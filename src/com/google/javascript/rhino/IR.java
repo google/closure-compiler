@@ -180,6 +180,15 @@ public class IR {
     return new Node(Token.RETURN, expr);
   }
 
+  public static Node yield() {
+    return new Node(Token.YIELD);
+  }
+
+  public static Node yield(Node expr) {
+    Preconditions.checkState(mayBeExpression(expr));
+    return new Node(Token.YIELD, expr);
+  }
+
   public static Node throwNode(Node expr) {
     Preconditions.checkState(mayBeExpression(expr));
     return new Node(Token.THROW, expr);

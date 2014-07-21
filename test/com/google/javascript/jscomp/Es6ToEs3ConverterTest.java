@@ -1604,9 +1604,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; throw 5; yield i;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    test("function *f() { var i = (yield 1); }",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testIfGenerator() {
@@ -1794,6 +1791,33 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "          $jscomp$generator$state = 1;",
         "          return {value: undefined, done: false};",
         "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }}",
+        "  }}",
+        "}"
+    ));
+  }
+
+  public void testYieldExpression() {
+    test("function *f() { return (yield 1); }",
+      Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  return { $$iterator: function() {",
+        "    var $jscomp$generator$state = 0;",
+        "    var $jscomp$generator$expression$0;",
+        "    return { next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$expression$0 = 1;",
+        "          $jscomp$generator$state = 1;",
+        "          return {value: $jscomp$generator$expression$0, done: false};",
+        "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "          return {value: $jscomp$generator$expression$0, done: false};",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",

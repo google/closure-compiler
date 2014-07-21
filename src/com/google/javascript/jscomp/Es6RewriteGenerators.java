@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -58,9 +59,13 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   // a call to yield or return. The beginning state is 0 and the end state is -1.
   private static final String GENERATOR_STATE = "$jscomp$generator$state";
 
-  private static int generatorCaseCount = 0;
+  private static int generatorCaseCount;
 
   private static final String GENERATOR_DO_WHILE_INITIAL = "$jscomp$generator$first$do";
+
+  private static final String GENERATOR_EXPRESSION_YIELD_NAME = "$jscomp$generator$expression$";
+
+  private Supplier<String> generatorExprCount;
 
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
@@ -72,6 +77,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     this.compiler = compiler;
     this.currentLoopEndCase = new ArrayDeque<>();
     this.currentLoopContinueStatement = new ArrayDeque<>();
+    generatorExprCount = compiler.getUniqueNameIdSupplier();
   }
 
   @Override
@@ -94,12 +100,23 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         }
         break;
       case Token.YIELD:
-        if (!n.getParent().isExprResult()) {
-          compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-          "Yield may only be used as a statement."));
+        if (!parent.isExprResult()) {
+          visitYieldExpr(n, parent);
         }
         break;
     }
+  }
+
+  private void visitYieldExpr(Node n, Node parent) {
+    Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
+    Node exprName = IR.name(GENERATOR_EXPRESSION_YIELD_NAME + generatorExprCount.get());
+    Node yieldDecl = IR.var(exprName.cloneTree(), n.getFirstChild().cloneTree());
+    Node yieldStatement = IR.exprResult(IR.yield(exprName.cloneTree()));
+
+    parent.replaceChild(n, exprName);
+    enclosingStatement.getParent().addChildBefore(yieldDecl, enclosingStatement);
+    enclosingStatement.getParent().addChildBefore(yieldStatement, enclosingStatement);
+    compiler.reportCodeChange();
   }
 
   private void visitGenerator(Node n, Node parent) {
