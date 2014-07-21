@@ -505,7 +505,7 @@ public class CommandLineRunner extends
           COMPILATION_LEVEL_MAP.get(compilationLevel.toUpperCase());
       if (compilationLevelParsed == null) {
         throw new CmdLineException(
-            "Bad value for --compilation_level: " + compilationLevel);
+            parser, "Bad value for --compilation_level: " + compilationLevel);
       }
     }
 
@@ -551,7 +551,7 @@ public class CommandLineRunner extends
       }
 
       if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
-        throw new CmdLineException("No inputs matched");
+        throw new CmdLineException(new CmdLineParser(this), "No inputs matched");
       }
 
       return new ArrayList<>(allJsInputs);
