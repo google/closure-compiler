@@ -316,8 +316,11 @@ public class AstValidator implements CompilerPass {
   private void validateYield(Node n) {
     validateEs6Feature("yield", n);
     validateNodeType(Token.YIELD, n);
-    validateChildCount(n, Token.arity(Token.YIELD));
-    validateExpression(n.getFirstChild());
+    validateMinimumChildCount(n, 0);
+    validateMaximumChildCount(n, 1);
+    if (n.hasChildren()) {
+      validateExpression(n.getFirstChild());
+    }
   }
 
   private void validateImport(Node n) {

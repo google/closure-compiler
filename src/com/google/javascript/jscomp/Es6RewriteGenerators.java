@@ -111,7 +111,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       "      while (1) switch (" + GENERATOR_STATE + ") {",
       "        case " + generatorCaseCount + ":",
       "        default:",
-      "          return {done: true};",
+      "          return {value: undefined, done: true};",
       "      }",
       "    }}",
       "  }}",
@@ -401,8 +401,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    */
   private void visitYieldExprResult() {
     enclosingCase.getLastChild().addChildToBack(createStateUpdate());
+    Node yield = currentStatement.getFirstChild();
+    Node value = yield.hasChildren() ? yield.removeFirstChild() : IR.name("undefined");
     enclosingCase.getLastChild().addChildToBack(IR.returnNode(
-        createIteratorResult(currentStatement.getFirstChild().removeFirstChild())));
+        createIteratorResult(value)));
   }
 
   /**
