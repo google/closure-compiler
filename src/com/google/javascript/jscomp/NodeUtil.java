@@ -1721,6 +1721,13 @@ public final class NodeUtil {
     return getEnclosingType(n, Token.CLASS);
   }
 
+  /**
+   * Finds the function containing the given node.
+   */
+  static Node getEnclosingFunction(Node n) {
+    return getEnclosingType(n, Token.FUNCTION);
+  }
+
   static Node getEnclosingStatement(Node n) {
     Node curr = n;
     while (curr != null && !isStatement(curr)) {

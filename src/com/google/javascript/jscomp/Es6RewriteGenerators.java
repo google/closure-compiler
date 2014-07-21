@@ -104,6 +104,13 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           visitYieldExpr(n, parent);
         }
         break;
+      case Token.LABEL:
+        Node enclosing = NodeUtil.getEnclosingFunction(n);
+        if (enclosing != null && enclosing.isGeneratorFunction()) {
+          compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+          "Labels in generator functions"));
+        }
+        break;
     }
   }
 

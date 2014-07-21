@@ -1602,6 +1602,9 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ));
 
+    test("function *f() { label: while (i) { yield i; } }",
+      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
     test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; throw 5; yield i;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
