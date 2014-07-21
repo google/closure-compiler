@@ -51,10 +51,6 @@ public class NominalType {
     this.rawType = rawType;
   }
 
-  public static NominalType fromRaw(RawNominalType rawType) {
-    return new NominalType(ImmutableMap.<String, JSType>of(), rawType);
-  }
-
   // This should only be called during GlobalTypeInfo
   public RawNominalType getRawNominalType() {
     Preconditions.checkState(typeMap.isEmpty());
@@ -319,6 +315,11 @@ public class NominalType {
     private ImmutableSet<NominalType> interfaces = null;
     private final boolean isInterface;
     private ImmutableSet<String> allProps = null;
+    // In GlobalTypeInfo, we request (wrapped) RawNominalTypes in various
+    // places. Create them here and cache them to save mem.
+    private final NominalType wrappedAsNominal;
+    private final JSType wrappedAsJSType;
+    private final JSType wrappedAsNullableJSType;
     // Empty iff this type is not generic
     private final ImmutableList<String> typeParameters;
     private final ObjectKind objectKind;
@@ -334,6 +335,12 @@ public class NominalType {
       this.typeParameters = typeParameters;
       this.isInterface = isInterface;
       this.objectKind = objectKind;
+      this.wrappedAsNominal =
+          new NominalType(ImmutableMap.<String, JSType>of(), this);
+      this.wrappedAsJSType = JSType.fromObjectType(
+          ObjectType.fromNominalType(this.wrappedAsNominal));
+      this.wrappedAsNullableJSType = JSType.join(JSType.NULL,
+          this.wrappedAsJSType);
     }
 
     public static RawNominalType makeUnrestrictedClass(
@@ -344,18 +351,21 @@ public class NominalType {
 
     public static RawNominalType makeStructClass(
         QualifiedName name, ImmutableList<String> typeParameters) {
-      return new RawNominalType(name.toString(), typeParameters, false, ObjectKind.STRUCT);
+      return new RawNominalType(
+          name.toString(), typeParameters, false, ObjectKind.STRUCT);
     }
 
     public static RawNominalType makeDictClass(
         QualifiedName name, ImmutableList<String> typeParameters) {
-      return new RawNominalType(name.toString(), typeParameters, false, ObjectKind.DICT);
+      return new RawNominalType(
+          name.toString(), typeParameters, false, ObjectKind.DICT);
     }
 
     public static RawNominalType makeInterface(
         QualifiedName name, ImmutableList<String> typeParameters) {
       // interfaces are struct by default
-      return new RawNominalType(name.toString(), typeParameters, true, ObjectKind.STRUCT);
+      return new RawNominalType(
+          name.toString(), typeParameters, true, ObjectKind.STRUCT);
     }
 
     public String getName() {
@@ -690,10 +700,25 @@ public class NominalType {
       appendGenericSuffixTo(builder, ImmutableMap.<String, JSType>of());
       return builder.toString();
     }
-
+    @Override
     public JSType toJSType() {
       Preconditions.checkState(ctorFn != null);
       return createConstructorObject(ctorFn);
+    }
+
+    public NominalType getAsNominalType() {
+      return wrappedAsNominal;
+    }
+
+    // Don't confuse with the toJSType method, inherited from Namespace.
+    // The namespace is represented by the constructor, so that method wraps the
+    // constructor in a JSType, and this method wraps the instance.
+    public JSType getInstanceAsJSType() {
+      return wrappedAsJSType;
+    }
+
+    public JSType getInstanceAsNullableJSType() {
+      return wrappedAsNullableJSType;
     }
 
     // equals and hashCode default to reference equality, which is what we want

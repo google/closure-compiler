@@ -42,6 +42,11 @@ public class JSTypeCreatorFromJSDoc {
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
 
+  private static final JSType UNKNOWN_FUNCTION_OR_NULL =
+      JSType.join(JSType.qmarkFunction(), JSType.NULL);
+  private static final JSType OBJECT_OR_NULL =
+      JSType.join(JSType.TOP_OBJECT, JSType.NULL);
+
   /** Exception for when unrecognized type names are encountered */
   public static class UnknownTypeException extends Exception {
     UnknownTypeException(String cause) {
@@ -128,6 +133,9 @@ public class JSTypeCreatorFromJSDoc {
         JSType union = JSType.BOTTOM;
         for (Node child = n.getFirstChild(); child != null;
              child = child.getNext()) {
+          // TODO(dimvar): When the union has many things, we join and throw
+          // away types, except the result of the last join. Very inefficient.
+          // Consider optimizing.
           union = JSType.join(union, getTypeFromNodeHelper(
               child, ownerType, registry, typeParameters));
         }
@@ -213,9 +221,9 @@ public class JSTypeCreatorFromJSDoc {
       case "void":
         return JSType.UNDEFINED;
       case "Function":
-        return JSType.join(JSType.qmarkFunction(), JSType.NULL);
+        return UNKNOWN_FUNCTION_OR_NULL;
       case "Object":
-        return JSType.join(JSType.TOP_OBJECT, JSType.NULL);
+        return OBJECT_OR_NULL;
       default: {
         if (hasTypeVariable(outerTypeParameters, ownerType, typeName)) {
           return JSType.fromTypeVar(typeName);
@@ -236,8 +244,8 @@ public class JSTypeCreatorFromJSDoc {
             howmanyTypeVars++;
             return namedType;
           }
-          return JSType.join(JSType.NULL, getNominalTypeHelper(
-              namedType, n, ownerType, registry, outerTypeParameters));
+          return getNominalTypeHelper(
+              namedType, n, ownerType, registry, outerTypeParameters);
         }
       }
     }
@@ -312,15 +320,16 @@ public class JSTypeCreatorFromJSDoc {
     NominalType uninstantiated = namedType.getNominalTypeIfUnique();
     RawNominalType rawType = uninstantiated.getRawNominalType();
     if (!rawType.isGeneric() && !n.hasChildren()) {
-      return namedType;
+      return rawType.getInstanceAsNullableJSType();
     }
     if (!n.hasChildren()) {
       ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
       for (String unused : rawType.getTypeParameters()) {
         typeList.add(JSType.UNKNOWN);
       }
-      return JSType.fromObjectType(ObjectType.fromNominalType(
-          uninstantiated.instantiateGenerics(typeList.build())));
+      return JSType.join(JSType.NULL,
+          JSType.fromObjectType(ObjectType.fromNominalType(
+              uninstantiated.instantiateGenerics(typeList.build()))));
     }
     // Compute instantiation of polymorphic class/interface.
     Preconditions.checkState(n.getFirstChild().isBlock());
@@ -336,12 +345,14 @@ public class JSTypeCreatorFromJSDoc {
       warn("Invalid generics instantiation.\n" +
           "Expected " + typeParameters.size() + " type arguments, but " +
           typeArguments.size() + " were passed.", n);
-      return JSType.fromObjectType(ObjectType.fromNominalType(
-          uninstantiated.instantiateGenerics(JSType.fixLengthOfTypeList(
-              typeParameters.size(), typeArguments))));
+      return JSType.join(JSType.NULL,
+          JSType.fromObjectType(ObjectType.fromNominalType(
+              uninstantiated.instantiateGenerics(JSType.fixLengthOfTypeList(
+                  typeParameters.size(), typeArguments)))));
     }
-    return JSType.fromObjectType(ObjectType.fromNominalType(
-        uninstantiated.instantiateGenerics(typeArguments)));
+    return JSType.join(JSType.NULL,
+        JSType.fromObjectType(ObjectType.fromNominalType(
+            uninstantiated.instantiateGenerics(typeArguments))));
   }
 
   // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a

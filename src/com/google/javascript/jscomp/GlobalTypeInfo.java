@@ -1434,7 +1434,7 @@ class GlobalTypeInfo implements CompilerPass {
           }
           boolean noCycles = ctorType.addInterfaces(implementedIntfs);
           Preconditions.checkState(noCycles);
-          builder.addNominalType(NominalType.fromRaw(ctorType));
+          builder.addNominalType(ctorType.getAsNominalType());
         } else if (fnDoc.isInterface()) {
           if (declNode.isFunction() &&
               !NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(declNode))) {
@@ -1451,7 +1451,7 @@ class GlobalTypeInfo implements CompilerPass {
             warnings.add(JSError.make(
                 declNode, INHERITANCE_CYCLE, ctorType.toString()));
           }
-          builder.addNominalType(NominalType.fromRaw(ctorType));
+          builder.addNominalType(ctorType.getAsNominalType());
         } else if (!implementedIntfs.isEmpty()) {
           warnings.add(JSError.make(
               declNode, IMPLEMENTS_WITHOUT_CONSTRUCTOR, functionName));
@@ -1459,7 +1459,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
 
       if (ownerType != null) {
-        builder.addReceiverType(NominalType.fromRaw(ownerType));
+        builder.addReceiverType(ownerType.getAsNominalType());
       }
       DeclaredFunctionType result = builder.buildDeclaration();
       if (ctorType != null) {
@@ -1795,8 +1795,7 @@ class GlobalTypeInfo implements CompilerPass {
         if (rawType == null) {
           return null;
         }
-        return JSType.fromObjectType(ObjectType.fromNominalType(
-            NominalType.fromRaw(rawType)));
+        return rawType.getInstanceAsJSType();
       }
 
       // First see if it's a type variable
@@ -1807,8 +1806,7 @@ class GlobalTypeInfo implements CompilerPass {
       // Then if it's a class/interface name
       RawNominalType rawNominalType = localClassDefs.get(name);
       if (rawNominalType != null) {
-        return JSType.fromObjectType(ObjectType.fromNominalType(
-            NominalType.fromRaw(rawNominalType)));
+        return rawNominalType.getInstanceAsJSType();
       }
       // O/w keep looking in the parent scope
       return parent == null ? null : parent.lookupTypeByName(name);
