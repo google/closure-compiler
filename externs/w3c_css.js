@@ -2440,20 +2440,28 @@ function FontFaceSet() {}
 
 /**
  * @param {!FontFace} value
- * @see http://dev.w3.org/csswg/css-font-loading/#set-modifications
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-add
  */
 FontFaceSet.prototype.add = function(value) {};
 
 /**
- * @see http://dev.w3.org/csswg/css-font-loading/#set-modifications
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-clear
  */
 FontFaceSet.prototype.clear = function() {};
 
 /**
  * @param {!FontFace} value
- * @see http://dev.w3.org/csswg/css-font-loading/#set-modifications
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-delete
  */
 FontFaceSet.prototype.delete = function(value) {};
+
+
+/**
+ * @param {!FontFace} font
+ * @return {boolean}
+ * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-has
+ */
+FontFaceSet.prototype.has = function(font) {};
 
 /**
  * @param {string} font
