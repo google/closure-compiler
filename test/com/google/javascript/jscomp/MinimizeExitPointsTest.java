@@ -275,4 +275,14 @@ public class MinimizeExitPointsTest extends CompilerTestCase {
   public void testDontRemoveBreakInTryFinally() throws Exception {
     foldSame("function f() {b:try{throw 9} finally {break b} return 1;}");
   }
+
+  /**
+   * See https://github.com/google/closure-compiler/issues/554
+   * The 'break' prevents the 'b=false' from being evaluated.
+   * If we fold the do-while to 'do;while(b=false)' the code will
+   * be incorrect.
+   */
+  public void testDontFoldBreakInDoWhileIfConditionHasSideEffects() {
+    foldSame("var b=true;do{break}while(b=false);");
+  }
 }

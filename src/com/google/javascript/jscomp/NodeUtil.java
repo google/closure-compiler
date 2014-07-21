@@ -70,7 +70,7 @@ public final class NodeUtil {
   /**
    * Gets the boolean value of a node that represents a expression. This method
    * effectively emulates the <code>Boolean()</code> JavaScript cast function.
-   * Note: unlike getBooleanValue this function does not return UNKNOWN
+   * Note: unlike getPureBooleanValue this function does not return UNKNOWN
    * for expressions with side-effects.
    */
   static TernaryValue getImpureBooleanValue(Node n) {

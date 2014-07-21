@@ -63,9 +63,9 @@ class MinimizeExitPoints
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
 
         Node cond = NodeUtil.getConditionExpression(n);
-        if (NodeUtil.getImpureBooleanValue(cond) == TernaryValue.FALSE) {
+        if (NodeUtil.getPureBooleanValue(cond) == TernaryValue.FALSE) {
           // Normally, we wouldn't be able to optimize BREAKs inside a loop
-          // but as we know the condition will always false, we can treat them
+          // but as we know the condition will always be false, we can treat them
           // as we would a CONTINUE.
           tryMinimizeExits(n.getFirstChild(), Token.BREAK, null);
         }
