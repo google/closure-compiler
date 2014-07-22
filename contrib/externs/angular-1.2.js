@@ -281,6 +281,22 @@ angular.Attributes;
 angular.Attributes.$attr;
 
 /**
+ * @param {string} classVal
+ */
+angular.Attributes.$addClass = function(classVal) {};
+
+/**
+ * @param {string} classVal
+ */
+angular.Attributes.$removeClass = function(classVal) {};
+
+/**
+ * @param {string} newClasses
+ * @param {string} oldClasses
+ */
+angular.Attributes.$updateClass = function(newClasses, oldClasses) {};
+
+/**
  * @param {string} name
  * @return {string}
  */
