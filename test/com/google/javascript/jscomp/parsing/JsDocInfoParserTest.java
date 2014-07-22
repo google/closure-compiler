@@ -2985,17 +2985,18 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLEmptyUnionType() {
     parse("@template T := union() =:*/",
-        "Bad type annotation. Union of less than two types");
+        "Bad type annotation. Missing parameter in union type");
   }
 
   public void testParserWithTTLSingletonUnionType() {
     parse("@template T := union(type('string')) =:*/",
-        "Bad type annotation. Union of less than two types");
+        "Bad type annotation. Missing parameter in union type");
   }
 
   public void testParserWithTTLInvalidUnionType2() {
     parse("@template T := union(function(a){}, T) =:*/",
-        "Bad type annotation. Invalid basic type expression");
+        "Bad type annotation. Invalid basic type expression",
+        "Bad type annotation. Invalid expression inside union type");
   }
 
   public void testParserWithTTLConditional() {
@@ -3009,32 +3010,32 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLExtraParamBoolean() {
     parse("@template T := cond(eq(T, R, S), R, S) =: */",
         "Bad type annotation. Found extra parameter in boolean predicate",
-        "Bad type annotation. Invalid boolean expression inside conditional");
+        "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testParserWithTTLMissingParamBoolean() {
     parse("@template T := cond(eq(T), R, S) =: */",
         "Bad type annotation. Missing parameter in boolean predicate",
-        "Bad type annotation. Invalid boolean expression inside conditional");
+        "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testParserWithTTLInvalidBooleanConditional() {
     parse("@template T := cond(aaa, R, S) =: */",
         "Bad type annotation. Invalid boolean expression",
-        "Bad type annotation. Invalid boolean expression inside conditional");
+        "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testParserWithTTLInvalidBooleanConditional2() {
     parse("@template T := cond(foo(T, R), S, R) =: */",
         "Bad type annotation. Invalid boolean predicate",
-        "Bad type annotation. Invalid boolean expression inside conditional");
+        "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testParserWithTTLInvalidBooleanConditional3() {
     parse("@template T := cond(eq(T, foo()), R, S) =: */",
         "Bad type annotation. Invalid type expression",
-        "Bad type annotation. Invalid type expression inside boolean",
-        "Bad type annotation. Invalid boolean expression inside conditional");
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testParserWithTTLInvalidConditionalMissingParam() {
@@ -3050,13 +3051,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLInvalidConditional() {
     parse("@template T := cond(eq(T, R), foo(), S) =: */",
         "Bad type annotation. Invalid type transformation expression",
-        "Bad type annotation. Invalid if expression inside conditional");
+        "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testParserWithTTLInvalidConditional2() {
     parse("@template T := cond(eq(T, R), S, foo()) =: */",
         "Bad type annotation. Invalid type transformation expression",
-        "Bad type annotation. Invalid else expression inside conditional");
+        "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testWhitelistedNewAnnotations() {

@@ -973,8 +973,8 @@ public final class JsDocInfoParser {
                   // TODO(lpino): Report the exact lineno and charno in the
                   // type transformation. For now they are set at the beginning
                   // of the @template
-                  parser.addTypeWarning(
-                      currentWarning.messageId, templateLineno, templateCharno);
+                  parser.addTypeWarning(currentWarning.messageId,
+                      currentWarning.messageArg, templateLineno, templateCharno);
                 }
               }
             }
