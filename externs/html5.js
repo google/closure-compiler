@@ -2929,3 +2929,11 @@ ErrorEvent.prototype.error;
  * }}
  */
  var ErrorEventInit;
+
+
+/**
+ * @see http://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
+ * @param {string=} opt_title A title to give the new HTML document
+ * @return {!HTMLDocument}
+ */
+DOMImplementation.prototype.createHTMLDocument = function(opt_title) {};
