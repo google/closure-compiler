@@ -1887,4 +1887,74 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testYieldAll() {
+    test("function *f() {yield * n;}", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var $jscomp$generator$yield$entry;",
+        "  var $jscomp$generator$yield$all;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$yield$all = n;",
+        "        case 1:",
+        "          if (!!($jscomp$generator$yield$entry =",
+        "              $jscomp$generator$yield$all.next()).done) {",
+        "            $jscomp$generator$state = 2;",
+        "            break;",
+        "          }",
+        "          $jscomp$generator$state = 3;",
+        "          return {value: $jscomp$generator$yield$entry.value, done: false};",
+        "        case 3:",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "        case 2:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+
+    test("function *f() {var i = yield * n;}", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var i;",
+        "  var $jscomp$generator$yield$entry;",
+        "  var $jscomp$generator$yield$all;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$yield$all = n;",
+        "        case 1:",
+        "          if (!!($jscomp$generator$yield$entry =",
+        "              $jscomp$generator$yield$all.next()).done) {",
+        "            $jscomp$generator$state = 2;",
+        "            break;",
+        "          }",
+        "          $jscomp$generator$state = 3;",
+        "          return {value: $jscomp$generator$yield$entry.value, done: false};",
+        "        case 3:",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "        case 2:",
+        "          i = $jscomp$generator$yield$entry.value;",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+  }
+
 }
