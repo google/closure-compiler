@@ -79,6 +79,9 @@ public class NominalType {
   }
 
   NominalType instantiateGenerics(Map<String, JSType> newTypeMap) {
+    if (!this.rawType.isGeneric()) {
+      return this.rawType.wrappedAsNominal;
+    }
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     if (!typeMap.isEmpty()) {
       for (String oldKey : typeMap.keySet()) {
