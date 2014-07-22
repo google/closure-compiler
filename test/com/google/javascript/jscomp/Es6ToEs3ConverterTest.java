@@ -1326,19 +1326,56 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
-  public void testSimpleTemplateString() {
-    test("``", "\"\"");
-    test("`hello`", "\"hello\"");
-    test("`hello\nworld`", "\"hello\\nworld\"");
-    test("`hello\rworld`", "\"hello\\nworld\"");
-    test("`hello\r\nworld`", "\"hello\\nworld\"");
-    test("`hello\n\nworld`", "\"hello\\n\\nworld\"");
-    test("`${world}`", "\"\" + world");
-    test("`hello ${world}`", "\"hello \" + world");
-    test("`${hello} world`", "hello + \" world\"");
-    test("`${hello}${world}`", "\"\" + hello + world");
-    test("`${a} b ${c} d ${e}`", "a + \" b \" + c + \" d \" + e");
-    test("tag`${hello} world`", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  public void testUntaggedTemplateLiteral() {
+    test("``", "''");
+    test("`\"`", "'\\\"'");
+    test("`'`", "\"'\"");
+    test("`hello`", "'hello'");
+    test("`hello\nworld`", "'hello\\nworld'");
+    test("`hello\rworld`", "'hello\\nworld'");
+    test("`hello\r\nworld`", "'hello\\nworld'");
+    test("`hello\n\nworld`", "'hello\\n\\nworld'");
+    test("`${world}`", "'' + world");
+    test("`hello ${world}`", "'hello ' + world");
+    test("`${hello} world`", "hello + ' world'");
+    test("`${hello}${world}`", "'' + hello + world");
+    test("`${a} b ${c} d ${e}`", "a + ' b ' + c + ' d ' + e");
+    test("`hello ${a + b}`", "'hello ' + (a + b)");
+    test("`hello ${a, b, c}`", "'hello ' + (a, b, c)");
+    test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
+  }
+
+  public void testTaggedTemplateLiteral() {
+    test("tag``", Joiner.on('\n').join(
+        "var $jscomp$templatelit$0 = [''];",
+        "$jscomp$templatelit$0['raw'] = [''];",
+        "tag($jscomp$templatelit$0);"
+    ));
+
+    test("tag`${hello} world`", Joiner.on('\n').join(
+        "var $jscomp$templatelit$0 = ['', ' world'];",
+        "$jscomp$templatelit$0['raw'] = ['', ' world'];",
+        "tag($jscomp$templatelit$0, hello);"
+    ));
+
+    test("tag`${hello} ${world}`", Joiner.on('\n').join(
+        "var $jscomp$templatelit$0 = ['', ' ', ''];",
+        "$jscomp$templatelit$0['raw'] = ['', ' ', ''];",
+        "tag($jscomp$templatelit$0, hello, world);"
+    ));
+
+    test("tag`\"`", Joiner.on('\n').join(
+        "var $jscomp$templatelit$0 = ['\\\"'];",
+        "$jscomp$templatelit$0['raw'] = ['\\\"'];",
+        "tag($jscomp$templatelit$0);"
+    ));
+
+    // The cooked string and the raw string are different.
+    test("tag`a\tb`", Joiner.on('\n').join(
+        "var $jscomp$templatelit$0 = ['a\tb'];",
+        "$jscomp$templatelit$0['raw'] = ['a\\tb'];",
+        "tag($jscomp$templatelit$0);"
+    ));
   }
 
   public void testSimpleGenerator() {

@@ -890,7 +890,12 @@ class CodeGenerator {
       case Token.STRING:
         Preconditions.checkState(
             childCount == 0, "A string may not have children");
-        addJsString(n);
+        // The string is already processed, don't escape it.
+        if (n.getBooleanProp(Node.COOKED_STRING)) {
+          add("\"" + n.getString() + "\"");
+        } else {
+          addJsString(n);
+        }
         break;
 
       case Token.DELPROP:

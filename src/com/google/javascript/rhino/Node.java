@@ -112,7 +112,9 @@ public class Node implements Cloneable, Serializable {
       EXPORT_ALL_FROM    = 63,    // Set if a export is a "*" export
       IS_CONSTANT_VAR    = 64,    // A lexical variable is inferred const
       GENERATOR_MARKER   = 65,    // Used by the ES6-to-ES3 translator.
-      GENERATOR_SAFE     = 66;    // Used by the ES6-to-ES3 translator.
+      GENERATOR_SAFE     = 66,    // Used by the ES6-to-ES3 translator.
+
+      COOKED_STRING      = 70;    // Used to support ES6 tagged template literal.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -155,6 +157,7 @@ public class Node implements Cloneable, Serializable {
         case IS_CONSTANT_VAR:    return "is_constant_var";
         case GENERATOR_MARKER:   return "is_generator_marker";
         case GENERATOR_SAFE:     return "is_generator_safe";
+        case COOKED_STRING:      return "cooked_string";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

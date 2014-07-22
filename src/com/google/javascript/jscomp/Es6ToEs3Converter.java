@@ -166,7 +166,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         }
         break;
       case Token.TEMPLATELIT:
-        visitTemplateLiteral(n);
+        Es6TemplateLiterals.visitTemplateLiteral(t, n);
         break;
       case Token.ARRAY_PATTERN:
         for (Node child : n.children()) {
@@ -846,51 +846,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       return !n.isFunction() || n.isArrowFunction();
-    }
-  }
-
-  private void visitTemplateLiteral(Node n) {
-    if (!n.getFirstChild().isName()) {
-      createDefaultTemplateLiteral(n);
-    } else {
-      //TODO(moz): Handle tagged template literals.
-      cannotConvertYet(n, "Tagged template literals are not supported yet.");
-    }
-    compiler.reportCodeChange();
-  }
-
-  /**
-   * Converts `${a} b ${c} d ${e}` to (a + " b " + c + " d " + e)
-   *
-   * @param n A TEMPLATELIT node that is not prefixed with a tag
-   */
-  private void createDefaultTemplateLiteral(Node n) {
-    int length = n.getChildCount();
-    if (length == 0) {
-      n.getParent().replaceChild(n, IR.string("\"\""));
-    } else {
-      Node first = n.removeFirstChild(); // first is always a STRING node
-      if (length == 1) {
-        n.getParent().replaceChild(n, first);
-      } else {
-        // Add the first string with the first substitution expression
-        Node add = IR.add(first, n.removeFirstChild().removeFirstChild());
-        // Process the rest of the template literal
-        for (int i = 2; i < length; i++) {
-          Node child = n.removeFirstChild();
-          if (child.isString()) {
-            if (child.getString().isEmpty()) {
-              continue;
-            } else if (i == 2 && first.getString().isEmpty()) {
-              // So that `${hello} world` gets translated into (hello + " world")
-              // instead of ("" + hello + " world").
-              add = add.getChildAtIndex(1).detachFromParent();
-            }
-          }
-          add = IR.add(add, child.isString() ? child : child.removeFirstChild());
-        }
-        n.getParent().replaceChild(n, add.useSourceInfoIfMissingFromForTree(n));
-      }
     }
   }
 
