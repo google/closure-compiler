@@ -30,6 +30,7 @@ import java.util.HashSet;
 /**
  * A parser for the type transformation expressions (TTL-Exp) as in
  * @template T := TTL-Exp =:
+ *
  */
 final class TypeTransformationParser {
 
@@ -61,19 +62,21 @@ final class TypeTransformationParser {
   private static final String TYPE_KEYWORD = "type",
       UNION_KEYWORD = "union",
       COND_KEYWORD = "cond",
+      MAPUNION_KEYWORD = "mapunion",
       EQTYPE_PREDICATE = "eq",
       SUBTYPE_PREDICATE = "sub";
 
   private static final ImmutableList<String>
   TYPE_CONSTRUCTORS = ImmutableList.of(TYPE_KEYWORD, UNION_KEYWORD),
-  OPERATIONS = ImmutableList.of(COND_KEYWORD),
+  OPERATIONS = ImmutableList.of(COND_KEYWORD, MAPUNION_KEYWORD),
   BOOLEAN_PREDICATES = ImmutableList.of(EQTYPE_PREDICATE, SUBTYPE_PREDICATE);
 
   private static final int TYPE_MIN_PARAM_COUNT = 1,
       TYPE_MAX_PARAM_COUNT = 1,
       UNION_MIN_PARAM_COUNT = 2,
       COND_PARAM_COUNT = 3,
-      BOOLPRED_PARAM_COUNT = 2;
+      BOOLPRED_PARAM_COUNT = 2,
+      MAPUNION_PARAM_COUNT = 2;
 
   public TypeTransformationParser(String typeTransformationString,
       StaticSourceFile sourceFile, ErrorReporter errorReporter) {
@@ -224,7 +227,7 @@ final class TypeTransformationParser {
     }
     // Otherwise it must start with union keyword
     if (!expression.getFirstChild().getString().equals(UNION_KEYWORD)) {
-      addNewWarning("msg.jsdoc.typetransformation.invalid.uniontype",
+      addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
           "union type", expression);
       return false;
     }
@@ -360,6 +363,66 @@ final class TypeTransformationParser {
   }
 
   /**
+   * A mapunion type transformation expression must be of the form
+   * mapunion(Uniontype-Exp, (typevar) => TTL-Exp).
+   */
+  private boolean validTTLMapunionExpression(Node expression) {
+    // The expression must have four children:
+    // - The mapunion keyword
+    // - A union type expression
+    // - A map function
+    if (expression.getChildCount() < 1 + MAPUNION_PARAM_COUNT) {
+      addNewWarning("msg.jsdoc.typetransformation.missing.param",
+          "mapunion", expression);
+      return false;
+    }
+    if (expression.getChildCount() > 1 + MAPUNION_PARAM_COUNT) {
+      addNewWarning("msg.jsdoc.typetransformation.extra.param",
+          "mapunion", expression);
+      return false;
+    }
+    // The second child must be a valid union type expression
+    if (!validTTLUnionTypeExpression(expression.getChildAtIndex(1))) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid.inside",
+          "mapunion", expression.getChildAtIndex(1));
+      return false;
+    }
+    // The third child must be a function
+    if (!expression.getChildAtIndex(2).isFunction()) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid",
+          "map function", expression.getChildAtIndex(2));
+      return false;
+    }
+    Node mapFunction = expression.getChildAtIndex(2);
+    // The map function must have only one parameter
+    if (!mapFunction.getChildAtIndex(1).hasChildren()) {
+      addNewWarning("msg.jsdoc.typetransformation.missing.param",
+          "map function", mapFunction.getChildAtIndex(1));
+      return false;
+    }
+    if (!mapFunction.getChildAtIndex(1).hasOneChild()) {
+      addNewWarning("msg.jsdoc.typetransformation.extra.param",
+          "map function", mapFunction.getChildAtIndex(1));
+      return false;
+    }
+    // The parameter of the map function must be valid
+    Node mapFunctionParam = mapFunction.getChildAtIndex(1).getFirstChild();
+    if (!validTTLTypeVar(mapFunctionParam)) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid.inside",
+          "map function", mapFunctionParam);
+      return false;
+    }
+    // The body must be a valid type transformation expression
+    Node mapFunctionBody = mapFunction.getChildAtIndex(2);
+    if (!validTypeTransformationExpression(mapFunctionBody)) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid.inside",
+          "map function body", mapFunctionBody);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Checks the structure of the AST of a type transformation expression
    * in @template T as TTL-Exp.
    */
@@ -390,6 +453,9 @@ final class TypeTransformationParser {
     }
     if (operation.getString().equals(COND_KEYWORD)) {
       return validTTLCondionalExpression(expression);
+    }
+    if (operation.getString().equals(MAPUNION_KEYWORD)) {
+      return validTTLMapunionExpression(expression);
     }
     throw new IllegalStateException("Invalid type transformation expression");
   }

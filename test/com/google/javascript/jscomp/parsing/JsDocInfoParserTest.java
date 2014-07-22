@@ -3060,6 +3060,68 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside conditional");
   }
 
+  public void testParserWithTTLValidMapunion() {
+    parse("@template T := mapunion(T, (S) => S) =: */");
+  }
+
+  public void testParserWithTTLValidMapunion2() {
+    parse("@template T := "
+        + "mapunion(union(type('string'), type('number')), (S) => S) "
+        + "=: */");
+  }
+
+  public void testParserWithTTLInvalidMapunionType() {
+    parse("@template T := mapunion(foo(), (S) => S) =: */",
+        "Bad type annotation. Invalid union type expression",
+        "Bad type annotation. Invalid expression inside mapunion");
+  }
+
+  public void testParserWithTTLInvalidMapunionFn() {
+    parse("@template T := mapunion(R, S) =: */",
+        "Bad type annotation. Invalid map function");
+  }
+
+  public void testParserWithTTLInvalidMapunionMissingParams() {
+    parse("@template T := mapunion(T) =: */",
+        "Bad type annotation. Missing parameter in mapunion");
+  }
+
+  public void testParserWithTTLInvalidMapunionExtraParams() {
+    parse("@template T := mapunion(T, (S) => S, R) =: */",
+        "Bad type annotation. Found extra parameter in mapunion");
+  }
+
+  public void testParserWithTTLInvalidMapunionMissingFnParams() {
+    parse("@template T := mapunion(T, () => S) =: */",
+        "Bad type annotation. Missing parameter in map function");
+  }
+  public void testParserWithTTLInvalidMapunionExtraFnParams() {
+    parse("@template T := mapunion(T, (S, R) => S) =: */",
+        "Bad type annotation. Found extra parameter in map function");
+  }
+
+  public void testParserWithTTLInvalidMapunionFunctionBody() {
+    parse("@template T := mapunion(T, (S) => foo()) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside map function body");
+  }
+
+  public void testParserWithTTLUseCaseObject(){
+    parse("@template T := "
+        + "mapunion(T, (TVAL) => "
+        + "cond(eq(TVAL, type('string')),"
+        + "type('String'),"
+        + "cond(eq(TVAL, type('number')),"
+        + "type('Number'),"
+        + "cond(eq(TVAL, type('boolean')),"
+        + "type('Boolean'),"
+        + "cond(eq(TVAL, type('null')),"
+        + "type('Object'),"
+        + "cond(eq(TVAL, type('undefined')),"
+        + "type('Object'),"
+        + "TVAL)))))) =: */");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");
