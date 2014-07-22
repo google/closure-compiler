@@ -1346,79 +1346,84 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() {}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
     test("function *f() {}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
     test("function *f() {}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
     test("/** @param {*} a */ function *f(a,b) {}", Joiner.on('\n').join(
         "/** @param {*} a @suppress {uselessCode} */",
         "function f(a,b) {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
     test("function *f(a,b) {var i = 0, j = 2;}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f(a,b) {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var j;",
-        "    var i;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var j;",
+        "  var i;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          i = 0;",
@@ -1427,8 +1432,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
@@ -1436,10 +1441,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var i;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var i;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          i = 0;",
@@ -1458,8 +1464,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1469,10 +1475,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var i;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var i;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          i = 0;",
@@ -1484,8 +1491,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
@@ -1493,10 +1500,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var j;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var j;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          j = 0;",
@@ -1513,8 +1521,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1524,10 +1532,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var i;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var i;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          i = 0;",
@@ -1539,8 +1548,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
@@ -1548,10 +1557,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var j;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var j;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          j = 0;",
@@ -1568,8 +1578,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1582,10 +1592,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ), Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var i;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var i;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          i = 0;",
@@ -1597,8 +1608,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
@@ -1614,10 +1625,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var j;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var j;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          j = 0;",
@@ -1630,8 +1642,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
@@ -1639,9 +1651,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f(i) {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          if (!(i < 1)) { $jscomp$generator$state = 1; break; }",
@@ -1659,8 +1672,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1670,19 +1683,20 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$state = -1;",
-        "          return {value: 1, done: false};",
+        "          return {value: 1, done: true};",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1692,10 +1706,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var j;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var j;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          j = 0;",
@@ -1713,8 +1728,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
 
@@ -1722,10 +1737,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var j;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var j;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          j = 0;",
@@ -1743,8 +1759,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1754,10 +1770,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var $jscomp$generator$first$do;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var $jscomp$generator$first$do;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$first$do = true;",
@@ -1775,8 +1792,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1786,9 +1803,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$state = 1;",
@@ -1798,8 +1816,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }
@@ -1809,10 +1827,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
-        "  return { $$iterator: function() {",
-        "    var $jscomp$generator$state = 0;",
-        "    var $jscomp$generator$expression$0;",
-        "    return { next: function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var $jscomp$generator$expression$0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
         "          $jscomp$generator$expression$0 = 1;",
@@ -1820,13 +1839,13 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "          return {value: $jscomp$generator$expression$0, done: false};",
         "        case 1:",
         "          $jscomp$generator$state = -1;",
-        "          return {value: $jscomp$generator$expression$0, done: false};",
+        "          return {value: $jscomp$generator$expression$0, done: true};",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
         "      }",
-        "    }}",
-        "  }}",
+        "    }",
+        "  }",
         "}"
     ));
   }

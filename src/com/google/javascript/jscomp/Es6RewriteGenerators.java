@@ -129,16 +129,17 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   private void visitGenerator(Node n, Node parent) {
     Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
       "{",
-      "  return {" + ITER_KEY + ": function() {",
-      "    var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
-      "    return { next: function() {",
+      "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
+      "  return {",
+      "    " + ITER_KEY + ": function() { return this; },",
+      "    next: function() {",
       "      while (1) switch (" + GENERATOR_STATE + ") {",
       "        case " + generatorCaseCount + ":",
       "        default:",
       "          return {value: undefined, done: true};",
       "      }",
-      "    }}",
-      "  }}",
+      "    }",
+      "  }",
       "}"
     )).removeFirstChild();
     generatorCaseCount++;
@@ -428,7 +429,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node yield = currentStatement.getFirstChild();
     Node value = yield.hasChildren() ? yield.removeFirstChild() : IR.name("undefined");
     enclosingCase.getLastChild().addChildToBack(IR.returnNode(
-        createIteratorResult(value)));
+        createIteratorResult(value, false)));
   }
 
   /**
@@ -438,7 +439,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   private void visitReturn() {
     enclosingCase.getLastChild().addChildToBack(createStateUpdate(-1));
     enclosingCase.getLastChild().addChildToBack(IR.returnNode(
-        createIteratorResult(currentStatement.removeFirstChild())));
+        createIteratorResult(currentStatement.removeFirstChild(), true)));
   }
 
   private Node createStateUpdate() {
@@ -451,10 +452,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         IR.assign(IR.name(GENERATOR_STATE), IR.number(state)));
   }
 
-  private Node createIteratorResult(Node value) {
+  private Node createIteratorResult(Node value, boolean done) {
     return IR.objectlit(
         IR.propdef(IR.stringKey("value"), value),
-        IR.propdef(IR.stringKey("done"), IR.falseNode()));
+        IR.propdef(IR.stringKey("done"), done ? IR.trueNode() : IR.falseNode()));
   }
 
   private static Node createSafeBreak() {
