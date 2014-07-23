@@ -202,7 +202,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     )).removeFirstChild();
     generatorCaseCount++;
 
-    Node genFunc = IR.function(n.removeFirstChild(), n.removeFirstChild(), genBlock);
+    Node genFunc = IR.var(n.removeFirstChild(),
+        IR.function(IR.name(""), n.removeFirstChild(), genBlock));
 
     //TODO(mattloring): remove this suppression once we can optimize the switch statement to
     // remove unused cases.

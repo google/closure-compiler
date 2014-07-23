@@ -1387,7 +1387,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     // TODO(mattloring): expand these tests once a translation strategy is decided upon.
     test("function *f() {}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  return {",
         "    $$iterator: function() { return this; },",
@@ -1405,7 +1405,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("function *f() {yield 1;}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  return {",
         "    $$iterator: function() { return this; },",
@@ -1426,7 +1426,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("/** @param {*} a */ function *f(a,b) {}", Joiner.on('\n').join(
         "/** @param {*} a @suppress {uselessCode} */",
-        "function f(a,b) {",
+        "var f = function(a,b) {",
         "  var $jscomp$generator$state = 0;",
         "  return {",
         "    $$iterator: function() { return this; },",
@@ -1444,7 +1444,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("function *f(a,b) {var i = 0, j = 2;}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f(a,b) {",
+        "var f = function(a,b) {",
         "  var $jscomp$generator$state = 0;",
         "  var j;",
         "  var i;",
@@ -1467,7 +1467,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { var i = 0; yield i; i = 1; yield i; i = i + 1; yield i;}",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var i;",
         "  return {",
@@ -1501,7 +1501,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; } yield i;}",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var i;",
         "  return {",
@@ -1526,7 +1526,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { for (var j = 0; j < 10; j++) { yield j; } }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var j;",
         "  return {",
@@ -1558,7 +1558,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() {var i = 0; while (i < 10) { i++; i++; i++; } yield i;}",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var i;",
         "  return {",
@@ -1583,7 +1583,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { var j = 0; while (j < 10) { yield j; j++; } }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var j;",
         "  return {",
@@ -1618,7 +1618,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ), Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var i;",
         "  return {",
@@ -1651,7 +1651,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { var j = 0; if (j < 1) { yield j; } }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var j;",
         "  return {",
@@ -1677,7 +1677,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f(i) { if (i < 1) { yield i; } else { yield 1; } }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f(i) {",
+        "var f = function(i) {",
         "  var $jscomp$generator$state = 0;",
         "  return {",
         "    $$iterator: function() { return this; },",
@@ -1709,7 +1709,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { return 1; }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  return {",
         "    $$iterator: function() { return this; },",
@@ -1732,7 +1732,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { var j = 0; while (j < 10) { yield j; break; } }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var j;",
         "  return {",
@@ -1763,7 +1763,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { var j = 0; while (j < 10) { yield j; continue; } }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var j;",
         "  return {",
@@ -1796,7 +1796,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { do { yield j; } while (j < 10); }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var $jscomp$generator$first$do;",
         "  return {",
@@ -1829,7 +1829,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { yield; }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  return {",
         "    $$iterator: function() { return this; },",
@@ -1853,7 +1853,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { return (yield 1); }",
       Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var $jscomp$generator$expression$0;",
         "  return {",
@@ -1880,7 +1880,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testYieldAll() {
     test("function *f() {yield * n;}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var $jscomp$generator$yield$entry;",
         "  var $jscomp$generator$yield$all;",
@@ -1913,7 +1913,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("function *f() {var i = yield * n;}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var i;",
         "  var $jscomp$generator$yield$entry;",
@@ -1950,7 +1950,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testYieldArguments() {
     test("function *f() {yield arguments[0];}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
-        "function f() {",
+        "var f  = function() {",
         "  var $jscomp$generator$state = 0;",
         "  var $jscomp$generator$arguments = arguments;",
         "  return {",
