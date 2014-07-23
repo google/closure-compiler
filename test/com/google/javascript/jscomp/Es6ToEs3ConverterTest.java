@@ -1403,7 +1403,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ));
 
-    test("function *f() {}", Joiner.on('\n').join(
+    test("function *f() {yield 1;}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
         "function f() {",
         "  var $jscomp$generator$state = 0;",
@@ -1412,24 +1412,9 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "    next: function() {",
         "      while (1) switch ($jscomp$generator$state) {",
         "        case 0:",
-        "          $jscomp$generator$state = -1;",
-        "        default:",
-        "          return {value: undefined, done: true}",
-        "      }",
-        "    }",
-        "  }",
-        "}"
-    ));
-
-    test("function *f() {}", Joiner.on('\n').join(
-        "/** @suppress {uselessCode} */",
-        "function f() {",
-        "  var $jscomp$generator$state = 0;",
-        "  return {",
-        "    $$iterator: function() { return this; },",
-        "    next: function() {",
-        "      while (1) switch ($jscomp$generator$state) {",
-        "        case 0:",
+        "          $jscomp$generator$state = 1;",
+        "          return {value: 1, done: false};",
+        "        case 1:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
@@ -1952,6 +1937,30 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "          break;",
         "        case 2:",
         "          i = $jscomp$generator$yield$entry.value;",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+  }
+
+  public void testYieldArguments() {
+    test("function *f() {yield arguments[0];}", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var $jscomp$generator$arguments = arguments;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function() {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$state = 1;",
+        "          return {value: $jscomp$generator$arguments[0], done: false};",
+        "        case 1:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",

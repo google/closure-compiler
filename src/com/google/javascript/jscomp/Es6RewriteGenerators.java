@@ -71,6 +71,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String GENERATOR_YIELD_ALL_ENTRY = "$jscomp$generator$yield$entry";
 
+  private static final String GENERATOR_ARGUMENTS = "$jscomp$generator$arguments";
+
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
   private Deque<Integer> currentLoopEndCase;
@@ -103,6 +105,13 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           visitGenerator(n, parent);
         }
         break;
+      case Token.NAME:
+        Node enclosing = NodeUtil.getEnclosingFunction(n);
+        if (enclosing != null && enclosing.isGeneratorFunction()
+            && n.matchesQualifiedName("arguments")) {
+          n.setString(GENERATOR_ARGUMENTS);
+        }
+        break;
       case Token.YIELD:
         if (n.isYieldFor()) {
           visitYieldFor(n, parent);
@@ -111,7 +120,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         }
         break;
       case Token.LABEL:
-        Node enclosing = NodeUtil.getEnclosingFunction(n);
+        enclosing = NodeUtil.getEnclosingFunction(n);
         if (enclosing != null && enclosing.isGeneratorFunction()) {
           compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Labels in generator functions"));
@@ -215,6 +224,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     enclosingCase = getUnique(genBlock, Token.CASE);
     hoistRoot = getUnique(genBlock, Token.VAR);
+
+    if (NodeUtil.isNameReferenced(n, GENERATOR_ARGUMENTS)) {
+      hoistRoot.getParent().addChildAfter(
+          IR.var(IR.name(GENERATOR_ARGUMENTS), IR.name("arguments")), hoistRoot);
+    }
 
     while (originalGeneratorBody.hasChildren()) {
       currentStatement = originalGeneratorBody.removeFirstChild();
