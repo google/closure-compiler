@@ -977,131 +977,249 @@ chrome.tabs = {};
 
 
 /**
- * @param {number?} windowId Window Id.
- * @param {Object?} options parameters of image capture, such as the format of
- *    the resulting image.
- * @param {function(string): void} callback Callback function which accepts
- *    the data URL string of a JPEG encoding of the visible area of the
- *    captured tab. May be assigned to the 'src' property of an HTML Image
- *    element for display.
+ * @typedef {?{
+ *   code: (string|undefined),
+ *   file: (string|undefined),
+ *   allFrames: (boolean|undefined),
+ *   matchAboutBlank: (boolean|undefined),
+ *   runAt: (string|undefined)
+ * }}
  */
-chrome.tabs.captureVisibleTab = function(windowId, options, callback) {};
+chrome.tabs.InjectDetails;
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#method-captureVisibleTab
+ * @param {number|!chrome.types.ImageDetails|function(string):void}
+ *     windowIdOrOptionsOrCallback One of:
+ *     The target window.
+ *     An object defining details about the format and quality of an image, in
+ *     which case the window defaults to the current window.
+ *     A callback function which accepts the data URL string of a JPEG encoding
+ *     of the visible area of the captured tab.
+ * @param {(!chrome.types.ImageDetails|function(string):void)=}
+ *     opt_optionsOrCallback Either an object defining details about the
+ *     format and quality of an image, or a callback function which accepts the
+ *     data URL string of a JPEG encoding of the visible area of the captured
+ *     tab.
+ * @param {function(string):void=} opt_callback A callback function which
+ *     accepts the data URL string of a JPEG encoding of the visible area of the
+ *     captured tab.
+ */
+chrome.tabs.captureVisibleTab = function(windowIdOrOptionsOrCallback,
+    opt_optionsOrCallback, opt_callback) {};
 
 
 /**
  * @param {number} tabId Tab Id.
- * @param {Object.<string>=} opt_connectInfo Info Object.
+ * @param {{name: (string|undefined)}=} connectInfo Info Object.
  */
-chrome.tabs.connect = function(tabId, opt_connectInfo) {};
+chrome.tabs.connect = function(tabId, connectInfo) {};
 
 
 /**
- * @param {Object} createProperties Info object.
- * @param {function(Tab): void=} opt_callback The callback function.
+ * @typedef {?{
+ *   windowId: (number|undefined),
+ *   index: (number|undefined),
+ *   url: (string|undefined),
+ *   active: (boolean|undefined),
+ *   pinned: (boolean|undefined),
+ *   openerTabId: (number|undefined)
+ * }}
+ */
+chrome.tabs.CreateProperties;
+
+
+/**
+ * @param {!chrome.tabs.CreateProperties} createProperties Info object.
+ * @param {function(!Tab): void=} opt_callback The callback function.
  */
 chrome.tabs.create = function(createProperties, opt_callback) {};
 
 
 /**
- * @param {number?} tabId Tab id.
- * @param {function(string): void} callback Callback function.
+ * @see https://developer.chrome.com/extensions/tabs#method-detectLanguage
+ * @param {number|function(string): void} tabIdOrCallback The tab id, or a
+ *     callback function that will be invoked with the language of the active
+ *     tab in the current window.
+ * @param {function(string): void=} opt_callback An optional callback function
+ *     that will be invoked with the language of the tab specified as first
+ *     argument.
  */
-chrome.tabs.detectLanguage = function(tabId, callback) {};
+chrome.tabs.detectLanguage = function(tabIdOrCallback, opt_callback) {};
 
 
 /**
- * @param {number?} tabId Tab id.
- * @param {Object?} details An object which may have 'code', 'file',
- *    or 'allFrames' keys.
- * @param {function(): void=} opt_callback Callback function.
+ * @see https://developer.chrome.com/extensions/tabs#method-executeScript
+ * @param {number|!chrome.tabs.InjectDetails} tabIdOrDetails
+ *     Either the id of the tab in which to run the script, or an object
+ *     containing the details of the script to run, in which case the script
+ *     will be executed in the active tab of the current window.
+ * @param {(!chrome.tabs.InjectDetails|function(!Array.<*>):void)=}
+ *     opt_detailsOrCallback Either an object containing the details of the
+ *     script to run, if the tab id was speficied as first argument, or a
+ *     callback that will be invoked with the result of the execution of the
+ *     script in every injected frame.
+ * @param {function(!Array.<*>):void=} opt_callback A callback that will be
+ *     invoked with the result of the execution of the script in every
+ *     injected frame.
  */
-chrome.tabs.executeScript = function(tabId, details, opt_callback) {};
+chrome.tabs.executeScript = function(tabIdOrDetails, opt_detailsOrCallback,
+    opt_callback) {};
 
 
 /**
  * @param {number} tabId Tab id.
- * @param {function(Tab): void} callback Callback.
+ * @param {function(!Tab): void} callback Callback.
  */
 chrome.tabs.get = function(tabId, callback) {};
 
 
 /**
- * Note: as of 2012-04-12, this function is no longer documented on
- * the public web pages, but there are still existing usages
+ * Note (2014-05-21): Because this function is deprecated, the types of it's
+ * parameters were not upgraded to make the first parameter optional and to mark
+ * the Array and Tab in the callback as non-null.
  *
  * @param {number?} windowId Window id.
  * @param {function(Array.<Tab>): void} callback Callback.
+ * @deprecated Please use tabs.query {windowId: windowId}.
  */
 chrome.tabs.getAllInWindow = function(windowId, callback) {};
 
 
 /**
- * @param {function(Tab): void} callback Callback.
+ * @param {function(!Tab=): void} callback Callback.
  */
 chrome.tabs.getCurrent = function(callback) {};
 
 
 /**
- * Note: as of 2012-04-12, this function is no longer documented on
- * the public web pages, but there are still existing usages.
+ * Note (2014-05-21): Because this function is deprecated, the types of it's
+ * parameters were not upgraded to make the first parameter optional and to mark
+ * the Array and Tab in the callback as non-null.
  *
  * @param {number?} windowId Window id.
  * @param {function(Tab): void} callback Callback.
+ * @deprecated Please use tabs.query({active: true}).
  */
 chrome.tabs.getSelected = function(windowId, callback) {};
 
 
 /**
- * @param {Object.<string, (number|Array.<number>)>} highlightInfo
- *     An object with 'windowId' (number) and 'tabs'
- *     (number or array of numbers) keys.
- * @param {function(Window): void} callback Callback function invoked
+ * @typedef {?{
+ *   windowId: (number|undefined),
+ *   tabs: (number|!Array.<number>)
+ * }}
+ */
+chrome.tabs.HighlightInfo;
+
+
+/**
+ * @param {!chrome.tabs.HighlightInfo} highlightInfo
+ * @param {function(!Window): void} callback Callback function invoked
  *    with each appropriate Window.
  */
 chrome.tabs.highlight = function(highlightInfo, callback) {};
 
 
 /**
- * @param {number?} tabId Tab id.
- * @param {Object?} details An object which may have 'code', 'file',
- *     or 'allFrames' keys.
- * @param {function(): void=} opt_callback Callback function.
+ * @link https://developer.chrome.com/extensions/tabs#method-insertCSS
+ * @param {number|!chrome.tabs.InjectDetails} tabIdOrDetails
+ *     Either the id of the tab in which to run the script, or an object
+ *     containing the details of the CSS to insert, in which case the script
+ *     will be executed in the active tab of the current window.
+ * @param {(!chrome.tabs.InjectDetails|function():void)=}
+ *     opt_detailsOrCallback Either an object containing the details of the
+ *     CSS to insert, if the tab id was speficied as first argument, or a
+ *     callback that will be invoked after the CSS has been injected.
+ * @param {function():void=} opt_callback A callback that will be invoked after
+ *     the CSS has been injected.
  */
-chrome.tabs.insertCSS = function(tabId, details, opt_callback) {};
+chrome.tabs.insertCSS = function(tabIdOrDetails, opt_detailsOrCallback,
+    opt_callback) {};
 
 
 /**
- * @param {number} tabId Tab id.
- * @param {Object.<string, number>} moveProperties An object with 'index'
- *     and optional 'windowId' keys.
- * @param {function(Tab): void=} opt_callback Callback.
+ * @typedef {?{
+ *   windowId: (number|undefined),
+ *   index: number
+ * }}
+ */
+chrome.tabs.MoveProperties;
+
+
+/**
+ * @param {number|!Array.<number>} tabId Tab id or array of tab ids.
+ * @param {!chrome.tabs.MoveProperties} moveProperties
+ * @param {function((!Tab|!Array.<!Tab>)): void=} opt_callback Callback.
  */
 chrome.tabs.move = function(tabId, moveProperties, opt_callback) {};
 
 
 /**
- * @param {Object.<string, (number|string)>} queryInfo An object which may have
- *     'active', 'pinned', 'highlighted', 'status', 'title', 'url', 'windowId',
- *     and 'windowType' keys.
- * @param {function(Array.<Tab>): void=} opt_callback Callback.
- * @return {!Array.<Tab>}
+ * @typedef {?{
+ *   active: (boolean|undefined),
+ *   pinned: (boolean|undefined),
+ *   highlighted: (boolean|undefined),
+ *   currentWindow: (boolean|undefined),
+ *   lastFocusedWindow: (boolean|undefined),
+ *   status: (string|undefined),
+ *   title: (string|undefined),
+ *   url: (string|undefined),
+ *   windowId: (number|undefined),
+ *   windowType: (string|undefined),
+ *   index: (number|undefined)
+ * }}
  */
-chrome.tabs.query = function(queryInfo, opt_callback) {};
+chrome.tabs.QueryInfo;
 
 
 /**
- * @param {number=} opt_tabId Tab id.
- * @param {Object.<string, boolean>=} opt_reloadProperties An object which
- *   may have a 'bypassCache' key.
- * @param {function(): void=} opt_callback The callback function invoked
- *    after the tab has been reloaded.
+ * @param {!chrome.tabs.QueryInfo} queryInfo
+ * @param {function(!Array.<!Tab>): void} callback Callback.
  */
-chrome.tabs.reload = function(opt_tabId, opt_reloadProperties, opt_callback) {};
+chrome.tabs.query = function(queryInfo, callback) {};
 
 
 /**
- * @param {number|Array.<number>} tabIds A tab ID or an array of tab IDs.
- * @param {function(Tab): void=} opt_callback Callback.
+ * @see https://developer.chrome.com/extensions/tabs#method-query
+ * @param {number} tabId The ID of the tab which is to be duplicated.
+ * @param {(function(!Tab=):void)=} opt_callback A callback to be invoked with
+ *     details about the duplicated tab.
+ */
+chrome.tabs.duplicate = function(tabId, opt_callback) {};
+
+
+/**
+ * @typedef {?{
+ *   bypassCache: (boolean|undefined)
+ * }}
+ */
+chrome.tabs.ReloadProperties;
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#method-reload
+ * @param {(number|!chrome.tabs.ReloadProperties|function():void)=}
+ *     opt_tabIdOrReloadPropertiesOrCallback One of:
+ *     The ID of the tab to reload; defaults to the selected tab of the current
+ *     window.
+ *     An object specifying boolean flags to customize the reload operation.
+ *     A callback to be invoked when the reload is complete.
+ * @param {(!chrome.tabs.ReloadProperties|function():void)=}
+ *     opt_reloadPropertiesOrCallback Either an object specifying boolean flags
+ *     to customize the reload operation, or a callback to be invoked when the
+ *     reload is complete, if no object needs to be specified.
+ * @param {function():void=} opt_callback  A callback to be invoked when the
+ *     reload is complete.
+ */
+chrome.tabs.reload = function(opt_tabIdOrReloadPropertiesOrCallback,
+    opt_reloadPropertiesOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number|!Array.<number>} tabIds A tab ID or an array of tab IDs.
+ * @param {function(): void=} opt_callback Callback.
  */
 chrome.tabs.remove = function(tabIds, opt_callback) {};
 
@@ -1120,20 +1238,44 @@ chrome.tabs.sendMessage = function(tabId, request, opt_callback) {};
  * @param {*} request The request value of any type.
  * @param {function(*): void=} opt_callback The callback function which
  *     takes a JSON response object sent by the handler of the request.
+ * @deprecated Please use runtime.sendMessage.
  */
 chrome.tabs.sendRequest = function(tabId, request, opt_callback) {};
 
 
 /**
- * @param {number} tabId Tab id.
- * @param {Object.<string, (string|boolean)>} updateProperties An object which
- *     may have 'url' or 'selected' key.
- * @param {function(Tab): void=} opt_callback Callback.
+ * @typedef {?{
+ *   url: (string|undefined),
+ *   active: (boolean|undefined),
+ *   highlighted: (boolean|undefined),
+ *   pinned: (boolean|undefined),
+ *   openerTabId: (number|undefined)
+ * }}
  */
-chrome.tabs.update = function(tabId, updateProperties, opt_callback) {};
+chrome.tabs.UpdateProperties;
 
 
-/** @type {ChromeEvent} */
+/**
+ * @see https://developer.chrome.com/extensions/tabs#method-update
+ * @param {number|!chrome.tabs.UpdateProperties} tabIdOrUpdateProperties
+ *     Either the id of the tab to update, or an object with new property
+ *     values, in which case the selected tab of the current window will be
+ *     updated.
+ * @param {(!chrome.tabs.UpdateProperties|function(Tab):void)=}
+ *     opt_updatePropertiesOrCallback Either an object with new property values,
+ *     if the tabId was specified as first parameter, or an optional callback
+ *     that will be invoked with information about the tab being updated.
+ * @param {function(!Tab=): void=} opt_callback An optional callback that will
+ *     be invoked with information about the tab being updated.
+ */
+chrome.tabs.update = function(tabIdOrUpdateProperties,
+    opt_updatePropertiesOrCallback, opt_callback) {};
+
+
+/**
+ * @type {ChromeEvent}
+ * @deprecated Please use tabs.onActivated.
+ */
 chrome.tabs.onActiveChanged;
 
 
@@ -1153,8 +1295,17 @@ chrome.tabs.onCreated;
 chrome.tabs.onDetached;
 
 
-/** @type {ChromeEvent} */
+/**
+ * @type {ChromeEvent}
+ * @deprecated Please use tabs.onHighlighted.
+ */
 chrome.tabs.onHighlightChanged;
+
+
+/**
+ * @type {ChromeEvent}
+ */
+chrome.tabs.onHighlighted;
 
 
 /** @type {ChromeEvent} */
@@ -1176,7 +1327,10 @@ chrome.tabs.onReplaced;
 // TODO(user): Remove once all usage has been confirmed to have ended.
 
 
-/** @type {ChromeEvent} */
+/**
+ * @type {ChromeEvent}
+ * @deprecated Please use tabs.onActivated.
+ */
 chrome.tabs.onSelectionChanged;
 
 
@@ -3188,6 +3342,18 @@ chrome.system.display.DisplayInfo.prototype.workArea;
 chrome.system.display.SettableDisplayInfo;
 
 
+chrome.types = {};
+
+
+/**
+ * @typedef {?{
+ *   format: (string|undefined),
+ *   quality: (number|undefined)
+ * }}
+ */
+chrome.types.ImageDetails;
+
+
 /**
  * @param {function(!Array.<!chrome.system.display.DisplayInfo>)}
  *     callback Called with an array of objects representing display info.
@@ -3509,13 +3675,15 @@ IconInfo.prototype.url;
 
 
 /**
- * @see https://developer.chrome.com/extensions/tabs.html
+ * @see https://developer.chrome.com/extensions/tabs
  * @constructor
  */
 function Tab() {}
 
-
-/** @type {number} */
+// TODO: Make this field optional once dependent projects have been updated.
+/**
+ * @type {number}
+ */
 Tab.prototype.id;
 
 
@@ -3527,7 +3695,10 @@ Tab.prototype.index;
 Tab.prototype.windowId;
 
 
-/** @type {number} */
+// TODO: Make this field optional once dependent projects have been updated.
+/**
+ * @type {number}
+ */
 Tab.prototype.openerTabId;
 
 
@@ -3543,25 +3714,48 @@ Tab.prototype.active;
 Tab.prototype.pinned;
 
 
-/** @type {string} */
+// TODO: Make this field optional once dependent projects have been updated.
+/**
+ * @type {string}
+ */
 Tab.prototype.url;
 
 
-/** @type {string} */
+// TODO: Make this field optional once dependent projects have been updated.
+/**
+ * @type {string}
+ */
 Tab.prototype.title;
 
 
-/** @type {string} */
+// TODO: Make this field optional once dependent projects have been updated.
+/**
+ * @type {string}
+ */
 Tab.prototype.favIconUrl;
 
 
-/** @type {string} */
+// TODO: Make this field optional once dependent projects have been updated.
+/**
+ * @type {string}
+ */
 Tab.prototype.status;
 
 
 /** @type {boolean} */
 Tab.prototype.incognito;
 
+
+/** @type {number|undefined} */
+Tab.prototype.width;
+
+
+/** @type {number|undefined} */
+Tab.prototype.height;
+
+
+/** @type {number|undefined} */
+Tab.prototype.sessionId;
 
 
 /**
