@@ -55,8 +55,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String ITER_KEY = "$$iterator";
 
-  // This holds the current state at which a generator should resume execution after
-  // a call to yield or return. The beginning state is 0 and the end state is -1.
+  // The name of the variable that holds the state at which the generator
+  // should resume execution after a call to yield or return.
+  // The beginning state is 0 and the end state is -1.
   private static final String GENERATOR_STATE = "$jscomp$generator$state";
 
   private static int generatorCaseCount;
@@ -381,9 +382,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /**
-   * {@code while} loops are translated to a case statement followed by an if statement
-   * containing the loop body. The if statement finishes by jumping back to the initial
-   * case statement to enter the loop again.
+   * {@code while} loops are eventually translated to a case statement followed
+   * by an if statement containing the loop body. The if statement finishes by
+   * jumping back to the initial case statement to enter the loop again.
    *
    * <code>
    * while (b) {
@@ -391,15 +392,15 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * }
    * </code>
    *
-   * is rewritten to:
+   * is eventually rewritten to:
    *
    * <code>
-   * case_marker n;
-   * if (b) {
-   *   s;
-   *   state = n;
-   *   break;
-   * }
+   * case n:
+   *   if (b) {
+   *     s;
+   *     state = n;
+   *     break;
+   *   }
    * </code>
    */
   private void visitWhile() {
