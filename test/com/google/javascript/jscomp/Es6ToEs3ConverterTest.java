@@ -820,6 +820,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("var f = x => x+1;",
         "var f = function(x) { return x+1; };");
 
+    test("var f = () => this;",
+        Joiner.on('\n').join(
+            "var $jscomp$this = this;",
+            "var f = function() { return $jscomp$this; };"));
+
     test("var f = x => { this.needsBinding(); return 0; };",
         Joiner.on('\n').join(
             "var $jscomp$this = this;",

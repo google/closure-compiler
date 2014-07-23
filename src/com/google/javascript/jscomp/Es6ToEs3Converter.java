@@ -781,8 +781,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     Node body = n.getLastChild();
     if (!body.isBlock()) {
       body.detachFromParent();
-      Node newBody = IR.block(IR.returnNode(body).srcref(body)).srcref(body);
-      n.addChildToBack(newBody);
+      body = IR.block(IR.returnNode(body).srcref(body)).srcref(body);
+      n.addChildToBack(body);
     }
 
     UpdateThisNodes thisUpdater = new UpdateThisNodes();
