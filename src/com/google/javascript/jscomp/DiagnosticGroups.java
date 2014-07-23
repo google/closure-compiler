@@ -312,7 +312,8 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("suspiciousCode",
           CheckSuspiciousCode.SUSPICIOUS_SEMICOLON,
           CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
-          CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+          CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR,
+          CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
 
   // NOTE(tbreisacher): The checks in this DiagnosticGroup are still
   // experimental. Use them at your own risk!

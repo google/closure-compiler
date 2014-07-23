@@ -41,30 +41,29 @@ public class CheckSuspiciousCodeTest extends CompilerTestCase {
 
   public void testSuspiciousSemi() {
     final DiagnosticType e = CheckSuspiciousCode.SUSPICIOUS_SEMICOLON;
-    final DiagnosticType ok = null;  //  code is 'ok', verify no warning
 
-    test("if(x()) x = y;", ok);
+    testOk("if(x()) x = y;");
     test("if(x()); x = y;", e);  // I've had this bug, damned ;
-    test("if(x()){} x = y;", ok);
+    testOk("if(x()){} x = y;");
 
-    test("if(x()) x = y; else y=z;", ok);
+    testOk("if(x()) x = y; else y=z;");
     test("if(x()); else y=z;", e);
-    test("if(x()){} else y=z;", ok);
+    testOk("if(x()){} else y=z;");
     test("if(x()) x = y; else;", e);
-    test("if(x()) x = y; else {}", ok);
+    testOk("if(x()) x = y; else {}");
 
-    test("while(x()) x = y;", ok);
+    testOk("while(x()) x = y;");
     test("while(x()); x = y;", e);
-    test("while(x()){} x = y;", ok);
+    testOk("while(x()){} x = y;");
     test("while(x()); {x = y}", e);
-    test("while(x()){} {x = y}", ok);
+    testOk("while(x()){} {x = y}");
 
-    test("for(;;) x = y;", ok);
+    testOk("for(;;) x = y;");
     test("for(;;); x = y;", e);
-    test("for(;;){} x = y;", ok);
-    test("for(x in y) x = y;", ok);
+    testOk("for(;;){} x = y;");
+    testOk("for(x in y) x = y;");
     test("for(x in y); x = y;", e);
-    test("for(x in y){} x = y;", ok);
+    testOk("for(x in y){} x = y;");
   }
 
   public void testSuspiciousIn() {
@@ -76,6 +75,9 @@ public class CheckSuspiciousCodeTest extends CompilerTestCase {
     testSame("'foo' in true", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
     testSame("'foo' in false", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
     testSame("'foo' in null", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in !Object", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
+    testSame("'foo' in Object", null);
+    testSame("'foo' in {}", null);
   }
 
   private void testReportNaN(String js) {
@@ -124,5 +126,56 @@ public class CheckSuspiciousCodeTest extends CompilerTestCase {
     testReportNaN("0/0 <= x");
     testReportNaN("0/0 > x");
     testReportNaN("0/0 >= x");
+  }
+
+  public void testInstanceOf() {
+    testReportInstanceOf("''", "String");
+    testReportInstanceOf("4", "Number");
+    testReportInstanceOf("-4", "Number");
+    testReportInstanceOf("null", "Number");
+    testReportInstanceOf("true", "Boolean");
+    testReportInstanceOf("false", "Boolean");
+    testReportInstanceOf("!true", "Boolean");
+    testReportInstanceOf("undefined", "Number");
+    testReportInstanceOf("Infinity", "Number");
+    testReportInstanceOf("NaN", "Number");
+    testReportInstanceOf(
+        "/** @constructor */ function Foo() {}; var foo = new Foo();"
+        + "!foo", "Foo");
+
+    testReportInstanceOf("!''", "String");
+    testReportInstanceOf("!4", "Number");
+    testReportInstanceOf("!(new Boolean(true))", "Boolean");
+    testReportInstanceOf("!(new Object())", "Object");
+    testReportInstanceOf("!Object.prototype", "Object");
+    testReportInstanceOf("!Function", "Object");
+    testReportInstanceOf("!func()", "String");
+    testReportInstanceOf("!({})", "Object");
+    testReportInstanceOf("/** @constructor */ function Foo() {"
+        + "!this", "Foo;"
+        + "}");
+
+    testOk("new String('') instanceof String");
+    testOk("new Number(4) instanceof Number");
+    testOk("new Boolean(true) instanceof Boolean");
+    testOk("new Object() instanceof Object");
+    testOk("Object.prototype instanceof Object");
+    testOk("Function instanceof Object");
+    testOk("func() instanceof String");
+    testOk("({}) instanceof Object");
+    testOk("/** @constructor */ function Foo() {"
+        + " var a = this instanceof Foo; }");
+
+    // TODO(apavlov): It would be nice to have this report, too.
+    testOk("(4 + 5) instanceof Number");
+  }
+
+  private void testReportInstanceOf(String left, String right) {
+    testSame(left + " instanceof " + right,
+        CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
+  }
+
+  private void testOk(String js) {
+    test(js, (DiagnosticType) null);
   }
 }

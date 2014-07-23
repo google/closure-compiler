@@ -50,6 +50,11 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
           "JSC_SUSPICIOUS_IN",
           "Use of the \"in\" keyword on non-object types throws an exception.");
 
+  static final DiagnosticType SUSPICIOUS_INSTANCEOF_LEFT_OPERAND =
+      DiagnosticType.warning(
+          "JSC_SUSPICIOUS_INSTANCEOF_LEFT",
+          "\"instanceof\" with left non-object operand is always false.");
+
   CheckSuspiciousCode() {
   }
 
@@ -58,6 +63,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
     checkMissingSemicolon(t, n);
     checkNaN(t, n);
     checkInvalidIn(t, n);
+    checkNonObjectInstanceOf(t, n);
   }
 
   private void checkMissingSemicolon(NodeTraversal t, Node n) {
@@ -114,14 +120,24 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private void checkInvalidIn(NodeTraversal t, Node n) {
     if (n.getType() == Token.IN) {
-      reportIfNonObject(t, n.getLastChild());
+      reportIfNonObject(t, n.getLastChild(), SUSPICIOUS_IN_OPERATOR);
     }
   }
 
-  private static void reportIfNonObject(NodeTraversal t, Node n) {
-    if (NodeUtil.isImmutableResult(n)) {
-      t.getCompiler().report(
-          t.makeError(n.getParent(), SUSPICIOUS_IN_OPERATOR));
+  private void checkNonObjectInstanceOf(NodeTraversal t, Node n) {
+    if (n.getType() == Token.INSTANCEOF) {
+      reportIfNonObject(
+          t, n.getFirstChild(), SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
     }
+  }
+
+  private static boolean reportIfNonObject(
+      NodeTraversal t, Node n, DiagnosticType diagnosticType) {
+    if (NodeUtil.isImmutableResult(n) || n.getType() == Token.NOT) {
+      t.getCompiler().report(
+          t.makeError(n.getParent(), diagnosticType));
+      return true;
+    }
+    return false;
   }
 }
