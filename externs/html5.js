@@ -2061,11 +2061,14 @@ History.prototype.replaceState = function(data, title, opt_url) {};
 History.prototype.state;
 
 /**
- * @see http://www.w3.org/TR/html5/history.html#event-definitions
+ * @see http://www.whatwg.org/specs/web-apps/current-work/#popstateevent
  * @constructor
  * @extends {Event}
+ *
+ * @param {string} type
+ * @param {{state: *}=} opt_eventInitDict
  */
-function PopStateEvent() {}
+function PopStateEvent(type, opt_eventInitDict) {}
 
 /**
  * @type {*}
@@ -2083,11 +2086,14 @@ PopStateEvent.prototype.initPopStateEvent = function(typeArg, canBubbleArg,
     cancelableArg, stateArg) {};
 
 /**
- * @see http://www.w3.org/TR/html5/history.html#event-definitions
+ * @see http://www.whatwg.org/specs/web-apps/current-work/#hashchangeevent
  * @constructor
  * @extends {Event}
+ *
+ * @param {string} type
+ * @param {{oldURL: string, newURL: string}=} opt_eventInitDict
  */
-function HashChangeEvent() {}
+function HashChangeEvent(type, opt_eventInitDict) {}
 
 /** @type {string} */
 HashChangeEvent.prototype.oldURL;
@@ -2107,11 +2113,14 @@ HashChangeEvent.prototype.initHashChangeEvent = function(typeArg, canBubbleArg,
     cancelableArg, oldURLArg, newURLArg) {};
 
 /**
- * @see http://www.w3.org/TR/html5/history.html#event-definitions
+ * @see http://www.whatwg.org/specs/web-apps/current-work/#pagetransitionevent
  * @constructor
  * @extends {Event}
+ *
+ * @param {string} type
+ * @param {{persisted: boolean}=} opt_eventInitDict
  */
-function PageTransitionEvent() {}
+function PageTransitionEvent(type, opt_eventInitDict) {}
 
 /** @type {boolean} */
 PageTransitionEvent.prototype.persisted;
