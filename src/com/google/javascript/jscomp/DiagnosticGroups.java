@@ -118,7 +118,8 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup NON_STANDARD_JSDOC =
       DiagnosticGroups.registerGroup("nonStandardJsDocs",
-          RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+          RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
+          RhinoErrorReporter.INVALID_PARAM);
 
   public static final DiagnosticGroup INVALID_CASTS =
       DiagnosticGroups.registerGroup("invalidCasts",

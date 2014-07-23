@@ -775,10 +775,12 @@ public final class JsDocInfoParser {
               }
             }
 
-            // If the param name has a DOT in it, just throw it out
-            // quietly. We do not handle the JsDocToolkit method
-            // for handling properties of params.
+            // We do not handle the JsDocToolkit method
+            // for handling properties of params, so if the param name has a DOT
+            // in it, report a warning and throw it out.
+            // See https://github.com/google/closure-compiler/issues/499
             if (name.indexOf('.') > -1) {
+              parser.addParserWarning("msg.invalid.variable.name", name, lineno, charno);
               name = null;
             } else if (!jsdocBuilder.recordParameter(name, type)) {
               if (jsdocBuilder.hasParameter(name)) {

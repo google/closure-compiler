@@ -48,6 +48,9 @@ class RhinoErrorReporter {
   static final DiagnosticType DUPLICATE_PARAM =
       DiagnosticType.error("JSC_DUPLICATE_PARAM", "Parse error. {0}");
 
+  static final DiagnosticType INVALID_PARAM =
+      DiagnosticType.warning("JSC_INVALID_PARAM", "Parse error. {0}");
+
   static final DiagnosticType BAD_JSDOC_ANNOTATION =
       DiagnosticType.warning("JSC_BAD_JSDOC_ANNOTATION", "Parse error. {0}");
 
@@ -103,6 +106,8 @@ class RhinoErrorReporter {
         .put(replacePlaceHolders(
             "Duplicate parameter name \"{0}\""),
             DUPLICATE_PARAM)
+
+        .put(Pattern.compile("^invalid param name.*"), INVALID_PARAM)
 
         // Unknown @annotations.
         .put(replacePlaceHolders(

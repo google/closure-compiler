@@ -1037,6 +1037,27 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTrue(info.getParameterType("index").isVarArgs());
   }
 
+  public void testParseParam22() throws Exception {
+    JSDocInfo info = parse("@param {string} .index */", "invalid param name \".index\"");
+    assertNull(info);
+  }
+
+  public void testParseParam23() throws Exception {
+    JSDocInfo info = parse("@param {string} index. */", "invalid param name \"index.\"");
+    assertNull(info);
+  }
+
+  public void testParseParam24() throws Exception {
+    JSDocInfo info = parse("@param {string} foo.bar */", "invalid param name \"foo.bar\"");
+    assertNull(info);
+  }
+  public void testParseParam25() throws Exception {
+    JSDocInfo info = parse(
+        "@param {string} foo.bar\n * @param {string} baz */", "invalid param name \"foo.bar\"");
+    assertEquals(1, info.getParameterCount());
+    assertTypeEquals(STRING_TYPE, info.getParameterType("baz"));
+  }
+
   public void testParseThrows1() throws Exception {
     JSDocInfo info = parse("@throws {number} Some number */");
     assertEquals(1, info.getThrownTypes().size());
@@ -3156,8 +3177,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testUnsupportedJsDocSyntax2() {
     JSDocInfo info =
-        parse("@param userInfo The user info. \n" +
-              " * @param userInfo.name The name of the user */", true);
+        parse("@param userInfo The user info. \n"
+                  + " * @param userInfo.name The name of the user */",
+              true,
+              "invalid param name \"userInfo.name\"");
     assertEquals(1, info.getParameterCount());
     assertEquals("The user info.",
         info.getDescriptionForParameter("userInfo"));
