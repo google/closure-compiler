@@ -236,8 +236,7 @@ public class NominalType {
     if (c1.isSubclassOf(c2)) {
       return c2;
     }
-    Preconditions.checkState(c2.isSubclassOf(c1));
-    return c1;
+    return c2.isSubclassOf(c1) ? c1 : null;
   }
 
   // A special-case of meet
@@ -250,8 +249,7 @@ public class NominalType {
     if (c1.isSubclassOf(c2)) {
       return c1;
     }
-    Preconditions.checkState(c2.isSubclassOf(c1));
-    return c2;
+    return c2.isSubclassOf(c1) ? c2 : null;
   }
 
   boolean unifyWith(NominalType other, List<String> typeParameters,

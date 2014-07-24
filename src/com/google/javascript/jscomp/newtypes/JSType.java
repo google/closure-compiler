@@ -168,6 +168,7 @@ public abstract class JSType {
   public static final JSType TOP_STRUCT = fromObjectType(ObjectType.TOP_STRUCT);
   public static final JSType TOP_DICT = fromObjectType(ObjectType.TOP_DICT);
   private static JSType TOP_FUNCTION = null;
+  private static JSType QMARK_FUNCTION = null;
 
   // Some commonly used types
   public static final JSType NULL_OR_UNDEF =
@@ -190,7 +191,10 @@ public abstract class JSType {
 
   // Corresponds to Function, which is a subtype and supertype of all functions.
   static JSType qmarkFunction() {
-    return fromFunctionType(FunctionType.QMARK_FUNCTION);
+    if (QMARK_FUNCTION == null) {
+      QMARK_FUNCTION = fromFunctionType(FunctionType.QMARK_FUNCTION);
+    }
+    return QMARK_FUNCTION;
   }
 
   public boolean isTop() {

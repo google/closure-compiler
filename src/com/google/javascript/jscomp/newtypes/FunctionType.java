@@ -274,8 +274,6 @@ public class FunctionType {
   }
 
   public boolean isSubtypeOf(FunctionType other) {
-    // t1 <= t2 iff t2 = t1 \/ t2 doesn't hold always,
-    // so we first create a new type by replacing ? in the right places.
     if (other.isTopFunction() ||
         other.isQmarkFunction() || this.isQmarkFunction()) {
       return true;
@@ -296,32 +294,57 @@ public class FunctionType {
       // polymorphic methods; fix for that.
       return true;
     }
-    Preconditions.checkState(!other.isGeneric()); // TODO(dimvar): implement it
-    FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    int i = 0;
-    for (; i < other.requiredFormals.size(); i++) {
-      JSType formalType = other.getFormalType(i);
-      builder.addReqFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
+    // TODO(dimvar): implement it
+    Preconditions.checkState(!other.isGeneric());
+    // NOTE(dimvar): We never happen to call isSubtypeOf for loose functions.
+    // If some analyzed program changes this, the preconditions check will tell
+    // us so we can handle looseness correctly.
+    Preconditions.checkState(!isLoose && !other.isLoose);
+    // The subtype must have an equal or smaller number of required formals
+    if (requiredFormals.size() > other.requiredFormals.size()) {
+      return false;
     }
-    for (int j = 0; j < other.optionalFormals.size(); j++) {
-      JSType formalType = other.getFormalType(i + j);
-      builder.addOptFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
+    int otherMaxTotalArity =
+        other.requiredFormals.size() + other.optionalFormals.size();
+    for (int i = 0; i < otherMaxTotalArity; i++) {
+      // contravariance in the arguments
+      JSType thisFormal = getFormalType(i);
+      JSType otherFormal = other.getFormalType(i);
+      if (thisFormal != null
+          && !thisFormal.isUnknown() && !otherFormal.isUnknown()
+          && !otherFormal.isSubtypeOf(thisFormal)) {
+        return false;
+      }
     }
+
     if (other.restFormals != null) {
-      JSType formalType = other.restFormals;
-      builder.addOptFormal(formalType.isUnknown() ? JSType.BOTTOM : formalType);
+      int thisMaxTotalArity =
+          this.requiredFormals.size() + this.optionalFormals.size();
+      if (this.restFormals != null) {
+        thisMaxTotalArity++;
+      }
+      for (int i = otherMaxTotalArity; i < thisMaxTotalArity; i++) {
+        JSType thisFormal = getFormalType(i);
+        JSType otherFormal = other.getFormalType(i);
+        if (thisFormal != null
+            && !thisFormal.isUnknown() && !otherFormal.isUnknown()
+            && !otherFormal.isSubtypeOf(thisFormal)) {
+          return false;
+        }
+      }
     }
-    if (this.returnType.isUnknown()) {
-      builder.addRetType(JSType.UNKNOWN);
-    } else {
-      builder.addRetType(other.returnType);
+
+    // covariance for the new: type
+    if (nominalType == null && other.nominalType != null
+        || nominalType != null && other.nominalType == null
+        || nominalType != null && other.nominalType != null
+           && !nominalType.isSubclassOf(other.nominalType)) {
+      return false;
     }
-    if (other.isLoose()) {
-      builder.addLoose();
-    }
-    builder.addNominalType(other.nominalType);
-    FunctionType newOther = builder.buildFunction();
-    return newOther.equals(join(this, newOther));
+
+    // covariance in the return type
+    return returnType.isUnknown() || other.returnType.isUnknown()
+        || returnType.isSubtypeOf(other.returnType);
   }
 
   static FunctionType join(FunctionType f1, FunctionType f2) {
@@ -358,6 +381,8 @@ public class FunctionType {
           nullAcceptingMeet(f1.restFormals, f2.restFormals));
     }
     builder.addRetType(JSType.join(f1.returnType, f2.returnType));
+    builder.addNominalType(
+        NominalType.pickSuperclass(f1.nominalType, f2.nominalType));
     return builder.buildFunction();
   }
 
@@ -403,6 +428,8 @@ public class FunctionType {
           JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals));
     }
     builder.addRetType(JSType.meet(f1.returnType, f2.returnType));
+    builder.addNominalType(
+        NominalType.pickSubclass(f1.nominalType, f2.nominalType));
     return builder.buildFunction();
   }
 
@@ -545,13 +572,14 @@ public class FunctionType {
     return Objects.equals(this.requiredFormals, f2.requiredFormals) &&
         Objects.equals(this.optionalFormals, f2.optionalFormals) &&
         Objects.equals(this.restFormals, f2.restFormals) &&
-        Objects.equals(this.returnType, f2.returnType);
+        Objects.equals(this.returnType, f2.returnType) &&
+        Objects.equals(this.nominalType, f2.nominalType);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        requiredFormals, optionalFormals, restFormals, returnType);
+        requiredFormals, optionalFormals, restFormals, returnType, nominalType);
   }
 
   @Override

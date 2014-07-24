@@ -766,6 +766,89 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.INEXISTENT_PARAM);
   }
 
+  public void testFunctionSubtyping() {
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor */\n" +
+        "function Bar() {}\n" +
+        "function f(/** function(new:Foo) */ x) {}\n" +
+        "f(Bar);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "function f(/** function(new:Foo) */ x) {}\n" +
+        "f(function() {});",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */\n" +
+        "function Bar() {}\n" +
+        "function f(/** function(new:Foo) */ x) {}\n" +
+        "f(Bar);");
+  }
+
+  public void testFunctionJoin() {
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @param {function(new:Foo, (number|string))} x \n" +
+        " * @param {function(new:Foo, number)} y \n" +
+        " */\n" +
+        "function f(x, y) {\n" +
+        "  var z = 1 < 2 ? x : y;\n" +
+        "  return new z(123);\n" +
+        "}");
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor */\n" +
+        "function Bar() {}\n" +
+        "/**\n" +
+        " * @param {function(new:Foo)} x \n" +
+        " * @param {function(new:Bar)} y \n" +
+        " */\n" +
+        "function f(x, y) {\n" +
+        "  var z = 1 < 2 ? x : y;\n" +
+        "  return new z();\n" +
+        "}",
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "function f(/** function(new:Foo) */ x, /** function() */ y) {\n" +
+        "  var z = 1 < 2 ? x : y;\n" +
+        "  return new z();\n" +
+        "}",
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "function f(/** function(new:Foo) */ x, /** function() */ y) {\n" +
+        "  var z = 1 < 2 ? x : y;\n" +
+        "  return z();\n" +
+        "}");
+  }
+
+  public void testFunctionMeet() {
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @param {function(new:Foo, (number|string))} x \n" +
+        " * @param {function(new:Foo, number)} y \n" +
+        " */\n" +
+        "function f(x, y) { if (x === y) { return x; } }");
+  }
+
   public void testRecordWithoutTypesJsdoc() {
     typeCheck(
         "function f(/** {a, b} */ x) {}\n" +
@@ -2760,6 +2843,24 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     checkNoWarnings(
         "/** @param {number=} x */ function f(x) { if (x) { x - 5; } }");
+
+    checkNoWarnings(
+        "function f(/** function(... [number]) */ x) {}\n" +
+        "f(function() {});");
+
+    checkNoWarnings(
+        "function f(/** function() */ x) {}\n" +
+        "f(/** @type {function(... [number])} */ (function(nums) {}));");
+
+    typeCheck(
+        "function f(/** function(string=) */ x) {}\n" +
+        "f(/** @type {function(... [number])} */ (function(nums) {}));",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f(/** function(... [number]) */ x) {}\n" +
+        "f(/** @type {function(string=)} */ (function(x) {}));",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testInferredOptionalFormals() {
