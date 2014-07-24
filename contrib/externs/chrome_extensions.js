@@ -4812,7 +4812,7 @@ chrome.fileSystem.getDisplayPath = function(entry, callback) {};
  * @param {function(!Entry)} callback A success callback.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-getWritableEntry
  */
-chrome.fileSystem.getWriteableEntry = function(entry, callback) {};
+chrome.fileSystem.getWritableEntry = function(entry, callback) {};
 
 
 /**
