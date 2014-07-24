@@ -242,6 +242,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     return null;
   }
 
+  protected abstract void addWhitelistWarningsGuard(
+      CompilerOptions options, File whitelistFile);
+
   /**
    * Sets options based on the configurations set flags API.
    * Called during the run() run() method.
@@ -259,9 +262,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (!config.warningsWhitelistFile.isEmpty()) {
-      options.addWarningsGuard(
-          WhitelistWarningsGuard.fromFile(
-              new File(config.warningsWhitelistFile)));
+      addWhitelistWarningsGuard(options, new File(config.warningsWhitelistFile));
     }
 
     createDefineOrTweakReplacements(config.define, options, false);

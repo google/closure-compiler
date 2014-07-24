@@ -58,6 +58,10 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   /** Pattern to match line number in error descriptions. */
   private static final Pattern LINE_NUMBER = Pattern.compile(":-?\\d+");
 
+  public WhitelistWarningsGuard() {
+    this(ImmutableSet.<String>of());
+  }
+
   /**
    * This class depends on an input set that contains the white-list. The format
    * of each white-list string is:
@@ -78,7 +82,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    *
    * @return known legacy warnings without line numbers.
    */
-  private static Set<String> normalizeWhitelist(Set<String> whitelist) {
+  protected Set<String> normalizeWhitelist(Set<String> whitelist) {
     Set<String> result = Sets.newHashSet();
     for (String line : whitelist) {
       String trimmed = line.trim();
@@ -163,7 +167,11 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     return result;
   }
 
-  public static String formatWarning(JSError error) {
+  /**
+   * If subclasses want to modify the formatting, they should override
+   * #formatWarning(JSError, boolean), not this method.
+   */
+  protected String formatWarning(JSError error) {
     return formatWarning(error, false);
   }
 
@@ -171,7 +179,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    * @param withMetaData If true, include metadata that's useful to humans
    *     This metadata won't be used for matching the warning.
    */
-  public static String formatWarning(JSError error, boolean withMetaData) {
+  protected String formatWarning(JSError error, boolean withMetaData) {
     StringBuilder sb = new StringBuilder();
     sb.append(error.sourceName).append(":");
     if (withMetaData) {
@@ -201,7 +209,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   }
 
   /** Whitelist builder */
-  public static class WhitelistBuilder implements ErrorHandler {
+  public class WhitelistBuilder implements ErrorHandler {
     private final Set<JSError> warnings = Sets.newLinkedHashSet();
     private String productName = null;
     private String generatorTarget = null;

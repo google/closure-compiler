@@ -1013,6 +1013,12 @@ public class CommandLineRunner extends
   }
 
   @Override
+  protected void addWhitelistWarningsGuard(
+      CompilerOptions options, File whitelistFile) {
+    options.addWarningsGuard(WhitelistWarningsGuard.fromFile(whitelistFile));
+  }
+
+  @Override
   protected CompilerOptions createOptions() {
     CompilerOptions options = new CompilerOptions();
     if (flags.processJqueryPrimitives) {
