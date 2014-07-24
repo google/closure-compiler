@@ -276,7 +276,7 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testFunctionHoisting() {
-    assertUndeclared("if (true) { f(); function f() {} }");
+    assertEarlyReference("if (true) { f(); function f() {} }");
   }
 
   public void testArrowFunction() {
@@ -382,9 +382,9 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   /**
-   * Expects the JS to generate one bad-write error.
+   * Expects the JS to generate one bad-write warning.
    */
-  private void assertUndeclared(String js) {
+  private void assertEarlyReference(String js) {
     testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
   }
 

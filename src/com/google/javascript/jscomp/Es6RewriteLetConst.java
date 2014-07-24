@@ -46,6 +46,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
   private final AbstractCompiler compiler;
   private final Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
   private final Set<Node> blockScopedDeclarations = new HashSet<>();
+  private final Set<String> undeclaredNames = new HashSet<>();
 
   public Es6RewriteLetConst(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -73,7 +74,8 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     Scope hoistScope = scope.getClosestHoistScope();
     boolean doRename = false;
     if (scope != hoistScope) {
-      doRename = hoistScope.isDeclared(oldName, true);
+      doRename = hoistScope.isDeclared(oldName, true)
+          || undeclaredNames.contains(oldName);
       String newName = doRename
           ? oldName + "$" + compiler.getUniqueNameIdSupplier().get()
           : oldName;
@@ -97,6 +99,8 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverseRoots(
+        compiler, Lists.newArrayList(externs, root), new CollectUndeclaredNames());
     NodeTraversal.traverseRoots(compiler, Lists.newArrayList(externs, root), this);
     NodeTraversal.traverseRoots(
         compiler, Lists.newArrayList(externs, root), new RenameReferences());
@@ -118,6 +122,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, new CollectUndeclaredNames());
     NodeTraversal.traverse(compiler, scriptRoot, this);
     NodeTraversal.traverse(compiler, scriptRoot, new RenameReferences());
 
@@ -135,7 +140,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
   }
 
   private class RewriteBlockScopedFunctionDeclaration extends
-      NodeTraversal.AbstractPostOrderCallback {
+      AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -148,9 +153,22 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
   }
 
   /**
+   * Record undeclared names and aggressively rename possible references to them.
+   * Eg: In "{ let inner; } use(inner);", we rename the let declared variable.
+   */
+  private class CollectUndeclaredNames extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName() && !t.getScope().isDeclared(n.getString(), true)) {
+        undeclaredNames.add(n.getString());
+      }
+    }
+  }
+
+  /**
    * Renames references when necessary.
    */
-  private class RenameReferences extends NodeTraversal.AbstractPostOrderCallback {
+  private class RenameReferences extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -186,7 +204,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
   /**
    * Transforms let/const declarations captured by loop closures.
    */
-  private class LoopClosureTransformer extends NodeTraversal.AbstractPostOrderCallback {
+  private class LoopClosureTransformer extends AbstractPostOrderCallback {
     private static final String LOOP_OBJECT_NAME = "$jscomp$loop";
 
     private final Map<Node, LoopObject> loopObjectMap = new LinkedHashMap<>();

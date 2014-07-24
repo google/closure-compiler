@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -92,6 +93,11 @@ public class VarCheckTest extends CompilerTestCase {
 
   public void testReferencedVarNotDefined() {
     test("x = 0;", null, VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  public void testReferencedLetNotDefined() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("{ let x = 1; } var y = x;", null, VarCheck.UNDEFINED_VAR_ERROR);
   }
 
   public void testReferencedVarDefined1() {

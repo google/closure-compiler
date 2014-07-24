@@ -131,6 +131,22 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
         "  }",
         "}"
     ));
+
+    test(Joiner.on('\n').join(
+        "function f() {",
+        "  {",
+        "    let inner = 2;",
+        "  }",
+        "  use(inner)",
+        "}"
+    ), Joiner.on('\n').join(
+        "function f() {",
+        "  {",
+        "    var inner$0 = 2;",
+        "  }",
+        "  use(inner)",
+        "}"
+    ));
   }
 
   public void testNonUniqueLet() {
