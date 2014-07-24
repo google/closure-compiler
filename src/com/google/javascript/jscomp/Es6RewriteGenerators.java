@@ -64,15 +64,15 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String GENERATOR_DO_WHILE_INITIAL = "$jscomp$generator$first$do";
 
-  private static final String GENERATOR_EXPRESSION_YIELD_NAME = "$jscomp$generator$expression$";
-
-  private Supplier<String> generatorExprCount;
-
   private static final String GENERATOR_YIELD_ALL_NAME = "$jscomp$generator$yield$all";
 
   private static final String GENERATOR_YIELD_ALL_ENTRY = "$jscomp$generator$yield$entry";
 
   private static final String GENERATOR_ARGUMENTS = "$jscomp$generator$arguments";
+
+  private static final String GENERATOR_NEXT_ARG = "$jscomp$generator$next$arg";
+
+  private Supplier<String> generatorResultCount;
 
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
@@ -84,7 +84,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     this.compiler = compiler;
     this.currentLoopEndCase = new ArrayDeque<>();
     this.currentLoopContinueStatement = new ArrayDeque<>();
-    generatorExprCount = compiler.getUniqueNameIdSupplier();
+    generatorResultCount = compiler.getUniqueNameIdSupplier();
   }
 
   @Override
@@ -174,13 +174,14 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private void visitYieldExpr(Node n, Node parent) {
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
-    Node exprName = IR.name(GENERATOR_EXPRESSION_YIELD_NAME + generatorExprCount.get());
-    Node yieldDecl = IR.var(exprName.cloneTree(), n.getFirstChild().cloneTree());
-    Node yieldStatement = IR.exprResult(IR.yield(exprName.cloneTree()));
+    Node yieldStatement = IR.exprResult(
+        n.hasChildren() ? IR.yield(n.removeFirstChild()) : IR.yield());
+    Node yieldResult = IR.name(GENERATOR_NEXT_ARG + generatorResultCount.get());
+    Node yieldResultDecl = IR.var(yieldResult.cloneTree(), IR.name(GENERATOR_NEXT_ARG));
 
-    parent.replaceChild(n, exprName);
-    enclosingStatement.getParent().addChildBefore(yieldDecl, enclosingStatement);
+    parent.replaceChild(n, yieldResult);
     enclosingStatement.getParent().addChildBefore(yieldStatement, enclosingStatement);
+    enclosingStatement.getParent().addChildBefore(yieldResultDecl, enclosingStatement);
     compiler.reportCodeChange();
   }
 
@@ -190,7 +191,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
       "  return {",
       "    " + ITER_KEY + ": function() { return this; },",
-      "    next: function() {",
+      "    next: function(" + GENERATOR_NEXT_ARG + ") {",
       "      while (1) switch (" + GENERATOR_STATE + ") {",
       "        case " + generatorCaseCount + ":",
       "        default:",
