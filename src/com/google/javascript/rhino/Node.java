@@ -161,6 +161,7 @@ public class Node implements Cloneable, Serializable {
         case GENERATOR_MARKER:   return "is_generator_marker";
         case GENERATOR_SAFE:     return "is_generator_safe";
         case COOKED_STRING:      return "cooked_string";
+        case COMPUTED_PROP_METHOD: return "computed_prop_method";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

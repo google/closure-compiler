@@ -1297,8 +1297,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
-  public void testComputedPropInClass() {
+  public void testComputedPropMethod() {
     test("class C { [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var obj = { [foo]() {}}", Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"
+    ));
   }
 
   public void testNoComputedProperties() {
