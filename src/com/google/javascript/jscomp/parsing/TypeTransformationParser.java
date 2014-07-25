@@ -59,17 +59,24 @@ final class TypeTransformationParser {
       CharMatcher.JAVA_LETTER_OR_DIGIT
       .or(CharMatcher.is('_')).or(CharMatcher.is('$'));
 
-  private static final String TYPE_KEYWORD = "type",
-      UNION_KEYWORD = "union",
-      COND_KEYWORD = "cond",
-      MAPUNION_KEYWORD = "mapunion",
-      EQTYPE_PREDICATE = "eq",
-      SUBTYPE_PREDICATE = "sub";
+  public static enum Keywords {
+    TYPE("type"),
+    UNION("union"),
+    COND("cond"),
+    MAPUNION("mapunion"),
+    EQTYPE("eq"),
+    SUBTYPE("sub");
 
-  private static final ImmutableList<String>
-  TYPE_CONSTRUCTORS = ImmutableList.of(TYPE_KEYWORD, UNION_KEYWORD),
-  OPERATIONS = ImmutableList.of(COND_KEYWORD, MAPUNION_KEYWORD),
-  BOOLEAN_PREDICATES = ImmutableList.of(EQTYPE_PREDICATE, SUBTYPE_PREDICATE);
+    public final String name;
+    Keywords(String name) {
+      this.name = name;
+    }
+  }
+
+  private static final ImmutableList<Keywords>
+  TYPE_CONSTRUCTORS = ImmutableList.of(Keywords.TYPE, Keywords.UNION),
+  OPERATIONS = ImmutableList.of(Keywords.COND, Keywords.MAPUNION),
+  BOOLEAN_PREDICATES = ImmutableList.of(Keywords.EQTYPE, Keywords.SUBTYPE);
 
   private static final int TYPE_MIN_PARAM_COUNT = 1,
       TYPE_MAX_PARAM_COUNT = 1,
@@ -104,6 +111,20 @@ final class TypeTransformationParser {
         new TypeTransformationWarning(messageId, messageArg, nodeWarning);
     warnings.add(newWarning);
   }
+
+  private boolean isKeyword(String s, Keywords keyword) {
+    return s.equals(keyword.name);
+  }
+
+  private boolean belongsTo(String s, ImmutableList<Keywords> set) {
+    for (Keywords keyword : set) {
+      if (s.equals(keyword.name)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * The type variables in type transformation annotations must begin with a
    * letter, an underscore (_), or a dollar sign ($). Subsequent characters
@@ -183,7 +204,8 @@ final class TypeTransformationParser {
       return validTTLTypeVar(expression);
     }
     // If the expression is a type it must start with type keyword
-    if (!expression.getFirstChild().getString().equals(TYPE_KEYWORD)) {
+    String keyword = expression.getFirstChild().getString();
+    if (!isKeyword(keyword, Keywords.TYPE)) {
       addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
           "basic type", expression);
       return false;
@@ -226,7 +248,8 @@ final class TypeTransformationParser {
       return validTTLTypeVar(expression);
     }
     // Otherwise it must start with union keyword
-    if (!expression.getFirstChild().getString().equals(UNION_KEYWORD)) {
+    String keyword = expression.getFirstChild().getString();
+    if (!isKeyword(keyword, Keywords.UNION)) {
       addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
           "union type", expression);
       return false;
@@ -270,17 +293,21 @@ final class TypeTransformationParser {
     }
     // If it is a CALL we can safely move one level down
     Node operation = expression.getFirstChild();
+    String keyword = operation.getString();
     // Check for valid operations
-    if (!TYPE_CONSTRUCTORS.contains(operation.getString())) {
+    if (!belongsTo(keyword, TYPE_CONSTRUCTORS)) {
       addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
           "type", operation);
       return false;
     }
     // Use the right verifier
-    if (operation.getString().equals(TYPE_KEYWORD)) {
+    if (isKeyword(keyword, Keywords.TYPE)) {
       return validTTLBasicTypeExpression(expression);
     }
-    return validTTLUnionTypeExpression(expression);
+    if (isKeyword(keyword, Keywords.UNION)) {
+      return validTTLUnionTypeExpression(expression);
+    }
+    throw new IllegalStateException("Invalid type expression");
   }
 
   /**
@@ -295,7 +322,8 @@ final class TypeTransformationParser {
       return false;
     }
     // Check for valid predicates
-    if (!BOOLEAN_PREDICATES.contains(expression.getFirstChild().getString())) {
+    String predicate = expression.getFirstChild().getString();
+    if (!belongsTo(predicate, BOOLEAN_PREDICATES)) {
       addNewWarning("msg.jsdoc.typetransformation.invalid",
           "boolean predicate", expression);
       return false;
@@ -440,21 +468,22 @@ final class TypeTransformationParser {
     }
     // If it is a CALL we can safely move one level down
     Node operation = expression.getFirstChild();
+    String keyword = operation.getString();
     // Check for valid operations
-    if (!TYPE_CONSTRUCTORS.contains(operation.getString())
-        && !OPERATIONS.contains(operation.getString())) {
+    if (!belongsTo(keyword, TYPE_CONSTRUCTORS)
+        && !belongsTo(keyword, OPERATIONS)) {
       addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
           "type transformation", operation);
       return false;
     }
     // Check the rest of the expression depending on the operation
-    if (TYPE_CONSTRUCTORS.contains(operation.getString())) {
+    if (belongsTo(keyword, TYPE_CONSTRUCTORS)) {
       return validTTLTypeExpression(expression);
     }
-    if (operation.getString().equals(COND_KEYWORD)) {
+    if (isKeyword(keyword, Keywords.COND)) {
       return validTTLCondionalExpression(expression);
     }
-    if (operation.getString().equals(MAPUNION_KEYWORD)) {
+    if (isKeyword(keyword, Keywords.MAPUNION)) {
       return validTTLMapunionExpression(expression);
     }
     throw new IllegalStateException("Invalid type transformation expression");
