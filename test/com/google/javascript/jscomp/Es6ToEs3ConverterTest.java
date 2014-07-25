@@ -1385,6 +1385,18 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "$jscomp$templatelit$0['raw'] = ['a\\tb'];",
         "tag($jscomp$templatelit$0);"
     ));
+
+    test("tag()`${hello} world`", Joiner.on('\n').join(
+        "var $jscomp$templatelit$0 = ['', ' world'];",
+        "$jscomp$templatelit$0['raw'] = ['', ' world'];",
+        "tag()($jscomp$templatelit$0, hello);"
+    ));
+
+    test("a.b`${hello} world`", Joiner.on('\n').join(
+        "var $jscomp$templatelit$0 = ['', ' world'];",
+        "$jscomp$templatelit$0['raw'] = ['', ' world'];",
+        "a.b($jscomp$templatelit$0, hello);"
+    ));
   }
 
   public void testSimpleGenerator() {

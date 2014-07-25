@@ -28,7 +28,7 @@ class Es6TemplateLiterals {
   private static final String TEMPLATELIT_VAR = "$jscomp$templatelit$";
 
   static void visitTemplateLiteral(NodeTraversal t, Node n) {
-    if (!n.getFirstChild().isName()) {
+    if (n.getFirstChild().isString()) {
       createUntaggedTemplateLiteral(n);
     } else {
       createTaggedTemplateLiteral(t, n);
@@ -110,7 +110,7 @@ class Es6TemplateLiterals {
     }
     Node call = IR.call(n.removeFirstChild(), args)
         .useSourceInfoIfMissingFromForTree(n);
-    call.putBooleanProp(Node.FREE_CALL, true);
+    call.putBooleanProp(Node.FREE_CALL, !call.getFirstChild().isGetProp());
     n.getParent().replaceChild(n, call);
   }
 
