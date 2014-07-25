@@ -2112,11 +2112,15 @@ public class Compiler extends AbstractCompiler {
     switch (options.getLanguageIn()) {
       case ECMASCRIPT5:
       case ECMASCRIPT5_STRICT:
+      case ECMASCRIPT6:
+      case ECMASCRIPT6_STRICT:
         return true;
       case ECMASCRIPT3:
         return false;
+      default:
+        throw new IllegalStateException(
+            "unexpected language mode: " + options.getLanguageIn());
     }
-    throw new IllegalStateException("unexpected language mode");
   }
 
   public LanguageMode languageMode() {
