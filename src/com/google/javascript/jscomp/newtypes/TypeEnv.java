@@ -18,12 +18,9 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * A persistent map from variables to abstract values (types)
@@ -86,17 +83,6 @@ public class TypeEnv {
       newMap = newMap.with(n, joinedType);
     }
     return new TypeEnv(newMap);
-  }
-
-  public Multimap<String, String> getTaints() {
-    Multimap<String, String> taints = HashMultimap.create();
-    for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
-      String formal = entry.getValue().getLocation();
-      if (formal != null) {
-        taints.put(formal, entry.getKey());
-      }
-    }
-    return taints;
   }
 
   @Override

@@ -2637,14 +2637,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  }\n" +
         "}");
 
-    // We may prefer to not warn here.
-    // This would probably require a separate type for undeclared.
-    typeCheck(
+    checkNoWarnings(
         "function f(/** { prop: ? } */ x) {\n" +
         "  var /** (number|string) */ y = x.prop;\n" +
         "  x.prop < 5;\n" +
-        "}",
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        "}");
 
     typeCheck(
         "function f(/** (number|string) */ x, /** (number|string) */ y) {\n" +
@@ -3678,10 +3675,20 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(x, y) {\n" +
         "  x < y;\n" +
         "  ({})[y - 5];\n" +
-        "  x = 'asdf';\n" +
         "}\n" +
         "f('asdf', 123);",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // We don't see the warning here b/c the formal param x is assigned to a
+    // string, and we use x's type at the end of the function to create the
+    // summary.
+    checkNoWarnings(
+        "function f(x, y) {\n" +
+        "  x < y;\n" +
+        "  ({})[y - 5];\n" +
+        "  x = 'asdf';\n" +
+        "}\n" +
+        "f('asdf', 123);");
 
     typeCheck(
         "function f(x, y) {\n" +
@@ -4425,7 +4432,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @constructor */ function Array(){}",
         "function f(/** !Array */ arr, i) {\n" +
         "  arr[i];\n" +
-        "  i = 'str';\n" +
         "}\n" +
         "f([1, 2, 3], 'str');",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
@@ -4581,7 +4587,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "   */\n" +
         "  function f(x, y) {}\n" +
         "  f(x, 5);\n" +
-        "  x = 'asdf';\n" +
         "}\n" +
         "g('asdf');",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
@@ -5206,14 +5211,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testLooserCheckingForInferredProperties() {
-    typeCheck(
+    checkNoWarnings(
         "/** @constructor */\n" +
         "function Foo(x) { this.prop = x; }\n" +
         "function f(/** !Foo */ obj) {\n" +
         "  obj.prop = true ? 1 : 'asdf';\n" +
         "  obj.prop - 5;\n" +
-        "}",
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        "}");
 
     checkNoWarnings(
         "/** @constructor */\n" +
@@ -5232,9 +5236,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  obj.prop - 5;\n" +
         "  obj.prop < 'asdf';\n" +
         "}",
-        ImmutableList.of(
-            NewTypeInference.INVALID_OPERAND_TYPE,
-            NewTypeInference.INVALID_OPERAND_TYPE));
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
         "function /** string */ f(/** ?number */ x) {\n" +
@@ -7015,34 +7017,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  function g(/** N */ obj) { obj - 5; }\n" +
         "}",
         NewTypeInference.INVALID_OPERAND_TYPE);
-  }
-
-  public void testLocationsDontSpill() {
-    typeCheck(
-        "function f(x, y) {\n" +
-        "  x < 'str';\n" +
-        "  function g(x) {\n" +
-        "    x -= 5;\n" +
-        "  }\n" +
-        "  g(y);\n" +
-        "  x = 5;\n" +
-        "  return y;\n" +
-        "}\n" +
-        "f(5,5);",
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
-
-    typeCheck(
-        "function f(x) {\n" +
-        "  x < 'str';\n" +
-        "  function g(x) {\n" +
-        "    x--; return x;\n" +
-        "  }\n" +
-        "  var y = g(5);\n" +
-        "  x = 5;\n" +
-        "  return y;\n" +
-        "}\n" +
-        "f(5);",
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testLends() {

@@ -79,14 +79,6 @@ class Property {
     return declaredType;
   }
 
-  Property withLocation(String location) {
-    return new Property(
-        inferredType.withLocation(location),
-        declaredType == null ? null :
-        declaredType.withLocation(location),
-        attribute);
-  }
-
   Property withOptional() {
     return new Property(inferredType, declaredType, Attribute.OPTIONAL);
   }

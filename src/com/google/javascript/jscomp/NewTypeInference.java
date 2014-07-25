@@ -358,8 +358,7 @@ public class NewTypeInference implements CompilerPass {
       for (String name : formalsAndOuters) {
         JSType declType = currentScope.getDeclaredTypeOf(name);
         JSType initType = declType == null ?
-            envGetType(entryEnv, name).withLocation(name) :
-            pickInitialType(declType);
+            envGetType(entryEnv, name) : pickInitialType(declType);
         entryEnv = envPutType(entryEnv, name, initType);
       }
       entryEnv = envPutType(entryEnv, RETVAL_ID, JSType.UNDEFINED);
@@ -596,13 +595,13 @@ public class NewTypeInference implements CompilerPass {
             inEnv = outEnv;
             break;
           }
-          inEnv = null;
+          inEnv = outEnv;
           for (Node nameNode = n.getFirstChild(); nameNode != null;
                nameNode = nameNode.getNext()) {
             String varName = nameNode.getString();
             Node rhs = nameNode.getFirstChild();
             JSType declType = currentScope.getDeclaredTypeOf(varName);
-            inEnv = envPutType(outEnv, varName, JSType.UNKNOWN);
+            inEnv = envPutType(inEnv, varName, JSType.UNKNOWN);
             if (rhs == null || currentScope.isLocalFunDef(varName)) {
               continue;
             }
@@ -803,9 +802,6 @@ public class NewTypeInference implements CompilerPass {
     TypeEnv entryEnv = getEntryTypeEnv();
     TypeEnv exitEnv = getFinalTypeEnv();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    // Each formal and outer var is bound to some value at the start of the
-    // fun. Get the names of vars where this value may have flowed to.
-    Multimap<String, String> taints = exitEnv.getTaints();
 
     DeclaredFunctionType declType = fn.getDeclaredType();
     int reqArity = declType.getRequiredArity();
@@ -823,8 +819,7 @@ public class NewTypeInference implements CompilerPass {
         break;
       }
       String formalName = formals.get(i);
-      formalType = getFormalTypeAfterFwd(
-          formalName, envGetType(entryEnv, formalName), exitEnv, taints);
+      formalType = getTypeAfterFwd(formalName, entryEnv, exitEnv);
       if (formalType.isUnknown() || JSType.UNDEFINED.isSubtypeOf(formalType)) {
         reqArity--;
       } else {
@@ -837,10 +832,7 @@ public class NewTypeInference implements CompilerPass {
     for (String formal : formals) {
       JSType formalType = fn.getDeclaredTypeOf(formal);
       if (formalType == null) {
-        formalType = getFormalTypeAfterFwd(
-            formal, envGetType(entryEnv, formal), exitEnv, taints);
-        // TODO(blickly): Use location to infer polymorphism
-        formalType = formalType.withLocation(null);
+        formalType = getTypeAfterFwd(formal, entryEnv, exitEnv);
       }
       if (formalIndex < reqArity) {
         builder.addReqFormal(formalType);
@@ -855,13 +847,8 @@ public class NewTypeInference implements CompilerPass {
 
     for (String outer : fn.getOuterVars()) {
       println("Free var ", outer, " going in summary");
-      JSType outerType = envGetType(entryEnv, outer);
-      for (String taintedVarName : taints.get(outer)) {
-        JSType taintType = envGetType(exitEnv, taintedVarName);
-        outerType = JSType.meet(taintType, outerType);
-      }
-      // TODO(blickly): Use location to infer polymorphism
-      builder.addOuterVarPrecondition(outer, outerType.withLocation(null));
+      builder.addOuterVarPrecondition(
+          outer, getTypeAfterFwd(outer, entryEnv, exitEnv));
     }
 
     builder.addNominalType(declType.getNominalType());
@@ -869,8 +856,7 @@ public class NewTypeInference implements CompilerPass {
     JSType actualRetType = envGetType(exitEnv, RETVAL_ID);
 
     if (declRetType == null) {
-      // TODO(blickly): Use location to infer polymorphism
-      builder.addRetType(actualRetType.withLocation(null));
+      builder.addRetType(actualRetType);
     } else {
       builder.addRetType(declRetType);
       if (!isAllowedToNotReturn(fn) &&
@@ -887,17 +873,24 @@ public class NewTypeInference implements CompilerPass {
     summaries.put(fn, summary);
   }
 
-  // TODO(dimvar): fix so we get the adjusted end-of-fwd type for objs too
-  private JSType getFormalTypeAfterFwd(String formalName, JSType typeAfterBwd,
-      TypeEnv exitEnv, Multimap<String, String> taints) {
-    JSType typeAfterFwd = typeAfterBwd;
+  // TODO(dimvar): To get the adjusted end-of-fwd type for objs, we must be
+  // able to know whether a property was added during the evaluation of the
+  // function, or was on the object already.
+  private JSType getTypeAfterFwd(
+      String varName, TypeEnv entryEnv, TypeEnv exitEnv) {
+    JSType typeAfterBwd = envGetType(entryEnv, varName);
     if (!typeAfterBwd.hasNonScalar() || typeAfterBwd.getFunType() != null) {
-      for (String taintedVarName : taints.get(formalName)) {
-        JSType taintType = envGetType(exitEnv, taintedVarName);
-        typeAfterFwd = JSType.meet(taintType, typeAfterFwd);
+      // The type of a formal after fwd is more precise than the type after bwd,
+      // so we use typeAfterFwd in the summary.
+      // Trade-off: If the formal is assigned in the body of a function, and the
+      // new value has a different type, we compute a wrong summary.
+      // Since this is rare, we prefer typeAfterFwd to typeAfterBwd.
+      JSType typeAfterFwd = envGetType(exitEnv, varName);
+      if (typeAfterFwd != null) {
+        return typeAfterFwd;
       }
     }
-    return typeAfterFwd;
+    return typeAfterBwd;
   }
 
   private static boolean isAllowedToNotReturn(Scope methodScope) {
@@ -1041,8 +1034,8 @@ public class NewTypeInference implements CompilerPass {
             // We have a heuristic check to avoid the spurious warnings,
             // but we also miss some true warnings.
             JSType declType = currentScope.getDeclaredTypeOf(varName);
-            if (tightenTypeAndDontWarn(declType, inferredType, requiredType)) {
-              // Keeps requiredType, but using the location of inferredType
+            if (tightenTypeAndDontWarn(
+                varName, declType, inferredType, requiredType)) {
               inferredType = inferredType.specialize(requiredType);
             } else {
               // Propagate incorrect type so that the context catches
@@ -2016,14 +2009,19 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private static boolean tightenTypeAndDontWarn(
-      JSType declared, JSType inferred, JSType required) {
+  private boolean tightenTypeAndDontWarn(
+      String varName, JSType declared, JSType inferred, JSType required) {
     boolean fuzzyDeclaration = declared == null || declared.isUnknown() ||
         (declared.isTop() && !inferred.isTop());
     return fuzzyDeclaration
-        // We do not know much about the values that flow to undeclared formals,
-        // so be permissive here; don't give the warning.
-        && inferred.isFromUndeclaredFormal()
+        // The intent is to be looser about warnings when a value can be passed
+        // to a function, so we have less information about the value.
+        // The accurate way to do this is to taint types so that we can track
+        // where a type comes from (local or not).
+        // Without tainting (eg, we used to have locations), we approximate this
+        // by checking the variable name.
+        && (varName == null || currentScope.isFormalParam(varName)
+            || currentScope.isOuterVar(varName))
         // If required is loose, it's easier for it to be a subtype of inferred.
         // We only tighten the type if the non-loose required is also a subtype.
         // Otherwise, we would be skipping warnings too often.
@@ -2154,7 +2152,9 @@ public class NewTypeInference implements CompilerPass {
       } else if (recvType.hasProp(propQname) &&
           !resultType.isSubtypeOf(requiredType) &&
           tightenTypeAndDontWarn(
-              recvType.getDeclaredProp(propQname), resultType, requiredType)) {
+              receiver.isName() ? receiver.getString() : null,
+              recvType.getDeclaredProp(propQname),
+              resultType, requiredType)) {
         // Tighten the inferred type and don't warn.
         // See Token.NAME fwd for explanation about types as lower/upper bounds.
         resultType = resultType.specialize(requiredType);
@@ -2783,8 +2783,7 @@ public class NewTypeInference implements CompilerPass {
   private static TypeEnv envPutType(TypeEnv env, String varName, JSType type) {
     Preconditions.checkArgument(!varName.contains("."));
     JSType oldType = env.getType(varName);
-    if (oldType != null && oldType.equals(type) &&
-        Objects.equals(oldType.getLocation(), type.getLocation())) {
+    if (oldType != null && oldType.equals(type)) {
       return env;
     }
     return env.putType(varName, type);

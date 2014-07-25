@@ -124,26 +124,6 @@ public class ObjectType implements TypeWithProperties {
     return objectKind.isDict();
   }
 
-  static ImmutableSet<ObjectType> withLocation(
-      Set<ObjectType> objs, String location) {
-    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
-    for (ObjectType obj : objs) {
-      newObjs.add(obj.withLocation(location));
-    }
-    return newObjs.build();
-  }
-
-  private ObjectType withLocation(String location) {
-    if (props.isEmpty()) {
-      return this;
-    }
-    PersistentMap<String, Property> pm = PersistentMap.create();
-    for (Map.Entry<String, Property> entry : props.entrySet()) {
-      pm = pm.with(entry.getKey(), entry.getValue().withLocation(location));
-    }
-    return ObjectType.makeObjectType(nominalType, pm, fn, isLoose, objectKind);
-  }
-
   static ImmutableSet<ObjectType> withLooseObjects(Set<ObjectType> objs) {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj : objs) {
