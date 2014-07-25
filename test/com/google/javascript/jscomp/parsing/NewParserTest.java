@@ -129,6 +129,38 @@ public class NewParserTest extends BaseJSTypeTestCase {
         UNDEFINED_LABEL + " \"a\"");
   }
 
+  public void testLabel1() {
+    parse("foo:bar");
+  }
+
+  public void testLabel2() {
+    parse("{foo:bar}");
+  }
+
+  public void testLabel3() {
+    parse("foo:bar:baz");
+  }
+
+  public void testDuplicateLabelWithoutBraces() {
+    parseError("foo:foo:bar", "Duplicate label \"foo\"");
+  }
+
+  public void testDuplicateLabelWithBraces() {
+    parseError("foo:{bar;foo:baz}", "Duplicate label \"foo\"");
+  }
+
+  public void testDuplicateLabelWithFor() {
+    parseError("foo:for(;;){foo:bar}", "Duplicate label \"foo\"");
+  }
+
+  public void testNonDuplicateLabelSiblings() {
+    parse("foo:1;foo:2");
+  }
+
+  public void testNonDuplicateLabelCrossFunction() {
+    parse("foo:(function(){foo:2})");
+  }
+
   public void testLinenoCharnoAssign1() throws Exception {
     Node assign = parse("a = b").getFirstChild().getFirstChild();
 

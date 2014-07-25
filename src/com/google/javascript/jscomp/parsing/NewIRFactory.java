@@ -91,6 +91,9 @@ class NewIRFactory {
   static final String DUPLICATE_PARAMETER =
       "Duplicate parameter name \"%s\"";
 
+  static final String DUPLICATE_LABEL =
+      "Duplicate label \"%s\"";
+
   static final String UNLABELED_BREAK =
       "unlabelled break must be inside loop or switch";
 
@@ -244,6 +247,7 @@ class NewIRFactory {
     validateTypeAnnotations(n);
     validateParameters(n);
     validateBreakContinue(n);
+    validateLabel(n);
   }
 
   private void validateBreakContinue(Node n) {
@@ -410,6 +414,22 @@ class NewIRFactory {
         errorReporter.warning(MISPLACED_TYPE_ANNOTATION,
             sourceName,
             n.getLineno(), n.getCharno());
+      }
+    }
+  }
+
+  private void validateLabel(Node n) {
+    if (n.isLabel()) {
+      Node labelName = n.getFirstChild();
+      for (Node parent = n.getParent();
+           parent != null && !parent.isFunction(); parent = parent.getParent()) {
+        if (parent.isLabel() && labelsMatch(parent, labelName)) {
+          errorReporter.error(
+              String.format(DUPLICATE_LABEL, labelName.getString()),
+              sourceName,
+              n.getLineno(), n.getCharno());
+          break;
+        }
       }
     }
   }
