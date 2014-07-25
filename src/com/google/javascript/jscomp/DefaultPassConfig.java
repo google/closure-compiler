@@ -327,7 +327,7 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE) ||
-        (options.checkTypes && options.checkMissingReturn.isOn())) {
+        options.checkMissingReturn.isOn()) {
       checks.add(checkControlFlow);
     }
 
@@ -1449,7 +1449,7 @@ public class DefaultPassConfig extends PassConfig {
       if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
         callbacks.add(new CheckUnreachableCode(compiler));
       }
-      if (options.checkMissingReturn.isOn() && options.checkTypes) {
+      if (options.checkMissingReturn.isOn()) {
         callbacks.add(
             new CheckMissingReturn(compiler, options.checkMissingReturn));
       }
