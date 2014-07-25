@@ -2712,11 +2712,19 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   void addComments(String filename, List<Comment> comments) {
+    if (!isIdeMode()) {
+      throw new UnsupportedOperationException(
+          "addComments may only be called in IDE mode.");
+    }
     commentsPerFile.put(filename, comments);
   }
 
   @Override
   public List<Comment> getComments(String filename) {
+    if (!isIdeMode()) {
+      throw new UnsupportedOperationException(
+          "getComments may only be called in IDE mode.");
+    }
     return commentsPerFile.get(filename);
   }
 

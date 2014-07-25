@@ -89,7 +89,9 @@ public class JsAst implements SourceAst {
                         : AbstractCompiler.ConfigContext.DEFAULT),
           compiler.getDefaultErrorReporter());
       root = result.ast;
-      compiler.addComments(sourceFile.getName(), result.comments);
+      if (compiler.isIdeMode()) {
+        compiler.addComments(sourceFile.getName(), result.comments);
+      }
     } catch (IOException e) {
       compiler.report(
           JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
