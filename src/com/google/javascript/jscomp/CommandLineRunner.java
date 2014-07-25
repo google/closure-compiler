@@ -315,7 +315,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--use_types_for_optimization",
         usage = "Experimental: perform additional optimizations " +
-        "based on available information.  Inaccurate type annotations " +
+        "based on available information. Inaccurate type annotations " +
         "may result in incorrect results.")
     private boolean useTypesForOptimization = false;
 
@@ -367,7 +367,8 @@ public class CommandLineRunner extends
     @Option(name = "--process_closure_primitives",
         handler = BooleanOptionHandler.class,
         usage = "Processes built-ins from the Closure library, such as "
-        + "goog.require(), goog.provide(), and goog.exportSymbol()")
+        + "goog.require(), goog.provide(), and goog.exportSymbol(). "
+        + "True by default.")
     private boolean processClosurePrimitives = true;
 
     @Option(name = "--manage_closure_dependencies",
@@ -383,7 +384,7 @@ public class CommandLineRunner extends
         handler = BooleanOptionHandler.class,
         usage = "Only include files in the transitive dependency of the "
         + "entry points (specified by closure_entry_point). Files that do "
-        + "not provide dependencies will be removed. This supersedes"
+        + "not provide dependencies will be removed. This supersedes "
         + "manage_closure_dependencies")
     private boolean onlyClosureDependencies = false;
 
