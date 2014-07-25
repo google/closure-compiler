@@ -32,7 +32,7 @@ import java.util.HashSet;
  * @template T := TTL-Exp =:
  *
  */
-final class TypeTransformationParser {
+public final class TypeTransformationParser {
 
   final class TypeTransformationWarning {
     String messageId;
@@ -59,6 +59,7 @@ final class TypeTransformationParser {
       CharMatcher.JAVA_LETTER_OR_DIGIT
       .or(CharMatcher.is('_')).or(CharMatcher.is('$'));
 
+  /** Keywords of the type transformation language */
   public static enum Keywords {
     TYPE("type"),
     UNION("union"),
