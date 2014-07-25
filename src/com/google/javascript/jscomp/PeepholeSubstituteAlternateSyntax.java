@@ -486,6 +486,19 @@ class PeepholeSubstituteAlternateSyntax
 
   private Node reduceTrueFalse(Node n) {
     if (late) {
+      switch (n.getParent().getType()) {
+        case Token.EQ:
+        case Token.GT:
+        case Token.GE:
+        case Token.LE:
+        case Token.LT:
+        case Token.NE:
+          Node number = IR.number(n.isTrue() ? 1 : 0);
+          n.getParent().replaceChild(n, number);
+          reportCodeChange();
+          return number;
+      }
+
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));
       not.copyInformationFromForTree(n);
       n.getParent().replaceChild(n, not);

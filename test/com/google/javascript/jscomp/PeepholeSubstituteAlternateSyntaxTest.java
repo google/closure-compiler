@@ -273,6 +273,16 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     fold("x = false", "x = !1");
   }
 
+  public void testFoldTrueFalseComparison() {
+    fold("x == true", "x == 1");
+    fold("x == false", "x == 0");
+    fold("x != true", "x != 1");
+    fold("x < true", "x < 1");
+    fold("x <= true", "x <= 1");
+    fold("x > true", "x > 1");
+    fold("x >= true", "x >= 1");
+  }
+
   public void testFoldReturnResult() {
     foldSame("function f(){return !1;}");
     foldSame("function f(){return null;}");
