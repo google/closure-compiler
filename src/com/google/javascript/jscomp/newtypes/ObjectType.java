@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -540,10 +541,13 @@ public class ObjectType implements TypeWithProperties {
     } else if (objs2 == null) {
       return objs1;
     }
-    Set<ObjectType> newObjs = Sets.newHashSet(objs1);
+    ObjectType[] objs1Arr = objs1.toArray(new ObjectType[0]);
+    ObjectType[] keptFrom1 = Arrays.copyOf(objs1Arr, objs1Arr.length);
+    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj2 : objs2) {
       boolean addedObj2 = false;
-      for (ObjectType obj1 : objs1) {
+      for (int i = 0; i < objs1Arr.length; i++) {
+        ObjectType obj1 = objs1Arr[i];
         NominalType nominalType1 = obj1.nominalType;
         NominalType nominalType2 = obj2.nominalType;
         if (areRelatedClasses(nominalType1, nominalType2)) {
@@ -554,7 +558,7 @@ public class ObjectType implements TypeWithProperties {
             // Don't merge other classes with record types
             break;
           }
-          newObjs.remove(obj1);
+          keptFrom1[i] = null;
           newObjs.add(join(obj1, obj2));
           addedObj2 = true;
           break;
@@ -564,7 +568,12 @@ public class ObjectType implements TypeWithProperties {
         newObjs.add(obj2);
       }
     }
-    return ImmutableSet.copyOf(newObjs);
+    for (ObjectType o : keptFrom1) {
+      if (o != null) {
+        newObjs.add(o);
+      }
+    }
+    return newObjs.build();
   }
 
   private static boolean areRelatedClasses(NominalType c1, NominalType c2) {
