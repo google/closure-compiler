@@ -1447,11 +1447,21 @@ class NewIRFactory {
     }
 
     @Override
-    Node processComputedProperty(ComputedPropertyAssignmentTree tree) {
+    Node processComputedPropertyDefinition(ComputedPropertyDefinitionTree tree) {
       maybeWarnEs6Feature(tree, "computed property");
 
       return newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.value));
+    }
+
+    @Override
+    Node processComputedPropertyMethod(ComputedPropertyMethodTree tree) {
+      maybeWarnEs6Feature(tree, "computed property");
+
+      Node n = newNode(Token.COMPUTED_PROP,
+          transform(tree.property), transform(tree.method));
+      n.putBooleanProp(Node.COMPUTED_PROP_METHOD, true);
+      return n;
     }
 
     @Override

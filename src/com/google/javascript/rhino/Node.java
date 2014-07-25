@@ -114,7 +114,10 @@ public class Node implements Cloneable, Serializable {
       GENERATOR_MARKER   = 65,    // Used by the ES6-to-ES3 translator.
       GENERATOR_SAFE     = 66,    // Used by the ES6-to-ES3 translator.
 
-      COOKED_STRING      = 70;    // Used to support ES6 tagged template literal.
+      COOKED_STRING      = 70,    // Used to support ES6 tagged template literal.
+      COMPUTED_PROP_METHOD = 71;  // A computed property that has the method
+                                  // syntax ( [prop]() {...} ) rather than the
+                                  // property definition syntax ( [prop]: value ).
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,

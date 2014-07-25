@@ -1521,10 +1521,23 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var a={b,c(){},d,e:f}");
   }
 
-  public void testComputedProps() {
+  public void testComputedProperties() {
     languageMode = LanguageMode.ECMASCRIPT6;
+
     assertPrintSame("var a={[b]:c}");
     assertPrintSame("var a={[b+3]:c}");
+
+    assertPrintSame("var a={[b](){}}");
+    assertPrintSame("var a={[b](){alert(foo)}}");
+    assertPrintSame("var a={[b]:(()=>c)}");
+  }
+
+  public void testComputedPropertiesClassMethods() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrintSame("class C{[m](){}}");
+
+    assertPrintSame("class C{[\"foo\"+bar](){alert(1)}}");
   }
 
   public void testGetter() {

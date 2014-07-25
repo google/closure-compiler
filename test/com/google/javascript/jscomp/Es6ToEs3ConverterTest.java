@@ -1297,6 +1297,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testComputedPropInClass() {
+    test("class C { [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
   public void testNoComputedProperties() {
     testSame("({'a' : 1})");
     testSame("({'a' : 1, f : 1, b : 1})");

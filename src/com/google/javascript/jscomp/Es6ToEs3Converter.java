@@ -150,6 +150,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         visitStringKey(n);
         break;
       case Token.CLASS:
+        for (Node member = n.getLastChild().getFirstChild();
+            member != null;
+            member = member.getNext()) {
+          if (member.isComputedProp()) {
+            cannotConvertYet(member, "class method whose name is a computed property");
+            return;
+          }
+        }
         visitClass(n, parent);
         break;
       case Token.PARAM_LIST:

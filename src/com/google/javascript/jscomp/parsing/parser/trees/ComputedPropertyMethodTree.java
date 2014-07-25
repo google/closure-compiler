@@ -17,18 +17,13 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-/**
- * Represents a computed property in an object literal.
- */
-public class ComputedPropertyAssignmentTree extends ParseTree {
+public class ComputedPropertyMethodTree extends ParseTree {
   public final ParseTree property;
-  public final ParseTree value;
+  public final ParseTree method;
 
-  public ComputedPropertyAssignmentTree(SourceRange location,
-      ParseTree property, ParseTree value) {
-    super(ParseTreeType.COMPUTED_PROPERTY_ASSIGNMENT, location);
-
+  public ComputedPropertyMethodTree(SourceRange location, ParseTree property, ParseTree method) {
+    super(ParseTreeType.COMPUTED_PROPERTY_METHOD, location);
     this.property = property;
-    this.value = value;
+    this.method = method;
   }
 }

@@ -943,6 +943,26 @@ public class NewParserTest extends BaseJSTypeTestCase {
         + " extended object literals");
   }
 
+  public void testComputedMethodObjLit() {
+    testComputedProperty(Joiner.on('\n').join(
+        "var x = {",
+        "  [prop + '_']() {}",
+        "}"));
+  }
+
+  public void testComputedMethodClass() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(Joiner.on('\n').join(
+        "class X {",
+        "  [prop + '_']() {}",
+        "}"));
+
+    parse(Joiner.on('\n').join(
+        "class X {",
+        "  static [prop + '_']() {}",
+        "}"));
+  }
+
   public void testComputedProperty() {
     testComputedProperty(Joiner.on('\n').join(
         "var prop = 'some complex expression';",

@@ -490,7 +490,7 @@ class CodeGenerator {
 
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
-      case Token.MEMBER_DEF:
+      case Token.MEMBER_DEF: {
         n.getParent().toStringTree();
         Preconditions.checkState(n.getParent().isObjectLit()
             || n.getParent().isClassMembers());
@@ -551,6 +551,7 @@ class CodeGenerator {
         add(parameters);
         add(body, Context.PRESERVE_BLOCK);
         break;
+      }
 
       case Token.SCRIPT:
       case Token.BLOCK: {
@@ -915,16 +916,12 @@ class CodeGenerator {
             cc.listSeparator();
           }
 
-          if (c.isGetterDef() || c.isSetterDef() || c.isStringKey() || c.isMemberDef()) {
-            add(c);
-          } else {
-            Preconditions.checkState(c.isComputedProp());
-            add("[");
-            add(c.getFirstChild());
-            add("]");
-            add(":");
-            add(c.getLastChild());
-          }
+          Preconditions.checkState(c.isComputedProp()
+              || c.isGetterDef()
+              || c.isSetterDef()
+              || c.isStringKey()
+              || c.isMemberDef());
+          add(c);
         }
         add("}");
         if (needsParens) {
@@ -932,6 +929,23 @@ class CodeGenerator {
         }
         break;
       }
+
+      case Token.COMPUTED_PROP:
+        add("[");
+        add(first);
+        add("]");
+        if (n.getBooleanProp(Node.COMPUTED_PROP_METHOD)) {
+          Node function = first.getNext();
+          Node params = function.getFirstChild().getNext();
+          Node body = function.getLastChild();
+
+          add(params);
+          add(body, Context.PRESERVE_BLOCK);
+        } else {
+          add(":");
+          add(first.getNext());
+        }
+        break;
 
       case Token.OBJECT_PATTERN:
         addObjectPattern(n, context);
@@ -1000,7 +1014,8 @@ class CodeGenerator {
         break;
 
       default:
-        throw new Error("Unknown type " + type + "\n" + n.toStringTree());
+        throw new RuntimeException(
+            "Unknown type " + Token.name(type) + "\n" + n.toStringTree());
     }
 
     cc.endSourceMapping(n);

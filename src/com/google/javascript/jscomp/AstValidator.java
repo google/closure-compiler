@@ -464,14 +464,16 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateClassMember(Node n) {
-    if (n.getType() != Token.MEMBER_DEF
-        && n.getType() != Token.GETTER_DEF
-        && n.getType() != Token.SETTER_DEF) {
-      violation("Class contained member which was not a MEMBER_DEF, GETTER_DEF, or SETTER_DEF",
-          n);
+    if (n.getType() == Token.MEMBER_DEF
+        || n.getType() == Token.GETTER_DEF
+        || n.getType() == Token.SETTER_DEF) {
+      validateChildCount(n, Token.arity(n.getType()));
+      validateFunctionExpression(n.getFirstChild());
+    } else if (n.isComputedProp()) {
+      validateComputedPropClassMethod(n);
+    } else {
+      violation("Class contained member of invalid type " + Token.name(n.getType()), n);
     }
-    validateChildCount(n, Token.arity(n.getType()));
-    validateFunctionExpression(n.getFirstChild());
   }
 
   private void validateBlock(Node n) {
@@ -1121,6 +1123,13 @@ public class AstValidator implements CompilerPass {
     validateChildCount(n, Token.arity(Token.COMPUTED_PROP));
     validateExpression(n.getFirstChild());
     validateExpression(n.getLastChild());
+  }
+
+  private void validateComputedPropClassMethod(Node n) {
+    validateNodeType(Token.COMPUTED_PROP, n);
+    validateChildCount(n, Token.arity(Token.COMPUTED_PROP));
+    validateExpression(n.getFirstChild());
+    validateFunctionExpression(n.getLastChild());
   }
 
   private void validateObjectLiteralKeyName(Node n) {

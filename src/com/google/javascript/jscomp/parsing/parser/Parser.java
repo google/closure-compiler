@@ -438,6 +438,7 @@ public class Parser {
       case IDENTIFIER:
       case STAR:
       case STATIC:
+      case OPEN_SQUARE:
         return true;
       default:
         return false;
@@ -458,10 +459,18 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = allowStatic && eatOpt(TokenType.STATIC) != null;
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    IdentifierToken name = eatIdOrKeywordAsId();
-    return parseFunctionTail(
-        start, name, isStatic, isGenerator,
-        FunctionDeclarationTree.Kind.MEMBER);
+    if (peekId()) {
+      IdentifierToken name = eatIdOrKeywordAsId();
+      return parseFunctionTail(
+          start, name, isStatic, isGenerator,
+          FunctionDeclarationTree.Kind.MEMBER);
+    } else {
+      ParseTree name = parseComputedPropertyName();
+      ParseTree function = parseFunctionTail(
+          start, null, isStatic, isGenerator,
+          FunctionDeclarationTree.Kind.EXPRESSION);
+      return new ComputedPropertyMethodTree(getTreeLocation(start), name, function);
+    }
   }
 
   private ParseTree parseFunctionTail(
@@ -1527,23 +1536,29 @@ public class Parser {
         return parsePropertyNameAssignment();
       }
     } else if (type == TokenType.OPEN_SQUARE) {
-      return parseComputedProperty();
+      SourcePosition start = getTreeStartLocation();
+      ParseTree name = parseComputedPropertyName();
+
+      if (peek(TokenType.COLON)) {
+        eat(TokenType.COLON);
+        ParseTree value = parseAssignmentExpression();
+        return new ComputedPropertyDefinitionTree(getTreeLocation(start), name, value);
+      } else {
+        ParseTree value = parseFunctionTail(
+            start, null, false, false, FunctionDeclarationTree.Kind.EXPRESSION);
+        return new ComputedPropertyMethodTree(getTreeLocation(start), name, value);
+      }
     } else {
       throw new RuntimeException("unreachable");
     }
   }
 
-  private ParseTree parseComputedProperty() {
-    SourcePosition start = getTreeStartLocation();
+  private ParseTree parseComputedPropertyName() {
 
     eat(TokenType.OPEN_SQUARE);
     ParseTree assign = parseAssignmentExpression();
     eat(TokenType.CLOSE_SQUARE);
-
-    eat(TokenType.COLON);
-    ParseTree value = parseAssignmentExpression();
-
-    return new ComputedPropertyAssignmentTree(getTreeLocation(start), assign, value);
+    return assign;
   }
 
   private boolean peekGetAccessor(boolean allowStatic) {

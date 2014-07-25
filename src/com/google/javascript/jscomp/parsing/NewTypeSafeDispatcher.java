@@ -30,7 +30,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyAssignmentTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
@@ -97,7 +98,8 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processBlock(BlockTree tree);
   abstract T processBreakStatement(BreakStatementTree breakStatementTree);
   abstract T processCatchClause(CatchTree tree);
-  abstract T processComputedProperty(ComputedPropertyAssignmentTree tree);
+  abstract T processComputedPropertyDefinition(ComputedPropertyDefinitionTree tree);
+  abstract T processComputedPropertyMethod(ComputedPropertyMethodTree tree);
   abstract T processConditionalExpression(ConditionalExpressionTree tree);
   abstract T processContinueStatement(ContinueStatementTree tree);
   abstract T processDoLoop(DoWhileStatementTree tree);
@@ -256,8 +258,10 @@ abstract class NewTypeSafeDispatcher<T> {
         return processNewExpression(node.asNewExpression());
       case OBJECT_LITERAL_EXPRESSION:
         return processObjectLiteral(node.asObjectLiteralExpression());
-      case COMPUTED_PROPERTY_ASSIGNMENT:
-        return processComputedProperty(node.asComputedProperty());
+      case COMPUTED_PROPERTY_DEFINITION:
+        return processComputedPropertyDefinition(node.asComputedPropertyDefinition());
+      case COMPUTED_PROPERTY_METHOD:
+        return processComputedPropertyMethod(node.asComputedPropertyMethod());
       case RETURN_STATEMENT:
         return processReturnStatement(node.asReturnStatement());
       case POSTFIX_EXPRESSION:
