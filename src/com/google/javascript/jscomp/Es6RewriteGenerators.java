@@ -25,9 +25,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 
 /**
@@ -72,19 +70,27 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String GENERATOR_NEXT_ARG = "$jscomp$generator$next$arg";
 
-  private Supplier<String> generatorResultCount;
+  private Supplier<String> generatorCounter;
+
+  private static final String GENERATOR_SWITCH_ENTERED = "$jscomp$generator$switch$entered";
+
+  private static final String GENERATOR_SWITCH_VAL = "$jscomp$generator$switch$val";
 
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
-  private Deque<Integer> currentLoopEndCase;
+  private List<Integer> currentLoopEndCase;
   // The node head of this stack must be executed before any continue statement.
-  private Deque<Node> currentLoopContinueStatement;
+  private List<Node> currentLoopContinueStatement;
+  // A stack of booleans indicating whether the enclosing control structure which captures
+  // breaks is a switch.
+  private List<Boolean> currentBreakCaptureIsSwitch;
 
   public Es6RewriteGenerators(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.currentLoopEndCase = new ArrayDeque<>();
-    this.currentLoopContinueStatement = new ArrayDeque<>();
-    generatorResultCount = compiler.getUniqueNameIdSupplier();
+    this.currentLoopEndCase = new ArrayList<>();
+    this.currentLoopContinueStatement = new ArrayList<>();
+    this.currentBreakCaptureIsSwitch = new ArrayList<>();
+    generatorCounter = compiler.getUniqueNameIdSupplier();
   }
 
   @Override
@@ -176,7 +182,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
     Node yieldStatement = IR.exprResult(
         n.hasChildren() ? IR.yield(n.removeFirstChild()) : IR.yield());
-    Node yieldResult = IR.name(GENERATOR_NEXT_ARG + generatorResultCount.get());
+    Node yieldResult = IR.name(GENERATOR_NEXT_ARG + generatorCounter.get());
     Node yieldResultDecl = IR.var(yieldResult.cloneTree(), IR.name(GENERATOR_NEXT_ARG));
 
     parent.replaceChild(n, yieldResult);
@@ -273,6 +279,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else if (currentStatement.isDo() && yieldsOrReturns(currentStatement)) {
       visitDo();
       return false;
+    } else if (currentStatement.isSwitch() && yieldsOrReturns(currentStatement)) {
+      visitSwitch();
+      return false;
     } else if (currentStatement.isIf()
         && (yieldsOrReturns(currentStatement) || jumpsOut(currentStatement))
         && !currentStatement.isGeneratorSafe()) {
@@ -306,18 +315,22 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   private void visitContinue() {
-    if (!currentLoopContinueStatement.peekFirst().isEmpty()) {
+    int nested = 0;
+    while (!currentBreakCaptureIsSwitch.isEmpty() && currentBreakCaptureIsSwitch.get(nested)) {
+      nested++;
+    }
+    if (!currentLoopContinueStatement.get(nested).isEmpty()) {
       enclosingCase.getLastChild().addChildToBack(
-        currentLoopContinueStatement.peekFirst().cloneTree());
+        currentLoopContinueStatement.get(nested).cloneTree());
     }
     enclosingCase.getLastChild().addChildToBack(
-        createStateUpdate(currentLoopEndCase.peekFirst() - 1));
+        createStateUpdate(currentLoopEndCase.get(nested) - 1));
     enclosingCase.getLastChild().addChildToBack(createSafeBreak());
   }
 
   private void visitBreak() {
     enclosingCase.getLastChild().addChildToBack(
-        createStateUpdate(currentLoopEndCase.peekFirst()));
+        createStateUpdate(currentLoopEndCase.get(0)));
     enclosingCase.getLastChild().addChildToBack(createSafeBreak());
   }
 
@@ -326,10 +339,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * pop the loop information off of our stack.
    */
   private void visitGeneratorMarker() {
-    if (currentLoopEndCase.peekFirst() != null
-        && currentLoopEndCase.peekFirst() == currentStatement.getDouble()) {
-      currentLoopEndCase.removeFirst();
-      currentLoopContinueStatement.removeFirst();
+    if (!currentLoopEndCase.isEmpty()
+        && currentLoopEndCase.get(0) == currentStatement.getDouble()) {
+      currentLoopEndCase.remove(0);
+      currentLoopContinueStatement.remove(0);
+      currentBreakCaptureIsSwitch.remove(0);
     }
   }
 
@@ -368,6 +382,73 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       originalGeneratorBody.addChildAfter(elseBlock, endIf);
       originalGeneratorBody.addChildAfter(endElse, elseBlock);
     }
+  }
+
+  /**
+   * Switch statements are translated into a series of if statements.
+   *
+   * <code>
+   * switch (i) {
+   *   case 1:
+   *     s;
+   *   case 2:
+   *     t;
+   *   ...
+   * }
+   * </code>
+   *
+   * is eventually rewritten to:
+   *
+   * <code>
+   * $jscomp$generator$switch$entered0 = false;
+   * if ($jscomp$generator$switch$entered0 || i == 1) {
+   *   $jscomp$generator$switch$entered0 = true;
+   *   s;
+   * }
+   * if ($jscomp$generator$switch$entered0 || i == 2) {
+   *   $jscomp$generator$switch$entered0 = true;
+   *   t;
+   * }
+   * ...
+   *
+   * </code>
+   */
+  private void visitSwitch() {
+    Node didEnter = IR.name(GENERATOR_SWITCH_ENTERED + generatorCounter.get());
+    Node didEnterDecl = IR.var(didEnter.cloneTree(), IR.falseNode());
+    Node switchVal = IR.name(GENERATOR_SWITCH_VAL + generatorCounter.get());
+    Node switchValDecl = IR.var(switchVal.cloneTree(), currentStatement.removeFirstChild());
+    originalGeneratorBody.addChildToFront(didEnterDecl);
+    originalGeneratorBody.addChildAfter(switchValDecl, didEnterDecl);
+    Node insertionPoint = switchValDecl;
+
+    while (currentStatement.hasChildren()) {
+      Node currCase = currentStatement.removeFirstChild();
+      Node equivBlock;
+      currCase.getLastChild().addChildToFront(
+          IR.exprResult(IR.assign(didEnter.cloneTree(), IR.trueNode())));
+      if (currCase.isDefaultCase()) {
+        if (currentStatement.hasChildren()) {
+          compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+            "Default case as intermediate case"));
+        }
+        equivBlock = IR.block(currCase.removeFirstChild());
+      } else {
+        equivBlock = IR.ifNode(IR.or(didEnter.cloneTree(),
+            IR.sheq(switchVal.cloneTree(), currCase.removeFirstChild())),
+          currCase.removeFirstChild());
+      }
+      originalGeneratorBody.addChildAfter(equivBlock, insertionPoint);
+      insertionPoint = equivBlock;
+    }
+
+    int breakTarget = generatorCaseCount++;
+    currentLoopEndCase.add(0, breakTarget);
+    currentLoopContinueStatement.add(0, IR.empty());
+    currentBreakCaptureIsSwitch.add(0, true);
+    Node breakCase = IR.number(breakTarget);
+    breakCase.setGeneratorMarker(true);
+    originalGeneratorBody.addChildAfter(breakCase, insertionPoint);
   }
 
   /**
@@ -410,9 +491,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node body = currentStatement.removeFirstChild();
 
     int loopBeginState = generatorCaseCount++;
-    currentLoopEndCase.addFirst(generatorCaseCount);
+    currentLoopEndCase.add(0, generatorCaseCount);
+    currentBreakCaptureIsSwitch.add(0, false);
     if (currentLoopContinueStatement.size() != currentLoopEndCase.size()) {
-      currentLoopContinueStatement.addFirst(IR.empty());
+      currentLoopContinueStatement.add(0, IR.empty());
     }
 
     Node beginCase = IR.number(loopBeginState);
@@ -440,7 +522,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node equivalentWhile = IR.whileNode(condition, body);
     if (!postExpression.isEmpty()) {
       body.addChildToBack(IR.exprResult(postExpression));
-      currentLoopContinueStatement.addFirst(body.getLastChild());
+      currentLoopContinueStatement.add(0, body.getLastChild());
     }
 
     if (!initializer.isEmpty()) {
@@ -563,4 +645,3 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
 }
-
