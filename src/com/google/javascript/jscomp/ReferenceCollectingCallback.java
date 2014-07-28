@@ -593,14 +593,6 @@ class ReferenceCollectingCallback implements ScopedCallback,
       this(nameNode, basicBlock, t.getScope(), t.getInput().getInputId());
     }
 
-    // Bleeding functions are weird, because the declaration does
-    // not appear inside their scope. So they need their own constructor.
-    static Reference newBleedingFunction(NodeTraversal t,
-        BasicBlock basicBlock, Node func) {
-      return new Reference(func.getFirstChild(),
-          basicBlock, t.getScope(), t.getInput().getInputId());
-    }
-
     /**
      * Creates a variable reference in a given script file name, used in tests.
      *
