@@ -532,7 +532,7 @@ public class CommandLineRunner extends
      * order produced by {@code find} is unlikely to be sorted correctly with
      * respect to {@code goog.provide()} and {@code goog.requires()}.
      */
-    List<String> getJsFiles(PrintStream err) throws CmdLineException, IOException {
+    protected List<String> getJsFiles() throws CmdLineException, IOException {
       final Set<String> allJsInputs = new LinkedHashSet<>();
       List<String> patterns = new ArrayList<>();
       patterns.addAll(js);
@@ -773,30 +773,6 @@ public class CommandLineRunner extends
     initConfigFromFlags(args, out, err);
   }
 
-  /**
-   * Split strings into tokens delimited by whitespace, but treat quoted
-   * strings as single tokens. Non-whitespace characters adjacent to quoted
-   * strings will be returned as part of the token. For example, the string
-   * {@code "--js='/home/my project/app.js'"} would be returned as a single
-   * token.
-   *
-   * @param lines strings to tokenize
-   * @return a list of tokens
-   */
-  private static List<String> tokenizeKeepingQuotedStrings(List<String> lines) {
-    List<String> tokens = new ArrayList<>();
-    Pattern tokenPattern =
-        Pattern.compile("(?:[^ \t\f\\x0B'\"]|(?:'[^']*'|\"[^\"]*\"))+");
-
-    for (String line : lines) {
-      Matcher matcher = tokenPattern.matcher(line);
-      while (matcher.find()) {
-        tokens.add(matcher.group(0));
-      }
-    }
-    return tokens;
-  }
-
   private static List<String> processArgs(String[] args) {
     // Args4j has a different format that the old command-line parser.
     // So we use some voodoo to get the args into the format that args4j
@@ -908,7 +884,7 @@ public class CommandLineRunner extends
         processFlagFile(err);
       }
 
-      jsFiles = flags.getJsFiles(err);
+      jsFiles = flags.getJsFiles();
     } catch (CmdLineException e) {
       err.println(e.getMessage());
       isConfigValid = false;
