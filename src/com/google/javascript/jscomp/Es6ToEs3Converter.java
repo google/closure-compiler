@@ -58,8 +58,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       "CLASS_REASSIGNMENT",
       "Class names defined inside a function cannot be reassigned.");
 
-  // The name of the var that captures 'this' for converting arrow functions.
+  // The name of the vars that capture 'this' and 'arguments'
+  // for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
+  private static final String ARGUMENTS_VAR = "$jscomp$arguments";
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
 
@@ -793,19 +795,22 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       n.addChildToBack(body);
     }
 
-    UpdateThisNodes thisUpdater = new UpdateThisNodes();
-    NodeTraversal.traverse(compiler, body, thisUpdater);
-    if (thisUpdater.changed) {
-      addThisVar(t);
-    }
+    UpdateThisAndArgumentsReferences updater =
+        new UpdateThisAndArgumentsReferences();
+    NodeTraversal.traverse(compiler, body, updater);
+    addVarDecls(t, updater.changedThis, updater.changedArguments);
 
     compiler.reportCodeChange();
   }
 
-  private void addThisVar(NodeTraversal t) {
+  private void addVarDecls(
+      NodeTraversal t, boolean addThis, boolean addArguments) {
     Scope scope = t.getScope();
     if (scope.isDeclared(THIS_VAR, false)) {
-      return;
+      addThis = false;
+    }
+    if (scope.isDeclared(ARGUMENTS_VAR, false)) {
+      addArguments = false;
     }
 
     Node parent = t.getScopeRoot();
@@ -819,11 +824,21 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       parent = parent.getFirstChild();
     }
 
-    Node name = IR.name(THIS_VAR).srcref(parent);
-    Node thisVar = IR.var(name, IR.thisNode().srcref(parent));
-    thisVar.srcref(parent);
-    parent.addChildToFront(thisVar);
-    scope.declare(THIS_VAR, name, null, compiler.getInput(parent.getInputId()));
+    CompilerInput input = compiler.getInput(parent.getInputId());
+    if (addArguments) {
+      Node name = IR.name(ARGUMENTS_VAR).srcref(parent);
+      Node argumentsVar = IR.var(name, IR.name("arguments").srcref(parent));
+      argumentsVar.srcref(parent);
+      parent.addChildToFront(argumentsVar);
+      scope.declare(ARGUMENTS_VAR, name, null, input);
+    }
+    if (addThis) {
+      Node name = IR.name(THIS_VAR).srcref(parent);
+      Node thisVar = IR.var(name, IR.thisNode().srcref(parent));
+      thisVar.srcref(parent);
+      parent.addChildToFront(thisVar);
+      scope.declare(THIS_VAR, name, null, input);
+    }
   }
 
   private static String getUniqueClassName(String qualifiedName) {
@@ -839,15 +854,21 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     return getEnclosingFunction(n) != null;
   }
 
-  private static class UpdateThisNodes implements NodeTraversal.Callback {
-    private boolean changed = false;
+  private static class UpdateThisAndArgumentsReferences
+      implements NodeTraversal.Callback {
+    private boolean changedThis = false;
+    private boolean changedArguments = false;
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isThis()) {
         Node name = IR.name(THIS_VAR).srcref(n);
         parent.replaceChild(n, name);
-        changed = true;
+        changedThis = true;
+      } else if (n.isName() && n.getString().equals("arguments")) {
+        Node name = IR.name(ARGUMENTS_VAR).srcref(n);
+        parent.replaceChild(n, name);
+        changedArguments = true;
       }
     }
 
