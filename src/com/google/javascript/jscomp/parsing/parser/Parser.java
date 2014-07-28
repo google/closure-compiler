@@ -611,8 +611,6 @@ public class Parser {
     //   FormalParameterListNoRest , Identifier
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
 
-    boolean hasDefaultParameters = false;
-
     while (peek(TokenType.SPREAD) || peekId()
         || peek(TokenType.OPEN_SQUARE) || peek(TokenType.OPEN_CURLY)) {
 
@@ -635,13 +633,10 @@ public class Parser {
         parameter = parseObjectPattern(PatternKind.INITIALIZER);
       }
 
-      // Once we have seen a default parameter all remaining params must either
-      // be default or rest parameters.
-      if (hasDefaultParameters || peek(TokenType.EQUAL)) {
+      if (peek(TokenType.EQUAL)) {
         eat(TokenType.EQUAL);
         ParseTree defaultValue = parseAssignmentExpression();
         parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
-        hasDefaultParameters = true;
       }
 
       result.add(parameter);
