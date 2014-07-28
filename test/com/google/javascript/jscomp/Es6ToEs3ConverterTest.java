@@ -1668,6 +1668,9 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("function *f() {switch (i) {default: case 1: yield 1;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("function *f() {for (i in j) { yield 1; }}",
+      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testIfGenerator() {

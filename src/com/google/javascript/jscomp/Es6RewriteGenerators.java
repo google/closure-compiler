@@ -270,14 +270,12 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else if (currentStatement.isVar()) {
       visitVar();
       return false;
-    } else if (currentStatement.isFor() && yieldsOrReturns(currentStatement)) {
-      visitFor();
+    } else if (NodeUtil.isForIn(currentStatement) && yieldsOrReturns(currentStatement)) {
+      compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+        "For...in loops containing yield or return"));
       return false;
-    } else if (currentStatement.isWhile() && yieldsOrReturns(currentStatement)) {
-      visitWhile();
-      return false;
-    } else if (currentStatement.isDo() && yieldsOrReturns(currentStatement)) {
-      visitDo();
+    } else if (NodeUtil.isLoopStructure(currentStatement) && yieldsOrReturns(currentStatement)) {
+      visitLoop();
       return false;
     } else if (currentStatement.isSwitch() && yieldsOrReturns(currentStatement)) {
       visitSwitch();
@@ -465,9 +463,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /**
-   * {@code while} loops are eventually translated to a case statement followed
-   * by an if statement containing the loop body. The if statement finishes by
+   * Loops are eventually translated to a case statement followed by an if statement
+   * containing the loop body. The if statement finishes by
    * jumping back to the initial case statement to enter the loop again.
+   * In the case of for and do loops, initialization and post loop statements are inserted
+   * before and after the if statement. Below is a sample translation for a while loop:
    *
    * <code>
    * while (b) {
@@ -486,15 +486,41 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    *   }
    * </code>
    */
-  private void visitWhile() {
-    Node condition = currentStatement.removeFirstChild();
-    Node body = currentStatement.removeFirstChild();
+  private void visitLoop() {
+    Node initializer;
+    Node condition;
+    Node postExpression;
+    Node body;
+
+    if (currentStatement.isWhile()) {
+      condition = currentStatement.removeFirstChild();
+      body = currentStatement.removeFirstChild();
+      initializer = IR.empty();
+      postExpression = IR.empty();
+    } else if (currentStatement.isFor()) {
+      initializer = currentStatement.removeFirstChild();
+      condition = currentStatement.removeFirstChild();
+      postExpression = currentStatement.removeFirstChild();
+      body = currentStatement.removeFirstChild();
+    } else {
+      Preconditions.checkState(currentStatement.isDo());
+      Node firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
+      initializer = IR.var(firstEntry.cloneTree(), IR.trueNode());
+      postExpression = IR.assign(firstEntry.cloneTree(), IR.falseNode());
+
+      body = currentStatement.removeFirstChild();
+      condition = IR.or(firstEntry, currentStatement.removeFirstChild());
+    }
+
+    postExpression = postExpression.isEmpty() ? postExpression : IR.exprResult(postExpression);
 
     int loopBeginState = generatorCaseCount++;
     currentLoopEndCase.add(0, generatorCaseCount);
     currentBreakCaptureIsSwitch.add(0, false);
-    if (currentLoopContinueStatement.size() != currentLoopEndCase.size()) {
-      currentLoopContinueStatement.add(0, IR.empty());
+    currentLoopContinueStatement.add(0, postExpression);
+
+    if (!postExpression.isEmpty()) {
+      body.addChildToBack(postExpression);
     }
 
     Node beginCase = IR.number(loopBeginState);
@@ -504,51 +530,12 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node breakToStart = createSafeBreak();
 
     originalGeneratorBody.addChildToFront(beginCase);
+    if (!initializer.isEmpty()) {
+      originalGeneratorBody.addChildToFront(initializer);
+    }
     originalGeneratorBody.addChildAfter(conditionalBranch, beginCase);
     body.addChildToBack(setStateLoopStart);
     body.addChildToBack(breakToStart);
-  }
-
-  /**
-   * {@code for} loops are translated into equivalent while loops to
-   * consolidate loop translation logic.
-   */
-  private void visitFor() {
-    Node initializer = currentStatement.removeFirstChild();
-    Node condition = currentStatement.removeFirstChild();
-    Node postExpression = currentStatement.removeFirstChild();
-    Node body = currentStatement.removeFirstChild();
-
-    Node equivalentWhile = IR.whileNode(condition, body);
-    if (!postExpression.isEmpty()) {
-      body.addChildToBack(IR.exprResult(postExpression));
-      currentLoopContinueStatement.add(0, body.getLastChild());
-    }
-
-    if (!initializer.isEmpty()) {
-      originalGeneratorBody.addChildToFront(initializer);
-      originalGeneratorBody.addChildAfter(equivalentWhile, initializer);
-    } else {
-      originalGeneratorBody.addChildToFront(equivalentWhile);
-    }
-  }
-
-  /**
-   * Do while loops are rewritten into equivalent for loops to reduce duplication in
-   * translation logic.
-   */
-  private void visitDo() {
-    Node body = currentStatement.removeFirstChild();
-    Node condition = currentStatement.removeFirstChild();
-
-    Node firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
-    Node init = IR.var(firstEntry.cloneTree(), IR.trueNode());
-    Node incr = IR.assign(firstEntry.cloneTree(), IR.falseNode());
-
-    Node equivalentFor = IR.forNode(init, IR.or(firstEntry.cloneTree(),
-        condition), incr, body);
-
-    originalGeneratorBody.addChildToFront(equivalentFor);
   }
 
   /**
