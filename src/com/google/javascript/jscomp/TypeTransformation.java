@@ -23,6 +23,8 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
+import java.util.ArrayList;
+
 /**
  * A class for processing type transformation expressions
  *
@@ -56,12 +58,25 @@ class TypeTransformation {
     return isCallTo(n, TypeTransformationParser.Keywords.TYPE);
   }
 
+  private boolean isUnionType(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.UNION);
+  }
+
   private JSType getUnknownType() {
     return typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
   }
 
   private JSType typeOrUnknown(JSType type) {
     return (type == null) ? getUnknownType() : type;
+  }
+
+  private ArrayList<Node> getParameters(Node operation) {
+    ArrayList<Node> params = new ArrayList<Node>();
+    // Omit the keyword (first child)
+    for (int i = 1; i < operation.getChildCount(); i++) {
+      params.add(operation.getChildAtIndex(i));
+    }
+    return params;
   }
 
   /** Evaluates the type transformation expression and returns the resulting
@@ -82,6 +97,10 @@ class TypeTransformation {
     if (isTypePredicate(ttlAst)) {
       return evalTypePredicate(ttlAst);
     }
+    // Case union type: union(BasicType, BasicType, ...)
+    if (isUnionType(ttlAst)) {
+      return evalUnionType(ttlAst, typeVars);
+    }
     throw new IllegalStateException(
         "Could not evaluate the type transformation expression");
   }
@@ -100,5 +119,18 @@ class TypeTransformation {
     // If the type variable is not found in the environment then it will be
     // taken as UNKNOWN
     return typeOrUnknown(resultingType);
+  }
+
+  private JSType evalUnionType(Node ttlAst,
+      ImmutableMap<String, JSType> typeVars) {
+    // Get the parameters of the union
+    ArrayList<Node> params = getParameters(ttlAst);
+    int paramCount = params.size();
+    // Create an array of types after evaluating each parameter
+    JSType[] basicTypes = new JSType[paramCount];
+    for (int i = 0; i < paramCount; i++) {
+      basicTypes[i] = eval(params.get(i), typeVars);
+    }
+    return typeRegistry.createUnionType(basicTypes);
   }
 }
