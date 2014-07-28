@@ -62,6 +62,18 @@ class TypeTransformation {
     return isCallTo(n, TypeTransformationParser.Keywords.UNION);
   }
 
+  private boolean isEqtype(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.EQTYPE);
+  }
+
+  private boolean isSubtype(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.SUBTYPE);
+  }
+
+  private boolean isConditional(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.COND);
+  }
+
   private JSType getUnknownType() {
     return typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
   }
@@ -101,6 +113,9 @@ class TypeTransformation {
     if (isUnionType(ttlAst)) {
       return evalUnionType(ttlAst, typeVars);
     }
+    if (isConditional(ttlAst)) {
+      return evalConditional(ttlAst, typeVars);
+    }
     throw new IllegalStateException(
         "Could not evaluate the type transformation expression");
   }
@@ -132,5 +147,30 @@ class TypeTransformation {
       basicTypes[i] = eval(params.get(i), typeVars);
     }
     return typeRegistry.createUnionType(basicTypes);
+  }
+
+  private boolean evalBoolean(Node ttlAst,
+      ImmutableMap<String, JSType> typeVars) {
+    ArrayList<Node> params = getParameters(ttlAst);
+    JSType type0 = eval(params.get(0), typeVars);
+    JSType type1 = eval(params.get(1), typeVars);
+
+    if (isEqtype(ttlAst)) {
+      return type0.isEquivalentTo(type1);
+    } else if (isSubtype(ttlAst)) {
+      return type0.isSubtype(type1);
+    }
+    throw new IllegalStateException(
+        "Invalid boolean predicate in the type transformation");
+  }
+
+  private JSType evalConditional(Node ttlAst,
+      ImmutableMap<String, JSType> typeVars) {
+    ArrayList<Node> params = getParameters(ttlAst);
+    if (evalBoolean(params.get(0), typeVars)) {
+      return eval(params.get(1), typeVars);
+    } else {
+      return eval(params.get(2), typeVars);
+    }
   }
 }
