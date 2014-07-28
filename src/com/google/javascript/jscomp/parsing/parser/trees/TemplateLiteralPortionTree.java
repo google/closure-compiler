@@ -20,7 +20,7 @@ import com.google.javascript.jscomp.parsing.parser.Token;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 /**
- * A production representing a literal portion of a template string.
+ * A production representing a literal portion of a template literal.
  * Eg: `hello`.
  */
 public class TemplateLiteralPortionTree extends ParseTree {

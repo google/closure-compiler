@@ -117,7 +117,8 @@ class Es6TemplateLiterals {
   private static Node createRawStringArray(Node n) {
     Node[] items = new Node[n.getChildCount() / 2];
     for (int i = 0, j = 1; i < items.length; i++, j += 2) {
-      items[i] = n.getChildAtIndex(j).cloneNode();
+      items[i] = IR.string(
+          (String) n.getChildAtIndex(j).getProp(Node.RAW_STRING_VALUE));
     }
     return IR.arraylit(items);
   }
@@ -125,7 +126,8 @@ class Es6TemplateLiterals {
   private static Node createCookedStringArray(Node n) {
     Node[] items = new Node[n.getChildCount() / 2];
     for (int i = 0, j = 1; i < items.length; i++, j += 2) {
-      items[i] = IR.string(cookString(n.getChildAtIndex(j).getString()));
+      items[i] = IR.string(cookString(
+          (String) n.getChildAtIndex(j).getProp(Node.RAW_STRING_VALUE)));
       items[i].putBooleanProp(Node.COOKED_STRING, true);
     }
     return IR.arraylit(items);
@@ -150,7 +152,7 @@ class Es6TemplateLiterals {
             case '\u2029':
               break;
             case '\r':
-              // \ \r \n should be stripped as one71601162
+              // \ \r \n should be stripped as one
               if (s.charAt(i + 1) == '\n') {
                 i++;
               }

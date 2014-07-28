@@ -564,7 +564,7 @@ public class Scanner {
       case '\'':
         return scanStringLiteral(beginToken, ch);
       case '`':
-        return scanTemplateString(beginToken);
+        return scanTemplateLiteral(beginToken);
       default:
         return scanIdentifierOrKeyword(beginToken, ch);
       }
@@ -768,9 +768,9 @@ public class Scanner {
         TokenType.STRING, getTokenString(beginIndex), getTokenRange(beginIndex));
   }
 
-  private Token scanTemplateString(int beginIndex) {
+  private Token scanTemplateLiteral(int beginIndex) {
     if (isAtEnd()) {
-      reportError(getPosition(beginIndex), "Unterminated template string");
+      reportError(getPosition(beginIndex), "Unterminated template literal");
     }
 
     return nextTemplateLiteralTokenShared(
@@ -782,7 +782,7 @@ public class Scanner {
     int beginIndex = index;
     skipTemplateCharacters();
     if (isAtEnd()) {
-      reportError(getPosition(beginIndex), "Unterminated template string");
+      reportError(getPosition(beginIndex), "Unterminated template literal");
     }
 
     String value = getTokenString(beginIndex);

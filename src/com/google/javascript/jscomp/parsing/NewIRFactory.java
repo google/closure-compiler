@@ -26,8 +26,80 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
-import com.google.javascript.jscomp.parsing.parser.trees.*;
+import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
+import com.google.javascript.jscomp.parsing.parser.trees.AssignmentRestElementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
+import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
+import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.CallExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
+import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
+import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
+import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternFieldTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
+import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
+import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
+import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralPortionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TemplateSubstitutionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationListTree;
+import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.WhileStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.YieldExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
@@ -1344,19 +1416,19 @@ class NewIRFactory {
 
     Node processString(LiteralToken token) {
       Preconditions.checkArgument(token.type == TokenType.STRING);
-      Node node = newStringNode(Token.STRING, normalizeString(token));
+      Node node = newStringNode(Token.STRING, normalizeString(token, false));
       setSourceInfo(node, token);
       return node;
     }
 
-    Node processTemplateString(LiteralToken token) {
+    Node processTemplateLiteralToken(LiteralToken token) {
       Preconditions.checkArgument(
           token.type == TokenType.NO_SUBSTITUTION_TEMPLATE
           || token.type == TokenType.TEMPLATE_HEAD
           || token.type == TokenType.TEMPLATE_MIDDLE
           || token.type == TokenType.TEMPLATE_TAIL);
-      // <CR><LF> and <CR> are normalized as <LF> for raw string value
-      Node node = newStringNode(token.value.replaceAll("\\r(\\n)?", "\n"));
+      Node node = newStringNode(normalizeString(token, true));
+      node.putProp(Node.RAW_STRING_VALUE, token.value);
       setSourceInfo(node, token);
       return node;
     }
@@ -1618,7 +1690,7 @@ class NewIRFactory {
 
     @Override
     Node processTemplateLiteral(TemplateLiteralExpressionTree tree) {
-      maybeWarnEs6Feature(tree, "template strings");
+      maybeWarnEs6Feature(tree, "template literals");
       Node node = tree.operand == null
           ? newNode(Token.TEMPLATELIT)
           : newNode(Token.TEMPLATELIT, transform(tree.operand));
@@ -1630,7 +1702,7 @@ class NewIRFactory {
 
     @Override
     Node processTemplateLiteralPortion(TemplateLiteralPortionTree tree) {
-      return processTemplateString(tree.value.asLiteral());
+      return processTemplateLiteralToken(tree.value.asLiteral());
     }
 
     @Override
@@ -2092,13 +2164,17 @@ class NewIRFactory {
   }
 
 
-  private String normalizeString(LiteralToken token) {
+  private String normalizeString(LiteralToken token, boolean templateLiteral) {
     String value = token.value;
-    int start = 1; // skip the leading quote
+    if (templateLiteral) {
+      // <CR><LF> and <CR> are normalized as <LF> for raw string value
+      value = value.replaceAll("(?<!\\\\)\r(\n)?", "\n");
+    }
+    int start = templateLiteral ? 0 : 1; // skip the leading quote
     int cur = value.indexOf('\\');
     if (cur == -1) {
       // short circuit no escapes.
-      return value.substring(1, value.length() - 1);
+      return templateLiteral ? value : value.substring(1, value.length() - 1);
     }
     StringBuilder result = new StringBuilder();
     while (cur != -1) {
@@ -2203,7 +2279,7 @@ class NewIRFactory {
       cur = value.indexOf('\\', start);
     }
     // skip the trailing quote.
-    result.append(value, start, value.length() - 1);
+    result.append(value, start, templateLiteral ? value.length() : value.length() - 1);
 
     return result.toString();
   }

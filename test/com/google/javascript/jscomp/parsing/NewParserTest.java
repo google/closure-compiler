@@ -1430,27 +1430,31 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("'\\\n';");
   }
 
-  private void testTemplateString(String s) {
+  private void testTemplateLiteral(String s) {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(s,
-        "this language feature is only supported in es6 mode: template strings");
+        "this language feature is only supported in es6 mode: template literals");
 
     mode = LanguageMode.ECMASCRIPT6;
     parse(s);
   }
 
-  public void testUseTemplateString() {
-    testTemplateString("f`hello world`;");
-    testTemplateString("`hello ${name} ${world}`.length;");
+  public void testUseTemplateLiteral() {
+    testTemplateLiteral("f`hello world`;");
+    testTemplateLiteral("`hello ${name} ${world}`.length;");
   }
 
-  public void testTemplateString() {
-    testTemplateString("`hello world`;");
-    testTemplateString("`hello\nworld`;");
-    testTemplateString("`string containing \\`escaped\\` backticks`;");
+  public void testTemplateLiteral() {
+    testTemplateLiteral("``");
+    testTemplateLiteral("`\"`");
+    testTemplateLiteral("`\\\"`");
+    testTemplateLiteral("`\\``");
+    testTemplateLiteral("`hello world`;");
+    testTemplateLiteral("`hello\nworld`;");
+    testTemplateLiteral("`string containing \\`escaped\\` backticks`;");
   }
 
-  public void testTemplateStringPlaceholder() {
+  public void testTemplateLiteralSubstitution() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("`hello ${name}`;");
     parse("`hello ${name} ${world}`;");
@@ -1459,15 +1463,15 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("`hello ${name tail}", "Expected '}' after expression in template literal");
   }
 
-  public void testUnterminatedTemplateString() {
+  public void testUnterminatedTemplateLiteral() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("`hello",
-        "Unterminated template string");
+        "Unterminated template literal");
     parseError("`hello\\`",
-        "Unterminated template string");
+        "Unterminated template literal");
   }
 
-  public void testIncorrectEscapeSequenceInTemplateString() {
+  public void testIncorrectEscapeSequenceInTemplateLiteral() {
     parseError("`hello\\x",
         "Hex digit expected");
     parseError("`hello\\x`",

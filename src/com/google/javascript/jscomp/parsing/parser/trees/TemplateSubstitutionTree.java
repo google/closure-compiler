@@ -20,7 +20,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 /**
  * A production representing the expression to be evaluated and substituted
- * into a template string. Eg: ${hello}.
+ * into a template literal. Eg: ${hello}.
  */
 public class TemplateSubstitutionTree extends ParseTree {
 
