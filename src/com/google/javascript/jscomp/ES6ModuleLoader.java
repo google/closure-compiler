@@ -43,6 +43,10 @@ abstract class ES6ModuleLoader {
         name.startsWith(".." + MODULE_SLASH);
   }
 
+  static final DiagnosticType LOAD_ERROR = DiagnosticType.error(
+      "JSC_ES6_MODULE_LOAD_ERROR",
+      "Failed to load module \"{0}\"");
+
   /**
    * The normalize hook creates a global qualified name for a module, and then
    * the locate hook creates an address. Meant to mimic the behavior of these

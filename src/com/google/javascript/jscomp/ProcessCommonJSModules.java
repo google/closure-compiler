@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
  * ordering.
  */
 public class ProcessCommonJSModules implements CompilerPass {
-  private static final String MODULE_SLASH = ES6ModuleLoader.MODULE_SLASH;
   public static final String DEFAULT_FILENAME_PREFIX =
       "." + ES6ModuleLoader.MODULE_SLASH;
 
@@ -47,35 +46,27 @@ public class ProcessCommonJSModules implements CompilerPass {
 
   private static final String EXPORTS = "exports";
 
-  static final DiagnosticType LOAD_ERROR = DiagnosticType.error(
-      "JSC_ES6_MODULE_LOAD_ERROR",
-      "Failed to load module \"{0}\"");
-
   private final Compiler compiler;
   private final ES6ModuleLoader loader;
   private final boolean reportDependencies;
-  private final boolean overrideModule;
   private JSModule module;
 
-  private boolean dontProcess;
-
   ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader) {
-    this(compiler, loader, true, true);
+    this(compiler, loader, true);
   }
 
   ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader,
-      boolean reportDependencies, boolean overrideModule) {
+      boolean reportDependencies) {
     this.compiler = compiler;
     this.loader = loader;
     this.reportDependencies = reportDependencies;
-    this.overrideModule = overrideModule;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    dontProcess = false;
-    NodeTraversal.traverse(compiler, root, new FindGoogProvideAndGoogModule());
-    if (dontProcess) {
+    FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
+    NodeTraversal.traverse(compiler, root, finder);
+    if (finder.found) {
       return;
     }
     NodeTraversal
@@ -97,8 +88,8 @@ public class ProcessCommonJSModules implements CompilerPass {
    */
   public static String toModuleName(String filename) {
     return MODULE_NAME_PREFIX +
-        filename.replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
-            .replaceAll(Pattern.quote(MODULE_SLASH), MODULE_NAME_SEPARATOR)
+        filename.replaceAll("^\\." + Pattern.quote(ES6ModuleLoader.MODULE_SLASH), "")
+            .replaceAll(Pattern.quote(ES6ModuleLoader.MODULE_SLASH), MODULE_NAME_SEPARATOR)
             .replaceAll(Pattern.quote("\\"), MODULE_NAME_SEPARATOR)
             .replaceAll("\\.js$", "")
             .replaceAll("-", "_")
@@ -111,7 +102,14 @@ public class ProcessCommonJSModules implements CompilerPass {
    *
    * TODO(moz): Let ES6, CommonJS and goog.provide live happily together.
    */
-  private class FindGoogProvideAndGoogModule extends AbstractPreOrderCallback {
+  static class FindGoogProvideOrGoogModule extends AbstractPreOrderCallback {
+
+    private boolean found;
+
+    boolean isFound() {
+      return found;
+    }
+
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       // Shallow traversal, since we don't need to inspect within function declarations.
@@ -122,7 +120,7 @@ public class ProcessCommonJSModules implements CompilerPass {
           if (maybeGetProp != null
               && (maybeGetProp.matchesQualifiedName("goog.provide")
                   || maybeGetProp.matchesQualifiedName("goog.module"))) {
-            dontProcess = true;
+            found = true;
             return false;
           }
         }
@@ -178,7 +176,7 @@ public class ProcessCommonJSModules implements CompilerPass {
       try {
         loader.load(loadAddress);
       } catch (ES6ModuleLoader.LoadFailedException e) {
-        t.makeError(require, LOAD_ERROR, requireName);
+        t.makeError(require, ES6ModuleLoader.LOAD_ERROR, requireName);
       }
 
       String moduleName = toModuleName(loadAddress);
@@ -220,9 +218,7 @@ public class ProcessCommonJSModules implements CompilerPass {
         CompilerInput ci = t.getInput();
         ci.addProvide(moduleName);
         JSModule m = new JSModule(moduleName);
-        if (overrideModule) {
-          m.addAndOverrideModule(ci);
-        }
+        m.addAndOverrideModule(ci);
         module = m;
       }
       script.addChildToFront(IR.exprResult(
@@ -450,7 +446,7 @@ public class ProcessCommonJSModules implements CompilerPass {
           String moduleName = name.substring(0, endIndex);
           String loadAddress = loader.locate(moduleName, t.getInput());
           if (loadAddress == null) {
-            t.makeError(typeNode, LOAD_ERROR, moduleName);
+            t.makeError(typeNode, ES6ModuleLoader.LOAD_ERROR, moduleName);
             return;
           }
 

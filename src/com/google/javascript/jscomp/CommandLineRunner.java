@@ -350,6 +350,10 @@ public class CommandLineRunner extends
         usage = "Process CommonJS modules to a concatenable form.")
     private boolean processCommonJsModules = false;
 
+    @Option(name = "--rewrite_es6_modules",
+        usage = "Rewrite ES6 modules to a concatenable form.")
+    private boolean rewriteEs6Modules = false;
+
     @Option(name = "--common_js_module_path_prefix",
         usage = "Path prefix to be removed from CommonJS module names.")
     private String commonJsPathPrefix =
@@ -979,6 +983,7 @@ public class CommandLineRunner extends
           .setLanguageIn(flags.languageIn)
           .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)
+          .setRewriteEs6Modules(flags.rewriteEs6Modules)
           .setCommonJSModulePathPrefix(flags.commonJsPathPrefix)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)

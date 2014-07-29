@@ -1353,9 +1353,7 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
-      boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
-
-      if (needsConversion && options.processCommonJSModules) {
+      if (options.rewriteEs6Modules) {
         processEs6Modules();
       }
 
@@ -1526,7 +1524,10 @@ public class Compiler extends AbstractCompiler {
       if (root == null) {
         continue;
       }
-      new TransformEs6ModuleToCjsModule(this).process(null, root);
+      new ProcessEs6Modules(
+          this,
+          ES6ModuleLoader.createNaiveLoader(this, options.commonJSModulePathPrefix))
+      .process(null, root);
     }
   }
 
@@ -1542,7 +1543,6 @@ public class Compiler extends AbstractCompiler {
     // with multiple ways to express dependencies. Directly support JSModules
     // that are equivalent to a single file and which express their deps
     // directly in the source.
-    boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -1556,7 +1556,7 @@ public class Compiler extends AbstractCompiler {
         ProcessCommonJSModules cjs = new ProcessCommonJSModules(
             this,
             ES6ModuleLoader.createNaiveLoader(
-                this, options.commonJSModulePathPrefix), true, !needsConversion);
+                this, options.commonJSModulePathPrefix), true);
         cjs.process(null, root);
         JSModule m = cjs.getModule();
         if (m != null) {
@@ -1565,10 +1565,8 @@ public class Compiler extends AbstractCompiler {
         }
       }
     }
-    // TODO(moz): ProcessCommonJSModules treats each CommonJS/ES6 input as a
-    // separate module, which causes problems with non-CommonJS code. Disable
-    // this part of dependency management until we refactor it.
-    if (options.processCommonJSModules && !needsConversion) {
+
+    if (options.processCommonJSModules) {
       List<JSModule> modules = Lists.newArrayList(modulesByName.values());
       if (!modules.isEmpty()) {
         this.modules = modules;
