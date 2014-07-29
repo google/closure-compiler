@@ -1452,6 +1452,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     testTemplateLiteral("`hello world`;");
     testTemplateLiteral("`hello\nworld`;");
     testTemplateLiteral("`string containing \\`escaped\\` backticks`;");
+    testTemplateLiteral("{ `in block` }");
+    testTemplateLiteral("{ `in ${block}` }");
   }
 
   public void testTemplateLiteralSubstitution() {

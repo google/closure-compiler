@@ -839,6 +839,8 @@ public class Parser {
     case SUPER:
     case NUMBER:
     case STRING:
+    case NO_SUBSTITUTION_TEMPLATE:
+    case TEMPLATE_HEAD:
     case NULL:
     case TRUE:
     case SLASH: // regular expression literal
