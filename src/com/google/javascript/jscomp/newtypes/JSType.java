@@ -24,6 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -375,7 +376,8 @@ public abstract class JSType {
 
   public JSType substituteGenerics(Map<String, JSType> concreteTypes) {
     if (isTop() || isUnknown()
-        || getObjs() == null && getTypeVar() == null) {
+        || getObjs() == null && getTypeVar() == null
+        || !hasFreeTypeVars(new HashSet<String>())) {
       return this;
     }
     ImmutableSet<ObjectType> newObjs = null;
@@ -413,6 +415,20 @@ public abstract class JSType {
     typeMultimap.put(typeParam, type);
   }
 
+  boolean hasFreeTypeVars(Set<String> boundTypeVars) {
+    if (getTypeVar() != null && !boundTypeVars.contains(getTypeVar())) {
+      return true;
+    }
+    if (getObjs() != null) {
+      for (ObjectType obj : getObjs()) {
+        if (obj.hasFreeTypeVars(boundTypeVars)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   private static int promoteBoolean(int mask) {
     if ((mask & (TRUE_MASK | FALSE_MASK)) != 0) {
       return mask | TRUE_MASK | FALSE_MASK;
@@ -424,7 +440,8 @@ public abstract class JSType {
    * Unify the two types symmetrically, given that we have already instantiated
    * the type variables of interest in {@code t1} and {@code t2}, treating
    * JSType.UNKNOWN as a "hole" to be filled.
-   * @return The unified type, or null if unification fails */
+   * @return The unified type, or null if unification fails
+   */
   static JSType unifyUnknowns(JSType t1, JSType t2) {
     if (t1.isUnknown()) {
       return t2;

@@ -22,10 +22,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -542,10 +544,14 @@ public class FunctionType {
    */
   FunctionType substituteGenerics(Map<String, JSType> concreteTypes) {
     Preconditions.checkState(outerVarPreconditions.isEmpty());
+    if (!hasFreeTypeVars(new HashSet<String>())) {
+      return this;
+    }
     Map<String, JSType> typeMap = concreteTypes;
     if (typeParameters != null) {
       ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-      for (Map.Entry<String, JSType> concreteTypeEntry : concreteTypes.entrySet()) {
+      for (Map.Entry<String, JSType> concreteTypeEntry
+               : concreteTypes.entrySet()) {
         if (!typeParameters.contains(concreteTypeEntry.getKey())) {
           builder.put(concreteTypeEntry.getKey(), concreteTypeEntry.getValue());
         }
@@ -560,6 +566,26 @@ public class FunctionType {
       Preconditions.checkState(typeParameters.contains(typeParam));
     }
     return applyInstantiation(false, typeMap);
+  }
+
+  boolean hasFreeTypeVars(Set<String> boundTypeVars) {
+    if (typeParameters != null) {
+      boundTypeVars.addAll(typeParameters);
+    }
+    for (JSType t : requiredFormals) {
+      if (t.hasFreeTypeVars(boundTypeVars)) {
+        return true;
+      }
+    }
+    for (JSType t : optionalFormals) {
+      if (t.hasFreeTypeVars(boundTypeVars)) {
+        return true;
+      }
+    }
+    return restFormals != null && restFormals.hasFreeTypeVars(boundTypeVars)
+        || returnType.hasFreeTypeVars(boundTypeVars)
+        || (nominalType != null
+            && nominalType.hasFreeTypeVars(boundTypeVars));
   }
 
   @Override

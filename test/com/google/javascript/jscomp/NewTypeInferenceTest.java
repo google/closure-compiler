@@ -4668,6 +4668,22 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function /** T */ f(/** T */ x) { return x; }\n" +
         "f('str') - 5;",
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  /** @constructor */\n" +
+        "  function Foo() {\n" +
+        "    /** @type {T} */\n" +
+        "    this.prop = x;\n" +
+        "  }\n" +
+        "  return (new Foo()).prop;\n" +
+        "}\n" +
+        "f('asdf') - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testUnification() {
