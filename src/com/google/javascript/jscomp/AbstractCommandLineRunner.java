@@ -1553,7 +1553,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
             "\n" + // terminate any trailing single line comment.
             ";return exports;" +
             "});" +
-            "\n//# sourceURL=" + displayName + "\n");
+            "\n");
       }
 
       out.append("\n");
