@@ -2322,7 +2322,7 @@ public class NewTypeInference implements CompilerPass {
         }
         println(varName, "'s preciseType: ", preciseType);
 
-        if (!preciseType.isInhabitable()) {
+        if (preciseType.isBottom()) {
           // If there is a type mismatch, we can propagate the previously
           // inferred type or the required type.
           // Propagating the already inferred type means that the type of the
@@ -3061,7 +3061,7 @@ public class NewTypeInference implements CompilerPass {
   private static JSType specializeWithCorrection(
       JSType inferred, JSType required) {
     JSType specializedType = inferred.specialize(required);
-    if (!specializedType.isInhabitable()) {
+    if (specializedType.isBottom()) {
       return required;
     }
     return specializedType;

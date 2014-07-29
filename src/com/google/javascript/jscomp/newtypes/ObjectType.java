@@ -97,7 +97,7 @@ public class ObjectType implements TypeWithProperties {
 
   boolean isInhabitable() {
     for (Property p : props.values()) {
-      if (!p.getType().isInhabitable()) {
+      if (p.getType().isBottom()) {
         return false;
       }
     }

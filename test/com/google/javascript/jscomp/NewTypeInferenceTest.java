@@ -5853,6 +5853,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.MALFORMED_ENUM);
   }
 
+  public void testUninhabitableObjectTypeDoesntCrash() {
+    checkNoWarnings(
+        "function f(/** number */ n) {\n" +
+        "  if (typeof n == 'string') {\n" +
+        "    return { 'First': n, 'Second': 5 };\n" +
+        "  }\n" +
+        "};");
+  }
+
   public void testDebuggerStatementDoesntCrash() {
     checkNoWarnings("debugger;");
   }

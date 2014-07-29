@@ -84,6 +84,9 @@ public abstract class JSType {
     if (objs == null && typeVar == null && enums == null) {
       return MaskType.make(mask);
     }
+    if (!JSType.isInhabitable(objs)) {
+      return BOTTOM;
+    }
     if (mask == NON_SCALAR_MASK) {
       return new ObjsType(objs);
     }
@@ -229,13 +232,11 @@ public abstract class JSType {
   }
 
   // True iff there exists a value that can have this type
-  public boolean isInhabitable() {
-    if (isBottom()) {
-      return false;
-    } else if (getObjs() == null) {
+  private static boolean isInhabitable(Set<ObjectType> objs) {
+    if (objs == null) {
       return true;
     }
-    for (ObjectType obj : getObjs()) {
+    for (ObjectType obj : objs) {
       if (!obj.isInhabitable()) {
         return false;
       }
@@ -921,7 +922,7 @@ public abstract class JSType {
 
   public JSType withProperty(QualifiedName qname, JSType type) {
     Preconditions.checkArgument(type != null);
-    if (isUnknown()) {
+    if (isUnknown() || isBottom()) {
       return this;
     }
     Preconditions.checkState(getObjs() != null);
