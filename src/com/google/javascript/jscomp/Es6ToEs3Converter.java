@@ -649,6 +649,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     JSDocInfo ctorJSDocInfo = null;
     // Process all members of the class
     for (Node member : classMembers.children()) {
+      if (member.isEmpty()) {
+        continue;
+      }
       if (member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();

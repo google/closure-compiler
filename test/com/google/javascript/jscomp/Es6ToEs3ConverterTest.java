@@ -80,6 +80,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "/** @constructor @struct */",
         "var C = function() {};"
     ));
+    test("class C { method() {}; }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "C.prototype.method = function() {};"
+    ));
     test("class C { constructor(a) { this.a = a; } }", Joiner.on('\n').join(
         "/** @constructor @struct */",
         "var C = function(a) { this.a = a; };"

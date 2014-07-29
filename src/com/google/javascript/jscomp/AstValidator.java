@@ -471,6 +471,8 @@ public class AstValidator implements CompilerPass {
       validateFunctionExpression(n.getFirstChild());
     } else if (n.isComputedProp()) {
       validateComputedPropClassMethod(n);
+    } else if (n.isEmpty()) {
+      // Empty is allowed too.
     } else {
       violation("Class contained member of invalid type " + Token.name(n.getType()), n);
     }
