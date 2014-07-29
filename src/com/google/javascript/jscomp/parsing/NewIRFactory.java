@@ -42,7 +42,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyGetterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertySetterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
@@ -1533,6 +1535,33 @@ class NewIRFactory {
       Node n = newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.method));
       n.putBooleanProp(Node.COMPUTED_PROP_METHOD, true);
+      return n;
+    }
+
+    @Override
+    Node processComputedPropertyGetter(ComputedPropertyGetterTree tree) {
+      maybeWarnEs6Feature(tree, "computed property");
+
+      Node key = transform(tree.property);
+      Node body = transform(tree.body);
+      Node function = IR.function(IR.name(""), IR.paramList(), body);
+      function.useSourceInfoIfMissingFromForTree(body);
+      Node n = newNode(Token.COMPUTED_PROP, key, function);
+      n.putBooleanProp(Node.COMPUTED_PROP_GETTER, true);
+      return n;
+    }
+
+    @Override
+    Node processComputedPropertySetter(ComputedPropertySetterTree tree) {
+      maybeWarnEs6Feature(tree, "computed property");
+
+      Node key = transform(tree.property);
+      Node body = transform(tree.body);
+      Node paramList = IR.paramList(safeProcessName(tree.parameter));
+      Node function = IR.function(IR.name(""), paramList, body);
+      function.useSourceInfoIfMissingFromForTree(body);
+      Node n = newNode(Token.COMPUTED_PROP, key, function);
+      n.putBooleanProp(Node.COMPUTED_PROP_SETTER, true);
       return n;
     }
 

@@ -61,8 +61,12 @@ public class ParseTree {
   public ComprehensionTree asComprehension() { return (ComprehensionTree) this; }
   public ComputedPropertyDefinitionTree asComputedPropertyDefinition() {
     return (ComputedPropertyDefinitionTree) this; }
+  public ComputedPropertyGetterTree asComputedPropertyGetter() {
+    return (ComputedPropertyGetterTree) this; }
   public ComputedPropertyMethodTree asComputedPropertyMethod() {
     return (ComputedPropertyMethodTree) this; }
+  public ComputedPropertySetterTree asComputedPropertySetter() {
+    return (ComputedPropertySetterTree) this; }
   public ConditionalExpressionTree asConditionalExpression() {
     return (ConditionalExpressionTree) this; }
   public ContinueStatementTree asContinueStatement() { return (ContinueStatementTree) this; }

@@ -16,78 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
-import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
-import com.google.javascript.jscomp.parsing.parser.trees.AssignmentRestElementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
-import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CallExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.CommaExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionForTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ContinueStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DebuggerStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
-import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.FinallyTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ForInStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
-import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
-import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
-import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternFieldTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
-import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
-import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
-import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SpreadExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SuperExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.SwitchStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.TemplateLiteralPortionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.TemplateSubstitutionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationListTree;
-import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.WhileStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
-import com.google.javascript.jscomp.parsing.parser.trees.YieldExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.*;
 
 /**
  * Type safe dispatcher interface for use with new ES6 parser ASTs.
@@ -99,7 +28,9 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processBreakStatement(BreakStatementTree breakStatementTree);
   abstract T processCatchClause(CatchTree tree);
   abstract T processComputedPropertyDefinition(ComputedPropertyDefinitionTree tree);
+  abstract T processComputedPropertyGetter(ComputedPropertyGetterTree tree);
   abstract T processComputedPropertyMethod(ComputedPropertyMethodTree tree);
+  abstract T processComputedPropertySetter(ComputedPropertySetterTree tree);
   abstract T processConditionalExpression(ConditionalExpressionTree tree);
   abstract T processContinueStatement(ContinueStatementTree tree);
   abstract T processDoLoop(DoWhileStatementTree tree);
@@ -260,8 +191,12 @@ abstract class NewTypeSafeDispatcher<T> {
         return processObjectLiteral(node.asObjectLiteralExpression());
       case COMPUTED_PROPERTY_DEFINITION:
         return processComputedPropertyDefinition(node.asComputedPropertyDefinition());
+      case COMPUTED_PROPERTY_GETTER:
+        return processComputedPropertyGetter(node.asComputedPropertyGetter());
       case COMPUTED_PROPERTY_METHOD:
         return processComputedPropertyMethod(node.asComputedPropertyMethod());
+      case COMPUTED_PROPERTY_SETTER:
+        return processComputedPropertySetter(node.asComputedPropertySetter());
       case RETURN_STATEMENT:
         return processReturnStatement(node.asReturnStatement());
       case POSTFIX_EXPRESSION:

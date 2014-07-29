@@ -931,10 +931,17 @@ class CodeGenerator {
       }
 
       case Token.COMPUTED_PROP:
+        if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
+          add("get ");
+        } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
+          add("set ");
+        }
         add("[");
         add(first);
         add("]");
-        if (n.getBooleanProp(Node.COMPUTED_PROP_METHOD)) {
+        if (n.getBooleanProp(Node.COMPUTED_PROP_METHOD)
+            || n.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+            || n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
           Node function = first.getNext();
           Node params = function.getFirstChild().getNext();
           Node body = function.getLastChild();

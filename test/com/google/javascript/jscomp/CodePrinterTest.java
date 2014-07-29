@@ -1530,6 +1530,9 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("var a={[b](){}}");
     assertPrintSame("var a={[b](){alert(foo)}}");
     assertPrintSame("var a={[b]:(()=>c)}");
+
+    assertPrintSame("var a={get [b](){return null}}");
+    assertPrintSame("var a={set [b](val){window.b=val}}");
   }
 
   public void testComputedPropertiesClassMethods() {

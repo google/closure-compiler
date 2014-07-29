@@ -1279,6 +1279,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var $jscomp$compprop0 = {};",
         "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0.a = a, $jscomp$compprop0))"
     ));
+
+    test("var obj = { [foo]() {}}", Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"
+    ));
   }
 
   public void testComputedPropGetterSetter() {
@@ -1297,12 +1302,13 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
-  public void testComputedPropMethod() {
+  public void testComputedPropCannotConvert() {
     test("class C { [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var obj = { [foo]() {}}", Joiner.on('\n').join(
-        "var $jscomp$compprop0 = {};",
-        "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"
-    ));
+    test("class C { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class C { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("var o = { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var o = { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testNoComputedProperties() {

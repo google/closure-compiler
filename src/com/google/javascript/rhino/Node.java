@@ -116,9 +116,13 @@ public class Node implements Cloneable, Serializable {
 
       COOKED_STRING      = 70,    // Used to support ES6 tagged template literal.
       RAW_STRING_VALUE   = 71,    // Used to support ES6 tagged template literal.
-      COMPUTED_PROP_METHOD = 72;  // A computed property that has the method
+      COMPUTED_PROP_METHOD = 72,  // A computed property that has the method
                                   // syntax ( [prop]() {...} ) rather than the
                                   // property definition syntax ( [prop]: value ).
+      COMPUTED_PROP_GETTER = 73,  // A computed property in a getter, e.g.
+                                  // var obj = { get [prop]() {...} };
+      COMPUTED_PROP_SETTER = 74;  // A computed property in a setter, e.g.
+                                  // var obj = { set [prop](val) {...} };
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -164,6 +168,8 @@ public class Node implements Cloneable, Serializable {
         case COOKED_STRING:      return "cooked_string";
         case RAW_STRING_VALUE:   return "raw_string_value";
         case COMPUTED_PROP_METHOD: return "computed_prop_method";
+        case COMPUTED_PROP_GETTER: return "computed_prop_getter";
+        case COMPUTED_PROP_SETTER: return "computed_prop_setter";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
