@@ -78,18 +78,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
-  private List<Integer> currentLoopEndCase;
-  // The node head of this stack must be executed before any continue statement.
-  private List<Node> currentLoopContinueStatement;
-  // A stack of booleans indicating whether the enclosing control structure which captures
-  // breaks is a switch.
-  private List<Boolean> currentBreakCaptureIsSwitch;
+  private List<LoopContext> currentLoopContext;
 
   public Es6RewriteGenerators(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.currentLoopEndCase = new ArrayList<>();
-    this.currentLoopContinueStatement = new ArrayList<>();
-    this.currentBreakCaptureIsSwitch = new ArrayList<>();
+    this.currentLoopContext = new ArrayList<>();
     generatorCounter = compiler.getUniqueNameIdSupplier();
   }
 
@@ -313,22 +306,15 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   private void visitContinue() {
-    int nested = 0;
-    while (!currentBreakCaptureIsSwitch.isEmpty() && currentBreakCaptureIsSwitch.get(nested)) {
-      nested++;
-    }
-    if (!currentLoopContinueStatement.get(nested).isEmpty()) {
-      enclosingCase.getLastChild().addChildToBack(
-        currentLoopContinueStatement.get(nested).cloneTree());
-    }
+    Preconditions.checkState(currentLoopContext.get(0).continueCase != -1);
     enclosingCase.getLastChild().addChildToBack(
-        createStateUpdate(currentLoopEndCase.get(nested) - 1));
+        createStateUpdate(currentLoopContext.get(0).continueCase));
     enclosingCase.getLastChild().addChildToBack(createSafeBreak());
   }
 
   private void visitBreak() {
     enclosingCase.getLastChild().addChildToBack(
-        createStateUpdate(currentLoopEndCase.get(0)));
+        createStateUpdate(currentLoopContext.get(0).breakCase));
     enclosingCase.getLastChild().addChildToBack(createSafeBreak());
   }
 
@@ -337,11 +323,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * pop the loop information off of our stack.
    */
   private void visitGeneratorMarker() {
-    if (!currentLoopEndCase.isEmpty()
-        && currentLoopEndCase.get(0) == currentStatement.getDouble()) {
-      currentLoopEndCase.remove(0);
-      currentLoopContinueStatement.remove(0);
-      currentBreakCaptureIsSwitch.remove(0);
+    if (!currentLoopContext.isEmpty()
+        && currentLoopContext.get(0).breakCase == currentStatement.getDouble()) {
+      currentLoopContext.remove(0);
     }
   }
 
@@ -441,9 +425,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     }
 
     int breakTarget = generatorCaseCount++;
-    currentLoopEndCase.add(0, breakTarget);
-    currentLoopContinueStatement.add(0, IR.empty());
-    currentBreakCaptureIsSwitch.add(0, true);
+    int cont = currentLoopContext.isEmpty() ? -1 : currentLoopContext.get(0).continueCase;
+    currentLoopContext.add(0, new LoopContext(breakTarget, cont));
     Node breakCase = IR.number(breakTarget);
     breakCase.setGeneratorMarker(true);
     originalGeneratorBody.addChildAfter(breakCase, insertionPoint);
@@ -515,13 +498,17 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     postExpression = postExpression.isEmpty() ? postExpression : IR.exprResult(postExpression);
 
     int loopBeginState = generatorCaseCount++;
-    currentLoopEndCase.add(0, generatorCaseCount);
-    currentBreakCaptureIsSwitch.add(0, false);
-    currentLoopContinueStatement.add(0, postExpression);
+    int continueState = loopBeginState;
 
     if (!postExpression.isEmpty()) {
+      continueState = generatorCaseCount++;
+      Node continueCase = IR.number(continueState);
+      continueCase.setGeneratorMarker(true);
+      body.addChildToBack(continueCase);
       body.addChildToBack(postExpression);
     }
+
+    currentLoopContext.add(0, new LoopContext(generatorCaseCount, continueState));
 
     Node beginCase = IR.number(loopBeginState);
     beginCase.setGeneratorMarker(true);
@@ -629,6 +616,18 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
       insertAll(c, type, matchingNodes);
     }
+  }
+
+  private class LoopContext {
+
+    int breakCase;
+    int continueCase;
+
+    public LoopContext(int breakCase, int continueCase) {
+      this.breakCase = breakCase;
+      this.continueCase = continueCase;
+    }
+
   }
 
 }
