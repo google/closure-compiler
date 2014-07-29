@@ -2085,6 +2085,21 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "}\n");
   }
 
+  public void testClass3() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("class C {\n" +
+          "  member() {};\n" +
+          "  get field() {};\n" +
+          "  set field(a) {};\n" +
+          "}\n");
+
+    parse("class C {\n" +
+        "  static member() {};\n" +
+        "  static get field() {};\n" +
+        "  static set field(a) {};\n" +
+        "}\n");
+  }
+
   public void testSuper1() {
     mode = LanguageMode.ECMASCRIPT6;
 

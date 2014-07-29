@@ -439,6 +439,7 @@ public class Parser {
       case STAR:
       case STATIC:
       case OPEN_SQUARE:
+      case SEMI_COLON:
         return true;
       default:
         return false;
@@ -446,6 +447,9 @@ public class Parser {
   }
 
   private ParseTree parseClassElement() {
+    if (peek(TokenType.SEMI_COLON)) {
+      return parseEmptyStatement();
+    }
     if (peekGetAccessor(true)) {
       return parseGetAccessor();
     }
