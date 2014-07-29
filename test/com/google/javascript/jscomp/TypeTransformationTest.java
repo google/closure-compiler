@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.testing.TestErrorReporter;
 
 public class TypeTransformationTest extends CompilerTypeTestCase {
 
@@ -27,6 +29,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   @Override
   public void setUp() {
     super.setUp();
+    errorReporter = new TestErrorReporter(null, null);
     typeVars = ImmutableMap.of(
         "S", STRING_TYPE, "N", NUMBER_TYPE);
   }
@@ -149,14 +152,16 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   private void testTTL(JSType expectedType, String ttlExp) {
-    // TODO(lpino): Validate the AST using the TypeTransformationParser
-    Node ast = compiler.parseTestCode(ttlExp);
-    // Cut the SCRIPT and EXPR_RESULT nodes
-    ast = ast.getFirstChild().getFirstChild();
-    // Evaluate the type transformation
-    TypeTransformation typeTransformation = new TypeTransformation(compiler);
-    JSType resultType = typeTransformation.eval(ast, typeVars);
-    assertTypeEquals(expectedType, resultType);
+    TypeTransformationParser ttlParser = new TypeTransformationParser(ttlExp,
+        SourceFile.fromCode("[testcode]", ttlExp), errorReporter, 0, 0);
+    // Run the test if the parsing was successful
+    if (ttlParser.parseTypeTransformation()) {
+      Node ast = ttlParser.getTypeTransformationAst();
+      // Evaluate the type transformation
+      TypeTransformation typeTransformation = new TypeTransformation(compiler);
+      JSType resultType = typeTransformation.eval(ast, typeVars);
+      assertTypeEquals(expectedType, resultType);
+    }
   }
 
 }

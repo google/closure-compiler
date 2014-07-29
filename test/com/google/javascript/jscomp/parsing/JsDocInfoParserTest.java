@@ -3016,8 +3016,34 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidUnionType2() {
     parse("@template T := union(function(a){}, T) =:*/",
-        "Bad type annotation. Invalid basic type expression",
+        "Bad type annotation. Invalid type expression",
         "Bad type annotation. Invalid expression inside union type");
+  }
+
+  public void testParserWithNestedUnionFirstParam() {
+    parse("@template T := union(union(N, type('null')), S) =:*/");
+  }
+
+  public void testParserWithNestedUnionSecondParam() {
+    parse("@template T := union(N, union(type('null'), S)) =:*/");
+  }
+
+  public void testParserWithNestedBooleanFirstParam() {
+    parse("@template T := "
+        + "cond( eq( cond(eq(N, N), type('string'), type('number')),"
+        +     "type('string')"
+        +    "),"
+        + "type('string'),"
+        + "type('number')) =: */");
+  }
+
+  public void testParserWithNestedBooleanSecondParam() {
+    parse("@template T := "
+        + "cond( eq( type('string'),"
+        +          "cond(eq(N, N), type('string'), type('number'))"
+        +        "),"
+        +     "type('string'),"
+        +     "type('number')) =:*/");
   }
 
   public void testParserWithTTLConditional() {
@@ -3054,7 +3080,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidBooleanConditional3() {
     parse("@template T := cond(eq(T, foo()), R, S) =: */",
-        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside boolean",
         "Bad type annotation. Invalid expression inside conditional");
   }

@@ -22,9 +22,9 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
@@ -34,24 +34,11 @@ import java.util.HashSet;
  */
 public final class TypeTransformationParser {
 
-  final class TypeTransformationWarning {
-    String messageId;
-    Node nodeWarning;
-    String messageArg;
-
-    TypeTransformationWarning(
-        String messageId, String messageArg, Node nodeWarning) {
-      this.messageId = messageId;
-      this.messageArg = messageArg;
-      this.nodeWarning = nodeWarning;
-    }
-  }
-
-  private ArrayList<TypeTransformationWarning> warnings;
   private String typeTransformationString;
   private Node typeTransformationAst;
   private StaticSourceFile sourceFile;
   private ErrorReporter errorReporter;
+  private int templateLineno, templateCharno;
 
   private static final CharMatcher TYPEVAR_FIRSTLETTER_MATCHER =
       CharMatcher.JAVA_LETTER.or(CharMatcher.is('_')).or(CharMatcher.is('$'));
@@ -87,30 +74,32 @@ public final class TypeTransformationParser {
       MAPUNION_PARAM_COUNT = 2;
 
   public TypeTransformationParser(String typeTransformationString,
-      StaticSourceFile sourceFile, ErrorReporter errorReporter) {
+      StaticSourceFile sourceFile, ErrorReporter errorReporter,
+      int templateLineno, int templateCharno) {
     this.typeTransformationString = typeTransformationString;
     this.sourceFile = sourceFile;
     this.errorReporter = errorReporter;
-    warnings = new ArrayList<>();
+    this.templateLineno = templateLineno;
+    this.templateCharno = templateCharno;
   }
 
   public Node getTypeTransformationAst() {
     return typeTransformationAst;
   }
 
-  public ArrayList<TypeTransformationWarning> getWarnings() {
-    return warnings;
-  }
-
   private void addNewWarning(String messageId, Node nodeWarning) {
     addNewWarning(messageId, "", nodeWarning);
   }
 
-  private void addNewWarning(
-      String messageId, String messageArg, Node nodeWarning) {
-    TypeTransformationWarning newWarning =
-        new TypeTransformationWarning(messageId, messageArg, nodeWarning);
-    warnings.add(newWarning);
+  private void addNewWarning(String messageId, String messageArg, Node nodeWarning) {
+    // TODO(lpino): Use the exact lineno and charno, it is currently using
+    // the lineno and charno of the parent @template
+    errorReporter.warning(
+        "Bad type annotation. "
+            + SimpleErrorReporter.getMessage1(messageId, messageArg),
+            sourceFile.getName(),
+            templateLineno,
+            templateCharno);
   }
 
   private boolean isKeyword(String s, Keywords keyword) {
@@ -234,11 +223,11 @@ public final class TypeTransformationParser {
 
   /**
    * A Union type expression must be a valid type variable or
-   * a union(Basictype-Exp, Basictype-Exp, ...)
+   * a union(Uniontype-Exp, Uniontype-Exp, ...)
    */
   private boolean validTTLUnionTypeExpression(Node expression) {
     // A union expression must be a NAME for type variables or
-    // a CALL for union(BasicType-Exp, BasicType-Exp,...)
+    // a CALL for union
     if (!expression.isName() && !expression.isCall()) {
       addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
           "union type", expression);
@@ -264,12 +253,12 @@ public final class TypeTransformationParser {
       return false;
     }
     // Check if each of the members of the union is a valid BasicType-Exp
-    for (Node basicExp : expression.children()) {
+    for (Node param : expression.children()) {
       // Omit the first child since it is the union keyword
-      if (basicExp.equals(expression.getFirstChild())) {
+      if (param.equals(expression.getFirstChild())) {
         continue;
       }
-      if (!validTTLBasicTypeExpression(basicExp)) {
+      if (!validTTLTypeExpression(param)) {
         addNewWarning("msg.jsdoc.typetransformation.invalid.inside",
             "union type", expression);
         return false;
@@ -343,8 +332,8 @@ public final class TypeTransformationParser {
       return false;
     }
     // Both input types must be valid type expressions
-    if (!validTTLTypeExpression(expression.getChildAtIndex(1))
-        || !validTTLTypeExpression(expression.getChildAtIndex(2))) {
+    if (!validTypeTransformationExpression(expression.getChildAtIndex(1))
+        || !validTypeTransformationExpression(expression.getChildAtIndex(2))) {
       addNewWarning("msg.jsdoc.typetransformation.invalid.inside",
           "boolean", expression);
       return false;
