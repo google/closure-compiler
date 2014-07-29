@@ -81,6 +81,7 @@ public class DiagnosticGroups {
       "checkRegExp, checkStructDictInheritance, checkTypes, checkVars, " +
       "const, constantProperty, deprecated, duplicateMessage, es3, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
+      "inferredConstCheck, " +
       "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
       "missingGetCssName, missingProperties, " +
       "missingProvide, missingRequire, missingReturn," +
@@ -128,6 +129,10 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup UNNECESSARY_CASTS =
       DiagnosticGroups.registerGroup("unnecessaryCasts",
           TypeValidator.UNNECESSARY_CAST);
+
+  public static final DiagnosticGroup INFERRED_CONST_CHECKS =
+      DiagnosticGroups.registerGroup("inferredConstCheck",
+          TypedScopeCreator.CANNOT_INFER_CONST_TYPE);
 
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
