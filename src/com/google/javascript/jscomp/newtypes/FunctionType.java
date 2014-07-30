@@ -511,6 +511,9 @@ public class FunctionType {
    */
   private FunctionType applyInstantiation(
       boolean keepTypeParams, Map<String, JSType> typeMap) {
+    if (typeMap.isEmpty()) {
+      return this;
+    }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType reqFormal : requiredFormals) {
       builder.addReqFormal(reqFormal.substituteGenerics(typeMap));

@@ -80,8 +80,10 @@ public class NominalType {
   }
 
   NominalType instantiateGenerics(Map<String, JSType> newTypeMap) {
-    if (!rawType.isGeneric()
-        && !hasFreeTypeVars(new HashSet<String>())) {
+    if (newTypeMap.isEmpty()) {
+      return this;
+    }
+    if (!rawType.isGeneric() && !hasFreeTypeVars(new HashSet<String>())) {
       return this.rawType.wrappedAsNominal;
     }
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();

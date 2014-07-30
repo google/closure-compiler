@@ -756,7 +756,8 @@ public class ObjectType implements TypeWithProperties {
   }
 
   ObjectType substituteGenerics(Map<String, JSType> concreteTypes) {
-    if (!hasFreeTypeVars(new HashSet<String>())) {
+    if (concreteTypes.isEmpty()
+        || !hasFreeTypeVars(new HashSet<String>())) {
       return this;
     }
     PersistentMap<String, Property> newProps = PersistentMap.create();

@@ -375,8 +375,10 @@ public abstract class JSType {
   }
 
   public JSType substituteGenerics(Map<String, JSType> concreteTypes) {
-    if (isTop() || isUnknown()
+    if (isTop()
+        || isUnknown()
         || getObjs() == null && getTypeVar() == null
+        || concreteTypes.isEmpty()
         || !hasFreeTypeVars(new HashSet<String>())) {
       return this;
     }

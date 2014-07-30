@@ -186,7 +186,8 @@ class Property {
   }
 
   Property substituteGenerics(Map<String, JSType> concreteTypes) {
-    if (!hasFreeTypeVars(new HashSet<String>())) {
+    if (concreteTypes.isEmpty()
+        || !hasFreeTypeVars(new HashSet<String>())) {
       return this;
     }
     return new Property(
