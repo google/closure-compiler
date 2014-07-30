@@ -145,7 +145,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
           if (n.getFirstChild().isGetProp()) {
             Node rootNameNode =
                 NodeUtil.getRootOfQualifiedName(n.getFirstChild());
-            isDefinedInSrc =
+            isDefinedInSrc = rootNameNode != null && rootNameNode.isName() &&
                 t.getScope().getVar(rootNameNode.getString()) != null;
           } else {
             isDefinedInSrc = t.getScope().getVar(qname) != null;
