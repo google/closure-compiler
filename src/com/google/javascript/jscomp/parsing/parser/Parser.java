@@ -1481,7 +1481,7 @@ public class Parser {
 
     eat(TokenType.OPEN_CURLY);
     Token commaToken = null;
-    while (peekPropertyNameOrComputedProp(0)) {
+    while (peekPropertyNameOrComputedProp(0) || peek(TokenType.STAR)) {
       commaToken = null;
       result.add(parsePropertyAssignment());
       commaToken = eatOpt(TokenType.COMMA);
@@ -1524,7 +1524,9 @@ public class Parser {
 
   private ParseTree parsePropertyAssignment() {
     TokenType type = peekType();
-    if (type == TokenType.STRING
+    if (type == TokenType.STAR) {
+      return parsePropertyAssignmentGenerator();
+    } else if (type == TokenType.STRING
         || type == TokenType.NUMBER
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
@@ -1552,6 +1554,25 @@ public class Parser {
       }
     } else {
       throw new RuntimeException("unreachable");
+    }
+  }
+
+  private ParseTree parsePropertyAssignmentGenerator() {
+    TokenType type = peekType(1);
+    if (type == TokenType.STRING
+        || type == TokenType.NUMBER
+        || type == TokenType.IDENTIFIER
+        || Keywords.isKeyword(type)) {
+      // parseMethodDeclaration will consume the '*'.
+      return parseMethodDeclaration(false);
+    } else {
+      SourcePosition start = getTreeStartLocation();
+      eat(TokenType.STAR);
+      ParseTree name = parseComputedPropertyName();
+
+      ParseTree value = parseFunctionTail(
+          start, null, false, true, FunctionDeclarationTree.Kind.EXPRESSION);
+      return new ComputedPropertyMethodTree(getTreeLocation(start), name, value);
     }
   }
 

@@ -1529,6 +1529,7 @@ public class CodePrinterTest extends TestCase {
 
     assertPrintSame("var a={[b](){}}");
     assertPrintSame("var a={[b](){alert(foo)}}");
+    assertPrintSame("var a={*[b](){yield\"foo\"}}");
     assertPrintSame("var a={[b]:(()=>c)}");
 
     assertPrintSame("var a={get [b](){return null}}");
@@ -1934,6 +1935,7 @@ public class CodePrinterTest extends TestCase {
   public void testMemberGeneratorYield1() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("class C{*member(){(yield 1)+(yield 1)}}");
+    assertPrintSame("var obj={*member(){(yield 1)+(yield 1)}}");
   }
 
   public void testArrowFunction() {

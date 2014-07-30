@@ -961,6 +961,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "var x = {",
         "  set [prop + '_'](val) {}",
         "}"));
+
+    // Generator method
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(Joiner.on('\n').join(
+        "var x = {",
+        "  *[prop + '_']() {}",
+        "}"));
+
   }
 
   public void testComputedMethodClass() {
@@ -1263,8 +1271,16 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testGenerator() {
+    mode = LanguageMode.ECMASCRIPT6_STRICT;
+    parse("var obj = { *f() { yield 3; } };");
+    parse("function* f() { yield 3; }");
+
+    mode = LanguageMode.ECMASCRIPT5_STRICT;
     parseWarning("function* f() { yield 3; }",
         "this language feature is only supported in es6 mode: generators");
+    parseWarning("var obj = { * f() { yield 3; } };",
+        "this language feature is only supported in es6 mode: generators",
+        "this language feature is only supported in es6 mode: member declarations");
   }
 
   public void testBracelessFunctionForbidden() {

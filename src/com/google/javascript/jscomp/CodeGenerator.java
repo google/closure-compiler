@@ -935,6 +935,8 @@ class CodeGenerator {
           add("get ");
         } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
           add("set ");
+        } else if (last.getBooleanProp(Node.GENERATOR_FN)) {
+          add("*");
         }
         add("[");
         add(first);

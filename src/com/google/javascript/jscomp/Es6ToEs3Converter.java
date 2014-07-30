@@ -505,6 +505,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           || currElement.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
         cannotConvertYet(currElement, "computed getter/setter");
         return;
+      } else if (currElement.getLastChild().getBooleanProp(Node.GENERATOR_FN)) {
+        cannotConvertYet(currElement, "generator function with computed name");
+        return;
       } else if (currElement.isGetterDef() || currElement.isSetterDef()) {
         currElement = currElement.getNext();
       } else {

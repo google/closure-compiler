@@ -1309,9 +1309,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testComputedPropCannotConvert() {
     test("class C { [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class C { *[foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("class C { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("class C { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
+    test("var o = { *[foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var o = { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var o = { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
