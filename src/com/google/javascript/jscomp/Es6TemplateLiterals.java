@@ -135,8 +135,8 @@ class Es6TemplateLiterals {
 
   /**
    * Takes a raw string and returns a string that is suitable for the cooked
-   * value. This involves removing line continuations, escaping double quotes
-   * and escaping whitespace.
+   * value (the Template Value or TV as described in the specs). This involves
+   * removing line continuations.
    */
   private static String cookString(String s) {
     StringBuffer sb = new StringBuffer();
@@ -164,13 +164,23 @@ class Es6TemplateLiterals {
           }
           break;
 
+        // Whitespace
+        case '\n':
+          sb.append("\\n");
+          break;
         // <CR><LF> and <CR> LineTerminatorSequences are normalized to <LF>
         // for both TV and TRV.
         case '\r':
           if (s.charAt(i) == '\n') {
             i++;
           }
-          sb.append('\n');
+          sb.append("\\n");
+          break;
+        case '\u2028':
+          sb.append("\\u2028");
+          break;
+        case '\u2029':
+          sb.append("\\u2029");
           break;
 
         default:
