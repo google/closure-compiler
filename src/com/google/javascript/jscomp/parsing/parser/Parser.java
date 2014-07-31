@@ -590,8 +590,8 @@ public class Parser {
 
   private ParseTree parseFunctionExpression() {
     SourcePosition start = getTreeStartLocation();
-    boolean isGenerator = eatOpt(TokenType.STAR) != null;
     eat(Keywords.FUNCTION.type);
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
     IdentifierToken name = eatIdOpt();
 
     return parseFunctionTail(
