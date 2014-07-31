@@ -461,7 +461,11 @@ public class Parser {
 
   private ParseTree parseMethodDeclaration(boolean allowStatic) {
     SourcePosition start = getTreeStartLocation();
-    boolean isStatic = allowStatic && eatOpt(TokenType.STATIC) != null;
+    boolean isStatic = false;
+    if (allowStatic && peek(TokenType.STATIC) && peekType(1) != TokenType.OPEN_PAREN) {
+      eat(TokenType.STATIC);
+      isStatic = true;
+    }
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
     TokenType type = peekType();
     if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
