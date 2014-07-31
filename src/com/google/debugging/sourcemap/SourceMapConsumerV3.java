@@ -360,6 +360,17 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
           tryConsumeToken(',');
         }
       }
+      // Some source map generator (e.g.UglifyJS) generates lines without line separator ;. 
+      // If so, then add the rest of the content in entries as a single line
+      if (!entries.isEmpty()) {
+        ArrayList<Entry> result;        
+        result = entries;
+        // A new array list for the next line.
+        entries = new ArrayList<>();
+        lines.add(result);
+        entries.clear();
+        line++;
+      }
     }
 
     /**
