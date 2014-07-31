@@ -330,20 +330,12 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
       while (content.hasNext()) {
         // ';' denotes a new line.
         if (tryConsumeToken(';')) {
-          // The line is complete, store the result for the line,
-          // null if the line is empty.
-          ArrayList<Entry> result;
+          // The line is complete, store the result
+          completeLine(entries);
           if (!entries.isEmpty()) {
-            result = entries;
             // A new array list for the next line.
             entries = new ArrayList<>();
-          } else {
-            result = null;
           }
-          lines.add(result);
-          entries.clear();
-          line++;
-          previousCol = 0;
         } else {
           // grab the next entry for the current line.
           int entryValues = 0;
@@ -360,6 +352,24 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
           tryConsumeToken(',');
         }
       }
+
+      // Some source map generator (e.g.UglifyJS) generates lines without
+      // a trailing line separator. So add the rest of the content.
+      if (!entries.isEmpty()) {
+        completeLine(entries);
+      }
+    }
+
+    private void completeLine(ArrayList<Entry> entries) {
+      // The line is complete, store the result for the line,
+      // null if the line is empty.
+      if (!entries.isEmpty()) {
+        lines.add(entries);
+      } else {
+        lines.add(null);
+      }
+      line++;
+      previousCol = 0;
     }
 
     /**
