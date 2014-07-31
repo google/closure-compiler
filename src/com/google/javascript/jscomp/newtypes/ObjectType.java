@@ -518,6 +518,9 @@ public class ObjectType implements TypeWithProperties {
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
     Preconditions.checkState(
         areRelatedClasses(obj1.nominalType, obj2.nominalType));
+    if (obj1 == obj2 || obj1.equals(obj2)) {
+      return obj1;
+    }
     boolean isLoose = obj1.isLoose || obj2.isLoose;
     FunctionType fn = FunctionType.join(obj1.fn, obj2.fn);
     PersistentMap<String, Property> props;

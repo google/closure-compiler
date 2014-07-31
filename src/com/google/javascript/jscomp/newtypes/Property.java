@@ -217,6 +217,9 @@ class Property {
 
   @Override
   public boolean equals(Object o) {
+    if (o == null) {
+      return false;
+    }
     Preconditions.checkArgument(o instanceof Property);
     Property p2 = (Property) o;
     return inferredType.equals(p2.inferredType) &&
