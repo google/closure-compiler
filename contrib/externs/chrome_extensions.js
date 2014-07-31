@@ -1443,6 +1443,11 @@ chrome.i18n.getAcceptLanguages = function(callback) {};
  */
 chrome.i18n.getMessage = function(messageName, opt_args) {};
 
+/**
+ * @return {string}
+ */
+chrome.i18n.getUILanguage = function() {};
+
 
 /**
  * @const
