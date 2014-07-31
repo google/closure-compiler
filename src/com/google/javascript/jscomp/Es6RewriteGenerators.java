@@ -202,23 +202,31 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     )).removeFirstChild();
     generatorCaseCount++;
 
-    Node genFunc = IR.var(n.removeFirstChild(),
-        IR.function(IR.name(""), n.removeFirstChild(), genBlock));
+    originalGeneratorBody = n.getLastChild();
+    Node suppressionInsertSpot = null;
+    if (NodeUtil.isFunctionExpression(n)) {
+      n.replaceChild(n.getLastChild(), genBlock);
+      n.setIsGeneratorFunction(false);
+      suppressionInsertSpot = n;
+    } else {
+      suppressionInsertSpot = IR.var(n.removeFirstChild(), IR.function(IR.name(""),
+          n.removeFirstChild(), genBlock));
+      parent.replaceChild(n, suppressionInsertSpot);
+    }
 
     //TODO(mattloring): remove this suppression once we can optimize the switch statement to
     // remove unused cases.
-    JSDocInfoBuilder genDoc;
+    JSDocInfoBuilder builder;
     if (n.getJSDocInfo() == null) {
-      genDoc = new JSDocInfoBuilder(true);
+      builder = new JSDocInfoBuilder(true);
     } else {
-      genDoc = JSDocInfoBuilder.copyFrom(n.getJSDocInfo());
+      builder = JSDocInfoBuilder.copyFrom(n.getJSDocInfo());
     }
     //TODO(mattloring): copy existing suppressions.
-    genDoc.recordSuppressions(ImmutableSet.of("uselessCode"));
-    JSDocInfo genInfo = genDoc.build(genFunc);
-    genFunc.setJSDocInfo(genInfo);
+    builder.recordSuppressions(ImmutableSet.of("uselessCode"));
+    JSDocInfo info = builder.build(suppressionInsertSpot);
+    suppressionInsertSpot.setJSDocInfo(info);
 
-    originalGeneratorBody = n.getFirstChild();
 
     // Set state to the default after the body of the function has completed.
     originalGeneratorBody.addChildToBack(
@@ -250,7 +258,6 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       }
     }
 
-    parent.replaceChild(n, genFunc);
     parent.useSourceInfoIfMissingFromForTree(parent);
     compiler.reportCodeChange();
   }
