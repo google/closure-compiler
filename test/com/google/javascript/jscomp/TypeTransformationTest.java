@@ -30,8 +30,19 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   public void setUp() {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
-    typeVars = ImmutableMap.of(
-        "S", STRING_TYPE, "N", NUMBER_TYPE);
+    typeVars = new ImmutableMap.Builder<String, JSType>()
+        .put("S", STRING_TYPE)
+        .put("N", NUMBER_TYPE)
+        .put("B", BOOLEAN_TYPE)
+        .put("BOT", NO_TYPE)
+        .put("SO", STRING_OBJECT_TYPE)
+        .put("NO", NUMBER_OBJECT_TYPE)
+        .put("BO", BOOLEAN_OBJECT_TYPE)
+        .put("NULL", NULL_TYPE)
+        .put("OBJ", OBJECT_TYPE)
+        .put("UNDEF", VOID_TYPE)
+        .put("ARR", ARRAY_TYPE)
+        .build();
   }
 
   public void testTransformationWithValidBasicTypePredicate() {
@@ -145,6 +156,58 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "cond( eq(N, S),"
         +     "type('number'),"
         +     "cond(eq(N, S), type('string'), type('String')))");
+  }
+
+  public void testTransformationWithMapunionMappingEverythingToString() {
+    testTTL(STRING_TYPE, "mapunion(union(S, N), (x) => S)");
+  }
+
+  public void testTransformationWithMapunionIdentity() {
+    testTTL(union(NUMBER_TYPE, STRING_TYPE),
+        "mapunion(union(N, S), (x) => x)");
+  }
+
+  public void testTransformationWithMapunionWithUnionEvaluatedToANonUnion() {
+    testTTL(NUMBER_TYPE,
+        "mapunion(union(N, type('number')), (x) => x)");
+  }
+
+  public void testTransformationWithMapunionFilterWithOnlyString() {
+    testTTL(STRING_TYPE,
+        "mapunion(union(S, B, N), (x) => cond(eq(x, S), x, BOT))");
+  }
+
+  public void testTransformationWithMapunionOnSingletonStringToNumber() {
+    testTTL(union(NUMBER_TYPE),
+        "mapunion(S, (x) => cond(eq(x, S), N, BOT))");
+  }
+
+  public void testTransformationWithNestedUnionInMapunionFilterString() {
+    testTTL(union(NUMBER_TYPE, BOOLEAN_TYPE),
+        "mapunion(union(union(S, B), union(N, S)),"
+        + "(x) => cond(eq(x, S), BOT, x))");
+  }
+
+  public void testTransformationWithNestedMapunionInMapFunctionBody() {
+    testTTL(STRING_TYPE,
+        "mapunion(union(S, B),"
+        + "(x) => mapunion(union(S, N), "
+        +          "(y) => cond(eq(x, y), x, BOT)))");
+  }
+
+  public void testTransformationWithObjectUseCase() {
+    testTTL(
+        union(STRING_OBJECT_TYPE, NUMBER_OBJECT_TYPE, BOOLEAN_OBJECT_TYPE,
+        OBJECT_TYPE, ARRAY_TYPE),
+        "mapunion("
+        + "union(S, N, B, NULL, UNDEF, ARR),"
+        + "(x) => "
+        + "cond(eq(x, S), SO,"
+        + "cond(eq(x, N), NO,"
+        + "cond(eq(x, B), BO,"
+        + "cond(eq(x, NULL), OBJ,"
+        + "cond(eq(x, UNDEF), OBJ,"
+        + "x ))))))");
   }
 
   private JSType union(JSType... variants) {

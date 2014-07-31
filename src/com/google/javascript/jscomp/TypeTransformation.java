@@ -22,8 +22,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * A class for processing type transformation expressions
@@ -74,12 +76,32 @@ class TypeTransformation {
     return isCallTo(n, TypeTransformationParser.Keywords.COND);
   }
 
+  private boolean isMapunion(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.MAPUNION);
+  }
+
   private JSType getUnknownType() {
     return typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
   }
 
   private JSType typeOrUnknown(JSType type) {
     return (type == null) ? getUnknownType() : type;
+  }
+
+  private JSType union(JSType... variants) {
+    return typeRegistry.createUnionType(variants);
+  }
+
+  private ImmutableMap<String, JSType> addNewVar(
+      ImmutableMap<String, JSType> typeVars, String name, JSType type) {
+    return new ImmutableMap.Builder<String, JSType>()
+        .putAll(typeVars)
+        .put(name, type)
+        .build();
+  }
+
+  private String getFunctionParameter(Node functionNode, int index) {
+    return functionNode.getChildAtIndex(1).getChildAtIndex(index).getString();
   }
 
   private ArrayList<Node> getParameters(Node operation) {
@@ -115,6 +137,9 @@ class TypeTransformation {
     }
     if (isConditional(ttlAst)) {
       return evalConditional(ttlAst, typeVars);
+    }
+    if (isMapunion(ttlAst)) {
+      return evalMapunion(ttlAst, typeVars);
     }
     throw new IllegalStateException(
         "Could not evaluate the type transformation expression");
@@ -172,5 +197,44 @@ class TypeTransformation {
     } else {
       return eval(params.get(2), typeVars);
     }
+  }
+
+  private JSType evalMapunion(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
+    ArrayList<Node> params = getParameters(ttlAst);
+    Node unionParam = params.get(0);
+    Node mapFunction = params.get(1);
+    String paramName = getFunctionParameter(mapFunction, 0);
+    Node mapFunctionBody = mapFunction.getChildAtIndex(2);
+    JSType unionType;
+
+    // The first parameter is either a union() or a type variable
+    if (isUnionType(unionParam)) {
+      unionType = evalUnionType(unionParam, typeVars);
+    } else if (isTypeVar(unionParam)) {
+      unionType = typeOrUnknown(typeVars.get(unionParam.getString()));
+    } else {
+      throw new IllegalStateException("Invalid union type parameter in mapunion");
+    }
+
+    // If the first parameter does not correspond to a union type then
+    // consider it as a union with a single type and evaluate
+    if (!unionType.isUnionType()) {
+      return eval(mapFunctionBody, addNewVar(typeVars, paramName, unionType));
+    }
+
+    // Otherwise obtain the elements in the union type. Note that the block
+    // above guarantees the casting to be safe
+    Collection<JSType> unionElms = ((UnionType) unionType).getAlternates();
+    // Evaluate the map function body using each element in the union type
+    int unionSize = unionElms.size();
+    JSType[] newUnionElms = new JSType[unionSize];
+    int i = 0;
+    for (JSType elm : unionElms) {
+      newUnionElms[i] = eval(mapFunctionBody,
+          addNewVar(typeVars, paramName, elm));
+      i++;
+    }
+
+    return union(newUnionElms);
   }
 }
