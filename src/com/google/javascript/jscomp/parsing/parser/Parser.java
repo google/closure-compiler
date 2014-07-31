@@ -603,7 +603,6 @@ public class Parser {
     SourcePosition listStart = getTreeStartLocation();
     eat(TokenType.OPEN_PAREN);
 
-
     // FormalParameterList :
     //   ... Identifier
     //   FormalParameterListNoRest
@@ -646,7 +645,10 @@ public class Parser {
       result.add(parameter);
 
       if (!peek(TokenType.CLOSE_PAREN)) {
-        eat(TokenType.COMMA);
+        Token comma = eat(TokenType.COMMA);
+        if (peek(TokenType.CLOSE_PAREN)) {
+          reportError(comma, "Invalid trailing comma in formal parameter list");
+        }
       }
     }
 

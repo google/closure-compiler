@@ -69,6 +69,16 @@ public class NewParserTest extends BaseJSTypeTestCase {
     isIdeMode = false;
   }
 
+  public void testFunction() {
+    parse("var f = function(x,y,z) { return 0; }");
+    parse("function f(x,y,z) { return 0; }");
+
+    parseError("var f = function(x,y,z,) {}",
+        "Invalid trailing comma in formal parameter list");
+    parseError("function f(x,y,z,) {}",
+        "Invalid trailing comma in formal parameter list");
+  }
+
   public void testWhile() {
     parse("while(1) { break; }");
   }
@@ -1880,10 +1890,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
     isIdeMode = true;
     parseError("function a.b() {}",
         "'(' expected",
-        "',' expected");
+        "',' expected",
+        "Invalid trailing comma in formal parameter list");
     parseError("var x = function a.b() {}",
         "'(' expected",
-        "',' expected");
+        "',' expected",
+        "Invalid trailing comma in formal parameter list");
   }
 
   public void testIdeModePartialTree() {
