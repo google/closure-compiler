@@ -811,8 +811,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testClassGetterSetter() {
     test("class C { get value() {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
-
     test("class C { set value(v) {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
+
+    test("class C { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT);
+    test("class C { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
   public void testArrowFunction() {
@@ -1307,12 +1309,26 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
-  public void testComputedPropCannotConvert() {
-    test("class C { [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("class C { *[foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("class C { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("class C { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  public void testComputedPropClass() {
+    test("class C { [foo]() { alert(1); } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "C.prototype[foo] = function() { alert(1); };"
+    ));
 
+    test("class C { static [foo]() { alert(2); } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "C[foo] = function() { alert(2); };"
+    ));
+
+    test("class C { *[foo]() { yield 1; } }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class C { static *[foo]() { yield 2; } }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testComputedPropCannotConvert() {
     test("var o = { *[foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var o = { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var o = { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);

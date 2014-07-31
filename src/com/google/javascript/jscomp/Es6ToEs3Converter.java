@@ -113,9 +113,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         // Need to check for super references before they get rewritten.
         checkClassSuperReferences(n);
         break;
-      case Token.CLASS_MEMBERS:
-        checkMemberDefs(n);
-        break;
       case Token.ARRAY_COMP:
       case Token.OBJECT_PATTERN:
         cannotConvertYet(n, Token.name(n.getType()));
@@ -155,8 +152,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         for (Node member = n.getLastChild().getFirstChild();
             member != null;
             member = member.getNext()) {
-          if (member.isComputedProp()) {
-            cannotConvertYet(member, "class method whose name is a computed property");
+          if (member.isGetterDef() || member.isSetterDef()
+              || member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+              || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
+            cannotConvert(member, "getters or setters in class definitions");
+            return;
+          } else if (member.isComputedProp()
+              && member.getLastChild().isGeneratorFunction()) {
+            cannotConvertYet(member, "generator method in class definition");
             return;
           }
         }
@@ -309,14 +312,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
     CheckClassAssignments checkAssigns = new CheckClassAssignments(name);
     NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
-  }
-
-  public void checkMemberDefs(Node members) {
-    for (Node member : members.children()) {
-      if (member.isGetterDef() || member.isSetterDef()) {
-        cannotConvert(member, "Cannot convert getters or setters in class definitions.");
-      }
-    }
   }
 
   private void visitSuper(Node node, Node parent) {
@@ -655,32 +650,52 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       if (member.isEmpty()) {
         continue;
       }
-      if (member.getString().equals("constructor")) {
+
+      if (member.isMemberDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
         if (!anonymous) {
           constructor.replaceChild(constructor.getFirstChild(), className);
         }
       } else {
-        String qualifiedMemberName;
-        if (member.isStaticMember()) {
-          qualifiedMemberName = Joiner.on(".").join(
-              uniqueFullClassName,
-              member.getString());
-        } else {
-          qualifiedMemberName = Joiner.on(".").join(
-              uniqueFullClassName,
-              "prototype",
-              member.getString());
-        }
-        Node assign = IR.assign(
-            NodeUtil.newQualifiedNameNode(
+        Node qualifiedMemberName;
+        Node method;
+        if (member.isMemberDef()) {
+          if (member.isStaticMember()) {
+            qualifiedMemberName = NodeUtil.newQualifiedNameNode(
                 compiler.getCodingConvention(),
-                qualifiedMemberName,
-                /* basis node */ member,
-                /* original name */ member.getString()),
-            member.getFirstChild().detachFromParent());
-        assign.srcref(member);
+                Joiner.on(".").join(
+                    uniqueFullClassName,
+                    member.getString()));
+          } else {
+            qualifiedMemberName = NodeUtil.newQualifiedNameNode(
+                compiler.getCodingConvention(),
+                Joiner.on(".").join(
+                    uniqueFullClassName,
+                    "prototype",
+                    member.getString()));
+          }
+          method = member.getFirstChild().detachFromParent();
+        } else if (member.isComputedProp()) {
+          if (member.isStaticMember()) {
+            qualifiedMemberName = IR.getelem(
+                NodeUtil.newQualifiedNameNode(
+                    compiler.getCodingConvention(),
+                    uniqueFullClassName),
+                member.removeFirstChild());
+          } else {
+            qualifiedMemberName = IR.getelem(
+                NodeUtil.newQualifiedNameNode(
+                    compiler.getCodingConvention(),
+                    Joiner.on('.').join(uniqueFullClassName, "prototype")),
+                member.removeFirstChild());
+          }
+          method = member.getLastChild().detachFromParent();
+        } else {
+          throw new IllegalStateException("Unexpected class member: " + member);
+        }
+        Node assign = IR.assign(qualifiedMemberName, method);
+        assign.useSourceInfoIfMissingFromForTree(member);
 
         JSDocInfo info = member.getJSDocInfo();
         if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {

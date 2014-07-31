@@ -1535,6 +1535,9 @@ class NewIRFactory {
       Node n = newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.method));
       n.putBooleanProp(Node.COMPUTED_PROP_METHOD, true);
+      if (tree.method.asFunctionDeclaration().isStatic) {
+        n.setStaticMember(true);
+      }
       return n;
     }
 
