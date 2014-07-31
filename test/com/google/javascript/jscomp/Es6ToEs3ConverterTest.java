@@ -320,8 +320,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var D = function() {};",
         "/** @constructor @struct @extends {D} */",
         "var C = function() {};",
-        "$jscomp$inherits(C, D);",
-        "$jscomp$copy$properties(C, D);"
+        "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);"
     ));
 
     test("class D {} class C extends D { constructor() { super(); } }", Joiner.on('\n').join(
@@ -331,8 +331,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var C = function() {",
         "  C.base(this, 'constructor');",
         "}",
-        "$jscomp$inherits(C, D);",
-        "$jscomp$copy$properties(C, D);"
+        "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);"
     ));
 
     test("class D {} class C extends D { constructor(str) { super(str); } }", Joiner.on('\n').join(
@@ -341,15 +341,15 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "/** @constructor @struct @extends {D} */",
         "var C = function(str) { ",
         "  C.base(this, 'constructor', str); }",
-        "$jscomp$inherits(C, D);",
-        "$jscomp$copy$properties(C, D);"
+        "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);"
     ));
 
     test("class C extends ns.D { }", Joiner.on('\n').join(
         "/** @constructor @struct @extends {ns.D} */",
         "var C = function() {}",
-        "$jscomp$inherits(C, ns.D);",
-        "$jscomp$copy$properties(C, ns.D);"
+        "$jscomp$copy$properties(C, ns.D);",
+        "$jscomp$inherits(C, ns.D);"
     ));
 
     test("class C extends foo() {}", null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
@@ -405,8 +405,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var C = function() {",
         "  C.base(this, 'constructor');",
         "}",
-        "$jscomp$inherits(C, D);",
-        "$jscomp$copy$properties(C, D);"
+        "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);"
     ));
 
     test("class D {} class C extends D { constructor(str) { super(str); } }", Joiner.on('\n').join(
@@ -416,8 +416,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var C = function(str) {",
         "  C.base(this, 'constructor', str);",
         "}",
-        "$jscomp$inherits(C, D);",
-        "$jscomp$copy$properties(C, D);"
+        "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);"
     ));
 
     test(Joiner.on('\n').join(
@@ -430,8 +430,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var D = function() {}",
         "/** @constructor @struct @extends {D} */",
         "var C = function() {}",
-        "$jscomp$inherits(C, D);",
         "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);",
         "C.prototype.foo = function() ",
         "{return C.base(this, 'foo');}"
     ));
@@ -446,8 +446,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var D = function() {}",
         "/** @constructor @struct @extends {D} */",
         "var C = function() {}",
-        "$jscomp$inherits(C, D);",
         "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);",
         "C.prototype.foo = function(bar)",
         "{return C.base(this, 'foo', bar);}"
     ));
@@ -470,8 +470,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  var D = function() {",
         "    D.base(this, 'constructor');",
         "  }",
-        "  $jscomp$inherits(D, C);",
         "  $jscomp$copy$properties(D, C);",
+        "  $jscomp$inherits(D, C);",
         "};"
     ));
 
@@ -483,8 +483,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var D = function() {};",
         "/** @constructor @struct @extends {D} */",
         "var C = function() {}",
-        "$jscomp$inherits(C, D);",
         "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);",
         "C.prototype.f = function() {C.base(this, 'f');}"
     ));
 
@@ -493,8 +493,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var D = function(v) {};",
         "/** @constructor @struct @extends{D} */",
         "var C = function() {};",
-        "$jscomp$inherits(C, D);",
-        "$jscomp$copy$properties(C, D);"
+        "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);"
     ));
   }
 
@@ -520,57 +520,27 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "C.prototype.f = function() {",
         "  /** @constructor @struct @extends{C} */",
         "  var D = function() {}",
-        "  $jscomp$inherits(D, C);",
         "  $jscomp$copy$properties(D, C);",
+        "  $jscomp$inherits(D, C);",
         "};"
     ));
   }
 
   public void testSuperGet() {
-    test("class D {} class C extends D { f() {var i = super.c;} }", Joiner.on('\n').join(
-        "var $jscomp$unique$class$D = function() {};",
-        "/** @constructor @struct */",
-        "var D = $jscomp$unique$class$D;",
-        "/** @constructor @struct @extends {D} */",
-        "function C() {} C.prototype.f = function() {var i = D.prototype.c;};",
-        "$jscomp$inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { f() {var i = super.c;} }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { static f() {var i = super.c;} }", Joiner.on('\n').join(
-        "var $jscomp$unique$class$D = function() {};",
-        "/** @constructor @struct */",
-        "var D = $jscomp$unique$class$D;",
-        "/** @constructor @struct @extends {D} */",
-        "function C() {} C.prototype.f = function() {var i = D.c;};",
-        "$jscomp$inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { static f() {var i = super.c;} }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f() {var i; i = super[s];} }", Joiner.on('\n').join(
-        "var $jscomp$unique$class$D = function() {};",
-        "/** @constructor @struct */",
-        "var D = $jscomp$unique$class$D;",
-        "/** @constructor @struct @extends {D} */",
-        "function C() {} C.prototype.f = function() {var i; i = D.prototype[s];};",
-        "$jscomp$inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { f() {var i; i = super[s];} }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f() {return super.s;} }", Joiner.on('\n').join(
-        "var $jscomp$unique$class$D = function() {};",
-        "/** @constructor @struct */",
-        "var D = $jscomp$unique$class$D;",
-        "/** @constructor @struct @extends {D} */",
-        "function C() {} C.prototype.f = function() {return D.s;};",
-        "$jscomp$inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { f() {return super.s;} }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f() {m(super.s);} }", Joiner.on('\n').join(
-        "var $jscomp$unique$class$D = function() {};",
-        "/** @constructor @struct */",
-        "var D = $jscomp$unique$class$D;",
-        "/** @constructor @struct @extends {D} */",
-        "function C() {} C.prototype.f = function() {m(D.s);};",
-        "$jscomp$inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { f() {m(super.s);} }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
     test(Joiner.on('\n').join(
         "class D {}",
@@ -588,38 +558,27 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperNew() {
-    test("class D {} class C extends D { f() {var s = new super;} }", Joiner.on('\n').join(
-        "/** @constructor @struct */",
-        "var D = function() {};",
-        "/** @constructor @struct @extends {D} */",
-        "function C() {} C.prototype.f = function() {var s = new D};",
-        "$jscomp$inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { f() {var s = new super;} }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f(str) {var s = new super(str);} }", Joiner.on('\n').join(
-        "var $jscomp$unique$class$D = function() {};",
-        "/** @constructor @struct */",
-        "var D = $jscomp$unique$class$D;",
-        "/** @constructor @struct @extends {D} */",
-        "function C() {} C.prototype.f = function(str) {var s = new D(str);};",
-        "$jscomp$inherits(C, D);"
-    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { f(str) {var s = new super(str);} }", null,
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testSuperCallNonConstructor() {
     test("class S extends B { static f() { super(); } }", Joiner.on('\n').join(
         "/** @constructor @struct @extends {B} */",
         "var S = function() {};",
-        "$jscomp$inherits(S, B);",
         "$jscomp$copy$properties(S, B);",
+        "$jscomp$inherits(S, B);",
         "/** @this {?} */",
         "S.f=function() { B.f.call(this) }"));
 
     test("class S extends B { f() { super(); } }", Joiner.on('\n').join(
         "/** @constructor @struct @extends {B} */",
         "var S = function() {};",
-        "$jscomp$inherits(S, B);",
         "$jscomp$copy$properties(S, B);",
+        "$jscomp$inherits(S, B);",
         "S.prototype.f=function() { S.base(this, \"f\") }"));
   }
 
@@ -686,8 +645,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "D.f = function () {};",
         "/** @constructor @struct @extends{D} */",
         "var C = function() {};",
-        "$jscomp$inherits(C, D);",
         "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);",
         "C.f();"
     ));
 
@@ -705,8 +664,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "D.f = function() {};",
         "/** @constructor @struct @extends{D} */",
         "var C = function() {};",
-        "$jscomp$inherits(C, D);",
         "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);",
         "C.prototype.f = function() {};",
         "C.f();"
     ));
@@ -724,8 +683,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "D.f = function() {};",
         "/** @constructor @struct @extends{D} */",
         "var C = function() {};",
-        "$jscomp$inherits(C, D);",
         "$jscomp$copy$properties(C, D);",
+        "$jscomp$inherits(C, D);",
         "C.f = function() {};",
         "C.prototype.g = function() {};"
     ));
@@ -786,8 +745,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "Foo.prototype.f = function() {};",
         "/** @constructor @struct @extends {Foo} */",
         "var Sub = function() {};",
-        "$jscomp$inherits(Sub, Foo);",
         "$jscomp$copy$properties(Sub, Foo);",
+        "$jscomp$inherits(Sub, Foo);",
         "(new Sub).f();"
     ));
 

@@ -759,7 +759,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         copyProps.useSourceInfoIfMissingFromForTree(classNode);
         copyProps.putBooleanProp(Node.FREE_CALL, true);
         enclosingStatement.getParent().addChildAfter(
-            IR.exprResult(copyProps).srcref(classNode),  inheritsCall);
+            IR.exprResult(copyProps).srcref(classNode), enclosingStatement);
       }
     }
 
