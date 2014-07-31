@@ -117,6 +117,14 @@ public final class CompileTask
    */
   public void setLanguageIn(String value) {
     switch (value) {
+      case "ECMASCRIPT6_STRICT":
+      case "ES6_STRICT":
+        this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT6_STRICT;
+        break;
+      case "ECMASCRIPT6":
+      case "ES6":
+        this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT6;
+        break;
       case "ECMASCRIPT5_STRICT":
       case "ES5_STRICT":
         this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
