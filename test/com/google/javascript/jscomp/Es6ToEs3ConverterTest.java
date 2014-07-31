@@ -1250,6 +1250,26 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var $jscomp$compprop0 = {};",
         "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"
     ));
+
+    test("var obj = { *[foo]() {}}", Joiner.on('\n').join(
+        "var $jscomp$compprop0 = {};",
+        "var obj = (",
+        "  $jscomp$compprop0[foo] = /** @suppress {uselessCode} */ function(){",
+        "     var $jscomp$generator$state = 0;",
+        "     return { $$iterator: function(){",
+        "       return this",
+        "     },",
+        "     next: function($jscomp$generator$next$arg) {",
+        "       while (1) switch ($jscomp$generator$state) {",
+        "         case 0:",
+        "           $jscomp$generator$state = -1;",
+        "         default:",
+        "           return {value: undefined, done: true}",
+        "       }",
+        "     }",
+        "   };",
+        "  },",
+        "  $jscomp$compprop0)"));
   }
 
   public void testComputedPropGetterSetter() {
@@ -1280,15 +1300,61 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var C = function() {};",
         "C[foo] = function() { alert(2); };"
     ));
+  }
 
-    test("class C { *[foo]() { yield 1; } }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("class C { static *[foo]() { yield 2; } }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  public void testComputedPropGeneratorMethods() {
+    test("class C { *[foo]() { yield 1; } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "",
+        "C.prototype[foo] = /** @suppress {uselessCode} */ function() {",
+        "  var $jscomp$generator$state=0;",
+        "  return {",
+        "    $$iterator: function(){",
+        "      return this;",
+        "    },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while(1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$state = 1;",
+        "          return {value: 1, done: false};",
+        "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  };",
+        "};"
+    ));
+
+    test("class C { static *[foo]() { yield 2; } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "",
+        "C[foo] = /** @suppress {uselessCode} */ function() {",
+        "  var $jscomp$generator$state=0;",
+        "  return {",
+        "    $$iterator: function(){",
+        "      return this;",
+        "    },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while(1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$state = 1;",
+        "          return {value: 2, done: false};",
+        "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  };",
+        "};"
+    ));
   }
 
   public void testComputedPropCannotConvert() {
-    test("var o = { *[foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var o = { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var o = { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
