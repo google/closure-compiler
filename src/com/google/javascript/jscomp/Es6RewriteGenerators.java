@@ -490,6 +490,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else if (currentStatement.isFor()) {
       initializer = currentStatement.removeFirstChild();
       condition = currentStatement.removeFirstChild();
+      if (condition.isEmpty()) {
+        condition = IR.trueNode();
+      }
       postExpression = currentStatement.removeFirstChild();
       body = currentStatement.removeFirstChild();
     } else {
