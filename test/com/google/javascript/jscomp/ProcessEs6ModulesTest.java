@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.Node;
 
 /**
  * Unit tests for {@link ProcessEs6Modules}
@@ -43,10 +44,15 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new ProcessEs6Modules(
-        compiler,
-        ES6ModuleLoader.createNaiveLoader(compiler, "foo/bar/"));
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        NodeTraversal.traverse(compiler, root, new ProcessEs6Modules(
+            compiler,
+            ES6ModuleLoader.createNaiveLoader(compiler, "foo/bar/")));
+      }
+    };
   }
 
   @Override
@@ -126,27 +132,31 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
 
   public void testFixTypeNode() {
     test(Joiner.on('\n').join(
-        "class Child {",
+        "export class Child {",
         "  /** @param {Child} child */",
         "  useChild(child) {}",
         "}"
     ), Joiner.on('\n').join(
+        "goog.provide('module$testcode');",
         "class Child$$module$testcode {",
         "  /** @param {Child$$module$testcode} child */",
         "  useChild(child) {}",
-        "}"
+        "}",
+        "var module$testcode = {Child: Child$$module$testcode};"
     ));
 
     test(Joiner.on('\n').join(
-        "class Child {",
+        "export class Child {",
         "  /** @param {Child.Foo.Bar.Baz} baz */",
         "  useBaz(baz) {}",
         "}"
     ), Joiner.on('\n').join(
+        "goog.provide('module$testcode');",
         "class Child$$module$testcode {",
         "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
         "  useBaz(baz) {}",
-        "}"
+        "}",
+        "var module$testcode = {Child: Child$$module$testcode};"
     ));
   }
 

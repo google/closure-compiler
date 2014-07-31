@@ -33,12 +33,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/** Rewrites a ES6 module into a form that can be safely concatenated.
+/**
+ * Rewrites a ES6 module into a form that can be safely concatenated.
+ * Note that we treat a file as an ES6 module if it has at least one import or
+ * export statement.
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class ProcessEs6Modules extends AbstractPostOrderCallback
-    implements CompilerPass {
+public class ProcessEs6Modules extends AbstractPostOrderCallback {
   private static final String MODULE_SLASH = ES6ModuleLoader.MODULE_SLASH;
   public static final String DEFAULT_FILENAME_PREFIX =
       "." + ES6ModuleLoader.MODULE_SLASH;
@@ -66,26 +68,30 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback
 
   private Set<String> alreadyRequired = new HashSet<>();
 
+  private boolean isEs6Module;
+
   ProcessEs6Modules(Compiler compiler, ES6ModuleLoader loader) {
     this.compiler = compiler;
     this.loader = loader;
   }
 
-  @Override
-  public void process(Node externs, Node root) {
+  public void processFile(Node root) {
     FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
     NodeTraversal.traverse(compiler, root, finder);
     if (finder.isFound()) {
       return;
     }
+    isEs6Module = false;
     NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isImport()) {
+      isEs6Module = true;
       visitImport(t, n, parent);
     } else if (n.isExport()) {
+      isEs6Module = true;
       visitExport(t, n, parent);
     } else if (n.isScript()) {
       scriptNodeCount++;
@@ -181,6 +187,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback
   }
 
   private void visitScript(NodeTraversal t, Node script) {
+    if (!isEs6Module) {
+      return;
+    }
     Preconditions.checkArgument(scriptNodeCount == 1,
         "ProcessEs6Modules supports only one invocation per "
         + "CompilerInput / script node");
