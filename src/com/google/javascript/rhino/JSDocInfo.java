@@ -46,11 +46,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +113,7 @@ public class JSDocInfo implements Serializable {
     List<JSTypeExpression> thrownTypes = null;
     List<String> templateTypeNames = null;
     Set<String> disposedParameters = null;
+    Map<String, Node> typeTransformations = null;
 
     // Other information
     String description = null;
@@ -1101,6 +1102,9 @@ public class JSDocInfo implements Serializable {
   boolean declareTemplateTypeName(String newTemplateTypeName) {
     lazyInitInfo();
 
+    if (isTypeTransformationName(newTemplateTypeName)) {
+      return false;
+    }
     if (info.templateTypeNames == null){
       info.templateTypeNames = new ArrayList<String>();
     } else if (info.templateTypeNames.contains(newTemplateTypeName)) {
@@ -1108,6 +1112,43 @@ public class JSDocInfo implements Serializable {
     }
 
     info.templateTypeNames.add(newTemplateTypeName);
+    return true;
+  }
+
+  private boolean isTemplateTypeName(String name) {
+    if (info.templateTypeNames == null) {
+      return false;
+    }
+    return info.templateTypeNames.contains(name);
+  }
+
+  private boolean isTypeTransformationName(String name) {
+    if (info.typeTransformations == null) {
+      return false;
+    }
+    return info.typeTransformations.containsKey(name);
+  }
+
+  /**
+   * Declares a type transformation expression. These expressions are described
+   * using a {@code @template} annotation of the form
+   * {@code @template T := TTL-Expr =:}
+   *
+   * @param newName The name associated to the type transformation.
+   * @param expr The type transformation expression.
+   */
+  boolean declareTypeTransformation(String newName, Node expr) {
+    lazyInitInfo();
+
+    if (isTemplateTypeName(newName)) {
+      return false;
+    }
+    if (info.typeTransformations == null){
+      info.typeTransformations = new HashMap<String, Node>();
+    } else if (info.typeTransformations.containsKey(newName)) {
+      return false;
+    }
+    info.typeTransformations.put(newName, expr);
     return true;
   }
 

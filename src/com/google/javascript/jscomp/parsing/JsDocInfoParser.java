@@ -881,8 +881,6 @@ public final class JsDocInfoParser {
         case TEMPLATE: {
           int templateLineno = stream.getLineno();
           int templateCharno = stream.getCharno();
-          // TODO(lpino): Fix the position of the warning marker for this case.
-          // For now the lineno and charno are set at the beginning of the @template
           ExtractionInfo templateInfo =
               extractMultilineTextualBlock(token, WhitespaceOption.TRIM);
           String templateString = templateInfo.string;
@@ -937,9 +935,11 @@ public final class JsDocInfoParser {
               if (!validTemplateTypeName(typeName)) {
                 parser.addTypeWarning("msg.jsdoc.template.invalid.type.name",
                     templateLineno, templateCharno);
-              } else if (!jsdocBuilder.recordTemplateTypeName(typeName)) {
-                parser.addTypeWarning("msg.jsdoc.template.name.declared.twice",
-                    templateLineno, templateCharno);
+              } else if (!isTypeTransformation) {
+                if (!jsdocBuilder.recordTemplateTypeName(typeName)) {
+                  parser.addTypeWarning("msg.jsdoc.template.name.declared.twice",
+                      templateLineno, templateCharno);
+                }
               }
             }
           }
@@ -964,8 +964,12 @@ public final class JsDocInfoParser {
                       sourceFile, errorReporter, templateLineno, templateCharno);
               // If the parsing was successful store the type transformation
               if (ttlParser.parseTypeTransformation()) {
-                Node ttlAst = ttlParser.getTypeTransformationAst();
-                // TODO(lpino): Use the Type Transformation AST
+                if (!jsdocBuilder.recordTypeTransformation(names.get(0),
+                    ttlParser.getTypeTransformationAst())) {
+                  parser.addTypeWarning(
+                      "msg.jsdoc.template.name.declared.twice",
+                      templateLineno, templateCharno);
+                }
               }
             }
           }

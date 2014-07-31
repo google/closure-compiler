@@ -325,6 +325,19 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Records a type transformation expression together with its template
+   * type name.
+   */
+  public boolean recordTypeTransformation(String name, Node expr) {
+    if (currentInfo.declareTypeTransformation(name, expr)) {
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records a thrown type.
    */
   public boolean recordThrowType(JSTypeExpression type) {

@@ -2894,8 +2894,26 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T\n@param {string} x\n@template V */");
   }
 
-  public void testParserWithDoubleTemplateDeclaration() {
+  public void testParserWithTemplateTypeNameDeclaredTwice() {
     parse("@template T\n@template T */",
+        "Bad type annotation. Type name(s) for "
+        + "@template annotation declared twice");
+  }
+
+  public void testParserWithTemplateTypeNameDeclaredTwice2() {
+    parse("@template T := S =: \n @template T := R =:*/",
+        "Bad type annotation. Type name(s) for "
+        + "@template annotation declared twice");
+  }
+
+  public void testParserWithTemplateTypeNameDeclaredTwice3() {
+    parse("@template T \n @template T := R =:*/",
+        "Bad type annotation. Type name(s) for "
+        + "@template annotation declared twice");
+  }
+
+  public void testParserWithTemplateTypeNameDeclaredTwice4() {
+    parse("@template T := R =: \n @template T*/",
         "Bad type annotation. Type name(s) for "
         + "@template annotation declared twice");
   }
