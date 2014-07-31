@@ -442,7 +442,7 @@ public class Parser {
       case SEMI_COLON:
         return true;
       default:
-        return false;
+        return Keywords.isKeyword(token.type);
     }
   }
 
@@ -463,7 +463,8 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = allowStatic && eatOpt(TokenType.STATIC) != null;
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    if (peekId()) {
+    TokenType type = peekType();
+    if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
       IdentifierToken name = eatIdOrKeywordAsId();
       return parseFunctionTail(
           start, name, isStatic, isGenerator,

@@ -2129,6 +2129,16 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "}\n");
   }
 
+  public void testClassKeywordsAsMethodNames() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse(Joiner.on('\n').join(
+        "class KeywordMethods {",
+        "  continue() {}",
+        "  throw() {}",
+        "  else() {}",
+        "}"));
+  }
+
   public void testSuper1() {
     mode = LanguageMode.ECMASCRIPT6;
 
