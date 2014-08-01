@@ -292,9 +292,9 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private TypeEnv getInEnv(Node n) {
+  private TypeEnv getInEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
     Set<TypeEnv> envSet = Sets.newHashSet();
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : cfg.getInEdges(n)) {
+    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getInEdges()) {
       TypeEnv env = envs.get(de);
       if (env != null) {
         envSet.add(env);
@@ -306,10 +306,10 @@ public class NewTypeInference implements CompilerPass {
     return TypeEnv.join(envSet);
   }
 
-  private TypeEnv getOutEnv(Node n) {
-    Preconditions.checkArgument(!cfg.getOutEdges(n).isEmpty());
+  private TypeEnv getOutEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
+    Preconditions.checkArgument(!dn.getOutEdges().isEmpty());
     Set<TypeEnv> envSet = Sets.newHashSet();
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : cfg.getOutEdges(n)) {
+    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getOutEdges()) {
       TypeEnv env = envs.get(de);
       if (env != null) {
         envSet.add(env);
@@ -318,23 +318,23 @@ public class NewTypeInference implements CompilerPass {
     return TypeEnv.join(envSet);
   }
 
-  private TypeEnv setOutEnv(Node n, TypeEnv e) {
-    if (cfg.getOutEdges(n).size() > 1) {
+  private TypeEnv setOutEnv(
+      DiGraphNode<Node, ControlFlowGraph.Branch> dn, TypeEnv e) {
+    if (dn.getOutEdges().size() > 1) {
       e = e.split();
     }
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de :
-        cfg.getOutEdges(n)) {
+    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getOutEdges()) {
       envs.put(de, e);
     }
     return e;
   }
 
-  private TypeEnv setInEnv(Node n, TypeEnv e) {
-    if (cfg.getOutEdges(n).size() > 1) {
+  private TypeEnv setInEnv(
+      DiGraphNode<Node, ControlFlowGraph.Branch> dn, TypeEnv e) {
+    if (dn.getInEdges().size() > 1) {
       e = e.split();
     }
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de :
-        cfg.getInEdges(n)) {
+    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getInEdges()) {
       envs.put(de, e);
     }
     return e;
@@ -382,7 +382,7 @@ public class NewTypeInference implements CompilerPass {
       entryEnv = envPutType(entryEnv, fnName, summaryType);
     }
     println("Keeping env: ", entryEnv);
-    setOutEnv(cfg.getEntry().getValue(), entryEnv);
+    setOutEnv(cfg.getEntry(), entryEnv);
   }
 
   private TypeEnv getTypeEnvFromDeclaredTypes() {
@@ -462,8 +462,7 @@ public class NewTypeInference implements CompilerPass {
     if (seen.contains(dn) || dn == cfg.getImplicitReturn()) {
       return;
     }
-    Node currentNode = dn.getValue();
-    switch (currentNode.getType()) {
+    switch (dn.getValue().getType()) {
       case Token.DO:
       case Token.WHILE:
       case Token.FOR:
@@ -471,7 +470,7 @@ public class NewTypeInference implements CompilerPass {
         // For DO loops, we do BODY-CONDT-CONDF-FOLLOW
         // Since CONDT is currently unused, this could be optimized.
         List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
-            cfg.getOutEdges(currentNode);
+            dn.getOutEdges();
         seen.add(dn);
         workset.add(dn);
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
@@ -489,7 +488,7 @@ public class NewTypeInference implements CompilerPass {
       default:
         // Wait for all other incoming edges at join nodes.
         for (DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge :
-            cfg.getInEdges(currentNode)) {
+            dn.getInEdges()) {
           if (!seen.contains(inEdge.getSource())
               && !inEdge.getSource().getValue().isDo()) {
             return;
@@ -571,7 +570,7 @@ public class NewTypeInference implements CompilerPass {
         // TODO(blickly): Support analyzing the body of the THROW
         continue;
       }
-      TypeEnv outEnv = getOutEnv(n);
+      TypeEnv outEnv = getOutEnv(dn);
       TypeEnv inEnv;
       println("\tBWD Statment: ", n);
       println("\t\toutEnv: ", outEnv);
@@ -653,7 +652,7 @@ public class NewTypeInference implements CompilerPass {
           }
       }
       println("\t\tinEnv: ", inEnv);
-      setInEnv(n, inEnv);
+      setInEnv(dn, inEnv);
     }
   }
 
@@ -663,7 +662,7 @@ public class NewTypeInference implements CompilerPass {
       Node n = dn.getValue();
       Preconditions.checkState(n != null,
           "Implicit return should not be in workset.");
-      TypeEnv inEnv = getInEnv(n);
+      TypeEnv inEnv = getInEnv(dn);
       TypeEnv outEnv = null;
 
       println("\tFWD Statment: ", n);
@@ -734,12 +733,12 @@ public class NewTypeInference implements CompilerPass {
           }
           conditional = true;
           analyzeConditionalStmFwd(
-              n, NodeUtil.getConditionExpression(n), inEnv);
+              dn, NodeUtil.getConditionExpression(n), inEnv);
           break;
         case Token.CASE: {
           conditional = true;
           // See analyzeExprFwd#Token.CASE for how to handle this precisely
-          analyzeConditionalStmFwd(n, n, inEnv);
+          analyzeConditionalStmFwd(dn, n, inEnv);
           break;
         }
         case Token.VAR:
@@ -768,16 +767,18 @@ public class NewTypeInference implements CompilerPass {
 
       if (!conditional) {
         println("\t\toutEnv: ", outEnv);
-        setOutEnv(n, outEnv);
+        setOutEnv(dn, outEnv);
       }
     }
   }
 
   // TODO(dimvar): differentiate for/in to not treat its cond as boolean, but
   // as an assignment to a string.
-  private void analyzeConditionalStmFwd(Node stm, Node cond, TypeEnv inEnv) {
+  private void analyzeConditionalStmFwd(
+      DiGraphNode<Node, ControlFlowGraph.Branch> stm,
+      Node cond, TypeEnv inEnv) {
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge :
-             cfg.getOutEdges(stm)) {
+        stm.getOutEdges()) {
       JSType specializedType;
       switch (outEdge.getValue()) {
         case ON_TRUE:
@@ -3068,12 +3069,11 @@ public class NewTypeInference implements CompilerPass {
   }
 
   TypeEnv getEntryTypeEnv() {
-    return getOutEnv(cfg.getEntry().getValue());
+    return getOutEnv(cfg.getEntry());
   }
 
   private TypeEnv getFinalTypeEnv() {
-    Node n = cfg.getImplicitReturn().getValue();
-    TypeEnv env = getInEnv(n);
+    TypeEnv env = getInEnv(cfg.getImplicitReturn());
     if (env == null) {
       // This function only exits with THROWs
       env = new TypeEnv();
