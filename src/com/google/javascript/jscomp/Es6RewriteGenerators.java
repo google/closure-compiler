@@ -205,12 +205,16 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     originalGeneratorBody = n.getLastChild();
     Node suppressionInsertSpot = null;
     if (NodeUtil.isFunctionExpression(n)) {
-      n.replaceChild(n.getLastChild(), genBlock);
+      n.replaceChild(originalGeneratorBody, genBlock);
       n.setIsGeneratorFunction(false);
       suppressionInsertSpot = n;
     } else {
-      suppressionInsertSpot = IR.var(n.removeFirstChild(), IR.function(IR.name(""),
-          n.removeFirstChild(), genBlock));
+      suppressionInsertSpot = IR.var(
+          n.removeFirstChild(),
+          IR.function(
+              IR.name(""),
+              n.removeFirstChild(),
+              genBlock));
       parent.replaceChild(n, suppressionInsertSpot);
     }
 
@@ -235,7 +239,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     enclosingCase = getUnique(genBlock, Token.CASE);
     hoistRoot = getUnique(genBlock, Token.VAR);
 
-    if (NodeUtil.isNameReferenced(n, GENERATOR_ARGUMENTS)) {
+    if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_ARGUMENTS)) {
       hoistRoot.getParent().addChildAfter(
           IR.var(IR.name(GENERATOR_ARGUMENTS), IR.name("arguments")), hoistRoot);
     }
