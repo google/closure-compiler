@@ -45,14 +45,22 @@
  */
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.Node;
+
 public class TemplateType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String name;
+  private final Node typeTransformation;
 
   TemplateType(JSTypeRegistry registry, String name) {
+    this(registry, name, null);
+  }
+
+  TemplateType(JSTypeRegistry registry, String name, Node typeTransformation) {
     super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
     this.name = name;
+    this.typeTransformation = typeTransformation;
   }
 
   @Override
@@ -82,5 +90,13 @@ public class TemplateType extends ProxyObjectType {
 
   @Override <T> T visit(RelationshipVisitor<T> visitor, JSType that) {
     return visitor.caseTemplateType(this, that);
+  }
+
+  public boolean isTypeTransformation() {
+    return typeTransformation != null;
+  }
+
+  public Node getTypeTransformation() {
+    return typeTransformation;
   }
 }

@@ -1479,6 +1479,11 @@ public class JSTypeRegistry implements Serializable {
     return new TemplateType(this, name);
   }
 
+  public TemplateType createTemplateTypeWithTransformation(
+      String name, Node expr) {
+    return new TemplateType(this, name, expr);
+  }
+
   /**
    * Creates a template type map from the specified list of template keys and
    * template value types.

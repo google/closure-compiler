@@ -42,10 +42,12 @@ package com.google.javascript.rhino;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1782,6 +1784,14 @@ public class JSDocInfo implements Serializable {
       return ImmutableList.of();
     }
     return ImmutableList.copyOf(info.templateTypeNames);
+  }
+
+  /** Gets the type transformations. */
+  public ImmutableMap<String, Node> getTypeTransformations() {
+    if (info == null || info.typeTransformations == null) {
+      return ImmutableMap.<String, Node>of();
+    }
+    return ImmutableMap.copyOf(info.typeTransformations);
   }
 
   /**

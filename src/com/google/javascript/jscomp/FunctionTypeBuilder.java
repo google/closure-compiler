@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -46,6 +47,7 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -588,12 +590,27 @@ final class FunctionTypeBuilder {
       @Nullable JSDocInfo info, JSType ownerType) {
     // NOTE: these template type names may override a list
     // of inherited ones from an overridden function.
-    if (info != null &&  !info.getTemplateTypeNames().isEmpty()) {
+    if (info != null) {
       ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
-      for (String key : info.getTemplateTypeNames()) {
-        builder.add(typeRegistry.createTemplateType(key));
+      ImmutableList<String> infoTemplateTypeNames =
+          info.getTemplateTypeNames();
+      ImmutableMap<String, Node> infoTypeTransformations =
+          info.getTypeTransformations();
+      if (!infoTemplateTypeNames.isEmpty()) {
+        for (String key : infoTemplateTypeNames) {
+          builder.add(typeRegistry.createTemplateType(key));
+        }
       }
-      templateTypeNames = builder.build();
+      if (!infoTypeTransformations.isEmpty()) {
+        for (Entry<String, Node> entry : infoTypeTransformations.entrySet()) {
+          builder.add(typeRegistry.createTemplateTypeWithTransformation(
+              entry.getKey(), entry.getValue()));
+        }
+      }
+      if (!infoTemplateTypeNames.isEmpty()
+          || !infoTypeTransformations.isEmpty()) {
+        templateTypeNames = builder.build();
+      }
     }
 
     ImmutableList<TemplateType> keys = templateTypeNames;
