@@ -980,8 +980,7 @@ public class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     Preconditions.checkArgument(
         requiredType != null && !requiredType.isBottom());
-    int exprKind = expr.getType();
-    switch (exprKind) {
+    switch (expr.getType()) {
       case Token.EMPTY: // can be created by a FOR with empty condition
         return new EnvTypePair(inEnv, JSType.UNKNOWN);
       case Token.FUNCTION: {
@@ -996,7 +995,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.NUMBER:
       case Token.STRING:
       case Token.TRUE:
-        return new EnvTypePair(inEnv, scalarValueToType(exprKind));
+        return new EnvTypePair(inEnv, scalarValueToType(expr.getType()));
       case Token.OBJECTLIT:
         return analyzeObjLitFwd(expr, inEnv, requiredType, specializedType);
       case Token.THIS: {
@@ -1007,193 +1006,27 @@ public class NewTypeInference implements CompilerPass {
         JSType thisType = currentScope.getDeclaredTypeOf("this");
         return new EnvTypePair(inEnv, thisType);
       }
-      case Token.NAME: { // Fwd
-        if (expr.matchesQualifiedName("undefined")) {
-          return new EnvTypePair(inEnv, JSType.UNDEFINED);
-        }
-
-        String varName = expr.getString();
-        if (currentScope.isLocalVar(varName) ||
-            currentScope.isFormalParam(varName) ||
-            currentScope.isLocalFunDef(varName) ||
-            currentScope.isOuterVar(varName) ||
-            varName.equals(currentScope.getName())) {
-          JSType inferredType = envGetType(inEnv, varName);
-          println(varName, "'s inferredType: ", inferredType,
-              " requiredType:  ", requiredType,
-              " specializedType:  ", specializedType);
-          if (!inferredType.isSubtypeOf(requiredType)) {
-            // The inferred type of a variable is always an upper bound, but
-            // sometimes it's also a lower bound, eg, if x was the lhs of an =
-            // where we know the type of the rhs.
-            // We don't track whether the inferred type is a lower bound, so we
-            // conservatively assume that it always is.
-            // This is why we warn when !inferredType.isSubtypeOf(requiredType).
-            // In some rare cases, the inferred type is only an upper bound,
-            // and we would falsely warn.
-            // (These usually include the polymorphic operators += and <.)
-            // We have a heuristic check to avoid the spurious warnings,
-            // but we also miss some true warnings.
-            JSType declType = currentScope.getDeclaredTypeOf(varName);
-            if (tightenTypeAndDontWarn(
-                varName, declType, inferredType, requiredType)) {
-              inferredType = inferredType.specialize(requiredType);
-            } else {
-              // Propagate incorrect type so that the context catches
-              // the mismatch
-              return new EnvTypePair(inEnv, inferredType);
-            }
-          }
-
-          // If preciseType is bottom, there is a condition that can't be true,
-          // but that's not necessarily a type error.
-          JSType preciseType = inferredType.specialize(specializedType);
-          println(varName, "'s preciseType: ", preciseType);
-          if (!preciseType.isBottom() &&
-              currentScope.isUndeclaredFormal(varName) &&
-              preciseType.hasNonScalar()) {
-            // In the bwd direction, we may infer a loose type and then join w/
-            // top and forget it. That's why we also loosen types going fwd.
-            preciseType = preciseType.withLoose();
-          }
-          return EnvTypePair.addBinding(inEnv, varName, preciseType);
-        }
-
-        println("Found global variable ", varName);
-        // For now, we don't warn for global variables
-        return new EnvTypePair(inEnv, JSType.UNKNOWN);
-      }
+      case Token.NAME:
+        return analyzeNameFwd(expr, inEnv, requiredType, specializedType);
       case Token.AND:
-      case Token.OR: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        if ((specializedType.isTruthy() && exprKind == Token.AND) ||
-            (specializedType.isFalsy() && exprKind == Token.OR)) {
-          EnvTypePair lhsPair =
-              analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, specializedType);
-          EnvTypePair rhsPair =
-              analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
-          return rhsPair;
-        } else if ((specializedType.isFalsy() && exprKind == Token.AND) ||
-                   (specializedType.isTruthy() && exprKind == Token.OR)) {
-          inEnv = inEnv.split();
-          EnvTypePair shortCircuitPair =
-              analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, specializedType);
-          EnvTypePair lhsPair = analyzeExprFwd(
-              lhs, inEnv, JSType.UNKNOWN, specializedType.negate());
-          EnvTypePair rhsPair =
-              analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
-          return EnvTypePair.join(rhsPair, shortCircuitPair);
-        } else {
-          inEnv = inEnv.split();
-          // Independently of the specializedType, && rhs is only analyzed when
-          // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
-          JSType stopAfterLhsType = exprKind == Token.AND ?
-              JSType.FALSY : JSType.TRUTHY;
-          EnvTypePair shortCircuitPair =
-              analyzeExprFwd(lhs, inEnv, requiredType, stopAfterLhsType);
-          EnvTypePair lhsPair = analyzeExprFwd(
-              lhs, inEnv, JSType.UNKNOWN, stopAfterLhsType.negate());
-          EnvTypePair rhsPair =
-              analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
-          return EnvTypePair.join(rhsPair, shortCircuitPair);
-        }
-      }
+      case Token.OR:
+        return analyzeLogicalOpFwd(expr, inEnv, requiredType, specializedType);
       case Token.INC:
-      case Token.DEC: {
-        mayWarnAboutConst(expr);
-        Node ch = expr.getFirstChild();
-        if (ch.isGetProp() || ch.isGetElem() && ch.getLastChild().isString()) {
-          // We prefer to analyze the child of INC/DEC one extra time here,
-          // to putting the @const prop check in analyzePropAccessFwd.
-          Node recv = ch.getFirstChild();
-          String pname = ch.getLastChild().getString();
-          EnvTypePair pair = analyzeExprFwd(recv, inEnv);
-          JSType recvType = pair.type;
-          if (mayWarnAboutConstProp(ch, recvType, new QualifiedName(pname))) {
-            pair.type = requiredType;
-            return pair;
-          }
-        }
-        // fall through
-      }
+      case Token.DEC:
+        return analyzeIncDecFwd(expr, inEnv, requiredType);
       case Token.BITNOT:
       case Token.POS:
-      case Token.NEG: { // Unary operations on numbers
-        // For inc and dec on a getprop, we don't want to create a property on
-        // a struct by accident.
-        // But we will get an inexistent-property warning, so we don't check
-        // for structness separately here.
-        Node child = expr.getFirstChild();
-        EnvTypePair pair = analyzeExprFwd(child, inEnv, JSType.NUMBER);
-        if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
-          warnInvalidOperand(child, expr.getType(), JSType.NUMBER, pair.type);
-        }
-        pair.type = JSType.NUMBER;
-        return pair;
-      }
+      case Token.NEG:
+        return analyzeUnaryNumFwd(expr, inEnv);
       case Token.TYPEOF: {
         EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
         pair.type = JSType.STRING;
         return pair;
       }
-      case Token.INSTANCEOF: {
-        Node obj = expr.getFirstChild();
-        Node ctor = expr.getLastChild();
-        EnvTypePair objPair, ctorPair;
-
-        // First, evaluate ignoring the specialized context
-        objPair = analyzeExprFwd(obj, inEnv);
-        JSType objType = objPair.type;
-        if (!objType.equals(JSType.TOP) &&
-            !objType.equals(JSType.UNKNOWN) &&
-            !objType.hasNonScalar()) {
-          warnInvalidOperand(
-              obj, Token.INSTANCEOF,
-              "an object or a union type that includes an object",
-              objPair.type);
-        }
-        ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
-        JSType ctorType = ctorPair.type;
-        FunctionType ctorFunType = ctorType.getFunType();
-        if (!ctorType.isUnknown() &&
-            (!ctorType.isSubtypeOf(JSType.topFunction()) ||
-                !ctorFunType.isConstructor())) {
-          warnInvalidOperand(
-              ctor, Token.INSTANCEOF, "a constructor function", ctorType);
-        }
-        if (ctorFunType == null || !ctorFunType.isConstructor() ||
-            (!specializedType.isTruthy() && !specializedType.isFalsy())) {
-          ctorPair.type = JSType.BOOLEAN;
-          return ctorPair;
-        }
-
-        // We are in a specialized context *and* we know the constructor type
-        JSType instanceType = ctorFunType.getTypeOfThis();
-        objPair = analyzeExprFwd(obj, inEnv, JSType.UNKNOWN,
-            specializedType.isTruthy() ?
-            objPair.type.specialize(instanceType) :
-            objPair.type.removeType(instanceType));
-        ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
-        ctorPair.type = JSType.BOOLEAN;
-        return ctorPair;
-      }
-      case Token.ADD: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, JSType.NUM_OR_STR);
-        EnvTypePair rhsPair =
-            analyzeExprFwd(rhs, lhsPair.env, JSType.NUM_OR_STR);
-        JSType lhsType = lhsPair.type;
-        JSType rhsType = rhsPair.type;
-        if (!lhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
-          warnInvalidOperand(lhs, expr.getType(), JSType.NUM_OR_STR, lhsType);
-        }
-        if (!rhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
-          warnInvalidOperand(rhs, expr.getType(), JSType.NUM_OR_STR, rhsType);
-        }
-        return new EnvTypePair(rhsPair.env, JSType.plus(lhsType, rhsType));
-      }
+      case Token.INSTANCEOF:
+        return analyzeInstanceofFwd(expr, inEnv, specializedType);
+      case Token.ADD:
+        return analyzeAddFwd(expr, inEnv);
       case Token.BITOR:
       case Token.BITAND:
       case Token.BITXOR:
@@ -1203,57 +1036,12 @@ public class NewTypeInference implements CompilerPass {
       case Token.MUL:
       case Token.RSH:
       case Token.SUB:
-      case Token.URSH: { // Binary operations on numbers
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, JSType.NUMBER);
-        EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.NUMBER);
-        if (!lhsPair.type.isSubtypeOf(JSType.NUMBER)) {
-          warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsPair.type);
-        }
-        if (!rhsPair.type.isSubtypeOf(JSType.NUMBER)) {
-          warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, rhsPair.type);
-        }
-        rhsPair.type = JSType.NUMBER;
-        return rhsPair;
-      }
-      case Token.ASSIGN: { // Fwd
-        mayWarnAboutConst(expr);
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
-        JSType declType = lvalue.declType;
-        EnvTypePair rhsPair =
-            analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
-        if (declType != null && !rhsPair.type.isSubtypeOf(declType)) {
-          warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
-              declType.toString(), rhsPair.type.toString()));
-        } else {
-          rhsPair.env = updateLvalueTypeInEnv(
-              rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
-        }
-        return rhsPair;
-      }
-      case Token.ASSIGN_ADD: {
-        mayWarnAboutConst(expr);
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        JSType lhsReqType = specializeWithCorrection(
-            requiredType, JSType.NUM_OR_STR);
-        LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, lhsReqType);
-        JSType lhsType = lvalue.type;
-        if (!lhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
-          warnInvalidOperand(lhs, Token.ASSIGN_ADD, JSType.NUM_OR_STR, lhsType);
-        }
-        // if lhs is a string, rhs can still be a number
-        JSType rhsReqType = lhsType.equals(JSType.NUMBER) ?
-            JSType.NUMBER : JSType.NUM_OR_STR;
-        EnvTypePair pair = analyzeExprFwd(rhs, lvalue.env, rhsReqType);
-        if (!pair.type.isSubtypeOf(rhsReqType)) {
-          warnInvalidOperand(rhs, Token.ASSIGN_ADD, rhsReqType, pair.type);
-        }
-        return pair;
-      }
+      case Token.URSH:
+        return analyzeBinaryNumericOpFwd(expr, inEnv);
+      case Token.ASSIGN:
+        return analyzeAssignFwd(expr, inEnv, requiredType, specializedType);
+      case Token.ASSIGN_ADD:
+        return analyzeAssignAddFwd(expr, inEnv, requiredType);
       case Token.ASSIGN_BITOR:
       case Token.ASSIGN_BITXOR:
       case Token.ASSIGN_BITAND:
@@ -1263,31 +1051,11 @@ public class NewTypeInference implements CompilerPass {
       case Token.ASSIGN_SUB:
       case Token.ASSIGN_MUL:
       case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD: {
-        mayWarnAboutConst(expr);
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, JSType.NUMBER);
-        JSType lhsType = lvalue.type;
-        boolean lhsWarned = false;
-        if (!lhsType.isSubtypeOf(JSType.NUMBER)) {
-          warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsType);
-          lhsWarned = true;
-        }
-        EnvTypePair pair = analyzeExprFwd(rhs, lvalue.env, JSType.NUMBER);
-        if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
-          warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, pair.type);
-        }
-        if (!lhsWarned) {
-          pair.env =
-            updateLvalueTypeInEnv(pair.env, lhs, lvalue.ptr, JSType.NUMBER);
-        }
-        pair.type = JSType.NUMBER;
-        return pair;
-      }
+      case Token.ASSIGN_MOD:
+        return analyzeAssignNumericOpFwd(expr, inEnv);
       case Token.SHEQ:
       case Token.SHNE:
-        return analyzeStrictComparisonFwd(exprKind,
+        return analyzeStrictComparisonFwd(expr.getType(),
             expr.getFirstChild(), expr.getLastChild(), inEnv, specializedType);
       case Token.EQ:
       case Token.NE:
@@ -1295,37 +1063,8 @@ public class NewTypeInference implements CompilerPass {
       case Token.LT:
       case Token.GT:
       case Token.LE:
-      case Token.GE: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
-        EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
-        // The type of either side can be specialized based on the other side
-        if (lhsPair.type.isScalar() && !rhsPair.type.isScalar()) {
-          rhsPair = analyzeExprFwd(rhs, lhsPair.env, lhsPair.type);
-        } else if (rhsPair.type.isScalar()) {
-          lhsPair = analyzeExprFwd(lhs, inEnv, rhsPair.type);
-          rhsPair = analyzeExprFwd(rhs, lhsPair.env, rhsPair.type);
-        } else if (lhs.isName() && lhsPair.type.isUnknown() &&
-            rhs.isName() && rhsPair.type.isUnknown()) {
-          TypeEnv env = envPutType(
-              rhsPair.env, lhs.getString(), JSType.TOP_SCALAR);
-          env = envPutType(
-              rhsPair.env, rhs.getString(), JSType.TOP_SCALAR);
-          return new EnvTypePair(env, JSType.BOOLEAN);
-        }
-        JSType lhsType = lhsPair.type;
-        JSType rhsType = rhsPair.type;
-
-        if (!lhsType.isSubtypeOf(JSType.TOP_SCALAR) ||
-            !rhsType.isSubtypeOf(JSType.TOP_SCALAR) ||
-            !JSType.areCompatibleScalarTypes(lhsType, rhsType)) {
-          warnInvalidOperand(expr, exprKind, "matching scalar types",
-              lhsType.toString() + ", " + rhsType.toString());
-        }
-        rhsPair.type = JSType.BOOLEAN;
-        return rhsPair;
-      }
+      case Token.GE:
+        return analyzeLtGtFwd(expr, inEnv);
       case Token.GETPROP:
         Preconditions.checkState(
             !NodeUtil.isAssignmentOp(expr.getParent()) ||
@@ -1333,133 +1072,11 @@ public class NewTypeInference implements CompilerPass {
         return analyzePropAccessFwd(
             expr.getFirstChild(), expr.getLastChild().getString(),
             inEnv, requiredType, specializedType);
-      case Token.HOOK: {
-        Node cond = expr.getFirstChild();
-        Node thenBranch = cond.getNext();
-        Node elseBranch = thenBranch.getNext();
-        inEnv = inEnv.split();
-        TypeEnv trueEnv =
-            analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.TRUE_TYPE).env;
-        TypeEnv falseEnv =
-            analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.FALSE_TYPE).env;
-        EnvTypePair thenPair =
-            analyzeExprFwd(thenBranch, trueEnv, requiredType, specializedType);
-        EnvTypePair elsePair =
-            analyzeExprFwd(elseBranch, falseEnv, requiredType, specializedType);
-        return EnvTypePair.join(thenPair, elsePair);
-      }
-      case Token.CALL: // Fwd
-      case Token.NEW: {
-        if (isClosureSpecificCall(expr)) {
-          return analyzeClosureCallFwd(expr, inEnv, specializedType);
-        }
-        Node callee = expr.getFirstChild();
-        EnvTypePair calleePair =
-            analyzeExprFwd(callee, inEnv, JSType.topFunction());
-        JSType calleeType = calleePair.type;
-        if (!calleeType.isSubtypeOf(JSType.topFunction())) {
-          warnings.add(JSError.make(
-              expr, TypeCheck.NOT_CALLABLE, calleeType.toString()));
-        }
-        FunctionType funType = calleeType.getFunType();
-        if (funType == null ||
-            funType.isTopFunction() || funType.isQmarkFunction()) {
-          return analyzeCallNodeArgumentsFwd(expr, inEnv);
-        } else if (funType.isLoose()) {
-          return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
-        } else if (expr.isCall() && funType.isConstructor()) {
-          // TODO(dimvar): handle constructors with @return; they can be called
-          // without new, eg, Number in es3.js
-          warnings.add(JSError.make(
-              expr, TypeCheck.CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
-          return analyzeCallNodeArgumentsFwd(expr, inEnv);
-        } else if (expr.isNew() && !funType.isConstructor()) {
-          warnings.add(JSError.make(
-              expr, NOT_A_CONSTRUCTOR, funType.toString()));
-          return analyzeCallNodeArgumentsFwd(expr, inEnv);
-        }
-        int maxArity = funType.getMaxArity();
-        int minArity = funType.getMinArity();
-        int numArgs = expr.getChildCount() - 1;
-        if (numArgs < minArity || numArgs > maxArity) {
-          warnings.add(JSError.make(
-              expr, TypeCheck.WRONG_ARGUMENT_COUNT, "",
-              Integer.toString(numArgs), Integer.toString(minArity),
-              " and at most " + maxArity));
-          return analyzeCallNodeArgumentsFwd(expr, inEnv);
-        }
-        FunctionType origFunType = funType; // save for later
-        if (funType.isGeneric()) {
-          Map<String, JSType> typeMap =
-              calcTypeInstantiationFwd(expr, funType, inEnv);
-          funType = funType.instantiateGenerics(typeMap);
-          println("Instantiated function type: " + funType);
-        }
-        // argTypes collects types of actuals for deferred checks.
-        List<JSType> argTypes = Lists.newArrayList();
-        TypeEnv tmpEnv = inEnv;
-        Node arg = expr.getChildAtIndex(1);
-        for (int i = 0; i < numArgs; i++) {
-          JSType formalType = funType.getFormalType(i);
-          if (formalType.isBottom()) {
-            warnings.add(JSError.make(expr, CALL_FUNCTION_WITH_BOTTOM_FORMAL,
-                  Integer.toString(i)));
-            formalType = JSType.UNKNOWN;
-          }
-          EnvTypePair pair = analyzeExprFwd(arg, tmpEnv, formalType);
-          JSType argTypeForDeferredCheck = pair.type;
-          // Allow passing undefined for an optional argument.
-          if (i >= minArity && pair.type.equals(JSType.UNDEFINED)) {
-            argTypeForDeferredCheck = null; // No deferred check needed.
-          } else if (!pair.type.isSubtypeOf(formalType)) {
-            warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
-                    Integer.toString(i + 1), "",
-                    formalType.toString(), pair.type.toString()));
-            argTypeForDeferredCheck = null; // No deferred check needed.
-          }
-          argTypes.add(argTypeForDeferredCheck);
-          tmpEnv = pair.env;
-          arg = arg.getNext();
-        }
-        JSType retType = funType.getReturnType();
-        if (callee.isName()) {
-          String calleeName = callee.getQualifiedName();
-          if (currentScope.isKnownFunction(calleeName)) {
-            // Local function definitions will be type-checked more
-            // exactly using their summaries, and don't need deferred checks
-            if (currentScope.isLocalFunDef(calleeName)) {
-              collectTypesForFreeVarsFwd(callee, tmpEnv);
-            } else if (!origFunType.isGeneric()) {
-              JSType expectedRetType = requiredType;
-              println("Updating deferred check with ret: ", expectedRetType,
-                  " and args: ", argTypes);
-              DeferredCheck dc;
-              if (expr.isCall()) {
-                dc = deferredChecks.get(expr);
-                if (dc != null) {
-                  dc.updateReturn(expectedRetType);
-                } else {
-                  // The backward analysis of a function is skipped when all
-                  // variables, including outer vars, are declared.
-                  // So, we check that dc is null iff bwd was skipped.
-                  Preconditions.checkState(
-                      !currentScope.hasUndeclaredFormalsOrOuters(),
-                      "No deferred check created in backward direction for %s",
-                      expr);
-                }
-              } else { // call to constructor
-                dc = new DeferredCheck(expr, null,
-                    currentScope, currentScope.getScope(calleeName));
-                deferredChecks.put(expr, dc);
-              }
-              if (dc != null) {
-                dc.updateArgTypes(argTypes);
-              }
-            }
-          }
-        }
-        return new EnvTypePair(tmpEnv, retType);
-      }
+      case Token.HOOK:
+        return analyzeHookFwd(expr, inEnv, requiredType, specializedType);
+      case Token.CALL:
+      case Token.NEW:
+        return analyzeCallNewFwd(expr, inEnv, requiredType, specializedType);
       case Token.COMMA:
         return analyzeExprFwd(
             expr.getLastChild(),
@@ -1472,82 +1089,15 @@ public class NewTypeInference implements CompilerPass {
         pair.type = pair.type.negate().toBoolean();
         return pair;
       }
-      case Token.GETELEM: {
-        Node receiver = expr.getFirstChild();
-        Node index = expr.getLastChild();
-        JSType reqObjType = pickReqObjType(expr);
-        EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
-        JSType recvType = pair.type;
-        // TODO(dimvar): we don't know the prop name here so we're passing the
-        // empty string. Consider improving the error msg.
-        if (!mayWarnAboutNonObject(receiver, "", recvType, specializedType) &&
-            !mayWarnAboutStructPropAccess(receiver, recvType)) {
-          if (isArrayType(recvType)) {
-            pair = analyzeExprFwd(index, pair.env, JSType.NUMBER);
-            if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
-              warnings.add(JSError.make(
-                  index, NewTypeInference.NON_NUMERIC_ARRAY_INDEX,
-                  pair.type.toString()));
-            }
-            // No precision for array elms yet.
-          } else if (index.isString()) {
-            return analyzePropAccessFwd(receiver, index.getString(), inEnv,
-                requiredType, specializedType);
-          }
-        }
-        pair = analyzeExprFwd(index, pair.env);
-        pair.type = requiredType;
-        return pair;
-      }
+      case Token.GETELEM:
+        return analyzeGetElemFwd(expr, inEnv, requiredType, specializedType);
       case Token.VOID: {
         EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
         pair.type = JSType.UNDEFINED;
         return pair;
       }
-      case Token.IN: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        JSType reqObjType = pickReqObjType(expr);
-        EnvTypePair pair;
-
-        pair = analyzeExprFwd(lhs, inEnv, JSType.NUM_OR_STR);
-        if (!pair.type.isSubtypeOf(JSType.NUM_OR_STR)) {
-          warnInvalidOperand(lhs, Token.IN, JSType.NUM_OR_STR, pair.type);
-        }
-        pair = analyzeExprFwd(rhs, pair.env, reqObjType);
-        if (!pair.type.isSubtypeOf(JSType.TOP_OBJECT)) {
-          warnInvalidOperand(rhs, Token.IN, "Object", pair.type);
-          pair.type = JSType.BOOLEAN;
-          return pair;
-        }
-        if (pair.type.isStruct()) {
-          warnings.add(JSError.make(rhs, TypeCheck.IN_USED_WITH_STRUCT));
-          pair.type = JSType.BOOLEAN;
-          return pair;
-        }
-
-        JSType resultType = JSType.BOOLEAN;
-        if (lhs.isString()) {
-          QualifiedName pname = new QualifiedName(lhs.getString());
-          if (specializedType.isTruthy()) {
-            pair = analyzeExprFwd(rhs, inEnv, reqObjType,
-                reqObjType.withPropertyRequired(pname.getLeftmostName()));
-            resultType = JSType.TRUE_TYPE;
-          } else if (specializedType.isFalsy()) {
-            pair = analyzeExprFwd(rhs, inEnv, reqObjType);
-            // If the rhs is a loose object, we won't warn about missing
-            // properties, despite removing the type here.
-            // The only way to have that warning would be to keep track of props
-            // that a loose object *cannot* have; but the implementation cost
-            // is probably not worth it.
-            pair = analyzeExprFwd(
-                rhs, inEnv, reqObjType, pair.type.withoutProperty(pname));
-            resultType = JSType.FALSE_TYPE;
-          }
-        }
-        pair.type = resultType;
-        return pair;
-      }
+      case Token.IN:
+        return analyzeInFwd(expr, inEnv, specializedType);
       case Token.DELPROP: {
         // IRFactory checks that the operand is a name, getprop or getelem.
         // No further warnings here.
@@ -1557,25 +1107,10 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.REGEXP:
         return new EnvTypePair(inEnv, regexpType);
-      case Token.ARRAYLIT: {
-        TypeEnv env = inEnv;
-        for (Node arrayElm = expr.getFirstChild(); arrayElm != null;
-             arrayElm = arrayElm.getNext()) {
-          env = analyzeExprFwd(arrayElm, env).env;
-        }
-        return new EnvTypePair(env, arrayType);
-      }
-      case Token.CAST: {
-        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
-        JSType fromType = pair.type;
-        JSType toType = symbolTable.getCastType(expr);
-        if (!toType.isSubtypeOf(fromType) && !fromType.isSubtypeOf(toType)) {
-          warnings.add(JSError.make(expr, TypeValidator.INVALID_CAST,
-                  fromType.toString(), toType.toString()));
-        }
-        pair.type = toType;
-        return pair;
-      }
+      case Token.ARRAYLIT:
+        return analyzeArrayLitFwd(expr, inEnv);
+      case Token.CAST:
+        return analyzeCastFwd(expr, inEnv);
       case Token.CASE:
         // For a statement of the form: switch (exp1) { ... case exp2: ... }
         // we analyze the case as if it were (exp1 === exp2).
@@ -1588,6 +1123,525 @@ public class NewTypeInference implements CompilerPass {
         throw new RuntimeException("Unhandled expression type: " +
               Token.name(expr.getType()));
     }
+  }
+
+  private EnvTypePair analyzeNameFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    String varName = expr.getString();
+    if (varName.equals("undefined")) {
+      return new EnvTypePair(inEnv, JSType.UNDEFINED);
+    }
+    if (currentScope.isLocalVar(varName) ||
+        currentScope.isFormalParam(varName) ||
+        currentScope.isLocalFunDef(varName) ||
+        currentScope.isOuterVar(varName) ||
+        varName.equals(currentScope.getName())) {
+      JSType inferredType = envGetType(inEnv, varName);
+      println(varName, "'s inferredType: ", inferredType,
+          " requiredType:  ", requiredType,
+          " specializedType:  ", specializedType);
+      if (!inferredType.isSubtypeOf(requiredType)) {
+        // The inferred type of a variable is always an upper bound, but
+        // sometimes it's also a lower bound, eg, if x was the lhs of an =
+        // where we know the type of the rhs.
+        // We don't track whether the inferred type is a lower bound, so we
+        // conservatively assume that it always is.
+        // This is why we warn when !inferredType.isSubtypeOf(requiredType).
+        // In some rare cases, the inferred type is only an upper bound,
+        // and we would falsely warn.
+        // (These usually include the polymorphic operators += and <.)
+        // We have a heuristic check to avoid the spurious warnings,
+        // but we also miss some true warnings.
+        JSType declType = currentScope.getDeclaredTypeOf(varName);
+        if (tightenTypeAndDontWarn(
+            varName, declType, inferredType, requiredType)) {
+          inferredType = inferredType.specialize(requiredType);
+        } else {
+          // Propagate incorrect type so that the context catches
+          // the mismatch
+          return new EnvTypePair(inEnv, inferredType);
+        }
+      }
+      // If preciseType is bottom, there is a condition that can't be true,
+      // but that's not necessarily a type error.
+      JSType preciseType = inferredType.specialize(specializedType);
+      println(varName, "'s preciseType: ", preciseType);
+      if (!preciseType.isBottom() &&
+          currentScope.isUndeclaredFormal(varName) &&
+          preciseType.hasNonScalar()) {
+        // In the bwd direction, we may infer a loose type and then join w/
+        // top and forget it. That's why we also loosen types going fwd.
+        preciseType = preciseType.withLoose();
+      }
+      return EnvTypePair.addBinding(inEnv, varName, preciseType);
+    }
+    println("Found global variable ", varName);
+    // For now, we don't warn for global variables
+    return new EnvTypePair(inEnv, JSType.UNKNOWN);
+  }
+
+  private EnvTypePair analyzeLogicalOpFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    int exprKind = expr.getType();
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    if ((specializedType.isTruthy() && exprKind == Token.AND) ||
+        (specializedType.isFalsy() && exprKind == Token.OR)) {
+      EnvTypePair lhsPair =
+          analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, specializedType);
+      EnvTypePair rhsPair =
+          analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
+      return rhsPair;
+    } else if ((specializedType.isFalsy() && exprKind == Token.AND) ||
+        (specializedType.isTruthy() && exprKind == Token.OR)) {
+      inEnv = inEnv.split();
+      EnvTypePair shortCircuitPair =
+          analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, specializedType);
+      EnvTypePair lhsPair = analyzeExprFwd(
+          lhs, inEnv, JSType.UNKNOWN, specializedType.negate());
+      EnvTypePair rhsPair =
+          analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
+      return EnvTypePair.join(rhsPair, shortCircuitPair);
+    } else {
+      inEnv = inEnv.split();
+      // Independently of the specializedType, && rhs is only analyzed when
+      // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
+      JSType stopAfterLhsType = exprKind == Token.AND ?
+          JSType.FALSY : JSType.TRUTHY;
+      EnvTypePair shortCircuitPair =
+          analyzeExprFwd(lhs, inEnv, requiredType, stopAfterLhsType);
+      EnvTypePair lhsPair = analyzeExprFwd(
+          lhs, inEnv, JSType.UNKNOWN, stopAfterLhsType.negate());
+      EnvTypePair rhsPair =
+          analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
+      return EnvTypePair.join(rhsPair, shortCircuitPair);
+    }
+  }
+
+  private EnvTypePair analyzeIncDecFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType) {
+    mayWarnAboutConst(expr);
+    Node ch = expr.getFirstChild();
+    if (ch.isGetProp() || ch.isGetElem() && ch.getLastChild().isString()) {
+      // We prefer to analyze the child of INC/DEC one extra time here,
+      // to putting the @const prop check in analyzePropAccessFwd.
+      Node recv = ch.getFirstChild();
+      String pname = ch.getLastChild().getString();
+      EnvTypePair pair = analyzeExprFwd(recv, inEnv);
+      JSType recvType = pair.type;
+      if (mayWarnAboutConstProp(ch, recvType, new QualifiedName(pname))) {
+        pair.type = requiredType;
+        return pair;
+      }
+    }
+    return analyzeUnaryNumFwd(expr, inEnv);
+  }
+
+  private EnvTypePair analyzeUnaryNumFwd(Node expr, TypeEnv inEnv) {
+    // For inc and dec on a getprop, we don't want to create a property on
+    // a struct by accident.
+    // But we will get an inexistent-property warning, so we don't check
+    // for structness separately here.
+    Node child = expr.getFirstChild();
+    EnvTypePair pair = analyzeExprFwd(child, inEnv, JSType.NUMBER);
+    if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
+      warnInvalidOperand(child, expr.getType(), JSType.NUMBER, pair.type);
+    }
+    pair.type = JSType.NUMBER;
+    return pair;
+  }
+
+  private EnvTypePair analyzeInstanceofFwd(
+      Node expr, TypeEnv inEnv, JSType specializedType) {
+    Node obj = expr.getFirstChild();
+    Node ctor = expr.getLastChild();
+    EnvTypePair objPair, ctorPair;
+
+    // First, evaluate ignoring the specialized context
+    objPair = analyzeExprFwd(obj, inEnv);
+    JSType objType = objPair.type;
+    if (!objType.equals(JSType.TOP) &&
+        !objType.equals(JSType.UNKNOWN) &&
+        !objType.hasNonScalar()) {
+      warnInvalidOperand(
+          obj, Token.INSTANCEOF,
+          "an object or a union type that includes an object",
+          objPair.type);
+    }
+    ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
+    JSType ctorType = ctorPair.type;
+    FunctionType ctorFunType = ctorType.getFunType();
+    if (!ctorType.isUnknown() &&
+        (!ctorType.isSubtypeOf(JSType.topFunction()) ||
+            !ctorFunType.isConstructor())) {
+      warnInvalidOperand(
+          ctor, Token.INSTANCEOF, "a constructor function", ctorType);
+    }
+    if (ctorFunType == null || !ctorFunType.isConstructor() ||
+        (!specializedType.isTruthy() && !specializedType.isFalsy())) {
+      ctorPair.type = JSType.BOOLEAN;
+      return ctorPair;
+    }
+
+    // We are in a specialized context *and* we know the constructor type
+    JSType instanceType = ctorFunType.getTypeOfThis();
+    objPair = analyzeExprFwd(obj, inEnv, JSType.UNKNOWN,
+        specializedType.isTruthy() ?
+        objPair.type.specialize(instanceType) :
+        objPair.type.removeType(instanceType));
+    ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
+    ctorPair.type = JSType.BOOLEAN;
+    return ctorPair;
+  }
+
+  private EnvTypePair analyzeAddFwd(Node expr, TypeEnv inEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, JSType.NUM_OR_STR);
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.NUM_OR_STR);
+    JSType lhsType = lhsPair.type;
+    JSType rhsType = rhsPair.type;
+    if (!lhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
+      warnInvalidOperand(lhs, expr.getType(), JSType.NUM_OR_STR, lhsType);
+    }
+    if (!rhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
+      warnInvalidOperand(rhs, expr.getType(), JSType.NUM_OR_STR, rhsType);
+    }
+    return new EnvTypePair(rhsPair.env, JSType.plus(lhsType, rhsType));
+  }
+
+  private EnvTypePair analyzeBinaryNumericOpFwd(Node expr, TypeEnv inEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, JSType.NUMBER);
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.NUMBER);
+    if (!lhsPair.type.isSubtypeOf(JSType.NUMBER)) {
+      warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsPair.type);
+    }
+    if (!rhsPair.type.isSubtypeOf(JSType.NUMBER)) {
+      warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, rhsPair.type);
+    }
+    rhsPair.type = JSType.NUMBER;
+    return rhsPair;
+  }
+
+  private EnvTypePair analyzeAssignFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    mayWarnAboutConst(expr);
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
+    JSType declType = lvalue.declType;
+    EnvTypePair rhsPair =
+        analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
+    if (declType != null && !rhsPair.type.isSubtypeOf(declType)) {
+      warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
+              declType.toString(), rhsPair.type.toString()));
+    } else {
+      rhsPair.env = updateLvalueTypeInEnv(
+          rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
+    }
+    return rhsPair;
+  }
+
+  private EnvTypePair analyzeAssignAddFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType) {
+    mayWarnAboutConst(expr);
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    JSType lhsReqType =
+        specializeWithCorrection(requiredType, JSType.NUM_OR_STR);
+    LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, lhsReqType);
+    JSType lhsType = lvalue.type;
+    if (!lhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
+      warnInvalidOperand(lhs, Token.ASSIGN_ADD, JSType.NUM_OR_STR, lhsType);
+    }
+    // if lhs is a string, rhs can still be a number
+    JSType rhsReqType = lhsType.equals(JSType.NUMBER) ?
+        JSType.NUMBER : JSType.NUM_OR_STR;
+    EnvTypePair pair = analyzeExprFwd(rhs, lvalue.env, rhsReqType);
+    if (!pair.type.isSubtypeOf(rhsReqType)) {
+      warnInvalidOperand(rhs, Token.ASSIGN_ADD, rhsReqType, pair.type);
+    }
+    return pair;
+  }
+
+  private EnvTypePair analyzeAssignNumericOpFwd(Node expr, TypeEnv inEnv) {
+    mayWarnAboutConst(expr);
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, JSType.NUMBER);
+    JSType lhsType = lvalue.type;
+    boolean lhsWarned = false;
+    if (!lhsType.isSubtypeOf(JSType.NUMBER)) {
+      warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsType);
+      lhsWarned = true;
+    }
+    EnvTypePair pair = analyzeExprFwd(rhs, lvalue.env, JSType.NUMBER);
+    if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
+      warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, pair.type);
+    }
+    if (!lhsWarned) {
+      pair.env =
+          updateLvalueTypeInEnv(pair.env, lhs, lvalue.ptr, JSType.NUMBER);
+    }
+    pair.type = JSType.NUMBER;
+    return pair;
+  }
+
+  private EnvTypePair analyzeLtGtFwd(Node expr, TypeEnv inEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+    // The type of either side can be specialized based on the other side
+    if (lhsPair.type.isScalar() && !rhsPair.type.isScalar()) {
+      rhsPair = analyzeExprFwd(rhs, lhsPair.env, lhsPair.type);
+    } else if (rhsPair.type.isScalar()) {
+      lhsPair = analyzeExprFwd(lhs, inEnv, rhsPair.type);
+      rhsPair = analyzeExprFwd(rhs, lhsPair.env, rhsPair.type);
+    } else if (lhs.isName() && lhsPair.type.isUnknown() &&
+        rhs.isName() && rhsPair.type.isUnknown()) {
+      TypeEnv env = envPutType(rhsPair.env, lhs.getString(), JSType.TOP_SCALAR);
+      env = envPutType(rhsPair.env, rhs.getString(), JSType.TOP_SCALAR);
+      return new EnvTypePair(env, JSType.BOOLEAN);
+    }
+    JSType lhsType = lhsPair.type;
+    JSType rhsType = rhsPair.type;
+    if (!lhsType.isSubtypeOf(JSType.TOP_SCALAR) ||
+        !rhsType.isSubtypeOf(JSType.TOP_SCALAR) ||
+        !JSType.areCompatibleScalarTypes(lhsType, rhsType)) {
+      warnInvalidOperand(expr, expr.getType(), "matching scalar types",
+          lhsType.toString() + ", " + rhsType.toString());
+    }
+    rhsPair.type = JSType.BOOLEAN;
+    return rhsPair;
+  }
+
+  private EnvTypePair analyzeHookFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    Node cond = expr.getFirstChild();
+    Node thenBranch = cond.getNext();
+    Node elseBranch = thenBranch.getNext();
+    inEnv = inEnv.split();
+    TypeEnv trueEnv =
+        analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.TRUE_TYPE).env;
+    TypeEnv falseEnv =
+        analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.FALSE_TYPE).env;
+    EnvTypePair thenPair =
+        analyzeExprFwd(thenBranch, trueEnv, requiredType, specializedType);
+    EnvTypePair elsePair =
+        analyzeExprFwd(elseBranch, falseEnv, requiredType, specializedType);
+    return EnvTypePair.join(thenPair, elsePair);
+  }
+
+  private EnvTypePair analyzeCallNewFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    if (isClosureSpecificCall(expr)) {
+      return analyzeClosureCallFwd(expr, inEnv, specializedType);
+    }
+    Node callee = expr.getFirstChild();
+    EnvTypePair calleePair =
+        analyzeExprFwd(callee, inEnv, JSType.topFunction());
+    JSType calleeType = calleePair.type;
+    if (!calleeType.isSubtypeOf(JSType.topFunction())) {
+      warnings.add(JSError.make(
+          expr, TypeCheck.NOT_CALLABLE, calleeType.toString()));
+    }
+    FunctionType funType = calleeType.getFunType();
+    if (funType == null
+        || funType.isTopFunction() || funType.isQmarkFunction()) {
+      return analyzeCallNodeArgumentsFwd(expr, inEnv);
+    } else if (funType.isLoose()) {
+      return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
+    } else if (expr.isCall() && funType.isConstructor()) {
+      // TODO(dimvar): handle constructors with @return; they can be called
+      // without new, eg, Number in es3.js
+      warnings.add(JSError.make(
+          expr, TypeCheck.CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
+      return analyzeCallNodeArgumentsFwd(expr, inEnv);
+    } else if (expr.isNew() && !funType.isConstructor()) {
+      warnings.add(JSError.make(
+          expr, NOT_A_CONSTRUCTOR, funType.toString()));
+      return analyzeCallNodeArgumentsFwd(expr, inEnv);
+    }
+    int maxArity = funType.getMaxArity();
+    int minArity = funType.getMinArity();
+    int numArgs = expr.getChildCount() - 1;
+    if (numArgs < minArity || numArgs > maxArity) {
+      warnings.add(JSError.make(
+          expr, TypeCheck.WRONG_ARGUMENT_COUNT, "",
+          Integer.toString(numArgs), Integer.toString(minArity),
+          " and at most " + maxArity));
+      return analyzeCallNodeArgumentsFwd(expr, inEnv);
+    }
+    FunctionType origFunType = funType; // save for later
+    if (funType.isGeneric()) {
+      Map<String, JSType> typeMap =
+          calcTypeInstantiationFwd(expr, funType, inEnv);
+      funType = funType.instantiateGenerics(typeMap);
+      println("Instantiated function type: " + funType);
+    }
+    // argTypes collects types of actuals for deferred checks.
+    List<JSType> argTypes = Lists.newArrayList();
+    TypeEnv tmpEnv = inEnv;
+    Node arg = expr.getChildAtIndex(1);
+    for (int i = 0; i < numArgs; i++) {
+      JSType formalType = funType.getFormalType(i);
+      if (formalType.isBottom()) {
+        warnings.add(JSError.make(expr, CALL_FUNCTION_WITH_BOTTOM_FORMAL,
+                Integer.toString(i)));
+        formalType = JSType.UNKNOWN;
+      }
+      EnvTypePair pair = analyzeExprFwd(arg, tmpEnv, formalType);
+      JSType argTypeForDeferredCheck = pair.type;
+      // Allow passing undefined for an optional argument.
+      if (i >= minArity && pair.type.equals(JSType.UNDEFINED)) {
+        argTypeForDeferredCheck = null; // No deferred check needed.
+      } else if (!pair.type.isSubtypeOf(formalType)) {
+        warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
+                Integer.toString(i + 1), "",
+                formalType.toString(), pair.type.toString()));
+        argTypeForDeferredCheck = null; // No deferred check needed.
+      }
+      argTypes.add(argTypeForDeferredCheck);
+      tmpEnv = pair.env;
+      arg = arg.getNext();
+    }
+    JSType retType = funType.getReturnType();
+    if (callee.isName()) {
+      String calleeName = callee.getQualifiedName();
+      if (currentScope.isKnownFunction(calleeName)) {
+        // Local function definitions will be type-checked more
+        // exactly using their summaries, and don't need deferred checks
+        if (currentScope.isLocalFunDef(calleeName)) {
+          collectTypesForFreeVarsFwd(callee, tmpEnv);
+        } else if (!origFunType.isGeneric()) {
+          JSType expectedRetType = requiredType;
+          println("Updating deferred check with ret: ", expectedRetType,
+              " and args: ", argTypes);
+          DeferredCheck dc;
+          if (expr.isCall()) {
+            dc = deferredChecks.get(expr);
+            if (dc != null) {
+              dc.updateReturn(expectedRetType);
+            } else {
+              // The backward analysis of a function is skipped when all
+              // variables, including outer vars, are declared.
+              // So, we check that dc is null iff bwd was skipped.
+              Preconditions.checkState(
+                  !currentScope.hasUndeclaredFormalsOrOuters(),
+                  "No deferred check created in backward direction for %s",
+                  expr);
+            }
+          } else { // call to constructor
+            dc = new DeferredCheck(expr, null,
+                currentScope, currentScope.getScope(calleeName));
+            deferredChecks.put(expr, dc);
+          }
+          if (dc != null) {
+            dc.updateArgTypes(argTypes);
+          }
+        }
+      }
+    }
+    return new EnvTypePair(tmpEnv, retType);
+  }
+
+  private EnvTypePair analyzeGetElemFwd(
+      Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    Node receiver = expr.getFirstChild();
+    Node index = expr.getLastChild();
+    JSType reqObjType = pickReqObjType(expr);
+    EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
+    JSType recvType = pair.type;
+    // TODO(dimvar): we don't know the prop name here so we're passing the
+    // empty string. Consider improving the error msg.
+    if (!mayWarnAboutNonObject(receiver, "", recvType, specializedType) &&
+        !mayWarnAboutStructPropAccess(receiver, recvType)) {
+      if (isArrayType(recvType)) {
+        pair = analyzeExprFwd(index, pair.env, JSType.NUMBER);
+        if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
+          warnings.add(JSError.make(
+              index, NewTypeInference.NON_NUMERIC_ARRAY_INDEX,
+              pair.type.toString()));
+        }
+        // No precision for array elms yet.
+      } else if (index.isString()) {
+        return analyzePropAccessFwd(receiver, index.getString(), inEnv,
+            requiredType, specializedType);
+      }
+    }
+    pair = analyzeExprFwd(index, pair.env);
+    pair.type = requiredType;
+    return pair;
+  }
+
+  private EnvTypePair analyzeInFwd(
+      Node expr, TypeEnv inEnv, JSType specializedType) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    JSType reqObjType = pickReqObjType(expr);
+    EnvTypePair pair;
+
+    pair = analyzeExprFwd(lhs, inEnv, JSType.NUM_OR_STR);
+    if (!pair.type.isSubtypeOf(JSType.NUM_OR_STR)) {
+      warnInvalidOperand(lhs, Token.IN, JSType.NUM_OR_STR, pair.type);
+    }
+    pair = analyzeExprFwd(rhs, pair.env, reqObjType);
+    if (!pair.type.isSubtypeOf(JSType.TOP_OBJECT)) {
+      warnInvalidOperand(rhs, Token.IN, "Object", pair.type);
+      pair.type = JSType.BOOLEAN;
+      return pair;
+    }
+    if (pair.type.isStruct()) {
+      warnings.add(JSError.make(rhs, TypeCheck.IN_USED_WITH_STRUCT));
+      pair.type = JSType.BOOLEAN;
+      return pair;
+    }
+
+    JSType resultType = JSType.BOOLEAN;
+    if (lhs.isString()) {
+      QualifiedName pname = new QualifiedName(lhs.getString());
+      if (specializedType.isTruthy()) {
+        pair = analyzeExprFwd(rhs, inEnv, reqObjType,
+            reqObjType.withPropertyRequired(pname.getLeftmostName()));
+        resultType = JSType.TRUE_TYPE;
+      } else if (specializedType.isFalsy()) {
+        pair = analyzeExprFwd(rhs, inEnv, reqObjType);
+        // If the rhs is a loose object, we won't warn about missing
+        // properties, despite removing the type here.
+        // The only way to have that warning would be to keep track of props
+        // that a loose object *cannot* have; but the implementation cost
+        // is probably not worth it.
+        pair = analyzeExprFwd(
+            rhs, inEnv, reqObjType, pair.type.withoutProperty(pname));
+        resultType = JSType.FALSE_TYPE;
+      }
+    }
+    pair.type = resultType;
+    return pair;
+  }
+
+  private EnvTypePair analyzeArrayLitFwd(Node expr, TypeEnv inEnv) {
+    TypeEnv env = inEnv;
+    for (Node arrayElm = expr.getFirstChild(); arrayElm != null;
+         arrayElm = arrayElm.getNext()) {
+      env = analyzeExprFwd(arrayElm, env).env;
+    }
+    return new EnvTypePair(env, arrayType);
+  }
+
+  private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv) {
+    EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+    JSType fromType = pair.type;
+    JSType toType = symbolTable.getCastType(expr);
+    if (!toType.isSubtypeOf(fromType) && !fromType.isSubtypeOf(toType)) {
+      warnings.add(JSError.make(expr, TypeValidator.INVALID_CAST,
+              fromType.toString(), toType.toString()));
+    }
+    pair.type = toType;
+    return pair;
   }
 
   private EnvTypePair analyzeCallNodeArgumentsFwd(
@@ -2279,8 +2333,7 @@ public class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(requiredType != null,
         "Required type null at: " + expr);
     Preconditions.checkArgument(!requiredType.isBottom());
-    int exprKind = expr.getType();
-    switch (exprKind) {
+    switch (expr.getType()) {
       case Token.EMPTY: // can be created by a FOR with empty condition
         return new EnvTypePair(outEnv, JSType.UNKNOWN);
       case Token.FUNCTION: {
@@ -2292,7 +2345,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.NUMBER:
       case Token.STRING:
       case Token.TRUE:
-        return new EnvTypePair(outEnv, scalarValueToType(exprKind));
+        return new EnvTypePair(outEnv, scalarValueToType(expr.getType()));
       case Token.OBJECTLIT:
         return analyzeObjLitBwd(expr, outEnv, requiredType);
       case Token.THIS: {
@@ -2303,43 +2356,8 @@ public class NewTypeInference implements CompilerPass {
         JSType thisType = currentScope.getDeclaredTypeOf("this");
         return new EnvTypePair(outEnv, thisType);
       }
-      case Token.NAME: { // Bwd
-        if (expr.matchesQualifiedName("undefined")) {
-          return new EnvTypePair(outEnv, JSType.UNDEFINED);
-        }
-
-        String varName = expr.getString();
-        JSType inferredType = envGetType(outEnv, varName);
-        println(varName, "'s inferredType: ", inferredType,
-            " requiredType:  ", requiredType);
-        if (inferredType == null) { // Needed for the free vars in the tests
-          return new EnvTypePair(outEnv, JSType.UNKNOWN);
-        }
-
-        JSType preciseType = inferredType.specialize(requiredType);
-        if (currentScope.isUndeclaredFormal(varName) &&
-            preciseType.hasNonScalar()) {
-          preciseType = preciseType.withLoose();
-        }
-        println(varName, "'s preciseType: ", preciseType);
-
-        if (preciseType.isBottom()) {
-          // If there is a type mismatch, we can propagate the previously
-          // inferred type or the required type.
-          // Propagating the already inferred type means that the type of the
-          // variable is stable throughout the function body.
-          // Propagating the required type means that the type chosen for a
-          // formal is the one closest to the function header, which helps
-          // generate more intuitive warnings in the fwd direction.
-          // But there is a small chance that the different types of the same
-          // variable flow to other variables and this can also be a source of
-          // unintuitive warnings.
-          // It's a trade-off.
-          JSType declType = currentScope.getDeclaredTypeOf(varName);
-          preciseType = declType == null ? requiredType : declType;
-        }
-        return EnvTypePair.addBinding(outEnv, varName, preciseType);
-      }
+      case Token.NAME:
+        return analyzeNameBwd(expr, outEnv, requiredType);
       case Token.INC:
       case Token.DEC:
       case Token.BITNOT:
@@ -2367,90 +2385,27 @@ public class NewTypeInference implements CompilerPass {
       case Token.MUL:
       case Token.RSH:
       case Token.SUB:
-      case Token.URSH: { // Binary operations on numbers
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        TypeEnv rhsEnv = analyzeExprBwd(rhs, outEnv, JSType.NUMBER).env;
-        EnvTypePair pair = analyzeExprBwd(lhs, rhsEnv, JSType.NUMBER);
-        pair.type = JSType.NUMBER;
-        return pair;
-      }
-      case Token.ADD: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv, JSType.NUM_OR_STR);
-        EnvTypePair lhsPair =
-            analyzeExprBwd(lhs, rhsPair.env, JSType.NUM_OR_STR);
-        lhsPair.type = JSType.plus(lhsPair.type, rhsPair.type);
-        return lhsPair;
-      }
+      case Token.URSH:
+        return analyzeBinaryNumericOpBwd(expr, outEnv);
+      case Token.ADD:
+        return analyzeAddBwd(expr, outEnv);
       case Token.OR:
-      case Token.AND: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv);
-        EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env);
-        lhsPair.type = JSType.join(rhsPair.type, lhsPair.type);
-        return lhsPair;
-      }
+      case Token.AND:
+        return analyzeLogicalOpBwd(expr, outEnv);
       case Token.SHEQ:
       case Token.SHNE:
       case Token.EQ:
-      case Token.NE: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        TypeEnv rhsEnv = analyzeExprBwd(rhs, outEnv).env;
-        EnvTypePair pair = analyzeExprBwd(lhs, rhsEnv);
-        pair.type = JSType.BOOLEAN;
-        return pair;
-      }
+      case Token.NE:
+        return analyzeEqNeBwd(expr, outEnv);
       case Token.LT:
       case Token.GT:
       case Token.LE:
-      case Token.GE: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv);
-        EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env);
-        JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
-        if (meetType.isBottom()) {
-          // Type mismatch, the fwd direction will warn; don't reanalyze
-          lhsPair.type = JSType.BOOLEAN;
-          return lhsPair;
-        }
-        rhsPair = analyzeExprBwd(rhs, outEnv, meetType);
-        lhsPair = analyzeExprBwd(lhs, rhsPair.env, meetType);
-        lhsPair.type = JSType.BOOLEAN;
-        return lhsPair;
-      }
-      case Token.ASSIGN: { // Bwd
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        // Here we analyze the LHS twice:
-        // Once to find out what should be removed for the slicedEnv,
-        // and again to take into account the side effects of the LHS itself.
-        LValueResultBwd lvalue = analyzeLValueBwd(
-            lhs, outEnv, requiredType, true);
-        TypeEnv slicedEnv = lvalue.env;
-        JSType rhsReqType = specializeWithCorrection(lvalue.type, requiredType);
-        EnvTypePair pair = analyzeExprBwd(rhs, slicedEnv, rhsReqType);
-        pair.env = analyzeLValueBwd(lhs, pair.env, requiredType, true).env;
-        return pair;
-      }
-      case Token.ASSIGN_ADD: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        JSType lhsReqType = specializeWithCorrection(
-            requiredType, JSType.NUM_OR_STR);
-        LValueResultBwd lvalue = analyzeLValueBwd(
-            lhs, outEnv, lhsReqType, false);
-        // if lhs is a string, rhs can still be a number
-        JSType rhsReqType = lvalue.type.equals(JSType.NUMBER) ?
-            JSType.NUMBER : JSType.NUM_OR_STR;
-        EnvTypePair pair = analyzeExprBwd(rhs, outEnv, rhsReqType);
-        pair.env = analyzeLValueBwd(lhs, pair.env, lhsReqType, false).env;
-        return pair;
-      }
+      case Token.GE:
+        return analyzeLtGtBwd(expr, outEnv);
+      case Token.ASSIGN:
+        return analyzeAssignBwd(expr, outEnv, requiredType);
+      case Token.ASSIGN_ADD:
+        return analyzeAssignAddBwd(expr, outEnv, requiredType);
       case Token.ASSIGN_BITOR:
       case Token.ASSIGN_BITXOR:
       case Token.ASSIGN_BITAND:
@@ -2460,14 +2415,8 @@ public class NewTypeInference implements CompilerPass {
       case Token.ASSIGN_SUB:
       case Token.ASSIGN_MUL:
       case Token.ASSIGN_DIV:
-      case Token.ASSIGN_MOD: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair pair = analyzeExprBwd(rhs, outEnv, JSType.NUMBER);
-        LValueResultBwd lvalue =
-            analyzeLValueBwd(lhs, pair.env, JSType.NUMBER, false);
-        return new EnvTypePair(lvalue.env, JSType.NUMBER);
-      }
+      case Token.ASSIGN_MOD:
+        return analyzeAssignNumericOpBwd(expr, outEnv);
       case Token.GETPROP: {
         Preconditions.checkState(
             !NodeUtil.isAssignmentOp(expr.getParent()) ||
@@ -2475,65 +2424,11 @@ public class NewTypeInference implements CompilerPass {
         return analyzePropAccessBwd(expr.getFirstChild(),
             expr.getLastChild().getString(), outEnv, requiredType);
       }
-      case Token.HOOK: {
-        Node cond = expr.getFirstChild();
-        Node thenBranch = cond.getNext();
-        Node elseBranch = thenBranch.getNext();
-        outEnv = outEnv.split();
-        EnvTypePair thenPair =
-            analyzeExprBwd(thenBranch, outEnv, requiredType);
-        EnvTypePair elsePair =
-            analyzeExprBwd(elseBranch, outEnv, requiredType);
-        return analyzeExprBwd(cond, TypeEnv.join(thenPair.env, elsePair.env));
-      }
-      case Token.CALL: // Bwd
-      case Token.NEW: {
-        Node callee = expr.getFirstChild();
-        JSType calleeTypeGeneral =
-            analyzeExprBwd(callee, outEnv, JSType.topFunction()).type;
-        FunctionType funType = calleeTypeGeneral.getFunType();
-        if (funType == null) {
-          return analyzeCallNodeArgumentsBwd(expr, outEnv);
-        } else if (funType.isLoose()) {
-          return analyzeLooseCallNodeBwd(expr, outEnv, requiredType);
-        } else if (expr.isCall() && funType.isConstructor() ||
-            expr.isNew() && !funType.isConstructor()) {
-          return analyzeCallNodeArgumentsBwd(expr, outEnv);
-        } else if (funType.isTopFunction()) {
-          return analyzeCallNodeArgumentsBwd(expr, outEnv);
-        }
-        if (callee.isName() && !funType.isGeneric() && expr.isCall()) {
-          createDeferredCheckBwd(expr, requiredType);
-        }
-        int numArgs = expr.getChildCount() - 1;
-        if (numArgs < funType.getMinArity() ||
-            numArgs > funType.getMaxArity()) {
-          return analyzeCallNodeArgumentsBwd(expr, outEnv);
-        }
-        if (funType.isGeneric()) {
-          Map<String, JSType> typeMap =
-              calcTypeInstantiationBwd(expr, funType, outEnv);
-          funType = funType.instantiateGenerics(typeMap);
-        }
-        TypeEnv tmpEnv = outEnv;
-        // In bwd direction, analyze arguments in reverse
-        for (int i = expr.getChildCount() - 2; i >= 0; i--) {
-          JSType formalType = funType.getFormalType(i);
-          // The type of a formal can be BOTTOM as the result of a join.
-          // Don't use this as a requiredType.
-          if (formalType.isBottom()) {
-            formalType = JSType.UNKNOWN;
-          }
-          Node arg = expr.getChildAtIndex(i + 1);
-          tmpEnv = analyzeExprBwd(arg, tmpEnv, formalType).env;
-          // We don't need deferred checks for args in BWD
-        }
-        if (callee.isName() &&
-            currentScope.isLocalFunDef(callee.getString())) {
-          tmpEnv = collectTypesForFreeVarsBwd(callee, tmpEnv);
-        }
-        return new EnvTypePair(tmpEnv, funType.getReturnType());
-      }
+      case Token.HOOK:
+        return analyzeHookBwd(expr, outEnv, requiredType);
+      case Token.CALL:
+      case Token.NEW:
+        return analyzeCallNewBwd(expr, outEnv, requiredType);
       case Token.COMMA: {
         EnvTypePair pair = analyzeExprBwd(
             expr.getLastChild(), outEnv, requiredType);
@@ -2545,38 +2440,15 @@ public class NewTypeInference implements CompilerPass {
         pair.type = pair.type.negate();
         return pair;
       }
-      case Token.GETELEM: {
-        Node receiver = expr.getFirstChild();
-        Node index = expr.getLastChild();
-        JSType reqObjType = pickReqObjType(expr);
-        EnvTypePair pair = analyzeExprBwd(receiver, outEnv, reqObjType);
-        if (isArrayType(pair.type)) {
-          pair = analyzeExprBwd(index, pair.env, JSType.NUMBER);
-          pair.type = requiredType;
-          return pair;
-        }
-        if (index.isString()) {
-          return analyzePropAccessBwd(
-              receiver, index.getString(), outEnv, requiredType);
-        }
-        pair = analyzeExprBwd(index, outEnv);
-        pair = analyzeExprBwd(receiver, pair.env, reqObjType);
-        pair.type = requiredType;
-        return pair;
-      }
+      case Token.GETELEM:
+        return analyzeGetElemBwd(expr, outEnv, requiredType);
       case Token.VOID: {
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
         pair.type = JSType.UNDEFINED;
         return pair;
       }
-      case Token.IN: {
-        Node lhs = expr.getFirstChild();
-        Node rhs = expr.getLastChild();
-        EnvTypePair pair = analyzeExprBwd(rhs, outEnv, pickReqObjType(expr));
-        pair = analyzeExprBwd(lhs, pair.env, JSType.NUM_OR_STR);
-        pair.type = JSType.BOOLEAN;
-        return pair;
-      }
+      case Token.IN:
+        return analyzeInBwd(expr, outEnv);
       case Token.DELPROP: {
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
         pair.type = JSType.BOOLEAN;
@@ -2593,12 +2465,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.REGEXP:
         return new EnvTypePair(outEnv, regexpType);
       case Token.ARRAYLIT:
-        TypeEnv env = outEnv;
-        for (int i = expr.getChildCount() - 1; i >= 0; i--) {
-          Node arrayElm = expr.getChildAtIndex(i);
-          env = analyzeExprBwd(arrayElm, env).env;
-        }
-        return new EnvTypePair(env, arrayType);
+        return analyzeArrayLitBwd(expr, outEnv);
       case Token.CAST:
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
         pair.type = symbolTable.getCastType(expr);
@@ -2607,6 +2474,229 @@ public class NewTypeInference implements CompilerPass {
         throw new RuntimeException("BWD: Unhandled expression type: "
             + Token.name(expr.getType()) + " with parent: " + expr.getParent());
     }
+  }
+
+  private EnvTypePair analyzeNameBwd(
+      Node expr, TypeEnv outEnv, JSType requiredType) {
+    String varName = expr.getString();
+    if (varName.equals("undefined")) {
+      return new EnvTypePair(outEnv, JSType.UNDEFINED);
+    }
+    JSType inferredType = envGetType(outEnv, varName);
+    println(varName, "'s inferredType: ", inferredType,
+        " requiredType:  ", requiredType);
+    if (inferredType == null) { // Needed for the free vars in the tests
+      return new EnvTypePair(outEnv, JSType.UNKNOWN);
+    }
+    JSType preciseType = inferredType.specialize(requiredType);
+    if (currentScope.isUndeclaredFormal(varName)
+        && preciseType.hasNonScalar()) {
+      preciseType = preciseType.withLoose();
+    }
+    println(varName, "'s preciseType: ", preciseType);
+    if (preciseType.isBottom()) {
+      // If there is a type mismatch, we can propagate the previously
+      // inferred type or the required type.
+      // Propagating the already inferred type means that the type of the
+      // variable is stable throughout the function body.
+      // Propagating the required type means that the type chosen for a
+      // formal is the one closest to the function header, which helps
+      // generate more intuitive warnings in the fwd direction.
+      // But there is a small chance that the different types of the same
+      // variable flow to other variables and this can also be a source of
+      // unintuitive warnings.
+      // It's a trade-off.
+      JSType declType = currentScope.getDeclaredTypeOf(varName);
+      preciseType = declType == null ? requiredType : declType;
+    }
+    return EnvTypePair.addBinding(outEnv, varName, preciseType);
+  }
+
+  private EnvTypePair analyzeBinaryNumericOpBwd(Node expr, TypeEnv outEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    TypeEnv rhsEnv = analyzeExprBwd(rhs, outEnv, JSType.NUMBER).env;
+    EnvTypePair pair = analyzeExprBwd(lhs, rhsEnv, JSType.NUMBER);
+    pair.type = JSType.NUMBER;
+    return pair;
+  }
+
+  private EnvTypePair analyzeAddBwd(Node expr, TypeEnv outEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv, JSType.NUM_OR_STR);
+    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env, JSType.NUM_OR_STR);
+    lhsPair.type = JSType.plus(lhsPair.type, rhsPair.type);
+    return lhsPair;
+  }
+
+  private EnvTypePair analyzeLogicalOpBwd(Node expr, TypeEnv outEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv);
+    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env);
+    lhsPair.type = JSType.join(rhsPair.type, lhsPair.type);
+    return lhsPair;
+  }
+
+  private EnvTypePair analyzeEqNeBwd(Node expr, TypeEnv outEnv) {
+    TypeEnv rhsEnv = analyzeExprBwd(expr.getLastChild(), outEnv).env;
+    EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), rhsEnv);
+    pair.type = JSType.BOOLEAN;
+    return pair;
+  }
+
+  private EnvTypePair analyzeLtGtBwd(Node expr, TypeEnv outEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv);
+    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env);
+    JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
+    if (meetType.isBottom()) {
+      // Type mismatch, the fwd direction will warn; don't reanalyze
+      lhsPair.type = JSType.BOOLEAN;
+      return lhsPair;
+    }
+    rhsPair = analyzeExprBwd(rhs, outEnv, meetType);
+    lhsPair = analyzeExprBwd(lhs, rhsPair.env, meetType);
+    lhsPair.type = JSType.BOOLEAN;
+    return lhsPair;
+  }
+
+  private EnvTypePair analyzeAssignBwd(
+      Node expr, TypeEnv outEnv, JSType requiredType) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    // Here we analyze the LHS twice:
+    // Once to find out what should be removed for the slicedEnv,
+    // and again to take into account the side effects of the LHS itself.
+    LValueResultBwd lvalue = analyzeLValueBwd(lhs, outEnv, requiredType, true);
+    TypeEnv slicedEnv = lvalue.env;
+    JSType rhsReqType = specializeWithCorrection(lvalue.type, requiredType);
+    EnvTypePair pair = analyzeExprBwd(rhs, slicedEnv, rhsReqType);
+    pair.env = analyzeLValueBwd(lhs, pair.env, requiredType, true).env;
+    return pair;
+  }
+
+  private EnvTypePair analyzeAssignAddBwd(
+      Node expr, TypeEnv outEnv, JSType requiredType) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    JSType lhsReqType = specializeWithCorrection(
+        requiredType, JSType.NUM_OR_STR);
+    LValueResultBwd lvalue = analyzeLValueBwd(lhs, outEnv, lhsReqType, false);
+    // if lhs is a string, rhs can still be a number
+    JSType rhsReqType = lvalue.type.equals(JSType.NUMBER) ?
+        JSType.NUMBER : JSType.NUM_OR_STR;
+    EnvTypePair pair = analyzeExprBwd(rhs, outEnv, rhsReqType);
+    pair.env = analyzeLValueBwd(lhs, pair.env, lhsReqType, false).env;
+    return pair;
+  }
+
+  private EnvTypePair analyzeAssignNumericOpBwd(Node expr, TypeEnv outEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair pair = analyzeExprBwd(rhs, outEnv, JSType.NUMBER);
+    LValueResultBwd lvalue =
+        analyzeLValueBwd(lhs, pair.env, JSType.NUMBER, false);
+    return new EnvTypePair(lvalue.env, JSType.NUMBER);
+  }
+
+  private EnvTypePair analyzeHookBwd(
+      Node expr, TypeEnv outEnv, JSType requiredType) {
+    Node cond = expr.getFirstChild();
+    Node thenBranch = cond.getNext();
+    Node elseBranch = thenBranch.getNext();
+    outEnv = outEnv.split();
+    EnvTypePair thenPair = analyzeExprBwd(thenBranch, outEnv, requiredType);
+    EnvTypePair elsePair = analyzeExprBwd(elseBranch, outEnv, requiredType);
+    return analyzeExprBwd(cond, TypeEnv.join(thenPair.env, elsePair.env));
+  }
+
+  private EnvTypePair analyzeCallNewBwd(
+      Node expr, TypeEnv outEnv, JSType requiredType) {
+    Node callee = expr.getFirstChild();
+    JSType calleeTypeGeneral =
+        analyzeExprBwd(callee, outEnv, JSType.topFunction()).type;
+    FunctionType funType = calleeTypeGeneral.getFunType();
+    if (funType == null) {
+      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+    } else if (funType.isLoose()) {
+      return analyzeLooseCallNodeBwd(expr, outEnv, requiredType);
+    } else if (expr.isCall() && funType.isConstructor() ||
+        expr.isNew() && !funType.isConstructor()) {
+      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+    } else if (funType.isTopFunction()) {
+      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+    }
+    if (callee.isName() && !funType.isGeneric() && expr.isCall()) {
+      createDeferredCheckBwd(expr, requiredType);
+    }
+    int numArgs = expr.getChildCount() - 1;
+    if (numArgs < funType.getMinArity() || numArgs > funType.getMaxArity()) {
+      return analyzeCallNodeArgumentsBwd(expr, outEnv);
+    }
+    if (funType.isGeneric()) {
+      Map<String, JSType> typeMap =
+          calcTypeInstantiationBwd(expr, funType, outEnv);
+      funType = funType.instantiateGenerics(typeMap);
+    }
+    TypeEnv tmpEnv = outEnv;
+    // In bwd direction, analyze arguments in reverse
+    for (int i = expr.getChildCount() - 2; i >= 0; i--) {
+      JSType formalType = funType.getFormalType(i);
+      // The type of a formal can be BOTTOM as the result of a join.
+      // Don't use this as a requiredType.
+      if (formalType.isBottom()) {
+        formalType = JSType.UNKNOWN;
+      }
+      Node arg = expr.getChildAtIndex(i + 1);
+      tmpEnv = analyzeExprBwd(arg, tmpEnv, formalType).env;
+      // We don't need deferred checks for args in BWD
+    }
+    if (callee.isName() && currentScope.isLocalFunDef(callee.getString())) {
+      tmpEnv = collectTypesForFreeVarsBwd(callee, tmpEnv);
+    }
+    return new EnvTypePair(tmpEnv, funType.getReturnType());
+  }
+
+  private EnvTypePair analyzeGetElemBwd(
+      Node expr, TypeEnv outEnv, JSType requiredType) {
+    Node receiver = expr.getFirstChild();
+    Node index = expr.getLastChild();
+    JSType reqObjType = pickReqObjType(expr);
+    EnvTypePair pair = analyzeExprBwd(receiver, outEnv, reqObjType);
+    if (isArrayType(pair.type)) {
+      pair = analyzeExprBwd(index, pair.env, JSType.NUMBER);
+      pair.type = requiredType;
+      return pair;
+    }
+    if (index.isString()) {
+      return analyzePropAccessBwd(
+          receiver, index.getString(), outEnv, requiredType);
+    }
+    pair = analyzeExprBwd(index, outEnv);
+    pair = analyzeExprBwd(receiver, pair.env, reqObjType);
+    pair.type = requiredType;
+    return pair;
+  }
+
+  private EnvTypePair analyzeInBwd(Node expr, TypeEnv outEnv) {
+    Node lhs = expr.getFirstChild();
+    Node rhs = expr.getLastChild();
+    EnvTypePair pair = analyzeExprBwd(rhs, outEnv, pickReqObjType(expr));
+    pair = analyzeExprBwd(lhs, pair.env, JSType.NUM_OR_STR);
+    pair.type = JSType.BOOLEAN;
+    return pair;
+  }
+
+  private EnvTypePair analyzeArrayLitBwd(Node expr, TypeEnv outEnv) {
+    TypeEnv env = outEnv;
+    for (int i = expr.getChildCount() - 1; i >= 0; i--) {
+      Node arrayElm = expr.getChildAtIndex(i);
+      env = analyzeExprBwd(arrayElm, env).env;
+    }
+    return new EnvTypePair(env, arrayType);
   }
 
   private EnvTypePair analyzeCallNodeArgumentsBwd(
