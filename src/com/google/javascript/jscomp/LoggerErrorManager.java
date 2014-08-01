@@ -41,7 +41,7 @@ public class LoggerErrorManager extends BasicErrorManager {
    * Creates an instance with a source-less error formatter.
    */
   public LoggerErrorManager(Logger logger) {
-    this(ErrorFormat.SOURCELESS.toFormatter(null, false), logger);
+    this(LightweightMessageFormatter.withoutSource(), logger);
   }
 
   @Override
