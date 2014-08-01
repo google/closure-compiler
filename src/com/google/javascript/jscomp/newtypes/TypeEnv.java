@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A persistent map from variables to abstract values (types)
@@ -60,27 +62,29 @@ public class TypeEnv {
 
   public static TypeEnv join(Collection<TypeEnv> envs) {
     Preconditions.checkArgument(!envs.isEmpty());
-    TypeEnv firstEnv = envs.iterator().next();
-    if (envs.size() == 1) {
+    Iterator<TypeEnv> envsIter = envs.iterator();
+    TypeEnv firstEnv = envsIter.next();
+    if (!envsIter.hasNext()) {
       return firstEnv;
     }
     PersistentMap<String, JSType> newMap = firstEnv.typeMap;
-    ImmutableSet.Builder<String> keys = ImmutableSet.builder();
-    for (TypeEnv env : envs) {
-      keys.addAll(env.typeMap.keySet());
-    }
-    for (String n : keys.build()) {
-      JSType joinedType = null;
-      for (TypeEnv env : envs) {
-        JSType otherType = env.getType(n);
-        Preconditions.checkNotNull(otherType, "%s is missing from an env", n);
-        if (joinedType == null) {
-          joinedType = otherType;
-        } else if (!joinedType.equals(otherType)) {
-          joinedType = JSType.join(joinedType, otherType);
+
+    while (envsIter.hasNext()) {
+      TypeEnv env = envsIter.next();
+      for (Map.Entry<String, JSType> entry : env.typeMap.entrySet()) {
+        String name = entry.getKey();
+        // TODO(dimvar):
+        // If the iteration order in the type envs is guaranteed to get the
+        // keys in the same order for any env, then we can iterate through the
+        // two type envs at the same time, to avoid the map lookup here.
+        JSType currentType = newMap.get(name);
+        JSType otherType = entry.getValue();
+        Preconditions.checkNotNull(
+            currentType, "%s is missing from an env", name);
+        if (!currentType.equals(otherType)) {
+          newMap = newMap.with(name, JSType.join(currentType, otherType));
         }
       }
-      newMap = newMap.with(n, joinedType);
     }
     return new TypeEnv(newMap);
   }
