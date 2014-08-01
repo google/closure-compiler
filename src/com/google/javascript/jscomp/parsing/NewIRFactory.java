@@ -1259,6 +1259,9 @@ class NewIRFactory {
       parseDirectives(bodyNode);
       node.addChildToBack(bodyNode);
 
+      node.setIsGeneratorFunction(isGenerator);
+      node.setIsArrowFunction(isArrow);
+
       Node result;
 
       if (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER) {
@@ -1270,9 +1273,6 @@ class NewIRFactory {
       } else {
         result = node;
       }
-
-      result.setIsGeneratorFunction(isGenerator);
-      result.setIsArrowFunction(isArrow);
 
       return result;
     }

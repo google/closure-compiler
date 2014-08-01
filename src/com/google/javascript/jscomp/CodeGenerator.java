@@ -504,7 +504,7 @@ class CodeGenerator {
           add("static ");
         }
 
-        if (n.isGeneratorFunction()) {
+        if (n.getFirstChild().isGeneratorFunction()) {
           Preconditions.checkState(type == Token.MEMBER_DEF);
           add("*");
         }

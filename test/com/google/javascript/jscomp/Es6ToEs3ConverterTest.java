@@ -71,6 +71,30 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("var x = {a, b};", "var x = {a: a, b: b};");
   }
 
+  public void testClassGenerator() {
+    test("class C { *foo() { yield 1; } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "C.prototype.foo = /** @suppress {uselessCode} */ function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function(){ return this; },",
+        "    next : function($jscomp$generator$next$arg) {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$state = 1;",
+        "          return {value : 1, done : false};",
+        "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true};",
+        "      }",
+        "    }",
+        "  };",
+        "};"
+    ));
+  }
+
   public void testClassStatement() {
     test("class C { }", Joiner.on('\n').join(
         "/** @constructor @struct */",
@@ -1137,6 +1161,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var $jscomp$spread$args0;",
         "($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, [].concat(arr));"
     ), null, null);
+  }
+
+  public void testArrowFunctionInObject() {
+    test("var obj = { f: () => 'bar' };",
+        "var obj = { f: function() { return 'bar'; } };");
   }
 
   public void testMethodInObject() {
