@@ -128,6 +128,24 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "  useParent(parent) {}",
         "}"
     ));
+
+    test(Joiner.on('\n').join(
+        "import {Parent} from 'parent';",
+        "export class Child extends Parent {",
+        "  /** @param {Parent} parent */",
+        "  useParent(parent) {}",
+        "}"
+    ), Joiner.on('\n').join(
+        "goog.provide('module$testcode');",
+        "goog.require('module$parent');",
+        "class Child$$module$testcode extends module$parent.Parent {",
+        "  /** @param {module$parent.Parent} parent */",
+        "  useParent(parent) {}",
+        "}",
+        "var module$testcode = {Child: Child$$module$testcode};",
+        "/** @typedef {Child$$module$testcode} */",
+        "module$testcode.Child;"
+    ));
   }
 
   public void testFixTypeNode() {
@@ -142,7 +160,9 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "  /** @param {Child$$module$testcode} child */",
         "  useChild(child) {}",
         "}",
-        "var module$testcode = {Child: Child$$module$testcode};"
+        "var module$testcode = {Child: Child$$module$testcode};",
+        "/** @typedef {Child$$module$testcode} */",
+        "module$testcode.Child;"
     ));
 
     test(Joiner.on('\n').join(
@@ -156,7 +176,9 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
         "  useBaz(baz) {}",
         "}",
-        "var module$testcode = {Child: Child$$module$testcode};"
+        "var module$testcode = {Child: Child$$module$testcode};",
+        "/** @typedef {Child$$module$testcode} */",
+        "module$testcode.Child;"
     ));
   }
 

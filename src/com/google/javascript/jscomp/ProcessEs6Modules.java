@@ -22,12 +22,15 @@ import com.google.javascript.jscomp.ProcessCommonJSModules.FindGoogProvideOrGoog
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,6 +68,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
    * object. Eg: "import {foo as f} from 'm'" maps 'f' to the pair <'m', 'foo'>.
    */
   private Map<String, ModuleOriginalNamePair> importMap = new HashMap<>();
+
+  private Set<String> typedefs = new LinkedHashSet<>();
 
   private Set<String> alreadyRequired = new HashSet<>();
 
@@ -144,40 +149,44 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private void visitExport(NodeTraversal t, Node n, Node parent) {
     if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
-      // TODO(moz): Handle default export: export default foo = 2
       compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Default export"));
     } else if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) {
-      // TODO(moz): Maybe support wildcard: export * from "mod"
       compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Wildcard export"));
+    } else if (n.getChildCount() == 2) {
+      compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+          "Export with FromClause"));
     } else {
-      if (n.getChildCount() == 2) {
-        // TODO(moz): Support export FromClause.
-        compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-            "Export with FromClause"));
-        return;
-      }
-
       if (n.getFirstChild().getType() == Token.EXPORT_SPECS) {
-        for (Node grandChild : n.getFirstChild().children()) {
-          Node origName = grandChild.getFirstChild();
+        for (Node exportSpec : n.getFirstChild().children()) {
+          Node origName = exportSpec.getFirstChild();
           exportMap.put(
-              grandChild.getChildCount() == 2
-                  ? grandChild.getLastChild().getString()
+              exportSpec.getChildCount() == 2
+                  ? exportSpec.getLastChild().getString()
                   : origName.getString(),
               origName.getString());
         }
         parent.removeChild(n);
       } else {
-        for (Node grandChild : n.getFirstChild().children()) {
-          if (!grandChild.isName()) {
+        Node declaration = n.getFirstChild();
+        for (int i = 0; i < declaration.getChildCount(); i++) {
+          Node maybeName = declaration.getChildAtIndex(i);
+          if (!maybeName.isName() || (n.getFirstChild().isClass() && i > 0)) {
             break;
           }
-          String name = grandChild.getString();
+          String name = maybeName.getString();
           Var v = t.getScope().getVar(name);
           if (v == null || v.isGlobal()) {
             exportMap.put(name, name);
+          }
+
+          // If the declaration declares a new type, we need to create @typedef
+          // annotations for the type checker later.
+          // TODO(moz): Currently we only record ES6 classes, need to handle
+          // other kinds of type declarations too.
+          if (declaration.isClass()) {
+            typedefs.add(name);
           }
         }
         parent.replaceChild(n, n.removeFirstChild());
@@ -213,6 +222,19 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     Node varNode = IR.var(IR.name(moduleName), objectlit)
         .copyInformationFromForTree(script);
     script.addChildToBack(varNode);
+
+    // Add @typedefs for the the type checker.
+    for (String name : typedefs) {
+      Node typedef = IR.getprop(IR.name(moduleName), IR.string(name));
+      JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+      builder.recordTypedef(new JSTypeExpression(
+          Node.newString(exportMap.get(name) + "$$" + moduleName),
+          t.getSourceName()));
+      JSDocInfo info = builder.build(typedef);
+      typedef.setJSDocInfo(info);
+      script.addChildToBack(IR.exprResult(typedef)
+          .useSourceInfoIfMissingFromForTree(varNode));
+    }
 
     exportMap.clear();
 

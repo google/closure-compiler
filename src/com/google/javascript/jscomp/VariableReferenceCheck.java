@@ -290,7 +290,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
             // Only generate warnings if the scopes do not match in order
             // to deal with possible forward declarations and recursion
-            if (reference.getScope() == v.scope) {
+            // TODO(moz): Remove the bypass for "goog" once VariableReferenceCheck
+            // is run after the Closure passes.
+            if (reference.getScope() == v.scope && !v.getName().equals("goog")) {
               isUndeclaredReference = true;
               compiler.report(
                   JSError.make(reference.getNode(),
