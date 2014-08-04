@@ -40,7 +40,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   // The current case statement onto which translated statements from the
   // body of a generator will be appended.
-  private Node enclosingCase;
+  private Node enclosingBlock;
 
   // The destination for vars defined in the body of a generator.
   private Node hoistRoot;
@@ -236,7 +236,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     originalGeneratorBody.addChildToBack(
         IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), IR.number(-1))));
 
-    enclosingCase = getUnique(genBlock, Token.CASE);
+    enclosingBlock = getUnique(genBlock, Token.CASE).getLastChild();
     hoistRoot = getUnique(genBlock, Token.VAR);
 
     if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_ARGUMENTS)) {
@@ -257,8 +257,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           generatorCaseCount++;
         }
         Node newCase = IR.caseNode(IR.number(caseNumber), IR.block());
-        enclosingCase.getParent().addChildAfter(newCase, enclosingCase);
-        enclosingCase = newCase;
+        Node oldCase = enclosingBlock.getParent();
+        oldCase.getParent().addChildAfter(newCase, oldCase);
+        enclosingBlock = newCase.getLastChild();
       }
     }
 
@@ -311,22 +312,22 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       return false;
     } else {
       // In the default case, add the statement to the current case block unchanged.
-      enclosingCase.getLastChild().addChildToBack(currentStatement);
+      enclosingBlock.addChildToBack(currentStatement);
       return false;
     }
   }
 
   private void visitContinue() {
     Preconditions.checkState(currentLoopContext.get(0).continueCase != -1);
-    enclosingCase.getLastChild().addChildToBack(
+    enclosingBlock.addChildToBack(
         createStateUpdate(currentLoopContext.get(0).continueCase));
-    enclosingCase.getLastChild().addChildToBack(createSafeBreak());
+    enclosingBlock.addChildToBack(createSafeBreak());
   }
 
   private void visitBreak() {
-    enclosingCase.getLastChild().addChildToBack(
+    enclosingBlock.addChildToBack(
         createStateUpdate(currentLoopContext.get(0).breakCase));
-    enclosingCase.getLastChild().addChildToBack(createSafeBreak());
+    enclosingBlock.addChildToBack(createSafeBreak());
   }
 
   /**
@@ -548,7 +549,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node name = currentStatement.removeFirstChild();
     while (name != null) {
       if (name.hasChildren()) {
-        enclosingCase.getLastChild().addChildToBack(
+        enclosingBlock.addChildToBack(
             IR.exprResult(IR.assign(name, name.removeFirstChild())));
       }
       hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
@@ -562,10 +563,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * the desired value.
    */
   private void visitYieldExprResult() {
-    enclosingCase.getLastChild().addChildToBack(createStateUpdate());
+    enclosingBlock.addChildToBack(createStateUpdate());
     Node yield = currentStatement.getFirstChild();
     Node value = yield.hasChildren() ? yield.removeFirstChild() : IR.name("undefined");
-    enclosingCase.getLastChild().addChildToBack(IR.returnNode(
+    enclosingBlock.addChildToBack(IR.returnNode(
         createIteratorResult(value, false)));
   }
 
@@ -574,8 +575,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * desired value.
    */
   private void visitReturn() {
-    enclosingCase.getLastChild().addChildToBack(createStateUpdate(-1));
-    enclosingCase.getLastChild().addChildToBack(IR.returnNode(
+    enclosingBlock.addChildToBack(createStateUpdate(-1));
+    enclosingBlock.addChildToBack(IR.returnNode(
         createIteratorResult(currentStatement.removeFirstChild(), true)));
   }
 
