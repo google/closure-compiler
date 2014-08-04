@@ -3171,7 +3171,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside map function body");
   }
 
-  public void testParserWithTTLUseCaseObject(){
+  public void testParserWithTTLUseCaseObject() {
     parse("@template T := "
         + "mapunion(T, (TVAL) => "
         + "cond(eq(TVAL, type('string')),"
@@ -3185,6 +3185,24 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         + "cond(eq(TVAL, type('undefined')),"
         + "type('Object'),"
         + "TVAL)))))) =: */");
+  }
+
+  public void testParserWithNoneType() {
+    parse("@template T := none() =: */");
+  }
+
+  public void testParserWithNoneType2() {
+    parse("@template T := cond(eq(S, none()), S, T) =: */");
+  }
+
+  public void testParserWithInvalidNoneType() {
+    parse("@template T := none(foo) =: */",
+        "Bad type annotation. Found extra parameter in none");
+  }
+
+  public void testParserWithInvalidNoneType2() {
+    parse("@template T := none(a, b, c) =: */",
+        "Bad type annotation. Found extra parameter in none");
   }
 
   public void testWhitelistedNewAnnotations() {

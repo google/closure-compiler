@@ -210,6 +210,19 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         + "x ))))))");
   }
 
+  public void testTransformatioWithNoneType() {
+    testTTL(NO_TYPE, "none()");
+  }
+
+  public void testTransformatioWithNoneTypeInConditional() {
+    testTTL(NO_TYPE, "cond(eq(BOT, none()), none(), N)");
+  }
+
+  public void testTransformatioWithNoneTypeInMapunionFilterString() {
+    testTTL(STRING_TYPE,
+        "mapunion(union(S, B, N), (x) => cond(eq(x, S), x, none()))");
+  }
+
   private JSType union(JSType... variants) {
     return createUnionType(variants);
   }

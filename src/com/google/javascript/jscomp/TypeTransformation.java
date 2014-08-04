@@ -80,8 +80,20 @@ class TypeTransformation {
     return isCallTo(n, TypeTransformationParser.Keywords.MAPUNION);
   }
 
+  private boolean isNone(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.NONE);
+  }
+
+  private JSType getNativeType(JSTypeNative type) {
+    return typeRegistry.getNativeObjectType(type);
+  }
+
   private JSType getUnknownType() {
-    return typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
+    return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+  }
+
+  private JSType getNoType() {
+    return getNativeType(JSTypeNative.NO_TYPE);
   }
 
   private JSType typeOrUnknown(JSType type) {
@@ -140,6 +152,9 @@ class TypeTransformation {
     }
     if (isMapunion(ttlAst)) {
       return evalMapunion(ttlAst, typeVars);
+    }
+    if (isNone(ttlAst)) {
+      return getNoType();
     }
     throw new IllegalStateException(
         "Could not evaluate the type transformation expression");

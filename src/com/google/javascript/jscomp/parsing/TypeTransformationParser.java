@@ -53,7 +53,8 @@ public final class TypeTransformationParser {
     COND("cond"),
     MAPUNION("mapunion"),
     EQTYPE("eq"),
-    SUBTYPE("sub");
+    SUBTYPE("sub"),
+    NONE("none");
 
     public final String name;
     Keywords(String name) {
@@ -61,10 +62,12 @@ public final class TypeTransformationParser {
     }
   }
 
-  private static final ImmutableList<Keywords>
-  TYPE_CONSTRUCTORS = ImmutableList.of(Keywords.TYPE, Keywords.UNION),
-  OPERATIONS = ImmutableList.of(Keywords.COND, Keywords.MAPUNION),
-  BOOLEAN_PREDICATES = ImmutableList.of(Keywords.EQTYPE, Keywords.SUBTYPE);
+  private static final ImmutableList<Keywords> TYPE_CONSTRUCTORS =
+      ImmutableList.of(Keywords.TYPE, Keywords.UNION, Keywords.NONE);
+  private static final ImmutableList<Keywords> OPERATIONS =
+      ImmutableList.of(Keywords.COND, Keywords.MAPUNION);
+  private static final ImmutableList<Keywords> BOOLEAN_PREDICATES =
+      ImmutableList.of(Keywords.EQTYPE, Keywords.SUBTYPE);
 
   private static final int TYPE_MIN_PARAM_COUNT = 1,
       TYPE_MAX_PARAM_COUNT = 1,
@@ -268,6 +271,31 @@ public final class TypeTransformationParser {
   }
 
   /**
+   * A none type expression must be of the form: none()
+   */
+  private boolean validTTLNoneTypeExpression(Node expression) {
+    if (!expression.isCall()) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
+          "none", expression);
+      return false;
+    }
+    // If the expression is a type it must start with type keyword
+    String keyword = expression.getFirstChild().getString();
+    if (!isKeyword(keyword, Keywords.NONE)) {
+      addNewWarning("msg.jsdoc.typetransformation.invalid.expression",
+          "none", expression);
+      return false;
+    }
+    // The expression must have no children
+    if (expression.getChildCount() > 1) {
+      addNewWarning("msg.jsdoc.typetransformation.extra.param",
+          "none", expression);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * A TTL type expression must be a type variable, a basic type expression
    * or a union type expression
    */
@@ -296,6 +324,9 @@ public final class TypeTransformationParser {
     }
     if (isKeyword(keyword, Keywords.UNION)) {
       return validTTLUnionTypeExpression(expression);
+    }
+    if (isKeyword(keyword, Keywords.NONE)) {
+      return validTTLNoneTypeExpression(expression);
     }
     throw new IllegalStateException("Invalid type expression");
   }
