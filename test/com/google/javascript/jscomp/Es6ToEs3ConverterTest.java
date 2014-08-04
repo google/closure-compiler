@@ -1845,14 +1845,33 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() { label: while (i) { yield i; } }",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; throw 5; yield i;}}",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
     test("function *f() {switch (i) {default: case 1: yield 1;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
     test("function *f() {for (i in j) { yield 1; }}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testThrowGenerator() {
+    test("function *f() {throw 1;}", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "var f = function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$state = -1;",
+        "          throw 1;",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
   }
 
   public void testIfGenerator() {

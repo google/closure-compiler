@@ -318,9 +318,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       visitBreak();
       return false;
     } else if (currentStatement.isThrow()) {
-      compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-          "Throws are not yet allowed if their enclosing control structure"
-          + " contains a yield or return."));
+      visitThrow();
       return false;
     } else {
       // In the default case, add the statement to the current case block unchanged.
@@ -334,6 +332,11 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     enclosingBlock.addChildToBack(
         createStateUpdate(currentLoopContext.get(0).continueCase));
     enclosingBlock.addChildToBack(createSafeBreak());
+  }
+
+  private void visitThrow() {
+    enclosingBlock.addChildToBack(createStateUpdate(-1));
+    enclosingBlock.addChildToBack(currentStatement);
   }
 
   private void visitBreak() {
