@@ -68,6 +68,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String GENERATOR_ARGUMENTS = "$jscomp$generator$arguments";
 
+  private static final String GENERATOR_THIS = "$jscomp$generator$this";
+
   private static final String GENERATOR_NEXT_ARG = "$jscomp$generator$next$arg";
 
   private Supplier<String> generatorCounter;
@@ -110,6 +112,12 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         if (enclosing != null && enclosing.isGeneratorFunction()
             && n.matchesQualifiedName("arguments")) {
           n.setString(GENERATOR_ARGUMENTS);
+        }
+        break;
+      case Token.THIS:
+        enclosing = NodeUtil.getEnclosingFunction(n);
+        if (enclosing != null && enclosing.isGeneratorFunction()) {
+          n.getParent().replaceChild(n, IR.name(GENERATOR_THIS));
         }
         break;
       case Token.YIELD:
@@ -242,6 +250,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_ARGUMENTS)) {
       hoistRoot.getParent().addChildAfter(
           IR.var(IR.name(GENERATOR_ARGUMENTS), IR.name("arguments")), hoistRoot);
+    }
+    if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_THIS)) {
+      hoistRoot.getParent().addChildAfter(
+          IR.var(IR.name(GENERATOR_THIS), IR.thisNode()), hoistRoot);
     }
 
     while (originalGeneratorBody.hasChildren()) {
