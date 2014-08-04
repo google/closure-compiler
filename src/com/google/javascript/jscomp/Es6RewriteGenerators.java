@@ -281,50 +281,63 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   /** Returns true if a new case node should be added */
   private boolean translateStatementInOriginalBody() {
-    if (currentStatement.isExprResult() && currentStatement.getFirstChild().isYield()) {
-      visitYieldExprResult();
-      return true;
-    } else if (currentStatement.isVar()) {
-      visitVar();
-      return false;
-    } else if (NodeUtil.isForIn(currentStatement) && yieldsOrReturns(currentStatement)) {
-      compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-        "For...in loops containing yield or return"));
-      return false;
-    } else if (NodeUtil.isLoopStructure(currentStatement) && yieldsOrReturns(currentStatement)) {
-      visitLoop();
-      return false;
-    } else if (currentStatement.isSwitch() && yieldsOrReturns(currentStatement)) {
-      visitSwitch();
-      return false;
-    } else if (currentStatement.isIf()
-        && (yieldsOrReturns(currentStatement) || jumpsOut(currentStatement))
-        && !currentStatement.isGeneratorSafe()) {
-      visitIf();
-      return false;
-    } else if (currentStatement.isBlock()) {
-      visitBlock();
-      return false;
+    if (currentStatement.isVar()) {
+        visitVar();
+        return false;
     } else if (currentStatement.isGeneratorMarker()) {
-      visitGeneratorMarker();
-      return true;
-    } else if (currentStatement.isReturn()) {
-      visitReturn();
-      return false;
-    } else if (currentStatement.isContinue()) {
-      visitContinue();
-      return false;
-    } else if (currentStatement.isBreak() && !currentStatement.isGeneratorSafe()) {
-      visitBreak();
-      return false;
-    } else if (currentStatement.isThrow()) {
-      visitThrow();
-      return false;
-    } else {
-      // In the default case, add the statement to the current case block unchanged.
-      enclosingBlock.addChildToBack(currentStatement);
-      return false;
+        visitGeneratorMarker();
+        return true;
+    } else if (controlCanExit(currentStatement)) {
+      switch (currentStatement.getType()) {
+        case Token.WHILE:
+        case Token.DO:
+        case Token.FOR:
+          if (NodeUtil.isForIn(currentStatement)) {
+            compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+              "For...in loops containing yield or return"));
+            return false;
+          }
+          visitLoop();
+          return false;
+        case Token.SWITCH:
+          visitSwitch();
+          return false;
+        case Token.IF:
+          if (!currentStatement.isGeneratorSafe()) {
+            visitIf();
+            return false;
+          }
+          break;
+        case Token.EXPR_RESULT:
+          if (currentStatement.getFirstChild().isYield()) {
+            visitYieldExprResult();
+            return true;
+          }
+          break;
+        case Token.BLOCK:
+          visitBlock();
+          return false;
+        case Token.RETURN:
+          visitReturn();
+          return false;
+        case Token.CONTINUE:
+          visitContinue();
+          return false;
+        case Token.BREAK:
+          if (!currentStatement.isGeneratorSafe()) {
+            visitBreak();
+            return false;
+          }
+          break;
+        case Token.THROW:
+          visitThrow();
+          return false;
+      }
     }
+
+    // In the default case, add the statement to the current case block unchanged.
+    enclosingBlock.addChildToBack(currentStatement);
+    return false;
   }
 
   private void visitContinue() {
@@ -617,13 +630,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     return breakNode;
   }
 
-  //TODO(mattloring): move these to NodeUtil if deemed generally useful.
-  private static boolean yieldsOrReturns(Node n) {
-    return NodeUtil.referencesYield(n) || NodeUtil.referencesReturn(n);
-  }
-
-  private static boolean jumpsOut(Node n) {
-    return NodeUtil.referencesContinue(n) || NodeUtil.referencesBreak(n);
+  private boolean controlCanExit(Node n) {
+    ControlExitsCheck exits = new ControlExitsCheck();
+    NodeTraversal.traverse(compiler, n, exits);
+    return exits.didExit();
   }
 
   /**
@@ -645,6 +655,64 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     }
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
       insertAll(c, type, matchingNodes);
+    }
+  }
+
+  class ControlExitsCheck implements NodeTraversal.Callback {
+    // TODO(mattloring): track seen labels to check for labelled breaks
+    boolean continuesCaught = false;
+    boolean breaksCaught = false;
+    boolean throwsCaught = false;
+    boolean exited = false;
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      return !n.isFunction();
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.DO:
+        case Token.WHILE:
+        case Token.FOR:
+          continuesCaught = true;
+          breaksCaught = true;
+          break;
+        case Token.SWITCH:
+          breaksCaught = true;
+          break;
+        case Token.TRY:
+          throwsCaught = true;
+          break;
+        case Token.BREAK:
+          if (!breaksCaught || n.hasChildren()) {
+            exited = true;
+          }
+          break;
+        case Token.CONTINUE:
+          if (!continuesCaught || n.hasChildren()) {
+            exited = true;
+          }
+          break;
+        case Token.THROW:
+          if (!throwsCaught) {
+            exited = true;
+          }
+          break;
+        case Token.RETURN:
+          exited = true;
+          break;
+        case Token.EXPR_RESULT:
+          if (n.getFirstChild().isYield()) {
+            exited = true;
+          }
+          break;
+      }
+    }
+
+    public boolean didExit() {
+      return exited;
     }
   }
 
