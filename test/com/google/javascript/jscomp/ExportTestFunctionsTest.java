@@ -29,7 +29,9 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
       "function Foo(arg) {}; "
       + "function setUp(arg3) {}; "
       + "function tearDown(arg, arg2) {}; "
-      + "function testBar(arg) {}";
+      + "function testBar(arg) {}; "
+      + "function test$(arg) {}; "
+      + "function test$foo(arg) {}";
 
   public ExportTestFunctionsTest() {
     super(EXTERNS);
@@ -58,7 +60,9 @@ public class ExportTestFunctionsTest extends CompilerTestCase {
         + "function setUp(arg3){} google_exportSymbol(\"setUp\",setUp);; "
         + "function tearDown(arg,arg2) {} "
         + "google_exportSymbol(\"tearDown\",tearDown);; "
-        + "function testBar(arg){} google_exportSymbol(\"testBar\",testBar)"
+        + "function testBar(arg){} google_exportSymbol(\"testBar\",testBar);; "
+        + "function test$(arg){} google_exportSymbol(\"test$\",test$);; "
+        + "function test$foo(arg){} google_exportSymbol(\"test$foo\",test$foo)"
     );
   }
 
