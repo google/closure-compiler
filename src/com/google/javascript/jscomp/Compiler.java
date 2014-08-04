@@ -1526,7 +1526,8 @@ public class Compiler extends AbstractCompiler {
       }
       new ProcessEs6Modules(
           this,
-          ES6ModuleLoader.createNaiveLoader(this, options.commonJSModulePathPrefix))
+          ES6ModuleLoader.createNaiveLoader(this, options.commonJSModulePathPrefix),
+          true)
       .processFile(root);
     }
   }

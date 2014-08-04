@@ -50,7 +50,8 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
       public void process(Node externs, Node root) {
         NodeTraversal.traverse(compiler, root, new ProcessEs6Modules(
             compiler,
-            ES6ModuleLoader.createNaiveLoader(compiler, "foo/bar/")));
+            ES6ModuleLoader.createNaiveLoader(compiler, "foo/bar/"),
+            false));
       }
     };
   }

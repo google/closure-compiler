@@ -75,9 +75,20 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private boolean isEs6Module;
 
-  ProcessEs6Modules(Compiler compiler, ES6ModuleLoader loader) {
+  private boolean reportDependencies;
+
+  /**
+   * @param reportDependencies Whether the rewriter should report dependency
+   *     information to the Closure dependency manager. This needs to be true
+   *     if we want to sort ES6 module inputs correctly. Note that goog.provide
+   *     and goog.require calls will still be generated if this argument is
+   *     false.
+   */
+  ProcessEs6Modules(Compiler compiler, ES6ModuleLoader loader,
+      boolean reportDependencies) {
     this.compiler = compiler;
     this.loader = loader;
+    this.reportDependencies = reportDependencies;
   }
 
   public void processFile(Node root) {
@@ -142,6 +153,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
               compiler.getCodingConvention(), "goog.require"),
               IR.string(moduleName))).copyInformationFromForTree(n));
+    }
+    if (reportDependencies) {
+      t.getInput().addRequire(moduleName);
     }
     parent.removeChild(n);
     compiler.reportCodeChange();
@@ -247,6 +261,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
         IR.call(NodeUtil.newQualifiedNameNode(
             compiler.getCodingConvention(), "goog.provide"),
             IR.string(moduleName))).copyInformationFromForTree(script));
+    if (reportDependencies) {
+      t.getInput().addProvide(moduleName);
+    }
     compiler.reportCodeChange();
   }
 

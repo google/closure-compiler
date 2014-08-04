@@ -212,6 +212,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       boolean manageClosureDependencies,
       boolean onlyClosureDependencies,
       boolean processCommonJSModules,
+      boolean rewriteEs6Modules,
       List<String> closureEntryPoints)
       throws FlagUsageException {
     if (onlyClosureDependencies) {
@@ -226,6 +227,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           .setMoocherDropping(true)
           .setEntryPoints(closureEntryPoints);
     } else if (processCommonJSModules) {
+      return new DependencyOptions()
+        .setDependencyPruning(false)
+        .setDependencySorting(true)
+        .setMoocherDropping(false)
+        .setEntryPoints(closureEntryPoints);
+    } else if (rewriteEs6Modules) {
       return new DependencyOptions()
         .setDependencyPruning(false)
         .setDependencySorting(true)
@@ -274,6 +281,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         config.manageClosureDependencies,
         config.onlyClosureDependencies,
         config.processCommonJSModules,
+        config.rewriteEs6Modules,
         config.closureEntryPoints);
     if (depOptions != null) {
       options.setDependencyOptions(depOptions);
