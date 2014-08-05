@@ -362,7 +362,8 @@ class ScopedAliases implements HotSwapCompilerPass {
       for (Var v : scope.getVarIterable()) {
         Node n = v.getNode();
         Node parent = n.getParent();
-        boolean isVar = parent.isVar();
+        // We use isBlock to avoid variables declared in loop headers.
+        boolean isVar = parent.isVar() && parent.getParent().isBlock();
         boolean isFunctionDecl = NodeUtil.isFunctionDeclaration(parent);
         if (isVar && n.getFirstChild() != null && n.getFirstChild().isQualifiedName()) {
           recordAlias(v);

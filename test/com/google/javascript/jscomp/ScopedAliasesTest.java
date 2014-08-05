@@ -603,6 +603,9 @@ public class ScopedAliasesTest extends CompilerTestCase {
   public void testNonAliasLocal() {
     testScopedFailure("try { } catch (e) {}",
         ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+
+    testScopedFailure("for (var k in { a: 1, b: 2 }) {}",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
   }
 
   public void testOkAliasLocal() {
