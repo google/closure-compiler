@@ -596,6 +596,9 @@ public class FunctionType {
     if (obj == null) {
       return false;
     }
+    if (this == obj) {
+      return true;
+    }
     Preconditions.checkArgument(obj instanceof FunctionType, "obj is: %s", obj);
     FunctionType f2 = (FunctionType) obj;
     return Objects.equals(this.requiredFormals, f2.requiredFormals) &&

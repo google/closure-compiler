@@ -1084,6 +1084,9 @@ public abstract class JSType {
     if (o == null) {
       return false;
     }
+    if (this == o) {
+      return true;
+    }
     Preconditions.checkArgument(o instanceof JSType);
     JSType t2 = (JSType) o;
     return getMask() == t2.getMask() && Objects.equals(getObjs(), t2.getObjs());

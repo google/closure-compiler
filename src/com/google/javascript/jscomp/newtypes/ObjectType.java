@@ -518,7 +518,7 @@ public class ObjectType implements TypeWithProperties {
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
     Preconditions.checkState(
         areRelatedClasses(obj1.nominalType, obj2.nominalType));
-    if (obj1 == obj2 || obj1.equals(obj2)) {
+    if (obj1.equals(obj2)) {
       return obj1;
     }
     boolean isLoose = obj1.isLoose || obj2.isLoose;
@@ -836,6 +836,9 @@ public class ObjectType implements TypeWithProperties {
   public boolean equals(Object o) {
     if (o == null) {
       return false;
+    }
+    if (this == o) {
+      return true;
     }
     Preconditions.checkArgument(o instanceof ObjectType);
     ObjectType obj2 = (ObjectType) o;

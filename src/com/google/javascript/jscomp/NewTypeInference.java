@@ -293,8 +293,13 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv getInEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
+    List<DiGraphEdge<Node, ControlFlowGraph.Branch>> inEdges = dn.getInEdges();
+    if (inEdges.size() == 1) {
+      return envs.get(inEdges.get(0));
+    }
+
     Set<TypeEnv> envSet = Sets.newHashSet();
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getInEdges()) {
+    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : inEdges) {
       TypeEnv env = envs.get(de);
       if (env != null) {
         envSet.add(env);
@@ -308,8 +313,14 @@ public class NewTypeInference implements CompilerPass {
 
   private TypeEnv getOutEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
     Preconditions.checkArgument(!dn.getOutEdges().isEmpty());
+    List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
+        dn.getOutEdges();
+    if (outEdges.size() == 1) {
+      return envs.get(outEdges.get(0));
+    }
+
     Set<TypeEnv> envSet = Sets.newHashSet();
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getOutEdges()) {
+    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : outEdges) {
       TypeEnv env = envs.get(de);
       if (env != null) {
         envSet.add(env);
