@@ -1157,6 +1157,87 @@ public class TypeInferenceTest extends TestCase {
     assertEquals("{prop: (string|undefined)}", getType("out").toString());
   }
 
+  public void testTemplateForTypeTransformationTests() {
+    inFunction(
+        "/**\n"
+        + " * @param {T} a\n"
+        + " * @return {R}\n"
+        + " * @template T, R\n"
+        + " */\n"
+        + "function f(a){}\n"
+        + "var result = f(10);");
+      verify("result", UNKNOWN_TYPE);
+  }
+
+  public void testTypeTransformationTypePredicate() {
+    inFunction(
+        "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := type('number') =:\n"
+        + " */\n"
+        + "function f(a){}\n"
+        + "var result = f(10);");
+      verify("result", NUMBER_TYPE);
+  }
+
+  public void testTypeTransformationConditional() {
+    inFunction(
+        "/**\n"
+        + " * @param {T} a\n"
+        + " * @param {N} b\n"
+        + " * @return {R}\n"
+        + " * @template T, N\n"
+        + " * @template R := cond( eq(T, N), type('string'), type('boolean') ) =:\n"
+        + " */\n"
+        + "function f(a, b){}\n"
+        + "var result = f(1, 2);"
+        + "var result2 = f(1, 'a');");
+      verify("result", STRING_TYPE);
+      verify("result2", BOOLEAN_TYPE);
+  }
+
+  public void testTypeTransformationNoneType() {
+    inFunction(
+        "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := none() =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var result = f(10);");
+      verify("result", JSTypeNative.NO_TYPE);
+  }
+
+  public void testTypeTransformationUnionType() {
+    inFunction(
+        "/**\n"
+        + " * @param {S} a\n"
+        + " * @param {N} b\n"
+        + " * @return {R}\n"
+        + " * @template S, N\n"
+        + " * @template R := union(S, N) =:\n"
+        + " */\n"
+        + "function f(a, b) {}\n"
+        + "var result = f(1, 'a');");
+      verify("result", createUnionType(STRING_TYPE, NUMBER_TYPE));
+  }
+
+  public void testTypeTransformationMapunion() {
+    inFunction(
+        "/**\n"
+        + " * @param {U} a\n"
+        + " * @return {R}\n"
+        + " * @template U\n"
+        + " * @template R := mapunion(U, "
+        +                   "(x) => cond(eq(x, type('string')), "
+        +                                "type('boolean'), "
+        +                                "type('null'))) =:\n"
+        + " */\n"
+        + "function f(a) {}\n"
+        + "/** @type {string|number} */ var x;"
+        + "var result = f(x);");
+      verify("result", createUnionType(BOOLEAN_TYPE, NULL_TYPE));
+  }
+
   public void testAssertTypeofProp() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction(

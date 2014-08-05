@@ -33,10 +33,10 @@ import java.util.Collection;
  * @author lpino@google.com (Luis Fernando Pino Duque)
  */
 class TypeTransformation {
-  private Compiler compiler;
+  private AbstractCompiler compiler;
   private JSTypeRegistry typeRegistry;
 
-  TypeTransformation(Compiler compiler) {
+  TypeTransformation(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();
   }
