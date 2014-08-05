@@ -441,12 +441,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *
    * @param resourceName The name of the library. For example, if "base" is
    *     is specified, then we load js/base.js
+   * @param normalizeAndUniquifyNames Whether to normalize the library code and make
+   *     names unique.
    * @return If new code was injected, returns the last expression node of the
    *     library. If the caller needs to add additional code, they should add
    *     it as the next sibling of this node. If new code was not injected,
    *     returns null.
    */
-  abstract Node ensureLibraryInjected(String resourceName);
+  abstract Node ensureLibraryInjected(String resourceName,
+      boolean normalizeAndUniquifyNames);
 
   /**
    * Sets the names of the properties defined in externs.

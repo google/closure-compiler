@@ -399,11 +399,12 @@ public class NormalizeTest extends CompilerTestCase {
     compiler.init(
         Lists.<SourceFile>newArrayList(),
         Lists.<SourceFile>newArrayList(), new CompilerOptions());
-    Node code = Normalize.parseAndNormalizeSyntheticCode(
-        compiler, "function f(x) {} function g(x) {}", "prefix_");
+    String code = "function f(x) {} function g(x) {}";
+    Node ast = compiler.parseSyntheticCode(code);
+    Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");
     assertEquals(
         "function f(x$$prefix_0){}function g(x$$prefix_1){}",
-        compiler.toSource(code));
+        compiler.toSource(ast));
   }
 
   public void testIsConstant() throws Exception {

@@ -84,9 +84,8 @@ class Normalize implements CompilerPass {
     // is normalized.
   }
 
-  static Node parseAndNormalizeSyntheticCode(
-      AbstractCompiler compiler, String code, String prefix) {
-    Node js = compiler.parseSyntheticCode(code);
+  static void normalizeSyntheticCode(
+      AbstractCompiler compiler, Node js, String prefix) {
     NodeTraversal.traverse(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
     NodeTraversal.traverse(
@@ -96,7 +95,6 @@ class Normalize implements CompilerPass {
                 compiler.getCodingConvention(),
                 compiler.getUniqueNameIdSupplier(),
                 prefix)));
-    return js;
   }
 
   static Node parseAndNormalizeTestCode(

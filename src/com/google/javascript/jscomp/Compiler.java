@@ -2652,7 +2652,8 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  Node ensureLibraryInjected(String resourceName) {
+  Node ensureLibraryInjected(String resourceName,
+      boolean normalizeAndUniquifyNames) {
     if (injectedLibraries.containsKey(resourceName)) {
       return null;
     }
@@ -2660,10 +2661,11 @@ public class Compiler extends AbstractCompiler {
     // All libraries depend on js/base.js
     boolean isBase = "base".equals(resourceName);
     if (!isBase) {
-      ensureLibraryInjected("base");
+      ensureLibraryInjected("base", true);
     }
 
-    Node firstChild = loadLibraryCode(resourceName).removeChildren();
+    Node firstChild = loadLibraryCode(resourceName, normalizeAndUniquifyNames)
+        .removeChildren();
     Node lastChild = firstChild.getLastSibling();
 
     Node parent = getNodeForCodeInsertion(null);
@@ -2681,7 +2683,7 @@ public class Compiler extends AbstractCompiler {
 
   /** Load a library as a resource */
   @VisibleForTesting
-  Node loadLibraryCode(String resourceName) {
+  Node loadLibraryCode(String resourceName, boolean normalizeAndUniquifyNames) {
     String originalCode;
     try {
       originalCode = CharStreams.toString(new InputStreamReader(
@@ -2692,9 +2694,13 @@ public class Compiler extends AbstractCompiler {
       throw new RuntimeException(e);
     }
 
-    return Normalize.parseAndNormalizeSyntheticCode(
-        this, originalCode,
-        String.format("jscomp_%s_", resourceName));
+    Node ast = parseSyntheticCode(originalCode);
+    if (normalizeAndUniquifyNames) {
+      Normalize.normalizeSyntheticCode(
+          this, ast,
+          String.format("jscomp_%s_", resourceName));
+    }
+    return ast;
   }
 
   /** Returns the compiler version baked into the jar. */

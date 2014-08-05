@@ -213,6 +213,7 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (needsConversion) {
+      checks.add(es6RuntimeLibrary);
       checks.add(es6HandleDefaultParams);
       checks.add(es6SplitVariableDeclarations);
       checks.add(convertEs6ToEs3);
@@ -1081,6 +1082,14 @@ public class DefaultPassConfig extends PassConfig {
           compiler,
           preprocessorSymbolTable,
           options.getAliasTransformationHandler());
+    }
+  };
+
+  final PassFactory es6RuntimeLibrary =
+      new PassFactory("Es6RuntimeLibrary", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new InjectEs6RuntimeLibrary(compiler);
     }
   };
 

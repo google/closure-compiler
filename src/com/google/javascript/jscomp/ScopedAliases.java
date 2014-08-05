@@ -389,7 +389,7 @@ class ScopedAliases implements HotSwapCompilerPass {
           String globalName =
               "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
 
-          compiler.ensureLibraryInjected("base");
+          compiler.ensureLibraryInjected("base", true);
 
           // First, we need to free up the function expression (EXPR)
           // to be used in another expression.

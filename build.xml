@@ -159,7 +159,7 @@
       <entry key="compiler.version" value="${build.relVersion}"/>
     </propertyfile>
 
-    <!-- Move runtime_type_check.js where RuntimeTypeCheck.java expects it. -->
+    <!-- Move the runtime libraries where the compiler expects them. -->
     <mkdir dir="${classes.dir}/com/google/javascript/jscomp/js" />
     <copy todir="${classes.dir}/com/google/javascript/jscomp/js">
       <fileset dir="${src.dir}/com/google/javascript/jscomp/js" />

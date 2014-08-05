@@ -71,16 +71,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 
-  // The name of the property-copying function, defined in runtime_lib.js
-  public static final String COPY_PROP = "$jscomp$copy$properties";
-
-  private static final String INHERITS = "$jscomp$inherits";
-
   private static final String ITER_BASE = "$jscomp$iter$";
 
   private static final String ITER_RESULT = "$jscomp$key$";
 
-  private static final String MAKE_ITER = "$jscomp$make$iterator";
+  // These functions are defined in js/es6_runtime.js
+  public static final String COPY_PROP = "$jscomp.copyProperties";
+  private static final String INHERITS = "$jscomp.inherits";
+  private static final String MAKE_ITER = "$jscomp.makeIterator";
 
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -282,8 +280,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         : variable.getFirstChild().getQualifiedName(); // var or let
     Node iterResult = IR.name(ITER_RESULT + variableName);
 
-    Node makeIter = IR.call(IR.name(MAKE_ITER), iterable);
-    makeIter.putBooleanProp(Node.FREE_CALL, true);
+    Node makeIter = IR.call(
+        NodeUtil.newQualifiedNameNode(
+            compiler.getCodingConvention(), MAKE_ITER),
+        iterable);
+
     Node init = IR.var(iterName.cloneTree(), makeIter);
     Node initIterResult = iterResult.cloneTree();
     initIterResult.addChildToFront(getNext.cloneTree());
@@ -735,10 +736,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             IR.string(superClassString)),
             superClassName.getSourceFileName()));
       } else {
-        Node inherits = IR.call(IR.name(INHERITS),
+        Node inherits = IR.call(
+            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), INHERITS),
             NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), fullClassName),
             NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString));
-        inherits.putBooleanProp(Node.FREE_CALL, true);
         Node inheritsCall = IR.exprResult(inherits);
         inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
         Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
@@ -746,11 +747,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG,
             IR.string(superClassString)),
             superClassName.getSourceFileName()));
-        Node copyProps = IR.call(IR.name(COPY_PROP).srcref(classNode),
+
+        Node copyProps = IR.call(
+            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), COPY_PROP),
             NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), fullClassName),
             NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString));
         copyProps.useSourceInfoIfMissingFromForTree(classNode);
-        copyProps.putBooleanProp(Node.FREE_CALL, true);
         enclosingStatement.getParent().addChildAfter(
             IR.exprResult(copyProps).srcref(classNode), enclosingStatement);
       }
