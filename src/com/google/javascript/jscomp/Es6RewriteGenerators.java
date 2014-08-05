@@ -605,7 +605,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   private void visitReturn() {
     enclosingBlock.addChildToBack(createStateUpdate(-1));
     enclosingBlock.addChildToBack(IR.returnNode(
-        createIteratorResult(currentStatement.removeFirstChild(), true)));
+        createIteratorResult(currentStatement.hasChildren() ? currentStatement.removeFirstChild()
+            : IR.name("undefined"), true)));
   }
 
   private Node createStateUpdate() {
