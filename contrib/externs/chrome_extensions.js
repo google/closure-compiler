@@ -5113,11 +5113,10 @@ chrome.hid.disconnect = function(connectionId, opt_callback) {};
  * @see https://developer.chrome.com/apps/hid#method-receive
  * Receives an input report from an HID device.
  * @param {number} connectionId The connection from which to receive the report.
- * @param {number} size The size of the input report to receive.
- * @param {function(!ArrayBuffer)} callback The callback to invoke with the
- *     received report.
+ * @param {function(number, !ArrayBuffer)} callback The callback to invoke with
+ *     the received report.
  */
-chrome.hid.receive = function(connectionId, size, callback) {};
+chrome.hid.receive = function(connectionId, callback) {};
 
 
 /**
