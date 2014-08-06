@@ -331,9 +331,6 @@ public class NewTypeInference implements CompilerPass {
 
   private TypeEnv setOutEnv(
       DiGraphNode<Node, ControlFlowGraph.Branch> dn, TypeEnv e) {
-    if (dn.getOutEdges().size() > 1) {
-      e = e.split();
-    }
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getOutEdges()) {
       envs.put(de, e);
     }
@@ -342,9 +339,6 @@ public class NewTypeInference implements CompilerPass {
 
   private TypeEnv setInEnv(
       DiGraphNode<Node, ControlFlowGraph.Branch> dn, TypeEnv e) {
-    if (dn.getInEdges().size() > 1) {
-      e = e.split();
-    }
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getInEdges()) {
       envs.put(de, e);
     }
@@ -398,7 +392,6 @@ public class NewTypeInference implements CompilerPass {
 
   private TypeEnv getTypeEnvFromDeclaredTypes() {
     TypeEnv env = new TypeEnv();
-    env = env.split();
     Set<String> varNames = currentScope.getOuterVars();
     varNames.addAll(currentScope.getLocals());
     if (currentScope.isFunction()) {
@@ -549,7 +542,7 @@ public class NewTypeInference implements CompilerPass {
         Lists.newLinkedList();
     buildWorkset(cfg.getEntry(), workset);
     /* println("Workset: ", workset); */
-    if (scope.hasUndeclaredFormalsOrOuters()) {
+    if (scope.isFunction() && scope.hasUndeclaredFormalsOrOuters()) {
       Collections.reverse(workset);
       initEdgeEnvsBwd();
       analyzeFunctionBwd(workset);
@@ -671,10 +664,16 @@ public class NewTypeInference implements CompilerPass {
       List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset) {
     for (DiGraphNode<Node, ControlFlowGraph.Branch> dn : workset) {
       Node n = dn.getValue();
+      Node parent = n.getParent();
       Preconditions.checkState(n != null,
           "Implicit return should not be in workset.");
       TypeEnv inEnv = getInEnv(dn);
       TypeEnv outEnv = null;
+      if (parent.isScript()
+          || (parent.isBlock() && parent.getParent().isFunction())) {
+        // All joins have merged; forget changes
+        inEnv = inEnv.clearChangeLog();
+      }
 
       println("\tFWD Statment: ", n);
       println("\t\tinEnv: ", inEnv);
@@ -1205,7 +1204,6 @@ public class NewTypeInference implements CompilerPass {
       return rhsPair;
     } else if ((specializedType.isFalsy() && exprKind == Token.AND) ||
         (specializedType.isTruthy() && exprKind == Token.OR)) {
-      inEnv = inEnv.split();
       EnvTypePair shortCircuitPair =
           analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, specializedType);
       EnvTypePair lhsPair = analyzeExprFwd(
@@ -1214,7 +1212,6 @@ public class NewTypeInference implements CompilerPass {
           analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
       return EnvTypePair.join(rhsPair, shortCircuitPair);
     } else {
-      inEnv = inEnv.split();
       // Independently of the specializedType, && rhs is only analyzed when
       // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
       JSType stopAfterLhsType = exprKind == Token.AND ?
@@ -1434,7 +1431,6 @@ public class NewTypeInference implements CompilerPass {
     Node cond = expr.getFirstChild();
     Node thenBranch = cond.getNext();
     Node elseBranch = thenBranch.getNext();
-    inEnv = inEnv.split();
     TypeEnv trueEnv =
         analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.TRUE_TYPE).env;
     TypeEnv falseEnv =
@@ -2618,7 +2614,6 @@ public class NewTypeInference implements CompilerPass {
     Node cond = expr.getFirstChild();
     Node thenBranch = cond.getNext();
     Node elseBranch = thenBranch.getNext();
-    outEnv = outEnv.split();
     EnvTypePair thenPair = analyzeExprBwd(thenBranch, outEnv, requiredType);
     EnvTypePair elsePair = analyzeExprBwd(elseBranch, outEnv, requiredType);
     return analyzeExprBwd(cond, TypeEnv.join(thenPair.env, elsePair.env));

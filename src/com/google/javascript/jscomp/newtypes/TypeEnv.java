@@ -33,12 +33,28 @@ import java.util.Map;
 public class TypeEnv {
   private final PersistentMap<String, JSType> typeMap;
 
+  // Above this threshold, the type env keeps track of which variables have
+  // changed, in order to improve the speed of joins.
+  // In practice, a value of 1000 affects only the type env of the top level.
+  private static final int SIZE_THRESHOLD = 1000;
+  private PersistentSet<String> changedVars = null;
+
   public TypeEnv() {
     this.typeMap = PersistentMap.create();
   }
 
   private TypeEnv(PersistentMap<String, JSType> typeMap) {
     this.typeMap = typeMap;
+    if (typeMap.size() >= SIZE_THRESHOLD) {
+      this.changedVars = PersistentSet.create();
+    }
+  }
+
+  private TypeEnv(PersistentMap<String, JSType> typeMap,
+      PersistentSet<String> changedVars) {
+    Preconditions.checkState(typeMap.size() >= SIZE_THRESHOLD);
+    this.typeMap = typeMap;
+    this.changedVars = changedVars;
   }
 
   public JSType getType(String n) {
@@ -49,44 +65,86 @@ public class TypeEnv {
   public TypeEnv putType(String n, JSType t) {
     Preconditions.checkArgument(!n.contains("."));
     Preconditions.checkArgument(t != null);
-    return new TypeEnv(typeMap.with(n, t));
+    if (changedVars == null) {
+      return new TypeEnv(typeMap.with(n, t));
+    }
+    JSType oldType = typeMap.get(n);
+    if (oldType == null) {
+      // The environment is being initialized; don't keep a log yet.
+      return new TypeEnv(typeMap.with(n, t));
+    } else if (t.equals(oldType)) {
+      return this;
+    } else {
+      return new TypeEnv(typeMap.with(n, t), changedVars.with(n));
+    }
   }
 
-  public TypeEnv split() {
-    return this;
+  // This method clears the change log, so it can change the correctness
+  // because it influences what is joined.
+  // In NewTypeInference, we call it only from statements at the top level of a
+  // scope, where we know that we are not in a branch, so we can forget the log.
+  public TypeEnv clearChangeLog() {
+    if (changedVars == null || changedVars.isEmpty()) {
+      return this;
+    }
+    return new TypeEnv(typeMap);
   }
 
   public static TypeEnv join(TypeEnv e1, TypeEnv e2) {
     return join(ImmutableSet.of(e1, e2));
   }
 
+  // In NewTypeInference, we call join with a set of type envs.
+  // This is OK because we use reference equality for type envs.
+  // Don't override equals to do logical equality!
   public static TypeEnv join(Collection<TypeEnv> envs) {
     Preconditions.checkArgument(!envs.isEmpty());
     Iterator<TypeEnv> envsIter = envs.iterator();
     TypeEnv firstEnv = envsIter.next();
+
     if (!envsIter.hasNext()) {
       return firstEnv;
     }
     PersistentMap<String, JSType> newMap = firstEnv.typeMap;
 
+    if (firstEnv.changedVars == null) {
+      while (envsIter.hasNext()) {
+        TypeEnv env = envsIter.next();
+        for (Map.Entry<String, JSType> entry : env.typeMap.entrySet()) {
+          String name = entry.getKey();
+          // TODO(dimvar):
+          // If the iteration order in the type envs is guaranteed to get the
+          // keys in the same order for any env, then we can iterate through the
+          // two type envs at the same time, to avoid the map lookup here.
+          JSType currentType = newMap.get(name);
+          JSType otherType = entry.getValue();
+          Preconditions.checkNotNull(
+              currentType, "%s is missing from an env", name);
+          if (!currentType.equals(otherType)) {
+            newMap = newMap.with(name, JSType.join(currentType, otherType));
+          }
+        }
+      }
+      return new TypeEnv(newMap);
+    }
+
+    PersistentSet<String> newLog = PersistentSet.create();
+    for (TypeEnv env : envs) {
+      for (String varName : env.changedVars) {
+        newLog = newLog.with(varName);
+      }
+    }
     while (envsIter.hasNext()) {
       TypeEnv env = envsIter.next();
-      for (Map.Entry<String, JSType> entry : env.typeMap.entrySet()) {
-        String name = entry.getKey();
-        // TODO(dimvar):
-        // If the iteration order in the type envs is guaranteed to get the
-        // keys in the same order for any env, then we can iterate through the
-        // two type envs at the same time, to avoid the map lookup here.
-        JSType currentType = newMap.get(name);
-        JSType otherType = entry.getValue();
-        Preconditions.checkNotNull(
-            currentType, "%s is missing from an env", name);
+      for (String changedVar : newLog) {
+        JSType currentType = newMap.get(changedVar);
+        JSType otherType = env.typeMap.get(changedVar);
         if (!currentType.equals(otherType)) {
-          newMap = newMap.with(name, JSType.join(currentType, otherType));
+          newMap = newMap.with(changedVar, JSType.join(currentType, otherType));
         }
       }
     }
-    return new TypeEnv(newMap);
+    return new TypeEnv(newMap, newLog);
   }
 
   @Override
