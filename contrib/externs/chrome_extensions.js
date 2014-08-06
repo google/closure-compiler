@@ -27,6 +27,7 @@
  * C. Pseudo-types
  * D. Events
  * E. Nullability
+ * F. Private APIs
  *
  * The best practices for each are described in more detail below.  It
  * should be noted that, due to historical reasons, and the evolutionary
@@ -39,6 +40,11 @@
  * experimental APIs change very quickly, so rather than add them here, make a
  * separate externs file for your project, then move the API here when it moves
  * out of experimental.
+ *
+ * Some non-experimental APIs are still evolving or are not full documented. It
+ * is still advantageous to include these in this file as doing so avoids a
+ * proliferation of project-private externs files containing duplicated info. In
+ * these cases, use comments to describe the situation.
  *
  * B. Optional Parameters
  * The Chrome extension APIs make extensive use of optional parameters that
@@ -151,6 +157,10 @@
  * 3. Optional params as there is little value to passing null when the
  *    parameter can be omitted, of course, if null is explicitly declared
  *    to be meaningful, then a nullable type should be used.
+ *
+ * F. Private APIs
+ * Private Chrome APIs (such as those that end in "Private") should go at the
+ * bottom of this file.
  *
  * @externs
  *
@@ -2733,13 +2743,6 @@ chrome.mediaGalleries.getMetadata = function(
 
 
 /**
- * namespace
- * @const
- */
-chrome.mediaGalleries.onScanProgress = {};
-
-
-/**
  * @typedef {{
  *   type: string,
  *   galleryCount: (number|undefined),
@@ -2748,35 +2751,42 @@ chrome.mediaGalleries.onScanProgress = {};
  *   videoCount: (number|undefined)
  * }}
  */
-chrome.mediaGalleries.onScanProgress.Details;
+chrome.mediaGalleries.OnScanProgressDetails;
+
 
 
 /**
- * @param {function(!chrome.mediaGalleries.onScanProgress.Details)} callback
- *     Callback function.
+ * Event whose listeners take a chrome.mediaGalleries.OnScanProgressDetails
+ * parameter.
+ * @constructor
  */
-chrome.mediaGalleries.onScanProgress.addListener = function(callback) {};
+chrome.mediaGalleries.ScanProgressEvent = function() {};
+
+
+/** @param {function(!chrome.mediaGalleries.OnScanProgressDetails)} callback */
+chrome.mediaGalleries.ScanProgressEvent.prototype.addListener =
+    function(callback) {};
+
+
+/** @param {function(!chrome.mediaGalleries.OnScanProgressDetails)} callback */
+chrome.mediaGalleries.ScanProgressEvent.prototype.removeListener =
+    function(callback) {};
 
 
 /**
- * @param {function(!chrome.mediaGalleries.onScanProgress.Details)} callback
- *     Callback function.
- */
-chrome.mediaGalleries.onScanProgress.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.mediaGalleries.onScanProgress.Details)} callback
- *     Callback function.
+ * @param {function(!chrome.mediaGalleries.OnScanProgressDetails)} callback
  * @return {boolean}
  */
-chrome.mediaGalleries.onScanProgress.hasListener = function(callback) {};
+chrome.mediaGalleries.ScanProgressEvent.prototype.hasListener =
+    function(callback) {};
 
 
-/**
- * @return {boolean}
- */
-chrome.mediaGalleries.onScanProgress.hasListeners = function() {};
+/** @return {boolean} */
+chrome.mediaGalleries.ScanProgressEvent.prototype.hasListeners = function() {};
+
+
+/** @type {!chrome.mediaGalleries.ScanProgressEvent} */
+chrome.mediaGalleries.onScanProgress;
 
 
 /**
@@ -3993,6 +4003,59 @@ ChromeExtensionInfoEvent.prototype.hasListener = function(callback) {};
 
 /** @return {boolean} */
 ChromeExtensionInfoEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * Event whose listeners take a string array parameter.
+ * @constructor
+ */
+function ChromeStringArrayEvent() {}
+
+
+/** @param {function(!Array.<string>): void} callback */
+ChromeStringArrayEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(!Array.<string>): void} callback */
+ChromeStringArrayEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Array.<string>): void} callback
+ * @return {boolean}
+ */
+ChromeStringArrayEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeStringArrayEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take two strings as parameters.
+ * @constructor
+ */
+function ChromeStringStringEvent() {}
+
+
+/** @param {function(string, string): void} callback */
+ChromeStringStringEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(string, string): void} callback */
+ChromeStringStringEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(string, string): void} callback
+ * @return {boolean}
+ */
+ChromeStringStringEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeStringStringEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -5411,144 +5474,6 @@ chrome.notifications.ButtonClickedEvent.prototype.hasListeners = function() {};
 
 /**
  * @const
- */
-chrome.musicManagerPrivate = {};
-
-
-/**
- * @param {function(string): void} callback
- */
-chrome.musicManagerPrivate.getDeviceId = function(callback) {};
-
-
-/**
- * @const
- */
-chrome.mediaGalleriesPrivate = {};
-
-
-/**
- * @typedef {function({deviceId: string, deviceName: string}): void}
- */
-chrome.mediaGalleriesPrivate.DeviceCallback;
-
-
-/**
- * @typedef {function({galleryId: string}): void}
- */
-chrome.mediaGalleriesPrivate.GalleryChangeCallback;
-
-
-/**
- * @typedef {function({galleryId: string, success: boolean}): void}
- */
-chrome.mediaGalleriesPrivate.AddGalleryWatchCallback;
-
-
-/**
- * @param {string} galleryId
- * @param {!chrome.mediaGalleriesPrivate.AddGalleryWatchCallback} callback
- */
-chrome.mediaGalleriesPrivate.addGalleryWatch = function(galleryId, callback) {};
-
-
-/**
- * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
- * @deprecated Use {chrome.system.storage.onAttach}.
- */
-chrome.mediaGalleriesPrivate.onDeviceAttached;
-
-
-/**
- * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
- * @deprecated Use {chrome.system.storage.onDetach}.
- */
-chrome.mediaGalleriesPrivate.onDeviceDetached;
-
-
-/**
- * @type {!chrome.mediaGalleriesPrivate.GalleryChangeEvent}
- */
-chrome.mediaGalleriesPrivate.onGalleryChanged;
-
-
-
-/**
- * @interface
- * @deprecated Use {chrome.system.storage.DeviceEvent}.
- */
-chrome.mediaGalleriesPrivate.DeviceEvent = function() {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
- * @deprecated Use {chrome.system.storage.DeviceEvent.addListener}.
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
- * @deprecated Use {chrome.system.storage.DeviceEvent.removeListener}.
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
- * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}.
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/**
- * @return {boolean}
- * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListeners =
-    function(callback) {};
-
-
-
-/**
- * @interface
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent = function() {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListeners =
-    function() {};
-
-
-/**
- * @const
  * @see http://developer.chrome.com/apps/system_storage.html
  */
 chrome.system.storage = {};
@@ -5878,33 +5803,6 @@ chrome.usb.isochronousTransfer = function(handle, transferInfo, callback) {};
 chrome.usb.resetDevice = function(handle, callback) {};
 
 
-/** @const */
-chrome.screenlockPrivate = {};
-
-
-/**
- * @param {string} message Displayed on the unlock screen.
- */
-chrome.screenlockPrivate.showMessage = function(message) {};
-
-
-/**
- * @param {function(boolean)} callback
- */
-chrome.screenlockPrivate.getLocked = function(callback) {};
-
-
-/**
- * @param {boolean} locked If true and the screen is unlocked, locks the screen.
- *     If false and the screen is locked, unlocks the screen.
- */
-chrome.screenlockPrivate.setLocked = function(locked) {};
-
-
-/** @type {!ChromeBooleanEvent} */
-chrome.screenlockPrivate.onChanged;
-
-
 /**
  * @const
  * @see https://developer.chrome.com/apps/webstore
@@ -5934,3 +5832,440 @@ chrome.webstore.onInstallStageChanged;
 
 /** @type {!ChromeNumberEvent} */
 chrome.webstore.onDownloadProgress;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////// Chrome Private APIs ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+/** @const */
+chrome.screenlockPrivate = {};
+
+
+/**
+ * @param {string} message Displayed on the unlock screen.
+ */
+chrome.screenlockPrivate.showMessage = function(message) {};
+
+
+/**
+ * @param {function(boolean)} callback
+ */
+chrome.screenlockPrivate.getLocked = function(callback) {};
+
+
+/**
+ * @param {boolean} locked If true and the screen is unlocked, locks the screen.
+ *     If false and the screen is locked, unlocks the screen.
+ */
+chrome.screenlockPrivate.setLocked = function(locked) {};
+
+
+/** @type {!ChromeBooleanEvent} */
+chrome.screenlockPrivate.onChanged;
+
+
+/**
+ * @const
+ */
+chrome.musicManagerPrivate = {};
+
+
+/**
+ * @param {function(string): void} callback
+ */
+chrome.musicManagerPrivate.getDeviceId = function(callback) {};
+
+
+/**
+ * @const
+ */
+chrome.mediaGalleriesPrivate = {};
+
+
+/**
+ * @typedef {function({deviceId: string, deviceName: string}): void}
+ */
+chrome.mediaGalleriesPrivate.DeviceCallback;
+
+
+/**
+ * @typedef {function({galleryId: string}): void}
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeCallback;
+
+
+/**
+ * @typedef {function({galleryId: string, success: boolean}): void}
+ */
+chrome.mediaGalleriesPrivate.AddGalleryWatchCallback;
+
+
+/**
+ * @param {string} galleryId
+ * @param {!chrome.mediaGalleriesPrivate.AddGalleryWatchCallback} callback
+ */
+chrome.mediaGalleriesPrivate.addGalleryWatch = function(galleryId, callback) {};
+
+
+/**
+ * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
+ * @deprecated Use {chrome.system.storage.onAttach}.
+ */
+chrome.mediaGalleriesPrivate.onDeviceAttached;
+
+
+/**
+ * @type {!chrome.mediaGalleriesPrivate.DeviceEvent}
+ * @deprecated Use {chrome.system.storage.onDetach}.
+ */
+chrome.mediaGalleriesPrivate.onDeviceDetached;
+
+
+/**
+ * @type {!chrome.mediaGalleriesPrivate.GalleryChangeEvent}
+ */
+chrome.mediaGalleriesPrivate.onGalleryChanged;
+
+
+
+/**
+ * @interface
+ * @deprecated Use {chrome.system.storage.DeviceEvent}.
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent = function() {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
+ * @deprecated Use {chrome.system.storage.DeviceEvent.addListener}.
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
+ * @deprecated Use {chrome.system.storage.DeviceEvent.removeListener}.
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
+ * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}.
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/**
+ * @return {boolean}
+ * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}
+ */
+chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListeners =
+    function(callback) {};
+
+
+
+/**
+ * @interface
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent = function() {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListeners =
+    function() {};
+
+
+/**
+ * WARNING(2014/08/04): This API is still under active initial development and
+ * unstable and has a number of issues:
+ *
+ * 1. The types NetworkProperties and ManagedNetworkProperties are not defined
+ *    in the docs; that is, there is no list of fields and their types.
+ *    Therefore, these types are treated as bags-of-objects, rather than types.
+ * 2. According to Steven Bennetts, NetworkProperties *should* be a
+ *    bag-of-properties as it's a map containing ONC properties and the ONC
+ *    properties do not follow the JS field naming conventions; specifically,
+ *    the properties start with an uppercase letter, and at least one property
+ *    is in all uppercase.
+ * 3. The deviceSsid and deviceBssid fields of VerticationProperties are listed
+ *    as being required while their description mentions "Only set if" which
+ *    sound optional. The dev team was unclear whether they are required or
+ *    optional.
+ * 4. Some parameters to some functions are marked as being in the Beta channel
+ *    only (for example, the networkGuid parameter to getCaptivePortalStatus).
+ *
+ * Because of the above issues, this API should not be used as an example for
+ * other APIs added to this file. Please contact mednik@ for questions on and
+ * maintenance for this API.
+ * @const
+ * @see https://developer.chrome.com/extensions/networkingPrivate
+ */
+chrome.networkingPrivate = {};
+
+
+/**
+ * @typedef {?{
+ *   certificate: string,
+ *   publicKey: string,
+ *   nonce: string,
+ *   signedData: string,
+ *   deviceSerial: string,
+ *   deviceSsid: string,
+ *   deviceBssid: string
+ * }}
+ */
+chrome.networkingPrivate.VerificationProperties;
+
+
+/**
+ * @typedef {?{
+ *   networkType: string,
+ *   visible: (boolean|undefined),
+ *   configured: (boolean|undefined),
+ *   limit: (number|undefined)
+ * }}
+ */
+chrome.networkingPrivate.NetworkFilter;
+
+
+/**
+ * @param {string} guid
+ * @param {function(!Object)} callback
+ */
+chrome.networkingPrivate.getProperties = function(guid, callback) {};
+
+
+/**
+ * @param {string} guid
+ * @param {function(!Object)} callback
+ */
+chrome.networkingPrivate.getManagedProperties = function(guid, callback) {};
+
+
+/**
+ * @param {string} guid
+ * @param {function(!Object)} callback
+ */
+chrome.networkingPrivate.getState = function(guid, callback) {};
+
+
+/**
+ * @param {string} guid
+ * @param {!Object} properties
+ * @param {function()} callback
+ */
+chrome.networkingPrivate.setProperties = function(guid, properties, callback) {
+};
+
+
+/**
+ * @param {boolean} shared
+ * @param {!Object} properties
+ * @param {function(string)} callback Returns guid of the configured
+ *     configuration.
+ */
+chrome.networkingPrivate.createNetwork =
+    function(shared, properties, callback) {};
+
+
+/**
+ * @param {!chrome.networkingPrivate.NetworkFilter} filter
+ * @param {function(!Array.<!Object>)=} opt_callback
+ */
+chrome.networkingPrivate.getNetworks = function(filter, opt_callback) {};
+
+
+/**
+ * @param {string} type
+ * @param {function(!Array.<!Object>)=} opt_callback
+ */
+chrome.networkingPrivate.getVisibleNetworks = function(type, opt_callback) {};
+
+
+/** @param {function(!Array.<string>)=} opt_callback */
+chrome.networkingPrivate.getEnabledNetworkTypes = function(opt_callback) {};
+
+
+/** @param {string} networkType */
+chrome.networkingPrivate.enableNetworkType = function(networkType) {};
+
+
+/** @param {string} networkType */
+chrome.networkingPrivate.disableNetworkType = function(networkType) {};
+
+
+/**
+ * Requests that the networking subsystem scan for new networks and update the
+ * list returned by getVisibleNetworks.
+ */
+chrome.networkingPrivate.requestNetworkScan = function() {};
+
+
+/**
+ * @param {string} guid
+ * @param {function()=} opt_callback
+ */
+chrome.networkingPrivate.startConnect = function(guid, opt_callback) {};
+
+
+/**
+ * @param {string} guid
+ * @param {function()=} opt_callback
+ */
+chrome.networkingPrivate.startDisconnect = function(guid, opt_callback) {};
+
+
+/**
+ * @param {!chrome.networkingPrivate.VerificationProperties} verificationInfo
+ * @param {function(boolean)} callback
+ */
+chrome.networkingPrivate.verifyDestination =
+    function(verificationInfo, callback) {};
+
+
+/**
+ * @param {!chrome.networkingPrivate.VerificationProperties} verificationInfo
+ * @param {string} guid
+ * @param {function(string)} callback
+ */
+chrome.networkingPrivate.verifyAndEncryptCredentials =
+    function(verificationInfo, guid, callback) {};
+
+
+/**
+ * @param {!chrome.networkingPrivate.VerificationProperties} verificationInfo
+ * @param {string} data
+ * @param {function(string)} callback
+ */
+chrome.networkingPrivate.verifyAndEncryptData =
+    function(verificationInfo, data, callback) {};
+
+
+/**
+ * @param {string} ipOrMacAddress
+ * @param {boolean} enabled
+ * @param {function(string)} callback
+ */
+chrome.networkingPrivate.setWifiTDLSEnabledState =
+    function(ipOrMacAddress, enabled, callback) {};
+
+
+/**
+ * @param {string} ipOrMacAddress
+ * @param {function(string)} callback
+ */
+chrome.networkingPrivate.getWifiTDLSStatus =
+    function(ipOrMacAddress, callback) {};
+
+
+/**
+ * @param {string} guid
+ * @param {function(string)} callback
+ */
+chrome.networkingPrivate.getCaptivePortalStatus = function(guid, callback) {};
+
+
+/** @type {!ChromeStringArrayEvent} */
+chrome.networkingPrivate.onNetworksChanged;
+
+
+/** @type {!ChromeStringArrayEvent} */
+chrome.networkingPrivate.onNetworkListChanged;
+
+
+/** @type {!ChromeStringStringEvent} */
+chrome.networkingPrivate.onPortalDetectionCompleted;
+
+
+/**
+ * WARNING(2014/08/14): This API is still under active initial development and
+ * unstable. The types are not well defined or documented, and this API
+ * definition here should not be used as an example for other APIs added to this
+ * file. Please contact mednik@ for questions on and maintenance for this API.
+ * @const
+ * @see http://goo.gl/afV8wB
+ */
+chrome.mdns = {};
+
+
+/** @constructor */
+chrome.mdns.MdnsService = function() {};
+
+
+/** @type {string} */
+chrome.mdns.MdnsService.prototype.serviceName;
+
+
+/** @type {string} */
+chrome.mdns.MdnsService.prototype.serviceHostPort;
+
+
+/** @type {string} */
+chrome.mdns.MdnsService.prototype.ipAddress;
+
+
+/** @type {!Array.<string>} */
+chrome.mdns.MdnsService.prototype.serviceData;
+
+
+/**
+ * Event whose listeners take an array of MdnsService parameter.
+ * @constructor
+ */
+chrome.mdns.ServiceListEvent = function() {};
+
+
+/**
+ * @param {function(!Array.<!chrome.mdns.MdnsService>): void} callback
+ * @param {!Object=} opt_filter
+ */
+chrome.mdns.ServiceListEvent.prototype.addListener =
+    function(callback, opt_filter) {};
+
+
+/** @param {function(!Array.<!chrome.mdns.MdnsService>): void} callback */
+chrome.mdns.ServiceListEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Array.<!chrome.mdns.MdnsService>): void} callback
+ * @return {boolean}
+ */
+chrome.mdns.ServiceListEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+chrome.mdns.ServiceListEvent.prototype.hasListeners = function() {};
+
+
+/** @type {!chrome.mdns.ServiceListEvent} */
+chrome.mdns.onServiceList;
