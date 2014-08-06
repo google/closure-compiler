@@ -211,20 +211,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     generatorCaseCount++;
 
     originalGeneratorBody = n.getLastChild();
-    Node suppressionInsertSpot = null;
-    if (NodeUtil.isFunctionExpression(n)) {
-      n.replaceChild(originalGeneratorBody, genBlock);
-      n.setIsGeneratorFunction(false);
-      suppressionInsertSpot = n;
-    } else {
-      suppressionInsertSpot = IR.var(
-          n.removeFirstChild(),
-          IR.function(
-              IR.name(""),
-              n.removeFirstChild(),
-              genBlock));
-      parent.replaceChild(n, suppressionInsertSpot);
-    }
+    n.replaceChild(originalGeneratorBody, genBlock);
+    n.setIsGeneratorFunction(false);
 
     //TODO(mattloring): remove this suppression once we can optimize the switch statement to
     // remove unused cases.
@@ -236,8 +224,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     }
     //TODO(mattloring): copy existing suppressions.
     builder.recordSuppressions(ImmutableSet.of("uselessCode"));
-    JSDocInfo info = builder.build(suppressionInsertSpot);
-    suppressionInsertSpot.setJSDocInfo(info);
+    JSDocInfo info = builder.build(n);
+    n.setJSDocInfo(info);
 
 
     // Set state to the default after the body of the function has completed.
