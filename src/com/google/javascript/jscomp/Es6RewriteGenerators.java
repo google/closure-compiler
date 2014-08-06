@@ -282,11 +282,14 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   /** Returns true if a new case node should be added */
   private boolean translateStatementInOriginalBody() {
     if (currentStatement.isVar()) {
-        visitVar();
-        return false;
+      visitVar();
+      return false;
     } else if (currentStatement.isGeneratorMarker()) {
-        visitGeneratorMarker();
-        return true;
+      visitGeneratorMarker();
+      return true;
+    } else if (currentStatement.isFunction()) {
+      visitFunctionStatement();
+      return false;
     } else if (controlCanExit(currentStatement)) {
       switch (currentStatement.getType()) {
         case Token.WHILE:
@@ -338,6 +341,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     // In the default case, add the statement to the current case block unchanged.
     enclosingBlock.addChildToBack(currentStatement);
     return false;
+  }
+
+  private void visitFunctionStatement() {
+    hoistRoot.getParent().addChildAfter(currentStatement, hoistRoot);
   }
 
   private void visitContinue() {

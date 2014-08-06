@@ -2211,6 +2211,28 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testFunctionInGenerator() {
+    test("function *f() { function g() {} }",
+      Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "var f = function() {",
+        "  var $jscomp$generator$state = 0;",
+        "  function g() {}",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+  }
+
   public void testYieldAll() {
     test("function *f() {yield * n;}", Joiner.on('\n').join(
         "/** @suppress {uselessCode} */",
