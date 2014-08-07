@@ -2279,9 +2279,14 @@ DOMTokenList.prototype.remove = function(token) {};
 
 /**
  * @param {string} token The CSS class to toggle from this element.
+ * @param {boolean=} opt_force True to add the class whether it exists
+ *     or not. False to remove the class whether it exists or not.
+ *     This argument is not supported on IE 10 and below, according to
+ *     the MDN page linked below.
  * @return {boolean} False if the token was removed; True otherwise.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Element.classList
  */
-DOMTokenList.prototype.toggle = function(token) {};
+DOMTokenList.prototype.toggle = function(token, opt_force) {};
 
 /**
  * @return {string} A stringified representation of CSS classes.
