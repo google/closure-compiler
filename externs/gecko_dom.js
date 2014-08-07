@@ -1038,6 +1038,14 @@ Navigator.prototype.productSub;
 Navigator.prototype.securityPolicy;
 
 /**
+ * @param {string} url
+ * @param {ArrayBufferView|Blob|string|FormData=} opt_data
+ * @return {boolean}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/navigator.sendBeacon
+ */
+Navigator.prototype.sendBeacon = function(url, opt_data) {};
+
+/**
  * @type {string}
  * @see https://developer.mozilla.org/en/Navigator.userAgent
  */
