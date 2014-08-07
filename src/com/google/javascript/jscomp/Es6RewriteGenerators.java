@@ -78,13 +78,20 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String GENERATOR_SWITCH_VAL = "$jscomp$generator$switch$val";
 
+  private static final String GENERATOR_ERROR = "$jscomp$generator$global$error";
+
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
   private List<LoopContext> currentLoopContext;
 
+  private List<ExceptionContext> currentExceptionContext;
+
+  private boolean hasTranslatedTry;
+
   public Es6RewriteGenerators(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.currentLoopContext = new ArrayList<>();
+    this.currentExceptionContext = new ArrayList<>();
     generatorCounter = compiler.getUniqueNameIdSupplier();
   }
 
@@ -193,6 +200,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   private void visitGenerator(Node n, Node parent) {
+    hasTranslatedTry = false;
     Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
       "{",
       "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
@@ -256,10 +264,19 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           caseNumber = generatorCaseCount;
           generatorCaseCount++;
         }
-        Node newCase = IR.caseNode(IR.number(caseNumber), IR.block());
         Node oldCase = enclosingBlock.getParent();
-        oldCase.getParent().addChildAfter(newCase, oldCase);
+        Node newCase = IR.caseNode(IR.number(caseNumber), IR.block());
         enclosingBlock = newCase.getLastChild();
+        if (oldCase.isTry()) {
+          oldCase = oldCase.getParent().getParent();
+          if (!currentExceptionContext.isEmpty()) {
+            Node newTry = IR.tryCatch(IR.block(),
+                currentExceptionContext.get(0).catchBlock.cloneTree());
+            newCase.getLastChild().addChildToBack(newTry);
+            enclosingBlock = newCase.getLastChild().getLastChild().getFirstChild();
+          }
+        }
+        oldCase.getParent().addChildAfter(newCase, oldCase);
       }
     }
 
@@ -278,6 +295,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else if (currentStatement.isFunction()) {
       visitFunctionStatement();
       return false;
+    } else if (currentStatement.isBlock()) {
+        visitBlock();
+        return false;
     } else if (controlCanExit(currentStatement)) {
       switch (currentStatement.getType()) {
         case Token.WHILE:
@@ -299,15 +319,20 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
             return false;
           }
           break;
+        case Token.TRY:
+          if (currentStatement.getChildCount() == 3) {
+            compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+              "Try statements with finally blocks inside generators"));
+          } else {
+            visitTry();
+          }
+          return false;
         case Token.EXPR_RESULT:
           if (currentStatement.getFirstChild().isYield()) {
             visitYieldExprResult();
             return true;
           }
           break;
-        case Token.BLOCK:
-          visitBlock();
-          return false;
         case Token.RETURN:
           visitReturn();
           return false;
@@ -333,6 +358,48 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private void visitFunctionStatement() {
     hoistRoot.getParent().addChildAfter(currentStatement, hoistRoot);
+  }
+
+  private void visitTry() {
+    Node tryBody = currentStatement.removeFirstChild();
+    Node caughtError = currentStatement.getFirstChild().getFirstChild().removeFirstChild();
+    Node catchBody = currentStatement.getFirstChild().getFirstChild().removeFirstChild();
+    int catchStartState = generatorCaseCount++;
+    Node catchStart = IR.number(catchStartState);
+    catchStart.setGeneratorMarker(true);
+    int catchEndState = generatorCaseCount++;
+    Node catchEnd = IR.number(catchEndState);
+    catchEnd.setGeneratorMarker(true);
+
+    tryBody.addChildToBack(createStateUpdate(catchEndState));
+    tryBody.addChildToBack(createSafeBreak());
+    catchBody.addChildToFront(IR.var(caughtError, IR.name(GENERATOR_ERROR)));
+
+    Node errorNameGenerated = IR.name("$jscomp$generator$" + caughtError.getString());
+
+    originalGeneratorBody.addChildToFront(tryBody);
+    originalGeneratorBody.addChildAfter(catchStart, tryBody);
+    originalGeneratorBody.addChildAfter(catchBody, catchStart);
+    originalGeneratorBody.addChildAfter(catchEnd, catchBody);
+
+    Node assignError = IR.assign(IR.name(GENERATOR_ERROR), errorNameGenerated.cloneTree());
+    Node newCatchBody = IR.block(IR.exprResult(assignError),
+        createStateUpdate(catchStartState), createSafeBreak());
+    Node newCatch = IR.catchNode(errorNameGenerated, newCatchBody);
+
+    currentExceptionContext.add(0, new ExceptionContext(catchStartState, newCatch));
+
+    if (enclosingBlock.getParent().isTry()) {
+      enclosingBlock = enclosingBlock.getParent().getParent();
+    }
+
+    enclosingBlock.addChildToBack(
+        IR.tryCatch(IR.block(), newCatch));
+    enclosingBlock = enclosingBlock.getLastChild().getFirstChild();
+    if (!hasTranslatedTry) {
+      hasTranslatedTry = true;
+      hoistRoot.getParent().addChildAfter(IR.var(IR.name(GENERATOR_ERROR)), hoistRoot);
+    }
   }
 
   private void visitContinue() {
@@ -361,6 +428,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     if (!currentLoopContext.isEmpty()
         && currentLoopContext.get(0).breakCase == currentStatement.getDouble()) {
       currentLoopContext.remove(0);
+    }
+    if (!currentExceptionContext.isEmpty()
+        && currentExceptionContext.get(0).catchStartCase == currentStatement.getDouble()) {
+      currentExceptionContext.remove(0);
     }
   }
 
@@ -471,6 +542,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * Blocks are flattened by lifting all children to the body of the original generator.
    */
   private void visitBlock() {
+    if (currentStatement.getChildCount() == 0) {
+      return;
+    }
     Node insertionPoint = currentStatement.removeFirstChild();
     originalGeneratorBody.addChildToFront(insertionPoint);
     for (Node child = currentStatement.removeFirstChild(); child != null;
@@ -627,6 +701,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   private boolean controlCanExit(Node n) {
+    Preconditions.checkState(n.getParent() == null);
     ControlExitsCheck exits = new ControlExitsCheck();
     NodeTraversal.traverse(compiler, n, exits);
     return exits.didExit();
@@ -656,43 +731,40 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   class ControlExitsCheck implements NodeTraversal.Callback {
     // TODO(mattloring): track seen labels to check for labelled breaks
-    boolean continuesCaught = false;
-    boolean breaksCaught = false;
-    boolean throwsCaught = false;
+    int continueCatchers = 0;
+    int breakCatchers = 0;
+    int throwCatchers = 0;
     boolean exited = false;
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      return !n.isFunction();
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
+        case Token.FUNCTION:
+          return false;
         case Token.DO:
         case Token.WHILE:
         case Token.FOR:
-          continuesCaught = true;
-          breaksCaught = true;
+          continueCatchers++;
+          breakCatchers++;
           break;
         case Token.SWITCH:
-          breaksCaught = true;
+          breakCatchers++;
           break;
         case Token.TRY:
-          throwsCaught = true;
+          throwCatchers++;
           break;
         case Token.BREAK:
-          if (!breaksCaught || n.hasChildren()) {
+          if (breakCatchers == 0 || n.hasChildren()) {
             exited = true;
           }
           break;
         case Token.CONTINUE:
-          if (!continuesCaught || n.hasChildren()) {
+          if (continueCatchers == 0 || n.hasChildren()) {
             exited = true;
           }
           break;
         case Token.THROW:
-          if (!throwsCaught) {
+          if (throwCatchers == 0) {
             exited = true;
           }
           break;
@@ -703,6 +775,25 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           if (n.getFirstChild().isYield()) {
             exited = true;
           }
+          break;
+      }
+      return true;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.DO:
+        case Token.WHILE:
+        case Token.FOR:
+          continueCatchers--;
+          breakCatchers--;
+          break;
+        case Token.SWITCH:
+          breakCatchers--;
+          break;
+        case Token.TRY:
+          throwCatchers--;
           break;
       }
     }
@@ -722,6 +813,16 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       this.continueCase = continueCase;
     }
 
+  }
+
+  private class ExceptionContext {
+    int catchStartCase;
+    Node catchBlock;
+
+    public ExceptionContext(int catchStartCase, Node catchBlock) {
+      this.catchStartCase = catchStartCase;
+      this.catchBlock = catchBlock;
+    }
   }
 
 }
