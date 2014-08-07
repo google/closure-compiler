@@ -56,7 +56,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       Node newValue = getNewValueNode(msgNode, message);
       newValue.copyInformationFromForTree(msgNode);
 
-      definition.getMessageParentNode().replaceChild(msgNode, newValue);
+      msgNode.getParent().replaceChild(msgNode, newValue);
       compiler.reportCodeChange();
     } catch (MalformedException e) {
       compiler.report(JSError.make(e.getNode(),

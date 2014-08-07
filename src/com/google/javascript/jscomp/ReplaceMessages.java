@@ -94,7 +94,7 @@ class ReplaceMessages extends JsMessageVisitor {
 
     if (newValue != msgNode) {
       newValue.copyInformationFromForTree(msgNode);
-      definition.getMessageParentNode().replaceChild(msgNode, newValue);
+      msgNode.getParent().replaceChild(msgNode, newValue);
       compiler.reportCodeChange();
     }
   }

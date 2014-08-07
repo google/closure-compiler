@@ -41,37 +41,18 @@ import com.google.javascript.rhino.Node;
 class JsMessageDefinition {
 
   private final Node messageNode;
-  private final Node messageParentNode;
-  private final Node visitingNode;
 
   /**
    * Constructs JS message definition.
-   *
-   * @param visitingNode Node that is visited by
-   *     {@link JsMessageVisitor}. Take into
-   *     account that visiting node could differ from the node the message
-   *     was found.
    * @param messageNode A node that contains the message. It could be node with
    *     goog.getMsg() call or string/function for old-style messages.
    * @param messageParentNode The parent of the message node.
    */
-  JsMessageDefinition(Node visitingNode, Node messageNode,
-      Node messageParentNode) {
-
+  JsMessageDefinition(Node messageNode) {
     this.messageNode = messageNode;
-    this.visitingNode = visitingNode;
-    this.messageParentNode = messageParentNode;
   }
 
   Node getMessageNode() {
     return messageNode;
-  }
-
-  Node getVisitingNode() {
-    return visitingNode;
-  }
-
- Node getMessageParentNode() {
-    return messageParentNode;
   }
 }

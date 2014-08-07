@@ -199,7 +199,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
   public void visit(NodeTraversal traversal, Node node, Node parent) {
     String messageKey;
     boolean isVar;
-    Node msgNode, msgNodeParent;
+    Node msgNode;
 
     switch (node.getType()) {
       case Token.NAME:
@@ -212,7 +212,6 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         }
 
         msgNode = node.getFirstChild();
-        msgNodeParent = node;
         break;
       case Token.ASSIGN:
         // somenamespace.someclass.MSG_HELLO = 'Message'
@@ -227,7 +226,6 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
         messageKey = propNode.getString();
         msgNode = node.getLastChild();
-        msgNodeParent = node;
         break;
       case Token.CALL:
         // goog.getMsg()
@@ -281,7 +279,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       if (isVar) {
         extractMessageFromVariable(builder, node, parent, parent.getParent());
       } else {
-        extractMessageFromProperty(builder, node.getFirstChild(), node);
+        extractMessageFrom(builder, msgNode, node);
       }
     } catch (MalformedException ex) {
       compiler.report(traversal.makeError(ex.getNode(),
@@ -318,8 +316,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
           messageKey));
     }
 
-    JsMessageDefinition msgDefinition = new JsMessageDefinition(
-        node, msgNode, msgNodeParent);
+    JsMessageDefinition msgDefinition = new JsMessageDefinition(msgNode);
     processJsMessage(extractedMessage, msgDefinition);
   }
 
@@ -423,17 +420,16 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * a qualified name (e.g <code>a.b.MSG_X = goog.getMsg(...);</code>).
    *
    * @param builder the message builder
-   * @param getPropNode a GETPROP node in a JS message assignment
-   * @param assignNode an ASSIGN node, parent of {@code getPropNode}.
+   * @param valueNode a node in a JS message value
+   * @param docNode the node containing the jsdoc.
    * @throws MalformedException if {@code getPropNode} does not
    *         correspond to a valid JS message node
    */
-  private void extractMessageFromProperty(
-      Builder builder, Node getPropNode, Node assignNode)
+  private void extractMessageFrom(
+      Builder builder, Node valueNode, Node docNode)
       throws MalformedException {
-    Node callNode = getPropNode.getNext();
-    maybeInitMetaDataFromJsDoc(builder, assignNode);
-    extractFromCallNode(builder, callNode);
+    maybeInitMetaDataFromJsDoc(builder, docNode);
+    extractFromCallNode(builder, valueNode);
   }
 
   /**
