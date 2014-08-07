@@ -373,22 +373,6 @@ public class CodePrinterTest extends TestCase {
     assertPrint("if(x){;;function y(){};;}", "if(x){function y(){}}");
   }
 
-  public void testPrintArrayComprehension() {
-    languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrintSame("[for(foo of bar)baz()]");
-    assertPrintSame("[for(n of nums)if(prime(n))n*n]");
-    assertPrintSame("[for(a of b)for(c of d)if(c>a)a+c]");
-    assertPrintSame("[for({x,y}of z)x+y]");
-  }
-
-  public void testPrintGeneratorComprehension() {
-    languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrintSame("(for(foo of bar)baz())");
-    assertPrintSame("(for(n of nums)if(prime(n))n*n)");
-    assertPrintSame("(for(a of b)for(c of d)if(c>a)a+c)");
-    assertPrintSame("(for({x,y}of z)x+y)");
-  }
-
   public void testPrintArrayPatternVar() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("var []=[]");

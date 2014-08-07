@@ -111,7 +111,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         // Need to check for super references before they get rewritten.
         checkClassSuperReferences(n);
         break;
-      case Token.ARRAY_COMP:
       case Token.OBJECT_PATTERN:
         cannotConvertYet(n, Token.name(n.getType()));
         // Don't bother visiting the children of a node if we

@@ -1227,30 +1227,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("function f({x: [y, z]}) {}");
   }
 
-  public void testArrayComprehensions() {
+  public void testComprehensions() {
     mode = LanguageMode.ECMASCRIPT6;
-    parse("[for (x of y) z];");
-    parse("[for ({x,y} of z) x+y];");
-    parse("[for (x of y) if (x<10) z];");
+    String error = "unsupported language feature:"
+        + " array/generator comprehensions";
+
+    // array comprehensions
+    parseError("[for (x of y) z];", error);
+    parseError("[for ({x,y} of z) x+y];", error);
+    parseError("[for (x of y) if (x<10) z];", error);
     parseError("[for (a = 5 of v) a];", "'identifier' expected");
 
-    mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("[for (x of y) z];",
-        "this language feature is only supported in es6 mode:"
-        + " array/generator comprehensions");
-  }
-
-  public void testGeneratorComprehensions() {
-    mode = LanguageMode.ECMASCRIPT6;
-    parse("(for (x of y) z);");
-    parse("(for ({x,y} of z) x+y);");
-    parse("(for (x of y) if (x<10) z);");
+    // generator comprehensions
+    parseError("(for (x of y) z);", error);
+    parseError("(for ({x,y} of z) x+y);", error);
+    parseError("(for (x of y) if (x<10) z);", error);
     parseError("(for (a = 5 of v) a);", "'identifier' expected");
-
-    mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("(for (x of y) z);",
-        "this language feature is only supported in es6 mode:"
-        + " array/generator comprehensions");
   }
 
   public void testLetForbidden1() {

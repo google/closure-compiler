@@ -184,13 +184,10 @@ public class Token {
 
         COMPUTED_PROP  = 174,
 
-        ARRAY_COMP     = 175,
-        GENERATOR_COMP = 176,
+        TEMPLATELIT     = 175, // template literal
+        TEMPLATELIT_SUB = 176, // template literal substitution
 
-        TEMPLATELIT     = 177, // template literal
-        TEMPLATELIT_SUB = 178, // template literal substitution
-
-        DEFAULT_VALUE   = 179, // Formal parameter with a default value
+        DEFAULT_VALUE   = 177, // Formal parameter with a default value
 
         // JSDoc-only tokens
         ANNOTATION     = 300,
@@ -316,8 +313,6 @@ public class Token {
           case LC:              return "LC";
           case COLON:           return "COLON";
 
-          case ARRAY_COMP:      return "ARRAY_COMP";
-          case GENERATOR_COMP:  return "GENERATOR_COMP";
           case ARRAY_PATTERN:   return "ARRAY_PATTERN";
           case OBJECT_PATTERN:  return "OBJECT_PATTERN";
           case CLASS:           return "CLASS";

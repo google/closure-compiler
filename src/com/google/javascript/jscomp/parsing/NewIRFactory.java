@@ -937,37 +937,17 @@ class NewIRFactory {
 
     @Override
     Node processComprehension(ComprehensionTree tree) {
-      maybeWarnEs6Feature(tree, "array/generator comprehensions");
-
-      int type;
-      switch (tree.type) {
-        case ARRAY:
-          type = Token.ARRAY_COMP;
-          break;
-        case GENERATOR:
-         type = Token.GENERATOR_COMP;
-          break;
-        default:
-          throw new IllegalStateException("unreachable");
-      }
-      Node node = newNode(type);
-      for (ParseTree child : tree.children) {
-        node.addChildToBack(transform(child));
-      }
-      node.addChildToBack(transform(tree.tailExpression));
-      return node;
+      return unsupportedLanguageFeature(tree, "array/generator comprehensions");
     }
 
     @Override
     Node processComprehensionFor(ComprehensionForTree tree) {
-      return newNode(Token.FOR_OF,
-          transform(tree.initializer),
-          transform(tree.collection));
+      return unsupportedLanguageFeature(tree, "array/generator comprehensions");
     }
 
     @Override
     Node processComprehensionIf(ComprehensionIfTree tree) {
-      return newNode(Token.IF, transform(tree.expression));
+      return unsupportedLanguageFeature(tree, "array/generator comprehensions");
     }
 
     @Override

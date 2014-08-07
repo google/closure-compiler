@@ -266,11 +266,6 @@ public class AstValidator implements CompilerPass {
         validateArrayLit(n);
         return;
 
-      case Token.ARRAY_COMP:
-      case Token.GENERATOR_COMP:
-        validateComprehension(n);
-        return;
-
       case Token.OBJECTLIT:
         validateObjectLit(n);
         return;
@@ -1014,28 +1009,6 @@ public class AstValidator implements CompilerPass {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // EMPTY is allowed to represent empty slots.
       validateOptionalExpression(c);
-    }
-  }
-
-  private void validateComprehension(Node n) {
-    validateMinimumChildCount(n, 2);
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      switch (c.getType()) {
-      case Token.FOR_OF:
-        validateChildCount(c, 2);
-        break;
-      case Token.IF:
-        validateChildCount(c, 1);
-        break;
-      default:
-        if (c == n.getLastChild()) {
-          validateExpression(c);
-        } else {
-          violation("All children of a comprehension node, except the last"
-              + " one, must be FOR_OF or IF nodes.", c);
-        }
-
-      }
     }
   }
 
