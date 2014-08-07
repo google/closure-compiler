@@ -183,6 +183,10 @@ public class TypeInferenceTest extends TestCase {
         registry.getNativeType(type1), registry.getNativeType(type2));
   }
 
+  private JSType createMultiParamUnionType(JSTypeNative... variants) {
+    return registry.createUnionType(variants);
+  }
+
   public void testAssumption() {
     assuming("x", NUMBER_TYPE);
     inFunction("");
@@ -1236,6 +1240,73 @@ public class TypeInferenceTest extends TestCase {
         + "/** @type {string|number} */ var x;"
         + "var result = f(x);");
       verify("result", createUnionType(BOOLEAN_TYPE, NULL_TYPE));
+  }
+
+  public void testTypeTransformationObjectUseCase() {
+    inFunction("/** \n"
+        + " * @param {T} a\n"
+        + " * @return {R}\n"
+        + " * @template T \n"
+        + " * @template R := \n"
+        + " * mapunion(T, (x) => \n"
+        + " *      cond(eq(x, type('string')), type('String'),\n"
+        + " *      cond(eq(x, type('number')), type('Number'),\n"
+        + " *      cond(eq(x, type('boolean')), type('Boolean'),\n"
+        + " *      cond(eq(x, type('null')), type('Object'), \n"
+        + " *      cond(eq(x, type('undefined')), type('Object'),\n"
+        + " *      x)))))) \n"
+        + " * =:\n"
+        + " */\n"
+        + "function Object(a) {}\n"
+        + "/** @type {(string|number|boolean)} */\n"
+        + "var o;\n"
+        + "var r = Object(o);");
+    verify("r", createMultiParamUnionType(STRING_OBJECT_TYPE,
+        NUMBER_OBJECT_TYPE, JSTypeNative.BOOLEAN_OBJECT_TYPE));
+  }
+
+  public void testTypeTransformationObjectUseCase2() {
+    inFunction("/** \n"
+        + " * @param {T} a\n"
+        + " * @return {R}\n"
+        + " * @template T \n"
+        + " * @template R := \n"
+        + " * mapunion(T, (x) => \n"
+        + " *      cond(eq(x, type('string')), type('String'),\n"
+        + " *      cond(eq(x, type('number')), type('Number'),\n"
+        + " *      cond(eq(x, type('boolean')), type('Boolean'),\n"
+        + " *      cond(eq(x, type('null')), type('Object'), \n"
+        + " *      cond(eq(x, type('undefined')), type('Object'),\n"
+        + " *      x)))))) \n"
+        + " * =:\n"
+        + " */\n"
+        + "function Object(a) {}\n"
+        + "/** @type {(string|null|undefined)} */\n"
+        + "var o;\n"
+        + "var r = Object(o);");
+    verify("r", OBJECT_TYPE);
+  }
+
+  public void testTypeTransformationObjectUseCase3() {
+    inFunction("/** \n"
+        + " * @param {T} a\n"
+        + " * @return {R}\n"
+        + " * @template T \n"
+        + " * @template R := \n"
+        + " * mapunion(T, (x) => \n"
+        + " *      cond(eq(x, type('string')), type('String'),\n"
+        + " *      cond(eq(x, type('number')), type('Number'),\n"
+        + " *      cond(eq(x, type('boolean')), type('Boolean'),\n"
+        + " *      cond(eq(x, type('null')), type('Object'), \n"
+        + " *      cond(eq(x, type('undefined')), type('Object'),\n"
+        + " *      x)))))) \n"
+        + " * =:\n"
+        + " */\n"
+        + "function Object(a) {}\n"
+        + "/** @type {(Array|undefined)} */\n"
+        + "var o;\n"
+        + "var r = Object(o);");
+    verify("r", OBJECT_TYPE);
   }
 
   public void testAssertTypeofProp() {
