@@ -67,6 +67,8 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   private LanguageMode languageOut;
 
+  boolean transpileOnly;
+
   /**
    * Whether the compiler accepts the `const' keyword.
    */
@@ -743,6 +745,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Output options
   //--------------------------------
 
+  public boolean preserveJsDoc;
+
   /** Output in pretty indented format */
   public boolean prettyPrint;
 
@@ -918,6 +922,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     acceptConstKeyword = false;
 
     // Checks
+    transpileOnly = false;
     skipAllPasses = false;
     nameAnonymousFunctionsOnly = false;
     devMode = DevMode.OFF;
@@ -1043,6 +1048,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     instrumentForCoverage = false;  // instrument lines
 
     // Output
+    preserveJsDoc = false;
     printInputDelimiter = false;
     prettyPrint = false;
     lineBreak = false;
@@ -1585,6 +1591,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public LanguageMode getLanguageOut() {
     return languageOut;
+  }
+
+  boolean needsConversion() {
+    return languageIn != languageOut;
   }
 
   /**

@@ -39,6 +39,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -51,14 +52,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    extraAnnotations =
-        Sets.newHashSet(
-            ParserRunner.createConfig(true, LanguageMode.ECMASCRIPT3, false)
-                .annotationNames.keySet());
-    extraSuppressions =
-        Sets.newHashSet(
-            ParserRunner.createConfig(true, LanguageMode.ECMASCRIPT3, false)
-                .suppressionNames);
+    extraAnnotations = new HashSet<>(ParserRunner.createConfig(
+        true, true, LanguageMode.ECMASCRIPT3, false, null)
+            .annotationNames.keySet());
+    extraSuppressions = new HashSet<>(ParserRunner.createConfig(
+        true, true, LanguageMode.ECMASCRIPT3, false, null).suppressionNames);
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -3577,7 +3575,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Config config =
         new Config(extraAnnotations, extraSuppressions,
-            true, LanguageMode.ECMASCRIPT3, false);
+            true, true, LanguageMode.ECMASCRIPT3, false);
 
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("source", false), code, config, testErrorReporter);
@@ -3611,7 +3609,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
     Config config = new Config(extraAnnotations, extraSuppressions,
-        parseDocumentation, LanguageMode.ECMASCRIPT3, false);
+        parseDocumentation, parseDocumentation,
+        LanguageMode.ECMASCRIPT3, false);
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
     Node associatedNode = new Node(Token.SCRIPT);
     associatedNode.setInputId(new InputId(file.getName()));

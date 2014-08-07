@@ -207,12 +207,11 @@ public class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
-    boolean needsConversion = options.getLanguageIn() != options.getLanguageOut();
-    if (needsConversion || options.aggressiveVarCheck.isOn()) {
+    if (options.needsConversion() || options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
     }
 
-    if (needsConversion) {
+    if (options.needsConversion()) {
       checks.add(es6RuntimeLibrary);
       checks.add(es6HandleDefaultParams);
       checks.add(es6SplitVariableDeclarations);
@@ -221,6 +220,10 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(rewriteGenerators);
       checks.add(markTranspilationDone);
       checks.add(convertStaticInheritance);
+
+      if (options.transpileOnly) {
+        return checks;
+      }
     }
 
     if (options.declaredGlobalExternsOnWindow) {
@@ -404,6 +407,10 @@ public class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getOptimizations() {
     List<PassFactory> passes = Lists.newArrayList();
+
+    if (options.transpileOnly) {
+      return passes;
+    }
 
     // Gather property names in externs so they can be queried by the
     // optimising passes.

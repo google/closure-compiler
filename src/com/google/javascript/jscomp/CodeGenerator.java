@@ -51,6 +51,7 @@ class CodeGenerator {
   private final CharsetEncoder outputCharsetEncoder;
 
   private final boolean preferSingleQuotes;
+  private final boolean preserveJsDoc;
   private final boolean trustedStrings;
   private final LanguageMode languageMode;
 
@@ -60,6 +61,7 @@ class CodeGenerator {
     preferSingleQuotes = false;
     trustedStrings = true;
     languageMode = LanguageMode.ECMASCRIPT5;
+    preserveJsDoc = false;
   }
 
   static CodeGenerator forCostEstimation(CodeConsumer consumer) {
@@ -84,6 +86,7 @@ class CodeGenerator {
     this.preferSingleQuotes = options.preferSingleQuotes;
     this.trustedStrings = options.trustedStrings;
     this.languageMode = options.getLanguageOut();
+    this.preserveJsDoc = options.preserveJsDoc;
   }
 
   /**
@@ -108,6 +111,15 @@ class CodeGenerator {
   void add(Node n, Context context) {
     if (!cc.continueProcessing()) {
       return;
+    }
+
+    if (preserveJsDoc) {
+      if (n.getJSDocInfo() != null) {
+        String jsDocString = n.getJSDocInfo().getOriginalCommentString();
+        if (jsDocString != null) {
+          add(jsDocString);
+        }
+      }
     }
 
     int type = n.getType();

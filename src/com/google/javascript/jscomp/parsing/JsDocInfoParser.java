@@ -194,6 +194,7 @@ public final class JsDocInfoParser {
         Sets.<String>newHashSet(),
         Sets.<String>newHashSet(),
         false,
+        false,
         LanguageMode.ECMASCRIPT3,
         false);
     JsDocInfoParser parser = new JsDocInfoParser(
