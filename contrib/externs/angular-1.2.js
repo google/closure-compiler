@@ -481,6 +481,7 @@ angular.Directive.transclude;
  *   next: function(): !angular.JQLite,
  *   on: function(string, Function): !angular.JQLite,
  *   off: function(string=, Function=): !angular.JQLite,
+ *   one: function(string, Function): !angular.JQLite,
  *   parent: function(): !angular.JQLite,
  *   prepend: function(JQLiteSelector): !angular.JQLite,
  *   prop: function(string, *=): *,
