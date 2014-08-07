@@ -1319,14 +1319,19 @@ class TypeInference
   private Map<TemplateType, JSType> evaluateTypeTransformations(
       ImmutableList<TemplateType> templateTypes,
       Map<TemplateType, JSType> inferredTypes) {
-    // Build the set type variables in which the transformations are evaluated
-    Map<String, JSType> typeVars = buildTypeVariables(inferredTypes);
-    Map<TemplateType, JSType> result = new HashMap<TemplateType, JSType>();
 
-    // Process the type transformations
-    TypeTransformation ttlObj = new TypeTransformation(compiler);
+    Map<String, JSType> typeVars = null;
+    Map<TemplateType, JSType> result = null;
+    TypeTransformation ttlObj = null;
+
     for (TemplateType type : templateTypes) {
       if (type.isTypeTransformation()) {
+        // Lazy initialization when the first type transformation is found
+        if (ttlObj == null) {
+          ttlObj = new TypeTransformation(compiler);
+          typeVars = buildTypeVariables(inferredTypes);
+          result = new HashMap<TemplateType, JSType>();
+        }
         // Evaluate the type transformation expression using the current
         // known types for the template type variables
         JSType transformedType = ttlObj.eval(type.getTypeTransformation(),
@@ -1364,7 +1369,11 @@ class TypeInference
         );
 
     // Try to infer the template types using the type transformations
-    inferred.putAll(evaluateTypeTransformations(keys, inferred));
+    Map<TemplateType, JSType> typeTransformations =
+        evaluateTypeTransformations(keys, inferred);
+    if (typeTransformations != null) {
+      inferred.putAll(typeTransformations);
+    }
 
     // Replace all template types. If we couldn't find a replacement, we
     // replace it with UNKNOWN.
