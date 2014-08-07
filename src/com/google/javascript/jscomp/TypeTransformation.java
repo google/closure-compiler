@@ -36,6 +36,13 @@ class TypeTransformation {
   private AbstractCompiler compiler;
   private JSTypeRegistry typeRegistry;
 
+  static final DiagnosticType UNKNOWN_TYPEVAR =
+      DiagnosticType.warning("TYPEVAR_UNDEFINED",
+          "Reference to an unknown type variable {0}");
+  static final DiagnosticType UNKNOWN_TYPENAME =
+      DiagnosticType.warning("TYPENAME_UNDEFINED",
+          "Reference to an unknown type name {0}");
+
   TypeTransformation(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();
@@ -164,6 +171,9 @@ class TypeTransformation {
     String typeName = ttlAst.getChildAtIndex(1).getString();
     JSType resultingType = typeRegistry.getType(typeName);
     // If the type name is not defined then return UNKNOWN
+    if (resultingType == null) {
+      compiler.report(JSError.make(ttlAst, UNKNOWN_TYPENAME, typeName));
+    }
     return typeOrUnknown(resultingType);
   }
 
@@ -173,6 +183,9 @@ class TypeTransformation {
     JSType resultingType = typeVars.get(typeVar);
     // If the type variable is not found in the environment then it will be
     // taken as UNKNOWN
+    if (resultingType == null) {
+      compiler.report(JSError.make(ttlAst, UNKNOWN_TYPEVAR, typeVar));
+    }
     return typeOrUnknown(resultingType);
   }
 

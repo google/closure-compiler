@@ -50,7 +50,8 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithBasicTypePredicateWithInvalidTypename() {
-    testTTL(UNKNOWN_TYPE, "type('foo')");
+    testTTL(UNKNOWN_TYPE, "type('foo')",
+        "Reference to an unknown type name foo");
   }
 
   public void testTransformationWithSingleTypeVar() {
@@ -78,12 +79,14 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationWithUnknownParameter() {
     // Returns ? because foo is not defined
-    testTTL(UNKNOWN_TYPE, "union(foo, type('number'))");
+    testTTL(UNKNOWN_TYPE, "union(foo, type('number'))",
+        "Reference to an unknown type variable foo");
   }
 
   public void testTransformationWithUnknownParameter2() {
     // Returns ? because foo is not defined
-    testTTL(UNKNOWN_TYPE, "union(N, type('foo'))");
+    testTTL(UNKNOWN_TYPE, "union(N, type('foo'))",
+        "Reference to an unknown type name foo");
   }
 
   public void testTransformationWithNestedUnionInFirstParameter() {
@@ -101,7 +104,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithUndefinedTypeVar() {
-    testTTL(UNKNOWN_TYPE, "foo");
+    testTTL(UNKNOWN_TYPE, "foo", "Reference to an unknown type variable foo");
   }
 
   public void testTransformationWithTrueEqtypeConditional() {
@@ -227,7 +230,8 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     return createUnionType(variants);
   }
 
-  private void testTTL(JSType expectedType, String ttlExp) {
+  private void testTTL(JSType expectedType, String ttlExp,
+      String... expectedWarnings) {
     TypeTransformationParser ttlParser = new TypeTransformationParser(ttlExp,
         SourceFile.fromCode("[testcode]", ttlExp), errorReporter, 0, 0);
     // Run the test if the parsing was successful
@@ -236,6 +240,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
       // Evaluate the type transformation
       TypeTransformation typeTransformation = new TypeTransformation(compiler);
       JSType resultType = typeTransformation.eval(ast, typeVars);
+      checkReportedWarningsHelper(expectedWarnings);
       assertTypeEquals(expectedType, resultType);
     }
   }
