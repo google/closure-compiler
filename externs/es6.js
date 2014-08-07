@@ -646,5 +646,9 @@ Promise.race = function(iterable) {};
  */
 Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
-// Intentionally omitted until the spec gets clearer.
-// Promise.prototype.catch
+
+/**
+ * @param {function(*): *} onRejected
+ * @return {!Promise}
+ */
+Promise.prototype.catch = function(onRejected) {};
