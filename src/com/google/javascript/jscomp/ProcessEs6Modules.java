@@ -57,7 +57,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
   private int scriptNodeCount = 0;
 
   /**
-   * Maps symbol names to their exported names.
+   * Maps exported names to their names in current module.
    */
   private Map<String, String> exportMap = new LinkedHashMap<>();
 
@@ -125,15 +125,18 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
 
     String moduleName = toModuleName(loadAddress);
+    Set<String> namesToRequire = new LinkedHashSet<>();
     for (Node child : n.children()) {
       if (child.isEmpty() || child.isString()) {
         continue;
       } else if (child.isName()) { // import a from "mod"
         importMap.put(child.getString(),
             new ModuleOriginalNamePair(moduleName, child.getString()));
+        namesToRequire.add(child.getString());
       } else {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
+          namesToRequire.add(origName);
           if (grandChild.getChildCount() == 2) { // import {a as foo} from "mod"
             importMap.put(
                 grandChild.getLastChild().getString(),
@@ -146,17 +149,30 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
         }
       }
     }
-    // Emit goog.require call
+
+    Node script = NodeUtil.getEnclosingType(parent, Token.SCRIPT);
+    // Emit goog.require call for the module.
     if (!alreadyRequired.contains(moduleName)) {
       alreadyRequired.add(moduleName);
-      NodeUtil.getEnclosingType(parent, Token.SCRIPT).addChildToFront(
+      script.addChildToFront(
           IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
               compiler.getCodingConvention(), "goog.require"),
               IR.string(moduleName))).copyInformationFromForTree(n));
+      if (reportDependencies) {
+        t.getInput().addRequire(moduleName);
+      }
     }
-    if (reportDependencies) {
-      t.getInput().addRequire(moduleName);
+
+    for (String name : namesToRequire) {
+      script.addChildToFront(
+          IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
+              compiler.getCodingConvention(), "goog.require"),
+              IR.string(moduleName + "." + name))).copyInformationFromForTree(n));
+      if (reportDependencies) {
+        t.getInput().addRequire(moduleName + "." + name);
+      }
     }
+
     parent.removeChild(n);
     compiler.reportCodeChange();
   }
@@ -231,17 +247,26 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
 
     // Creates an export object for this module.
-    // var moduleName = { foo: moduleName$$foo };
+    // var moduleName = {};
     Node objectlit = IR.objectlit();
-    for (String name : exportMap.keySet()) {
-      objectlit.addChildToBack(
-          IR.stringKey(name, IR.name(exportMap.get(name) + "$$" + moduleName)));
-    }
     Node varNode = IR.var(IR.name(moduleName), objectlit)
-        .copyInformationFromForTree(script);
+        .useSourceInfoIfMissingFromForTree(script);
     script.addChildToBack(varNode);
 
+    // moduleName.foo = moduleName$$foo;
+    for (Map.Entry<String, String> entry : exportMap.entrySet()) {
+      String exportedName = entry.getKey();
+      String withSuffix = entry.getValue() + "$$" + moduleName;
+      Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
+      Node exprResult = IR.exprResult(IR.assign(
+          getProp,
+          NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
+              withSuffix))).useSourceInfoIfMissingFromForTree(script);
+      script.addChildToBack(exprResult);
+    }
+
     // Add @typedefs for the the type checker.
+    // /** @typedef {moduleName$$foo} */ moduleName.foo;
     for (String name : typedefs) {
       Node typedef = IR.getprop(IR.name(moduleName), IR.string(name));
       JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
@@ -254,16 +279,28 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           .useSourceInfoIfMissingFromForTree(varNode));
     }
 
-    exportMap.clear();
-
     // Add goog.provide call.
-    script.addChildToFront(IR.exprResult(
+    Node googProvide = IR.exprResult(
         IR.call(NodeUtil.newQualifiedNameNode(
             compiler.getCodingConvention(), "goog.provide"),
-            IR.string(moduleName))).copyInformationFromForTree(script));
+            IR.string(moduleName)));
+    script.addChildToFront(googProvide.copyInformationFromForTree(script));
     if (reportDependencies) {
       t.getInput().addProvide(moduleName);
     }
+
+    for (String name : exportMap.keySet()) {
+      String qualifiedName = moduleName + "." + name;
+      script.addChildAfter(IR.exprResult(
+          IR.call(NodeUtil.newQualifiedNameNode(
+              compiler.getCodingConvention(), "goog.provide"),
+              IR.string(qualifiedName)))
+              .copyInformationFromForTree(script), googProvide);
+      if (reportDependencies) {
+        t.getInput().addProvide(qualifiedName);
+      }
+    }
+    exportMap.clear();
     compiler.reportCodeChange();
   }
 
@@ -366,9 +403,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           Scope.Var var = t.getScope().getVar(baseName);
           if (var != null && var.isGlobal()) {
             typeNode.setString(baseName + "$$" + suffix + rest);
-          } else if (var == null && importMap.containsKey(name)) {
+          } else if (var == null && importMap.containsKey(baseName)) {
             ModuleOriginalNamePair pair = importMap.get(baseName);
-            typeNode.setString(pair.module + "." + pair.originalName);
+            typeNode.setString(baseName + "$$" + pair.module + rest);
           }
           typeNode.putProp(Node.ORIGINALNAME_PROP, name);
         }
