@@ -2879,10 +2879,6 @@ public class NewTypeInference implements CompilerPass {
 
   private static TypeEnv envPutType(TypeEnv env, String varName, JSType type) {
     Preconditions.checkArgument(!varName.contains("."));
-    JSType oldType = env.getType(varName);
-    if (oldType != null && oldType.equals(type)) {
-      return env;
-    }
     return env.putType(varName, type);
   }
 

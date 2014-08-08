@@ -35,8 +35,7 @@ public class TypeEnv {
 
   // Above this threshold, the type env keeps track of which variables have
   // changed, in order to improve the speed of joins.
-  // In practice, a value of 1000 affects only the type env of the top level.
-  private static final int SIZE_THRESHOLD = 1000;
+  private static final int SIZE_THRESHOLD = 100;
   private PersistentSet<String> changedVars = null;
 
   public TypeEnv() {
