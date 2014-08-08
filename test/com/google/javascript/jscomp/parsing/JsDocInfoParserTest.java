@@ -2928,20 +2928,20 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTypeTransformationNewline() {
-    parse("@template R := \n type('string') =:*/");
+    parse("@template R := \n 'string' =:*/");
   }
 
   public void testParserWithTypeTransformation() {
-    parse("@template T := type('string') =:*/");
+    parse("@template T := 'string' =:*/");
   }
 
   public void testParserWithTypeTransformation2() {
-    parse("@template T := type('string') =:\n"
+    parse("@template T := 'string' =:\n"
         + "Random text*/");
   }
 
   public void testParserWithTypeTransformationMultipleNames() {
-    parse("@template T, R := type('string') =:*/",
+    parse("@template T, R := 'string' =:*/",
         "Bad type annotation. "
         + "Type transformation must be associated to a single type name");
   }
@@ -2990,26 +2990,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTTLBasicType() {
-    parse("@template T := type('string') =:*/");
-  }
-
-  public void testParserWithTTLInvalidBasicType() {
-    parse("@template T := type(a) =:*/",
-        "Bad type annotation. Invalid type name");
-  }
-
-  public void testParserWithTTLEmptyBasicType() {
-    parse("@template T := type() =:*/",
-        "Bad type annotation. Missing parameter in type operation");
-  }
-
-  public void testParserWithTTLExtraParamsBasicType() {
-    parse("@template T := type('string','number') =:*/",
-        "Bad type annotation. Found extra parameter in type operation");
+    parse("@template T := 'string' =:*/");
   }
 
   public void testParserWithTTLValidUnionType() {
-    parse("@template T := union(type('string'), type('number')) =:*/");
+    parse("@template T := union('string', 'number') =:*/");
   }
 
   public void testParserWithTTLValidUnionType2() {
@@ -3017,7 +3002,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTTLValidUnionType3() {
-    parse("@template T := union(R, type('string'), S) =:*/");
+    parse("@template T := union(R, 'string', S) =:*/");
   }
 
   public void testParserWithTTLEmptyUnionType() {
@@ -3026,7 +3011,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTTLSingletonUnionType() {
-    parse("@template T := union(type('string')) =:*/",
+    parse("@template T := union('string') =:*/",
         "Bad type annotation. Missing parameter in union type");
   }
 
@@ -3037,29 +3022,25 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithNestedUnionFirstParam() {
-    parse("@template T := union(union(N, type('null')), S) =:*/");
+    parse("@template T := union(union(N, 'null'), S) =:*/");
   }
 
   public void testParserWithNestedUnionSecondParam() {
-    parse("@template T := union(N, union(type('null'), S)) =:*/");
+    parse("@template T := union(N, union('null', S)) =:*/");
   }
 
   public void testParserWithNestedBooleanFirstParam() {
     parse("@template T := "
-        + "cond( eq( cond(eq(N, N), type('string'), type('number')),"
-        +     "type('string')"
-        +    "),"
-        + "type('string'),"
-        + "type('number')) =: */");
+        + "cond( eq(cond(eq(N, N), 'string', 'number'), 'string'),"
+        + "'string',"
+        + "'number') =: */");
   }
 
   public void testParserWithNestedBooleanSecondParam() {
     parse("@template T := "
-        + "cond( eq( type('string'),"
-        +          "cond(eq(N, N), type('string'), type('number'))"
-        +        "),"
-        +     "type('string'),"
-        +     "type('number')) =:*/");
+        + "cond( eq('string', cond(eq(N, N), 'string', 'number')),"
+        + "'string',"
+        + "'number') =:*/");
   }
 
   public void testParserWithTTLConditional() {
@@ -3129,7 +3110,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLValidMapunion2() {
     parse("@template T := "
-        + "mapunion(union(type('string'), type('number')), (S) => S) "
+        + "mapunion(union('string', 'number'), (S) => S) "
         + "=: */");
   }
 
@@ -3171,36 +3152,63 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLUseCaseObject() {
     parse("@template T := "
-        + "mapunion(T, (TVAL) => "
-        + "cond(eq(TVAL, type('string')),"
-        + "type('String'),"
-        + "cond(eq(TVAL, type('number')),"
-        + "type('Number'),"
-        + "cond(eq(TVAL, type('boolean')),"
-        + "type('Boolean'),"
-        + "cond(eq(TVAL, type('null')),"
-        + "type('Object'),"
-        + "cond(eq(TVAL, type('undefined')),"
-        + "type('Object'),"
-        + "TVAL)))))) =: */");
+        + "mapunion(T, (x) => "
+        + "cond(eq(x, 'string'), 'String',"
+        + "cond(eq(x, 'number'), 'Number',"
+        + "cond(eq(x, 'boolean'), 'Boolean',"
+        + "cond(eq(x, 'null'), 'Object',"
+        + "cond(eq(x, 'undefined'), 'Object',"
+        + "x)))))) =: */");
   }
 
-  public void testParserWithNoneType() {
+  public void testParserWithTTLNoneType() {
     parse("@template T := none() =: */");
   }
 
-  public void testParserWithNoneType2() {
+  public void testParserWithTTLNoneType2() {
     parse("@template T := cond(eq(S, none()), S, T) =: */");
   }
 
-  public void testParserWithInvalidNoneType() {
+  public void testParserWithTTLInvalidNoneType() {
     parse("@template T := none(foo) =: */",
         "Bad type annotation. Found extra parameter in none");
   }
 
-  public void testParserWithInvalidNoneType2() {
+  public void testParserWithTTLInvalidNoneType2() {
     parse("@template T := none(a, b, c) =: */",
         "Bad type annotation. Found extra parameter in none");
+  }
+
+  public void testParserWithTTLTemplateTypeOperation() {
+    parse("@template T := type('Map', 'string', 'number') =: */");
+  }
+
+  public void testParserWithTTLTemplateTypeOperationGeneric() {
+    parse("@template T := type('Array', T) =: */");
+  }
+
+  public void testParserWithTTLTemplateTypeOperationGeneric2() {
+    parse("@template T := type(T, R) =: */");
+  }
+
+  public void testParserWithTTLTemplateTypeOperationNestedGeneric() {
+    parse("@template T := type(T, type(R, S)) =: */");
+  }
+
+  public void testParserWithTTLTemplateTypeOperationGenericWithUnion() {
+    parse("@template T := type(T, union(R, S)) =: */");
+  }
+
+  public void testParserWithTTLInvalidTemplateTypeOperationGenericUnion() {
+    parse("@template T := type(union(R, S), T) =: */",
+        "Bad type annotation. Invalid type name or type variable",
+        "Bad type annotation. Invalid expression inside template type operation");
+  }
+
+  public void testParserWithTTLInvalidTypeOperationNestedGeneric() {
+    parse("@template T := type(T, foo()) =: */",
+        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid expression inside template type operation");
   }
 
   public void testWhitelistedNewAnnotations() {

@@ -46,11 +46,11 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithValidBasicTypePredicate() {
-    testTTL(NUMBER_TYPE, "type('number')");
+    testTTL(NUMBER_TYPE, "'number'");
   }
 
   public void testTransformationWithBasicTypePredicateWithInvalidTypename() {
-    testTTL(UNKNOWN_TYPE, "type('foo')",
+    testTTL(UNKNOWN_TYPE, "'foo'",
         "Reference to an unknown type name foo");
   }
 
@@ -70,37 +70,37 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationWithValidUnionTypeOnlyTypePredicates() {
     testTTL(union(NUMBER_TYPE, STRING_TYPE),
-        "union(type('number'), type('string'))");
+        "union('number', 'string')");
   }
 
   public void testTransformationWithValidUnionTypeMixed() {
-    testTTL(union(NUMBER_TYPE, STRING_TYPE), "union(S, type('number'))");
+    testTTL(union(NUMBER_TYPE, STRING_TYPE), "union(S, 'number')");
   }
 
   public void testTransformationWithUnknownParameter() {
     // Returns ? because foo is not defined
-    testTTL(UNKNOWN_TYPE, "union(foo, type('number'))",
+    testTTL(UNKNOWN_TYPE, "union(foo, 'number')",
         "Reference to an unknown type variable foo");
   }
 
   public void testTransformationWithUnknownParameter2() {
     // Returns ? because foo is not defined
-    testTTL(UNKNOWN_TYPE, "union(N, type('foo'))",
+    testTTL(UNKNOWN_TYPE, "union(N, 'foo')",
         "Reference to an unknown type name foo");
   }
 
   public void testTransformationWithNestedUnionInFirstParameter() {
     testTTL(union(NUMBER_TYPE, NULL_TYPE, STRING_TYPE),
-        "union(union(N, type('null')), S)");
+        "union(union(N, 'null'), S)");
   }
 
   public void testTransformationWithNestedUnionInSecondParameter() {
     testTTL(union(NUMBER_TYPE, NULL_TYPE, STRING_TYPE),
-        "union(N, union(type('null'), S))");
+        "union(N, union('null', S))");
   }
 
   public void testTransformationWithRepeatedTypePredicate() {
-    testTTL(NUMBER_TYPE, "union(type('number'), type('number'))");
+    testTTL(NUMBER_TYPE, "union('number', 'number')");
   }
 
   public void testTransformationWithUndefinedTypeVar() {
@@ -108,57 +108,49 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithTrueEqtypeConditional() {
-    testTTL(STRING_TYPE, "cond(eq(N, N), type('string'), type('number'))");
+    testTTL(STRING_TYPE, "cond(eq(N, N), 'string', 'number')");
   }
 
   public void testTransformationWithFalseEqtypeConditional() {
-    testTTL(NUMBER_TYPE, "cond(eq(N, S), type('string'), type('number'))");
+    testTTL(NUMBER_TYPE, "cond(eq(N, S), 'string', 'number')");
   }
 
   public void testTransformationWithTrueSubtypeConditional() {
     testTTL(STRING_TYPE,
-        "cond( sub(type('Number'), type('Object')),"
-            + "type('string'),"
-            + "type('number'))");
+        "cond( sub('Number', 'Object'), 'string', 'number')");
   }
 
   public void testTransformationWithFalseSubtypeConditional() {
     testTTL(NUMBER_TYPE,
-        "cond( sub(type('Number'), type('String')),"
-            + "type('string'),"
-            + "type('number'))");
+        "cond( sub('Number', 'String'), 'string', 'number')");
   }
 
   public void testTransformationWithNestedExpressionInBooleanFirstParam() {
     testTTL(STRING_TYPE,
-        "cond( eq( cond(eq(N, N), type('string'), type('number')),"
-            +     "type('string')"
-            +    "),"
-            + "type('string'),"
-            + "type('number'))");
+        "cond( eq( cond(eq(N, N), 'string', 'number'), 'string'),"
+            + "'string', "
+            + "'number')");
   }
 
   public void testTransformationWithNestedExpressionInBooleanSecondParam() {
     testTTL(STRING_TYPE,
-        "cond( eq( type('string'),"
-        +          "cond(eq(N, N), type('string'), type('number'))"
-        +        "),"
-        +     "type('string'),"
-        +     "type('number'))");
+        "cond( eq( 'string', cond(eq(N, N), 'string', 'number')),"
+            + "'string', "
+            + "'number')");
   }
 
   public void testTransformationWithNestedExpressionInIfBranch() {
     testTTL(STRING_OBJECT_TYPE,
         "cond( eq(N, N),"
-        +     "cond(eq(N, S), type('string'), type('String')),"
-        +     "type('number'))");
+            + "cond(eq(N, S), 'string', 'String'),"
+            + "'number')");
   }
 
   public void testTransformationWithNestedExpressionInElseBranch() {
     testTTL(STRING_OBJECT_TYPE,
         "cond( eq(N, S),"
-        +     "type('number'),"
-        +     "cond(eq(N, S), type('string'), type('String')))");
+        +     "'number',"
+        +     "cond(eq(N, S), 'string', 'String'))");
   }
 
   public void testTransformationWithMapunionMappingEverythingToString() {
@@ -172,7 +164,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationWithMapunionWithUnionEvaluatedToANonUnion() {
     testTTL(NUMBER_TYPE,
-        "mapunion(union(N, type('number')), (x) => x)");
+        "mapunion(union(N, 'number'), (x) => x)");
   }
 
   public void testTransformationWithMapunionFilterWithOnlyString() {

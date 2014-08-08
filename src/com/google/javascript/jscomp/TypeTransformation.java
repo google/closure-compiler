@@ -48,22 +48,22 @@ class TypeTransformation {
     this.typeRegistry = compiler.getTypeRegistry();
   }
 
-  private static boolean isTypeVar(Node n) {
+  private boolean isTypeVar(Node n) {
     return n.isName();
   }
 
-  private static boolean isCallTo(Node n,
-      TypeTransformationParser.Keywords keyword) {
+  private boolean isTypeName(Node n) {
+    return n.isString();
+  }
+
+  private boolean isCallTo(Node n, TypeTransformationParser.Keywords keyword) {
     if (!n.isCall()) {
       return false;
     }
     return n.getFirstChild().getString().equals(keyword.name);
   }
 
-  /**
-   * Checks if the expression is type()
-   */
-  private static boolean isTypePredicate(Node n) {
+  private boolean isTypePredicate(Node n) {
     return isCallTo(n, TypeTransformationParser.Keywords.TYPE);
   }
 
@@ -103,10 +103,6 @@ class TypeTransformation {
     return getNativeType(JSTypeNative.NO_TYPE);
   }
 
-  private JSType typeOrUnknown(JSType type) {
-    return (type == null) ? getUnknownType() : type;
-  }
-
   private JSType union(JSType... variants) {
     return typeRegistry.createUnionType(variants);
   }
@@ -142,15 +138,15 @@ class TypeTransformation {
    * @return JSType The resulting type after the transformation
    */
   JSType eval(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
-    // Case type variable: T
+    if (isTypeName(ttlAst)) {
+      return evalTypeName(ttlAst);
+    }
     if (isTypeVar(ttlAst)) {
-      return evalTypeVariable(ttlAst, typeVars);
+      return evalTypeVar(ttlAst, typeVars);
     }
-    // Case basic type: type(typename)
     if (isTypePredicate(ttlAst)) {
-      return evalTypePredicate(ttlAst);
+      return evalTypePredicate(ttlAst, typeVars);
     }
-    // Case union type: union(BasicType, BasicType, ...)
     if (isUnionType(ttlAst)) {
       return evalUnionType(ttlAst, typeVars);
     }
@@ -167,26 +163,32 @@ class TypeTransformation {
         "Could not evaluate the type transformation expression");
   }
 
-  private JSType evalTypePredicate(Node ttlAst) {
-    String typeName = ttlAst.getChildAtIndex(1).getString();
+  private JSType evalTypeName(Node ttlAst) {
+    String typeName = ttlAst.getString();
     JSType resultingType = typeRegistry.getType(typeName);
-    // If the type name is not defined then return UNKNOWN
+    // If the type name is not defined then return UNKNOWN and report a warning
     if (resultingType == null) {
       compiler.report(JSError.make(ttlAst, UNKNOWN_TYPENAME, typeName));
+      return getUnknownType();
     }
-    return typeOrUnknown(resultingType);
+    return resultingType;
   }
 
-  private JSType evalTypeVariable(Node ttlAst,
+  private JSType evalTypePredicate(Node ttlAst, 
       ImmutableMap<String, JSType> typeVars) {
+    // TODO(lpino): Implement evaluation of template type construction
+    throw new IllegalStateException("Operation not yet supported");
+  }
+
+  private JSType evalTypeVar(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
     String typeVar = ttlAst.getString();
     JSType resultingType = typeVars.get(typeVar);
-    // If the type variable is not found in the environment then it will be
-    // taken as UNKNOWN
+    // If the type variable is not defined then return UNKNOWN and report a warning
     if (resultingType == null) {
       compiler.report(JSError.make(ttlAst, UNKNOWN_TYPEVAR, typeVar));
+      return getUnknownType();
     }
-    return typeOrUnknown(resultingType);
+    return resultingType;
   }
 
   private JSType evalUnionType(Node ttlAst,
@@ -239,7 +241,7 @@ class TypeTransformation {
     if (isUnionType(unionParam)) {
       unionType = evalUnionType(unionParam, typeVars);
     } else if (isTypeVar(unionParam)) {
-      unionType = typeOrUnknown(typeVars.get(unionParam.getString()));
+      unionType = evalTypeVar(unionParam, typeVars);
     } else {
       throw new IllegalStateException("Invalid union type parameter in mapunion");
     }
