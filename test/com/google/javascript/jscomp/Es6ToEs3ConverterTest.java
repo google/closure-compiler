@@ -837,6 +837,14 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  $jscomp$this.doThings();",
         "  $jscomp$this.done();",
         "};"));
+
+    test("switch(a) { case b: (() => { this; })(); }", Joiner.on('\n').join(
+        "switch(a) {",
+        "  case b:",
+        "    var $jscomp$this = this;",
+        "    (function() { $jscomp$this; })();",
+        "}"
+     ));
   }
 
   public void testMultipleArrowsInSameScope() {

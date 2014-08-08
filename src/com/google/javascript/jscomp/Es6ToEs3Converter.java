@@ -837,7 +837,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       // Add the new node at the beginning of the function body.
       parent = parent.getLastChild();
     }
-    if (parent.isSyntheticBlock()) {
+    if (parent.isSyntheticBlock() && parent.getFirstChild().isScript()) {
       // Add the new node inside the SCRIPT node instead of the
       // synthetic block that contains it.
       parent = parent.getFirstChild();
