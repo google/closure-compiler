@@ -410,9 +410,9 @@ class CollapseProperties implements CompilerPass {
               warnAboutNamespaceRedefinition(name, ref);
             }
           } else if (
-              ref.type == Ref.Type.SET_FROM_GLOBAL ||
-              ref.type == Ref.Type.SET_FROM_LOCAL) {
-            if (initialized) {
+              ref.type == Ref.Type.SET_FROM_GLOBAL
+              || ref.type == Ref.Type.SET_FROM_LOCAL) {
+            if (initialized && !isSafeNamespaceReinit(ref)) {
               warnAboutNamespaceRedefinition(name, ref);
             }
 
@@ -423,6 +423,33 @@ class CollapseProperties implements CompilerPass {
         }
       }
     }
+  }
+
+  private boolean isSafeNamespaceReinit(Ref ref) {
+    // allow "a = a || {}" or "var a = a || {}"
+    Node valParent = getValueParent(ref);
+    Node val = valParent.getLastChild();
+    if (val.getType() == Token.OR) {
+      Node maybeName = val.getFirstChild();
+      if (ref.node.matchesQualifiedName(maybeName)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Gets the parent node of the value for any assignment to a Name.
+   * For example, in the assignment
+   * {@code var x = 3;}
+   * the parent would be the NAME node.
+   */
+  private static Node getValueParent(Ref ref) {
+    // there are two types of declarations: VARs and ASSIGNs
+    return (ref.node.getParent() != null
+        && ref.node.getParent().isVar())
+        ? ref.node : ref.node.getParent();
   }
 
   /**

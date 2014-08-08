@@ -539,6 +539,17 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          null, CollapseProperties.NAMESPACE_REDEFINED_WARNING);
   }
 
+  public void testNamespaceResetInGlobalScope3() {
+    test("var a = {}; /** @constructor */a.b = function() {}; a = a || {};",
+         "var a = {}; var a$b = function() {}; a = a || {};");
+  }
+
+
+  public void testNamespaceResetInGlobalScope4() {
+    test("var a = {}; /** @constructor */a.b = function() {}; var a = a || {};",
+         "var a = {}; var a$b = function() {}; var a = a || {};");
+  }
+
   public void testNamespaceResetInLocalScope1() {
     test("var a = {}; /** @constructor */a.b = function() {};" +
          " function f() { a = {}; }",
