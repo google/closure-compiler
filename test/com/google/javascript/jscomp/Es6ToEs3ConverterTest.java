@@ -1859,9 +1859,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function *f() {switch (i) {default: case 1: yield 1;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("function *f() {for (i in j) { yield 1; }}",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
     test("function *f() {try {} catch (e) { yield 1; } finally {}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
@@ -2457,6 +2454,49 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "          $jscomp$generator$state = -1;",
         "          throw 1;",
         "        case 1:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+  }
+
+  public void testGeneratorForIn() {
+    test("function *f() { for (var i in j) { yield 1; } }", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var i;",
+        "  var $jscomp$generator$forin$var0;",
+        "  var $jscomp$generator$forin$array0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          $jscomp$generator$forin$array0 = [];",
+        "          for ($jscomp$generator$forin$var0 in j) {",
+        "            $jscomp$generator$forin$array0.push($jscomp$generator$forin$var0);",
+        "          }",
+        "          $jscomp$generator$forin$var0 = 0;",
+        "        case 1:",
+        "          if (!($jscomp$generator$forin$var0",
+        "              < $jscomp$generator$forin$array0.length)) {",
+        "            $jscomp$generator$state = 3;",
+        "            break;",
+        "          }",
+        "          i = $jscomp$generator$forin$array0[$jscomp$generator$forin$var0];",
+        "          $jscomp$generator$state = 4;",
+        "          return{value:1, done:false};",
+        "        case 4:",
+        "        case 2:",
+        "          $jscomp$generator$forin$var0++;",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "        case 3:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",

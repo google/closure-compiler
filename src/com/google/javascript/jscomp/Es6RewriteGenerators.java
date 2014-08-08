@@ -80,6 +80,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String GENERATOR_ERROR = "$jscomp$generator$global$error";
 
+  private static final String GENERATOR_FOR_IN_ARRAY = "$jscomp$generator$forin$array";
+
+  private static final String GENERATOR_FOR_IN_VAR = "$jscomp$generator$forin$var";
+
   // Maintains a stack of numbers which identify the cases which mark the end of loops. These
   // are used to manage jump destinations for break and continue statements.
   private List<LoopContext> currentLoopContext;
@@ -304,8 +308,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         case Token.DO:
         case Token.FOR:
           if (NodeUtil.isForIn(currentStatement)) {
-            compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-              "For...in loops containing yield or return"));
+            visitForIn();
             return false;
           }
           visitLoop();
@@ -555,6 +558,62 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   /**
+   * For in loops are eventually translated to a for in loop which produces an array of
+   * values iterated over followed by a plain for loop which performs the logic
+   * contained in the body of the original for in.
+   *
+   * <code>
+   * for (i in j) {
+   *   s;
+   * }
+   * </code>
+   *
+   * is eventually rewritten to:
+   *
+   * <code>
+   * $jscomp$arr = []
+   * for ($jscomp$var in j) {
+   *   $jscomp$arr.push($jscomp$var);
+   * }
+   * for ($jscomp$var = 0; $jscomp$var < $jscomp$arr.length; $jscomp$var++) {
+   *   i = $jscomp$arr[$jscomp$var];
+   *   s;
+   * }
+   * </code>
+   */
+  private void visitForIn() {
+    Node variable = currentStatement.removeFirstChild();
+    Node iterable = currentStatement.removeFirstChild();
+    Node body = currentStatement.removeFirstChild();
+
+    String loopId = generatorCounter.get();
+    Node arrayName = IR.name(GENERATOR_FOR_IN_ARRAY + loopId);
+    Node varName = IR.name(GENERATOR_FOR_IN_VAR + loopId);
+
+    if (variable.isVar()) {
+      variable = variable.removeFirstChild();
+    }
+    body.addChildToFront(IR.var(variable,
+        IR.getelem(arrayName.cloneTree(), varName.cloneTree())));
+    hoistRoot.getParent().addChildAfter(IR.var(arrayName.cloneTree()), hoistRoot);
+    hoistRoot.getParent().addChildAfter(IR.var(varName.cloneTree()), hoistRoot);
+
+    Node arrayDef = IR.exprResult(IR.assign(arrayName.cloneTree(), IR.arraylit()));
+    Node newForIn = IR.forIn(varName.cloneTree(), iterable,
+        IR.block(IR.exprResult(
+            IR.call(IR.getprop(arrayName.cloneTree(), IR.string("push")),
+                varName.cloneTree()))));
+    Node newFor = IR.forNode(IR.assign(varName.cloneTree(), IR.number(0)),
+        IR.lt(varName.cloneTree(), IR.getprop(arrayName, IR.string("length"))),
+        IR.inc(varName, true),
+        body);
+
+    enclosingBlock.addChildToBack(arrayDef);
+    enclosingBlock.addChildToBack(newForIn);
+    originalGeneratorBody.addChildToFront(newFor);
+  }
+
+  /**
    * Loops are eventually translated to a case statement followed by an if statement
    * containing the loop body. The if statement finishes by
    * jumping back to the initial case statement to enter the loop again.
@@ -591,6 +650,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       postExpression = IR.empty();
     } else if (currentStatement.isFor()) {
       initializer = currentStatement.removeFirstChild();
+      if (initializer.isAssign()) {
+        initializer = IR.exprResult(initializer);
+      }
       condition = currentStatement.removeFirstChild();
       if (condition.isEmpty()) {
         condition = IR.trueNode();
