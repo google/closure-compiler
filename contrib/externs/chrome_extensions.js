@@ -6269,3 +6269,194 @@ chrome.mdns.ServiceListEvent.prototype.hasListeners = function() {};
 
 /** @type {!chrome.mdns.ServiceListEvent} */
 chrome.mdns.onServiceList;
+
+
+/**
+ * @const
+ * @see http://goo.gl/79p5h5
+ */
+chrome.gcdPrivate = {};
+
+
+/**
+ * Represents a GCD device discovered locally or registered to a given user.
+ * deviceId: Opaque device identifier to be passed to API.
+ * setupType: How this device was discovered.
+ * cloudId: Cloud identifier string.
+ * deviceName: Device human readable name.
+ * deviceType: Device type (camera, printer, etc).
+ * deviceDescription: Device human readable description.
+ * @typedef {?{
+ *   deviceId: string,
+ *   setupType: string,
+ *   cloudId: (string|undefined),
+ *   deviceType: string,
+ *   deviceName: string,
+ *   deviceDescription: string
+ * }}
+ */
+chrome.gcdPrivate.Device;
+
+
+/**
+ * Returns the list of cloud devices visible locally or available in the
+ * cloud for user account.
+ * @param {function(!Array.<!chrome.gcdPrivate.Device>): void} callback
+ */
+chrome.gcdPrivate.getCloudDeviceList = function(callback) {};
+
+
+/**
+ * Queries network for local devices. Triggers onDeviceStateChanged and
+ * onDeviceRemoved events. Call this function *only* after registering for
+ * onDeviceStateChanged and onDeviceRemoved events, or it will do nothing.
+ */
+chrome.gcdPrivate.queryForNewLocalDevices = function() {};
+
+
+/**
+ * Cache the WiFi password in the browser process for use during
+ * provisioning. This is done to allow the gathering of the wifi password to
+ * not be done while connected to the device's network. Callback is called
+ * with true if wifi password was cached and false if it was unavailable.
+ * @param {string} ssid
+ * @param {function(boolean): void} callback
+ */
+chrome.gcdPrivate.prefetchWifiPassword = function(ssid, callback) {};
+
+
+/**
+ * Establish the session.
+ * @param {string} ipAddress
+ * @param {number} port
+ * @param {function(number, string, string, string): void} callback Called when
+ *     the confirmation code is available or on error. 1st param, |sessionId|,
+ *     is the session ID (identifies the session for future calls). 2nd param,
+ *     |status|, is the status (success or type of error). 3rd param, |code|, is
+ *     the confirmation code or empty on error. 4th param, |confirmationType|,
+ *     is the type of confirmation required.
+ */
+chrome.gcdPrivate.establishSession = function(ipAddress, port, callback) {};
+
+
+/**
+ * Confirm that the code is correct. Device will still need to confirm.
+ * @param {number} sessionId
+ * @param {function(string): void} callback
+ */
+chrome.gcdPrivate.confirmCode = function(sessionId, callback) {};
+
+
+/**
+ * Send an encrypted message to the device. If the message is a setup message
+ * with a wifi ssid specified but no password, the password cached from
+ * prefetchWifiPassword() will be used and the call will fail if it's not
+ * available. For open networks use an empty string as the password.
+ * @param {number} sessionId
+ * @param {string} api The API path.
+ * @param {!Object} input The input message to be sent over the encrypted
+ *     channel.
+ * @param {function(string, ?Object): void} callback
+ */
+chrome.gcdPrivate.sendMessage = function(sessionId, api, input, callback) {};
+
+
+/**
+ * Terminate the session with the device.
+ * @param {number} sessionId
+ */
+chrome.gcdPrivate.terminateSession = function(sessionId) {};
+
+
+/**
+ * Returns command definitions.
+ * @param {string} deviceId The device to get command definitions for.
+ * @param {function(!Object): void} callback The result callback.
+ */
+chrome.gcdPrivate.getCommandDefinitions = function(deviceId, callback) {};
+
+
+/**
+ * Creates and sends a new command.
+ * @param {string} deviceId The device to send the command to.
+ * @param {number} expireInMs The number of milliseconds since now before the
+ *     command expires. An expired command should not be executed by the device.
+ *     Acceptable values are 10 sec (10000 ms) to 30 days (2592000000 ms),
+ *     inclusive. All values outside that range will be replaced by 30 days.
+ * @param {!Object} command Described at
+ *     https://developers.google.com/cloud-devices/v1/reference/commands.
+ * @param {function(!Object): void} callback  The result callback.
+ */
+chrome.gcdPrivate.insertCommand = function(
+    deviceId, expireInMs, command, callback) {};
+
+
+/**
+ * Returns a particular command.
+ * @param {string} commandId Unique command ID.
+ * @param {function(!Object): void} callback  The result callback.
+ */
+chrome.gcdPrivate.getCommand = function(commandId, callback) {};
+
+
+/**
+ * Cancels a command.
+ * @param {string} commandId Unique command ID.
+ * @param {function(!Object): void} callback  The result callback.
+ */
+chrome.gcdPrivate.cancelCommand = function(commandId, callback) {};
+
+
+/**
+ * Lists all commands in order of creation.
+ * @param {string} deviceId The device to send the command to.
+ * @param {string} byUser List all the commands issued by the user. Special
+ *     value 'me' can be used to list by the current user.
+ * @param {string} state Command state.
+ * @param {function(!Array.<!Object>): void} callback  The result callback.
+ */
+chrome.gcdPrivate.getCommandsList = function(
+    deviceId, byUser, state, callback) {};
+
+
+/**
+ * Event whose listeners take a chrome.gcdPrivate.Device.
+ * @constructor
+ */
+chrome.gcdPrivate.DeviceEvent = function() {};
+
+
+/** @param {function(!chrome.gcdPrivate.Device): void} callback */
+chrome.gcdPrivate.DeviceEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(!chrome.gcdPrivate.Device): void} callback */
+chrome.gcdPrivate.DeviceEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.gcdPrivate.Device): void} callback
+ * @return {boolean}
+ */
+chrome.gcdPrivate.DeviceEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+chrome.gcdPrivate.DeviceEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * Fires when a device's state changes. When a listener is first added, this
+ * event fires for all known devices on the network. Afterwards, it will fire
+ * with device status updates.
+ * @type {!chrome.gcdPrivate.DeviceEvent}
+ */
+chrome.gcdPrivate.onDeviceStateChanged;
+
+
+/**
+ * Fires when a given device disappears.
+ * |deviceId| The device that has disappeared.
+ * @type {!ChromeStringEvent}
+ */
+chrome.gcdPrivate.onDeviceRemoved;
