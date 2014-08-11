@@ -22,10 +22,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalTypeInfo.Scope;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -39,10 +36,12 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -227,9 +226,9 @@ public class NewTypeInference implements CompilerPass {
   NewTypeInference(AbstractCompiler compiler, boolean isClosurePassOn) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
-    this.envs = Maps.newHashMap();
-    this.summaries = Maps.newHashMap();
-    this.deferredChecks = Maps.newHashMap();
+    this.envs = new HashMap<>();
+    this.summaries = new HashMap<>();
+    this.deferredChecks = new HashMap<>();
     this.isClosurePassOn = isClosurePassOn;
   }
 
@@ -298,7 +297,7 @@ public class NewTypeInference implements CompilerPass {
       return envs.get(inEdges.get(0));
     }
 
-    Set<TypeEnv> envSet = Sets.newHashSet();
+    Set<TypeEnv> envSet = new HashSet<>();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : inEdges) {
       TypeEnv env = envs.get(de);
       if (env != null) {
@@ -319,7 +318,7 @@ public class NewTypeInference implements CompilerPass {
       return envs.get(outEdges.get(0));
     }
 
-    Set<TypeEnv> envSet = Sets.newHashSet();
+    Set<TypeEnv> envSet = new HashSet<>();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : outEdges) {
       TypeEnv env = envs.get(de);
       if (env != null) {
@@ -539,7 +538,7 @@ public class NewTypeInference implements CompilerPass {
     // The size is > 1 when multiple files are compiled
     // Preconditions.checkState(cfg.getEntry().getOutEdges().size() == 1);
     List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset =
-        Lists.newLinkedList();
+        new LinkedList<>();
     buildWorkset(cfg.getEntry(), workset);
     /* println("Workset: ", workset); */
     if (scope.isFunction() && scope.hasUndeclaredFormalsOrOuters()) {
@@ -1490,7 +1489,7 @@ public class NewTypeInference implements CompilerPass {
       println("Instantiated function type: " + funType);
     }
     // argTypes collects types of actuals for deferred checks.
-    List<JSType> argTypes = Lists.newArrayList();
+    List<JSType> argTypes = new ArrayList<>();
     TypeEnv tmpEnv = inEnv;
     Node arg = expr.getChildAtIndex(1);
     for (int i = 0; i < numArgs; i++) {
@@ -1804,7 +1803,7 @@ public class NewTypeInference implements CompilerPass {
         // Unification may fail b/c of types irrelevant to generics, eg,
         // number vs string.
         // In this case, don't warn here; we'll show invalid-arg-type later.
-        HashMap<String, JSType> tmpTypeMap = Maps.newHashMap();
+        HashMap<String, JSType> tmpTypeMap = new HashMap<>();
         for (String typeParam : typeParameters) {
           tmpTypeMap.put(typeParam, JSType.UNKNOWN);
         }
@@ -1896,29 +1895,7 @@ public class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeObjLitFwd(
       Node objLit, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     if (NodeUtil.isEnumDecl(objLit.getParent().getParent())) {
-      // We warn about malformed enum declarations in GlobalTypeInfo,
-      // so we ignore them here.
-      if (objLit.getFirstChild() == null) {
-        return new EnvTypePair(inEnv, requiredType);
-      }
-      String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
-      JSType enumeratedType =
-          requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
-      if (enumeratedType == null) {
-        return new EnvTypePair(inEnv, requiredType);
-      }
-      TypeEnv env = inEnv;
-      for (Node prop : objLit.children()) {
-        EnvTypePair pair =
-            analyzeExprFwd(prop.getFirstChild(), env, enumeratedType);
-        if (!pair.type.isSubtypeOf(enumeratedType)) {
-          warnings.add(JSError.make(
-              prop, INVALID_OBJLIT_PROPERTY_TYPE,
-              enumeratedType.toString(), pair.type.toString()));
-        }
-        env = pair.env;
-      }
-      return new EnvTypePair(env, requiredType);
+      return analyzeEnumObjLitFwd(objLit, inEnv, requiredType);
     }
     JSDocInfo jsdoc = objLit.getJSDocInfo();
     boolean isStruct = jsdoc != null && jsdoc.makesStructs();
@@ -1930,8 +1907,7 @@ public class NewTypeInference implements CompilerPass {
         warnings.add(
             JSError.make(prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "struct"));
       } else if (isDict && !prop.isQuotedString()) {
-        warnings.add(
-            JSError.make(prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "dict"));
+        warnings.add(JSError.make(prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "dict"));
       }
       String pname = NodeUtil.getObjectLitKeyName(prop);
       // We can't assign to a getter to change its value.
@@ -1986,6 +1962,34 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     return new EnvTypePair(env, result);
+  }
+
+  private EnvTypePair analyzeEnumObjLitFwd(
+      Node objLit, TypeEnv inEnv, JSType requiredType) {
+    // We warn about malformed enum declarations in GlobalTypeInfo,
+    // so we ignore them here.
+    if (objLit.getFirstChild() == null) {
+      return new EnvTypePair(inEnv, requiredType);
+    }
+    String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
+    JSType enumeratedType =
+        requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
+    if (enumeratedType == null) {
+      // enumeratedType is null only if there is some other type error
+      return new EnvTypePair(inEnv, requiredType);
+    }
+    TypeEnv env = inEnv;
+    for (Node prop : objLit.children()) {
+      EnvTypePair pair =
+          analyzeExprFwd(prop.getFirstChild(), env, enumeratedType);
+      if (!pair.type.isSubtypeOf(enumeratedType)) {
+        warnings.add(JSError.make(
+            prop, INVALID_OBJLIT_PROPERTY_TYPE,
+            enumeratedType.toString(), pair.type.toString()));
+      }
+      env = pair.env;
+    }
+    return new EnvTypePair(env, requiredType);
   }
 
   private EnvTypePair analyzeGoogTypePredicate(
@@ -2753,22 +2757,7 @@ public class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeObjLitBwd(
       Node objLit, TypeEnv outEnv, JSType requiredType) {
     if (NodeUtil.isEnumDecl(objLit.getParent().getParent())) {
-      if (objLit.getFirstChild() == null) {
-        return new EnvTypePair(outEnv, requiredType);
-      }
-      String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
-      JSType enumeratedType =
-          requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
-      if (enumeratedType == null) {
-        return new EnvTypePair(outEnv, requiredType);
-      }
-      TypeEnv env = outEnv;
-      for (Node prop = objLit.getLastChild();
-           prop != null;
-           prop = objLit.getChildBefore(prop)) {
-        env = analyzeExprBwd(prop.getFirstChild(), env, enumeratedType).env;
-      }
-      return new EnvTypePair(env, requiredType);
+      return analyzeEnumObjLitBwd(objLit, outEnv, requiredType);
     }
     TypeEnv env = outEnv;
     JSType result = pickReqObjType(objLit);
@@ -2795,6 +2784,26 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     return new EnvTypePair(env, result);
+  }
+
+  private EnvTypePair analyzeEnumObjLitBwd(
+      Node objLit, TypeEnv outEnv, JSType requiredType) {
+    if (objLit.getFirstChild() == null) {
+      return new EnvTypePair(outEnv, requiredType);
+    }
+    String pname = NodeUtil.getObjectLitKeyName(objLit.getFirstChild());
+    JSType enumeratedType =
+        requiredType.getProp(new QualifiedName(pname)).getEnumeratedType();
+    if (enumeratedType == null) {
+      return new EnvTypePair(outEnv, requiredType);
+    }
+    TypeEnv env = outEnv;
+    for (Node prop = objLit.getLastChild();
+         prop != null;
+         prop = objLit.getChildBefore(prop)) {
+      env = analyzeExprBwd(prop.getFirstChild(), env, enumeratedType).env;
+    }
+    return new EnvTypePair(env, requiredType);
   }
 
   static final ImmutableSet<String> googPredicates =

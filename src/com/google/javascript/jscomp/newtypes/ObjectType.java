@@ -20,7 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -814,7 +814,7 @@ public class ObjectType implements TypeWithProperties {
     if (nominalType == null || !props.isEmpty()) {
       builder.append('{');
       boolean firstIteration = true;
-      for (String pname : Sets.newTreeSet(props.keySet())) {
+      for (String pname : new TreeSet<>(props.keySet())) {
         if (firstIteration) {
           firstIteration = false;
         } else {

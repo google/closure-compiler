@@ -20,10 +20,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +71,7 @@ public class NominalType {
 
   NominalType instantiateGenerics(List<JSType> types) {
     Preconditions.checkState(types.size() == rawType.typeParameters.size());
-    Map<String, JSType> typeMap = Maps.newHashMap();
+    Map<String, JSType> typeMap = new HashMap<>();
     for (int i = 0; i < rawType.typeParameters.size(); i++) {
       typeMap.put(rawType.typeParameters.get(i), types.get(i));
     }
@@ -549,7 +548,7 @@ public class NominalType {
     }
 
     public Set<String> getAllOwnProps() {
-      Set<String> ownProps = Sets.newHashSet();
+      Set<String> ownProps = new HashSet<>();
       ownProps.addAll(classProps.keySet());
       ownProps.addAll(protoProps.keySet());
       return ownProps;
@@ -772,6 +771,7 @@ public class NominalType {
       appendGenericSuffixTo(builder, ImmutableMap.<String, JSType>of());
       return builder.toString();
     }
+
     @Override
     public JSType toJSType() {
       Preconditions.checkState(ctorFn != null);

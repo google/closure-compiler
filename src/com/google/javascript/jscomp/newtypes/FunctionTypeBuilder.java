@@ -18,9 +18,9 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,9 +41,9 @@ public class FunctionTypeBuilder {
     }
   }
 
-  private final List<JSType> requiredFormals = Lists.newArrayList();
-  private final List<JSType> optionalFormals = Lists.newArrayList();
-  private final Map<String, JSType> outerVars = Maps.newHashMap();
+  private final List<JSType> requiredFormals = new ArrayList<>();
+  private final List<JSType> optionalFormals = new ArrayList<>();
+  private final Map<String, JSType> outerVars = new HashMap<>();
   private JSType restFormals = null;
   private JSType returnType = null;
   private boolean loose = false;

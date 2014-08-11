@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -87,10 +87,10 @@ public class DeclaredFunctionType {
       NominalType receiverType,
       ImmutableList<String> typeParameters) {
     if (requiredFormals == null) {
-      requiredFormals = Lists.newArrayList();
+      requiredFormals = new ArrayList<>();
     }
     if (optionalFormals == null) {
-      optionalFormals = Lists.newArrayList();
+      optionalFormals = new ArrayList<>();
     }
     return new DeclaredFunctionType(
         requiredFormals, optionalFormals, restFormals, retType,

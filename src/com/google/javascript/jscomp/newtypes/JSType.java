@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -402,7 +403,7 @@ public abstract class JSType {
   private static void updateTypemap(
       Multimap<String, JSType> typeMultimap,
       String typeParam, JSType type) {
-    Set<JSType> typesToRemove = Sets.newHashSet();
+    Set<JSType> typesToRemove = new HashSet<>();
     for (JSType other : typeMultimap.get(typeParam)) {
       JSType unified = unifyUnknowns(type, other);
       if (unified != null) {
@@ -482,8 +483,8 @@ public abstract class JSType {
       return null;
     }
 
-    Set<ObjectType> ununified = Sets.newHashSet(t2.getObjs());
-    Set<ObjectType> unifiedObjs = Sets.newHashSet();
+    Set<ObjectType> ununified = new HashSet<>(t2.getObjs());
+    Set<ObjectType> unifiedObjs = new HashSet<>();
     for (ObjectType objType1 : t1.getObjs()) {
       ObjectType unified = objType1;
       boolean hasUnified = false;
@@ -537,7 +538,7 @@ public abstract class JSType {
     } else if (other.getEnums() == null) {
       return false;
     } else {
-      ununifiedEnums = Sets.newHashSet();
+      ununifiedEnums = new HashSet<>();
       for (EnumType e : getEnums()) {
         if (!other.getEnums().contains(e)) {
           return false;
@@ -555,7 +556,7 @@ public abstract class JSType {
 
     Set<ObjectType> ununified = ImmutableSet.of();
     if (other.getObjs() != null) {
-      ununified = Sets.newHashSet(other.getObjs());
+      ununified = new HashSet<>(other.getObjs());
     }
     // Each obj in this must unify w/ exactly one obj in other.
     // However, we don't check that two different objects of this don't unify
@@ -697,7 +698,7 @@ public abstract class JSType {
           newMask &= ~enumeratedType.getMask();
         }
       } else if (objs1 != null || objs2 != null) {
-        Set<ObjectType> objsToRemove = Sets.newHashSet();
+        Set<ObjectType> objsToRemove = new HashSet<>();
         ObjectType enumObj = Iterables.getOnlyElement(enumeratedType.getObjs());
         if (objs1 != null) {
           for (ObjectType obj1 : objs1) {
@@ -1042,7 +1043,7 @@ public abstract class JSType {
                 if (getObjs().size() == 1) {
                   Iterables.getOnlyElement(getObjs()).appendTo(builder);
                 } else {
-                  Set<String> strReps = Sets.newTreeSet();
+                  Set<String> strReps = new TreeSet<>();
                   for (ObjectType obj : getObjs()) {
                     strReps.add(obj.toString());
                   }
@@ -1055,7 +1056,7 @@ public abstract class JSType {
                 if (getEnums().size() == 1) {
                   builder.append(Iterables.getOnlyElement(getEnums()));
                 } else {
-                  Set<String> strReps = Sets.newTreeSet();
+                  Set<String> strReps = new TreeSet<>();
                   for (EnumType e : getEnums()) {
                     strReps.add(e.toString());
                   }

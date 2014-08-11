@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.collect.Sets;
-
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -30,17 +29,17 @@ public class NaivePersistentSet<K> extends PersistentSet<K> {
   }
 
   public static <K> PersistentSet<K> create()  {
-    return new NaivePersistentSet<K>(Sets.<K>newHashSet());
+    return new NaivePersistentSet<K>(new HashSet<K>());
   }
 
   public PersistentSet<K> with(K key) {
-    Set<K> newSet = Sets.newHashSet(this.set);
+    Set<K> newSet = new HashSet<>(this.set);
     newSet.add(key);
     return new NaivePersistentSet<>(newSet);
   }
 
   public PersistentSet<K> without(K key) {
-    Set<K> newSet = Sets.newHashSet(this.set);
+    Set<K> newSet = new HashSet<>(this.set);
     newSet.remove(key);
     return new NaivePersistentSet<>(newSet);
   }

@@ -20,8 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -29,6 +27,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,7 +56,7 @@ public class JSTypeCreatorFromJSDoc {
 
   private SimpleErrorReporter reporter = new SimpleErrorReporter();
   // Unknown type names indexed by JSDoc AST node at which they were found.
-  private Map<Node, String> unknownTypeNames = Maps.newHashMap();
+  private Map<Node, String> unknownTypeNames = new HashMap<>();
 
   public JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
       RawNominalType ownerType, DeclaredTypeRegistry registry) {
@@ -74,7 +74,7 @@ public class JSTypeCreatorFromJSDoc {
   }
 
   public Set<String> getWarnings() {
-    Set<String> warnings = Sets.newHashSet();
+    Set<String> warnings = new HashSet<>();
     if (reporter.warnings() != null) {
       warnings.addAll(reporter.warnings());
     }
@@ -169,7 +169,7 @@ public class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
-    Map<String, JSType> fields = Maps.newHashMap();
+    Map<String, JSType> fields = new HashMap<>();
     // For each of the fields in the record type.
     for (Node fieldTypeNode = n.getFirstChild().getFirstChild();
          fieldTypeNode != null;

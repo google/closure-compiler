@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.collect.Maps;
-
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,17 +29,17 @@ public class NaivePersistentMap<K, V> extends PersistentMap<K, V> {
   }
 
   public static <K, V> PersistentMap<K, V> create()  {
-    return new NaivePersistentMap<>(Maps.<K, V>newHashMap());
+    return new NaivePersistentMap<>(new HashMap<K, V>());
   }
 
   public PersistentMap<K, V> with(K key, V value) {
-    Map<K, V> newMap = Maps.newHashMap(this);
+    Map<K, V> newMap = new HashMap<>(this);
     newMap.put(key, value);
     return new NaivePersistentMap<>(newMap);
   }
 
   public PersistentMap<K, V> without(K key) {
-    Map<K, V> newMap = Maps.newHashMap(this);
+    Map<K, V> newMap = new HashMap<>(this);
     newMap.remove(key);
     return new NaivePersistentMap<>(newMap);
   }
