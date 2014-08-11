@@ -16,15 +16,16 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -42,6 +43,9 @@ class TypeTransformation {
   static final DiagnosticType UNKNOWN_TYPENAME =
       DiagnosticType.warning("TYPENAME_UNDEFINED",
           "Reference to an unknown type name {0}");
+  static final DiagnosticType BASETYPE_INVALID =
+      DiagnosticType.warning("BASETYPE_INVALID",
+          "The type {0} cannot be templatized");
 
   TypeTransformation(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -91,8 +95,16 @@ class TypeTransformation {
     return isCallTo(n, TypeTransformationParser.Keywords.NONE);
   }
 
+  private JSType getType(String name) {
+    return typeRegistry.getType(name);
+  }
+
   private JSType getNativeType(JSTypeNative type) {
     return typeRegistry.getNativeObjectType(type);
+  }
+
+  private boolean isTemplatizable(JSType type) {
+    return typeRegistry.isTemplatizable(type);
   }
 
   private JSType getUnknownType() {
@@ -103,8 +115,16 @@ class TypeTransformation {
     return getNativeType(JSTypeNative.NO_TYPE);
   }
 
-  private JSType union(JSType... variants) {
+  private JSType createUnionType(JSType... variants) {
     return typeRegistry.createUnionType(variants);
+  }
+
+  private JSType createTemplatizedType(ObjectType baseType, JSType[] params) {
+    return typeRegistry.createTemplatizedType(baseType, params);
+  }
+
+  private void reportWarning(Node n, DiagnosticType msg, String param) {
+    compiler.report(JSError.make(n, msg, param));
   }
 
   private ImmutableMap<String, JSType> addNewVar(
@@ -119,13 +139,13 @@ class TypeTransformation {
     return functionNode.getChildAtIndex(1).getChildAtIndex(index).getString();
   }
 
-  private ArrayList<Node> getParameters(Node operation) {
-    ArrayList<Node> params = new ArrayList<Node>();
+  private ImmutableList<Node> getParameters(Node operation) {
+    ImmutableList.Builder<Node> builder = new ImmutableList.Builder<Node>();
     // Omit the keyword (first child)
     for (int i = 1; i < operation.getChildCount(); i++) {
-      params.add(operation.getChildAtIndex(i));
+      builder.add(operation.getChildAtIndex(i));
     }
-    return params;
+    return builder.build();
   }
 
   /** Evaluates the type transformation expression and returns the resulting
@@ -145,7 +165,7 @@ class TypeTransformation {
       return evalTypeVar(ttlAst, typeVars);
     }
     if (isTypePredicate(ttlAst)) {
-      return evalTypePredicate(ttlAst, typeVars);
+      return evalTemplatizedType(ttlAst, typeVars);
     }
     if (isUnionType(ttlAst)) {
       return evalUnionType(ttlAst, typeVars);
@@ -165,19 +185,33 @@ class TypeTransformation {
 
   private JSType evalTypeName(Node ttlAst) {
     String typeName = ttlAst.getString();
-    JSType resultingType = typeRegistry.getType(typeName);
+    JSType resultingType = getType(typeName);
     // If the type name is not defined then return UNKNOWN and report a warning
     if (resultingType == null) {
-      compiler.report(JSError.make(ttlAst, UNKNOWN_TYPENAME, typeName));
+      reportWarning(ttlAst, UNKNOWN_TYPENAME, typeName);
       return getUnknownType();
     }
     return resultingType;
   }
 
-  private JSType evalTypePredicate(Node ttlAst, 
+  private JSType evalTemplatizedType(Node ttlAst,
       ImmutableMap<String, JSType> typeVars) {
-    // TODO(lpino): Implement evaluation of template type construction
-    throw new IllegalStateException("Operation not yet supported");
+    ImmutableList<Node> params = getParameters(ttlAst);
+    JSType firstParam = eval(params.get(0), typeVars);
+    if (!isTemplatizable(firstParam)) {
+      reportWarning(ttlAst, BASETYPE_INVALID, firstParam.toString());
+      return getUnknownType();
+    }
+    ObjectType baseType = firstParam.toObjectType();
+    // TODO(lpino): Check that the number of parameters correspond with the
+    // number of template types that the base type can take when creating
+    // a templatized type. For instance, if the base type is Array then there
+    // must be just one parameter.
+    JSType[] templatizedTypes = new JSType[params.size() - 1];
+    for (int i = 0; i < templatizedTypes.length; i++) {
+      templatizedTypes[i] = eval(params.get(i + 1), typeVars);
+    }
+    return createTemplatizedType(baseType, templatizedTypes);
   }
 
   private JSType evalTypeVar(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
@@ -185,7 +219,7 @@ class TypeTransformation {
     JSType resultingType = typeVars.get(typeVar);
     // If the type variable is not defined then return UNKNOWN and report a warning
     if (resultingType == null) {
-      compiler.report(JSError.make(ttlAst, UNKNOWN_TYPEVAR, typeVar));
+      reportWarning(ttlAst, UNKNOWN_TYPEVAR, typeVar);
       return getUnknownType();
     }
     return resultingType;
@@ -194,19 +228,19 @@ class TypeTransformation {
   private JSType evalUnionType(Node ttlAst,
       ImmutableMap<String, JSType> typeVars) {
     // Get the parameters of the union
-    ArrayList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getParameters(ttlAst);
     int paramCount = params.size();
     // Create an array of types after evaluating each parameter
     JSType[] basicTypes = new JSType[paramCount];
     for (int i = 0; i < paramCount; i++) {
       basicTypes[i] = eval(params.get(i), typeVars);
     }
-    return typeRegistry.createUnionType(basicTypes);
+    return createUnionType(basicTypes);
   }
 
   private boolean evalBoolean(Node ttlAst,
       ImmutableMap<String, JSType> typeVars) {
-    ArrayList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getParameters(ttlAst);
     JSType type0 = eval(params.get(0), typeVars);
     JSType type1 = eval(params.get(1), typeVars);
 
@@ -221,7 +255,7 @@ class TypeTransformation {
 
   private JSType evalConditional(Node ttlAst,
       ImmutableMap<String, JSType> typeVars) {
-    ArrayList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getParameters(ttlAst);
     if (evalBoolean(params.get(0), typeVars)) {
       return eval(params.get(1), typeVars);
     } else {
@@ -230,7 +264,7 @@ class TypeTransformation {
   }
 
   private JSType evalMapunion(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
-    ArrayList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getParameters(ttlAst);
     Node unionParam = params.get(0);
     Node mapFunction = params.get(1);
     String paramName = getFunctionParameter(mapFunction, 0);
@@ -265,6 +299,6 @@ class TypeTransformation {
       i++;
     }
 
-    return union(newUnionElms);
+    return createUnionType(newUnionElms);
   }
 }

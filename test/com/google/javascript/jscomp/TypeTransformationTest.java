@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 
 public class TypeTransformationTest extends CompilerTypeTestCase {
@@ -218,8 +219,34 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "mapunion(union(S, B, N), (x) => cond(eq(x, S), x, none()))");
   }
 
+  public void testTransformationWithTemplatizedType() {
+    testTTL(type(ARRAY_TYPE, NUMBER_TYPE), "type('Array', 'number')");
+  }
+
+  public void testTransformationWithTemplatizedType2() {
+    testTTL(type(ARRAY_TYPE, NUMBER_TYPE), "type(ARR, 'number')");
+  }
+
+  public void testTransformationWithTemplatizedType3() {
+    testTTL(type(ARRAY_TYPE, NUMBER_TYPE), "type(ARR, N)");
+  }
+
+  public void testTransformationWithTemplatizedTypeInvalidBaseType() {
+    testTTL(UNKNOWN_TYPE, "type('string', 'number')",
+        "The type string cannot be templatized");
+  }
+
+  public void testTransformationWithTemplatizedTypeInvalidBaseType2() {
+    testTTL(UNKNOWN_TYPE, "type(S, 'number')",
+        "The type string cannot be templatized");
+  }
+
   private JSType union(JSType... variants) {
     return createUnionType(variants);
+  }
+
+  private JSType type(ObjectType baseType, JSType... templatizedTypes) {
+    return createTemplatizedType(baseType, templatizedTypes);
   }
 
   private void testTTL(JSType expectedType, String ttlExp,
