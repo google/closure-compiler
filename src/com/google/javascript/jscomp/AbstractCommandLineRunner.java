@@ -30,8 +30,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
+
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
+import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
@@ -1546,24 +1547,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append(displayName);
       out.append("\n");
 
-      if (input.isModule()) {
-        // Add module preamble
-        String moduleName = Iterables.get(input.getProvides(), 0);
-        out.append(
-            "goog.loadModule('" + moduleName + "', function(exports) {" +
-            "'use strict';");
-      }
-
-      Files.copy(file, inputCharset, out);
-
-      if (input.isModule()) {
-        // Add module postamble
-        out.append(
-            "\n" + // terminate any trailing single line comment.
-            ";return exports;" +
-            "});" +
-            "\n");
-      }
+      ClosureBundler.appendInput(out, input, file, inputCharset);
 
       out.append("\n");
     }
