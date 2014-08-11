@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -56,7 +58,7 @@ import java.util.Set;
  *
  * @author mattloring@google.com (Matthew Loring)
  */
-public class Es6ToEs3ClassSideInheritance extends NodeTraversal.AbstractPostOrderCallback
+public class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallback
     implements CompilerPass {
 
   final AbstractCompiler compiler;
@@ -75,12 +77,16 @@ public class Es6ToEs3ClassSideInheritance extends NodeTraversal.AbstractPostOrde
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new FindStaticMembers());
-    NodeTraversal.traverse(compiler, root, this);
+    FindCopyProp findCopyProp = new FindCopyProp();
+    NodeTraversal.traverse(compiler, root, findCopyProp);
+    if (findCopyProp.found) {
+      NodeTraversal.traverse(compiler, root, new FindStaticMembers());
+      NodeTraversal.traverse(compiler, root, this);
+    }
   }
 
   @Override
-  public void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
+  public void visit(NodeTraversal t, Node n, Node parent) {
     if (!n.isCall()) {
       return;
     }
@@ -108,6 +114,21 @@ public class Es6ToEs3ClassSideInheritance extends NodeTraversal.AbstractPostOrde
     }
   }
 
+  private class FindCopyProp extends AbstractPreOrderCallback {
+
+    private boolean found = false;
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (found || n.isCall()
+          && n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.COPY_PROP)) {
+        found = true;
+        return false;
+      }
+      return true;
+    }
+  }
+
   private class FindStaticMembers extends NodeTraversal.AbstractPostOrderCallback {
 
     private final Set<String> classNames = new HashSet<String>();
@@ -115,6 +136,9 @@ public class Es6ToEs3ClassSideInheritance extends NodeTraversal.AbstractPostOrde
     @Override
     public void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
       switch(n.getType()) {
+        case Token.VAR:
+          visitVar(n);
+          break;
         case Token.ASSIGN:
           visitAssign(n);
           break;
@@ -124,30 +148,50 @@ public class Es6ToEs3ClassSideInheritance extends NodeTraversal.AbstractPostOrde
       }
     }
 
-    public void visitFunctionClassDef(Node n) {
+    private void visitFunctionClassDef(Node n) {
       JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(n);
       if (classInfo != null && classInfo.isConstructor()) {
         String name = NodeUtil.getFunctionName(n);
         if (classNames.contains(name)) {
           multiplyDefinedClasses.add(name);
-        } else {
+        } else if (name != null) {
           classNames.add(name);
         }
       }
     }
 
-    public void visitAssign(Node n) {
-      if (!n.hasChildren() || !n.getFirstChild().isGetProp()) {
-        return;
-      }
-      Node potentialClassName = n.getFirstChild().getFirstChild();
-      if (classNames.contains(potentialClassName.getQualifiedName())) {
-        staticMembers.put(potentialClassName.getQualifiedName(),
-              n.getFirstChild().getLastChild().getString());
+    private void visitAssign(Node n) {
+      // Alias for classes. We assume that the alias appears after the class
+      // declaration.
+      if (classNames.contains(n.getLastChild().getQualifiedName())) {
+        String maybeAlias = n.getFirstChild().getQualifiedName();
+        if (maybeAlias != null) {
+          classNames.add(maybeAlias);
+          staticMembers.putAll(maybeAlias,
+              staticMembers.get(n.getLastChild().getQualifiedName()));
+        }
+      } else if (n.getFirstChild().isGetProp()) {
+        Node getProp = n.getFirstChild();
+        String maybeClassName = getProp.getFirstChild().getQualifiedName();
+        if (classNames.contains(maybeClassName)) {
+          staticMembers.put(maybeClassName, getProp.getLastChild().getString());
+        }
       }
     }
 
+    private void visitVar(Node n) {
+      Node child = n.getFirstChild();
+      if (!child.hasChildren()) {
+        return;
+      }
+      String maybeOriginalName = child.getFirstChild().getQualifiedName();
+      if (classNames.contains(maybeOriginalName)) {
+        String maybeAlias = child.getQualifiedName();
+        if (maybeAlias != null) {
+          classNames.add(maybeAlias);
+          staticMembers.putAll(maybeAlias, staticMembers.get(maybeOriginalName));
+        }
+      }
+    }
   }
-
 }
-

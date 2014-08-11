@@ -219,12 +219,13 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(rewriteLetConst);
       checks.add(rewriteGenerators);
       checks.add(markTranspilationDone);
-      checks.add(convertStaticInheritance);
 
       if (options.transpileOnly) {
         return checks;
       }
     }
+
+    checks.add(convertStaticInheritance);
 
     if (options.declaredGlobalExternsOnWindow) {
       checks.add(declaredGlobalExternsOnWindow);
@@ -1162,6 +1163,7 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new CompilerPass() {
+        @Override
         public void process(Node externs, Node root) {
           compiler.setLanguageMode(options.getLanguageOut());
         }

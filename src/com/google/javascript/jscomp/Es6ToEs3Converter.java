@@ -557,18 +557,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   /**
-   * Classes are processed in 4 phases.
-   *
-   * 1) Metadata about the class is computed including the name and unique name (used to
-   * support mocking).
-   *
-   * 2) Class members are processed and rewritten.
-   *
-   * 3) The constructor is built.
-   *
-   * 4) Class is reassigned using a unique name to support mocking
-   *   ex) function foo() {} is rewritten to var unique$foo = function() {}; var foo = unique$foo;
-   *
+   * Classes are processed in 3 phases:
+   *   1) The class name is extracted.
+   *   2) Class members are processed and rewritten.
+   *   3) The constructor is built.
    */
   private void visitClass(Node classNode, Node parent) {
     checkClassReassignment(classNode);

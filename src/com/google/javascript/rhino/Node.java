@@ -2134,9 +2134,10 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * Returns whether this node is a variable length argument node. This
-   * method's return value is meaningful only on {@link Token#NAME} nodes
-   * used to define a {@link Token#FUNCTION}'s argument list.
+   * Returns whether this node is a static member node. This
+   * method is meaningful only on {@link Token#GETTER_DEF},
+   * {@link Token#SETTER_DEF} or {@link Token#MEMBER_DEF} nodes contained
+   * within {@link Token#CLASS}.
    */
   public boolean isStaticMember() {
     return getBooleanProp(STATIC_MEMBER);
@@ -2213,9 +2214,9 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * Returns whether this node is a variable length argument node. This
-   * method's return value is meaningful only on {@link Token#NAME} nodes
-   * used to define a {@link Token#FUNCTION}'s argument list.
+   * Returns whether this node is a generator node. This
+   * method is meaningful only on {@link Token#FUNCTION} or
+   * {@link Token#MEMBER_DEF} nodes.
    */
   public boolean isYieldFor() {
     return getBooleanProp(YIELD_FOR);
