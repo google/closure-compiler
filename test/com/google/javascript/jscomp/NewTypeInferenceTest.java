@@ -7842,6 +7842,32 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testEnumsAsNamespaces() {
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns.E = {\n" +
+        "  ONE: 1,\n" +
+        "  TWO: true\n" +
+        "};",
+        NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
+
+    typeCheck(
+        "/** @enum */\n" +
+        "var E = { A: 1 };\n" +
+        "/** @enum */\n" +
+        "E.E2 = { B: true };\n" +
+        "var /** E */ x = E.A;",
+        NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
+
+    checkNoWarnings(
+        "/** @enum */\n" +
+        "var E = { A: 1 };\n" +
+        "/** @constructor */\n" +
+        "E.Foo = function(x) {};\n" +
+        "var /** E */ x = E.A;");
+  }
+
   public void testStringMethods() {
     // TODO(blickly): This warning is spurious
     typeCheck(

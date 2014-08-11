@@ -229,11 +229,13 @@ public class JSTypeCreatorFromJSDoc {
           return JSType.fromTypeVar(typeName);
         } else {
           // It's either a typedef, an enum, a type variable or a nominal type
-          if (registry.getTypedef(typeName) != null) {
-            return getTypedefType(typeName, registry);
+          Typedef td = registry.getTypedef(typeName);
+          if (td != null) {
+            return getTypedefType(td, registry);
           }
-          if (registry.getEnum(typeName) != null) {
-            return getEnumPropType(typeName, registry);
+          EnumType e = registry.getEnum(typeName);
+          if (e != null) {
+            return getEnumPropType(e, registry);
           }
           JSType namedType = registry.lookupTypeByName(typeName);
           if (namedType == null) {
@@ -251,13 +253,12 @@ public class JSTypeCreatorFromJSDoc {
     }
   }
 
-  private JSType getTypedefType(String name, DeclaredTypeRegistry registry) {
-    resolveTypedef(name, registry);
-    return registry.getTypedef(name).getType();
+  private JSType getTypedefType(Typedef td, DeclaredTypeRegistry registry) {
+    resolveTypedef(td, registry);
+    return td.getType();
   }
 
-  public void resolveTypedef(String name, DeclaredTypeRegistry registry) {
-    Typedef td = registry.getTypedef(name);
+  public void resolveTypedef(Typedef td, DeclaredTypeRegistry registry) {
     Preconditions.checkState(td != null, "getTypedef should only be " +
         "called when we know that the typedef is defined");
     if (td.isResolved()) {
@@ -275,13 +276,12 @@ public class JSTypeCreatorFromJSDoc {
     td.resolveTypedef(tdType);
   }
 
-  private JSType getEnumPropType(String name, DeclaredTypeRegistry registry) {
-    resolveEnum(name, registry);
-    return registry.getEnum(name).getPropType();
+  private JSType getEnumPropType(EnumType e, DeclaredTypeRegistry registry) {
+    resolveEnum(e, registry);
+    return e.getPropType();
   }
 
-  public void resolveEnum(String name, DeclaredTypeRegistry registry) {
-    EnumType e = registry.getEnum(name);
+  public void resolveEnum(EnumType e, DeclaredTypeRegistry registry) {
     Preconditions.checkState(e != null, "getEnum should only be " +
         "called when we know that the enum is defined");
     if (e.isResolved()) {

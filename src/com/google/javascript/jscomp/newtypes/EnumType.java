@@ -82,15 +82,11 @@ public class EnumType extends Namespace implements TypeWithProperties {
     return enumPropType;
   }
 
-  public JSType getObjLitType() {
-    Preconditions.checkState(state == State.RESOLVED);
-    return enumObjType;
-  }
-
   public JSType toJSType() {
-    // TODO(blickly): Put off pulling of Namespace's JSTypes until
-    // enums are finalized and add back this check.
-//     return getObjLitType();
+    Preconditions.checkState(state == State.RESOLVED);
+    if (enumObjType == null) {
+      enumObjType = computeObjType();
+    }
     return enumObjType;
   }
 
@@ -120,7 +116,6 @@ public class EnumType extends Namespace implements TypeWithProperties {
     typeExpr = null;
     declaredType = t;
     enumPropType = JSType.fromEnum(this);
-    enumObjType = computeObjType();
   }
 
   /**

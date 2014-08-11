@@ -798,7 +798,8 @@ public final class NodeUtil {
     if (n.isVar()
         || n.isName() && n.getParent().isVar()
         || (n.isGetProp() && n.getParent().isAssign()
-            && n.getParent().getParent().isExprResult())) {
+            && n.getParent().getParent().isExprResult())
+        || (n.isAssign() && n.getParent().isExprResult())) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null && jsdoc.hasEnumParameterType();
     }

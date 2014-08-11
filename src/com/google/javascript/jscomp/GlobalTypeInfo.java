@@ -1571,6 +1571,8 @@ class GlobalTypeInfo implements CompilerPass {
     private Map<String, Typedef> localTypedefs = new HashMap<>();
     private Map<String, EnumType> localEnums = new HashMap<>();
     private Map<String, NamespaceLit> localNamespaces = new HashMap<>();
+    // The set qualifiedEnums is used for enum resolution, and then discarded.
+    private Set<EnumType> qualifiedEnums = new HashSet<>();
 
     // declaredType is null for top level, but never null for functions,
     // even those without jsdoc.
@@ -1985,6 +1987,7 @@ class GlobalTypeInfo implements CompilerPass {
         QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
         Namespace ns = getNamespace(qname.getLeftmostName());
         ns.addEnum(qname.getAllButLeftmost(), e);
+        qualifiedEnums.add(e);
       }
     }
 
@@ -2025,24 +2028,25 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void resolveTypedefs(JSTypeCreatorFromJSDoc typeParser) {
-      for (Map.Entry<String, Typedef> entry : localTypedefs.entrySet()) {
-        String name = entry.getKey();
-        Typedef td = entry.getValue();
+      for (Typedef td : localTypedefs.values()) {
         if (!td.isResolved()) {
-          typeParser.resolveTypedef(name, this);
+          typeParser.resolveTypedef(td, this);
         }
       }
     }
 
     private void resolveEnums(JSTypeCreatorFromJSDoc typeParser) {
-      for (Map.Entry<String, EnumType> entry : localEnums.entrySet()) {
-        String name = entry.getKey();
-        EnumType e = entry.getValue();
+      for (EnumType e : localEnums.values()) {
         if (!e.isResolved()) {
-          typeParser.resolveEnum(name, this);
+          typeParser.resolveEnum(e, this);
         }
-        locals.put(name, e.getObjLitType());
       }
+      for (EnumType e : qualifiedEnums) {
+        if (!e.isResolved()) {
+          typeParser.resolveEnum(e, this);
+        }
+      }
+      qualifiedEnums = null;
     }
 
     // When debugging, this method can be called at the start of removeTmpData,
@@ -2097,9 +2101,13 @@ class GlobalTypeInfo implements CompilerPass {
       for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {
         locals.put(entry.getKey(), entry.getValue().toJSType());
       }
+      for (Map.Entry<String, EnumType> entry : localEnums.entrySet()) {
+        locals.put(entry.getKey(), entry.getValue().toJSType());
+      }
       localNamespaces = null;
       localClassDefs = null;
       localTypedefs = null;
+      localEnums = null;
     }
   }
 }

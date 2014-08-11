@@ -1339,6 +1339,9 @@ public class NewTypeInference implements CompilerPass {
     Node rhs = expr.getLastChild();
     LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
     JSType declType = lvalue.declType;
+    if (NodeUtil.isEnumDecl(expr) && rhs.isObjectLit()) {
+      return analyzeEnumObjLitFwd(rhs, lvalue.env, lvalue.type);
+    }
     EnvTypePair rhsPair =
         analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
     if (declType != null && !rhsPair.type.isSubtypeOf(declType)) {
@@ -1894,7 +1897,7 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeObjLitFwd(
       Node objLit, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
-    if (NodeUtil.isEnumDecl(objLit.getParent().getParent())) {
+    if (NodeUtil.isEnumDecl(objLit.getParent())) {
       return analyzeEnumObjLitFwd(objLit, inEnv, requiredType);
     }
     JSDocInfo jsdoc = objLit.getJSDocInfo();
@@ -2756,7 +2759,7 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeObjLitBwd(
       Node objLit, TypeEnv outEnv, JSType requiredType) {
-    if (NodeUtil.isEnumDecl(objLit.getParent().getParent())) {
+    if (NodeUtil.isEnumDecl(objLit.getParent())) {
       return analyzeEnumObjLitBwd(objLit, outEnv, requiredType);
     }
     TypeEnv env = outEnv;
