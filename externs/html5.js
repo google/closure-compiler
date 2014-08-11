@@ -1794,6 +1794,25 @@ DataTransfer.prototype.addElement = function(elem) {};
 MouseEvent.prototype.dataTransfer;
 
 /**
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/#interface-WheelEvent
+ * @constructor
+ * @extends {MouseEvent}
+ */
+var WheelEvent = function() {};
+
+/** @const {number} */
+WheelEvent.prototype.deltaX;
+
+/** @const {number} */
+WheelEvent.prototype.deltaY;
+
+/** @const {number} */
+WheelEvent.prototype.deltaZ;
+
+/** @const {number} */
+WheelEvent.prototype.deltaMode;
+
+/**
  * HTML5 DataTransferItem class.
  *
  * @see http://www.w3.org/TR/2011/WD-html5-20110113/dnd.html
