@@ -1197,6 +1197,16 @@ HTMLAnchorElement.prototype.hostname;
 /** @type {string} */
 HTMLAnchorElement.prototype.pathname;
 
+/**
+ * The 'ping' attribute is known to be supported in recent versions (as of
+ * mid-2014) of Chrome, Safari, and Firefox, and is not supported in any
+ * current version of Internet Explorer.
+ *
+ * @type {string}
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/semantics.html#hyperlink-auditing
+ */
+HTMLAnchorElement.prototype.ping;
+
 /** @type {string} */
 HTMLAnchorElement.prototype.port;
 
@@ -1205,6 +1215,12 @@ HTMLAnchorElement.prototype.protocol;
 
 /** @type {string} */
 HTMLAnchorElement.prototype.search;
+
+/**
+ * @type {string}
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/semantics.html#hyperlink-auditing
+ */
+HTMLAreaElement.prototype.ping;
 
 /** @type {string} */
 HTMLInputElement.prototype.autocomplete;
