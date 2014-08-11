@@ -148,7 +148,7 @@ public enum CompilationLevel {
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.shadowVariables = true;
     options.removeUnusedPrototypeProperties = true;
-    options.removeUnusedPrototypePropertiesInExterns = true;
+    options.removeUnusedPrototypePropertiesInExterns = false;
     options.removeUnusedClassProperties = true;
     options.collapseAnonymousFunctions = true;
     options.collapseProperties = true;

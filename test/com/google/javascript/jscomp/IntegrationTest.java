@@ -2963,6 +2963,8 @@ public class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
+    options.removeUnusedPrototypePropertiesInExterns = true;
+
     String code = "" +
         "/** @constructor */ var X = function() {" +
            "/** @export */ this.abc = 1;};\n" +
