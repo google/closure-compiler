@@ -47,7 +47,8 @@ public final class TypeTransformationParser {
     MAPUNION("mapunion"),
     EQTYPE("eq"),
     SUBTYPE("sub"),
-    NONE("none");
+    NONE("none"),
+    RAWTYPEOF("rawTypeOf");
 
     public final String name;
     Keywords(String name) {
@@ -56,7 +57,8 @@ public final class TypeTransformationParser {
   }
 
   private static final ImmutableList<Keywords> TYPE_CONSTRUCTORS =
-      ImmutableList.of(Keywords.TYPE, Keywords.UNION, Keywords.NONE);
+      ImmutableList.of(Keywords.TYPE, Keywords.UNION, Keywords.NONE,
+          Keywords.RAWTYPEOF);
   private static final ImmutableList<Keywords> OPERATIONS =
       ImmutableList.of(Keywords.COND, Keywords.MAPUNION);
   private static final ImmutableList<Keywords> BOOLEAN_PREDICATES =
@@ -66,7 +68,8 @@ public final class TypeTransformationParser {
       UNION_MIN_PARAM_COUNT = 2,
       COND_PARAM_COUNT = 3,
       BOOLPRED_PARAM_COUNT = 2,
-      MAPUNION_PARAM_COUNT = 2;
+      MAPUNION_PARAM_COUNT = 2,
+      RAWTYPEOF_PARAM_COUNT = 1;
 
   public TypeTransformationParser(String typeTransformationString,
       StaticSourceFile sourceFile, ErrorReporter errorReporter,
@@ -285,6 +288,28 @@ public final class TypeTransformationParser {
   }
 
   /**
+   * A raw type expression must be of the form rawTypeOf(TemplateType)
+   */
+  private boolean validTTLRawTypeOfTypeExpression(Node expr) {
+    // The expression must have two children. The rawTypeOf keyword and the
+    // parameter
+    if (expr.getChildCount() < 1 + RAWTYPEOF_PARAM_COUNT) {
+     warnMissingParam("rawTypeOf", expr);
+      return false;
+    }
+    if (expr.getChildCount() > 1 + RAWTYPEOF_PARAM_COUNT) {
+     warnExtraParam("rawTypeOf", expr);
+      return false;
+    }
+    // The parameter must be a valid type expression
+    if (!validTTLTypeExpression(expr.getChildAtIndex(1))) {
+      warnInvalidInside("rawTypeOf", expr);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * A TTL type expression must be a type variable, a basic type expression
    * or a union type expression
    */
@@ -313,6 +338,9 @@ public final class TypeTransformationParser {
     }
     if (isKeyword(keyword, Keywords.NONE)) {
       return validTTLNoneTypeExpression(expr);
+    }
+    if (isKeyword(keyword, Keywords.RAWTYPEOF)) {
+      return validTTLRawTypeOfTypeExpression(expr);
     }
     throw new IllegalStateException("Invalid type expression");
   }
@@ -354,7 +382,7 @@ public final class TypeTransformationParser {
    * A conditional type transformation expression must be of the
    * form cond(Bool-Exp, TTL-Exp, TTL-Exp)
    */
-  private boolean validTTLCondionalExpression(Node expr) {
+  private boolean validTTLConditionalExpression(Node expr) {
     // The expression must have four children:
     // - The cond keyword
     // - A boolean expression
@@ -457,7 +485,7 @@ public final class TypeTransformationParser {
       return validTTLTypeExpression(expr);
     }
     if (isKeyword(keyword, Keywords.COND)) {
-      return validTTLCondionalExpression(expr);
+      return validTTLConditionalExpression(expr);
     }
     if (isKeyword(keyword, Keywords.MAPUNION)) {
       return validTTLMapunionExpression(expr);

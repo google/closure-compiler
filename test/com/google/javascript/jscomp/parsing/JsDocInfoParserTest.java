@@ -3211,6 +3211,34 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside template type operation");
   }
 
+  public void testParserWithTTLValidRawTypeOperation() {
+    parse("@template T := rawTypeOf(T) =: */");
+  }
+
+  public void testParserWithTTLValidRawTypeOperation2() {
+    parse("@template T := rawTypeOf(type(T, R)) =: */");
+  }
+
+  public void testParserWithTTLInvalidRawTypeOperation() {
+    parse("@template T := rawTypeOf(foo()) =: */",
+        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid expression inside rawTypeOf");
+  }
+
+  public void testParserWithTTLInvalidRawTypeOperationExtraParam() {
+    parse("@template T := rawTypeOf(R, S) =: */",
+        "Bad type annotation. Found extra parameter in rawTypeOf");
+  }
+
+  public void testParserWithTTLInvalidRawTypeOperationMissingParam() {
+    parse("@template T := rawTypeOf() =: */",
+        "Bad type annotation. Missing parameter in rawTypeOf");
+  }
+
+  public void testParserWithTTLNestedRawTypeOperation() {
+    parse("@template T := rawTypeOf(type(T, rawTypeOf(type(R, S)))) =: */");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");

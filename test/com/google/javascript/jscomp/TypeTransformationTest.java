@@ -43,6 +43,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         .put("OBJ", OBJECT_TYPE)
         .put("UNDEF", VOID_TYPE)
         .put("ARR", ARRAY_TYPE)
+        .put("ARRNUM", type(ARRAY_TYPE, NUMBER_TYPE))
         .build();
   }
 
@@ -239,6 +240,23 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithTemplatizedTypeInvalidBaseType2() {
     testTTL(UNKNOWN_TYPE, "type(S, 'number')",
         "The type string cannot be templatized");
+  }
+
+  public void testTransformationWithRawTypeOf() {
+    testTTL(ARRAY_TYPE, "rawTypeOf(type('Array', 'number'))");
+  }
+
+  public void testTransformationWithRawTypeOf2() {
+    testTTL(ARRAY_TYPE, "rawTypeOf(ARRNUM)");
+  }
+
+  public void testTransformationWithNestedRawTypeOf() {
+    testTTL(ARRAY_TYPE, "rawTypeOf(type('Array', rawTypeOf(ARRNUM)))");
+  }
+
+  public void testTransformationWithInvalidRawTypeOf() {
+    testTTL(UNKNOWN_TYPE, "rawTypeOf(N)",
+        "Expected templatized type in rawTypeOf found number");
   }
 
   private JSType union(JSType... variants) {

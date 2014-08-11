@@ -24,6 +24,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collection;
@@ -46,6 +47,9 @@ class TypeTransformation {
   static final DiagnosticType BASETYPE_INVALID =
       DiagnosticType.warning("BASETYPE_INVALID",
           "The type {0} cannot be templatized");
+  static final DiagnosticType TEMPTYPE_INVALID =
+      DiagnosticType.warning("TEMPTYPE_INVALID",
+          "Expected templatized type in rawTypeOf found {0}");
 
   TypeTransformation(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -93,6 +97,10 @@ class TypeTransformation {
 
   private boolean isNone(Node n) {
     return isCallTo(n, TypeTransformationParser.Keywords.NONE);
+  }
+
+  private boolean isRawTypeOf(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.RAWTYPEOF);
   }
 
   private JSType getType(String name) {
@@ -178,6 +186,9 @@ class TypeTransformation {
     }
     if (isNone(ttlAst)) {
       return getNoType();
+    }
+    if (isRawTypeOf(ttlAst)) {
+      return evalRawTypeOf(ttlAst, typeVars);
     }
     throw new IllegalStateException(
         "Could not evaluate the type transformation expression");
@@ -300,5 +311,15 @@ class TypeTransformation {
     }
 
     return createUnionType(newUnionElms);
+  }
+
+  private JSType evalRawTypeOf(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
+    ImmutableList<Node> params = getParameters(ttlAst);
+    JSType type = eval(params.get(0), typeVars);
+    if (!type.isTemplatizedType()) {
+      reportWarning(ttlAst, TEMPTYPE_INVALID, type.toString());
+      return getUnknownType();
+    }
+    return ((TemplatizedType) type).getReferencedType();
   }
 }
