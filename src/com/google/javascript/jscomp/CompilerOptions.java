@@ -930,7 +930,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public CompilerOptions() {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT3;
-    languageOut = LanguageMode.ECMASCRIPT3;
+    languageOut = LanguageMode.NO_TRANSPILE;
 
     // Language variation
     acceptConstKeyword = false;
@@ -1579,6 +1579,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * Sets ECMAScript version to use.
    */
   public void setLanguage(LanguageMode language) {
+    Preconditions.checkState(languageIn != LanguageMode.NO_TRANSPILE);
     this.languageIn = language;
     this.languageOut = language;
   }
@@ -1588,6 +1589,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    * transpiling from one version to another, use #setLanguage instead.
    */
   public void setLanguageIn(LanguageMode languageIn) {
+    Preconditions.checkState(languageIn != LanguageMode.NO_TRANSPILE);
     this.languageIn = languageIn;
   }
 
@@ -1604,11 +1606,15 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   public LanguageMode getLanguageOut() {
+    if (languageOut == LanguageMode.NO_TRANSPILE) {
+      return languageIn;
+    }
     return languageOut;
   }
 
   boolean needsConversion() {
-    return languageIn != languageOut;
+    return languageOut != LanguageMode.NO_TRANSPILE
+        && languageIn != languageOut;
   }
 
   /**
@@ -2237,32 +2243,38 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** When to do the extra sanity checks */
   public static enum LanguageMode {
     /**
-     * Traditional JavaScript
+     * 90's JavaScript
      */
     ECMASCRIPT3,
 
     /**
-     * Shiny new JavaScript
+     * Traditional JavaScript
      */
     ECMASCRIPT5,
 
     /**
-     * Nitpicky, shiny new JavaScript
+     * Nitpicky, traditional JavaScript
      */
     ECMASCRIPT5_STRICT,
 
     /**
-     * Experimental JavaScript
+     * Shiny new JavaScript
      */
     ECMASCRIPT6,
 
     /**
-     * Nitpicky, experimental JavaScript
+     * Nitpicky, shiny new JavaScript
      */
-    ECMASCRIPT6_STRICT;
+    ECMASCRIPT6_STRICT,
+
+    /**
+     * For languageOut only. The same language mode as the input.
+     */
+    NO_TRANSPILE;
 
     /** Whether this is a "strict mode" language. */
     public boolean isStrict() {
+      Preconditions.checkState(this != NO_TRANSPILE);
       switch (this) {
         case ECMASCRIPT5_STRICT:
         case ECMASCRIPT6_STRICT:
@@ -2274,6 +2286,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     /** Whether this is ECMAScript 6 or higher. */
     public boolean isEs6OrHigher() {
+      Preconditions.checkState(this != NO_TRANSPILE);
       switch (this) {
         case ECMASCRIPT6:
         case ECMASCRIPT6_STRICT:
