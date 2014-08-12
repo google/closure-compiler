@@ -3239,6 +3239,59 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T := rawTypeOf(type(T, rawTypeOf(type(R, S)))) =: */");
   }
 
+  public void testParserWithTTLValidTemplateTypeOfOperation() {
+    parse("@template T := templateTypeOf(T, 1) =: */");
+  }
+
+  public void testParserWithTTLValidTemplateTypeOfOperation2() {
+    parse("@template T := templateTypeOf(type(T, R), 1) =: */");
+  }
+
+  public void testParserWithTTLInvalidFirstParamTemplateTypeOf() {
+    parse("@template T := templateTypeOf(foo(), 1) =: */",
+        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid expression inside templateTypeOf");
+  }
+
+  public void testParserWithTTLInvalidSecondParamTemplateTypeOf() {
+    parse("@template T := templateTypeOf(R, foo()) =: */",
+        "Bad type annotation. Invalid index",
+        "Bad type annotation. Invalid expression inside templateTypeOf");
+  }
+
+  public void testParserWithTTLInvalidSecondParamTemplateTypeOf2() {
+    parse("@template T := templateTypeOf(R, 1.5) =: */",
+        "Bad type annotation. Invalid index",
+        "Bad type annotation. Invalid expression inside templateTypeOf");
+  }
+
+  public void testParserWithTTLInvalidSecondParamTemplateTypeOf3() {
+    parse("@template T := templateTypeOf(R, -1) =: */",
+        "Bad type annotation. Invalid index",
+        "Bad type annotation. Invalid expression inside templateTypeOf");
+  }
+
+  public void testParserWithTTLInvalidTemplateTypeOfExtraParam() {
+    parse("@template T := templateTypeOf(R, 1, S) =: */",
+        "Bad type annotation. Found extra parameter in templateTypeOf");
+  }
+
+  public void testParserWithTTLInvalidTemplateTypeOfMissingParam() {
+    parse("@template T := templateTypeOf() =: */",
+        "Bad type annotation. Missing parameter in templateTypeOf");
+  }
+
+  public void testParserWithTTLInvalidTemplateTypeOfMissingParam2() {
+    parse("@template T := templateTypeOf(T) =: */",
+        "Bad type annotation. Missing parameter in templateTypeOf");
+  }
+
+  public void testParserWithTTLNestedTemplateTypeOfOperation() {
+    parse("@template T := templateTypeOf("
+        +                   "templateTypeOf(type(T, type(R, S)), 0),"
+        +                   "0) =: */");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");

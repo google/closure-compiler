@@ -49,7 +49,10 @@ class TypeTransformation {
           "The type {0} cannot be templatized");
   static final DiagnosticType TEMPTYPE_INVALID =
       DiagnosticType.warning("TEMPTYPE_INVALID",
-          "Expected templatized type in rawTypeOf found {0}");
+          "Expected templatized type in {0} found {1}");
+  static final DiagnosticType INDEX_OUTOFBOUNDS =
+      DiagnosticType.warning("INDEX_OUTOFBOUNDS",
+      "Index out of bounds in templateTypeOf: {0} > {1}");
 
   TypeTransformation(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -103,6 +106,10 @@ class TypeTransformation {
     return isCallTo(n, TypeTransformationParser.Keywords.RAWTYPEOF);
   }
 
+  private boolean isTemplateTypeOf(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.TEMPTYPEOF);
+  }
+
   private JSType getType(String name) {
     return typeRegistry.getType(name);
   }
@@ -131,7 +138,7 @@ class TypeTransformation {
     return typeRegistry.createTemplatizedType(baseType, params);
   }
 
-  private void reportWarning(Node n, DiagnosticType msg, String param) {
+  private void reportWarning(Node n, DiagnosticType msg, String... param) {
     compiler.report(JSError.make(n, msg, param));
   }
 
@@ -190,9 +197,13 @@ class TypeTransformation {
     if (isRawTypeOf(ttlAst)) {
       return evalRawTypeOf(ttlAst, typeVars);
     }
+    if (isTemplateTypeOf(ttlAst)) {
+      return evalTemplateTypeOf(ttlAst, typeVars);
+    }
     throw new IllegalStateException(
         "Could not evaluate the type transformation expression");
   }
+
 
   private JSType evalTypeName(Node ttlAst) {
     String typeName = ttlAst.getString();
@@ -317,9 +328,28 @@ class TypeTransformation {
     ImmutableList<Node> params = getParameters(ttlAst);
     JSType type = eval(params.get(0), typeVars);
     if (!type.isTemplatizedType()) {
-      reportWarning(ttlAst, TEMPTYPE_INVALID, type.toString());
+      reportWarning(ttlAst, TEMPTYPE_INVALID, "rawTypeOf", type.toString());
       return getUnknownType();
     }
     return ((TemplatizedType) type).getReferencedType();
+  }
+
+  private JSType evalTemplateTypeOf(Node ttlAst,
+      ImmutableMap<String, JSType> typeVars) {
+    ImmutableList<Node> params = getParameters(ttlAst);
+    JSType type = eval(params.get(0), typeVars);
+    if (!type.isTemplatizedType()) {
+      reportWarning(ttlAst, TEMPTYPE_INVALID, "templateTypeOf", type.toString());
+      return getUnknownType();
+    }
+    int index = (int) params.get(1).getDouble();
+    ImmutableList<JSType> templateTypes =
+        ((TemplatizedType) type).getTemplateTypes();
+    if (index > templateTypes.size()) {
+      reportWarning(ttlAst, INDEX_OUTOFBOUNDS,
+          Integer.toString(index), Integer.toString(templateTypes.size()));
+      return getUnknownType();
+    }
+    return templateTypes.get(index);
   }
 }

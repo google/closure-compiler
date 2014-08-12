@@ -259,6 +259,31 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "Expected templatized type in rawTypeOf found number");
   }
 
+  public void testTransformationWithTemplateTypeOf() {
+    testTTL(NUMBER_TYPE, "templateTypeOf(type('Array', 'number'), 0)");
+  }
+
+  public void testTransformationWithTemplateTypeOf2() {
+    testTTL(NUMBER_TYPE, "templateTypeOf(ARRNUM, 0)");
+  }
+
+  public void testTransformationWithNestedTemplateTypeOf() {
+    testTTL(NUMBER_TYPE,
+        "templateTypeOf("
+        + "templateTypeOf(type('Array', type('Array', 'number')), 0),"
+        + "0)");
+  }
+
+  public void testTransformationWithInvalidTypeTemplateTypeOf() {
+    testTTL(UNKNOWN_TYPE, "templateTypeOf(N, 0)",
+        "Expected templatized type in templateTypeOf found number");
+  }
+
+  public void testTransformationWithInvalidIndexTemplateTypeOf() {
+    testTTL(UNKNOWN_TYPE, "templateTypeOf(ARRNUM, 2)",
+        "Index out of bounds in templateTypeOf: 2 > 1");
+  }
+
   private JSType union(JSType... variants) {
     return createUnionType(variants);
   }

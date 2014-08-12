@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.math.DoubleMath;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.rhino.ErrorReporter;
@@ -48,7 +49,8 @@ public final class TypeTransformationParser {
     EQTYPE("eq"),
     SUBTYPE("sub"),
     NONE("none"),
-    RAWTYPEOF("rawTypeOf");
+    RAWTYPEOF("rawTypeOf"),
+    TEMPTYPEOF("templateTypeOf");
 
     public final String name;
     Keywords(String name) {
@@ -58,7 +60,7 @@ public final class TypeTransformationParser {
 
   private static final ImmutableList<Keywords> TYPE_CONSTRUCTORS =
       ImmutableList.of(Keywords.TYPE, Keywords.UNION, Keywords.NONE,
-          Keywords.RAWTYPEOF);
+          Keywords.RAWTYPEOF, Keywords.TEMPTYPEOF);
   private static final ImmutableList<Keywords> OPERATIONS =
       ImmutableList.of(Keywords.COND, Keywords.MAPUNION);
   private static final ImmutableList<Keywords> BOOLEAN_PREDICATES =
@@ -69,7 +71,8 @@ public final class TypeTransformationParser {
       COND_PARAM_COUNT = 3,
       BOOLPRED_PARAM_COUNT = 2,
       MAPUNION_PARAM_COUNT = 2,
-      RAWTYPEOF_PARAM_COUNT = 1;
+      RAWTYPEOF_PARAM_COUNT = 1,
+      TEMPTYPEOF_PARAM_COUNT = 2;
 
   public TypeTransformationParser(String typeTransformationString,
       StaticSourceFile sourceFile, ErrorReporter errorReporter,
@@ -310,6 +313,40 @@ public final class TypeTransformationParser {
   }
 
   /**
+   * A template type of expression must be of the form
+   * templateTypeOf(TemplateType, index)
+   */
+  private boolean validTTLTemplateTypeOf(Node expr) {
+    // The expression must have three children. The templateTypeOf keyword, a
+    // templatized type and an index
+    if (expr.getChildCount() < 1 + TEMPTYPEOF_PARAM_COUNT) {
+     warnMissingParam("templateTypeOf", expr);
+      return false;
+    }
+    if (expr.getChildCount() > 1 + TEMPTYPEOF_PARAM_COUNT) {
+     warnExtraParam("templateTypeOf", expr);
+      return false;
+    }
+    // The parameter must be a valid type expression
+    if (!validTTLTypeExpression(expr.getChildAtIndex(1))) {
+      warnInvalidInside("templateTypeOf", expr);
+      return false;
+    }
+    if (!expr.getChildAtIndex(2).isNumber()) {
+      warnInvalid("index", expr);
+      warnInvalidInside("templateTypeOf", expr);
+      return false;
+    }
+    double index = expr.getChildAtIndex(2).getDouble();
+    if (!DoubleMath.isMathematicalInteger(index) || index < 0) {
+      warnInvalid("index", expr);
+      warnInvalidInside("templateTypeOf", expr);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * A TTL type expression must be a type variable, a basic type expression
    * or a union type expression
    */
@@ -341,6 +378,9 @@ public final class TypeTransformationParser {
     }
     if (isKeyword(keyword, Keywords.RAWTYPEOF)) {
       return validTTLRawTypeOfTypeExpression(expr);
+    }
+    if (isKeyword(keyword, Keywords.TEMPTYPEOF)) {
+      return validTTLTemplateTypeOf(expr);
     }
     throw new IllegalStateException("Invalid type expression");
   }
