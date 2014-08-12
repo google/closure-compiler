@@ -377,7 +377,7 @@ public class NewTypeInference implements CompilerPass {
     for (String fnName : currentScope.getLocalFunDefs()) {
       JSType summaryType = summaries.get(currentScope.getScope(fnName));
       FunctionType fnType = summaryType.getFunType();
-      if (fnType.isConstructor()) {
+      if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.createConstructorObject();
       } else {
         summaryType = summaryType.withProperty(
@@ -410,7 +410,7 @@ public class NewTypeInference implements CompilerPass {
     for (String fnName : currentScope.getLocalFunDefs()) {
       JSType summaryType = summaries.get(currentScope.getScope(fnName));
       FunctionType fnType = summaryType.getFunType();
-      if (fnType.isConstructor()) {
+      if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.createConstructorObject();
       } else {
         summaryType = summaryType.withProperty(
@@ -441,7 +441,7 @@ public class NewTypeInference implements CompilerPass {
     FunctionType funType = declType.getFunTypeIfSingletonObj();
     if (funType == null) {
       return declType;
-    } else if (funType.isConstructor()) {
+    } else if (funType.isConstructor() || funType.isInterfaceDefinition()) {
       // TODO(dimvar): when declType is a union, consider also creating
       // appropriate ctor objs. (This is going to be rare.)
       return funType.createConstructorObject();

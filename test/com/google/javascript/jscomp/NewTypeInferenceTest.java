@@ -3381,6 +3381,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.INTERFACE_WITH_A_BODY);
   }
 
+  public void testInterfaceMistypedProp() {
+    typeCheck(
+        "/** @interface */ function I() {}\n" +
+        "/** @type {number} */ I.prototype.y = 'asdf';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testInterfaceSingleInheritance() {
     typeCheck(
         "/** @interface */ function I() {}\n" +

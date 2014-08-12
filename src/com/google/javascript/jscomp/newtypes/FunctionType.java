@@ -177,12 +177,12 @@ public class FunctionType {
     return nominalType != null && !nominalType.isInterface();
   }
 
-  public boolean isQmarkFunction() {
-    return this == QMARK_FUNCTION;
+  public boolean isInterfaceDefinition() {
+    return nominalType != null && nominalType.isInterface();
   }
 
-  boolean isInterfaceDefinition() {
-    return nominalType != null && nominalType.isInterface();
+  public boolean isQmarkFunction() {
+    return this == QMARK_FUNCTION;
   }
 
   // 0-indexed
