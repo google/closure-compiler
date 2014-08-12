@@ -592,7 +592,7 @@ class GlobalTypeInfo implements CompilerPass {
           if (expr.isGetProp()
               || expr.isAssign() && expr.getFirstChild().isGetProp()) {
             Node getProp = expr.isGetProp() ? expr : expr.getFirstChild();
-            if (NodeUtil.isPrototypeProperty(getProp)
+            if (isPrototypeProperty(getProp)
                 || NodeUtil.referencesThis(getProp)
                 || !getProp.isQualifiedName()) {
               // Class or prototype properties are handled later in ProcessScope
@@ -852,7 +852,7 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.FUNCTION:
           Node grandparent = parent.getParent();
           if (grandparent == null ||
-              !NodeUtil.isPrototypePropertyDeclaration(grandparent)) {
+              !isPrototypePropertyDeclaration(grandparent)) {
             visitFunctionLate(n, null);
           }
           break;
@@ -958,18 +958,18 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       // Prototype property
-      if (isPropDecl(getProp) && NodeUtil.isPrototypeProperty(getProp)) {
+      if (isPropertyDeclaration(getProp) && isPrototypeProperty(getProp)) {
         visitPrototypePropertyDeclaration(getProp);
         return;
       }
       // "Static" property on constructor
-      if (isPropDecl(getProp) &&
+      if (isPropertyDeclaration(getProp) &&
           isStaticCtorProp(getProp, currentScope)) {
         visitConstructorPropertyDeclaration(getProp);
         return;
       }
       // Namespace property
-      if (isPropDecl(getProp) &&
+      if (isPropertyDeclaration(getProp) &&
           currentScope.isNamespace(getProp.getFirstChild())) {
         visitNamespacePropertyDeclaration(getProp);
         return;
@@ -1502,7 +1502,6 @@ class GlobalTypeInfo implements CompilerPass {
 
   }
 
-
   // TODO(blickly): Move to NodeUtil
   private static boolean isClassPropAccess(Node n, Scope s) {
     return n.isGetProp() && n.getFirstChild().isThis() &&
@@ -1525,11 +1524,27 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   // TODO(blickly): Move to NodeUtil
-  private static boolean isPropDecl(Node getProp) {
+  private static boolean isPropertyDeclaration(Node getProp) {
     Preconditions.checkArgument(getProp.isGetProp());
     Node parent = getProp.getParent();
     return parent.isExprResult() ||
         (parent.isAssign() && parent.getParent().isExprResult());
+  }
+
+  // In contrast to the NodeUtil method, here we only accept properties directly
+  // on the prototype, and return false for names such as Foo.prototype.bar.baz
+  private static boolean isPrototypeProperty(Node getProp) {
+    if (!getProp.isGetProp()) {
+      return false;
+    }
+    Node recv = getProp.getFirstChild();
+    return recv.isGetProp()
+        && recv.getLastChild().getString().equals("prototype");
+  }
+
+  private static boolean isPrototypePropertyDeclaration(Node n) {
+    return NodeUtil.isExprAssign(n)
+        && isPrototypeProperty(n.getFirstChild().getFirstChild());
   }
 
   private static class PropertyDef {

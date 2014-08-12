@@ -2387,6 +2387,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings(
         "/** @param {!Function} f */" +
         "function foo(f) { f.prototype.bar = function(x) {}; }");
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.method = function() {};\n" +
+        "/** @type {number} */\n" +
+        "Foo.prototype.method.pnum = 123;\n" +
+        "var /** number */ n = Foo.prototype['method.pnum'];",
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testAssignmentsToPrototype() {
