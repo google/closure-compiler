@@ -107,7 +107,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         // aliased.
         "t.y=".length() - "x[p].y=".length()),
 
-    USE_ANON_FUNCTION(
+    USE_IIFE(
        // Global Overhead:
        0,
        // Per-extraction overhead:
@@ -184,7 +184,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
           .copyInformationFromForTree(first.node);
 
       instance.parent.addChildBefore(stmt, first.node);
-    } else if (pattern == Pattern.USE_ANON_FUNCTION){
+    } else if (pattern == Pattern.USE_IIFE){
       Node block = IR.block();
       Node func = IR.function(
            IR.name(""),

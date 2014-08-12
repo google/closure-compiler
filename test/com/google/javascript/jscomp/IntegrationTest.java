@@ -1418,7 +1418,7 @@ public class IntegrationTest extends IntegrationTestCase {
     }
     testSame(options, code);
 
-    options.extractPrototypeMemberDeclarations = true;
+    options.setExtractPrototypeMemberDeclarations(true);
     options.variableRenaming = VariableRenamingPolicy.ALL;
     test(options, code, expected);
 
@@ -1431,7 +1431,7 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.devirtualizePrototypeMethods = true;
     options.collapseAnonymousFunctions = true;
-    options.extractPrototypeMemberDeclarations = true;
+    options.setExtractPrototypeMemberDeclarations(true);
     options.variableRenaming = VariableRenamingPolicy.ALL;
     String code = "var f = function() {};";
     String expected = "var a; function b() {} a = b.prototype;";

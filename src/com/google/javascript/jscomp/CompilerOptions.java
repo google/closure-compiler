@@ -352,8 +352,14 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.checkMissingReturn = level;
   }
 
+  public enum ExtractPrototypeMemberDeclarationsMode {
+    OFF,
+    USE_GLOBAL_TEMP,
+    USE_IIFE
+  }
+
   /** Extracts common prototype member declarations */
-  public boolean extractPrototypeMemberDeclarations;
+  ExtractPrototypeMemberDeclarationsMode extractPrototypeMemberDeclarations;
 
   /** Removes unused member prototypes */
   public boolean removeUnusedPrototypeProperties;
@@ -987,7 +993,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     smartNameRemoval = false;
     extraSmartNameRemoval = false;
     removeDeadCode = false;
-    extractPrototypeMemberDeclarations = false;
+    extractPrototypeMemberDeclarations =
+        ExtractPrototypeMemberDeclarationsMode.OFF;
     removeUnusedPrototypeProperties = false;
     removeUnusedPrototypePropertiesInExterns = false;
     removeUnusedClassProperties = false;
@@ -1853,7 +1860,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   public void setExtractPrototypeMemberDeclarations(boolean enabled) {
-    this.extractPrototypeMemberDeclarations = enabled;
+    this.extractPrototypeMemberDeclarations =
+        enabled ? ExtractPrototypeMemberDeclarationsMode.USE_GLOBAL_TEMP
+            : ExtractPrototypeMemberDeclarationsMode.USE_IIFE;
+  }
+
+  public void setExtractPrototypeMemberDeclarations(ExtractPrototypeMemberDeclarationsMode mode) {
+    this.extractPrototypeMemberDeclarations = mode;
   }
 
   public void setRemoveUnusedPrototypeProperties(boolean enabled) {

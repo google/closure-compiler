@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
+import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
@@ -653,10 +654,11 @@ public class DefaultPassConfig extends PassConfig {
     //
     // Extracting prototype properties screws up the heuristic renaming
     // policies, so never run it when those policies are requested.
-    if (options.extractPrototypeMemberDeclarations &&
-        (options.propertyRenaming != PropertyRenamingPolicy.HEURISTIC &&
-         options.propertyRenaming !=
-            PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC)) {
+    if (options.extractPrototypeMemberDeclarations !=
+            ExtractPrototypeMemberDeclarationsMode.OFF
+        && (options.propertyRenaming != PropertyRenamingPolicy.HEURISTIC
+            && options.propertyRenaming !=
+               PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC)) {
       passes.add(extractPrototypeMemberDeclarations);
     }
 
@@ -2163,8 +2165,20 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("extractPrototypeMemberDeclarations", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
+      Pattern pattern;
+      switch (options.extractPrototypeMemberDeclarations) {
+        case USE_GLOBAL_TEMP:
+          pattern = Pattern.USE_GLOBAL_TEMP;
+          break;
+        case USE_IIFE:
+          pattern = Pattern.USE_IIFE;
+          break;
+        default:
+          throw new IllegalStateException("unexpected");
+      }
+
       return new ExtractPrototypeMemberDeclarations(
-          compiler, Pattern.USE_GLOBAL_TEMP);
+          compiler, pattern);
     }
   };
 
