@@ -1861,10 +1861,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ));
 
-    test("function *f() { label: while (i) { yield i; } }",
+    test("function *f() {switch (i) {default: case 1: yield 1;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("function *f() {switch (i) {default: case 1: yield 1;}}",
+    test("function *f() { l: if (true) { var x = 5; break l; x++; yield x; }; }",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
@@ -1880,6 +1880,55 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        case 0:",
         "          $jscomp$generator$state = -1;",
         "          throw 1;",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+  }
+
+  public void testLabelsGenerator() {
+    test("function *f() { l: if (true) { break l; } }", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          l: if (true) { break l; }",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+
+    test("function *f() { l: for (;;) { yield i; continue l; } }", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  var $jscomp$generator$state = 0;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "        case 1:",
+        "          if (!true) { $jscomp$generator$state = 2; break; }",
+        "          $jscomp$generator$state = 3;",
+        "          return {value: i, done: false};",
+        "        case 3:",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "        case 2:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",

@@ -306,7 +306,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
             visitForIn();
             return false;
           }
-          visitLoop();
+          visitLoop(null);
+          return false;
+        case Token.LABEL:
+          visitLabel();
           return false;
         case Token.SWITCH:
           visitSwitch();
@@ -340,10 +343,6 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           break;
         case Token.THROW:
           visitThrow();
-          return false;
-        case Token.LABEL:
-          compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-            "Labels in generator functions"));
           return false;
         default:
           // We never want to copy over an untranslated statement for which control exits.
@@ -450,8 +449,15 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private void visitContinue() {
     Preconditions.checkState(currentLoopContext.get(0).continueCase != -1);
+    int continueCase;
+    if (currentStatement.hasChildren()) {
+      continueCase = getLoopContext(
+          currentStatement.removeFirstChild().getString()).continueCase;
+    } else {
+      continueCase = currentLoopContext.get(0).continueCase;
+    }
     enclosingBlock.addChildToBack(
-        createStateUpdate(currentLoopContext.get(0).continueCase));
+        createStateUpdate(continueCase));
     enclosingBlock.addChildToBack(createSafeBreak());
   }
 
@@ -461,9 +467,32 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   private void visitBreak() {
+    int breakCase;
+    if (currentStatement.hasChildren()) {
+      LoopContext loop = getLoopContext(currentStatement.removeFirstChild().getString());
+      if (loop == null) {
+        compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+          "Breaking to a label that is not a loop"));
+        return;
+      }
+      breakCase = loop.breakCase;
+    } else {
+      breakCase = currentLoopContext.get(0).breakCase;
+    }
     enclosingBlock.addChildToBack(
-        createStateUpdate(currentLoopContext.get(0).breakCase));
+        createStateUpdate(breakCase));
     enclosingBlock.addChildToBack(createSafeBreak());
+  }
+
+  private void visitLabel() {
+    Node labelName = currentStatement.removeFirstChild();
+    Node child = currentStatement.removeFirstChild();
+    if (NodeUtil.isLoopStructure(child)) {
+      currentStatement = child;
+      visitLoop(labelName.getString());
+    } else {
+      originalGeneratorBody.addChildToFront(child);
+    }
   }
 
   /**
@@ -578,7 +607,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     int breakTarget = generatorCaseCount++;
     int cont = currentLoopContext.isEmpty() ? -1 : currentLoopContext.get(0).continueCase;
-    currentLoopContext.add(0, new LoopContext(breakTarget, cont));
+    currentLoopContext.add(0, new LoopContext(breakTarget, cont, null));
     Node breakCase = IR.number(breakTarget);
     breakCase.setGeneratorMarker(true);
     originalGeneratorBody.addChildAfter(breakCase, insertionPoint);
@@ -680,7 +709,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    *   }
    * </code>
    */
-  private void visitLoop() {
+  private void visitLoop(String label) {
     Node initializer;
     Node condition;
     Node postExpression;
@@ -725,7 +754,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       body.addChildToBack(postExpression);
     }
 
-    currentLoopContext.add(0, new LoopContext(generatorCaseCount, continueState));
+    currentLoopContext.add(0, new LoopContext(generatorCaseCount, continueState, label));
 
     Node beginCase = IR.number(loopBeginState);
     beginCase.setGeneratorMarker(true);
@@ -817,6 +846,15 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     return returnBlock;
   }
 
+  private LoopContext getLoopContext(String label) {
+    for (int i = 0; i < currentLoopContext.size(); i++) {
+      if (label.equals(currentLoopContext.get(i).label)) {
+        return currentLoopContext.get(i);
+      }
+    }
+    return null;
+  }
+
   private boolean controlCanExit(Node n) {
     Preconditions.checkState(n.getParent() == null);
     ControlExitsCheck exits = new ControlExitsCheck();
@@ -847,10 +885,10 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   }
 
   class ControlExitsCheck implements NodeTraversal.Callback {
-    // TODO(mattloring): track seen labels to check for labelled breaks
     int continueCatchers = 0;
     int breakCatchers = 0;
     int throwCatchers = 0;
+    List<String> labels = new ArrayList<>();
     boolean exited = false;
 
     boolean addJumps = false;
@@ -872,6 +910,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
       switch (n.getType()) {
         case Token.FUNCTION:
           return false;
+        case Token.LABEL:
+          labels.add(0, n.getFirstChild().getString());
+          break;
         case Token.DO:
         case Token.WHILE:
         case Token.FOR:
@@ -889,7 +930,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           }
           break;
         case Token.BREAK:
-          if (breakCatchers == 0 || n.hasChildren()) {
+          if ((breakCatchers == 0 && !n.hasChildren()) || (n.hasChildren()
+              && !labels.contains(n.getFirstChild().getString()))) {
             exited = true;
             if (addJumps) {
               parent.addChildBefore(createFinallyJumpBlock(finallyName, finallyStartState), n);
@@ -897,7 +939,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           }
           break;
         case Token.CONTINUE:
-          if (continueCatchers == 0 || n.hasChildren()) {
+          if (continueCatchers == 0 || (n.hasChildren()
+              && !labels.contains(n.getFirstChild().getString()))) {
             exited = true;
             if (addJumps) {
               parent.addChildBefore(createFinallyJumpBlock(finallyName, finallyStartState), n);
@@ -930,6 +973,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
+        case Token.LABEL:
+          labels.remove(0);
+          break;
         case Token.DO:
         case Token.WHILE:
         case Token.FOR:
@@ -958,10 +1004,12 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     int breakCase;
     int continueCase;
+    String label;
 
-    public LoopContext(int breakCase, int continueCase) {
+    public LoopContext(int breakCase, int continueCase, String label) {
       this.breakCase = breakCase;
       this.continueCase = continueCase;
+      this.label = label;
     }
 
   }
