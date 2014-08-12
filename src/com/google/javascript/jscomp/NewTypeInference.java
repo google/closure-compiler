@@ -346,7 +346,7 @@ public class NewTypeInference implements CompilerPass {
 
   // Initialize the type environments on the CFG edges before the FWD analysis.
   private void initEdgeEnvsFwd(TypeEnv entryEnv) {
-    initEdgeEnvs(null);
+    envs.clear();
 
     // For function scopes, add the formal parameters and the free variables
     // from outer scopes to the environment.
