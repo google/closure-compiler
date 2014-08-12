@@ -70,6 +70,14 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean transpileOnly;
 
   /**
+   * Only do transpilation, don't inject es6_runtime.js or
+   * do any optimizations (this is useful for per-file transpilation).
+   */
+  public void setTranspileOnly(boolean value) {
+    transpileOnly = value;
+  }
+
+  /**
    * Whether the compiler accepts the `const' keyword.
    */
   boolean acceptConstKeyword;

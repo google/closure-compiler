@@ -212,7 +212,6 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.needsConversion()) {
-      checks.add(es6RuntimeLibrary);
       checks.add(es6HandleDefaultParams);
       checks.add(es6SplitVariableDeclarations);
       checks.add(convertEs6ToEs3);
@@ -222,6 +221,8 @@ public class DefaultPassConfig extends PassConfig {
 
       if (options.transpileOnly) {
         return checks;
+      } else {
+        checks.add(es6RuntimeLibrary);
       }
     }
 
@@ -412,7 +413,7 @@ public class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getOptimizations() {
     List<PassFactory> passes = Lists.newArrayList();
 
-    if (options.transpileOnly) {
+    if (options.needsConversion() && options.transpileOnly) {
       return passes;
     }
 
