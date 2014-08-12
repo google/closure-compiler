@@ -379,8 +379,14 @@ final class RescopeGlobalSymbols implements CompilerPass {
       // becomes
       // var notCrossModule;_.crossModule = i++, notCrossModule = i++
       if (!isCrossModule && parent.isVar()) {
-        input.getAstRoot(compiler).addChildToFront(
-            IR.var(IR.name(name).srcref(node)).srcref(node));
+        Node root = input.getAstRoot(compiler);
+        Node preDeclaration = IR.name(name).srcref(node);
+        if (root.getFirstChild().isVar() && root.getFirstChild() != parent) {
+          root.getFirstChild().addChildToBack(preDeclaration);
+        } else {
+          root.addChildToFront(
+              IR.var(preDeclaration).srcref(node));
+        }
       }
       compiler.reportCodeChange();
     }
