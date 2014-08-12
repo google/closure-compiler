@@ -24,6 +24,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 
@@ -110,6 +111,10 @@ class TypeTransformation {
     return isCallTo(n, TypeTransformationParser.Keywords.TEMPTYPEOF);
   }
 
+  private boolean isRecordType(Node n) {
+    return isCallTo(n, TypeTransformationParser.Keywords.RECORD);
+  }
+
   private JSType getType(String name) {
     return typeRegistry.getType(name);
   }
@@ -152,6 +157,10 @@ class TypeTransformation {
 
   private String getFunctionParameter(Node functionNode, int index) {
     return functionNode.getChildAtIndex(1).getChildAtIndex(index).getString();
+  }
+
+  private Node getCallArgument(Node n, int i) {
+    return n.isCall() ? n.getChildAtIndex(i + 1) : null;
   }
 
   private ImmutableList<Node> getParameters(Node operation) {
@@ -200,10 +209,12 @@ class TypeTransformation {
     if (isTemplateTypeOf(ttlAst)) {
       return evalTemplateTypeOf(ttlAst, typeVars);
     }
+    if (isRecordType(ttlAst)) {
+      return evalRecordType(ttlAst, typeVars);
+    }
     throw new IllegalStateException(
         "Could not evaluate the type transformation expression");
   }
-
 
   private JSType evalTypeName(Node ttlAst) {
     String typeName = ttlAst.getString();
@@ -351,5 +362,16 @@ class TypeTransformation {
       return getUnknownType();
     }
     return templateTypes.get(index);
+  }
+
+  private JSType evalRecordType(Node ttlAst,
+      ImmutableMap<String, JSType> typeVars) {
+    Node record = getCallArgument(ttlAst, 0);
+    RecordTypeBuilder builder = new RecordTypeBuilder(typeRegistry);
+    for (Node p : record.children()) {
+      builder.addProperty(p.getString(),
+          eval(p.getFirstChild(), typeVars), null);
+    }
+    return builder.build();
   }
 }

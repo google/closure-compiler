@@ -21,7 +21,10 @@ import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.testing.TestErrorReporter;
+
+import java.util.Map.Entry;
 
 public class TypeTransformationTest extends CompilerTypeTestCase {
 
@@ -284,12 +287,43 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "Index out of bounds in templateTypeOf: 2 > 1");
   }
 
+  public void testTransformationWithRecordType() {
+    testTTL(record(ImmutableMap.<String, JSType>of("x", NUMBER_TYPE)),
+        "record({x:'number'})");
+  }
+
+  public void testTransformationWithRecordType2() {
+    testTTL(record(ImmutableMap.<String, JSType>of("0", NUMBER_TYPE)),
+        "record({0:'number'})");
+  }
+
+  public void testTransformationWithRecordTypeMultipleProperties() {
+    testTTL(record(
+        ImmutableMap.<String, JSType>of("x", NUMBER_TYPE, "y", STRING_TYPE)),
+        "record({x:'number', y:S})");
+  }
+
+  public void testTransformationWithNestedRecordType() {
+    testTTL(record(ImmutableMap.<String, JSType>of(
+        "x", record(ImmutableMap.<String, JSType>of("z", BOOLEAN_TYPE)),
+        "y", STRING_TYPE)),
+        "record({x:record({z:B}), y:S})");
+  }
+
   private JSType union(JSType... variants) {
     return createUnionType(variants);
   }
 
   private JSType type(ObjectType baseType, JSType... templatizedTypes) {
     return createTemplatizedType(baseType, templatizedTypes);
+  }
+
+  private JSType record(ImmutableMap<String, JSType> props) {
+    RecordTypeBuilder builder = createRecordTypeBuilder();
+    for (Entry<String, JSType> e : props.entrySet()) {
+      builder.addProperty(e.getKey(), e.getValue(), null);
+    }
+    return builder.build();
   }
 
   private void testTTL(JSType expectedType, String ttlExp,

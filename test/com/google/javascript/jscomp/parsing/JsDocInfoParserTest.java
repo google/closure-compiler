@@ -3292,6 +3292,53 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         +                   "0) =: */");
   }
 
+  public void testParserWithTTLRecordType() {
+    parse("@template T := record({prop:T}) =: */");
+  }
+
+  public void testParserWithTTLNestedRecordType() {
+    parse("@template T := "
+        + "record({prop: record({p1:'number', p2:'boolean'}), x:'string' })"
+        + "=: */");
+  }
+
+  public void testParserWithTTLInvalidRecordTypeMissingParam() {
+    parse("@template T := record() =: */",
+        "Bad type annotation. Missing parameter in record");
+  }
+
+  public void testParserWithTTLInvalidRecordTypeExtraParam() {
+    parse("@template T := record({x:'number'}, {y:'number'}) =: */",
+        "Bad type annotation. Found extra parameter in record");
+  }
+
+  public void testParserWithTTLInvalidRecordTypeWithInvalidTypeInProperty() {
+    parse("@template T := record({prop:foo()}) =: */",
+        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid expression inside record");
+  }
+
+  public void testParserWithTTLInvalidRecordTypeMissingTypeInProperty() {
+    parse("@template T := record({prop}) =: */",
+        "Bad type annotation. Invalid property, missing type",
+        "Bad type annotation. Invalid expression inside record");
+  }
+
+  public void testParserWithTTLInvalidRecordTypeInvalidRecordExpression() {
+    parse("@template T := record(foo()) =: */",
+        "Bad type annotation. Invalid record expression");
+  }
+
+  public void testParserWithTTLInvalidRecordTypeInvalidRecordExpression2() {
+    parse("@template T := record(T) =: */",
+        "Bad type annotation. Invalid record expression");
+  }
+
+  public void testParserWithTTLInvalidRecordTypeInvalidRecordExpression3() {
+    parse("@template T := record({}) =: */",
+        "Bad type annotation. Missing parameter in record expression");
+  }
+
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",
         "illegal use of unknown JSDoc tag \"foobar\"; ignoring it");

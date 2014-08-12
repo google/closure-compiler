@@ -50,7 +50,8 @@ public final class TypeTransformationParser {
     SUBTYPE("sub"),
     NONE("none"),
     RAWTYPEOF("rawTypeOf"),
-    TEMPTYPEOF("templateTypeOf");
+    TEMPTYPEOF("templateTypeOf"),
+    RECORD("record");
 
     public final String name;
     Keywords(String name) {
@@ -60,7 +61,7 @@ public final class TypeTransformationParser {
 
   private static final ImmutableList<Keywords> TYPE_CONSTRUCTORS =
       ImmutableList.of(Keywords.TYPE, Keywords.UNION, Keywords.NONE,
-          Keywords.RAWTYPEOF, Keywords.TEMPTYPEOF);
+          Keywords.RAWTYPEOF, Keywords.TEMPTYPEOF, Keywords.RECORD);
   private static final ImmutableList<Keywords> OPERATIONS =
       ImmutableList.of(Keywords.COND, Keywords.MAPUNION);
   private static final ImmutableList<Keywords> BOOLEAN_PREDICATES =
@@ -72,7 +73,9 @@ public final class TypeTransformationParser {
       BOOLPRED_PARAM_COUNT = 2,
       MAPUNION_PARAM_COUNT = 2,
       RAWTYPEOF_PARAM_COUNT = 1,
-      TEMPTYPEOF_PARAM_COUNT = 2;
+      TEMPTYPEOF_PARAM_COUNT = 2,
+      RECORD_PARAM_COUNT = 1,
+      RECORD_MIN_PROPERTY_COUNT = 1;
 
   public TypeTransformationParser(String typeTransformationString,
       StaticSourceFile sourceFile, ErrorReporter errorReporter,
@@ -195,7 +198,7 @@ public final class TypeTransformationParser {
    * A template type expression must be a type variable or
    * a type(typename, TypeExp...) expression
    */
-  private boolean validTTLTemplateTypeExpression(Node expr) {
+  private boolean validTemplateTypeExpression(Node expr) {
     if (!isTypeVar(expr) && !isOperation(expr)) {
       warnInvalidExpression("template type operation", expr);
       return false;
@@ -237,7 +240,7 @@ public final class TypeTransformationParser {
    * A Union type expression must be a valid type variable or
    * a union(Uniontype-Exp, Uniontype-Exp, ...)
    */
-  private boolean validTTLUnionTypeExpression(Node expr) {
+  private boolean validUnionTypeExpression(Node expr) {
     if (!isTypeVar(expr) && !isOperation(expr)) {
       warnInvalidExpression("union type", expr);
       return false;
@@ -271,7 +274,7 @@ public final class TypeTransformationParser {
   /**
    * A none type expression must be of the form: none()
    */
-  private boolean validTTLNoneTypeExpression(Node expr) {
+  private boolean validNoneTypeExpression(Node expr) {
     if (!isOperation(expr)) {
       warnInvalidExpression("none", expr);
       return false;
@@ -293,7 +296,7 @@ public final class TypeTransformationParser {
   /**
    * A raw type expression must be of the form rawTypeOf(TemplateType)
    */
-  private boolean validTTLRawTypeOfTypeExpression(Node expr) {
+  private boolean validRawTypeOfTypeExpression(Node expr) {
     // The expression must have two children. The rawTypeOf keyword and the
     // parameter
     if (expr.getChildCount() < 1 + RAWTYPEOF_PARAM_COUNT) {
@@ -316,7 +319,7 @@ public final class TypeTransformationParser {
    * A template type of expression must be of the form
    * templateTypeOf(TemplateType, index)
    */
-  private boolean validTTLTemplateTypeOf(Node expr) {
+  private boolean validTemplateTypeOfExpression(Node expr) {
     // The expression must have three children. The templateTypeOf keyword, a
     // templatized type and an index
     if (expr.getChildCount() < 1 + TEMPTYPEOF_PARAM_COUNT) {
@@ -346,6 +349,41 @@ public final class TypeTransformationParser {
     return true;
   }
 
+  private boolean validRecordTypeExpression(Node expr) {
+    // The expression must have two children. The record keyword and
+    // a record expression
+    if (expr.getChildCount() < 1 + RECORD_PARAM_COUNT) {
+      warnMissingParam("record", expr);
+      return false;
+    }
+    if (expr.getChildCount() > 1 + RECORD_PARAM_COUNT) {
+      warnExtraParam("record", expr);
+      return false;
+    }
+    // A record expression must be an object literal with at least one property
+    Node record = expr.getChildAtIndex(1);
+    if (!record.isObjectLit()) {
+      warnInvalid("record expression", record);
+      return false;
+    }
+    if (record.getChildCount() < RECORD_MIN_PROPERTY_COUNT) {
+      warnMissingParam("record expression", record);
+      return false;
+    }
+    // Each value of a property must be a valid type expression
+    for (Node prop : record.children()) {
+      if (!prop.hasChildren()) {
+        warnInvalid("property, missing type", prop);
+        warnInvalidInside("record", prop);
+        return false;
+      } else if (!validTTLTypeExpression(prop.getFirstChild())) {
+        warnInvalidInside("record", prop);
+        return false;
+      }
+    }
+    return true;
+  }
+
   /**
    * A TTL type expression must be a type variable, a basic type expression
    * or a union type expression
@@ -368,19 +406,22 @@ public final class TypeTransformationParser {
     }
     // Use the right verifier
     if (isKeyword(keyword, Keywords.TYPE)) {
-      return validTTLTemplateTypeExpression(expr);
+      return validTemplateTypeExpression(expr);
     }
     if (isKeyword(keyword, Keywords.UNION)) {
-      return validTTLUnionTypeExpression(expr);
+      return validUnionTypeExpression(expr);
     }
     if (isKeyword(keyword, Keywords.NONE)) {
-      return validTTLNoneTypeExpression(expr);
+      return validNoneTypeExpression(expr);
     }
     if (isKeyword(keyword, Keywords.RAWTYPEOF)) {
-      return validTTLRawTypeOfTypeExpression(expr);
+      return validRawTypeOfTypeExpression(expr);
     }
     if (isKeyword(keyword, Keywords.TEMPTYPEOF)) {
-      return validTTLTemplateTypeOf(expr);
+      return validTemplateTypeOfExpression(expr);
+    }
+    if (isKeyword(keyword, Keywords.RECORD)) {
+      return validRecordTypeExpression(expr);
     }
     throw new IllegalStateException("Invalid type expression");
   }
@@ -389,7 +430,7 @@ public final class TypeTransformationParser {
    * A boolean expression (Bool-Exp) must follow the syntax:
    * Bool-Exp := eq(Type-Exp, Type-Exp) | sub(Type-Exp, Type-Exp)
    */
-  private boolean validTTLBooleanTypeExpression(Node expr) {
+  private boolean validBooleanTypeExpression(Node expr) {
     if (!isOperation(expr)) {
       warnInvalidExpression("boolean", expr);
       return false;
@@ -422,7 +463,7 @@ public final class TypeTransformationParser {
    * A conditional type transformation expression must be of the
    * form cond(Bool-Exp, TTL-Exp, TTL-Exp)
    */
-  private boolean validTTLConditionalExpression(Node expr) {
+  private boolean validConditionalExpression(Node expr) {
     // The expression must have four children:
     // - The cond keyword
     // - A boolean expression
@@ -437,7 +478,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // Check for the validity of the boolean and the expressions
-    if (!validTTLBooleanTypeExpression(expr.getChildAtIndex(1))) {
+    if (!validBooleanTypeExpression(expr.getChildAtIndex(1))) {
       warnInvalidInside("conditional", expr);
       return false;
     }
@@ -456,7 +497,7 @@ public final class TypeTransformationParser {
    * A mapunion type transformation expression must be of the form
    * mapunion(Uniontype-Exp, (typevar) => TTL-Exp).
    */
-  private boolean validTTLMapunionExpression(Node expr) {
+  private boolean validMapunionExpression(Node expr) {
     // The expression must have four children:
     // - The mapunion keyword
     // - A union type expression
@@ -470,7 +511,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // The second child must be a valid union type expression
-    if (!validTTLUnionTypeExpression(expr.getChildAtIndex(1))) {
+    if (!validUnionTypeExpression(expr.getChildAtIndex(1))) {
       warnInvalidInside("mapunion", expr.getChildAtIndex(1));
       return false;
     }
@@ -501,7 +542,7 @@ public final class TypeTransformationParser {
 
   /**
    * Checks the structure of the AST of a type transformation expression
-   * in @template T as TTL-Exp.
+   * in @template T := expression =:
    */
   private boolean validTypeTransformationExpression(Node expr) {
     if (!isValidExpression(expr)) {
@@ -525,10 +566,10 @@ public final class TypeTransformationParser {
       return validTTLTypeExpression(expr);
     }
     if (isKeyword(keyword, Keywords.COND)) {
-      return validTTLConditionalExpression(expr);
+      return validConditionalExpression(expr);
     }
     if (isKeyword(keyword, Keywords.MAPUNION)) {
-      return validTTLMapunionExpression(expr);
+      return validMapunionExpression(expr);
     }
     throw new IllegalStateException("Invalid type transformation expression");
   }
