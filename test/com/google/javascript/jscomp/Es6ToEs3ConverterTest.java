@@ -1866,12 +1866,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("function *f() {switch (i) {default: case 1: yield 1;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    test("function *f() {try {} catch (e) { yield 1; } finally {}}",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    test("function *f() {try { yield 1; } finally {}}",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testThrowGenerator() {
@@ -2547,6 +2541,55 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "        case 1:",
         "          e = $jscomp$generator$global$error;",
         "        case 2:",
+        "          $jscomp$generator$state = -1;",
+        "        default:",
+        "          return {value: undefined, done: true}",
+        "      }",
+        "    }",
+        "  }",
+        "}"
+    ));
+  }
+
+  public void testGeneratorFinally() {
+    test("function *f() {try {yield 1;} catch (e) {} finally {b();}}", Joiner.on('\n').join(
+        "/** @suppress {uselessCode} */",
+        "function f() {",
+        "  var $jscomp$generator$state = 0;",
+        "  var e;",
+        "  var $jscomp$generator$finally0;",
+        "  var $jscomp$generator$global$error;",
+        "  return {",
+        "    $$iterator: function() { return this; },",
+        "    next: function($jscomp$generator$next$arg) {",
+        "      while (1) switch ($jscomp$generator$state) {",
+        "        case 0:",
+        "          try {",
+        "            $jscomp$generator$state = 4;",
+        "            return {value: 1, done: false};",
+        "          } catch ($jscomp$generator$e) {",
+        "            $jscomp$generator$global$error = $jscomp$generator$e;",
+        "            $jscomp$generator$state = 1;",
+        "            break;",
+        "          }",
+        "        case 4:",
+        "          try {",
+        "            $jscomp$generator$finally0 = 3;",
+        "            $jscomp$generator$state = 2;",
+        "            break;",
+        "          } catch ($jscomp$generator$e) {",
+        "            $jscomp$generator$global$error = $jscomp$generator$e;",
+        "            $jscomp$generator$state = 1;",
+        "            break;",
+        "          }",
+        "        case 1:",
+        "          e = $jscomp$generator$global$error;",
+        "          $jscomp$generator$finally0 = 3;",
+        "        case 2:",
+        "          b();",
+        "          $jscomp$generator$state = $jscomp$generator$finally0;",
+        "          break;",
+        "        case 3:",
         "          $jscomp$generator$state = -1;",
         "        default:",
         "          return {value: undefined, done: true}",
