@@ -1078,6 +1078,10 @@ public class NewTypeInference implements CompilerPass {
         Preconditions.checkState(
             !NodeUtil.isAssignmentOp(expr.getParent()) ||
             !NodeUtil.isLValue(expr));
+        if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+          expr.removeProp(Node.ANALYZED_DURING_GTI);
+          return new EnvTypePair(inEnv, requiredType);
+        }
         return analyzePropAccessFwd(
             expr.getFirstChild(), expr.getLastChild().getString(),
             inEnv, requiredType, specializedType);
@@ -1334,14 +1338,25 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeAssignFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
+    if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+      expr.removeProp(Node.ANALYZED_DURING_GTI);
+      return new EnvTypePair(inEnv, requiredType);
+    }
     mayWarnAboutConst(expr);
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
+    if (lhs.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+      lhs.removeProp(Node.ANALYZED_DURING_GTI);
+      JSType declType = getDeclaredTypeOfQname(lhs, inEnv);
+      EnvTypePair rhsPair = analyzeExprFwd(rhs, inEnv, declType);
+      if (!rhsPair.type.isSubtypeOf(declType)) {
+        warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
+                declType.toString(), rhsPair.type.toString()));
+      }
+      return rhsPair;
+    }
     LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
     JSType declType = lvalue.declType;
-    if (NodeUtil.isEnumDecl(expr) && rhs.isObjectLit()) {
-      return analyzeEnumObjLitFwd(rhs, lvalue.env, lvalue.type);
-    }
     EnvTypePair rhsPair =
         analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
     if (declType != null && !rhsPair.type.isSubtypeOf(declType)) {
@@ -2435,6 +2450,9 @@ public class NewTypeInference implements CompilerPass {
         Preconditions.checkState(
             !NodeUtil.isAssignmentOp(expr.getParent()) ||
             !NodeUtil.isLValue(expr));
+        if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+          return new EnvTypePair(outEnv, requiredType);
+        }
         return analyzePropAccessBwd(expr.getFirstChild(),
             expr.getLastChild().getString(), outEnv, requiredType);
       }
@@ -2579,8 +2597,14 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeAssignBwd(
       Node expr, TypeEnv outEnv, JSType requiredType) {
+    if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+      return new EnvTypePair(outEnv, requiredType);
+    }
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
+    if (lhs.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+      return analyzeExprBwd(rhs, outEnv, getDeclaredTypeOfQname(lhs, outEnv));
+    }
     // Here we analyze the LHS twice:
     // Once to find out what should be removed for the slicedEnv,
     // and again to take into account the side effects of the LHS itself.
@@ -2907,6 +2931,28 @@ public class NewTypeInference implements CompilerPass {
       this.type = type;
       this.declType = declType;
       this.ptr = ptr;
+    }
+  }
+
+  private JSType getDeclaredTypeOfQname(Node qnameNode, TypeEnv env) {
+    switch (qnameNode.getType()) {
+      case Token.NAME: {
+        JSType result = envGetType(env, qnameNode.getString());
+        Preconditions.checkNotNull(result);
+        return result;
+      }
+      case Token.GETPROP: {
+        Preconditions.checkState(qnameNode.isQualifiedName());
+        JSType recvType =
+            getDeclaredTypeOfQname(qnameNode.getFirstChild(), env);
+        JSType result = recvType.getProp(
+            new QualifiedName(qnameNode.getLastChild().getString()));
+        Preconditions.checkNotNull(result);
+        return result;
+      }
+      default:
+        throw new RuntimeException("getDeclaredTypeOfQname: unexpected node "
+            + Token.name(qnameNode.getType()));
     }
   }
 

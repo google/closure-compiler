@@ -611,12 +611,14 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitNamespace(Node qnameNode) {
       if (qnameNode.isGetProp()) {
+        Preconditions.checkState(qnameNode.getParent().isAssign());
         QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
         String leftmost = qname.getLeftmostName();
         QualifiedName props = qname.getAllButLeftmost();
         if (currentScope.getNamespace(leftmost).isDefined(props)) {
           return;
         }
+        qnameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       }
       if (!currentScope.isNamespace(qnameNode)) {
         currentScope.addNamespace(qnameNode);
@@ -625,6 +627,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitTypedef(Node qnameNode) {
       Preconditions.checkState(qnameNode.isQualifiedName());
+      qnameNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       if (NodeUtil.getInitializer(qnameNode) != null) {
         warnings.add(JSError.make(qnameNode, CANNOT_INIT_TYPEDEF));
       }
@@ -645,6 +648,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitEnum(Node qnameNode) {
       Preconditions.checkState(qnameNode.isQualifiedName());
+      qnameNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       if (qnameNode.isName()
           && currentScope.isDefinedLocally(qnameNode.getString())) {
         String qname = qnameNode.getQualifiedName();
@@ -763,6 +767,10 @@ class GlobalTypeInfo implements CompilerPass {
         nominaltypesByNode.put(fn, rawNominalType);
         if (nameNode.isName()
             || currentScope.isNamespace(nameNode.getFirstChild())) {
+          if (fn.getParent().isAssign()) {
+            fn.getParent().getFirstChild()
+                .putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+          }
           currentScope.addNominalType(nameNode, rawNominalType);
         }
       } else if (fnDoc != null) {
@@ -1061,6 +1069,7 @@ class GlobalTypeInfo implements CompilerPass {
           propDeclType = inferConstTypeFromRhs(getProp);
         }
         rawType.addProtoProperty(pname, propDeclType, isConst);
+        getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       } else {
         rawType.addUndeclaredProtoProperty(pname);
       }
@@ -1090,6 +1099,7 @@ class GlobalTypeInfo implements CompilerPass {
           propDeclType = inferConstTypeFromRhs(getProp);
         }
         classType.addCtorProperty(pname, propDeclType, isConst);
+        getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       } else {
         classType.addUndeclaredCtorProperty(pname);
       }
@@ -1130,6 +1140,7 @@ class GlobalTypeInfo implements CompilerPass {
           propDeclType = inferConstTypeFromRhs(getProp);
         }
         ns.addProperty(pname, propDeclType, isConst);
+        getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
         JSType t = simpleInferExprType(getProp.getParent().getLastChild());
