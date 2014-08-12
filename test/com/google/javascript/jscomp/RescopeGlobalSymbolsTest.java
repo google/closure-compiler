@@ -259,12 +259,33 @@ public class RescopeGlobalSymbolsTest extends CompilerTestCase {
     }
 
     public void testFreeCallSemantics() {
+      // This triggers free call.
       test(
-          "function x(){};var y=function(){var val=x()||{}}",
-          "_.x=function(){};_.y=function(){var val=(0,_.x)()||{}}");
+          "function x(){this};var y=function(){var val=x()||{}}",
+          "_.x=function(){this};_.y=function(){var val=(0,_.x)()||{}}");
       test(
-          "function x(){x()}",
-          "_.x=function(){(0,_.x)()}");
+          "function x(){this;x()}",
+          "_.x=function(){this;(0,_.x)()}");
+      test(
+          "var a=function(){this};a()",
+          "_.a=function(){this};(0,_.a)()");
+      // Cases where free call forcing through (0, foo)() is not necessary.
+      test(
+          "var a=function(){};a()",
+          "_.a=function(){};_.a()");
+      test(
+          "function a(){};a()",
+          "_.a=function(){};_.a()");
+      test(
+          "var a;a=function(){};a()",
+          "_.a=function(){};_.a()");
+      // Ambigious cases.
+      test(
+          "var a=1;a=function(){};a()",
+          "_.a=1;_.a=function(){};(0,_.a)()");
+      test(
+          "var b;var a=b;a()",
+          "_.a=_.b;(0,_.a)()");
     }
   }
 }

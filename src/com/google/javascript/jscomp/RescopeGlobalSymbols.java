@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -63,6 +64,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final boolean addExtern;
   private final boolean assumeCrossModuleNames;
   private final Set<String> crossModuleNames = Sets.newHashSet();
+  private final Set<String> maybeReferencesThis = Sets.newHashSet();
 
   /**
    * Constructor for the RescopeGlobalSymbols compiler pass.
@@ -130,9 +132,13 @@ final class RescopeGlobalSymbols implements CompilerPass {
         compiler,
         root,
         new RewriteGlobalFunctionStatementsToVarAssignmentsCallback());
-    // 2. find global names than are used in more than one module. Those that
+    // 2. find global names that are used in more than one module. Those that
     //    are have to be rewritten.
-    NodeTraversal.traverse(compiler, root, new FindCrossModuleNamesCallback());
+    List<Callback> nonMutatingPasses = new ArrayList<>();
+    nonMutatingPasses.add(new FindCrossModuleNamesCallback());
+    //    and find names that may refering functions that reference this.
+    nonMutatingPasses.add(new FindNamesReferencingThis());
+    CombinedCompilerPass.traverse(compiler, root, nonMutatingPasses);
     // 3. rewriting all references to be property accesses of the single symbol.
     NodeTraversal.traverse(compiler, root, new RewriteScopeCallback());
     // 4. removing the var from statements in global scope if the declared names
@@ -206,6 +212,52 @@ final class RescopeGlobalSymbols implements CompilerPass {
         JSModule module = input.getModule();
         if (module != t.getModule()) {
           crossModuleNames.add(name);
+        }
+      }
+    }
+  }
+
+  /**
+   * Builds the maybeReferencesThis set of names that may reference a function
+   * that references this. If the function a name references does not reference
+   * this it can be called as a method call where the this value is not the
+   * same as in a normal function call.
+   */
+  private class FindNamesReferencingThis extends
+      AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName()) {
+        String name = n.getString();
+        if (name.isEmpty()) {
+          return;
+        }
+        Node value = null;
+        if (parent.isAssign() && n == parent.getFirstChild()) {
+          value = parent.getLastChild();
+        } else if (parent.isVar()) {
+          value = n.getFirstChild();
+        } else if (parent.isFunction()) {
+          value = parent;
+        }
+        if (value == null) {
+          return;
+        }
+        // We already added this symbol. Done after checks above because those
+        // are comparatively cheap.
+        if (maybeReferencesThis.contains(name)) {
+          return;
+        }
+        Scope s = t.getScope();
+        Scope.Var v = s.getVar(name);
+        if (v == null || !v.isGlobal()) {
+          return;
+        }
+        // If anything but a function is assignment we assume that possibly
+        // a function referencing this is being assignment. Otherwise we
+        // check whether the function that is being assigned references this.
+        if (!value.isFunction() || NodeUtil.referencesThis(value)) {
+          maybeReferencesThis.add(name);
         }
       }
     }
@@ -312,6 +364,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
         parent.replaceChild(node, assign);
       } else if (isCrossModule) {
         parent.replaceChild(node, replacement);
+        if (parent.isCall() && !maybeReferencesThis.contains(name)) {
+          // Do not write calls like this: (0, _a)() but rather as _.a(). The
+          // this inside the function will be wrong, but it doesn't matter
+          // because the this is never read.
+          parent.putBooleanProp(Node.FREE_CALL, false);
+        }
       }
       // If we changed a non cross module name that was in a var declaration
       // we need to preserve that var declaration. Because it is global
