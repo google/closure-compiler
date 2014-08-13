@@ -310,6 +310,12 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "record({x:record({z:B}), y:S})");
   }
 
+  public void testParserWithTTLTypeTransformationInFirstParamMapunion() {
+    testTTL(union(NUMBER_TYPE, STRING_TYPE),
+        "mapunion(templateTypeOf(type(ARR, union(N, S)), 0),"
+        + "(x) => x)");
+  }
+
   private JSType union(JSType... variants) {
     return createUnionType(variants);
   }

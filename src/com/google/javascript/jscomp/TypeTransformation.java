@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser;
+import com.google.javascript.jscomp.parsing.TypeTransformationParser.Keywords;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -68,51 +69,8 @@ class TypeTransformation {
     return n.isString();
   }
 
-  private boolean isCallTo(Node n, TypeTransformationParser.Keywords keyword) {
-    if (!n.isCall()) {
-      return false;
-    }
-    return n.getFirstChild().getString().equals(keyword.name);
-  }
-
-  private boolean isTypePredicate(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.TYPE);
-  }
-
-  private boolean isUnionType(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.UNION);
-  }
-
-  private boolean isEqtype(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.EQ);
-  }
-
-  private boolean isSubtype(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.SUB);
-  }
-
-  private boolean isConditional(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.COND);
-  }
-
-  private boolean isMapunion(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.MAPUNION);
-  }
-
-  private boolean isNone(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.NONE);
-  }
-
-  private boolean isRawTypeOf(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.RAWTYPEOF);
-  }
-
-  private boolean isTemplateTypeOf(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.TEMPLATETYPEOF);
-  }
-
-  private boolean isRecordType(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.RECORD);
+  private Keywords nameToKeyword(String s) {
+    return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
   }
 
   private JSType getType(String name) {
@@ -188,32 +146,53 @@ class TypeTransformation {
     if (isTypeVar(ttlAst)) {
       return evalTypeVar(ttlAst, typeVars);
     }
-    if (isTypePredicate(ttlAst)) {
-      return evalTemplatizedType(ttlAst, typeVars);
+    String name = ttlAst.getFirstChild().getString();
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword.kind) {
+      case TYPE_CONSTRUCTOR:
+        return evalTypeExpression(ttlAst, typeVars);
+      case OPERATION:
+        return evalOperationExpression(ttlAst, typeVars);
+      default:
+        throw new IllegalStateException(
+            "Could not evaluate the type transformation expression");
     }
-    if (isUnionType(ttlAst)) {
-      return evalUnionType(ttlAst, typeVars);
+  }
+
+  private JSType evalOperationExpression(Node ttlAst,
+      ImmutableMap<String, JSType> typeVars) {
+    String name = ttlAst.getFirstChild().getString();
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword) {
+      case COND:
+        return evalConditional(ttlAst, typeVars);
+      case MAPUNION:
+        return evalMapunion(ttlAst, typeVars);
+      default:
+        throw new IllegalStateException("Invalid type transformation operation");
     }
-    if (isConditional(ttlAst)) {
-      return evalConditional(ttlAst, typeVars);
+  }
+
+  private JSType evalTypeExpression(Node ttlAst,
+      ImmutableMap<String, JSType> typeVars) {
+    String name = ttlAst.getFirstChild().getString();
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword) {
+      case TYPE:
+        return evalTemplatizedType(ttlAst, typeVars);
+      case UNION:
+        return evalUnionType(ttlAst, typeVars);
+      case NONE:
+        return getNoType();
+      case RAWTYPEOF:
+        return evalRawTypeOf(ttlAst, typeVars);
+      case TEMPLATETYPEOF:
+        return evalTemplateTypeOf(ttlAst, typeVars);
+      case RECORD:
+        return evalRecordType(ttlAst, typeVars);
+      default:
+        throw new IllegalStateException("Invalid type expression");
     }
-    if (isMapunion(ttlAst)) {
-      return evalMapunion(ttlAst, typeVars);
-    }
-    if (isNone(ttlAst)) {
-      return getNoType();
-    }
-    if (isRawTypeOf(ttlAst)) {
-      return evalRawTypeOf(ttlAst, typeVars);
-    }
-    if (isTemplateTypeOf(ttlAst)) {
-      return evalTemplateTypeOf(ttlAst, typeVars);
-    }
-    if (isRecordType(ttlAst)) {
-      return evalRecordType(ttlAst, typeVars);
-    }
-    throw new IllegalStateException(
-        "Could not evaluate the type transformation expression");
   }
 
   private JSType evalTypeName(Node ttlAst) {
@@ -276,14 +255,18 @@ class TypeTransformation {
     ImmutableList<Node> params = getParameters(ttlAst);
     JSType type0 = eval(params.get(0), typeVars);
     JSType type1 = eval(params.get(1), typeVars);
+    String name = ttlAst.getFirstChild().getString();
+    Keywords keyword = nameToKeyword(name);
 
-    if (isEqtype(ttlAst)) {
-      return type0.isEquivalentTo(type1);
-    } else if (isSubtype(ttlAst)) {
-      return type0.isSubtype(type1);
+    switch (keyword) {
+      case EQ:
+        return type0.isEquivalentTo(type1);
+      case SUB:
+        return type0.isSubtype(type1);
+      default:
+        throw new IllegalStateException(
+            "Invalid boolean predicate in the type transformation");
     }
-    throw new IllegalStateException(
-        "Invalid boolean predicate in the type transformation");
   }
 
   private JSType evalConditional(Node ttlAst,
@@ -302,16 +285,7 @@ class TypeTransformation {
     Node mapFunction = params.get(1);
     String paramName = getFunctionParameter(mapFunction, 0);
     Node mapFunctionBody = mapFunction.getChildAtIndex(2);
-    JSType unionType;
-
-    // The first parameter is either a union() or a type variable
-    if (isUnionType(unionParam)) {
-      unionType = evalUnionType(unionParam, typeVars);
-    } else if (isTypeVar(unionParam)) {
-      unionType = evalTypeVar(unionParam, typeVars);
-    } else {
-      throw new IllegalStateException("Invalid union type parameter in mapunion");
-    }
+    JSType unionType = eval(unionParam, typeVars);
 
     // If the first parameter does not correspond to a union type then
     // consider it as a union with a single type and evaluate

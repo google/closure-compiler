@@ -3017,7 +3017,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidUnionType2() {
     parse("@template T := union(function(a){}, T) =:*/",
-        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside union type");
   }
 
@@ -3116,7 +3116,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidMapunionType() {
     parse("@template T := mapunion(foo(), (S) => S) =: */",
-        "Bad type annotation. Invalid union type expression",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside mapunion");
   }
 
@@ -3207,7 +3207,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidTypeOperationNestedGeneric() {
     parse("@template T := type(T, foo()) =: */",
-        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside template type operation");
   }
 
@@ -3221,7 +3221,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidRawTypeOperation() {
     parse("@template T := rawTypeOf(foo()) =: */",
-        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside rawTypeOf");
   }
 
@@ -3249,7 +3249,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidFirstParamTemplateTypeOf() {
     parse("@template T := templateTypeOf(foo(), 1) =: */",
-        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside templateTypeOf");
   }
 
@@ -3314,7 +3314,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidRecordTypeWithInvalidTypeInProperty() {
     parse("@template T := record({prop:foo()}) =: */",
-        "Bad type annotation. Invalid type expression",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside record");
   }
 
@@ -3337,6 +3337,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLInvalidRecordTypeInvalidRecordExpression3() {
     parse("@template T := record({}) =: */",
         "Bad type annotation. Missing parameter in record expression");
+  }
+
+  public void testParserWithTTLTypeTransformationInFirstParamMapunion() {
+    parse("@template T := "
+        + "mapunion(templateTypeOf(type(R, union(S, U)), 0), "
+        + "(x) => x) =: */");
   }
 
   public void testWhitelistedNewAnnotations() {

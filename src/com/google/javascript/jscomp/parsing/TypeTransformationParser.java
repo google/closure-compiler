@@ -116,20 +116,8 @@ public final class TypeTransformationParser {
     return isValidKeyword(name) ? nameToKeyword(name).kind == kind : false;
   }
 
-  private boolean isValidTypeConstructor(String name) {
-    return isOperationKind(name, OperationKind.TYPE_CONSTRUCTOR);
-  }
-
   private boolean isValidBooleanPredicate(String name) {
     return isOperationKind(name, OperationKind.BOOLEAN_PREDICATE);
-  }
-
-  private boolean isUnion(String name) {
-    return Keywords.UNION.name.equals(name);
-  }
-
-  private boolean isTemplateType(String name) {
-    return Keywords.TYPE.name.equals(name);
   }
 
   private Node getCallArgument(Node n, int i) {
@@ -225,8 +213,8 @@ public final class TypeTransformationParser {
   }
 
   /**
-   * A template type expression must be a type variable or
-   * a type(typename, TypeExp...) expression
+   * A template type expression must be of the form type(typename, TTLExp,...)
+   * or type(typevar, TTLExp...)
    */
   private boolean validTemplateTypeExpression(Node expr) {
     // The expression must have at least three children the type keyword,
@@ -244,7 +232,7 @@ public final class TypeTransformationParser {
     }
     // The rest of the parameters must be valid type expressions
     for (int i = 1; i < numParams; i++) {
-      if (!validTypeExpression(getCallArgument(expr, i))) {
+      if (!validTypeTransformationExpression(getCallArgument(expr, i))) {
         warnInvalidInside("template type operation", expr);
         return false;
       }
@@ -254,22 +242,9 @@ public final class TypeTransformationParser {
 
   /**
    * A Union type expression must be a valid type variable or
-   * a union(Uniontype-Exp, Uniontype-Exp, ...)
+   * a union(TTLExp, TTLExp, ...)
    */
   private boolean validUnionTypeExpression(Node expr) {
-    if (!isTypeVar(expr) && !isOperation(expr)) {
-      warnInvalidExpression("union type", expr);
-      return false;
-    }
-    if (isTypeVar(expr)) {
-      return true;
-    }
-    // It must start with union keyword
-    String name = expr.getFirstChild().getString();
-    if (!isUnion(name)) {
-      warnInvalidExpression("union type", expr);
-      return false;
-    }
     // The expression must have at least three children: The union keyword and
     // two type expressions
     if (!checkParameterCount(expr, Keywords.UNION)) {
@@ -278,7 +253,7 @@ public final class TypeTransformationParser {
     int numParams = expr.getChildCount() - 1;
     // Check if each of the members of the union is a valid type expression
     for (int i = 0; i < numParams; i++) {
-      if (!validTypeExpression(expr.getChildAtIndex(i))) {
+      if (!validTypeTransformationExpression(expr.getChildAtIndex(i))) {
         warnInvalidInside("union type", expr);
         return false;
       }
@@ -295,7 +270,7 @@ public final class TypeTransformationParser {
   }
 
   /**
-   * A raw type expression must be of the form rawTypeOf(TemplateType)
+   * A raw type expression must be of the form rawTypeOf(TTLExp)
    */
   private boolean validRawTypeOfTypeExpression(Node expr) {
     // The expression must have two children. The rawTypeOf keyword and the
@@ -304,7 +279,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // The parameter must be a valid type expression
-    if (!validTypeExpression(getCallArgument(expr, 0))) {
+    if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
       warnInvalidInside("rawTypeOf", expr);
       return false;
     }
@@ -313,7 +288,7 @@ public final class TypeTransformationParser {
 
   /**
    * A template type of expression must be of the form
-   * templateTypeOf(TemplateType, index)
+   * templateTypeOf(TTLExp, index)
    */
   private boolean validTemplateTypeOfExpression(Node expr) {
     // The expression must have three children. The templateTypeOf keyword, a
@@ -322,7 +297,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // The parameter must be a valid type expression
-    if (!validTypeExpression(getCallArgument(expr, 0))) {
+    if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
       warnInvalidInside("templateTypeOf", expr);
       return false;
     }
@@ -356,13 +331,13 @@ public final class TypeTransformationParser {
       warnMissingParam("record expression", record);
       return false;
     }
-    // Each value of a property must be a valid type expression
+    // Each value of a property must be a valid expression
     for (Node prop : record.children()) {
       if (!prop.hasChildren()) {
         warnInvalid("property, missing type", prop);
         warnInvalidInside("record", prop);
         return false;
-      } else if (!validTypeExpression(prop.getFirstChild())) {
+      } else if (!validTypeTransformationExpression(prop.getFirstChild())) {
         warnInvalidInside("record", prop);
         return false;
       }
@@ -371,51 +346,33 @@ public final class TypeTransformationParser {
   }
 
   /**
-   * A TTL type expression must be a type variable, a basic type expression
-   * or a union type expression
+   * A TTL type expression must be a union type, a template type, a record type
+   * or any of the type predicates (none, rawTypeOf, templateTypeOf).
    */
   private boolean validTypeExpression(Node expr) {
-    if (!isValidExpression(expr)) {
-      warnInvalidExpression("type", expr);
-      return false;
-    }
-    if (isTypeVar(expr) || isTypeName(expr)) {
-      return true;
-    }
-    // If it is an operation we can safely move one level down
-    Node operation = expr.getFirstChild();
-    String name = operation.getString();
-    // Check for valid type operations
-    if (!isValidTypeConstructor(name)) {
-      warnInvalidExpression("type", expr);
-      return false;
-    }
+    String name = expr.getFirstChild().getString();
     Keywords keyword = nameToKeyword(name);
-    // Use the right verifier
-    if (keyword == Keywords.TYPE) {
-      return validTemplateTypeExpression(expr);
+    switch (keyword) {
+      case TYPE:
+        return validTemplateTypeExpression(expr);
+      case UNION:
+        return validUnionTypeExpression(expr);
+      case NONE:
+        return validNoneTypeExpression(expr);
+      case RAWTYPEOF:
+        return validRawTypeOfTypeExpression(expr);
+      case TEMPLATETYPEOF:
+        return validTemplateTypeOfExpression(expr);
+      case RECORD:
+        return validRecordTypeExpression(expr);
+      default:
+        throw new IllegalStateException("Invalid type expression");
     }
-    if (keyword == Keywords.UNION) {
-      return validUnionTypeExpression(expr);
-    }
-    if (keyword == Keywords.NONE) {
-      return validNoneTypeExpression(expr);
-    }
-    if (keyword == Keywords.RAWTYPEOF) {
-      return validRawTypeOfTypeExpression(expr);
-    }
-    if (keyword == Keywords.TEMPLATETYPEOF) {
-      return validTemplateTypeOfExpression(expr);
-    }
-    if (keyword == Keywords.RECORD) {
-      return validRecordTypeExpression(expr);
-    }
-    throw new IllegalStateException("Invalid type expression");
   }
 
   /**
-   * A boolean expression (Bool-Exp) must follow the syntax:
-   * Bool-Exp := eq(Type-Exp, Type-Exp) | sub(Type-Exp, Type-Exp)
+   * A boolean expression must be of the form eq(TTLExp, TTLExp) or
+   * sub(TTLExp, TTLExp)
    */
   private boolean validBooleanTypeExpression(Node expr) {
     if (!isOperation(expr)) {
@@ -441,7 +398,7 @@ public final class TypeTransformationParser {
 
   /**
    * A conditional type transformation expression must be of the
-   * form cond(Bool-Exp, TTL-Exp, TTL-Exp)
+   * form cond(BoolExp, TTLExp, TTLExp)
    */
   private boolean validConditionalExpression(Node expr) {
     // The expression must have four children:
@@ -470,7 +427,7 @@ public final class TypeTransformationParser {
 
   /**
    * A mapunion type transformation expression must be of the form
-   * mapunion(Uniontype-Exp, (typevar) => TTL-Exp).
+   * mapunion(TTLExp, (typevar) => TTLExp).
    */
   private boolean validMapunionExpression(Node expr) {
     // The expression must have four children:
@@ -481,7 +438,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // The second child must be a valid union type expression
-    if (!validUnionTypeExpression(getCallArgument(expr, 0))) {
+    if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
       warnInvalidInside("mapunion", getCallArgument(expr, 0));
       return false;
     }
@@ -511,36 +468,48 @@ public final class TypeTransformationParser {
   }
 
   /**
+   * An operation expression is a cond or a mapunion
+   */
+  private boolean validOperationExpression(Node expr) {
+    String name = expr.getFirstChild().getString();
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword) {
+      case COND:
+        return validConditionalExpression(expr);
+      case MAPUNION:
+        return validMapunionExpression(expr);
+      default:
+        throw new IllegalStateException("Invalid type expression");
+    }
+  }
+
+  /**
    * Checks the structure of the AST of a type transformation expression
-   * in @template T := expression =:
+   * in @template T := TTLExp =:
    */
   private boolean validTypeTransformationExpression(Node expr) {
     if (!isValidExpression(expr)) {
       warnInvalidExpression("type transformation", expr);
       return false;
     }
-    // If the expression is a type variable or a type name then return
     if (isTypeVar(expr) || isTypeName(expr)) {
       return true;
     }
-    // If it is a CALL we can safely move one level down
+    // Check for valid keyword
     String name = expr.getFirstChild().getString();
-    // Check for valid operations
     if (!isValidKeyword(name)) {
       warnInvalidExpression("type transformation", expr);
       return false;
     }
     Keywords keyword = nameToKeyword(name);
-    // Check the rest of the expression depending on the operation
-    if (keyword.kind == OperationKind.TYPE_CONSTRUCTOR) {
-      return validTypeExpression(expr);
+    // Check the rest of the expression depending on the kind
+    switch (keyword.kind) {
+      case TYPE_CONSTRUCTOR:
+        return validTypeExpression(expr);
+      case OPERATION:
+        return validOperationExpression(expr);
+      default:
+        throw new IllegalStateException("Invalid type transformation expression");
     }
-    if (keyword == Keywords.COND) {
-      return validConditionalExpression(expr);
-    }
-    if (keyword == Keywords.MAPUNION) {
-      return validMapunionExpression(expr);
-    }
-    throw new IllegalStateException("Invalid type transformation expression");
   }
 }
