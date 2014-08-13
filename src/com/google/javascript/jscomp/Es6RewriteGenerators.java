@@ -72,6 +72,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   private static final String GENERATOR_NEXT_ARG = "$jscomp$generator$next$arg";
 
+  private static final String GENERATOR_THROW_ARG = "$jscomp$generator$throw$arg";
+
   private Supplier<String> generatorCounter;
 
   private static final String GENERATOR_SWITCH_ENTERED = "$jscomp$generator$switch$entered";
@@ -138,9 +140,19 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           visitYieldFor(n, parent);
         } else if (!parent.isExprResult()) {
           visitYieldExpr(n, parent);
+        } else {
+          visitYieldThrows(parent, parent.getParent());
         }
         break;
     }
+  }
+
+  private void visitYieldThrows(Node n, Node parent) {
+    Node ifThrows = IR.ifNode(
+        IR.shne(IR.name(GENERATOR_THROW_ARG), IR.name("undefined")),
+        IR.block(IR.throwNode(IR.name(GENERATOR_THROW_ARG))));
+    parent.addChildAfter(ifThrows, n);
+    compiler.reportCodeChange();
   }
 
   /**
@@ -174,8 +186,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
         IR.call(IR.getprop(IR.name(GENERATOR_YIELD_ALL_NAME), IR.string("next"))));
     Node loopCondition = IR.not(IR.getprop(assignIterResult, IR.string("done")));
     Node elemValue = IR.getprop(IR.name(GENERATOR_YIELD_ALL_ENTRY), IR.string("value"));
+    Node yieldStatement = IR.exprResult(IR.yield(elemValue.cloneTree()));
     Node loop = IR.whileNode(loopCondition,
-        IR.block(IR.exprResult(IR.yield(elemValue.cloneTree()))));
+        IR.block(yieldStatement));
 
     enclosingStatement.getParent().addChildBefore(generator, enclosingStatement);
     enclosingStatement.getParent().addChildBefore(entryDecl, enclosingStatement);
@@ -185,6 +198,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     } else {
       parent.replaceChild(n, elemValue);
     }
+
+    visitYieldThrows(yieldStatement, yieldStatement.getParent());
+    compiler.reportCodeChange();
   }
 
   private void visitYieldExpr(Node n, Node parent) {
@@ -197,6 +213,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     parent.replaceChild(n, yieldResult);
     enclosingStatement.getParent().addChildBefore(yieldStatement, enclosingStatement);
     enclosingStatement.getParent().addChildBefore(yieldResultDecl, enclosingStatement);
+
+    visitYieldThrows(yieldStatement, yieldStatement.getParent());
     compiler.reportCodeChange();
   }
 
@@ -205,15 +223,18 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
     Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
       "{",
       "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
+      "  function $jscomp$generator$impl(" + GENERATOR_NEXT_ARG + ", ",
+      "      " + GENERATOR_THROW_ARG + ") {",
+      "    while (1) switch (" + GENERATOR_STATE + ") {",
+      "      case " + generatorCaseCount + ":",
+      "      default:",
+      "        return {value: undefined, done: true};",
+      "    }",
+      "  }",
       "  return {",
       "    " + ITER_KEY + ": function() { return this; },",
-      "    next: function(" + GENERATOR_NEXT_ARG + ") {",
-      "      while (1) switch (" + GENERATOR_STATE + ") {",
-      "        case " + generatorCaseCount + ":",
-      "        default:",
-      "          return {value: undefined, done: true};",
-      "      }",
-      "    }",
+      "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
+      "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
       "  }",
       "}"
     )).removeFirstChild();
@@ -932,8 +953,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
           }
           break;
         case Token.BREAK:
-          if ((breakCatchers == 0 && !n.hasChildren()) || (n.hasChildren()
-              && !labels.contains(n.getFirstChild().getString()))) {
+          if (!n.isGeneratorSafe()
+              && ((breakCatchers == 0 && !n.hasChildren()) || (n.hasChildren()
+                  && !labels.contains(n.getFirstChild().getString())))) {
             exited = true;
             if (addJumps) {
               parent.addChildBefore(createFinallyJumpBlock(finallyName, finallyStartState), n);
