@@ -341,10 +341,21 @@ public class JSTypeCreatorFromJSDoc {
     }
     ImmutableList<JSType> typeArguments = typeList.build();
     ImmutableList<String> typeParameters = rawType.getTypeParameters();
-    if (typeArguments.size() != typeParameters.size()) {
-      warn("Invalid generics instantiation.\n" +
-          "Expected " + typeParameters.size() + " type arguments, but " +
-          typeArguments.size() + " were passed.", n);
+    int typeArgsSize = typeArguments.size();
+    int typeParamsSize = typeParameters.size();
+    if (typeArgsSize != typeParamsSize) {
+      String nominalTypeName = uninstantiated.getName();
+      if (!nominalTypeName.equals("Object")
+          && !nominalTypeName.equals("Array")) {
+        // TODO(dimvar): remove this once we handle parameterized Object and
+        // parameterized Array.
+        warn("Invalid generics instantiation for " + nominalTypeName + ".\n"
+            + "Expected " + typeParamsSize
+            + " type argument(s), but "
+            + typeArgsSize
+            + (typeArgsSize == 1 ? " was passed." : " were passed."),
+            n);
+      }
       return JSType.join(JSType.NULL,
           JSType.fromObjectType(ObjectType.fromNominalType(
               uninstantiated.instantiateGenerics(JSType.fixLengthOfTypeList(

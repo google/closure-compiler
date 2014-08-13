@@ -85,6 +85,6 @@ public class QualifiedName {
   }
 
   public String toString() {
-    return parts.toString();
+    return isIdentifier() ? parts.get(0).toString() : parts.toString();
   }
 }

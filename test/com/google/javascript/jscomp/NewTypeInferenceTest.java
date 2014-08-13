@@ -4529,6 +4529,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @param {Foo.<number, string>} x */\n" +
         "function f(x) {}",
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    checkNoWarnings(
+        "/** @constructor */ function Array(){}\n" +
+        "/** @type {Array.<number>} */ var x;");
+
+    checkNoWarnings(
+        "/** @constructor */ function Object(){}\n" +
+        "/** @type {Object.<number>} */ var x;");
   }
 
   public void testPolymorphicFunctionInstantiation() {
