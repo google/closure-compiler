@@ -1862,7 +1862,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public void setExtractPrototypeMemberDeclarations(boolean enabled) {
     this.extractPrototypeMemberDeclarations =
         enabled ? ExtractPrototypeMemberDeclarationsMode.USE_GLOBAL_TEMP
-            : ExtractPrototypeMemberDeclarationsMode.USE_IIFE;
+            : ExtractPrototypeMemberDeclarationsMode.OFF;
   }
 
   public void setExtractPrototypeMemberDeclarations(ExtractPrototypeMemberDeclarationsMode mode) {
