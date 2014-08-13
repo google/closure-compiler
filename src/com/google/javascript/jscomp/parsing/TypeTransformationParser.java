@@ -39,7 +39,7 @@ public final class TypeTransformationParser {
   private ErrorReporter errorReporter;
   private int templateLineno, templateCharno;
 
-  private static final int VAR_ARGS = Integer.MAX_VALUE;
+  private static final int VAR_ARGS = Integer.MAX_VALUE - 1;
 
   /** The classification of the keywords */
   public static enum OperationKind {
