@@ -69,7 +69,8 @@ class InferConsts implements CompilerPass {
     } else if (nameNode != null &&
         compiler.getCodingConvention().isConstant(nameNode.getString())) {
       nameNode.putBooleanProp(Node.IS_CONSTANT_VAR, true);
-    } else if (refCollection != null &&
+    } else if (nameNode != null &&
+               refCollection != null &&
                refCollection.isWellDefined() &&
                refCollection.isAssignedOnceInLifetime() &&
                refCollection.firstReferenceIsAssigningDeclaration()) {
