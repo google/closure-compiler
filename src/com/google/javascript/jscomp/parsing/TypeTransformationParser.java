@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.parsing;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.math.DoubleMath;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
@@ -40,42 +39,40 @@ public final class TypeTransformationParser {
   private ErrorReporter errorReporter;
   private int templateLineno, templateCharno;
 
-  /** Keywords of the type transformation language */
-  public static enum Keywords {
-    TYPE("type"),
-    UNION("union"),
-    COND("cond"),
-    MAPUNION("mapunion"),
-    EQTYPE("eq"),
-    SUBTYPE("sub"),
-    NONE("none"),
-    RAWTYPEOF("rawTypeOf"),
-    TEMPTYPEOF("templateTypeOf"),
-    RECORD("record");
+  private static final int VAR_ARGS = Integer.MAX_VALUE;
 
-    public final String name;
-    Keywords(String name) {
-      this.name = name;
-    }
+  /** The classification of the keywords */
+  public static enum OperationKind {
+    TYPE_CONSTRUCTOR,
+    OPERATION,
+    BOOLEAN_PREDICATE
   }
 
-  private static final ImmutableList<Keywords> TYPE_CONSTRUCTORS =
-      ImmutableList.of(Keywords.TYPE, Keywords.UNION, Keywords.NONE,
-          Keywords.RAWTYPEOF, Keywords.TEMPTYPEOF, Keywords.RECORD);
-  private static final ImmutableList<Keywords> OPERATIONS =
-      ImmutableList.of(Keywords.COND, Keywords.MAPUNION);
-  private static final ImmutableList<Keywords> BOOLEAN_PREDICATES =
-      ImmutableList.of(Keywords.EQTYPE, Keywords.SUBTYPE);
+  /** Keywords of the type transformation language */
+  public static enum Keywords {
+    TYPE("type", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
+    UNION("union", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
+    COND("cond", 3, 3, OperationKind.OPERATION),
+    MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),
+    EQ("eq", 2, 2, OperationKind.BOOLEAN_PREDICATE),
+    SUB("sub", 2, 2, OperationKind.BOOLEAN_PREDICATE),
+    NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
+    RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
+    TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
+    RECORD("record", 1, 1, OperationKind.TYPE_CONSTRUCTOR);
 
-  private static final int TYPE_MIN_PARAM_COUNT = 2,
-      UNION_MIN_PARAM_COUNT = 2,
-      COND_PARAM_COUNT = 3,
-      BOOLPRED_PARAM_COUNT = 2,
-      MAPUNION_PARAM_COUNT = 2,
-      RAWTYPEOF_PARAM_COUNT = 1,
-      TEMPTYPEOF_PARAM_COUNT = 2,
-      RECORD_PARAM_COUNT = 1,
-      RECORD_MIN_PROPERTY_COUNT = 1;
+    public final String name;
+    public final int minParamCount, maxParamCount;
+    public final OperationKind kind;
+
+    Keywords(String name, int minParamCount, int maxParamCount,
+        OperationKind kind) {
+      this.name = name;
+      this.minParamCount = minParamCount;
+      this.maxParamCount = maxParamCount;
+      this.kind = kind;
+    }
+  }
 
   public TypeTransformationParser(String typeTransformationString,
       StaticSourceFile sourceFile, ErrorReporter errorReporter,
@@ -102,21 +99,41 @@ public final class TypeTransformationParser {
             templateCharno);
   }
 
-  private boolean isKeyword(String s, Keywords keyword) {
-    return s.equals(keyword.name);
+  private Keywords nameToKeyword(String s) {
+    return Keywords.valueOf(s.toUpperCase());
   }
 
-  private boolean belongsTo(String s, ImmutableList<Keywords> set) {
-    for (Keywords keyword : set) {
-      if (s.equals(keyword.name)) {
+  private boolean isValidKeyword(String name) {
+    for (Keywords k : Keywords.values()) {
+      if (k.name.equals(name)) {
         return true;
       }
     }
     return false;
   }
 
-  private boolean isValidOperation(String k) {
-    return belongsTo(k, TYPE_CONSTRUCTORS) || belongsTo(k, OPERATIONS);
+  private boolean isOperationKind(String name, OperationKind kind) {
+    return isValidKeyword(name) ? nameToKeyword(name).kind == kind : false;
+  }
+
+  private boolean isValidTypeConstructor(String name) {
+    return isOperationKind(name, OperationKind.TYPE_CONSTRUCTOR);
+  }
+
+  private boolean isValidBooleanPredicate(String name) {
+    return isOperationKind(name, OperationKind.BOOLEAN_PREDICATE);
+  }
+
+  private boolean isUnion(String name) {
+    return Keywords.UNION.name.equals(name);
+  }
+
+  private boolean isTemplateType(String name) {
+    return Keywords.TYPE.name.equals(name);
+  }
+
+  private Node getCallArgument(Node n, int i) {
+    return n.isCall() ? n.getChildAtIndex(i + 1) : null;
   }
 
   private boolean isTypeVar(Node n) {
@@ -161,6 +178,19 @@ public final class TypeTransformationParser {
     addNewWarning("msg.jsdoc.typetransformation.invalid.inside", msg, e);
   }
 
+  private boolean checkParameterCount(Node expr, Keywords keyword) {
+    int numParams = expr.getChildCount();
+    if (numParams < 1 + keyword.minParamCount) {
+      warnMissingParam(keyword.name, expr);
+      return false;
+    }
+    if (numParams > 1 + keyword.maxParamCount) {
+      warnExtraParam(keyword.name, expr);
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Takes a type transformation expression, transforms it to an AST using
    * the ParserRunner of the JSCompiler and then verifies that it is a valid
@@ -199,36 +229,22 @@ public final class TypeTransformationParser {
    * a type(typename, TypeExp...) expression
    */
   private boolean validTemplateTypeExpression(Node expr) {
-    if (!isTypeVar(expr) && !isOperation(expr)) {
-      warnInvalidExpression("template type operation", expr);
-      return false;
-    }
-    if (isTypeVar(expr)) {
-      return true;
-    }
-    // It must start with type keyword
-    String keyword = expr.getFirstChild().getString();
-    if (!isKeyword(keyword, Keywords.TYPE)) {
-      warnInvalidExpression("template type operation", expr);
-      return false;
-    }
     // The expression must have at least three children the type keyword,
     // a type name (or type variable) and a type expression
-    int childCount = expr.getChildCount();
-    if (childCount < 1 + TYPE_MIN_PARAM_COUNT) {
-      warnMissingParam("template type operation", expr);
+    if (!checkParameterCount(expr, Keywords.TYPE)) {
       return false;
     }
+    int numParams = expr.getChildCount() - 1;
     // The first parameter must be a type variable or a type name
-    Node firstParam = expr.getChildAtIndex(1);
+    Node firstParam = getCallArgument(expr, 0);
     if (!isTypeVar(firstParam) && !isTypeName(firstParam)) {
       warnInvalid("type name or type variable", expr);
       warnInvalidInside("template type operation", expr);
       return false;
     }
     // The rest of the parameters must be valid type expressions
-    for (int i = 2; i < childCount; i++) {
-      if (!validTTLTypeExpression(expr.getChildAtIndex(i))) {
+    for (int i = 1; i < numParams; i++) {
+      if (!validTypeExpression(getCallArgument(expr, i))) {
         warnInvalidInside("template type operation", expr);
         return false;
       }
@@ -249,21 +265,20 @@ public final class TypeTransformationParser {
       return true;
     }
     // It must start with union keyword
-    String keyword = expr.getFirstChild().getString();
-    if (!isKeyword(keyword, Keywords.UNION)) {
+    String name = expr.getFirstChild().getString();
+    if (!isUnion(name)) {
       warnInvalidExpression("union type", expr);
       return false;
     }
     // The expression must have at least three children: The union keyword and
     // two type expressions
-    int childCount = expr.getChildCount();
-    if (childCount < 1 + UNION_MIN_PARAM_COUNT) {
-      warnMissingParam("union type", expr);
+    if (!checkParameterCount(expr, Keywords.UNION)) {
       return false;
     }
+    int numParams = expr.getChildCount() - 1;
     // Check if each of the members of the union is a valid type expression
-    for (int i = 1; i < childCount; i++) {
-      if (!validTTLTypeExpression(expr.getChildAtIndex(i))) {
+    for (int i = 0; i < numParams; i++) {
+      if (!validTypeExpression(expr.getChildAtIndex(i))) {
         warnInvalidInside("union type", expr);
         return false;
       }
@@ -275,22 +290,8 @@ public final class TypeTransformationParser {
    * A none type expression must be of the form: none()
    */
   private boolean validNoneTypeExpression(Node expr) {
-    if (!isOperation(expr)) {
-      warnInvalidExpression("none", expr);
-      return false;
-    }
-    // If the expression is a type it must start with type keyword
-    String keyword = expr.getFirstChild().getString();
-    if (!isKeyword(keyword, Keywords.NONE)) {
-      warnInvalidExpression("none", expr);
-      return false;
-    }
     // The expression must have no children
-    if (expr.getChildCount() > 1) {
-      warnExtraParam("none", expr);
-      return false;
-    }
-    return true;
+    return checkParameterCount(expr, Keywords.NONE);
   }
 
   /**
@@ -299,16 +300,11 @@ public final class TypeTransformationParser {
   private boolean validRawTypeOfTypeExpression(Node expr) {
     // The expression must have two children. The rawTypeOf keyword and the
     // parameter
-    if (expr.getChildCount() < 1 + RAWTYPEOF_PARAM_COUNT) {
-     warnMissingParam("rawTypeOf", expr);
-      return false;
-    }
-    if (expr.getChildCount() > 1 + RAWTYPEOF_PARAM_COUNT) {
-     warnExtraParam("rawTypeOf", expr);
+    if (!checkParameterCount(expr, Keywords.RAWTYPEOF)) {
       return false;
     }
     // The parameter must be a valid type expression
-    if (!validTTLTypeExpression(expr.getChildAtIndex(1))) {
+    if (!validTypeExpression(getCallArgument(expr, 0))) {
       warnInvalidInside("rawTypeOf", expr);
       return false;
     }
@@ -322,25 +318,20 @@ public final class TypeTransformationParser {
   private boolean validTemplateTypeOfExpression(Node expr) {
     // The expression must have three children. The templateTypeOf keyword, a
     // templatized type and an index
-    if (expr.getChildCount() < 1 + TEMPTYPEOF_PARAM_COUNT) {
-     warnMissingParam("templateTypeOf", expr);
-      return false;
-    }
-    if (expr.getChildCount() > 1 + TEMPTYPEOF_PARAM_COUNT) {
-     warnExtraParam("templateTypeOf", expr);
+    if (!checkParameterCount(expr, Keywords.TEMPLATETYPEOF)) {
       return false;
     }
     // The parameter must be a valid type expression
-    if (!validTTLTypeExpression(expr.getChildAtIndex(1))) {
+    if (!validTypeExpression(getCallArgument(expr, 0))) {
       warnInvalidInside("templateTypeOf", expr);
       return false;
     }
-    if (!expr.getChildAtIndex(2).isNumber()) {
+    if (!getCallArgument(expr, 1).isNumber()) {
       warnInvalid("index", expr);
       warnInvalidInside("templateTypeOf", expr);
       return false;
     }
-    double index = expr.getChildAtIndex(2).getDouble();
+    double index = getCallArgument(expr, 1).getDouble();
     if (!DoubleMath.isMathematicalInteger(index) || index < 0) {
       warnInvalid("index", expr);
       warnInvalidInside("templateTypeOf", expr);
@@ -352,21 +343,16 @@ public final class TypeTransformationParser {
   private boolean validRecordTypeExpression(Node expr) {
     // The expression must have two children. The record keyword and
     // a record expression
-    if (expr.getChildCount() < 1 + RECORD_PARAM_COUNT) {
-      warnMissingParam("record", expr);
-      return false;
-    }
-    if (expr.getChildCount() > 1 + RECORD_PARAM_COUNT) {
-      warnExtraParam("record", expr);
+    if (!checkParameterCount(expr, Keywords.RECORD)) {
       return false;
     }
     // A record expression must be an object literal with at least one property
-    Node record = expr.getChildAtIndex(1);
+    Node record = getCallArgument(expr, 0);
     if (!record.isObjectLit()) {
       warnInvalid("record expression", record);
       return false;
     }
-    if (record.getChildCount() < RECORD_MIN_PROPERTY_COUNT) {
+    if (record.getChildCount() < 1) {
       warnMissingParam("record expression", record);
       return false;
     }
@@ -376,7 +362,7 @@ public final class TypeTransformationParser {
         warnInvalid("property, missing type", prop);
         warnInvalidInside("record", prop);
         return false;
-      } else if (!validTTLTypeExpression(prop.getFirstChild())) {
+      } else if (!validTypeExpression(prop.getFirstChild())) {
         warnInvalidInside("record", prop);
         return false;
       }
@@ -388,7 +374,7 @@ public final class TypeTransformationParser {
    * A TTL type expression must be a type variable, a basic type expression
    * or a union type expression
    */
-  private boolean validTTLTypeExpression(Node expr) {
+  private boolean validTypeExpression(Node expr) {
     if (!isValidExpression(expr)) {
       warnInvalidExpression("type", expr);
       return false;
@@ -398,29 +384,30 @@ public final class TypeTransformationParser {
     }
     // If it is an operation we can safely move one level down
     Node operation = expr.getFirstChild();
-    String keyword = operation.getString();
+    String name = operation.getString();
     // Check for valid type operations
-    if (!belongsTo(keyword, TYPE_CONSTRUCTORS)) {
+    if (!isValidTypeConstructor(name)) {
       warnInvalidExpression("type", expr);
       return false;
     }
+    Keywords keyword = nameToKeyword(name);
     // Use the right verifier
-    if (isKeyword(keyword, Keywords.TYPE)) {
+    if (keyword == Keywords.TYPE) {
       return validTemplateTypeExpression(expr);
     }
-    if (isKeyword(keyword, Keywords.UNION)) {
+    if (keyword == Keywords.UNION) {
       return validUnionTypeExpression(expr);
     }
-    if (isKeyword(keyword, Keywords.NONE)) {
+    if (keyword == Keywords.NONE) {
       return validNoneTypeExpression(expr);
     }
-    if (isKeyword(keyword, Keywords.RAWTYPEOF)) {
+    if (keyword == Keywords.RAWTYPEOF) {
       return validRawTypeOfTypeExpression(expr);
     }
-    if (isKeyword(keyword, Keywords.TEMPTYPEOF)) {
+    if (keyword == Keywords.TEMPLATETYPEOF) {
       return validTemplateTypeOfExpression(expr);
     }
-    if (isKeyword(keyword, Keywords.RECORD)) {
+    if (keyword == Keywords.RECORD) {
       return validRecordTypeExpression(expr);
     }
     throw new IllegalStateException("Invalid type expression");
@@ -436,23 +423,16 @@ public final class TypeTransformationParser {
       return false;
     }
     String predicate = expr.getFirstChild().getString();
-    if (!belongsTo(predicate, BOOLEAN_PREDICATES)) {
+    if (!isValidBooleanPredicate(predicate)) {
       warnInvalid("boolean predicate", expr);
       return false;
     }
-    // The expression must have three children. The keyword and two type
-    // expressions as parameters
-    if (expr.getChildCount() < 1 + BOOLPRED_PARAM_COUNT) {
-      warnMissingParam("boolean predicate", expr);
-      return false;
-    }
-    if (expr.getChildCount() > 1 + BOOLPRED_PARAM_COUNT) {
-      warnExtraParam("boolean predicate", expr);
+    if (!checkParameterCount(expr, Keywords.EQ)) {
       return false;
     }
     // Both input types must be valid type expressions
-    if (!validTypeTransformationExpression(expr.getChildAtIndex(1))
-        || !validTypeTransformationExpression(expr.getChildAtIndex(2))) {
+    if (!validTypeTransformationExpression(getCallArgument(expr, 0))
+        || !validTypeTransformationExpression(getCallArgument(expr, 1))) {
       warnInvalidInside("boolean", expr);
       return false;
     }
@@ -469,24 +449,19 @@ public final class TypeTransformationParser {
     // - A boolean expression
     // - A type transformation expression with the 'if' branch
     // - A type transformation expression with the 'else' branch
-    if (expr.getChildCount() < 1 + COND_PARAM_COUNT) {
-     warnMissingParam("conditional", expr);
-      return false;
-    }
-    if (expr.getChildCount() > 1 + COND_PARAM_COUNT) {
-     warnExtraParam("conditional", expr);
+    if (!checkParameterCount(expr, Keywords.COND)) {
       return false;
     }
     // Check for the validity of the boolean and the expressions
-    if (!validBooleanTypeExpression(expr.getChildAtIndex(1))) {
+    if (!validBooleanTypeExpression(getCallArgument(expr, 0))) {
       warnInvalidInside("conditional", expr);
       return false;
     }
-    if (!validTypeTransformationExpression(expr.getChildAtIndex(2))) {
+    if (!validTypeTransformationExpression(getCallArgument(expr, 1))) {
       warnInvalidInside("conditional", expr);
       return false;
     }
-    if (!validTypeTransformationExpression(expr.getChildAtIndex(3))) {
+    if (!validTypeTransformationExpression(getCallArgument(expr, 2))) {
       warnInvalidInside("conditional", expr);
       return false;
     }
@@ -502,25 +477,20 @@ public final class TypeTransformationParser {
     // - The mapunion keyword
     // - A union type expression
     // - A map function
-    if (expr.getChildCount() < 1 + MAPUNION_PARAM_COUNT) {
-      warnMissingParam("mapunion", expr);
-      return false;
-    }
-    if (expr.getChildCount() > 1 + MAPUNION_PARAM_COUNT) {
-      warnExtraParam("mapunion", expr);
+    if (!checkParameterCount(expr, Keywords.MAPUNION)) {
       return false;
     }
     // The second child must be a valid union type expression
-    if (!validUnionTypeExpression(expr.getChildAtIndex(1))) {
-      warnInvalidInside("mapunion", expr.getChildAtIndex(1));
+    if (!validUnionTypeExpression(getCallArgument(expr, 0))) {
+      warnInvalidInside("mapunion", getCallArgument(expr, 0));
       return false;
     }
     // The third child must be a function
-    if (!expr.getChildAtIndex(2).isFunction()) {
-      warnInvalid("map function", expr.getChildAtIndex(2));
+    if (!getCallArgument(expr, 1).isFunction()) {
+      warnInvalid("map function", getCallArgument(expr, 1));
       return false;
     }
-    Node mapFn = expr.getChildAtIndex(2);
+    Node mapFn = getCallArgument(expr, 1);
     // The map function must have only one parameter
     Node mapFnParam = mapFn.getChildAtIndex(1);
     if (!mapFnParam.hasChildren()) {
@@ -554,21 +524,21 @@ public final class TypeTransformationParser {
       return true;
     }
     // If it is a CALL we can safely move one level down
-    Node operation = expr.getFirstChild();
-    String keyword = operation.getString();
+    String name = expr.getFirstChild().getString();
     // Check for valid operations
-    if (!isValidOperation(keyword)) {
-      warnInvalidExpression("type transformation", operation);
+    if (!isValidKeyword(name)) {
+      warnInvalidExpression("type transformation", expr);
       return false;
     }
+    Keywords keyword = nameToKeyword(name);
     // Check the rest of the expression depending on the operation
-    if (belongsTo(keyword, TYPE_CONSTRUCTORS)) {
-      return validTTLTypeExpression(expr);
+    if (keyword.kind == OperationKind.TYPE_CONSTRUCTOR) {
+      return validTypeExpression(expr);
     }
-    if (isKeyword(keyword, Keywords.COND)) {
+    if (keyword == Keywords.COND) {
       return validConditionalExpression(expr);
     }
-    if (isKeyword(keyword, Keywords.MAPUNION)) {
+    if (keyword == Keywords.MAPUNION) {
       return validMapunionExpression(expr);
     }
     throw new IllegalStateException("Invalid type transformation expression");

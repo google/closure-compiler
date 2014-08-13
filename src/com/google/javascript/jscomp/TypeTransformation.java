@@ -84,11 +84,11 @@ class TypeTransformation {
   }
 
   private boolean isEqtype(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.EQTYPE);
+    return isCallTo(n, TypeTransformationParser.Keywords.EQ);
   }
 
   private boolean isSubtype(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.SUBTYPE);
+    return isCallTo(n, TypeTransformationParser.Keywords.SUB);
   }
 
   private boolean isConditional(Node n) {
@@ -108,7 +108,7 @@ class TypeTransformation {
   }
 
   private boolean isTemplateTypeOf(Node n) {
-    return isCallTo(n, TypeTransformationParser.Keywords.TEMPTYPEOF);
+    return isCallTo(n, TypeTransformationParser.Keywords.TEMPLATETYPEOF);
   }
 
   private boolean isRecordType(Node n) {

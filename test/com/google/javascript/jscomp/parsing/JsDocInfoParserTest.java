@@ -3007,12 +3007,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLEmptyUnionType() {
     parse("@template T := union() =:*/",
-        "Bad type annotation. Missing parameter in union type");
+        "Bad type annotation. Missing parameter in union");
   }
 
   public void testParserWithTTLSingletonUnionType() {
     parse("@template T := union('string') =:*/",
-        "Bad type annotation. Missing parameter in union type");
+        "Bad type annotation. Missing parameter in union");
   }
 
   public void testParserWithTTLInvalidUnionType2() {
@@ -3053,13 +3053,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLExtraParamBoolean() {
     parse("@template T := cond(eq(T, R, S), R, S) =: */",
-        "Bad type annotation. Found extra parameter in boolean predicate",
+        "Bad type annotation. Found extra parameter in eq",
         "Bad type annotation. Invalid expression inside conditional");
   }
 
   public void testParserWithTTLMissingParamBoolean() {
     parse("@template T := cond(eq(T), R, S) =: */",
-        "Bad type annotation. Missing parameter in boolean predicate",
+        "Bad type annotation. Missing parameter in eq",
         "Bad type annotation. Invalid expression inside conditional");
   }
 
@@ -3084,12 +3084,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidConditionalMissingParam() {
     parse("@template T := cond(sub(T, R), T) =: */",
-        "Bad type annotation. Missing parameter in conditional");
+        "Bad type annotation. Missing parameter in cond");
   }
 
   public void testParserWithTTLInvalidConditionalExtraParam() {
     parse("@template T := cond(sub(T, R), T, R, R) =: */",
-        "Bad type annotation. Found extra parameter in conditional");
+        "Bad type annotation. Found extra parameter in cond");
   }
 
   public void testParserWithTTLInvalidConditional() {
