@@ -164,7 +164,9 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
   private void visitYieldFor(Node n, Node parent) {
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
 
-    Node generator = IR.var(IR.name(GENERATOR_YIELD_ALL_NAME), n.removeFirstChild());
+    Node generator = IR.var(IR.name(GENERATOR_YIELD_ALL_NAME),
+        IR.call(NodeUtil.newQualifiedNameNode(
+            compiler.getCodingConvention(), Es6ToEs3Converter.MAKE_ITER), n.removeFirstChild()));
     Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
 
     Node assignIterResult = IR.assign(

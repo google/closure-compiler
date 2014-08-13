@@ -78,7 +78,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   // These functions are defined in js/es6_runtime.js
   public static final String COPY_PROP = "$jscomp.copyProperties";
   private static final String INHERITS = "$jscomp.inherits";
-  private static final String MAKE_ITER = "$jscomp.makeIterator";
+  static final String MAKE_ITER = "$jscomp.makeIterator";
 
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
