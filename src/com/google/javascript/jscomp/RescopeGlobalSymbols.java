@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
@@ -140,10 +141,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
     nonMutatingPasses.add(new FindNamesReferencingThis());
     CombinedCompilerPass.traverse(compiler, root, nonMutatingPasses);
     // 3. rewriting all references to be property accesses of the single symbol.
-    NodeTraversal.traverse(compiler, root, new RewriteScopeCallback());
+    RewriteScopeCallback rewriteScope = new RewriteScopeCallback();
+    NodeTraversal.traverse(compiler, root, rewriteScope);
     // 4. removing the var from statements in global scope if the declared names
     //    have been rewritten in the previous pass.
     NodeTraversal.traverse(compiler, root, new RemoveGlobalVarCallback());
+    rewriteScope.declareModuleGlobals();
 
     // Extra pass which makes all extern global symbols reference window
     // explicitly.
@@ -284,6 +287,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * function call.
    */
   private class RewriteScopeCallback extends AbstractPostOrderCallback {
+
+    List<ModuleGlobal> preDeclarations = Lists.newArrayList();
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (!n.isName()) {
@@ -379,10 +385,40 @@ final class RescopeGlobalSymbols implements CompilerPass {
       // becomes
       // var notCrossModule;_.crossModule = i++, notCrossModule = i++
       if (!isCrossModule && parent.isVar()) {
-        input.getAstRoot(compiler).addChildToFront(
-            IR.var(IR.name(name).srcref(node)).srcref(node));
+        preDeclarations.add(new ModuleGlobal(
+            input.getAstRoot(compiler),
+            IR.name(name).srcref(node)));
       }
       compiler.reportCodeChange();
+    }
+
+    /**
+     * Adds back declarations for variables that do not cross module boundaries.
+     * Must be called after RemoveGlobalVarCallback.
+     */
+    void declareModuleGlobals() {
+      for (ModuleGlobal global : preDeclarations) {
+        if (global.root.getFirstChild().isVar()) {
+          global.root.getFirstChild().addChildToBack(global.name);
+        } else {
+          global.root.addChildToFront(
+              IR.var(global.name).srcref(global.name));
+        }
+        compiler.reportCodeChange();
+      }
+    }
+
+    /**
+     * Variable that doesn't cross module boundaries.
+     */
+    private class ModuleGlobal {
+      final Node root;
+      final Node name;
+
+      ModuleGlobal(Node root, Node name) {
+        this.root = root;
+        this.name = name;
+      }
     }
   }
 

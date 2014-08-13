@@ -85,6 +85,18 @@ public class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(createModules(
         "var a, b = 1;", "b"),
         new String[] {"var a;_.b = 1;", "_.b"});
+    test(createModules(
+        "var a, b = 1, c = 2;", "b"),
+        new String[] {"var a, c;_.b = 1;c = 2", "_.b"});
+    test(createModules(
+        "var a, b = 1, c = 2;", "a"),
+        new String[] {"var b, c;b = 1;c = 2", "_.a"});
+    test(createModules(
+        "var a=1; var b=2,c=3;", "a;c;"),
+        new String[] {"var b;_.a=1;b=2;_.c=3", "_.a;_.c"});
+    test(createModules(
+        "1;var a, b = 1, c = 2;", "b"),
+        new String[] {"var a, c;1;_.b = 1;c = 2", "_.b"});
   }
 
   public void testForLoops() {
