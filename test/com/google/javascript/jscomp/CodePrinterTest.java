@@ -425,6 +425,13 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("[a,,c,,e]=[1,2,3,4,5]");
   }
 
+  public void testPrintArrayPatternWithInitializer() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("[x=1]=[]");
+    assertPrintSame("[a,,c=2,,e]=[1,2,3,4,5]");
+    assertPrintSame("[a=1,b=2,c=3]=foo()");
+  }
+
   public void testPrintNestedArrayPattern() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("var [a,[b,c],d]=[1,[2,3],4]");

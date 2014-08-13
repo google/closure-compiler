@@ -187,7 +187,8 @@ public class Token {
         TEMPLATELIT     = 175, // template literal
         TEMPLATELIT_SUB = 176, // template literal substitution
 
-        DEFAULT_VALUE   = 177, // Formal parameter with a default value
+        DEFAULT_VALUE   = 177, // Formal parameter or destructuring element
+                               // with a default value
 
         // JSDoc-only tokens
         ANNOTATION     = 300,

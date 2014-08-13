@@ -1156,6 +1156,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("[x,y] = foo();");
   }
 
+  public void testArrayDestructuringInitializer() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var [x=1,y] = foo();");
+    parse("[x=1,y] = foo();");
+    parse("var [x,y=2] = foo();");
+    parse("[x,y=2] = foo();");
+  }
+
   public void testArrayDestructuringTrailingComma() {
     mode = LanguageMode.ECMASCRIPT6;
     // TODO(tbreisacher): Make this error clearer. The error we want

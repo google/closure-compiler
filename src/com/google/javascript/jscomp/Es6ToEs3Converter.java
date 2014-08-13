@@ -180,6 +180,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             cannotConvertYet(child, "REST node in an ARRAY_PATTERN");
             return;
           }
+          if (child.isDefaultValue()) {
+            cannotConvertYet(child,
+                "node with an initializer in an ARRAY_PATTERN");
+            return;
+          }
         }
         visitArrayPattern(t, n, parent);
         break;

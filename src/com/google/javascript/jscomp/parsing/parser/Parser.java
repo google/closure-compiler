@@ -2355,11 +2355,19 @@ public class Parser {
       return lvalue;
     }
 
-    return rest
-        ? new AssignmentRestElementTree(
-            getTreeLocation(start),
-            lvalue.asIdentifierExpression().identifierToken)
-        : lvalue;
+    if (rest) {
+      return new AssignmentRestElementTree(
+          getTreeLocation(start),
+          lvalue.asIdentifierExpression().identifierToken);
+    }
+
+    Token eq = eatOpt(TokenType.EQUAL);
+    if (eq != null) {
+      ParseTree defaultValue = parseAssignmentExpression();
+      return new DefaultParameterTree(getTreeLocation(start),
+          lvalue, defaultValue);
+    }
+    return lvalue;
   }
 
   private static final EnumSet<TokenType> arraySubPatternFollowSet =

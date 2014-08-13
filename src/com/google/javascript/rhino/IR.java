@@ -361,7 +361,7 @@ public class IR {
   }
 
   public static Node assign(Node target, Node expr) {
-    Preconditions.checkState(isAssignmentTarget(target));
+    Preconditions.checkState(target.isValidAssignmentTarget());
     Preconditions.checkState(mayBeExpression(expr));
     return new Node(Token.ASSIGN, target, expr);
   }
@@ -548,10 +548,6 @@ public class IR {
 
   private static boolean mayBeExpressionOrEmpty(Node n) {
     return n.isEmpty() || mayBeExpression(n);
-  }
-
-  private static boolean isAssignmentTarget(Node n) {
-    return n.isName() || n.isGetProp() || n.isGetElem();
   }
 
   // NOTE: some nodes are neither statements nor expression nodes:

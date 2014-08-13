@@ -1455,6 +1455,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var $jscomp$destructuring$var1 = z();",
             "var x = $jscomp$destructuring$var1[0];",
             "var y = $jscomp$destructuring$var1[1];"));
+
+    test("var a; [a=1] = b();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var [a=1] = b();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var [a, b=1, c] = d();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testArrayDestructuringParam() {

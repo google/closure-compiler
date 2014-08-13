@@ -613,17 +613,7 @@ public class AstValidator implements CompilerPass {
         validateRest(c);
       } else if (c.isDefaultValue()) {
         defaultParams = true;
-        validateAssignmentExpression(c);
-
-        // LHS can only be a name or destructuring pattern.
-        Node lhs = c.getFirstChild();
-        if (lhs.isName()) {
-          validateName(lhs);
-        } else if (lhs.isArrayPattern()) {
-          validateArrayPattern(Token.PARAM_LIST, lhs);
-        } else {
-          validateObjectPattern(Token.PARAM_LIST, lhs);
-        }
+        validateDefaultValue(Token.PARAM_LIST, c);
       } else {
         if (defaultParams) {
           violation("Cannot have a parameter without a default value,"
@@ -638,6 +628,20 @@ public class AstValidator implements CompilerPass {
           validateObjectPattern(Token.PARAM_LIST, c);
         }
       }
+    }
+  }
+
+  private void validateDefaultValue(int type, Node n) {
+    validateAssignmentExpression(n);
+    Node lhs = n.getFirstChild();
+
+    // LHS can only be a name or destructuring pattern.
+    if (lhs.isName()) {
+      validateName(lhs);
+    } else if (lhs.isArrayPattern()) {
+      validateArrayPattern(type, lhs);
+    } else {
+      validateObjectPattern(type, lhs);
     }
   }
 
@@ -702,6 +706,8 @@ public class AstValidator implements CompilerPass {
       validateArrayPattern(type, n);
     } else if (n.isObjectPattern()) {
       validateObjectPattern(type, n);
+    } else if (n.isDefaultValue()) {
+      validateDefaultValue(type, n);
     } else {
       violation("Invalid child for " + Token.name(type) + " node", n);
     }
@@ -912,7 +918,7 @@ public class AstValidator implements CompilerPass {
         validateCase(n);
         return;
       case Token.DEFAULT_CASE:
-        validateDefault(n);
+        validateDefaultCase(n);
         return;
       default:
         violation("Expected switch member but was "
@@ -920,7 +926,7 @@ public class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateDefault(Node n) {
+  private void validateDefaultCase(Node n) {
     validateNodeType(Token.DEFAULT_CASE, n);
     validateChildCount(n, Token.arity(Token.DEFAULT_CASE));
     validateSyntheticBlock(n.getLastChild());
