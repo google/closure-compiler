@@ -722,7 +722,7 @@ public class Compiler extends AbstractCompiler {
 
   private void compileInternal() {
     setProgress(0.0, null);
-    CompilerOptionsValidator.validate(options);
+    CompilerOptionsPreprocessor.preprocess(options);
     parse();
     // 15 percent of the work is assumed to be for parsing (based on some
     // minimal analysis on big JS projects, of course this depends on options)

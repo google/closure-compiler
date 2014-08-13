@@ -18,16 +18,17 @@ package com.google.javascript.jscomp;
 /**
  * Checks for combinations of options that are incompatible, i.e. will produce
  * incorrect code.
+ *
+ * Also, turns off options if the provided options don't make sense together.
+ *
+ * @author tbreisacher@google.com (Tyler Breisacher)
  */
-final class CompilerOptionsValidator {
-  /**
-   * Checks for incompatible options.
-   * @author tbreisacher@google.com (Tyler Breisacher)
-   */
-  static void validate(CompilerOptions options) {
-    if (options.checkMissingGetCssNameLevel.isOn() &&
-        (options.checkMissingGetCssNameBlacklist == null ||
-            options.checkMissingGetCssNameBlacklist.isEmpty())) {
+final class CompilerOptionsPreprocessor {
+
+  static void preprocess(CompilerOptions options) {
+    if (options.checkMissingGetCssNameLevel.isOn()
+        && (options.checkMissingGetCssNameBlacklist == null
+            || options.checkMissingGetCssNameBlacklist.isEmpty())) {
       throw new InvalidOptionsException(
           "Cannot check use of goog.getCssName because of empty blacklist.");
     }
@@ -37,8 +38,20 @@ final class CompilerOptionsValidator {
     } else if (!options.getLanguageIn().isEs6OrHigher() ||
         options.getLanguageOut() != CompilerOptions.LanguageMode.ECMASCRIPT3) {
       throw new InvalidOptionsException(
-          "Can only convert code from ES6 to ES3. Cannot convert from %s to %s.",
+          "Can only convert code from ES6 to ES3. "
+          + "Cannot convert from %s to %s.",
           options.getLanguageIn(), options.getLanguageOut());
+    }
+
+    if (options.useNewTypeInference) {
+      options.checkTypes = false;
+      options.inferTypes = false;
+      options.checkMissingReturn = CheckLevel.OFF;
+      options.checkGlobalThisLevel = CheckLevel.OFF;
+      // There is also overlap in the warnings of GlobalTypeInfo and VarCheck
+      // and VariableReferenceCheck.
+      // But VarCheck is always added in DefaultPassConfig, and
+      // VariableReferenceCheck finds warnings that we don't, so leave them on.
     }
   }
 
@@ -52,7 +65,6 @@ final class CompilerOptionsValidator {
   }
 
   // Don't instantiate.
-  private CompilerOptionsValidator() {
+  private CompilerOptionsPreprocessor() {
   }
 }
-
