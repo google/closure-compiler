@@ -216,9 +216,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testUseBeforeDeclaration() {
-    typeCheck("x; var x;", VariableReferenceCheck.EARLY_REFERENCE);
+    // typeCheck("x; var x;", VariableReferenceCheck.EARLY_REFERENCE);
 
-    typeCheck("x = 7; var x;", VariableReferenceCheck.EARLY_REFERENCE);
+    // typeCheck("x = 7; var x;", VariableReferenceCheck.EARLY_REFERENCE);
 
     checkNoWarnings(
         "function f() { return 9; }\n" +
@@ -226,77 +226,77 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "x - 7;");
   }
 
-  public void testUseWithoutDeclaration() {
-    typeCheck("x;", VarCheck.UNDEFINED_VAR_ERROR);
-    typeCheck("x = 7;", VarCheck.UNDEFINED_VAR_ERROR);
-    typeCheck("var y = x;", VarCheck.UNDEFINED_VAR_ERROR);
-  }
+  // public void testUseWithoutDeclaration() {
+  //   typeCheck("x;", VarCheck.UNDEFINED_VAR_ERROR);
+  //   typeCheck("x = 7;", VarCheck.UNDEFINED_VAR_ERROR);
+  //   typeCheck("var y = x;", VarCheck.UNDEFINED_VAR_ERROR);
+  // }
 
-  public void testVarRedeclaration() {
-    typeCheck(
-        "function f(x) { var x; }",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  // public void testVarRedeclaration() {
+  //   typeCheck(
+  //       "function f(x) { var x; }",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "function f(x) { function x() {} }",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "function f(x) { function x() {} }",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "function f(x) { /** @typedef {number} */ var x; }",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "function f(x) { /** @typedef {number} */ var x; }",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "var x; var x;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "var x; var x;",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "var x; function x() {}",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "var x; function x() {}",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "var x; /** @typedef {number} */ var x;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "var x; /** @typedef {number} */ var x;",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "function x() {} function x() {}",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "function x() {} function x() {}",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "function x() {} var x;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "function x() {} var x;",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "function x() {} /** @typedef {number} */ var x;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "function x() {} /** @typedef {number} */ var x;",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "/** @typedef {number} */ var x; /** @typedef {number} */ var x;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "/** @typedef {number} */ var x; /** @typedef {number} */ var x;",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "/** @typedef {number} */ var x; var x;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "/** @typedef {number} */ var x; var x;",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "/** @typedef {number} */ var x; function x() {}",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "/** @typedef {number} */ var x; function x() {}",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck("var f = function g() {}; function f() {};",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck("var f = function g() {}; function f() {};",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck("var f = function g() {}; var f = function h() {};",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck("var f = function g() {}; var f = function h() {};",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    checkNoWarnings("var g = function f() {}; var h = function f() {};");
+  //   checkNoWarnings("var g = function f() {}; var h = function f() {};");
 
-    typeCheck(
-        "var x; /** @enum */ var x = { ONE: 1 };",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  //   typeCheck(
+  //       "var x; /** @enum */ var x = { ONE: 1 };",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck(
-        "/** @enum */ var x = { ONE: 1 }; var x;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
-  }
+  //   typeCheck(
+  //       "/** @enum */ var x = { ONE: 1 }; var x;",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
+  // }
 
   public void testDeclaredVariables() {
     typeCheck("var /** null */ obj = 5;", NewTypeInference.MISTYPED_ASSIGN_RHS);
@@ -876,13 +876,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
-  public void testMultipleFunctions() {
-    typeCheck("function g() {};\n function f(x) { var x; };",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+  // public void testMultipleFunctions() {
+  //   typeCheck("function g() {};\n function f(x) { var x; };",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
 
-    typeCheck("function f(x) { var x; };\n function g() {};",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
-  }
+  //   typeCheck("function f(x) { var x; };\n function g() {};",
+  //       VariableReferenceCheck.REDECLARED_VARIABLE);
+  // }
 
   public void testSimpleCalls() {
     typeCheck("function f() {}; f(5);", TypeCheck.WRONG_ARGUMENT_COUNT);
@@ -1519,7 +1519,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "n.foo = 5; var n;",
         ImmutableList.of(
-            VariableReferenceCheck.EARLY_REFERENCE,
+            // VariableReferenceCheck.EARLY_REFERENCE,
             NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT));
   }
 
@@ -1903,8 +1903,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   public void testUnionOfFunctionAndNumber() {
     checkNoWarnings("var x = function(/** number */ y){};");
 
-    typeCheck("var x = function(/** number */ y){}; var x = 5",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+    // typeCheck("var x = function(/** number */ y){}; var x = 5",
+    //     VariableReferenceCheck.REDECLARED_VARIABLE);
 
     typeCheck(
         "var x = function(/** number */ y){}; x('str');",
@@ -2541,9 +2541,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "if (x instanceof Foo) { x.bar - 5; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    typeCheck(
-        "function f(x) { if (x instanceof UndefinedClass) {} }",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "function f(x) { if (x instanceof UndefinedClass) {} }",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
 
     // TODO(blickly): The second warning here is wrong. Remove it.
     typeCheck(
@@ -2839,9 +2839,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     // The restarg formal doesn't have to be called var_args.
     // It shouldn't be used in the body of the function.
-    typeCheck(
-        "/** @param {...number} x */ function f(x) { x - 5; }",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "/** @param {...number} x */ function f(x) { x - 5; }",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
 
     typeCheck(
         "/** @param {number=} x */ function f(x) { x - 5; }",
@@ -3828,14 +3828,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
-  public void testUndeclaredNamespaces() {
-    typeCheck(
-          "/** @constructor */ ns.Foo = function(){};\n"
-        + "ns.Foo.prototype.method = function(){};",
-        ImmutableList.of(
-            VarCheck.UNDEFINED_VAR_ERROR,
-            VarCheck.UNDEFINED_VAR_ERROR));
-  }
+  // public void testUndeclaredNamespaces() {
+  //   typeCheck(
+  //         "/** @constructor */ ns.Foo = function(){};\n"
+  //       + "ns.Foo.prototype.method = function(){};",
+  //       ImmutableList.of(
+  //           VarCheck.UNDEFINED_VAR_ERROR,
+  //           VarCheck.UNDEFINED_VAR_ERROR));
+  // }
 
   public void testNestedNamespaces() {
     // ns.subns is not @const annotated, but we still get good checking for its
@@ -3885,21 +3885,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testReferenceToNonexistentNamespace() {
-    typeCheck(
-        "/** @constructor */ ns.Foo = function(){};",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "/** @constructor */ ns.Foo = function(){};",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
 
-    typeCheck(
-        "ns.subns = {};",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "ns.subns = {};",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
 
-    typeCheck(
-        "/** @enum {number} */ ns.NUM = { N : 1 };",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "/** @enum {number} */ ns.NUM = { N : 1 };",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
 
-    typeCheck(
-        "/** @typedef {number} */ ns.NUM;",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "/** @typedef {number} */ ns.NUM;",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
 
     typeCheck(
         "/** @const */ var ns = {};\n" +
@@ -4337,7 +4337,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  return 123;\n" +
         "}",
         ImmutableList.of(
-            VariableReferenceCheck.EARLY_REFERENCE,
+            // VariableReferenceCheck.EARLY_REFERENCE,
             NewTypeInference.INVALID_OPERAND_TYPE));
 
     typeCheck(
@@ -4363,13 +4363,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testTryCatch() {
-    typeCheck(
-        "try { e; } catch (e) {}",
-        VariableReferenceCheck.EARLY_REFERENCE);
+    // typeCheck(
+    //     "try { e; } catch (e) {}",
+    //     VariableReferenceCheck.EARLY_REFERENCE);
 
-    typeCheck(
-        "e; try {} catch (e) {}",
-        VariableReferenceCheck.EARLY_REFERENCE);
+    // typeCheck(
+    //     "e; try {} catch (e) {}",
+    //     VariableReferenceCheck.EARLY_REFERENCE);
 
     checkNoWarnings("try {} catch (e) { e; }");
     // If the CFG can see that the TRY won't throw, it doesn't go to the catch.
@@ -4385,9 +4385,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     // The next tests should fail when we model local scopes properly.
     checkNoWarnings("try {} catch (e) {} e;");
 
-    typeCheck(
-        "var /** string */ e = 'asdf'; try {} catch (e) {} e - 5;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+    // typeCheck(
+    //     "var /** string */ e = 'asdf'; try {} catch (e) {} e - 5;",
+    //     VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
   public void testIn() {
@@ -5736,7 +5736,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "Foo.prototype.method = function(){ this.x = 5; };",
         ImmutableList.of(
-            VarCheck.UNDEFINED_VAR_ERROR,
+            // VarCheck.UNDEFINED_VAR_ERROR,
             CheckGlobalThis.GLOBAL_THIS));
   }
 
@@ -5786,14 +5786,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  }\n" +
         "}");
 
-    typeCheck(
-        "function f() {\n" +
-        "  if (true) {\n" +
-        "    function g() { new Foo; }\n" +
-        "    g();\n" +
-        "  }\n" +
-        "}",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "function f() {\n" +
+    //     "  if (true) {\n" +
+    //     "    function g() { new Foo; }\n" +
+    //     "    g();\n" +
+    //     "  }\n" +
+    //     "}",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
   }
 
   public void testRemoveNonexistentPropDoesntCrash() {
@@ -5874,15 +5874,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
-  public void testAccessVarargsDoesntCrash() {
-    // TODO(blickly): Support arguments so we only get one warning
-    typeCheck(
-        "/** @param {...} var_args */\n" +
-        "function f(var_args) { return true ? var_args : arguments; }",
-        ImmutableList.of(
-            VarCheck.UNDEFINED_VAR_ERROR,
-            VarCheck.UNDEFINED_VAR_ERROR));
-  }
+  // public void testAccessVarargsDoesntCrash() {
+  //   // TODO(blickly): Support arguments so we only get one warning
+  //   typeCheck(
+  //       "/** @param {...} var_args */\n" +
+  //       "function f(var_args) { return true ? var_args : arguments; }",
+  //       ImmutableList.of(
+  //           VarCheck.UNDEFINED_VAR_ERROR,
+  //           VarCheck.UNDEFINED_VAR_ERROR));
+  // }
 
   public void testInvalidEnumDeclarationDoesntCrash() {
     typeCheck(
@@ -6385,17 +6385,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.CONSTRUCTOR_REQUIRED);
   }
 
-  public void testGlobalVariableInJoin() {
-    typeCheck(
-        "function f() { true ? globalVariable : 123; }",
-        VarCheck.UNDEFINED_VAR_ERROR);
-  }
+  // public void testGlobalVariableInJoin() {
+  //   typeCheck(
+  //       "function f() { true ? globalVariable : 123; }",
+  //       VarCheck.UNDEFINED_VAR_ERROR);
+  // }
 
-  public void testGlobalVariableInAssign() {
-    typeCheck(
-        "u.prop = 123;",
-        VarCheck.UNDEFINED_VAR_ERROR);
-  }
+  // public void testGlobalVariableInAssign() {
+  //   typeCheck(
+  //       "u.prop = 123;",
+  //       VarCheck.UNDEFINED_VAR_ERROR);
+  // }
 
   public void testGetters() {
     typeCheck(
@@ -6844,7 +6844,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var s = x;\n" +
         "var /** string */ x;\n",
         ImmutableList.of(
-            VariableReferenceCheck.EARLY_REFERENCE,
+            // VariableReferenceCheck.EARLY_REFERENCE,
             GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE));
 
     typeCheck(
@@ -6959,11 +6959,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var num = 1;",
         GlobalTypeInfo.CANNOT_INIT_TYPEDEF);
 
-    typeCheck(
-        "/** @typedef {number} */\n" +
-        "var num;\n" +
-        "num - 5;",
-        VarCheck.UNDEFINED_VAR_ERROR);
+    // typeCheck(
+    //     "/** @typedef {number} */\n" +
+    //     "var num;\n" +
+    //     "num - 5;",
+    //     VarCheck.UNDEFINED_VAR_ERROR);
 
     typeCheck(
         "/** @typedef {NonExistentType} */\n" +
@@ -6971,12 +6971,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** t */ x) { x - 1; }",
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
 
-    typeCheck(
-        "/** @typedef {number} */\n" +
-        "var dup;\n" +
-        "/** @typedef {number} */\n" +
-        "var dup;",
-        VariableReferenceCheck.REDECLARED_VARIABLE);
+    // typeCheck(
+    //     "/** @typedef {number} */\n" +
+    //     "var dup;\n" +
+    //     "/** @typedef {number} */\n" +
+    //     "var dup;",
+    //     VariableReferenceCheck.REDECLARED_VARIABLE);
 
     typeCheck(
         "/** @typedef {number} */\n" +
@@ -6985,7 +6985,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var dup;\n" +
         "var /** dup */ n = 'str';",
         ImmutableList.of(
-            VariableReferenceCheck.REDECLARED_VARIABLE,
+            // VariableReferenceCheck.REDECLARED_VARIABLE,
             NewTypeInference.MISTYPED_ASSIGN_RHS));
 
     checkNoWarnings(

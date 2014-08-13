@@ -206,10 +206,11 @@ class GlobalTypeInfo implements CompilerPass {
       TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
       TypeCheck.MULTIPLE_VAR_DEF,
       TypeCheck.UNKNOWN_OVERRIDE,
-      TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED,
-      VarCheck.UNDEFINED_VAR_ERROR,
-      VariableReferenceCheck.REDECLARED_VARIABLE,
-      VariableReferenceCheck.EARLY_REFERENCE);
+      TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED //,
+      // VarCheck.UNDEFINED_VAR_ERROR,
+      // VariableReferenceCheck.REDECLARED_VARIABLE,
+      // VariableReferenceCheck.EARLY_REFERENCE
+      );
 
   // An out-to-in list of the scopes, built during CollectNamedTypes
   // This will be reversed at the end of GlobalTypeInfo to make sure
@@ -631,13 +632,13 @@ class GlobalTypeInfo implements CompilerPass {
       if (NodeUtil.getInitializer(qnameNode) != null) {
         warnings.add(JSError.make(qnameNode, CANNOT_INIT_TYPEDEF));
       }
-      if (qnameNode.isName()
-          && currentScope.isDefinedLocally(qnameNode.getString())) {
-        warnings.add(JSError.make(
-            qnameNode,
-            VariableReferenceCheck.REDECLARED_VARIABLE,
-            qnameNode.getQualifiedName()));
-      }
+      // if (qnameNode.isName()
+      //     && currentScope.isDefinedLocally(qnameNode.getString())) {
+      //   warnings.add(JSError.make(
+      //       qnameNode,
+      //       VariableReferenceCheck.REDECLARED_VARIABLE,
+      //       qnameNode.getQualifiedName()));
+      // }
       if (currentScope.isDefined(qnameNode)) {
         return;
       }
@@ -649,12 +650,12 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitEnum(Node qnameNode) {
       Preconditions.checkState(qnameNode.isQualifiedName());
       qnameNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
-      if (qnameNode.isName()
-          && currentScope.isDefinedLocally(qnameNode.getString())) {
-        String qname = qnameNode.getQualifiedName();
-        warnings.add(JSError.make(qnameNode,
-                VariableReferenceCheck.REDECLARED_VARIABLE, qname));
-      }
+      // if (qnameNode.isName()
+      //     && currentScope.isDefinedLocally(qnameNode.getString())) {
+      //   String qname = qnameNode.getQualifiedName();
+      //   warnings.add(JSError.make(qnameNode,
+      //           VariableReferenceCheck.REDECLARED_VARIABLE, qname));
+      // }
       if (currentScope.isDefined(qnameNode)) {
         return;
       }
@@ -698,8 +699,8 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (currentScope.isDefinedLocally(nameNode.getString())) {
         String fnName = nameNode.getString();
         Preconditions.checkState(!fnName.contains("."));
-        warnings.add(JSError.make(
-            fn, VariableReferenceCheck.REDECLARED_VARIABLE, fnName));
+        // warnings.add(JSError.make(
+        //     fn, VariableReferenceCheck.REDECLARED_VARIABLE, fnName));
         // Redeclared variables also need gensymed names
         internalName = ANON_FUN_PREFIX + freshId;
         anonFunNames.put(fn, internalName);
@@ -808,10 +809,10 @@ class GlobalTypeInfo implements CompilerPass {
       }
       lendsObjlits = null;
 
-      for (Node nameNode : undeclaredVars.values()) {
-        warnings.add(JSError.make(nameNode,
-              VarCheck.UNDEFINED_VAR_ERROR, nameNode.getString()));
-      }
+      // for (Node nameNode : undeclaredVars.values()) {
+      //   warnings.add(JSError.make(nameNode,
+      //         VarCheck.UNDEFINED_VAR_ERROR, nameNode.getString()));
+      // }
     }
 
     // @lends can lend properties to an object X being defined in the same
@@ -886,13 +887,13 @@ class GlobalTypeInfo implements CompilerPass {
             if (initializer != null && initializer.isFunction()) {
               break;
             } else if (currentScope.isDefinedLocally(name)) {
-              warnings.add(JSError.make(
-                  n, VariableReferenceCheck.REDECLARED_VARIABLE, name));
+              // warnings.add(JSError.make(
+              //     n, VariableReferenceCheck.REDECLARED_VARIABLE, name));
             } else {
-              for (Node useBeforeDeclNode : undeclaredVars.get(name)) {
-                warnings.add(JSError.make(useBeforeDeclNode,
-                    VariableReferenceCheck.EARLY_REFERENCE, name));
-              }
+              // for (Node useBeforeDeclNode : undeclaredVars.get(name)) {
+              //   warnings.add(JSError.make(useBeforeDeclNode,
+              //       VariableReferenceCheck.EARLY_REFERENCE, name));
+              // }
               undeclaredVars.removeAll(name);
               if (parent.isCatch()) {
                 currentScope.addLocal(name, JSType.UNKNOWN, false);
