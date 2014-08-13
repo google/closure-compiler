@@ -1313,7 +1313,7 @@ class NewIRFactory {
 
       if (isAssignmentOp(n)) {
         Node target = n.getFirstChild();
-        if (!validAssignmentTarget(target)) {
+        if (!target.isValidAssignmentTarget()) {
           errorReporter.error(
               "invalid assignment target: " + target,
               sourceName,
@@ -1834,7 +1834,7 @@ class NewIRFactory {
               sourceName,
               operand.getLineno(), 0);
         } else  if (type == Token.INC || type == Token.DEC) {
-          if (!validAssignmentTarget(operand)) {
+          if (!operand.isValidAssignmentTarget()) {
             String msg = (type == Token.INC)
                 ? "invalid increment target"
                 : "invalid decrement target";
@@ -1854,7 +1854,7 @@ class NewIRFactory {
       int type = transformPostfixTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
       // Only INC and DEC
-      if (!validAssignmentTarget(operand)) {
+      if (!operand.isValidAssignmentTarget()) {
         String msg = (type == Token.INC)
             ? "invalid increment target"
             : "invalid decrement target";
@@ -1867,19 +1867,6 @@ class NewIRFactory {
       Node node = newNode(type, operand);
       node.putBooleanProp(Node.INCRDECR_PROP, true);
       return node;
-    }
-
-    private boolean validAssignmentTarget(Node target) {
-      switch (target.getType()) {
-        case Token.CAST: // CAST is a bit weird, but syntactically valid.
-        case Token.NAME:
-        case Token.GETPROP:
-        case Token.GETELEM:
-        case Token.ARRAY_PATTERN:
-        case Token.OBJECT_PATTERN:
-          return true;
-      }
-      return false;
     }
 
     @Override

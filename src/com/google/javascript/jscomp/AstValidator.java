@@ -952,15 +952,9 @@ public class AstValidator implements CompilerPass {
   }
 
   private void validateAssignmentTarget(Node n) {
-    switch (n.getType()) {
-      case Token.NAME:
-      case Token.GETELEM:
-      case Token.GETPROP:
-        validateExpression(n);
-        return;
-      default:
-        violation("Expected assignment target expression but was "
-            + Token.name(n.getType()), n);
+    if (!n.isValidAssignmentTarget()) {
+      violation("Expected assignment target expression but was "
+          + Token.name(n.getType()), n);
     }
   }
 

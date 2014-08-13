@@ -1758,6 +1758,22 @@ public class Node implements Cloneable, Serializable {
     }
   }
 
+  public boolean isValidAssignmentTarget() {
+    switch (getType()) {
+      // TODO(tbreisacher): Remove CAST from this list, and disallow
+      // the cryptic case from cl/41958159.
+      case Token.CAST:
+      case Token.NAME:
+      case Token.GETPROP:
+      case Token.GETELEM:
+      case Token.ARRAY_PATTERN:
+      case Token.OBJECT_PATTERN:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   // ==========================================================================
   // Mutators
 

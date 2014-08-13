@@ -1405,6 +1405,16 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var $jscomp$destructuring$var0 = z();",
             "var x = $jscomp$destructuring$var0[0];",
             "var y = $jscomp$destructuring$var0[1];"));
+
+    test(
+        "var x,y;\n"
+        + "[x,y] = z();",
+        Joiner.on('\n').join(
+            "var x,y;",
+            "var $jscomp$destructuring$var0 = z();",
+            "x = $jscomp$destructuring$var0[0];",
+            "y = $jscomp$destructuring$var0[1];"));
+
     test(
         "var [a,b] = c();"
         + "var [x,y] = z();",
