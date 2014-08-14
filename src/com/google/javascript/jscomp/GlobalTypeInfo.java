@@ -218,7 +218,7 @@ class GlobalTypeInfo implements CompilerPass {
   private final List<Scope> scopes = new ArrayList<>();
   private Scope globalScope;
   private WarningReporter warnings;
-  private JSTypeCreatorFromJSDoc typeParser = new JSTypeCreatorFromJSDoc();
+  private JSTypeCreatorFromJSDoc typeParser;
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
   private final Map<Node, String> anonFunNames = new HashMap<>();
@@ -236,6 +236,7 @@ class GlobalTypeInfo implements CompilerPass {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.convention = compiler.getCodingConvention();
+    this.typeParser = new JSTypeCreatorFromJSDoc(this.convention);
   }
 
   Collection<Scope> getScopes() {

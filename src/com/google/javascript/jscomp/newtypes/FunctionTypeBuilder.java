@@ -72,13 +72,18 @@ public class FunctionTypeBuilder {
 
   public FunctionTypeBuilder addOptFormal(JSType t)
       throws WrongParameterOrderException {
-    Preconditions.checkNotNull(t);
     if (restFormals != null) {
       throw new WrongParameterOrderException(
           "Cannot add optional formal after rest args");
     }
-    // We keep bottom to warn about CALL_FUNCTION_WITH_BOTTOM_FORMAL.
-    optionalFormals.add(t.isBottom() ? t : JSType.join(t, JSType.UNDEFINED));
+    if (t == null) {
+      optionalFormals.add(null);
+    } else if (t.isBottom()) {
+      // We keep bottom to warn about CALL_FUNCTION_WITH_BOTTOM_FORMAL.
+      optionalFormals.add(JSType.BOTTOM);
+    } else {
+      optionalFormals.add(JSType.join(t, JSType.UNDEFINED));
+    }
     return this;
   }
 

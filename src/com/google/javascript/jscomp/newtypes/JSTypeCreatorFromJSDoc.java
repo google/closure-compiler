@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.CodingConvention;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -29,6 +30,7 @@ import com.google.javascript.rhino.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +40,8 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class JSTypeCreatorFromJSDoc {
+
+  private final CodingConvention convention;
 
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
@@ -57,6 +61,10 @@ public class JSTypeCreatorFromJSDoc {
   private SimpleErrorReporter reporter = new SimpleErrorReporter();
   // Unknown type names indexed by JSDoc AST node at which they were found.
   private Map<Node, String> unknownTypeNames = new HashMap<>();
+
+  public JSTypeCreatorFromJSDoc(CodingConvention convention) {
+    this.convention = convention;
+  }
 
   public JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
       RawNominalType ownerType, DeclaredTypeRegistry registry) {
@@ -358,12 +366,25 @@ public class JSTypeCreatorFromJSDoc {
       }
       return JSType.join(JSType.NULL,
           JSType.fromObjectType(ObjectType.fromNominalType(
-              uninstantiated.instantiateGenerics(JSType.fixLengthOfTypeList(
-                  typeParameters.size(), typeArguments)))));
+              uninstantiated.instantiateGenerics(
+                  fixLengthOfTypeList(typeParameters.size(), typeArguments)))));
     }
     return JSType.join(JSType.NULL,
         JSType.fromObjectType(ObjectType.fromNominalType(
             uninstantiated.instantiateGenerics(typeArguments))));
+  }
+
+  private static List<JSType> fixLengthOfTypeList(
+      int desiredLength, List<JSType> typeList) {
+    int length = typeList.size();
+    if (length == desiredLength) {
+      return typeList;
+    }
+    ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+    for (int i = 0; i < desiredLength; i++) {
+      builder.add(i < length ? typeList.get(i) : JSType.UNKNOWN);
+    }
+    return builder.build();
   }
 
   // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a
@@ -528,8 +549,7 @@ public class JSTypeCreatorFromJSDoc {
     } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
       warn("Wrong parameter order: required parameters are first, " +
           "then optional, then varargs. Ignoring jsdoc.", declNode);
-      return getFunTypeFromTypicalFunctionJsdoc(
-          null, declNode, ownerType, registry, true);
+      return FunctionTypeBuilder.qmarkFunctionBuilder();
     }
   }
 
@@ -670,6 +690,12 @@ public class JSTypeCreatorFromJSDoc {
       JSTypeExpression texp = jsdoc == null ?
           null : jsdoc.getParameterType(pname);
       Node jsdocNode = texp == null ? null : texp.getRootNode();
+      if (convention.isOptionalParameter(param)) {
+        isRequired = false;
+      } else if (convention.isVarArgsParameter(param)) {
+        isRequired = false;
+        isRestFormals = true;
+      }
       if (jsdocNode != null && jsdocNode.getType() == Token.EQUALS) {
         isRequired = false;
         jsdocNode = jsdocNode.getFirstChild();
@@ -693,7 +719,8 @@ public class JSTypeCreatorFromJSDoc {
       } else if (isRequired) {
         builder.addReqFormal(fnParamType);
       } else if (isRestFormals) {
-        builder.addRestFormals(fnParamType);
+        builder.addRestFormals(
+            fnParamType == null ? JSType.UNKNOWN : fnParamType);
       } else {
         builder.addOptFormal(fnParamType);
       }

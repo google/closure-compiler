@@ -2867,6 +2867,20 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** function(... [number]) */ x) {}\n" +
         "f(/** @type {function(string=)} */ (function(x) {}));",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @param {number} opt_num */ function f(opt_num) {}\n" +
+        "f();");
+
+    typeCheck(
+        "function f(opt_num, x) {}",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    checkNoWarnings("function f(var_args) {} f(1, 2, 3);");
+
+    typeCheck(
+        "function f(var_args, x) {}",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
   }
 
   public void testInferredOptionalFormals() {
