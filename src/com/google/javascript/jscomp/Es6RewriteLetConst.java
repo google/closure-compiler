@@ -24,6 +24,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -109,13 +111,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     NodeTraversal.traverseRoots(
         compiler, Lists.newArrayList(externs, root), transformer);
     transformer.transformLoopClosure();
-
-    if (!blockScopedDeclarations.isEmpty()) {
-      for (Node n : blockScopedDeclarations) {
-        n.setType(Token.VAR);
-      }
-      compiler.reportCodeChange();
-    }
+    varify();
     NodeTraversal.traverseRoots(compiler, Lists.newArrayList(externs, root),
         new RewriteBlockScopedFunctionDeclaration());
   }
@@ -129,14 +125,26 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverse(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
+    varify();
+    NodeTraversal.traverse(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
+  }
 
+  private void varify() {
     if (!blockScopedDeclarations.isEmpty()) {
       for (Node n : blockScopedDeclarations) {
+        if (n.isConst()) {
+          JSDocInfoBuilder builder = (n.getJSDocInfo() == null)
+              ? new JSDocInfoBuilder(true)
+              : JSDocInfoBuilder.copyFrom(n.getJSDocInfo());
+          builder.recordConstancy();
+          JSDocInfo info = builder.build(n);
+          info.setAssociatedNode(n);
+          n.setJSDocInfo(info);
+        }
         n.setType(Token.VAR);
       }
       compiler.reportCodeChange();
     }
-    NodeTraversal.traverse(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
   }
 
   private class RewriteBlockScopedFunctionDeclaration extends
