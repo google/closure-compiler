@@ -169,7 +169,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
    * <code>
    * var $jscomp$generator$yield$all = gen();
    * var $jscomp$generator$yield$entry;
-   * while (!($jscomp$generator$yield$entry = $jscomp$generator$yield$all.next()).done) {
+   * while (!($jscomp$generator$yield$entry =
+   *     $jscomp$generator$yield$all.next($jscomp$generator$next$arg)).done) {
    *   yield $jscomp$generator$yield$entry.value;
    * }
    * var i = $jscomp$generator$yield$entry.value;
@@ -185,7 +186,8 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
     Node assignIterResult = IR.assign(
         IR.name(GENERATOR_YIELD_ALL_ENTRY),
-        IR.call(IR.getprop(IR.name(GENERATOR_YIELD_ALL_NAME), IR.string("next"))));
+        IR.call(IR.getprop(IR.name(GENERATOR_YIELD_ALL_NAME), IR.string("next")),
+            IR.name(GENERATOR_NEXT_ARG)));
     Node loopCondition = IR.not(IR.getprop(assignIterResult, IR.string("done")));
     Node elemValue = IR.getprop(IR.name(GENERATOR_YIELD_ALL_ENTRY), IR.string("value"));
     Node yieldStatement = IR.exprResult(IR.yield(elemValue.cloneTree()));
