@@ -244,7 +244,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
       nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
       // Explicitly visit the new nodes to translate nested destructuring.
-      visit(t, child, newNode);
+      visit(t, child, child.getParent());
     }
     nodeToDetach.detachFromParent();
     compiler.reportCodeChange();
