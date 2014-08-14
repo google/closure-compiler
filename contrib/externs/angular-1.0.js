@@ -20,8 +20,6 @@
  * TODO: Mocks.
  * TODO: Remaining Services:
  *     $compileProvider
- *     $controller
- *     $controllerProvider
  *     $cookies
  *     $cookieStore
  *     $document
@@ -942,6 +940,26 @@ angular.$cacheFactory.Cache;
  *   }}
  */
 angular.$cacheFactory.Cache.Info;
+
+/******************************************************************************
+ * $controller Service
+ *****************************************************************************/
+
+/**
+ * @typedef {function((Function|string), Object):Object}
+ */
+angular.$controller;
+
+/******************************************************************************
+ * $controllerProvider Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   register: function((string|Object), (Function|Array))
+ *   }}
+ */
+angular.$controllerProvider;
 
 /******************************************************************************
  * $exceptionHandler Service
