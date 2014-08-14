@@ -373,6 +373,10 @@ public class IR {
     return new Node(Token.HOOK, cond, trueval, falseval);
   }
 
+  public static Node in(Node expr1, Node expr2) {
+    return binaryOp(Token.IN, expr1, expr2);
+  }
+
   public static Node comma(Node expr1, Node expr2) {
     return binaryOp(Token.COMMA, expr1, expr2);
   }
