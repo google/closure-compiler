@@ -44,12 +44,14 @@ public class QualifiedName {
         .addAll(lhs.parts).addAll(rhs.parts).build());
   }
 
-  public static QualifiedName fromGetprop(Node getprop) {
-    if (getprop == null || !getprop.isQualifiedName()) {
+  public static QualifiedName fromNode(Node qnameNode) {
+    if (qnameNode == null || !qnameNode.isQualifiedName()) {
       return null;
     }
-    return new QualifiedName(ImmutableList.copyOf(
-        Splitter.on('.').split(getprop.getQualifiedName())));
+    return qnameNode.isName()
+        ? new QualifiedName(qnameNode.getString())
+        : new QualifiedName(ImmutableList.copyOf(
+              Splitter.on('.').split(qnameNode.getQualifiedName())));
   }
 
   public static QualifiedName fromQname(String qname) {

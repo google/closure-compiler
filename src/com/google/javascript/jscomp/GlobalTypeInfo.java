@@ -612,19 +612,14 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void visitNamespace(Node qnameNode) {
+      if (currentScope.isDefined(qnameNode)) {
+        return;
+      }
       if (qnameNode.isGetProp()) {
         Preconditions.checkState(qnameNode.getParent().isAssign());
-        QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
-        String leftmost = qname.getLeftmostName();
-        QualifiedName props = qname.getAllButLeftmost();
-        if (currentScope.getNamespace(leftmost).isDefined(props)) {
-          return;
-        }
         qnameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       }
-      if (!currentScope.isNamespace(qnameNode)) {
-        currentScope.addNamespace(qnameNode);
-      }
+      currentScope.addNamespace(qnameNode);
     }
 
     private void visitTypedef(Node qnameNode) {
@@ -748,7 +743,7 @@ class GlobalTypeInfo implements CompilerPass {
         }
       }
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
-        QualifiedName qname = QualifiedName.fromGetprop(nameNode);
+        QualifiedName qname = QualifiedName.fromNode(nameNode);
         if (qname == null) {
           warnings.add(JSError.make(fn, ANONYMOUS_NOMINAL_TYPE));
           return;
@@ -1009,7 +1004,7 @@ class GlobalTypeInfo implements CompilerPass {
       Node initializer = parent.isAssign() ? parent.getLastChild() : null;
       Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
 
-      QualifiedName ctorQname = QualifiedName.fromGetprop(ctorNameNode);
+      QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
       RawNominalType rawType = currentScope.getNominalType(ctorQname);
 
       if (rawType == null) {
@@ -1080,8 +1075,7 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitConstructorPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
       String ctorName = getProp.getFirstChild().getQualifiedName();
-      QualifiedName ctorQname =
-          QualifiedName.fromGetprop(getProp.getFirstChild());
+      QualifiedName ctorQname = QualifiedName.fromNode(getProp.getFirstChild());
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
       RawNominalType classType = currentScope.getNominalType(ctorQname);
       String pname = getProp.getLastChild().getString();
@@ -1114,17 +1108,9 @@ class GlobalTypeInfo implements CompilerPass {
         // Named types have already been crawled in CollectNamedTypes
         return;
       }
-      Node nsNameNode = getProp.getFirstChild();
-      Preconditions.checkState(currentScope.isNamespace(nsNameNode));
-      Namespace ns;
-      if (nsNameNode.isName()) {
-        ns = currentScope.getNamespace(nsNameNode.getString());
-      } else {
-        QualifiedName nsQname = QualifiedName.fromGetprop(nsNameNode);
-        ns = currentScope
-            .getNamespace(nsQname.getLeftmostName())
-            .getSubnamespace(nsQname.getAllButLeftmost());
-      }
+      Node recv = getProp.getFirstChild();
+      Preconditions.checkState(currentScope.isNamespace(recv));
+      Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       JSType propDeclType = getTypeDeclarationFromJsdoc(jsdoc, currentScope);
@@ -1708,14 +1694,13 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (qnameNode.isName()) {
         return isDefinedLocally(qnameNode.getString());
       }
-      QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
+      QualifiedName qname = QualifiedName.fromNode(qnameNode);
       String leftmost = qname.getLeftmostName();
       if (isNamespace(leftmost)) {
         return getNamespace(leftmost).isDefined(qname.getAllButLeftmost());
       }
       return parent == null ? null : parent.isDefined(qnameNode);
     }
-
 
     private boolean isNamespace(Node expr) {
       if (expr.isName()) {
@@ -1724,7 +1709,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (!expr.isGetProp()) {
         return false;
       }
-      QualifiedName qname = QualifiedName.fromGetprop(expr);
+      QualifiedName qname = QualifiedName.fromNode(expr);
       if (qname == null) {
         return false;
       }
@@ -1735,16 +1720,16 @@ class GlobalTypeInfo implements CompilerPass {
       return getNamespace(leftmost).hasSubnamespace(qname.getAllButLeftmost());
     }
 
-    private boolean isNamespaceLiteral(String name) {
-      return localNamespaces.containsKey(name);
-    }
-
     private boolean isNamespace(String name) {
       Preconditions.checkArgument(!name.contains("."));
       return localNamespaces.containsKey(name) ||
           localClassDefs.containsKey(name) ||
           localEnums.containsKey(name) ||
           parent != null && parent.isNamespace(name);
+    }
+
+    private boolean isNamespaceLiteral(String name) {
+      return localNamespaces.containsKey(name);
     }
 
     private boolean isVisibleInScope(String name) {
@@ -1841,7 +1826,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     JSType getDeclaredTypeOf(String name) {
-      Preconditions.checkArgument(name.indexOf('.') == -1);
+      Preconditions.checkArgument(!name.contains("."));
       if ("this".equals(name)) {
         if (!hasThis()) {
           return null;
@@ -1935,12 +1920,10 @@ class GlobalTypeInfo implements CompilerPass {
     private void addNamespace(Node qnameNode) {
       Preconditions.checkArgument(!isNamespace(qnameNode));
       if (qnameNode.isName()) {
-        String name = qnameNode.getString();
-        localNamespaces.put(name, new NamespaceLit());
+        localNamespaces.put(qnameNode.getString(), new NamespaceLit());
       } else {
-        QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
-        String leftmost = qname.getLeftmostName();
-        Namespace ns = getNamespace(leftmost);
+        QualifiedName qname = QualifiedName.fromNode(qnameNode);
+        Namespace ns = getNamespace(qname.getLeftmostName());
         ns.addSubnamespace(qname.getAllButLeftmost());
       }
     }
@@ -1967,7 +1950,7 @@ class GlobalTypeInfo implements CompilerPass {
         localClassDefs.put(qnameNode.getString(), rawNominalType);
       } else {
         Preconditions.checkArgument(!isDefined(qnameNode));
-        QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
+        QualifiedName qname = QualifiedName.fromNode(qnameNode);
         Namespace ns = getNamespace(qname.getLeftmostName());
         ns.addNominalType(qname.getAllButLeftmost(), rawNominalType);
       }
@@ -1980,7 +1963,7 @@ class GlobalTypeInfo implements CompilerPass {
         localTypedefs.put(qnameNode.getString(), td);
       } else {
         Preconditions.checkState(!isDefined(qnameNode));
-        QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
+        QualifiedName qname = QualifiedName.fromNode(qnameNode);
         Namespace ns = getNamespace(qname.getLeftmostName());
         ns.addTypedef(qname.getAllButLeftmost(), td);
       }
@@ -2012,7 +1995,7 @@ class GlobalTypeInfo implements CompilerPass {
         localEnums.put(qnameNode.getString(), e);
       } else {
         Preconditions.checkState(!isDefined(qnameNode));
-        QualifiedName qname = QualifiedName.fromGetprop(qnameNode);
+        QualifiedName qname = QualifiedName.fromNode(qnameNode);
         Namespace ns = getNamespace(qname.getLeftmostName());
         ns.addEnum(qname.getAllButLeftmost(), e);
         qualifiedEnums.add(e);
@@ -2036,6 +2019,12 @@ class GlobalTypeInfo implements CompilerPass {
         return parent.getEnum(name);
       }
       return null;
+    }
+
+    private Namespace getNamespace(QualifiedName qname) {
+      Namespace ns = getNamespace(qname.getLeftmostName());
+      return qname.isIdentifier()
+          ? ns : ns.getSubnamespace(qname.getAllButLeftmost());
     }
 
     private Namespace getNamespace(String name) {
