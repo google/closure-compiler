@@ -50,6 +50,9 @@ public class ObjectType implements TypeWithProperties {
       null, null, null, false, ObjectKind.STRUCT);
   static final ObjectType TOP_DICT = ObjectType.makeObjectType(
       null, null, null, false, ObjectKind.DICT);
+  private static final ObjectType BOTTOM_OBJECT = new ObjectType(
+      null, PersistentMap.of("_", Property.make(JSType.BOTTOM, JSType.BOTTOM)),
+      null, false, ObjectKind.UNRESTRICTED);
 
   private ObjectType(NominalType nominalType,
       PersistentMap<String, Property> props, FunctionType fn, boolean isLoose,
@@ -71,6 +74,8 @@ public class ObjectType implements TypeWithProperties {
       boolean isLoose, ObjectKind ok) {
     if (props == null) {
       props = PersistentMap.create();
+    } else if (containsBottomProp(props)) {
+      return BOTTOM_OBJECT;
     }
     return new ObjectType(nominalType, props, fn, isLoose, ok);
   }
@@ -97,13 +102,17 @@ public class ObjectType implements TypeWithProperties {
   }
 
   boolean isInhabitable() {
+    return this != BOTTOM_OBJECT;
+  }
+
+  static boolean containsBottomProp(PersistentMap<String, Property> props) {
     for (Property p : props.values()) {
       if (p.getType().isBottom()) {
-        return false;
+        return true;
       }
     }
     // TODO(dimvar): do we need a stricter check for functions?
-    return true;
+    return false;
   }
 
   boolean isRecordType() {
@@ -768,7 +777,7 @@ public class ObjectType implements TypeWithProperties {
       newProps =
           newProps.with(p, props.get(p).substituteGenerics(concreteTypes));
     }
-    return new ObjectType(
+    return makeObjectType(
         nominalType == null ? null :
         nominalType.instantiateGenerics(concreteTypes),
         newProps,
