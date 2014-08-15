@@ -1500,6 +1500,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var x = {}; var y = x.a;",
         TypeCheck.INEXISTENT_PROPERTY);
 
+    typeCheck(
+        "var x = {}; x.y - 3; x.y = 5;",
+        TypeCheck.INEXISTENT_PROPERTY);
+
     // TODO(dimvar): fix
     // typeCheck(
     //     "function f(/** !Object */ x) {\n" +
