@@ -548,6 +548,210 @@ chrome.app.window.onRestored;
 
 
 /**
+ * @const
+ * @see https://developer.chrome.com/apps/bluetooth
+ */
+chrome.bluetooth = function() {};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetooth#type-AdapterState
+ */
+chrome.bluetooth.AdapterState = function() {};
+
+
+/** @type {string} */
+chrome.bluetooth.AdapterState.prototype.address;
+
+
+/** @type {string} */
+chrome.bluetooth.AdapterState.prototype.name;
+
+
+/** @type {boolean} */
+chrome.bluetooth.AdapterState.prototype.powered;
+
+
+/** @type {boolean} */
+chrome.bluetooth.AdapterState.prototype.available;
+
+
+/** @type {boolean} */
+chrome.bluetooth.AdapterState.prototype.discovering;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetooth#type-Device
+ */
+chrome.bluetooth.Device = function() {};
+
+
+/** @type {string} */
+chrome.bluetooth.Device.prototype.address;
+
+
+/** @type {string|undefined} */
+chrome.bluetooth.Device.prototype.name;
+
+
+/** @type {number|undefined} */
+chrome.bluetooth.Device.prototype.deviceClass;
+
+
+/** @type {string|undefined} */
+chrome.bluetooth.Device.prototype.vendorIdSource;
+
+
+/** @type {string|undefined} */
+chrome.bluetooth.Device.prototype.vendorId;
+
+
+/** @type {number|undefined} */
+chrome.bluetooth.Device.prototype.productId;
+
+
+/** @type {number|undefined} */
+chrome.bluetooth.Device.prototype.deviceId;
+
+
+/** @type {string|undefined} */
+chrome.bluetooth.Device.prototype.type;
+
+
+/** @type {boolean|undefined} */
+chrome.bluetooth.Device.prototype.paired;
+
+
+/** @type {boolean|undefined} */
+chrome.bluetooth.Device.prototype.connected;
+
+
+/** @type {!Array.<string>|undefined} */
+chrome.bluetooth.Device.prototype.uuids;
+
+
+/**
+ * @param {function(!chrome.bluetooth.AdapterState)} callback
+ * @see https://developer.chrome.com/apps/bluetooth#method-getAdapterState
+ */
+chrome.bluetooth.getAdapterState = function(callback) {};
+
+
+/**
+ * @param {string} deviceAddress
+ * @param {function(!chrome.bluetooth.Device)} callback
+ * @see https://developer.chrome.com/apps/bluetooth#method-getDevice
+ */
+chrome.bluetooth.getDevice = function(deviceAddress, callback) {};
+
+
+/**
+ * @param {function(!Array.<!chrome.bluetooth.Device>)} callback
+ * @see https://developer.chrome.com/apps/bluetooth#method-getDevices
+ */
+chrome.bluetooth.getDevices = function(callback) {};
+
+
+/**
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetooth#method-startDiscovery
+ */
+chrome.bluetooth.startDiscovery = function(opt_callback) {};
+
+
+/**
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetooth#method-stopDiscovery
+ */
+chrome.bluetooth.stopDiscovery = function(opt_callback) {};
+
+
+/**
+ * Event whose listeners take an AdapaterState parameter.
+ * @constructor
+ */
+chrome.bluetooth.AdapterStateEvent = function() {};
+
+
+/** @param {function(!chrome.bluetooth.AdapterState): void} callback */
+chrome.bluetooth.AdapterStateEvent.prototype.addListener =
+    function(callback) {};
+
+
+/** @param {function(!chrome.bluetooth.AdapterState): void} callback */
+chrome.bluetooth.AdapterStateEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetooth.AdapterState): void} callback
+ * @return {boolean}
+ */
+chrome.bluetooth.AdapterStateEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetooth.AdapterStateEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.bluetooth.AdapterStateEvent}
+ * @see https://developer.chrome.com/apps/bluetooth#event-onAdapterStateChanged
+ */
+chrome.bluetooth.onAdapterStateChange;
+
+
+/**
+ * Event whose listeners take an Device parameter.
+ * @constructor
+ */
+chrome.bluetooth.DeviceEvent = function() {};
+
+
+/** @param {function(!chrome.bluetooth.Device): void} callback */
+chrome.bluetooth.DeviceEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(!chrome.bluetooth.Device): void} callback */
+chrome.bluetooth.DeviceEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetooth.Device): void} callback
+ * @return {boolean}
+ */
+chrome.bluetooth.DeviceEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetooth.DeviceEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.bluetooth.DeviceEvent}
+ * @see https://developer.chrome.com/apps/bluetooth#event-onDeviceAdded
+ */
+chrome.bluetooth.onDeviceAdded;
+
+
+/**
+ * @type {!chrome.bluetooth.DeviceEvent}
+ * @see https://developer.chrome.com/apps/bluetooth#event-onDeviceChanged
+ */
+chrome.bluetooth.onDeviceChanged;
+
+
+/**
+ * @type {!chrome.bluetooth.DeviceEvent}
+ * @see https://developer.chrome.com/apps/bluetooth#event-onDeviceRemoved
+ */
+chrome.bluetooth.onDeviceRemoved;
+
+
+/**
  * @see http://developer.chrome.com/extensions/commands.html
  * @const
  */
