@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 public class TypeTransformationTest extends CompilerTypeTestCase {
 
   private ImmutableMap<String, JSType> typeVars;
+  private ImmutableMap<String, String> nameVars;
 
   @Override
   public void setUp() {
@@ -47,6 +48,11 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         .put("UNDEF", VOID_TYPE)
         .put("ARR", ARRAY_TYPE)
         .put("ARRNUM", type(ARRAY_TYPE, NUMBER_TYPE))
+        .build();
+    nameVars = new ImmutableMap.Builder<String, String>()
+        .put("s", "string")
+        .put("n", "number")
+        .put("b", "boolean")
         .build();
   }
 
@@ -288,32 +294,48 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithRecordType() {
-    testTTL(record(ImmutableMap.<String, JSType>of("x", NUMBER_TYPE)),
+    testTTL(record("x", NUMBER_TYPE),
         "record({x:'number'})");
   }
 
   public void testTransformationWithRecordType2() {
-    testTTL(record(ImmutableMap.<String, JSType>of("0", NUMBER_TYPE)),
+    testTTL(record("0", NUMBER_TYPE),
         "record({0:'number'})");
   }
 
   public void testTransformationWithRecordTypeMultipleProperties() {
-    testTTL(record(
-        ImmutableMap.<String, JSType>of("x", NUMBER_TYPE, "y", STRING_TYPE)),
+    testTTL(record("x", NUMBER_TYPE, "y", STRING_TYPE),
         "record({x:'number', y:S})");
   }
 
   public void testTransformationWithNestedRecordType() {
-    testTTL(record(ImmutableMap.<String, JSType>of(
-        "x", record(ImmutableMap.<String, JSType>of("z", BOOLEAN_TYPE)),
-        "y", STRING_TYPE)),
+    testTTL(record("x", record("z", BOOLEAN_TYPE), "y", STRING_TYPE),
         "record({x:record({z:B}), y:S})");
   }
 
-  public void testParserWithTTLTypeTransformationInFirstParamMapunion() {
+  public void testTransformationWithTTLTypeTransformationInFirstParamMapunion() {
     testTTL(union(NUMBER_TYPE, STRING_TYPE),
         "mapunion(templateTypeOf(type(ARR, union(N, S)), 0),"
         + "(x) => x)");
+  }
+
+  public void testTransformationWithInvalidNestedMapunion() {
+    testTTL(UNKNOWN_TYPE,
+        "mapunion(union(S, B),"
+        + "(x) => mapunion(union(S, N), "
+        +          "(x) => cond(eq(x, x), x, BOT)))",
+        "The variable x is already defined");
+  }
+
+  public void testTransformationWithTTLRecordWithReference() {
+    testTTL(record("number", NUMBER_TYPE, "string", STRING_TYPE,
+        "boolean", BOOLEAN_TYPE),
+        "record({[n]:N, [s]:S, [b]:B})");
+  }
+
+  public void testTransformationWithTTLRecordWithInvalidReference() {
+    testTTL(UNKNOWN_TYPE, "record({[Foo]:N})",
+        "Reference to an unknown name variable Foo");
   }
 
   private JSType union(JSType... variants) {
@@ -322,6 +344,19 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   private JSType type(ObjectType baseType, JSType... templatizedTypes) {
     return createTemplatizedType(baseType, templatizedTypes);
+  }
+
+  private JSType record(String p1, JSType t1) {
+    return record(ImmutableMap.<String, JSType>of(p1, t1));
+  }
+
+  private JSType record(String p1, JSType t1, String p2, JSType t2) {
+    return record(ImmutableMap.<String, JSType>of(p1, t1, p2, t2));
+  }
+
+  private JSType record(String p1, JSType t1, String p2, JSType t2,
+      String p3, JSType t3) {
+    return record(ImmutableMap.<String, JSType>of(p1, t1, p2, t2, p3, t3));
   }
 
   private JSType record(ImmutableMap<String, JSType> props) {
@@ -341,7 +376,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
       Node ast = ttlParser.getTypeTransformationAst();
       // Evaluate the type transformation
       TypeTransformation typeTransformation = new TypeTransformation(compiler);
-      JSType resultType = typeTransformation.eval(ast, typeVars);
+      JSType resultType = typeTransformation.eval(ast, typeVars, nameVars);
       checkReportedWarningsHelper(expectedWarnings);
       assertTypeEquals(expectedType, resultType);
     }

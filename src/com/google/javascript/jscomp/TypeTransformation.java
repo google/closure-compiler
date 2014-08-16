@@ -55,6 +55,27 @@ class TypeTransformation {
   static final DiagnosticType INDEX_OUTOFBOUNDS =
       DiagnosticType.warning("INDEX_OUTOFBOUNDS",
       "Index out of bounds in templateTypeOf: {0} > {1}");
+  static final DiagnosticType DUPLICATE_VARIABLE =
+      DiagnosticType.warning("DUPLICATE_VARIABLE",
+          "The variable {0} is already defined");
+  static final DiagnosticType UNKNOWN_NAMEVAR =
+      DiagnosticType.warning("UNKNOWN_NAMEVAR",
+          "Reference to an unknown name variable {0}");
+
+  /**
+   * A helper class for holding the information about the type variables
+   * and the name variables in maprecord expressions
+   */
+  private class NameResolver {
+    ImmutableMap<String, JSType> typeVars;
+    ImmutableMap<String, String> nameVars;
+
+    NameResolver(ImmutableMap<String, JSType> typeVars,
+        ImmutableMap<String, String> nameVars) {
+      this.typeVars = typeVars;
+      this.nameVars = nameVars;
+    }
+  }
 
   TypeTransformation(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -105,10 +126,10 @@ class TypeTransformation {
     compiler.report(JSError.make(n, msg, param));
   }
 
-  private ImmutableMap<String, JSType> addNewVar(
-      ImmutableMap<String, JSType> typeVars, String name, JSType type) {
-    return new ImmutableMap.Builder<String, JSType>()
-        .putAll(typeVars)
+  private <T> ImmutableMap<String, T> addNewEntry(
+      ImmutableMap<String, T> map, String name, T type) {
+    return new ImmutableMap.Builder<String, T>()
+        .putAll(map)
         .put(name, type)
         .build();
   }
@@ -140,56 +161,74 @@ class TypeTransformation {
    * @return JSType The resulting type after the transformation
    */
   JSType eval(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
+    return eval(ttlAst, typeVars, ImmutableMap.<String, String>of());
+  }
+
+  /** Evaluates the type transformation expression and returns the resulting
+   * type.
+   *
+   * @param ttlAst The node representing the type transformation
+   * expression
+   * @param typeVars The environment containing the information about
+   * the type variables
+   * @param nameVars The environment containing the information about
+   * the name variables
+   * @return JSType The resulting type after the transformation
+   */
+  JSType eval(Node ttlAst, ImmutableMap<String, JSType> typeVars,
+      ImmutableMap<String, String> nameVars) {
+    return evalInternal(ttlAst, new NameResolver(typeVars, nameVars));
+  }
+
+  private JSType evalInternal(Node ttlAst, NameResolver nameResolver) {
     if (isTypeName(ttlAst)) {
       return evalTypeName(ttlAst);
     }
     if (isTypeVar(ttlAst)) {
-      return evalTypeVar(ttlAst, typeVars);
+      return evalTypeVar(ttlAst, nameResolver);
     }
     String name = ttlAst.getFirstChild().getString();
     Keywords keyword = nameToKeyword(name);
     switch (keyword.kind) {
       case TYPE_CONSTRUCTOR:
-        return evalTypeExpression(ttlAst, typeVars);
+        return evalTypeExpression(ttlAst, nameResolver);
       case OPERATION:
-        return evalOperationExpression(ttlAst, typeVars);
+        return evalOperationExpression(ttlAst, nameResolver);
       default:
         throw new IllegalStateException(
             "Could not evaluate the type transformation expression");
     }
   }
 
-  private JSType evalOperationExpression(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private JSType evalOperationExpression(Node ttlAst, NameResolver nameResolver) {
     String name = ttlAst.getFirstChild().getString();
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case COND:
-        return evalConditional(ttlAst, typeVars);
+        return evalConditional(ttlAst, nameResolver);
       case MAPUNION:
-        return evalMapunion(ttlAst, typeVars);
+        return evalMapunion(ttlAst, nameResolver);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
   }
 
-  private JSType evalTypeExpression(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private JSType evalTypeExpression(Node ttlAst, NameResolver nameResolver) {
     String name = ttlAst.getFirstChild().getString();
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case TYPE:
-        return evalTemplatizedType(ttlAst, typeVars);
+        return evalTemplatizedType(ttlAst, nameResolver);
       case UNION:
-        return evalUnionType(ttlAst, typeVars);
+        return evalUnionType(ttlAst, nameResolver);
       case NONE:
         return getNoType();
       case RAWTYPEOF:
-        return evalRawTypeOf(ttlAst, typeVars);
+        return evalRawTypeOf(ttlAst, nameResolver);
       case TEMPLATETYPEOF:
-        return evalTemplateTypeOf(ttlAst, typeVars);
+        return evalTemplateTypeOf(ttlAst, nameResolver);
       case RECORD:
-        return evalRecordType(ttlAst, typeVars);
+        return evalRecordType(ttlAst, nameResolver);
       default:
         throw new IllegalStateException("Invalid type expression");
     }
@@ -206,10 +245,9 @@ class TypeTransformation {
     return resultingType;
   }
 
-  private JSType evalTemplatizedType(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private JSType evalTemplatizedType(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getParameters(ttlAst);
-    JSType firstParam = eval(params.get(0), typeVars);
+    JSType firstParam = evalInternal(params.get(0), nameResolver);
     if (!isTemplatizable(firstParam)) {
       reportWarning(ttlAst, BASETYPE_INVALID, firstParam.toString());
       return getUnknownType();
@@ -221,14 +259,14 @@ class TypeTransformation {
     // must be just one parameter.
     JSType[] templatizedTypes = new JSType[params.size() - 1];
     for (int i = 0; i < templatizedTypes.length; i++) {
-      templatizedTypes[i] = eval(params.get(i + 1), typeVars);
+      templatizedTypes[i] = evalInternal(params.get(i + 1), nameResolver);
     }
     return createTemplatizedType(baseType, templatizedTypes);
   }
 
-  private JSType evalTypeVar(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
+  private JSType evalTypeVar(Node ttlAst, NameResolver nameResolver) {
     String typeVar = ttlAst.getString();
-    JSType resultingType = typeVars.get(typeVar);
+    JSType resultingType = nameResolver.typeVars.get(typeVar);
     // If the type variable is not defined then return UNKNOWN and report a warning
     if (resultingType == null) {
       reportWarning(ttlAst, UNKNOWN_TYPEVAR, typeVar);
@@ -237,24 +275,22 @@ class TypeTransformation {
     return resultingType;
   }
 
-  private JSType evalUnionType(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private JSType evalUnionType(Node ttlAst, NameResolver nameResolver) {
     // Get the parameters of the union
     ImmutableList<Node> params = getParameters(ttlAst);
     int paramCount = params.size();
     // Create an array of types after evaluating each parameter
     JSType[] basicTypes = new JSType[paramCount];
     for (int i = 0; i < paramCount; i++) {
-      basicTypes[i] = eval(params.get(i), typeVars);
+      basicTypes[i] = evalInternal(params.get(i), nameResolver);
     }
     return createUnionType(basicTypes);
   }
 
-  private boolean evalBoolean(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private boolean evalBoolean(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getParameters(ttlAst);
-    JSType type0 = eval(params.get(0), typeVars);
-    JSType type1 = eval(params.get(1), typeVars);
+    JSType type0 = evalInternal(params.get(0), nameResolver);
+    JSType type1 = evalInternal(params.get(1), nameResolver);
     String name = ttlAst.getFirstChild().getString();
     Keywords keyword = nameToKeyword(name);
 
@@ -269,28 +305,36 @@ class TypeTransformation {
     }
   }
 
-  private JSType evalConditional(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private JSType evalConditional(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getParameters(ttlAst);
-    if (evalBoolean(params.get(0), typeVars)) {
-      return eval(params.get(1), typeVars);
+    if (evalBoolean(params.get(0), nameResolver)) {
+      return evalInternal(params.get(1), nameResolver);
     } else {
-      return eval(params.get(2), typeVars);
+      return evalInternal(params.get(2), nameResolver);
     }
   }
 
-  private JSType evalMapunion(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
+  private JSType evalMapunion(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getParameters(ttlAst);
     Node unionParam = params.get(0);
     Node mapFunction = params.get(1);
     String paramName = getFunctionParameter(mapFunction, 0);
-    Node mapFunctionBody = mapFunction.getChildAtIndex(2);
-    JSType unionType = eval(unionParam, typeVars);
 
+    // The mapunion variable must not be defined in the environment
+    if (nameResolver.typeVars.containsKey(paramName)) {
+      reportWarning(ttlAst, DUPLICATE_VARIABLE, paramName);
+      return getUnknownType();
+    }
+
+    Node mapFunctionBody = mapFunction.getChildAtIndex(2);
+    JSType unionType = evalInternal(unionParam, nameResolver);
     // If the first parameter does not correspond to a union type then
     // consider it as a union with a single type and evaluate
     if (!unionType.isUnionType()) {
-      return eval(mapFunctionBody, addNewVar(typeVars, paramName, unionType));
+      NameResolver newNameResolver = new NameResolver(
+          addNewEntry(nameResolver.typeVars, paramName, unionType),
+          nameResolver.nameVars);
+      return evalInternal(mapFunctionBody, newNameResolver);
     }
 
     // Otherwise obtain the elements in the union type. Note that the block
@@ -301,17 +345,19 @@ class TypeTransformation {
     JSType[] newUnionElms = new JSType[unionSize];
     int i = 0;
     for (JSType elm : unionElms) {
-      newUnionElms[i] = eval(mapFunctionBody,
-          addNewVar(typeVars, paramName, elm));
+      NameResolver newNameResolver = new NameResolver(
+          addNewEntry(nameResolver.typeVars, paramName, elm),
+          nameResolver.nameVars);
+      newUnionElms[i] = evalInternal(mapFunctionBody, newNameResolver);
       i++;
     }
 
     return createUnionType(newUnionElms);
   }
 
-  private JSType evalRawTypeOf(Node ttlAst, ImmutableMap<String, JSType> typeVars) {
+  private JSType evalRawTypeOf(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getParameters(ttlAst);
-    JSType type = eval(params.get(0), typeVars);
+    JSType type = evalInternal(params.get(0), nameResolver);
     if (!type.isTemplatizedType()) {
       reportWarning(ttlAst, TEMPTYPE_INVALID, "rawTypeOf", type.toString());
       return getUnknownType();
@@ -319,10 +365,9 @@ class TypeTransformation {
     return ((TemplatizedType) type).getReferencedType();
   }
 
-  private JSType evalTemplateTypeOf(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private JSType evalTemplateTypeOf(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getParameters(ttlAst);
-    JSType type = eval(params.get(0), typeVars);
+    JSType type = evalInternal(params.get(0), nameResolver);
     if (!type.isTemplatizedType()) {
       reportWarning(ttlAst, TEMPTYPE_INVALID, "templateTypeOf", type.toString());
       return getUnknownType();
@@ -338,13 +383,25 @@ class TypeTransformation {
     return templateTypes.get(index);
   }
 
-  private JSType evalRecordType(Node ttlAst,
-      ImmutableMap<String, JSType> typeVars) {
+  private JSType evalRecordType(Node ttlAst, NameResolver nameResolver) {
     Node record = getCallArgument(ttlAst, 0);
     RecordTypeBuilder builder = new RecordTypeBuilder(typeRegistry);
     for (Node p : record.children()) {
-      builder.addProperty(p.getString(),
-          eval(p.getFirstChild(), typeVars), null);
+      // If it is a computed property then find the property name using the resolver
+      if (p.isComputedProp()) {
+        String nameVar = p.getFirstChild().getString();
+        // If the name does not exist then report a warning
+        if (!nameResolver.nameVars.containsKey(nameVar)) {
+          reportWarning(ttlAst, UNKNOWN_NAMEVAR, nameVar);
+          return getUnknownType();
+        }
+        // Otherwise add the property
+        builder.addProperty(nameResolver.nameVars.get(nameVar),
+            evalInternal(p.getChildAtIndex(1), nameResolver), null);
+      } else {
+        builder.addProperty(p.getString(),
+            evalInternal(p.getFirstChild(), nameResolver), null);
+      }
     }
     return builder.build();
   }
