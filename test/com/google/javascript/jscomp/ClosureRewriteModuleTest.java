@@ -65,6 +65,43 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "});");
   }
 
+  public void testBundle1() {
+    test(
+        "goog.loadModule(function(exports) {" +
+        "goog.module('ns.a');" +
+        "var b = goog.require('ns.b');" +
+        "return exports;});",
+
+        "goog.provide('ns.a');" +
+        "goog.require('ns.b');" +
+        "goog.scope(function(){" +
+        "  var b = ns.b;" +
+        "});");
+  }
+
+  public void testBundle2() {
+    test(
+        "goog.loadModule(function(exports) {" +
+        "goog.module('ns.a');" +
+        "var b = goog.require('ns.b');" +
+        "return exports;});" +
+        "goog.loadModule(function(exports) {" +
+        "goog.module('ns.c');" +
+        "var b = goog.require('ns.b');" +
+        "return exports;});",
+
+        "goog.provide('ns.a');" +
+        "goog.require('ns.b');" +
+        "goog.scope(function(){" +
+        "  var b = ns.b;" +
+        "});" +
+        "goog.provide('ns.c');" +
+        "goog.require('ns.b');" +
+        "goog.scope(function(){" +
+        "  var b = ns.b;" +
+        "});");
+  }
+
   public void testInvalidModule() {
     testSame(
         "goog.module(a);",

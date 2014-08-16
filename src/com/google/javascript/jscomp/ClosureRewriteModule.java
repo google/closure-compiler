@@ -39,8 +39,9 @@ import com.google.javascript.rhino.Token;
 public class ClosureRewriteModule
     implements NodeTraversal.Callback, HotSwapCompilerPass {
 
+  // TODO(johnlenz): Don't use goog.scope as an intermediary add type checker
+  // support instead.
   // TODO(johnlenz): harden this class to warn about misuse
-  // TODO(johnlenz): handle "var x = goog.require('x');
   // TODO(johnlenz): handle non-namespace module identifiers aka 'foo/bar'
 
   static final DiagnosticType INVALID_MODULE_IDENTIFIER =
@@ -59,6 +60,18 @@ public class ClosureRewriteModule
     Node moduleDecl;
     String moduleNamespace = "";
     Node requireInsertNode = null;
+    final Node moduleScopeRoot;
+    final Node moduleStatementRoot;
+
+    ModuleDescription(Node n) {
+      if (isLoadModuleCall(n)) {
+        this.moduleScopeRoot = getModuleScopeRootForLoadModuleCall(n);
+        this.moduleStatementRoot = getModuleStatementRootForLoadModuleCall(n);
+      } else {
+        this.moduleScopeRoot = n;
+        this.moduleStatementRoot = n;
+      }
+    }
   }
 
   // Per "goog.module" state need for rewriting.
@@ -80,20 +93,31 @@ public class ClosureRewriteModule
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (n.isScript()) {
-      if (!n.hasChildren() || !isGoogModuleCall(n.getFirstChild())) {
-        return false;
-      }
-      enterModule();
+    if (isModuleFile(n) || isLoadModuleCall(n)) {
+      enterModule(n);
     }
     return true;
   }
 
-  private void enterModule() {
-    current = new ModuleDescription();
+  private static boolean isLoadModuleCall(Node n) {
+    return n.isCall()
+        && n.getFirstChild().matchesQualifiedName("goog.loadModule");
   }
 
-  private boolean isGoogModuleCall(Node n) {
+  private static boolean isModuleFile(Node n) {
+    return n.isScript() && n.hasChildren()
+        && isGoogModuleCall(n.getFirstChild());
+  }
+
+  private void enterModule(Node n) {
+    current = new ModuleDescription(n);
+  }
+
+  private boolean inModule() {
+    return current != null;
+  }
+
+  private static boolean isGoogModuleCall(Node n) {
     if (NodeUtil.isExprCall(n)) {
       Node target = n.getFirstChild().getFirstChild();
       return (target.matchesQualifiedName("goog.module"));
@@ -116,6 +140,11 @@ public class ClosureRewriteModule
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (!inModule()) {
+      // Nothing to do if we aren't within a module file.
+      return;
+    }
+
     switch (n.getType()) {
       case Token.CALL:
         Node first = n.getFirstChild();
@@ -123,8 +152,11 @@ public class ClosureRewriteModule
           recordAndUpdateModule(t, n);
         } else if (first.matchesQualifiedName("goog.require")) {
           recordAndUpdateRequire(t, n);
+        } else if (isLoadModuleCall(n)) {
+          rewriteModuleAsScope(n);
         }
         break;
+
       case Token.NAME:
         if (n.getString().equals("exports")) {
           Node replacement = NodeUtil.newQualifiedNameNode(
@@ -133,9 +165,16 @@ public class ClosureRewriteModule
           parent.replaceChild(n, replacement);
         }
         break;
+
       case Token.SCRIPT:
         // Exiting the script, fixup everything else;
         rewriteModuleAsScope(n);
+        break;
+
+      case Token.RETURN:
+        if (t.getScopeRoot() == current.moduleScopeRoot) {
+          n.detachFromParent();
+        }
         break;
     }
   }
@@ -185,25 +224,51 @@ public class ClosureRewriteModule
     insertAt.getParent().addChildBefore(require, insertAt);
   }
 
-  private void rewriteModuleAsScope(Node script) {
+  private void rewriteModuleAsScope(Node root) {
     // Moving everything following the goog.module/goog.requires into a
     // goog.scope so that the aliases can be resolved.
 
+    Node moduleRoot = current.moduleStatementRoot;
+
     // The moduleDecl will be null if it is invalid.
-    Node srcref = current.moduleDecl != null ? current.moduleDecl : script;
+    Node srcref = current.moduleDecl != null ? current.moduleDecl : root;
 
     Node block = IR.block();
     Node scope = IR.exprResult(IR.call(
-      IR.getprop(IR.name("goog"), IR.string("scope")),
-      IR.function(IR.name(""), IR.paramList(), block)))
-      .srcrefTree(srcref);
+        IR.getprop(IR.name("goog"), IR.string("scope")),
+        IR.function(IR.name(""), IR.paramList(), block)))
+        .srcrefTree(srcref);
 
     // Skip goog.module, etc.
-    Node fromNode = skipHeaderNodes(script);
+    Node fromNode = skipHeaderNodes(moduleRoot);
     Preconditions.checkNotNull(fromNode);
     moveChildrenAfter(fromNode, block);
-    script.addChildAfter(scope, fromNode);
+    moduleRoot.addChildAfter(scope, fromNode);
+
+    if (root.isCall()) {
+      Node expr = root.getParent();
+      Preconditions.checkState(expr.isExprResult(), expr);
+      expr.getParent().addChildrenAfter(moduleRoot.removeChildren(), expr);
+      expr.detachFromParent();
+    }
     compiler.reportCodeChange();
+
+    // reset the module.
+    current = null;
+  }
+
+  private static Node getModuleScopeRootForLoadModuleCall(Node n) {
+    Preconditions.checkState(n.isCall());
+    Node fn = n.getLastChild();
+    Preconditions.checkState(fn.isFunction());
+    return fn;
+  }
+
+  private static Node getModuleStatementRootForLoadModuleCall(Node n) {
+    Node fn = getModuleScopeRootForLoadModuleCall(n);
+    Node block = fn.getLastChild();
+    Preconditions.checkState(block.isBlock());
+    return block;
   }
 
   private Node skipHeaderNodes(Node script) {
@@ -237,7 +302,7 @@ public class ClosureRewriteModule
   }
 
   private Node getInsertRoot(Node n) {
-    while (!n.getParent().isScript()) {
+    while (n.getParent() != current.moduleStatementRoot) {
       n = n.getParent();
     }
     return n;
