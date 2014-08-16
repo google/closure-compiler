@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp.deps;
 
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -33,9 +32,8 @@ public class ClosureBundler {
 
   static void appendPrefix(Appendable out, DependencyInfo info) throws IOException {
     if (info.isModule()) {
-      String moduleName = Iterables.get(info.getProvides(), 0);
       // add the prefix on the first line so the line numbers aren't affected.
-      out.append("goog.loadModule('" + moduleName + "', function(exports) {"
+      out.append("goog.loadModule(function(exports) {"
           + "'use strict';");
     }
   }
