@@ -5920,6 +5920,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testMockedOutConstructorDoesntCrash() {
+    typeCheck(
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @constructor */ Foo = function(){};",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testDebuggerStatementDoesntCrash() {
     checkNoWarnings("debugger;");
   }

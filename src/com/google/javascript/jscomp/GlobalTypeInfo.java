@@ -717,6 +717,14 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitFunctionEarly(Node fn) {
       JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
       Node nameNode = NodeUtil.getFunctionNameNode(fn);
+      boolean isRedeclaration;
+      if (nameNode == null || !nameNode.isQualifiedName()) {
+        isRedeclaration = false;
+      } else if (nameNode.isName()) {
+        isRedeclaration = currentScope.isDefinedLocally(nameNode.getString());
+      } else {
+        isRedeclaration = currentScope.isDefined(nameNode);
+      }
       // Collect the names of the formals.
       // If a formal is a placeholder for variable arity, eg,
       // /** @param {...?} var_args */ function f(var_args) { ... }
@@ -768,9 +776,12 @@ class GlobalTypeInfo implements CompilerPass {
               RawNominalType.makeUnrestrictedClass(qname, typeParameters);
         }
         nominaltypesByNode.put(fn, rawNominalType);
+        if (isRedeclaration) {
+          return;
+        }
         if (nameNode.isName()
             || currentScope.isNamespace(nameNode.getFirstChild())) {
-          if (fn.getParent().isAssign()) {
+          if (nameNode.isGetProp()) {
             fn.getParent().getFirstChild()
                 .putBooleanProp(Node.ANALYZED_DURING_GTI, true);
           }
@@ -1744,7 +1755,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (isNamespace(leftmost)) {
         return getNamespace(leftmost).isDefined(qname.getAllButLeftmost());
       }
-      return parent == null ? null : parent.isDefined(qnameNode);
+      return parent == null ? false : parent.isDefined(qnameNode);
     }
 
     private boolean isNamespace(Node expr) {
