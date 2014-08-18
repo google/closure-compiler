@@ -77,12 +77,12 @@ public class QualifiedName {
     return parts.get(0);
   }
 
-  QualifiedName getAllButRightmost() {
+  public QualifiedName getAllButRightmost() {
     Preconditions.checkArgument(!isIdentifier());
     return new QualifiedName(parts.subList(0, parts.size() - 1));
   }
 
-  String getRightmostName() {
+  public String getRightmostName() {
     return parts.get(parts.size() - 1);
   }
 

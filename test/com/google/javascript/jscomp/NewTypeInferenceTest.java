@@ -7089,11 +7089,33 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   public void testLends() {
     typeCheck(
         "(/** @lends {InexistentType} */ { a: 1 });",
-        TypedScopeCreator.LENDS_ON_NON_OBJECT);
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
 
     typeCheck(
         "(/** @lends {number} */ { a: 1 });",
-        TypedScopeCreator.LENDS_ON_NON_OBJECT);
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "(/** @lends {Foo.badname} */ { a: 1 });",
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
+
+    typeCheck(
+        "/** @interface */\n" +
+        "function Foo() {}\n" +
+        "(/** @lends {Foo} */ { a: 1 });",
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
+
+    typeCheck(
+        "/** @interface */\n" +
+        "function Foo() {}\n" +
+        "(/** @lends {Foo.prototype} */ { a: 1 });",
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
+
+    typeCheck(
+        "(/** @lends {Inexistent.Type} */ { a: 1 });",
+        GlobalTypeInfo.LENDS_ON_BAD_TYPE);
 
     typeCheck(
         "/** @const */ var ns = {};\n" +
@@ -7111,6 +7133,59 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @const */ var ns = {};\n" +
         "(/** @lends {ns} */ { prop : 1 });\n" +
         "function f() { var /** string */ s = ns.prop; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "ns.subns = {};\n" +
+        "(/** @lends {ns.subns} */ { prop: 1 });\n" +
+        "var /** string */ s = ns.subns.prop;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "(/** @lends {Foo} */ { prop: 1 });\n" +
+        "var /** string */ s = Foo.prop;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "(/** @lends {Foo} */ { prop: 1 });\n" +
+        "function f() { var /** string */ s = Foo.prop; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @constructor */\n" +
+        "ns.Foo = function() {};\n" +
+        "(/** @lends {ns.Foo} */ { prop: 1 });\n" +
+        "function f() { var /** string */ s = ns.Foo.prop; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "(/** @lends {Foo.prototype} */ { /** @type {number} */ a: 1 });\n" +
+        "var /** string */ s = Foo.prototype.a;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "(/** @lends {Foo.prototype} */ { /** @type {number} */ a: 1 });\n" +
+        "var /** string */ s = (new Foo).a;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() { /** @type {number} */ this.prop = 1; }\n" +
+        "(/** @lends {Foo.prototype} */\n" +
+        " { /** @return {number} */ m: function() { return this.prop; } });\n" +
+        "var /** string */ s = (new Foo).m();",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 

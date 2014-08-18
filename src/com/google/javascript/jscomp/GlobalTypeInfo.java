@@ -174,6 +174,11 @@ class GlobalTypeInfo implements CompilerPass {
           "JSC_UNDECLARED_NAMESPACE",
           "Undeclared reference to {0}.");
 
+  static final DiagnosticType LENDS_ON_BAD_TYPE =
+      DiagnosticType.warning(
+          "JSC_LENDS_ON_BAD_TYPE",
+          "May only lend properties to namespaces, constructors and their"
+          + " prototypes. Found {0}.");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
@@ -194,6 +199,7 @@ class GlobalTypeInfo implements CompilerPass {
       INHERITANCE_CYCLE,
       INTERFACE_WITH_A_BODY,
       INVALID_PROP_OVERRIDE,
+      LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
       UNDECLARED_NAMESPACE,
@@ -811,31 +817,41 @@ class GlobalTypeInfo implements CompilerPass {
       // }
     }
 
-    // @lends can lend properties to an object X being defined in the same
-    // statement as the @lends. To make sure that we've seen the definition of
-    // X, we process @lends annotations after we've traversed the scope.
+    /**
+     * @lends can lend properties to an object X being defined in the same
+     * statement as the @lends. To make sure that we've seen the definition of
+     * X, we process @lends annotations after we've traversed the scope.
+     *
+     * @lends can only add properties to namespaces, constructors and prototypes
+     */
     void processLendsNode(Node objlit) {
       JSDocInfo jsdoc = objlit.getJSDocInfo();
       String lendsName = jsdoc.getLendsName();
       Preconditions.checkNotNull(lendsName);
-      // TODO(dimvar): handle @lends for objects with qualified names
-      Preconditions.checkState(!lendsName.contains("."));
-      JSType borrowerType = currentScope.getDeclaredTypeOf(lendsName);
-      if (borrowerType == null || borrowerType.isUnknown()) {
-        warnings.add(JSError.make(objlit, TypedScopeCreator.LENDS_ON_NON_OBJECT,
-                lendsName, "unknown"));
+      QualifiedName lendsQname = QualifiedName.fromQname(lendsName);
+      if (currentScope.isNamespace(lendsQname)) {
+        processLendsToNamespace(lendsQname, lendsName, objlit);
+      } else {
+        RawNominalType rawType = checkValidLendsToPrototypeAndGetClass(
+            lendsQname, lendsName, objlit);
+        if (rawType == null) {
+          return;
+        }
+        for (Node prop : objlit.children()) {
+          String pname =  NodeUtil.getObjectLitKeyName(prop);
+          mayAddPropToPrototype(rawType, pname, prop, prop.getFirstChild());
+        }
+      }
+    }
+
+    void processLendsToNamespace(
+        QualifiedName lendsQname, String lendsName, Node objlit) {
+      RawNominalType rawType = currentScope.getNominalType(lendsQname);
+      if (rawType != null && rawType.isInterface()) {
+        warnings.add(JSError.make(objlit, LENDS_ON_BAD_TYPE, lendsName));
         return;
       }
-      if (!borrowerType.isSubtypeOf(JSType.TOP_OBJECT)) {
-        warnings.add(JSError.make(objlit, TypedScopeCreator.LENDS_ON_NON_OBJECT,
-                lendsName, borrowerType.toString()));
-        return;
-      }
-      if (!currentScope.isNamespace(lendsName)) {
-        // TODO(dimvar): Handle @lends for constructors and prototypes
-        return;
-      }
-      Namespace borrowerNamespace = currentScope.getNamespace(lendsName);
+      Namespace borrowerNamespace = currentScope.getNamespace(lendsQname);
       for (Node prop : objlit.children()) {
         String pname = NodeUtil.getObjectLitKeyName(prop);
         JSType propDeclType = declaredObjLitProps.get(prop);
@@ -849,6 +865,20 @@ class GlobalTypeInfo implements CompilerPass {
           borrowerNamespace.addProperty(pname, t, false);
         }
       }
+    }
+
+    RawNominalType checkValidLendsToPrototypeAndGetClass(
+        QualifiedName lendsQname, String lendsName, Node objlit) {
+      if (!lendsQname.getRightmostName().equals("prototype")) {
+        warnings.add(JSError.make(objlit, LENDS_ON_BAD_TYPE, lendsName));
+        return null;
+      }
+      QualifiedName recv = lendsQname.getAllButRightmost();
+      RawNominalType rawType = currentScope.getNominalType(recv);
+      if (rawType == null || rawType.isInterface()) {
+        warnings.add(JSError.make(objlit, LENDS_ON_BAD_TYPE, lendsName));
+      }
+      return rawType;
     }
 
     @Override
@@ -1003,7 +1033,6 @@ class GlobalTypeInfo implements CompilerPass {
       Node parent = getProp.getParent();
       Node initializer = parent.isAssign() ? parent.getLastChild() : null;
       Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
-
       QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
       RawNominalType rawType = currentScope.getNominalType(ctorQname);
 
@@ -1025,51 +1054,7 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       String pname = NodeUtil.getPrototypePropertyName(getProp);
-      // Find the declared type of the property.
-      JSType propDeclType;
-      DeclaredFunctionType methodType;
-      Scope methodScope;
-      if (initializer != null && initializer.isFunction()) {
-        // TODO(dimvar): we must do this for any function "defined" as the rhs
-        // of an assignment to a property, not just when the property is a
-        // prototype property.
-        methodScope = visitFunctionLate(initializer, rawType);
-        methodType = methodScope.getDeclaredType();
-        propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
-      } else {
-        methodScope = null;
-        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-        if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
-          // We're parsing a function declaration without a function initializer
-          methodType = computeFnDeclaredType(
-              jsdoc, pname, getProp, rawType, currentScope);
-          propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
-        } else if (jsdoc != null && jsdoc.hasType()) {
-          // We are parsing a non-function prototype property
-          methodType = null;
-          propDeclType =
-              typeParser.getNodeTypeDeclaration(jsdoc, rawType, currentScope);
-        } else {
-          methodType = null;
-          propDeclType = null;
-        }
-      }
-      propertyDefs.put(rawType, pname,
-          new PropertyDef(getProp, methodType, methodScope));
-      // Add the property to the class with the appropriate type.
-      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
-      if (propDeclType != null || isConst) {
-        if (mayWarnAboutExistingProp(rawType, pname, getProp, propDeclType)) {
-          return;
-        }
-        if (isConst && !mayWarnAboutNoInit(getProp) && propDeclType == null) {
-          propDeclType = inferConstTypeFromRhs(getProp);
-        }
-        rawType.addProtoProperty(pname, propDeclType, isConst);
-        getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
-      } else {
-        rawType.addUndeclaredProtoProperty(pname);
-      }
+      mayAddPropToPrototype(rawType, pname, getProp, initializer);
     }
 
     private void visitConstructorPropertyDeclaration(Node getProp) {
@@ -1390,7 +1375,7 @@ class GlobalTypeInfo implements CompilerPass {
                 warnings.add(JSError.make(
                     declNode, EXTENDS_NON_OBJECT, functionName,
                     docNode.toStringTree()));
-              } else if (!parentClass.isClass()) {
+              } else if (parentClass.isInterface()) {
                 warnings.add(JSError.make(
                     declNode, TypeCheck.CONFLICTING_EXTENDED_TYPE,
                     "constructor", functionName));
@@ -1499,6 +1484,65 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
+    /**
+     * Called for the usual style of prototype-property definitions,
+     * but also for @lends.
+     */
+    private void mayAddPropToPrototype(
+        RawNominalType rawType, String pname, Node defSite, Node initializer) {
+      Scope methodScope;
+      DeclaredFunctionType methodType;
+      JSType propDeclType;
+
+      // Find the declared type of the property.
+      if (initializer != null && initializer.isFunction()) {
+        // TODO(dimvar): we must do this for any function "defined" as the rhs
+        // of an assignment to a property, not just when the property is a
+        // prototype property.
+        methodScope = visitFunctionLate(initializer, rawType);
+        methodType = methodScope.getDeclaredType();
+        propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
+      } else {
+        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
+        if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
+          // We're parsing a function declaration without a function initializer
+          methodScope = null;
+          methodType = computeFnDeclaredType(
+              jsdoc, pname, defSite, rawType, currentScope);
+          propDeclType = JSType.fromFunctionType(methodType.toFunctionType());
+        } else if (jsdoc != null && jsdoc.hasType()) {
+          // We are parsing a non-function prototype property
+          methodScope = null;
+          methodType = null;
+          propDeclType =
+              typeParser.getNodeTypeDeclaration(jsdoc, rawType, currentScope);
+        } else {
+          methodScope = null;
+          methodType = null;
+          propDeclType = null;
+        }
+      }
+      propertyDefs.put(
+          rawType, pname, new PropertyDef(defSite, methodType, methodScope));
+
+      // Add the property to the class with the appropriate type.
+      boolean isConst = NodeUtil.hasConstAnnotation(defSite);
+      if (propDeclType != null || isConst) {
+        if (mayWarnAboutExistingProp(rawType, pname, defSite, propDeclType)) {
+          return;
+        }
+        if (defSite.isGetProp() && propDeclType == null
+            && isConst && !mayWarnAboutNoInit(defSite)) {
+          propDeclType = inferConstTypeFromRhs(defSite);
+        }
+        rawType.addProtoProperty(pname, propDeclType, isConst);
+        if (defSite.isGetProp()) { // Don't bother saving for @lends
+          defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        }
+      } else {
+        rawType.addUndeclaredProtoProperty(pname);
+      }
+    }
   }
 
   // TODO(blickly): Move to NodeUtil
@@ -1547,13 +1591,14 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   private static class PropertyDef {
-    final Node defSite; // The getProp of the property definition
+    final Node defSite; // The getProp/objectLitKey of the property definition
     DeclaredFunctionType methodType; // null for non-method property decls
     final Scope methodScope; // null for decls without function on the RHS
 
     PropertyDef(
         Node defSite, DeclaredFunctionType methodType, Scope methodScope) {
-      Preconditions.checkArgument(defSite.isGetProp());
+      Preconditions.checkArgument(
+          defSite.isGetProp() || NodeUtil.isObjectLitKey(defSite));
       this.defSite = defSite;
       this.methodType = methodType;
       this.methodScope = methodScope;
@@ -1709,15 +1754,18 @@ class GlobalTypeInfo implements CompilerPass {
       if (!expr.isGetProp()) {
         return false;
       }
-      QualifiedName qname = QualifiedName.fromNode(expr);
+      return isNamespace(QualifiedName.fromNode(expr));
+    }
+
+    private boolean isNamespace(QualifiedName qname) {
       if (qname == null) {
         return false;
       }
       String leftmost = qname.getLeftmostName();
-      if (!isNamespace(leftmost)) {
-        return false;
-      }
-      return getNamespace(leftmost).hasSubnamespace(qname.getAllButLeftmost());
+      return isNamespace(leftmost)
+          && (qname.isIdentifier()
+              || getNamespace(leftmost)
+              .hasSubnamespace(qname.getAllButLeftmost()));
     }
 
     private boolean isNamespace(String name) {

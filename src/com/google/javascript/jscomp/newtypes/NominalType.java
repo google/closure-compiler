@@ -125,7 +125,7 @@ public class NominalType {
   }
 
   public boolean isInterface() {
-    return !rawType.isClass();
+    return rawType.isInterface();
   }
 
   /** True iff it has all properties and the RawNominalType is immutable */
@@ -396,6 +396,10 @@ public class NominalType {
 
     public boolean isClass() {
       return !isInterface;
+    }
+
+    public boolean isInterface() {
+      return isInterface;
     }
 
     boolean isGeneric() {
