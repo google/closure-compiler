@@ -3122,7 +3122,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidMapunionFn() {
     parse("@template T := mapunion(R, S) =: */",
-        "Bad type annotation. Invalid map function");
+        "Bad type annotation. Invalid map function",
+        "Bad type annotation. Invalid expression inside mapunion");
   }
 
   public void testParserWithTTLInvalidMapunionMissingParams() {
@@ -3137,11 +3138,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidMapunionMissingFnParams() {
     parse("@template T := mapunion(T, () => S) =: */",
-        "Bad type annotation. Missing parameter in map function");
+        "Bad type annotation. Missing parameter in map function",
+        "Bad type annotation. Invalid expression inside mapunion");
   }
   public void testParserWithTTLInvalidMapunionExtraFnParams() {
     parse("@template T := mapunion(T, (S, R) => S) =: */",
-        "Bad type annotation. Found extra parameter in map function");
+        "Bad type annotation. Found extra parameter in map function",
+        "Bad type annotation. Invalid expression inside mapunion");
   }
 
   public void testParserWithTTLInvalidMapunionFunctionBody() {
@@ -3343,6 +3346,74 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T := "
         + "mapunion(templateTypeOf(type(R, union(S, U)), 0), "
         + "(x) => x) =: */");
+  }
+
+  public void testParserWithTTLValidMaprecord() {
+    parse("@template T := maprecord(R, (K, V) => V) =: */");
+  }
+
+  public void testParserWithTTLValidMaprecord2() {
+    parse("@template T := "
+        + "maprecord(record({x:'string', y:'number'}), "
+        + "(K, V) => V) =: */");
+  }
+
+  public void testParserWithTTLInvalidMaprecordFirstParam() {
+    parse("@template T := maprecord(foo(), (K, V) => V) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside maprecord");
+  }
+
+  public void testParserWithTTLInvalidMaprecordNotAFunction() {
+    parse("@template T := maprecord(R, S) =: */",
+        "Bad type annotation. Invalid map function",
+        "Bad type annotation. Invalid expression inside maprecord");
+  }
+
+  public void testParserWithTTLInvalidMaprecordMissingParams() {
+    parse("@template T := maprecord(R) =: */",
+        "Bad type annotation. Missing parameter in maprecord");
+  }
+
+  public void testParserWithTTLInvalidMaprecordExtraParams() {
+    parse("@template T := maprecord(R, (K, V) => V, R) =: */",
+        "Bad type annotation. Found extra parameter in maprecord");
+  }
+
+  public void testParserWithTTLInvalidMaprecordMissingParamsInMapFunction() {
+    parse("@template T := maprecord(R, () => S) =: */",
+        "Bad type annotation. Missing parameter in map function",
+        "Bad type annotation. Invalid expression inside maprecord");
+  }
+
+  public void testParserWithTTLInvalidMaprecordMissingParamsInMapFunction2() {
+    parse("@template T := maprecord(R, (K) => S) =: */",
+        "Bad type annotation. Missing parameter in map function",
+        "Bad type annotation. Invalid expression inside maprecord");
+  }
+
+  public void testParserWithTTLInvalidMaprecordExtraParamsInMapFunction() {
+    parse("@template T := maprecord(R, (K, V, S) => S) =: */",
+        "Bad type annotation. Found extra parameter in map function",
+        "Bad type annotation. Invalid expression inside maprecord");
+  }
+
+  public void testParserWithTTLInvalidMaprecordInvalidFunctionBody() {
+    parse("@template T := maprecord(R, (K, V) => foo()) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside map function body");
+  }
+
+  public void testParserWithTTLAsynchUseCase() {
+    parse("@template R := "
+        + "cond(eq(T, 'Object'),\n"
+        +       "maprecord(T, \n"
+        +       "(K, V) => cond(eq(rawTypeOf(V), 'Promise'),\n"
+        +                   "templateTypeOf(V, 0),\n"
+        +                   "'undefined') "
+        +               "),\n"
+        +       "T)"
+        + "=: */");
   }
 
   public void testWhitelistedNewAnnotations() {

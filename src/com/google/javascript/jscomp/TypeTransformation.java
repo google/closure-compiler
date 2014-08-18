@@ -30,6 +30,8 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collection;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * A class for processing type transformation expressions
@@ -61,6 +63,14 @@ class TypeTransformation {
   static final DiagnosticType UNKNOWN_NAMEVAR =
       DiagnosticType.warning("UNKNOWN_NAMEVAR",
           "Reference to an unknown name variable {0}");
+  static final DiagnosticType RECTYPE_INVALID =
+      DiagnosticType.warning("RECTYPE_INVALID",
+          "The first parameter of a maprecord must be a record type, "
+          + "found {0}");
+  static final DiagnosticType MAPRECORD_BODY_INVALID =
+      DiagnosticType.warning("MAPRECORD_BODY_INVALID",
+          "The body of a maprecord function must evaluate to a record type or "
+          + "a no type, found {0}");
 
   /**
    * A helper class for holding the information about the type variables
@@ -120,6 +130,14 @@ class TypeTransformation {
 
   private JSType createTemplatizedType(ObjectType baseType, JSType[] params) {
     return typeRegistry.createTemplatizedType(baseType, params);
+  }
+
+  private JSType createRecordType(ImmutableMap<String, JSType> props) {
+    RecordTypeBuilder builder = new RecordTypeBuilder(typeRegistry);
+    for (Entry<String, JSType> e : props.entrySet()) {
+      builder.addProperty(e.getKey(), e.getValue(), null);
+    }
+    return builder.build();
   }
 
   private void reportWarning(Node n, DiagnosticType msg, String... param) {
@@ -208,6 +226,8 @@ class TypeTransformation {
         return evalConditional(ttlAst, nameResolver);
       case MAPUNION:
         return evalMapunion(ttlAst, nameResolver);
+      case MAPRECORD:
+        return evalMaprecord(ttlAst, nameResolver);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
@@ -404,5 +424,72 @@ class TypeTransformation {
       }
     }
     return builder.build();
+  }
+
+  private JSType evalMaprecord(Node ttlAst, NameResolver nameResolver) {
+    ImmutableList<Node> params = getParameters(ttlAst);
+    // Evaluate the first parameter, it must be a record type
+    Node recParam = params.get(0);
+    JSType recType = evalInternal(recParam, nameResolver);
+    if (!recType.isRecordType()) {
+      // TODO(lpino): Handle non-record types in maprecord operations
+      reportWarning(ttlAst, RECTYPE_INVALID, recType.toString());
+      return getUnknownType();
+    }
+
+    // Obtain the elements in the record type. Note that the block
+    // above guarantees the casting to be safe
+    ObjectType objRecType = ((ObjectType) recType);
+    Set<String> ownPropsNames = objRecType.getOwnPropertyNames();
+
+    // Fetch the information of the map function
+    Node mapFunction = params.get(1);
+    String paramKey = getFunctionParameter(mapFunction, 0);
+    String paramValue = getFunctionParameter(mapFunction, 1);
+
+    // The maprecord variables must not be defined in the environment
+    if (nameResolver.nameVars.containsKey(paramKey)) {
+      reportWarning(ttlAst, DUPLICATE_VARIABLE, paramKey);
+      return getUnknownType();
+    }
+    if (nameResolver.typeVars.containsKey(paramValue)) {
+      reportWarning(ttlAst, DUPLICATE_VARIABLE, paramValue);
+      return getUnknownType();
+    }
+
+    // Compute the new properties using the map function
+    Node mapFnBody = mapFunction.getChildAtIndex(2);
+    ImmutableMap.Builder<String, JSType> newPropsBuilder =
+        new ImmutableMap.Builder<String, JSType>();
+    for (String propName : ownPropsNames) {
+      // The value of the current property
+      JSType propValue = objRecType.getSlot(propName).getType();
+
+      // Evaluate the map function body with paramValue and paramKey replaced
+      // by the values of the current property
+      NameResolver newNameResolver = new NameResolver(
+          addNewEntry(nameResolver.typeVars, paramValue, propValue),
+          addNewEntry(nameResolver.nameVars, paramKey, propName));
+      JSType mapFnBodyResult = evalInternal(mapFnBody, newNameResolver);
+
+      // Skip the property when the body evaluates to NO_TYPE
+      if (mapFnBodyResult.isNoType()) {
+        continue;
+      }
+
+      // The body must evaluate to a record type
+      if (!mapFnBodyResult.isRecordType()) {
+        reportWarning(ttlAst, MAPRECORD_BODY_INVALID, mapFnBodyResult.toString());
+        return getUnknownType();
+      }
+
+      // Add the properties of the resulting record type to the original one
+      ObjectType mapFnBodyAsObjType = ((ObjectType) mapFnBodyResult);
+      for (String newPropName : mapFnBodyAsObjType.getOwnPropertyNames()) {
+        JSType newPropValue = mapFnBodyAsObjType.getSlot(newPropName).getType();
+        newPropsBuilder.put(newPropName, newPropValue);
+      }
+    }
+    return createRecordType(newPropsBuilder.build());
   }
 }

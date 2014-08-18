@@ -59,7 +59,8 @@ public final class TypeTransformationParser {
     NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
     RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
     TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
-    RECORD("record", 1, 1, OperationKind.TYPE_CONSTRUCTOR);
+    RECORD("record", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
+    MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION);
 
     public final String name;
     public final int minParamCount, maxParamCount;
@@ -91,6 +92,7 @@ public final class TypeTransformationParser {
   private void addNewWarning(String messageId, String messageArg, Node nodeWarning) {
     // TODO(lpino): Use the exact lineno and charno, it is currently using
     // the lineno and charno of the parent @template
+    // TODO(lpino): Use only constants as parameters of this method
     errorReporter.warning(
         "Bad type annotation. "
             + SimpleErrorReporter.getMessage1(messageId, messageArg),
@@ -280,7 +282,7 @@ public final class TypeTransformationParser {
     }
     // The parameter must be a valid type expression
     if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
-      warnInvalidInside("rawTypeOf", expr);
+      warnInvalidInside(Keywords.RAWTYPEOF.name, expr);
       return false;
     }
     return true;
@@ -298,18 +300,18 @@ public final class TypeTransformationParser {
     }
     // The parameter must be a valid type expression
     if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
-      warnInvalidInside("templateTypeOf", expr);
+      warnInvalidInside(Keywords.TEMPLATETYPEOF.name, expr);
       return false;
     }
     if (!getCallArgument(expr, 1).isNumber()) {
       warnInvalid("index", expr);
-      warnInvalidInside("templateTypeOf", expr);
+      warnInvalidInside(Keywords.TEMPLATETYPEOF.name, expr);
       return false;
     }
     double index = getCallArgument(expr, 1).getDouble();
     if (!DoubleMath.isMathematicalInteger(index) || index < 0) {
       warnInvalid("index", expr);
-      warnInvalidInside("templateTypeOf", expr);
+      warnInvalidInside(Keywords.TEMPLATETYPEOF.name, expr);
       return false;
     }
     return true;
@@ -335,10 +337,10 @@ public final class TypeTransformationParser {
     for (Node prop : record.children()) {
       if (!prop.hasChildren()) {
         warnInvalid("property, missing type", prop);
-        warnInvalidInside("record", prop);
+        warnInvalidInside(Keywords.RECORD.name, prop);
         return false;
       } else if (!validTypeTransformationExpression(prop.getFirstChild())) {
-        warnInvalidInside("record", prop);
+        warnInvalidInside(Keywords.RECORD.name, prop);
         return false;
       }
     }
@@ -439,12 +441,13 @@ public final class TypeTransformationParser {
     }
     // The second child must be a valid union type expression
     if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
-      warnInvalidInside("mapunion", getCallArgument(expr, 0));
+      warnInvalidInside(Keywords.MAPUNION.name, getCallArgument(expr, 0));
       return false;
     }
     // The third child must be a function
     if (!getCallArgument(expr, 1).isFunction()) {
       warnInvalid("map function", getCallArgument(expr, 1));
+      warnInvalidInside(Keywords.MAPUNION.name, getCallArgument(expr, 1));
       return false;
     }
     Node mapFn = getCallArgument(expr, 1);
@@ -452,10 +455,57 @@ public final class TypeTransformationParser {
     Node mapFnParam = mapFn.getChildAtIndex(1);
     if (!mapFnParam.hasChildren()) {
       warnMissingParam("map function", mapFnParam);
+      warnInvalidInside(Keywords.MAPUNION.name, getCallArgument(expr, 1));
       return false;
     }
     if (!mapFnParam.hasOneChild()) {
       warnExtraParam("map function", mapFnParam);
+      warnInvalidInside(Keywords.MAPUNION.name, getCallArgument(expr, 1));
+      return false;
+    }
+    // The body must be a valid type transformation expression
+    Node mapFnBody = mapFn.getChildAtIndex(2);
+    if (!validTypeTransformationExpression(mapFnBody)) {
+      warnInvalidInside("map function body", mapFnBody);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * A maprecord type transformation expression must be of the form
+   * maprecord(TTLExp, (typevar, typevar) => TTLExp).
+   */
+  private boolean validMaprecordExpression(Node expr) {
+    // The expression must have four children:
+    // - The maprecord keyword
+    // - A type expression
+    // - A map function
+    if (!checkParameterCount(expr, Keywords.MAPRECORD)) {
+      return false;
+    }
+    // The second child must be a valid expression
+    if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
+      warnInvalidInside(Keywords.MAPRECORD.name, getCallArgument(expr, 0));
+      return false;
+    }
+    // The third child must be a function
+    if (!getCallArgument(expr, 1).isFunction()) {
+      warnInvalid("map function", getCallArgument(expr, 1));
+      warnInvalidInside(Keywords.MAPRECORD.name, getCallArgument(expr, 1));
+      return false;
+    }
+    Node mapFn = getCallArgument(expr, 1);
+    // The map function must have exactly two parameters
+    int mapFnParamCount = mapFn.getChildAtIndex(1).getChildCount();
+    if (mapFnParamCount < 2) {
+      warnMissingParam("map function", mapFn);
+      warnInvalidInside(Keywords.MAPRECORD.name, getCallArgument(expr, 1));
+      return false;
+    }
+    if (mapFnParamCount > 2) {
+      warnExtraParam("map function", mapFn);
+      warnInvalidInside(Keywords.MAPRECORD.name, getCallArgument(expr, 1));
       return false;
     }
     // The body must be a valid type transformation expression
@@ -478,6 +528,8 @@ public final class TypeTransformationParser {
         return validConditionalExpression(expr);
       case MAPUNION:
         return validMapunionExpression(expr);
+      case MAPRECORD:
+        return validMaprecordExpression(expr);
       default:
         throw new IllegalStateException("Invalid type expression");
     }

@@ -30,11 +30,13 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   private ImmutableMap<String, JSType> typeVars;
   private ImmutableMap<String, String> nameVars;
+  private static JSType recordTypeTest, nestedRecordTypeTest, asynchRecord;
 
   @Override
   public void setUp() {
     super.setUp();
     errorReporter = new TestErrorReporter(null, null);
+    initRecordTypeTests();
     typeVars = new ImmutableMap.Builder<String, JSType>()
         .put("S", STRING_TYPE)
         .put("N", NUMBER_TYPE)
@@ -48,6 +50,9 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         .put("UNDEF", VOID_TYPE)
         .put("ARR", ARRAY_TYPE)
         .put("ARRNUM", type(ARRAY_TYPE, NUMBER_TYPE))
+        .put("REC", recordTypeTest)
+        .put("NESTEDREC", nestedRecordTypeTest)
+        .put("ASYNCH", asynchRecord)
         .build();
     nameVars = new ImmutableMap.Builder<String, String>()
         .put("s", "string")
@@ -336,6 +341,104 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithTTLRecordWithInvalidReference() {
     testTTL(UNKNOWN_TYPE, "record({[Foo]:N})",
         "Reference to an unknown name variable Foo");
+  }
+
+  public void testTransformationWithMaprecordMappingEverythingToString() {
+    // {n:number, s:string, b:boolean}
+    // is transformed to
+    // {n:string, s:string, b:string}
+    testTTL(record("n", STRING_TYPE, "s", STRING_TYPE, "b", STRING_TYPE),
+        "maprecord(REC, (k, v) => record({[k]:S}))");
+  }
+
+  public void testTransformationWithMaprecordIdentity() {
+    // {n:number, s:string, b:boolean} remains the same
+    testTTL(recordTypeTest, "maprecord(REC, (k, v) => record({[k]:v}))");
+  }
+
+  public void testTransformationWithMaprecordDeleteEverything() {
+    // TODO(lpino): Discussed the expected behavior of this case
+    // {n:number, s:string, b:boolean}
+    // is transformed to
+    // OBJECT_TYPE
+    testTTL(OBJECT_TYPE, "maprecord(REC, (k, v) => BOT)");
+  }
+
+  public void testTransformationWithInvalidMaprecord() {
+    testTTL(UNKNOWN_TYPE, "maprecord(REC, (k, v) => 'number')",
+        "The body of a maprecord function must evaluate to a record type "
+            + "or a no type, found number");
+  }
+
+  public void testTransformationWithMaprecordFilterWithOnlyString() {
+    // {n:number, s:string, b:boolean}
+    // is transformed to
+    // {s:string}
+    testTTL(record("s", STRING_TYPE),
+        "maprecord(REC, (k, v) => cond(eq(v, S), record({[k]:v}), BOT))");
+  }
+
+  public void testTransformationWithInvalidMaprecordFirstParam() {
+    testTTL(UNKNOWN_TYPE, "maprecord(N, (k, v) => BOT)",
+        "The first parameter of a maprecord must be a record type, found number");
+  }
+
+  public void testTransformationWithNestedRecordInMaprecordFilterOneLevelString() {
+    // {s:string, r:{s:string, b:boolean}}
+    // is transformed to
+    // {r:{s:string, b:boolean}}
+    testTTL(record("r", record("s", STRING_TYPE, "b", BOOLEAN_TYPE)),
+        "maprecord(NESTEDREC,"
+            + "(k, v) => cond(eq(v, S), BOT, record({[k]:v})))");
+  }
+
+  public void testTransformationWithNestedRecordInMaprecordFilterTwoLevelsString() {
+    // {s:string, r:{s:string, b:boolean}}
+    // is transformed to
+    // {r:{b:boolean}}
+    testTTL(record("r", record("b", BOOLEAN_TYPE)),
+        "maprecord(NESTEDREC,"
+            + "(k1, v1) => "
+            +  "cond(sub(v1, 'Object'), "
+            +        "maprecord(v1, (k2, v2) => "
+            +             "cond(eq(v2, S), BOT, record({[k1]:record({[k2]:v2})}))),"
+            +        "cond(eq(v1, S), BOT, record({[k1]:v1}))))");
+  }
+
+  public void testTransformationWithAsynchUseCase() {
+    // TODO(lpino): Use the type Promise instead of Array
+    // {service:Array<number>}
+    // is transformed to
+    // {service:number}
+    testTTL(record("service", NUMBER_TYPE),
+        "cond(sub(ASYNCH, 'Object'),\n"
+            +       "maprecord(ASYNCH, \n"
+            +       "(k, v) => cond(eq(rawTypeOf(v), 'Array'),\n"
+            +                   "record({[k]:templateTypeOf(v, 0)}),\n"
+            +                   "record({[k]:'undefined'})) "
+            +               "),\n"
+            +       "ASYNCH)");
+  }
+
+  public void testTransformationWithInvalidNestedMaprecord() {
+    testTTL(UNKNOWN_TYPE,
+        "maprecord(NESTEDREC, (k, v) => maprecord(v, (k, v) => BOT))",
+        "The body of a maprecord function must evaluate to a record type "
+            + "or a no type, found ?",
+        "The variable k is already defined");
+
+  }
+
+  private void initRecordTypeTests() {
+    // {n:number, s:string, b:boolean}
+    recordTypeTest = record("n", NUMBER_TYPE, "s", STRING_TYPE,
+        "b", BOOLEAN_TYPE);
+    // {n:number, r:{s:string, b:boolean}}
+    nestedRecordTypeTest = record("s", STRING_TYPE,
+        "r", record("s", STRING_TYPE, "b", BOOLEAN_TYPE));
+    // {service:Array<number>}
+    asynchRecord = record("service", type(ARRAY_TYPE, NUMBER_TYPE));
+
   }
 
   private JSType union(JSType... variants) {
