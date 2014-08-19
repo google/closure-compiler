@@ -70,6 +70,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testObjectLiteralStringKeysWithNoValue() {
     test("var x = {a, b};", "var x = {a: a, b: b};");
+    test("var x = { 'a' };", null, Es6ToEs3Converter.NO_PROPERTY_VALUE);
+    test("var x = { 123 };", null, Es6ToEs3Converter.NO_PROPERTY_VALUE);
   }
 
   public void testClassGenerator() {
