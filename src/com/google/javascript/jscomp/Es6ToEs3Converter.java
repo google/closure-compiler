@@ -58,6 +58,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       "CLASS_REASSIGNMENT",
       "Class names defined inside a function cannot be reassigned.");
 
+  static final DiagnosticType NO_PROPERTY_VALUE = DiagnosticType.error(
+      "NO_PROPERTY_VALUE",
+      "The property does not have a value.");
+
   // The name of the vars that capture 'this' and 'arguments'
   // for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
@@ -266,6 +270,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
    */
   private void visitStringKey(Node n) {
     if (!n.hasChildren()) {
+      if (n.isQuotedString()) {
+        compiler.report(JSError.make(n, NO_PROPERTY_VALUE));
+        return;
+      }
       Node name = IR.name(n.getString());
       name.copyInformationFrom(n);
       n.addChildToBack(name);
