@@ -1202,7 +1202,7 @@ public class Compiler extends AbstractCompiler {
   @Override
   public JSTypeRegistry getTypeRegistry() {
     if (typeRegistry == null) {
-      typeRegistry = new JSTypeRegistry(oldErrorReporter, options.looseTypes);
+      typeRegistry = new JSTypeRegistry(oldErrorReporter);
     }
     return typeRegistry;
   }

@@ -178,27 +178,17 @@ public class JSTypeRegistry implements Serializable {
   // there are no template types.
   private final TemplateTypeMap emptyTemplateTypeMap;
 
-  private final boolean tolerateUndefinedValues;
-
-  /**
-   * Constructs a new type registry populated with the built-in types.
-   */
-  public JSTypeRegistry(ErrorReporter reporter) {
-    this(reporter, false);
-  }
-
   /**
    * Constructs a new type registry populated with the built-in types.
    */
   public JSTypeRegistry(
-      ErrorReporter reporter, boolean tolerateUndefinedValues) {
+      ErrorReporter reporter) {
     this.reporter = reporter;
     this.emptyTemplateTypeMap = new TemplateTypeMap(
         this, ImmutableList.<TemplateType>of(), ImmutableList.<JSType>of());
     nativeTypes = new JSType[JSTypeNative.values().length];
     namesToTypes = new HashMap<String, JSType>();
     resetForTypeCheck();
-    this.tolerateUndefinedValues = tolerateUndefinedValues;
   }
 
   /**
@@ -220,10 +210,6 @@ public class JSTypeRegistry implements Serializable {
 
   public ErrorReporter getErrorReporter() {
     return reporter;
-  }
-
-  public boolean shouldTolerateUndefinedValues() {
-    return tolerateUndefinedValues;
   }
 
   /**
@@ -1012,9 +998,7 @@ public class JSTypeRegistry implements Serializable {
       // not be wrapped.
       return type;
     } else {
-      return shouldTolerateUndefinedValues()
-        ? createOptionalNullableType(type)
-        : createNullableType(type);
+      return createNullableType(type);
     }
   }
 

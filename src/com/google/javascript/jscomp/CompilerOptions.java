@@ -898,11 +898,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   String outputCharset;
 
   /**
-   * Whether the named objects types included 'undefined' by default.
-   */
-  boolean looseTypes;
-
-  /**
    * Transitional option.
    */
   boolean enforceAccessControlCodingConventions;
@@ -1630,17 +1625,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean needsConversion() {
     return languageOut != LanguageMode.NO_TRANSPILE
         && languageIn != languageOut;
-  }
-
-  /**
-   * Whether to include "undefined" in the default types.
-   *   For example:
-   *     "{Object}" is normally "Object|null" becomes "Object|null|undefined"
-   *     "{?string}" is normally "string|null" becomes "string|null|undefined"
-   * In either case "!" annotated types excluded both null and undefined.
-   */
-  public void setLooseTypes(boolean looseTypes) {
-    this.looseTypes = looseTypes;
   }
 
   @Override
