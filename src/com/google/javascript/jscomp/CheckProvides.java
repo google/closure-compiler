@@ -110,6 +110,11 @@ class CheckProvides implements HotSwapCompilerPass {
         String ctor = ctorEntry.getKey();
         int index = -1;
         boolean found = false;
+
+        if (ctor.startsWith("$jscomp.scope.")) {
+          continue;
+        }
+
         do {
           index = ctor.indexOf('.', index + 1);
           String provideKey = index == -1 ? ctor : ctor.substring(0, index);

@@ -62,6 +62,12 @@ public class CheckProvidesTest extends CompilerTestCase {
     test(js, js, null, MISSING_PROVIDE_WARNING, warning);
   }
 
+  public void testMissingGoogProvideWithinGoogScope(){
+    String[] js = new String[]{
+        "/** @constructor */ $jscomp.scope.bar = function() {};"};
+    test(js, js);
+  }
+
   public void testGoogProvideInWrongFileShouldCreateWarning(){
     String bad = "/** @constructor */ X = function(){};";
     String good = "goog.provide('X'); goog.provide('Y');" +
