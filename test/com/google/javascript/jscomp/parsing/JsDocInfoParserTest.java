@@ -3182,6 +3182,42 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Found extra parameter in none");
   }
 
+  public void testParserWithTTLAllType() {
+    parse("@template T := all() =: */");
+  }
+
+  public void testParserWithTTLAllType2() {
+    parse("@template T := cond(eq(S, all()), S, T) =: */");
+  }
+
+  public void testParserWithTTLInvalidAllType() {
+    parse("@template T := all(foo) =: */",
+        "Bad type annotation. Found extra parameter in all");
+  }
+
+  public void testParserWithTTLInvalidAllType2() {
+    parse("@template T := all(a, b, c) =: */",
+        "Bad type annotation. Found extra parameter in all");
+  }
+
+  public void testParserWithTTLUnknownType() {
+    parse("@template T := unknown() =: */");
+  }
+
+  public void testParserWithTTLUnknownType2() {
+    parse("@template T := cond(eq(S, unknown()), S, T) =: */");
+  }
+
+  public void testParserWithTTLInvalidUnknownType() {
+    parse("@template T := unknown(foo) =: */",
+        "Bad type annotation. Found extra parameter in unknown");
+  }
+
+  public void testParserWithTTLInvalidUnknownType2() {
+    parse("@template T := unknown(a, b, c) =: */",
+        "Bad type annotation. Found extra parameter in unknown");
+  }
+
   public void testParserWithTTLTemplateTypeOperation() {
     parse("@template T := type('Map', 'string', 'number') =: */");
   }

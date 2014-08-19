@@ -42,6 +42,8 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         .put("N", NUMBER_TYPE)
         .put("B", BOOLEAN_TYPE)
         .put("BOT", NO_TYPE)
+        .put("TOP", ALL_TYPE)
+        .put("UNK", UNKNOWN_TYPE)
         .put("SO", STRING_OBJECT_TYPE)
         .put("NO", NUMBER_OBJECT_TYPE)
         .put("BO", BOOLEAN_OBJECT_TYPE)
@@ -189,8 +191,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithMapunionOnSingletonStringToNumber() {
-    testTTL(union(NUMBER_TYPE),
-        "mapunion(S, (x) => cond(eq(x, S), N, BOT))");
+    testTTL(NUMBER_TYPE, "mapunion(S, (x) => cond(eq(x, S), N, BOT))");
   }
 
   public void testTransformationWithNestedUnionInMapunionFilterString() {
@@ -207,9 +208,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithObjectUseCase() {
-    testTTL(
-        union(STRING_OBJECT_TYPE, NUMBER_OBJECT_TYPE, BOOLEAN_OBJECT_TYPE,
-        OBJECT_TYPE, ARRAY_TYPE),
+    testTTL(OBJECT_TYPE,
         "mapunion("
         + "union(S, N, B, NULL, UNDEF, ARR),"
         + "(x) => "
@@ -232,6 +231,32 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformatioWithNoneTypeInMapunionFilterString() {
     testTTL(STRING_TYPE,
         "mapunion(union(S, B, N), (x) => cond(eq(x, S), x, none()))");
+  }
+
+  public void testTransformatioWithAllType() {
+    testTTL(ALL_TYPE, "all()");
+  }
+
+  public void testTransformatioWithAllTypeInConditional() {
+    testTTL(ALL_TYPE, "cond(eq(TOP, all()), all(), N)");
+  }
+
+  public void testTransformatioWithAllTypeMixUnion() {
+    testTTL(ALL_TYPE,
+        "mapunion(union(S, B, N), (x) => cond(eq(x, S), x, all()))");
+  }
+
+  public void testTransformatioWithUnknownType() {
+    testTTL(UNKNOWN_TYPE, "unknown()");
+  }
+
+  public void testTransformatioWithUnknownTypeInConditional() {
+    testTTL(NUMBER_TYPE, "cond(eq(UNK, unknown()), N, S)");
+  }
+
+  public void testTransformatioWithUnknownTypeInMapunionStringToUnknown() {
+    testTTL(UNKNOWN_TYPE,
+        "mapunion(union(S, B, N), (x) => cond(eq(x, S), x, unknown()))");
   }
 
   public void testTransformationWithTemplatizedType() {
@@ -442,7 +467,9 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   private JSType union(JSType... variants) {
-    return createUnionType(variants);
+    JSType type = createUnionType(variants);
+    assertTrue(type.isUnionType());
+    return type;
   }
 
   private JSType type(ObjectType baseType, JSType... templatizedTypes) {

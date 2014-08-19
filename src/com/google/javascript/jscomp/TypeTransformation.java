@@ -108,20 +108,20 @@ class TypeTransformation {
     return typeRegistry.getType(name);
   }
 
-  private JSType getNativeType(JSTypeNative type) {
-    return typeRegistry.getNativeObjectType(type);
-  }
-
   private boolean isTemplatizable(JSType type) {
     return typeRegistry.isTemplatizable(type);
   }
 
   private JSType getUnknownType() {
-    return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    return typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
   }
 
   private JSType getNoType() {
-    return getNativeType(JSTypeNative.NO_TYPE);
+    return typeRegistry.getNativeObjectType(JSTypeNative.NO_TYPE);
+  }
+
+  private JSType getAllType() {
+    return typeRegistry.getNativeType(JSTypeNative.ALL_TYPE);
   }
 
   private JSType createUnionType(JSType... variants) {
@@ -243,6 +243,10 @@ class TypeTransformation {
         return evalUnionType(ttlAst, nameResolver);
       case NONE:
         return getNoType();
+      case ALL:
+        return getAllType();
+      case UNKNOWN:
+         return getUnknownType();
       case RAWTYPEOF:
         return evalRawTypeOf(ttlAst, nameResolver);
       case TEMPLATETYPEOF:

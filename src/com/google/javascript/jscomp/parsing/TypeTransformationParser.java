@@ -60,7 +60,9 @@ public final class TypeTransformationParser {
     RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
     TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
     RECORD("record", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
-    MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION);
+    MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
+    ALL("all", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
+    UNKNOWN("unknown", 0, 0, OperationKind.TYPE_CONSTRUCTOR);
 
     public final String name;
     public final int minParamCount, maxParamCount;
@@ -272,6 +274,22 @@ public final class TypeTransformationParser {
   }
 
   /**
+   * An all type expression must be of the form: all()
+   */
+  private boolean validAllTypeExpression(Node expr) {
+    // The expression must have no children
+    return checkParameterCount(expr, Keywords.ALL);
+  }
+
+  /**
+   * An unknown type expression must be of the form: unknown()
+   */
+  private boolean validUnknownTypeExpression(Node expr) {
+    // The expression must have no children
+    return checkParameterCount(expr, Keywords.UNKNOWN);
+  }
+
+  /**
    * A raw type expression must be of the form rawTypeOf(TTLExp)
    */
   private boolean validRawTypeOfTypeExpression(Node expr) {
@@ -361,6 +379,10 @@ public final class TypeTransformationParser {
         return validUnionTypeExpression(expr);
       case NONE:
         return validNoneTypeExpression(expr);
+      case ALL:
+        return validAllTypeExpression(expr);
+      case UNKNOWN:
+        return validUnknownTypeExpression(expr);
       case RAWTYPEOF:
         return validRawTypeOfTypeExpression(expr);
       case TEMPLATETYPEOF:
