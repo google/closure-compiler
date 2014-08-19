@@ -1408,6 +1408,17 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
+  public void testObjectDestructuring() {
+    test("var {a,b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var {a = 'default'} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var {a: {b: {c}}} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testMixedDestructuring() {
+    test("var {a,b:[c,d]} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var [a,{b,c}] = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
   public void testUntaggedTemplateLiteral() {
     test("``", "''");
     test("`\"`", "'\\\"'");

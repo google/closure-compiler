@@ -2436,6 +2436,13 @@ public class Parser {
   private ParseTree parseObjectPatternField(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
     IdentifierToken identifier = eatIdOrKeywordAsId();
+    if (peek(TokenType.EQUAL)) {
+      ParseTree lhs = new IdentifierExpressionTree(getTreeLocation(start), identifier);
+      eat(TokenType.EQUAL);
+      ParseTree defaultValue = parseAssignmentExpression();
+      return new DefaultParameterTree(getTreeLocation(start), lhs, defaultValue);
+    }
+
     ParseTree element = null;
     if (peek(TokenType.COLON)) {
       eat(TokenType.COLON);

@@ -107,8 +107,16 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
   }
 
   private void declareLHS(Scope declarationScope, Node lhs) {
-    if (lhs.isName() || lhs.isStringKey() || lhs.isRest()) {
+    if (lhs.isStringKey()) {
+      if (lhs.hasChildren()) {
+        declareLHS(declarationScope, lhs.getFirstChild());
+      } else {
+        declareVar(declarationScope, lhs);
+      }
+    } else if (lhs.isName() || lhs.isRest()) {
       declareVar(declarationScope, lhs);
+    } else if (lhs.isDefaultValue()) {
+      declareVar(declarationScope, lhs.getFirstChild());
     } else if (lhs.isArrayPattern() || lhs.isObjectPattern()) {
       for (Node child = lhs.getFirstChild(); child != null; child = child.getNext()) {
         if (NodeUtil.isNameDeclaration(lhs.getParent()) && child.getNext() == null) {
@@ -121,7 +129,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         declareLHS(declarationScope, child);
       }
     } else {
-      Preconditions.checkState(lhs.isEmpty());
+      Preconditions.checkState(lhs.isEmpty(), "Invalid left-hand side: %s", lhs);
     }
   }
 

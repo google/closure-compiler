@@ -136,6 +136,81 @@ public class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(functionBlockScope.isDeclared("y", false));
   }
 
+  public void testObjectDestructuring() {
+    String js = Joiner.on('\n').join(
+        "function foo() {",
+        "  var {a, b} = bar();",
+        "}");
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertTrue(functionBlockScope.isDeclared("a", false));
+    assertTrue(functionBlockScope.isDeclared("b", false));
+  }
+
+  public void testObjectDestructuring2() {
+    String js = Joiner.on('\n').join(
+        "function foo() {",
+        "  var {a: b = 1} = bar();",
+        "}");
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertFalse(functionBlockScope.isDeclared("a", false));
+    assertTrue(functionBlockScope.isDeclared("b", false));
+  }
+
+  public void testObjectDestructuringNested() {
+    String js = Joiner.on('\n').join(
+        "function foo() {",
+        "  var {a:{b}} = bar();",
+        "}");
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertFalse(functionBlockScope.isDeclared("a", false));
+    assertTrue(functionBlockScope.isDeclared("b", false));
+  }
+
+  public void testObjectDestructuringWithInitializer() {
+    String js = Joiner.on('\n').join(
+        "function foo() {",
+        "  var {a=1} = bar();",
+        "}");
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertTrue(functionBlockScope.isDeclared("a", false));
+  }
+
   public void testFunctionScope() {
     Scope scope = getScope("function foo() {}\n"
                          + "var x = function bar(a1) {};"

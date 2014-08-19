@@ -1200,9 +1200,18 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("var {x, y} = foo();");
     parse("var {x: x, y: y} = foo();");
     parse("var {x: {y, z}} = foo();");
+    parse("var {x: {y: {z}}} = foo();");
 
     // Useless, but legal.
     parse("var {} = foo();");
+  }
+
+  public void testObjectDestructuringWithInitializer() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {x = 1} = foo();");
+    parse("var {x: {y = 1}} = foo();");
+    parse("var {x: y = 1} = foo();");
+    parse("var {x: v1 = 5, y: v2 = 'str'} = foo();");
   }
 
   public void testObjectDestructuringAssign() {

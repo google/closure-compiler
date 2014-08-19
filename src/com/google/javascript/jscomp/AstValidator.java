@@ -713,6 +713,14 @@ public class AstValidator implements CompilerPass {
     }
   }
 
+  private void validateDestructuringPattern(int type, Node n) {
+    if (n.isArrayPattern()) {
+      validateArrayPattern(type, n);
+    } else {
+      validateObjectPattern(type, n);
+    }
+  }
+
   private void validateArrayPattern(int type, Node n) {
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
@@ -738,8 +746,7 @@ public class AstValidator implements CompilerPass {
       if (c == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
         validateExpression(c);
       } else if (c.isStringKey()) {
-        validateObjectLitStringKey(c);
-        validateChildCount(c, 0);
+        validateObjectPatternStringKey(type, c);
       } else {
         // Nested destructuring pattern.
         validateNameDeclarationChild(type, c);
@@ -1090,6 +1097,17 @@ public class AstValidator implements CompilerPass {
 
     if (n.hasOneChild()) {
       validateExpression(n.getFirstChild());
+    }
+  }
+
+  private void validateObjectPatternStringKey(int type, Node n) {
+    validateNodeType(Token.STRING_KEY, n);
+    validateObjectLiteralKeyName(n);
+    validateMinimumChildCount(n, 0);
+    validateMaximumChildCount(n, 1);
+
+    if (n.hasOneChild()) {
+      validateNameDeclarationChild(type, n.getFirstChild());
     }
   }
 

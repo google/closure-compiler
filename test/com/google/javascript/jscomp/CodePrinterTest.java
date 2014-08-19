@@ -475,6 +475,15 @@ public class CodePrinterTest extends TestCase {
     assertPrintSame("({a:{b:{c:{d}}}})=foo()");
   }
 
+  public void testPrintObjectPatternInitializer() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrintSame("({a=1})=foo()");
+    assertPrintSame("({a:{b=2}})=foo()");
+    assertPrintSame("({a:b=2})=foo()");
+    assertPrintSame("({a,b:{c=2}})=foo()");
+    assertPrintSame("({a:{b=2},c})=foo()");
+  }
+
   public void testPrintMixedDestructuring() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("({a:[b,c]})=foo()");
