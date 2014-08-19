@@ -1455,10 +1455,37 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var $jscomp$destructuring$var1 = z();",
             "var x = $jscomp$destructuring$var1[0];",
             "var y = $jscomp$destructuring$var1[1];"));
+  }
 
-    test("var a; [a=1] = b();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var [a=1] = b();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var [a, b=1, c] = d();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  public void testArrayDestructuringDefaultValues() {
+    test("var a; [a=1] = b();", Joiner.on('\n').join(
+        "var a;",
+        "var $jscomp$destructuring$var0 = b()",
+        "a = ($jscomp$destructuring$var0[0] === undefined) ?",
+        "    1 :",
+        "    $jscomp$destructuring$var0[0];"));
+
+    test("var [a=1] = b();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = b()",
+        "var a = ($jscomp$destructuring$var0[0] === undefined) ?",
+        "    1 :",
+        "    $jscomp$destructuring$var0[0];"));
+
+    test("var [a, b=1, c] = d();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0=d();",
+        "var a = $jscomp$destructuring$var0[0];",
+        "var b = ($jscomp$destructuring$var0[1] === undefined) ?",
+        "    1 :",
+        "    $jscomp$destructuring$var0[1];",
+        "var c=$jscomp$destructuring$var0[2]"));
+
+    test("var a; [[a] = ['b']] = [];", Joiner.on('\n').join(
+        "var a;",
+        "var $jscomp$destructuring$var0 = [];",
+        "var $jscomp$destructuring$var1 = ($jscomp$destructuring$var0[0] === undefined)",
+        "    ? ['b']",
+        "    : $jscomp$destructuring$var0[0];",
+        "a = $jscomp$destructuring$var1[0]"));
   }
 
   public void testArrayDestructuringParam() {

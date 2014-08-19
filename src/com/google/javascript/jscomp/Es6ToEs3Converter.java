@@ -180,11 +180,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             cannotConvertYet(child, "REST node in an ARRAY_PATTERN");
             return;
           }
-          if (child.isDefaultValue()) {
-            cannotConvertYet(child,
-                "node with an initializer in an ARRAY_PATTERN");
-            return;
-          }
         }
         visitArrayPattern(t, n, parent);
         break;
@@ -203,7 +198,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       rhs = arrayPattern.getNext();
       nodeToDetach = parent.getParent();
       Preconditions.checkState(nodeToDetach.isExprResult());
-    } else if (parent.isArrayPattern()) {
+    } else if (parent.isArrayPattern() || parent.isDefaultValue()) {
       // This is a nested array pattern. Don't do anything now; we'll visit it
       // after visiting the parent.
       return;
@@ -231,20 +226,35 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         continue;
       }
 
-      Node newRHS = IR.getelem(IR.name(tempVarName), IR.number(i));
+      Node newLHS, newRHS;
+      if (child.isDefaultValue()) {
+        Node getElem = IR.getelem(IR.name(tempVarName), IR.number(i));
+        //   [x = defaultValue] = rhs;
+        // becomes
+        //   var temp = rhs;
+        //   x = (temp[0] === undefined) ? defaultValue : temp[0];
+        newLHS = child.getFirstChild().detachFromParent();
+        newRHS = IR.hook(
+            IR.sheq(getElem.cloneTree(), IR.name("undefined")),
+            child.getLastChild().detachFromParent(),
+            getElem);
+      } else {
+        newLHS = child.detachFromParent();
+        newRHS = IR.getelem(IR.name(tempVarName), IR.number(i));
+      }
       Node newNode;
       if (parent.isAssign()) {
-        Node assignment = IR.assign(child.detachFromParent(), newRHS);
+        Node assignment = IR.assign(newLHS, newRHS);
         newNode = IR.exprResult(assignment);
       } else {
-        newNode = IR.declaration(
-            child.detachFromParent(), newRHS, parent.getType());
+        newNode = IR.declaration(newLHS, newRHS, parent.getType());
       }
       newNode.useSourceInfoFromForTree(arrayPattern);
 
       nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
-      // Explicitly visit the new nodes to translate nested destructuring.
-      visit(t, child, child.getParent());
+      // Explicitly visit the LHS of the new node since it may be a nested
+      // destructuring pattern.
+      visit(t, newLHS, newLHS.getParent());
     }
     nodeToDetach.detachFromParent();
     compiler.reportCodeChange();
