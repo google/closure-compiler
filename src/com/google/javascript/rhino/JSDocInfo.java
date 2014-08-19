@@ -1215,7 +1215,8 @@ public class JSDocInfo implements Serializable {
 
   /**
    * Returns the set of names of the defined parameters. The iteration order
-   * of the returned set is not the order in which parameters are defined.
+   * of the returned set is the order in which parameters are defined in the
+   * JSDoc, rather than the order in which the function declares them.
    *
    * @return the set of names of the defined parameters. The returned set is
    *     immutable.

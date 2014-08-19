@@ -8008,4 +8008,60 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     // This is technically valid JS, but we don't support it
     checkNoWarnings("Foo.STATIC = 5; /** @constructor */ function Foo(){}");
   }
+
+  public void testAbstractMethodsAreTypedCorrectly() {
+    checkNoWarnings(
+        "/** @type {!Function} */\n" +
+        "var abstractMethod = function(){};\n" +
+        "/** @constructor */ function Foo(){};\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){};\n" +
+        "/** @param {number} index */\n" +
+        "Foo.prototype.m = abstractMethod;\n" +
+        "/** @override */\n" +
+        "Bar.prototype.m = function(index) {};");
+
+    typeCheck(
+        "/** @type {!Function} */\n" +
+        "var abstractMethod = function(){};\n" +
+        "/** @constructor */ function Foo(){};\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){};\n" +
+        "/** @param {number} index */\n" +
+        "Foo.prototype.m = abstractMethod;\n" +
+        "/** @override */\n" +
+        "Bar.prototype.m = function(index) {};\n" +
+        "(new Bar).m('str');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @type {!Function} */\n" +
+        "var abstractMethod = function(){};\n" +
+        "/** @constructor */ function Foo(){};\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){};\n" +
+        "/**\n" +
+        " * @param {number} b\n" +
+        " * @param {string} a\n" +
+        " */\n" +
+        "Foo.prototype.m = abstractMethod;\n" +
+        "/** @override */\n" +
+        "Bar.prototype.m = function(a, b) {};\n" +
+        "(new Bar).m('str', 5);",
+        ImmutableList.of(
+            NewTypeInference.INVALID_ARGUMENT_TYPE,
+            NewTypeInference.INVALID_ARGUMENT_TYPE));
+
+    typeCheck(
+        "/** @type {!Function} */\n" +
+        "var abstractMethod = function(){};\n" +
+        "/** @constructor */ function Foo(){};\n" +
+        "/** @constructor @extends {Foo} */ function Bar(){};\n" +
+        "/** @type {function(number, string)} */\n" +
+        "Foo.prototype.m = abstractMethod;\n" +
+        "/** @override */\n" +
+        "Bar.prototype.m = function(a, b) {};\n" +
+        "(new Bar).m('str', 5);",
+        ImmutableList.of(
+            NewTypeInference.INVALID_ARGUMENT_TYPE,
+            NewTypeInference.INVALID_ARGUMENT_TYPE));
+
+  }
 }

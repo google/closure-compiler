@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -389,20 +390,20 @@ public class JSTypeCreatorFromJSDoc {
 
   // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a
   // type that doesn't have an associated AST node.
-  private JSType getFunTypeHelper(Node n, RawNominalType ownerType,
+  private JSType getFunTypeHelper(Node jsdocNode, RawNominalType ownerType,
       DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
-    return getFunTypeBuilder(n, ownerType, registry, typeParameters)
+    return getFunTypeBuilder(jsdocNode, ownerType, registry, typeParameters)
         .buildType();
   }
 
   private FunctionTypeBuilder getFunTypeBuilder(
-      Node n, RawNominalType ownerType, DeclaredTypeRegistry registry,
+      Node jsdocNode, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    Node child = n.getFirstChild();
+    Node child = jsdocNode.getFirstChild();
     if (child.getType() == Token.THIS) {
       builder.addReceiverType(getNominalType(
           child.getFirstChild(), ownerType, registry, typeParameters));
@@ -436,7 +437,7 @@ public class JSTypeCreatorFromJSDoc {
           }
         } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
           warn("Wrong parameter order: required parameters are first, " +
-              "then optional, then varargs", n);
+              "then optional, then varargs", jsdocNode);
         }
       }
       child = child.getNext();
@@ -650,17 +651,54 @@ public class JSTypeCreatorFromJSDoc {
     return builder;
   }
 
+  private static class ParamIterator {
+    Iterator<String> paramNames;
+    Node params;
+    int index = -1;
+
+    ParamIterator(Node params, JSDocInfo jsdoc) {
+      Preconditions.checkArgument(params != null || jsdoc != null);
+      if (params != null) {
+        this.params = params;
+        this.paramNames = null;
+      } else {
+        this.params = null;
+        this.paramNames = jsdoc.getParameterNames().iterator();
+      }
+    }
+
+    boolean hasNext() {
+      if (paramNames != null) {
+        return paramNames.hasNext();
+      }
+      return index + 1 < params.getChildCount();
+    }
+
+    String nextString() {
+      if (paramNames != null) {
+        return paramNames.next();
+      }
+      index++;
+      return params.getChildAtIndex(index).getString();
+    }
+
+    Node getNode() {
+      if (paramNames != null) {
+        return null;
+      }
+      return params.getChildAtIndex(index);
+    }
+  }
+
   private FunctionTypeBuilder getFunTypeFromTypicalFunctionJsdoc(
       JSDocInfo jsdoc, Node funNode, RawNominalType ownerType,
       DeclaredTypeRegistry registry,
       boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
     Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);
-    if (!funNode.isFunction()) {
-      // TODO(blickly): Support typical function jsdoc without initializer
-      return FunctionTypeBuilder.qmarkFunctionBuilder();
-    }
+    Preconditions.checkArgument(!ignoreJsdoc || funNode.isFunction());
+    boolean ignoreFunNode  = !funNode.isFunction();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    Node params = funNode.getFirstChild().getNext();
+    Node params = ignoreFunNode ? null : funNode.getFirstChild().getNext();
     ImmutableList<String> typeParameters = null;
     Node parent = funNode.getParent();
 
@@ -680,32 +718,35 @@ public class JSTypeCreatorFromJSDoc {
         }
       }
     }
-    for (Node param = params.getFirstChild();
-         param != null;
-         param = param.getNext()) {
-      String pname = param.getString();
-      JSType inlineParamType = ignoreJsdoc ? null : getNodeTypeDeclaration(
-          param.getJSDocInfo(), ownerType, registry, typeParameters);
+    ParamIterator iterator = new ParamIterator(params, jsdoc);
+    while (iterator.hasNext()) {
+      String pname = iterator.nextString();
+      Node param = iterator.getNode();
+      JSType inlineParamType = (ignoreJsdoc || ignoreFunNode)
+          ? null : getNodeTypeDeclaration(
+            param.getJSDocInfo(), ownerType, registry, typeParameters);
       boolean isRequired = true, isRestFormals = false;
       JSTypeExpression texp = jsdoc == null ?
           null : jsdoc.getParameterType(pname);
       Node jsdocNode = texp == null ? null : texp.getRootNode();
-      if (convention.isOptionalParameter(param)) {
-        isRequired = false;
-      } else if (convention.isVarArgsParameter(param)) {
-        isRequired = false;
-        isRestFormals = true;
-      }
-      if (jsdocNode != null && jsdocNode.getType() == Token.EQUALS) {
-        isRequired = false;
-        jsdocNode = jsdocNode.getFirstChild();
-      } else if (jsdocNode != null && jsdocNode.getType() == Token.ELLIPSIS) {
-        isRequired = false;
-        isRestFormals = true;
-        jsdocNode = jsdocNode.getFirstChild();
+      if (param != null) {
+        if (convention.isOptionalParameter(param)) {
+          isRequired = false;
+        } else if (convention.isVarArgsParameter(param)) {
+          isRequired = false;
+          isRestFormals = true;
+        }
       }
       JSType fnParamType = null;
       if (jsdocNode != null) {
+        if (jsdocNode.getType() == Token.EQUALS) {
+          isRequired = false;
+          jsdocNode = jsdocNode.getFirstChild();
+        } else if (jsdocNode.getType() == Token.ELLIPSIS) {
+          isRequired = false;
+          isRestFormals = true;
+          jsdocNode = jsdocNode.getFirstChild();
+        }
         fnParamType =
             getTypeFromNode(jsdocNode, ownerType, registry, typeParameters);
       }
