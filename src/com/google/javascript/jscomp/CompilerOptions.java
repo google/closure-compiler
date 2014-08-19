@@ -67,6 +67,9 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   private LanguageMode languageOut;
 
+  /**
+   * If true, transpile ES6 to ES3 only. All others passes will be skipped.
+   */
   boolean transpileOnly;
 
   /**
@@ -773,7 +776,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Output options
   //--------------------------------
 
-  public boolean preserveJsDoc;
+  /** Do not strip closure-style type annotations from code. */
+  public boolean preserveTypeAnnotations;
 
   /** Output in pretty indented format */
   public boolean prettyPrint;
@@ -1072,7 +1076,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     instrumentForCoverage = false;  // instrument lines
 
     // Output
-    preserveJsDoc = false;
+    preserveTypeAnnotations = false;
     printInputDelimiter = false;
     prettyPrint = false;
     lineBreak = false;
@@ -2052,6 +2056,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setPreserveGoogRequires(boolean preserveGoogRequires) {
     this.preserveGoogRequires = preserveGoogRequires;
+  }
+
+  public void setPreserveTypeAnnotations(boolean preserveTypeAnnotations) {
+    this.preserveTypeAnnotations = preserveTypeAnnotations;
   }
 
   public void setGatherCssNames(boolean gatherCssNames) {

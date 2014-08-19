@@ -170,6 +170,7 @@ public final class JsDocInfoParser {
     JSTypeExpression expr = createJSTypeExpression(typeAst);
     if (expr != null) {
       jsdocBuilder.recordType(expr);
+      jsdocBuilder.recordInlineType();
       return retrieveAndResetParsedJSDocInfo();
     }
     return null;
@@ -193,7 +194,6 @@ public final class JsDocInfoParser {
     Config config = new Config(
         Sets.<String>newHashSet(),
         Sets.<String>newHashSet(),
-        false,
         false,
         LanguageMode.ECMASCRIPT3,
         false);

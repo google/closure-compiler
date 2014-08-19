@@ -508,6 +508,10 @@ final public class JSDocInfoBuilder {
     }
   }
 
+  public void recordInlineType() {
+    currentInfo.setInlineType();
+  }
+
   /**
    * Records that the {@link JSDocInfo} being built should be populated
    * with a {@code typedef}'d type.

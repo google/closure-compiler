@@ -70,10 +70,10 @@ public class Config {
   final boolean acceptConstKeyword;
 
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
-      boolean isIdeMode, boolean parseJsDocDocumentation, LanguageMode languageMode,
+      boolean isIdeMode, LanguageMode languageMode,
       boolean acceptConstKeyword) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
-    this.parseJsDocDocumentation = parseJsDocDocumentation;
+    this.parseJsDocDocumentation = isIdeMode;
     this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
     this.languageMode = languageMode;

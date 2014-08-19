@@ -334,6 +334,11 @@ public class JSDocInfo implements Serializable {
   private JSTypeExpression thisType = null;
 
   /**
+   * Whether the type annotation was inlined.
+   */
+  private boolean inlineType = false;
+
+  /**
    * Whether to include documentation.
    *
    * @see JSDocInfo.LazilyInitializedDocumentation
@@ -1242,6 +1247,10 @@ public class JSDocInfo implements Serializable {
     setType(type, TYPEFIELD_TYPE);
   }
 
+  void setInlineType() {
+    this.inlineType = true;
+  }
+
   void setReturnType(JSTypeExpression type) {
     setType(type, TYPEFIELD_RETURN);
   }
@@ -1315,6 +1324,13 @@ public class JSDocInfo implements Serializable {
    */
   public JSTypeExpression getType() {
     return getType(TYPEFIELD_TYPE);
+  }
+
+  /**
+   * Returns whether the type annotation was inlined.
+   */
+  public boolean isInlineType() {
+    return inlineType;
   }
 
   /**
