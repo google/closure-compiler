@@ -62,7 +62,8 @@ public final class TypeTransformationParser {
     RECORD("record", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
     MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
     ALL("all", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
-    UNKNOWN("unknown", 0, 0, OperationKind.TYPE_CONSTRUCTOR);
+    UNKNOWN("unknown", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
+    TYPEOFVAR("typeOfVar", 1, 1, OperationKind.OPERATION);
 
     public final String name;
     public final int minParamCount, maxParamCount;
@@ -540,6 +541,24 @@ public final class TypeTransformationParser {
   }
 
   /**
+   * A typeOfVar expression must be of the form typeOfVar(name)
+   */
+  private boolean validTypeOfVarExpression(Node expr) {
+ // The expression must have two children:
+    // - The typeOfVar keyword
+    // - An identifier
+    if (!checkParameterCount(expr, Keywords.TYPEOFVAR)) {
+      return false;
+    }
+    if (!getCallArgument(expr, 0).isName()) {
+      warnInvalid("name", expr);
+      warnInvalidInside(Keywords.TYPEOFVAR.name, expr);
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * An operation expression is a cond or a mapunion
    */
   private boolean validOperationExpression(Node expr) {
@@ -552,8 +571,10 @@ public final class TypeTransformationParser {
         return validMapunionExpression(expr);
       case MAPRECORD:
         return validMaprecordExpression(expr);
+      case TYPEOFVAR:
+        return validTypeOfVarExpression(expr);
       default:
-        throw new IllegalStateException("Invalid type expression");
+        throw new IllegalStateException("Invalid type transformation operation");
     }
   }
 

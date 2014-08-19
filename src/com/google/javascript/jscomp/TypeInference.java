@@ -1328,7 +1328,7 @@ class TypeInference
       if (type.isTypeTransformation()) {
         // Lazy initialization when the first type transformation is found
         if (ttlObj == null) {
-          ttlObj = new TypeTransformation(compiler);
+          ttlObj = new TypeTransformation(compiler, syntacticScope);
           typeVars = buildTypeVariables(inferredTypes);
           result = new HashMap<TemplateType, JSType>();
         }

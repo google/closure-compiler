@@ -32,6 +32,12 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   private ImmutableMap<String, String> nameVars;
   private static JSType recordTypeTest, nestedRecordTypeTest, asynchRecord;
 
+  static final String EXTRA_TYPE_DEFS =
+      "/** @constructor */\n"
+          + "function Bar() {}"
+          + "/** @type {number} */"
+          + "var n = 10;";
+
   @Override
   public void setUp() {
     super.setUp();
@@ -454,6 +460,15 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   }
 
+  public void testTransformationWithTypeOfVar() {
+    testTTL(NUMBER_TYPE, "typeOfVar(n)");
+  }
+
+  public void testTransformationWithUnknownTypeOfVar() {
+    testTTL(UNKNOWN_TYPE, "typeOfVar(foo)",
+        "Variable foo is undefined in the scope");
+  }
+
   private void initRecordTypeTests() {
     // {n:number, s:string, b:boolean}
     recordTypeTest = record("n", NUMBER_TYPE, "s", STRING_TYPE,
@@ -504,8 +519,13 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     // Run the test if the parsing was successful
     if (ttlParser.parseTypeTransformation()) {
       Node ast = ttlParser.getTypeTransformationAst();
+      // Create the scope using the extra definitions
+      Node extraTypeDefs = compiler.parseTestCode(EXTRA_TYPE_DEFS);
+      Scope scope = new TypedScopeCreator(compiler).createScope(
+          extraTypeDefs, null);
       // Evaluate the type transformation
-      TypeTransformation typeTransformation = new TypeTransformation(compiler);
+      TypeTransformation typeTransformation =
+          new TypeTransformation(compiler, scope);
       JSType resultType = typeTransformation.eval(ast, typeVars, nameVars);
       checkReportedWarningsHelper(expectedWarnings);
       assertTypeEquals(expectedType, resultType);

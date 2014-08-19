@@ -26,6 +26,8 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
+import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticSlot;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 
@@ -41,6 +43,7 @@ import java.util.Set;
 class TypeTransformation {
   private AbstractCompiler compiler;
   private JSTypeRegistry typeRegistry;
+  private StaticScope<JSType> scope;
 
   static final DiagnosticType UNKNOWN_TYPEVAR =
       DiagnosticType.warning("TYPEVAR_UNDEFINED",
@@ -71,6 +74,9 @@ class TypeTransformation {
       DiagnosticType.warning("MAPRECORD_BODY_INVALID",
           "The body of a maprecord function must evaluate to a record type or "
           + "a no type, found {0}");
+  static final DiagnosticType VAR_UNDEFINED =
+      DiagnosticType.warning("VAR_UNDEFINED",
+          "Variable {0} is undefined in the scope");
 
   /**
    * A helper class for holding the information about the type variables
@@ -87,9 +93,10 @@ class TypeTransformation {
     }
   }
 
-  TypeTransformation(AbstractCompiler compiler) {
+  TypeTransformation(AbstractCompiler compiler, StaticScope<JSType> scope) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();
+    this.scope = scope;
   }
 
   private boolean isTypeVar(Node n) {
@@ -228,6 +235,8 @@ class TypeTransformation {
         return evalMapunion(ttlAst, nameResolver);
       case MAPRECORD:
         return evalMaprecord(ttlAst, nameResolver);
+      case TYPEOFVAR:
+        return evalTypeOfVar(ttlAst);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
@@ -495,5 +504,15 @@ class TypeTransformation {
       }
     }
     return createRecordType(newPropsBuilder.build());
+  }
+
+  private JSType evalTypeOfVar(Node ttlAst) {
+    String name = getCallArgument(ttlAst, 0).getString();
+    StaticSlot<JSType> slot = scope.getSlot(name);
+    if (slot == null) {
+      reportWarning(ttlAst, VAR_UNDEFINED, name);
+      return getUnknownType();
+    }
+    return slot.getType();
   }
 }

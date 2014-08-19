@@ -3440,6 +3440,26 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside map function body");
   }
 
+  public void testParserWithTTLTypeOfVar() {
+    parse("@template T := typeOfVar(x) =: */");
+  }
+
+  public void testParserWithTTLTypeOfVarInvalidName() {
+    parse("@template T := typeOfVar(foo()) =: */",
+        "Bad type annotation. Invalid name",
+        "Bad type annotation. Invalid expression inside typeOfVar");
+  }
+
+  public void testParserWithTTLTypeOfVarMissingParam() {
+    parse("@template T := typeOfVar() =: */",
+        "Bad type annotation. Missing parameter in typeOfVar");
+  }
+
+  public void testParserWithTTLTypeOfVarExtraParam() {
+    parse("@template T := typeOfVar(a, b) =: */",
+        "Bad type annotation. Found extra parameter in typeOfVar");
+  }
+
   public void testParserWithTTLAsynchUseCase() {
     parse("@template R := "
         + "cond(eq(T, 'Object'),\n"

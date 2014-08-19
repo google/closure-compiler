@@ -1308,6 +1308,45 @@ public class TypeInferenceTest extends TestCase {
     verify("r", OBJECT_TYPE);
   }
 
+  public void testTypeTransformationTypeOfVarWithInstanceOfConstructor() {
+    inFunction("/** @constructor */\n"
+        + "function Bar() {}"
+        + "var b = new Bar();"
+        + "/** \n"
+        + " * @return {R}\n"
+        + " * @template R := typeOfVar(b) =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("b"));
+  }
+
+  public void testTypeTransformationTypeOfVarWithConstructor() {
+    inFunction("/** @constructor */\n"
+        + "function Bar() {}"
+        + "/** \n"
+        + " * @return {R}\n"
+        + " * @template R := typeOfVar(Bar) =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("Bar"));
+  }
+
+  public void testTypeTransformationTypeOfVarWithTypedef() {
+    inFunction("/** @typedef {(string|number)} */\n"
+        + "var NumberLike;"
+        + "/** @type {!NumberLike} */"
+        + "var x;"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := typeOfVar(x) =:"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("x"));
+  }
+
   public void testAssertTypeofProp() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction(
