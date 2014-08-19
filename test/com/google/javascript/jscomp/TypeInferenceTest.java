@@ -1347,6 +1347,33 @@ public class TypeInferenceTest extends TestCase {
     verify("r", getType("x"));
   }
 
+  public void testTypeTransformationWithTypeFromConstructor() {
+    inFunction("/** @constructor */\n"
+        + "function Bar(){}"
+        + "var x = new Bar();"
+        + "/** \n"
+        + " * @return {R}\n"
+        + " * @template R := 'Bar' =:"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("x"));
+  }
+
+  public void testTypeTransformationWithTypeFromTypedef() {
+    inFunction("/** @typedef {(string|number)} */\n"
+        + "var NumberLike;"
+        + "/** @type {!NumberLike} */"
+        + "var x;"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := 'NumberLike' =:"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", createUnionType(STRING_TYPE, NUMBER_TYPE));
+  }
+
   public void testAssertTypeofProp() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction(

@@ -16,10 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser;
 import com.google.javascript.jscomp.parsing.TypeTransformationParser.Keywords;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -111,7 +114,55 @@ class TypeTransformation {
     return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
   }
 
+  private StaticScope<JSType> getScope(StaticScope<JSType> scope, String name) {
+    StaticSlot<JSType> slot = scope.getOwnSlot(name);
+    if (slot != null) {
+      return scope;
+    }
+    return getScope(scope.getParentScope(), name);
+  }
+
   private JSType getType(String name) {
+    // Case template type names inside a class
+    // (borrowed from JSTypeRegistry#getType
+    JSType type = null;
+    JSType thisType = null;
+    if (scope != null && scope.getTypeOfThis() != null) {
+      thisType = scope.getTypeOfThis().toObjectType();
+    }
+    if (thisType != null) {
+      type = thisType.getTemplateTypeMap().getTemplateTypeKeyByName(name);
+      if (type != null) {
+        Preconditions.checkState(type.isTemplateType(),
+            "Expected a template type, but found: %s", type);
+        return type;
+      }
+    }
+
+    // Resolve the name and get the corresponding type
+    StaticSlot<JSType> slot = scope.getSlot(name);
+    if (slot != null) {
+      JSType rawType = slot.getType();
+      if (rawType != null) {
+        // Case constructor, get the instance type
+        if ((rawType.isConstructor() || rawType.isInterface())
+            && rawType.isFunctionType() && rawType.isNominalConstructor()) {
+          return rawType.toMaybeFunctionType().getInstanceType();
+        }
+        // Case enum
+        if (rawType.isEnumType()) {
+          return rawType.toMaybeEnumType().getElementsType();
+        }
+      }
+      // Case typedef
+      JSDocInfo info = slot.getJSDocInfo();
+      if (info != null && info.hasTypedefType()) {
+        JSTypeExpression expr = info.getTypedefType();
+        StaticScope<JSType> typedefScope = getScope(scope, name);
+        return expr.evaluate(typedefScope, typeRegistry);
+      }
+    }
+    // Otherwise handle native types
     return typeRegistry.getType(name);
   }
 
