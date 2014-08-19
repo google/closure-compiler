@@ -208,6 +208,10 @@ public class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
+    if (options.closurePass) {
+      checks.add(closureRewriteModule);
+    }
+
     if (options.needsConversion() || options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
     }
@@ -234,7 +238,6 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.closurePass) {
-      checks.add(closureRewriteModule);
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
     }

@@ -102,6 +102,45 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "});");
   }
 
+  public void testAliasShadowsGlobal1() {
+    // If locals shadow globals they need to be renamed.
+    test(
+        "goog.module('a'); var b = goog.require('b');",
+
+        "goog.provide('a');"
+        + "goog.require('b');"
+        + "goog.scope(function(){var b_module = b});");
+  }
+
+  public void testAliasShadowsGlobal2() {
+    // If locals shadow globals they need to be renamed.
+    test(
+        "goog.module('a'); goog.require('b'); var a,b,c;",
+
+        "goog.provide('a');"
+        + "goog.require('b');"
+        + "goog.scope(function(){b;var a_module,b_module,c});");
+  }
+
+  public void testAliasShadowsGlobal3() {
+    // If locals shadow globals they need to be renamed.
+    test(
+        "goog.module('a.c'); goog.require('b.c'); var a,b,c;",
+
+        "goog.provide('a.c');"
+        + "goog.require('b.c');"
+        + "goog.scope(function(){b.c;var a_module,b_module,c});");
+  }
+
+  public void testThis() {
+    // global "this" is retained.
+    test(
+        "goog.module('a'); this;",
+
+        "goog.provide('a');"
+        + "goog.scope(function(){this});");
+  }
+
   public void testInvalidModule() {
     testSame(
         "goog.module(a);",
