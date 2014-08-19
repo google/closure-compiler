@@ -752,6 +752,413 @@ chrome.bluetooth.onDeviceRemoved;
 
 
 /**
+ * @const
+ * @see https://developer.chrome.com/apps/bluetoothSocket
+ */
+chrome.bluetoothSocket = {};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothSocket#type-SocketProperties
+ */
+chrome.bluetoothSocket.SocketProperties = function() {};
+
+
+/** @type {boolean|undefined} */
+chrome.bluetoothSocket.SocketProperties.prototype.persistent;
+
+
+/** @type {string|undefined} */
+chrome.bluetoothSocket.SocketProperties.prototype.name;
+
+
+/** @type {number|undefined} */
+chrome.bluetoothSocket.SocketProperties.prototype.bufferSize;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothSocket#type-ListenOptions
+ */
+chrome.bluetoothSocket.ListenOptions = function() {};
+
+
+/** @type {number|undefined} */
+chrome.bluetoothSocket.ListenOptions.prototype.channel;
+
+
+/** @type {number|undefined} */
+chrome.bluetoothSocket.ListenOptions.prototype.psm;
+
+
+/** @type {number|undefined} */
+chrome.bluetoothSocket.ListenOptions.prototype.backlog;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothSocket#type-SocketInfo
+ */
+chrome.bluetoothSocket.SocketInfo = function() {};
+
+
+/** @type {number} */
+chrome.bluetoothSocket.SocketInfo.prototype.socketId;
+
+
+/** @type {boolean} */
+chrome.bluetoothSocket.SocketInfo.prototype.persistent;
+
+
+/** @type {string|undefined} */
+chrome.bluetoothSocket.SocketInfo.prototype.name;
+
+
+/** @type {number|undefined} */
+chrome.bluetoothSocket.SocketInfo.prototype.bufferSize;
+
+
+/** @type {boolean} */
+chrome.bluetoothSocket.SocketInfo.prototype.paused;
+
+
+/** @type {boolean} */
+chrome.bluetoothSocket.SocketInfo.prototype.connected;
+
+
+/** @type {string|undefined} */
+chrome.bluetoothSocket.SocketInfo.prototype.address;
+
+
+/** @type {string|undefined} */
+chrome.bluetoothSocket.SocketInfo.prototype.uuid;
+
+
+/**
+ * @param {!chrome.bluetoothSocket.SocketProperties|
+ *     function(!{socketId: number})} propertiesOrCallback
+ * @param {function(!{socketId: number})=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-create
+ */
+chrome.bluetoothSocket.create = function(propertiesOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {!chrome.bluetoothSocket.SocketProperties} properties
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-update
+ */
+chrome.bluetoothSocket.update = function(socketId, properties, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {boolean} paused
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-setPaused
+ */
+chrome.bluetoothSocket.setPaused = function(socketId, paused, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {string} uuid
+ * @param {!chrome.bluetoothSocket.ListenOptions|function()} optionsOrCallback
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-listenUsingRfcomm
+ */
+chrome.bluetoothSocket.listenUsingRfcomm =
+    function(socketId, uuid, optionsOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {string} uuid
+ * @param {!chrome.bluetoothSocket.ListenOptions|function()} optionsOrCallback
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-listenUsingL2cap
+ */
+chrome.bluetoothSocket.listenUsingL2cap =
+    function(socketId, uuid, optionsOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {string} address
+ * @param {string} uuid
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-connect
+ */
+chrome.bluetoothSocket.connect = function(socketId, address, uuid, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-disconnect
+ */
+chrome.bluetoothSocket.disconnect = function(socketId, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-close
+ */
+chrome.bluetoothSocket.close = function(socketId, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {!ArrayBuffer} data
+ * @param {function(number)=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-send
+ */
+chrome.bluetoothSocket.send = function(socketId, data, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function(!chrome.bluetoothSocket.SocketInfo)} callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-getInfo
+ */
+chrome.bluetoothSocket.getInfo = function(socketId, callback) {};
+
+
+/**
+ * @param {function(!Array.<!chrome.bluetoothSocket.SocketInfo>)} callback
+ * @see https://developer.chrome.com/apps/bluetoothSocket#method-getSockets
+ */
+chrome.bluetoothSocket.getSockets = function(callback) {};
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothSocket#event-onAccept
+ */
+chrome.bluetoothSocket.AcceptEventData = function() {};
+
+
+/** @type {number} */
+chrome.bluetoothSocket.AcceptEventData.prototype.socketId;
+
+
+/** @type {number} */
+chrome.bluetoothSocket.AcceptEventData.prototype.clientSocketId;
+
+
+/**
+ * Event whose listeners take a AcceptEventData parameter.
+ * @constructor
+ */
+chrome.bluetoothSocket.AcceptEvent = function() {};
+
+
+/**
+ * @param {function(!chrome.bluetoothSocket.AcceptEventData): void} callback
+ */
+chrome.bluetoothSocket.AcceptEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetoothSocket.AcceptEventData): void} callback
+ */
+chrome.bluetoothSocket.AcceptEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetoothSocket.AcceptEventData): void} callback
+ * @return {boolean}
+ */
+chrome.bluetoothSocket.AcceptEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetoothSocket.AcceptEvent.prototype.hasListeners = function() {};
+
+
+/** @type {!chrome.bluetoothSocket.AcceptEvent} */
+chrome.bluetoothSocket.onAccept;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothSocket#event-onAcceptError
+ */
+chrome.bluetoothSocket.AcceptErrorEventData = function() {};
+
+
+/** @type {number} */
+chrome.bluetoothSocket.AcceptErrorEventData.prototype.socketId;
+
+
+/** @type {string} */
+chrome.bluetoothSocket.AcceptErrorEventData.prototype.errorMessage;
+
+
+/** @type {string} */
+chrome.bluetoothSocket.AcceptErrorEventData.prototype.error;
+
+
+/**
+ * Event whose listeners take a AcceptErrorEventData parameter.
+ * @constructor
+ */
+chrome.bluetoothSocket.AcceptErrorEvent = function() {};
+
+
+/**
+ * @param {function(
+ *     !chrome.bluetoothSocket.AcceptErrorEventData): void} callback
+ */
+chrome.bluetoothSocket.AcceptErrorEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(
+ *     !chrome.bluetoothSocket.AcceptErrorEventData): void} callback
+ */
+chrome.bluetoothSocket.AcceptErrorEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(
+ *     !chrome.bluetoothSocket.AcceptErrorEventData): void} callback
+ * @return {boolean}
+ */
+chrome.bluetoothSocket.AcceptErrorEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetoothSocket.AcceptErrorEvent.prototype.hasListeners =
+    function() {};
+
+
+/** @type {!chrome.bluetoothSocket.AcceptErrorEvent} */
+chrome.bluetoothSocket.onAcceptError;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothSocket#event-onReceive
+ */
+chrome.bluetoothSocket.ReceiveEventData = function() {};
+
+
+/** @type {number} */
+chrome.bluetoothSocket.ReceiveEventData.prototype.socketId;
+
+
+/** @type {!ArrayBuffer} */
+chrome.bluetoothSocket.ReceiveEventData.prototype.data;
+
+
+/**
+ * Event whose listeners take a ReceiveEventData parameter.
+ * @constructor
+ */
+chrome.bluetoothSocket.ReceiveEvent = function() {};
+
+
+/**
+ * @param {function(!chrome.bluetoothSocket.ReceiveEventData): void} callback
+ */
+chrome.bluetoothSocket.ReceiveEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetoothSocket.ReceiveEventData): void} callback
+ */
+chrome.bluetoothSocket.ReceiveEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetoothSocket.ReceiveEventData): void} callback
+ * @return {boolean}
+ */
+chrome.bluetoothSocket.ReceiveEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetoothSocket.ReceiveEvent.prototype.hasListeners = function() {};
+
+
+/** @type {!chrome.bluetoothSocket.ReceiveEvent} */
+chrome.bluetoothSocket.onReceive;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothSocket#event-onReceiveError
+ */
+chrome.bluetoothSocket.ReceiveErrorEventData = function() {};
+
+
+/** @type {number} */
+chrome.bluetoothSocket.ReceiveErrorEventData.prototype.socketId;
+
+
+/** @type {string} */
+chrome.bluetoothSocket.ReceiveErrorEventData.prototype.errorMessage;
+
+
+/** @type {string} */
+chrome.bluetoothSocket.ReceiveErrorEventData.prototype.error;
+
+
+/**
+ * Event whose listeners take a ReceiveErrorEventData parameter.
+ * @constructor
+ */
+chrome.bluetoothSocket.ReceiveErrorEvent = function() {};
+
+
+/**
+ * @param {function(
+ *     !chrome.bluetoothSocket.ReceiveErrorEventData): void} callback
+ */
+chrome.bluetoothSocket.ReceiveErrorEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(
+ *     !chrome.bluetoothSocket.ReceiveErrorEventData): void} callback
+ */
+chrome.bluetoothSocket.ReceiveErrorEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(
+ *     !chrome.bluetoothSocket.ReceiveErrorEventData): void} callback
+ * @return {boolean}
+ */
+chrome.bluetoothSocket.ReceiveErrorEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetoothSocket.ReceiveErrorEvent.prototype.hasListeners =
+    function() {};
+
+
+/** @type {!chrome.bluetoothSocket.ReceiveErrorEvent} */
+chrome.bluetoothSocket.onReceiveError;
+
+
+/**
  * @see http://developer.chrome.com/extensions/commands.html
  * @const
  */
