@@ -516,7 +516,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
     PropertyDef localPropDef = propertyDefs.get(current, pname);
     JSType localPropType = localPropDef == null ? null :
-        current.getPropDeclaredType(pname);
+        current.getInstancePropDeclaredType(pname);
     if (localPropDef != null && superType.isClass() &&
         localPropType.getFunType() != null &&
         superType.hasConstantProp(pname)) {
@@ -1318,7 +1318,7 @@ class GlobalTypeInfo implements CompilerPass {
     private boolean mayWarnAboutExistingProp(RawNominalType classType,
         String pname, Node propCreationNode, JSType typeInJsdoc) {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propCreationNode);
-      JSType previousPropType = classType.getPropDeclaredType(pname);
+      JSType previousPropType = classType.getInstancePropDeclaredType(pname);
       if (classType.mayHaveOwnProp(pname) &&
           previousPropType != null &&
           !suppressDupPropWarning(jsdoc, typeInJsdoc, previousPropType)) {

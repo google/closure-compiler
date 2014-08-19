@@ -164,7 +164,7 @@ public class NominalType {
   }
 
   public JSType getPropDeclaredType(String pname) {
-    JSType type = rawType.getPropDeclaredType(pname);
+    JSType type = rawType.getInstancePropDeclaredType(pname);
     return type == null ? null : type.substituteGenerics(typeMap);
   }
 
@@ -541,7 +541,7 @@ public class NominalType {
       return getProp(pname) != null;
     }
 
-    public JSType getPropDeclaredType(String pname) {
+    public JSType getInstancePropDeclaredType(String pname) {
       Property p = getProp(pname);
       if (p == null) {
         return null;
