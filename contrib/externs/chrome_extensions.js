@@ -701,7 +701,7 @@ chrome.bluetooth.AdapterStateEvent.prototype.hasListeners = function() {};
  * @type {!chrome.bluetooth.AdapterStateEvent}
  * @see https://developer.chrome.com/apps/bluetooth#event-onAdapterStateChanged
  */
-chrome.bluetooth.onAdapterStateChange;
+chrome.bluetooth.onAdapterStateChanged;
 
 
 /**
