@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.base.Preconditions;
 import com.google.common.math.DoubleMath;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
@@ -39,7 +40,7 @@ public final class TypeTransformationParser {
   private ErrorReporter errorReporter;
   private int templateLineno, templateCharno;
 
-  private static final int VAR_ARGS = Integer.MAX_VALUE - 1;
+  private static final int VAR_ARGS = Integer.MAX_VALUE;
 
   /** The classification of the keywords */
   public static enum OperationKind {
@@ -125,8 +126,34 @@ public final class TypeTransformationParser {
     return isOperationKind(name, OperationKind.BOOLEAN_PREDICATE);
   }
 
+  private int getFunctionParamCount(Node n) {
+    Preconditions.checkArgument(n.isFunction(),
+        "Expected a function node, found " + n);
+    return n.getChildAtIndex(1).getChildCount();
+  }
+
+  private Node getFunctionBody(Node n) {
+    Preconditions.checkArgument(n.isFunction(),
+        "Expected a function node, found " + n);
+    return n.getChildAtIndex(2);
+  }
+
+  private String getCallName(Node n) {
+    Preconditions.checkArgument(n.isCall(),
+        "Expected a call node, found " + n);
+    return n.getFirstChild().getString();
+  }
+
   private Node getCallArgument(Node n, int i) {
-    return n.isCall() ? n.getChildAtIndex(i + 1) : null;
+    Preconditions.checkArgument(n.isCall(),
+        "Expected a call node, found " + n);
+    return n.getChildAtIndex(i + 1);
+  }
+
+  private int getCallParamCount(Node n) {
+    Preconditions.checkArgument(n.isCall(),
+        "Expected a call node, found " + n);
+    return n.getChildCount() - 1;
   }
 
   private boolean isTypeVar(Node n) {
@@ -172,12 +199,12 @@ public final class TypeTransformationParser {
   }
 
   private boolean checkParameterCount(Node expr, Keywords keyword) {
-    int numParams = expr.getChildCount();
-    if (numParams < 1 + keyword.minParamCount) {
+    int paramCount = getCallParamCount(expr);
+    if (paramCount < keyword.minParamCount) {
       warnMissingParam(keyword.name, expr);
       return false;
     }
-    if (numParams > 1 + keyword.maxParamCount) {
+    if (paramCount > keyword.maxParamCount) {
       warnExtraParam(keyword.name, expr);
       return false;
     }
@@ -227,7 +254,7 @@ public final class TypeTransformationParser {
     if (!checkParameterCount(expr, Keywords.TYPE)) {
       return false;
     }
-    int numParams = expr.getChildCount() - 1;
+    int paramCount = getCallParamCount(expr);
     // The first parameter must be a type variable or a type name
     Node firstParam = getCallArgument(expr, 0);
     if (!isTypeVar(firstParam) && !isTypeName(firstParam)) {
@@ -236,7 +263,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // The rest of the parameters must be valid type expressions
-    for (int i = 1; i < numParams; i++) {
+    for (int i = 1; i < paramCount; i++) {
       if (!validTypeTransformationExpression(getCallArgument(expr, i))) {
         warnInvalidInside("template type operation", expr);
         return false;
@@ -255,10 +282,10 @@ public final class TypeTransformationParser {
     if (!checkParameterCount(expr, Keywords.UNION)) {
       return false;
     }
-    int numParams = expr.getChildCount() - 1;
+    int paramCount = getCallParamCount(expr);
     // Check if each of the members of the union is a valid type expression
-    for (int i = 0; i < numParams; i++) {
-      if (!validTypeTransformationExpression(expr.getChildAtIndex(i))) {
+    for (int i = 0; i < paramCount; i++) {
+      if (!validTypeTransformationExpression(getCallArgument(expr, i))) {
         warnInvalidInside("union type", expr);
         return false;
       }
@@ -371,7 +398,7 @@ public final class TypeTransformationParser {
    * or any of the type predicates (none, rawTypeOf, templateTypeOf).
    */
   private boolean validTypeExpression(Node expr) {
-    String name = expr.getFirstChild().getString();
+    String name = getCallName(expr);
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case TYPE:
@@ -404,7 +431,7 @@ public final class TypeTransformationParser {
       warnInvalidExpression("boolean", expr);
       return false;
     }
-    String predicate = expr.getFirstChild().getString();
+    String predicate = getCallName(expr);
     if (!isValidBooleanPredicate(predicate)) {
       warnInvalid("boolean predicate", expr);
       return false;
@@ -475,19 +502,19 @@ public final class TypeTransformationParser {
     }
     Node mapFn = getCallArgument(expr, 1);
     // The map function must have only one parameter
-    Node mapFnParam = mapFn.getChildAtIndex(1);
-    if (!mapFnParam.hasChildren()) {
-      warnMissingParam("map function", mapFnParam);
+    int mapFnParamCount = getFunctionParamCount(mapFn);
+    if (mapFnParamCount < 1) {
+      warnMissingParam("map function", mapFn);
       warnInvalidInside(Keywords.MAPUNION.name, getCallArgument(expr, 1));
       return false;
     }
-    if (!mapFnParam.hasOneChild()) {
-      warnExtraParam("map function", mapFnParam);
+    if (mapFnParamCount > 1) {
+      warnExtraParam("map function", mapFn);
       warnInvalidInside(Keywords.MAPUNION.name, getCallArgument(expr, 1));
       return false;
     }
     // The body must be a valid type transformation expression
-    Node mapFnBody = mapFn.getChildAtIndex(2);
+    Node mapFnBody = getFunctionBody(mapFn);
     if (!validTypeTransformationExpression(mapFnBody)) {
       warnInvalidInside("map function body", mapFnBody);
       return false;
@@ -520,7 +547,7 @@ public final class TypeTransformationParser {
     }
     Node mapFn = getCallArgument(expr, 1);
     // The map function must have exactly two parameters
-    int mapFnParamCount = mapFn.getChildAtIndex(1).getChildCount();
+    int mapFnParamCount = getFunctionParamCount(mapFn);
     if (mapFnParamCount < 2) {
       warnMissingParam("map function", mapFn);
       warnInvalidInside(Keywords.MAPRECORD.name, getCallArgument(expr, 1));
@@ -532,7 +559,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // The body must be a valid type transformation expression
-    Node mapFnBody = mapFn.getChildAtIndex(2);
+    Node mapFnBody = getFunctionBody(mapFn);
     if (!validTypeTransformationExpression(mapFnBody)) {
       warnInvalidInside("map function body", mapFnBody);
       return false;
@@ -562,7 +589,7 @@ public final class TypeTransformationParser {
    * An operation expression is a cond or a mapunion
    */
   private boolean validOperationExpression(Node expr) {
-    String name = expr.getFirstChild().getString();
+    String name = getCallName(expr);
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case COND:
@@ -591,7 +618,7 @@ public final class TypeTransformationParser {
       return true;
     }
     // Check for valid keyword
-    String name = expr.getFirstChild().getString();
+    String name = getCallName(expr);
     if (!isValidKeyword(name)) {
       warnInvalidExpression("type transformation", expr);
       return false;

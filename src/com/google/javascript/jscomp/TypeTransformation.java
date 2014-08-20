@@ -210,21 +210,56 @@ class TypeTransformation {
         .build();
   }
 
-  private String getFunctionParameter(Node functionNode, int index) {
-    return functionNode.getChildAtIndex(1).getChildAtIndex(index).getString();
+  private String getFunctionParameter(Node n, int i) {
+    Preconditions.checkArgument(n.isFunction(),
+        "Expected a function node, found " + n);
+    return n.getChildAtIndex(1).getChildAtIndex(i).getString();
+  }
+
+  private Node getFunctionBody(Node n) {
+    Preconditions.checkArgument(n.isFunction(),
+        "Expected a function node, found " + n);
+    return n.getChildAtIndex(2);
+  }
+
+  private String getCallName(Node n) {
+    Preconditions.checkArgument(n.isCall(),
+        "Expected a call node, found " + n);
+    return n.getFirstChild().getString();
   }
 
   private Node getCallArgument(Node n, int i) {
-    return n.isCall() ? n.getChildAtIndex(i + 1) : null;
+    Preconditions.checkArgument(n.isCall(),
+        "Expected a call node, found " + n);
+    return n.getChildAtIndex(i + 1);
   }
 
-  private ImmutableList<Node> getParameters(Node operation) {
+  private int getCallParamCount(Node n) {
+    Preconditions.checkArgument(n.isCall(),
+        "Expected a call node, found " + n);
+    return n.getChildCount() - 1;
+  }
+
+  private ImmutableList<Node> getCallParams(Node n) {
+    Preconditions.checkArgument(n.isCall(),
+        "Expected a call node, found " + n);
     ImmutableList.Builder<Node> builder = new ImmutableList.Builder<Node>();
-    // Omit the keyword (first child)
-    for (int i = 1; i < operation.getChildCount(); i++) {
-      builder.add(operation.getChildAtIndex(i));
+    for (int i = 0; i < getCallParamCount(n); i++) {
+      builder.add(getCallArgument(n, i));
     }
     return builder.build();
+  }
+
+  private Node getComputedPropValue(Node n) {
+    Preconditions.checkArgument(n.isComputedProp(),
+        "Expected a computed property node, found " + n);
+    return n.getChildAtIndex(1);
+  }
+
+  private String getComputedPropName(Node n) {
+    Preconditions.checkArgument(n.isComputedProp(),
+        "Expected a computed property node, found " + n);
+    return n.getFirstChild().getString();
   }
 
   /** Evaluates the type transformation expression and returns the resulting
@@ -263,7 +298,7 @@ class TypeTransformation {
     if (isTypeVar(ttlAst)) {
       return evalTypeVar(ttlAst, nameResolver);
     }
-    String name = ttlAst.getFirstChild().getString();
+    String name = getCallName(ttlAst);
     Keywords keyword = nameToKeyword(name);
     switch (keyword.kind) {
       case TYPE_CONSTRUCTOR:
@@ -277,7 +312,7 @@ class TypeTransformation {
   }
 
   private JSType evalOperationExpression(Node ttlAst, NameResolver nameResolver) {
-    String name = ttlAst.getFirstChild().getString();
+    String name = getCallName(ttlAst);
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case COND:
@@ -294,7 +329,7 @@ class TypeTransformation {
   }
 
   private JSType evalTypeExpression(Node ttlAst, NameResolver nameResolver) {
-    String name = ttlAst.getFirstChild().getString();
+    String name = getCallName(ttlAst);
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case TYPE:
@@ -330,7 +365,7 @@ class TypeTransformation {
   }
 
   private JSType evalTemplatizedType(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     JSType firstParam = evalInternal(params.get(0), nameResolver);
     if (!isTemplatizable(firstParam)) {
       reportWarning(ttlAst, BASETYPE_INVALID, firstParam.toString());
@@ -361,7 +396,7 @@ class TypeTransformation {
 
   private JSType evalUnionType(Node ttlAst, NameResolver nameResolver) {
     // Get the parameters of the union
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     int paramCount = params.size();
     // Create an array of types after evaluating each parameter
     JSType[] basicTypes = new JSType[paramCount];
@@ -372,10 +407,10 @@ class TypeTransformation {
   }
 
   private boolean evalBoolean(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     JSType type0 = evalInternal(params.get(0), nameResolver);
     JSType type1 = evalInternal(params.get(1), nameResolver);
-    String name = ttlAst.getFirstChild().getString();
+    String name = getCallName(ttlAst);
     Keywords keyword = nameToKeyword(name);
 
     switch (keyword) {
@@ -390,7 +425,7 @@ class TypeTransformation {
   }
 
   private JSType evalConditional(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     if (evalBoolean(params.get(0), nameResolver)) {
       return evalInternal(params.get(1), nameResolver);
     } else {
@@ -399,7 +434,7 @@ class TypeTransformation {
   }
 
   private JSType evalMapunion(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     Node unionParam = params.get(0);
     Node mapFunction = params.get(1);
     String paramName = getFunctionParameter(mapFunction, 0);
@@ -410,7 +445,7 @@ class TypeTransformation {
       return getUnknownType();
     }
 
-    Node mapFunctionBody = mapFunction.getChildAtIndex(2);
+    Node mapFunctionBody = getFunctionBody(mapFunction);
     JSType unionType = evalInternal(unionParam, nameResolver);
     // If the first parameter does not correspond to a union type then
     // consider it as a union with a single type and evaluate
@@ -440,7 +475,7 @@ class TypeTransformation {
   }
 
   private JSType evalRawTypeOf(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     JSType type = evalInternal(params.get(0), nameResolver);
     if (!type.isTemplatizedType()) {
       reportWarning(ttlAst, TEMPTYPE_INVALID, "rawTypeOf", type.toString());
@@ -450,7 +485,7 @@ class TypeTransformation {
   }
 
   private JSType evalTemplateTypeOf(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     JSType type = evalInternal(params.get(0), nameResolver);
     if (!type.isTemplatizedType()) {
       reportWarning(ttlAst, TEMPTYPE_INVALID, "templateTypeOf", type.toString());
@@ -470,28 +505,32 @@ class TypeTransformation {
   private JSType evalRecordType(Node ttlAst, NameResolver nameResolver) {
     Node record = getCallArgument(ttlAst, 0);
     RecordTypeBuilder builder = new RecordTypeBuilder(typeRegistry);
-    for (Node p : record.children()) {
+    for (Node propNode : record.children()) {
       // If it is a computed property then find the property name using the resolver
-      if (p.isComputedProp()) {
-        String nameVar = p.getFirstChild().getString();
+      if (propNode.isComputedProp()) {
+        String compPropName = getComputedPropName(propNode);
         // If the name does not exist then report a warning
-        if (!nameResolver.nameVars.containsKey(nameVar)) {
-          reportWarning(ttlAst, UNKNOWN_NAMEVAR, nameVar);
+        if (!nameResolver.nameVars.containsKey(compPropName)) {
+          reportWarning(ttlAst, UNKNOWN_NAMEVAR, compPropName);
           return getUnknownType();
         }
         // Otherwise add the property
-        builder.addProperty(nameResolver.nameVars.get(nameVar),
-            evalInternal(p.getChildAtIndex(1), nameResolver), null);
+        Node propValue = getComputedPropValue(propNode);
+        String resolvedName = nameResolver.nameVars.get(compPropName);
+        JSType resultingType = evalInternal(propValue, nameResolver);
+        builder.addProperty(resolvedName, resultingType, null);
       } else {
-        builder.addProperty(p.getString(),
-            evalInternal(p.getFirstChild(), nameResolver), null);
+        String propName = propNode.getString();
+        JSType resultingType = evalInternal(propNode.getFirstChild(),
+            nameResolver);
+        builder.addProperty(propName, resultingType, null);
       }
     }
     return builder.build();
   }
 
   private JSType evalMaprecord(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getParameters(ttlAst);
+    ImmutableList<Node> params = getCallParams(ttlAst);
     // Evaluate the first parameter, it must be a record type
     Node recParam = params.get(0);
     JSType recType = evalInternal(recParam, nameResolver);
@@ -522,7 +561,7 @@ class TypeTransformation {
     }
 
     // Compute the new properties using the map function
-    Node mapFnBody = mapFunction.getChildAtIndex(2);
+    Node mapFnBody = getFunctionBody(mapFunction);
     ImmutableMap.Builder<String, JSType> newPropsBuilder =
         new ImmutableMap.Builder<String, JSType>();
     for (String propName : ownPropsNames) {
