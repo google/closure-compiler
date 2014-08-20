@@ -7071,3 +7071,118 @@ chrome.gcdPrivate.onDeviceStateChanged;
  * @type {!ChromeStringEvent}
  */
 chrome.gcdPrivate.onDeviceRemoved;
+
+
+/**
+ * @const
+ * @see http://goo.gl/bKHibo
+ */
+chrome.bluetoothPrivate = {};
+
+
+/** @constructor */
+chrome.bluetoothPrivate.PairingEvent = function() {};
+
+
+/** @type {string} */
+chrome.bluetoothPrivate.PairingEvent.prototype.pairing;
+
+
+/** @type {!chrome.bluetooth.Device} */
+chrome.bluetoothPrivate.PairingEvent.prototype.device;
+
+
+/** @type {string|undefined} */
+chrome.bluetoothPrivate.PairingEvent.prototype.pincode;
+
+
+/** @type {number|undefined} */
+chrome.bluetoothPrivate.PairingEvent.prototype.passkey;
+
+
+/** @type {number|undefined} */
+chrome.bluetoothPrivate.PairingEvent.prototype.enteredKey;
+
+
+/** @constructor */
+chrome.bluetoothPrivate.NewAdapterState = function() {};
+
+
+/** @type {string|undefined} */
+chrome.bluetoothPrivate.NewAdapterState.prototype.name;
+
+
+/** @type {boolean|undefined} */
+chrome.bluetoothPrivate.NewAdapterState.prototype.powered;
+
+
+/** @type {boolean|undefined} */
+chrome.bluetoothPrivate.NewAdapterState.prototype.discoverable;
+
+
+/** @constructor */
+chrome.bluetoothPrivate.SetPairingResponseOptions = function() {};
+
+
+/** @type {!chrome.bluetooth.Device} */
+chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.device;
+
+
+/** @type {string|undefined} */
+chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.response;
+
+
+/** @type {string|undefined} */
+chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.pincode;
+
+
+/** @type {number|undefined} */
+chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.passkey;
+
+
+/**
+ * @param {!chrome.bluetoothPrivate.NewAdapterState} adapterState
+ * @param {function()} callback
+ */
+chrome.bluetoothPrivate.setAdapterState = function(adapterState, callback) {};
+
+
+/**
+ * @param {!chrome.bluetoothPrivate.SetPairingResponseOptions} options
+ * @param {function()} callback
+ */
+chrome.bluetoothPrivate.setPairingResponse = function(options, callback) {};
+
+
+/**
+ * Event whose listeners take a PairingEvent parameter.
+ * @constructor
+ */
+chrome.bluetoothPrivate.PairingEventEvent = function() {};
+
+
+/** @param {function(!chrome.bluetoothPrivate.PairingEvent): void} callback */
+chrome.bluetoothPrivate.PairingEventEvent.prototype.addListener =
+    function(callback) {};
+
+
+/** @param {function(!chrome.bluetoothPrivate.PairingEvent): void} callback */
+chrome.bluetoothPrivate.PairingEventEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetoothPrivate.PairingEvent): void} callback
+ * @return {boolean}
+ */
+chrome.bluetoothPrivate.PairingEventEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetoothPrivate.PairingEventEvent.prototype.hasListeners =
+    function() {};
+
+
+/** @type {!chrome.bluetoothPrivate.PairingEventEvent} */
+chrome.bluetoothPrivate.onPairing;
