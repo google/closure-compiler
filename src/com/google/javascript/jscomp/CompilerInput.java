@@ -372,6 +372,14 @@ public class CompilerInput
 
   @Override
   public boolean isModule() {
-    return isModuleFile;
+    checkErrorManager();
+    try {
+      regenerateDependencyInfoIfNecessary();
+      return isModuleFile;
+    } catch (IOException e) {
+      compiler.getErrorManager().report(CheckLevel.ERROR,
+          JSError.make(AbstractCompiler.READ_ERROR, getName()));
+      return false;
+    }
   }
 }
