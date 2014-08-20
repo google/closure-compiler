@@ -154,24 +154,49 @@ public final class JSDocInfoPrinter {
       appendTypeNode(sb, typeNode.getLastChild());
     } else if (typeNode.getType() == Token.ELLIPSIS) {
       sb.append("...");
-      appendTypeNode(sb, typeNode.getFirstChild());
+      if (typeNode.hasChildren()) {
+        boolean inFunction = typeNode.getParent() != null
+            && typeNode.getParent().getParent() != null
+            && typeNode.getParent().getParent().isFunction();
+        if (inFunction) {
+          sb.append("[");
+        }
+        appendTypeNode(sb, typeNode.getFirstChild());
+        if (inFunction) {
+          sb.append("]");
+        }
+      }
     } else if (typeNode.getType() == Token.STAR) {
       sb.append("*");
     } else if (typeNode.getType() == Token.QMARK) {
       sb.append("?");
     } else if (typeNode.isFunction()) {
       sb.append("function(");
-      Node paramList = typeNode.getFirstChild();
-      if (paramList.isEmpty()) {
+      Node first = typeNode.getFirstChild();
+      if (first.isNew()) {
+        sb.append("new:");
+        appendTypeNode(sb, typeNode.getFirstChild().getFirstChild());
+        sb.append(",");
+      } else if (first.isThis()) {
+        sb.append("this:");
+        appendTypeNode(sb, typeNode.getFirstChild().getFirstChild());
+        sb.append(",");
+      } else if (first.isEmpty()) {
         sb.append(")");
-      } else {
-        for (int i = 0; i < paramList.getChildCount() - 1; i++) {
-          appendTypeNode(sb, paramList.getChildAtIndex(i));
-          sb.append(",");
-        }
-        appendTypeNode(sb, paramList.getLastChild());
-        sb.append(")");
+        return;
+      } else if (first.isVoid()) {
+        sb.append("):void");
+        return;
       }
+      Node paramList = typeNode.getFirstChild().isParamList()
+          ? typeNode.getFirstChild()
+          : typeNode.getChildAtIndex(1);
+      for (int i = 0; i < paramList.getChildCount() - 1; i++) {
+        appendTypeNode(sb, paramList.getChildAtIndex(i));
+        sb.append(",");
+      }
+      appendTypeNode(sb, paramList.getLastChild());
+      sb.append(")");
       Node returnType = typeNode.getLastChild();
       if (!returnType.isEmpty()) {
         sb.append(":");
@@ -190,11 +215,17 @@ public final class JSDocInfoPrinter {
       sb.append(lastColon.getFirstChild().getString() + ":");
       appendTypeNode(sb, lastColon.getLastChild());
       sb.append("}");
+    } else if (typeNode.getType() == Token.VOID) {
+      sb.append("void");
     } else {
       if (typeNode.getString().equals("Array")) {
-        sb.append("Array.<");
-        appendTypeNode(sb, typeNode.getFirstChild().getFirstChild());
-        sb.append(">");
+        if (typeNode.hasChildren()) {
+          sb.append("Array.<");
+          appendTypeNode(sb, typeNode.getFirstChild().getFirstChild());
+          sb.append(">");
+        } else {
+          sb.append("Array");
+        }
       } else {
         sb.append(typeNode.getString());
       }
