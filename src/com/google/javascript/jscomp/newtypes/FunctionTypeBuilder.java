@@ -133,8 +133,8 @@ public class FunctionTypeBuilder {
 
   public FunctionType buildFunction() {
     FunctionType result = FunctionType.normalized(
-        requiredFormals, optionalFormals,
-        restFormals, returnType, nominalType, outerVars, typeParameters, loose);
+        requiredFormals, optionalFormals, restFormals, returnType,
+        nominalType, receiverType, outerVars, typeParameters, loose);
     result.checkValid();
     return result;
   }

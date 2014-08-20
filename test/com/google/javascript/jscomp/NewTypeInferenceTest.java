@@ -160,6 +160,77 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @type {function(this:gibberish)} */ function foo() {}",
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "var /** function(this:Foo) */ x = function() {};");
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @param {function(this:Foo)} x */\n" +
+        "function f(x) {}\n" +
+        "f(/** @type {function(this:Foo)} */ (function() {}));");
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() { /** @type {number} */ this.prop = 1; }\n" +
+        "/** @type {function(this:Foo)} */\n" +
+        "function f() { this.prop = 'asdf'; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor */\n" +
+        "function Bar() {}\n" +
+        "/** @param {function(this:Foo)} x */\n" +
+        "function f(x) {}\n" +
+        "f(/** @type {function(this:Bar)} */ (function() {}));",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function High() {}\n" +
+        "/** @constructor @extends {High} */\n" +
+        "function Low() {}\n" +
+        "function f(/** function(this:Low) */ low,\n" +
+        "           /** function(this:High) */ high) {\n" +
+        "  var fun = (1 < 2) ? low : high;\n" +
+        "  var /** function(this:High) */ f2 = fun;\n" +
+        "  var /** function(this:Low) */ f3 = fun;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function High() {}\n" +
+        "/** @constructor @extends {High} */\n" +
+        "function Low() {}\n" +
+        "function f(/** function(function(this:Low)) */ low,\n" +
+        "           /** function(function(this:High)) */ high) {\n" +
+        "  var fun = (1 < 2) ? low : high;\n" +
+        "  var /** function(function(this:High)) */ f2 = fun;\n" +
+        "  var /** function(function(this:Low)) */ f3 = fun;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function Foo(x) {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {function(this:Foo.<T>)} fun\n" +
+        " */\n" +
+        "function f(fun) { return fun; }\n" +
+        "var /** function(this:Foo.<string>) */ x =\n" +
+        "    f(/** @type {function(this:Foo.<number>)} */ (function() {}));",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   // TODO(dimvar): we must warn when a THIS fun isn't called as a method
@@ -184,6 +255,32 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  (new f()) - 5;\n" +
         "}",
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function Foo(x) {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {function(new:Foo.<T>)} fun\n" +
+        " */\n" +
+        "function f(fun) { return fun; }\n" +
+        "/** @type {function(new:Foo.<number>)} */\n" +
+        "function f2() {}\n" +
+        "var /** function(new:Foo.<string>) */ x = f(f2);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "function f(x) {\n" +
+        "  x();\n" +
+        "  var /** !Foo */ y = new x();\n" +
+        "  var /** function(new:Foo, number) */ z = x;\n" +
+        "}");
   }
 
   public void testInvalidThisReference() {

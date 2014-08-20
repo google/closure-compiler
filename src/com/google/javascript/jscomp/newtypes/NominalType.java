@@ -173,9 +173,8 @@ public class NominalType {
     return p != null && p.isConstant();
   }
 
-  JSType createConstructorObject(FunctionType ctorFn) {
-    Preconditions.checkState(typeMap.isEmpty());
-    return rawType.createConstructorObject(ctorFn);
+  static JSType createConstructorObject(FunctionType ctorFn) {
+    return ctorFn.nominalType.rawType.createConstructorObject(ctorFn);
   }
 
   boolean isSubclassOf(NominalType other) {

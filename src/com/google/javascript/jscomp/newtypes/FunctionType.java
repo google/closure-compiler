@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,8 +41,10 @@ public class FunctionType {
   private final boolean isLoose;
   private final ImmutableMap<String, JSType> outerVarPreconditions;
   // non-null iff this is a constructor/interface
-  private final NominalType nominalType;
-  // Non-null iff this function has an @template annotation
+  final NominalType nominalType;
+  // non-null iff this is a prototype method
+  private final NominalType receiverType;
+  // non-null iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
   private static final boolean DEBUGGING = false;
 
@@ -53,6 +54,7 @@ public class FunctionType {
       JSType restFormals,
       JSType retType,
       NominalType nominalType,
+      NominalType receiverType,
       ImmutableMap<String, JSType> outerVars,
       ImmutableList<String> typeParameters,
       boolean isLoose) {
@@ -61,15 +63,20 @@ public class FunctionType {
     this.restFormals = restFormals;
     this.returnType = retType;
     this.nominalType = nominalType;
+    this.receiverType = receiverType;
     this.outerVarPreconditions = outerVars;
     this.typeParameters = typeParameters;
     this.isLoose = isLoose;
   }
 
   void checkValid() {
-    if (isTopFunction()) {
+    if (isTopFunction() || isQmarkFunction()) {
       return;
     }
+    // We don't support prototype methods that are also constructors
+    Preconditions.checkState(nominalType == null || receiverType == null);
+    // Can we infer anything about the receiver type for loose functions?
+    Preconditions.checkState(!isLoose || receiverType == null);
     for (JSType formal : requiredFormals) {
       Preconditions.checkState(formal != null);
     }
@@ -89,7 +96,7 @@ public class FunctionType {
     }
     return new FunctionType(
         requiredFormals, optionalFormals, restFormals, returnType, nominalType,
-        outerVarPreconditions, typeParameters, true);
+        receiverType, outerVarPreconditions, typeParameters, true);
   }
 
   static FunctionType normalized(
@@ -98,6 +105,7 @@ public class FunctionType {
       JSType restFormals,
       JSType retType,
       NominalType nominalType,
+      NominalType receiverType,
       Map<String, JSType> outerVars,
       ImmutableList<String> typeParameters,
       boolean isLoose) {
@@ -123,21 +131,10 @@ public class FunctionType {
     return new FunctionType(
         ImmutableList.copyOf(requiredFormals),
         ImmutableList.copyOf(optionalFormals),
-        restFormals, retType, nominalType,
+        restFormals, retType, nominalType, receiverType,
         ImmutableMap.copyOf(outerVars),
         typeParameters,
         isLoose);
-  }
-
-  @VisibleForTesting
-  static JSType makeJSType(
-      ImmutableList<JSType> requiredFormals,
-      ImmutableList<JSType> optionalFormals,
-      JSType restFormals,
-      JSType retType) {
-    return JSType.fromFunctionType(FunctionType.normalized(
-        requiredFormals, optionalFormals, restFormals, retType,
-        null, null, null, false));
   }
 
   // We want to warn about argument mismatch, so we don't consider a function
@@ -157,13 +154,13 @@ public class FunctionType {
   // is ever called, a warning is inevitable.
   public static final FunctionType TOP_FUNCTION = new FunctionType(
       // Call the constructor directly to set fields to null
-      null, null, null, null, null, null, null, false);
+      null, null, null, null, null, null, null, null, false);
   public static final FunctionType LOOSE_TOP_FUNCTION = new FunctionType(
       // Call the constructor directly to set fields to null
-      null, null, null, null, null, null, null, true);
+      null, null, null, null, null, null, null, null, true);
   // Corresponds to Function, which is a subtype and supertype of all functions.
-  static final FunctionType QMARK_FUNCTION = FunctionType.normalized(
-      null, null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, false);
+  static final FunctionType QMARK_FUNCTION = FunctionType.normalized(null,
+      null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, null, false);
 
   public boolean isTopFunction() {
     if (requiredFormals == null) {
@@ -252,6 +249,8 @@ public class FunctionType {
     return JSType.meet(t1, t2);
   }
 
+  // TODO(dimvar): we need to clean up the combination of loose functions with
+  // new: and/or this: types. Eg, this.nominalType doesn't appear at all.
   private static FunctionType looseJoin(FunctionType f1, FunctionType f2) {
     Preconditions.checkArgument(f1.isLoose() || f2.isLoose());
 
@@ -344,6 +343,13 @@ public class FunctionType {
       return false;
     }
 
+    // covariance for the this: type
+    if (receiverType != null && other.receiverType == null
+        || receiverType != null && other.receiverType != null
+           && !receiverType.isSubclassOf(other.receiverType)) {
+      return false;
+    }
+
     // covariance in the return type
     return returnType.isUnknown() || other.returnType.isUnknown()
         || returnType.isSubtypeOf(other.returnType);
@@ -385,6 +391,8 @@ public class FunctionType {
     builder.addRetType(JSType.join(f1.returnType, f2.returnType));
     builder.addNominalType(
         NominalType.pickSuperclass(f1.nominalType, f2.nominalType));
+    builder.addReceiverType(
+        NominalType.pickSuperclass(f1.receiverType, f2.receiverType));
     return builder.buildFunction();
   }
 
@@ -432,6 +440,8 @@ public class FunctionType {
     builder.addRetType(JSType.meet(f1.returnType, f2.returnType));
     builder.addNominalType(
         NominalType.pickSubclass(f1.nominalType, f2.nominalType));
+    builder.addReceiverType(
+        NominalType.pickSubclass(f1.receiverType, f2.receiverType));
     return builder.buildFunction();
   }
 
@@ -464,7 +474,6 @@ public class FunctionType {
 
   boolean unifyWith(FunctionType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
-    Preconditions.checkState(this.nominalType == null);
     Preconditions.checkState(this.typeParameters == null);
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
 
@@ -502,6 +511,25 @@ public class FunctionType {
         other.restFormals, typeParameters, typeMultimap)) {
       return false;
     }
+
+    if (nominalType == null && other.nominalType != null
+        || nominalType != null && other.nominalType == null) {
+      return false;
+    }
+    if (nominalType != null
+        && !nominalType.unifyWith(other.nominalType, typeParameters, typeMultimap)) {
+      return false;
+    }
+
+    if (receiverType == null && other.receiverType != null
+        || receiverType != null && other.receiverType == null) {
+      return false;
+    }
+    if (receiverType != null
+        && !receiverType.unifyWith(other.receiverType, typeParameters, typeMultimap)) {
+      return false;
+    }
+
     return returnType.unifyWith(other.returnType, typeParameters, typeMultimap);
   }
 
@@ -530,6 +558,9 @@ public class FunctionType {
     }
     if (nominalType != null) {
       builder.addNominalType(nominalType.instantiateGenerics(typeMap));
+    }
+    if (receiverType != null) {
+      builder.addReceiverType(receiverType.instantiateGenerics(typeMap));
     }
     // TODO(blickly): Do we need instatiation here?
     for (String var : outerVarPreconditions.keySet()) {
@@ -588,7 +619,9 @@ public class FunctionType {
     return restFormals != null && restFormals.hasFreeTypeVars(boundTypeVars)
         || returnType.hasFreeTypeVars(boundTypeVars)
         || (nominalType != null
-            && nominalType.hasFreeTypeVars(boundTypeVars));
+            && nominalType.hasFreeTypeVars(boundTypeVars))
+        || (receiverType != null
+            && receiverType.hasFreeTypeVars(boundTypeVars));
   }
 
   @Override
@@ -601,17 +634,18 @@ public class FunctionType {
     }
     Preconditions.checkArgument(obj instanceof FunctionType, "obj is: %s", obj);
     FunctionType f2 = (FunctionType) obj;
-    return Objects.equals(this.requiredFormals, f2.requiredFormals) &&
-        Objects.equals(this.optionalFormals, f2.optionalFormals) &&
-        Objects.equals(this.restFormals, f2.restFormals) &&
-        Objects.equals(this.returnType, f2.returnType) &&
-        Objects.equals(this.nominalType, f2.nominalType);
+    return Objects.equals(this.requiredFormals, f2.requiredFormals)
+        && Objects.equals(this.optionalFormals, f2.optionalFormals)
+        && Objects.equals(this.restFormals, f2.restFormals)
+        && Objects.equals(this.returnType, f2.returnType)
+        && Objects.equals(this.nominalType, f2.nominalType)
+        && Objects.equals(this.receiverType, f2.receiverType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        requiredFormals, optionalFormals, restFormals, returnType, nominalType);
+    return Objects.hash(requiredFormals, optionalFormals, restFormals,
+        returnType, nominalType, receiverType);
   }
 
   @Override
@@ -630,6 +664,10 @@ public class FunctionType {
     if (nominalType != null) {
       builder.append("new:");
       builder.append(nominalType.getName());
+      builder.append(',');
+    } else if (receiverType != null) {
+      builder.append("this:");
+      builder.append(receiverType.getName());
       builder.append(',');
     }
     for (int i = 0; i < requiredFormals.size(); ++i) {
