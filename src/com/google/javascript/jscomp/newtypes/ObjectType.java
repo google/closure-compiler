@@ -50,9 +50,10 @@ public class ObjectType implements TypeWithProperties {
       null, null, null, false, ObjectKind.STRUCT);
   static final ObjectType TOP_DICT = ObjectType.makeObjectType(
       null, null, null, false, ObjectKind.DICT);
+  private static final PersistentMap<String, Property> BOTTOM_MAP =
+      PersistentMap.of("_", Property.make(JSType.BOTTOM, JSType.BOTTOM));
   private static final ObjectType BOTTOM_OBJECT = new ObjectType(
-      null, PersistentMap.of("_", Property.make(JSType.BOTTOM, JSType.BOTTOM)),
-      null, false, ObjectKind.UNRESTRICTED);
+      null, BOTTOM_MAP, null, false, ObjectKind.UNRESTRICTED);
 
   private ObjectType(NominalType nominalType,
       PersistentMap<String, Property> props, FunctionType fn, boolean isLoose,
@@ -95,9 +96,12 @@ public class ObjectType implements TypeWithProperties {
     for (Map.Entry<String, JSType> propTypeEntry : propTypes.entrySet()) {
       String propName = propTypeEntry.getKey();
       JSType propType = propTypeEntry.getValue();
+      if (propType.isBottom()) {
+        return BOTTOM_OBJECT;
+      }
       props = props.with(propName, Property.make(propType, propType));
     }
-    return ObjectType.makeObjectType(
+    return new ObjectType(
         null, props, null, false, ObjectKind.UNRESTRICTED);
   }
 
@@ -150,11 +154,14 @@ public class ObjectType implements TypeWithProperties {
     }
     FunctionType fn = this.fn == null ? null : this.fn.withLoose();
     PersistentMap<String, Property> newProps = PersistentMap.create();
-    for (String pname : this.props.keySet()) {
+    for (Map.Entry<String, Property> propsEntry : this.props.entrySet()) {
+      String pname = propsEntry.getKey();
+      Property prop = propsEntry.getValue();
       // It's wrong to warn about a possibly absent property on loose objects.
-      newProps = newProps.with(pname, this.props.get(pname).withRequired());
+      newProps = newProps.with(pname, prop.withRequired());
     }
-    return ObjectType.makeObjectType(
+    // No need to call makeObjectType because we know new object is inhabitable
+    return new ObjectType(
         nominalType, newProps, fn, true, this.objectKind);
   }
 
@@ -280,6 +287,9 @@ public class ObjectType implements TypeWithProperties {
         if (nomProp != null) {
           newProps =
               addOrRemoveProp(newProps, pname, nomProp, propsEntry.getValue());
+          if (newProps == BOTTOM_MAP) {
+            return BOTTOM_MAP;
+          }
         }
       }
     }
@@ -302,7 +312,13 @@ public class ObjectType implements TypeWithProperties {
           resultNominalType.getProp(pname) != null) {
         Property nomProp = resultNominalType.getProp(pname);
         newProps = addOrRemoveProp(newProps, pname, nomProp, newProp);
+        if (newProps == BOTTOM_MAP) {
+          return BOTTOM_MAP;
+        }
       } else {
+        if (newProp.getType().isBottom()) {
+          return BOTTOM_MAP;
+        }
         newProps = newProps.with(pname, newProp);
       }
     }
@@ -317,7 +333,11 @@ public class ObjectType implements TypeWithProperties {
     if (!propType.isUnknown() &&
         propType.isSubtypeOf(nomPropType) && !propType.equals(nomPropType)) {
       // We use specialize so that if nomProp is @const, we don't forget it.
-      return props.with(pname, nomProp.specialize(objProp));
+      Property newProp = nomProp.specialize(objProp);
+      if (newProp.getType().isBottom()) {
+        return BOTTOM_MAP;
+      }
+      return props.with(pname, newProp);
     }
     return props.without(pname);
   }
@@ -352,6 +372,9 @@ public class ObjectType implements TypeWithProperties {
       if (!props2.containsKey(pname)) {
         newProps = newProps.with(pname, propsEntry.getValue().withRequired());
       }
+      if (newProps == BOTTOM_MAP) {
+        return BOTTOM_MAP;
+      }
     }
     for (Map.Entry<String, Property> propsEntry : props2.entrySet()) {
       String pname = propsEntry.getKey();
@@ -361,6 +384,9 @@ public class ObjectType implements TypeWithProperties {
             Property.join(props1.get(pname), prop2).withRequired());
       } else {
         newProps = newProps.with(pname, prop2.withRequired());
+      }
+      if (newProps == BOTTOM_MAP) {
+        return BOTTOM_MAP;
       }
     }
     return newProps;
@@ -487,16 +513,26 @@ public class ObjectType implements TypeWithProperties {
       if (fn != null || other.fn != null) {
         return null;
       }
-      return ObjectType.makeObjectType(
+      PersistentMap<String, Property> newProps =
+          meetPropsHelper(true, resultNominalType, this.props, other.props);
+      if (newProps == BOTTOM_MAP) {
+        return BOTTOM_OBJECT;
+      }
+      return new ObjectType(
           resultNominalType,
-          meetPropsHelper(true, resultNominalType, this.props, other.props),
+          newProps,
           null,
           false,
           ObjectKind.meet(this.objectKind, other.objectKind));
     }
-    return ObjectType.makeObjectType(
+    PersistentMap<String, Property> newProps =
+        meetPropsHelper(true, null, this.props, other.props);
+    if (newProps == BOTTOM_MAP) {
+      return BOTTOM_OBJECT;
+    }
+    return new ObjectType(
         null,
-        meetPropsHelper(true, null, this.props, other.props),
+        newProps,
         this.fn == null ? null : this.fn.specialize(other.fn),
         this.isLoose,
         ObjectKind.meet(this.objectKind, other.objectKind));
@@ -516,7 +552,10 @@ public class ObjectType implements TypeWithProperties {
     } else {
       props = meetPropsHelper(false, resultNominalType, obj1.props, obj2.props);
     }
-    return ObjectType.makeObjectType(
+    if (props == BOTTOM_MAP) {
+      return BOTTOM_OBJECT;
+    }
+    return new ObjectType(
         resultNominalType,
         props,
         fn,
@@ -773,9 +812,11 @@ public class ObjectType implements TypeWithProperties {
       return this;
     }
     PersistentMap<String, Property> newProps = PersistentMap.create();
-    for (String p : props.keySet()) {
-      newProps =
-          newProps.with(p, props.get(p).substituteGenerics(concreteTypes));
+    for (Map.Entry<String, Property> propsEntry : this.props.entrySet()) {
+      String pname = propsEntry.getKey();
+      Property newProp =
+          propsEntry.getValue().substituteGenerics(concreteTypes);
+      newProps = newProps.with(pname, newProp);
     }
     return makeObjectType(
         nominalType == null ? null :
