@@ -285,121 +285,12 @@ WeakSet.prototype.has;
 
 
 /**
- * @param {*} a
- * @param {*} b
- * @return {boolean}
- * @see http://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.is
- */
-Object.is;
-
-
-/**
  * @param {Object} target
  * @param {Object} source
  * @return {Object}
  * @see http://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
  */
 Object.assign;
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.log10 = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.log2 = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.log1p = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.expm1 = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.cosh = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.sinh = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.tanh = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.acosh = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.asinh = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.atanh = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.trunc = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.sign = function(value) {};
-
-/**
- * @param {number} value
- * @return {number}
- * @nosideeffects
- */
-Math.cbrt = function(value) {};
-
-/**
- * @param {number} value1
- * @param {...number} var_args
- * @return {number}
- * @nosideeffects
- * @see http://people.mozilla.org/~jorendorff/es6-draft.html#sec-math.hypot
- */
-Math.hypot = function(value1, var_args) {};
 
 
 /** @const {number} */
