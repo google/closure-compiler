@@ -1669,6 +1669,9 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     Token name = eatObjectLiteralPropertyName();
     Token colon = eatOpt(TokenType.COLON);
+    if (colon == null && name.type != TokenType.IDENTIFIER) {
+      reportExpectedError(peekToken(), TokenType.COLON);
+    }
     ParseTree value = colon == null ? null : parseAssignmentExpression();
     return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
   }
