@@ -759,41 +759,25 @@ chrome.bluetoothSocket = {};
 
 
 /**
- * @constructor
+ * @typedef {{
+ *   persistent: (boolean|undefined),
+ *   name: (string|undefined),
+ *   bufferSize: (number|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothSocket#type-SocketProperties
  */
-chrome.bluetoothSocket.SocketProperties = function() {};
-
-
-/** @type {boolean|undefined} */
-chrome.bluetoothSocket.SocketProperties.prototype.persistent;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothSocket.SocketProperties.prototype.name;
-
-
-/** @type {number|undefined} */
-chrome.bluetoothSocket.SocketProperties.prototype.bufferSize;
+chrome.bluetoothSocket.SocketProperties;
 
 
 /**
- * @constructor
+ * @typedef {{
+ *   channel: (number|undefined),
+ *   psm: (number|undefined),
+ *   backlog: (number|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothSocket#type-ListenOptions
  */
-chrome.bluetoothSocket.ListenOptions = function() {};
-
-
-/** @type {number|undefined} */
-chrome.bluetoothSocket.ListenOptions.prototype.channel;
-
-
-/** @type {number|undefined} */
-chrome.bluetoothSocket.ListenOptions.prototype.psm;
-
-
-/** @type {number|undefined} */
-chrome.bluetoothSocket.ListenOptions.prototype.backlog;
+chrome.bluetoothSocket.ListenOptions;
 
 
 /**
@@ -7104,40 +7088,26 @@ chrome.bluetoothPrivate.PairingEvent.prototype.passkey;
 chrome.bluetoothPrivate.PairingEvent.prototype.enteredKey;
 
 
-/** @constructor */
-chrome.bluetoothPrivate.NewAdapterState = function() {};
+/**
+ * @typedef {{
+ *   name: (string|undefined),
+ *   powered: (boolean|undefined),
+ *   discoverable: (boolean|undefined)
+ * }}
+ */
+chrome.bluetoothPrivate.NewAdapterState;
 
 
-/** @type {string|undefined} */
-chrome.bluetoothPrivate.NewAdapterState.prototype.name;
-
-
-/** @type {boolean|undefined} */
-chrome.bluetoothPrivate.NewAdapterState.prototype.powered;
-
-
-/** @type {boolean|undefined} */
-chrome.bluetoothPrivate.NewAdapterState.prototype.discoverable;
-
-
-/** @constructor */
-chrome.bluetoothPrivate.SetPairingResponseOptions = function() {};
-
-
-/** @type {!chrome.bluetooth.Device} */
-chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.device;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.response;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.pincode;
-
-
-/** @type {number|undefined} */
-chrome.bluetoothPrivate.SetPairingResponseOptions.prototype.passkey;
+/**
+ * @typedef {{
+ *   device: !chrome.bluetooth.Device,
+ *   response: (string|undefined),
+ *   pincode: (string|undefined),
+ *   passkey: (number|undefined),
+ *   enteredKey: (number|undefined)
+ * }}
+ */
+chrome.bluetoothPrivate.SetPairingResponseOptions;
 
 
 /**
