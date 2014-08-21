@@ -1,0 +1,191 @@
+{
+  "script": {
+    "maxLength": 0.05
+  },
+  "sourceElement": {
+    "weights": {
+      "statement": 7,
+      "function": 3
+    }
+  },
+  "function": {
+    "maxParams": 5,
+    "maxLength": 0.1
+  },
+
+  "statement": {
+    "weights": {
+      "block": 1,
+      "var": 1,
+      "empty": 1,
+      "exprStmt": 1,
+      "if": 1,
+      "while": 1,
+      "doWhile": 1,
+      "for": 1,
+      "forIn": 1,
+      "continue": 1,
+      "break": 1,
+      "return": 1,
+      "switch": 1,
+      "label": 1,
+      "throw": 1,
+      "try": 1
+    }
+  },
+  "block": {
+    "maxLength": 0.1
+  },
+  "if": {
+    "hasElse": 0.5
+  },
+  "for": {
+    "headBudget": 0.3
+  },
+  "forInitializer": {
+    "weights": {
+      "var": 1,
+      "expression": 1
+    }
+  },
+  "forInItem": {
+    "weights": {
+      "assignableExpr": 1,
+      "var": 1
+    }
+  },
+  "continue": {
+    "toLabel": 0.5
+  },
+  "break": {
+    "toLabel": 0.5
+  },
+  "return": {
+    "hasValue": 0.5
+  },
+  "case": {
+    "valueBudget": 0.1
+  },
+  "expression": {
+    "weights": {
+        "this": 1,
+        "existingIdentifier": 1,
+        "literal": 1,
+        "functionCall": 1,
+        "unaryExpr": 1,
+        "binaryExpr": 1,
+        "function": 1,
+        "ternaryExpr": 1
+    }
+  },
+  "literal": {
+    "weights": {
+        "null": 1,
+        "undefined": 1,
+        "Infinity": 1,
+        "NaN": 1,
+        "boolean": 1,
+        "numeric": 1,
+        "string": 1,
+        "array": 1,
+        "object": 1,
+        "regularExpr": 0
+    }
+  },
+  "numeric": {
+    "max": 1000
+  },
+  "identifier": {
+    "shadow": 0.1
+  },
+  "object": {
+    "maxLength": 0.5
+  },
+  "array": {
+    "maxLength": 1
+  },
+  "assignableExpr": {
+    "weights": {
+        "getProp": 1,
+        "getElem": 1,
+        "existingIdentifier": 1
+    }
+  },
+  "functionCall": {
+    "weights": {
+        "constructorCall": 1,
+        "normalCall": 1
+    },
+  },
+  "constructorCall": {
+    "argLength": 1
+  },
+  "normalCall": {
+    "argLength": 1
+  },
+  "callableExpr": {
+    "weights": {
+        "getProp": 1,
+        "getElem": 1,
+        "existingIdentifier": 1,
+        "function": 1
+    }
+  },
+  "unaryExpr": {
+    "weights": {
+        "void": 1,
+        "typeof": 1,
+        "pos": 1,
+        "neg": 1,
+        "bitNot": 1,
+        "not": 1,
+        "inc": 1,
+        "dec": 1,
+        "delProp": 1,
+        "postInc": 1,
+        "postDec": 1
+    }
+  },
+  "binaryExpr": {
+    "weights": {
+        "mul": 1,
+        "div": 1,
+        "mod": 1,
+        "add": 1,
+        "sub": 1,
+        "lsh": 1,
+        "rsh": 1,
+        "ursh": 1,
+        "lt": 1,
+        "gt": 1,
+        "le": 1,
+        "ge": 1,
+        "instanceof": 1,
+        "in": 1,
+        "eq": 1,
+        "ne": 1,
+        "sheq": 1,
+        "shne": 1,
+        "bitAnd": 1,
+        "bitXor": 1,
+        "bitOr": 1,
+        "and": 1,
+        "or": 1,
+        "assign": 1,
+        "assignMul": 1,
+        "assignDiv": 1,
+        "assignMod": 1,
+        "assignAdd": 1,
+        "assignSub": 1,
+        "assignLsh": 1,
+        "assignRsh": 1,
+        "assignUrsh": 1,
+        "assignBitAnd": 1,
+        "assignBitXor": 1,
+        "assignBitOr": 1
+    }
+  },
+  "program": {
+    "maxLength": 0.1
+  }
+}
