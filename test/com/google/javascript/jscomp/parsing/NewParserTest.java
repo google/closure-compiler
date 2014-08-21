@@ -942,6 +942,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
     testExtendedObjectLiteral("var a = {b};");
     testExtendedObjectLiteral("var a = {b, c};");
     testExtendedObjectLiteral("var a = {b, c: d, e};");
+
+    parseError("var a = { '!@#$%' };", "':' expected");
+    parseError("var a = { 123 };", "':' expected");
   }
 
   private void testExtendedObjectLiteral(String js) {
@@ -1330,7 +1333,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testGettersForbidden4() {
     parseError("var x = {\"a\" getter:function b() { return 3; }};",
-        "'}' expected");
+        "':' expected");
   }
 
   public void testGettersForbidden5() {
