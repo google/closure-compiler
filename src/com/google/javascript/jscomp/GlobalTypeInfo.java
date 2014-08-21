@@ -238,6 +238,11 @@ class GlobalTypeInfo implements CompilerPass {
   private Map<Node, JSType> castTypes = new HashMap<>();
   private Map<Node, JSType> declaredObjLitProps = new HashMap<>();
 
+  // The type inference needs to know about the Array and RegExp types, in
+  // order to handle array and regexp literals. This info comes from externs.
+  // If it's not there, don't bother being more precise than JSType.UNKNOWN.
+  private JSType arrayType, regexpType;
+
   GlobalTypeInfo(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
@@ -261,6 +266,28 @@ class GlobalTypeInfo implements CompilerPass {
 
   JSType getPropDeclaredType(Node n) {
     return declaredObjLitProps.get(n);
+  }
+
+  JSType getArrayType() {
+    if (arrayType == null) {
+      JSType arrayCtor = globalScope.getDeclaredTypeOf("Array");
+      if (arrayCtor == null) {
+        return JSType.UNKNOWN;
+      }
+      arrayType = arrayCtor.getFunType().getReturnType();
+    }
+    return arrayType;
+  }
+
+  JSType getRegexpType() {
+    if (regexpType == null) {
+      JSType regexpCtor = globalScope.getDeclaredTypeOf("RegExp");
+      if (regexpCtor == null) {
+        return JSType.UNKNOWN;
+      }
+      regexpType = regexpCtor.getFunType().getReturnType();
+    }
+    return regexpType;
   }
 
   // Differs from the similar method in Scope class on how it treats qnames.
@@ -1225,10 +1252,11 @@ class GlobalTypeInfo implements CompilerPass {
 
     private JSType simpleInferExprType(Node n) {
       switch (n.getType()) {
-        // To do this, we must know the type of RegExp w/out looking at externs.
-        // case Token.REGEXP:
-        // As above, we must know about Array.
-        // case Token.ARRAYLIT:
+        case Token.REGEXP:
+          return getRegexpType();
+        case Token.ARRAYLIT:
+          // TODO(blickly): Infer generic type of array
+          return getArrayType();
         case Token.BITAND:
         case Token.BITNOT:
         case Token.BITOR:
@@ -1302,6 +1330,7 @@ class GlobalTypeInfo implements CompilerPass {
           }
           return recvType.getProp(qname);
         case Token.COMMA:
+        case Token.ASSIGN:
           return simpleInferExprType(n.getLastChild());
         case Token.CALL:
         case Token.NEW:

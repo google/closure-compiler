@@ -215,7 +215,6 @@ public class NewTypeInference implements CompilerPass {
   static final String RETVAL_ID = "%return";
   static final String GETTER_PREFIX = "%getter_fun";
   static final String SETTER_PREFIX = "%setter_fun";
-  private JSType arrayType, regexpType; // used for array and regexp literals
   private final boolean isClosurePassOn;
 
   // Used only for development
@@ -242,18 +241,6 @@ public class NewTypeInference implements CompilerPass {
   public void process(Node externs, Node root) {
     jsRoot = root;
     symbolTable = compiler.getSymbolTable();
-
-    // The type inference needs to know about the Array and RegExp types, in
-    // order to handle array and regexp literals. This info comes from externs.
-    // If it's not there, don't bother being more precise than JSType.UNKNOWN.
-    Scope gs = symbolTable.getGlobalScope();
-    JSType arrayCtor = gs.getDeclaredTypeOf("Array");
-    arrayType = arrayCtor == null ?
-        JSType.UNKNOWN : arrayCtor.getFunType().getReturnType();
-    JSType regexpCtor = gs.getDeclaredTypeOf("RegExp");
-    regexpType = regexpCtor == null ?
-        JSType.UNKNOWN : regexpCtor.getFunType().getReturnType();
-
     for (Scope scope : symbolTable.getScopes()) {
       analyzeFunction(scope);
       envs.clear();
@@ -275,10 +262,10 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private boolean isArrayType(JSType t) {
-    if (arrayType.isUnknown()) { // no externs
+    if (symbolTable.getArrayType().isUnknown()) { // no externs
       return false;
     }
-    return !t.isUnknown() && t.isSubtypeOf(arrayType);
+    return !t.isUnknown() && t.isSubtypeOf(symbolTable.getArrayType());
   }
 
   private static void println(Object ... objs) {
@@ -1120,7 +1107,7 @@ public class NewTypeInference implements CompilerPass {
         return pair;
       }
       case Token.REGEXP:
-        return new EnvTypePair(inEnv, regexpType);
+        return new EnvTypePair(inEnv, symbolTable.getRegexpType());
       case Token.ARRAYLIT:
         return analyzeArrayLitFwd(expr, inEnv);
       case Token.CAST:
@@ -1654,7 +1641,7 @@ public class NewTypeInference implements CompilerPass {
          arrayElm = arrayElm.getNext()) {
       env = analyzeExprFwd(arrayElm, env).env;
     }
-    return new EnvTypePair(env, arrayType);
+    return new EnvTypePair(env, symbolTable.getArrayType());
   }
 
   private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv) {
@@ -2049,6 +2036,10 @@ public class NewTypeInference implements CompilerPass {
     switch (typeHint) {
       case "array":
       case "isArray":
+        JSType arrayType = symbolTable.getArrayType();
+        if (arrayType.isUnknown()) {
+          return JSType.UNKNOWN;
+        }
         return booleanContext.isTruthy() ?
             arrayType : beforeType.removeType(arrayType);
       case "boolean":
@@ -2496,7 +2487,7 @@ public class NewTypeInference implements CompilerPass {
             envPutType(outEnv, name, JSType.UNKNOWN), JSType.UNKNOWN);
       }
       case Token.REGEXP:
-        return new EnvTypePair(outEnv, regexpType);
+        return new EnvTypePair(outEnv, symbolTable.getRegexpType());
       case Token.ARRAYLIT:
         return analyzeArrayLitBwd(expr, outEnv);
       case Token.CAST:
@@ -2734,7 +2725,7 @@ public class NewTypeInference implements CompilerPass {
       Node arrayElm = expr.getChildAtIndex(i);
       env = analyzeExprBwd(arrayElm, env).env;
     }
-    return new EnvTypePair(env, arrayType);
+    return new EnvTypePair(env, symbolTable.getArrayType());
   }
 
   private EnvTypePair analyzeCallNodeArgumentsBwd(

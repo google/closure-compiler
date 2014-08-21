@@ -6986,6 +6986,41 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
+    checkNoWarnings(
+        "/** @constructor */ function RegExp(){};",
+        "/** @const */\n" +
+        "var r = /find/;");
+
+    typeCheck(
+        "/** @constructor */ function RegExp(){};",
+        "/** @const */\n" +
+        "var r = /find/;\n" +
+        "function g() { r - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    checkNoWarnings(
+        "/** @constructor */ function Array(){};\n" +
+        "/** @const */\n" +
+        "var a = [5];");
+
+    typeCheck(
+        "/** @constructor */ function Array(){};\n" +
+        "/** @const */\n" +
+        "var a = [5];\n" +
+        "function g() { a - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var x;\n" +
+        "/** @const */ var o = x = {};\n" +
+        "function g() { return o.prop; }",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "/** @const */ var o = (0,{});\n" +
+        "function g() { return o.prop; }",
+        TypeCheck.INEXISTENT_PROPERTY);
+
     // TODO(dimvar): must fix externs initialization
     // typeCheck(
     //     "var /** string */ x;",
