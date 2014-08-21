@@ -33,6 +33,7 @@ import com.google.common.collect.Sets;
 
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
+import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
@@ -923,8 +924,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   Function<String, String> getJavascriptEscaper() {
-    throw new UnsupportedOperationException(
-        "SourceCodeEscapers is not in the standard release of Guava yet :(");
+    return SourceCodeEscapers.javascriptEscaper().asFunction();
   }
 
   void outputSingleBinary() throws IOException {
