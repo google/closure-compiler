@@ -234,6 +234,33 @@ public class FunctionType {
     return nominalType.createConstructorObject(this);
   }
 
+  // Used to get a declared type for an unannotated function that appears in
+  // argument position.
+  // Should only be used during GlobalTypeInfo.
+  public DeclaredFunctionType toDeclaredFunctionType() {
+    Preconditions.checkState(!isLoose);
+    // Don't do it for generic types.
+    if (typeParameters != null || hasFreeTypeVars(new HashSet<String>())) {
+      return null;
+    }
+    // Don't do it for anonymous constructors
+    if (nominalType != null) {
+      return null;
+    }
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    for (JSType type : requiredFormals) {
+      builder.addReqFormal(type);
+    }
+    for (JSType type : optionalFormals) {
+      builder.addOptFormal(type);
+    }
+    builder.addRestFormals(restFormals);
+    builder.addRetType(returnType);
+    builder.addNominalType(nominalType);
+    builder.addReceiverType(receiverType);
+    return builder.buildDeclaration();
+  }
+
   // Returns non-null JSType
   private static JSType nullAcceptingMeet(JSType t1, JSType t2) {
     Preconditions.checkArgument(t1 != null || t2 != null);

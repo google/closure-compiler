@@ -3283,6 +3283,25 @@ public final class NodeUtil {
     return fnInfo;
   }
 
+  static boolean functionHasInlineJsdocs(Node fn) {
+    if (!fn.isFunction()) {
+      return false;
+    }
+    // Check inline return annotation
+    if (fn.getFirstChild().getJSDocInfo() != null) {
+      return true;
+    }
+    // Check inline parameter annotations
+    Node param = fn.getChildAtIndex(1).getFirstChild();
+    while (param != null) {
+      if (param.getJSDocInfo() != null) {
+        return true;
+      }
+      param = param.getNext();
+    }
+    return false;
+  }
+
   /**
    * @param n The node.
    * @return The source name property on the node or its ancestors.

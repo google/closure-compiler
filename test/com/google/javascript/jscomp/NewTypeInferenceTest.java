@@ -8261,4 +8261,75 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
             NewTypeInference.INVALID_ARGUMENT_TYPE));
 
   }
+
+  public void testUseJsdocOfCalleeForUnannotatedFunctionsInArgumentPosition() {
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() { /** @type {string} */ this.prop = 'asdf'; }\n" +
+        "/** @param {function(!Foo)} fun */\n" +
+        "function f(fun) {}\n" +
+        "f(function(x) { x.prop = 123; });",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() { /** @type {string} */ this.prop = 'asdf'; }\n" +
+        "function f(/** function(this:Foo) */ x) {}\n" +
+        "f(function() { this.prop = 123; });",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @param {function(string)} fun */\n" +
+        "function f(fun) {}\n" +
+        "f(function(str) { str - 5; });",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @param {function(number, number=)} fun */\n" +
+        "function f(fun) {}\n" +
+        "f(function(num, maybeNum) { num - maybeNum; });",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @param {function(string, ... [string])} fun */\n" +
+        "function f(fun) {}\n" +
+        "f(function(str, maybeStrs) { str - 5; });",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "/** @param {function(string)} fun */\n" +
+        "ns.f = function(fun) {}\n" +
+        "ns.f(function(str) { str - 5; });",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "/** @type {function(function(string))} */\n" +
+        "ns.f = function(fun) {}\n" +
+        "ns.f(function(str) { str - 5; });",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @param {function(string)} fun */\n" +
+        "Foo.f = function(fun) {}\n" +
+        "Foo.f(function(str) { str - 5; });",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "(/** @param {function(string)} fun */ function(fun) {})(\n" +
+        "  function(str) { str - 5; });",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "/** @param {function(function(function(string)))} outerFun */\n" +
+        "ns.f = function(outerFun) {};\n" +
+        "ns.f(function(innerFun) {\n" +
+        "  innerFun(function(str) { str - 5; });\n" +
+        "});",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+  }
 }
