@@ -1702,6 +1702,11 @@ angular.FormController = function() {};
 angular.FormController.prototype.$addControl = function(control) {};
 
 /**
+ * @type {function()}
+ */
+angular.FormController.prototype.$commitViewValue = function() {};
+
+/**
  * @type {boolean}
  */
 angular.FormController.prototype.$dirty;
