@@ -328,6 +328,7 @@ public class Compiler extends AbstractCompiler {
    */
   public void initOptions(CompilerOptions options) {
     this.options = options;
+    this.languageMode = options.getLanguageIn();
     if (errorManager == null) {
       if (outStream == null) {
         setErrorManager(
@@ -404,7 +405,6 @@ public class Compiler extends AbstractCompiler {
       List<T1> externs,
       List<T2> inputs,
       CompilerOptions options) {
-    languageMode = options.getLanguageIn();
     JSModule module = new JSModule(SINGLETON_MODULE_NAME);
     for (SourceFile input : inputs) {
       module.add(input);
