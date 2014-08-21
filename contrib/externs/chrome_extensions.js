@@ -423,27 +423,27 @@ chrome.app.window.AppWindow.prototype.isAlwaysOnTop = function() {};
 chrome.app.window.AppWindow.prototype.setAlwaysOnTop = function(alwaysOnTop) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.app.window.AppWindow.prototype.onBoundsChanged;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.app.window.AppWindow.prototype.onClosed;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.app.window.AppWindow.prototype.onFullscreened;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.app.window.AppWindow.prototype.onMinimized;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.app.window.AppWindow.prototype.onMaximized;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.app.window.AppWindow.prototype.onRestored;
 
 
@@ -1256,23 +1256,23 @@ chrome.extension.sendRequest = function(opt_arg1, opt_request, opt_callback) {};
 chrome.extension.setUpdateUrlData = function(data) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.extension.onConnect;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.extension.onConnectExternal;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.extension.onMessage;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.extension.onRequest;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.extension.onRequestExternal;
 
 
@@ -1878,54 +1878,54 @@ chrome.tabs.update = function(tabIdOrUpdateProperties,
 
 
 /**
- * @type {ChromeEvent}
+ * @type {!ChromeEvent}
  * @deprecated Please use tabs.onActivated.
  */
 chrome.tabs.onActiveChanged;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onActivated;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onAttached;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onCreated;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onDetached;
 
 
 /**
- * @type {ChromeEvent}
+ * @type {!ChromeEvent}
  * @deprecated Please use tabs.onHighlighted.
  */
 chrome.tabs.onHighlightChanged;
 
 
 /**
- * @type {ChromeEvent}
+ * @type {!ChromeEvent}
  */
 chrome.tabs.onHighlighted;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onMoved;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onRemoved;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onUpdated;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.tabs.onReplaced;
 
 // DEPRECATED:
@@ -1933,7 +1933,7 @@ chrome.tabs.onReplaced;
 
 
 /**
- * @type {ChromeEvent}
+ * @type {!ChromeEvent}
  * @deprecated Please use tabs.onActivated.
  */
 chrome.tabs.onSelectionChanged;
@@ -2000,15 +2000,15 @@ chrome.windows.remove = function(tabId, opt_callback) {};
 chrome.windows.update = function(tabId, updateProperties, opt_callback) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.windows.onCreated;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.windows.onFocusChanged;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.windows.onRemoved;
 
 
@@ -2092,7 +2092,7 @@ chrome.pageAction.setTitle = function(details) {};
 chrome.pageAction.show = function(tabId) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.pageAction.onClicked;
 
 /**
@@ -2150,7 +2150,7 @@ chrome.browserAction.setPopup = function(details) {};
 chrome.browserAction.setTitle = function(details) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.browserAction.onClicked;
 
 
@@ -2267,31 +2267,31 @@ chrome.bookmarks.search = function(query, callback) {};
 chrome.bookmarks.update = function(id, changes, opt_callback) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.bookmarks.onChanged;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.bookmarks.onChildrenReordered;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.bookmarks.onCreated;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.bookmarks.onImportBegan;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.bookmarks.onImportEnded;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.bookmarks.onMoved;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.bookmarks.onRemoved;
 
 
@@ -2500,7 +2500,7 @@ chrome.cookies.set = function(details, opt_callback) {};
 
 /**
  * @see https://developer.chrome.com/extensions/cookies.html#event-onChanged
- * @type {ChromeEvent}
+ * @type {!ChromeEvent}
  */
 chrome.cookies.onChanged;
 
@@ -2666,7 +2666,7 @@ chrome.idle.queryState = function(thresholdSeconds, callback) {};
 chrome.idle.setDetectionInterval = function(intervalInSeconds) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.idle.onStateChanged;
 
 
@@ -2766,11 +2766,11 @@ chrome.tts.stop = function() {};
 chrome.ttsEngine = {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.ttsEngine.onSpeak;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.ttsEngine.onStop;
 
 
@@ -2812,7 +2812,7 @@ chrome.contentSettings.notifications;
 chrome.fileBrowserHandle = {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.fileBrowserHandle.onExecute;
 
 
@@ -3009,11 +3009,11 @@ chrome.history.getVisits = function(details, callback) {};
 chrome.history.search = function(query, callback) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.history.onVisitRemoved;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.history.onVisited;
 
 
@@ -3060,7 +3060,7 @@ chrome.identity.launchWebAuthFlow = function(details, callback) {};
 chrome.identity.WebAuthFlowDetails;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.identity.onSignInChanged;
 
 
@@ -3500,7 +3500,7 @@ chrome.proxy = {};
 chrome.proxy.settings;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.proxy.onProxyError;
 
 
@@ -3848,7 +3848,7 @@ chrome.system = {};
 chrome.system.display = {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.system.display.onDisplayChanged;
 
 
@@ -3989,7 +3989,7 @@ chrome.system.display.setDisplayProperties =
 chrome.chromeSetting = {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.chromeSetting.onChange;
 
 
@@ -4017,39 +4017,39 @@ chrome.webNavigation.getAllFrames = function(details, callback) {};
 chrome.webNavigation.getFrame = function(details, callback) {};
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onBeforeNavigate;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onCommitted;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onDOMContentLoaded;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onCompleted;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onErrorOccurred;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onCreatedNavigationTarget;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onReferenceFragmentUpdated;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onTabReplaced;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 chrome.webNavigation.onHistoryStateUpdated;
 
 
@@ -4726,11 +4726,11 @@ function Port() {}
 Port.prototype.name;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 Port.prototype.onDisconnect;
 
 
-/** @type {ChromeEvent} */
+/** @type {!ChromeEvent} */
 Port.prototype.onMessage;
 
 
