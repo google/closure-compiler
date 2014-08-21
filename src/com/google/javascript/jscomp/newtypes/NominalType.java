@@ -201,10 +201,14 @@ public class NominalType {
     // interface <: interface
     if (rawType.isInterface && otherRawType.isInterface) {
       if (rawType.equals(otherRawType)) {
-        for (String typeVar : rawType.getTypeParameters()) {
-          if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
-            return false;
+        if (!typeMap.isEmpty()) {
+          for (String typeVar : rawType.getTypeParameters()) {
+            if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
+              return false;
+            }
           }
+        } else if (!other.typeMap.isEmpty()) {
+          return false;
         }
         return true;
       } else if (rawType.interfaces == null) {
@@ -221,14 +225,18 @@ public class NominalType {
 
     // class <: class
     if (rawType.equals(otherRawType)) {
-      for (String typeVar : rawType.getTypeParameters()) {
-        Preconditions.checkState(typeMap.containsKey(typeVar),
-            "Type variable %s not in the domain: %s",
-            typeVar, typeMap.keySet());
-        Preconditions.checkState(other.typeMap.containsKey(typeVar));
-        if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
-          return false;
+      if (!typeMap.isEmpty()) {
+        for (String typeVar : rawType.getTypeParameters()) {
+          Preconditions.checkState(typeMap.containsKey(typeVar),
+              "Type variable %s not in the domain: %s",
+              typeVar, typeMap.keySet());
+          Preconditions.checkState(other.typeMap.containsKey(typeVar));
+          if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
+            return false;
+          }
         }
+      } else if (!other.typeMap.isEmpty()) {
+        return false;
       }
       return true;
     } else if (rawType.superClass == null) {

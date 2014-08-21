@@ -461,9 +461,10 @@ class GlobalTypeInfo implements CompilerPass {
         Preconditions.checkState(!defs.isEmpty());
         JSType resultType = JSType.TOP;
         for (JSType inheritedType : defs) {
-          if (inheritedType.isSubtypeOf(resultType)) {
+          resultType = JSType.meet(resultType, inheritedType);
+          if (!resultType.isBottom()) {
             resultType = inheritedType;
-          } else if (!resultType.isSubtypeOf(inheritedType)) {
+          } else {
             // TOOD(blickly): Fix this error message to include supertype names
             warnings.add(JSError.make(
                 funNode, TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,

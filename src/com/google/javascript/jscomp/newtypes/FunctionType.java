@@ -73,10 +73,6 @@ public class FunctionType {
     if (isTopFunction() || isQmarkFunction()) {
       return;
     }
-    // We don't support prototype methods that are also constructors
-    Preconditions.checkState(nominalType == null || receiverType == null);
-    // Can we infer anything about the receiver type for loose functions?
-    Preconditions.checkState(!isLoose || receiverType == null);
     for (JSType formal : requiredFormals) {
       Preconditions.checkState(formal != null);
     }
@@ -438,6 +434,11 @@ public class FunctionType {
           JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals));
     }
     builder.addRetType(JSType.meet(f1.returnType, f2.returnType));
+    // TODO(dimvar): these two are not correct. We should be picking the
+    // greatest lower bound of the types if they are incomparable.
+    // Eg, this case arises when an interface extends multiple interfaces.
+    // OTOH, it may be enough to detect that during GTI, and not implement the
+    // more expensive methods in NominalType.
     builder.addNominalType(
         NominalType.pickSubclass(f1.nominalType, f2.nominalType));
     builder.addReceiverType(
@@ -516,8 +517,8 @@ public class FunctionType {
         || nominalType != null && other.nominalType == null) {
       return false;
     }
-    if (nominalType != null
-        && !nominalType.unifyWith(other.nominalType, typeParameters, typeMultimap)) {
+    if (nominalType != null && !nominalType.unifyWith(
+        other.nominalType, typeParameters, typeMultimap)) {
       return false;
     }
 
@@ -525,12 +526,92 @@ public class FunctionType {
         || receiverType != null && other.receiverType == null) {
       return false;
     }
-    if (receiverType != null
-        && !receiverType.unifyWith(other.receiverType, typeParameters, typeMultimap)) {
+    if (receiverType != null && !receiverType.unifyWith(
+        other.receiverType, typeParameters, typeMultimap)) {
       return false;
     }
 
     return returnType.unifyWith(other.returnType, typeParameters, typeMultimap);
+  }
+
+  /**
+   * Unify the two types symmetrically, given that we have already instantiated
+   * the type variables of interest in {@code f1} and {@code f2}, treating
+   * JSType.UNKNOWN as a "hole" to be filled.
+   * @return The unified type, or null if unification fails
+   */
+  static FunctionType unifyUnknowns(FunctionType f1, FunctionType f2) {
+    Preconditions.checkState(f1 != null || f2 != null);
+    if (f1 == null || f2 == null) {
+      return null;
+    }
+    Preconditions.checkArgument(f1.typeParameters == null);
+    Preconditions.checkArgument(f2.typeParameters == null);
+    Preconditions.checkArgument(f1.outerVarPreconditions.isEmpty());
+    Preconditions.checkArgument(f2.outerVarPreconditions.isEmpty());
+    if (f1.equals(f2)) {
+      return f1;
+    }
+
+    ImmutableList<JSType> formals1 = f1.requiredFormals;
+    ImmutableList<JSType> formals2 = f2.requiredFormals;
+    if (formals1.size() != formals2.size()) {
+      return null;
+    }
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    int numReqFormals = formals1.size();
+    for (int i = 0; i < numReqFormals; i++) {
+      JSType t = JSType.unifyUnknowns(formals1.get(i), formals2.get(i));
+      if (t == null) {
+        return null;
+      }
+      builder.addReqFormal(t);
+    }
+
+    formals1 = f1.optionalFormals;
+    formals2 = f2.optionalFormals;
+    if (formals1.size() != formals2.size()) {
+      return null;
+    }
+    int numOptFormals = formals1.size();
+    for (int i = 0; i < numOptFormals; i++) {
+      JSType t = JSType.unifyUnknowns(formals1.get(i), formals2.get(i));
+      if (t == null) {
+        return null;
+      }
+      builder.addOptFormal(t);
+    }
+
+    if (f1.restFormals == null && f2.restFormals != null
+        || f1.restFormals != null && f2.restFormals == null) {
+      return null;
+    }
+    if (f1.restFormals != null) {
+      JSType t = JSType.unifyUnknowns(f1.restFormals, f2.restFormals);
+      if (t == null) {
+        return null;
+      }
+      builder.addRestFormals(t);
+    }
+
+    JSType t = JSType.unifyUnknowns(f1.returnType, f2.returnType);
+    if (t == null) {
+      return null;
+    }
+    builder.addRetType(t);
+
+    // Don't unify unknowns in nominal types; it's going to be rare.
+    if (!Objects.equals(f1.nominalType, f2.nominalType)) {
+      return null;
+    }
+    builder.addNominalType(f1.nominalType);
+
+    if (!Objects.equals(f1.receiverType, f2.receiverType)) {
+      return null;
+    }
+    builder.addReceiverType(f1.receiverType);
+
+    return builder.buildFunction();
   }
 
   /**

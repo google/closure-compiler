@@ -74,6 +74,7 @@ public class DeclaredFunctionType {
     builder.addRestFormals(restFormals);
     builder.addRetType(returnType == null ? JSType.UNKNOWN : returnType);
     builder.addNominalType(nominalType);
+    builder.addReceiverType(receiverType);
     builder.addTypeParameters(typeParameters);
     return builder.buildFunction();
   }

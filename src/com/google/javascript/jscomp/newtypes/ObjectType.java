@@ -749,12 +749,15 @@ public class ObjectType implements TypeWithProperties {
    * @return The unified type, or null if unification fails
    */
   static ObjectType unifyUnknowns(ObjectType t1, ObjectType t2) {
-    if (t1.nominalType != t2.nominalType) {
+    if (!Objects.equals(t1.nominalType, t2.nominalType)) {
       return null;
     }
-    // TODO(blickly): Use functionType.unifyWith
-    if (t1.fn != t2.fn) {
-      throw new RuntimeException("Unification of functions not yet supported");
+    FunctionType newFn = null;
+    if (t1.fn != null || t2.fn != null) {
+      newFn = FunctionType.unifyUnknowns(t1.fn, t2.fn);
+      if (newFn == null) {
+        return null;
+      }
     }
     PersistentMap<String, Property> newProps = PersistentMap.create();
     for (String propName : t1.props.keySet()) {
@@ -769,7 +772,7 @@ public class ObjectType implements TypeWithProperties {
       }
       newProps = newProps.with(propName, p);
     }
-    return makeObjectType(t1.nominalType, newProps, t1.fn,
+    return makeObjectType(t1.nominalType, newProps, newFn,
         t1.isLoose || t2.isLoose,
         ObjectKind.join(t1.objectKind, t2.objectKind));
   }

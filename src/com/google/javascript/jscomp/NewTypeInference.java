@@ -862,6 +862,7 @@ public class NewTypeInference implements CompilerPass {
     }
 
     builder.addNominalType(declType.getNominalType());
+    builder.addReceiverType(declType.getReceiverType());
     JSType declRetType = declType.getReturnType();
     JSType actualRetType = envGetType(exitEnv, RETVAL_ID);
 

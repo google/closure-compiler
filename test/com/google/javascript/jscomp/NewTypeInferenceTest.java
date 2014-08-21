@@ -5016,6 +5016,106 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
+  public void testFunctionTypeUnifyUnknowns() {
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "/** @type {function(number)} */\n" +
+        "function g(x) {}\n" +
+        "/** @type {function(?)} */\n" +
+        "function h(x) {}\n" +
+        "f(g, h);");
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "/** @type {function(number)} */\n" +
+        "function g(x) {}\n" +
+        "/** @type {function(string)} */\n" +
+        "function h(x) {}\n" +
+        "f(g, h);",
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "/** @type {function(number)} */\n" +
+        "function g(x) {}\n" +
+        "/** @type {function(?, string)} */\n" +
+        "function h(x, y) {}\n" +
+        "f(g, h);",
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "/** @type {function(number=, ...[string])} */\n" +
+        "function g(x) {}\n" +
+        "/** @type {function(number=, ...[?])} */\n" +
+        "function h(x) {}\n" +
+        "f(g, h);");
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "/** @type {function(number):number} */\n" +
+        "function g(x) { return 1; }\n" +
+        "/** @type {function(?):string} */\n" +
+        "function h(x) { return ''; }\n" +
+        "f(g, h);",
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @type {function(new:Foo)} */\n" +
+        "function g() {}\n" +
+        "/** @type {function(new:Foo)} */\n" +
+        "function h() {}\n" +
+        "f(g, h);");
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor */ function Bar() {}\n" +
+        "/** @type {function(this:Foo)} */\n" +
+        "function g() {}\n" +
+        "/** @type {function(this:Bar)} */\n" +
+        "function h() {}\n" +
+        "f(g, h);",
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+  }
+
   public void testInstantiationInsideObjectTypes() {
     typeCheck(
         "/**\n" +
