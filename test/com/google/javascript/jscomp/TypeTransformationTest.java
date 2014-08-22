@@ -388,7 +388,6 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithMaprecordDeleteEverything() {
-    // TODO(lpino): Discussed the expected behavior of this case
     // {n:number, s:string, b:boolean}
     // is transformed to
     // OBJECT_TYPE
@@ -434,6 +433,166 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
             +        "maprecord(v1, (k2, v2) => "
             +             "cond(eq(v2, S), BOT, record({[k1]:record({[k2]:v2})}))),"
             +        "cond(eq(v1, S), BOT, record({[k1]:v1}))))");
+  }
+
+  public void testTransformationWithNestedIdentityOneLevel() {
+    // {r:{n:number, s:string}}
+    testTTL(record("r",
+        record("b", BOOLEAN_TYPE, "s", STRING_TYPE)),
+        "maprecord(record({r:record({b:B, s:S})}),"
+            + "(k1, v1) => "
+            +   "maprecord(v1, "
+            +     "(k2, v2) => "
+            +       "record({[k1]:record({[k2]:v2})})))");
+  }
+
+  public void testTransformationWithNestedIdentityOneLevel2() {
+    // {r:{n:number, s:string}}
+    testTTL(record("r",
+        record("b", BOOLEAN_TYPE, "s", STRING_TYPE)),
+        "maprecord(record({r:record({b:B, s:S})}),\n"
+            + "(k1, v1) =>\n"
+            +   "record({[k1]:\n"
+            +     "maprecord(v1, "
+            +       "(k2, v2) => record({[k2]:v2}))}))");
+  }
+
+  public void testTransformationWithNestedIdentityTwoLevels() {
+    // {r:{r2:{n:number, s:string}}}
+    testTTL(record("r", record("r2",
+        record("n", NUMBER_TYPE, "s", STRING_TYPE))),
+        "maprecord(record({r:record({r2:record({n:N, s:S})})}),"
+            + "(k1, v1) => "
+            +    "maprecord(v1, "
+            +      "(k2, v2) => "
+            +        "maprecord(v2, "
+            +          "(k3, v3) =>"
+            +             "record({[k1]:"
+            +               "record({[k2]:"
+            +                 "record({[k3]:v3})})}))))");
+  }
+
+  public void testTransformationWithNestedIdentityTwoLevels2() {
+    // {r:{r2:{n:number, s:string}}}
+    testTTL(record("r", record("r2",
+        record("n", NUMBER_TYPE, "s", STRING_TYPE))),
+        "maprecord(record({r:record({r2:record({n:N, s:S})})}),"
+            + "(k1, v1) => "
+            +    "record({[k1]:"
+            +      "maprecord(v1, "
+            +        "(k2, v2) => "
+            +          "record({[k2]:"
+            +            "maprecord(v2, "
+            +              "(k3, v3) =>"
+            +                "record({[k3]:v3}))}))}))");
+  }
+
+  public void testTransformationWithNestedIdentityThreeLevels() {
+    // {r:{r2:{r3:{n:number, s:string}}}}
+    testTTL(record("r", record("r2", record("r3",
+        record("n", NUMBER_TYPE, "s", STRING_TYPE)))),
+        "maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"
+            + "(k1, v1) => "
+            +    "maprecord(v1, "
+            +      "(k2, v2) => "
+            +        "maprecord(v2, "
+            +          "(k3, v3) =>"
+            +            "maprecord(v3,"
+            +              "(k4, v4) =>"
+            +               "record({[k1]:"
+            +                 "record({[k2]:"
+            +                   "record({[k3]:"
+            +                     "record({[k4]:v4})})})})))))");
+  }
+
+  public void testTransformationWithNestedIdentityThreeLevels2() {
+    // {r:{r2:{r3:{n:number, s:string}}}}
+    testTTL(record("r", record("r2", record("r3",
+        record("n", NUMBER_TYPE, "s", STRING_TYPE)))),
+        "maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"
+            + "(k1, v1) => "
+            +   "record({[k1]:"
+            +     "maprecord(v1, "
+            +       "(k2, v2) => "
+            +         "record({[k2]:"
+            +           "maprecord(v2, "
+            +             "(k3, v3) =>"
+            +               "record({[k3]:"
+            +                 "maprecord(v3,"
+            +                   "(k4, v4) =>"
+            +                     "record({[k4]:v4}))}))}))}))");
+  }
+
+  public void testTransformationWithNestedRecordDeleteLevelTwoAndThree() {
+    // {r:{r2:{r3:{n:number, s:string}}}}
+    // is transformed into
+    // {r:{n:number, s:string}}
+    testTTL(record("r", record("n", NUMBER_TYPE, "s", STRING_TYPE)),
+        "maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"
+            + "(k1, v1) => "
+            +    "maprecord(v1, "
+            +      "(k2, v2) => "
+            +        "maprecord(v2, "
+            +          "(k3, v3) =>"
+            +            "maprecord(v3,"
+            +              "(k4, v4) =>"
+            +               "record({[k1]:"
+            +                 "record({[k4]:v4})})))))");
+  }
+
+  public void testTransformationWithNestedRecordDeleteLevelTwoAndThree2() {
+    // {r:{r2:{r3:{n:number, s:string}}}}
+    // is transformed into
+    // {r:{n:number, s:string}}
+    testTTL(record("r", record("n", NUMBER_TYPE, "s", STRING_TYPE)),
+        "maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"
+            + "(k1, v1) => "
+            +   "record({[k1]:"
+            +     "maprecord(v1, "
+            +       "(k2, v2) => "
+            +         "maprecord(v2, "
+            +           "(k3, v3) =>"
+            +             "maprecord(v3,"
+            +               "(k4, v4) =>"
+            +                 "record({[k4]:v4}))))}))");
+  }
+
+  public void testTransformationWithNestedRecordCollapsePropertiesToRecord() {
+    // {a:Array, b:{n:number}}
+    // is transformed to
+    // {foo:{n:number}}
+    testTTL(record("foo", record("n", NUMBER_TYPE)),
+        "maprecord(record({a:ARR, b:record({n:N})}),"
+            + "(k, v) => record({foo:v}))");
+  }
+
+  public void testTransformationWithNestedRecordCollapsePropertiesToType() {
+    // {a:{n:number}, b:Array}
+    // is transformed to
+    // {foo:Array}
+    testTTL(record("foo", ARRAY_TYPE),
+        "maprecord(record({a:record({n:N}), b:ARR}),"
+            + "(k, v) =>  record({foo:v}))");
+  }
+
+  public void testTransformationWithNestedRecordCollapsePropertiesJoinRecords() {
+    // {a:{n:number}, b:{s:Array}}
+    // is transformed to
+    // {foo:{n:number, s:Array}}
+    testTTL(record("foo", record("n", NUMBER_TYPE, "s", ARRAY_TYPE)),
+        "maprecord(record({a:record({n:N}), b:record({s:ARR})}),"
+            + "(k, v) => record({foo:v}))");
+  }
+
+  public void testTransformationWithNestedRecordCollapsePropertiesJoinRecords2() {
+    // {a:{n:number, {x:number}}, b:{s:Array, {y:number}}}
+    // is transformed to
+    // {foo:{n:number, s:Array, r:{x:number, y:number}}}
+    testTTL(record("foo", record("n", NUMBER_TYPE, "s", ARRAY_TYPE,
+        "r", record("x", NUMBER_TYPE, "y", NUMBER_TYPE))),
+        "maprecord(record({a:record({n:N, r:record({x:N})}), "
+        + "b:record({s:ARR, r:record({y:N})})}),"
+            + "(k, v) => record({foo:v}))");
   }
 
   public void testTransformationWithAsynchUseCase() {

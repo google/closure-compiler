@@ -35,6 +35,8 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -529,6 +531,56 @@ class TypeTransformation {
     return builder.build();
   }
 
+  private void putNewPropInPropertyMap(Map<String, JSType> props,
+      String newPropName, JSType newPropValue) {
+    // TODO(lpino): Decide if the best strategy is to collapse the properties
+    // to a union type or not. So far, new values replace the old ones except
+    // if they are two record types in which case the properties are joined
+    // together
+
+    // Three cases:
+    // (i) If the key does not exist then add it to the map with the new value
+    // (ii) If the key to be added already exists in the map and the new value
+    // is not a record type then the current value is replaced with the new one
+    // (iii) If the new value is a record type and the current is not then
+    // the current value is replaced with the new one
+    if (!props.containsKey(newPropName)
+        || !newPropValue.isRecordType()
+        || !props.get(newPropName).isRecordType()) {
+      props.put(newPropName, newPropValue);
+      return;
+    }
+    // Otherwise join the current value with the new one since both are records
+    props.put(newPropName, joinRecordTypes(props.get(newPropName), newPropValue));
+  }
+
+  private void addNewPropsFromRecordType(Map<String, JSType> props,
+      ObjectType recType) {
+    for (String newPropName : recType.getOwnPropertyNames()) {
+      JSType newPropValue = recType.getSlot(newPropName).getType();
+      // Put the new property depending if it already exists in the map
+      putNewPropInPropertyMap(props, newPropName, newPropValue);
+    }
+  }
+
+  /**
+   * Joins two record types.
+   * Example
+   * {r:{s:string, n:number}} and {a:boolean}
+   * is transformed into {r:{s:string, n:number}, a:boolean}
+   */
+  private JSType joinRecordTypes(JSType type1, JSType type2) {
+    Preconditions.checkArgument(type1.isRecordType(),
+        "Expected record type, found " + type1.getDisplayName());
+    Preconditions.checkArgument(type2.isRecordType(),
+        "Expected record type, found " + type2.getDisplayName());
+    Map<String, JSType> props = new HashMap<String, JSType>();
+    addNewPropsFromRecordType(props, (ObjectType) type1);
+    addNewPropsFromRecordType(props, (ObjectType) type2);
+    return createRecordType(
+        new ImmutableMap.Builder<String, JSType>().putAll(props).build());
+  }
+
   private JSType evalMaprecord(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
     // Evaluate the first parameter, it must be a record type
@@ -562,8 +614,7 @@ class TypeTransformation {
 
     // Compute the new properties using the map function
     Node mapFnBody = getFunctionBody(mapFunction);
-    ImmutableMap.Builder<String, JSType> newPropsBuilder =
-        new ImmutableMap.Builder<String, JSType>();
+    Map<String, JSType> newProps = new HashMap<String, JSType>();
     for (String propName : ownPropsNames) {
       // The value of the current property
       JSType propValue = objRecType.getSlot(propName).getType();
@@ -590,10 +641,13 @@ class TypeTransformation {
       ObjectType mapFnBodyAsObjType = ((ObjectType) mapFnBodyResult);
       for (String newPropName : mapFnBodyAsObjType.getOwnPropertyNames()) {
         JSType newPropValue = mapFnBodyAsObjType.getSlot(newPropName).getType();
-        newPropsBuilder.put(newPropName, newPropValue);
+        // If the key already exists then we have to mix it with the current
+        // property value
+        putNewPropInPropertyMap(newProps, newPropName, newPropValue);
       }
     }
-    return createRecordType(newPropsBuilder.build());
+    return createRecordType(
+        new ImmutableMap.Builder<String, JSType>().putAll(newProps).build());
   }
 
   private JSType evalTypeOfVar(Node ttlAst) {
