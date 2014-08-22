@@ -807,11 +807,12 @@ public final class NodeUtil {
   }
 
   static Node getInitializer(Node n) {
-    Preconditions.checkArgument(n.isQualifiedName());
+    Preconditions.checkArgument(n.isQualifiedName() || n.isStringKey());
     switch (n.getParent().getType()) {
       case Token.ASSIGN:
         return n.getNext();
       case Token.VAR:
+      case Token.OBJECTLIT:
         return n.getFirstChild();
       default:
         return null;
@@ -822,6 +823,9 @@ public final class NodeUtil {
    * Returns true iff this node defines a namespace, such as goog or goog.math.
    */
   static boolean isNamespaceDecl(Node n) {
+    if (isEnumDecl(n)) {
+      return false;
+    }
     Node qnameNode;
     Node initializer;
     if (n.getParent().isVar()) {
@@ -851,16 +855,12 @@ public final class NodeUtil {
     if (initializer == null || qnameNode == null) {
       return false;
     }
-    if (isEmptyObjectLit(initializer)) {
+    if (initializer.isObjectLit()) {
       return true;
     }
     return initializer.isOr()
         && qnameNode.matchesQualifiedName(initializer.getFirstChild())
-        && isEmptyObjectLit(initializer.getLastChild());
-  }
-
-  static boolean isEmptyObjectLit(Node n) {
-    return n.isObjectLit() && n.getChildCount() == 0;
+        && initializer.getLastChild().isObjectLit();
   }
 
   /**

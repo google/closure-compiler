@@ -1005,14 +1005,21 @@ class GlobalTypeInfo implements CompilerPass {
           if (jsdoc != null && jsdoc.getLendsName() != null) {
             lendsObjlits.add(n);
           }
-          for (Node prop : n.children()) {
-            if (prop.getJSDocInfo() != null) {
-              declaredObjLitProps.put(prop,
-                  getTypeDeclarationFromJsdoc(
-                      prop.getJSDocInfo(), currentScope));
+          if (NodeUtil.isNamespaceDecl(parent)) {
+            Node namespaceName = parent.isAssign() ? parent.getFirstChild() : parent;
+            for (Node prop : n.children()) {
+              visitNamespacePropertyDeclaration(prop, namespaceName, prop.getString());
             }
-            if (NodeUtil.hasConstAnnotation(prop)) {
-              warnings.add(JSError.make(prop, MISPLACED_CONST_ANNOTATION));
+          } else {
+            for (Node prop : n.children()) {
+              if (prop.getJSDocInfo() != null) {
+                declaredObjLitProps.put(prop,
+                    getTypeDeclarationFromJsdoc(
+                        prop.getJSDocInfo(), currentScope));
+              }
+              if (NodeUtil.hasConstAnnotation(prop)) {
+                warnings.add(JSError.make(prop, MISPLACED_CONST_ANNOTATION));
+              }
             }
           }
           break;
@@ -1132,29 +1139,36 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       Node recv = getProp.getFirstChild();
-      Preconditions.checkState(currentScope.isNamespace(recv));
-      Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       String pname = getProp.getLastChild().getString();
-      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-      JSType propDeclType = getTypeAtPropDeclNode(getProp, jsdoc);
-      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
+      visitNamespacePropertyDeclaration(getProp, recv, pname);
+    }
+
+    private void visitNamespacePropertyDeclaration(
+        Node declNode, Node recv, String pname) {
+      Preconditions.checkArgument(
+          declNode.isGetProp() || declNode.isStringKey());
+      Preconditions.checkArgument(currentScope.isNamespace(recv));
+      Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
+      JSType propDeclType = getTypeAtPropDeclNode(declNode, jsdoc);
+      boolean isConst = NodeUtil.hasConstAnnotation(declNode);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
         if (ns.hasProp(pname) &&
             previousPropType != null &&
             !suppressDupPropWarning(jsdoc, propDeclType, previousPropType)) {
-          warnings.add(JSError.make(getProp, REDECLARED_PROPERTY,
+          warnings.add(JSError.make(declNode, REDECLARED_PROPERTY,
                   pname, ns.toString()));
           return;
         }
-        if (isConst && !mayWarnAboutNoInit(getProp) && propDeclType == null) {
-          propDeclType = inferConstTypeFromRhs(getProp);
+        if (isConst && !mayWarnAboutNoInit(declNode) && propDeclType == null) {
+          propDeclType = inferConstTypeFromRhs(declNode);
         }
         ns.addProperty(pname, propDeclType, isConst);
-        getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
-        JSType t = simpleInferExprType(getProp.getParent().getLastChild());
+        JSType t = simpleInferExprType(NodeUtil.getInitializer(declNode));
         if (t == null) {
           t = JSType.UNKNOWN;
         }
@@ -1204,7 +1218,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     boolean mayWarnAboutNoInit(Node constExpr) {
-      if (constExpr.isFromExterns()) {
+      if (constExpr.isFromExterns() || constExpr.isStringKey()) {
         return false;
       }
       boolean noInit = true;
@@ -1233,15 +1247,7 @@ class GlobalTypeInfo implements CompilerPass {
         warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
         return null;
       }
-      Node rhs;
-      if (constExpr.isName()) {
-        Preconditions.checkState(constExpr.getParent().isVar());
-        rhs = constExpr.getFirstChild();
-      } else {
-        Preconditions.checkState(constExpr.isGetProp() &&
-            constExpr.getParent().isAssign());
-        rhs = constExpr.getParent().getLastChild();
-      }
+      Node rhs = NodeUtil.getInitializer(constExpr);
       JSType rhsType = simpleInferExprType(rhs);
       if (rhsType == null) {
         warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
@@ -2240,45 +2246,7 @@ class GlobalTypeInfo implements CompilerPass {
       qualifiedEnums = null;
     }
 
-    // When debugging, this method can be called at the start of removeTmpData,
-    // to make sure everything is OK.
-    private void sanityCheck() {
-      Set<String> names;
-      // dom(localClassDefs) is a subset of dom(localFunDefs)
-      names = localFunDefs.keySet();
-      for (String s : localClassDefs.keySet()) {
-        Preconditions.checkState(names.contains(s));
-      }
-      // constVars is a subset of dom(locals)
-      names = locals.keySet();
-      for (String s : constVars) {
-        Preconditions.checkState(names.contains(s));
-      }
-      // localNamespaces is a subset of dom(locals)
-      for (String s : localNamespaces.keySet()) {
-        Preconditions.checkState(names.contains(s));
-      }
-      // The domains of locals, formals, localFunDefs and localTypedefs are
-      // pairwise disjoint.
-      names = new HashSet<>(formals);
-      for (String s : locals.keySet()) {
-        Preconditions.checkState(!names.contains(s),
-            "Name %s is defined twice.", s);
-        names.add(s);
-      }
-      for (String s : localFunDefs.keySet()) {
-        Preconditions.checkState(!names.contains(s),
-            "Name %s is defined twice.", s);
-        names.add(s);
-      }
-      for (String s : localTypedefs.keySet()) {
-        Preconditions.checkState(!names.contains(s),
-            "Name %s is defined twice.", s);
-      }
-    }
-
     private void removeTmpData() {
-      // sanityCheck();
       Iterator<String> it = localFunDefs.keySet().iterator();
       while (it.hasNext()) {
         String name = it.next();

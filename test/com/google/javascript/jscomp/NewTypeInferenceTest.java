@@ -7111,12 +7111,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}",
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
 
-    typeCheck(
+    checkNoWarnings(
         "function f(x) {\n" +
         "  /** @const */\n" +
         "  var c = { a: 1, b: x };\n" +
-        "}",
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+        "}");
 
     typeCheck(
         "/**\n" +
@@ -8366,5 +8365,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "});",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
+  }
+
+  public void testStringKeyConstants() {
+    checkNoWarnings("/** @const */ var o = { /** @const */ PROP: 5};");
+
+    checkNoWarnings(
+        "var x = 5; /** @const */ var o = { /** @const {number} */ PROP: x};");
+
+    typeCheck(
+        "var x = 'str';\n" +
+        "/** @const */ var o = { /** @const {string} */ PROP: x};\n" +
+        "function g() { o.PROP - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    checkNoWarnings(
+        "var x = 5; /** @const */ var o = { /** @const {number} */ PROP: x};");
   }
 }
