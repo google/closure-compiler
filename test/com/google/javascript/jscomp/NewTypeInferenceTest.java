@@ -6124,6 +6124,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testNamespacePropWithNoTypeDoesntCrash() {
+    checkNoWarnings(
+        "/** @const */ var ns = {};\n" +
+        "/** @public */ ns.prop;");
+  }
+
   public void testDebuggerStatementDoesntCrash() {
     checkNoWarnings("debugger;");
   }

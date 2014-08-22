@@ -1168,7 +1168,8 @@ class GlobalTypeInfo implements CompilerPass {
         declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
-        JSType t = simpleInferExprType(NodeUtil.getInitializer(declNode));
+        Node initializer = NodeUtil.getInitializer(declNode);
+        JSType t = initializer == null ? null : simpleInferExprType(initializer);
         if (t == null) {
           t = JSType.UNKNOWN;
         }
