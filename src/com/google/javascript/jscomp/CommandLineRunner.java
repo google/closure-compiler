@@ -434,11 +434,11 @@ public class CommandLineRunner extends
         usage = "Allows usage of const keyword.")
     private boolean acceptConstKeyword = false;
 
-    // TODO(tbreisacher): Add ES6 and ES6_STRICT to this usage string, once ES6
-    // support is stable enough for people to start using it.
+    // TODO(tbreisacher): Remove the "(experimental)" for ES6 when it's stable enough.
     @Option(name = "--language_in",
         usage = "Sets what language spec that input sources conform. "
-        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT")
+        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+        + "ECMASCRIPT6 (experimental), ECMASCRIPT6_STRICT (experimental)")
     private String languageIn = "ECMASCRIPT3";
 
     @Option(name = "--language_out",
