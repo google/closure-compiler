@@ -593,6 +593,27 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       return;
     }
 
+    // Check if we need to synthesize an implicit default constructor
+    // TODO(blickly): Move this into rewrite constructor section below
+    if (!superClassName.isEmpty()) {
+      boolean hasConstructor = false;
+      for (Node member : classMembers.children()) {
+        if (member.isMemberDef() && member.getString().equals("constructor")) {
+          hasConstructor = true;
+          break;
+        }
+      }
+      if (!hasConstructor) {
+        Node superCall = IR.call(new Node(Token.SUPER));
+        classMembers.addChildrenToFront(IR.memberDef("constructor", IR.function(
+            IR.name(""),
+            IR.paramList(),
+            IR.block(IR.exprResult(superCall))))
+                .useSourceInfoIfMissingFromForTree(classMembers));
+        visitSuper(superCall.getFirstChild(), superCall);
+      }
+    }
+
     // The fully qualified name of the class, which will be used in the output.
     // May come from the class itself or the LHS of an assignment.
     String fullClassName = null;
@@ -726,8 +747,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       Node name = anonymous ? IR.name("").srcref(className) : className;
       constructor = IR.function(
           name,
-          IR.paramList().srcref(classNode),
-          IR.block().srcref(classNode));
+          IR.paramList(),
+          IR.block()).useSourceInfoIfMissingFromForTree(classNode);
     }
     JSDocInfo classJSDoc = classNode.getJSDocInfo();
     JSDocInfoBuilder newInfo = (classJSDoc != null) ?
