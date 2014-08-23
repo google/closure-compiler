@@ -22,7 +22,7 @@ import java.util.Set;
 
 /** A naive persistent map that does too many copies */
 public class NaivePersistentMap<K, V> extends PersistentMap<K, V> {
-  private Map map;
+  private Map<K, V> map;
 
   private NaivePersistentMap(Map<K, V> m) {
     this.map = m;

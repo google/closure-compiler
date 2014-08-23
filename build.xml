@@ -133,14 +133,18 @@
     <javac srcdir="${gen.dir}"
            destdir="${classes.dir}"
            excludes=".svn,.git"
-           debug="${javac.debug}">
+           debug="${javac.debug}"
+           includeantruntime="false">
       <classpath refid="srcclasspath.path" />
+      <compilerarg value="-Xlint:unchecked"/>
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
            excludes=".svn,.git,**/webservice/**,**/testing/**"
-           debug="${javac.debug}">
+           debug="${javac.debug}"
+           includeantruntime="true">
       <classpath refid="srcclasspath.path" />
+      <compilerarg value="-Xlint:unchecked"/>
     </javac>
 
     <!-- Move Messages.properties where ScriptRuntime.java expects it. -->
@@ -193,14 +197,18 @@
     <javac srcdir="${src.dir}"
            destdir="${testClasses.dir}"
            excludes=".svn,.git"
-           debug="on">
+           debug="on"
+           includeantruntime="false">
       <classpath refid="allclasspath.path" />
+      <compilerarg value="-Xlint:unchecked"/>
     </javac>
     <javac srcdir="${test.dir}"
            destdir="${testClasses.dir}"
            excludes=".svn,.git"
-           debug="on">
+           debug="on"
+           includeantruntime="false">
       <classpath refid="allclasspath.path" />
+      <compilerarg value="-Xlint:unchecked"/>
     </javac>
   </target>
 
