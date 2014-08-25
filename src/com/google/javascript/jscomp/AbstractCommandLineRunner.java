@@ -1521,6 +1521,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   @VisibleForTesting
   void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
+    ClosureBundler bundler = new ClosureBundler();
+
     for (CompilerInput input : inputs) {
       // Every module has an empty file in it. This makes it easier to implement
       // cross-module code motion.
@@ -1548,7 +1550,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append(displayName);
       out.append("\n");
 
-      ClosureBundler.appendInput(out, input, file, inputCharset);
+      bundler.appendTo(out, input, file, inputCharset);
 
       out.append("\n");
     }
