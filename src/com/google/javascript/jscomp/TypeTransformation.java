@@ -53,6 +53,9 @@ class TypeTransformation {
   static final DiagnosticType UNKNOWN_TYPEVAR =
       DiagnosticType.warning("TYPEVAR_UNDEFINED",
           "Reference to an unknown type variable {0}");
+  static final DiagnosticType UNKNOWN_STRVAR =
+      DiagnosticType.warning("UNKNOWN_STRVAR",
+          "Reference to an unknown string variable {0}");
   static final DiagnosticType UNKNOWN_TYPENAME =
       DiagnosticType.warning("TYPENAME_UNDEFINED",
           "Reference to an unknown type name {0}");
@@ -408,18 +411,69 @@ class TypeTransformation {
     return createUnionType(basicTypes);
   }
 
-  private boolean evalBoolean(Node ttlAst, NameResolver nameResolver) {
+  private boolean evalBooleanTypePredicate(Node ttlAst,
+      NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
     JSType type0 = evalInternal(params.get(0), nameResolver);
     JSType type1 = evalInternal(params.get(1), nameResolver);
     String name = getCallName(ttlAst);
-    Keywords keyword = nameToKeyword(name);
 
+    Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case EQ:
         return type0.isEquivalentTo(type1);
       case SUB:
         return type0.isSubtype(type1);
+      default:
+        throw new IllegalStateException(
+            "Invalid boolean predicate in the type transformation");
+    }
+  }
+
+  private String evalBooleanStringPredicateParam(Node ttlAst,
+      NameResolver nameResolver) {
+    if (ttlAst.isName()) {
+      // Return the empty string if the name variable cannot be resolved
+      if (!nameResolver.nameVars.containsKey(ttlAst.getString())) {
+        reportWarning(ttlAst, UNKNOWN_STRVAR, ttlAst.getString());
+        return "";
+      }
+      return nameResolver.nameVars.get(ttlAst.getString());
+    }
+    return ttlAst.getString();
+  }
+
+  private boolean evalBooleanStringPredicate(Node ttlAst,
+      NameResolver nameResolver) {
+    ImmutableList<Node> params = getCallParams(ttlAst);
+    String str0 = evalBooleanStringPredicateParam(params.get(0), nameResolver);
+    String str1 = evalBooleanStringPredicateParam(params.get(1), nameResolver);
+
+    // If any of the parameters evaluates to the empty string then they were
+    // not resolved by the name resolver. In this case we always return false.
+    if (str0.equals("") || str1.equals("")) {
+      return false;
+    }
+
+    String name = getCallName(ttlAst);
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword) {
+      case STREQ:
+        return str0.equals(str1);
+      default:
+        throw new IllegalStateException(
+            "Invalid boolean string predicate in the type transformation");
+    }
+  }
+
+  private boolean evalBoolean(Node ttlAst, NameResolver nameResolver) {
+    String name = getCallName(ttlAst);
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword.kind) {
+      case BOOLEAN_STRING_PREDICATE:
+        return evalBooleanStringPredicate(ttlAst, nameResolver);
+      case BOOLEAN_TYPE_PREDICATE:
+        return evalBooleanTypePredicate(ttlAst, nameResolver);
       default:
         throw new IllegalStateException(
             "Invalid boolean predicate in the type transformation");

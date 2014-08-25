@@ -3051,15 +3051,53 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T := cond(sub(T, R), R, S) =: */");
   }
 
+  public void testParserWithTTLConditionalStringEquivalence() {
+    parse("@template T := cond(streq(R, S), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditionalStringEquivalence2() {
+    parse("@template T := cond(streq(R, 'foo'), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditionalStringEquivalence3() {
+    parse("@template T := cond(streq('foo', 'bar'), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditionalStringEquivalenceInvalidParam() {
+    parse("@template T := cond(streq('foo', foo()), R, S) =: */",
+        "Bad type annotation. Invalid string",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalStringEquivalenceInvalidParamEmptyStr() {
+    parse("@template T := cond(streq('', S), R, S) =: */",
+        "Bad type annotation. Invalid string parameter",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
   public void testParserWithTTLExtraParamBoolean() {
     parse("@template T := cond(eq(T, R, S), R, S) =: */",
         "Bad type annotation. Found extra parameter in eq",
         "Bad type annotation. Invalid expression inside conditional");
   }
 
+  public void testParserWithTTLExtraParamStringEq() {
+    parse("@template T := cond(streq(T, R, S), R, S) =: */",
+        "Bad type annotation. Found extra parameter in streq",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
   public void testParserWithTTLMissingParamBoolean() {
     parse("@template T := cond(eq(T), R, S) =: */",
         "Bad type annotation. Missing parameter in eq",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLMissingParamStringEquivalence() {
+    parse("@template T := cond(streq(T), R, S) =: */",
+        "Bad type annotation. Missing parameter in streq",
         "Bad type annotation. Invalid expression inside conditional");
   }
 

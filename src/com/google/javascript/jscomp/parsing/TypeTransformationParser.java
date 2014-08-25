@@ -46,25 +46,27 @@ public final class TypeTransformationParser {
   public static enum OperationKind {
     TYPE_CONSTRUCTOR,
     OPERATION,
-    BOOLEAN_PREDICATE
+    BOOLEAN_STRING_PREDICATE,
+    BOOLEAN_TYPE_PREDICATE
   }
 
   /** Keywords of the type transformation language */
   public static enum Keywords {
-    TYPE("type", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
-    UNION("union", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
+    ALL("all", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
     COND("cond", 3, 3, OperationKind.OPERATION),
+    EQ("eq", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
     MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),
-    EQ("eq", 2, 2, OperationKind.BOOLEAN_PREDICATE),
-    SUB("sub", 2, 2, OperationKind.BOOLEAN_PREDICATE),
+    MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
     NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
     RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
-    TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
+    SUB("sub", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
+    STREQ("streq", 2, 2, OperationKind.BOOLEAN_STRING_PREDICATE),
     RECORD("record", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
-    MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
-    ALL("all", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
-    UNKNOWN("unknown", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
-    TYPEOFVAR("typeOfVar", 1, 1, OperationKind.OPERATION);
+    TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
+    TYPE("type", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
+    TYPEOFVAR("typeOfVar", 1, 1, OperationKind.OPERATION),
+    UNION("union", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
+    UNKNOWN("unknown", 0, 0, OperationKind.TYPE_CONSTRUCTOR);
 
     public final String name;
     public final int minParamCount, maxParamCount;
@@ -122,8 +124,17 @@ public final class TypeTransformationParser {
     return isValidKeyword(name) ? nameToKeyword(name).kind == kind : false;
   }
 
+  private boolean isValidBooleanStringPredicate(String name) {
+    return isOperationKind(name, OperationKind.BOOLEAN_STRING_PREDICATE);
+  }
+
+  private boolean isValidBooleanTypePredicate(String name) {
+    return isOperationKind(name, OperationKind.BOOLEAN_TYPE_PREDICATE);
+  }
+
   private boolean isValidBooleanPredicate(String name) {
-    return isOperationKind(name, OperationKind.BOOLEAN_PREDICATE);
+    return isValidBooleanStringPredicate(name)
+        || isValidBooleanTypePredicate(name);
   }
 
   private int getFunctionParamCount(Node n) {
@@ -422,23 +433,7 @@ public final class TypeTransformationParser {
     }
   }
 
-  /**
-   * A boolean expression must be of the form eq(TTLExp, TTLExp) or
-   * sub(TTLExp, TTLExp)
-   */
-  private boolean validBooleanTypeExpression(Node expr) {
-    if (!isOperation(expr)) {
-      warnInvalidExpression("boolean", expr);
-      return false;
-    }
-    String predicate = getCallName(expr);
-    if (!isValidBooleanPredicate(predicate)) {
-      warnInvalid("boolean predicate", expr);
-      return false;
-    }
-    if (!checkParameterCount(expr, Keywords.EQ)) {
-      return false;
-    }
+  private boolean validBooleanTypePredicate(Node expr) {
     // Both input types must be valid type expressions
     if (!validTypeTransformationExpression(getCallArgument(expr, 0))
         || !validTypeTransformationExpression(getCallArgument(expr, 1))) {
@@ -446,6 +441,55 @@ public final class TypeTransformationParser {
       return false;
     }
     return true;
+  }
+
+  private boolean isValidBooleanStringPredicateParam(Node expr) {
+    if (!expr.isName() && !expr.isString()) {
+      warnInvalid("string", expr);
+      return false;
+    }
+    if (expr.getString().equals("")) {
+      warnInvalid("string parameter", expr);
+      return false;
+    }
+    return true;
+  }
+
+  private boolean validBooleanStringPredicate(Node expr) {
+    // Both parameters must be either a string or a variable
+    if (!isValidBooleanStringPredicateParam(getCallArgument(expr, 0))
+        || !isValidBooleanStringPredicateParam(getCallArgument(expr, 1))) {
+      warnInvalidInside("boolean", expr);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * A boolean expression must be a boolean predicate or a boolean
+   * type predicate
+   */
+  private boolean validBooleanExpression(Node expr) {
+    if (!isOperation(expr)) {
+      warnInvalidExpression("boolean", expr);
+      return false;
+    }
+    if (!isValidBooleanPredicate(getCallName(expr))) {
+      warnInvalid("boolean predicate", expr);
+      return false;
+    }
+    Keywords keyword = nameToKeyword(getCallName(expr));
+    if (!checkParameterCount(expr, keyword)) {
+      return false;
+    }
+    switch (keyword.kind) {
+      case BOOLEAN_TYPE_PREDICATE:
+        return validBooleanTypePredicate(expr);
+      case BOOLEAN_STRING_PREDICATE:
+        return validBooleanStringPredicate(expr);
+      default:
+        throw new IllegalStateException("Invalid boolean expression");
+    }
   }
 
   /**
@@ -462,7 +506,7 @@ public final class TypeTransformationParser {
       return false;
     }
     // Check for the validity of the boolean and the expressions
-    if (!validBooleanTypeExpression(getCallArgument(expr, 0))) {
+    if (!validBooleanExpression(getCallArgument(expr, 0))) {
       warnInvalidInside("conditional", expr);
       return false;
     }

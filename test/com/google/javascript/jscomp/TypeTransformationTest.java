@@ -149,6 +149,42 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "cond( sub('Number', 'String'), 'string', 'number')");
   }
 
+  public void testTransformationWithTrueStreqConditional2() {
+    testTTL(STRING_TYPE, "cond(streq(n, n), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueStreqConditional() {
+    testTTL(STRING_TYPE, "cond(streq(n, 'number'), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueStreqConditional3() {
+    testTTL(STRING_TYPE, "cond(streq('number', 'number'), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseStreqConditional() {
+    testTTL(NUMBER_TYPE, "cond(streq('number', 'foo'), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseStreqConditional2() {
+    testTTL(NUMBER_TYPE, "cond(streq(n, 'foo'), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseStreqConditional3() {
+    testTTL(NUMBER_TYPE, "cond(streq(n, s), 'string', 'number')");
+  }
+
+  public void testTransformationWithInvalidEqConditional() {
+    // It returns number since a failing boolean expression returns false
+    testTTL(NUMBER_TYPE, "cond(eq(foo, S), 'string', 'number')",
+        "Reference to an unknown type variable foo");
+  }
+
+  public void testTransformationWithInvalidStreqConditional() {
+    // It returns number since a failing boolean expression returns false
+    testTTL(NUMBER_TYPE, "cond(streq(foo, s), 'string', 'number')",
+        "Reference to an unknown string variable foo");
+  }
+
   public void testTransformationWithNestedExpressionInBooleanFirstParam() {
     testTTL(STRING_TYPE,
         "cond( eq( cond(eq(N, N), 'string', 'number'), 'string'),"
@@ -617,6 +653,12 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
             + "or a no type, found ?",
         "The variable k is already defined");
 
+  }
+
+  public void testTransformationWithMaprecordAndStringEquivalence() {
+    testTTL(record("bool", NUMBER_TYPE, "str", STRING_TYPE),
+        "maprecord(record({bool:B, str:S}),"
+        + "(k, v) => record({[k]:cond(streq(k, 'bool'), N, v)}))");
   }
 
   public void testTransformationWithTypeOfVar() {
