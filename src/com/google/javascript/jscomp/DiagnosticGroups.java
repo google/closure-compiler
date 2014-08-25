@@ -107,6 +107,7 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("visibility",
           CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS,
           CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS,
+          CheckAccessControls.BAD_PACKAGE_PROPERTY_ACCESS,
           CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS,
           CheckAccessControls.EXTEND_FINAL_CLASS,
           CheckAccessControls.PRIVATE_OVERRIDE,
