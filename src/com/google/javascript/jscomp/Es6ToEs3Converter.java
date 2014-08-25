@@ -376,26 +376,31 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       return;
     }
 
-    Node methodName;
+    String methodName;
     Node callName = enclosing.removeFirstChild();
     if (callName.isSuper()) {
-      methodName = IR.string(enclosingMemberDef.getString()).srcref(enclosing);
+      methodName = enclosingMemberDef.getString();
     } else {
-      methodName = IR.string(callName.getLastChild().getString()).srcref(enclosing);
+      methodName = callName.getLastChild().getString();
     }
+    Node baseCall = baseCall(clazz, methodName, enclosing.removeChildren())
+        .useSourceInfoIfMissingFromForTree(enclosing);
+    enclosing.getParent().replaceChild(enclosing, baseCall);
+    compiler.reportCodeChange();
+  }
+
+  private Node baseCall(Node clazz, String methodName, Node arguments) {
     boolean useUnique = NodeUtil.isStatement(clazz) && !isInFunction(clazz);
     String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
         : NodeUtil.getClassName(clazz);
     Node uniqueClassName = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
         uniqueClassString);
-    uniqueClassName.useSourceInfoIfMissingFromForTree(enclosing);
-    Node base = IR.getprop(uniqueClassName,
-        IR.string("base").srcref(enclosing)).srcref(enclosing);
-    enclosing.addChildToFront(methodName);
-    enclosing.addChildToFront(IR.thisNode().srcref(enclosing));
-    enclosing.addChildToFront(base);
-    enclosing.putBooleanProp(Node.FREE_CALL, false);
-    compiler.reportCodeChange();
+    Node base = IR.getprop(uniqueClassName, IR.string("base"));
+    Node call = IR.call(base, IR.thisNode(), IR.string(methodName));
+    if (arguments != null) {
+      call.addChildrenToBack(arguments);
+    }
+    return call;
   }
 
   /**
@@ -593,27 +598,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       return;
     }
 
-    // Check if we need to synthesize an implicit default constructor
-    // TODO(blickly): Move this into rewrite constructor section below
-    if (!superClassName.isEmpty()) {
-      boolean hasConstructor = false;
-      for (Node member : classMembers.children()) {
-        if (member.isMemberDef() && member.getString().equals("constructor")) {
-          hasConstructor = true;
-          break;
-        }
-      }
-      if (!hasConstructor) {
-        Node superCall = IR.call(new Node(Token.SUPER));
-        classMembers.addChildrenToFront(IR.memberDef("constructor", IR.function(
-            IR.name(""),
-            IR.paramList(),
-            IR.block(IR.exprResult(superCall))))
-                .useSourceInfoIfMissingFromForTree(classMembers));
-        visitSuper(superCall.getFirstChild(), superCall);
-      }
-    }
-
     // The fully qualified name of the class, which will be used in the output.
     // May come from the class itself or the LHS of an assignment.
     String fullClassName = null;
@@ -663,7 +647,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
     Verify.verify(NodeUtil.isStatement(insertionPoint));
 
-    className.detachFromParent();
     Node constructor = null;
     JSDocInfo ctorJSDocInfo = null;
     // Process all members of the class
@@ -676,7 +659,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
         if (!anonymous) {
-          constructor.replaceChild(constructor.getFirstChild(), className);
+          constructor.replaceChild(
+              constructor.getFirstChild(), className.cloneNode());
         }
       } else {
         Node qualifiedMemberName;
@@ -744,11 +728,17 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
     // Rewrite constructor
     if (constructor == null) {
-      Node name = anonymous ? IR.name("").srcref(className) : className;
+      Node body = IR.block();
+      if (!superClassName.isEmpty()) {
+        Node superCall = baseCall(classNode, "constructor", null);
+        body.addChildToBack(IR.exprResult(superCall));
+      }
+      Node name = anonymous
+          ? IR.name("").srcref(className) : className.detachFromParent();
       constructor = IR.function(
           name,
           IR.paramList(),
-          IR.block()).useSourceInfoIfMissingFromForTree(classNode);
+          body).useSourceInfoIfMissingFromForTree(classNode);
     }
     JSDocInfo classJSDoc = classNode.getJSDocInfo();
     JSDocInfoBuilder newInfo = (classJSDoc != null) ?

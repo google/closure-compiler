@@ -54,13 +54,6 @@ public class IR {
     return new Node(Token.EMPTY);
   }
 
-  public static Node memberDef(String name, Node function) {
-    Preconditions.checkState(function.isFunction());
-    Node ret = Node.newString(Token.MEMBER_DEF, name);
-    ret.addChildToFront(function);
-    return ret;
-  }
-
   public static Node function(Node name, Node params, Node body) {
     Preconditions.checkState(name.isName());
     Preconditions.checkState(params.isParamList());
