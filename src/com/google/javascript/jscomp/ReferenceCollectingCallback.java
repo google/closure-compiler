@@ -162,7 +162,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName()) {
+    if (n.isName()
+        || (n.isStringKey() && parent.isObjectPattern() && !n.hasChildren())) {
       Var v;
       if (n.getString().equals("arguments")) {
         v = t.getScope().getArgumentsVar();
@@ -640,20 +641,28 @@ class ReferenceCollectingCallback implements ScopedCallback,
     }
 
     boolean isDeclaration() {
-      Node parent = getParent();
+      return isDeclarationHelper(nameNode);
+    }
+
+    private static boolean isDeclarationHelper(Node node) {
+      Node parent = node.getParent();
+
       // Special case for class B extends A, A is not a redeclaration.
-      if (parent.isClass() && nameNode != parent.getFirstChild()) {
+      if (parent.isClass() && node != parent.getFirstChild()) {
         return false;
       }
 
-      // Special case for array pattern: An array pattern is a declaration, only
-      // if it's a descendant of a declaration.
-      while (parent.isArrayPattern()) {
-        parent = parent.getParent();
+      if (NodeUtil.isNameDeclaration(parent.getParent())
+          && node == parent.getLastChild()) {
+        // This is the RHS of a var/let/const, so not a declaration.
+        return false;
       }
 
-      if (parent.isDefaultValue() && nameNode == parent.getFirstChild()) {
-        return true;
+      // Special cases for destructuring patterns.
+      if (parent.isDestructuringPattern()
+          || (parent.isStringKey() && parent.getParent().isObjectPattern())
+          || (parent.isDefaultValue() && node == parent.getFirstChild())) {
+        return isDeclarationHelper(parent);
       }
 
       return DECLARATION_PARENTS.contains(parent.getType());

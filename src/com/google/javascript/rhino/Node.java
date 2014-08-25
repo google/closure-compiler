@@ -2558,6 +2558,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.DELPROP;
   }
 
+  public boolean isDestructuringPattern() {
+    return isObjectPattern() || isArrayPattern();
+  }
+
   public boolean isDo() {
     return this.getType() == Token.DO;
   }

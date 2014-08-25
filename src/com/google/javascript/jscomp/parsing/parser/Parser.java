@@ -2352,9 +2352,8 @@ public class Parser {
 
     ParseTree lvalue = parseLeftHandSideExpression();
 
-    if ((rest || kind == PatternKind.INITIALIZER)
-        && lvalue.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
-      reportError("lvalues in initializer patterns must be identifiers");
+    if (rest && lvalue.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
+      reportError("lvalues in rest elements must be identifiers");
       return lvalue;
     }
 

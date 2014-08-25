@@ -1243,8 +1243,20 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("({x: [y, z]} = foo());");
     parse("[x, {y, z}] = foo();");
 
-    parse("function f([x, {y, z}]) {}");
     parse("function f({x: [y, z]}) {}");
+    parse("function f([x, {y, z}]) {}");
+  }
+
+  public void testMixedDestructuringWithInitializer() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {x: [y, z] = [1, 2]} = foo();");
+    parse("var [x, {y, z} = {y: 3, z: 4}] = foo();");
+
+    parse("({x: [y, z] = [1, 2]} = foo());");
+    parse("[x, {y, z} = {y: 3, z: 4}] = foo();");
+
+    parse("function f({x: [y, z] = [1, 2]}) {}");
+    parse("function f([x, {y, z} = {y: 3, z: 4}]) {}");
   }
 
   public void testComprehensions() {

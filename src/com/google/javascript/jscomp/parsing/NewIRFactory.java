@@ -1278,6 +1278,8 @@ class NewIRFactory {
       Node lhs = transform(tree.lhs);
       if (tree.lhs instanceof ArrayLiteralExpressionTree) {
         lhs.setType(Token.ARRAY_PATTERN);
+      } else if (tree.lhs instanceof ObjectLiteralExpressionTree) {
+        lhs.setType(Token.OBJECT_PATTERN);
       }
       return newNode(Token.DEFAULT_VALUE,
           lhs, transform(tree.defaultValue));
