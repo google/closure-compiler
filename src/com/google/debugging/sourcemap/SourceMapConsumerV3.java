@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 
 /**
  * Class for parsing version 3 of the SourceMap format, as produced by the
@@ -136,8 +137,9 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
         sourceRoot = sourceMapRoot.getString("sourceRoot");
       }
 
-      for (Object objkey : Lists.newArrayList(sourceMapRoot.keys())) {
-        String key = (String) objkey;
+      @SuppressWarnings("unchecked")
+      Iterator<String> keys = sourceMapRoot.keys();
+      for (String key : Lists.newArrayList(keys)) {
         if (key.startsWith("x_")) {
           extensions.put(key, sourceMapRoot.get(key));
         }
