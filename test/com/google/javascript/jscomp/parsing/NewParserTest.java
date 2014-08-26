@@ -1259,6 +1259,21 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("function f([x, {y, z} = {y: 3, z: 4}]) {}");
   }
 
+  public void testDestructuringNoRHS() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("var {x: y};", "destructuring must have an initializer");
+    parseError("let {x: y};", "destructuring must have an initializer");
+    parseError("const {x: y};", "const variables must have an initializer");
+
+    parseError("var {x};", "destructuring must have an initializer");
+    parseError("let {x};", "destructuring must have an initializer");
+    parseError("const {x};", "const variables must have an initializer");
+
+    parseError("var [x, y];", "destructuring must have an initializer");
+    parseError("let [x, y];", "destructuring must have an initializer");
+    parseError("const [x, y];", "const variables must have an initializer");
+  }
+
   public void testComprehensions() {
     mode = LanguageMode.ECMASCRIPT6;
     String error = "unsupported language feature:"
@@ -2204,6 +2219,62 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testArrow2() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("*()=>1;", "primary expression expected");
+  }
+
+  public void testForIn() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("for (a in b) c;");
+    parse("for (var a in b) c;");
+    parse("for (let a in b) c;");
+    parse("for (const a in b) c;");
+
+    parseError("for (a=1 in b) c;", "';' expected");
+    parseError("for (let a=1 in b) c;",
+        "let/const in for-in statement may not have initializer");
+    parseError("for (const a=1 in b) c;",
+        "let/const in for-in statement may not have initializer");
+
+    // TODO(tbreisacher): Report an error for this case too.
+    parse("for (var a=1 in b) c;");
+  }
+
+  public void testForInDestructuring() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("for ({a} in b) c;");
+    parse("for (var {a} in b) c;");
+    parse("for (let {a} in b) c;");
+    parse("for (const {a} in b) c;");
+
+    parse("for ({a: b} in c) d;");
+    parse("for (var {a: b} in c) d;");
+    parse("for (let {a: b} in c) d;");
+    parse("for (const {a: b} in c) d;");
+
+    parse("for ([a] in b) c;");
+    parse("for (var [a] in b) c;");
+    parse("for (let [a] in b) c;");
+    parse("for (const [a] in b) c;");
+
+    parseError("for ({a: b} = foo() in c) d;", "';' expected");
+    parseError("for (let {a: b} = foo() in c) d;",
+        "let/const in for-in statement may not have initializer");
+    parseError("for (const {a: b} = foo() in c) d;",
+        "let/const in for-in statement may not have initializer");
+
+    // TODO(tbreisacher): Report an error for this case too.
+    parse("for (var {a: b} = foo() in c) d;");
+
+    parseError("for ([a] = foo() in b) c;",
+        "';' expected");
+    parseError("for (let [a] = foo() in b) c;",
+        "let/const in for-in statement may not have initializer");
+    parseError("for (const [a] = foo() in b) c;",
+        "let/const in for-in statement may not have initializer");
+
+    // TODO(tbreisacher): Report an error for this case too.
+    parse("for (var [a] = foo() in b) c;");
   }
 
   public void testForOf1() {

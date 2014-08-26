@@ -863,15 +863,12 @@ public class Parser {
         getTreeLocation(start), token, declarations.build());
   }
 
-  private static final EnumSet<TokenType> declarationDestructuringFollow =
-      EnumSet.of(TokenType.EQUAL);
-
   private VariableDeclarationTree parseVariableDeclaration(
       final TokenType binding, Expression expressionIn) {
 
     SourcePosition start = getTreeStartLocation();
     ParseTree lvalue;
-    if (peekPattern(PatternKind.INITIALIZER, declarationDestructuringFollow)) {
+    if (peekPattern(PatternKind.INITIALIZER)) {
       lvalue = parsePattern(PatternKind.INITIALIZER);
     } else {
       lvalue = parseIdentifierExpression();
@@ -1004,10 +1001,14 @@ public class Parser {
     }
 
     ParseTree initializer = parseExpressionNoIn();
-    if (peek(TokenType.IN)) {
-      return parseForInStatement(start, initializer);
-    } else if (peekPredefinedString(PredefinedName.OF)) {
-      return parseForOfStatement(start, initializer);
+    if (peek(TokenType.IN) || peekPredefinedString(PredefinedName.OF)) {
+      if (initializer.type != ParseTreeType.BINARY_OPERATOR) {
+        if (peek(TokenType.IN)) {
+          return parseForInStatement(start, initializer);
+        } else {
+          return parseForOfStatement(start, initializer);
+        }
+      }
     }
 
     return parseForStatement(start, initializer);
@@ -2301,13 +2302,13 @@ public class Parser {
     }
   }
 
-  private boolean peekPattern(PatternKind kind, EnumSet<TokenType> follow) {
+  private boolean peekPattern(PatternKind kind) {
     if (!peekPatternStart()) {
       return false;
     }
     Parser p = createLookaheadParser();
     p.parsePattern(kind);
-    return !p.errorReporter.hadError() && follow.contains(p.peekType());
+    return !p.errorReporter.hadError();
   }
 
   private boolean peekParenPattern(PatternKind kind, EnumSet<TokenType> follow) {
