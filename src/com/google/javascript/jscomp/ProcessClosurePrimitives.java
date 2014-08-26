@@ -657,7 +657,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       Node enclosingParent = enclosingFnNameNode.getParent();
       Node maybeInheritsExpr = (enclosingParent.isAssign() ?
           enclosingParent.getParent() : enclosingParent).getNext();
-      while (maybeInheritsExpr.isEmpty()) {
+      while (maybeInheritsExpr != null && maybeInheritsExpr.isEmpty()) {
         maybeInheritsExpr = maybeInheritsExpr.getNext();
       }
       Node baseClassNode = null;

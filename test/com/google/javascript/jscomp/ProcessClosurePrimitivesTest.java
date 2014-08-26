@@ -847,6 +847,14 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
          "goog.inherits(goog.Foo, goog.BaseFoo);");
   }
 
+  public void testValidBase7() {
+    // No goog.inherits, so this is probably a different 'base' function.
+    testSame(""
+        + "var a = function() {"
+        + "  a.base(this, 'constructor');"
+        + "};");
+  }
+
   public void testImplicitAndExplicitProvide() {
     test("var goog = {}; " +
          "goog.provide('goog.foo.bar'); goog.provide('goog.foo');",
