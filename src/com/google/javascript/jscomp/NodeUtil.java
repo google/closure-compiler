@@ -823,13 +823,13 @@ public final class NodeUtil {
    * Returns true iff this node defines a namespace, such as goog or goog.math.
    */
   static boolean isNamespaceDecl(Node n) {
-    if (isEnumDecl(n)) {
+    JSDocInfo jsdoc = getBestJSDocInfo(n);
+    if (jsdoc != null && !jsdoc.getTypeNodes().isEmpty()) {
       return false;
     }
     Node qnameNode;
     Node initializer;
     if (n.getParent().isVar()) {
-      JSDocInfo jsdoc = getBestJSDocInfo(n);
       if (jsdoc == null || !jsdoc.isConstant()) {
         return false;
       }

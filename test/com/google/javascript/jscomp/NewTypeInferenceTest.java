@@ -8373,7 +8373,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   }
 
-  public void testStringKeyConstants() {
+  public void testNamespacesWithNonEmptyObjectLiteral() {
     checkNoWarnings("/** @const */ var o = { /** @const */ PROP: 5};");
 
     checkNoWarnings(
@@ -8386,6 +8386,29 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     checkNoWarnings(
-        "var x = 5; /** @const */ var o = { /** @const {number} */ PROP: x};");
+        "/** @const */ var ns = {}; ns.o = { /** @const */ PROP: 5};");
+
+    checkNoWarnings(
+        "/** @const */ var ns = {};\n" +
+        "var x = 5;\n" +
+        "/** @const */ ns.o = { /** @const {number} */ PROP: x};");
+
+    typeCheck(
+        "/** @const */ var ns = {};\n" +
+        "var x = 'str';\n" +
+        "/** @const */ ns.o = { /** @const {string} */ PROP: x};\n" +
+        "function g() { ns.o.PROP - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // These declarations are not considered namespaces
+    typeCheck(
+        "(function(){ return {}; })().ns = { /** @const */ PROP: 5};",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "function f(/** { x : string } */ obj) {\n" +
+        "  obj.ns = { /** @const */ PROP: 5};\n" +
+        "}",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
   }
 }

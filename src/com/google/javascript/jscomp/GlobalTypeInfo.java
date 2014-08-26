@@ -1005,10 +1005,11 @@ class GlobalTypeInfo implements CompilerPass {
           if (jsdoc != null && jsdoc.getLendsName() != null) {
             lendsObjlits.add(n);
           }
-          if (NodeUtil.isNamespaceDecl(parent)) {
-            Node namespaceName = parent.isAssign() ? parent.getFirstChild() : parent;
+          Node reciever = parent.isAssign() ? parent.getFirstChild() : parent;
+          if (isNamespaceDecl(reciever)) {
             for (Node prop : n.children()) {
-              visitNamespacePropertyDeclaration(prop, namespaceName, prop.getString());
+              visitNamespacePropertyDeclaration(
+                  prop, reciever, prop.getString());
             }
           } else {
             for (Node prop : n.children()) {
@@ -1025,6 +1026,16 @@ class GlobalTypeInfo implements CompilerPass {
           break;
         }
       }
+    }
+
+    private boolean isNamespaceDecl(Node n) {
+      if (!n.isQualifiedName() && !n.isStringKey()) {
+        return false;
+      }
+      if (n.isGetProp() && !currentScope.isNamespace(n.getFirstChild())) {
+        return false;
+      }
+      return NodeUtil.isNamespaceDecl(n);
     }
 
     private void visitPropertyDeclaration(Node getProp) {
@@ -1138,6 +1149,7 @@ class GlobalTypeInfo implements CompilerPass {
         // Named types have already been crawled in CollectNamedTypes
         return;
       }
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       Node recv = getProp.getFirstChild();
       String pname = getProp.getLastChild().getString();
       visitNamespacePropertyDeclaration(getProp, recv, pname);
@@ -1208,11 +1220,11 @@ class GlobalTypeInfo implements CompilerPass {
           new PropertyDef(getProp, null, null));
     }
 
-    private JSType getTypeAtPropDeclNode(Node getProp, JSDocInfo jsdoc) {
-      Node parent = getProp.getParent();
-      if (parent.isAssign() && parent.getLastChild().isFunction()) {
+    private JSType getTypeAtPropDeclNode(Node declNode, JSDocInfo jsdoc) {
+      Node initializer = NodeUtil.getInitializer(declNode);
+      if (initializer != null && initializer.isFunction()) {
         return JSType.fromFunctionType(
-            currentScope.getScope(getFunInternalName(parent.getLastChild()))
+            currentScope.getScope(getFunInternalName(initializer))
             .getDeclaredType().toFunctionType());
       }
       return getTypeDeclarationFromJsdoc(jsdoc, currentScope);
