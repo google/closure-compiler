@@ -26,7 +26,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 
-
 /**
  * Checks when a function is annotated as returning {SomeType} (nullable)
  * but actually always returns {!SomeType}, i.e. never returns null.
