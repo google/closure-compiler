@@ -262,10 +262,11 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private boolean isArrayType(JSType t) {
-    if (symbolTable.getArrayType().isUnknown()) { // no externs
+    if (symbolTable.getArrayType().isUnknown() // no externs
+        || t.isUnknown() || t.isLoose()) {
       return false;
     }
-    return !t.isUnknown() && t.isSubtypeOf(symbolTable.getArrayType());
+    return t.isSubtypeOf(symbolTable.getArrayType());
   }
 
   private static void println(Object ... objs) {

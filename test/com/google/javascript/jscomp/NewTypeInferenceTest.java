@@ -69,7 +69,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   private void checkNoWarnings(String js) {
-    checkNoWarnings("", js);
+    checkNoWarnings(DEFAULT_EXTERNS, js);
   }
 
   private void checkNoWarnings(String externs, String js) {
@@ -81,7 +81,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   private NewTypeInference typeCheck(String js, DiagnosticType warningKind) {
-    return typeCheck("", js, warningKind);
+    return typeCheck(DEFAULT_EXTERNS, js, warningKind);
   }
 
   private NewTypeInference typeCheck(

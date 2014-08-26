@@ -1506,13 +1506,16 @@ class GlobalTypeInfo implements CompilerPass {
             if (!ctorType.addSuperClass(parentClass)) {
               warnings.add(JSError.make(
                   declNode, INHERITANCE_CYCLE, className));
-            } else if (ctorType.isStruct() && !parentClass.isStruct()) {
-              warnings.add(JSError.make(
-                  declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
-                      "struct", className));
-            } else if (ctorType.isDict() && !parentClass.isDict()) {
-              warnings.add(JSError.make(
-                  declNode, TypeCheck.CONFLICTING_SHAPE_TYPE, "dict", className));
+            } else if (parentClass != getObjectNominalType()) {
+              if (ctorType.isStruct() && !parentClass.isStruct()) {
+                warnings.add(JSError.make(
+                    declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
+                        "struct", className));
+              } else if (ctorType.isDict() && !parentClass.isDict()) {
+                warnings.add(JSError.make(
+                    declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
+                    "dict", className));
+              }
             }
           }
           if (ctorType.isDict() && !implementedIntfs.isEmpty()) {
