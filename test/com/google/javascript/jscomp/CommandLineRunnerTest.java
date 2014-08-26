@@ -580,9 +580,13 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testHelpFlag() {
     args.add("--help");
-    assertFalse(
-        createCommandLineRunner(
-            new String[] {"function f() {}"}).shouldRunCompiler());
+    CommandLineRunner runner =
+        createCommandLineRunner(new String[] {"function f() {}"});
+    assertFalse(runner.shouldRunCompiler());
+    assertFalse(runner.hasErrors());
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertTrue(output.indexOf(" --help ") >= 0);
+    assertTrue(output.indexOf(" --version ") >= 0);
   }
 
   public void testHoistedFunction1() {
@@ -1023,9 +1027,10 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testVersionFlag() {
     args.add("--version");
-    assertFalse(
-        createCommandLineRunner(
-            new String[] {"function f() {}"}).shouldRunCompiler());
+    CommandLineRunner runner =
+        createCommandLineRunner(new String[] {"function f() {}"});
+    assertFalse(runner.shouldRunCompiler());
+    assertFalse(runner.hasErrors());
     assertEquals(
         0,
         new String(outReader.toByteArray(), UTF_8).indexOf(
@@ -1035,9 +1040,10 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testVersionFlag2() {
     lastArg = "--version";
-    assertFalse(
-        createCommandLineRunner(
-            new String[] {"function f() {}"}).shouldRunCompiler());
+    CommandLineRunner runner =
+        createCommandLineRunner(new String[] {"function f() {}"});
+    assertFalse(runner.shouldRunCompiler());
+    assertFalse(runner.hasErrors());
     assertEquals(
         0,
         new String(outReader.toByteArray(), UTF_8).indexOf(
@@ -1251,9 +1257,10 @@ public class CommandLineRunnerTest extends TestCase {
     // ensure that the compiler displays an error and exits.
     // See github issue 123
     args.add("--output_wrapper=output");
-    assertFalse(
-        createCommandLineRunner(
-            new String[] {"function f() {}"}).shouldRunCompiler());
+    CommandLineRunner runner =
+        createCommandLineRunner(new String[] {"function f() {}"});
+    assertFalse(runner.shouldRunCompiler());
+    assertTrue(runner.hasErrors());
   }
 
   /* Helper functions */
@@ -1371,7 +1378,10 @@ public class CommandLineRunnerTest extends TestCase {
 
   private Compiler compile(String[] original) {
     CommandLineRunner runner = createCommandLineRunner(original);
-    assertTrue(new String(errReader.toByteArray()), runner.shouldRunCompiler());
+    if (!runner.shouldRunCompiler()) {
+      assertTrue(runner.hasErrors());
+      fail(new String(errReader.toByteArray()));
+    }
     Supplier<List<SourceFile>> inputsSupplier = null;
     Supplier<List<JSModule>> modulesSupplier = null;
 

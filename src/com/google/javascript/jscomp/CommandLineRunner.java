@@ -94,7 +94,8 @@ import java.util.zip.ZipInputStream;
  *     MyCommandLineRunner runner = new MyCommandLineRunner(args);
  *     if (runner.shouldRunCompiler()) {
  *       runner.run();
- *     } else {
+ *     }
+ *     if (runner.hasErrors()) {
  *       System.exit(-1);
  *     }
  *   }
@@ -127,7 +128,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--help",
         handler = BooleanOptionHandler.class,
-        usage = "Displays this message")
+        usage = "Displays this message on stdout and exit")
     private boolean displayHelp = false;
 
     @Option(name = "--print_tree",
@@ -449,7 +450,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--version",
         handler = BooleanOptionHandler.class,
-        usage = "Prints the compiler version to stdout.")
+        usage = "Prints the compiler version to stdout and exit.")
     private boolean version = false;
 
     @Option(name = "--translations_file",
@@ -517,8 +518,9 @@ public class CommandLineRunner extends
       }
     }
 
-    private void printUsage(PrintStream err) {
-      (new CmdLineParser(this)).printUsage(err);
+    private void printUsage(PrintStream ps) {
+      (new CmdLineParser(this)).printUsage(ps);
+      ps.flush();
     }
 
     /**
@@ -764,7 +766,15 @@ public class CommandLineRunner extends
 
   private final Flags flags = new Flags();
 
-  private boolean isConfigValid = false;
+  private boolean errors = false;
+
+  private boolean runCompiler = false;
+
+  /**
+   * Cached error stream to avoid passing it as a parameter to helper
+   * functions.
+   */
+  private PrintStream errorStream;
 
   /**
    * Create a new command-line runner. You should only need to call
@@ -809,7 +819,13 @@ public class CommandLineRunner extends
     return processedArgs;
   }
 
-  private void processFlagFile(PrintStream err)
+  private void reportError(String message) {
+    errors = true;
+    errorStream.println(message);
+    errorStream.flush();
+  }
+
+  private void processFlagFile()
             throws CmdLineException, IOException {
     Path flagFile = Paths.get(flags.flagFile);
 
@@ -870,18 +886,17 @@ public class CommandLineRunner extends
 
     // Currently we are not supporting this (prevent direct/indirect loops)
     if (!flags.flagFile.isEmpty()) {
-      err.println("ERROR - Arguments in the file cannot contain "
+      reportError("ERROR - Arguments in the file cannot contain "
           + "--flagfile option.");
-      isConfigValid = false;
     }
   }
 
   private void initConfigFromFlags(String[] args, PrintStream out, PrintStream err) {
 
+    errorStream = err;
     List<String> processedArgs = processArgs(args);
 
     Flags.guardLevels.clear();
-    isConfigValid = true;
 
     List<String> jsFiles = null;
     try {
@@ -889,33 +904,21 @@ public class CommandLineRunner extends
 
       // For contains --flagfile flag
       if (!flags.flagFile.isEmpty()) {
-        processFlagFile(err);
+        processFlagFile();
       }
 
       jsFiles = flags.getJsFiles();
     } catch (CmdLineException e) {
-      err.println(e.getMessage());
-      isConfigValid = false;
+      reportError(e.getMessage());
     } catch (IOException ioErr) {
-      err.println("ERROR - " + flags.flagFile + " read error.");
-      isConfigValid = false;
-    }
-
-    if (flags.version) {
-      out.println(
-          "Closure Compiler (http://github.com/google/closure-compiler)\n" +
-          "Version: " + Compiler.getReleaseVersion() + "\n" +
-          "Built on: " + Compiler.getReleaseDate());
-      out.flush();
+      reportError("ERROR - " + flags.flagFile + " read error.");
     }
 
     if (flags.processCommonJsModules) {
       flags.processClosurePrimitives = true;
       flags.manageClosureDependencies = true;
       if (flags.commonJsEntryModule == null) {
-        err.println("Please specify --common_js_entry_module.");
-        err.flush();
-        isConfigValid = false;
+        reportError("Please specify --common_js_entry_module.");
       }
       flags.closureEntryPoint = Lists.newArrayList(
           ProcessCommonJSModules.toModuleName(flags.commonJsEntryModule));
@@ -927,24 +930,30 @@ public class CommandLineRunner extends
         flags.outputWrapper = Files.toString(
             new File(flags.outputWrapperFile), UTF_8);
       } catch (Exception e) {
-        err.println("ERROR - invalid output_wrapper_file specified.");
-        isConfigValid = false;
+        reportError("ERROR - invalid output_wrapper_file specified.");
       }
     }
 
     if (flags.outputWrapper != null && !flags.outputWrapper.isEmpty() &&
         !flags.outputWrapper.contains(CommandLineRunner.OUTPUT_MARKER)) {
-      err.println("ERROR - invalid output_wrapper specified. Missing '" +
+      reportError("ERROR - invalid output_wrapper specified. Missing '" +
           CommandLineRunner.OUTPUT_MARKER + "'.");
-      isConfigValid = false;
     }
 
-    if (!isConfigValid || flags.displayHelp) {
-      isConfigValid = false;
-      flags.printUsage(err);
+    if (errors) {
+      errorStream.println("Run with the --help option for the usage");
+      errorStream.flush();
+    } else if (flags.displayHelp) {
+      flags.printUsage(out);
     } else if (flags.version) {
-      isConfigValid = false;
+      out.println(
+          "Closure Compiler (http://github.com/google/closure-compiler)\n" +
+          "Version: " + Compiler.getReleaseVersion() + "\n" +
+          "Built on: " + Compiler.getReleaseDate());
+      out.flush();
     } else {
+      runCompiler = true;
+
       CodingConvention conv;
       if (flags.thirdParty) {
         conv = CodingConventions.getDefault();
@@ -996,6 +1005,7 @@ public class CommandLineRunner extends
           .setTracerMode(flags.tracerMode)
           .setNewTypeInference(flags.useNewTypeInference);
     }
+    errorStream = null;
   }
 
   @Override
@@ -1185,10 +1195,18 @@ public class CommandLineRunner extends
   }
 
   /**
-   * @return Whether the configuration is valid.
+   * @return Whether the configuration is valid and specifies to run the
+   *         compiler.
    */
   public boolean shouldRunCompiler() {
-    return this.isConfigValid;
+    return this.runCompiler;
+  }
+
+  /**
+   * @return Whether the configuration has errors.
+   */
+  public boolean hasErrors() {
+    return this.errors;
   }
 
   /**
@@ -1198,7 +1216,8 @@ public class CommandLineRunner extends
     CommandLineRunner runner = new CommandLineRunner(args);
     if (runner.shouldRunCompiler()) {
       runner.run();
-    } else {
+    }
+    if (runner.hasErrors()) {
       System.exit(-1);
     }
   }
