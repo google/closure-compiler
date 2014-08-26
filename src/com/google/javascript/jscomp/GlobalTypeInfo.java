@@ -238,10 +238,14 @@ class GlobalTypeInfo implements CompilerPass {
   private Map<Node, JSType> castTypes = new HashMap<>();
   private Map<Node, JSType> declaredObjLitProps = new HashMap<>();
 
-  // The type inference needs to know about the Array and RegExp types, in
-  // order to handle array and regexp literals. This info comes from externs.
-  // If it's not there, don't bother being more precise than JSType.UNKNOWN.
+  // Type inference needs to know about the Array and RegExp types,
+  // in order to handle array and regexp literals.
+  // This info should comes from externs, and will be set to ? if not present.
   private JSType arrayType, regexpType;
+
+  // GlobalTypeInfo needs to know about the nominal type "Object" in order
+  // to handle the implicit inheritance from Object of all classes.
+  private NominalType objectNominalType;
 
   GlobalTypeInfo(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
@@ -288,6 +292,16 @@ class GlobalTypeInfo implements CompilerPass {
       regexpType = regexpCtor.getFunType().getReturnType();
     }
     return regexpType;
+  }
+
+  private NominalType getObjectNominalType() {
+    if (objectNominalType == null) {
+      RawNominalType rawNominal = globalScope.getNominalType(new QualifiedName("Object"));
+      if (rawNominal != null) {
+        objectNominalType = rawNominal.getAsNominalType();
+      }
+    }
+    return objectNominalType;
   }
 
   // Differs from the similar method in Scope class on how it treats qnames.
@@ -1451,9 +1465,8 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Look at other annotations, eg, @constructor
       if (fnDoc != null) {
-        NominalType parentClass = null;
-        // TODO(dimvar): ignore @extends {Object} on constructors,
-        // it should be a no-op.
+        NominalType parentClass =
+            "Object".equals(functionName) ? null : getObjectNominalType();
         if (fnDoc.hasBaseType()) {
           if (!fnDoc.isConstructor()) {
             warnings.add(JSError.make(

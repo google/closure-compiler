@@ -3250,6 +3250,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testInheritanceImplicitObjectSubtyping() {
+    String objectExterns =
+        "/** @constructor */ function Object() {}\n" +
+        "/** @return {string} */ Object.prototype.toString = function() {};";
+
+    checkNoWarnings(objectExterns,
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @override */ Foo.prototype.toString = function(){ return ''; };");
+
+    typeCheck(objectExterns,
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @override */ Foo.prototype.toString = function(){ return 5; };",
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+  }
+
   public void testRecordtypeSubtyping() {
     // TODO(dimvar): fix
     // checkNoWarnings(
