@@ -1509,11 +1509,10 @@ class GlobalTypeInfo implements CompilerPass {
             } else if (ctorType.isStruct() && !parentClass.isStruct()) {
               warnings.add(JSError.make(
                   declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
-                      className, "struct", "struct"));
+                      "struct", className));
             } else if (ctorType.isDict() && !parentClass.isDict()) {
               warnings.add(JSError.make(
-                  declNode, TypeCheck.CONFLICTING_SHAPE_TYPE, className,
-                  "dict", "dict"));
+                  declNode, TypeCheck.CONFLICTING_SHAPE_TYPE, "dict", className));
             }
           }
           if (ctorType.isDict() && !implementedIntfs.isEmpty()) {
