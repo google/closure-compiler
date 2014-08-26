@@ -256,11 +256,26 @@ public final class JsDocInfoParser {
           break;
 
         case EOC:
+          boolean success = true;
           if (hasParsedFileOverviewDocInfo()) {
             fileOverviewJSDocInfo = retrieveAndResetParsedJSDocInfo();
+            Visibility visibility = fileOverviewJSDocInfo.getVisibility();
+            switch (visibility) {
+              case PRIVATE: // fallthrough
+              case PROTECTED:
+                // PRIVATE and PROTECTED are not allowed in @fileoverview JsDoc.
+                parser.addParserWarning("msg.bad.fileoverview.visibility.annotation",
+                    visibility.toString().toLowerCase(), stream.getLineno(), stream.getCharno());
+                success = false;
+                break;
+              default:
+                // PACKAGE, PUBLIC, and (implicitly) INHERITED are allowed
+                // in @fileoverview JsDoc.
+                break;
+            }
           }
           checkExtendedTypes(extendedTypes);
-          return true;
+          return success;
 
         case EOF:
           // discard any accumulated information

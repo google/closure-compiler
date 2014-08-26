@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PACKAGE_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_GLOBAL_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PRIVATE_PROPERTY_ACCESS;
+import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY;
 import static com.google.javascript.jscomp.CheckAccessControls.BAD_PROTECTED_PROPERTY_ACCESS;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_DELETED;
 import static com.google.javascript.jscomp.CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE;
@@ -858,6 +859,213 @@ public class CheckAccessControlsTest extends CompilerTestCase {
                     "baz/quux.js",
                     "SubFoo.prototype.baz = function() { this.bar(); }")),
     null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
+    test("/**\n" +
+          "* @fileoverview\n" +
+          "* @package\n" +
+          "*/\n" +
+          "/** @struct @constructor */\n" +
+          "Foo = function() {};\n" +
+          "/** @private */\n" +
+          "Foo.prototype.privateMethod_ = function() {};\n" +
+          "/** @struct @constructor @extends {Foo} */\n" +
+          "Bar = function() {};\n" +
+          "/** @override */\n" +
+          "Bar.prototype.privateMethod_ = function() {};\n",
+        null, BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
+  }
+
+  public void testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
+    test(new String[]{
+      "/** @struct @constructor */\n" +
+          "Foo = function() {};\n" +
+          "/** @protected */\n" +
+          "Foo.prototype.protectedMethod = function() {};\n",
+      "  /**\n" +
+          "* @fileoverview \n" +
+          "* @package\n" +
+          "*/\n" +
+          "/** @struct @constructor @extends {Foo} */\n" +
+          "Bar = function() {};\n" +
+          "/** @override */\n" +
+          "Bar.prototype.protectedMethod = function() {};\n"
+    }, null, BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
+  }
+
+  public void testOverrideWithoutVisibilityRedeclInFileWithNoFileOverviewOk() {
+    testSame("/** @struct @constructor */\n" +
+        "Foo = function() {};\n" +
+        "/** @private */\n" +
+        "Foo.prototype.privateMethod_ = function() {};\n" +
+        "/** @struct @constructor @extends {Foo} */\n" +
+        "Bar = function() {};\n" +
+        "/** @override */\n" +
+        "Bar.prototype.privateMethod_ = function() {};\n");
+  }
+
+  public void testOverrideWithoutVisibilityRedeclInFileWithNoFileOverviewVisibilityOk() {
+    testSame("/**\n" +
+        "  * @fileoverview\n" +
+        "  */\n" +
+        "/** @struct @constructor */\n" +
+          "Foo = function() {};\n" +
+          "/** @private */\n" +
+          "Foo.prototype.privateMethod_ = function() {};\n" +
+          "/** @struct @constructor @extends {Foo} */\n" +
+          "Bar = function() {};\n" +
+          "/** @override */\n" +
+          "Bar.prototype.privateMethod_ = function() {};\n");
+  }
+
+  public void testOverrideWithVisibilityRedeclInFileWithFileOverviewVisibilityOk_OneFile() {
+    testSame("/**\n" +
+        "  * @fileoverview\n" +
+        "  * @package\n" +
+        "  */\n" +
+        "/** @struct @constructor */\n" +
+          "Foo = function() {};\n" +
+          "/** @private */\n" +
+          "Foo.prototype.privateMethod_ = function() {};\n" +
+          "/** @struct @constructor @extends {Foo} */\n" +
+          "Bar = function() {};\n" +
+          "/** @override @private */\n" +
+          "Bar.prototype.privateMethod_ = function() {};\n");
+  }
+
+  public void testOverrideWithVisibilityRedeclInFileWithFileOverviewVisibilityOk_TwoFiles() {
+    testSame(new String[]{
+      "/** @struct @constructor */\n" +
+          "Foo = function() {};\n" +
+          "/** @protected */\n" +
+          "Foo.prototype.protectedMethod = function() {};\n",
+      "  /**\n" +
+          "* @fileoverview\n" +
+          "* @package\n" +
+          "*/\n" +
+          "/** @struct @constructor @extends {Foo} */\n" +
+          "Bar = function() {};\n" +
+          "/** @override @protected */\n" +
+          "Bar.prototype.protectedMethod = function() {};\n"
+    });
+  }
+
+  public void testPublicFileOverviewVisibilityDoesNotApplyToNameWithExplicitPackageVisibility() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @public\n" +
+            " */\n" +
+            "/** @constructor @package */ function Foo() {};"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "new Foo();")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testPackageFileOverviewVisibilityDoesNotApplyToNameWithExplicitPublicVisibility() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @package\n" +
+            " */\n" +
+            "/** @constructor @public */ function Foo() {};"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "new Foo();")));
+  }
+
+  public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @package\n" +
+            " */\n" +
+            "/** @constructor */\n" +
+            "var Foo = function() {};\n"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "new Foo();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testPackageFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPublicVisibility() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @package\n" +
+            " */\n" +
+            "/** @constructor */\n" +
+            "Foo = function() {};\n" +
+            "/** @public */\n" +
+            "Foo.prototype.bar = function() {};\n"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "var foo = new Foo();\n" +
+            "foo.bar();")));
+  }
+
+  public void testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @public\n" +
+            " */\n" +
+            "/** @constructor */\n" +
+            "Foo = function() {};\n" +
+            "/** @package */\n" +
+            "Foo.prototype.bar = function() {};\n"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "var foo = new Foo();\n" +
+            "foo.bar();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testPublicFileOverviewVisibilityAppliesToPropertyWithoutExplicitVisibility() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @public\n" +
+            " */\n" +
+            "/** @constructor */\n" +
+            "Foo = function() {};\n" +
+            "Foo.prototype.bar = function() {};\n"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "var foo = new Foo();\n" +
+            "foo.bar();")));
+  }
+
+  public void testPackageFileOverviewVisibilityAppliesToPropertyWithoutExplicitVisibility() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @package\n" +
+            " */\n" +
+            "/** @constructor */\n" +
+            "Foo = function() {};\n" +
+            "Foo.prototype.bar = function() {};\n"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "var foo = new Foo();\n" +
+            "foo.bar();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoExceptionsWithBadConstructors1() {

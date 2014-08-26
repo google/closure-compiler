@@ -88,6 +88,13 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           "JSC_BAD_PROTECTED_PROPERTY_ACCESS",
           "Access to protected property {0} of {1} not allowed here.");
 
+  static final DiagnosticType
+      BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY =
+      DiagnosticType.error(
+          "JSC_BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY",
+          "Overridden property {0} in file with fileoverview visibility {1}" +
+          " must explicity redeclare superclass visibility");
+
   static final DiagnosticType PRIVATE_OVERRIDE =
       DiagnosticType.warning(
           "JSC_PRIVATE_OVERRIDE",
@@ -126,6 +133,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   private int deprecatedDepth = 0;
   private int methodDepth = 0;
   private JSType currentClass = null;
+  private JSDocInfo fileOverviewJsDoc = null;
 
   private final Multimap<JSType, String> initializedConstantProperties;
 
@@ -242,6 +250,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    // Cache the @fileoverview JsDoc in case it has a default visibility.
+    if (n.getType() == Token.SCRIPT && n.getJSDocInfo() != null) {
+      fileOverviewJsDoc = n.getJSDocInfo();
+    }
     return true;
   }
 
@@ -407,10 +419,18 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       boolean isPrivateByConvention = isPrivateByConvention(name.getString());
       boolean isPrivate = isPrivateByConvention;
       JSDocInfo docInfo = var.getJSDocInfo();
+
+      Visibility visibility = null;
       if (docInfo != null) {
+        visibility = docInfo.getVisibility();
+      }
+      if ((visibility == null || visibility == Visibility.INHERITED)
+          && fileOverviewJsDoc != null) {
+        visibility = fileOverviewJsDoc.getVisibility();
+      }
+
+      if (visibility != null) {
         // If a name is private, make sure that we're in the same file.
-        Visibility visibility = docInfo.getVisibility();
-        // Overwrite if the visibility is explicitly set
         if (visibility != Visibility.INHERITED) {
           isPrivate = visibility == Visibility.PRIVATE;
           if (isPrivateByConvention && !isPrivate) {
@@ -621,6 +641,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         }
       }
 
+      Visibility fileOverviewVisibility = (fileOverviewJsDoc != null)
+          ? fileOverviewJsDoc.getVisibility()
+          : null;
+
       if (objectType == null) {
         // We couldn't find a visibility modifier
         if (isPrivateByConvention
@@ -630,6 +654,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           // it was defined in.
           objectType = referenceType;
           visibility = Visibility.PRIVATE;
+        } else if (fileOverviewVisibility != null) {
+          definingSource = fileOverviewJsDoc.getStaticSourceFile();
         } else {
           // Otherwise just assume the property is public.
           return;
@@ -647,21 +673,40 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         Visibility overridingVisibility = overridingInfo == null ?
             Visibility.INHERITED : overridingInfo.getVisibility();
 
-        // Check that (a) the property *can* be overridden, and
-        // (b) that the visibility of the override is the same as the
-        // visibility of the original property.
+        // Check that:
+        // (a) the property *can* be overridden,
+        // (b) the visibility of the override is the same as the
+        //     visibility of the original property,
+        // (c) the visibility is explicitly redeclared if the override is in
+        //     a file with default visibility in the @fileoverview block.
         if (visibility == Visibility.PRIVATE && !sameInput) {
           compiler.report(
               t.makeError(getprop, PRIVATE_OVERRIDE,
                   objectType.toString()));
         } else if (overridingVisibility != Visibility.INHERITED &&
-            overridingVisibility != visibility) {
+            overridingVisibility != visibility &&
+            fileOverviewVisibility == null) {
           compiler.report(
               t.makeError(getprop, VISIBILITY_MISMATCH,
                   visibility.name(), objectType.toString(),
                   overridingVisibility.name()));
+        } else if (overridingVisibility == Visibility.INHERITED &&
+            overridingVisibility != visibility &&
+            fileOverviewVisibility != null &&
+            fileOverviewVisibility != Visibility.INHERITED) {
+          compiler.report(
+              t.makeError(getprop,
+                  BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY,
+                  propertyName,
+                  fileOverviewVisibility.name()));
         }
       } else {
+        // If the property does not have an explicit visibility annotation
+        // but the file's @fileoverview block does, use that.
+        if (fileOverviewVisibility != null &&
+            visibility == Visibility.INHERITED) {
+          visibility = fileOverviewVisibility;
+        }
         if (sameInput) {
           // private access is always allowed in the same file.
           return;

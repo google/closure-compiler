@@ -2352,6 +2352,28 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "extra @fileoverview tag");
   }
 
+  public void testPublicVisibilityAllowedInFileOverview() {
+    parseFileOverview("@fileoverview \n * @public */");
+  }
+
+  public void testPackageVisibilityAllowedInFileOverview() {
+    parseFileOverview("@fileoverview \n * @package */");
+  }
+
+  public void testImplicitVisibilityAllowedInFileOverview() {
+    parseFileOverview("@fileoverview */");
+  }
+
+  public void testProtectedVisibilityNotAllowedInFileOverview() {
+    parseFileOverview("@fileoverview \n * @protected */",
+        "protected visibility not allowed in @fileoverview block");
+  }
+
+  public void testPrivateVisibilityNotAllowedInFileOverview() {
+    parseFileOverview("@fileoverview \n @private */",
+        "private visibility not allowed in @fileoverview block");
+  }
+
   public void testReferences() throws Exception {
     JSDocInfo jsdoc
         = parse("@see A cool place!"
