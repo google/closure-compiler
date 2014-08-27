@@ -99,15 +99,16 @@ public class Parser {
       ES6_STRICT,
     }
 
+    public final boolean atLeast6;
+    public final boolean atLeast5;
     public final boolean isStrictMode;
     public final boolean warnTrailingCommas;
     public final boolean warnLineContinuations;
     public final boolean warnES6NumberLiteral;
 
     public Config(Mode mode) {
-      boolean atLeast6 = mode == Mode.ES6 || mode == Mode.ES6_STRICT;
-      boolean atLeast5 =
-          atLeast6 || mode == Mode.ES5 || mode == Mode.ES5_STRICT;
+      atLeast6 = mode == Mode.ES6 || mode == Mode.ES6_STRICT;
+      atLeast5 = atLeast6 || mode == Mode.ES5 || mode == Mode.ES5_STRICT;
       this.isStrictMode = mode == Mode.ES5_STRICT || mode == Mode.ES6_STRICT;
 
       // Generally, we allow everything that is valid in any mode
@@ -967,12 +968,16 @@ public class Parser {
         if (variables.declarations.size() > 1) {
           reportError("for-in statement may not have more than one variable declaration");
         }
-        // for-in: if let/const binding used, initializer is illegal
-        if ((variables.declarationType == TokenType.LET ||
-             variables.declarationType == TokenType.CONST)) {
-          VariableDeclarationTree declaration = variables.declarations.get(0);
-          if (declaration.initializer != null) {
-            reportError("let/const in for-in statement may not have initializer");
+        VariableDeclarationTree declaration = variables.declarations.get(0);
+        if (declaration.initializer != null) {
+          // An initializer is allowed here in ES5 and below, but not in ES6.
+          // Warn about it, to encourage people to eliminate it from their code.
+          // http://esdiscuss.org/topic/initializer-expression-on-for-in-syntax-subject
+          if (config.atLeast6) {
+            reportError("for-in statement may not have initializer");
+          } else {
+            errorReporter.reportWarning(declaration.location.start,
+                "for-in statement should not have initializer");
           }
         }
 

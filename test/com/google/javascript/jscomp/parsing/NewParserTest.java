@@ -2221,7 +2221,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("*()=>1;", "primary expression expected");
   }
 
-  public void testForIn() {
+  public void testForIn_ES6() {
     mode = LanguageMode.ECMASCRIPT6;
 
     parse("for (a in b) c;");
@@ -2231,12 +2231,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     parseError("for (a=1 in b) c;", "';' expected");
     parseError("for (let a=1 in b) c;",
-        "let/const in for-in statement may not have initializer");
+        "for-in statement may not have initializer");
     parseError("for (const a=1 in b) c;",
-        "let/const in for-in statement may not have initializer");
+        "for-in statement may not have initializer");
+    parseError("for (var a=1 in b) c;",
+        "for-in statement may not have initializer");
+  }
 
-    // TODO(tbreisacher): Report an error for this case too.
-    parse("for (var a=1 in b) c;");
+  public void testForIn_ES5() {
+    mode = LanguageMode.ECMASCRIPT5;
+
+    parse("for (a in b) c;");
+    parse("for (var a in b) c;");
+
+    parseError("for (a=1 in b) c;", "';' expected");
+    parseWarning("for (var a=1 in b) c;",
+        "for-in statement should not have initializer");
   }
 
   public void testForInDestructuring() {
@@ -2259,22 +2269,20 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     parseError("for ({a: b} = foo() in c) d;", "';' expected");
     parseError("for (let {a: b} = foo() in c) d;",
-        "let/const in for-in statement may not have initializer");
+        "for-in statement may not have initializer");
     parseError("for (const {a: b} = foo() in c) d;",
-        "let/const in for-in statement may not have initializer");
-
-    // TODO(tbreisacher): Report an error for this case too.
-    parse("for (var {a: b} = foo() in c) d;");
+        "for-in statement may not have initializer");
+    parseError("for (var {a: b} = foo() in c) d;",
+        "for-in statement may not have initializer");
 
     parseError("for ([a] = foo() in b) c;",
         "';' expected");
     parseError("for (let [a] = foo() in b) c;",
-        "let/const in for-in statement may not have initializer");
+        "for-in statement may not have initializer");
     parseError("for (const [a] = foo() in b) c;",
-        "let/const in for-in statement may not have initializer");
-
-    // TODO(tbreisacher): Report an error for this case too.
-    parse("for (var [a] = foo() in b) c;");
+        "for-in statement may not have initializer");
+    parseError("for (var [a] = foo() in b) c;",
+        "for-in statement may not have initializer");
   }
 
   public void testForOf1() {

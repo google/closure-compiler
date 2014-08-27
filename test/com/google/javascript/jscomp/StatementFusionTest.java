@@ -83,8 +83,12 @@ public class StatementFusionTest extends CompilerTestCase  {
     fuse("a;b;c;switch(x){}", "switch(a,b,c,x){}");
   }
 
-  public void testFuseIntoForIn() {
+  public void testFuseIntoForIn1() {
     fuse("a;b;c;for(x in y){}", "for(x in a,b,c,y){}");
+  }
+
+  public void testFuseIntoForIn2() {
+    setExpectParseWarningsThisTest();
     fuseSame("a();for(var x = b() in y){}");
   }
 

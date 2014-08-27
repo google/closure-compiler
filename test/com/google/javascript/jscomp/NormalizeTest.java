@@ -147,6 +147,7 @@ public class NormalizeTest extends CompilerTestCase {
   }
 
   public void testForIn2() {
+    setExpectParseWarningsThisTest();
     // Verify vars are extracted from the FOR-IN node.
     test("for(var a = foo() in b) foo()",
          "var a = foo(); for(a in b) foo()");

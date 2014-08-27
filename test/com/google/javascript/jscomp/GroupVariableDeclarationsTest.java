@@ -104,10 +104,14 @@ public class GroupVariableDeclarationsTest extends CompilerTestCase {
          "var a = [1, 2, 3, 4], z, y; for (z in a) {alert(z);} y = 5;");
     test("var a; for (var z in a = [1, 2, 3, 4]) {alert(z);} var y, x = 5;",
          "var a, z, y, x; for (z in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
-    test("var a; for (var z = 1 in a = [1, 2, 3, 4]) {alert(z);} var y, x = 5;",
-         "var a, y, x; for (var z = 1 in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
     test("var a, z; for (z in a = [1, 2, 3, 4]) {alert(z);} var y, x = 5;",
          "var a, z, y, x; for (z in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
+  }
+
+  public void testGroupingVarsInForAndForInLoops_initializer() {
+    setExpectParseWarningsThisTest();
+    test("var a; for (var z = 1 in a = [1, 2, 3, 4]) {alert(z);} var y, x = 5;",
+         "var a, y, x; for (var z = 1 in a = [1, 2, 3, 4]) {alert(z);} x = 5;");
   }
 
   public void testGroupingVarsNestedFunction() {

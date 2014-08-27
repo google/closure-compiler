@@ -60,10 +60,14 @@ public class AstValidatorTest extends CompilerTestCase {
 
   public void testForIn() {
     valid("for(var a in b);");
-    valid("for(var a = 1 in b);");
     valid("for(a in b);");
     valid("for(a in []);");
     valid("for(a in {});");
+  }
+
+  public void testQuestionableForIn() {
+    setExpectParseWarningsThisTest();
+    valid("for(var a = 1 in b);");
   }
 
   public void testDebugger() {
