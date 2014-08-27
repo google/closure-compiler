@@ -3085,6 +3085,20 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T := cond(streq('foo', 'bar'), R, S) =: */");
   }
 
+  public void testParserWithTTLConditionalIsConstructor() {
+    parse("@template T := cond(isCtor(R), R, S) =: */");
+  }
+  public void testParserWithTTLConditionalIsConstructor2() {
+    parse("@template T := cond(isCtor('foo'), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditionalIsTemplatized() {
+    parse("@template T := cond(isTemplatized(R), R, S) =: */");
+  }
+  public void testParserWithTTLConditionalIsTemplatized2() {
+    parse("@template T := cond(isTemplatized('foo'), R, S) =: */");
+  }
+
   public void testParserWithTTLConditionalStringEquivalenceInvalidParam() {
     parse("@template T := cond(streq('foo', foo()), R, S) =: */",
         "Bad type annotation. Invalid string",
@@ -3095,6 +3109,20 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLConditionalStringEquivalenceInvalidParamEmptyStr() {
     parse("@template T := cond(streq('', S), R, S) =: */",
         "Bad type annotation. Invalid string parameter",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalIsConstructorInvalidParam() {
+    parse("@template T := cond(isCtor(foo()), R, S) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalIsTemplatizedInvalidParam() {
+    parse("@template T := cond(isTemplatized(foo()), R, S) =: */",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside boolean",
         "Bad type annotation. Invalid expression inside conditional");
   }
@@ -3111,6 +3139,18 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside conditional");
   }
 
+  public void testParserWithTTLExtraParamIsConstructor() {
+    parse("@template T := cond(isCtor(T, R, S), R, S) =: */",
+        "Bad type annotation. Found extra parameter in isCtor",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLExtraParamIsTemplatized() {
+    parse("@template T := cond(isTemplatized(T, R, S), R, S) =: */",
+        "Bad type annotation. Found extra parameter in isTemplatized",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
   public void testParserWithTTLMissingParamBoolean() {
     parse("@template T := cond(eq(T), R, S) =: */",
         "Bad type annotation. Missing parameter in eq",
@@ -3120,6 +3160,18 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLMissingParamStringEquivalence() {
     parse("@template T := cond(streq(T), R, S) =: */",
         "Bad type annotation. Missing parameter in streq",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLMissingParamIsConstructor() {
+    parse("@template T := cond(isCtor(), R, S) =: */",
+        "Bad type annotation. Missing parameter in isCtor",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLMissingParamIsTemplatized() {
+    parse("@template T := cond(isTemplatized(), R, S) =: */",
+        "Bad type annotation. Missing parameter in isTemplatized",
         "Bad type annotation. Invalid expression inside conditional");
   }
 
@@ -3535,6 +3587,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         +       "T)"
         + "=: */");
   }
+
+
 
   public void testWhitelistedNewAnnotations() {
     parse("@foobar */",

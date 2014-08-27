@@ -55,6 +55,8 @@ public final class TypeTransformationParser {
     ALL("all", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
     COND("cond", 3, 3, OperationKind.OPERATION),
     EQ("eq", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
+    ISCTOR("isCtor", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
+    ISTEMPLATIZED("isTemplatized", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
     MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),
     MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
     NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
@@ -433,17 +435,18 @@ public final class TypeTransformationParser {
     }
   }
 
-  private boolean validBooleanTypePredicate(Node expr) {
-    // Both input types must be valid type expressions
-    if (!validTypeTransformationExpression(getCallArgument(expr, 0))
-        || !validTypeTransformationExpression(getCallArgument(expr, 1))) {
-      warnInvalidInside("boolean", expr);
-      return false;
+  private boolean validBooleanTypePredicate(Node expr, int paramCount) {
+    // All the types must be valid type expressions
+    for (int i = 0; i < paramCount; i++) {
+      if (!validTypeTransformationExpression(getCallArgument(expr, i))) {
+        warnInvalidInside("boolean", expr);
+        return false;
+      }
     }
     return true;
   }
 
-  private boolean isValidBooleanStringPredicateParam(Node expr) {
+  private boolean isValidStringParam(Node expr) {
     if (!expr.isName() && !expr.isString()) {
       warnInvalid("string", expr);
       return false;
@@ -455,12 +458,13 @@ public final class TypeTransformationParser {
     return true;
   }
 
-  private boolean validBooleanStringPredicate(Node expr) {
-    // Both parameters must be either a string or a variable
-    if (!isValidBooleanStringPredicateParam(getCallArgument(expr, 0))
-        || !isValidBooleanStringPredicateParam(getCallArgument(expr, 1))) {
-      warnInvalidInside("boolean", expr);
-      return false;
+  private boolean validBooleanStringPredicate(Node expr, int paramCount) {
+    // Each parameter must be valid string parameter
+    for (int i = 0; i < paramCount; i++) {
+      if (!isValidStringParam(getCallArgument(expr, i))) {
+        warnInvalidInside("boolean", expr);
+        return false;
+      }
     }
     return true;
   }
@@ -484,9 +488,9 @@ public final class TypeTransformationParser {
     }
     switch (keyword.kind) {
       case BOOLEAN_TYPE_PREDICATE:
-        return validBooleanTypePredicate(expr);
+        return validBooleanTypePredicate(expr, getCallParamCount(expr));
       case BOOLEAN_STRING_PREDICATE:
-        return validBooleanStringPredicate(expr);
+        return validBooleanStringPredicate(expr, getCallParamCount(expr));
       default:
         throw new IllegalStateException("Invalid boolean expression");
     }

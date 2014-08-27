@@ -411,27 +411,17 @@ class TypeTransformation {
     return createUnionType(basicTypes);
   }
 
-  private boolean evalBooleanTypePredicate(Node ttlAst,
-      NameResolver nameResolver) {
+  private JSType[] evalTypeParams(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
-    JSType type0 = evalInternal(params.get(0), nameResolver);
-    JSType type1 = evalInternal(params.get(1), nameResolver);
-    String name = getCallName(ttlAst);
-
-    Keywords keyword = nameToKeyword(name);
-    switch (keyword) {
-      case EQ:
-        return type0.isEquivalentTo(type1);
-      case SUB:
-        return type0.isSubtype(type1);
-      default:
-        throw new IllegalStateException(
-            "Invalid boolean predicate in the type transformation");
+    int paramCount = params.size();
+    JSType[] result = new JSType[paramCount];
+    for (int i = 0; i < paramCount; i++) {
+      result[i] = evalInternal(params.get(i), nameResolver);
     }
+    return result;
   }
 
-  private String evalBooleanStringPredicateParam(Node ttlAst,
-      NameResolver nameResolver) {
+  private String evalString(Node ttlAst, NameResolver nameResolver) {
     if (ttlAst.isName()) {
       // Return the empty string if the name variable cannot be resolved
       if (!nameResolver.nameVars.containsKey(ttlAst.getString())) {
@@ -443,23 +433,51 @@ class TypeTransformation {
     return ttlAst.getString();
   }
 
+  private String[] evalStringParams(Node ttlAst, NameResolver nameResolver) {
+    ImmutableList<Node> params = getCallParams(ttlAst);
+    int paramCount = params.size();
+    String[] result = new String[paramCount];
+    for (int i = 0; i < paramCount; i++) {
+      result[i] = evalString(params.get(i), nameResolver);
+    }
+    return result;
+  }
+
+  private boolean evalBooleanTypePredicate(Node ttlAst,
+      NameResolver nameResolver) {
+    JSType[] params = evalTypeParams(ttlAst, nameResolver);
+    String name = getCallName(ttlAst);
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword) {
+      case EQ:
+        return params[0].isEquivalentTo(params[1]);
+      case SUB:
+        return params[0].isSubtype(params[1]);
+      case ISCTOR:
+        return params[0].isConstructor();
+      case ISTEMPLATIZED:
+        return params[0].isTemplatizedType();
+      default:
+        throw new IllegalStateException(
+            "Invalid boolean type predicate in the type transformation");
+    }
+  }
+
   private boolean evalBooleanStringPredicate(Node ttlAst,
       NameResolver nameResolver) {
-    ImmutableList<Node> params = getCallParams(ttlAst);
-    String str0 = evalBooleanStringPredicateParam(params.get(0), nameResolver);
-    String str1 = evalBooleanStringPredicateParam(params.get(1), nameResolver);
-
+    String[] params = evalStringParams(ttlAst, nameResolver);
     // If any of the parameters evaluates to the empty string then they were
     // not resolved by the name resolver. In this case we always return false.
-    if (str0.equals("") || str1.equals("")) {
-      return false;
+    for (int i = 0; i < params.length; i++) {
+      if (params[i].equals("")) {
+        return false;
+      }
     }
-
     String name = getCallName(ttlAst);
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case STREQ:
-        return str0.equals(str1);
+        return params[0].equals(params[1]);
       default:
         throw new IllegalStateException(
             "Invalid boolean string predicate in the type transformation");

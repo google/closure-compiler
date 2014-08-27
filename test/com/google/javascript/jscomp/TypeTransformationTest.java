@@ -149,12 +149,12 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "cond( sub('Number', 'String'), 'string', 'number')");
   }
 
-  public void testTransformationWithTrueStreqConditional2() {
-    testTTL(STRING_TYPE, "cond(streq(n, n), 'string', 'number')");
-  }
-
   public void testTransformationWithTrueStreqConditional() {
     testTTL(STRING_TYPE, "cond(streq(n, 'number'), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueStreqConditional2() {
+    testTTL(STRING_TYPE, "cond(streq(n, n), 'string', 'number')");
   }
 
   public void testTransformationWithTrueStreqConditional3() {
@@ -668,6 +668,22 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithUnknownTypeOfVar() {
     testTTL(UNKNOWN_TYPE, "typeOfVar('foo')",
         "Variable foo is undefined in the scope");
+  }
+
+  public void testTransformationWithTrueIsConstructorConditional() {
+    testTTL(STRING_TYPE, "cond(isCtor(typeOfVar('Bar')), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseIsConstructorConditional() {
+    testTTL(NUMBER_TYPE, "cond(isCtor(N), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueIsTemplatizedConditional() {
+    testTTL(STRING_TYPE, "cond(isTemplatized(type(ARR, N)), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseIsTemplatizedConditional() {
+    testTTL(NUMBER_TYPE, "cond(isTemplatized(ARR), 'string', 'number')");
   }
 
   private void initRecordTypeTests() {
