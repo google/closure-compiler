@@ -60,6 +60,10 @@
   <property name="webservice-classes.dir" value = "${build.dir}/webservice-classes" />
   <property name="webservice-jarfile" value="${build.dir}/webservice.jar" />
 
+  <property name="refasterjs.dir" value="${basedir}/src/com/google/javascript/refactoring" />
+  <property name="refasterjs-classes.dir" value = "${build.dir}/refasterjs-classes" />
+  <property name="refasterjs-jarfile" value="${build.dir}/refasterjs.jar" />
+
   <!-- The following server is used to deploy releases to maven central via Sonatypes
        publishing service which runs on oss.sonatype.org.
 
@@ -140,7 +144,7 @@
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn,.git,**/webservice/**,**/testing/**"
+           excludes=".svn,.git,**/refactoring/**,**/webservice/**,**/testing/**"
            debug="${javac.debug}"
            includeantruntime="true">
       <classpath refid="srcclasspath.path" />
@@ -351,6 +355,47 @@
      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
      <fileset dir="${classes.dir}" />
      <fileset dir="${webservice-classes.dir}" />
+   </jar>
+  </target>
+
+  <!-- RefasterJS package related targets                 -->
+  <!-- set the classpath for the project              -->
+  <!-- this includes the generated source class files -->
+  <!-- and every jar in the /lib directory            -->
+  <path id="refasterjs-classpath.path">
+    <pathelement location="${classes.dir}" />
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+    <fileset dir="${classes.dir}">
+      <include name="*.class" />
+    </fileset>
+  </path>
+
+  <target name="refasterjs-compile"
+          description="Compiles the source code of classes for RefasterJS"
+          depends="compile">
+    <mkdir dir="${refasterjs-classes.dir}" />
+    <javac srcdir="${refasterjs.dir}"
+           destdir="${refasterjs-classes.dir}"
+           excludes=".svn,.git"
+           debug="${javac.debug}">
+      <classpath refid="refasterjs-classpath.path" />
+    </javac>
+  </target>
+
+  <target name="refasterjs-jar"
+          description="Packages the compiler and RefasterJS classes"
+          depends="refasterjs-compile, compile">
+   <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
+   <jar destfile="${refasterjs-jarfile}" update="true">
+     <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+     <fileset dir="${classes.dir}" />
+     <fileset dir="${refasterjs-classes.dir}" />
+     <manifest>
+       <attribute name="Main-Class"
+                   value="com.google.javascript.refactoring.RefasterJs" />
+     </manifest>
    </jar>
   </target>
 </project>
