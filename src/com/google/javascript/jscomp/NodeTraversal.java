@@ -347,13 +347,16 @@ public class NodeTraversal {
    */
   void traverseWithScope(Node root, Scope s) {
     Preconditions.checkState(s.isGlobal());
-
-    inputId = null;
-    sourceName = "";
-    curNode = root;
-    pushScope(s);
-    traverseBranch(root, null);
-    popScope();
+    try {
+      inputId = null;
+      sourceName = "";
+      curNode = root;
+      pushScope(s);
+      traverseBranch(root, null);
+      popScope();
+    } catch (Exception unexpectedException) {
+      throwUnexpectedException(unexpectedException);
+    }
   }
 
   /**
