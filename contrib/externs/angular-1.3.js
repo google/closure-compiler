@@ -853,7 +853,9 @@ angular.Module.requires;
  *   $watch: function(
  *       (string|Function), (string|Function)=, boolean=):function(),
  *   $watchCollection: function(
- *       (string|Function), (string|Function)=):function()
+ *       (string|Function), (string|Function)=):function(),
+ *   $watchGroup: function(
+ *       Array.<string|Function>, (string|Function)=):function()
  *   }}
  */
 angular.Scope;
