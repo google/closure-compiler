@@ -178,7 +178,7 @@ public class ParserRunner {
       case ECMASCRIPT6:
         return Mode.ES6;
       case ECMASCRIPT6_STRICT:
-        return Mode.ES5_STRICT;
+        return Mode.ES6_STRICT;
       default:
         throw new IllegalStateException("unexpected");
     }
