@@ -1279,6 +1279,18 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         CONVENTION_MISMATCH, true);
   }
 
+  public void testDeclarationAndConventionConflict7() {
+    testSame("/** @public */ var Foo_;", CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict8() {
+    testSame("/** @package */ var Foo_;", CONVENTION_MISMATCH, true);
+  }
+
+  public void testDeclarationAndConventionConflict9() {
+    testSame("/** @protected */ var Foo_;", CONVENTION_MISMATCH, true);
+  }
+
   public void testConstantProperty1a() {
     test("/** @constructor */ function A() {" +
         "/** @const */ this.bar = 3;}" +
