@@ -189,6 +189,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     if (NodeUtil.isNameDeclaration(parent)) {
       rhs = objectPattern.getLastChild();
       nodeToDetach = parent;
+    } else if (parent.isAssign() && parent.getParent().isExprResult()) {
+      rhs = parent.getLastChild();
+      nodeToDetach = parent.getParent();
     } else if (parent.isStringKey() || parent.isArrayPattern()
         || parent.isDefaultValue()) {
       // Nested object pattern; do nothing. We will visit it after rewriting the parent.
@@ -205,7 +208,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     // var d = temp.c;
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
-        .useSourceInfoFromForTree(objectPattern);
+        .useSourceInfoIfMissingFromForTree(objectPattern);
     nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
 
     for (Node child = objectPattern.getFirstChild(), next;
@@ -248,10 +251,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       Node newNode;
       if (NodeUtil.isNameDeclaration(parent)) {
         newNode = IR.declaration(newLHS, newRHS, parent.getType());
-        newNode.useSourceInfoFromForTree(child);
+      } else if (parent.isAssign()) {
+        newNode = IR.exprResult(IR.assign(newLHS, newRHS));
       } else {
         throw new IllegalStateException("not reached");
       }
+      newNode.useSourceInfoIfMissingFromForTree(child);
 
       nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
 
@@ -293,7 +298,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     // var y = temp[1];
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
-        .useSourceInfoFromForTree(arrayPattern);
+        .useSourceInfoIfMissingFromForTree(arrayPattern);
     nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
 
     int i = 0;
@@ -328,7 +333,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       } else {
         newNode = IR.declaration(newLHS, newRHS, parent.getType());
       }
-      newNode.useSourceInfoFromForTree(arrayPattern);
+      newNode.useSourceInfoIfMissingFromForTree(arrayPattern);
 
       nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
       // Explicitly visit the LHS of the new node since it may be a nested

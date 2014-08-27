@@ -1418,6 +1418,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var $jscomp$destructuring$var0 = foo();",
         "var a = $jscomp$destructuring$var0.a;",
         "var b = $jscomp$destructuring$var0.b;"));
+
+    test("var x; ({a: x}) = foo();", Joiner.on('\n').join(
+        "var x;",
+        "var $jscomp$destructuring$var0 = foo();",
+        "x = $jscomp$destructuring$var0.a;"));
   }
 
   public void testObjectDestructuringWithInitializer() {
