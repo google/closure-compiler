@@ -3501,7 +3501,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTTLTypeOfVar() {
-    parse("@template T := typeOfVar(x) =: */");
+    parse("@template T := typeOfVar('x') =: */");
+  }
+
+  public void testParserWithTTLTypeOfVar2() {
+    parse("@template T := typeOfVar('x.y') =: */");
   }
 
   public void testParserWithTTLTypeOfVarInvalidName() {

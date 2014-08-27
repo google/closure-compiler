@@ -621,7 +621,7 @@ public final class TypeTransformationParser {
     if (!checkParameterCount(expr, Keywords.TYPEOFVAR)) {
       return false;
     }
-    if (!getCallArgument(expr, 0).isName()) {
+    if (!getCallArgument(expr, 0).isString()) {
       warnInvalid("name", expr);
       warnInvalidInside(Keywords.TYPEOFVAR.name, expr);
       return false;

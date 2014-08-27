@@ -1314,7 +1314,7 @@ public class TypeInferenceTest extends TestCase {
         + "var b = new Bar();"
         + "/** \n"
         + " * @return {R}\n"
-        + " * @template R := typeOfVar(b) =:\n"
+        + " * @template R := typeOfVar('b') =:\n"
         + " */\n"
         + "function f(){}\n"
         + "var r = f();");
@@ -1326,7 +1326,7 @@ public class TypeInferenceTest extends TestCase {
         + "function Bar() {}"
         + "/** \n"
         + " * @return {R}\n"
-        + " * @template R := typeOfVar(Bar) =:\n"
+        + " * @template R := typeOfVar('Bar') =:\n"
         + " */\n"
         + "function f(){}\n"
         + "var r = f();");
@@ -1340,7 +1340,7 @@ public class TypeInferenceTest extends TestCase {
         + "var x;"
         + "/**\n"
         + " * @return {R}\n"
-        + " * @template R := typeOfVar(x) =:"
+        + " * @template R := typeOfVar('x') =:"
         + " */\n"
         + "function f(){}\n"
         + "var r = f();");
@@ -1372,6 +1372,18 @@ public class TypeInferenceTest extends TestCase {
         + "function f(){}\n"
         + "var r = f();");
     verify("r", createUnionType(STRING_TYPE, NUMBER_TYPE));
+  }
+
+  public void testTypeTransformationWithTypeFromNamespace() {
+    inFunction("/** @constructor */\n"
+        + "wiz.async.Response = function() {};"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := typeOfVar('wiz.async.Response') =:"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("wiz.async.Response"));
   }
 
   public void testAssertTypeofProp() {

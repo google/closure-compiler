@@ -662,11 +662,11 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationWithTypeOfVar() {
-    testTTL(NUMBER_TYPE, "typeOfVar(n)");
+    testTTL(NUMBER_TYPE, "typeOfVar('n')");
   }
 
   public void testTransformationWithUnknownTypeOfVar() {
-    testTTL(UNKNOWN_TYPE, "typeOfVar(foo)",
+    testTTL(UNKNOWN_TYPE, "typeOfVar('foo')",
         "Variable foo is undefined in the scope");
   }
 
