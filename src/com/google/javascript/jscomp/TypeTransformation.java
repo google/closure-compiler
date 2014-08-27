@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.parsing.TypeTransformationParser.Keywords;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -85,6 +86,9 @@ class TypeTransformation {
   static final DiagnosticType VAR_UNDEFINED =
       DiagnosticType.warning("VAR_UNDEFINED",
           "Variable {0} is undefined in the scope");
+  static final DiagnosticType INVALID_CTOR =
+      DiagnosticType.warning("INVALID_CTOR",
+          "Expected a constructor type, found {0}");
 
   /**
    * A helper class for holding the information about the type variables
@@ -328,6 +332,8 @@ class TypeTransformation {
         return evalMaprecord(ttlAst, nameResolver);
       case TYPEOFVAR:
         return evalTypeOfVar(ttlAst);
+      case INSTANCEOF:
+        return evalInstanceOf(ttlAst, nameResolver);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
@@ -730,5 +736,14 @@ class TypeTransformation {
       return getUnknownType();
     }
     return slot.getType();
+  }
+
+  private JSType evalInstanceOf(Node ttlAst, NameResolver nameResolver) {
+    JSType type = evalInternal(getCallArgument(ttlAst, 0), nameResolver);
+    if (type.isUnknownType() || !type.isConstructor()) {
+      reportWarning(ttlAst, INVALID_CTOR, type.getDisplayName());
+      return getUnknownType();
+    }
+    return ((FunctionType) type).getInstanceType();
   }
 }

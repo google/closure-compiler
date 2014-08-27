@@ -686,6 +686,21 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(NUMBER_TYPE, "cond(isTemplatized(ARR), 'string', 'number')");
   }
 
+  public void testTransformationWithInstanceOf() {
+    testTTL(NUMBER_OBJECT_TYPE, "instanceOf(typeOfVar('Number'))");
+  }
+
+  public void testTransformationWithInvalidInstanceOf() {
+    testTTL(UNKNOWN_TYPE, "instanceOf(N)",
+        "Expected a constructor type, found number");
+  }
+
+  public void testTransformationWithInvalidInstanceOf2() {
+    testTTL(UNKNOWN_TYPE, "instanceOf(foo)",
+        "Expected a constructor type, found Unknown",
+        "Reference to an unknown type variable foo");
+  }
+
   private void initRecordTypeTests() {
     // {n:number, s:string, b:boolean}
     recordTypeTest = record("n", NUMBER_TYPE, "s", STRING_TYPE,

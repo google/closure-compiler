@@ -3576,6 +3576,30 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Found extra parameter in typeOfVar");
   }
 
+  public void testParserWithTTLInstanceOf() {
+    parse("@template T := instanceOf('x') =: */");
+  }
+
+  public void testParserWithTTLInstanceOf2() {
+    parse("@template T := instanceOf(R) =: */");
+  }
+
+  public void testParserWithTTLInstanceOfInvalidName() {
+    parse("@template T := instanceOf(foo()) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside instanceOf");
+  }
+
+  public void testParserWithTTLInstanceOfMissingParam() {
+    parse("@template T := instanceOf() =: */",
+        "Bad type annotation. Missing parameter in instanceOf");
+  }
+
+  public void testParserWithTTLInstanceOfExtraParam() {
+    parse("@template T := instanceOf(a, b) =: */",
+        "Bad type annotation. Found extra parameter in instanceOf");
+  }
+
   public void testParserWithTTLAsynchUseCase() {
     parse("@template R := "
         + "cond(eq(T, 'Object'),\n"

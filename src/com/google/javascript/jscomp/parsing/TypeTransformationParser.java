@@ -57,6 +57,7 @@ public final class TypeTransformationParser {
     EQ("eq", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
     ISCTOR("isCtor", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
     ISTEMPLATIZED("isTemplatized", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
+    INSTANCEOF("instanceOf", 1, 1, OperationKind.OPERATION),
     MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),
     MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
     NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
@@ -616,18 +617,35 @@ public final class TypeTransformationParser {
   }
 
   /**
-   * A typeOfVar expression must be of the form typeOfVar(name)
+   * A typeOfVar expression must be of the form typeOfVar('name')
    */
   private boolean validTypeOfVarExpression(Node expr) {
  // The expression must have two children:
     // - The typeOfVar keyword
-    // - An identifier
+    // - A string
     if (!checkParameterCount(expr, Keywords.TYPEOFVAR)) {
       return false;
     }
     if (!getCallArgument(expr, 0).isString()) {
       warnInvalid("name", expr);
       warnInvalidInside(Keywords.TYPEOFVAR.name, expr);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * A typeOfVar expression must be of the form instanceOf('name')
+   */
+  private boolean validInstanceOfExpression(Node expr) {
+    // The expression must have two children:
+    // - The instanceOf keyword
+    // - A string
+    if (!checkParameterCount(expr, Keywords.INSTANCEOF)) {
+      return false;
+    }
+    if (!validTypeTransformationExpression(getCallArgument(expr, 0))) {
+      warnInvalidInside(Keywords.INSTANCEOF.name, expr);
       return false;
     }
     return true;
@@ -648,6 +666,8 @@ public final class TypeTransformationParser {
         return validMaprecordExpression(expr);
       case TYPEOFVAR:
         return validTypeOfVarExpression(expr);
+      case INSTANCEOF:
+        return validInstanceOfExpression(expr);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
