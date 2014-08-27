@@ -1409,14 +1409,52 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testObjectDestructuring() {
-    test("var {a,b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var {a = 'default'} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var {a: {b: {c}}} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var {a: b, c: d} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var b = $jscomp$destructuring$var0.a;",
+        "var d = $jscomp$destructuring$var0.c;"));
+
+    test("var {a,b} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var a = $jscomp$destructuring$var0.a;",
+        "var b = $jscomp$destructuring$var0.b;"));
+  }
+
+  public void testObjectDestructuringWithInitializer() {
+    test("var {a : b = 'default'} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var b = ($jscomp$destructuring$var0.a === undefined) ?",
+        "    'default' :",
+        "    $jscomp$destructuring$var0.a"));
+
+    test("var {a = 'default'} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var a = ($jscomp$destructuring$var0.a === undefined) ?",
+        "    'default' :",
+        "    $jscomp$destructuring$var0.a"));
+  }
+
+  public void testObjectDestructuringNested() {
+    test("var {a: {b}} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;",
+        "var b = $jscomp$destructuring$var1.b"));
   }
 
   public void testMixedDestructuring() {
-    test("var {a,b:[c,d]} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var [a,{b,c}] = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var [a,{b,c}] = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var a = $jscomp$destructuring$var0[0];",
+        "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[1];",
+        "var b=$jscomp$destructuring$var1.b;",
+        "var c=$jscomp$destructuring$var1.c"));
+
+    test("var {a,b:[c,d]} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var a = $jscomp$destructuring$var0.a;",
+        "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.b;",
+        "var c = $jscomp$destructuring$var1[0];",
+        "var d = $jscomp$destructuring$var1[1]"));
   }
 
   public void testUntaggedTemplateLiteral() {

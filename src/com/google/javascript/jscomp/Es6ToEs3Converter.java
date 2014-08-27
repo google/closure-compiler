@@ -111,11 +111,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         // Need to check for super references before they get rewritten.
         checkClassSuperReferences(n);
         break;
-      case Token.OBJECT_PATTERN:
-        cannotConvertYet(n, Token.name(n.getType()));
-        // Don't bother visiting the children of a node if we
-        // already know we can't convert the node itself.
-        return false;
     }
     return true;
   }
@@ -183,7 +178,90 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         }
         visitArrayPattern(t, n, parent);
         break;
+      case Token.OBJECT_PATTERN:
+        visitObjectPattern(t, n, parent);
+        break;
     }
+  }
+
+  private void visitObjectPattern(NodeTraversal t, Node objectPattern, Node parent) {
+    Node rhs, nodeToDetach;
+    if (NodeUtil.isNameDeclaration(parent)) {
+      rhs = objectPattern.getLastChild();
+      nodeToDetach = parent;
+    } else if (parent.isStringKey() || parent.isArrayPattern()
+        || parent.isDefaultValue()) {
+      // Nested object pattern; do nothing. We will visit it after rewriting the parent.
+      return;
+    } else {
+      cannotConvertYet(objectPattern, "OBJECT_PATTERN that is a child of a "
+          + Token.name(parent.getType()));
+      return;
+    }
+
+    // Convert 'var {a: b, c: d} = rhs' to:
+    // var temp = rhs;
+    // var b = temp.a;
+    // var d = temp.c;
+    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+    Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
+        .useSourceInfoFromForTree(objectPattern);
+    nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
+
+    for (Node child = objectPattern.getFirstChild(), next;
+        child != null;
+        child = next) {
+      next = child.getNext();
+
+      Node newLHS, newRHS;
+      if (child.isStringKey()) {
+        Node getprop = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
+
+        if (!child.hasChildren()) {
+          newLHS = child.detachFromParent();
+          newRHS = getprop;
+        } else {
+          Node value = child.removeFirstChild();
+          if (!value.isDefaultValue()) {
+            newLHS = value;
+            newRHS = getprop;
+          } else {
+            newLHS = value.removeFirstChild();
+            Node defaultValue = value.removeFirstChild();
+            newRHS = IR.hook(
+                IR.sheq(getprop.cloneTree(), IR.name("undefined")),
+                defaultValue,
+                getprop);
+          }
+        }
+      } else {
+        Preconditions.checkState(child.isDefaultValue());
+        newLHS = child.removeFirstChild();
+        Node defaultValue = child.removeFirstChild();
+        Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
+        newRHS = IR.hook(
+            IR.sheq(getprop.cloneTree(), IR.name("undefined")),
+            defaultValue,
+            getprop);
+      }
+
+      Node newNode;
+      if (NodeUtil.isNameDeclaration(parent)) {
+        newNode = IR.declaration(newLHS, newRHS, parent.getType());
+        newNode.useSourceInfoFromForTree(child);
+      } else {
+        throw new IllegalStateException("not reached");
+      }
+
+      nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
+
+      // Explicitly visit the LHS of the new node since it may be a nested
+      // destructuring pattern.
+      visit(t, newLHS, newLHS.getParent());
+    }
+
+    nodeToDetach.detachFromParent();
+    compiler.reportCodeChange();
   }
 
   private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
@@ -198,7 +276,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       rhs = arrayPattern.getNext();
       nodeToDetach = parent.getParent();
       Preconditions.checkState(nodeToDetach.isExprResult());
-    } else if (parent.isArrayPattern() || parent.isDefaultValue()) {
+    } else if (parent.isArrayPattern() || parent.isDefaultValue()
+        || parent.isStringKey()) {
       // This is a nested array pattern. Don't do anything now; we'll visit it
       // after visiting the parent.
       return;
