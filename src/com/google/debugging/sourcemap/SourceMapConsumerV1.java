@@ -25,9 +25,9 @@ import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Shorts;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.wink.json4j.JSONArray;
+import org.apache.wink.json4j.JSONException;
+import org.apache.wink.json4j.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;

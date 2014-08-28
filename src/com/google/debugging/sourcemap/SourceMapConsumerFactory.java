@@ -16,8 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.wink.json4j.JSONException;
+import org.apache.wink.json4j.JSONObject;
 
 /**
  * Detect and parse the provided source map.

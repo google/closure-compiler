@@ -133,9 +133,8 @@ public class SourceMapConsumerV2Test extends TestCase {
     StringBuilder sb = new StringBuilder();
     sb.append("notjson");
 
-    assertExceptionStartsWith("JSON parse exception: org.json.JSONException: "
-         + "A JSONObject text must begin "
-         + "with '{' at character 1", sb);
+    assertExceptionStartsWith("JSON parse exception: org.apache.wink.json4j.JSONException: "
+         + "Expecting '{' on ", sb);
   }
 
   public void testUnknownVersion() throws Exception {

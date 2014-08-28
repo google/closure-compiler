@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp.jsonml;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.apache.wink.json4j.JSONArray;
+import org.apache.wink.json4j.JSONObject;
 
 import java.util.Iterator;
 

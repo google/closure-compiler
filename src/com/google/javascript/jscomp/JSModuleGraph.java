@@ -32,9 +32,9 @@ import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyEx
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.wink.json4j.JSONArray;
+import org.apache.wink.json4j.JSONException;
+import org.apache.wink.json4j.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -34,8 +34,8 @@ public class SourceMapConsumerV1Test extends TestCase {
   public void testGetMappingForLine() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("/** Begin line maps. **/{ count : 2 }\n");
-    sb.append("[0,,,,1,,2]\n");
-    sb.append("[3,,,,,,,]\n");
+    sb.append("[0,null,null,null,1,null,2]\n");
+    sb.append("[3,null,null,null,null,null,v,null]\n");
     sb.append("/** Begin file information. **/\n");
     sb.append("['test.js']\n");
     sb.append("['foo.js']\n");
@@ -162,7 +162,7 @@ public class SourceMapConsumerV1Test extends TestCase {
   public void testSimpleParse() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("/** Begin line maps. **/{ count : 1 }\n");
-    sb.append("[0,,,,1,2]\n");
+    sb.append("[0,null,null,null,1,2]\n");
     sb.append("/** Begin file information. **/\n");
     sb.append("['test.js']\n");
     sb.append("/** Begin mapping definitions. **/\n");
@@ -203,26 +203,26 @@ public class SourceMapConsumerV1Test extends TestCase {
   public void testInvalidJSONFailure() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("/** Begin line maps. **/{ count : 2 }\n");
-    sb.append("[0,,,,2\n");
+    sb.append("[0,null,null,null,2\n");
 
-    assertExceptionStartsWith("JSON parse exception: org.json.JSONException: " +
-                    "Expected a ',' or ']' at ", sb);
+    assertExceptionStartsWith("JSON parse exception: org.apache.wink.json4j.JSONException: " +
+                    "expecting either ',' or ']' on", sb);
   }
 
   public void testInvalidHeaderFailure() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("/** Begin line maps. **/{ count : 1 }\n");
-    sb.append("[0,,,1]\n");
-    sb.append("[3,,,4]\n");
+    sb.append("[0,null,null,1]\n");
+    sb.append("[3,null,null,4]\n");
 
     assertException(
-        "Expected /** Begin file information. **/ got [3,,,4]", sb);
+        "Expected /** Begin file information. **/ got [3,null,null,4]", sb);
   }
 
   public void testInvalidPostHeaderToken() throws Exception {
      StringBuilder sb = new StringBuilder();
     sb.append("/** Begin line maps. **/{ count : 1 }\n");
-    sb.append("[0,,,1]\n");
+    sb.append("[0,null,null,1]\n");
     sb.append("/** Begin file information. **/f\n");
 
     assertException("Expected /** Begin file information. **/"
@@ -232,7 +232,7 @@ public class SourceMapConsumerV1Test extends TestCase {
   public void testInvalidMappingArrayFailure() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("/** Begin line maps. **/{ count : 1 }\n");
-    sb.append("[0,,,,1,2]\n");
+    sb.append("[0,null,null,null,1,2]\n");
     sb.append("/** Begin file information. **/\n");
     sb.append("['test.js']\n");
     sb.append("/** Begin mapping definitions. **/\n");

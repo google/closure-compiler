@@ -20,13 +20,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
-import java.util.*;
+import org.apache.wink.json4j.JSONArray;
+import org.apache.wink.json4j.JSONException;
+import org.apache.wink.json4j.JSONObject;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Tests for {@link JSModuleGraph}

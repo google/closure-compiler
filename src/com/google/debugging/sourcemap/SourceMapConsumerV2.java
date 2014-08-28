@@ -21,9 +21,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.wink.json4j.JSONArray;
+import org.apache.wink.json4j.JSONException;
+import org.apache.wink.json4j.JSONObject;
 
 import java.util.List;
 import java.util.Map;

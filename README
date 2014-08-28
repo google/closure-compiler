@@ -270,12 +270,10 @@ Local Modifications: None
 
 ---
 Code in:
-lib/json.jar
-URL: http://json.org/java/index.html
-Version: JSON version 20090211
-License: MIT license
-Description:
-JSON is a set of java files for use in transmitting data in JSON format.
+lib/wink-json4j-1.4.jar
+URL: http://wink.apache.org/downloads.html
+Version: 1.4
+License: Apache License, version 2.0
 
 Local Modifications: None
 
