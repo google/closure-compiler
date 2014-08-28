@@ -1001,6 +1001,12 @@ CSSProperties.prototype.backgroundPosition;
 CSSProperties.prototype.backgroundRepeat;
 
 /**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-background/#the-background-size
+ */
+CSSProperties.prototype.backgroundSize;
+
+/**
  * @implicitCast
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-border
