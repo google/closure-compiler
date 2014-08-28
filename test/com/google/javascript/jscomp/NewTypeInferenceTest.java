@@ -35,7 +35,7 @@ import java.util.List;
  */
 
 public class NewTypeInferenceTest extends CompilerTypeTestCase {
-  private static final String CLOSURE_EXTERNS = "var goog;";
+  private static final String CLOSURE_BASE = "var goog;";
 
   private NewTypeInference parseAndTypeCheck(String externs, String js) {
     setUp();
@@ -145,7 +145,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testExterns() {
     typeCheck(
-        "/** @constructor */ function Array(){}",
         "/** @param {Array} x */ function f(x) {}; f(5);",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
@@ -4570,12 +4569,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testArrayAccesses() {
     typeCheck(
-        "/** @constructor */ function Array(){}",
         "var a = [1,2,3]; a['str'];",
         NewTypeInference.NON_NUMERIC_ARRAY_INDEX);
 
     typeCheck(
-        "/** @constructor */ function Array(){}",
         "function f(/** !Array */ arr, i) {\n" +
         "  arr[i];\n" +
         "}\n" +
@@ -4661,11 +4658,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
 
     checkNoWarnings(
-        "/** @constructor */ function Array(){}\n" +
         "/** @type {Array.<number>} */ var x;");
 
     checkNoWarnings(
-        "/** @constructor */ function Object(){}\n" +
         "/** @type {Object.<number>} */ var x;");
   }
 
@@ -7008,24 +7003,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     checkNoWarnings(
-        "/** @constructor */ function RegExp(){};",
         "/** @const */\n" +
         "var r = /find/;");
 
     typeCheck(
-        "/** @constructor */ function RegExp(){};",
+        "/** @constructor */ function RegExp(){}\n" +
         "/** @const */\n" +
         "var r = /find/;\n" +
         "function g() { r - 5; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     checkNoWarnings(
-        "/** @constructor */ function Array(){};\n" +
         "/** @const */\n" +
         "var a = [5];");
 
     typeCheck(
-        "/** @constructor */ function Array(){};\n" +
         "/** @const */\n" +
         "var a = [5];\n" +
         "function g() { a - 5; }",
@@ -7885,30 +7877,30 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testGoogIsPredicatesNoSpecializedContext() {
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "goog.isNull();",
         TypeCheck.WRONG_ARGUMENT_COUNT);
 
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "goog.isNull(1, 2, 5 - 'str');",
         ImmutableList.of(
             TypeCheck.WRONG_ARGUMENT_COUNT,
             NewTypeInference.INVALID_OPERAND_TYPE));
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(x) { var /** boolean */ b = goog.isNull(x); }");
   }
 
   public void testGoogIsPredicatesTrue() {
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(x) { if (goog.isNull(x)) { var /** undefined */ y = x; } }",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @param {number=} x */\n" +
         "function f(x) {\n" +
         "  if (goog.isDef(x)) {\n" +
@@ -7919,7 +7911,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @constructor */\n" +
         "function Foo() {}\n" +
         "/** @param {Foo=} x */\n" +
@@ -7933,9 +7925,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
-        CLOSURE_EXTERNS,
-        "/** @constructor */\n" +
-        "function Array() {}\n" +
+        CLOSURE_BASE +
         "function f(/** (Array|number) */ x) {\n" +
         "  var /** Array */ a;\n" +
         "  if (goog.isArray(x)) {\n" +
@@ -7946,7 +7936,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @param {null|function(number)} x */ \n" +
         "function f(x) {\n" +
         "  if (goog.isFunction(x)) {\n" +
@@ -7956,7 +7946,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(x) {\n" +
         "  if (goog.isObject(x)) {\n" +
         "    var /** null */ y = x;\n" +
@@ -7965,7 +7955,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|string) */ x) {\n" +
         "  if (goog.isString(x)) {\n" +
         "    x < 'str';\n" +
@@ -7973,7 +7963,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|string) */ x) {\n" +
         "  if (goog.isNumber(x)) {\n" +
         "    x - 5;\n" +
@@ -7981,7 +7971,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|boolean) */ x) {\n" +
         "  if (goog.isBoolean(x)) {\n" +
         "    var /** boolean */ b = x;\n" +
@@ -7989,7 +7979,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/**\n" +
         " * @param {number|string} x\n" +
         " * @return {string}\n" +
@@ -8001,7 +7991,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testGoogIsPredicatesFalse() {
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @constructor */\n" +
         "function Foo() {}\n" +
         "function f(/** Foo */ x) {\n" +
@@ -8014,7 +8004,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @param {number=} x */\n" +
         "function f(x) {\n" +
         "  if (!goog.isDef(x)) {\n" +
@@ -8023,7 +8013,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @constructor */\n" +
         "function Foo() {}\n" +
         "/** @param {Foo=} x */\n" +
@@ -8034,7 +8024,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|string) */ x) {\n" +
         "  if (!goog.isString(x)) {\n" +
         "    x - 5;\n" +
@@ -8042,7 +8032,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|string) */ x) {\n" +
         "  if (!goog.isNumber(x)) {\n" +
         "    x < 'str';\n" +
@@ -8050,7 +8040,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|boolean) */ x) {\n" +
         "  if (!goog.isBoolean(x)) {\n" +
         "    x - 5;\n" +
@@ -8058,9 +8048,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
-        "/** @constructor */\n" +
-        "function Array() {}\n" +
+        CLOSURE_BASE +
         "function f(/** (number|!Array) */ x) {\n" +
         "  if (!goog.isArray(x)) {\n" +
         "    x - 5;\n" +
@@ -8068,7 +8056,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|function(number)) */ x) {\n" +
         "  if (!goog.isFunction(x)) {\n" +
         "    x - 5;\n" +
@@ -8076,7 +8064,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @constructor */\n" +
         "function Foo() {}\n" +
         "/** @param {?Foo} x */\n" +
@@ -8089,7 +8077,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testGoogTypeof() {
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|string) */ x) {\n" +
         "  if (goog.typeOf(x) === 'number') {\n" +
         "    var /** number */ n = x;\n" +
@@ -8099,7 +8087,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|string) */ x) {\n" +
         "  if ('number' === goog.typeOf(x)) {\n" +
         "    var /** number */ n = x;\n" +
@@ -8107,7 +8095,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "function f(/** (number|string) */ x) {\n" +
         "  if (goog.typeOf(x) == 'number') {\n" +
         "    var /** number */ n = x;\n" +
@@ -8115,7 +8103,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     checkNoWarnings(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @param {number=} x */\n" +
         "function f(x) {\n" +
         "  if (goog.typeOf(x) === 'undefined') {\n" +
@@ -8126,7 +8114,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
 
     typeCheck(
-        CLOSURE_EXTERNS,
+        CLOSURE_BASE +
         "/** @param {string} x */\n" +
         "function f(x, other) {\n" +
         "  if (goog.typeOf(x) === other) {\n" +
