@@ -61,6 +61,16 @@ public class ClosureRewriteModule
           "JSC_GOOG_MODULE_INVALID_REQUIRE_IDENTIFIER",
           "goog.require parameter must be a string literal.");
 
+  static final DiagnosticType INVALID_GET_IDENTIFIER =
+      DiagnosticType.error(
+          "JSC_GOOG_MODULE_INVALID_GET_IDENTIFIER",
+          "goog.module.get parameter must be a string literal.");
+
+  static final DiagnosticType INVALID_GET_CALL_SCOPE =
+      DiagnosticType.error(
+          "JSC_GOOG_MODULE_INVALID_GET_CALL_SCOPE",
+          "goog.module.get can not be called in global scope.");
+
   private final AbstractCompiler compiler;
 
   private static class ModuleDescription {
@@ -113,6 +123,9 @@ public class ClosureRewriteModule
     if (isModuleFile(n) || isLoadModuleCall(n)) {
       enterModule(n);
     }
+    if (isGetModuleCall(n)) {
+      rewriteGetModuleCall(t, n);
+    }
     return true;
   }
 
@@ -120,6 +133,33 @@ public class ClosureRewriteModule
     return n.isCall()
         && n.getFirstChild().matchesQualifiedName("goog.loadModule");
   }
+
+  private static boolean isGetModuleCall(Node n) {
+    return n.isCall()
+        && n.getFirstChild().matchesQualifiedName("goog.module.get");
+  }
+
+  private void rewriteGetModuleCall(NodeTraversal t, Node n) {
+    // "use(goog.module.get('a.namespace'))" to "use(a.namespace)"
+    Node namespace = n.getFirstChild().getNext();
+    if (!namespace.isString()) {
+      t.report(namespace, INVALID_GET_IDENTIFIER);
+      return;
+    }
+
+    if (!inModule() && t.inGlobalScope()) {
+      t.report(namespace, INVALID_GET_CALL_SCOPE);
+      return;
+    }
+
+    Node replacement = NodeUtil.newQualifiedNameNode(
+        compiler.getCodingConvention(), namespace.getString());
+    replacement.srcrefTree(namespace);
+
+    n.getParent().replaceChild(n, replacement);
+    compiler.reportCodeChange();
+  }
+
 
   private static boolean isModuleFile(Node n) {
     return n.isScript() && n.hasChildren()

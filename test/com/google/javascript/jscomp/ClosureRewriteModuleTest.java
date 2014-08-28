@@ -15,8 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_CALL_SCOPE;
+import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_IDENTIFIER;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_IDENTIFIER;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_IDENTIFIER;
+
 
 /**
  * Unit tests for ClosureRewriteModule
@@ -152,6 +155,35 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "goog.module('ns.a');" +
         "goog.require(a);",
         INVALID_REQUIRE_IDENTIFIER, true);
+  }
+
+
+  public void testGoogModuleGet1() {
+    test(
+        "function f() { var x = goog.module.get('a'); }",
+        "function f() { var x = a; }");
+  }
+
+  public void testGoogModuleGet2() {
+    test(
+        "function f() { var x = goog.module.get('a.b.c'); }",
+        "function f() { var x = a.b.c; }");
+  }
+
+
+  public void testInvalidGoogModuleGet1() {
+    testSame(
+        "function f() {"
+        + "goog.module.get(a);"
+        + "}",
+        INVALID_GET_IDENTIFIER, true);
+  }
+
+  public void testInvalidGoogModuleGet2() {
+
+    testSame(
+        "goog.module.get('a');",
+        INVALID_GET_CALL_SCOPE, true);
   }
 
   public void testExport1() {
