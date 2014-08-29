@@ -21,7 +21,15 @@ import java.util.AbstractMap;
 /** A persistent map with non-destructive additions and removals  */
 public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
 
-  private static final PersistentMap EMPTY = NaivePersistentMap.create();
+  private static PersistentMap EMPTY;
+  static {
+    try {
+      Class c = Class.forName("clojure.lang.PersistentHashMap");
+      EMPTY = ClojurePersistentHashMap.create(c);
+    } catch (ClassNotFoundException e) {
+      EMPTY = NaivePersistentMap.create();
+    }
+  }
 
   public abstract PersistentMap<K, V> with(K key, V value);
 
