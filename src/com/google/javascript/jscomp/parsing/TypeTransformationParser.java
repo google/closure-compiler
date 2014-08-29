@@ -56,6 +56,7 @@ public final class TypeTransformationParser {
     COND("cond", 3, 3, OperationKind.OPERATION),
     EQ("eq", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
     ISCTOR("isCtor", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
+    ISRECORD("isRecord", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
     ISTEMPLATIZED("isTemplatized", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
     INSTANCEOF("instanceOf", 1, 1, OperationKind.OPERATION),
     MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),

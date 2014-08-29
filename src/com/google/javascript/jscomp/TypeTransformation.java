@@ -463,6 +463,8 @@ class TypeTransformation {
         return params[0].isConstructor();
       case ISTEMPLATIZED:
         return params[0].isTemplatizedType();
+      case ISRECORD:
+        return params[0].isRecordType();
       default:
         throw new IllegalStateException(
             "Invalid boolean type predicate in the type transformation");

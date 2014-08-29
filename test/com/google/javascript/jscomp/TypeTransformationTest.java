@@ -686,6 +686,14 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(NUMBER_TYPE, "cond(isTemplatized(ARR), 'string', 'number')");
   }
 
+  public void testTransformationWithTrueIsRecordConditional() {
+    testTTL(STRING_TYPE, "cond(isRecord(REC), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseIsRecordConditional() {
+    testTTL(NUMBER_TYPE, "cond(isRecord(N), 'string', 'number')");
+  }
+
   public void testTransformationWithInstanceOf() {
     testTTL(NUMBER_OBJECT_TYPE, "instanceOf(typeOfVar('Number'))");
   }

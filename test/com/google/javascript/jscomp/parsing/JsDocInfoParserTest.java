@@ -3099,6 +3099,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T := cond(isTemplatized('foo'), R, S) =: */");
   }
 
+  public void testParserWithTTLConditionalIsRecord() {
+    parse("@template T := cond(isRecord(R), R, S) =: */");
+  }
+  public void testParserWithTTLConditionalIsRecord2() {
+    parse("@template T := cond(isRecord('foo'), R, S) =: */");
+  }
+
   public void testParserWithTTLConditionalStringEquivalenceInvalidParam() {
     parse("@template T := cond(streq('foo', foo()), R, S) =: */",
         "Bad type annotation. Invalid string",
@@ -3122,6 +3129,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLConditionalIsTemplatizedInvalidParam() {
     parse("@template T := cond(isTemplatized(foo()), R, S) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalIsRecordInvalidParam() {
+    parse("@template T := cond(isRecord(foo()), R, S) =: */",
         "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside boolean",
         "Bad type annotation. Invalid expression inside conditional");
@@ -3151,6 +3165,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside conditional");
   }
 
+  public void testParserWithTTLExtraParamIsRecord() {
+    parse("@template T := cond(isRecord(T, R), R, S) =: */",
+        "Bad type annotation. Found extra parameter in isRecord",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
   public void testParserWithTTLMissingParamBoolean() {
     parse("@template T := cond(eq(T), R, S) =: */",
         "Bad type annotation. Missing parameter in eq",
@@ -3172,6 +3192,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLMissingParamIsTemplatized() {
     parse("@template T := cond(isTemplatized(), R, S) =: */",
         "Bad type annotation. Missing parameter in isTemplatized",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLMissingParamIsRecord() {
+    parse("@template T := cond(isRecord(), R, S) =: */",
+        "Bad type annotation. Missing parameter in isRecord",
         "Bad type annotation. Invalid expression inside conditional");
   }
 
