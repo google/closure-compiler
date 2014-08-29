@@ -82,7 +82,7 @@ public class NominalType {
     if (newTypeMap.isEmpty()) {
       return this;
     }
-    if (!rawType.isGeneric() && !hasFreeTypeVars(new HashSet<String>())) {
+    if (!this.rawType.isGeneric()) {
       return this.rawType.wrappedAsNominal;
     }
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
@@ -99,15 +99,6 @@ public class NominalType {
       }
     }
     return new NominalType(builder.build(), this.rawType);
-  }
-
-  boolean hasFreeTypeVars(Set<String> boundTypeVars) {
-    for (JSType t : typeMap.values()) {
-      if (t.hasFreeTypeVars(boundTypeVars)) {
-        return true;
-      }
-    }
-    return rawType.hasFreeTypeVars(boundTypeVars);
   }
 
   // Methods that delegate to RawNominalType
@@ -363,15 +354,6 @@ public class NominalType {
           this.wrappedAsJSType);
     }
 
-    private enum HasFreeTypeVars {
-      UNKNOWN,
-      CHECKING_NOW, // Used to detect recursion and stop
-      TRUE,
-      FALSE;
-    }
-    private HasFreeTypeVars hasFreeTypeVars =
-        HasFreeTypeVars.UNKNOWN;
-
     public static RawNominalType makeUnrestrictedClass(
         QualifiedName name, ImmutableList<String> typeParameters) {
       return new RawNominalType(
@@ -556,6 +538,7 @@ public class NominalType {
         return superClass.getPropDeclaredType(pname);
       }
       return p.getDeclaredType();
+
     }
 
     public Set<String> getAllOwnProps() {
@@ -593,53 +576,6 @@ public class NominalType {
             .addAll(classProps.keySet()).addAll(protoProps.keySet()).build();
       }
       return allProps;
-    }
-
-    // During finalizeNominalType, we compute the value of the hasFreeTypeVars
-    // field by calling this function, and subsequent queries do no computation.
-    private boolean hasFreeTypeVars(Set<String> boundTypeVars) {
-      switch (hasFreeTypeVars) {
-        case UNKNOWN:
-          hasFreeTypeVars = HasFreeTypeVars.CHECKING_NOW;
-          break;
-        case CHECKING_NOW:
-          hasFreeTypeVars = HasFreeTypeVars.FALSE;
-          return false;
-        case TRUE:
-          return true;
-        case FALSE:
-          return false;
-      }
-      if (isGeneric()) {
-        boundTypeVars.addAll(typeParameters);
-      }
-      for (Property prop : classProps.values()) {
-        if (prop.hasFreeTypeVars(boundTypeVars)) {
-          hasFreeTypeVars = HasFreeTypeVars.TRUE;
-          return true;
-        }
-      }
-      for (Property prop : protoProps.values()) {
-        if (prop.hasFreeTypeVars(boundTypeVars)) {
-          hasFreeTypeVars = HasFreeTypeVars.TRUE;
-          return true;
-        }
-      }
-      if (interfaces != null) {
-        for (NominalType nt : interfaces) {
-          if (nt.hasFreeTypeVars(boundTypeVars)) {
-            hasFreeTypeVars = HasFreeTypeVars.TRUE;
-            return true;
-          }
-        }
-      }
-      if (superClass != null && superClass.hasFreeTypeVars(boundTypeVars)) {
-        hasFreeTypeVars = HasFreeTypeVars.TRUE;
-        return true;
-      } else {
-        hasFreeTypeVars = HasFreeTypeVars.FALSE;
-        return false;
-      }
     }
 
     //////////// Class Properties
@@ -769,9 +705,6 @@ public class NominalType {
         this.interfaces = ImmutableSet.of();
       }
       addCtorProperty("prototype", createProtoObject(), false);
-      hasFreeTypeVars(new HashSet<String>());
-      Preconditions.checkState(hasFreeTypeVars == HasFreeTypeVars.TRUE
-          || hasFreeTypeVars == HasFreeTypeVars.FALSE);
       this.isFinalized = true;
       return this;
     }

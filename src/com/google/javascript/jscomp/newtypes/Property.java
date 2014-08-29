@@ -19,11 +19,9 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  *
@@ -71,13 +69,6 @@ class Property {
 
   boolean isDeclared() {
     return declaredType != null;
-  }
-
-  boolean hasFreeTypeVars(Set<String> boundTypeVars) {
-    return (declaredType != null
-            && declaredType.hasFreeTypeVars(boundTypeVars))
-        || (inferredType != null
-            && inferredType.hasFreeTypeVars(boundTypeVars));
   }
 
   JSType getType() {
@@ -186,8 +177,7 @@ class Property {
   }
 
   Property substituteGenerics(Map<String, JSType> concreteTypes) {
-    if (concreteTypes.isEmpty()
-        || !hasFreeTypeVars(new HashSet<String>())) {
+    if (concreteTypes.isEmpty()) {
       return this;
     }
     return new Property(

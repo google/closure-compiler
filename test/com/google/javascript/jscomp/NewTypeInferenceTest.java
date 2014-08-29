@@ -4804,7 +4804,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @type {string} */" +
         "var out;" +
         "var result = apply(function(x){ out = x; return x; }, 0);",
-        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+        ImmutableList.of(
+          NewTypeInference.NOT_UNIQUE_INSTANTIATION,
+          NewTypeInference.MISTYPED_ASSIGN_RHS));
 
     typeCheck(
         "/** @template T */\n" +
@@ -5928,6 +5930,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @type {[Object]} */ var arr = [];",
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+  }
+
+  public void testImplentsGenericInterfaceDoesntCrash() {
+    checkNoWarnings(
+        "/** @interface @template Z */\n" +
+        "function Foo(){}\n" +
+        "Foo.prototype.getCount = function /** number */ (){};\n" +
+        "/** @constructor @implements {Foo.<T>} @template T */\n" +
+        "function Bar(){}\n" +
+        "Bar.prototype.getCount = function /** number */ (){};");
   }
 
   public void testDeadCodeDoesntCrash() {

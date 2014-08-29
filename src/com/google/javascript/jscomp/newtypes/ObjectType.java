@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -810,8 +809,7 @@ public class ObjectType implements TypeWithProperties {
   }
 
   ObjectType substituteGenerics(Map<String, JSType> concreteTypes) {
-    if (concreteTypes.isEmpty()
-        || !hasFreeTypeVars(new HashSet<String>())) {
+    if (concreteTypes.isEmpty()) {
       return this;
     }
     PersistentMap<String, Property> newProps = PersistentMap.create();
@@ -828,19 +826,6 @@ public class ObjectType implements TypeWithProperties {
         fn == null ? null : fn.substituteGenerics(concreteTypes),
         isLoose,
         objectKind);
-  }
-
-  boolean hasFreeTypeVars(Set<String> boundTypeVars) {
-    if (nominalType != null && nominalType.hasFreeTypeVars(boundTypeVars)
-        || fn != null && fn.hasFreeTypeVars(boundTypeVars)) {
-      return true;
-    }
-    for (Property prop : props.values()) {
-      if (prop.hasFreeTypeVars(boundTypeVars)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   @Override
