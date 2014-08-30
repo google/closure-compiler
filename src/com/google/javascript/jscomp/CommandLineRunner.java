@@ -33,6 +33,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.OptionHandlerFilter;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.lang.reflect.AnnotatedElement;
 import java.nio.file.FileSystem;
@@ -127,22 +129,26 @@ public class CommandLineRunner extends
     private static List<GuardLevel> guardLevels = new ArrayList<>();
 
     @Option(name = "--help",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Displays this message on stdout and exit")
     private boolean displayHelp = false;
 
     @Option(name = "--print_tree",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Prints out the parse tree and exits")
     private boolean printTree = false;
 
     @Option(name = "--print_ast",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Prints a dot file describing the internal abstract syntax"
         + " tree and exits")
     private boolean printAst = false;
 
     @Option(name = "--print_pass_graph",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Prints a dot file describing the passes that will get run"
         + " and exits")
@@ -157,6 +163,7 @@ public class CommandLineRunner extends
         CompilerOptions.DevMode.OFF;
 
     @Option(name = "--logging_level",
+        hidden = true,
         usage = "The logging level (standard java.util.logging.Level"
         + " values) for Compiler progress. Does not control errors or"
         + " warnings for the JavaScript code under compilation")
@@ -181,6 +188,7 @@ public class CommandLineRunner extends
     private String jsOutputFile = "";
 
     @Option(name = "--module",
+        hidden = true,
         usage = "A JavaScript module specification. The format is "
         + "<name>:<num-js-files>[:[<dep>,...][:]]]. Module names must be "
         + "unique. Each dep is the name of a module that this module "
@@ -192,11 +200,13 @@ public class CommandLineRunner extends
     private List<String> module = new ArrayList<>();
 
     @Option(name = "--variable_renaming_report",
+        hidden = true,
         usage = "File where the serialized version of the variable "
         + "renaming map produced should be saved")
     private String variableMapOutputFile = "";
 
     @Option(name = "--create_renaming_reports",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "If true, variable renaming and property renaming report "
         + "files will be produced as {binary name}_vars_renaming_report.out "
@@ -206,17 +216,20 @@ public class CommandLineRunner extends
     private boolean createNameMapFiles = false;
 
     @Option(name = "--property_renaming_report",
+        hidden = true,
         usage = "File where the serialized version of the property "
         + "renaming map produced should be saved")
     private String propertyMapOutputFile = "";
 
     @Option(name = "--third_party",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Check source validity but do not enforce Closure style "
         + "rules and conventions")
     private boolean thirdParty = false;
 
     @Option(name = "--summary_detail_level",
+        hidden = true,
         usage = "Controls how detailed the compilation summary is. Values:"
         + " 0 (never print summary), 1 (print summary only if there are "
         + "errors or warnings), 2 (print summary if the 'checkTypes' "
@@ -225,17 +238,20 @@ public class CommandLineRunner extends
     private int summaryDetailLevel = 1;
 
     @Option(name = "--output_wrapper",
+        hidden = true,
         usage = "Interpolate output into this string at the place denoted"
         + " by the marker token %output%. Use marker token %output|jsstring%"
         + " to do js string escaping on the output.")
     private String outputWrapper = "";
 
     @Option(name = "--output_wrapper_file",
+        hidden = true,
         usage = "Loads the specified file and passes the file contents to the "
         + "--output_wrapper flag, replacing the value if it exists.")
     private String outputWrapperFile = "";
 
     @Option(name = "--module_wrapper",
+        hidden = true,
         usage = "An output wrapper for a JavaScript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
         + "with a module specified using --module. The wrapper must "
@@ -244,12 +260,14 @@ public class CommandLineRunner extends
     private List<String> moduleWrapper = new ArrayList<>();
 
     @Option(name = "--module_output_path_prefix",
+        hidden = true,
         usage = "Prefix for filenames of compiled JS modules. "
         + "<module-name>.js will be appended to this prefix. Directories "
         + "will be created as needed. Use with --module")
     private String moduleOutputPathPrefix = "./";
 
     @Option(name = "--create_source_map",
+        hidden = true,
         usage = "If specified, a source map file mapping the generated " +
         "source files back to the original source file will be " +
         "output to the specified path. The %outname% placeholder will " +
@@ -258,11 +276,13 @@ public class CommandLineRunner extends
     private String createSourceMap = "";
 
     @Option(name = "--source_map_format",
+        hidden = true,
         usage = "The source map format to produce. " +
         "Options are V3 and DEFAULT, which are equivalent.")
     private SourceMap.Format sourceMapFormat = SourceMap.Format.DEFAULT;
 
     @Option(name = "--source_map_location_mapping",
+        hidden = true,
         usage = "Source map location mapping separated by a '|' " +
         "(i.e. filesystem-path|webserver-path)")
     private List<String> sourceMapLocationMapping = Lists.newArrayList();
@@ -270,6 +290,7 @@ public class CommandLineRunner extends
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(name = "--jscomp_error",
+        hidden = true,
         handler = WarningGuardErrorOptionHandler.class,
         usage = "Make the named class of warnings an error. Options:" +
         DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
@@ -278,6 +299,7 @@ public class CommandLineRunner extends
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(name = "--jscomp_warning",
+        hidden = true,
         handler = WarningGuardWarningOptionHandler.class,
         usage = "Make the named class of warnings a normal warning. " +
         "Options:" + DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
@@ -286,12 +308,14 @@ public class CommandLineRunner extends
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(name = "--jscomp_off",
+        hidden = true,
         handler = WarningGuardOffOptionHandler.class,
         usage = "Turn off the named class of warnings. Options:" +
         DiagnosticGroups.DIAGNOSTIC_GROUP_NAMES)
     private List<String> jscompOff = new ArrayList<>();
 
     @Option(name = "--define",
+        hidden = true,
         aliases = {"--D", "-D"},
         usage = "Override the value of a variable annotated @define. " +
         "The format is <name>[=<val>], where <name> is the name of a @define " +
@@ -301,6 +325,7 @@ public class CommandLineRunner extends
     private List<String> define = new ArrayList<>();
 
     @Option(name = "--charset",
+        hidden = true,
         usage = "Input and output charset for all files. By default, we " +
                 "accept UTF-8 as input and output US_ASCII")
     private String charset = "";
@@ -315,6 +340,7 @@ public class CommandLineRunner extends
     private CompilationLevel compilationLevelParsed = null;
 
     @Option(name = "--use_types_for_optimization",
+        hidden = true,
         usage = "Experimental: perform additional optimizations " +
         "based on available information.  Inaccurate type annotations " +
         "may result in incorrect results.")
@@ -327,59 +353,71 @@ public class CommandLineRunner extends
     private WarningLevel warningLevel = WarningLevel.DEFAULT;
 
     @Option(name = "--use_only_custom_externs",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Specifies whether the default externs should be excluded")
     private boolean useOnlyCustomExterns = false;
 
     @Option(name = "--debug",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Enable debugging options")
     private boolean debug = false;
 
     @Option(name = "--generate_exports",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Generates export code for those marked with @export")
     private boolean generateExports = false;
 
     @Option(name = "--formatting",
+        hidden = true,
         usage = "Specifies which formatting options, if any, should be "
         + "applied to the output JS. Options: "
         + "PRETTY_PRINT, PRINT_INPUT_DELIMITER, SINGLE_QUOTES")
     private List<FormattingOption> formatting = new ArrayList<>();
 
     @Option(name = "--process_common_js_modules",
+        hidden = true,
         usage = "Process CommonJS modules to a concatenable form.")
     private boolean processCommonJsModules = false;
 
     @Option(name = "--rewrite_es6_modules",
+        hidden = true,
         usage = "Rewrite ES6 modules to a concatenable form.")
     private boolean rewriteEs6Modules = false;
 
     @Option(name = "--transpile_only",
+        hidden = true,
         usage = "Run ES6 to ES3 transpilation only, skip other passes.")
     private boolean transpileOnly = false;
 
     @Option(name = "--common_js_module_path_prefix",
+        hidden = true,
         usage = "Path prefix to be removed from CommonJS module names.")
     private String commonJsPathPrefix =
         ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
 
     @Option(name = "--common_js_entry_module",
+        hidden = true,
         usage = "Root of your common JS dependency hierarchy. " +
             "Your main script.")
     private String commonJsEntryModule;
 
     @Option(name = "--transform_amd_modules",
+        hidden = true,
         usage = "Transform AMD to CommonJS modules.")
     private boolean transformAmdModules = false;
 
     @Option(name = "--process_closure_primitives",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Processes built-ins from the Closure library, such as "
         + "goog.require(), goog.provide(), and goog.exportSymbol()")
     private boolean processClosurePrimitives = true;
 
     @Option(name = "--manage_closure_dependencies",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Automatically sort dependencies so that a file that "
         + "goog.provides symbol X will always come before a file that "
@@ -389,6 +427,7 @@ public class CommandLineRunner extends
     private boolean manageClosureDependencies = false;
 
     @Option(name = "--only_closure_dependencies",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Only include files in the transitive dependency of the "
         + "entry points (specified by closure_entry_point). Files that do "
@@ -397,6 +436,7 @@ public class CommandLineRunner extends
     private boolean onlyClosureDependencies = false;
 
     @Option(name = "--closure_entry_point",
+        hidden = true,
         usage = "Entry points to the program. Must be goog.provide'd "
         + "symbols. Any goog.provide'd symbols that are not a transitive "
         + "dependency of the entry points will be removed. Files without "
@@ -407,18 +447,21 @@ public class CommandLineRunner extends
     private List<String> closureEntryPoint = new ArrayList<>();
 
     @Option(name = "--process_jquery_primitives",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Processes built-ins from the Jquery library, such as "
         + "jQuery.fn and jQuery.extend()")
     private boolean processJqueryPrimitives = false;
 
     @Option(name = "--angular_pass",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Generate $inject properties for AngularJS for functions "
         + "annotated with @ngInject")
     private boolean angularPass = false;
 
     @Option(name = "--output_manifest",
+        hidden = true,
         usage = "Prints out a list of all the files in the compilation. "
         + "If --manage_closure_dependencies is on, this will not include "
         + "files that got dropped because they were not required. "
@@ -428,62 +471,74 @@ public class CommandLineRunner extends
     private String outputManifest = "";
 
     @Option(name = "--output_module_dependencies",
+        hidden = true,
         usage = "Prints out a JSON file of dependencies between modules.")
     private String outputModuleDependencies = "";
 
     @Option(name = "--accept_const_keyword",
+        hidden = true,
         usage = "Allows usage of const keyword.")
     private boolean acceptConstKeyword = false;
 
     // TODO(tbreisacher): Remove the "(experimental)" for ES6 when it's stable enough.
     @Option(name = "--language_in",
+        hidden = true,
         usage = "Sets what language spec that input sources conform. "
         + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
         + "ECMASCRIPT6 (experimental), ECMASCRIPT6_STRICT (experimental)")
     private String languageIn = "ECMASCRIPT3";
 
     @Option(name = "--language_out",
+        hidden = true,
         usage = "Sets what language spec the output should conform to. "
         + " If omitted, defaults to the value of language_in. "
         + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT")
     private String languageOut = "";
 
     @Option(name = "--version",
+        hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Prints the compiler version to stdout and exit.")
     private boolean version = false;
 
     @Option(name = "--translations_file",
+        hidden = true,
         usage = "Source of translated messages. Currently only supports XTB.")
     private String translationsFile = "";
 
     @Option(name = "--translations_project",
+        hidden = true,
         usage = "Scopes all translations to the specified project." +
         "When specified, we will use different message ids so that messages " +
         "in different projects can have different translations.")
     private String translationsProject = null;
 
     @Option(name = "--flagfile",
+        hidden = true,
         usage = "A file containing additional command-line options.")
     private String flagFile = "";
 
     @Option(name = "--warnings_whitelist_file",
+        hidden = true,
         usage = "A file containing warnings to suppress. Each line should be " +
             "of the form\n" +
             "<file-name>:<line-number>?  <warning-description>")
     private String warningsWhitelistFile = "";
 
     @Option(name = "--extra_annotation_name",
+        hidden = true,
         usage = "A whitelist of tag names in JSDoc. You may specify multiple")
     private List<String> extraAnnotationName = new ArrayList<>();
 
     @Option(name = "--tracer_mode",
+        hidden = true,
         usage = "Shows the duration of each compiler pass and the impact to " +
         "the compiled output size. Options: ALL, RAW_SIZE, TIMING_ONLY, OFF")
     private CompilerOptions.TracerMode tracerMode =
         CompilerOptions.TracerMode.OFF;
 
     @Option(name = "--new_type_inf",
+        hidden = true,
         usage = "In development new type inference pass. DO NOT USE!")
     private boolean useNewTypeInference = false;
 
@@ -519,7 +574,15 @@ public class CommandLineRunner extends
     }
 
     private void printUsage(PrintStream ps) {
-      (new CmdLineParser(this)).printUsage(ps);
+      CmdLineParser p = new CmdLineParser(this);
+      p.printUsage(new OutputStreamWriter(ps), null, OptionHandlerFilter.ALL);
+      ps.flush();
+    }
+
+    private void printShortUsageAfterErrors(PrintStream ps) {
+      ps.print("Sample usage: ");
+      ps.println((new CmdLineParser(this)).printExample(OptionHandlerFilter.PUBLIC, null));
+      ps.println("Run with --help for all options and details");
       ps.flush();
     }
 
@@ -941,8 +1004,7 @@ public class CommandLineRunner extends
     }
 
     if (errors) {
-      errorStream.println("Run with the --help option for the usage");
-      errorStream.flush();
+      flags.printShortUsageAfterErrors(errorStream);
     } else if (flags.displayHelp) {
       flags.printUsage(out);
     } else if (flags.version) {
