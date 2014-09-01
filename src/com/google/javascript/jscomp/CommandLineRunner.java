@@ -486,6 +486,11 @@ public class CommandLineRunner extends
         usage = "In development new type inference pass. DO NOT USE!")
     private boolean useNewTypeInference = false;
 
+    @Option(name = "--rename_prefix_namespace",
+        usage = "Specifies the name of an object that will be used to store all "
+        + "non-extern globals")
+    private String renamePrefixNamespace = null;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
 
@@ -994,7 +999,8 @@ public class CommandLineRunner extends
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
           .setAngularPass(flags.angularPass)
           .setTracerMode(flags.tracerMode)
-          .setNewTypeInference(flags.useNewTypeInference);
+          .setNewTypeInference(flags.useNewTypeInference)
+          .setRenamePrefixNamespace(flags.renamePrefixNamespace);
     }
   }
 
@@ -1042,6 +1048,8 @@ public class CommandLineRunner extends
         flags.processJqueryPrimitives;
 
     options.angularPass = flags.angularPass;
+
+    options.renamePrefixNamespace = flags.renamePrefixNamespace;
 
     if (!flags.translationsFile.isEmpty()) {
       try {
