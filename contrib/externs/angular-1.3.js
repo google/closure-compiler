@@ -1689,6 +1689,56 @@ angular.NgModelController.prototype.$viewChangeListeners;
  */
 angular.NgModelController.prototype.$viewValue;
 
+/**
+ * @type {!Object.<string, function(?):*>}
+ */
+angular.NgModelController.prototype.$validators;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$untouched;
+
+/**
+ * @type {boolean}
+ */
+angular.NgModelController.prototype.$touched;
+
+/**
+ * @param {?} value
+ */
+angular.NgModelController.prototype.$isEmpty = function(value) {};
+
+/**
+ * @type {function()}
+ */
+angular.NgModelController.prototype.$setPristine = function() {};
+
+/**
+ * @type {function()}
+ */
+angular.NgModelController.prototype.$setUntouched = function() {};
+
+/**
+ * @type {function()}
+ */
+angular.NgModelController.prototype.$setTouched = function() {};
+
+/**
+ * @type {function()}
+ */
+angular.NgModelController.prototype.$rollbackViewValue = function() {};
+
+/**
+ * @type {function()}
+ */
+angular.NgModelController.prototype.$validate = function() {};
+
+/**
+ * @type {function()}
+ */
+angular.NgModelController.prototype.$commitViewValue = function() {};
+
 /******************************************************************************
  * FormController
  *****************************************************************************/
@@ -1702,6 +1752,11 @@ angular.FormController = function() {};
  * @param {*} control
  */
 angular.FormController.prototype.$addControl = function(control) {};
+
+/**
+ * @type {function()}
+ */
+angular.FormController.prototype.$rollbackViewValue = function() {};
 
 /**
  * @type {function()}
