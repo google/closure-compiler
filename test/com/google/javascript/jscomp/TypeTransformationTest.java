@@ -839,6 +839,14 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(NUMBER_TYPE, "typeExpr('!number')");
   }
 
+  public void testTransformationPrintType() {
+    testTTL(NUMBER_TYPE, "printType('Test message: ', N)");
+  }
+
+  public void testTransformationPrintType2() {
+    testTTL(recordTypeTest, "printType('Test message: ', REC)");
+  }
+
   private void initRecordTypeTests() {
     // {n:number, s:string, b:boolean}
     recordTypeTest = record("n", NUMBER_TYPE, "s", STRING_TYPE,
@@ -905,5 +913,4 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
       assertTypeEquals(expectedType, resultType);
     }
   }
-
 }

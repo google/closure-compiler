@@ -64,6 +64,7 @@ public final class TypeTransformationParser {
     MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),
     MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
     NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
+    PRINTTYPE("printType", 2, 2, OperationKind.OPERATION),
     RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
     SUB("sub", 2, 2, OperationKind.TYPE_PREDICATE),
     STREQ("streq", 2, 2, OperationKind.STRING_PREDICATE),
@@ -738,6 +739,24 @@ public final class TypeTransformationParser {
     return true;
   }
 
+  private boolean validPrintTypeExpression(Node expr) {
+    // The expression must have three children. The printType keyword, a
+    // message and a type transformation expression
+    if (!checkParameterCount(expr, Keywords.PRINTTYPE)) {
+      return false;
+    }
+    if (!getCallArgument(expr, 0).isString()) {
+      warnInvalid("message", expr);
+      warnInvalidInside(Keywords.PRINTTYPE.name, expr);
+      return false;
+    }
+    if (!validTypeTransformationExpression(getCallArgument(expr, 1))) {
+      warnInvalidInside(Keywords.PRINTTYPE.name, expr);
+      return false;
+    }
+    return true;
+  }
+
   /**
    * An operation expression is a cond or a mapunion
    */
@@ -755,6 +774,8 @@ public final class TypeTransformationParser {
         return validTypeOfVarExpression(expr);
       case INSTANCEOF:
         return validInstanceOfExpression(expr);
+      case PRINTTYPE:
+        return validPrintTypeExpression(expr);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }

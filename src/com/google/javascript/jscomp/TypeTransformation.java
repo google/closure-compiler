@@ -346,6 +346,8 @@ class TypeTransformation {
         return evalTypeOfVar(ttlAst);
       case INSTANCEOF:
         return evalInstanceOf(ttlAst, nameResolver);
+      case PRINTTYPE:
+        return evalPrintType(ttlAst, nameResolver);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
@@ -838,4 +840,12 @@ class TypeTransformation {
     return new JSTypeExpression(
         getCallArgument(ttlAst, 0), "").evaluate(scope, typeRegistry);
   }
+
+  private JSType evalPrintType(Node ttlAst, NameResolver nameResolver) {
+    JSType type = evalInternal(getCallArgument(ttlAst, 1), nameResolver);
+    String msg = getCallArgument(ttlAst, 0).getString() + type.toString();
+    System.out.println(msg);
+    return type;
+  }
+
 }

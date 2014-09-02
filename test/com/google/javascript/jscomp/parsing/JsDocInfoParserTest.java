@@ -3547,6 +3547,37 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         +                   "0) =: */");
   }
 
+  public void testParserWithTTLValidPrintType() {
+    parse("@template T := printType('msg', R) =: */");
+  }
+
+  public void testParserWithTTLInvalidFirstParamPrintType() {
+    parse("@template T := printType(foo(), R) =: */",
+        "Bad type annotation. Invalid message",
+        "Bad type annotation. Invalid expression inside printType");
+  }
+
+  public void testParserWithTTLInvalidSecondParamPrintType() {
+    parse("@template T := printType('msg', foo()) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside printType");
+  }
+
+  public void testParserWithTTLInvalidPrintTypeExtraParam() {
+    parse("@template T := printType(R, S, U) =: */",
+        "Bad type annotation. Found extra parameter in printType");
+  }
+
+  public void testParserWithTTLInvalidPrintTypeOfMissingParam() {
+    parse("@template T := printType() =: */",
+        "Bad type annotation. Missing parameter in printType");
+  }
+
+  public void testParserWithTTLInvalidPrintTypeOfMissingParam2() {
+    parse("@template T := printType(R) =: */",
+        "Bad type annotation. Missing parameter in printType");
+  }
+
   public void testParserWithTTLRecordType() {
     parse("@template T := record({prop:T}) =: */");
   }
