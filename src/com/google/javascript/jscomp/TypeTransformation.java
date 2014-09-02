@@ -29,6 +29,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.RecordType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
@@ -89,6 +90,9 @@ class TypeTransformation {
   static final DiagnosticType INVALID_CTOR =
       DiagnosticType.warning("INVALID_CTOR",
           "Expected a constructor type, found {0}");
+  static final DiagnosticType RECPARAM_INVALID =
+      DiagnosticType.warning("RECPARAM_INVALID",
+          "Expected a record type, found {0}");
 
   /**
    * A helper class for holding the information about the type variables
@@ -189,6 +193,10 @@ class TypeTransformation {
 
   private JSType getAllType() {
     return typeRegistry.getNativeType(JSTypeNative.ALL_TYPE);
+  }
+
+  private JSType getObjectType() {
+    return typeRegistry.getNativeType(JSTypeNative.OBJECT_TYPE);
   }
 
   private JSType createUnionType(JSType... variants) {
@@ -584,8 +592,7 @@ class TypeTransformation {
     return templateTypes.get(index);
   }
 
-  private JSType evalRecordType(Node ttlAst, NameResolver nameResolver) {
-    Node record = getCallArgument(ttlAst, 0);
+  private JSType evalRecord(Node record, NameResolver nameResolver) {
     RecordTypeBuilder builder = new RecordTypeBuilder(typeRegistry);
     for (Node propNode : record.children()) {
       // If it is a computed property then find the property name using the resolver
@@ -593,7 +600,7 @@ class TypeTransformation {
         String compPropName = getComputedPropName(propNode);
         // If the name does not exist then report a warning
         if (!nameResolver.nameVars.containsKey(compPropName)) {
-          reportWarning(ttlAst, UNKNOWN_NAMEVAR, compPropName);
+          reportWarning(record, UNKNOWN_NAMEVAR, compPropName);
           return getUnknownType();
         }
         // Otherwise add the property
@@ -609,6 +616,34 @@ class TypeTransformation {
       }
     }
     return builder.build();
+  }
+
+  private JSType evalRecordParam(Node ttlAst, NameResolver nameResolver) {
+    if (ttlAst.isObjectLit()) {
+      return evalRecord(ttlAst, nameResolver);
+    }
+    // The parameter of record can be a type transformation expression
+    return evalInternal(ttlAst, nameResolver);
+  }
+
+  private JSType evalRecordType(Node ttlAst, NameResolver nameResolver) {
+    int paramCount = getCallParamCount(ttlAst);
+    ImmutableList.Builder<RecordType> recTypesBuilder =
+        new ImmutableList.Builder<RecordType>();
+    for (int i = 0; i < paramCount; i++) {
+      JSType type = evalRecordParam(getCallArgument(ttlAst, i), nameResolver);
+      // If the expression evaluates to Object then no property needs to be added
+      if (type.isEquivalentTo(getObjectType())) {
+        continue;
+      }
+      // Check that each parameter evaluates to a record type
+      if (!type.isRecordType()) {
+        reportWarning(ttlAst, RECPARAM_INVALID, type.getDisplayName());
+        return getUnknownType();
+      }
+      recTypesBuilder.add((RecordType) type);
+    }
+    return joinRecordTypes(recTypesBuilder.build());
   }
 
   private void putNewPropInPropertyMap(Map<String, JSType> props,
@@ -631,11 +666,14 @@ class TypeTransformation {
       return;
     }
     // Otherwise join the current value with the new one since both are records
-    props.put(newPropName, joinRecordTypes(props.get(newPropName), newPropValue));
+    props.put(newPropName,
+        joinRecordTypes(ImmutableList.<RecordType>of(
+            (RecordType) props.get(newPropName),
+            (RecordType) newPropValue)));
   }
 
   private void addNewPropsFromRecordType(Map<String, JSType> props,
-      ObjectType recType) {
+      RecordType recType) {
     for (String newPropName : recType.getOwnPropertyNames()) {
       JSType newPropValue = recType.getSlot(newPropName).getType();
       // Put the new property depending if it already exists in the map
@@ -644,19 +682,16 @@ class TypeTransformation {
   }
 
   /**
-   * Joins two record types.
+   * Merges a list of record types.
    * Example
    * {r:{s:string, n:number}} and {a:boolean}
    * is transformed into {r:{s:string, n:number}, a:boolean}
    */
-  private JSType joinRecordTypes(JSType type1, JSType type2) {
-    Preconditions.checkArgument(type1.isRecordType(),
-        "Expected record type, found " + type1.getDisplayName());
-    Preconditions.checkArgument(type2.isRecordType(),
-        "Expected record type, found " + type2.getDisplayName());
+  private JSType joinRecordTypes(ImmutableList<RecordType> recTypes) {
     Map<String, JSType> props = new HashMap<String, JSType>();
-    addNewPropsFromRecordType(props, (ObjectType) type1);
-    addNewPropsFromRecordType(props, (ObjectType) type2);
+    for (int i = 0; i < recTypes.size(); i++) {
+      addNewPropsFromRecordType(props, recTypes.get(i));
+    }
     return createRecordType(
         new ImmutableMap.Builder<String, JSType>().putAll(props).build());
   }

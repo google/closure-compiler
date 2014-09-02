@@ -3484,9 +3484,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Missing parameter in record");
   }
 
-  public void testParserWithTTLInvalidRecordTypeExtraParam() {
-    parse("@template T := record({x:'number'}, {y:'number'}) =: */",
-        "Bad type annotation. Found extra parameter in record");
+  public void testParserWithTTLMergeRecords() {
+    parse("@template T := record({x:'number'}, {y:'number'}) =: */");
+  }
+
+  public void testParserWithTTLInvalidMergeRecords() {
+    parse("@template T := record({x:'number'}, foo()) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside record");
   }
 
   public void testParserWithTTLInvalidRecordTypeWithInvalidTypeInProperty() {
@@ -3503,17 +3508,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParserWithTTLInvalidRecordTypeInvalidRecordExpression() {
     parse("@template T := record(foo()) =: */",
-        "Bad type annotation. Invalid record expression");
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside record");
   }
 
-  public void testParserWithTTLInvalidRecordTypeInvalidRecordExpression2() {
-    parse("@template T := record(T) =: */",
-        "Bad type annotation. Invalid record expression");
+  public void testParserWithTTLRecordTypeTypeVars() {
+    parse("@template T := record(T, R) =: */");
   }
 
-  public void testParserWithTTLInvalidRecordTypeInvalidRecordExpression3() {
-    parse("@template T := record({}) =: */",
-        "Bad type annotation. Missing parameter in record expression");
+  public void testParserWithTTLEmptyRecordType() {
+    parse("@template T := record({}) =: */");
   }
 
   public void testParserWithTTLTypeTransformationInFirstParamMapunion() {

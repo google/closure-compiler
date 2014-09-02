@@ -385,6 +385,40 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "record({x:record({z:B}), y:S})");
   }
 
+  public void testTransformationWithNestedRecordType2() {
+    testTTL(record("x", NUMBER_TYPE),
+        "record(record({x:N}))");
+  }
+
+  public void testTransformationWithEmptyRecordType() {
+    testTTL(record(), "record({})");
+  }
+
+  public void testTransformationWithMergeRecord() {
+    testTTL(record("x", NUMBER_TYPE, "y", STRING_TYPE, "z", BOOLEAN_TYPE),
+        "record({x:N}, {y:S}, {z:B})");
+  }
+
+  public void testTransformationWithMergeDuplicatedRecords() {
+    testTTL(record("x", NUMBER_TYPE),
+        "record({x:N}, {x:N}, {x:N})");
+  }
+
+  public void testTransformationWithMergeRecordTypeWithEmpty() {
+    testTTL(record("x", NUMBER_TYPE),
+        "record({x:N}, {})");
+  }
+
+  public void testTransformationWithInvalidRecordType() {
+    testTTL(UNKNOWN_TYPE, "record(N)",
+        "Expected a record type, found number");
+  }
+
+  public void testTransformationWithInvalidMergeRecordType() {
+    testTTL(UNKNOWN_TYPE, "record({x:N}, N)",
+        "Expected a record type, found number");
+  }
+
   public void testTransformationWithTTLTypeTransformationInFirstParamMapunion() {
     testTTL(union(NUMBER_TYPE, STRING_TYPE),
         "mapunion(templateTypeOf(type(ARR, union(N, S)), 0),"
@@ -407,6 +441,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationWithTTLRecordWithInvalidReference() {
     testTTL(UNKNOWN_TYPE, "record({[Foo]:N})",
+        "Expected a record type, found Unknown",
         "Reference to an unknown name variable Foo");
   }
 
@@ -729,6 +764,10 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   private JSType type(ObjectType baseType, JSType... templatizedTypes) {
     return createTemplatizedType(baseType, templatizedTypes);
+  }
+
+  private JSType record() {
+    return record(ImmutableMap.<String, JSType>of());
   }
 
   private JSType record(String p1, JSType t1) {

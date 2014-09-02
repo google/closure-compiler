@@ -65,7 +65,7 @@ public final class TypeTransformationParser {
     RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
     SUB("sub", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
     STREQ("streq", 2, 2, OperationKind.BOOLEAN_STRING_PREDICATE),
-    RECORD("record", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
+    RECORD("record", 1, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
     TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
     TYPE("type", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
     TYPEOFVAR("typeOfVar", 1, 1, OperationKind.OPERATION),
@@ -378,30 +378,43 @@ public final class TypeTransformationParser {
     return true;
   }
 
+  /**
+   * A record must be a valid type transformation expression or a node of the form:
+   * {prop:TTLExp, prop:TTLExp, ...}
+   * Notice that the values are mandatory and they must be valid type
+   * transformation expressions
+   */
+  private boolean validRecordParam(Node expr) {
+    if (expr.isObjectLit()) {
+      // Each value of a property must be a valid expression
+      for (Node prop : expr.children()) {
+        if (!prop.hasChildren()) {
+          warnInvalid("property, missing type", prop);
+          return false;
+        } else if (!validTypeTransformationExpression(prop.getFirstChild())) {
+          return false;
+        }
+      }
+    } else if (!validTypeTransformationExpression(expr)) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * A record type expression must be of the form:
+   * record(RecordExp, RecordExp, ...)
+   */
   private boolean validRecordTypeExpression(Node expr) {
-    // The expression must have two children. The record keyword and
+    // The expression must have at least two children. The record keyword and
     // a record expression
     if (!checkParameterCount(expr, Keywords.RECORD)) {
       return false;
     }
-    // A record expression must be an object literal with at least one property
-    Node record = getCallArgument(expr, 0);
-    if (!record.isObjectLit()) {
-      warnInvalid("record expression", record);
-      return false;
-    }
-    if (record.getChildCount() < 1) {
-      warnMissingParam("record expression", record);
-      return false;
-    }
-    // Each value of a property must be a valid expression
-    for (Node prop : record.children()) {
-      if (!prop.hasChildren()) {
-        warnInvalid("property, missing type", prop);
-        warnInvalidInside(Keywords.RECORD.name, prop);
-        return false;
-      } else if (!validTypeTransformationExpression(prop.getFirstChild())) {
-        warnInvalidInside(Keywords.RECORD.name, prop);
+    // Each child must be a valid record
+    for (int i = 0; i < getCallParamCount(expr); i++) {
+      if (!validRecordParam(getCallArgument(expr, i))) {
+        warnInvalidInside(Keywords.RECORD.name, expr);
         return false;
       }
     }
