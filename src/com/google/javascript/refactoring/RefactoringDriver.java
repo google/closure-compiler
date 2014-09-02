@@ -18,6 +18,7 @@ package com.google.javascript.refactoring;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -34,31 +35,25 @@ import java.util.List;
  *
  * @author mknichel@google.com (Mark Knichel)
  */
-final class RefactoringDriver {
+public final class RefactoringDriver {
 
   private final Scanner scanner;
   private final Compiler compiler;
   private final Node rootNode;
 
-  RefactoringDriver(Scanner scanner, List<String> inputs, List<String> externs) {
+  private RefactoringDriver(Scanner scanner, List<SourceFile> inputs, List<SourceFile> externs) {
     this.scanner = scanner;
     this.compiler = createCompiler(inputs, externs);
     this.rootNode = this.compiler.getRoot();
   }
 
-  /**
-   * Run the refactoring and return any suggested fixes as a result.
-   */
-  List<SuggestedFix> drive() {
-    JsFlumeCallback callback = new JsFlumeCallback(scanner, null);
-    NodeTraversal.traverse(compiler, rootNode, callback);
-    return callback.getFixes();
+  public static RefactoringDriver fromSourceFiles(
+      Scanner scanner, List<SourceFile> inputs, List<SourceFile> externs) {
+    return new RefactoringDriver(scanner, inputs, externs);
   }
 
-  private Compiler createCompiler(List<String> inputs, List<String> externs) {
-    CompilerOptions options = getCompilerOptions();
-    Compiler compiler = new Compiler();
-    compiler.disableThreads();
+  public static RefactoringDriver fromFiles(
+      Scanner scanner, List<String> inputs, List<String> externs) {
     Function<String, SourceFile> toSourceFileFn = new Function<String, SourceFile>() {
       @Override public SourceFile apply(String file) {
         return new SourceFile.Builder().buildFromFile(file);
@@ -66,7 +61,35 @@ final class RefactoringDriver {
     };
     List<SourceFile> inputSourceFiles = Lists.transform(inputs, toSourceFileFn);
     List<SourceFile> externSourceFiles = Lists.transform(externs, toSourceFileFn);
-    compiler.compile(externSourceFiles, inputSourceFiles, options);
+    return fromSourceFiles(scanner, inputSourceFiles, externSourceFiles);
+  }
+
+  public static RefactoringDriver fromCode(Scanner scanner, String input, String externs) {
+    List<SourceFile> inputSourceFiles =
+        ImmutableList.of(new SourceFile.Builder().buildFromCode("input.js", input));
+    List<SourceFile> externSourceFiles =
+        ImmutableList.of(new SourceFile.Builder().buildFromCode("extern.js", externs));
+    return fromSourceFiles(scanner, inputSourceFiles, externSourceFiles);
+  }
+
+  /**
+   * Run the refactoring and return any suggested fixes as a result.
+   */
+  public List<SuggestedFix> drive() {
+    JsFlumeCallback callback = new JsFlumeCallback(scanner, null);
+    NodeTraversal.traverse(compiler, rootNode, callback);
+    return callback.getFixes();
+  }
+
+  public Compiler getCompiler() {
+    return compiler;
+  }
+
+  private Compiler createCompiler(List<SourceFile> inputs, List<SourceFile> externs) {
+    CompilerOptions options = getCompilerOptions();
+    Compiler compiler = new Compiler();
+    compiler.disableThreads();
+    compiler.compile(externs, inputs, options);
     return compiler;
   }
 

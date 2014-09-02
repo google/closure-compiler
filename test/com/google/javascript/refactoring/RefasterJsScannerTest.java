@@ -259,7 +259,8 @@ public class RefasterJsScannerTest {
   }
 
   private RefasterJsScanner createScanner(Compiler compiler, String template) throws Exception {
-    RefasterJsScanner scanner = new RefasterJsScanner(template);
+    RefasterJsScanner scanner = new RefasterJsScanner();
+    scanner.loadRefasterJsTemplateFromCode(template);
     scanner.initialize(compiler);
     return scanner;
   }

@@ -48,7 +48,7 @@ final class RefasterJs {
     Preconditions.checkArgument(!inputs.isEmpty(), "At least one input must be provided.");
     RefasterJsScanner scanner = new RefasterJsScanner();
     scanner.loadRefasterJsTemplate(refasterJsTemplate);
-    RefactoringDriver driver = new RefactoringDriver(scanner, inputs, externs);
+    RefactoringDriver driver = RefactoringDriver.fromFiles(scanner, inputs, externs);
     List<SuggestedFix> fixes = driver.drive();
     System.out.println("SuggestedFixes: " + fixes);
   }
