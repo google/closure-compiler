@@ -28,7 +28,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -1358,15 +1357,16 @@ class TypeInference
     }
 
     // Try to infer the template types
-    Map<TemplateType, JSType> inferred = Maps.filterKeys(
-        inferTemplateTypesFromParameters(fnType, n),
-        new Predicate<TemplateType>() {
-
-          @Override
-          public boolean apply(TemplateType key) {
-            return keys.contains(key);
-          }}
-        );
+    Map<TemplateType, JSType> rawInferrence = inferTemplateTypesFromParameters(
+        fnType, n);
+    Map<TemplateType, JSType> inferred = Maps.newIdentityHashMap();
+    for (TemplateType key : keys) {
+      JSType type = rawInferrence.get(key);
+      if (type == null) {
+        type = unknownType;
+      }
+      inferred.put(key, type);
+    }
 
     // Try to infer the template types using the type transformations
     Map<TemplateType, JSType> typeTransformations =
