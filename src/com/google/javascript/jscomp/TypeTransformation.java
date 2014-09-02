@@ -457,7 +457,7 @@ class TypeTransformation {
     return result;
   }
 
-  private boolean evalBooleanTypePredicate(Node ttlAst,
+  private boolean evalTypePredicate(Node ttlAst,
       NameResolver nameResolver) {
     JSType[] params = evalTypeParams(ttlAst, nameResolver);
     String name = getCallName(ttlAst);
@@ -479,7 +479,7 @@ class TypeTransformation {
     }
   }
 
-  private boolean evalBooleanStringPredicate(Node ttlAst,
+  private boolean evalStringPredicate(Node ttlAst,
       NameResolver nameResolver) {
     String[] params = evalStringParams(ttlAst, nameResolver);
     // If any of the parameters evaluates to the empty string then they were
@@ -500,14 +500,30 @@ class TypeTransformation {
     }
   }
 
+  private boolean evalTypevarPredicate(Node ttlAst, NameResolver nameResolver) {
+    String name = getCallName(ttlAst);
+    Keywords keyword = nameToKeyword(name);
+    switch (keyword) {
+      case ISDEFINED:
+        return nameResolver.typeVars.get(
+            getCallArgument(ttlAst, 0).getString()) != null;
+      default:
+        throw new IllegalStateException(
+            "Invalid boolean typevar predicate in the type transformation");
+    }
+
+  }
+
   private boolean evalBoolean(Node ttlAst, NameResolver nameResolver) {
     String name = getCallName(ttlAst);
     Keywords keyword = nameToKeyword(name);
     switch (keyword.kind) {
-      case BOOLEAN_STRING_PREDICATE:
-        return evalBooleanStringPredicate(ttlAst, nameResolver);
-      case BOOLEAN_TYPE_PREDICATE:
-        return evalBooleanTypePredicate(ttlAst, nameResolver);
+      case STRING_PREDICATE:
+        return evalStringPredicate(ttlAst, nameResolver);
+      case TYPE_PREDICATE:
+        return evalTypePredicate(ttlAst, nameResolver);
+      case TYPEVAR_PREDICATE:
+        return evalTypevarPredicate(ttlAst, nameResolver);
       default:
         throw new IllegalStateException(
             "Invalid boolean predicate in the type transformation");

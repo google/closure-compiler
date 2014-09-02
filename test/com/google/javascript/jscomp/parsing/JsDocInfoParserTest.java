@@ -3106,6 +3106,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T := cond(isRecord('foo'), R, S) =: */");
   }
 
+  public void testParserWithTTLConditionalIsDefined() {
+    parse("@template T := cond(isDefined(R), R, S) =: */");
+  }
+
   public void testParserWithTTLConditionalStringEquivalenceInvalidParam() {
     parse("@template T := cond(streq('foo', foo()), R, S) =: */",
         "Bad type annotation. Invalid string",
@@ -3141,6 +3145,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside conditional");
   }
 
+  public void testParserWithTTLConditionalIsDefinedInvalidParam() {
+    parse("@template T := cond(isDefined('foo'), R, S) =: */",
+        "Bad type annotation. Invalid name",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
   public void testParserWithTTLExtraParamBoolean() {
     parse("@template T := cond(eq(T, R, S), R, S) =: */",
         "Bad type annotation. Found extra parameter in eq",
@@ -3171,6 +3182,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside conditional");
   }
 
+  public void testParserWithTTLExtraParamIsDefined() {
+    parse("@template T := cond(isDefined(T, R), R, S) =: */",
+        "Bad type annotation. Found extra parameter in isDefined",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
   public void testParserWithTTLMissingParamBoolean() {
     parse("@template T := cond(eq(T), R, S) =: */",
         "Bad type annotation. Missing parameter in eq",
@@ -3198,6 +3215,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLMissingParamIsRecord() {
     parse("@template T := cond(isRecord(), R, S) =: */",
         "Bad type annotation. Missing parameter in isRecord",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLMissingParamIsDefined() {
+    parse("@template T := cond(isDefined(), R, S) =: */",
+        "Bad type annotation. Missing parameter in isDefined",
         "Bad type annotation. Invalid expression inside conditional");
   }
 

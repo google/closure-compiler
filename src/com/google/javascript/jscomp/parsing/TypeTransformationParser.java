@@ -46,25 +46,27 @@ public final class TypeTransformationParser {
   public static enum OperationKind {
     TYPE_CONSTRUCTOR,
     OPERATION,
-    BOOLEAN_STRING_PREDICATE,
-    BOOLEAN_TYPE_PREDICATE
+    STRING_PREDICATE,
+    TYPE_PREDICATE,
+    TYPEVAR_PREDICATE
   }
 
   /** Keywords of the type transformation language */
   public static enum Keywords {
     ALL("all", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
     COND("cond", 3, 3, OperationKind.OPERATION),
-    EQ("eq", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
-    ISCTOR("isCtor", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
-    ISRECORD("isRecord", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
-    ISTEMPLATIZED("isTemplatized", 1, 1, OperationKind.BOOLEAN_TYPE_PREDICATE),
+    EQ("eq", 2, 2, OperationKind.TYPE_PREDICATE),
+    ISCTOR("isCtor", 1, 1, OperationKind.TYPE_PREDICATE),
+    ISDEFINED("isDefined", 1, 1, OperationKind.TYPEVAR_PREDICATE),
+    ISRECORD("isRecord", 1, 1, OperationKind.TYPE_PREDICATE),
+    ISTEMPLATIZED("isTemplatized", 1, 1, OperationKind.TYPE_PREDICATE),
     INSTANCEOF("instanceOf", 1, 1, OperationKind.OPERATION),
     MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),
     MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
     NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
     RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
-    SUB("sub", 2, 2, OperationKind.BOOLEAN_TYPE_PREDICATE),
-    STREQ("streq", 2, 2, OperationKind.BOOLEAN_STRING_PREDICATE),
+    SUB("sub", 2, 2, OperationKind.TYPE_PREDICATE),
+    STREQ("streq", 2, 2, OperationKind.STRING_PREDICATE),
     RECORD("record", 1, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
     TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
     TYPE("type", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
@@ -128,17 +130,22 @@ public final class TypeTransformationParser {
     return isValidKeyword(name) ? nameToKeyword(name).kind == kind : false;
   }
 
-  private boolean isValidBooleanStringPredicate(String name) {
-    return isOperationKind(name, OperationKind.BOOLEAN_STRING_PREDICATE);
+  private boolean isValidStringPredicate(String name) {
+    return isOperationKind(name, OperationKind.STRING_PREDICATE);
   }
 
-  private boolean isValidBooleanTypePredicate(String name) {
-    return isOperationKind(name, OperationKind.BOOLEAN_TYPE_PREDICATE);
+  private boolean isValidTypePredicate(String name) {
+    return isOperationKind(name, OperationKind.TYPE_PREDICATE);
   }
 
-  private boolean isValidBooleanPredicate(String name) {
-    return isValidBooleanStringPredicate(name)
-        || isValidBooleanTypePredicate(name);
+  private boolean isValidTypevarPredicate(String name) {
+    return isOperationKind(name, OperationKind.TYPEVAR_PREDICATE);
+  }
+
+  private boolean isValidPredicate(String name) {
+    return isValidStringPredicate(name)
+        || isValidTypePredicate(name)
+        || isValidTypevarPredicate(name);
   }
 
   private int getFunctionParamCount(Node n) {
@@ -450,7 +457,7 @@ public final class TypeTransformationParser {
     }
   }
 
-  private boolean validBooleanTypePredicate(Node expr, int paramCount) {
+  private boolean validTypePredicate(Node expr, int paramCount) {
     // All the types must be valid type expressions
     for (int i = 0; i < paramCount; i++) {
       if (!validTypeTransformationExpression(getCallArgument(expr, i))) {
@@ -473,10 +480,29 @@ public final class TypeTransformationParser {
     return true;
   }
 
-  private boolean validBooleanStringPredicate(Node expr, int paramCount) {
+  private boolean validStringPredicate(Node expr, int paramCount) {
     // Each parameter must be valid string parameter
     for (int i = 0; i < paramCount; i++) {
       if (!isValidStringParam(getCallArgument(expr, i))) {
+        warnInvalidInside("boolean", expr);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean isValidTypevarParam(Node expr) {
+    if (!isTypeVar(expr)) {
+      warnInvalid("name", expr);
+      return false;
+    }
+    return true;
+  }
+
+  private boolean validTypevarPredicate(Node expr, int paramCount) {
+ // Each parameter must be valid string parameter
+    for (int i = 0; i < paramCount; i++) {
+      if (!isValidTypevarParam(getCallArgument(expr, i))) {
         warnInvalidInside("boolean", expr);
         return false;
       }
@@ -493,7 +519,7 @@ public final class TypeTransformationParser {
       warnInvalidExpression("boolean", expr);
       return false;
     }
-    if (!isValidBooleanPredicate(getCallName(expr))) {
+    if (!isValidPredicate(getCallName(expr))) {
       warnInvalid("boolean predicate", expr);
       return false;
     }
@@ -502,10 +528,12 @@ public final class TypeTransformationParser {
       return false;
     }
     switch (keyword.kind) {
-      case BOOLEAN_TYPE_PREDICATE:
-        return validBooleanTypePredicate(expr, getCallParamCount(expr));
-      case BOOLEAN_STRING_PREDICATE:
-        return validBooleanStringPredicate(expr, getCallParamCount(expr));
+      case TYPE_PREDICATE:
+        return validTypePredicate(expr, getCallParamCount(expr));
+      case STRING_PREDICATE:
+        return validStringPredicate(expr, getCallParamCount(expr));
+      case TYPEVAR_PREDICATE:
+        return validTypevarPredicate(expr, getCallParamCount(expr));
       default:
         throw new IllegalStateException("Invalid boolean expression");
     }

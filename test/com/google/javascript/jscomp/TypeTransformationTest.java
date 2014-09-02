@@ -745,6 +745,14 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(NUMBER_TYPE, "cond(isRecord(N), 'string', 'number')");
   }
 
+  public void testTransformationWithTrueIsDefinedConditional() {
+    testTTL(STRING_TYPE, "cond(isDefined(N), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseIsDefinedConditional() {
+    testTTL(NUMBER_TYPE, "cond(isDefined(Foo), 'string', 'number')");
+  }
+
   public void testTransformationWithInstanceOf() {
     testTTL(NUMBER_OBJECT_TYPE, "instanceOf(typeOfVar('Number'))");
   }
