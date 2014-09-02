@@ -21,12 +21,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.protobuf.TextFormat;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -485,6 +487,10 @@ public class CommandLineRunner extends
     @Option(name = "--new_type_inf",
         usage = "In development new type inference pass. DO NOT USE!")
     private boolean useNewTypeInference = false;
+
+    @Option(name = "--conformance_configs",
+        usage = "A list of JS Conformance configurations in text protocol buffer format.")
+    private List<String> conformanceConfigs = new ArrayList<>();
 
     @Argument
     private List<String> arguments = new ArrayList<>();
@@ -1064,6 +1070,8 @@ public class CommandLineRunner extends
       options.setWarningLevel(JsMessageVisitor.MSG_CONVENTIONS, CheckLevel.OFF);
     }
 
+    options.setConformanceConfigs(loadConformanceConfigs(flags.conformanceConfigs));
+
     return options;
   }
 
@@ -1083,6 +1091,34 @@ public class CommandLineRunner extends
       defaultExterns.addAll(externs);
       return defaultExterns;
     }
+  }
+
+  private ImmutableList<ConformanceConfig> loadConformanceConfigs(List<String> configPaths) {
+    ImmutableList.Builder<ConformanceConfig> configs =
+        ImmutableList.builder();
+
+    for (String configPath : configPaths) {
+      try {
+        configs.add(loadConformanceConfig(configPath));
+      } catch (IOException e) {
+        throw new RuntimeException("Error loading conformance config", e);
+      }
+    }
+
+    return configs.build();
+  }
+
+  private static ConformanceConfig loadConformanceConfig(String configFile)
+      throws IOException {
+    String textProto = Files.toString(new File(configFile), UTF_8);
+
+    ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
+    try {
+      TextFormat.merge(textProto, builder);
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+    return builder.build();
   }
 
   // The externs expected in externs.zip, in sorted order.

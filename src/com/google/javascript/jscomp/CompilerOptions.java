@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -933,6 +934,8 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public boolean instrumentForCoverage;
 
+  /** List of conformance configs to use in CheckConformance */
+  private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
   /**
    * Initializes compiler options. All options are disabled by default.
@@ -2248,6 +2251,24 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setInstrumentForCoverage(boolean instrumentForCoverage) {
     this.instrumentForCoverage = instrumentForCoverage;
+  }
+
+  public List<ConformanceConfig> getConformanceConfigs() {
+    return conformanceConfigs;
+  }
+
+  /**
+   * Both enable and configure conformance checks, if non-null.
+   */
+  public void setConformanceConfig(ConformanceConfig conformanceConfig) {
+    this.conformanceConfigs = ImmutableList.of(conformanceConfig);
+  }
+
+  /**
+   * Both enable and configure conformance checks, if non-null.
+   */
+  public void setConformanceConfigs(List<ConformanceConfig> configs) {
+    this.conformanceConfigs = ImmutableList.copyOf(configs);
   }
 
   //////////////////////////////////////////////////////////////////////////////

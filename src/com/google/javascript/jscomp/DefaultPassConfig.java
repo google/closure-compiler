@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -405,6 +406,10 @@ public class DefaultPassConfig extends PassConfig {
     if (options.nameReferenceReportPath != null &&
         !options.nameReferenceReportPath.isEmpty()) {
       checks.add(printNameReferenceReport);
+    }
+
+    if (!options.getConformanceConfigs().isEmpty()) {
+      checks.add(checkConformance);
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));
@@ -2658,4 +2663,12 @@ public class DefaultPassConfig extends PassConfig {
     }
   }
 
+  private final PassFactory checkConformance =
+      new PassFactory("checkConformance", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new CheckConformance(
+          compiler, ImmutableList.copyOf(options.getConformanceConfigs()));
+    }
+  };
 }
