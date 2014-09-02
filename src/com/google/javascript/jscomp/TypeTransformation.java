@@ -371,6 +371,8 @@ class TypeTransformation {
         return evalTemplateTypeOf(ttlAst, nameResolver);
       case RECORD:
         return evalRecordType(ttlAst, nameResolver);
+      case TYPEEXPR:
+        return evalNativeTypeExpr(ttlAst);
       default:
         throw new IllegalStateException("Invalid type expression");
     }
@@ -830,5 +832,10 @@ class TypeTransformation {
       return getUnknownType();
     }
     return ((FunctionType) type).getInstanceType();
+  }
+
+  private JSType evalNativeTypeExpr(Node ttlAst) {
+    return new JSTypeExpression(
+        getCallArgument(ttlAst, 0), "").evaluate(scope, typeRegistry);
   }
 }

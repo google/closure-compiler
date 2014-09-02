@@ -70,6 +70,7 @@ public final class TypeTransformationParser {
     RECORD("record", 1, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
     TEMPLATETYPEOF("templateTypeOf", 2, 2, OperationKind.TYPE_CONSTRUCTOR),
     TYPE("type", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
+    TYPEEXPR("typeExpr", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
     TYPEOFVAR("typeOfVar", 1, 1, OperationKind.OPERATION),
     UNION("union", 2, VAR_ARGS, OperationKind.TYPE_CONSTRUCTOR),
     UNKNOWN("unknown", 0, 0, OperationKind.TYPE_CONSTRUCTOR);
@@ -432,6 +433,25 @@ public final class TypeTransformationParser {
     return true;
   }
 
+  private boolean validNativeTypeExpr(Node expr) {
+    // The expression must have two children:
+    // - The typeExpr keyword
+    // - A string
+    if (!checkParameterCount(expr, Keywords.TYPEEXPR)) {
+      return false;
+    }
+    Node typeString = getCallArgument(expr, 0);
+    if (!typeString.isString()) {
+      warnInvalidExpression("native type", expr);
+      warnInvalidInside(Keywords.TYPEEXPR.name, expr);
+      return false;
+    }
+    Node typeExpr = JsDocInfoParser.parseTypeString(typeString.getString());
+    typeString.detachFromParent();
+    expr.addChildToBack(typeExpr);
+    return true;
+  }
+
   /**
    * A TTL type expression must be a union type, a template type, a record type
    * or any of the type predicates (none, rawTypeOf, templateTypeOf).
@@ -456,6 +476,8 @@ public final class TypeTransformationParser {
         return validTemplateTypeOfExpression(expr);
       case RECORD:
         return validRecordTypeExpression(expr);
+      case TYPEEXPR:
+        return validNativeTypeExpr(expr);
       default:
         throw new IllegalStateException("Invalid type expression");
     }

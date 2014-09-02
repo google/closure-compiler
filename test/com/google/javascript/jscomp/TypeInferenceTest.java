@@ -1386,6 +1386,66 @@ public class TypeInferenceTest extends TestCase {
     verify("r", getType("wiz.async.Response"));
   }
 
+  public void testTypeTransformationWithNativeTypeExpressionFunction() {
+    inFunction("/** @type {function(string, boolean)} */\n"
+        + "var x;\n"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := typeExpr('function(string, boolean)') =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("x"));
+  }
+
+  public void testTypeTransformationWithNativeTypeExpressionFunctionReturn() {
+    inFunction("/** @type {function(): number} */\n"
+        + "var x;\n"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := typeExpr('function(): number') =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("x"));
+  }
+
+  public void testTypeTransformationWithNativeTypeExpressionFunctionThis() {
+    inFunction("/** @type {function(this:boolean, string)} */\n"
+        + "var x;\n"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := typeExpr('function(this:boolean, string)') =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("x"));
+  }
+
+ public void testTypeTransformationWithNativeTypeExpressionFunctionVarargs() {
+    inFunction("/** @type {function(string, ...[number]): number} */\n"
+        + "var x;\n"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := typeExpr('function(string, ...[number]): number') =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("x"));
+  }
+
+  public void testTypeTransformationWithNativeTypeExpressionFunctionOptional() {
+    inFunction("/** @type {function(?string=, number=)} */\n"
+        + "var x;\n"
+        + "/**\n"
+        + " * @return {R}\n"
+        + " * @template R := typeExpr('function(?string=, number=)') =:\n"
+        + " */\n"
+        + "function f(){}\n"
+        + "var r = f();");
+    verify("r", getType("x"));
+  }
+
   public void testAssertTypeofProp() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction(

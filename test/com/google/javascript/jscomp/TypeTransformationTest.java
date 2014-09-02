@@ -818,6 +818,27 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "Reference to an unknown type variable foo");
   }
 
+  public void testTransformationWithTypeExpr() {
+    testTTL(NUMBER_TYPE, "typeExpr('number')");
+  }
+
+  public void testParserWithTTLNativeTypeExprUnion() {
+    testTTL(union(NUMBER_TYPE, BOOLEAN_TYPE), "typeExpr('number|boolean')");
+  }
+
+  public void testParserWithTTLNativeTypeExprRecord() {
+    testTTL(record("foo", NUMBER_TYPE, "bar", BOOLEAN_TYPE),
+        "typeExpr('{foo:number, bar:boolean}')");
+  }
+
+  public void testParserWithTTLNativeTypeExprNullable() {
+    testTTL(union(NUMBER_TYPE, NULL_TYPE), "typeExpr('?number')");
+  }
+
+  public void testParserWithTTLNativeTypeExprNonNullable() {
+    testTTL(NUMBER_TYPE, "typeExpr('!number')");
+  }
+
   private void initRecordTypeTests() {
     // {n:number, s:string, b:boolean}
     recordTypeTest = record("n", NUMBER_TYPE, "s", STRING_TYPE,

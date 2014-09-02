@@ -3708,6 +3708,70 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Found extra parameter in instanceOf");
   }
 
+  public void testParserWithTTLNativeTypeExprBasic() {
+    parse("@template T := typeExpr('string') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprBasic2() {
+    parse("@template T := typeExpr('goog.ui.Menu') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprUnion() {
+    parse("@template T := typeExpr('number|boolean') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprRecord() {
+    parse("@template T := typeExpr('{myNum: number, myObject} ') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprNullable() {
+    parse("@template T := typeExpr('?number') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprNonNullable() {
+    parse("@template T := typeExpr('!Object') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprFunction() {
+    parse("@template T := typeExpr('function(string, boolean)') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprFunctionReturn() {
+    parse("@template T := typeExpr('function(): number') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprFunctionThis() {
+    parse("@template T := typeExpr('function(this:goog.ui.Menu, string)') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprFunctionNew() {
+    parse("@template T := typeExpr('function(new:goog.ui.Menu, string)') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprFunctionVarargs() {
+    parse("@template T := typeExpr('function(string, ...[number]): number') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprFunctionOptional() {
+    parse("@template T := typeExpr('function(?string=, number=)') =: */");
+  }
+
+  public void testParserWithTTLNativeTypeExprMissingParam() {
+    parse("@template T := typeExpr() =: */",
+        "Bad type annotation. Missing parameter in typeExpr");
+  }
+
+  public void testParserWithTTLNativeTypeExprExtraParam() {
+    parse("@template T := typeExpr('a', 'b') =: */",
+        "Bad type annotation. Found extra parameter in typeExpr");
+  }
+
+  public void testParserWithTTLNativeInvalidTypeExpr() {
+    parse("@template T := typeExpr(foo) =: */",
+        "Bad type annotation. Invalid native type expression",
+        "Bad type annotation. Invalid expression inside typeExpr");
+  }
+
   public void testParserWithTTLAsynchUseCase() {
     parse("@template R := "
         + "cond(eq(T, 'Object'),\n"
