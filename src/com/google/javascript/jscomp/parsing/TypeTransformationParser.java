@@ -142,6 +142,10 @@ public final class TypeTransformationParser {
     return isOperationKind(name, OperationKind.TYPEVAR_PREDICATE);
   }
 
+  private boolean isBooleanOperation(Node n) {
+    return n.isAnd() || n.isOr() || n.isNot();
+  }
+
   private boolean isValidPredicate(String name) {
     return isValidStringPredicate(name)
         || isValidTypePredicate(name)
@@ -491,7 +495,7 @@ public final class TypeTransformationParser {
     return true;
   }
 
-  private boolean isValidTypevarParam(Node expr) {
+  private boolean validTypevarParam(Node expr) {
     if (!isTypeVar(expr)) {
       warnInvalid("name", expr);
       return false;
@@ -500,12 +504,27 @@ public final class TypeTransformationParser {
   }
 
   private boolean validTypevarPredicate(Node expr, int paramCount) {
- // Each parameter must be valid string parameter
+    // Each parameter must be valid string parameter
     for (int i = 0; i < paramCount; i++) {
-      if (!isValidTypevarParam(getCallArgument(expr, i))) {
+      if (!validTypevarParam(getCallArgument(expr, i))) {
         warnInvalidInside("boolean", expr);
         return false;
       }
+    }
+    return true;
+  }
+
+  private boolean validBooleanOperation(Node expr) {
+    boolean valid;
+    if (expr.isNot()) {
+      valid = validBooleanExpression(expr.getFirstChild());
+    } else {
+      valid = validBooleanExpression(expr.getFirstChild())
+          && validBooleanExpression(expr.getChildAtIndex(1));
+    }
+    if (!valid) {
+      warnInvalidInside("boolean", expr);
+      return false;
     }
     return true;
   }
@@ -515,6 +534,10 @@ public final class TypeTransformationParser {
    * type predicate
    */
   private boolean validBooleanExpression(Node expr) {
+    if (isBooleanOperation(expr)) {
+      return validBooleanOperation(expr);
+    }
+
     if (!isOperation(expr)) {
       warnInvalidExpression("boolean", expr);
       return false;

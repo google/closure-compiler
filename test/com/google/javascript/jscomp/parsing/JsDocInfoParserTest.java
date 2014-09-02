@@ -3088,6 +3088,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLConditionalIsConstructor() {
     parse("@template T := cond(isCtor(R), R, S) =: */");
   }
+
   public void testParserWithTTLConditionalIsConstructor2() {
     parse("@template T := cond(isCtor('foo'), R, S) =: */");
   }
@@ -3095,6 +3096,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLConditionalIsTemplatized() {
     parse("@template T := cond(isTemplatized(R), R, S) =: */");
   }
+
   public void testParserWithTTLConditionalIsTemplatized2() {
     parse("@template T := cond(isTemplatized('foo'), R, S) =: */");
   }
@@ -3102,6 +3104,24 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLConditionalIsRecord() {
     parse("@template T := cond(isRecord(R), R, S) =: */");
   }
+
+  public void testParserWithTTLConditionalAndOperation() {
+    parse("@template T := cond(isCtor(R) && isCtor(S), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditionalOrOperation() {
+    parse("@template T := cond(isCtor(R) || isCtor(S), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditionalNotOperation() {
+    parse("@template T := cond(!isCtor(R), R, S) =: */");
+  }
+
+  public void testParserWithTTLConditionalNestedBoolOperation() {
+    parse("@template T := "
+        + "cond(((isCtor(R) || isCtor(S)) && !isCtor(R)), R, S) =: */");
+  }
+
   public void testParserWithTTLConditionalIsRecord2() {
     parse("@template T := cond(isRecord('foo'), R, S) =: */");
   }
@@ -3148,6 +3168,41 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLConditionalIsDefinedInvalidParam() {
     parse("@template T := cond(isDefined('foo'), R, S) =: */",
         "Bad type annotation. Invalid name",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalAndInvalidParam() {
+    parse("@template T := cond('foo' && isCtor(R), R, S) =: */",
+        "Bad type annotation. Invalid boolean expression",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalAndInvalidParam2() {
+    parse("@template T := cond(isCtor(R) && 'foo', R, S) =: */",
+        "Bad type annotation. Invalid boolean expression",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalOrInvalidParam() {
+    parse("@template T := cond('foo' || isCtor(R), R, S) =: */",
+        "Bad type annotation. Invalid boolean expression",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalOrInvalidParam2() {
+    parse("@template T := cond(isCtor(R) || 'foo', R, S) =: */",
+        "Bad type annotation. Invalid boolean expression",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalNotInvalidParam() {
+    parse("@template T := cond(!'foo', R, S) =: */",
+        "Bad type annotation. Invalid boolean expression",
         "Bad type annotation. Invalid expression inside boolean",
         "Bad type annotation. Invalid expression inside conditional");
   }

@@ -753,6 +753,56 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(NUMBER_TYPE, "cond(isDefined(Foo), 'string', 'number')");
   }
 
+  public void testTransformationWithTrueAndConditional() {
+    testTTL(STRING_TYPE,
+        "cond(isDefined(N) && isDefined(N), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseAndConditional() {
+    testTTL(NUMBER_TYPE,
+        "cond(isDefined(N) && isDefined(Foo), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseAndConditional2() {
+    testTTL(NUMBER_TYPE,
+        "cond(isDefined(Foo) && isDefined(N), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseAndConditional3() {
+    testTTL(NUMBER_TYPE,
+        "cond(isDefined(Foo) && isDefined(Foo), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueOrConditional() {
+    testTTL(STRING_TYPE,
+        "cond(isDefined(N) || isDefined(N), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueOrConditional2() {
+    testTTL(STRING_TYPE,
+        "cond(isDefined(Foo) || isDefined(N), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueOrConditional3() {
+    testTTL(STRING_TYPE,
+        "cond(isDefined(N) || isDefined(Foo), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseOrConditional() {
+    testTTL(NUMBER_TYPE,
+        "cond(isDefined(Foo) || isDefined(Foo), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueNotConditional3() {
+    testTTL(STRING_TYPE,
+        "cond(!isDefined(Foo), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseNotConditional() {
+    testTTL(NUMBER_TYPE,
+        "cond(!isDefined(N), 'string', 'number')");
+  }
+
   public void testTransformationWithInstanceOf() {
     testTTL(NUMBER_OBJECT_TYPE, "instanceOf(typeOfVar('Number'))");
   }

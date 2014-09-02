@@ -123,6 +123,10 @@ class TypeTransformation {
     return n.isString();
   }
 
+  private boolean isBooleanOperation(Node n) {
+    return n.isAnd() || n.isOr() || n.isNot();
+  }
+
   private Keywords nameToKeyword(String s) {
     return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
   }
@@ -475,7 +479,7 @@ class TypeTransformation {
         return params[0].isRecordType();
       default:
         throw new IllegalStateException(
-            "Invalid boolean type predicate in the type transformation");
+            "Invalid type predicate in the type transformation");
     }
   }
 
@@ -496,7 +500,7 @@ class TypeTransformation {
         return params[0].equals(params[1]);
       default:
         throw new IllegalStateException(
-            "Invalid boolean string predicate in the type transformation");
+            "Invalid string predicate in the type transformation");
     }
   }
 
@@ -509,12 +513,29 @@ class TypeTransformation {
             getCallArgument(ttlAst, 0).getString()) != null;
       default:
         throw new IllegalStateException(
-            "Invalid boolean typevar predicate in the type transformation");
+            "Invalid typevar predicate in the type transformation");
     }
+  }
 
+   private boolean evalBooleanOperation(Node ttlAst, NameResolver nameResolver) {
+     boolean param0 = evalBoolean(ttlAst.getFirstChild(), nameResolver);
+     if (ttlAst.isNot()) {
+       return !param0;
+     }
+     if (ttlAst.isAnd()) {
+       return param0 && evalBoolean(ttlAst.getLastChild(), nameResolver);
+     }
+     if (ttlAst.isOr()) {
+       return param0 || evalBoolean(ttlAst.getLastChild(), nameResolver);
+     }
+     throw new IllegalStateException(
+         "Invalid boolean predicate in the type transformation");
   }
 
   private boolean evalBoolean(Node ttlAst, NameResolver nameResolver) {
+    if (isBooleanOperation(ttlAst)) {
+      return evalBooleanOperation(ttlAst, nameResolver);
+    }
     String name = getCallName(ttlAst);
     Keywords keyword = nameToKeyword(name);
     switch (keyword.kind) {
