@@ -6893,6 +6893,18 @@ chrome.gcdPrivate = {};
 chrome.gcdPrivate.Device;
 
 
+/** @constructor */
+chrome.gcdPrivate.ConfirmationInfo = function() {};
+
+
+/** @type {string} */
+chrome.gcdPrivate.ConfirmationInfo.prototype.type;
+
+
+/** @type {string|undefined} */
+chrome.gcdPrivate.ConfirmationInfo.prototype.code;
+
+
 /**
  * Returns the list of cloud devices visible locally or available in the
  * cloud for user account.
@@ -6924,12 +6936,12 @@ chrome.gcdPrivate.prefetchWifiPassword = function(ssid, callback) {};
  * Establish the session.
  * @param {string} ipAddress
  * @param {number} port
- * @param {function(number, string, string, string): void} callback Called when
- *     the confirmation code is available or on error. 1st param, |sessionId|,
- *     is the session ID (identifies the session for future calls). 2nd param,
- *     |status|, is the status (success or type of error). 3rd param, |code|, is
- *     the confirmation code or empty on error. 4th param, |confirmationType|,
- *     is the type of confirmation required.
+ * @param {function(number, string, !chrome.gcdPrivate.ConfirmationInfo): void}
+ *     callback Called when the session is established or on error. 1st param,
+ *     |sessionId|, is the session ID (identifies the session for future calls).
+ *     2nd param, |status|, is the status (success or type of error). 3rd param,
+ *     |confirmationInfo|, is the info about how the device handles
+ *     confirmation.
  */
 chrome.gcdPrivate.establishSession = function(ipAddress, port, callback) {};
 
