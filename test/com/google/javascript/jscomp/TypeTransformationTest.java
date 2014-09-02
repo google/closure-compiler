@@ -484,6 +484,24 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         "The first parameter of a maprecord must be a record type, found number");
   }
 
+  public void testTransformationWithObjectInMaprecord() {
+    testTTL(OBJECT_TYPE, "maprecord(OBJ, (k, v) => record({[k]:v}))");
+  }
+
+  public void testTransformationWithUnionInMaprecord() {
+    testTTL(UNKNOWN_TYPE,
+        "maprecord(union(record({n:N}), S), (k, v) => record({[k]:v}))",
+        "The first parameter of a maprecord must be a record type, "
+            + "found (string|{n: number})");
+  }
+
+  public void testTransformationWithUnionOfRecordsInMaprecord() {
+    testTTL(UNKNOWN_TYPE, "maprecord(union(record({n:N}), record({s:S})), "
+        + "(k, v) => record({[k]:v}))",
+        "The first parameter of a maprecord must be a record type, "
+            + "found ({n: number}|{s: string})");
+  }
+
   public void testTransformationWithNestedRecordInMaprecordFilterOneLevelString() {
     // {s:string, r:{s:string, b:boolean}}
     // is transformed to
@@ -684,8 +702,6 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   public void testTransformationWithInvalidNestedMaprecord() {
     testTTL(UNKNOWN_TYPE,
         "maprecord(NESTEDREC, (k, v) => maprecord(v, (k, v) => BOT))",
-        "The body of a maprecord function must evaluate to a record type "
-            + "or a no type, found ?",
         "The variable k is already defined");
 
   }

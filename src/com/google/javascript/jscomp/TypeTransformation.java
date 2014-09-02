@@ -698,19 +698,24 @@ class TypeTransformation {
 
   private JSType evalMaprecord(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
-    // Evaluate the first parameter, it must be a record type
-    Node recParam = params.get(0);
-    JSType recType = evalInternal(recParam, nameResolver);
-    if (!recType.isRecordType()) {
-      // TODO(lpino): Handle non-record types in maprecord operations
-      reportWarning(ttlAst, RECTYPE_INVALID, recType.toString());
+    JSType type = evalInternal(params.get(0), nameResolver);
+
+    // If it is an empty record type (Object) then return
+    if (type.isEquivalentTo(getObjectType())) {
+      return getObjectType();
+    }
+
+    // The parameter must be a valid record type
+    if (!type.isRecordType()) {
+      // TODO(lpino): Decide how to handle non-record types
+      reportWarning(params.get(0), RECTYPE_INVALID, type.toString());
       return getUnknownType();
     }
 
     // Obtain the elements in the record type. Note that the block
     // above guarantees the casting to be safe
-    ObjectType objRecType = ((ObjectType) recType);
-    Set<String> ownPropsNames = objRecType.getOwnPropertyNames();
+    RecordType recType = ((RecordType) type);
+    Set<String> ownPropsNames = recType.getOwnPropertyNames();
 
     // Fetch the information of the map function
     Node mapFunction = params.get(1);
@@ -732,30 +737,36 @@ class TypeTransformation {
     Map<String, JSType> newProps = new HashMap<String, JSType>();
     for (String propName : ownPropsNames) {
       // The value of the current property
-      JSType propValue = objRecType.getSlot(propName).getType();
+      JSType propValue = recType.getSlot(propName).getType();
 
       // Evaluate the map function body with paramValue and paramKey replaced
       // by the values of the current property
       NameResolver newNameResolver = new NameResolver(
           addNewEntry(nameResolver.typeVars, paramValue, propValue),
           addNewEntry(nameResolver.nameVars, paramKey, propName));
-      JSType mapFnBodyResult = evalInternal(mapFnBody, newNameResolver);
+      JSType body = evalInternal(mapFnBody, newNameResolver);
+
+      // If the body returns unknown then the whole expression returns unknown
+      if (body.isUnknownType()) {
+        return getUnknownType();
+      }
 
       // Skip the property when the body evaluates to NO_TYPE
-      if (mapFnBodyResult.isNoType()) {
+      // or the empty record (Object)
+      if (body.isNoType() || body.isEquivalentTo(getObjectType())) {
         continue;
       }
 
-      // The body must evaluate to a record type
-      if (!mapFnBodyResult.isRecordType()) {
-        reportWarning(ttlAst, MAPRECORD_BODY_INVALID, mapFnBodyResult.toString());
+      // Otherwise the body must evaluate to a record type
+      if (!body.isRecordType()) {
+        reportWarning(ttlAst, MAPRECORD_BODY_INVALID, body.toString());
         return getUnknownType();
       }
 
       // Add the properties of the resulting record type to the original one
-      ObjectType mapFnBodyAsObjType = ((ObjectType) mapFnBodyResult);
-      for (String newPropName : mapFnBodyAsObjType.getOwnPropertyNames()) {
-        JSType newPropValue = mapFnBodyAsObjType.getSlot(newPropName).getType();
+      RecordType bodyAsRecType = ((RecordType) body);
+      for (String newPropName : bodyAsRecType.getOwnPropertyNames()) {
+        JSType newPropValue = bodyAsRecType.getSlot(newPropName).getType();
         // If the key already exists then we have to mix it with the current
         // property value
         putNewPropInPropertyMap(newProps, newPropName, newPropValue);
