@@ -683,14 +683,7 @@ class TypeTransformation {
         new ImmutableMap.Builder<String, JSType>();
     // Otherwise collect the properties and build a record type
     for (String propName : propNames) {
-      JSType propValue = objType.getPropertyType(propName);
-      ObjectType propValueObj = propValue.toObjectType();
-      // Handle Object types inside a record
-      // Beware with UNKNOWN since UNKNOWN.toObjectType() = UNKNOWN
-      if (propValueObj != null && propValue != getUnknownType()) {
-        propValue = buildRecordTypeFromObject(propValueObj);
-      }
-      props.put(propName, propValue);
+      props.put(propName, objType.getPropertyType(propName));
     }
     return createRecordType(props.build());
   }

@@ -852,6 +852,10 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
   }
 
   public void testTransformationInstanceObjectToRecord2() {
+    testTTL(record("length", NUMBER_TYPE), "record(type(ARR, N))");
+  }
+
+  public void testTransformationInstanceObjectToRecordInvalid() {
     testTTL(UNKNOWN_TYPE, "record(union(OBJ, NULL))",
         "Expected a record type, found (Object|null)");
   }

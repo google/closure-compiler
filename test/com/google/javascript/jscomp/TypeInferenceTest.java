@@ -1463,12 +1463,13 @@ public class TypeInferenceTest extends TestCase {
     verify("r", getType("e"));
   }
 
-  public void testTypeTransformationRecordFromObject2() {
+  public void testTypeTransformationRecordFromObjectNested() {
     inFunction("/** \n"
         + " * @param {T} a\n"
         + " * @return {R}\n"
         + " * @template T \n"
-        + " * @template R := record(T) =:"
+        + " * @template R :=\n"
+        + " * maprecord(record(T), (k, v) => record({[k]:record(v)})) =:"
         + " */\n"
         + "function f(a) {}\n"
         + "/** @type {{foo:!Object, bar:!Object}} */"
@@ -1478,7 +1479,7 @@ public class TypeInferenceTest extends TestCase {
     verify("r", getType("e"));
   }
 
-  public void testTypeTransformationRecordFromObject3() {
+  public void testTypeTransformationRecordFromObjectWithTemplatizedType() {
     inFunction("/** \n"
         + " * @param {T} a\n"
         + " * @return {R}\n"
@@ -1486,11 +1487,11 @@ public class TypeInferenceTest extends TestCase {
         + " * @template R := record(T) =:"
         + " */\n"
         + "function f(a) {}\n"
-        + "/** @type {{foo:{baz:!Object}, bar:!Object}} */"
+        + "/** @type {{foo:!Array.<number>}} */"
         + "var e;"
-        + "/** @type {!Object.<?,?>} */"
+        + "/** @type {!Array.<number>} */"
         + "var something;"
-        + "var r = f({foo:{baz:{}}, bar:something});");
+        + "var r = f({foo:something});");
     assertTrue(getType("r").isRecordType());
     verify("r", getType("e"));
   }
