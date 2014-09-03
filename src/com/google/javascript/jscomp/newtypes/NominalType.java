@@ -569,7 +569,6 @@ public class NominalType {
       if (allProps == null) {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         if (superClass != null) {
-          Preconditions.checkState(superClass.typeMap.isEmpty());
           builder.addAll(superClass.rawType.getAllPropsOfClass());
         }
         allProps = builder

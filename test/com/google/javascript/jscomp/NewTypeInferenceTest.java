@@ -5762,7 +5762,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
             NewTypeInference.NOT_UNIQUE_INSTANTIATION));
   }
 
-
   public void testDifficultClassGenericsInstantiation() {
     typeCheck(
         "/**\n" +
@@ -6198,6 +6197,22 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings(
         "/** @const */ var ns = {};\n" +
         "/** @public */ ns.prop;");
+  }
+
+  public void testGrandparentTemplatizedDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor @template VALUE */\n" +
+        "var Grandparent = function() {};\n" +
+        "/** @constructor @extends {Grandparent.<number>} */\n" +
+        "var Parent = function(){};\n" +
+        "/** @constructor @extends {Parent} */ function Child(){}");
+
+    checkNoWarnings(
+        "/** @constructor @template VALUE */\n" +
+        "var Grandparent = function() {};\n" +
+        "/** @constructor @extends {Grandparent} */\n" +
+        "var Parent = function(){};\n" +
+        "/** @constructor @extends {Parent} */ function Child(){}");
   }
 
   public void testDebuggerStatementDoesntCrash() {
