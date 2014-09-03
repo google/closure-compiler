@@ -17,10 +17,13 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -702,6 +705,26 @@ public class FunctionType {
       Preconditions.checkState(typeParameters.contains(typeParam));
     }
     return applyInstantiation(false, typeMap);
+  }
+
+  public FunctionType instantiateGenericsFromArgumentList(
+      List<JSType> argTypes) {
+    Multimap<String, JSType> typeMultimap = HashMultimap.create();
+    for (int i = 0, size = argTypes.size(); i < size; i++) {
+      if (!this.getFormalType(i)
+          .unifyWith(argTypes.get(i), typeParameters, typeMultimap)) {
+        return null;
+      }
+    }
+    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+    for (String typeParam : typeParameters) {
+      Collection<JSType> types = typeMultimap.get(typeParam);
+      if (types.size() != 1) {
+        return null;
+      }
+      builder.put(typeParam, Iterables.getOnlyElement(types));
+    }
+    return applyInstantiation(false, builder.build());
   }
 
   @Override

@@ -131,13 +131,13 @@ class GlobalTypeInfo implements CompilerPass {
   static final DiagnosticType COULD_NOT_INFER_CONST_TYPE =
       DiagnosticType.warning(
           "JSC_COULD_NOT_INFER_CONST_TYPE",
-          "All constants must be typed. The compiler could not infer the type" +
+          "All constants must be typed. The compiler could not infer the type " +
           "of this constant. Please use an explicit type annotation.");
 
   static final DiagnosticType MISPLACED_CONST_ANNOTATION =
       DiagnosticType.warning(
           "JSC_MISPLACED_CONST_ANNOTATION",
-          "This property cannot be @const." +
+          "This property cannot be @const. " +
           "The @const annotation is only allowed for " +
           "properties of namespaces, prototype properties, " +
           "static properties of constructors, " +
@@ -1372,7 +1372,27 @@ class GlobalTypeInfo implements CompilerPass {
             return null;
           }
           FunctionType funType = ratorType.getFunType();
-          return funType == null ? null : funType.getReturnType();
+          if (funType == null) {
+            return null;
+          }
+          if (funType.isGeneric()) {
+            ImmutableList.Builder<JSType> argTypes = ImmutableList.builder();
+            for (Node argNode = n.getFirstChild().getNext();
+                 argNode != null;
+                 argNode = argNode.getNext()) {
+              JSType t = simpleInferExprType(argNode);
+              if (t == null) {
+                return null;
+              }
+              argTypes.add(t);
+            }
+            funType = funType
+                .instantiateGenericsFromArgumentList(argTypes.build());
+            if (funType == null) {
+              return null;
+            }
+          }
+          return funType.getReturnType();
         default:
           return null;
       }

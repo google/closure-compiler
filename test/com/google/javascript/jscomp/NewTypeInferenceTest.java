@@ -5703,17 +5703,65 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " */\n" +
         "function Bar(x) {}");
 
-    // TODO(dimvar): fix
-    // checkNoWarnings(
-    //     "/**\n" +
-    //     " * @interface\n" +
-    //     " * @template T\n" +
-    //     " */\n" +
-    //     "function Foo() {}\n" +
-    //     "/** @constructor @implements {Foo.<number>} */\n" +
-    //     "function A() {}\n" +
-    //     "var /** Foo.<number> */ x = new A();");
+    checkNoWarnings(
+        "/**\n" +
+        " * @interface\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor @implements {Foo.<number>} */\n" +
+        "function A() {}\n" +
+        "var /** Foo.<number> */ x = new A();");
   }
+
+  public void testInferConstTypeFromGenerics() {
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function f(x) { return x; }\n" +
+        "/** @const */ var x = f(5);\n" +
+        "function g() { var /** null */ n = x; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @constructor\n" +
+        " */\n" +
+        "function Foo(x) {}\n" +
+        "/** @const */ var foo_str = new Foo('str');\n" +
+        "function g() { var /** !Foo.<number> */ foo_num = foo_str; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function f(x) { return x; }\n" +
+        "/** @const */ var x = f(f ? 'str' : 5);",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function f(x, y) { return true ? y : x; }\n" +
+        "/** @const */ var x = f(5, 'str');" +
+        "function g() { var /** null */ n = x; }",
+        ImmutableList.of(
+            GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
+            NewTypeInference.NOT_UNIQUE_INSTANTIATION));
+  }
+
 
   public void testDifficultClassGenericsInstantiation() {
     typeCheck(
