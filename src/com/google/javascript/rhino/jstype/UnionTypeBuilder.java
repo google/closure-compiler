@@ -62,9 +62,9 @@ import java.util.List;
 class UnionTypeBuilder implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  // If the best we can do is say "this object is one of twenty things",
+  // If the best we can do is say "this object is one of thirty things",
   // then we should just give up and admit that we have no clue.
-  private static final int DEFAULT_MAX_UNION_SIZE = 20;
+  private static final int DEFAULT_MAX_UNION_SIZE = 30;
 
   private final JSTypeRegistry registry;
   private final List<JSType> alternates = Lists.newArrayList();
