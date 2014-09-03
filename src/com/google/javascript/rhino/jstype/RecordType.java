@@ -203,7 +203,7 @@ public class RecordType extends PrototypeObjectType {
   }
 
   @Override
-  RecordType toMaybeRecordType() {
+  public RecordType toMaybeRecordType() {
     return this;
   }
 

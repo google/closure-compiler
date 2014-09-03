@@ -391,7 +391,7 @@ public abstract class JSType implements Serializable {
    * Downcasts this to a RecordType, or returns null if this is not
    * a RecordType.
    */
-  RecordType toMaybeRecordType() {
+  public RecordType toMaybeRecordType() {
     return null;
   }
 

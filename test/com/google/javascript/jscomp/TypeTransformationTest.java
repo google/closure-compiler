@@ -441,7 +441,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationWithTTLRecordWithInvalidReference() {
     testTTL(UNKNOWN_TYPE, "record({[Foo]:N})",
-        "Expected a record type, found Unknown",
+        "Expected a record type, found ?",
         "Reference to an unknown name variable Foo");
   }
 
@@ -845,6 +845,15 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationPrintType2() {
     testTTL(recordTypeTest, "printType('Test message: ', REC)");
+  }
+
+  public void testTransformationInstanceObjectToRecord() {
+    testTTL(OBJECT_TYPE, "record(type(OBJ, N))");
+  }
+
+  public void testTransformationInstanceObjectToRecord2() {
+    testTTL(UNKNOWN_TYPE, "record(union(OBJ, NULL))",
+        "Expected a record type, found (Object|null)");
   }
 
   private void initRecordTypeTests() {

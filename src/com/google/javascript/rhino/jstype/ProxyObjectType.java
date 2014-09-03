@@ -206,7 +206,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  RecordType toMaybeRecordType() {
+  public RecordType toMaybeRecordType() {
     return referencedType.toMaybeRecordType();
   }
 

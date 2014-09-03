@@ -1446,6 +1446,55 @@ public class TypeInferenceTest extends TestCase {
     verify("r", getType("x"));
   }
 
+  public void testTypeTransformationRecordFromObject() {
+    inFunction("/** \n"
+        + " * @param {T} a\n"
+        + " * @return {R}\n"
+        + " * @template T \n"
+        + " * @template R := record(T) =:"
+        + " */\n"
+        + "function f(a) {}\n"
+        + "/** @type {{foo:?}} */"
+        + "var e;"
+        + "/** @type {?} */"
+        + "var bar;"
+        + "var r = f({foo:bar});");
+    assertTrue(getType("r").isRecordType());
+    verify("r", getType("e"));
+  }
+
+  public void testTypeTransformationRecordFromObject2() {
+    inFunction("/** \n"
+        + " * @param {T} a\n"
+        + " * @return {R}\n"
+        + " * @template T \n"
+        + " * @template R := record(T) =:"
+        + " */\n"
+        + "function f(a) {}\n"
+        + "/** @type {{foo:!Object, bar:!Object}} */"
+        + "var e;"
+        + "var r = f({foo:{}, bar:{}});");
+    assertTrue(getType("r").isRecordType());
+    verify("r", getType("e"));
+  }
+
+  public void testTypeTransformationRecordFromObject3() {
+    inFunction("/** \n"
+        + " * @param {T} a\n"
+        + " * @return {R}\n"
+        + " * @template T \n"
+        + " * @template R := record(T) =:"
+        + " */\n"
+        + "function f(a) {}\n"
+        + "/** @type {{foo:{baz:!Object}, bar:!Object}} */"
+        + "var e;"
+        + "/** @type {!Object.<?,?>} */"
+        + "var something;"
+        + "var r = f({foo:{baz:{}}, bar:something});");
+    assertTrue(getType("r").isRecordType());
+    verify("r", getType("e"));
+  }
+
   public void testAssertTypeofProp() {
     assuming("x", createNullableType(OBJECT_TYPE));
     inFunction(

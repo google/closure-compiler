@@ -667,22 +667,50 @@ class TypeTransformation {
     return evalInternal(ttlAst, nameResolver);
   }
 
+  private JSType buildRecordTypeFromObject(ObjectType objType) {
+    RecordType recType = objType.toMaybeRecordType();
+    // If it can be casted to a record type then return
+    if (recType != null) {
+      return recType;
+    }
+    // TODO(lpino): Handle inherited properties
+    Set<String> propNames = objType.getOwnPropertyNames();
+    // If the type has no properties then return Object
+    if (propNames.isEmpty()) {
+      return getObjectType();
+    }
+    ImmutableMap.Builder<String, JSType> props =
+        new ImmutableMap.Builder<String, JSType>();
+    // Otherwise collect the properties and build a record type
+    for (String propName : propNames) {
+      JSType propValue = objType.getPropertyType(propName);
+      ObjectType propValueObj = propValue.toObjectType();
+      // Handle Object types inside a record
+      // Beware with UNKNOWN since UNKNOWN.toObjectType() = UNKNOWN
+      if (propValueObj != null && propValue != getUnknownType()) {
+        propValue = buildRecordTypeFromObject(propValueObj);
+      }
+      props.put(propName, propValue);
+    }
+    return createRecordType(props.build());
+  }
+
   private JSType evalRecordType(Node ttlAst, NameResolver nameResolver) {
     int paramCount = getCallParamCount(ttlAst);
     ImmutableList.Builder<RecordType> recTypesBuilder =
         new ImmutableList.Builder<RecordType>();
     for (int i = 0; i < paramCount; i++) {
       JSType type = evalRecordParam(getCallArgument(ttlAst, i), nameResolver);
-      // If the expression evaluates to Object then no property needs to be added
-      if (type.isEquivalentTo(getObjectType())) {
-        continue;
-      }
-      // Check that each parameter evaluates to a record type
-      if (!type.isRecordType()) {
-        reportWarning(ttlAst, RECPARAM_INVALID, type.getDisplayName());
+      // Check that each parameter evaluates to an object
+      ObjectType objType = type.toObjectType();
+      if (objType == null || objType.isUnknownType()) {
+        reportWarning(ttlAst, RECPARAM_INVALID, type.toString());
         return getUnknownType();
       }
-      recTypesBuilder.add((RecordType) type);
+      JSType recType = buildRecordTypeFromObject(objType);
+      if (!recType.isEquivalentTo(getObjectType())) {
+        recTypesBuilder.add(recType.toMaybeRecordType());
+      }
     }
     return joinRecordTypes(recTypesBuilder.build());
   }
