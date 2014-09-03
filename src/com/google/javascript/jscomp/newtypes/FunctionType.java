@@ -766,11 +766,11 @@ public class FunctionType {
     builder.append("function(");
     if (nominalType != null) {
       builder.append("new:");
-      builder.append(nominalType.getName());
+      builder.append(nominalType);
       builder.append(',');
     } else if (receiverType != null) {
       builder.append("this:");
-      builder.append(receiverType.getName());
+      builder.append(receiverType);
       builder.append(',');
     }
     for (int i = 0; i < requiredFormals.size(); ++i) {
