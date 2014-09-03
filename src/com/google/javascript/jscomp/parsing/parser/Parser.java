@@ -2339,11 +2339,13 @@ public class Parser {
     return peekExpression() || peek(TokenType.SPREAD);
   }
 
+  private static final EnumSet<TokenType> arraySubPatternFollowSet =
+      EnumSet.of(TokenType.COMMA, TokenType.CLOSE_SQUARE);
+
   // Element ::= Pattern | LValue | ... LValue
-  private ParseTree parsePatternElement(PatternKind kind,
-                                        EnumSet<TokenType> follow) {
+  private ParseTree parseArrayPatternElement(PatternKind kind) {
     // [ or { are preferably the start of a sub-pattern
-    if (peekParenPattern(kind, follow)) {
+    if (peekParenPattern(kind, arraySubPatternFollowSet)) {
       return parseParenPattern(kind);
     }
 
@@ -2378,9 +2380,6 @@ public class Parser {
     return lvalue;
   }
 
-  private static final EnumSet<TokenType> arraySubPatternFollowSet =
-      EnumSet.of(TokenType.COMMA, TokenType.CLOSE_SQUARE);
-
   // Pattern ::= ... | "[" Element? ("," Element?)* "]"
   private ParseTree parseArrayPattern(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
@@ -2391,7 +2390,7 @@ public class Parser {
         eat(TokenType.COMMA);
         elements.add(new NullTree(getTreeLocation(getTreeStartLocation())));
       } else {
-        ParseTree element = parsePatternElement(kind, arraySubPatternFollowSet);
+        ParseTree element = parseArrayPatternElement(kind);
         elements.add(element);
 
         if (element.isAssignmentRestElement()) {
@@ -2414,9 +2413,6 @@ public class Parser {
     return new ArrayPatternTree(getTreeLocation(start), elements.build());
   }
 
-  private static final EnumSet<TokenType> objectSubPatternFollowSet =
-      EnumSet.of(TokenType.COMMA, TokenType.CLOSE_CURLY);
-
   // Pattern ::= "{" (Field ("," Field)* ","?)? "}" | ...
   private ParseTree parseObjectPattern(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
@@ -2424,7 +2420,6 @@ public class Parser {
     eat(TokenType.OPEN_CURLY);
     while (peekObjectPatternField()) {
       fields.add(parseObjectPatternField(kind));
-
       if (peek(TokenType.COMMA)) {
         // Consume the comma separator
         eat(TokenType.COMMA);
@@ -2438,30 +2433,53 @@ public class Parser {
   }
 
   private boolean peekObjectPatternField() {
-    return peekId();
+    return peekId() || peek(TokenType.NUMBER)
+        || peek(TokenType.STRING) || peek(TokenType.OPEN_SQUARE);
   }
 
   private ParseTree parseObjectPatternField(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
-    IdentifierToken identifier = eatIdOrKeywordAsId();
+    if (peekType() == TokenType.OPEN_SQUARE) {
+      ParseTree key = parseComputedPropertyName();
+      eat(TokenType.COLON);
+      ParseTree value = parseObjectPatternFieldRHS(kind);
+      return new ComputedPropertyDefinitionTree(getTreeLocation(start), key, value);
+    }
+
+    Token name;
+    if (peekId()) {
+      IdentifierExpressionTree idTree = parseIdentifierExpression();
+      name = idTree.identifierToken;
+      if (peek(TokenType.EQUAL)) {
+        eat(TokenType.EQUAL);
+        ParseTree defaultValue = parseAssignmentExpression();
+        return new DefaultParameterTree(getTreeLocation(start), idTree, defaultValue);
+      } else if (!peek(TokenType.COLON)) {
+        return new PropertyNameAssignmentTree(getTreeLocation(start), name, null);
+      }
+    } else {
+      name = parseLiteralExpression().literalToken;
+    }
+
+    eat(TokenType.COLON);
+    ParseTree value = parseObjectPatternFieldRHS(kind);
+    return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
+  }
+
+  private ParseTree parseObjectPatternFieldRHS(PatternKind kind) {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree value;
+    if (peekPattern(kind)) {
+      value = parsePattern(kind);
+    } else {
+      value = parseIdentifierExpression();
+    }
     if (peek(TokenType.EQUAL)) {
-      ParseTree lhs = new IdentifierExpressionTree(getTreeLocation(start), identifier);
       eat(TokenType.EQUAL);
       ParseTree defaultValue = parseAssignmentExpression();
-      return new DefaultParameterTree(getTreeLocation(start), lhs, defaultValue);
+      return new DefaultParameterTree(getTreeLocation(start), value, defaultValue);
     }
-
-    ParseTree element = null;
-    if (peek(TokenType.COLON)) {
-      eat(TokenType.COLON);
-      element = parsePatternElement(kind, objectSubPatternFollowSet);
-
-      if (element.isAssignmentRestElement()) {
-        reportError("Rest can not be used in object patterns");
-      }
-    }
-    return new ObjectPatternFieldTree(getTreeLocation(start),
-                                      identifier, element);
+    return value;
   }
 
   /**

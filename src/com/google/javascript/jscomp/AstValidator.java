@@ -708,6 +708,8 @@ public class AstValidator implements CompilerPass {
       validateObjectPattern(type, n);
     } else if (n.isDefaultValue()) {
       validateDefaultValue(type, n);
+    } else if (n.isComputedProp()) {
+      validateObjectLitComputedPropKey(n);
     } else {
       violation("Invalid child for " + Token.name(type) + " node", n);
     }

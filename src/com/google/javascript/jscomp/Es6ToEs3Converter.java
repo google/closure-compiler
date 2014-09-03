@@ -179,6 +179,16 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         visitArrayPattern(t, n, parent);
         break;
       case Token.OBJECT_PATTERN:
+        for (Node child : n.children()) {
+          if (child.isStringKey() && child.isQuotedString()) {
+            cannotConvertYet(child, "number or string key in an object pattern");
+            return;
+          }
+          if (child.isComputedProp()) {
+            cannotConvertYet(child, "computed property in an object pattern");
+            return;
+          }
+        }
         visitObjectPattern(t, n, parent);
         break;
     }

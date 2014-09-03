@@ -1446,6 +1446,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var b = $jscomp$destructuring$var1.b"));
   }
 
+  public void testObjectDestructuringNotYetImplemented() {
+    test("var {5: b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var {'str': b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var {[a]: b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
   public void testMixedDestructuring() {
     test("var [a,{b,c}] = foo();", Joiner.on('\n').join(
         "var $jscomp$destructuring$var0 = foo();",

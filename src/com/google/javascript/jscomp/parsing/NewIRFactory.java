@@ -75,7 +75,6 @@ import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternFieldTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
@@ -978,16 +977,6 @@ class NewIRFactory {
       Node node = newNode(Token.OBJECT_PATTERN);
       for (ParseTree child : tree.fields) {
         node.addChildToBack(transform(child));
-      }
-      return node;
-    }
-
-    @Override
-    Node processObjectPatternField(ObjectPatternFieldTree tree) {
-      Node node = processObjectLitKeyAsString(tree.identifier);
-      node.setType(Token.STRING_KEY);
-      if (tree.element != null) {
-        node.addChildToBack(transform(tree.element));
       }
       return node;
     }

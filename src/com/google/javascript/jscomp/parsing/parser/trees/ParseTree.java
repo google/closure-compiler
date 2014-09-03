@@ -103,7 +103,6 @@ public class ParseTree {
   public ObjectLiteralExpressionTree asObjectLiteralExpression() {
     return (ObjectLiteralExpressionTree) this; }
   public ObjectPatternTree asObjectPattern() { return (ObjectPatternTree) this; }
-  public ObjectPatternFieldTree asObjectPatternField() { return (ObjectPatternFieldTree) this; }
   public ParenExpressionTree asParenExpression() { return (ParenExpressionTree) this; }
   public PostfixExpressionTree asPostfixExpression() { return (PostfixExpressionTree) this; }
   public ProgramTree asProgram() { return (ProgramTree) this; }

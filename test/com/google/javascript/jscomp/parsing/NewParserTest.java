@@ -1165,6 +1165,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("[x=1,y] = foo();");
     parse("var [x,y=2] = foo();");
     parse("[x,y=2] = foo();");
+
+    parse("[[a] = ['b']] = [];");
   }
 
   public void testArrayDestructuringTrailingComma() {
@@ -1209,22 +1211,51 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("var {} = foo();");
   }
 
-  public void testObjectDestructuringWithInitializer() {
+  public void testObjectDestructuringVarWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {x = 1} = foo();");
     parse("var {x: {y = 1}} = foo();");
     parse("var {x: y = 1} = foo();");
     parse("var {x: v1 = 5, y: v2 = 'str'} = foo();");
+    parse("var {k1: {k2 : x} = bar(), k3: y} = foo();");
   }
 
   public void testObjectDestructuringAssign() {
     mode = LanguageMode.ECMASCRIPT6;
+    mode = LanguageMode.ECMASCRIPT6;
     parse("({x, y}) = foo();");
+    parse("({x, y} = foo());");
     parse("({x: x, y: y}) = foo();");
+    parse("({x: x, y: y} = foo());");
     parse("({x: {y, z}}) = foo();");
+    parse("({x: {y, z}} = foo());");
+    parse("({k1: {k2 : x} = bar(), k3: y}) = foo();");
+    parse("({k1: {k2 : x} = bar(), k3: y} = foo());");
 
     // Useless, but legal.
     parse("({}) = foo();");
+    parse("({} = foo());");
+  }
+
+  public void testObjectDestructuringAssignWithInitializer() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("({x = 1}) = foo();");
+    parse("({x = 1} = foo());");
+    parse("({x: {y = 1}}) = foo();");
+    parse("({x: {y = 1}} = foo());");
+    parse("({x: y = 1}) = foo();");
+    parse("({x: y = 1} = foo());");
+    parse("({x: v1 = 5, y: v2 = 'str'}) = foo();");
+    parse("({x: v1 = 5, y: v2 = 'str'} = foo());");
+    parse("({k1: {k2 : x} = bar(), k3: y}) = foo();");
+    parse("({k1: {k2 : x} = bar(), k3: y} = foo());");
+  }
+
+  public void testObjectDestructuringWithInitializerInvalid() {
+    parseError("var {{x}} = foo();", "'identifier' expected");
+    parseError("({{x}}) = foo();", "'}' expected");
+    parseError("({{a} = {a: 'b'}}) = foo();", "'}' expected");
+    parseError("({{a : b} = {a: 'b'}}) = foo();", "'}' expected");
   }
 
   public void testObjectDestructuringFnDeclaration() {
@@ -1233,6 +1264,24 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("function f({w, x: {y, z}}) {}");
     parse("function f({x, y} = {x:1, y:2}) {}");
     parse("function f({x, x}) {}");
+  }
+
+  public void testObjectDestructuringComputedProp() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {[x]: y} = z;");
+    parse("var { [foo()] : [x,y,z] = bar() } = baz();");
+    parseError("var {[x]} = z;", "'identifier' expected");
+  }
+
+  public void testObjectDestructuringStringAndNumberKeys() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {'s': x} = foo();");
+    parse("var {3: x} = foo();");
+
+    parseError("var { 'hello world' } = foo();", "'identifier' expected");
+    parseError("var { 4 } = foo();", "'identifier' expected");
+    parseError("var { 'hello' = 'world' } = foo();", "'identifier' expected");
+    parseError("var { 2 = 5 } = foo();", "'identifier' expected");
   }
 
   public void testMixedDestructuring() {

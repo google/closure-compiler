@@ -85,7 +85,6 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processSpreadExpression(SpreadExpressionTree tree);
   abstract T processArrayPattern(ArrayPatternTree tree);
   abstract T processObjectPattern(ObjectPatternTree tree);
-  abstract T processObjectPatternField(ObjectPatternFieldTree tree);
   abstract T processAssignmentRestElement(AssignmentRestElementTree tree);
   abstract T processComprehension(ComprehensionTree tree);
   abstract T processComprehensionFor(ComprehensionForTree tree);
@@ -265,8 +264,6 @@ abstract class NewTypeSafeDispatcher<T> {
         return processArrayPattern(node.asArrayPattern());
       case OBJECT_PATTERN:
         return processObjectPattern(node.asObjectPattern());
-      case OBJECT_PATTERN_FIELD:
-        return processObjectPatternField(node.asObjectPatternField());
       case ASSIGNMENT_REST_ELEMENT:
         return processAssignmentRestElement(node.asAssignmentRestElement());
 
