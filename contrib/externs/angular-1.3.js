@@ -1804,6 +1804,16 @@ angular.FormController.prototype.$setDirty = function() {};
 angular.FormController.prototype.$setPristine = function() {};
 
 /**
+ * @type {function()}
+ */
+angular.FormController.prototype.$setSubmitted = function() {};
+
+/**
+ * @type {boolean}
+ */
+angular.FormController.prototype.$submitted;
+
+/**
  * @param {string} validationToken
  * @param {boolean} isValid
  * @param {*} control
