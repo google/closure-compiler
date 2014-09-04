@@ -111,7 +111,7 @@ class CheckProvides implements HotSwapCompilerPass {
         int index = -1;
         boolean found = false;
 
-        if (ctor.startsWith("$jscomp.scope.")) {
+        if (ctor.startsWith("$jscomp.")) {
           continue;
         }
 
