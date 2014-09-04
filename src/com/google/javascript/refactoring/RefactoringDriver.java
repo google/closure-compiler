@@ -47,31 +47,6 @@ public final class RefactoringDriver {
     this.rootNode = this.compiler.getRoot();
   }
 
-  public static RefactoringDriver fromSourceFiles(
-      Scanner scanner, List<SourceFile> inputs, List<SourceFile> externs) {
-    return new RefactoringDriver(scanner, inputs, externs);
-  }
-
-  public static RefactoringDriver fromFiles(
-      Scanner scanner, List<String> inputs, List<String> externs) {
-    Function<String, SourceFile> toSourceFileFn = new Function<String, SourceFile>() {
-      @Override public SourceFile apply(String file) {
-        return new SourceFile.Builder().buildFromFile(file);
-      }
-    };
-    List<SourceFile> inputSourceFiles = Lists.transform(inputs, toSourceFileFn);
-    List<SourceFile> externSourceFiles = Lists.transform(externs, toSourceFileFn);
-    return fromSourceFiles(scanner, inputSourceFiles, externSourceFiles);
-  }
-
-  public static RefactoringDriver fromCode(Scanner scanner, String input, String externs) {
-    List<SourceFile> inputSourceFiles =
-        ImmutableList.of(new SourceFile.Builder().buildFromCode("input.js", input));
-    List<SourceFile> externSourceFiles =
-        ImmutableList.of(new SourceFile.Builder().buildFromCode("extern.js", externs));
-    return fromSourceFiles(scanner, inputSourceFiles, externSourceFiles);
-  }
-
   /**
    * Run the refactoring and return any suggested fixes as a result.
    */
@@ -111,5 +86,66 @@ public final class RefactoringDriver {
     options.setAcceptConstKeyword(true);
 
     return options;
+  }
+
+  public static class Builder {
+    private static final Function<String, SourceFile> TO_SOURCE_FILE_FN =
+        new Function<String, SourceFile>() {
+          @Override public SourceFile apply(String file) {
+            return new SourceFile.Builder().buildFromFile(file);
+          }
+        };
+
+    private final Scanner scanner;
+    private final ImmutableList.Builder<SourceFile> inputs = ImmutableList.builder();
+    private final ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();
+
+    public Builder(Scanner scanner) {
+      this.scanner = scanner;
+    }
+
+    public Builder addExternsFromFile(String filename) {
+      externs.add(SourceFile.fromFile(filename));
+      return this;
+    }
+
+    public Builder addExternsFromCode(String code) {
+      externs.add(SourceFile.fromCode("externs", code));
+      return this;
+    }
+
+    public Builder addExterns(List<SourceFile> externs) {
+      this.externs.addAll(externs);
+      return this;
+    }
+
+    public Builder addExternsFromFile(List<String> externs) {
+      this.externs.addAll(Lists.transform(externs, TO_SOURCE_FILE_FN));
+      return this;
+    }
+
+    public Builder addInputsFromFile(String filename) {
+      inputs.add(SourceFile.fromFile(filename));
+      return this;
+    }
+
+    public Builder addInputsFromCode(String code) {
+      inputs.add(SourceFile.fromCode("input", code));
+      return this;
+    }
+
+    public Builder addInputs(List<SourceFile> inputs) {
+      this.inputs.addAll(inputs);
+      return this;
+    }
+
+    public Builder addInputsFromFile(List<String> inputs) {
+      this.inputs.addAll(Lists.transform(inputs, TO_SOURCE_FILE_FN));
+      return this;
+    }
+
+    public RefactoringDriver build() {
+      return new RefactoringDriver(scanner, inputs.build(), externs.build());
+    }
   }
 }
