@@ -417,6 +417,7 @@ Function.prototype.toString = function() {};
  * @param {...*} var_args
  * @return {!Array}
  * @nosideeffects
+ * @template T
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array
  */
 function Array(var_args) {}
