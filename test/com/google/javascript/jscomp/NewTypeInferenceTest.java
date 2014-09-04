@@ -5714,6 +5714,183 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var /** Foo.<number> */ x = new A();");
   }
 
+  public void testGenericsSubtyping1() {
+    typeCheck(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x, y){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @param {number} y\n" +
+        " */\n" +
+        "Child.prototype.method = function(x, y){};",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    typeCheck(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x, y){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {?} x\n" +
+        " * @param {number} y\n" +
+        " */\n" +
+        "Child.prototype.method = function(x, y){};",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+  }
+
+  public void testGenericsSubtyping2() {
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x, y){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {*} x\n" +
+        " * @param {*} y\n" +
+        " */\n" +
+        "Child.prototype.method = function(x, y){};");
+
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x, y){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {?} x\n" +
+        " * @param {?} y\n" +
+        " */\n" +
+        "Child.prototype.method = function(x, y){};");
+  }
+
+  public void testGenericsSubtyping3() {
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {?} x\n" +
+        " * @return {?}\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){ return x; };");
+
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {*} x\n" +
+        " * @return {?}\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){ return x; };");
+  }
+
+  public void testGenericsSubtyping4() {
+    typeCheck(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {*} x\n" +
+        " * @return {*}\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){ return x; };",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    typeCheck(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {number} x\n" +
+        " * @return {number}\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){ return x; };",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    typeCheck(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {?} x\n" +
+        " * @return {*}\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){ return x; };",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+  }
+
+  public void testGenericsSubtyping5() {
+    // This is probably an uncommon case, but technically it is valid, and
+    // should not cause an error.
+    // TODO(blickly): Make this a checkNoWarnings
+    typeCheck(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {function(T, T) : boolean} x\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @param {function(number, number) : boolean} x\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){ return x; };",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+  }
+
   public void testInferConstTypeFromGenerics() {
     typeCheck(
         "/**\n" +

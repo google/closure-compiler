@@ -572,21 +572,18 @@ class GlobalTypeInfo implements CompilerPass {
     //     " localPropType: " + localPropType +
     //     " with super: " + superType +
     //     " inheritedPropType: " + inheritedPropType);
-    if (localPropType != null &&
-        !localPropType.isSubtypeOf(inheritedPropType)) {
+    if (localPropType == null) {
+      // Add property from interface to class
+      propTypesToProcess.put(pname, inheritedPropType);
+    } else if (!localPropType.isSubtypeOf(inheritedPropType)) {
       warnings.add(JSError.make(
           localPropDef.defSite, INVALID_PROP_OVERRIDE, pname,
           inheritedPropType.toString(), localPropType.toString()));
-    } else {
-      if (localPropType == null) {
-        // Add property from interface to class
-        propTypesToProcess.put(pname, inheritedPropType);
-      } else if (localPropDef.methodType != null) {
-        // If we are looking at a method definition, munging may be needed
-        for (PropertyDef inheritedPropDef : inheritedPropDefs) {
-          if (inheritedPropDef.methodType != null) {
-            propMethodTypesToProcess.put(pname, inheritedPropDef.methodType);
-          }
+    } else if (localPropDef.methodType != null) {
+      // If we are looking at a method definition, munging may be needed
+      for (PropertyDef inheritedPropDef : inheritedPropDefs) {
+        if (inheritedPropDef.methodType != null) {
+          propMethodTypesToProcess.put(pname, inheritedPropDef.methodType);
         }
       }
     }

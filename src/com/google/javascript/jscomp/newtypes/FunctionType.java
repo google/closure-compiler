@@ -306,6 +306,10 @@ public class FunctionType {
     if (isTopFunction()) {
       return false;
     }
+    // NOTE(dimvar): We never happen to call isSubtypeOf for loose functions.
+    // If some analyzed program changes this, the preconditions check will tell
+    // us so we can handle looseness correctly.
+    Preconditions.checkState(!isLoose && !other.isLoose);
     if (this.isGeneric()) {
       // This can only happen when typechecking an assignment that "defines" a
       // polymorphic function, eg,
@@ -319,12 +323,6 @@ public class FunctionType {
       // polymorphic methods; fix for that.
       return true;
     }
-    // TODO(dimvar): implement it
-    Preconditions.checkState(!other.isGeneric());
-    // NOTE(dimvar): We never happen to call isSubtypeOf for loose functions.
-    // If some analyzed program changes this, the preconditions check will tell
-    // us so we can handle looseness correctly.
-    Preconditions.checkState(!isLoose && !other.isLoose);
     // The subtype must have an equal or smaller number of required formals
     if (requiredFormals.size() > other.requiredFormals.size()) {
       return false;

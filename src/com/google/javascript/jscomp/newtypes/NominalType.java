@@ -156,7 +156,10 @@ public class NominalType {
 
   public JSType getPropDeclaredType(String pname) {
     JSType type = rawType.getInstancePropDeclaredType(pname);
-    return type == null ? null : type.substituteGenerics(typeMap);
+    if (type == null) {
+      return null;
+    }
+    return type.substituteGenerics(typeMap);
   }
 
   public boolean hasConstantProp(String pname) {
@@ -194,6 +197,9 @@ public class NominalType {
       if (rawType.equals(otherRawType)) {
         if (!typeMap.isEmpty()) {
           for (String typeVar : rawType.getTypeParameters()) {
+            Preconditions.checkState(other.typeMap.containsKey(typeVar),
+                "Other (%s) doesn't contain mapping (%s->%s) from this (%s)",
+                other, typeVar, typeMap.get(typeVar), this);
             if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
               return false;
             }
