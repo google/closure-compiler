@@ -3601,6 +3601,37 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Missing parameter in printType");
   }
 
+  public void testParserWithTTLValidPropType() {
+    parse("@template T := propType('p', R) =: */");
+  }
+
+  public void testParserWithTTLInvalidFirstParamPropType() {
+    parse("@template T := propType(foo(), R) =: */",
+        "Bad type annotation. Invalid property name",
+        "Bad type annotation. Invalid expression inside propType");
+  }
+
+  public void testParserWithTTLInvalidSecondParamPropType() {
+    parse("@template T := propType('msg', foo()) =: */",
+        "Bad type annotation. Invalid type transformation expression",
+        "Bad type annotation. Invalid expression inside propType");
+  }
+
+  public void testParserWithTTLInvalidPropTypeExtraParam() {
+    parse("@template T := propType(R, S, U) =: */",
+        "Bad type annotation. Found extra parameter in propType");
+  }
+
+  public void testParserWithTTLInvalidPropTypeOfMissingParam() {
+    parse("@template T := propType() =: */",
+        "Bad type annotation. Missing parameter in propType");
+  }
+
+  public void testParserWithTTLInvalidPropTypeOfMissingParam2() {
+    parse("@template T := propType(R) =: */",
+        "Bad type annotation. Missing parameter in propType");
+  }
+
   public void testParserWithTTLRecordType() {
     parse("@template T := record({prop:T}) =: */");
   }

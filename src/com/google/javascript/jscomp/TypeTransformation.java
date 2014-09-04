@@ -93,6 +93,9 @@ class TypeTransformation {
   static final DiagnosticType RECPARAM_INVALID =
       DiagnosticType.warning("RECPARAM_INVALID",
           "Expected a record type, found {0}");
+  static final DiagnosticType PROPTYPE_INVALID =
+      DiagnosticType.warning("PROPTYPE_INVALID",
+          "Expected object type, found {0}");
 
   /**
    * A helper class for holding the information about the type variables
@@ -348,6 +351,8 @@ class TypeTransformation {
         return evalInstanceOf(ttlAst, nameResolver);
       case PRINTTYPE:
         return evalPrintType(ttlAst, nameResolver);
+      case PROPTYPE:
+        return evalPropType(ttlAst, nameResolver);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
@@ -869,6 +874,16 @@ class TypeTransformation {
     String msg = getCallArgument(ttlAst, 0).getString() + type.toString();
     System.out.println(msg);
     return type;
+  }
+
+  private JSType evalPropType(Node ttlAst, NameResolver nameResolver) {
+    JSType type = evalInternal(getCallArgument(ttlAst, 1), nameResolver);
+    ObjectType objType = type.toObjectType();
+    if (objType == null) {
+      reportWarning(ttlAst, PROPTYPE_INVALID, type.toString());
+      return getUnknownType();
+    }
+    return objType.getPropertyType(getCallArgument(ttlAst, 0).getString());
   }
 
 }

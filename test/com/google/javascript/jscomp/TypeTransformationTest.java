@@ -860,6 +860,24 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(recordTypeTest, "printType('Test message: ', REC)");
   }
 
+  public void testTransformationPropType() {
+    testTTL(NUMBER_TYPE, "propType('a', record({a:N, b:record({x:B})}))");
+  }
+
+  public void testTransformationPropType2() {
+    testTTL(record("x", BOOLEAN_TYPE),
+        "propType('b', record({a:N, b:record({x:B})}))");
+  }
+
+  public void testTransformationPropTypeNotFound() {
+    testTTL(UNKNOWN_TYPE, "propType('c', record({a:N, b:record({x:B})}))");
+  }
+
+  public void testTransformationPropTypeInvalid() {
+    testTTL(UNKNOWN_TYPE, "propType('c', N)",
+        "Expected object type, found number");
+  }
+
   public void testTransformationInstanceObjectToRecord() {
     testTTL(OBJECT_TYPE, "record(type(OBJ, N))");
   }

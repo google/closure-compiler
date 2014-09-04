@@ -66,6 +66,7 @@ public final class TypeTransformationParser {
     MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
     NONE("none", 0, 0, OperationKind.TYPE_CONSTRUCTOR),
     PRINTTYPE("printType", 2, 2, OperationKind.OPERATION),
+    PROPTYPE("propType", 2, 2, OperationKind.OPERATION),
     RAWTYPEOF("rawTypeOf", 1, 1, OperationKind.TYPE_CONSTRUCTOR),
     SUB("sub", 2, 2, OperationKind.TYPE_PREDICATE),
     STREQ("streq", 2, 2, OperationKind.STRING_PREDICATE),
@@ -758,6 +759,24 @@ public final class TypeTransformationParser {
     return true;
   }
 
+  private boolean validPropTypeExpression(Node expr) {
+    // The expression must have three children. The propType keyword, a
+    // a string and a type transformation expression
+    if (!checkParameterCount(expr, Keywords.PROPTYPE)) {
+      return false;
+    }
+    if (!getCallArgument(expr, 0).isString()) {
+      warnInvalid("property name", expr);
+      warnInvalidInside(Keywords.PROPTYPE.name, expr);
+      return false;
+    }
+    if (!validTypeTransformationExpression(getCallArgument(expr, 1))) {
+      warnInvalidInside(Keywords.PROPTYPE.name, expr);
+      return false;
+    }
+    return true;
+  }
+
   /**
    * An operation expression is a cond or a mapunion
    */
@@ -777,6 +796,8 @@ public final class TypeTransformationParser {
         return validInstanceOfExpression(expr);
       case PRINTTYPE:
         return validPrintTypeExpression(expr);
+      case PROPTYPE:
+        return validPropTypeExpression(expr);
       default:
         throw new IllegalStateException("Invalid type transformation operation");
     }
