@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NewTypeInference.WarningReporter;
@@ -273,6 +274,10 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   JSType getArrayType() {
+    return getArrayType(JSType.UNKNOWN);
+  }
+
+  JSType getArrayType(JSType t) {
     if (arrayType == null) {
       JSType arrayCtor = globalScope.getDeclaredTypeOf("Array");
       if (arrayCtor == null) {
@@ -280,7 +285,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       arrayType = arrayCtor.getFunType().getReturnType();
     }
-    return arrayType;
+    return arrayType.substituteGenerics(ImmutableMap.of("T", t));
   }
 
   JSType getRegexpType() {

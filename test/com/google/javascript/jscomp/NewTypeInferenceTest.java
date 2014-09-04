@@ -6376,6 +6376,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @public */ ns.prop;");
   }
 
+  public void testArrayLiteralUsedGenericallyDoesntCrash() {
+    checkNoWarnings(
+        "/** @param {!Array.<T>} arr @return {T} @template T */\n" +
+        "function f(arr) { return arr[0]; }\n" +
+        "f([1,2,3]);");
+  }
+
   public void testGrandparentTemplatizedDoesntCrash() {
     checkNoWarnings(
         "/** @constructor @template VALUE */\n" +
