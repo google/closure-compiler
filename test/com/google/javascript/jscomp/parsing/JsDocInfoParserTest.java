@@ -3130,6 +3130,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@template T := cond(isDefined(R), R, S) =: */");
   }
 
+  public void testParserWithTTLConditionalIsUnknown() {
+    parse("@template T := cond(isUnknown(R), R, S) =: */");
+  }
+
   public void testParserWithTTLConditionalStringEquivalenceInvalidParam() {
     parse("@template T := cond(streq('foo', foo()), R, S) =: */",
         "Bad type annotation. Invalid string",
@@ -3168,6 +3172,13 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLConditionalIsDefinedInvalidParam() {
     parse("@template T := cond(isDefined('foo'), R, S) =: */",
         "Bad type annotation. Invalid name",
+        "Bad type annotation. Invalid expression inside boolean",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLConditionalIsUnknownInvalidParam() {
+    parse("@template T := cond(isUnknown(foo()), R, S) =: */",
+        "Bad type annotation. Invalid type transformation expression",
         "Bad type annotation. Invalid expression inside boolean",
         "Bad type annotation. Invalid expression inside conditional");
   }
@@ -3243,6 +3254,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. Invalid expression inside conditional");
   }
 
+  public void testParserWithTTLExtraParamIsUnknown() {
+    parse("@template T := cond(isUnknown(T, R), R, S) =: */",
+        "Bad type annotation. Found extra parameter in isUnknown",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
   public void testParserWithTTLMissingParamBoolean() {
     parse("@template T := cond(eq(T), R, S) =: */",
         "Bad type annotation. Missing parameter in eq",
@@ -3276,6 +3293,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParserWithTTLMissingParamIsDefined() {
     parse("@template T := cond(isDefined(), R, S) =: */",
         "Bad type annotation. Missing parameter in isDefined",
+        "Bad type annotation. Invalid expression inside conditional");
+  }
+
+  public void testParserWithTTLMissingParamIsUnknown() {
+    parse("@template T := cond(isUnknown(), R, S) =: */",
+        "Bad type annotation. Missing parameter in isUnknown",
         "Bad type annotation. Invalid expression inside conditional");
   }
 

@@ -50,6 +50,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
         .put("BOT", NO_TYPE)
         .put("TOP", ALL_TYPE)
         .put("UNK", UNKNOWN_TYPE)
+        .put("CHKUNK", CHECKED_UNKNOWN_TYPE)
         .put("SO", STRING_OBJECT_TYPE)
         .put("NO", NUMBER_OBJECT_TYPE)
         .put("BO", BOOLEAN_OBJECT_TYPE)
@@ -751,6 +752,18 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
 
   public void testTransformationWithFalseIsDefinedConditional() {
     testTTL(NUMBER_TYPE, "cond(isDefined(Foo), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueIsUnknownConditional() {
+    testTTL(STRING_TYPE, "cond(isUnknown(UNK), 'string', 'number')");
+  }
+
+  public void testTransformationWithTrueIsUnknownConditional2() {
+    testTTL(STRING_TYPE, "cond(isUnknown(CHKUNK), 'string', 'number')");
+  }
+
+  public void testTransformationWithFalseIsUnknownConditional() {
+    testTTL(NUMBER_TYPE, "cond(isUnknown(N), 'string', 'number')");
   }
 
   public void testTransformationWithTrueAndConditional() {

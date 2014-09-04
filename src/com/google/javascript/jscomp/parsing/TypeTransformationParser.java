@@ -60,6 +60,7 @@ public final class TypeTransformationParser {
     ISDEFINED("isDefined", 1, 1, OperationKind.TYPEVAR_PREDICATE),
     ISRECORD("isRecord", 1, 1, OperationKind.TYPE_PREDICATE),
     ISTEMPLATIZED("isTemplatized", 1, 1, OperationKind.TYPE_PREDICATE),
+    ISUNKNOWN("isUnknown", 1, 1, OperationKind.TYPE_PREDICATE),
     INSTANCEOF("instanceOf", 1, 1, OperationKind.OPERATION),
     MAPUNION("mapunion", 2, 2, OperationKind.OPERATION),
     MAPRECORD("maprecord", 2, 2, OperationKind.OPERATION),
