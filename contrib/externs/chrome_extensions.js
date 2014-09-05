@@ -2174,6 +2174,18 @@ chrome.bookmarks = {};
 
 
 /**
+ * @typedef {?{
+ *   pareintId: (string|undefined),
+ *   index: (number|undefined),
+ *   url: (string|undefined),
+ *   title: (string|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/bookmarks#method-create
+ */
+chrome.bookmarks.CreateDetails;
+
+
+/**
  * @param {(string|Array.<string>)} idOrIdList
  * @param {function(Array.<BookmarkTreeNode>): void} callback The
  *     callback function which accepts an array of BookmarkTreeNode.
@@ -2226,8 +2238,7 @@ chrome.bookmarks.search = function(query, callback) {};
 
 
 /**
- * @param {Object} bookmark An object which has 'parentId' and
- *     optionally 'index', 'title', and 'url'.
+ * @param {chrome.bookmarks.CreateDetails} bookmark
  * @param {function(BookmarkTreeNode): void=} opt_callback The
  *     callback function which accepts a BookmarkTreeNode object.
  */
