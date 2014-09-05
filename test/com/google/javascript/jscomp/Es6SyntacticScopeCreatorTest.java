@@ -174,6 +174,40 @@ public class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(functionBlockScope.isDeclared("b", false));
   }
 
+  public void testObjectDestructuringComputedProp() {
+    String js = Joiner.on('\n').join(
+        "function foo() {",
+        "  var {['s']: a} = bar();",
+        "}");
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertTrue(functionBlockScope.isDeclared("a", false));
+  }
+
+  public void testObjectDestructuringComputedPropParam() {
+    String js = "function foo({['s']: a}) {}";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node functionNode = root.getFirstChild();
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
+    Node functionBlock = functionNode.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBlock, functionScope);
+
+    assertTrue(functionScope.isDeclared("a", false));
+    assertFalse(functionBlockScope.isDeclared("a", false));
+  }
+
   public void testObjectDestructuringNested() {
     String js = Joiner.on('\n').join(
         "function foo() {",

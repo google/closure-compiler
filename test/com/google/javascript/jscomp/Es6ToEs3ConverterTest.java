@@ -1450,6 +1450,35 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("var {5: b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var {'str': b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var {[a]: b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("function f({['KEY']: x}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("function f({key: x = 5}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  public void testObjectDestructuringFunction() {
+    test("function f({a: b}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var b = $jscomp$destructuring$var0.a",
+        "}"));
+
+    test("function f({a}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var a = $jscomp$destructuring$var0.a",
+        "}"));
+
+    test("function f({k: {subkey : a}}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.k;",
+        "  var a = $jscomp$destructuring$var1.subkey;",
+        "}"));
+
+    test("function f({k: [x, y, z]}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.k;",
+        "  var x = $jscomp$destructuring$var1[0];",
+        "  var y = $jscomp$destructuring$var1[1];",
+        "  var z = $jscomp$destructuring$var1[2];",
+        "}"));
   }
 
   public void testMixedDestructuring() {

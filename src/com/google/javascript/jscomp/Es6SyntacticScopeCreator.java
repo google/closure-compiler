@@ -113,6 +113,8 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
       } else {
         declareVar(declarationScope, lhs);
       }
+    } else if (lhs.isComputedProp()) {
+      declareLHS(declarationScope, lhs.getLastChild());
     } else if (lhs.isName() || lhs.isRest()) {
       declareVar(declarationScope, lhs);
     } else if (lhs.isDefaultValue()) {

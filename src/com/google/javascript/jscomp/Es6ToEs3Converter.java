@@ -206,6 +206,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         || parent.isDefaultValue()) {
       // Nested object pattern; do nothing. We will visit it after rewriting the parent.
       return;
+    } else if (parent.isParamList()) {
+      // This is transpiled in visitParamList.
+      return;
     } else {
       cannotConvertYet(objectPattern, "OBJECT_PATTERN that is a child of a "
           + Token.name(parent.getType()));
@@ -527,6 +530,34 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             IR.call(IR.getprop(IR.getprop(IR.arraylit(), IR.string("slice")),
                 IR.string("call")), IR.name("arguments"), IR.number(i))));
         block.addChildAfter(newArr.useSourceInfoIfMissingFromForTree(param), insertSpot);
+        compiler.reportCodeChange();
+      } else if (param.isObjectPattern()) {
+        Node pattern = param;
+        String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+        paramList.replaceChild(param, IR.name(tempVarName));
+        for (Node child = pattern.getFirstChild();
+             child != null;
+             child = child.getNext()) {
+          if (child.isComputedProp()) {
+            cannotConvertYet(child, "computed property in an object pattern");
+            return;
+          }
+          Node newName;
+          if (child.hasChildren()) {
+            if (child.getFirstChild().isDefaultValue()) {
+              cannotConvertYet(child.getFirstChild(),
+                  "default value in an object pattern in a param list");
+              return;
+            }
+            newName = child.removeFirstChild();
+          } else {
+            newName = IR.name(child.getString());
+          }
+          Node newDecl = IR.var(newName,
+              IR.getprop(IR.name(tempVarName), IR.string(child.getString())));
+          newDecl.useSourceInfoIfMissingFromForTree(child);
+          block.addChildAfter(newDecl, insertSpot);
+        }
         compiler.reportCodeChange();
       }
     }
