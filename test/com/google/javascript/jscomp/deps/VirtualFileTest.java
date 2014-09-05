@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static junit.framework.Assert.assertEquals;
+
 import junit.framework.TestCase;
 
 /**
@@ -26,8 +28,8 @@ public class VirtualFileTest extends TestCase {
     VirtualFile vf = new VirtualFile("name", "code");
     VirtualFile same = new VirtualFile("name", "code");
     VirtualFile other = new VirtualFile("otherName", "otherCode");
-    assertTrue(vf.equals(same));
-    assertTrue(same.equals(vf));
+    assertEquals(same, vf);
+    assertEquals(vf, same);
     assertFalse(vf.equals(other));
     assertFalse(other.equals(vf));
   }

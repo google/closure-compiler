@@ -223,7 +223,7 @@ public final class SuggestedFix {
      */
     public Builder changeJsDocType(Node n, AbstractCompiler compiler, String type) {
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
-      Preconditions.checkNotNull(info, "Node " + n + " does not have JS Doc associated with it.");
+      Preconditions.checkNotNull(info, "Node %s does not have JS Doc associated with it.", n);
       Node typeNode = JsDocInfoParser.parseTypeString(type);
       Preconditions.checkNotNull(typeNode, "Invalid type: %s", type);
       JSTypeExpression typeExpr = new JSTypeExpression(typeNode, "jsflume");

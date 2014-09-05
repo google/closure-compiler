@@ -744,8 +744,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
 
       if (line == nextLine && col == nextCol) {
         // Nothing to do.
-        Preconditions.checkState(false);
-        return;
+        throw new IllegalStateException();
       }
 
       v.visit(m, line, col, nextLine, nextCol);

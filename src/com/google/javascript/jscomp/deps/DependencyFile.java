@@ -71,7 +71,7 @@ public class DependencyFile implements SourceFile {
    * necessary.
    */
   public void ensureUpToDate() throws ServiceException {
-    if (dependencies.size() == 0 || wasModified()) {
+    if (dependencies.isEmpty() || wasModified()) {
       loadGraph();
     }
   }

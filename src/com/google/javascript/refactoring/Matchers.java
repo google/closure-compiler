@@ -240,19 +240,15 @@ public final class Matchers {
         providedJsType = providedJsType.restrictByNotNullOrUndefined();
 
         JSType jsType = node.getJSType();
-        if (jsType != null && jsType.isEnumType()
-            && providedJsType.isEquivalentTo(
-                jsType.toMaybeEnumType().getElementsType().getPrimitiveType())) {
-          return true;
-        }
-        return false;
+        return jsType != null && jsType.isEnumType() && providedJsType.isEquivalentTo(
+            jsType.toMaybeEnumType().getElementsType().getPrimitiveType());
       }
     };
   }
 
   /**
-   * Returns a Matcher that matches an ASSIGN node where the RHS of the
-   * assignment matches the given rhsMatcher.
+   * Returns a Matcher that matches an ASSIGN node where the RHS of the assignment matches the given
+   * rhsMatcher.
    */
   public static Matcher assignmentWithRhs(final Matcher rhsMatcher) {
     return new Matcher() {
@@ -296,11 +292,8 @@ public final class Matchers {
         JSDocInfo jsDoc = node.getParent().isVar()
             ? node.getParent().getJSDocInfo() : node.getJSDocInfo();
         JSType jsType = node.getJSType();
-        if (jsDoc != null && jsType != null
-            && providedJsType.isEquivalentTo(jsType.restrictByNotNullOrUndefined())) {
-          return true;
-        }
-        return false;
+        return jsDoc != null && jsType != null
+            && providedJsType.isEquivalentTo(jsType.restrictByNotNullOrUndefined());
       }
     };
   }

@@ -25,6 +25,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 
 
@@ -204,7 +205,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
 
   private JSType findNameType(String name, Scope scope) {
     Node root = scope.getRootNode();
-    Deque<Node> queue = Lists.newLinkedList();
+    Deque<Node> queue = new ArrayDeque<>();
     queue.push(root);
     while (!queue.isEmpty()) {
       Node current = queue.pop();

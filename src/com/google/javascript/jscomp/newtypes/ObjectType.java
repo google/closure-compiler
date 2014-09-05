@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -593,7 +592,7 @@ public class ObjectType implements TypeWithProperties {
       return objs1;
     }
     ObjectType[] objs1Arr = objs1.toArray(new ObjectType[0]);
-    ObjectType[] keptFrom1 = Arrays.copyOf(objs1Arr, objs1Arr.length);
+    ObjectType[] keptFrom1 = objs1Arr.clone();
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj2 : objs2) {
       boolean addedObj2 = false;

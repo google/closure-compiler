@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.graph.LatticeElement;
 
 import junit.framework.TestCase;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -665,9 +666,7 @@ public class DataFlowAnalysisTest extends TestCase {
         assertTrue(outEdges.size() < 2);
         ConstPropLatticeElement aResult = flowThroughArithmeticInstruction(
             (ArithmeticInstruction) node, input);
-        for (int i = 0; i < outEdges.size(); i++) {
-          result.add(aResult);
-        }
+        result.addAll(Collections.nCopies(outEdges.size(), aResult));
       } else {
         BranchInstruction branchInst = (BranchInstruction) node;
         for (DiGraphEdge<Instruction, Branch> branch : outEdges) {

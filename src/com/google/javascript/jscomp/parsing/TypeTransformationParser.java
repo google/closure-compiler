@@ -131,7 +131,7 @@ public final class TypeTransformationParser {
   }
 
   private boolean isOperationKind(String name, OperationKind kind) {
-    return isValidKeyword(name) ? nameToKeyword(name).kind == kind : false;
+    return isValidKeyword(name) && nameToKeyword(name).kind == kind;
   }
 
   private boolean isValidStringPredicate(String name) {
@@ -158,31 +158,31 @@ public final class TypeTransformationParser {
 
   private int getFunctionParamCount(Node n) {
     Preconditions.checkArgument(n.isFunction(),
-        "Expected a function node, found " + n);
+        "Expected a function node, found %s", n);
     return n.getChildAtIndex(1).getChildCount();
   }
 
   private Node getFunctionBody(Node n) {
     Preconditions.checkArgument(n.isFunction(),
-        "Expected a function node, found " + n);
+        "Expected a function node, found %s", n);
     return n.getChildAtIndex(2);
   }
 
   private String getCallName(Node n) {
     Preconditions.checkArgument(n.isCall(),
-        "Expected a call node, found " + n);
+        "Expected a call node, found %s", n);
     return n.getFirstChild().getString();
   }
 
   private Node getCallArgument(Node n, int i) {
     Preconditions.checkArgument(n.isCall(),
-        "Expected a call node, found " + n);
+        "Expected a call node, found %s", n);
     return n.getChildAtIndex(i + 1);
   }
 
   private int getCallParamCount(Node n) {
     Preconditions.checkArgument(n.isCall(),
-        "Expected a call node, found " + n);
+        "Expected a call node, found %s", n);
     return n.getChildCount() - 1;
   }
 
@@ -502,7 +502,7 @@ public final class TypeTransformationParser {
       warnInvalid("string", expr);
       return false;
     }
-    if (expr.getString().equals("")) {
+    if (expr.getString().isEmpty()) {
       warnInvalid("string parameter", expr);
       return false;
     }

@@ -57,7 +57,7 @@ public final class SourceCodeEscapers {
    */
   private static final Escaper JAVASCRIPT_ESCAPER;
   static {
-    Map<Character, String> jsMap = new HashMap<Character, String>();
+    Map<Character, String> jsMap = new HashMap<>();
     jsMap.put('\'', "\\x27");
     jsMap.put('"',  "\\x22");
     jsMap.put('<',  "\\x3c");
