@@ -6819,7 +6819,7 @@ chrome.mdns = {};
  * to the handlers which isn't possible by using the object form.
  * @typedef {{
  *     serviceName: string,
- *     seviceHostPort: string,
+ *     serviceHostPort: string,
  *     ipAddress: string,
  *     serviceData: !Array.<string>}}
  */
