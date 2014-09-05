@@ -49,7 +49,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
     if (errors != null && errorsIndex < errors.length) {
       assertEquals(errors[errorsIndex++], message);
     } else {
-      fail("extra error: " + message);
+      fail("extra error: " + message + " @ " + line + ":" + lineOffset);
     }
   }
 
@@ -58,7 +58,7 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
     if (warnings != null && warningsIndex < warnings.length) {
       assertEquals(warnings[warningsIndex++], message);
     } else {
-      fail("extra warning: " + message);
+      fail("extra warning: " + message + " @ " + line + ":" + lineOffset);
     }
   }
 
