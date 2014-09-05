@@ -31,6 +31,8 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,7 +62,12 @@ public final class SuggestedFix {
   }
 
   @Override public String toString() {
-    return replacements.toString();
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<String, Collection<CodeReplacement>> entry : replacements.asMap().entrySet()) {
+      sb.append("Replacements for file: " + entry.getKey() + "\n");
+      sb.append(Joiner.on("\n").join(entry.getValue()));
+    }
+    return sb.toString();
   }
 
   /**
