@@ -49,6 +49,10 @@ final class RefasterJs {
       usage = "Whether to include the standard JavaScript externs. Defaults to true.")
   private boolean includeDefaultExterns = true;
 
+  @Option(name = "--dry_run",
+      usage = "Use this to display what changes would be made without applying the changes.")
+  private boolean dryRun = false;
+
   private void doMain(String[] args) throws Exception {
     CmdLineParser parser = new CmdLineParser(this);
     parser.parseArgument(args);
@@ -62,7 +66,11 @@ final class RefasterJs {
         .addInputsFromFile(inputs)
         .build();
     List<SuggestedFix> fixes = driver.drive();
-    System.out.println("SuggestedFixes: " + fixes);
+    if (dryRun) {
+      System.out.println("SuggestedFixes: " + fixes);
+    } else {
+      ApplySuggestedFixes.applySuggestedFixesToFiles(fixes);
+    }
   }
 
   public static void main(String[] args) throws Exception {
