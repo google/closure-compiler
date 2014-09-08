@@ -661,6 +661,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
       // Special cases for destructuring patterns.
       if (parent.isDestructuringPattern()
           || (parent.isStringKey() && parent.getParent().isObjectPattern())
+          || (parent.isComputedProp() && parent.getParent().isObjectPattern()
+              && node == parent.getLastChild())
           || (parent.isDefaultValue() && node == parent.getFirstChild())) {
         return isDeclarationHelper(parent);
       }

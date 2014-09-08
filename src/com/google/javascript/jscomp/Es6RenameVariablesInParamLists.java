@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
@@ -29,16 +28,16 @@ import java.util.Set;
 
 /**
  * Renames declarations and references in function bodies to avoid shadowing
- * names referenced in default parameters.
+ * names referenced in the parameter list, in default values or computed properties.
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
+public class Es6RenameVariablesInParamLists extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
 
-  public Es6HandleDefaultParameters(AbstractCompiler compiler) {
+  public Es6RenameVariablesInParamLists(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -50,12 +49,22 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
     }
 
     Node paramList = n.getChildAtIndex(1);
-    CollectReferences collector = new CollectReferences();
-    for (Node child : paramList.children()) {
-      if (child.isDefaultValue()) {
-        NodeTraversal.traverse(compiler, child.getLastChild(), collector);
+    final CollectReferences collector = new CollectReferences();
+    NodeTraversal.traverse(compiler, paramList, new NodeTraversal.AbstractPreOrderCallback() {
+      @Override
+      public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+        if (parent == null) {
+          return true;
+        }
+
+        if (parent.isDefaultValue() && n == parent.getLastChild()
+            || parent.isComputedProp() && n == parent.getFirstChild()) {
+          NodeTraversal.traverse(compiler, n, collector);
+          return false;
+        }
+        return true;
       }
-    }
+    });
 
     Node block = paramList.getNext();
     Es6SyntacticScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
@@ -78,7 +87,7 @@ public class Es6HandleDefaultParameters extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(compiler, Lists.newArrayList(externs, root), this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override

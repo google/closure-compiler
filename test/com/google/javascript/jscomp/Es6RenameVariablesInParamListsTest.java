@@ -20,11 +20,11 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
- * Test case for {@link Es6HandleDefaultParameters}.
+ * Test case for {@link Es6RenameVariablesInParamLists}.
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class Es6HandleDefaultParametersTest extends CompilerTestCase {
+public class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
@@ -42,7 +42,7 @@ public class Es6HandleDefaultParametersTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return new Es6HandleDefaultParameters(compiler);
+    return new Es6RenameVariablesInParamLists(compiler);
   }
 
   @Override

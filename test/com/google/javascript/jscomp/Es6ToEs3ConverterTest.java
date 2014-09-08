@@ -56,7 +56,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null, null);
     DefaultPassConfig passConfig = new DefaultPassConfig(getOptions());
-    optimizer.addOneTimePass(passConfig.es6HandleDefaultParams);
+    optimizer.addOneTimePass(passConfig.es6RenameVariablesInParamLists);
     optimizer.addOneTimePass(passConfig.convertEs6ToEs3);
     optimizer.addOneTimePass(passConfig.rewriteLetConst);
     return optimizer;
@@ -1446,12 +1446,25 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var b = $jscomp$destructuring$var1.b"));
   }
 
+  public void testObjectDestructuringComputedProps() {
+    test("var {[a]: b} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var b = $jscomp$destructuring$var0[a];"));
+
+    test("({[a]: b}) = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "b = $jscomp$destructuring$var0[a];"));
+
+    test("function f({['KEY']: x}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var x = $jscomp$destructuring$var0['KEY']",
+        "}"));
+  }
+
   public void testObjectDestructuringNotYetImplemented() {
     test("var {5: b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("var {'str': b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var {[a]: b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("function f({['KEY']: x}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
     test("function f({key: x = 5}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 

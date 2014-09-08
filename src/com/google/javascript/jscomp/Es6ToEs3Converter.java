@@ -184,10 +184,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             cannotConvertYet(child, "number or string key in an object pattern");
             return;
           }
-          if (child.isComputedProp()) {
-            cannotConvertYet(child, "computed property in an object pattern");
-            return;
-          }
         }
         visitObjectPattern(t, n, parent);
         break;
@@ -250,8 +246,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
                 getprop);
           }
         }
-      } else {
-        Preconditions.checkState(child.isDefaultValue());
+      } else if (child.isComputedProp()) {
+        newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
+        newLHS = child.removeFirstChild();
+      } else if (child.isDefaultValue()) {
         newLHS = child.removeFirstChild();
         Node defaultValue = child.removeFirstChild();
         Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
@@ -259,6 +257,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             IR.sheq(getprop.cloneTree(), IR.name("undefined")),
             defaultValue,
             getprop);
+      } else {
+        throw new IllegalStateException("Unexpected OBJECT_PATTERN child: " + child);
       }
 
       Node newNode;
@@ -538,23 +538,23 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         for (Node child = pattern.getFirstChild();
              child != null;
              child = child.getNext()) {
+          Node newLHS, newRHS;
           if (child.isComputedProp()) {
-            cannotConvertYet(child, "computed property in an object pattern");
-            return;
-          }
-          Node newName;
-          if (child.hasChildren()) {
+            newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
+            newLHS = child.removeFirstChild();
+          } else if (child.hasChildren()) {
             if (child.getFirstChild().isDefaultValue()) {
               cannotConvertYet(child.getFirstChild(),
                   "default value in an object pattern in a param list");
               return;
             }
-            newName = child.removeFirstChild();
+            newLHS = child.removeFirstChild();
+            newRHS = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
           } else {
-            newName = IR.name(child.getString());
+            newLHS = IR.name(child.getString());
+            newRHS = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
           }
-          Node newDecl = IR.var(newName,
-              IR.getprop(IR.name(tempVarName), IR.string(child.getString())));
+          Node newDecl = IR.var(newLHS, newRHS);
           newDecl.useSourceInfoIfMissingFromForTree(child);
           block.addChildAfter(newDecl, insertSpot);
         }

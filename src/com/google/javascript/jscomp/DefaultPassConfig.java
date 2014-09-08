@@ -218,7 +218,7 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.needsConversion()) {
-      checks.add(es6HandleDefaultParams);
+      checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);
@@ -1117,11 +1117,11 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  final HotSwapPassFactory es6HandleDefaultParams =
-      new HotSwapPassFactory("Es6HandleDefaultParams", true) {
+  final HotSwapPassFactory es6RenameVariablesInParamLists =
+      new HotSwapPassFactory("Es6RenameVariablesInParamLists", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6HandleDefaultParameters(compiler);
+      return new Es6RenameVariablesInParamLists(compiler);
     }
   };
 
