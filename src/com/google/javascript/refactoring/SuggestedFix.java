@@ -65,7 +65,7 @@ public final class SuggestedFix {
     StringBuilder sb = new StringBuilder();
     for (Map.Entry<String, Collection<CodeReplacement>> entry : replacements.asMap().entrySet()) {
       sb.append("Replacements for file: " + entry.getKey() + "\n");
-      sb.append(Joiner.on("\n").join(entry.getValue()));
+      Joiner.on("\n").appendTo(sb, entry.getValue());
     }
     return sb.toString();
   }

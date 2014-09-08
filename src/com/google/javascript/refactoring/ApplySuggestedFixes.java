@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.SetMultimap;
@@ -29,7 +28,6 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,7 +61,7 @@ public final class ApplySuggestedFixes {
       throws IOException {
     Set<String> filenames = new HashSet<>();
     for (SuggestedFix fix : fixes) {
-      filenames.addAll(fix.getReplacements().keys());
+      filenames.addAll(fix.getReplacements().keySet());
     }
 
     Map<String, String> filenameToCodeMap = new HashMap<>();
@@ -110,14 +108,13 @@ public final class ApplySuggestedFixes {
    * The code replacements may not have any overlap.
    */
   public static String applyCodeReplacements(Iterable<CodeReplacement> replacements, String code) {
-    List<CodeReplacement> sortedReplacements = Lists.newArrayList(replacements);
-    Collections.sort(sortedReplacements, ORDER_CODE_REPLACEMENTS);
+    List<CodeReplacement> sortedReplacements = ORDER_CODE_REPLACEMENTS.sortedCopy(replacements);
     validateNoOverlaps(sortedReplacements);
 
     StringBuilder sb = new StringBuilder();
     int lastIndex = 0;
     for (CodeReplacement replacement : sortedReplacements) {
-      sb.append(code.substring(lastIndex, replacement.getStartPosition()));
+      sb.append(code, lastIndex, replacement.getStartPosition());
       sb.append(replacement.getNewContent());
       lastIndex = replacement.getStartPosition() + replacement.getLength();
     }
