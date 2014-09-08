@@ -19,6 +19,7 @@
  *  The whole file has been fully type annotated.
  *  http://www.w3.org/TR/DOM-Level-2-Style/css.html
  * @externs
+ * @author stevey@google.com (Steve Yegge)
  *
  * TODO(nicksantos): When there are no more occurrences of w3c_range.js and
  * gecko_dom.js being included directly in BUILD files, bug dbeam to split the

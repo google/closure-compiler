@@ -24,7 +24,6 @@ import java.util.List;
  * Class for parsing the line maps in SourceMap v2.
  *
  * @author johnlenz@google.com (John Lenz)
- * @author jschorr@google.com (Joseph Schorr)
  */
 class SourceMapLineDecoder {
 

@@ -33,6 +33,7 @@ import java.util.Map;
 
 /**
  * Helper classes for dealing with coding conventions.
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class CodingConventions {
 

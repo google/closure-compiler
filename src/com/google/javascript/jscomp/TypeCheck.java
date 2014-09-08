@@ -56,6 +56,7 @@ import java.util.Set;
  * <p>Checks the types of JS expressions against any declared type
  * information.</p>
  *
+ * @author nicksantos@google.com (Nick Santos)
  */
 public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 

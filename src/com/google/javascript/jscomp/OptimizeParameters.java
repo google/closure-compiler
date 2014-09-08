@@ -40,6 +40,7 @@ import java.util.List;
  *     </li>
  * </ul>
  *
+ * @author johnlenz@google.com (John Lenz)
  */
 class OptimizeParameters
     implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {

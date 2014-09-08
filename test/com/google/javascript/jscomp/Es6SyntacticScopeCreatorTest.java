@@ -25,6 +25,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link Es6SyntacticScopeCreator}.
  *
+ * @author moz@google.com (Michael Zhou)
  */
 public class Es6SyntacticScopeCreatorTest extends TestCase {
 

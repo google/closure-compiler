@@ -25,7 +25,6 @@
  *
  * @externs
  * @author nicksantos@google.com (Nick Santos)
- * @author mastepien@google.com (Marek Stepien)
  */
 
 /** @type {string} */ CSSProperties.prototype.WebkitAlignContent;

@@ -25,6 +25,7 @@ import java.util.Map;
 
 /**
  * This class implements a traversal to instrument an AST for code coverage.
+ * @author praveenk@google.com (Praveen Kumashi)
  *
  */
 class CoverageInstrumentationCallback extends

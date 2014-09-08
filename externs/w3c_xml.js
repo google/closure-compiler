@@ -29,6 +29,7 @@
  * @see http://www.w3.org/TR/XMLHttpRequest2/
  *
  * @externs
+ * @author stevey@google.com (Steve Yegge)
  */
 
 

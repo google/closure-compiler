@@ -43,6 +43,7 @@ import java.util.zip.GZIPOutputStream;
  * how much a pass impacts the size of the compiled output, before and after
  * gzip.
  *
+ * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class PerformanceTracker {
 

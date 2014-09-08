@@ -18,6 +18,7 @@
  * @fileoverview JavaScript Built-Ins for windows properties.
  *
  * @externs
+ * @author stevey@google.com (Steve Yegge)
  */
 
 // Window properties

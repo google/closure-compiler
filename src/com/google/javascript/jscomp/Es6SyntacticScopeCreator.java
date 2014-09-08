@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Token;
  *
  * <p>This implementation is not thread-safe.</p>
  *
+ * @author moz@google.com (Michael Zhou)
  */
 class Es6SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;

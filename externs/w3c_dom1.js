@@ -20,6 +20,7 @@
  *  http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
  *
  * @externs
+ * @author stevey@google.com (Steve Yegge)
  */
 
 /**

@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
  * A parser that can extract dependency information from a .js file.
  *
  * @author agrieve@google.com (Andrew Grieve)
- * @author ielashi@google.com (Islam El-Ashi)
  */
 public class JsFunctionParser extends JsFileLineParser {
 

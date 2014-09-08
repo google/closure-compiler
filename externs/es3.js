@@ -18,6 +18,10 @@
  * @fileoverview ECMAScript 3 Built-Ins. This include common extensions so this
  * is actually ES3+Reality.
  * @externs
+ * @author stevey@google.com (Steve Yegge)
+ * @author nicksantos@google.com (Nick Santos)
+ * @author arv@google.com (Erik Arvidsson)
+ * @author johnlenz@google.com (John Lenz)
  */
 
 

@@ -17,6 +17,7 @@
 /**
  * @fileoverview NodeJS built-ins.
  * @externs
+ * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
 
 /** @const {string} */

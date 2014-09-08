@@ -42,6 +42,7 @@ import javax.annotation.Nullable;
  * goog.require has a corresponding goog.provide and some closure specific
  * simplifications.
  *
+ * @author chrisn@google.com (Chris Nokleberg)
  */
 class ProcessClosurePrimitives extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {

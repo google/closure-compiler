@@ -23,6 +23,7 @@
  * it in gecko_dom.js
  *
  * @externs
+ * @author stevey@google.com (Steve Yegge)
  */
 
 // TODO(nicksantos): Rewrite all the DOM interfaces as interfaces, instead

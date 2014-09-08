@@ -27,6 +27,7 @@ import java.util.List;
 /**
  * Tests for {@link PureFunctionIdentifier}
  *
+ * @author johnlenz@google.com (John Lenz)
  */
 
 public class PureFunctionIdentifierTest extends CompilerTestCase {

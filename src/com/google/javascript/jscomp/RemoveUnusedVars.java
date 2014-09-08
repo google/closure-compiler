@@ -70,6 +70,7 @@ import java.util.Set;
  * {@code FlowSensitiveInlineVariables}, except that it works for variables
  * used across scopes.
  *
+ * @author nicksantos@google.com (Nick Santos)
  */
 class RemoveUnusedVars
     implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {

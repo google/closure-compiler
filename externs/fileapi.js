@@ -22,7 +22,6 @@
  *
  * @externs
  * @author dbk@google.com (David Barrett-Kahn)
- * @author mpd@google.com (Michael Davidson)
  */
 
 

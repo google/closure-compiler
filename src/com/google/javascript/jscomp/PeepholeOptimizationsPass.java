@@ -25,7 +25,6 @@ import com.google.javascript.rhino.Node;
  * some useless code removal, some minimizations).
  *
  * @author dcc@google.com (Devin Coughlin)
- * @author acleung@google.com (Alan Leung)(
  */
 class PeepholeOptimizationsPass implements CompilerPass {
   private AbstractCompiler compiler;

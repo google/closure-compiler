@@ -67,7 +67,6 @@ import javax.annotation.Nullable;
  * of JSCompiler.
  *
  * @author nicksantos@google.com (Nick Santos)
- * @author pascallouis@google.com (Pascal-Louis Perez)
  */
 final class FunctionTypeBuilder {
 

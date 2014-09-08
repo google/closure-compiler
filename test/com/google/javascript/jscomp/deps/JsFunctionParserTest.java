@@ -30,7 +30,6 @@ import java.util.Iterator;
  * Tests for {@link JsFunctionParser}
  *
  * @author agrieve@google.com (Andrew Grieve)
- * @author ielashi@google.com (Islam El-Ashi)
  */
 public class JsFunctionParserTest extends TestCase {
   private static final String SRC_PATH = "a";

@@ -26,6 +26,7 @@ import java.util.Map;
 /**
  * This code implements the instrumentation pass over the AST
  * (returned by JSCompiler).
+ * @author praveenk@google.com (Praveen Kumashi)
  *
  */
 class CoverageInstrumentationPass implements CompilerPass {

@@ -60,6 +60,7 @@ import java.util.Set;
  *
  * <pre>var c = b = a = true;</pre>
  *
+ * @author nicksantos@google.com (Nick Santos)
  */
 class CollapseVariableDeclarations implements CompilerPass {
   /** Reference to JS Compiler */
