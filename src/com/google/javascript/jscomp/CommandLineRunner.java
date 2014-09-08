@@ -393,7 +393,7 @@ public class CommandLineRunner extends
         handler = BooleanOptionHandler.class,
         usage = "Only include files in the transitive dependency of the "
         + "entry points (specified by closure_entry_point). Files that do "
-        + "not provide dependencies will be removed. This supersedes"
+        + "not provide dependencies will be removed. This supersedes "
         + "manage_closure_dependencies")
     private boolean onlyClosureDependencies = false;
 
