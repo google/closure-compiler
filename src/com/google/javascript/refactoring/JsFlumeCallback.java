@@ -53,6 +53,9 @@ final class JsFlumeCallback implements Callback {
 
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+    if (n.isFromExterns()) {
+      return false;
+    }
     String filename = n.getSourceFileName();
     if (includeFilePattern != null
         && !Strings.isNullOrEmpty(includeFilePattern.pattern())
