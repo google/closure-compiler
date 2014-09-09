@@ -1461,11 +1461,23 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"));
   }
 
-  public void testObjectDestructuringNotYetImplemented() {
-    test("var {5: b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var {'str': b} = foo();", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  public void testObjectDestructuringStrangeProperties() {
+    test("var {5: b} = foo();",  Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var b = $jscomp$destructuring$var0['5']"));
 
+    test("var {0.1: b} = foo();",  Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var b = $jscomp$destructuring$var0['0.1']"));
+
+    test("var {'str': b} = foo();", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = foo();",
+        "var b = $jscomp$destructuring$var0['str']"));
+  }
+
+  public void testObjectDestructuringNotYetImplemented() {
     test("function f({key: x = 5}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("function f({[key]: x = 5}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testObjectDestructuringFunction() {

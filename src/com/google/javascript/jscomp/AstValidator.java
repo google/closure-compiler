@@ -709,7 +709,7 @@ public class AstValidator implements CompilerPass {
     } else if (n.isDefaultValue()) {
       validateDefaultValue(type, n);
     } else if (n.isComputedProp()) {
-      validateObjectLitComputedPropKey(n);
+      validateObjectPatternComputedPropKey(type, n);
     } else {
       violation("Invalid child for " + Token.name(type) + " node", n);
     }
@@ -1118,6 +1118,17 @@ public class AstValidator implements CompilerPass {
     validateChildCount(n, Token.arity(Token.COMPUTED_PROP));
     validateExpression(n.getFirstChild());
     validateExpression(n.getLastChild());
+  }
+
+  private void validateObjectPatternComputedPropKey(int type, Node n) {
+    validateNodeType(Token.COMPUTED_PROP, n);
+    validateChildCount(n, Token.arity(Token.COMPUTED_PROP));
+    validateExpression(n.getFirstChild());
+    if (n.getLastChild().isDefaultValue()) {
+      validateDefaultValue(type, n.getLastChild());
+    } else {
+      validateExpression(n.getLastChild());
+    }
   }
 
   private void validateComputedPropClassMethod(Node n) {

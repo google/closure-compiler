@@ -179,12 +179,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         visitArrayPattern(t, n, parent);
         break;
       case Token.OBJECT_PATTERN:
-        for (Node child : n.children()) {
-          if (child.isStringKey() && child.isQuotedString()) {
-            cannotConvertYet(child, "number or string key in an object pattern");
-            return;
-          }
-        }
         visitObjectPattern(t, n, parent);
         break;
     }
@@ -227,7 +221,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
       Node newLHS, newRHS;
       if (child.isStringKey()) {
-        Node getprop = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
+        Node getprop = new Node(child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
+                                IR.name(tempVarName),
+                                IR.string(child.getString()));
 
         if (!child.hasChildren()) {
           newLHS = child.detachFromParent();
@@ -540,19 +536,30 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
              child = child.getNext()) {
           Node newLHS, newRHS;
           if (child.isComputedProp()) {
-            newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
-            newLHS = child.removeFirstChild();
-          } else if (child.hasChildren()) {
-            if (child.getFirstChild().isDefaultValue()) {
-              cannotConvertYet(child.getFirstChild(),
+            if (child.getLastChild().isDefaultValue()) {
+              cannotConvertYet(child.getLastChild(),
                   "default value in an object pattern in a param list");
               return;
             }
+            newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
             newLHS = child.removeFirstChild();
-            newRHS = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
+          } else if (child.isStringKey()) {
+            if (child.hasChildren()) {
+              if (child.getFirstChild().isDefaultValue()) {
+                cannotConvertYet(child.getFirstChild(),
+                    "default value in an object pattern in a param list");
+                return;
+              }
+              newLHS = child.removeFirstChild();
+              newRHS = new Node(child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
+                  IR.name(tempVarName), IR.string(child.getString()));
+            } else {
+              newLHS = IR.name(child.getString());
+              newRHS = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
+            }
           } else {
-            newLHS = IR.name(child.getString());
-            newRHS = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
+            Preconditions.checkState(false, "Unexpected object pattern child: %s", child);
+            return;
           }
           Node newDecl = IR.var(newLHS, newRHS);
           newDecl.useSourceInfoIfMissingFromForTree(child);
