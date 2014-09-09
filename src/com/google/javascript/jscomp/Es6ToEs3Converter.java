@@ -236,10 +236,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           } else {
             newLHS = value.removeFirstChild();
             Node defaultValue = value.removeFirstChild();
-            newRHS = IR.hook(
-                IR.sheq(getprop.cloneTree(), IR.name("undefined")),
-                defaultValue,
-                getprop);
+            newRHS = defaultValueHook(getprop, defaultValue);
           }
         }
       } else if (child.isComputedProp()) {
@@ -249,10 +246,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         newLHS = child.removeFirstChild();
         Node defaultValue = child.removeFirstChild();
         Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
-        newRHS = IR.hook(
-            IR.sheq(getprop.cloneTree(), IR.name("undefined")),
-            defaultValue,
-            getprop);
+        newRHS = defaultValueHook(getprop, defaultValue);
       } else {
         throw new IllegalStateException("Unexpected OBJECT_PATTERN child: " + child);
       }
@@ -327,10 +321,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         //   var temp = rhs;
         //   x = (temp[0] === undefined) ? defaultValue : temp[0];
         newLHS = child.getFirstChild().detachFromParent();
-        newRHS = IR.hook(
-            IR.sheq(getElem.cloneTree(), IR.name("undefined")),
-            child.getLastChild().detachFromParent(),
-            getElem);
+        newRHS = defaultValueHook(getElem, child.getLastChild().detachFromParent());
       } else {
         newLHS = child.detachFromParent();
         newRHS = IR.getelem(IR.name(tempVarName), IR.number(i));
@@ -528,35 +519,43 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         block.addChildAfter(newArr.useSourceInfoIfMissingFromForTree(param), insertSpot);
         compiler.reportCodeChange();
       } else if (param.isObjectPattern()) {
-        Node pattern = param;
         String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
         paramList.replaceChild(param, IR.name(tempVarName));
-        for (Node child = pattern.getFirstChild();
+        for (Node child = param.getFirstChild();
              child != null;
              child = child.getNext()) {
           Node newLHS, newRHS;
           if (child.isComputedProp()) {
+            Node getelem = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
             if (child.getLastChild().isDefaultValue()) {
-              cannotConvertYet(child.getLastChild(),
-                  "default value in an object pattern in a param list");
-              return;
+              newLHS = child.getFirstChild().removeFirstChild();
+              newRHS = defaultValueHook(getelem,
+                  child.getFirstChild().getLastChild().detachFromParent());
+            } else {
+              newLHS = child.removeFirstChild();
+              newRHS = getelem;
             }
-            newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
-            newLHS = child.removeFirstChild();
           } else if (child.isStringKey()) {
             if (child.hasChildren()) {
-              if (child.getFirstChild().isDefaultValue()) {
-                cannotConvertYet(child.getFirstChild(),
-                    "default value in an object pattern in a param list");
-                return;
-              }
-              newLHS = child.removeFirstChild();
-              newRHS = new Node(child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
+              Node getprop = new Node(child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
                   IR.name(tempVarName), IR.string(child.getString()));
+
+              if (child.getFirstChild().isDefaultValue()) {
+                newLHS = child.getFirstChild().removeFirstChild();
+                newRHS = defaultValueHook(getprop,
+                    child.getFirstChild().getLastChild().detachFromParent());
+              } else {
+                newLHS = child.removeFirstChild();
+                newRHS = getprop;
+              }
             } else {
               newLHS = IR.name(child.getString());
               newRHS = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
             }
+          } else if (child.isDefaultValue()) {
+            newLHS = child.removeFirstChild();
+            Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
+            newRHS = defaultValueHook(getprop, child.removeFirstChild());
           } else {
             Preconditions.checkState(false, "Unexpected object pattern child: %s", child);
             return;
@@ -1021,6 +1020,16 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static boolean isInFunction(Node n) {
     return getEnclosingFunction(n) != null;
+  }
+
+  /**
+   * Helper for transpiling DEFAULT_VALUE trees.
+   */
+  private static Node defaultValueHook(Node getprop, Node defaultValue) {
+    return IR.hook(
+        IR.sheq(getprop, IR.name("undefined")),
+        defaultValue,
+        getprop.cloneTree());
   }
 
   private static class UpdateThisAndArgumentsReferences

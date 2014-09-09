@@ -1475,11 +1475,6 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var b = $jscomp$destructuring$var0['str']"));
   }
 
-  public void testObjectDestructuringNotYetImplemented() {
-    test("function f({key: x = 5}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("function f({[key]: x = 5}) {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-  }
-
   public void testObjectDestructuringFunction() {
     test("function f({a: b}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
@@ -1503,6 +1498,24 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  var x = $jscomp$destructuring$var1[0];",
         "  var y = $jscomp$destructuring$var1[1];",
         "  var z = $jscomp$destructuring$var1[2];",
+        "}"));
+
+    test("function f({key: x = 5}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var x = $jscomp$destructuring$var0.key === undefined ?",
+        "      5 : $jscomp$destructuring$var0.key",
+        "}"));
+
+    test("function f({[key]: x = 5}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var x = $jscomp$destructuring$var0[key] === undefined ?",
+        "      5 : $jscomp$destructuring$var0[key]",
+        "}"));
+
+    test("function f({x = 5}) {}", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var x = $jscomp$destructuring$var0.x === undefined ?",
+        "      5 : $jscomp$destructuring$var0.x",
         "}"));
   }
 
