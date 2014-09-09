@@ -1284,6 +1284,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("var { 2 = 5 } = foo();", "'identifier' expected");
   }
 
+  public void testObjectDestructuringKeywordKeys() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("var {if: x, else: y} = foo();");
+    parse("var {while: x=1, for: y} = foo();");
+    parseError("var {while} = foo();", "'identifier' expected");
+    parseError("var {implements} = foo();", "'identifier' expected");
+  }
+
   public void testMixedDestructuring() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {x: [y, z]} = foo();");

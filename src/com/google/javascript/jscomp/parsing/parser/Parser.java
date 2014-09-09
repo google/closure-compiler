@@ -2433,8 +2433,7 @@ public class Parser {
   }
 
   private boolean peekObjectPatternField() {
-    return peekId() || peek(TokenType.NUMBER)
-        || peek(TokenType.STRING) || peek(TokenType.OPEN_SQUARE);
+    return peekPropertyNameOrComputedProp(0);
   }
 
   private ParseTree parseObjectPatternField(PatternKind kind) {
@@ -2447,14 +2446,20 @@ public class Parser {
     }
 
     Token name;
-    if (peekId()) {
-      IdentifierExpressionTree idTree = parseIdentifierExpression();
-      name = idTree.identifierToken;
-      if (peek(TokenType.EQUAL)) {
-        eat(TokenType.EQUAL);
-        ParseTree defaultValue = parseAssignmentExpression();
-        return new DefaultParameterTree(getTreeLocation(start), idTree, defaultValue);
-      } else if (!peek(TokenType.COLON)) {
+    if (peekId() || Keywords.isKeyword(peekType())) {
+      name = eatIdOrKeywordAsId();
+      if (!peek(TokenType.COLON)) {
+        IdentifierToken idToken = (IdentifierToken) name;
+        if (Keywords.isKeyword(idToken.value)) {
+          reportError("cannot use keyword '" + name + "' here.");
+        }
+        if (peek(TokenType.EQUAL)) {
+          IdentifierExpressionTree idTree = new IdentifierExpressionTree(
+              getTreeLocation(start), idToken);
+          eat(TokenType.EQUAL);
+          ParseTree defaultValue = parseAssignmentExpression();
+          return new DefaultParameterTree(getTreeLocation(start), idTree, defaultValue);
+        }
         return new PropertyNameAssignmentTree(getTreeLocation(start), name, null);
       }
     } else {
