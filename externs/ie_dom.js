@@ -391,6 +391,8 @@ Window.prototype.attachEvent;
 Window.prototype.createPopup;
 
 /**
+ * @param {string} event
+ * @param {Function} handler
  * @see http://msdn.microsoft.com/en-us/library/ms536411(VS.85).aspx
  */
 Window.prototype.detachEvent;
@@ -898,6 +900,8 @@ Document.prototype.createEventObject;
 Document.prototype.createStyleSheet;
 
 /**
+ * @param {string} event
+ * @param {Function} handler
  * @see http://msdn.microsoft.com/en-us/library/ms536411(VS.85).aspx
  */
 Document.prototype.detachEvent;
@@ -1034,6 +1038,8 @@ Element.prototype.createTextRange;
 Element.prototype.currentStyle;
 
 /**
+ * @param {string} event
+ * @param {Function} handler
  * @see http://msdn.microsoft.com/en-us/library/ie/ms536411(v=vs.85).aspx
  */
 Element.prototype.detachEvent;
