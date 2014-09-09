@@ -18,13 +18,10 @@ package com.google.javascript.refactoring;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -135,15 +132,6 @@ public final class RefasterJsScanner extends Scanner {
       fix.removeGoogRequire(match, require);
     }
     return ImmutableList.of(fix.build());
-  }
-
-  public String getAst() {
-    return Joiner.on("\n\n").join(Lists.transform(
-        templates, new Function<RefasterJsTemplate, String>() {
-      @Override public String apply(RefasterJsTemplate template) {
-        return template.toAstString();
-      }
-    }));
   }
 
   /**
@@ -263,11 +251,6 @@ public final class RefasterJsScanner extends Scanner {
         requires.add(m.group(1));
       }
       return requires.build();
-    }
-
-    public String toAstString() {
-      return "BEFORE:\n" + beforeTemplate.toStringTree()
-          + "\n\nAFTER:\n" + afterTemplate.toStringTree();
     }
   }
 }
