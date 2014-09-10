@@ -285,6 +285,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       // This is a nested array pattern. Don't do anything now; we'll visit it
       // after visiting the parent.
       return;
+    } else if (parent.isParamList()) {
+      // This will be transpiled in visitParamList.
+      return;
     } else {
       cannotConvertYet(arrayPattern, "ARRAY_PATTERN that is a child of a "
           + Token.name(parent.getType()));
@@ -559,6 +562,37 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           Node newDecl = IR.var(newLHS, newRHS);
           newDecl.useSourceInfoIfMissingFromForTree(child);
           block.addChildAfter(newDecl, insertSpot);
+          insertSpot = newDecl;
+        }
+        compiler.reportCodeChange();
+      } else if (param.isArrayPattern()) {
+        String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+        int index = 0;
+        paramList.replaceChild(param, IR.name(tempVarName));
+        Node next;
+        for (Node child = param.getFirstChild();
+            child != null;
+            child = next) {
+          next = child.getNext();
+          if (child.isEmpty()) {
+            child.detachFromParent();
+            index++;
+          } else if (child.isRest()) {
+            cannotConvertYet(child, "'...' in an array pattern");
+          } else if (child.isDefaultValue()) {
+            cannotConvertYet(child, "default_value in an array pattern in a param list");
+          } else if (child.isName() || child.isDestructuringPattern()) {
+            Node newDecl = IR.var(
+                child.detachFromParent(),
+                IR.getelem(
+                    IR.name(tempVarName),
+                    IR.number(index++)));
+            newDecl.useSourceInfoIfMissingFromForTree(child);
+            block.addChildAfter(newDecl, insertSpot);
+            insertSpot = newDecl;
+          } else {
+            Preconditions.checkState(false, "Unexpected array pattern child: %s", child);
+          }
         }
         compiler.reportCodeChange();
       }

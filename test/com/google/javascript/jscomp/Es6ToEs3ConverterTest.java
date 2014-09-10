@@ -1399,8 +1399,21 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testArrayDestructuringParam() {
-    test("function f([x,y]) { use(x); use(y); }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("function f([x,y]) { use(x); use(y); }", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var x = $jscomp$destructuring$var0[0];",
+        "  var y = $jscomp$destructuring$var0[1];",
+        "  use(x);",
+        "  use(y);",
+        "}"));
+
+    test("function f([x, , y]) { use(x); use(y); }", Joiner.on('\n').join(
+        "function f($jscomp$destructuring$var0) {",
+        "  var x = $jscomp$destructuring$var0[0];",
+        "  var y = $jscomp$destructuring$var0[2];",
+        "  use(x);",
+        "  use(y);",
+        "}"));
   }
 
   public void testArrayDestructuringRest() {

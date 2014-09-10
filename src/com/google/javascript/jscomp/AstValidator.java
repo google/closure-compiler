@@ -715,14 +715,6 @@ public class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateDestructuringPattern(int type, Node n) {
-    if (n.isArrayPattern()) {
-      validateArrayPattern(type, n);
-    } else {
-      validateObjectPattern(type, n);
-    }
-  }
-
   private void validateArrayPattern(int type, Node n) {
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
@@ -732,6 +724,8 @@ public class AstValidator implements CompilerPass {
         validateExpression(c);
       } else if (c.isRest()) {
         validateRest(c);
+      } else if (c.isEmpty()) {
+        validateChildless(c);
       } else {
         // The members of the array pattern can be simple names,
         // or nested array/object patterns, e.g. "var [a,[b,c]]=[1,[2,3]];"
