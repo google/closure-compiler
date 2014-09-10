@@ -221,23 +221,19 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
       Node newLHS, newRHS;
       if (child.isStringKey()) {
+        Preconditions.checkState(child.hasChildren());
         Node getprop = new Node(child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
                                 IR.name(tempVarName),
                                 IR.string(child.getString()));
 
-        if (!child.hasChildren()) {
-          newLHS = child.detachFromParent();
+        Node value = child.removeFirstChild();
+        if (!value.isDefaultValue()) {
+          newLHS = value;
           newRHS = getprop;
         } else {
-          Node value = child.removeFirstChild();
-          if (!value.isDefaultValue()) {
-            newLHS = value;
-            newRHS = getprop;
-          } else {
-            newLHS = value.removeFirstChild();
-            Node defaultValue = value.removeFirstChild();
-            newRHS = defaultValueHook(getprop, defaultValue);
-          }
+          newLHS = value.removeFirstChild();
+          Node defaultValue = value.removeFirstChild();
+          newRHS = defaultValueHook(getprop, defaultValue);
         }
       } else if (child.isComputedProp()) {
         newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
