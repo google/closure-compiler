@@ -111,6 +111,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         // Need to check for super references before they get rewritten.
         checkClassSuperReferences(n);
         break;
+      case Token.PARAM_LIST:
+        visitParamList(n, parent);
+        break;
     }
     return true;
   }
@@ -153,9 +156,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         }
         visitClass(n, parent);
         break;
-      case Token.PARAM_LIST:
-        visitParamList(n, parent);
-        break;
       case Token.ARRAYLIT:
       case Token.NEW:
       case Token.CALL:
@@ -196,10 +196,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         || parent.isDefaultValue()) {
       // Nested object pattern; do nothing. We will visit it after rewriting the parent.
       return;
-    } else if (parent.isParamList()) {
-      // This is transpiled in visitParamList.
-      return;
     } else {
+      Preconditions.checkState(parent.isCatch() || parent.isForOf(), parent);
       cannotConvertYet(objectPattern, "OBJECT_PATTERN that is a child of a "
           + Token.name(parent.getType()));
       return;
@@ -236,8 +234,24 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           newRHS = defaultValueHook(getprop, defaultValue);
         }
       } else if (child.isComputedProp()) {
-        newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
-        newLHS = child.removeFirstChild();
+        if (child.getLastChild().isDefaultValue()) {
+          newLHS = child.getLastChild().removeFirstChild();
+          Node getelem = IR.getelem(
+              IR.name(tempVarName),
+              child.removeFirstChild());
+
+          String intermediateTempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+          Node intermediateDecl = IR.var(IR.name(intermediateTempVarName), getelem);
+          intermediateDecl.useSourceInfoIfMissingFromForTree(child);
+          nodeToDetach.getParent().addChildBefore(intermediateDecl, nodeToDetach);
+
+          newRHS = defaultValueHook(
+              IR.name(intermediateTempVarName),
+              child.getLastChild().removeFirstChild());
+        } else {
+          newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
+          newLHS = child.removeFirstChild();
+        }
       } else if (child.isDefaultValue()) {
         newLHS = child.removeFirstChild();
         Node defaultValue = child.removeFirstChild();
@@ -285,10 +299,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       // This is a nested array pattern. Don't do anything now; we'll visit it
       // after visiting the parent.
       return;
-    } else if (parent.isParamList()) {
-      // This will be transpiled in visitParamList.
-      return;
     } else {
+      Preconditions.checkState(parent.isCatch() || parent.isForOf());
       cannotConvertYet(arrayPattern, "ARRAY_PATTERN that is a child of a "
           + Token.name(parent.getType()));
       return;
@@ -517,84 +529,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
                 IR.string("call")), IR.name("arguments"), IR.number(i))));
         block.addChildAfter(newArr.useSourceInfoIfMissingFromForTree(param), insertSpot);
         compiler.reportCodeChange();
-      } else if (param.isObjectPattern()) {
+      } else if (param.isDestructuringPattern()) {
         String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
         paramList.replaceChild(param, IR.name(tempVarName));
-        for (Node child = param.getFirstChild();
-             child != null;
-             child = child.getNext()) {
-          Node newLHS, newRHS;
-          if (child.isComputedProp()) {
-            Node getelem = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
-            if (child.getLastChild().isDefaultValue()) {
-              newLHS = child.getFirstChild().removeFirstChild();
-              newRHS = defaultValueHook(getelem,
-                  child.getFirstChild().getLastChild().detachFromParent());
-            } else {
-              newLHS = child.removeFirstChild();
-              newRHS = getelem;
-            }
-          } else if (child.isStringKey()) {
-            if (child.hasChildren()) {
-              Node getprop = new Node(child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
-                  IR.name(tempVarName), IR.string(child.getString()));
-
-              if (child.getFirstChild().isDefaultValue()) {
-                newLHS = child.getFirstChild().removeFirstChild();
-                newRHS = defaultValueHook(getprop,
-                    child.getFirstChild().getLastChild().detachFromParent());
-              } else {
-                newLHS = child.removeFirstChild();
-                newRHS = getprop;
-              }
-            } else {
-              newLHS = IR.name(child.getString());
-              newRHS = IR.getprop(IR.name(tempVarName), IR.string(child.getString()));
-            }
-          } else if (child.isDefaultValue()) {
-            newLHS = child.removeFirstChild();
-            Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
-            newRHS = defaultValueHook(getprop, child.removeFirstChild());
-          } else {
-            Preconditions.checkState(false, "Unexpected object pattern child: %s", child);
-            return;
-          }
-          Node newDecl = IR.var(newLHS, newRHS);
-          newDecl.useSourceInfoIfMissingFromForTree(child);
-          block.addChildAfter(newDecl, insertSpot);
-          insertSpot = newDecl;
-        }
-        compiler.reportCodeChange();
-      } else if (param.isArrayPattern()) {
-        String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-        int index = 0;
-        paramList.replaceChild(param, IR.name(tempVarName));
-        Node next;
-        for (Node child = param.getFirstChild();
-            child != null;
-            child = next) {
-          next = child.getNext();
-          if (child.isEmpty()) {
-            child.detachFromParent();
-            index++;
-          } else if (child.isRest()) {
-            cannotConvertYet(child, "'...' in an array pattern");
-          } else if (child.isDefaultValue()) {
-            cannotConvertYet(child, "default_value in an array pattern in a param list");
-          } else if (child.isName() || child.isDestructuringPattern()) {
-            Node newDecl = IR.var(
-                child.detachFromParent(),
-                IR.getelem(
-                    IR.name(tempVarName),
-                    IR.number(index++)));
-            newDecl.useSourceInfoIfMissingFromForTree(child);
-            block.addChildAfter(newDecl, insertSpot);
-            insertSpot = newDecl;
-          } else {
-            Preconditions.checkState(false, "Unexpected array pattern child: %s", child);
-          }
-        }
-        compiler.reportCodeChange();
+        Node newDecl = IR.var(param, IR.name(tempVarName));
+        block.addChildAfter(newDecl, insertSpot);
+        insertSpot = newDecl;
       }
     }
     // For now, we are running transpilation before type-checking, so we'll

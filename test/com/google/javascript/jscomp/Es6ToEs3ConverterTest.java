@@ -1401,16 +1401,18 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testArrayDestructuringParam() {
     test("function f([x,y]) { use(x); use(y); }", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var x = $jscomp$destructuring$var0[0];",
-        "  var y = $jscomp$destructuring$var0[1];",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+        "  var x = $jscomp$destructuring$var1[0];",
+        "  var y = $jscomp$destructuring$var1[1];",
         "  use(x);",
         "  use(y);",
         "}"));
 
     test("function f([x, , y]) { use(x); use(y); }", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var x = $jscomp$destructuring$var0[0];",
-        "  var y = $jscomp$destructuring$var0[2];",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+        "  var x = $jscomp$destructuring$var1[0];",
+        "  var y = $jscomp$destructuring$var1[2];",
         "  use(x);",
         "  use(y);",
         "}"));
@@ -1468,9 +1470,16 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var $jscomp$destructuring$var0 = foo();",
         "b = $jscomp$destructuring$var0[a];"));
 
+    test("var {[foo()]: x = 5} = {};", Joiner.on('\n').join(
+        "var $jscomp$destructuring$var0 = {};",
+        "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo()];",
+        "var x = $jscomp$destructuring$var1 === undefined ?",
+        "    5 : $jscomp$destructuring$var1"));
+
     test("function f({['KEY']: x}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var x = $jscomp$destructuring$var0['KEY']",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var x = $jscomp$destructuring$var1['KEY']",
         "}"));
   }
 
@@ -1491,44 +1500,52 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testObjectDestructuringFunction() {
     test("function f({a: b}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var b = $jscomp$destructuring$var0.a",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var b = $jscomp$destructuring$var1.a",
         "}"));
 
     test("function f({a}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var a = $jscomp$destructuring$var0.a",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var a = $jscomp$destructuring$var1.a",
         "}"));
 
     test("function f({k: {subkey : a}}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.k;",
-        "  var a = $jscomp$destructuring$var1.subkey;",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.k;",
+        "  var a = $jscomp$destructuring$var2.subkey;",
         "}"));
 
     test("function f({k: [x, y, z]}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.k;",
-        "  var x = $jscomp$destructuring$var1[0];",
-        "  var y = $jscomp$destructuring$var1[1];",
-        "  var z = $jscomp$destructuring$var1[2];",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.k;",
+        "  var x = $jscomp$destructuring$var2[0];",
+        "  var y = $jscomp$destructuring$var2[1];",
+        "  var z = $jscomp$destructuring$var2[2];",
         "}"));
 
     test("function f({key: x = 5}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var x = $jscomp$destructuring$var0.key === undefined ?",
-        "      5 : $jscomp$destructuring$var0.key",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var x = $jscomp$destructuring$var1.key === undefined ?",
+        "      5 : $jscomp$destructuring$var1.key",
         "}"));
 
     test("function f({[key]: x = 5}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var x = $jscomp$destructuring$var0[key] === undefined ?",
-        "      5 : $jscomp$destructuring$var0[key]",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var $jscomp$destructuring$var2 = $jscomp$destructuring$var1[key]",
+        "  var x = $jscomp$destructuring$var2 === undefined ?",
+        "      5 : $jscomp$destructuring$var2",
         "}"));
 
     test("function f({x = 5}) {}", Joiner.on('\n').join(
         "function f($jscomp$destructuring$var0) {",
-        "  var x = $jscomp$destructuring$var0.x === undefined ?",
-        "      5 : $jscomp$destructuring$var0.x",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
+        "  var x = $jscomp$destructuring$var1.x === undefined ?",
+        "      5 : $jscomp$destructuring$var1.x",
         "}"));
   }
 
