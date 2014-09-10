@@ -6964,11 +6964,14 @@ chrome.gcdPrivate.establishSession = function(ipAddress, port, callback) {};
 
 
 /**
- * Confirm that the code is correct. Device will still need to confirm.
+ * Confirm that the code is correct. Device will still need to confirm. |code|
+ * must be present and must match the code from the device, even when the code
+ * is supplied in the |ConfirmationInfo| object.
  * @param {number} sessionId
+ * @param {string} code
  * @param {function(string): void} callback
  */
-chrome.gcdPrivate.confirmCode = function(sessionId, callback) {};
+chrome.gcdPrivate.confirmCode = function(sessionId, code, callback) {};
 
 
 /**
