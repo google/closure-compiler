@@ -507,18 +507,23 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     for (int i = 0; i < paramList.getChildCount(); i++) {
       Node param = paramList.getChildAtIndex(i);
       if (param.isDefaultValue()) {
-        Node name = param.removeFirstChild();
+        Node nameOrPattern = param.removeFirstChild();
         Node defaultValue = param.removeFirstChild();
-        paramList.replaceChild(param, name);
-        name.setOptionalArg(true);
+        Node newParam = nameOrPattern.isName() ? nameOrPattern
+            : IR.name(DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++));
 
-        // Transpile to: param === undefined && (param = defaultValue);
-        Node stm = IR.exprResult(
-            IR.and(
-                IR.sheq(name.cloneNode(), IR.name("undefined")),
-                IR.assign(name.cloneNode(), defaultValue)));
-        block.addChildAfter(stm.useSourceInfoIfMissingFromForTree(param), insertSpot);
-        insertSpot = stm;
+        Node lhs = nameOrPattern.cloneTree();
+        Node rhs = defaultValueHook(newParam.cloneTree(), defaultValue);
+        Node newStatement = nameOrPattern.isName()
+            ? IR.exprResult(IR.assign(lhs, rhs))
+            : IR.var(lhs, rhs);
+        newStatement.useSourceInfoIfMissingFromForTree(param);
+        block.addChildAfter(newStatement, insertSpot);
+        insertSpot = newStatement;
+
+        paramList.replaceChild(param, newParam);
+        newParam.setOptionalArg(true);
+
         compiler.reportCodeChange();
       } else if (param.isRest()) { // rest parameter
         param.setType(Token.NAME);

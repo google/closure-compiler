@@ -955,14 +955,21 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testDefaultParameters() {
     enableTypeCheck(CheckLevel.WARNING);
 
-    test("var x = true; function f(a=x) { var x = false; return a; }",
-        "var x = true; function f(a) { a === undefined && (a = x); var x$0 = false; return a; }");
+    test(Joiner.on('\n').join(
+        "var x = true;",
+        "function f(a=x) { var x = false; return a; }"), Joiner.on('\n').join(
+        "var x = true;",
+        "function f(a) {",
+        "  a = (a === undefined) ? x : a;",
+        "  var x$0 = false;",
+        "  return a;",
+        "}"));
 
     test("function f(zero, one = 1, two = 2) {}; f(1); f(1,2,3);",
         Joiner.on('\n').join(
           "function f(zero, one, two) {",
-          "  one === undefined && (one = 1);",
-          "  two === undefined && (two = 2);",
+          "  one = (one === undefined) ? 1 : one;",
+          "  two = (two === undefined) ? 2 : two;",
           "};",
           "f(1); f(1,2,3);"
     ));
@@ -970,8 +977,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function f(zero, one = 1, two = 2) {}; f();",
         Joiner.on('\n').join(
           "function f(zero, one, two) {",
-          "  one === undefined && (one = 1);",
-          "  two === undefined && (two = 2);",
+          "  one = (one === undefined) ? 1 : one;",
+          "  two = (two === undefined) ? 2 : two;",
           "}; f();"
         ),
         null,
@@ -1003,7 +1010,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("function f(zero, one = 1, ...two) {}",
         Joiner.on('\n').join(
         "function f(zero, one, two) {",
-        "  one === undefined && (one = 1);",
+        "  one = (one === undefined) ? 1 : one;",
         "  two = [].slice.call(arguments, 2);",
         "}"
     ));
