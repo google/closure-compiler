@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -41,6 +42,7 @@ public class NominalType {
   //    this represents a completely instantiated generic type (Foo.<number>).
   private final ImmutableMap<String, JSType> typeMap;
   private final RawNominalType rawType;
+  private static final Pattern NUMERIC_PATTERN = Pattern.compile("\\d+");
 
   private NominalType(
       ImmutableMap<String, JSType> typeMap, RawNominalType rawType) {
@@ -494,6 +496,16 @@ public class NominalType {
       Property p = getOwnProp(pname);
       if (p != null) {
         return p;
+      } else if ("Array".equals(name)
+          && NUMERIC_PATTERN.matcher(pname).matches()) {
+        if (typeParameters.isEmpty()) {
+          // This case is only needed when the externs are not templated
+          return Property.make(JSType.UNKNOWN, null);
+        }
+        Preconditions.checkState(typeParameters.size() == 1);
+        Preconditions.checkState(typeParameters.get(0).equals("T"));
+        JSType arrayElementType = JSType.fromTypeVar("T");
+        return Property.make(arrayElementType, arrayElementType);
       }
       if (superClass != null) {
         p = superClass.getProp(pname);

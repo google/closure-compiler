@@ -274,7 +274,7 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   JSType getArrayType() {
-    return getArrayType(JSType.UNKNOWN);
+    return getArrayType(JSType.TOP);
   }
 
   JSType getArrayType(JSType t) {
@@ -1289,9 +1289,22 @@ class GlobalTypeInfo implements CompilerPass {
       switch (n.getType()) {
         case Token.REGEXP:
           return getRegexpType();
-        case Token.ARRAYLIT:
-          // TODO(blickly): Infer generic type of array
-          return getArrayType();
+        case Token.ARRAYLIT: {
+          if (!n.hasChildren()) {
+            return null;
+          }
+          Node child = n.getFirstChild();
+          JSType arrayType = simpleInferExprType(child);
+          if (arrayType == null) {
+            return null;
+          }
+          while (null != (child = child.getNext())) {
+            if (!arrayType.equals(simpleInferExprType(child))) {
+              return null;
+            }
+          }
+          return getArrayType(arrayType);
+        }
         case Token.BITAND:
         case Token.BITNOT:
         case Token.BITOR:

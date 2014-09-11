@@ -5891,6 +5891,129 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
   }
 
+  public void testInferredArrayGenerics() {
+    typeCheck(
+        "/** @const */ var x = [];",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/** @const */ var x = [1, 'str'];",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "/** @const */ var x = [new Foo, new Bar];",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "var /** Array.<string> */ a = [1, 2];",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "var arr = [];\n" +
+        "var /** Array.<string> */ as = arr;");
+
+    typeCheck(
+        "var arr = [1, 2, 3];\n" +
+        "var /** Array.<string> */ as = arr;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "var /** Array.<string> */ a = [new Foo, new Foo];",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "var /** Array.<Foo> */ a = [new Foo, new Bar];");
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "var /** Array.<Bar> */ a = [new Foo, new Bar];",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */ var x = [1, 2, 3];\n" +
+        "function g() { var /** Array.<string> */ a = x; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "/** @const */ var x = [new Foo, new Foo];\n" +
+        "function g() { var /** Array.<Bar> */ a = x; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testDeclaredGenericArrayTypes() {
+    typeCheck(
+        "/** @type {Array.<string>} */\n" +
+        "var arr = ['str'];\n" +
+        "arr[0]++;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var arr = ['str'];\n" +
+        "arr[0]++;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "function foo (/** Array.<string> */ a) {}\n" +
+        "/** @type {Array.<number>} */\n" +
+        "var b = [1];\n" +
+        "foo(b);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function foo (/** Array.<string> */ a) {}\n" +
+        "foo([1]);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @type {Array.<number>} */\n" +
+        "var arr = [1, 2, 3];\n" +
+        "arr[0] = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @const */\n" +
+        "var arr = [1, 2, 3];\n" +
+        "arr[0] = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // TODO(blickly): Distinguish between declared and inferred
+    // array types so that this test has no warnings
+    typeCheck(
+        "var arr = [1, 2, 3];\n" +
+        "arr[0] = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @type {Array.<number>} */ var arr = [];\n" +
+        "arr[0] = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @type {Array.<number>} */ var arr = [];\n" +
+        "(function (/** Array.<string> */ x){})(arr);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function /** string */ f(/** !Array.<number> */ arr) {\n" +
+        "  return arr[0];\n" +
+        "}",
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+
+    // TODO(blickly): Would be nice if we caught the MISTYPED_ASSIGN_RHS here
+    checkNoWarnings(
+        "var arr = [];\n" +
+        "arr[0] = 5;\n" +
+        "var /** Array.<string> */ as = arr;");
+  }
+
   public void testInferConstTypeFromGenerics() {
     typeCheck(
         "/**\n" +
@@ -6211,6 +6334,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         TypeCheck.INEXISTENT_PROPERTY);
   }
 
+  public void testUnannotatedBracketAccessDoesntCrash() {
+    checkNoWarnings(
+        "function f(foo, i, j) {\n" +
+        "  foo.array[i][j] = 5;\n" +
+        "}");
+  }
+
   public void testUnknownTypeReferenceDoesntCrash() {
     typeCheck(
         "/** @interface */ function I(){}\n" +
@@ -6255,6 +6385,29 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     //     "  }\n" +
     //     "}",
     //     VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  public void testUnparametrizedArrayDefinitionDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor */ function Array(){}",
+        "function f(/** !Array */ arr) {\n" +
+        "  var newarr = [];\n" +
+        "  newarr[0] = arr[0];\n" +
+        "  newarr[0].prop1 = newarr[0].prop2;\n" +
+        "};");
+  }
+
+  public void testInvalidEnumDoesntCrash() {
+    typeCheck(
+        "/** @enum {Array.<number>} */\n" +
+        "var FooEnum = {\n" +
+        "  BAR: [5]\n" +
+        "};\n" +
+        "/** @param {FooEnum} x */\n" +
+        "function f(x) {\n" +
+        "    var y = x[0];\n" +
+        "};",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
   }
 
   public void testRemoveNonexistentPropDoesntCrash() {
