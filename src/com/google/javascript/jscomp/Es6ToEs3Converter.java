@@ -170,12 +170,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         Es6TemplateLiterals.visitTemplateLiteral(t, n);
         break;
       case Token.ARRAY_PATTERN:
-        for (Node child : n.children()) {
-          if (child.isRest()) {
-            cannotConvertYet(child, "REST node in an ARRAY_PATTERN");
-            return;
-          }
-        }
         visitArrayPattern(t, n, parent);
         break;
       case Token.OBJECT_PATTERN:
@@ -333,6 +327,13 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         //   x = (temp[0] === undefined) ? defaultValue : temp[0];
         newLHS = child.getFirstChild().detachFromParent();
         newRHS = defaultValueHook(getElem, child.getLastChild().detachFromParent());
+      } else if (child.isRest()) {
+        newLHS = child.detachFromParent();
+        newLHS.setType(Token.NAME);
+        // [].slice.call(temp, i)
+        newRHS = IR.call(
+            IR.getprop(IR.getprop(IR.arraylit(), IR.string("slice")), IR.string("call")),
+            IR.name(tempVarName), IR.number(i));
       } else {
         newLHS = child.detachFromParent();
         newRHS = IR.getelem(IR.name(tempVarName), IR.number(i));
