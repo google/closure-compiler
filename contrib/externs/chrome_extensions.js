@@ -4810,15 +4810,15 @@ function BookmarkTreeNode() {}
 BookmarkTreeNode.prototype.id;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 BookmarkTreeNode.prototype.parentId;
 
 
-/** @type {number} */
+/** @type {number|undefined} */
 BookmarkTreeNode.prototype.index;
 
 
-/** @type {string} */
+/** @type {string|undefined} */
 BookmarkTreeNode.prototype.url;
 
 
@@ -4826,15 +4826,19 @@ BookmarkTreeNode.prototype.url;
 BookmarkTreeNode.prototype.title;
 
 
-/** @type {number} */
+/** @type {number|undefined} */
 BookmarkTreeNode.prototype.dateAdded;
 
 
-/** @type {number} */
+/** @type {number|undefined} */
 BookmarkTreeNode.prototype.dateGroupModified;
 
 
-/** @type {Array.<BookmarkTreeNode>} */
+/** @type {string|undefined} */
+BookmarkTreeNode.prototype.unmodifiable;
+
+
+/** @type {!Array.<!BookmarkTreeNode>|undefined} */
 BookmarkTreeNode.prototype.children;
 
 
