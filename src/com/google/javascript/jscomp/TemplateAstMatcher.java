@@ -179,14 +179,22 @@ public final class TemplateAstMatcher {
     final Map<String, JSType> paramTypes = new HashMap<>();
 
     // drop the function name so it isn't include in the name maps
+    String fnName = fn.getFirstChild().getString();
     fn.getFirstChild().setString("");
 
     // Build a list of parameter names and types.
     Node templateParametersNode = fn.getFirstChild().getNext();
     JSDocInfo info = NodeUtil.getBestJSDocInfo(fn);
+    if (templateParametersNode.hasChildren()) {
+      Preconditions.checkNotNull(info, 
+          "Missing JSDoc declaration for template function %s", fnName);
+    }
     for (Node paramNode : templateParametersNode.children()) {
       String name = paramNode.getString();
       JSTypeExpression expression = info.getParameterType(name);
+      Preconditions.checkNotNull(expression, 
+          "Missing JSDoc for parameter %s of template function %s", 
+          name, fnName);
       JSType type = expression.evaluate(null, compiler.getTypeRegistry());
       Preconditions.checkNotNull(type);
       params.add(name);
