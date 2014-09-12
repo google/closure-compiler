@@ -60,6 +60,12 @@ class DefinitionsRemover {
     } else if (parent.isParamList()) {
       Node function = parent.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);
+    } else if (parent.getType() == Token.COLON && parent.getFirstChild() == n
+        && isExtern) {
+      Node grandparent = parent.getParent();
+      Preconditions.checkState(grandparent.getType() == Token.LB);
+      Preconditions.checkState(grandparent.getParent().getType() == Token.LC);
+      return new RecordTypePropertyDefinition(n);
     }
     return null;
   }
@@ -87,6 +93,12 @@ class DefinitionsRemover {
     } else if (NodeUtil.isObjectLitKey(n)) {
       return true;
     } else if (parent.isParamList()) {
+      return true;
+    } else if (parent.getType() == Token.COLON && parent.getFirstChild() == n
+        && n.isFromExterns()) {
+      Node grandparent = parent.getParent();
+      Preconditions.checkState(grandparent.getType() == Token.LB);
+      Preconditions.checkState(grandparent.getParent().getType() == Token.LC);
       return true;
     }
     return false;
@@ -312,6 +324,24 @@ class DefinitionsRemover {
       return assignment.getLastChild();
     }
   }
+
+  /**
+   * Represents member declarations using a record type from externs.
+   * Example: /** @typedef {{prop: number}} *\/ var typdef;
+   */
+  static final class RecordTypePropertyDefinition extends IncompleteDefinition {
+    RecordTypePropertyDefinition(Node name) {
+      super(IR.getprop(IR.objectlit(), name.cloneNode()),
+            /** isExtern */ true);
+      Preconditions.checkArgument(name.isString());
+    }
+
+    @Override
+    public void performRemove() {
+      throw new UnsupportedOperationException("Can't remove RecordType def");
+    }
+  }
+
 
   /**
    * Represents member declarations using a object literal.

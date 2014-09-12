@@ -282,6 +282,34 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         ImmutableSet.of("DEF NAME a -> EXTERN NUMBER"));
   }
 
+  public void testRecordDefinitionInExterns() {
+    checkDefinitionsInExterns(
+        "var ns = {};" +
+        "/** @type {number} */ ns.NUM;",
+        ImmutableSet.of("DEF NAME ns -> EXTERN <null>",
+                        "DEF GETPROP ns.NUM -> EXTERN <null>",
+                        "USE NAME ns -> [EXTERN <null>]"));
+
+    checkDefinitionsInExterns(
+        "var ns = {};" +
+        "/** @type {function(T,T):number} @template T */ ns.COMPARATOR;",
+        ImmutableSet.of("DEF NAME ns -> EXTERN <null>",
+                        "DEF GETPROP ns.COMPARATOR -> EXTERN <null>",
+                        "USE NAME ns -> [EXTERN <null>]"));
+
+    checkDefinitionsInExterns(
+        "/** @type {{ prop1 : number, prop2 : string}} */" +
+        "var ns;",
+        ImmutableSet.of("DEF STRING_KEY null -> EXTERN <null>",
+                        "DEF STRING_KEY null -> EXTERN <null>"));
+
+    checkDefinitionsInExterns(
+        "/** @typedef {{ prop1 : number, prop2 : string}} */" +
+        "var ns;",
+        ImmutableSet.of("DEF STRING_KEY null -> EXTERN <null>",
+                        "DEF STRING_KEY null -> EXTERN <null>"));
+  }
+
   public void testObjectLitInExterns() {
     checkDefinitions(
         "var goog = {};" +
