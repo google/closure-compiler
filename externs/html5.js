@@ -962,14 +962,14 @@ Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
  * Sent when the worker thread posts a message to its creator.
  * @type {?function(!MessageEvent)}
  */
-Worker.prototype.onmessage = function() {};
+Worker.prototype.onmessage;
 
 /**
  * Sent when the worker thread encounters an error.
  * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
  * @type {?function(!Event)}
  */
-Worker.prototype.onerror = function() {};
+Worker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
@@ -1008,7 +1008,7 @@ SharedWorker.prototype.port;
  * TODO(tbreisacher): Should this change to function(!ErrorEvent)?
  * @type {?function(!Event)}
  */
-SharedWorker.prototype.onerror = function() {};
+SharedWorker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
@@ -1100,7 +1100,7 @@ DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
  * Sent when the creator posts a message to this worker.
  * @type {?function(!MessageEvent)}
  */
-DedicatedWorkerGlobalScope.prototype.onmessage = function() {};
+DedicatedWorkerGlobalScope.prototype.onmessage;
 
 /**
  * @see http://dev.w3.org/html5/workers/
@@ -1116,7 +1116,7 @@ SharedWorkerGlobalScope.prototype.name;
  * Sent when a connection to this worker is opened.
  * @type {?function(!Event)}
  */
-SharedWorkerGlobalScope.prototype.onconnect = function() {};
+SharedWorkerGlobalScope.prototype.onconnect;
 
 /** @type {Element} */
 HTMLElement.prototype.contextMenu;

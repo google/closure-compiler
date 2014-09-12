@@ -278,49 +278,49 @@ GestureEvent.prototype.initGestureEvent = function(type, canBubble, cancelable,
  * for the touch.
  * @type {?function(!TouchEvent)}
  */
-Element.prototype.ontouchcancel = function(e) {};
+Element.prototype.ontouchcancel;
 
 /**
  * Specifies the JavaScript method to invoke when a given event lifts from the
  * surface.
  * @type {?function(!TouchEvent)}
  */
-Element.prototype.ontouchend = function(e) {};
+Element.prototype.ontouchend;
 
 /**
  * Specifies the JavaScript method to invoke when a finger for a given event
  * moves on the surface.
  * @type {?function(!TouchEvent)}
  */
-Element.prototype.ontouchmove = function(e) {};
+Element.prototype.ontouchmove;
 
 /**
  * Specifies the JavaScript method to invoke when a finger for a given event
  * touches the surface.
  * @type {?function(!TouchEvent)}
  */
-Element.prototype.ontouchstart = function(e) {};
+Element.prototype.ontouchstart;
 
 /**
  * Specifies the JavaScript method to invoke when a gesture is started by
  * two or more fingers touching the surface.
  * @type {?function(!GestureEvent)}
  */
-Element.prototype.ongesturestart = function(e) {};
+Element.prototype.ongesturestart;
 
 /**
  * Specifies the JavaScript method to invoke when fingers are moved during a
  * gesture.
  * @type {?function(!GestureEvent)}
  */
-Element.prototype.ongesturechange = function(e) {};
+Element.prototype.ongesturechange;
 
 /**
  * Specifies the JavaScript method to invoke when a gesture ends (when there are
  * 0 or 1 fingers touching the surface).
  * @type {?function(!GestureEvent)}
  */
-Element.prototype.ongestureend = function(e) {};
+Element.prototype.ongestureend;
 
 /**
  * Specifies the JavaScript method to invoke when the browser device's
