@@ -91,6 +91,14 @@
       <version>1.3.9</version>
     </dependency>
 
+    <!-- Ant is a provided scope as it is only needed to compile; ant will provide itself when using the jar -->
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant</artifactId>
+      <scope>provided</scope>
+      <version>1.9.4</version>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -186,7 +194,6 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <excludes>
-            <exclude>**/com/google/javascript/jscomp/ant/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/webservice/**</exclude>
           </excludes>
