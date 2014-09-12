@@ -331,22 +331,15 @@ public class JSTypeCreatorFromJSDoc {
     if (!rawType.isGeneric() && !n.hasChildren()) {
       return rawType.getInstanceAsNullableJSType();
     }
-    if (!n.hasChildren()) {
-      ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
-      for (String unused : rawType.getTypeParameters()) {
-        typeList.add(JSType.UNKNOWN);
-      }
-      return JSType.join(JSType.NULL,
-          JSType.fromObjectType(ObjectType.fromNominalType(
-              uninstantiated.instantiateGenerics(typeList.build()))));
-    }
-    // Compute instantiation of polymorphic class/interface.
-    Preconditions.checkState(n.getFirstChild().isBlock());
     ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
-    for (Node child : n.getFirstChild().children()) {
-      JSType childType = getTypeFromNodeHelper(
-          child, ownerType, registry, outerTypeParameters);
-      typeList.add(childType);
+    if (n.hasChildren()) {
+      // Compute instantiation of polymorphic class/interface.
+      Preconditions.checkState(n.getFirstChild().isBlock());
+      for (Node child : n.getFirstChild().children()) {
+        JSType childType = getTypeFromNodeHelper(
+            child, ownerType, registry, outerTypeParameters);
+        typeList.add(childType);
+      }
     }
     ImmutableList<JSType> typeArguments = typeList.build();
     ImmutableList<String> typeParameters = rawType.getTypeParameters();
@@ -354,15 +347,12 @@ public class JSTypeCreatorFromJSDoc {
     int typeParamsSize = typeParameters.size();
     if (typeArgsSize != typeParamsSize) {
       String nominalTypeName = uninstantiated.getName();
-      if (!nominalTypeName.equals("Object")
-          && !nominalTypeName.equals("Array")) {
-        // TODO(dimvar): remove this once we handle parameterized Object and
-        // parameterized Array.
+      if (!nominalTypeName.equals("Object")) {
+        // TODO(dimvar): remove this once we handle parameterized Object
         warn("Invalid generics instantiation for " + nominalTypeName + ".\n"
             + "Expected " + typeParamsSize
-            + " type argument(s), but "
-            + typeArgsSize
-            + (typeArgsSize == 1 ? " was passed." : " were passed."),
+            + " type argument(s), but found "
+            + typeArgsSize,
             n);
       }
       return JSType.join(JSType.NULL,

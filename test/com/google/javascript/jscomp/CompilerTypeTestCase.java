@@ -81,7 +81,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       " * @template T\n" +
       " * @constructor\n" +
       " * @param {*} var_args\n" +
-      " * @return {!Array}\n" +
+      " * @return {!Array.<?>}\n" +
       " */\n" +
       "function Array(var_args) {}\n" +
       "/** @type {number} */ Array.prototype.length;\n" +

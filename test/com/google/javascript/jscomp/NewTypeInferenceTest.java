@@ -145,7 +145,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testExterns() {
     typeCheck(
-        "/** @param {Array} x */ function f(x) {}; f(5);",
+        "/** @param {Array.<string>} x */ function f(x) {}; f([5]);",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
@@ -4573,7 +4573,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.NON_NUMERIC_ARRAY_INDEX);
 
     typeCheck(
-        "function f(/** !Array */ arr, i) {\n" +
+        "function f(/** !Array.<number> */ arr, i) {\n" +
         "  arr[i];\n" +
         "}\n" +
         "f([1, 2, 3], 'str');",
@@ -5472,7 +5472,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function Foo() {}\n" +
         "/** @param {T} x */\n" +
         "Foo.prototype.method = function(x) {};\n" +
-        "var /** @type {Foo} */ foo = null;\n" +
+        "var /** @type {Foo.<string>} */ foo = null;\n" +
         "foo.method('asdf');",
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
@@ -6544,12 +6544,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var Parent = function(){};\n" +
         "/** @constructor @extends {Parent} */ function Child(){}");
 
-    checkNoWarnings(
+    typeCheck(
         "/** @constructor @template VALUE */\n" +
         "var Grandparent = function() {};\n" +
         "/** @constructor @extends {Grandparent} */\n" +
         "var Parent = function(){};\n" +
-        "/** @constructor @extends {Parent} */ function Child(){}");
+        "/** @constructor @extends {Parent} */ function Child(){}",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
   }
 
   public void testDebuggerStatementDoesntCrash() {
@@ -8338,8 +8339,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck(
         CLOSURE_BASE +
-        "function f(/** (Array|number) */ x) {\n" +
-        "  var /** Array */ a;\n" +
+        "function f(/** (Array.<number>|number) */ x) {\n" +
+        "  var /** Array.<number> */ a;\n" +
         "  if (goog.isArray(x)) {\n" +
         "    a = x;\n" +
         "  }\n" +
@@ -8461,7 +8462,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     checkNoWarnings(
         CLOSURE_BASE +
-        "function f(/** (number|!Array) */ x) {\n" +
+        "function f(/** (number|!Array.<number>) */ x) {\n" +
         "  if (!goog.isArray(x)) {\n" +
         "    x - 5;\n" +
         "  }\n" +
