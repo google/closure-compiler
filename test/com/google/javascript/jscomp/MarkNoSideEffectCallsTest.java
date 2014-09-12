@@ -67,9 +67,9 @@ public class MarkNoSideEffectCallsTest extends CompilerTestCase {
                   ImmutableList.of("f"));
     testMarkCalls("var f = /**@nosideeffects*/function(){};", "f()",
                   ImmutableList.of("f"));
-    testMarkCalls("var f; f = /**@nosideeffects*/function(){};", "f()",
+    testMarkCalls("f = /**@nosideeffects*/function(){};", "f()",
                   ImmutableList.of("f"));
-    testMarkCalls("var f; /**@nosideeffects*/ f = function(){};", "f()",
+    testMarkCalls("/**@nosideeffects*/ f = function(){};", "f()",
                   ImmutableList.of("f"));
 
     // no annotation

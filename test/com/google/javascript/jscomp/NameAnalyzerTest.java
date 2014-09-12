@@ -233,34 +233,31 @@ public class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoSideEffectAnnotation6() {
-    test("var f; f = /**@nosideeffects*/function(){};", "var a = f();",
+    test("f = /**@nosideeffects*/function(){};", "var a = f();",
          "", null, null);
   }
 
   public void testNoSideEffectAnnotation7() {
-    test("var f;" +
-         "f = /**@nosideeffects*/function(){};",
+    test("f = /**@nosideeffects*/function(){};",
          "f = function(){};" +
          "var a = f();",
          "f = function(){}; f();", null, null);
   }
 
   public void testNoSideEffectAnnotation8() {
-    test("var f;" +
-         "f = function(){};" +
+    test("f = function(){};" +
          "f = /**@nosideeffects*/function(){};",
          "var a = f();",
          "f();", null, null);
   }
 
   public void testNoSideEffectAnnotation9() {
-    test("var f;" +
-         "f = /**@nosideeffects*/function(){};" +
+    test("f = /**@nosideeffects*/function(){};" +
          "f = /**@nosideeffects*/function(){};",
          "var a = f();",
          "", null, null);
 
-    test("var f; f = /**@nosideeffects*/function(){};", "var a = f();",
+    test("f = /**@nosideeffects*/function(){};", "var a = f();",
          "", null, null);
   }
 

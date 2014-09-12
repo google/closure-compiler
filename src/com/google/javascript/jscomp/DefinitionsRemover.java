@@ -44,7 +44,7 @@ class DefinitionsRemover {
       return null;
     }
 
-    if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
+    if (NodeUtil.isVarDeclaration(n) && (isExtern || n.hasChildren())) {
       return new VarDefinition(n, isExtern);
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
@@ -80,7 +80,7 @@ class DefinitionsRemover {
       return false;
     }
 
-    if (NodeUtil.isVarDeclaration(n) && n.hasChildren()) {
+    if (NodeUtil.isVarDeclaration(n) && (n.isFromExterns() || n.hasChildren())) {
       return true;
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
@@ -402,8 +402,8 @@ class DefinitionsRemover {
     VarDefinition(Node node, boolean inExterns) {
       super(inExterns);
       Preconditions.checkArgument(NodeUtil.isVarDeclaration(node));
-      Preconditions.checkArgument(node.hasChildren(),
-          "VAR Declaration of %sshould be assigned a value.", node.getString());
+      Preconditions.checkArgument(inExterns || node.hasChildren(),
+          "VAR Declaration of %s must be assigned a value.", node.getString());
       name = node;
     }
 

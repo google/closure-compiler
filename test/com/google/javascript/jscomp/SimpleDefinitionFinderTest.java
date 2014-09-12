@@ -47,7 +47,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
     found.clear();
   }
 
-  public void testDefineNumber() throws Exception {
+  public void testDefineNumber() {
     checkDefinitionsInJs(
         "var a = 1",
         ImmutableSet.of("DEF NAME a -> NUMBER"));
@@ -91,7 +91,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
                         "USE GETPROP a.b -> [NUMBER]"));
   }
 
-  public void testDefineGet() throws Exception {
+  public void testDefineGet() {
     // TODO(johnlenz): Add support for quoted properties
     checkDefinitionsInJs(
       "({get a() {}}); o.a",
@@ -99,7 +99,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
                       "USE GETPROP o.a -> [FUNCTION]"));
   }
 
-  public void testDefineSet() throws Exception {
+  public void testDefineSet() {
     // TODO(johnlenz): Add support for quoted properties
     checkDefinitionsInJs(
       "({set a(b) {}}); o.a",
@@ -108,7 +108,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
                       "USE GETPROP o.a -> [FUNCTION]"));
   }
 
-  public void testDefineFunction() throws Exception {
+  public void testDefineFunction() {
     checkDefinitionsInJs(
         "var a = function(){}",
         ImmutableSet.of("DEF NAME a -> FUNCTION"));
@@ -139,7 +139,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
         ImmutableSet.of("DEF GETPROP null -> FUNCTION"));
   }
 
-  public void testFunctionArgumentsBasic() throws Exception {
+  public void testFunctionArgumentsBasic() {
     checkDefinitionsInJs(
         "function f(a){return a}",
         ImmutableSet.of("DEF NAME a -> <null>",
@@ -157,7 +157,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
   private static final String DEF = "var f = function(arg1, arg2){}";
   private static final String USE = "f(1, 2)";
 
-  public void testFunctionArgumentsInExterns() throws Exception {
+  public void testFunctionArgumentsInExterns() {
 
     // function arguments are definitions when they appear in source.
     checkDefinitionsInJs(
@@ -174,7 +174,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
                         "USE NAME f -> [EXTERN FUNCTION]"));
   }
 
-  public void testMultipleDefinition() throws Exception {
+  public void testMultipleDefinition() {
     checkDefinitionsInJs(
         "a = 1; a = 2; a",
         ImmutableSet.of("DEF NAME a -> NUMBER",
@@ -233,7 +233,7 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
 
   }
 
-  public void testDefinitionInExterns() throws Exception {
+  public void testDefinitionInExterns() {
     String externs = "var a = 1";
 
     checkDefinitionsInExterns(
@@ -300,14 +300,22 @@ public class SimpleDefinitionFinderTest extends CompilerTestCase {
     checkDefinitionsInExterns(
         "/** @type {{ prop1 : number, prop2 : string}} */" +
         "var ns;",
-        ImmutableSet.of("DEF STRING_KEY null -> EXTERN <null>",
+        ImmutableSet.of("DEF NAME ns -> EXTERN <null>",
+                        "DEF STRING_KEY null -> EXTERN <null>",
                         "DEF STRING_KEY null -> EXTERN <null>"));
 
     checkDefinitionsInExterns(
         "/** @typedef {{ prop1 : number, prop2 : string}} */" +
         "var ns;",
-        ImmutableSet.of("DEF STRING_KEY null -> EXTERN <null>",
+        ImmutableSet.of("DEF NAME ns -> EXTERN <null>",
+                        "DEF STRING_KEY null -> EXTERN <null>",
                         "DEF STRING_KEY null -> EXTERN <null>"));
+  }
+
+  public void testUnitializedDefinitionInExterns() {
+    checkDefinitionsInExterns(
+        "/** @type {number} */ var HYBRID;",
+        ImmutableSet.of("DEF NAME HYBRID -> EXTERN <null>"));
   }
 
   public void testObjectLitInExterns() {
