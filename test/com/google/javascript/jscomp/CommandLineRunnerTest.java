@@ -24,10 +24,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -940,6 +942,52 @@ public class CommandLineRunnerTest extends TestCase {
     testSame("var x = 3;");
     assertEquals(SourceMap.Format.V3,
         lastCompiler.getOptions().sourceMapFormat);
+  }
+
+  public void testSourceMapLocationsTranslations1() {
+    args.add("--js_output_file");
+    args.add("/path/to/out.js");
+    args.add("--create_source_map=%outname%.map");
+    args.add("--source_map_location_mapping=foo/|http://bar");
+    testSame("var x = 3;");
+
+    List<LocationMapping> mappings = lastCompiler.getOptions()
+        .sourceMapLocationMappings;
+    assertEquals(
+        ImmutableSet.of(new LocationMapping("foo/", "http://bar")).toString(),
+        ImmutableSet.copyOf(mappings).toString());
+  }
+
+  public void testSourceMapLocationsTranslations2() {
+    args.add("--js_output_file");
+    args.add("/path/to/out.js");
+    args.add("--create_source_map=%outname%.map");
+    args.add("--source_map_location_mapping=foo/|http://bar");
+    args.add("--source_map_location_mapping=xxx/|http://yyy");
+    testSame("var x = 3;");
+
+    List<LocationMapping> mappings = lastCompiler.getOptions()
+        .sourceMapLocationMappings;
+    assertEquals(
+        ImmutableSet.of(
+            new LocationMapping("foo/", "http://bar"),
+            new LocationMapping("xxx/", "http://yyy")).toString(),
+        ImmutableSet.copyOf(mappings).toString());
+  }
+
+  public void testSourceMapLocationsTranslations3() throws IOException {
+    // Prevents this from trying to load externs.zip
+    args.add("--use_only_custom_externs=true");
+
+    args.add("--js_output_file");
+    args.add("/path/to/out.js");
+    args.add("--create_source_map=%outname%.map");
+    args.add("--source_map_location_mapping=foo/");
+
+    CommandLineRunner runner = createCommandLineRunner(new String[0]);
+    assertFalse(runner.shouldRunCompiler());
+    assertTrue(new String(errReader.toByteArray()).contains(
+        "Bad value for --source_map_location_mapping"));
   }
 
   public void testModuleWrapperBaseNameExpansion() throws Exception {

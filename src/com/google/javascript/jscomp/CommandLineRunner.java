@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.protobuf.TextFormat;
 
 import org.kohsuke.args4j.Argument;
@@ -521,6 +522,7 @@ public class CommandLineRunner extends
         throw new CmdLineException(
             parser, "Bad value for --compilation_level: " + compilationLevel);
       }
+
     }
 
     private void printUsage(PrintStream err) {
@@ -613,16 +615,22 @@ public class CommandLineRunner extends
           });
     }
 
-    List<SourceMap.LocationMapping> getSourceMapLocationMappings() {
-      List<SourceMap.LocationMapping> locationMappings =
-          Lists.newArrayListWithCapacity(sourceMapLocationMapping.size());
+    @SuppressWarnings("deprecation")
+    List<SourceMap.LocationMapping> getSourceMapLocationMappings() throws CmdLineException {
+      ImmutableList.Builder<LocationMapping> locationMappings = ImmutableList.builder();
 
+      Splitter splitter = Splitter.on('|').limit(2);
       for (String locationMapping : sourceMapLocationMapping) {
-        String[] pair = locationMapping.split("\\|", 2);
-        locationMappings.add(new SourceMap.LocationMapping(pair[0], pair[1]));
+        List<String> parts = splitter.splitToList(locationMapping);
+        if (parts.size() != 2) {
+          throw new CmdLineException(
+            "Bad value for --source_map_location_mapping: " +
+            ImmutableList.of(sourceMapLocationMapping));
+        }
+        locationMappings.add(new SourceMap.LocationMapping(parts.get(0), parts.get(1)));
       }
 
-      return locationMappings;
+      return locationMappings.build();
     }
 
     // Our own option parser to be backwards-compatible.
@@ -890,6 +898,7 @@ public class CommandLineRunner extends
     isConfigValid = true;
 
     List<String> jsFiles = null;
+    List<LocationMapping> mappings = null;
     try {
       flags.parse(processedArgs);
 
@@ -899,6 +908,7 @@ public class CommandLineRunner extends
       }
 
       jsFiles = flags.getJsFiles();
+      mappings = flags.getSourceMapLocationMappings();
     } catch (CmdLineException e) {
       err.println(e.getMessage());
       isConfigValid = false;
@@ -980,7 +990,7 @@ public class CommandLineRunner extends
           .setModuleOutputPathPrefix(flags.moduleOutputPathPrefix)
           .setCreateSourceMap(flags.createSourceMap)
           .setSourceMapFormat(flags.sourceMapFormat)
-          .setSourceMapLocationMappings(flags.getSourceMapLocationMappings())
+          .setSourceMapLocationMappings(mappings)
           .setWarningGuardSpec(Flags.getWarningGuardSpec())
           .setDefine(flags.define)
           .setCharset(flags.charset)

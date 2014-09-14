@@ -91,6 +91,10 @@ public class SourceMap {
       this.prefix = prefix;
       this.replacement = replacement;
     }
+    @Override
+	public String toString() {
+        return "(" + prefix + "|" + replacement + ")";
+    }
   }
 
   private final SourceMapGenerator generator;
