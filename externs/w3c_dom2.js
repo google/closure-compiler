@@ -216,7 +216,6 @@ var TraversalDocument;
 function NodeFilter() {}
 
 /* Constants for whatToShow */
-/** @const {number} */ NodeFilter.SHOW_TEXT;
 /** @const {number} */ NodeFilter.SHOW_ALL;
 /** @const {number} */ NodeFilter.SHOW_ATTRIBUTE;
 /** @const {number} */ NodeFilter.SHOW_CDATA_SECTION;
