@@ -221,6 +221,24 @@ jQuery.ajaxSettings.xhr = function() {};
 /** @return {XMLHttpRequest|ActiveXObject} */
 $.ajaxSettings.xhr = function() {};
 
+/** @type {Object.<string, *>} */
+jQuery.ajaxSettings.xhrFields = {};
+
+/** @type {Object.<string, *>} */
+$.ajaxSettings.xhrFields = {};
+
+/** @type {boolean} */
+jQuery.ajaxSettings.xhrFields.withCredentials;
+
+/** @type {boolean} */
+$.ajaxSettings.xhrFields.withCredentials;
+
+/** @type {boolean} */
+jQuery.ajaxSettings.crossDomain;
+
+/** @type {boolean} */
+$.ajaxSettings.crossDomain;
+
 /** @param {Object.<string,*>} options */
 jQuery.ajaxSetup = function(options) {};
 
@@ -2183,4 +2201,3 @@ jQuery.prototype.wrapAll = function(wrappingElement) {};
  * @return {!jQuery}
  */
 jQuery.prototype.wrapInner = function(arg1) {};
-
