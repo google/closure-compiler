@@ -1383,7 +1383,20 @@ angular.$http.Response;
 
 /**
  * @typedef {{
- *   defaults: !angular.$http.Config
+ *   request: (undefined|(function(!angular.$http.Config):
+ *       !angular.$http.Config|!angular.$q.Promise.<!angular.$http.Config>)),
+ *   requestError: (undefined|(function(Object): !angular.$q.Promise|Object)),
+ *   response: (undefined|(function(!angular.$http.Response):
+ *       !angular.$http.Response|!angular.$q.Promise.<!angular.$http.Response>)),
+ *   responseError: (undefined|(function(Object): !angular.$q.Promise|Object))
+ *   }}
+ */
+angular.$http.Interceptor;
+
+/**
+ * @typedef {{
+ *   defaults: !angular.$http.Config,
+ *   interceptors: !Array.<string|function(...[*]): !angular.$http.Interceptor>
  * }}
  */
 angular.$HttpProvider;
