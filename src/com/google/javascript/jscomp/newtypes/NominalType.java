@@ -229,7 +229,9 @@ public class NominalType {
           Preconditions.checkState(typeMap.containsKey(typeVar),
               "Type variable %s not in the domain: %s",
               typeVar, typeMap.keySet());
-          Preconditions.checkState(other.typeMap.containsKey(typeVar));
+          Preconditions.checkState(other.typeMap.containsKey(typeVar),
+              "Other (%s) doesn't contain mapping (%s->%s) from this (%s)",
+              other, typeVar, typeMap.get(typeVar), this);
           if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
             return false;
           }

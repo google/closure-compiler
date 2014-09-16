@@ -240,17 +240,25 @@ public class NewTypeInference implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    jsRoot = root;
-    symbolTable = compiler.getSymbolTable();
-    for (Scope scope : symbolTable.getScopes()) {
-      analyzeFunction(scope);
-      envs.clear();
-    }
-    for (DeferredCheck check : deferredChecks.values()) {
-      check.runCheck(summaries, warnings);
-    }
-    if (measureMem) {
-      System.out.println("Peak mem: " + peakMem + "MB");
+    try {
+      jsRoot = root;
+      symbolTable = compiler.getSymbolTable();
+      for (Scope scope : symbolTable.getScopes()) {
+        analyzeFunction(scope);
+        envs.clear();
+      }
+      for (DeferredCheck check : deferredChecks.values()) {
+        check.runCheck(summaries, warnings);
+      }
+      if (measureMem) {
+        System.out.println("Peak mem: " + peakMem + "MB");
+      }
+    } catch (Exception unexpectedException) {
+      String message = unexpectedException.getMessage();
+      if (currentScope != null) {
+        message += "\nIn scope: " + currentScope.toString();
+      }
+      compiler.throwInternalError(message, unexpectedException);
     }
   }
 

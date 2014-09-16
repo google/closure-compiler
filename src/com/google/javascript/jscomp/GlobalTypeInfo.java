@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
@@ -2330,6 +2331,22 @@ class GlobalTypeInfo implements CompilerPass {
       localClassDefs = null;
       localTypedefs = null;
       localEnums = null;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      if (!root.isFunction()) {
+        sb.append("<TOP SCOPE>");
+      } else {
+        sb.append(getReadableName());
+        sb.append('(');
+        Joiner.on(',').appendTo(sb, formals);
+        sb.append(')');
+      }
+      sb.append(" with root: ");
+      sb.append(root.toString());
+      return sb.toString();
     }
   }
 }
