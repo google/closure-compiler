@@ -1679,7 +1679,7 @@ public class Parser {
       if (name.type != TokenType.IDENTIFIER) {
         reportExpectedError(peekToken(), TokenType.COLON);
       } else if (Keywords.isKeyword(name.asIdentifier().value)) {
-        reportError("Cannot use keyword in short object literal", name);
+        reportError(name, "Cannot use keyword in short object literal");
       }
     }
     ParseTree value = colon == null ? null : parseAssignmentExpression();
@@ -2218,6 +2218,9 @@ public class Parser {
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         eat(TokenType.COMMA);
+        if (peek(TokenType.CLOSE_PAREN)) {
+          reportError("Invalid trailing comma in arguments list");
+        }
       }
     }
     eat(TokenType.CLOSE_PAREN);
