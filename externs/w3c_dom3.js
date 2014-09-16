@@ -548,13 +548,6 @@ Element.prototype.setIdAttributeNode = function(idAttr, isId) {};
 Element.prototype.setIdAttributeNS = function(namespaceURI, localName, isId) {};
 
 /**
- * @type {boolean}
- * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Text3-isElementContentWhitespace
- * @nosideeffects
- */
-Text.prototype.isElementContentWhitespace;
-
-/**
  * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Text3-wholeText
  */
