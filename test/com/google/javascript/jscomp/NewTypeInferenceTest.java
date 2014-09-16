@@ -6397,6 +6397,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testInstanceofGenericTypeDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor @template T */ function Foo(){}",
+        "function f(/** !Foo.<?> */ f) {\n" +
+        "  if (f instanceof Foo) return true;\n" +
+        "};");
+  }
+
   public void testInvalidEnumDoesntCrash() {
     typeCheck(
         "/** @enum {Array.<number>} */\n" +

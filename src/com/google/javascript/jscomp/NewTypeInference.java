@@ -1293,6 +1293,13 @@ public class NewTypeInference implements CompilerPass {
       return ctorPair;
     }
 
+    if (ctorFunType.isGeneric()) {
+      ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+      for (String typeVar : ctorFunType.getTypeParameters()) {
+        builder.put(typeVar, JSType.UNKNOWN);
+      }
+      ctorFunType = ctorFunType.instantiateGenerics(builder.build());
+    }
     // We are in a specialized context *and* we know the constructor type
     JSType instanceType = ctorFunType.getTypeOfThis();
     objPair = analyzeExprFwd(obj, inEnv, JSType.UNKNOWN,
