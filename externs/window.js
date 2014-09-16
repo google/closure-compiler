@@ -55,7 +55,8 @@ var document;
 var location;
 
 /**
- * @see https://developer.mozilla.org/En/DOM/Window.screen
+ * @type {!Screen}
+ * @see https://developer.mozilla.org/En/DOM/window.screen
  * @const
  */
 var screen;
