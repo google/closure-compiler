@@ -1207,6 +1207,12 @@ HTMLAnchorElement.prototype.search;
  */
 HTMLAreaElement.prototype.ping;
 
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/html-markup/iframe.html#iframe.attrs.srcdoc
+ */
+HTMLIFrameElement.prototype.srcdoc;
+
 /** @type {string} */
 HTMLInputElement.prototype.autocomplete;
 
