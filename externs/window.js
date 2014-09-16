@@ -183,9 +183,10 @@ function setInterval(callback, delay) {}
 /**
  * @param {Function|string} callback
  * @param {number} delay
+ * @param {...*} var_args
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setTimeout
  * @see https://msdn.microsoft.com/en-us/library/ms536753(VS.85).aspx
  * @suppress {duplicate}
  */
-function setTimeout(callback, delay) {}
+function setTimeout(callback, delay, var_args) {}

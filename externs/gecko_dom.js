@@ -301,14 +301,6 @@ Window.prototype.scrollByLines;
 Window.prototype.scrollByPages;
 
 /**
- * @param {Function|string} callback
- * @param {number} delay
- * @param {...*} var_args
- * @return {number}
- */
-Window.prototype.setTimeout = function(callback, delay, var_args) {};
-
-/**
  * @param {string} uri
  * @param {?=} opt_arguments
  * @param {string=} opt_options
