@@ -328,7 +328,7 @@ Element.prototype.ongestureend;
  * @type {?function(!Event)}
  * @see http://developer.apple.com/library/IOS/#documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
  */
-Window.prototype.onorientationchange = function(e) {};
+Window.prototype.onorientationchange;
 
 /**
  * Returns the orientation of the browser's device, one of [-90, 0, 90, 180].
