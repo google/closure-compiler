@@ -1225,7 +1225,7 @@ google.maps.DirectionsStep.prototype.path;
 google.maps.DirectionsStep.prototype.start_location;
 
 /**
- * @type {google.maps.DirectionsStep}
+ * @type {Array.<google.maps.DirectionsStep>}
  */
 google.maps.DirectionsStep.prototype.steps;
 
