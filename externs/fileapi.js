@@ -76,12 +76,6 @@ Blob.prototype.webkitSlice = function(start, end) {};
 Blob.prototype.mozSlice = function(start, end) {};
 
 /**
- * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
- * @type {function(new:Blob, Array.<ArrayBufferView|Blob|string>=, Object=)}
- */
-Window.prototype.Blob;
-
-/**
  * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
  * @constructor
  */
@@ -102,13 +96,6 @@ BlobBuilder.prototype.append = function(data, endings) {};
  * @return {!Blob}
  */
 BlobBuilder.prototype.getBlob = function(contentType) {};
-
-
-/**
- * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
- * @type {function(new:BlobBuilder)}
- */
-Window.prototype.BlobBuilder;
 
 /**
  * This has replaced BlobBuilder in Chrome since WebKit revision 84008.
@@ -132,13 +119,6 @@ WebKitBlobBuilder.prototype.append = function(data, endings) {};
  * @return {!Blob}
  */
 WebKitBlobBuilder.prototype.getBlob = function(contentType) {};
-
-
-/**
- * @see http://www.w3.org/TR/file-writer-api/#the-blobbuilder-interface
- * @type {function(new:WebKitBlobBuilder)}
- */
-Window.prototype.WebKitBlobBuilder;
 
 
 /**

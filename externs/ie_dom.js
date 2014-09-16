@@ -364,18 +364,6 @@ Window.prototype.screenLeft;
  */
 Window.prototype.screenTop;
 
-/**
- * @type {function(new:XDomainRequest)}
- * @see http://msdn.microsoft.com/en-us/library/cc287985(VS.85).aspx
- */
-Window.prototype.XDomainRequest;
-
-/**
- * @type {function(new:XMLHttpRequest)}
- * @see http://msdn.microsoft.com/en-us/library/ms535157(VS.85).aspx
- */
-Window.prototype.XMLHttpRequest;
-
 // Functions
 
 /**

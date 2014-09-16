@@ -228,12 +228,6 @@ IDBDatabaseException.prototype.message;
  */
 webkitIDBDatabaseException.prototype.message;
 
-/** @type {function(new:IDBRequest)} */
-Window.prototype.IDBRequest;
-
-/** @type {function(new:IDBRequest)} */
-Window.prototype.webkitIDBRequest;
-
 /**
  * @constructor
  * @implements {EventTarget}
@@ -316,9 +310,6 @@ IDBRequest.prototype.source; // readonly
 
 /** @type {IDBTransaction} */
 IDBRequest.prototype.transaction; // readonly
-
-/** @type {function(new:IDBOpenDBRequest)} */
-Window.prototype.IDBOpenDBRequest;
 
 /**
  * @constructor
@@ -589,12 +580,6 @@ IDBIndex.prototype.get = function(key) {};
  */
 IDBIndex.prototype.getKey = function(key) {};
 
-/** @type {function(new:IDBCursor)} */
-Window.prototype.IDBCursor;
-
-/** @type {function(new:IDBCursor)} */
-Window.prototype.webkitIDBCursor;
-
 /**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBCursor
@@ -714,12 +699,6 @@ function IDBCursorWithValue() {}
 /** @type {*} */
 IDBCursorWithValue.prototype.value; // readonly
 
-/** @type {function(new:IDBTransaction)} */
-Window.prototype.IDBTransaction;
-
-/** @type {function(new:IDBTransaction)} */
-Window.prototype.webkitIDBTransaction;
-
 /**
  * @constructor
  * @see http://www.w3.org/TR/IndexedDB/#idl-def-IDBTransaction
@@ -806,12 +785,6 @@ IDBTransaction.prototype.oncomplete = function() {};
  * @type {Function}
  */
 IDBTransaction.prototype.onerror = function() {};
-
-/** @type {function(new:IDBKeyRange)} */
-Window.prototype.IDBKeyRange;
-
-/** @type {function(new:IDBKeyRange)} */
-Window.prototype.webkitIDBKeyRange;
 
 /**
  * @constructor

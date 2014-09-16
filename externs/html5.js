@@ -29,27 +29,12 @@
  * @externs
  */
 
-/*
- * JSON API.
- */
-
-/**
- * @see https://developer.mozilla.org/En/Using_native_JSON
- * @type {!JSONType}
- */
-Window.prototype.JSON;
-
 /**
  * @constructor
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#the-canvas-element
  * @extends {HTMLElement}
  */
 function HTMLCanvasElement() {}
-
-/**
- * @type {function(new:HTMLCanvasElement)}
- */
-Window.prototype.HTMLCanvasElement;
 
 /** @type {number} */
 HTMLCanvasElement.prototype.width;
@@ -2755,11 +2740,6 @@ function MutationObserver(callback) {}
 MutationObserver.prototype.observe = function(target, options) {};
 
 MutationObserver.prototype.disconnect = function() {};
-
-/**
- * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
- */
-Window.prototype.MutationObserver;
 
 /**
  * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}

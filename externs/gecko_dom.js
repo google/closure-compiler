@@ -79,15 +79,6 @@ Window.prototype.directories;
 Window.prototype.document;
 
 /**
- * Evaluates a string of JavaScript code in the context of the specified object.
- *
- * @param {string} code
- * @return {*}
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
- */
-Window.prototype.eval;
-
-/**
  * @type {HTMLObjectElement|HTMLIFrameElement|null}
  * @see https://developer.mozilla.org/en/DOM/window.frameElement
  */
@@ -274,14 +265,6 @@ Window.prototype.clearTimeout = function(timeoutID) {};
 /** @see https://developer.mozilla.org/en/DOM/window.close */
 Window.prototype.close = function() {};
 
-/**
- * @param {string} regular
- * @return {string}
- * @see https://developer.mozilla.org/en/DOM/window.escape
- * @nosideeffects
- */
-Window.prototype.escape = function(regular) {};
-
 /** @see https://developer.mozilla.org/en/DOM/window.find */
 Window.prototype.find;
 
@@ -323,14 +306,6 @@ Window.prototype.scrollByPages;
  * @param {...*} var_args
  * @return {number}
  */
-Window.prototype.setInterval;
-
-/**
- * @param {Function|string} callback
- * @param {number} delay
- * @param {...*} var_args
- * @return {number}
- */
 Window.prototype.setTimeout = function(callback, delay, var_args) {};
 
 /**
@@ -347,14 +322,6 @@ Window.prototype.sizeToContent;
  * @see http://msdn.microsoft.com/en-us/library/ms536769(VS.85).aspx
  */
 Window.prototype.stop = function() {};
-
-/**
- * @param {string} escaped
- * @return {string}
- * @see https://developer.mozilla.org/en/DOM/window.unescape
- * @nosideeffects
- */
-Window.prototype.unescape = function(escaped) {};
 
 Window.prototype.updateCommands;
 
