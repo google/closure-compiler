@@ -354,7 +354,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  * @typedef {{
  *   compile: (function(
  *       !angular.JQLite=, !angular.Attributes=, Function=)|undefined),
- *   controller: (Function|undefined),
+ *   controller: (Function|string|undefined),
  *   controllerAs: (string|undefined),
  *   link: (function(
  *       !angular.Scope=, !angular.JQLite=, !angular.Attributes=,
