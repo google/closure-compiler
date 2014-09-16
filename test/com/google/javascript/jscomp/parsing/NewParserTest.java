@@ -926,7 +926,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     testMethodInObjectLiteral("var a = {b() { alert('b'); }};");
 
     // Static methods not allowed in object literals.
-    parseError("var a = {static b() { alert('b'); }};", "'}' expected");
+    parseError("var a = {static b() { alert('b'); }};",
+        "Cannot use keyword in short object literal");
   }
 
   private void testMethodInObjectLiteral(String js) {
@@ -945,6 +946,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     parseError("var a = { '!@#$%' };", "':' expected");
     parseError("var a = { 123 };", "':' expected");
+    parseError("var a = { let };", "Cannot use keyword in short object literal");
+    parseError("var a = { else };", "Cannot use keyword in short object literal");
   }
 
   private void testExtendedObjectLiteral(String js) {

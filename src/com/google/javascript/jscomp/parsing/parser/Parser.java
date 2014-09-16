@@ -1675,8 +1675,12 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     Token name = eatObjectLiteralPropertyName();
     Token colon = eatOpt(TokenType.COLON);
-    if (colon == null && name.type != TokenType.IDENTIFIER) {
-      reportExpectedError(peekToken(), TokenType.COLON);
+    if (colon == null) {
+      if (name.type != TokenType.IDENTIFIER) {
+        reportExpectedError(peekToken(), TokenType.COLON);
+      } else if (Keywords.isKeyword(name.asIdentifier().value)) {
+        reportError("Cannot use keyword in short object literal", name);
+      }
     }
     ParseTree value = colon == null ? null : parseAssignmentExpression();
     return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
