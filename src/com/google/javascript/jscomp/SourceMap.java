@@ -92,8 +92,8 @@ public class SourceMap {
       this.replacement = replacement;
     }
     @Override
-	public String toString() {
-        return "(" + prefix + "|" + replacement + ")";
+    public String toString() {
+      return "(" + prefix + "|" + replacement + ")";
     }
   }
 
