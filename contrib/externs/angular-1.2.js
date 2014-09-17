@@ -2343,7 +2343,7 @@ angular.$timeout;
 angular.$timeout_;
 
 /**
- * @type {function(!angular.$q.Promise):boolean}
+ * @type {function(angular.$q.Promise=):boolean}
  */
 angular.$timeout_.cancel = function(promise) {};
 
