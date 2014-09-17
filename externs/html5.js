@@ -2354,7 +2354,7 @@ Window.prototype.crypto.getRandomValues = function(typedArray) {};
 HTMLFormElement.prototype.checkValidity = function() {};
 
 /** @type {boolean} */
-HTMLFormElement.prototype.novalidate;
+HTMLFormElement.prototype.noValidate;
 
 /** @constructor */
 function ValidityState() {}

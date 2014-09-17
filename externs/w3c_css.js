@@ -1752,6 +1752,12 @@ CSSProperties.prototype.zIndex;
 
 /**
  * @type {string}
+ * @see http://www.w3.org/TR/css3-background/#box-shadow
+ */
+CSSProperties.prototype.boxShadow;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/css3-ui/#box-sizing
  */
 CSSProperties.prototype.boxSizing;
