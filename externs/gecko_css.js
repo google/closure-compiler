@@ -54,6 +54,7 @@
 /** @type {string} */ CSSProperties.prototype.MozBoxOrient;
 /** @type {string} */ CSSProperties.prototype.MozBoxPack;
 /** @type {string} */ CSSProperties.prototype.MozBoxSizing;
+/** @type {string} */ CSSProperties.prototype.MozBoxShadow;
 /** @type {string} */ CSSProperties.prototype.MozColumnCount;
 /** @type {string} */ CSSProperties.prototype.MozColumnGap;
 /** @type {string} */ CSSProperties.prototype.MozColumnRule;
