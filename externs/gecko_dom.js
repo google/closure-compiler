@@ -420,12 +420,6 @@ Document.prototype.links;
  */
 Document.prototype.location;
 
-/**
- * @type {string}
- * @see https://developer.mozilla.org/en/DOM/Using_the_Page_Visibility_API
- */
-Document.prototype.mozVisibilityState;
-
 Document.prototype.namespaceURI;
 Document.prototype.nodePrincipal;
 Document.prototype.plugins;
