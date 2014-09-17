@@ -465,7 +465,7 @@ angular.Directive.transclude;
  *   clone: function(): !angular.JQLite,
  *   contents: function(): !angular.JQLite,
  *   controller: function(string=): Object,
- *   css: function(string, string=): (!angular.JQLite|string),
+ *   css: function((string|!Object), string=): (!angular.JQLite|string),
  *   data: function(string=, *=): *,
  *   empty: function(): !angular.JQLite,
  *   eq: function(number): !angular.JQLite,
@@ -554,11 +554,11 @@ angular.JQLite.contents = function() {};
 angular.JQLite.controller = function(opt_name) {};
 
 /**
- * @param {string} name
+ * @param {(string|!Object)} nameOrObject
  * @param {string=} opt_value
  * @return {!angular.JQLite|string}
  */
-angular.JQLite.css = function(name, opt_value) {};
+angular.JQLite.css = function(nameOrObject, opt_value) {};
 
 /**
  * @param {string=} opt_key
