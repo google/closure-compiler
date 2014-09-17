@@ -352,6 +352,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
 
 /**
  * @typedef {{
+ *   bindToController: (boolean|undefined),
  *   compile: (function(
  *       !angular.JQLite=, !angular.Attributes=, Function=)|undefined),
  *   controller: (Function|string|undefined),
