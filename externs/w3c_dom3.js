@@ -250,7 +250,7 @@ Document.prototype.normalizeDocument = function() {};
 Document.prototype.renameNode = function(n, namespaceURI, qualifiedName) {};
 
 /**
- * @type {string}
+ * @type {?string}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-baseURI
  */
 Node.prototype.baseURI;
