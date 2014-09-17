@@ -466,7 +466,7 @@ HTMLLinkElement.prototype.target;
  */
 HTMLLinkElement.prototype.type;
 
-/** @override */
+/** @type {StyleSheet} */
 HTMLLinkElement.prototype.sheet;
 
 /**
@@ -577,7 +577,7 @@ HTMLStyleElement.prototype.media;
  */
 HTMLStyleElement.prototype.type;
 
-/** @override */
+/** @type {StyleSheet} */
 HTMLStyleElement.prototype.sheet;
 
 /**
