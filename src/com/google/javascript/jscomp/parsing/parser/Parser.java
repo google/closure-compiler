@@ -2347,25 +2347,27 @@ public class Parser {
   }
 
   private static final EnumSet<TokenType> arraySubPatternFollowSet =
-      EnumSet.of(TokenType.COMMA, TokenType.CLOSE_SQUARE);
+      EnumSet.of(TokenType.COMMA, TokenType.CLOSE_SQUARE, TokenType.EQUAL);
 
   // Element ::= Pattern | LValue | ... LValue
   private ParseTree parseArrayPatternElement(PatternKind kind) {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree lvalue;
+    boolean rest = false;
+
     // [ or { are preferably the start of a sub-pattern
     if (peekParenPattern(kind, arraySubPatternFollowSet)) {
-      return parseParenPattern(kind);
+      lvalue = parseParenPattern(kind);
+    } else {
+      // An element that's not a sub-pattern
+
+      if (peek(TokenType.SPREAD)) {
+        eat(TokenType.SPREAD);
+        rest = true;
+      }
+
+      lvalue = parseLeftHandSideExpression();
     }
-
-    // An element that's not a sub-pattern
-
-    boolean rest = false;
-    SourcePosition start = getTreeStartLocation();
-    if (peek(TokenType.SPREAD)) {
-      eat(TokenType.SPREAD);
-      rest = true;
-    }
-
-    ParseTree lvalue = parseLeftHandSideExpression();
 
     if (rest && lvalue.type != ParseTreeType.IDENTIFIER_EXPRESSION) {
       reportError("lvalues in rest elements must be identifiers");

@@ -1264,14 +1264,8 @@ class NewIRFactory {
     @Override
     Node processDefaultParameter(DefaultParameterTree tree) {
       maybeWarnEs6Feature(tree, "default parameters");
-      Node lhs = transform(tree.lhs);
-      if (tree.lhs instanceof ArrayLiteralExpressionTree) {
-        lhs.setType(Token.ARRAY_PATTERN);
-      } else if (tree.lhs instanceof ObjectLiteralExpressionTree) {
-        lhs.setType(Token.OBJECT_PATTERN);
-      }
       return newNode(Token.DEFAULT_VALUE,
-          lhs, transform(tree.defaultValue));
+          transform(tree.lhs), transform(tree.defaultValue));
     }
 
     @Override
