@@ -27,25 +27,10 @@
 Event.prototype.Abstract;
 
 /** @type {boolean} */
-Event.prototype.altKey;
-
-/** @type {boolean} */
 Event.prototype.altLeft;
 
 /** @type {string} */
 Event.prototype.Banner;
-
-/** @type {number} */
-Event.prototype.button;
-
-/** @type {boolean} */
-Event.prototype.cancelBubble;
-
-/** @type {number} */
-Event.prototype.clientX;
-
-/** @type {number} */
-Event.prototype.clientY;
 
 /**
  * A ClipboardData on IE, but a DataTransfer on WebKit.
@@ -56,9 +41,6 @@ Event.prototype.clipboardData;
 
 /** @type {boolean} */
 Event.prototype.contentOverflow;
-
-/** @type {boolean} */
-Event.prototype.ctrlKey;
 
 /** @type {boolean} */
 Event.prototype.ctrlLeft;
@@ -73,9 +55,6 @@ Event.prototype.domain;
 
 /** @type {Element} */
 Event.prototype.fromElement;
-
-/** @type {number} */
-Event.prototype.keyCode;
 
 /** @type {string} */
 Event.prototype.MoreInfo;
@@ -111,15 +90,6 @@ Event.prototype.returnValue;
 Event.prototype.saveType;
 
 Event.prototype.scheme;
-
-/** @type {number} */
-Event.prototype.screenX;
-
-/** @type {number} */
-Event.prototype.screenY;
-
-/** @type {boolean} */
-Event.prototype.shiftKey;
 
 /** @type {boolean} */
 Event.prototype.shiftLeft;
