@@ -944,11 +944,6 @@ Document.prototype.childNodes;
 Document.prototype.frames;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms537461(VS.85).aspx
- */
-Document.prototype.images;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms537470(VS.85).aspx
  */
 Document.prototype.namespaces;

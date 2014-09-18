@@ -394,7 +394,7 @@ Document.prototype.fgColor;
 Document.prototype.forms;
 
 /** @type {number} */ Document.prototype.height;
-/** @type {Array} */ Document.prototype.images;
+/** @type {HTMLCollection} */ Document.prototype.images;
 
 /**
  * @type {string}
