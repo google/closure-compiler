@@ -41,7 +41,7 @@ public class JsFileParser extends JsFileLineParser {
 
   /** Pattern for matching goog.provide(*) and goog.require(*). */
   private static final Pattern GOOG_PROVIDE_REQUIRE_PATTERN = Pattern.compile(
-      "(?:^|;)\\s*(?:(?:var|let|const)\\s+[a-zA-Z_$][a-zA-Z0-9$_]*\\s+=\\s+)?goog\\.(provide|module|require|addDependency)\\s*\\((.*?)\\)");
+      "(?:^|;)\\s*(?:(?:var|let|const)\\s+[a-zA-Z_$][a-zA-Z0-9$_]*\\s*=\\s*)?goog\\.(provide|module|require|addDependency)\\s*\\((.*?)\\)");
 
   /** The first non-comment line of base.js */
   private static final String BASE_JS_START = "var COMPILED = false;";

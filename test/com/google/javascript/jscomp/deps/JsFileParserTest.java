@@ -90,6 +90,26 @@ public class JsFileParserTest extends TestCase {
     assertDeps(expected, result);
   }
 
+  /**
+   * Tests:
+   *  -Correct recording of what was parsed.
+   */
+  public void testParseFile3() {
+    String contents = ""
+      + "goog.module('yes1');\n"
+      + "var yes2=goog.require('yes2');\n"
+      + "var C=goog.require(\"a.b.C\");";
+
+    DependencyInfo expected = new SimpleDependencyInfo(CLOSURE_PATH, SRC_PATH,
+        ImmutableList.of("yes1"),
+        ImmutableList.of("yes2", "a.b.C"),
+        true);
+
+    DependencyInfo result = parser.parseFile(SRC_PATH, CLOSURE_PATH, contents);
+
+    assertDeps(expected, result);
+  }
+
   public void testMultiplePerLine() {
     String contents = "goog.provide('yes1');goog.provide('yes2');/*"
         + "goog.provide('no1');*/goog.provide('yes3');//goog.provide('no2');";
