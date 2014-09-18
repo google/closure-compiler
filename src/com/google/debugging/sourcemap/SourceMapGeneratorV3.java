@@ -353,13 +353,13 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
    */
   @Override
   public void appendTo(Appendable out, String name) throws IOException {
-    int maxLine = prepMappings();
+    int maxLine = prepMappings() + 1;
 
     // Add the header fields.
     out.append("{\n");
     appendFirstField(out, "version", "3");
     appendField(out, "file", escapeString(name));
-    appendField(out, "lineCount", String.valueOf(maxLine + 1));
+    appendField(out, "lineCount", String.valueOf(maxLine));
 
     //optional source root
     if (this.sourceRootPath != null && !this.sourceRootPath.isEmpty()) {
@@ -369,7 +369,8 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     // Add the mappings themselves.
     appendFieldStart(out, "mappings");
     // out.append("[");
-    (new LineMapper(out)).appendLineMappings();
+    (new LineMapper(out, maxLine)).appendLineMappings();
+
     // out.append("]");
     appendFieldEnd(out);
 
@@ -839,6 +840,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
   private class LineMapper implements MappingVisitor {
     // The destination.
     private final Appendable out;
+    private final int maxLine; // TODO(johnlenz): This shouldn't be necessary to track.
 
     private int previousLine = -1;
     private int previousColumn = 0;
@@ -849,8 +851,9 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     private int previousSourceColumn;
     private int previousNameId;
 
-    LineMapper(Appendable out) {
+    LineMapper(Appendable out, int maxLine) {
       this.out = out;
+      this.maxLine = maxLine;
     }
 
     /**
@@ -859,21 +862,27 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
     @Override
     public void visit(Mapping m, int line, int col, int nextLine, int nextCol)
       throws IOException {
-
       if (previousLine != line) {
         previousColumn = 0;
       }
 
       if (line != nextLine || col != nextCol) {
-        if (previousLine == line) { // not the first entry for the line
-          out.append(',');
+        // TODO(johnlenz): For some reason, we have mappings beyond the max line.
+        // So far they're just null mappings and we can ignore them.
+        // (If they're non-null, we assert-fail.)
+        if (line < maxLine) {
+          if (previousLine == line) { // not the first entry for the line
+            out.append(',');
+          }
+          writeEntry(m, col);
+          previousLine = line;
+          previousColumn = col;
+        } else {
+          Preconditions.checkState(m == null);
         }
-        writeEntry(m, col);
-        previousLine = line;
-        previousColumn = col;
       }
 
-      for (int i = line; i <= nextLine; i++) {
+      for (int i = line; i <= nextLine && i < maxLine; i++) {
         if (i == nextLine) {
           break;
         }
