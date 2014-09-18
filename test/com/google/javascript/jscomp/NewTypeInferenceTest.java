@@ -6544,6 +6544,19 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "f([1,2,3]);");
   }
 
+  public void testThisReferenceUsedGenericallyDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor @template T */\n" +
+        "var Foo = function(t) {\n" +
+        "  /** @type {Foo.<T>} */\n" +
+        "  this.parent_ = null;\n" +
+        "}\n" +
+        "Foo.prototype.method = function() {\n" +
+        "  var p = this;\n" +
+        "  while (p != null) p = p.parent_;\n" +
+        "}");
+  }
+
   public void testGrandparentTemplatizedDoesntCrash() {
     checkNoWarnings(
         "/** @constructor @template VALUE */\n" +
