@@ -19,7 +19,3 @@
  * @fileoverview an @externs file for the Angular Material library
  *
  */
-
-
-var TweenMax = {};
-var TweenLite = {};
