@@ -378,7 +378,8 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
      * Sanity check the entry.
      */
     private void validateEntry(Entry entry) {
-      Preconditions.checkState((lineCount < 0) || (line < lineCount));
+      Preconditions.checkState((lineCount < 0) || (line < lineCount),
+          "line=%s, lineCount=%s", line, lineCount);
       Preconditions.checkState(entry.getSourceFileId() == UNMAPPED
           || entry.getSourceFileId() < sources.length);
       Preconditions.checkState(entry.getNameId() == UNMAPPED
