@@ -1106,18 +1106,32 @@ class NewIRFactory {
 
     @Override
     Node processForInLoop(ForInStatementTree loopNode) {
+      Node initializer = transform(loopNode.initializer);
+      ImmutableSet<Integer> invalidInitializers =
+          ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
+      if (invalidInitializers.contains(initializer.getType())) {
+        errorReporter.error("Invalid LHS for a for-in loop", sourceName,
+            lineno(loopNode.initializer), charno(loopNode.initializer));
+      }
       return newNode(
           Token.FOR,
-          transform(loopNode.initializer),
+          initializer,
           transform(loopNode.collection),
           transformBlock(loopNode.body));
     }
 
     @Override
     Node processForOf(ForOfStatementTree loopNode) {
+      Node initializer = transform(loopNode.initializer);
+      ImmutableSet<Integer> invalidInitializers =
+          ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);
+      if (invalidInitializers.contains(initializer.getType())) {
+        errorReporter.error("Invalid LHS for a for-of loop", sourceName,
+            lineno(loopNode.initializer), charno(loopNode.initializer));
+      }
       return newNode(
           Token.FOR_OF,
-          transform(loopNode.initializer),
+          initializer,
           transform(loopNode.collection),
           transformBlock(loopNode.body));
     }
@@ -1906,8 +1920,8 @@ class NewIRFactory {
     Node processVariableDeclaration(VariableDeclarationTree decl) {
       Node node = transformNodeWithInlineJsDoc(decl.lvalue, true);
       if (decl.initializer != null) {
-        Node initalizer = transform(decl.initializer);
-        node.addChildToBack(initalizer);
+        Node initializer = transform(decl.initializer);
+        node.addChildToBack(initializer);
       }
       return node;
     }

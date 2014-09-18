@@ -1075,6 +1075,23 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testDestructuringForOf() {
+    test(Joiner.on('\n').join(
+      "for ({x} of y) {",
+      "  console.log(x);",
+      "}"
+    ), Joiner.on('\n').join(
+        "for (var $jscomp$iter$0 = $jscomp.makeIterator(y),",
+        "         $jscomp$key$$jscomp$destructuring$var0 = $jscomp$iter$0.next();",
+        "     !$jscomp$key$$jscomp$destructuring$var0.done;",
+        "     $jscomp$key$$jscomp$destructuring$var0 = $jscomp$iter$0.next()) {",
+        "  var $jscomp$destructuring$var0 = $jscomp$key$$jscomp$destructuring$var0.value;",
+        "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+        "  x = $jscomp$destructuring$var1.x",
+        "  console.log(x);",
+        "}"));
+  }
+
   public void testSpreadArray() {
     test("var arr = [1, 2, ...mid, 4, 5];",
         "var arr = [].concat([1, 2], mid, [4, 5]);");

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.trees.*;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
@@ -1005,7 +1007,17 @@ public class Parser {
       return parseForStatement(start, null);
     }
 
-    ParseTree initializer = parseExpressionNoIn();
+    Predicate<Token> followPred = new Predicate<Token>() {
+      public boolean apply(Token t) {
+        return EnumSet.of(TokenType.IN, TokenType.EQUAL).contains(t.type)
+            || (t.type == TokenType.IDENTIFIER
+                && t.asIdentifier().value.equals(PredefinedName.OF));
+      }
+    };
+    ParseTree initializer = peekPattern(PatternKind.ANY, followPred)
+        ? parsePattern(PatternKind.ANY)
+        : parseExpressionNoIn();
+
     if (peek(TokenType.IN) || peekPredefinedString(PredefinedName.OF)) {
       if (initializer.type != ParseTreeType.BINARY_OPERATOR) {
         if (peek(TokenType.IN)) {
@@ -2315,12 +2327,16 @@ public class Parser {
   }
 
   private boolean peekPattern(PatternKind kind) {
+    return peekPattern(kind, Predicates.<Token>alwaysTrue());
+  }
+
+  private boolean peekPattern(PatternKind kind, Predicate<Token> follow) {
     if (!peekPatternStart()) {
       return false;
     }
     Parser p = createLookaheadParser();
     p.parsePattern(kind);
-    return !p.errorReporter.hadError();
+    return !p.errorReporter.hadError() && follow.apply(p.peekToken());
   }
 
   private boolean peekParenPattern(PatternKind kind, EnumSet<TokenType> follow) {

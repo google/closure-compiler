@@ -2356,13 +2356,61 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testForOf2() {
     mode = LanguageMode.ECMASCRIPT6;
 
-    // TODO(johnlenz): is this valid?
-    // parse("for(a=1 of b) c;",
-    //     "for-of statement may not have initializer");
+    parseError("for(a=1 of b) c;", "';' expected");
     parseError("for(let a=1 of b) c;",
         "for-of statement may not have initializer");
     parseError("for(const a=1 of b) c;",
         "for-of statement may not have initializer");
+  }
+
+  public void testInvalidDestructuring() {
+    // {x: 5} is a valid object literal but not a valid object pattern.
+    parseError("for ({x: 5} in foo()) {}", "Invalid LHS for a for-in loop");
+
+    // {method(){}} is a valid object literal but not a valid object pattern.
+    parseError("function f({method(){}}) {}", "'}' expected");
+    parseError("function f({method(){}} = foo()) {}", "'}' expected");
+  }
+
+  public void testForOfPatterns() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("for({x} of b) c;");
+    parse("for({x: y} of b) c;");
+    parse("for([x, y] of b) c;");
+    parse("for([x, ...y] of b) c;");
+
+    parse("for(let {x} of b) c;");
+    parse("for(let {x: y} of b) c;");
+    parse("for(let [x, y] of b) c;");
+    parse("for(let [x, ...y] of b) c;");
+
+    parse("for(const {x} of b) c;");
+    parse("for(const {x: y} of b) c;");
+    parse("for(const [x, y] of b) c;");
+    parse("for(const [x, ...y] of b) c;");
+
+    parse("for(var {x} of b) c;");
+    parse("for(var {x: y} of b) c;");
+    parse("for(var [x, y] of b) c;");
+    parse("for(var [x, ...y] of b) c;");
+  }
+
+  public void testForOfPatternsWithInitializer() {
+    parseError("for({x}=a of b) c;", "';' expected");
+    parseError("for({x: y}=a of b) c;", "';' expected");
+    parseError("for([x, y]=a of b) c;", "';' expected");
+    parseError("for([x, ...y]=a of b) c;", "';' expected");
+
+    parseError("for(let {x}=a of b) c;", "for-of statement may not have initializer");
+    parseError("for(let {x: y}=a of b) c;", "for-of statement may not have initializer");
+    parseError("for(let [x, y]=a of b) c;", "for-of statement may not have initializer");
+    parseError("for(let [x, ...y]=a of b) c;", "for-of statement may not have initializer");
+
+    parseError("for(const {x}=a of b) c;", "for-of statement may not have initializer");
+    parseError("for(const {x: y}=a of b) c;", "for-of statement may not have initializer");
+    parseError("for(const [x, y]=a of b) c;", "for-of statement may not have initializer");
+    parseError("for(const [x, ...y]=a of b) c;", "for-of statement may not have initializer");
   }
 
   public void testShebang() {

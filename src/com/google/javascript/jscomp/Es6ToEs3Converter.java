@@ -180,7 +180,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private void visitObjectPattern(NodeTraversal t, Node objectPattern, Node parent) {
     Node rhs, nodeToDetach;
-    if (NodeUtil.isNameDeclaration(parent)) {
+    if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
       rhs = objectPattern.getLastChild();
       nodeToDetach = parent;
     } else if (parent.isAssign() && parent.getParent().isExprResult()) {
@@ -190,8 +190,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         || parent.isDefaultValue()) {
       // Nested object pattern; do nothing. We will visit it after rewriting the parent.
       return;
+    } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
+      visitDestructuringPatternInEnhancedFor(objectPattern);
+      return;
     } else {
-      Preconditions.checkState(parent.isCatch() || parent.isForOf(), parent);
+      Preconditions.checkState(parent.isCatch(), parent);
       cannotConvertYet(objectPattern, "OBJECT_PATTERN that is a child of a "
           + Token.name(parent.getType()));
       return;
@@ -278,7 +281,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
     Node rhs, nodeToDetach;
-    if (NodeUtil.isNameDeclaration(parent)) {
+    if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
       // The array pattern is the only child, because Es6SplitVariableDeclarations
       // has already run.
       Preconditions.checkState(arrayPattern.getNext() == null);
@@ -292,6 +295,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         || parent.isStringKey()) {
       // This is a nested array pattern. Don't do anything now; we'll visit it
       // after visiting the parent.
+      return;
+    } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
+      visitDestructuringPatternInEnhancedFor(arrayPattern);
       return;
     } else {
       Preconditions.checkState(parent.isCatch() || parent.isForOf());
@@ -354,6 +360,32 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
     nodeToDetach.detachFromParent();
     compiler.reportCodeChange();
+  }
+
+  private void visitDestructuringPatternInEnhancedFor(Node pattern) {
+    Node forNode;
+    int declarationType;
+    if (NodeUtil.isEnhancedFor(pattern.getParent())) {
+      forNode = pattern.getParent();
+      declarationType = Token.ASSIGN;
+    } else {
+      forNode = pattern.getParent().getParent();
+      declarationType = pattern.getParent().getType();
+      Preconditions.checkState(NodeUtil.isEnhancedFor(forNode));
+    }
+
+    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+    Node block = forNode.getLastChild();
+    if (declarationType == Token.ASSIGN) {
+      pattern.getParent().replaceChild(pattern,
+          IR.declaration(IR.name(tempVarName), Token.LET));
+      block.addChildToFront(
+          IR.exprResult(IR.assign(pattern, IR.name(tempVarName))));
+    } else {
+      pattern.getParent().replaceChild(pattern, IR.name(tempVarName));
+      block.addChildToFront(
+          IR.declaration(pattern, IR.name(tempVarName), declarationType));
+    }
   }
 
   /**
