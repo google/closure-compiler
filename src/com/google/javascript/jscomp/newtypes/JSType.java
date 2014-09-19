@@ -182,7 +182,7 @@ public abstract class JSType {
 
   public static JSType topFunction() {
     if (TOP_FUNCTION == null) {
-      TOP_FUNCTION = fromFunctionType(FunctionType.TOP_FUNCTION);
+      TOP_FUNCTION = fromFunctionType(FunctionType.LOOSE_TOP_FUNCTION);
     }
     return TOP_FUNCTION;
   }

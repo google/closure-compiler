@@ -6561,6 +6561,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "      f(obj);\n" +
         "    }\n" +
         "};");
+
+    checkNoWarnings(
+        "/** @param {function(T)} fn @param {T} x @template T */\n" +
+        "function reqGenFun(fn, x) {};\n" +
+        "function g(obj, str) {\n" +
+        "  var member = obj[str];\n" +
+        "  if (typeof member === 'function') {\n" +
+        "    reqGenFun(member, str);\n" +
+        "  }\n" +
+        "};");
   }
 
   public void testThisReferenceUsedGenericallyDoesntCrash() {

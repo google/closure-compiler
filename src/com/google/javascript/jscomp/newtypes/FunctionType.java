@@ -508,6 +508,14 @@ public class FunctionType {
     Preconditions.checkState(this.typeParameters == null);
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
 
+    if (this == LOOSE_TOP_FUNCTION || other == LOOSE_TOP_FUNCTION) {
+      return true;
+    }
+
+    Preconditions.checkState(
+        this.requiredFormals != null && other.requiredFormals != null,
+        "Cannot run unification algorithm on %s and %s", this, other);
+
     if (requiredFormals.size() != other.requiredFormals.size()) {
       return false;
     }
@@ -759,11 +767,12 @@ public class FunctionType {
   }
 
   public StringBuilder appendTo(StringBuilder builder) {
-    if (isTopFunction()) {
-      if (isLoose) {
-        return builder.append("LOOSE_TOP_FUNCTION");
-      }
+    if (this == LOOSE_TOP_FUNCTION) {
+      return builder.append("LOOSE_TOP_FUNCTION");
+    } else if (this == TOP_FUNCTION) {
       return builder.append("TOP_FUNCTION");
+    } else if (this == QMARK_FUNCTION) {
+      return builder.append("QMARK_FUNCTION");
     }
     builder.append("function(");
     if (nominalType != null) {
