@@ -428,7 +428,7 @@ IDBDatabase.prototype.dispatchEvent = function(evt) {};
  * is slightly wider than what is actually allowed, as all Array elements must
  * have a valid key type.
  * @see http://www.w3.org/TR/IndexedDB/#key-construct
- * @typedef {number|string|!Date|!Array}
+ * @typedef {number|string|!Date|!Array.<?>}
  */
 var IDBKeyType;
 
