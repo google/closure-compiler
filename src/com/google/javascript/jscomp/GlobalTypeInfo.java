@@ -1248,18 +1248,11 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     boolean mayWarnAboutNoInit(Node constExpr) {
-      if (constExpr.isFromExterns() || constExpr.isStringKey()) {
+      if (constExpr.isFromExterns()) {
         return false;
       }
-      boolean noInit = true;
-      if (constExpr.isName()) {
-        Preconditions.checkState(constExpr.getParent().isVar());
-        noInit = constExpr.getFirstChild() == null;
-      } else {
-        Preconditions.checkState(constExpr.isGetProp());
-        noInit = !constExpr.getParent().isAssign();
-      }
-      if (noInit) {
+      Node initializer = NodeUtil.getInitializer(constExpr);
+      if (initializer == null) {
         warnings.add(JSError.make(constExpr, CONST_WITHOUT_INITIALIZER));
         return true;
       }
