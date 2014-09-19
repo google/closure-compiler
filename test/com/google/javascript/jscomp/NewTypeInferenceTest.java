@@ -6544,6 +6544,25 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "f([1,2,3]);");
   }
 
+  public void testSpecializeLooseFunctionDoesntCrash() {
+    checkNoWarnings(
+        CLOSURE_BASE +
+        "function f(/** !Function */ func) {};\n" +
+        "function g(obj) {\n" +
+        "    if (goog.isFunction(obj)) {\n" +
+        "      f(obj);\n" +
+        "    }\n" +
+        "};");
+
+    checkNoWarnings(
+        "function f(/** !Function */ func) {};\n" +
+        "function g(obj) {\n" +
+        "    if (typeof obj === 'function') {\n" +
+        "      f(obj);\n" +
+        "    }\n" +
+        "};");
+  }
+
   public void testThisReferenceUsedGenericallyDoesntCrash() {
     checkNoWarnings(
         "/** @constructor @template T */\n" +

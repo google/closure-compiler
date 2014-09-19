@@ -423,7 +423,11 @@ public class FunctionType {
         !this.isLoose() && other.isLoose()) {
       return this;
     } else {
-      return FunctionType.meet(this, other);
+      FunctionType result = FunctionType.meet(this, other);
+      if (this.isLoose && !result.isLoose()) {
+        result = result.withLoose();
+      }
+      return result;
     }
   }
 
