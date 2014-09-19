@@ -34,7 +34,6 @@
 /** @type {number} */ Event.prototype.clientX;
 /** @type {number} */ Event.prototype.clientY;
 /** @type {boolean} */ Event.prototype.ctrlKey;
-/** @type {number} */ Event.prototype.detail;
 /** @type {EventTarget} */ Event.prototype.explicitOriginalTarget;
 /** @type {boolean} */ Event.prototype.isChar;
 /** @type {number} */ Event.prototype.keyCode;
