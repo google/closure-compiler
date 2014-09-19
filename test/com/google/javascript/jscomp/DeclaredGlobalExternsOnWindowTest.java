@@ -50,7 +50,7 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
 
   public void testWindowProperty3a() {
     testExternChanges("var window; function f() {}", "var b",
-        "var window;function f(){};window.window;window.f;");
+        "var window;function f(){}window.window;window.f;");
   }
 
   // No "var window;" so this is a no-op.

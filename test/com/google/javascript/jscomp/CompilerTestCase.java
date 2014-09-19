@@ -50,7 +50,7 @@ public abstract class CompilerTestCase extends TestCase  {
   private final List<SourceFile> externsInputs;
 
   /** Whether to compare input and output as trees instead of strings */
-  private final boolean compareAsTree;
+  private boolean compareAsTree;
 
   /** Whether to parse type info from JSDoc comments */
   protected boolean parseTypeInfo;
@@ -379,6 +379,13 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected void enableAstValidation(boolean validate) {
     astValidationEnabled = validate;
+  }
+
+  /**
+   * Whether to compare the expected output as a tree or string.
+   */
+  protected void enableCompareAsTree(boolean compareAsTree) {
+    this.compareAsTree = compareAsTree;
   }
 
   /** Whether we should ignore parse warnings for the current test method. */
@@ -1272,10 +1279,23 @@ public abstract class CompilerTestCase extends TestCase  {
 
     (getProcessor(compiler)).process(externs, root);
 
-    String externsCode = compiler.toSource(externs);
-    String expectedCode = compiler.toSource(expected);
-
-    assertEquals(expectedCode, externsCode);
+    if (compareAsTree) {
+      // Expected output parsed without implied block.
+      Preconditions.checkState(externs.isBlock());
+      Preconditions.checkState(compareJsDoc);
+      Preconditions.checkState(externs.hasOneChild(),
+          "Compare as tree only works when output has a single script.");
+      externs = externs.getFirstChild();
+      String explanation = expected.checkTreeEqualsIncludingJsDoc(externs);
+      assertNull(
+          "\nExpected: " + compiler.toSource(expected) +
+          "\nResult:   " + compiler.toSource(externs) +
+          "\n" + explanation, explanation);
+    } else {
+      String externsCode = compiler.toSource(externs);
+      String expectedCode = compiler.toSource(expected);
+      assertEquals(expectedCode, externsCode);
+    }
   }
 
   protected Node parseExpectedJs(String expected) {

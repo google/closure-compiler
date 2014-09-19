@@ -410,6 +410,7 @@ public class VarCheckTest extends CompilerTestCase {
   public void checkSynthesizedExtern(
       String extern, String input, String expectedExtern) {
     declarationCheck = !sanityCheck;
+    this.enableCompareAsTree(false);
     testExternChanges(extern, input, expectedExtern);
   }
 }
