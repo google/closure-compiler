@@ -1245,10 +1245,15 @@ public class Parser {
     CatchTree catchBlock;
     eat(TokenType.CATCH);
     eat(TokenType.OPEN_PAREN);
-    IdentifierToken exceptionName = eatId();
+    ParseTree exception;
+    if (peekPattern(PatternKind.INITIALIZER)) {
+      exception = parsePattern(PatternKind.INITIALIZER);
+    } else {
+      exception = parseIdentifierExpression();
+    }
     eat(TokenType.CLOSE_PAREN);
     BlockTree catchBody = parseBlock();
-    catchBlock = new CatchTree(getTreeLocation(start), exceptionName, catchBody);
+    catchBlock = new CatchTree(getTreeLocation(start), exception, catchBody);
     return catchBlock;
   }
 

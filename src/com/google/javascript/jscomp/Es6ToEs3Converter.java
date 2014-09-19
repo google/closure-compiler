@@ -193,11 +193,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
       visitDestructuringPatternInEnhancedFor(objectPattern);
       return;
-    } else {
-      Preconditions.checkState(parent.isCatch(), parent);
-      cannotConvertYet(objectPattern, "OBJECT_PATTERN that is a child of a "
-          + Token.name(parent.getType()));
+    } else if (parent.isCatch()) {
+      visitDestructuringPatternInCatch(objectPattern);
       return;
+    } else {
+      throw new IllegalStateException("Unexpected OBJECT_PATTERN parent: " + parent);
     }
 
     // Convert 'var {a: b, c: d} = rhs' to:
@@ -299,11 +299,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
       visitDestructuringPatternInEnhancedFor(arrayPattern);
       return;
-    } else {
-      Preconditions.checkState(parent.isCatch() || parent.isForOf());
-      cannotConvertYet(arrayPattern, "ARRAY_PATTERN that is a child of a "
-          + Token.name(parent.getType()));
+    } else if (parent.isCatch()) {
+      visitDestructuringPatternInCatch(arrayPattern);
       return;
+    } else {
+      throw new IllegalStateException("Unexpected ARRAY_PATTERN parent: " + parent);
     }
 
     // Convert 'var [x, y] = rhs' to:
@@ -360,6 +360,15 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
     nodeToDetach.detachFromParent();
     compiler.reportCodeChange();
+  }
+
+  private void visitDestructuringPatternInCatch(Node pattern) {
+    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+    Node catchBlock = pattern.getNext();
+
+    pattern.getParent().replaceChild(pattern, IR.name(tempVarName));
+    catchBlock.addChildToFront(
+        IR.declaration(pattern, IR.name(tempVarName), Token.LET));
   }
 
   private void visitDestructuringPatternInEnhancedFor(Node pattern) {

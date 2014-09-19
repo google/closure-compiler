@@ -185,15 +185,14 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
       case Token.CATCH:
         Preconditions.checkState(n.getChildCount() == 2);
-        Preconditions.checkState(n.getFirstChild().isName());
         // the first child is the catch var and the second child
         // is the code block
 
-        final Node var = n.getFirstChild();
-        final Node block = var.getNext();
+        final Node exception = n.getFirstChild();
+        final Node block = exception.getNext();
 
         if (isNodeAtCurrentLexicalScope(n)) {
-          declareVar(var);
+          declareLHS(scope, exception);
         }
         scanVars(block);
         return;  // only one child to scan

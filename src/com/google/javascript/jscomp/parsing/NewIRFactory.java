@@ -1807,10 +1807,9 @@ class NewIRFactory {
 
     @Override
     Node processCatchClause(CatchTree clauseNode) {
-      IdentifierToken catchVar = clauseNode.exceptionName;
-      Node node = newNode(Token.CATCH, processName(catchVar));
-      node.addChildToBack(transformBlock(clauseNode.catchBody));
-      return node;
+      return newNode(Token.CATCH,
+          transform(clauseNode.exception),
+          transformBlock(clauseNode.catchBody));
     }
 
     @Override

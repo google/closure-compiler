@@ -16,18 +16,17 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class CatchTree extends ParseTree {
 
-  public final IdentifierToken exceptionName;
+  public final ParseTree exception;
   public final ParseTree catchBody;
 
-  public CatchTree(SourceRange location, IdentifierToken exceptionName, ParseTree catchBody) {
+  public CatchTree(SourceRange location, ParseTree exception, ParseTree catchBody) {
     super(ParseTreeType.CATCH, location);
 
-    this.exceptionName = exceptionName;
+    this.exception = exception;
     this.catchBody = catchBody;
   }
 
