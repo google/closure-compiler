@@ -2507,7 +2507,9 @@ public class Parser {
     if (peekPattern(kind)) {
       value = parsePattern(kind);
     } else {
-      value = parseIdentifierExpression();
+      value = (kind == PatternKind.ANY)
+          ? parseLeftHandSideExpression()
+          : parseIdentifierExpression();
     }
     if (peek(TokenType.EQUAL)) {
       eat(TokenType.EQUAL);

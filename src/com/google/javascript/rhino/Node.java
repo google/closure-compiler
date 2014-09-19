@@ -1763,6 +1763,7 @@ public class Node implements Cloneable, Serializable {
       // TODO(tbreisacher): Remove CAST from this list, and disallow
       // the cryptic case from cl/41958159.
       case Token.CAST:
+      case Token.DEFAULT_VALUE:
       case Token.NAME:
       case Token.GETPROP:
       case Token.GETELEM:
