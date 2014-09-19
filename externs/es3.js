@@ -1700,12 +1700,15 @@ String.prototype.link = function(hrefAttribute) {};
  * or is the same as the given string in sort order.
  *
  * @this {*}
- * @param {*} other
+ * @param {string} compareString
+ * @param {string|Array.<string>=} locales
+ * @param {Object=} options
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/En/Core_JavaScript_1.5_Reference/Objects/String/Prototype
+ * @see http://developer.mozilla.org/En/Core_JavaScript_1.5_Reference/Objects/String/localeCompare
+ * @see http://www.ecma-international.org/ecma-402/1.0/#sec-13.1.1
  */
-String.prototype.localeCompare = function(other) {};
+String.prototype.localeCompare = function(compareString, locales, options) {};
 
 /**
  * Used to retrieve the matches when matching a string against a regular
