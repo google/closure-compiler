@@ -26,6 +26,8 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     allowExternsChanges(true);
+    enableTypeCheck(CheckLevel.ERROR);
+    runTypeCheckAfterProcessing = true;
   }
 
   @Override
@@ -75,9 +77,6 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
    * is the same as that of "x".
    */
   public void testWindowPropertyWithJsDoc() {
-    enableTypeCheck(CheckLevel.ERROR);
-    runTypeCheckAfterProcessing = true;
-
     testSame(
         "var window;\n/** @type {string} */ var x;",
         "/** @param {number} n*/\n" +
@@ -87,9 +86,6 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   }
 
   public void testEnum() {
-    enableTypeCheck(CheckLevel.ERROR);
-    runTypeCheckAfterProcessing = true;
-
     testSame(
         "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};",
         "/** @param {Enum} e*/\n" +
@@ -103,9 +99,6 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
    * to be the same type as window.Foo.
    */
   public void testConstructorIsSameType() {
-    enableTypeCheck(CheckLevel.ERROR);
-    runTypeCheckAfterProcessing = true;
-
     testSame(
         "var window;\n/** @constructor */ function Foo() {}\n",
         "/** @param {!window.Foo} f*/\n" +
