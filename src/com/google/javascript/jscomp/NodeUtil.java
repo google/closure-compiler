@@ -1448,51 +1448,73 @@ public final class NodeUtil {
     }
   }
 
+  enum ValueType {
+    UNDETERMINED,
+    NULL,
+    VOID,
+    NUMBER,
+    STRING,
+    BOOLEAN
+    // TODO(johnlenz): Array,Object,RegExp
+  }
+
   /**
    * Apply the supplied predicate against
    * all possible result Nodes of the expression.
    */
-  static boolean anyResultsMatch(Node n, Predicate<Node> p) {
+  static ValueType getKnownValueType(Node n) {
     switch (n.getType()) {
       case Token.CAST:
-        return anyResultsMatch(n.getFirstChild(), p);
+        return getKnownValueType(n.getFirstChild());
       case Token.ASSIGN:
       case Token.COMMA:
-        return anyResultsMatch(n.getLastChild(), p);
+        return getKnownValueType(n.getLastChild());
       case Token.AND:
       case Token.OR:
-        return anyResultsMatch(n.getFirstChild(), p)
-            || anyResultsMatch(n.getLastChild(), p);
+        return and(
+            getKnownValueType(n.getFirstChild()),
+            getKnownValueType(n.getLastChild()));
       case Token.HOOK:
-        return anyResultsMatch(n.getFirstChild().getNext(), p)
-            || anyResultsMatch(n.getLastChild(), p);
-      default:
-        return p.apply(n);
-    }
-  }
+        return and(
+            getKnownValueType(n.getFirstChild().getNext()),
+            getKnownValueType(n.getLastChild()));
 
-  static class NumbericResultPredicate implements Predicate<Node> {
-    @Override
-    public boolean apply(Node n) {
-      return isNumericResultHelper(n);
-    }
-  }
+      case Token.ADD: {
+        ValueType last = getKnownValueType(n.getLastChild());
+        if (last == ValueType.STRING) {
+          return ValueType.STRING;
+        }
+        ValueType first = getKnownValueType(n.getFirstChild());
+        if (first == ValueType.STRING) {
+          return ValueType.STRING;
+        }
 
-  static final NumbericResultPredicate NUMBERIC_RESULT_PREDICATE =
-      new NumbericResultPredicate();
+        if (!mayBeString(first) && !mayBeString(last)) {
+          // ADD used with compilations of null, undefined, boolean and number always result
+          // in numbers.
+          return ValueType.NUMBER;
+        }
 
-  /**
-   * Returns true if the result of node evaluation is always a number
-   */
-  static boolean isNumericResult(Node n) {
-    return allResultsMatch(n, NUMBERIC_RESULT_PREDICATE);
-  }
+        // There are some pretty weird cases for object types:
+        //   {} + [] === "0"
+        //   [] + {} ==== "[object Object]"
 
-  static boolean isNumericResultHelper(Node n) {
-    switch (n.getType()) {
-      case Token.ADD:
-        return !mayBeString(n.getFirstChild())
-            && !mayBeString(n.getLastChild());
+        return ValueType.UNDETERMINED;
+      }
+
+      case Token.NAME:
+        String name = n.getString();
+        if (name.equals("undefined")) {
+          return ValueType.VOID;
+        }
+        if (name.equals("NaN")) {
+          return ValueType.NUMBER;
+        }
+        if (name.equals("Infinity")) {
+          return ValueType.NUMBER;
+        }
+        return ValueType.UNDETERMINED;
+
       case Token.BITNOT:
       case Token.BITOR:
       case Token.BITXOR:
@@ -1509,40 +1531,8 @@ public final class NodeUtil {
       case Token.POS:
       case Token.NEG:
       case Token.NUMBER:
-        return true;
-      case Token.NAME:
-        String name = n.getString();
-        if (name.equals("NaN")) {
-          return true;
-        }
-        if (name.equals("Infinity")) {
-          return true;
-        }
-        return false;
-      default:
-        return false;
-    }
-  }
+        return ValueType.NUMBER;
 
-  static class BooleanResultPredicate implements Predicate<Node> {
-    @Override
-    public boolean apply(Node n) {
-      return isBooleanResultHelper(n);
-    }
-  }
-
-  static final BooleanResultPredicate BOOLEAN_RESULT_PREDICATE =
-      new BooleanResultPredicate();
-
-  /**
-   * @return Whether the result of node evaluation is always a boolean
-   */
-  static boolean isBooleanResult(Node n) {
-    return allResultsMatch(n, BOOLEAN_RESULT_PREDICATE);
-  }
-
-  static boolean isBooleanResultHelper(Node n) {
-    switch (n.getType()) {
       // Primitives
       case Token.TRUE:
       case Token.FALSE:
@@ -1562,42 +1552,64 @@ public final class NodeUtil {
       case Token.NOT:
       // delete operator returns a boolean.
       case Token.DELPROP:
-        return true;
+        return ValueType.BOOLEAN;
+
+      case Token.TYPEOF:
+      case Token.STRING:
+        return ValueType.STRING;
+
+      case Token.NULL:
+        return ValueType.NULL;
+
+      case Token.VOID:
+        return ValueType.VOID;
+
       default:
-        return false;
+        return ValueType.UNDETERMINED;
     }
   }
 
-
-
-  static class MayBeStringResultPredicate implements Predicate<Node> {
-    @Override
-    public boolean apply(Node n) {
-      return mayBeStringHelper(n);
-    }
+  static ValueType and(ValueType a, ValueType b) {
+    return (a == b) ? a : ValueType.UNDETERMINED;
   }
 
-  static final MayBeStringResultPredicate MAY_BE_STRING_PREDICATE =
-      new MayBeStringResultPredicate();
+  /**
+   * Returns true if the result of node evaluation is always a number
+   */
+  static boolean isNumericResult(Node n) {
+    return getKnownValueType(n) == ValueType.NUMBER;
+  }
+
+  /**
+   * @return Whether the result of node evaluation is always a boolean
+   */
+  static boolean isBooleanResult(Node n) {
+    return getKnownValueType(n) == ValueType.BOOLEAN;
+  }
 
   /**
    * @return Whether the results is possibly a string.
    */
   static boolean mayBeString(Node n) {
-    return mayBeString(n, true);
+    return mayBeString(getKnownValueType(n));
   }
 
-  static boolean mayBeString(Node n, boolean recurse) {
-    if (recurse) {
-      return anyResultsMatch(n, MAY_BE_STRING_PREDICATE);
-    } else {
-      return mayBeStringHelper(n);
+  /**
+   * @return Whether the results is possibly a string.
+   */
+  static boolean mayBeString(ValueType type) {
+    switch (type) {
+      case BOOLEAN:
+      case NULL:
+      case NUMBER:
+      case VOID:
+        return false;
+      case UNDETERMINED:
+      case STRING:
+        return true;
+      default:
+        throw new IllegalStateException("unexpected");
     }
-  }
-
-  static boolean mayBeStringHelper(Node n) {
-    return !isNumericResult(n) && !isBooleanResult(n)
-        && !isUndefined(n) && !n.isNull();
   }
 
   /**
