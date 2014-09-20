@@ -1838,8 +1838,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private List<SourceMap.LocationMapping> sourceMapLocationMappings =
-      Lists.newArrayList();
+    private ImmutableList<SourceMap.LocationMapping> sourceMapLocationMappings =
+      ImmutableList.of();
 
     /**
      * The source map location mappings to use, if generated.
@@ -1847,8 +1847,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     CommandLineConfig setSourceMapLocationMappings(
         List<SourceMap.LocationMapping> locationMappings) {
 
-      this.sourceMapLocationMappings.clear();
-      this.sourceMapLocationMappings.addAll(locationMappings);
+      this.sourceMapLocationMappings = ImmutableList.copyOf(locationMappings);
       return this;
     }
 
