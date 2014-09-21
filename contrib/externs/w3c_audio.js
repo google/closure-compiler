@@ -313,7 +313,7 @@ AudioParam.prototype.exponentialRampToValueAtTime = function(value, endTime) {};
  * @param {number} startTime
  * @param {number} timeConstant
  */
-AudioParam.prototype.setTargetValueAtTime = function(target, startTime,
+AudioParam.prototype.setTargetAtTime = function(target, startTime,
     timeConstant) {};
 
 /**
