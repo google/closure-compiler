@@ -1075,6 +1075,27 @@ angular.$animate.prototype.removeClass = function(
 angular.$animate.prototype.enabled = function(opt_value, opt_element) {};
 
 /******************************************************************************
+ * $animateProvider Service
+ *****************************************************************************/
+
+/**
+ * @constructor
+ */
+angular.$animateProvider;
+
+/**
+ * @param {string} name
+ * @param {Function} factory
+ */
+angular.$animateProvider.prototype.register = function(name, factory) {};
+
+/**
+ * @param {RegExp=} opt_expression
+ */
+angular.$animateProvider.prototype.classNameFilter = function(
+    opt_expression) {};
+
+/******************************************************************************
  * $compile Service
  *****************************************************************************/
 
