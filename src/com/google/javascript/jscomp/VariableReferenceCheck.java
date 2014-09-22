@@ -163,7 +163,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     private void checkShadowParam(Var v, Scope scope, List<Reference> references) {
       Scope functionScope = scope.getParent();
       Var maybeParam = functionScope.getVar(v.getName());
-      if (maybeParam != null && maybeParam.isParam()) {
+      if (maybeParam != null && maybeParam.isParam()
+          && maybeParam.getScope() == functionScope) {
         for (Reference r : references) {
           if (!r.isDeclaration() || r.getScope() != scope) {
             continue;
