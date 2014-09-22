@@ -30,8 +30,10 @@ import com.google.common.io.CharStreams;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.JSModuleGraph.MissingModuleException;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.Scope.Var;
+import com.google.javascript.jscomp.deps.DefaultDependencyResolver;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
@@ -1576,36 +1578,53 @@ public class Compiler extends AbstractCompiler {
       for (JSModule module : modules) {
         for (CompilerInput input : module.getInputs()) {
           for (String require : input.getRequires()) {
-            JSModule dependency = modulesByName.get(require);
-            if (dependency == null) {
-              report(JSError.make(MISSING_ENTRY_ERROR, require));
-            } else {
-              module.addDependency(dependency);
+            if (!DefaultDependencyResolver.IsClosureBaseRequire(require)) {
+              JSModule dependency = modulesByName.get(require);
+              if (dependency == null) {
+                report(JSError.make(MISSING_ENTRY_ERROR, require));
+              } else {
+                module.addDependency(dependency);
+              }
             }
           }
         }
       }
       try {
-        modules = Lists.newArrayList();
-        for (CompilerInput input : this.moduleGraph.manageDependencies(
-            options.dependencyOptions, inputs)) {
-          modules.add(modulesByInput.get(input));
-        }
-        JSModule root = new JSModule("root");
-        for (JSModule m : modules) {
-          m.addDependency(root);
-        }
-        modules.add(0, root);
-        SortedDependencies<JSModule> sorter =
-          new SortedDependencies<>(modules);
-        modules = sorter.getDependenciesOf(modules, true);
-        this.modules = modules;
-
-        this.moduleGraph = new JSModuleGraph(modules);
+        addCommonJSModulesToGraph(modules, modulesByInput);
       } catch (Exception e) {
         Throwables.propagate(e);
       }
     }
+  }
+
+  void addCommonJSModulesToGraph(
+      List<JSModule> inputModules,
+      Map<CompilerInput, JSModule> modulesByInput)
+      throws CircularDependencyException, MissingProvideException, MissingModuleException {
+    List<CompilerInput> inputs = Lists.newArrayList();
+    for (JSModule module : inputModules) {
+      for (CompilerInput input : module.getInputs()) {
+        inputs.add(input);
+      }
+    }
+
+    List<JSModule> modules = Lists.newArrayList();
+    for (CompilerInput input : this.moduleGraph.manageDependencies(
+        options.dependencyOptions, inputs)) {
+        modules.add(modulesByInput.get(input));
+    }
+
+    JSModule root = new JSModule("root");
+    for (JSModule m : modules) {
+      m.addDependency(root);
+    }
+    modules.add(0, root);
+
+    SortedDependencies<JSModule> sorter = new SortedDependencies<>(modules);
+    modules = sorter.getDependenciesOf(modules, true);
+    this.modules = modules;
+
+    this.moduleGraph = new JSModuleGraph(modules);
   }
 
   public Node parse(SourceFile file) {
