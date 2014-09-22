@@ -228,7 +228,6 @@ function NodeFilter() {}
 /** @const {number} */ NodeFilter.SHOW_ENTITY_REFERENCE;
 /** @const {number} */ NodeFilter.SHOW_NOTATION;
 /** @const {number} */ NodeFilter.SHOW_PROCESSING_INSTRUCTION;
-/** @const {number} */ NodeFilter.SHOW_TEXT;
 
 /* Consants for acceptNode */
 /** @const {number} */ NodeFilter.FILTER_ACCEPT;
