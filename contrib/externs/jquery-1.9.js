@@ -57,7 +57,7 @@ var jQueryCallback;
                ifModified: (?boolean|undefined),
                isLocal: (?boolean|undefined),
                jsonp: (?string|undefined),
-               jsonCallback: (?string|function()|undefined),
+               jsonpCallback: (?string|function()|undefined),
                mimeType: (?string|undefined),
                password: (?string|undefined),
                processData: (?boolean|undefined),
