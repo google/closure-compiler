@@ -1295,17 +1295,6 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("var {implements} = foo();", "'identifier' expected");
   }
 
-  public void testObjectDestructuringComplexTarget() {
-    mode = LanguageMode.ECMASCRIPT6;
-    parseError("var {foo: bar.x} = baz();", "'identifier' expected");
-    parse("({foo: bar.x} = baz());");
-    parse("for ({foo: bar.x} in baz());");
-
-    parseError("var {foo: bar[x]} = baz();", "'identifier' expected");
-    parse("({foo: bar[x]} = baz());");
-    parse("for ({foo: bar[x]} in baz());");
-  }
-
   public void testMixedDestructuring() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {x: [y, z]} = foo();");
@@ -2375,10 +2364,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testInvalidDestructuring() {
-    mode = LanguageMode.ECMASCRIPT6;
-
     // {x: 5} is a valid object literal but not a valid object pattern.
-    parseError("for ({x: 5} in foo()) {}", "invalid assignment target");
+    parseError("for ({x: 5} in foo()) {}", "Invalid LHS for a for-in loop");
 
     // {method(){}} is a valid object literal but not a valid object pattern.
     parseError("function f({method(){}}) {}", "'}' expected");

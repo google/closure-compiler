@@ -975,16 +975,8 @@ class NewIRFactory {
       maybeWarnEs6Feature(tree, "destructuring");
 
       Node node = newNode(Token.OBJECT_PATTERN);
-      for (ParseTree field : tree.fields) {
-        Node child = transform(field);
-        if (child.isStringKey() && child.getFirstChild() != null
-            && !child.getFirstChild().isValidAssignmentTarget()) {
-          errorReporter.error(
-              "invalid assignment target",
-              sourceName,
-              child.getLineno(), 0);
-        }
-        node.addChildToBack(child);
+      for (ParseTree child : tree.fields) {
+        node.addChildToBack(transform(child));
       }
       return node;
     }
