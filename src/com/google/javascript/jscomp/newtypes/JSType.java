@@ -180,9 +180,13 @@ public abstract class JSType {
       UNDEFINED_MASK | NON_SCALAR_MASK,
       ImmutableSet.of(ObjectType.TOP_OBJECT), null, null);
 
+  public static JSType looseTopFunction() {
+    return topFunction().withLoose();
+  }
+
   public static JSType topFunction() {
     if (TOP_FUNCTION == null) {
-      TOP_FUNCTION = fromFunctionType(FunctionType.LOOSE_TOP_FUNCTION);
+      TOP_FUNCTION = fromFunctionType(FunctionType.TOP_FUNCTION);
     }
     return TOP_FUNCTION;
   }

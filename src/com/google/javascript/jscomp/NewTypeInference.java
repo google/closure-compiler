@@ -1773,7 +1773,7 @@ public class NewTypeInference implements CompilerPass {
       case "undefined":
         return JSType.UNDEFINED;
       case "function":
-        return JSType.topFunction();
+        return JSType.looseTopFunction();
       case "object":
         return JSType.join(JSType.NULL, JSType.TOP_OBJECT);
       default:
@@ -2076,8 +2076,9 @@ public class NewTypeInference implements CompilerPass {
             JSType.BOOLEAN : beforeType.removeType(JSType.BOOLEAN);
       case "function":
       case "isFunction":
-        return booleanContext.isTruthy() ?
-            JSType.topFunction() : beforeType.removeType(JSType.topFunction());
+        return booleanContext.isTruthy()
+            ? JSType.looseTopFunction()
+            : beforeType.removeType(JSType.topFunction());
       case "null":
       case "isNull":
         return booleanContext.isTruthy() ?
@@ -2971,7 +2972,7 @@ public class NewTypeInference implements CompilerPass {
     switch (qnameNode.getType()) {
       case Token.NAME: {
         JSType result = envGetType(env, qnameNode.getString());
-        Preconditions.checkNotNull(result);
+        Preconditions.checkNotNull(result, "Null declared type@%s", qnameNode);
         return result;
       }
       case Token.GETPROP: {
@@ -2980,7 +2981,7 @@ public class NewTypeInference implements CompilerPass {
             getDeclaredTypeOfQname(qnameNode.getFirstChild(), env);
         JSType result = recvType.getProp(
             new QualifiedName(qnameNode.getLastChild().getString()));
-        Preconditions.checkNotNull(result);
+        Preconditions.checkNotNull(result, "Null declared type@%s", qnameNode);
         return result;
       }
       default:

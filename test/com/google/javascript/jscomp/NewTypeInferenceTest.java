@@ -6573,6 +6573,22 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testAbstractMethodOverrides() {
+    checkNoWarnings(
+        "/** @type {!Function} */ function abstractMethod(){}\n" +
+        "/** @interface */ function I() {}\n" +
+        "/** @param {string} opt_str */\n" +
+        "I.prototype.done = abstractMethod;\n" +
+        "/** @implements {I} @constructor */ function Foo() {}\n" +
+        "/** @override */ Foo.prototype.done = function(opt_str) {}\n" +
+        "/** @param {I} stats */ function f(stats) {}\n" +
+        "function g() {\n" +
+        "  var x = new Foo();\n" +
+        "  f(x);\n" +
+        "  x.done();\n" +
+        "}");
+  }
+
   public void testThisReferenceUsedGenericallyDoesntCrash() {
     checkNoWarnings(
         "/** @constructor @template T */\n" +
