@@ -261,6 +261,20 @@ public class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertParameterShadowed("function f(x=3) { function x() {} }");
     assertParameterShadowed("function f(...x) { function x() {} }");
     assertNoWarning("function f(x) { if (true) { let x; } }");
+    assertNoWarning(Joiner.on('\n').join(
+        "function outer(x) {",
+        "  function inner() {",
+        "    let x = 1;",
+        "  }",
+        "}"
+    ));
+    assertNoWarning(Joiner.on('\n').join(
+        "function outer(x) {",
+        "  function inner() {",
+        "    var x = 1;",
+        "  }",
+        "}"
+    ));
   }
 
   public void testReassignedConst() {

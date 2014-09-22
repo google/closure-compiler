@@ -16,6 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
@@ -25,11 +30,6 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollect
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
-
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Checks variables to see if they are referenced before their declaration, or
@@ -163,7 +163,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     private void checkShadowParam(Var v, Scope scope, List<Reference> references) {
       Scope functionScope = scope.getParent();
       Var maybeParam = functionScope.getVar(v.getName());
-      if (maybeParam != null && maybeParam.isParam()) {
+      if (maybeParam != null && maybeParam.isParam()
+          && maybeParam.getScope() == functionScope) {
         for (Reference r : references) {
           if (!r.isDeclaration() || r.getScope() != scope) {
             continue;
