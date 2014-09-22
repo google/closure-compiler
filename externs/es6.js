@@ -726,7 +726,7 @@ Promise.resolve = function(opt_value) {};
 
 /**
  * @param {*=} opt_error
- * @return {!Promise}
+ * @return {!Promise.<?>}
  */
 Promise.reject = function(opt_error) {};
 
@@ -761,7 +761,8 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 
 /**
- * @param {function(*): *} onRejected
- * @return {!Promise}
+ * @param {function(*): RESULT} onRejected
+ * @return {!Promise.<RESULT>}
+ * @template RESULT
  */
 Promise.prototype.catch = function(onRejected) {};
