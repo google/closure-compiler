@@ -1983,21 +1983,11 @@ public class CodePrinterTest extends TestCase {
 
   public void testImports() {
     languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrint(
-        "import x from 'foo'",
-        "import x from\"foo\"");
-    assertPrint(
-        "import x, {a as b} from 'foo'",
-        "import x,{a as b}from\"foo\"");
-    assertPrint(
-        "import {a as b, c as d} from 'foo'",
-        "import{a as b,c as d}from\"foo\"");
-    assertPrint(
-        "import x, {a} from 'foo'",
-        "import x,{a}from\"foo\"");
-    assertPrint(
-        "import {a, c} from 'foo'",
-        "import{a,c}from\"foo\"");
+    assertPrintSame("import x from\"foo\"");
+    assertPrintSame("import x,{a as b}from\"foo\"");
+    assertPrintSame("import{a as b,c as d}from\"foo\"");
+    assertPrintSame("import x,{a}from\"foo\"");
+    assertPrintSame("import{a,c}from\"foo\"");
   }
 
   public void testModuleImports() {
@@ -2018,31 +2008,15 @@ public class CodePrinterTest extends TestCase {
     assertPrint("export * from 'a.b.c'", "export*from\"a.b.c\"");
 
     // from
-    assertPrint(
-        "export { a } from 'a.b.c'",
-        "export{a}from\"a.b.c\"");
-    assertPrint(
-        "export { a as x } from 'a.b.c'",
-        "export{a as x}from\"a.b.c\"");
-
-    assertPrint(
-        "export { a,b } from 'a.b.c'",
-        "export{a,b}from\"a.b.c\"");
-    assertPrint(
-        "export { a as x, b as y } from 'a.b.c'",
-        "export{a as x,b as y}from\"a.b.c\"");
-
+    assertPrintSame("export{a}from\"a.b.c\"");
+    assertPrintSame("export{a as x}from\"a.b.c\"");
+    assertPrintSame("export{a,b}from\"a.b.c\"");
+    assertPrintSame("export{a as x,b as y}from\"a.b.c\"");
     assertPrintSame("export{a}");
-    assertPrint(
-        "export { a as x }",
-        "export{a as x}");
+    assertPrintSame("export{a as x}");
 
-    assertPrint(
-        "export { a,b }",
-        "export{a,b}");
-    assertPrint(
-        "export { a as x, b as y }",
-        "export{a as x,b as y}");
+    assertPrintSame("export{a,b}");
+    assertPrintSame("export{a as x,b as y}");
 
     // export default
     assertPrintSame("export default x");

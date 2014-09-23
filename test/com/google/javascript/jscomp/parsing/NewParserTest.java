@@ -2426,6 +2426,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testForOfPatternsWithInitializer() {
+    mode = LanguageMode.ECMASCRIPT6;
+
     parseError("for({x}=a of b) c;", "';' expected");
     parseError("for({x: y}=a of b) c;", "';' expected");
     parseError("for([x, y]=a of b) c;", "';' expected");
@@ -2440,6 +2442,19 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("for(const {x: y}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(const [x, y]=a of b) c;", "for-of statement may not have initializer");
     parseError("for(const [x, ...y]=a of b) c;", "for-of statement may not have initializer");
+  }
+
+  public void testImport() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("import 'someModule'");
+    parse("import d from './someModule'");
+    parse("import {x, y} from './someModule'");
+    parse("import {x as x1, y as y1} from './someModule'");
+
+    // Not in the spec yet, but will be soon, per
+    // http://www.2ality.com/2014/09/es6-modules-final.html
+    parseError("import * as sm from './someModule'", "'{' expected");
   }
 
   public void testShebang() {

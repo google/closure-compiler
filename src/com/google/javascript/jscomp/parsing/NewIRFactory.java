@@ -2061,11 +2061,10 @@ class NewIRFactory {
     @Override
     Node processImportDecl(ImportDeclarationTree tree) {
       maybeWarnEs6Feature(tree, "modules");
-      Node export = newNode(Token.IMPORT,
+      return newNode(Token.IMPORT,
           transformOrEmpty(tree.defaultBindingIndentifier, tree),
           transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList),
           processString(tree.moduleSpecifier));
-      return export;
     }
 
     @Override

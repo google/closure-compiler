@@ -196,6 +196,9 @@ public class Parser {
         && peek(3, TokenType.STRING);
   }
 
+  // TODO(tbreisacher): Remove this if it gets removed from the spec,
+  // which it probably will be:
+  // http://www.2ality.com/2014/09/es6-modules-final.html#comment-1586114058
   private ParseTree parseModuleDefinition() {
     SourcePosition start = getTreeStartLocation();
     eatPredefinedString(PredefinedName.MODULE);
@@ -235,12 +238,14 @@ public class Parser {
         eat(TokenType.COMMA);
         identifierSet = parseImportSpecifierSet();
       }
-    } else if (peek(TokenType.OPEN_CURLY)) {
+    } else {
       identifierSet = parseImportSpecifierSet();
     }
 
     eatPredefinedString(PredefinedName.FROM);
-    LiteralToken moduleSpecifier = eat(TokenType.STRING).asLiteral();
+    Token moduleStr = eat(TokenType.STRING);
+    LiteralToken moduleSpecifier = (moduleStr == null)
+        ? null : moduleStr.asLiteral();
     eatPossibleImplicitSemiColon();
 
     return new ImportDeclarationTree(

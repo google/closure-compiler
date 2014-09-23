@@ -115,18 +115,19 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
   }
 
-  private void visitImport(NodeTraversal t, Node n, Node parent) {
-    String importName = n.getLastChild().getString();
+  private void visitImport(NodeTraversal t, Node importDecl, Node parent) {
+    String importName = importDecl.getLastChild().getString();
     String loadAddress = loader.locate(importName, t.getInput());
     try {
       loader.load(loadAddress);
     } catch (ES6ModuleLoader.LoadFailedException e) {
-      t.makeError(n, ES6ModuleLoader.LOAD_ERROR, importName);
+      compiler.report(t.makeError(
+          importDecl, ES6ModuleLoader.LOAD_ERROR, importName));
     }
 
     String moduleName = toModuleName(loadAddress);
     Set<String> namesToRequire = new LinkedHashSet<>();
-    for (Node child : n.children()) {
+    for (Node child : importDecl.children()) {
       if (child.isEmpty() || child.isString()) {
         continue;
       } else if (child.isName()) { // import a from "mod"
@@ -154,26 +155,28 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     // Emit goog.require call for the module.
     if (!alreadyRequired.contains(moduleName)) {
       alreadyRequired.add(moduleName);
-      script.addChildToFront(
-          IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
-              compiler.getCodingConvention(), "goog.require"),
-              IR.string(moduleName))).copyInformationFromForTree(n));
+      Node require = IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
+          compiler.getCodingConvention(), "goog.require"),
+          IR.string(moduleName)));
+      require.copyInformationFromForTree(importDecl);
+      script.addChildToFront(require);
       if (reportDependencies) {
         t.getInput().addRequire(moduleName);
       }
     }
 
     for (String name : namesToRequire) {
-      script.addChildToFront(
-          IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
-              compiler.getCodingConvention(), "goog.require"),
-              IR.string(moduleName + "." + name))).copyInformationFromForTree(n));
+      Node require = IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
+          compiler.getCodingConvention(), "goog.require"),
+          IR.string(moduleName + "." + name)));
+      require.copyInformationFromForTree(importDecl);
+      script.addChildToFront(require);
       if (reportDependencies) {
         t.getInput().addRequire(moduleName + "." + name);
       }
     }
 
-    parent.removeChild(n);
+    parent.removeChild(importDecl);
     compiler.reportCodeChange();
   }
 
@@ -384,7 +387,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           String moduleName = name.substring(0, endIndex);
           String loadAddress = loader.locate(moduleName, t.getInput());
           if (loadAddress == null) {
-            t.makeError(typeNode, ES6ModuleLoader.LOAD_ERROR, moduleName);
+            compiler.report(t.makeError(
+                typeNode, ES6ModuleLoader.LOAD_ERROR, moduleName));
             return;
           }
 
