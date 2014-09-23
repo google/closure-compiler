@@ -40,7 +40,7 @@ var jQueryCallback;
               {
                accepts: (Object.<string, string>|undefined),
                async: (?boolean|undefined),
-               beforeSend: (function(jQuery.jqXHR, jQueryAjaxSettings)|undefined),
+               beforeSend: (function(jQuery.jqXHR, (jQueryAjaxSettings|Object.<string, *>))|undefined),
                cache: (?boolean|undefined),
                complete: (function(jQuery.jqXHR, string)|undefined),
                contents: (Object.<string, RegExp>|undefined),
@@ -124,55 +124,53 @@ jQuery.prototype.addClass = function(arg1) {};
 jQuery.prototype.after = function(arg1, content) {};
 
 /**
- * @param {(string|Object.<string,*>)} arg1
- * @param {jQueryAjaxSettings=} settings
+ * @param {(string|jQueryAjaxSettings|Object.<string,*>)} arg1
+ * @param {(jQueryAjaxSettings|Object.<string, *>)=} settings
  * @return {jQuery.jqXHR}
  */
 jQuery.ajax = function(arg1, settings) {};
 
 /**
- * @param {(string|Object.<string,*>)} arg1
- * @param {jQueryAjaxSettings>=} settings
+ * @param {(string|jQueryAjaxSettings|Object.<string, *>)} arg1
+ * @param {(jQueryAjaxSettings|Object.<string, *>)=} settings
  * @return {jQuery.jqXHR}
  */
 $.ajax = function(arg1, settings) {};
 
 /**
- * @param {function(!jQuery.event,XMLHttpRequest,jQueryAjaxSettings)} handler
+ * @param {function(!jQuery.event,XMLHttpRequest,(jQueryAjaxSettings|Object.<string, *>)} handler
  * @return {!jQuery}
  */
 jQuery.prototype.ajaxComplete = function(handler) {};
 
 /**
- * @param {function(!jQuery.event,jQuery.jqXHR,jQueryAjaxSettings,*)} handler
+ * @param {function(!jQuery.event,jQuery.jqXHR,(jQueryAjaxSettings|Object.<string, *>),*)} handler
  * @return {!jQuery}
  */
 jQuery.prototype.ajaxError = function(handler) {};
 
 /**
- * @param {(string|
- *     function(jQueryAjaxSettings,jQueryAjaxSettings,jQuery.jqXHR))} dataTypes
- * @param {function(jQueryAjaxSettings,jQueryAjaxSettings,jQuery.jqXHR)=} handler
+ * @param {(string|function((jQueryAjaxSettings|Object.<string, *>),(jQueryAjaxSettings|Object.<string, *>),jQuery.jqXHR))} dataTypes
+ * @param {function((jQueryAjaxSettings|Object.<string, *>),(jQueryAjaxSettings|Object.<string, *>),jQuery.jqXHR)=} handler
  */
 jQuery.ajaxPrefilter = function(dataTypes, handler) {};
 
 /**
- * @param {(string|
- *     function(jQueryAjaxSettings,jQueryAjaxSettings,jQuery.jqXHR))} dataTypes
- * @param {function(jQueryAjaxSettings,jQueryAjaxSettings,jQuery.jqXHR)=} handler
+ * @param {(string|function((jQueryAjaxSettings|Object.<string, *>),(jQueryAjaxSettings|Object.<string, *>),jQuery.jqXHR))} dataTypes
+ * @param {function((jQueryAjaxSettings|Object.<string, *>),(jQueryAjaxSettings|Object.<string, *>),jQuery.jqXHR)=} handler
  */
 $.ajaxPrefilter = function(dataTypes, handler) {};
 
 /**
- * @param {function(!jQuery.event,jQuery.jqXHR,jQueryAjaxSettings)} handler
+ * @param {function(!jQuery.event,jQuery.jqXHR,(jQueryAjaxSettings|Object.<string, *>))} handler
  * @return {!jQuery}
  */
 jQuery.prototype.ajaxSend = function(handler) {};
 
-/** @const {jQueryAjaxSettings} */
+/** @const {jQueryAjaxSettings|Object.<string, *>} */
 jQuery.ajaxSettings;
 
-/** @const {jQueryAjaxSettings} */
+/** @const {jQueryAjaxSettings|Object.<string, *>} */
 $.ajaxSettings = {};
 
 /** @type {Object.<string, boolean>} */
@@ -193,10 +191,10 @@ jQuery.ajaxSettings.responseFields = {};
 /** @type {Object.<string, string>} */
 $.ajaxSettings.responseFields = {};
 
-/** @param {jQueryAjaxSettings} options */
+/** @param {jQueryAjaxSettings|Object.<string, *>} options */
 jQuery.ajaxSetup = function(options) {};
 
-/** @param {jQueryAjaxSettings} options */
+/** @param {jQueryAjaxSettings|Object.<string, *>} options */
 $.ajaxSetup = function(options) {};
 
 /**
@@ -212,7 +210,7 @@ jQuery.prototype.ajaxStart = function(handler) {};
 jQuery.prototype.ajaxStop = function(handler) {};
 
 /**
- * @param {function(!jQuery.event,XMLHttpRequest,jQueryAjaxSettings, ?)} handler
+ * @param {function(!jQuery.event,XMLHttpRequest,(jQueryAjaxSettings|Object.<string, *>), ?)} handler
  * @return {!jQuery}
  */
 jQuery.prototype.ajaxSuccess = function(handler) {};
