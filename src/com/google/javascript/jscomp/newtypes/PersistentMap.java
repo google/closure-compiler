@@ -23,12 +23,17 @@ public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
 
   private static PersistentMap EMPTY;
   static {
-    try {
-      Class c = Class.forName("clojure.lang.PersistentHashMap");
-      EMPTY = ClojurePersistentHashMap.create(c);
-    } catch (ClassNotFoundException e) {
-      EMPTY = NaivePersistentMap.create();
-    }
+    setupEmpty();
+  }
+
+  @SuppressWarnings("unchecked") //we cannot cast to 'Class<PersistentHashMap>' because it is not in scope at compile time
+  private static void setupEmpty(){
+      try {
+        Class c = Class.forName("clojure.lang.PersistentHashMap");
+        EMPTY = ClojurePersistentHashMap.create(c);
+      } catch (ClassNotFoundException e) {
+        EMPTY = NaivePersistentMap.create();
+      }
   }
 
   public abstract PersistentMap<K, V> with(K key, V value);
