@@ -373,6 +373,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract Node getRoot();
 
+  abstract CompilerOptions getOptions();
+
   /**
    * The language mode of the current root node. This will match the languageIn
    * field of the {@link CompilerOptions} before transpilation happens, and

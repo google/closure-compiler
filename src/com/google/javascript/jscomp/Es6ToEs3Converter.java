@@ -19,6 +19,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -39,7 +40,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   static final DiagnosticType CANNOT_CONVERT = DiagnosticType.error(
       "JSC_CANNOT_CONVERT",
-      "This code cannot be converted from ES6 to ES3. {0}");
+      "This code cannot be converted from ES6. {0}");
 
   // TODO(tbreisacher): Remove this once all ES6 features are transpilable.
   static final DiagnosticType CANNOT_CONVERT_YET = DiagnosticType.error(
@@ -113,6 +114,13 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         break;
       case Token.PARAM_LIST:
         visitParamList(n, parent);
+        break;
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
+        if (compiler.getOptions().getLanguageOut() == LanguageMode.ECMASCRIPT3) {
+          cannotConvert(n, "ES5 getters/setters (consider using --language_out=ES5)");
+          return false;
+        }
         break;
     }
     return true;

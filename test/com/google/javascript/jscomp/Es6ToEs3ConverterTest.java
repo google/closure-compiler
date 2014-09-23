@@ -37,9 +37,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
       "$jscomp.inherits = function(x,y) { x.base = function(a,b) {}; };"
   );
 
+  private LanguageMode languageOut;
+
   @Override
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    languageOut = LanguageMode.ECMASCRIPT3;
     enableAstValidation(true);
     runTypeCheckAfterProcessing = true;
     compareJsDoc = true;
@@ -48,7 +51,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setLanguageOut(languageOut);
     return options;
   }
 
@@ -776,12 +779,35 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     ), null, null, TypeCheck.CONFLICTING_SHAPE_TYPE);
   }
 
+  /**
+   * If languageOut is ES5, getters/setters in object literals are supported,
+   * but getters/setters in classes are not.
+   */
   public void testClassGetterSetter() {
+    languageOut = LanguageMode.ECMASCRIPT5;
+
     test("class C { get value() {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
     test("class C { set value(v) {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
 
     test("class C { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT);
     test("class C { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
+  /**
+   * ES5 getters and setters should report an error if the languageOut is ES3.
+   */
+  public void testEs5GettersAndSetters_es3() {
+    test("var x = { get y() {} };", null, Es6ToEs3Converter.CANNOT_CONVERT);
+    test("var x = { set y(value) {} };", null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
+
+  /**
+   * ES5 getters and setters should be left alone if the languageOut is ES5.
+   */
+  public void testEs5GettersAndSetters_es5() {
+    languageOut = LanguageMode.ECMASCRIPT5;
+    testSame("var x = { get y() {} };");
+    testSame("var x = { set y(value) {} };");
   }
 
   public void testArrowFunction() {
@@ -1300,6 +1326,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testComputedPropGetterSetter() {
+    languageOut = LanguageMode.ECMASCRIPT5;
+
     testSame("var obj = {get latest () {return undefined;}}");
     testSame("var obj = {set latest (str) {}}");
     test("var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
