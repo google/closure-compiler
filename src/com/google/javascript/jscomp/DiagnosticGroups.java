@@ -79,6 +79,7 @@ public class DiagnosticGroups {
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, " +
       "checkRegExp, checkStructDictInheritance, checkTypes, checkVars, " +
+      "conformanceViolations, " +
       "const, constantProperty, deprecated, duplicateMessage, es3, " +
       "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
       "inferredConstCheck, " +
@@ -344,6 +345,11 @@ public class DiagnosticGroups {
           PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE,
           PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS,
           PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+
+  public static final DiagnosticGroup CONFORMANCE_VIOLATIONS =
+      DiagnosticGroups.registerGroup("conformanceViolations",
+          CheckConformance.CONFORMANCE_VIOLATION,
+          CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
   /**
    * Adds warning levels by name.
