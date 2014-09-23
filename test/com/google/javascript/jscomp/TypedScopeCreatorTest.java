@@ -838,7 +838,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
     Var v = globalScope.getVar("Object");
     FunctionType obj = (FunctionType) v.getType();
-    assertEquals("function (new:Object, *=): ?", obj.toString());
+    assertEquals("function (new:Object, *=): Object", obj.toString());
     assertNotNull(v.getNode());
     assertNotNull(v.input);
   }

@@ -264,11 +264,13 @@ public class JSTypeRegistry implements Serializable {
     // Object
     FunctionType OBJECT_FUNCTION_TYPE =
         new FunctionType(this, "Object", null,
-            createArrowType(createOptionalParameters(ALL_TYPE), UNKNOWN_TYPE),
+            createArrowType(createOptionalParameters(ALL_TYPE), null),
             null,
             createTemplateTypeMap(ImmutableList.of(
                 objectIndexTemplateKey, objectElementTemplateKey), null),
             true, true);
+    OBJECT_FUNCTION_TYPE.getInternalArrowType().returnType =
+        OBJECT_FUNCTION_TYPE.getInstanceType();
 
     OBJECT_FUNCTION_TYPE.setPrototype(TOP_LEVEL_PROTOTYPE, null);
     registerNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE, OBJECT_FUNCTION_TYPE);

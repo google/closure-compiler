@@ -5867,7 +5867,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {number} x */ function f(x) {}" +
         "f(this.Object);",
         "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : function (new:Object, *=): ?\n" +
+        "found   : function (new:Object, *=): Object\n" +
         "required: number");
   }
 
