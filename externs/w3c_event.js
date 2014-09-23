@@ -127,9 +127,6 @@ Event.prototype.cancelable;
 /** @type {number} */
 Event.prototype.timeStamp;
 
-/** @type {Object} */
-Event.prototype.state;
-
 /**
  * Present for events spawned in browsers that support shadow dom.
  * @type {Array.<!Element>|undefined}
