@@ -1225,7 +1225,6 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringAssign() {
     mode = LanguageMode.ECMASCRIPT6;
-    mode = LanguageMode.ECMASCRIPT6;
     parse("({x, y}) = foo();");
     parse("({x, y} = foo());");
     parse("({x: x, y: y}) = foo();");
@@ -1293,6 +1292,29 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("var {while: x=1, for: y} = foo();");
     parseError("var {while} = foo();", "'identifier' expected");
     parseError("var {implements} = foo();", "'identifier' expected");
+  }
+
+  public void testObjectDestructuringComplexTarget() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("var {foo: bar.x} = baz();", "'identifier' expected");
+    parse("({foo: bar.x} = baz());");
+    parse("for ({foo: bar.x} in baz());");
+
+    parseError("var {foo: bar[x]} = baz();", "'identifier' expected");
+    parse("({foo: bar[x]} = baz());");
+    parse("for ({foo: bar[x]} in baz());");
+  }
+
+  public void testObjectDestructuringExtraParens() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("({x}) = y;");
+    parse("(({x})) = y;");
+    parse("((({x}))) = y;");
+
+    parse("([x]) = y;");
+    parse("[x, (y)] = z;");
+    parse("[x, ([y])] = z;");
+    parse("[x, (([y]))] = z;");
   }
 
   public void testMixedDestructuring() {
@@ -2364,8 +2386,15 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testInvalidDestructuring() {
-    // {x: 5} is a valid object literal but not a valid object pattern.
+    mode = LanguageMode.ECMASCRIPT6;
+
+    // {x: 5} and {x: 'str'} are valid object literals but not valid patterns.
     parseError("for ({x: 5} in foo()) {}", "Invalid LHS for a for-in loop");
+    parseError("for ({x: 'str'} in foo()) {}", "Invalid LHS for a for-in loop");
+    parseError("var {x: 5} = foo();", "'identifier' expected");
+    parseError("var {x: 'str'} = foo();", "'identifier' expected");
+    parseError("({x: 5} = foo());", "invalid assignment target");
+    parseError("({x: 'str'} = foo());", "invalid assignment target");
 
     // {method(){}} is a valid object literal but not a valid object pattern.
     parseError("function f({method(){}}) {}", "'}' expected");

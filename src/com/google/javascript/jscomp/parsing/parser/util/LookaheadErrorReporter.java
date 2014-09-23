@@ -17,18 +17,14 @@
 package com.google.javascript.jscomp.parsing.parser.util;
 
 /**
- * An error reporter that doesn't output errors; it just records
- * whether an error occurred.
- *
- * <p>{@code MutedErrorReporter} instances are used by the parser to
- * observe whether speculative parses fail before committing to
- * parsing them.
+ * An error reporter that throws exceptions for parse errors. Used
+ * for speculative parses.
  */
-public class MutedErrorReporter extends ErrorReporter {
-  public MutedErrorReporter() {}
+public class LookaheadErrorReporter extends ErrorReporter {
+  public static class ParseException extends RuntimeException {}
 
   @Override
   protected void reportMessage(SourcePosition location, String message) {
-    // message.dropOn(floor);
+    throw new ParseException();
   }
 }

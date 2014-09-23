@@ -177,6 +177,25 @@ public class ParseTree {
     }
   }
 
+  public boolean isValidAssignmentTarget() {
+    ParseTree parseTree = this;
+    while (parseTree.type == ParseTreeType.PAREN_EXPRESSION) {
+      parseTree = parseTree.asParenExpression().expression;
+    }
+
+    switch(parseTree.type) {
+      case IDENTIFIER_EXPRESSION:
+      case MEMBER_EXPRESSION:
+      case MEMBER_LOOKUP_EXPRESSION:
+      case ARRAY_PATTERN:
+      case OBJECT_PATTERN:
+      case DEFAULT_PARAMETER:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   // TODO: enable classes and traits
   public boolean isAssignmentExpression() {
     switch (this.type) {

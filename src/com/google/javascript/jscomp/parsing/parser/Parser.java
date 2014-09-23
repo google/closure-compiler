@@ -21,7 +21,8 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.trees.*;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
-import com.google.javascript.jscomp.parsing.parser.util.MutedErrorReporter;
+import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter;
+import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter.ParseException;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.jscomp.parsing.parser.util.Timer;
@@ -578,8 +579,12 @@ public class Parser {
       // TODO(johnlenz): determine if we can parse this without the
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
-      p.parseFormalParameterList();
-      return !p.errorReporter.hadError() && p.peek(TokenType.ARROW);
+      try {
+        p.parseFormalParameterList();
+        return p.peek(TokenType.ARROW);
+      } catch (ParseException e) {
+        return false;
+      }
     }
     return false;
   }
@@ -1815,9 +1820,8 @@ public class Parser {
         : parseConditional(expressionIn);
 
     if (peekAssignmentOperator()) {
-      if (!left.isLeftHandSideExpression() && !left.isPattern()) {
-        reportError("Left hand side of assignment must be new, call, member, " +
-            "function, primary expressions or destructuring pattern");
+      if (!left.isValidAssignmentTarget()) {
+        reportError("invalid assignment target");
       }
       Token operator = nextToken();
       ParseTree right = parseAssignment(expressionIn);
@@ -2291,12 +2295,7 @@ public class Parser {
   }
 
   private boolean peekParenPatternAssignment() {
-    if (!peekParenPatternStart()) {
-      return false;
-    }
-    Parser p = createLookaheadParser();
-    p.parseParenPattern();
-    return !p.errorReporter.hadError() && p.peek(TokenType.EQUAL);
+    return peekParenPattern(PatternKind.ANY, EnumSet.of(TokenType.EQUAL));
   }
 
   private boolean peekParenPatternStart() {
@@ -2340,8 +2339,12 @@ public class Parser {
       return false;
     }
     Parser p = createLookaheadParser();
-    p.parsePattern(kind);
-    return !p.errorReporter.hadError() && follow.apply(p.peekToken());
+    try {
+      p.parsePattern(kind);
+      return follow.apply(p.peekToken());
+    } catch (ParseException e) {
+      return false;
+    }
   }
 
   private boolean peekParenPattern(PatternKind kind, EnumSet<TokenType> follow) {
@@ -2349,8 +2352,12 @@ public class Parser {
       return false;
     }
     Parser p = createLookaheadParser();
-    p.parsePattern(kind);
-    return !p.errorReporter.hadError() && follow.contains(p.peekType());
+    try {
+      p.parseParenPattern(kind);
+      return follow.contains(p.peekType());
+    } catch (ParseException e) {
+      return false;
+    }
   }
 
   private ParseTree parsePattern(PatternKind kind) {
@@ -2471,7 +2478,7 @@ public class Parser {
     if (peekType() == TokenType.OPEN_SQUARE) {
       ParseTree key = parseComputedPropertyName();
       eat(TokenType.COLON);
-      ParseTree value = parseObjectPatternFieldRHS(kind);
+      ParseTree value = parseObjectPatternFieldTail(kind);
       return new ComputedPropertyDefinitionTree(getTreeLocation(start), key, value);
     }
 
@@ -2497,17 +2504,25 @@ public class Parser {
     }
 
     eat(TokenType.COLON);
-    ParseTree value = parseObjectPatternFieldRHS(kind);
+    ParseTree value = parseObjectPatternFieldTail(kind);
     return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
   }
 
-  private ParseTree parseObjectPatternFieldRHS(PatternKind kind) {
+  /**
+   * Parses the "tail" of an object pattern field, i.e. the part after the ':'
+   */
+  private ParseTree parseObjectPatternFieldTail(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
     ParseTree value;
     if (peekPattern(kind)) {
       value = parsePattern(kind);
     } else {
-      value = parseIdentifierExpression();
+      value = (kind == PatternKind.ANY)
+          ? parseLeftHandSideExpression()
+          : parseIdentifierExpression();
+      if (!value.isValidAssignmentTarget()) {
+        reportError("invalid assignment target");
+      }
     }
     if (peek(TokenType.EQUAL)) {
       eat(TokenType.EQUAL);
@@ -2770,21 +2785,11 @@ public class Parser {
 
   /**
    * Forks the parser at the current point and returns a new
-   * parser. The new parser observes but does not report errors. This
-   * can be used for speculative parsing:
-   *
-   * <pre>
-   * Parser p = createLookaheadParser();
-   * if (p.parseX() != null &amp;&amp; !p.errorReporter.hadError()) {
-   *   return parseX();  // speculation succeeded, so roll forward
-   * } else {
-   *   return parseY();  // try something else
-   * }
-   * </pre>
+   * parser for speculative parsing.
    */
   private Parser createLookaheadParser() {
     return new Parser(config,
-        new MutedErrorReporter(),
+        new LookaheadErrorReporter(),
         this.scanner.getFile(),
         this.scanner.getOffset(),
         inGeneratorContext());

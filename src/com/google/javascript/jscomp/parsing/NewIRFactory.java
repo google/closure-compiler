@@ -1309,22 +1309,10 @@ class NewIRFactory {
 
     @Override
     Node processBinaryExpression(BinaryOperatorTree exprNode) {
-      Node n =  newNode(
+      return newNode(
           transformBinaryTokenType(exprNode.operator.type),
           transform(exprNode.left),
           transform(exprNode.right));
-
-      if (isAssignmentOp(n)) {
-        Node target = n.getFirstChild();
-        if (!target.isValidAssignmentTarget()) {
-          errorReporter.error(
-              "invalid assignment target: " + target,
-              sourceName,
-              target.getLineno(), 0);
-        }
-      }
-
-      return n;
     }
 
     // Move this to a more maintainable location.
@@ -1835,16 +1823,6 @@ class NewIRFactory {
               msg,
               sourceName,
               operand.getLineno(), 0);
-        } else  if (type == Token.INC || type == Token.DEC) {
-          if (!operand.isValidAssignmentTarget()) {
-            String msg = (type == Token.INC)
-                ? "invalid increment target"
-                : "invalid decrement target";
-            errorReporter.error(
-                msg,
-                sourceName,
-                operand.getLineno(), 0);
-          }
         }
 
         return newNode(type, operand);
@@ -1854,19 +1832,7 @@ class NewIRFactory {
     @Override
     Node processPostfixExpression(PostfixExpressionTree exprNode) {
       int type = transformPostfixTokenType(exprNode.operator.type);
-      Node operand = transform(exprNode.operand);
-      // Only INC and DEC
-      if (!operand.isValidAssignmentTarget()) {
-        String msg = (type == Token.INC)
-            ? "invalid increment target"
-            : "invalid decrement target";
-        errorReporter.error(
-            msg,
-            sourceName,
-            operand.getLineno(), 0);
-      }
-
-      Node node = newNode(type, operand);
+      Node node = newNode(type, transform(exprNode.operand));
       node.putBooleanProp(Node.INCRDECR_PROP, true);
       return node;
     }
