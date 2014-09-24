@@ -1088,6 +1088,19 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
+    private boolean isStaticCtorProp(Node getProp, Scope s) {
+      Preconditions.checkArgument(getProp.isGetProp());
+      if (!getProp.isQualifiedName()) {
+        return false;
+      }
+      Node recieverObj = getProp.getFirstChild();
+      if (!s.isLocalFunDef(recieverObj.getQualifiedName())) {
+        return false;
+      }
+      return null != currentScope.getNominalType(
+          QualifiedName.fromNode(recieverObj));
+    }
+
     /** Returns the newly created scope for this function */
     private Scope visitFunctionLate(Node fn, RawNominalType ownerType) {
       Preconditions.checkArgument(fn.isFunction());
@@ -1717,25 +1730,9 @@ class GlobalTypeInfo implements CompilerPass {
     return type == null ? null : type.getFunType();
   }
 
-  // TODO(blickly): Move to NodeUtil
   private static boolean isClassPropAccess(Node n, Scope s) {
     return n.isGetProp() && n.getFirstChild().isThis() &&
         (s.isConstructor() || s.isPrototypeMethod());
-  }
-
-  // TODO(blickly): Move to NodeUtil
-  private static boolean isStaticCtorProp(Node getProp, Scope s) {
-    Preconditions.checkArgument(getProp.isGetProp());
-    if (!getProp.isQualifiedName()) {
-      return false;
-    }
-    String receiverObjName = getProp.getFirstChild().getQualifiedName();
-    if (!s.isLocalFunDef(receiverObjName)) {
-      return false;
-    }
-    DeclaredFunctionType ctorType =
-        s.getScope(receiverObjName).getDeclaredType();
-    return ctorType != null && ctorType.getNominalType() != null;
   }
 
   // TODO(blickly): Move to NodeUtil

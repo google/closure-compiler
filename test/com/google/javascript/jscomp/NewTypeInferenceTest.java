@@ -6573,6 +6573,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testCtorManipulationDoesntCrash() {
+    checkNoWarnings(
+        "/** @constructor */ var X = function() {};\n" +
+        "var f = function(ctor) {\n" +
+        "  /** @type {function(new: X)} */\n" +
+        "  function InstantiableCtor() {};\n" +
+        "  InstantiableCtor.prototype = ctor.prototype;\n" +
+        "}");
+  }
+
   public void testAbstractMethodOverrides() {
     checkNoWarnings(
         "/** @type {!Function} */ function abstractMethod(){}\n" +
