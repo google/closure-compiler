@@ -72,6 +72,31 @@ public class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
     testExternChanges("var x = function f() {}", "var b", "var x=function f(){}");
   }
 
+  public void testWindowProperty6() {
+    testExternChanges("var window; /** @const {number} */ var n;", "",
+        "var window;\n" +
+        "/** @const {number} */ var n;\n" +
+        "window.window;\n" +
+        "/** @const {number} @suppress {duplicate} */ window.n;");
+  }
+
+  public void testWindowProperty7() {
+    testExternChanges("var window; /** @const */ var ns = {}", "",
+        "var window;\n" +
+        "/** @const */ var ns = {};\n" +
+        "window.window;\n" +
+        "/** @const @suppress {duplicate} */ window.ns;");
+  }
+
+  public void testWindowProperty8() {
+    testExternChanges("var window; /** @constructor */ function Foo() {}", "",
+        "var window;\n" +
+        "/** @constructor */ function Foo(){}\n" +
+        "window.window;\n" +
+        "/** @constructor @suppress {duplicate} */ window.Foo = Foo;");
+  }
+
+
   /**
    * Test to make sure the compiler knows the type of "window.x"
    * is the same as that of "x".
