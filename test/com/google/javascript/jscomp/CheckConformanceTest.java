@@ -174,7 +174,8 @@ public class CheckConformanceTest extends CompilerTestCase {
         "error_message: \"placeholder\"\n" +
         "whitelist_regexp: \"(\"\n" +
         "type: BANNED_NAME\n" +
-        "value: \"eval\"\n");
+        "value: \"eval\"\n",
+        true /* error */);
   }
 
   public void testViolationWhitelisted1() {
@@ -560,7 +561,8 @@ public class CheckConformanceTest extends CompilerTestCase {
         "Invalid requirement. Reason: missing java_class\n" +
         "Requirement spec:\n" +
         "error_message: \"placeholder\"\n" +
-        "type: CUSTOM\n");
+        "type: CUSTOM\n",
+        true /* error */);
   }
 
   public void testCustom2() {
@@ -580,7 +582,8 @@ public class CheckConformanceTest extends CompilerTestCase {
         "Requirement spec:\n" +
         "error_message: \"placeholder\"\n" +
         "type: CUSTOM\n" +
-        "java_class: \"MissingClass\"\n");
+        "java_class: \"MissingClass\"\n",
+        true /* error */);
   }
 
   public void testCustom3() {
@@ -601,7 +604,8 @@ public class CheckConformanceTest extends CompilerTestCase {
         "error_message: \"placeholder\"\n" +
         "type: CUSTOM\n" +
         "java_class: \"com.google.javascript.jscomp.CheckConformanceTest\"\n" +
-        "");
+        "",
+        true /* error */);
   }
 
   // A custom rule missing a callable constructor.
@@ -678,7 +682,8 @@ public class CheckConformanceTest extends CompilerTestCase {
         "type: CUSTOM\n" +
         "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$" +
         "CustomRuleMissingPublicConstructor\"\n" +
-        "");
+        "",
+        true /* error */);
   }
 
 
@@ -700,7 +705,8 @@ public class CheckConformanceTest extends CompilerTestCase {
         "error_message: \"placeholder\"\n" +
         "type: CUSTOM\n" +
         "java_class: \"com.google.javascript.jscomp.CheckConformanceTest$CustomRule\"\n" +
-        "");
+        "",
+        true /* error */);
   }
 
   public void testCustom6() {

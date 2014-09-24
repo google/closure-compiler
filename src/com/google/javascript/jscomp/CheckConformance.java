@@ -43,7 +43,7 @@ public final class CheckConformance extends AbstractPostOrderCallback
           "Possible violation: {0}");
 
   static final DiagnosticType INVALID_REQUIREMENT_SPEC =
-      DiagnosticType.warning(
+      DiagnosticType.error(
           "JSC_INVALID_REQUIREMENT_SPEC",
           "Invalid requirement. Reason: {0}\nRequirement spec:\n{1}");
 
