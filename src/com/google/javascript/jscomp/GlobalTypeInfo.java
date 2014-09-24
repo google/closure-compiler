@@ -1299,46 +1299,10 @@ class GlobalTypeInfo implements CompilerPass {
           }
           return getArrayType(arrayType);
         }
-        case Token.BITAND:
-        case Token.BITNOT:
-        case Token.BITOR:
-        case Token.BITXOR:
-        case Token.DEC:
-        case Token.DIV:
-        case Token.INC:
-        case Token.LSH:
-        case Token.MOD:
-        case Token.MUL:
-        case Token.NEG:
-        case Token.NUMBER:
-        case Token.POS:
-        case Token.RSH:
-        case Token.SUB:
-        case Token.URSH:
-          return JSType.NUMBER;
-        case Token.STRING:
-        case Token.TYPEOF:
-          return JSType.STRING;
         case Token.TRUE:
           return JSType.TRUE_TYPE;
         case Token.FALSE:
           return JSType.FALSE_TYPE;
-        case Token.EQ:
-        case Token.GE:
-        case Token.GT:
-        case Token.IN:
-        case Token.INSTANCEOF:
-        case Token.LE:
-        case Token.LT:
-        case Token.NE:
-        case Token.NOT:
-        case Token.SHEQ:
-        case Token.SHNE:
-          return JSType.BOOLEAN;
-        case Token.NULL:
-          return JSType.NULL;
-        case Token.VOID:
-          return JSType.UNDEFINED;
         case Token.NAME: {
           String varName = n.getString();
           if (varName.equals("undefined")) {
@@ -1403,7 +1367,21 @@ class GlobalTypeInfo implements CompilerPass {
           }
           return funType.getReturnType();
         default:
-          return null;
+          switch (NodeUtil.getKnownValueType(n)) {
+            case NULL:
+              return JSType.NULL;
+            case VOID:
+              return JSType.UNDEFINED;
+            case NUMBER:
+              return JSType.NUMBER;
+            case STRING:
+              return JSType.STRING;
+            case BOOLEAN:
+              return JSType.BOOLEAN;
+            case UNDETERMINED:
+            default:
+              return null;
+          }
       }
     }
 

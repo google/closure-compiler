@@ -7513,6 +7513,31 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function g() { return o.prop; }",
         TypeCheck.INEXISTENT_PROPERTY);
 
+    typeCheck(
+        "/** @const */ var s = (true) ? null : null;\n" +
+        "function g() { s - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */ var s = (true) ? void 0 : undefined;\n" +
+        "function g() { s - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */ var b = (true) ? (1<2) : ('' in {});\n" +
+        "function g() { b - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */ var n = 0 || 6;\n" +
+        "function g() { n < 'str'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @const */ var s = 'str' + 5;\n" +
+        "function g() { s - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
     // TODO(dimvar): must fix externs initialization
     // typeCheck(
     //     "var /** string */ x;",
