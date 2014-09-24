@@ -17,15 +17,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
+import com.google.common.primitives.Ints;
 import com.google.javascript.jscomp.NodeIterators.FunctionlessLocalScope;
 import com.google.javascript.jscomp.NodeIterators.LocalVarMotion;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import junit.framework.TestCase;
 
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.TestCase;
-
 /**
  * Tests for NodeIterators.
  * @author nicksantos@google.com (Nick Santos)
@@ -127,11 +127,8 @@ public class NodeIteratorsTest extends TestCase {
    * the VarMotion iterator. Asserts that the iteration order matches the
    * tokens given.
    */
-  private void testVarMotionWithCode(String code, int ... expectedTokens) {
-    List<Integer> expectedList = Lists.newArrayList();
-    for (int token : expectedTokens) {
-      expectedList.add(token);
-    }
+  private void testVarMotionWithCode(String code, int... expectedTokens) {
+    List<Integer> expectedList = Ints.asList(expectedTokens);
     testVarMotionWithCode(code, expectedList);
   }
 

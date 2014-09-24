@@ -587,8 +587,8 @@ public class CommandLineRunnerTest extends TestCase {
     assertFalse(runner.shouldRunCompiler());
     assertFalse(runner.hasErrors());
     String output = new String(outReader.toByteArray(), UTF_8);
-    assertTrue(output.indexOf(" --help ") >= 0);
-    assertTrue(output.indexOf(" --version ") >= 0);
+    assertTrue(output.contains(" --help "));
+    assertTrue(output.contains(" --version "));
   }
 
   public void testHoistedFunction1() {

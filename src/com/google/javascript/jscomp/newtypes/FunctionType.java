@@ -702,7 +702,7 @@ public class FunctionType {
       ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
       for (Map.Entry<String, JSType> concreteTypeEntry : concreteTypes.entrySet()) {
         if (!typeParameters.contains(concreteTypeEntry.getKey())) {
-          builder.put(concreteTypeEntry.getKey(), concreteTypeEntry.getValue());
+          builder.put(concreteTypeEntry);
         }
       }
       typeMap = builder.build();
