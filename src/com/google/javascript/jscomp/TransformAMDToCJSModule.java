@@ -141,13 +141,9 @@ class TransformAMDToCJSModule implements CompilerPass {
         Node script) {
       onlyExport.getParent().removeChild(onlyExport);
       script.replaceChild(parent,
-          IR.exprResult(
-              IR.assign(
-                  NodeUtil.newQualifiedNameNode(
-                      compiler.getCodingConvention(),
-                      "module.exports"),
-                  onlyExport))
-          .copyInformationFromForTree(onlyExport));
+          IR.exprResult(IR.assign(
+              compiler.newQualifiedNameNode("module.exports"),
+              onlyExport)).copyInformationFromForTree(onlyExport));
       compiler.reportCodeChange();
     }
 

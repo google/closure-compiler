@@ -439,10 +439,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         : variable.getFirstChild().getQualifiedName(); // var or let
     Node iterResult = IR.name(ITER_RESULT + variableName);
 
-    Node makeIter = IR.call(
-        NodeUtil.newQualifiedNameNode(
-            compiler.getCodingConvention(), MAKE_ITER),
-        iterable);
+    Node makeIter = IR.call(compiler.newQualifiedNameNode(MAKE_ITER), iterable);
 
     Node init = IR.var(iterName.cloneTree(), makeIter);
     Node initIterResult = iterResult.cloneTree();
@@ -538,8 +535,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     boolean useUnique = NodeUtil.isStatement(clazz) && !isInFunction(clazz);
     String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
         : NodeUtil.getClassName(clazz);
-    Node uniqueClassName = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
-        uniqueClassString);
+    Node uniqueClassName = compiler.newQualifiedNameNode(uniqueClassString);
     Node base = IR.getprop(uniqueClassName, IR.string("base"));
     Node call = IR.call(base, IR.thisNode(), IR.string(methodName));
     if (arguments != null) {
@@ -653,8 +649,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         result = IR.call(IR.getprop(callee, IR.string("apply")), context, joinedGroups);
       }
     } else {
-      Node bindApply = NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
-          "Function.prototype.bind.apply");
+      Node bindApply = compiler.newQualifiedNameNode("Function.prototype.bind.apply");
       result = IR.newNode(bindApply, callee, joinedGroups);
     }
     result.useSourceInfoIfMissingFromForTree(node);
@@ -823,14 +818,12 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         Node method;
         if (member.isMemberDef()) {
           if (member.isStaticMember()) {
-            qualifiedMemberName = NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(),
+            qualifiedMemberName = compiler.newQualifiedNameNode(
                 Joiner.on(".").join(
                     uniqueFullClassName,
                     member.getString()));
           } else {
-            qualifiedMemberName = NodeUtil.newQualifiedNameNode(
-                compiler.getCodingConvention(),
+            qualifiedMemberName = compiler.newQualifiedNameNode(
                 Joiner.on(".").join(
                     uniqueFullClassName,
                     "prototype",
@@ -840,14 +833,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         } else if (member.isComputedProp()) {
           if (member.isStaticMember()) {
             qualifiedMemberName = IR.getelem(
-                NodeUtil.newQualifiedNameNode(
-                    compiler.getCodingConvention(),
-                    uniqueFullClassName),
+                compiler.newQualifiedNameNode(uniqueFullClassName),
                 member.removeFirstChild());
           } else {
             qualifiedMemberName = IR.getelem(
-                NodeUtil.newQualifiedNameNode(
-                    compiler.getCodingConvention(),
+                compiler.newQualifiedNameNode(
                     Joiner.on('.').join(uniqueFullClassName, "prototype")),
                 member.removeFirstChild());
           }
@@ -910,9 +900,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             superClassName.getSourceFileName()));
       } else {
         Node inherits = IR.call(
-            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), INHERITS),
-            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), fullClassName),
-            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString));
+            compiler.newQualifiedNameNode(INHERITS),
+            compiler.newQualifiedNameNode(fullClassName),
+            compiler.newQualifiedNameNode(superClassString));
         Node inheritsCall = IR.exprResult(inherits);
         inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
         Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
@@ -922,9 +912,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             superClassName.getSourceFileName()));
 
         Node copyProps = IR.call(
-            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), COPY_PROP),
-            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), fullClassName),
-            NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), superClassString));
+            compiler.newQualifiedNameNode(COPY_PROP),
+            compiler.newQualifiedNameNode(fullClassName),
+            compiler.newQualifiedNameNode(superClassString));
         copyProps.useSourceInfoIfMissingFromForTree(classNode);
         enclosingStatement.getParent().addChildAfter(
             IR.exprResult(copyProps).srcref(classNode), enclosingStatement);

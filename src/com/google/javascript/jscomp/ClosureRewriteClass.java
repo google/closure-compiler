@@ -371,8 +371,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       block.addChildToBack(
           fixupSrcref(IR.exprResult(
               IR.call(
-                  NodeUtil.newQualifiedNameNode(
-                      compiler.getCodingConvention(), "goog.inherits")
+                  compiler.newQualifiedNameNode("goog.inherits")
                       .srcrefTree(cls.superClass),
                   cls.name.cloneTree(),
                   cls.superClass.cloneTree()).srcref(cls.superClass))));

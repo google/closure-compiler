@@ -2636,86 +2636,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Creates a node representing a qualified name.
-   *
-   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @return A NAME or GETPROP node
-   */
-  public static Node newQualifiedNameNode(
-      CodingConvention convention, String name) {
-    int endPos = name.indexOf('.');
-    if (endPos == -1) {
-      return newName(convention, name);
-    }
-    Node node;
-    String nodeName = name.substring(0, endPos);
-    if ("this".equals(nodeName)) {
-      node = IR.thisNode();
-    } else {
-      node = newName(convention, nodeName);
-    }
-    int startPos;
-    do {
-      startPos = endPos + 1;
-      endPos = name.indexOf('.', startPos);
-      String part = (endPos == -1
-                     ? name.substring(startPos)
-                     : name.substring(startPos, endPos));
-      Node propNode = IR.string(part);
-      if (convention.isConstantKey(part)) {
-        propNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-      }
-      node = IR.getprop(node, propNode);
-    } while (endPos != -1);
-
-    return node;
-  }
-
-  /**
-   * Creates a node representing a qualified name.
-   *
-   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @return A NAME or GETPROP node
-   */
-  public static Node newQualifiedNameNodeDeclaration(
-      CodingConvention convention, String name, Node value, JSDocInfo info) {
-    Node result;
-    Node nameNode = newQualifiedNameNode(convention, name);
-    if (nameNode.isName()) {
-      result = IR.var(nameNode, value);
-      result.setJSDocInfo(info);
-    } else if (value != null) {
-      result = IR.exprResult(IR.assign(nameNode, value));
-      result.getFirstChild().setJSDocInfo(info);
-    } else {
-      result = IR.exprResult(nameNode);
-      result.getFirstChild().setJSDocInfo(info);
-    }
-    return result;
-  }
-
-  /**
-   * Creates a node representing a qualified name, copying over the source
-   * location information from the basis node and assigning the given original
-   * name to the node.
-   *
-   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @param basisNode The node that represents the name as currently found in
-   *     the AST.
-   * @param originalName The original name of the item being represented by the
-   *     NAME node. Used for debugging information.
-   *
-   * @return A NAME or GETPROP node
-   */
-  static Node newQualifiedNameNode(
-      CodingConvention convention, String name, Node basisNode,
-      String originalName) {
-    Node node = newQualifiedNameNode(convention, name);
-    setDebugInformation(node, basisNode, originalName);
-    return node;
-  }
-
-  /**
    * Gets the root node of a qualified name. Must be either NAME or THIS.
    */
   static Node getRootOfQualifiedName(Node qName) {
@@ -2740,50 +2660,6 @@ public final class NodeUtil {
                                   String originalName) {
     node.copyInformationFromForTree(basisNode);
     node.putProp(Node.ORIGINALNAME_PROP, originalName);
-  }
-
-  private static Node newName(
-      CodingConvention convention, String name) {
-    Node nameNode = IR.name(name);
-    if (convention.isConstant(name)) {
-      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    }
-    return nameNode;
-  }
-
-  /**
-   * Creates a new node representing an *existing* name, copying over the source
-   * location information from the basis node.
-   *
-   * @param name The name for the new NAME node.
-   * @param srcref The node that represents the name as currently found in
-   *     the AST.
-   *
-   * @return The node created.
-   */
-  static Node newName(CodingConvention convention, String name, Node srcref) {
-    return newName(convention, name).srcref(srcref);
-  }
-
-  /**
-   * Creates a new node representing an *existing* name, copying over the source
-   * location information from the basis node and assigning the given original
-   * name to the node.
-   *
-   * @param name The name for the new NAME node.
-   * @param basisNode The node that represents the name as currently found in
-   *     the AST.
-   * @param originalName The original name of the item being represented by the
-   *     NAME node. Used for debugging information.
-   *
-   * @return The node created.
-   */
-  static Node newName(
-      CodingConvention convention, String name,
-      Node basisNode, String originalName) {
-    Node nameNode = newName(convention, name, basisNode);
-    nameNode.putProp(Node.ORIGINALNAME_PROP, originalName);
-    return nameNode;
   }
 
   /** Test if all characters in the string are in the Basic Latin (aka ASCII)

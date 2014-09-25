@@ -508,15 +508,13 @@ class SpecializeModule implements CompilerPass {
       Node nameNode;
 
       if (isAssignFunction) {
-        nameNode =
-           NodeUtil.newQualifiedNameNode(
-               compiler.getCodingConvention(), name, functionCopy, name);
+        nameNode = compiler.newQualifiedNameNode(name, functionCopy, name);
       } else {
         // Grab the name node from the original function and make that
         // function anonymous.
         nameNode = functionCopy.getFirstChild();
         functionCopy.replaceChild(nameNode,
-            NodeUtil.newName(compiler.getCodingConvention(), "", nameNode));
+            compiler.newName("", nameNode, ""));
       }
 
       Node assignment = IR.assign(nameNode, functionCopy);

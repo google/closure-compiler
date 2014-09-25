@@ -81,13 +81,9 @@ class GenerateExports implements CompilerPass {
     }
   }
 
-  private Node qualifiedNameNode(String qname) {
-    return NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(), qname);
-  }
-
   private void addExtern(String export) {
     Node propstmt = IR.exprResult(
-        IR.getprop(qualifiedNameNode("Object.prototype"), IR.string(export)));
+        compiler.newQualifiedNameNode("Object.prototype." + export));
     NodeUtil.setDebugInformation(propstmt, getSynthesizedExternsRoot(), export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);
     compiler.reportCodeChange();
@@ -95,8 +91,6 @@ class GenerateExports implements CompilerPass {
 
   private void addExportMethod(Map<String, GenerateNodeContext> exports,
       String export, GenerateNodeContext context) {
-    CodingConvention convention = compiler.getCodingConvention();
-
     // Emit the proper CALL expression.
     // This is an optimization to avoid exporting everything as a symbol
     // because exporting a property is significantly simpler/faster.
@@ -127,26 +121,26 @@ class GenerateExports implements CompilerPass {
     if (useExportSymbol) {
       // exportSymbol(publicPath, object);
       call = IR.call(
-          NodeUtil.newQualifiedNameNode(
-              convention, exportSymbolFunction,
+          compiler.newQualifiedNameNode(
+              exportSymbolFunction,
               context.getNode(), export),
           IR.string(export),
-          NodeUtil.newQualifiedNameNode(
-              convention, export,
+          compiler.newQualifiedNameNode(
+              export,
               context.getNode(), export));
     } else {
       // exportProperty(object, publicName, symbol);
       String property = getPropertyName(node);
       call = IR.call(
-          NodeUtil.newQualifiedNameNode(
-              convention, exportPropertyFunction,
+          compiler.newQualifiedNameNode(
+              exportPropertyFunction,
               context.getNode(), exportPropertyFunction),
-          NodeUtil.newQualifiedNameNode(
-              convention, parent,
+          compiler.newQualifiedNameNode(
+              parent,
               context.getNode(), exportPropertyFunction),
           IR.string(property),
-          NodeUtil.newQualifiedNameNode(
-              convention, export,
+          compiler.newQualifiedNameNode(
+              export,
               context.getNode(), exportPropertyFunction));
     }
 

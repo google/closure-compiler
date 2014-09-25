@@ -106,7 +106,6 @@ class AngularPass extends AbstractPostOrderCallback
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     // Traverses AST looking for nodes annotated with @ngInject.
     NodeTraversal.traverse(compiler, scriptRoot, this);
-    CodingConvention convention = compiler.getCodingConvention();
     boolean codeChanged = false;
     // iterates through annotated nodes adding $inject property to elements.
     for (NodeContext entry : injectables) {
@@ -123,7 +122,7 @@ class AngularPass extends AbstractPostOrderCallback
       Node statement = IR.exprResult(
           IR.assign(
               IR.getelem(
-                  NodeUtil.newQualifiedNameNode(convention, name),
+                  compiler.newQualifiedNameNode(name),
                   IR.string(INJECT_PROPERTY_NAME)),
               dependenciesArray
           )
@@ -136,7 +135,7 @@ class AngularPass extends AbstractPostOrderCallback
       Node next = insertionPoint.getNext();
       while (next != null &&
              NodeUtil.isExprCall(next) &&
-             convention.getClassesDefinedByCall(
+             compiler.getCodingConvention().getClassesDefinedByCall(
                  next.getFirstChild()) != null) {
         insertionPoint = next;
         next = insertionPoint.getNext();

@@ -210,8 +210,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     String name = n.getChildAtIndex(1).getString();
     Node value = n.getChildAtIndex(2).detachFromParent();
 
-    Node replacement = NodeUtil.newQualifiedNameNodeDeclaration(
-        compiler.getCodingConvention(), name, value, n.getJSDocInfo());
+    Node replacement = compiler.newQualifiedNameNodeDeclaration(
+        name, value, n.getJSDocInfo());
     replacement.useSourceInfoIfMissingFromForTree(n);
     parent.getParent().replaceChild(parent, replacement);
     compiler.reportCodeChange();
@@ -555,10 +555,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // We're good to go.
       n.replaceChild(
           callee,
-          NodeUtil.newQualifiedNameNode(
-            compiler.getCodingConvention(),
-            String.format("%s.call", baseClassNode.getQualifiedName()),
-            callee, "goog.base"));
+          compiler.newQualifiedNameNode(
+              String.format("%s.call", baseClassNode.getQualifiedName()),
+              callee, "goog.base"));
       compiler.reportCodeChange();
     } else {
       // Handle methods.
@@ -582,11 +581,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           enclosingFnNameNode.getFirstChild().getFirstChild();
       n.replaceChild(
           callee,
-          NodeUtil.newQualifiedNameNode(
-            compiler.getCodingConvention(),
-            String.format("%s.superClass_.%s.call",
-                className.getQualifiedName(), methodName),
-            callee, "goog.base"));
+          compiler.newQualifiedNameNode(
+              String.format("%s.superClass_.%s.call",
+                  className.getQualifiedName(), methodName),
+              callee, "goog.base"));
       n.removeChild(methodNameNode);
       compiler.reportCodeChange();
     }
@@ -699,10 +697,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // We're good to go.
       n.replaceChild(
           callee,
-          NodeUtil.newQualifiedNameNode(
-            compiler.getCodingConvention(),
-            String.format("%s.call", baseClassNode.getQualifiedName()),
-            callee, enclosingQname + ".base"));
+          compiler.newQualifiedNameNode(
+              String.format("%s.call", baseClassNode.getQualifiedName()),
+              callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);
       compiler.reportCodeChange();
     } else {
@@ -752,11 +749,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           enclosingFnNameNode.getFirstChild().getFirstChild();
       n.replaceChild(
           callee,
-          NodeUtil.newQualifiedNameNode(
-            compiler.getCodingConvention(),
-            String.format("%s.superClass_.%s.call",
-                className.getQualifiedName(), methodName),
-            callee, enclosingQname + ".base"));
+          compiler.newQualifiedNameNode(
+             String.format("%s.superClass_.%s.call",
+                 className.getQualifiedName(), methodName),
+             callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);
       compiler.reportCodeChange();
     }
@@ -1387,8 +1383,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     private Node makeAssignmentExprNode() {
       Node decl = IR.exprResult(
           IR.assign(
-              NodeUtil.newQualifiedNameNode(
-                  compiler.getCodingConvention(), namespace,
+              compiler.newQualifiedNameNode(
+                  namespace,
                   firstNode /* real source info will be filled in below */,
                   namespace),
               createNamespaceLiteral()));
@@ -1474,8 +1470,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     String name = n.getString();
-    Node syntheticRef = NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(), name,
+    Node syntheticRef = compiler.newQualifiedNameNode(
+        name,
         n /* real source offsets will be filled in below */,
         name);
 

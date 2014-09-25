@@ -120,16 +120,14 @@ class ExportTestFunctions implements CompilerPass {
   private void exportTestFunctionAsSymbol(String testFunctionName, Node node,
       Node scriptNode) {
 
-    Node exportCallTarget = NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(),
+    Node exportCallTarget = compiler.newQualifiedNameNode(
         exportSymbolFunction, node, testFunctionName);
     Node call = IR.call(exportCallTarget);
     if (exportCallTarget.isName()) {
       call.putBooleanProp(Node.FREE_CALL, true);
     }
     call.addChildToBack(IR.string(testFunctionName));
-    call.addChildToBack(NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(),
+    call.addChildToBack(compiler.newQualifiedNameNode(
         testFunctionName, node, testFunctionName));
 
     Node expression = IR.exprResult(call);

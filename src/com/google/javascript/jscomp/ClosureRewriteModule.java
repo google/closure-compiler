@@ -152,8 +152,7 @@ public class ClosureRewriteModule
       return;
     }
 
-    Node replacement = NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(), namespace.getString());
+    Node replacement = compiler.newQualifiedNameNode(namespace.getString());
     replacement.srcrefTree(namespace);
 
     n.getParent().replaceChild(n, replacement);
@@ -221,8 +220,7 @@ public class ClosureRewriteModule
 
       case Token.NAME:
         if (n.getString().equals("exports")) {
-          Node replacement = NodeUtil.newQualifiedNameNode(
-              compiler.getCodingConvention(), current.moduleNamespace);
+          Node replacement = compiler.newQualifiedNameNode(current.moduleNamespace);
           replacement.srcrefTree(n);
           parent.replaceChild(n, replacement);
         }
@@ -289,9 +287,7 @@ public class ClosureRewriteModule
 
     // replace the goog.require statementment with a reference to the
     // namespace.
-    Node replacement = NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(), namespace)
-        .srcrefTree(call);
+    Node replacement = compiler.newQualifiedNameNode(namespace).srcrefTree(call);
     call.getParent().replaceChild(call, replacement);
 
     // readd the goog.require statement

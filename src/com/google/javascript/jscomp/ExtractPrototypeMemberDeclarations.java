@@ -178,8 +178,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       Node stmt = new Node(first.node.getType(),
          IR.assign(
               IR.name(prototypeAlias),
-              NodeUtil.newQualifiedNameNode(
-                  compiler.getCodingConvention(), className + ".prototype",
+              compiler.newQualifiedNameNode(
+                  className + ".prototype",
                   instance.parent, className + ".prototype")))
           .copyInformationFromForTree(first.node);
 
@@ -192,9 +192,8 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
            block);
 
       Node call = IR.call(func,
-           NodeUtil.newQualifiedNameNode(
-               compiler.getCodingConvention(), className + ".prototype",
-               instance.parent, className + ".prototype"));
+          compiler.newQualifiedNameNode(className + ".prototype",
+          instance.parent, className + ".prototype"));
       call.putIntProp(Node.FREE_CALL, 1);
 
       Node stmt = new Node(first.node.getType(), call);
@@ -220,8 +219,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     // x.prototype.y = ...  ->  t.y = ...
     Node assignment = declar.node.getFirstChild();
     Node lhs = assignment.getFirstChild();
-    Node name = NodeUtil.newQualifiedNameNode(
-        compiler.getCodingConvention(),
+    Node name = compiler.newQualifiedNameNode(
         prototypeAlias + "." + declar.memberName, declar.node,
         declar.memberName);
 

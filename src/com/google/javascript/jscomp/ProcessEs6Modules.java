@@ -155,8 +155,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     // Emit goog.require call for the module.
     if (!alreadyRequired.contains(moduleName)) {
       alreadyRequired.add(moduleName);
-      Node require = IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
-          compiler.getCodingConvention(), "goog.require"),
+      Node require = IR.exprResult(IR.call(
+          compiler.newQualifiedNameNode("goog.require"),
           IR.string(moduleName)));
       require.copyInformationFromForTree(importDecl);
       script.addChildToFront(require);
@@ -166,8 +166,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
 
     for (String name : namesToRequire) {
-      Node require = IR.exprResult(IR.call(NodeUtil.newQualifiedNameNode(
-          compiler.getCodingConvention(), "goog.require"),
+      Node require = IR.exprResult(IR.call(
+          compiler.newQualifiedNameNode("goog.require"),
           IR.string(moduleName + "." + name)));
       require.copyInformationFromForTree(importDecl);
       script.addChildToFront(require);
@@ -263,8 +263,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
       Node exprResult = IR.exprResult(IR.assign(
           getProp,
-          NodeUtil.newQualifiedNameNode(compiler.getCodingConvention(),
-              withSuffix))).useSourceInfoIfMissingFromForTree(script);
+          compiler.newQualifiedNameNode(withSuffix)))
+          .useSourceInfoIfMissingFromForTree(script);
       script.addChildToBack(exprResult);
     }
 
@@ -283,10 +283,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
 
     // Add goog.provide call.
-    Node googProvide = IR.exprResult(
-        IR.call(NodeUtil.newQualifiedNameNode(
-            compiler.getCodingConvention(), "goog.provide"),
-            IR.string(moduleName)));
+    Node googProvide = IR.exprResult(IR.call(
+        compiler.newQualifiedNameNode("goog.provide"), IR.string(moduleName)));
     script.addChildToFront(googProvide.copyInformationFromForTree(script));
     if (reportDependencies) {
       t.getInput().addProvide(moduleName);
@@ -294,10 +292,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
     for (String name : exportMap.keySet()) {
       String qualifiedName = moduleName + "." + name;
-      script.addChildAfter(IR.exprResult(
-          IR.call(NodeUtil.newQualifiedNameNode(
-              compiler.getCodingConvention(), "goog.provide"),
-              IR.string(qualifiedName)))
+      script.addChildAfter(IR.exprResult(IR.call(
+          compiler.newQualifiedNameNode("goog.provide"), IR.string(qualifiedName)))
               .copyInformationFromForTree(script), googProvide);
       if (reportDependencies) {
         t.getInput().addProvide(qualifiedName);

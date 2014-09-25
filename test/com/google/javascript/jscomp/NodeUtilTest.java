@@ -1642,24 +1642,6 @@ public class NodeUtilTest extends TestCase {
     assertFalse(executedOnceTestCase("if (1) { try {} finally {x} }"));
   }
 
-  public void testNewQualifiedNameNode1() {
-    Node actual = NodeUtil.newQualifiedNameNode(
-        new GoogleCodingConvention(), "ns.prop");
-    Node expected = IR.getprop(
-        IR.name("ns"),
-        IR.string("prop"));
-    assertNodeTreesEqual(expected, actual);
-  }
-
-  public void testNewQualifiedNameNode2() {
-    Node actual = NodeUtil.newQualifiedNameNode(
-        new GoogleCodingConvention(), "this.prop");
-    Node expected = IR.getprop(
-        IR.thisNode(),
-        IR.string("prop"));
-    assertNodeTreesEqual(expected, actual);
-  }
-
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, "x");

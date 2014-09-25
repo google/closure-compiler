@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
@@ -453,6 +454,17 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract Node ensureLibraryInjected(String resourceName,
       boolean normalizeAndUniquifyNames);
 
+  /**
+   * Creates a node representing a qualified name.
+   *
+   * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
+   * @return A NAME or GETPROP node
+   */
+  public abstract Node newQualifiedNameNode(String name);
+  public abstract Node newQualifiedNameNode(String name, Node basisNode, String originalName);
+  abstract Node newName(String name, Node basisNode, String originalName);
+
+  abstract Node newQualifiedNameNodeDeclaration(String name, Node value, JSDocInfo info);
   /**
    * Sets the names of the properties defined in externs.
    * @param externProperties The set of property names defined in externs.
