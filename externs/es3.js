@@ -180,6 +180,7 @@ function eval(code) {}
 /**
  * @constructor
  * @param {*=} opt_value
+ * @return {!Object}
  * @nosideeffects
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object
  */
