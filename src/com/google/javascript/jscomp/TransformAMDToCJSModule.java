@@ -16,11 +16,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Iterators;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -156,7 +156,7 @@ class TransformAMDToCJSModule implements CompilerPass {
       Iterator<Node> paramList = callback.getChildAtIndex(1).children().
           iterator();
       Iterator<Node> requires = requiresNode != null ?
-          requiresNode.children().iterator() : Iterators.<Node>emptyIterator();
+          requiresNode.children().iterator() : Collections.<Node>emptyIterator();
       while (paramList.hasNext() || requires.hasNext()) {
         Node aliasNode = paramList.hasNext() ? paramList.next() : null;
         Node modNode = requires.hasNext() ? requires.next() : null;
