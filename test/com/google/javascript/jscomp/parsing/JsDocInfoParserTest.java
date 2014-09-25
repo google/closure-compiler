@@ -2824,6 +2824,26 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, jsdoc.getType());
   }
 
+  public void testExportType() throws Exception {
+    JSDocInfo jsdoc = parse("@export {string} descr\n next line */", true);
+    assertTypeEquals(STRING_TYPE, jsdoc.getType());
+
+    assertTrue(jsdoc.isExport());
+
+    Marker defineMarker = jsdoc.getMarkers().iterator().next();
+    assertEquals("export", defineMarker.getAnnotation().getItem());
+    assertTrue(defineMarker.getDescription().getItem().contains("descr"));
+    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+  }
+
+  public void testMixedVisibility() throws Exception {
+    parse("@public @private */", "extra visibility tag");
+    parse("@public @protected */", "extra visibility tag");
+    parse("@export @protected */", "extra visibility tag");
+    parse("@export {string}\n * @private */", "extra visibility tag");
+    parse("@export {string}\n * @public */", "extra visibility tag");
+  }
+
   public void testStableIdGeneratorConflict() throws Exception {
     parse("/**\n" +
           " * @stableIdGenerator\n" +
