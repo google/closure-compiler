@@ -391,6 +391,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(x.hasProperty("foo"));
     assertEquals("number", x.getPropertyType("foo").toString());
     assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
   }
 
   public void testCollectedCtorProperty2() {
@@ -404,6 +405,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(x.hasProperty("foo"));
     assertEquals("number", x.getPropertyType("foo").toString());
     assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
   }
 
   public void testCollectedCtorProperty3() {
@@ -417,6 +419,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(x.hasProperty("foo"));
     assertEquals("number", x.getPropertyType("foo").toString());
     assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
   }
 
   public void testCollectedCtorProperty4() {
@@ -438,35 +441,33 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ function f() { " +
         "  /** @const */ this.foo = 'abc' + 'def';" +
         "}" +
-        "var x = new f();",
-        TypedScopeCreator.CANNOT_INFER_CONST_TYPE);
+        "var x = new f();");
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("f", x.toString());
     assertTrue(x.hasProperty("foo"));
     assertEquals("string", x.getPropertyType("foo").toString());
-    assertTrue(x.isPropertyTypeInferred("foo"));
+    assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
   }
 
   public void testCollectedCtorProperty6() {
     testSame(
         "/** @constructor */ function f() {}\n" +
         "/** @this {f} */ var init_f = function() {" +
-        "  /** @const */ this.foo = 'abc' + 'def';" +
+        "  /** @const */ this.foo = unknown;" +
         "};" +
         "var x = new f();",
         TypedScopeCreator.CANNOT_INFER_CONST_TYPE);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("f", x.toString());
     // assertTrue(x.hasProperty("foo"));  // ? why doesn't "f" have "foo" ?
-    // assertEquals("string", x.getPropertyType("foo").toString());
-    // assertFalse(x.isPropertyTypeInferred("foo"));
   }
 
   public void testCollectedCtorProperty7() {
     testSame(
         "/** @constructor */ function f() {}\n" +
         "var init_f = function() {" +
-        "  /** @const */ this.FOO = 'abc' + 'def';" +
+        "  /** @const */ this.FOO = unknown;" +
         "};" +
         "var x = new f();",
         TypedScopeCreator.CANNOT_INFER_CONST_TYPE);
@@ -479,15 +480,13 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/** @constructor */ function f() {}\n" +
         "f.prototype.init_f = function() {" +
-        "  /** @const */ this.FOO = 'abc' + 'def';" +
+        "  /** @const */ this.FOO = unknown;" +
         "};" +
         "var x = new f();",
         TypedScopeCreator.CANNOT_INFER_CONST_TYPE);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("f", x.toString());
     // assertTrue(x.hasProperty("FOO"));  // ? why doesn't "f" have "foo" ?
-    // assertEquals("string", x.getPropertyType("FOO").toString());
-    // assertFalse(x.isPropertyTypeInferred("FOO"));
   }
 
   public void testCollectedCtorProperty9() {
@@ -502,6 +501,100 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     assertTrue(x.hasProperty("FOO"));
     assertEquals("string", x.getPropertyType("FOO").toString());
     assertFalse(x.isPropertyTypeInferred("FOO"));
+    assertTrue(x.isPropertyTypeDeclared("FOO"));
+  }
+
+  public void testCollectedCtorProperty10() {
+    testSame(
+        "/** @constructor */ function f() {}\n" +
+        "f.prototype.init_f = function() {" +
+        "  /** @const */ this.foo = new String();" +
+        "};" +
+        "var x = new f();");
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertEquals("f", x.toString());
+    assertTrue(x.hasProperty("foo"));
+    assertEquals("String", x.getPropertyType("foo").toString());
+    assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
+  }
+
+  public void testCollectedCtorProperty11() {
+    testSame(
+        "/** @constructor */ function f() {}\n" +
+        "f.prototype.init_f = function() {" +
+        "  /** @const */ this.foo = [];" +
+        "};" +
+        "var x = new f();");
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertEquals("f", x.toString());
+    assertTrue(x.hasProperty("foo"));
+    assertEquals("Array", x.getPropertyType("foo").toString());
+    assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
+  }
+
+  public void testCollectedCtorProperty12() {
+    testSame(
+        "/** @constructor */ function f() {}\n" +
+        "f.prototype.init_f = function() {" +
+        "  /** @const */ this.foo = !!unknown;" +
+        "};" +
+        "var x = new f();");
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertEquals("f", x.toString());
+    assertTrue(x.hasProperty("foo"));
+    assertEquals("boolean", x.getPropertyType("foo").toString());
+    assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
+  }
+
+  public void testCollectedCtorProperty13() {
+    testSame(
+        "/** @constructor */ function f() {}\n" +
+        "f.prototype.init_f = function() {" +
+        "  /** @const */ this.foo = +unknown;" +
+        "};" +
+        "var x = new f();");
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertEquals("f", x.toString());
+    assertTrue(x.hasProperty("foo"));
+    assertEquals("number", x.getPropertyType("foo").toString());
+    assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
+  }
+
+  public void testCollectedCtorProperty14() {
+    testSame(
+        "/** @constructor */ function f() {}\n" +
+        "f.prototype.init_f = function() {" +
+        "  /** @const */ this.foo = unknown + '';" +
+        "};" +
+        "var x = new f();");
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertEquals("f", x.toString());
+    assertTrue(x.hasProperty("foo"));
+    assertEquals("string", x.getPropertyType("foo").toString());
+    assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
+  }
+
+  public void testCollectedCtorProperty15() {
+    testSame(
+        "/** " +
+        " * @constructor\n" +
+        " * @param {string} a\n" +
+        " */\n" +
+        " function f(a) {" +
+        "  /** @const */ this.foo = a;" +
+        "};" +
+        "var x = new f();");
+    ObjectType x = (ObjectType) findNameType("x", globalScope);
+    assertEquals("f", x.toString());
+    assertTrue(x.hasProperty("foo"));
+    assertEquals("string", x.getPropertyType("foo").toString());
+    assertFalse(x.isPropertyTypeInferred("foo"));
+    assertTrue(x.isPropertyTypeDeclared("foo"));
   }
 
   public void testPropertyOnUnknownSuperClass1() {

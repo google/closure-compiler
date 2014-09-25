@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.ENUM_NOT_CONSTANT;
 import static com.google.javascript.jscomp.TypeCheck.MULTIPLE_VAR_DEF;
+import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -599,8 +600,12 @@ final class TypedScopeCreator implements ScopeCreator {
           }
           break;
 
-          // NOTE(nicksantos): If we ever support Array tuples,
-          // we will need to put ARRAYLIT here as well.
+        // NOTE(johnlenz): If we ever support Array tuples,
+        // we will need to handle them here as we do object literals
+        // above.
+        case Token.ARRAYLIT:
+          n.setJSType(getNativeType(ARRAY_TYPE));
+          break;
       }
     }
 
@@ -964,7 +969,6 @@ final class TypedScopeCreator implements ScopeCreator {
             searchedForThisType = true;
           } else if (ownerNode != null && ownerNode.isThis()) {
             // If we have a 'this' node, use the scope type.
-            JSType injectedThisType = ownerNode.getJSType();
             builder.inferThisType(info, scope.getTypeOfThis());
             searchedForThisType = true;
           }
@@ -1399,6 +1403,31 @@ final class TypedScopeCreator implements ScopeCreator {
       // If rValue is a name, try looking it up in the current scope.
       if (rValue.isQualifiedName()) {
         return lookupQualifiedName(rValue);
+      }
+
+      // Check for simple invariant operations, such as "!x" or "+x" or "''+x"
+      if (NodeUtil.isBooleanResult(rValue)) {
+        return getNativeType(BOOLEAN_TYPE);
+      }
+
+      if (NodeUtil.isNumericResult(rValue)) {
+        return getNativeType(NUMBER_TYPE);
+      }
+
+      if (NodeUtil.isStringResult(rValue)) {
+        return getNativeType(STRING_TYPE);
+      }
+
+      if (rValue.isNew() && rValue.getFirstChild().isQualifiedName()) {
+        JSType targetType = lookupQualifiedName(rValue.getFirstChild());
+        if (targetType != null) {
+          FunctionType fnType = targetType
+              .restrictByNotNullOrUndefined()
+              .toMaybeFunctionType();
+          if (fnType != null && fnType.hasInstanceType()) {
+            return fnType.getInstanceType();
+          }
+        }
       }
 
       // Check for a very specific JS idiom:
@@ -1870,7 +1899,6 @@ final class TypedScopeCreator implements ScopeCreator {
 
     /**
      * Handle typedefs.
-     * @param t The current traversal.
      * @param candidate A qualified name node.
      * @param info JSDoc comments.
      */

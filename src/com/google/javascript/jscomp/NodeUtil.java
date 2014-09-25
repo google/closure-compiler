@@ -1588,6 +1588,13 @@ public final class NodeUtil {
   }
 
   /**
+   * @return Whether the result of node evaluation is always a string
+   */
+  static boolean isStringResult(Node n) {
+    return getKnownValueType(n) == ValueType.STRING;
+  }
+
+  /**
    * @return Whether the results is possibly a string.
    */
   static boolean mayBeString(Node n) {
