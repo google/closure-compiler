@@ -197,13 +197,15 @@ public final class RefasterJsScanner extends Scanner {
 
     Preconditions.checkState(
         !beforeTemplates.isEmpty(),
-        "Did not find any RefasterJs templates!");
+        "Did not find any RefasterJs templates! Make sure that there are 2 functions defined "
+        + "with the same name, one with a \"before_\" prefix and one with a \"after_\" prefix");
 
     ImmutableList.Builder<RefasterJsTemplate> builder = ImmutableList.builder();
     for (String templateName : beforeTemplates.keySet()) {
       Preconditions.checkState(
           afterTemplates.containsKey(templateName),
-          "Found before template without a corresponding after template: %s", templateName);
+          "Found before template without a corresponding after template. Make sure there is an "
+          + "after_%s function defined.", templateName);
       builder.add(new RefasterJsTemplate(compiler,
           beforeTemplates.get(templateName), afterTemplates.get(templateName)));
     }

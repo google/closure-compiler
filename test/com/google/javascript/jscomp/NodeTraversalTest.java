@@ -115,7 +115,7 @@ public class NodeTraversalTest extends TestCase {
     } catch (RuntimeException e) {
       assertTrue(e.getMessage().startsWith(
           "INTERNAL COMPILER ERROR.\n" +
-          "Please report this problem.\n" +
+          "Please report this problem.\n\n" +
           "test me"));
     }
   }

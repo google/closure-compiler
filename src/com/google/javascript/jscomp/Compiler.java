@@ -2224,7 +2224,7 @@ public class Compiler extends AbstractCompiler {
   void throwInternalError(String message, Exception cause) {
     String finalMessage =
       "INTERNAL COMPILER ERROR.\n" +
-      "Please report this problem.\n" + message;
+      "Please report this problem.\n\n" + message;
 
     RuntimeException e = new RuntimeException(finalMessage, cause);
     if (cause != null) {
