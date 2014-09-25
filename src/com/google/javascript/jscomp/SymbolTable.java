@@ -985,7 +985,7 @@ public final class SymbolTable
       // at the same node. We bail out here to be safe.
       if (symbols.get(newProp.getDeclaration().getNode(),
               newProp.getName()) != null) {
-        logger.warning("Found duplicate symbol " + newProp);
+        logger.info("Found duplicate symbol " + newProp);
         continue;
       }
 
@@ -1563,7 +1563,7 @@ public final class SymbolTable
           symbol.defineReferenceAt(n);
         } else {
          // TODO(johnlenz): filter out "class" template vars or remove this logging.
-          logger.warning(NodeUtil.getSourceName(refNode) + ":" + refNode.getLineno() +
+          logger.info(NodeUtil.getSourceName(refNode) + ":" + refNode.getLineno() +
              "  Could not find symbol for type: " + n.getString());
         }
       }
