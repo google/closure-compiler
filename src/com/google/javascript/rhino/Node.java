@@ -352,7 +352,7 @@ public class Node implements Cloneable, Serializable {
 
     @Override
     public String toString() {
-      return objectValue == null ? "null" : objectValue.toString();
+      return String.valueOf(objectValue);
     }
 
     @Override
