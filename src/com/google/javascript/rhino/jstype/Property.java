@@ -138,4 +138,12 @@ public final class Property
   public void setNode(Node n) {
     this.propertyNode = n;
   }
+
+  public String toString() {
+    return "Property { "
+        + " name: " + this.name
+        + ", type:" + this.type
+        + ", inferred: " + this.inferred
+        + "}";
+  }
 }
