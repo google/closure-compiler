@@ -73,12 +73,6 @@ Window.prototype.dialogArguments;
 Window.prototype.directories;
 
 /**
- * @type {!Document}
- * @see https://developer.mozilla.org/en/DOM/window.document
- */
-Window.prototype.document;
-
-/**
  * @type {HTMLObjectElement|HTMLIFrameElement|null}
  * @see https://developer.mozilla.org/en/DOM/window.frameElement
  */
