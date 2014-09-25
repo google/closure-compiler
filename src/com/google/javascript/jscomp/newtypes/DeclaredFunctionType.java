@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -240,7 +240,7 @@ public class DeclaredFunctionType {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this.getClass())
+    return MoreObjects.toStringHelper(this)
         .add("Required formals", requiredFormals)
         .add("Optional formals", optionalFormals)
         .add("Varargs formals", restFormals)

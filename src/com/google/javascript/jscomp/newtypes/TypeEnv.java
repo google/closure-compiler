@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -148,7 +148,7 @@ public class TypeEnv {
 
   @Override
   public String toString() {
-    Objects.ToStringHelper helper = Objects.toStringHelper(this.getClass());
+    MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
     for (String key : typeMap.keySet()) {
       helper.add(key, getType(key));
     }
