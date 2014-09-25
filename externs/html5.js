@@ -684,18 +684,6 @@ function postMessage(message, opt_targetOriginOrTransfer,
     opt_targetOriginOrPortsOrTransfer) {}
 
 /**
- * The postMessage method (as defined by HTML5 spec), with support for the
- * obsolete 'ports' argument in either 2nd or 3rd position.
- * @param {*} message
- * @param {string|!Array.<!MessagePort>} targetOriginOrPorts
- * @param {(string|!Array.<!MessagePort>|!Array.<!Transferable>)=}
- *     opt_targetOriginOrPortsOrTransfer
- * @see http://dev.w3.org/html5/postmsg/#dom-window-postmessage
- */
-Window.prototype.postMessage = function(message, targetOriginOrPorts,
-    opt_targetOriginOrPortsOrTransfer) {};
-
-/**
  * The postMessage method (as implemented in Opera).
  * @param {string} message
  */
