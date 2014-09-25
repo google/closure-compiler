@@ -422,7 +422,8 @@ class ScopedAliases implements HotSwapCompilerPass {
           // Add $jscomp.scope.name = EXPR;
           // Make sure we copy over all the jsdoc and debug info.
           if (value != null || varDocInfo != null) {
-            Node newDecl = compiler.newQualifiedNameNodeDeclaration(
+            Node newDecl = NodeUtil.newQNameDeclaration(
+                compiler,
                 globalName,
                 value,
                 varDocInfo)
@@ -440,7 +441,8 @@ class ScopedAliases implements HotSwapCompilerPass {
 
           // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
           v.getNameNode().addChildToFront(
-              compiler.newQualifiedNameNode(globalName, n, name));
+              NodeUtil.newQName(
+                  compiler, globalName, n, name));
 
           recordAlias(v);
         } else {

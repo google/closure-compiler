@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -179,37 +178,6 @@ public class CompilerTest extends TestCase {
     assertEquals("<div ng-show='foo()'>",
         compiler.getSourceLine(origSourceName, 1));
   }
-
-  public void testNewQualifiedNameNode1() {
-    CompilerOptions options = new CompilerOptions();
-    options.setCodingConvention(new GoogleCodingConvention());
-    Compiler compiler = new Compiler();
-    compiler.init(ImmutableList.<SourceFile>of(),
-        ImmutableList.<SourceFile>of(), options);
-
-    Node actual = compiler.newQualifiedNameNode("ns.prop");
-    Node expected = IR.getprop(
-        IR.name("ns"),
-        IR.string("prop"));
-    String error = expected.checkTreeEquals(actual);
-    assertNull(error, error);
-  }
-
-  public void testNewQualifiedNameNode2() {
-    CompilerOptions options = new CompilerOptions();
-    options.setCodingConvention(new GoogleCodingConvention());
-    Compiler compiler = new Compiler();
-    compiler.init(ImmutableList.<SourceFile>of(),
-        ImmutableList.<SourceFile>of(), options);
-
-    Node actual = compiler.newQualifiedNameNode("this.prop");
-    Node expected = IR.getprop(
-        IR.thisNode(),
-        IR.string("prop"));
-    String error = expected.checkTreeEquals(actual);
-    assertNull(error, error);
-  }
-
 
   private SourceMapInput sourcemap(String sourceMapPath, String originalSource,
       FilePosition originalSourcePosition) throws Exception {

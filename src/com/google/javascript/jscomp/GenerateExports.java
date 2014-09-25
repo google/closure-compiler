@@ -83,7 +83,7 @@ class GenerateExports implements CompilerPass {
 
   private void addExtern(String export) {
     Node propstmt = IR.exprResult(
-        compiler.newQualifiedNameNode("Object.prototype." + export));
+        IR.getprop(NodeUtil.newQName(compiler, "Object.prototype"), IR.string(export)));
     NodeUtil.setDebugInformation(propstmt, getSynthesizedExternsRoot(), export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);
     compiler.reportCodeChange();
@@ -121,26 +121,26 @@ class GenerateExports implements CompilerPass {
     if (useExportSymbol) {
       // exportSymbol(publicPath, object);
       call = IR.call(
-          compiler.newQualifiedNameNode(
-              exportSymbolFunction,
+          NodeUtil.newQName(
+              compiler, exportSymbolFunction,
               context.getNode(), export),
           IR.string(export),
-          compiler.newQualifiedNameNode(
-              export,
+          NodeUtil.newQName(
+              compiler, export,
               context.getNode(), export));
     } else {
       // exportProperty(object, publicName, symbol);
       String property = getPropertyName(node);
       call = IR.call(
-          compiler.newQualifiedNameNode(
-              exportPropertyFunction,
+          NodeUtil.newQName(
+              compiler, exportPropertyFunction,
               context.getNode(), exportPropertyFunction),
-          compiler.newQualifiedNameNode(
-              parent,
+          NodeUtil.newQName(
+              compiler, parent,
               context.getNode(), exportPropertyFunction),
           IR.string(property),
-          compiler.newQualifiedNameNode(
-              export,
+          NodeUtil.newQName(
+              compiler, export,
               context.getNode(), exportPropertyFunction));
     }
 

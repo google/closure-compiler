@@ -122,7 +122,7 @@ class AngularPass extends AbstractPostOrderCallback
       Node statement = IR.exprResult(
           IR.assign(
               IR.getelem(
-                  compiler.newQualifiedNameNode(name),
+                  NodeUtil.newQName(compiler, name),
                   IR.string(INJECT_PROPERTY_NAME)),
               dependenciesArray
           )
@@ -133,9 +133,9 @@ class AngularPass extends AbstractPostOrderCallback
       // goog.inherits call.
       Node insertionPoint = entry.getTarget();
       Node next = insertionPoint.getNext();
-      while (next != null &&
-             NodeUtil.isExprCall(next) &&
-             compiler.getCodingConvention().getClassesDefinedByCall(
+      while (next != null
+             && NodeUtil.isExprCall(next)
+             && compiler.getCodingConvention().getClassesDefinedByCall(
                  next.getFirstChild()) != null) {
         insertionPoint = next;
         next = insertionPoint.getNext();

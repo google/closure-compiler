@@ -221,9 +221,10 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
   private void visitYieldFor(Node n, Node parent) {
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
 
-    Node generator = IR.var(IR.name(GENERATOR_YIELD_ALL_NAME),
+    Node generator = IR.var(
+        IR.name(GENERATOR_YIELD_ALL_NAME),
         IR.call(
-            compiler.newQualifiedNameNode(Es6ToEs3Converter.MAKE_ITER),
+            NodeUtil.newQName(compiler, Es6ToEs3Converter.MAKE_ITER),
             n.removeFirstChild()));
     Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
 

@@ -177,7 +177,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           pathDefinition = NodeUtil.newVarNode(path, initializer);
         }
       } else {
-        Node qualifiedPath = compiler.newQualifiedNameNode(path);
+        Node qualifiedPath = NodeUtil.newQName(compiler, path);
         if (initializer.isEmpty()) {
           pathDefinition = NodeUtil.newExpr(qualifiedPath);
         } else {

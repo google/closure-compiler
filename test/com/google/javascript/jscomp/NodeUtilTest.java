@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -1640,6 +1641,30 @@ public class NodeUtilTest extends TestCase {
     assertTrue(executedOnceTestCase("try {} finally {x}"));
 
     assertFalse(executedOnceTestCase("if (1) { try {} finally {x} }"));
+  }
+
+  public void testNewQName1() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new GoogleCodingConvention());
+    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
+    Node actual = NodeUtil.newQName(compiler, "ns.prop");
+    Node expected = IR.getprop(
+        IR.name("ns"),
+        IR.string("prop"));
+    assertNodeTreesEqual(expected, actual);
+  }
+
+  public void testNewQualifiedNameNode2() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new GoogleCodingConvention());
+    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.<SourceFile>of(), options);
+    Node actual = NodeUtil.newQName(compiler, "this.prop");
+    Node expected = IR.getprop(
+        IR.thisNode(),
+        IR.string("prop"));
+    assertNodeTreesEqual(expected, actual);
   }
 
   private boolean executedOnceTestCase(String code) {
