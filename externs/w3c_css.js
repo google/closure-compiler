@@ -1866,12 +1866,6 @@ CSSProperties.prototype.pointerEvents;
 Window.prototype.matchMedia = function(media_query_list) {};
 
 /**
- * @type {Screen}
- * @see http://www.w3.org/TR/cssom-view/#dom-window-screen
- */
-Window.prototype.screen;
-
-/**
  * @type {number}
  * @see http://www.w3.org/TR/cssom-view/#dom-window-innerwidth
  */
