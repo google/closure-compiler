@@ -207,6 +207,17 @@ public class ClosureRewriteModule
           current.moduleScope = t.getScope();
         }
         break;
+
+      case Token.EXPR_RESULT:
+        if (n.getFirstChild().isCall()) {
+          Node target = n.getFirstChild().getFirstChild();
+          if (target.matchesQualifiedName(
+              "goog.module.declareLegacyNamespace")) {
+            n.detachFromParent();
+          }
+        }
+        break;
+
       case Token.CALL:
         Node first = n.getFirstChild();
         if (first.matchesQualifiedName("goog.module")) {
@@ -401,6 +412,9 @@ public class ClosureRewriteModule
   }
 
   private boolean isHeaderNode(Node n) {
+    if (n.isEmpty()) {
+      return true;
+    }
     if (NodeUtil.isExprCall(n)) {
       Node target = n.getFirstChild().getFirstChild();
       return (

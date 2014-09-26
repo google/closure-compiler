@@ -68,6 +68,19 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "});");
   }
 
+  public void testDeclareLegacyNamespace() {
+    test(
+        "goog.module('ns.a');"
+        + "goog.module.declareLegacyNamespace();"
+        + "var b = goog.require('ns.b');",
+
+        "goog.provide('ns.a');"
+        + "goog.require('ns.b');"
+        + "goog.scope(function(){"
+        + "  var b = ns.b;"
+        + "});");
+  }
+
   public void testBundle1() {
     test(
         "goog.loadModule(function(exports) {" +
