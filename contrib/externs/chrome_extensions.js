@@ -1160,6 +1160,161 @@ chrome.commands.onCommand;
 
 
 /**
+ * @see https://developer.chrome.com/apps/copresence
+ * @const
+ */
+chrome.copresence = {};
+
+
+/**
+ * @typedef {?{
+ *   lowPower: (boolean|undefined),
+ *   onlyBroadcast: (boolean|undefined),
+ *   onlyScan: (boolean|undefined),
+ *   audible: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/copresence#type-Strategy
+ */
+chrome.copresence.Strategy;
+
+
+/**
+ * @typedef {?{
+ *   type: string,
+ *   payload: ArrayBuffer
+ * }}
+ * @see https://developer.chrome.com/apps/copresence#type-Message
+ */
+chrome.copresence.Message;
+
+
+/**
+ * @typedef {?{
+ *   onlyEarshot: (boolean|undefined)
+ * }}
+ * https://developer.chrome.com/apps/copresence#type-AccessPolicy
+ */
+chrome.copresence.AccessPolicy;
+
+
+/**
+ * @typedef {?{
+ *   id: string,
+ *   message: !chrome.copresence.Message,
+ *   timeToLiveMillis: (number|undefined),
+ *   policy: (!chrome.copresence.AccessPolicy|undefined),
+ *   strategies: (!chrome.copresence.Strategy|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/copresence#type-PublishOperation
+ */
+chrome.copresence.PublishOperation;
+
+
+/** @typedef {?{type: string}} */
+chrome.copresence.SubscriptionFilter;
+
+
+/**
+ * @typedef {?{
+ *   id: string,
+ *   filter: !chrome.copresence.SubscriptionFilter,
+ *   timeToLiveMillis: (number|undefined),
+ *   strategies: (!chrome.copresence.Strategy|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/copresence#type-SubscribeOperation
+ */
+chrome.copresence.SubscribeOperation;
+
+
+/**
+ * @typedef {?{
+ *   unpublishId: string
+ * }}
+ * @see https://developer.chrome.com/apps/copresence#type-UnpublishOperation
+ */
+chrome.copresence.UnpublishOperation;
+
+
+/**
+ * @typedef {?{
+ *   unsubscribeId: string
+ * }}
+ * @see https://developer.chrome.com/apps/copresence#type-UnsubscribeOperation
+ */
+chrome.copresence.UnsubscribeOperation;
+
+
+/**
+ * @typedef {?{
+ *   publish: (!chrome.copresence.PublishOperation|undefined),
+ *   subscribe: (!chrome.copresence.SubscribeOperation|undefined),
+ *   unpublish: (!chrome.copresence.UnpublishOperation|undefined),
+ *   unsubscribe: (!chrome.copresence.UnsubscribeOperation|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/copresence#type-Operation
+ */
+chrome.copresence.Operation;
+
+
+/**
+ * @param {!Array.<!chrome.copresence.Operation>} operations
+ * @param {function(string): void} callback
+ * @see https://developer.chrome.com/apps/copresence#method-execute
+ */
+chrome.copresence.execute = function(operations, callback) {};
+
+
+
+/**
+ * Event whose listeners take a subscription id and received messages as a
+ * parameter.
+ * @constructor
+ * @see https://developer.chrome.com/apps/copresence#event-onMessagesReceived
+ */
+chrome.copresence.MessagesReceivedEvent = function() {};
+
+
+/**
+ * @param {function(string, !Array.<!chrome.copresence.Message>): void} callback
+ */
+chrome.copresence.MessagesReceivedEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(string, !Array.<!chrome.copresence.Message>): void} callback
+ */
+chrome.copresence.MessagesReceivedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(string, !Array.<!chrome.copresence.Message>): void} callback
+ * @return {boolean}
+ */
+chrome.copresence.MessagesReceivedEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.copresence.MessagesReceivedEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.copresence.MessagesReceivedEvent}
+ * @see https://developer.chrome.com/apps/copresence#event-onMessagesReceived
+ */
+chrome.copresence.onMessagesReceived;
+
+
+/**
+ * @type {!ChromeStringEvent}
+ * @see https://developer.chrome.com/apps/copresence#event-onStatusUpdated
+ */
+chrome.copresence.onStatusUpdated;
+
+
+/**
  * @see https://developer.chrome.com/extensions/extension.html
  * @const
  */
