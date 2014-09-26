@@ -1683,7 +1683,7 @@ String.prototype.link = function(hrefAttribute) {};
  * or is the same as the given string in sort order.
  *
  * @this {*}
- * @param {string} compareString
+ * @param {?string} compareString
  * @param {string|Array.<string>=} locales
  * @param {Object=} options
  * @return {number}
