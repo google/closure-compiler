@@ -12422,6 +12422,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "super interfaces Int0.<number> and Int1.<string>");
   }
 
+  public void testExtendedInterfacePropertiesCompatibilityNoError() throws Exception {
+    testTypes(""
+        + "/** @interface */function Int0() {};"
+        + "/** @interface */function Int1() {};"
+        + "/** @param {number} x */"
+        + "Int0.prototype.foo;"
+        + "/** @param {number} x */"
+        + "Int1.prototype.foo;"
+        + "/** @interface \n * @extends {Int0} \n * @extends {Int1} */"
+        + "function Int2() {};");
+  }
+
   public void testGenerics1() throws Exception {
     String fnDecl = "/** \n" +
         " * @param {T} x \n" +

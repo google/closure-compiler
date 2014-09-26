@@ -1689,16 +1689,21 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
     for (String name : currentPropertyNames) {
       ObjectType oType = properties.get(name);
-      if (oType != null) {
-        if (!interfaceType.getPropertyType(name).isEquivalentTo(
-            oType.getPropertyType(name))) {
-          compiler.report(
-              t.makeError(n, INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
-                  functionName, name, oType.toString(),
-                  interfaceType.toString()));
-        }
-      }
       currentProperties.put(name, interfaceType);
+      if (oType != null) {
+        JSType thisPropType = interfaceType.getPropertyType(name);
+        JSType oPropType = oType.getPropertyType(name);
+        if (thisPropType.isEquivalentTo(oPropType)
+            || thisPropType.isFunctionType() && oPropType.isFunctionType()
+               && thisPropType.toMaybeFunctionType().hasEqualCallType(
+                  oPropType.toMaybeFunctionType())) {
+          continue;
+        }
+        compiler.report(
+            t.makeError(n, INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
+                functionName, name, oType.toString(),
+                interfaceType.toString()));
+      }
     }
     for (ObjectType iType : interfaceType.getCtorExtendedInterfaces()) {
       checkInterfaceConflictProperties(t, n, functionName, properties,
