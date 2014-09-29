@@ -2033,7 +2033,7 @@ WebSocket.prototype.onclose;
 
 /**
  * Transmits data using the connection.
- * @param {string|ArrayBuffer} data
+ * @param {string|ArrayBuffer|ArrayBufferView} data
  * @return {boolean}
  */
 WebSocket.prototype.send = function(data) {};
