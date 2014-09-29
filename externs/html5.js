@@ -877,7 +877,7 @@ WebWorker.prototype.postMessage = function(message) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent)}
+ * @type {?function(!MessageEvent.<*>)}
  */
 WebWorker.prototype.onmessage;
 
@@ -933,7 +933,7 @@ Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent)}
+ * @type {?function(!MessageEvent.<*>)}
  */
 Worker.prototype.onmessage;
 
@@ -1071,7 +1071,7 @@ DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
 
 /**
  * Sent when the creator posts a message to this worker.
- * @type {?function(!MessageEvent)}
+ * @type {?function(!MessageEvent.<*>)}
  */
 DedicatedWorkerGlobalScope.prototype.onmessage;
 
@@ -1645,7 +1645,8 @@ MessagePort.prototype.start = function() {};
 MessagePort.prototype.close = function() {};
 
 /**
- * @type {?function(!MessageEvent)}
+ * TODO(blickly): Change this to MessageEvent.<*> and add casts as needed
+ * @type {?function(!MessageEvent.<?>)}
  */
 MessagePort.prototype.onmessage;
 
@@ -2021,7 +2022,8 @@ WebSocket.prototype.onopen;
 
 /**
  * An event handler called on message event.
- * @type {?function(!MessageEvent)}
+ * TODO(blickly): Change this to MessageEvent.<*> and add casts as needed
+ * @type {?function(!MessageEvent.<?>)}
  */
 WebSocket.prototype.onmessage;
 

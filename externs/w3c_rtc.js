@@ -770,7 +770,7 @@ RTCDataChannel.prototype.onclose;
 RTCDataChannel.prototype.close = function() {};
 
 /**
- * @type {?function(!MessageEvent)}
+ * @type {?function(!MessageEvent.<*>)}
  */
 RTCDataChannel.prototype.onmessage;
 
