@@ -250,6 +250,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(VOID_TYPE, parse("@type {void}*/").getType());
   }
 
+  public void testParseTemplatizedTypeAlternateSyntax() throws Exception {
+    JSDocInfo info = parse("@type !Array<number> */");
+    assertTypeEquals(
+        createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
+  }
+
   public void testParseTemplatizedType1() throws Exception {
     JSDocInfo info = parse("@type !Array.<number> */");
     assertTypeEquals(
@@ -1310,7 +1316,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseDesc9() throws Exception {
     String comment = "@desc\n.\n,\n{\n)\n}\n|\n.<\n>\n<\n?\n~\n+\n-\n;\n:\n*/";
 
-    assertEquals(". , { ) } | .< > < ? ~ + - ; :",
+    assertEquals(". , { ) } | < > < ? ~ + - ; :",
         parse(comment).getDescription());
   }
 

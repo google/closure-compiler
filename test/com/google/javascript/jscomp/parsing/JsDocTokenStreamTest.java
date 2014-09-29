@@ -173,8 +173,8 @@ public class JsDocTokenStreamTest extends TestCase {
   }
 
   public void testJsDocTokenization10() throws Exception {
-    List<JsDocToken> tokens = ImmutableList.of(STRING, GT, EOC);
-    List<String> strings = ImmutableList.of("Array<String");
+    List<JsDocToken> tokens = ImmutableList.of(STRING, LT, STRING, GT, EOC);
+    List<String> strings = ImmutableList.of("Array", "String");
     testJSDocTokenStream("Array<String>*/", tokens, strings);
   }
 

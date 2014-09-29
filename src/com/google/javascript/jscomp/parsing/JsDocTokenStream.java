@@ -133,6 +133,9 @@ class JsDocTokenStream {
           matchChar('|');
           return JsDocToken.PIPE;
 
+        case '<':
+          return JsDocToken.LT;
+
         case '.':
           c = getChar();
           if (c == '<') {
@@ -279,6 +282,7 @@ class JsDocTokenStream {
       case '@':
       case '*':
       case ',':
+      case '<':
       case '>':
       case ':':
       case '(':

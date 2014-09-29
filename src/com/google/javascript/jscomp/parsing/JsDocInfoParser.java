@@ -1535,7 +1535,7 @@ public final class JsDocInfoParser {
         return "(";
 
       case LT:
-        return ".<";
+        return "<";
 
       case QMARK:
         return "?";
