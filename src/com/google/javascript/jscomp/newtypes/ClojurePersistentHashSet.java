@@ -24,36 +24,39 @@ import java.util.Set;
 public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
   private static Method cons;
   private static Method disjoin;
-  private final Set set;
+  private final Set<K> set;
 
-  private ClojurePersistentHashSet(Set s) {
+  private ClojurePersistentHashSet(Set<K> s) {
     this.set = s;
   }
 
+  @SuppressWarnings("unchecked")
   public static <K> PersistentSet<K> create(Class<? extends Set> cls)  {
     try {
       cons = cls.getDeclaredMethod("cons", Object.class);
       disjoin = cls.getDeclaredMethod("disjoin", Object.class);
-      Set m = (Set) cls.getDeclaredField("EMPTY").get(null);
-      return new ClojurePersistentHashSet<>(m);
+      Set<K> m = (Set<K>) cls.getDeclaredField("EMPTY").get(null);
+      return new ClojurePersistentHashSet(m);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
   }
 
+  @SuppressWarnings("unchecked")
   public PersistentSet<K> with(K key) {
     try {
-      Set s = (Set) cons.invoke(set, key);
-      return new ClojurePersistentHashSet<>(s);
+      Set<K> s = (Set<K>) cons.invoke(set, key);
+      return new ClojurePersistentHashSet(s);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
   }
 
+  @SuppressWarnings("unchecked")
   public PersistentSet<K> without(K key) {
     try {
-      Set s = (Set) disjoin.invoke(set, key);
-      return new ClojurePersistentHashSet<>(s);
+      Set<K> s = (Set<K>) disjoin.invoke(set, key);
+      return new ClojurePersistentHashSet(s);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }

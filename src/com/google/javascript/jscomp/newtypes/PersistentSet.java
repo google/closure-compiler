@@ -24,6 +24,11 @@ public abstract class PersistentSet<K> extends AbstractSet<K> {
   private static PersistentSet EMPTY;
 
   static {
+      setupEmpty();
+  }
+
+  @SuppressWarnings("unchecked") //we cannot cast to 'Class<PersistentHashSet>' because it is not in scope at compile time
+  private static void setupEmpty(){
     try {
       Class c = Class.forName("clojure.lang.PersistentHashSet");
       EMPTY = ClojurePersistentHashSet.create(c);
