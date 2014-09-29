@@ -25,7 +25,7 @@
  */
 
 /**
- * @param {Object} obj
+ * @param {*} obj
  * @return {!_}
  * @constructor
  */
