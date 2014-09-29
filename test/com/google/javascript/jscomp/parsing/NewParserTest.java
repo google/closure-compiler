@@ -103,6 +103,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("while(1) {for(var f = function () { break; };;) {}}", UNLABELED_BREAK);
   }
 
+  public void testBreakInForOf() {
+    parse(""
+        + "for (var x of [1, 2, 3]) {\n"
+        + "  if (x == 2) break;\n"
+        + "}");
+  }
+
   public void testContinueToSwitch() {
     parseError("switch(1) {case(1): continue; }", UNEXPECTED_CONTINUE);
   }
@@ -137,6 +144,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError(
         "a:switch(1){case(1):function f(){while(1){continue a;}}}",
         UNDEFINED_LABEL + " \"a\"");
+  }
+
+  public void testContinueInForOf() {
+    parse(""
+        + "for (var x of [1, 2, 3]) {\n"
+        + "  if (x == 2) continue;\n"
+        + "}");
   }
 
   public void testLabel1() {

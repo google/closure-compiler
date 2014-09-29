@@ -383,6 +383,7 @@ class NewIRFactory {
   private static boolean isBreakTarget(Node n) {
     switch (n.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.WHILE:
       case Token.DO:
       case Token.SWITCH:
@@ -394,6 +395,7 @@ class NewIRFactory {
   private static boolean isContinueTarget(Node n) {
     switch (n.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.WHILE:
       case Token.DO:
         return true;
