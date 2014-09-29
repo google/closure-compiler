@@ -46,6 +46,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
   private static final String UNEXPECTED_CONTINUE =
       "continue must be inside loop";
 
+  private static final String UNEXPECTED_RETURN =
+      "return must be inside function";
+
   private static final String UNEXPECTED_LABELED_CONTINUE =
       "continue can only use labeles of iteration statements";
 
@@ -151,6 +154,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
         + "for (var x of [1, 2, 3]) {\n"
         + "  if (x == 2) continue;\n"
         + "}");
+  }
+
+  public void testReturn() {
+    parse("function foo() { return 1; }");
+    parseError("return;", UNEXPECTED_RETURN);
+    parseError("return 1;", UNEXPECTED_RETURN);
   }
 
   public void testLabel1() {
@@ -915,8 +924,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("for (a; b\n)", "';' expected");
 
     assertNodeEquality(
-        parse("return\na + b"),
-        parse("return; a + b;"));
+        parse("function f() { return\na + b }"),
+        parse("function f() { return; a + b; }"));
 
     assertNodeEquality(
         parse("a = b\n++c"),

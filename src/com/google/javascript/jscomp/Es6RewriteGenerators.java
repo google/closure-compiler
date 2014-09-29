@@ -269,7 +269,7 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
   private void visitGenerator(Node n, Node parent) {
     hasTranslatedTry = false;
     Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
-      "{",
+      "function generatorBody() {",
       "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
       "  function $jscomp$generator$impl(" + GENERATOR_NEXT_ARG + ", ",
       "      " + GENERATOR_THROW_ARG + ") {",
@@ -285,7 +285,7 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
       "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
       "  }",
       "}"
-    )).removeFirstChild();
+    )).getFirstChild().getLastChild().detachFromParent();
     generatorCaseCount++;
 
     originalGeneratorBody = n.getLastChild();
