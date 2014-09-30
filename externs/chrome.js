@@ -30,12 +30,6 @@
 var chrome = {};
 
 
-/**
- * Make the chrome namespace available via window, window.top, etc.
- * @const
- */
-window.chrome;
-
 
 /**
  * Returns an object representing current load times. Note that the properties
