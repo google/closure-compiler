@@ -256,7 +256,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       out.append(
           "# This is a list of legacy warnings that have yet to be fixed.\n");
 
-      if (productName != null && !productName.isEmpty()) {
+      if (productName != null && !productName.isEmpty() && !warnings.isEmpty()) {
         out.append("# Please find some time and fix at least one of them "
             + "and it will be the happiest day for " + productName + ".\n");
       }
