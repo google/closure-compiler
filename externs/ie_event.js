@@ -46,9 +46,6 @@ Event.prototype.contentOverflow;
 Event.prototype.ctrlLeft;
 
 /** @type {string} */
-Event.prototype.data;
-
-/** @type {string} */
 Event.prototype.dataFld;
 
 Event.prototype.domain;
