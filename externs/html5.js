@@ -29,6 +29,21 @@
  * @externs
  */
 
+
+/**
+ * Note: In IE, the contains() method only exists on Elements, not Nodes.
+ * Therefore, it is recommended that you use the Conformance framework to
+ * prevent calling this on Nodes which are not Elements.
+ * @see https://connect.microsoft.com/IE/feedback/details/780874/node-contains-is-incorrect
+ *
+ * @param {Node} n The node to check
+ * @return {boolean} If 'n' is this Node, or is contained within this Node.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Node.contains
+ * @nosideeffects
+ */
+Node.prototype.contains = function(n) {};
+
+
 /**
  * @constructor
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#the-canvas-element
