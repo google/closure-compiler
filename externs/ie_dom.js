@@ -302,13 +302,6 @@ ClipboardData.prototype.getData = function(type) { };
 var window;
 
 /**
- * @param {number|undefined|null} immediateID
- * @see https://developer.mozilla.org/en-US/docs/DOM/window.clearImmediate
- * @see http://msdn.microsoft.com/en-us/library/ie/hh924825(v=vs.85).aspx
- */
-Window.prototype.clearImmediate = function(immediateID) {};
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
  * @type ClipboardData
  */
@@ -431,14 +424,6 @@ Window.prototype.open = function(opt_url, opt_windowName, opt_windowFeatures,
 Window.prototype.print = function() {};
 
 /**
- * @param {string} message
- * @param {string=} opt_defValue
- * @return {?string}
- * @see http://msdn.microsoft.com/en-us/library/ms536673(VS.85).aspx
- */
-Window.prototype.prompt = function(message, opt_defValue) {};
-
-/**
  * @param {number} width
  * @param {number} height
  * @see http://msdn.microsoft.com/en-us/library/ms536722(VS.85).aspx
@@ -456,14 +441,6 @@ Window.prototype.resizeTo = function(width, height) {};
  * @see http://msdn.microsoft.com/en-us/library/ms536738(VS.85).aspx
  */
 Window.prototype.setActive;
-
-/**
- * @param {function()} callback
- * @return {number}
- * @see https://developer.mozilla.org/en-US/docs/DOM/window.setImmediate
- * @see http://msdn.microsoft.com/en-us/library/ie/hh773176(v=vs.85).aspx
- */
-Window.prototype.setImmediate = function(callback) {};
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms536758(VS.85).aspx
