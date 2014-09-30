@@ -244,18 +244,6 @@ Window.prototype.btoa = function(stringToEncode) {};
 /** @deprecated */
 Window.prototype.captureEvents;
 
-/**
- * @param {number|undefined?} intervalID
- * @see https://developer.mozilla.org/en/DOM/window.clearInterval
- */
-Window.prototype.clearInterval = function(intervalID) {};
-
-/**
- * @param {number|undefined?} timeoutID
- * @see https://developer.mozilla.org/en/DOM/window.clearTimeout
- */
-Window.prototype.clearTimeout = function(timeoutID) {};
-
 /** @see https://developer.mozilla.org/en/DOM/window.close */
 Window.prototype.close = function() {};
 
