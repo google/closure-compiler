@@ -16,9 +16,9 @@
 package com.google.javascript.jscomp.lint;
 
 import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.ControlFlowGraph;
 import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.graph.DiGraph;
@@ -29,10 +29,9 @@ import com.google.javascript.rhino.jstype.JSType;
 /**
  * Checks when a function is annotated as returning {SomeType} (nullable)
  * but actually always returns {!SomeType}, i.e. never returns null.
- * TODO(tbreisacher): Make this a HotSwapCompilerPass.
  *
  */
-public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback {
+public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.Callback {
   final AbstractCompiler compiler;
 
   public static final DiagnosticType NULLABLE_RETURN =
@@ -80,8 +79,8 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
       return false;
     }
     JSType returnType = n.getJSType().toMaybeFunctionType().getReturnType();
-    if (returnType == null ||
-        returnType.isUnknownType() || !returnType.isNullable()) {
+    if (returnType == null
+        || returnType.isUnknownType() || !returnType.isNullable()) {
       return false;
     }
     JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
@@ -115,8 +114,8 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
    *     be undefined.
    */
   private static boolean isNullable(Node n) {
-    return n.getJSType().isNullable() ||
-        (n.isOr() && n.getLastChild().isNull());
+    return n.getJSType().isNullable()
+        || (n.isOr() && n.getLastChild().isNull());
   }
 
   @Override
@@ -127,5 +126,10 @@ public class CheckNullableReturn implements CompilerPass, NodeTraversal.Callback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverse(compiler, originalRoot, this);
   }
 }

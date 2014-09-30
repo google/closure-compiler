@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 
 import java.util.Map;
@@ -324,12 +325,14 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR,
           CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
 
-  // NOTE(tbreisacher): The checks in this DiagnosticGroup are still
-  // experimental. Use them at your own risk!
+  // These checks are not intended to be enabled as errors. It is
+  // recommended that you think of them as "linter" warnings that
+  // provide optional suggestions.
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup("lintChecks",
           CheckNullableReturn.NULLABLE_RETURN,
-          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
+          CheckEnums.DUPLICATE_ENUM_VALUE);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
       DiagnosticGroups.registerGroup("useOfGoogBase",
