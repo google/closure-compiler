@@ -956,7 +956,12 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
 
   public void testSkipNativeObjectMethod() {
     String externs = ""
-        + "/** @constructor \n @param {*} opt_v */ function Object(opt_v) {}"
+        + "/**"
+        + " * @constructor\n"
+        + " * @param {*} opt_v\n"
+        + " * @return {!Object}\n"
+        + " */\n"
+        + "function Object(opt_v) {}"
         + "Object.prototype.hasOwnProperty;";
     String js = ""
         + "/** @constructor */ function Foo(){};"

@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -784,13 +783,8 @@ final class FunctionTypeBuilder {
         }
 
         if (!existingFn.hasEqualCallType(fnType)) {
-          // Special-case the 'Object' function since the definition in the
-          // JSTypeRegistry doesn't quite match the one in the externs.
-          // TODO(tbreisacher): Remove this check after cl/73727760 is submitted.
-          if (existingFn != typeRegistry.getNativeType(OBJECT_FUNCTION_TYPE)) {
-            reportWarning(TYPE_REDEFINITION, formatFnName(),
-                fnType.toString(), existingFn.toString());
-          }
+          reportWarning(TYPE_REDEFINITION, formatFnName(),
+              fnType.toString(), existingFn.toString());
         }
 
         return existingFn;
