@@ -3031,6 +3031,16 @@ public class IntegrationTest extends IntegrationTestCase {
             "(new function(){this.abc = 1}));");
   }
 
+  public void testRmUnusedProtoPropsInExternsUsage() {
+    CompilerOptions options = new CompilerOptions();
+    options.removeUnusedPrototypePropertiesInExterns = true;
+    options.removeUnusedPrototypeProperties = false;
+    try {
+      test(options, "", "");
+      fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+    } catch (CompilerOptionsPreprocessor.InvalidOptionsException e) {}
+  }
+
   public void testManyAdds() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
