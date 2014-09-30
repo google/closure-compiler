@@ -31,17 +31,6 @@ var iframes = /** @type {!iframes.Iframes} */ ({});
 
 
 /**
- * The namespace for most of the APIs.
- *
- * This has "|undefined" so that JSCompiler won't optimize out existence checks
- * for win.iframes.
- *
- * @type {!iframes.Iframes|undefined}
- */
-Window.prototype.iframes;
-
-
-/**
  * The type for the Iframes API.
  * @constructor
  */
@@ -319,13 +308,6 @@ iframes.Iframes.prototype.setBootstrapHint = function(hint) {};
  * @deprecated
  */
 iframes.Iframes.prototype.setVersionOverride = function(version) {};
-
-/**
- * Inside an iframe, the properties of the iframer object are the data and
- * functions provided in iframes.open.
- * @type {!Object|undefined}
- */
-Window.prototype.iframer = {};
 
 /**
  * Inside an iframe, the properties of the iframer object are the data and
