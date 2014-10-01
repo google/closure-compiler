@@ -50,7 +50,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -318,7 +317,8 @@ class GlobalTypeInfo implements CompilerPass {
     }
     Node fnNameNode = NodeUtil.getFunctionNameNode(n);
     // We don't want to use qualified names here
-    Preconditions.checkState(fnNameNode != null && fnNameNode.isName());
+    Preconditions.checkState(fnNameNode != null);
+    Preconditions.checkState(fnNameNode.isName());
     return fnNameNode.getString();
   }
 
@@ -596,7 +596,7 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   /**
-   * Collects names of classes, interfaces and typedefs.
+   * Collects names of classes, interfaces, namespaces, typedefs and enums.
    * This way, if a type name appears before its declaration, we know what
    * it refers to.
    */
@@ -732,10 +732,24 @@ class GlobalTypeInfo implements CompilerPass {
               ImmutableSet.copyOf(propNames)));
     }
 
-    private void createFunctionScope(
-        Node fn, ArrayList<String> formals, Node nameNode) {
-      Scope fnScope = new Scope(fn, currentScope, formals);
-      scopes.add(fnScope);
+    private void visitFunctionEarly(Node fn) {
+      JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
+      Node nameNode = NodeUtil.getFunctionNameNode(fn);
+      String internalName = createFunctionInternalName(fn, nameNode);
+      boolean isRedeclaration;
+      if (nameNode == null || !nameNode.isQualifiedName()) {
+        isRedeclaration = false;
+      } else if (nameNode.isName()) {
+        isRedeclaration = currentScope.isDefinedLocally(nameNode.getString());
+      } else {
+        isRedeclaration = currentScope.isDefined(nameNode);
+      }
+      ArrayList<String> formals = collectFormals(fn, fnDoc);
+      createFunctionScope(fn, formals, internalName);
+      maybeRecordNominalType(fn, nameNode, fnDoc, isRedeclaration);
+    }
+
+    private String createFunctionInternalName(Node fn, Node nameNode) {
       String internalName = null;
       if (nameNode == null || !nameNode.isName()) {
         // Anonymous and qualified names need gensymed names.
@@ -755,20 +769,18 @@ class GlobalTypeInfo implements CompilerPass {
         // fnNameNode is undefined simple name
         internalName = nameNode.getString();
       }
+      return internalName;
+    }
+
+    private void createFunctionScope(
+        Node fn, ArrayList<String> formals, String internalName) {
+      Scope fnScope = new Scope(fn, currentScope, formals);
+      scopes.add(fnScope);
       currentScope.addLocalFunDef(internalName, fnScope);
     }
 
-    private void visitFunctionEarly(Node fn) {
-      JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
-      Node nameNode = NodeUtil.getFunctionNameNode(fn);
-      boolean isRedeclaration;
-      if (nameNode == null || !nameNode.isQualifiedName()) {
-        isRedeclaration = false;
-      } else if (nameNode.isName()) {
-        isRedeclaration = currentScope.isDefinedLocally(nameNode.getString());
-      } else {
-        isRedeclaration = currentScope.isDefined(nameNode);
-      }
+    private ArrayList<String> collectFormals(Node fn, JSDocInfo fnDoc) {
+      Preconditions.checkArgument(fn.isFunction());
       // Collect the names of the formals.
       // If a formal is a placeholder for variable arity, eg,
       // /** @param {...?} var_args */ function f(var_args) { ... }
@@ -789,17 +801,21 @@ class GlobalTypeInfo implements CompilerPass {
         }
         param = param.getNext();
       }
-      createFunctionScope(fn, formals, nameNode);
       if (fnDoc != null) {
         for (String formalInJsdoc : fnDoc.getParameterNames()) {
           if (!formals.contains(formalInJsdoc) &&
               !tmpRestFormals.contains(formalInJsdoc)) {
-            String functionName = getFunInternalName(fn);
+            String functionName = NodeUtil.getFunctionName(fn);
             warnings.add(JSError.make(
                 fn, INEXISTENT_PARAM, formalInJsdoc, functionName));
           }
         }
       }
+      return formals;
+    }
+
+    private void maybeRecordNominalType(
+        Node fn, Node nameNode, JSDocInfo fnDoc, boolean isRedeclaration) {
       if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
         QualifiedName qname = QualifiedName.fromNode(nameNode);
         if (qname == null) {
@@ -2276,13 +2292,6 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void removeTmpData() {
-      Iterator<String> it = localFunDefs.keySet().iterator();
-      while (it.hasNext()) {
-        String name = it.next();
-        if (name.contains(".")) {
-          it.remove();
-        }
-      }
 
       // For now, we put types of namespaces directly into the locals.
       // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
