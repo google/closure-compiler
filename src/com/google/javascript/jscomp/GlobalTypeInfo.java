@@ -1046,9 +1046,6 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private boolean isNamespaceDecl(Node n) {
-      if (!n.isQualifiedName() && !n.isStringKey()) {
-        return false;
-      }
       if (n.isGetProp() && !currentScope.isNamespace(n.getFirstChild())) {
         return false;
       }
