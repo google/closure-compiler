@@ -317,6 +317,15 @@ AudioParam.prototype.setTargetAtTime = function(target, startTime,
     timeConstant) {};
 
 /**
+ * @deprecated Use setTargetAtTime instead.
+ * @param {number} target
+ * @param {number} startTime
+ * @param {number} timeConstant
+ */
+AudioParam.prototype.setTargetValueAtTime = function(target, startTime,
+    timeConstant) {};
+
+/**
  * @param {Float32Array} values
  * @param {number} startTime
  * @param {number} duration
