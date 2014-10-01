@@ -22,7 +22,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
-import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -36,6 +35,7 @@ import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.io.IOException;
 import java.util.Collection;

@@ -1055,8 +1055,8 @@ public class Parser {
 
   /** Checks variable declaration in variable and for statements. */
   private void checkInitializers(VariableDeclarationListTree variables) {
-    if (variables.declarationType == TokenType.LET ||
-        variables.declarationType == TokenType.CONST) {
+    if (variables.declarationType == TokenType.LET
+        || variables.declarationType == TokenType.CONST) {
       for (VariableDeclarationTree declaration : variables.declarations) {
         if (declaration.initializer == null) {
           reportError("let/const in for statement must have an initializer");
@@ -2270,25 +2270,8 @@ public class Parser {
     return parseAssignmentExpression();
   }
 
-  // Destructuring; see
+  // Destructuring (aka pattern matching); see
   // http://wiki.ecmascript.org/doku.php?id=harmony:destructuring
-  //
-  // SpiderMonkey is much more liberal in where it allows
-  // parenthesized patterns, for example, it allows [x, ([y, z])] but
-  // those inner parentheses aren't allowed in the grammar on the ES
-  // wiki. This implementation conservatively only allows parentheses
-  // at the top-level of assignment statements.
-  //
-  // Rhino has some destructuring support, but it lags SpiderMonkey;
-  // for example, Rhino crashes parsing ({x: f().foo}) = {x: 123}.
-
-  // TODO: implement numbers and strings as labels in object destructuring
-  // TODO: implement destructuring bind in formal parameter lists
-  // TODO: implement destructuring bind in catch headers
-  // TODO: implement destructuring bind in for-in when iterators are
-  // supported
-  // TODO: implement destructuring bind in let bindings when let
-  // bindings are supported
 
   // Kinds of destructuring patterns
   private enum PatternKind {
