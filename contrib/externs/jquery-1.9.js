@@ -138,7 +138,7 @@ jQuery.ajax = function(arg1, settings) {};
 $.ajax = function(arg1, settings) {};
 
 /**
- * @param {function(!jQuery.event,XMLHttpRequest,(jQueryAjaxSettings|Object.<string, *>)} handler
+ * @param {function(!jQuery.event,XMLHttpRequest,(jQueryAjaxSettings|Object.<string, *>))} handler
  * @return {!jQuery}
  */
 jQuery.prototype.ajaxComplete = function(handler) {};
