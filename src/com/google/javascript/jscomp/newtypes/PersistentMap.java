@@ -27,7 +27,7 @@ public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
     try {
       @SuppressWarnings("unchecked")
       Class<? extends Map> c =
-          (Class<? extends Map>)Class.forName("clojure.lang.PersistentHashMap");
+          (Class<? extends Map>) Class.forName("clojure.lang.PersistentHashMap");
       EMPTY = ClojurePersistentHashMap.create(c);
     } catch (ClassNotFoundException e) {
       EMPTY = NaivePersistentMap.create();

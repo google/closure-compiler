@@ -28,7 +28,7 @@ public abstract class PersistentSet<K> extends AbstractSet<K> {
     try {
       @SuppressWarnings("unchecked")
       Class<? extends Set> c =
-          (Class<? extends Set>)Class.forName("clojure.lang.PersistentHashSet");
+          (Class<? extends Set>) Class.forName("clojure.lang.PersistentHashSet");
       EMPTY = ClojurePersistentHashSet.create(c);
     } catch (ClassNotFoundException e) {
       EMPTY = NaivePersistentSet.create();
