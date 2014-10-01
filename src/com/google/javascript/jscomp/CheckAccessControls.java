@@ -77,7 +77,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           "Access to package-private property {0} of {1} not allowed here.");
 
   static final DiagnosticType BAD_PRIVATE_GLOBAL_ACCESS =
-      DiagnosticType.warning(
+      DiagnosticType.error(
           "JSC_BAD_PRIVATE_GLOBAL_ACCESS",
           "Access to private variable {0} not allowed outside file {1}.");
 
