@@ -241,7 +241,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   // Type inference needs to know about the Array and RegExp types,
   // in order to handle array and regexp literals.
-  // This info should comes from externs, and will be set to ? if not present.
+  // This info should come from externs, and will be set to ? if not present.
   private JSType arrayType, regexpType;
 
   // GlobalTypeInfo needs to know about the nominal type "Object" in order
@@ -1038,11 +1038,11 @@ class GlobalTypeInfo implements CompilerPass {
           if (jsdoc != null && jsdoc.getLendsName() != null) {
             lendsObjlits.add(n);
           }
-          Node reciever = parent.isAssign() ? parent.getFirstChild() : parent;
-          if (isNamespaceDecl(reciever)) {
+          Node receiver = parent.isAssign() ? parent.getFirstChild() : parent;
+          if (isNamespaceDecl(receiver)) {
             for (Node prop : n.children()) {
               visitNamespacePropertyDeclaration(
-                  prop, reciever, prop.getString());
+                  prop, receiver, prop.getString());
             }
           } else {
             for (Node prop : n.children()) {
@@ -1106,12 +1106,12 @@ class GlobalTypeInfo implements CompilerPass {
       if (!getProp.isQualifiedName()) {
         return false;
       }
-      Node recieverObj = getProp.getFirstChild();
-      if (!s.isLocalFunDef(recieverObj.getQualifiedName())) {
+      Node receiverObj = getProp.getFirstChild();
+      if (!s.isLocalFunDef(receiverObj.getQualifiedName())) {
         return false;
       }
       return null != currentScope.getNominalType(
-          QualifiedName.fromNode(recieverObj));
+          QualifiedName.fromNode(receiverObj));
     }
 
     /** Returns the newly created scope for this function */
@@ -1192,7 +1192,6 @@ class GlobalTypeInfo implements CompilerPass {
         // Named types have already been crawled in CollectNamedTypes
         return;
       }
-      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       Node recv = getProp.getFirstChild();
       String pname = getProp.getLastChild().getString();
       visitNamespacePropertyDeclaration(getProp, recv, pname);
@@ -1498,8 +1497,7 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Look at other annotations, eg, @constructor
       if (fnDoc != null) {
-        NominalType parentClass =
-            "Object".equals(functionName) ? null : getObjectNominalType();
+        NominalType parentClass = null;
         if (fnDoc.hasBaseType()) {
           if (!fnDoc.isConstructor()) {
             warnings.add(JSError.make(
@@ -1535,6 +1533,9 @@ class GlobalTypeInfo implements CompilerPass {
           return builder.buildDeclaration();
         } else if (fnDoc.isConstructor()) {
           String className = ctorType.toString();
+          if (parentClass == null && !"Object".equals(functionName)) {
+            parentClass = getObjectNominalType();
+          }
           if (parentClass != null) {
             if (!ctorType.addSuperClass(parentClass)) {
               warnings.add(JSError.make(
