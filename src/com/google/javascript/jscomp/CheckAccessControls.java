@@ -425,7 +425,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    Visibility v = getAndCheckEffectiveNameVisibility(t, name, var);
+    Visibility v = checkPrivateNameConvention(
+        AccessControlUtils.getEffectiveNameVisibility(
+            var, defaultVisibilityForFiles), name);
 
     switch (v) {
       case PACKAGE:
@@ -456,37 +458,14 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * (example: a variable with a trailing underscore that is declared
    * {@code @public}).
    */
-  private Visibility getAndCheckEffectiveNameVisibility(
-      NodeTraversal t, Node name, Var var) {
-    Visibility v = getEffectiveNameVisibility(var);
+  private Visibility checkPrivateNameConvention(Visibility v, Node name) {
     if (isPrivateByConvention(name.getString())) {
       if (v != Visibility.PRIVATE && v != Visibility.INHERITED) {
-        compiler.report(t.makeError(name, CONVENTION_MISMATCH));
+        compiler.report(JSError.make(name, CONVENTION_MISMATCH));
       }
       return Visibility.PRIVATE;
     }
     return v;
-  }
-
-  /**
-   * Returns the effective visibility of the given name. This can differ
-   * from the name's declared visibility if the file's {@code @fileoverview}
-   * JsDoc specifies a default visibility.
-   * TODO(brndn): extract to AccessControlUtils.
-   */
-  private Visibility getEffectiveNameVisibility(Var var) {
-    JSDocInfo jsDocInfo = var.getJSDocInfo();
-    Visibility raw = (jsDocInfo == null || jsDocInfo.getVisibility() == null)
-        ? Visibility.INHERITED
-        : jsDocInfo.getVisibility();
-    if (raw != Visibility.INHERITED) {
-      return raw;
-    }
-    Visibility defaultVisibilityForFile =
-        defaultVisibilityForFiles.get(var.getSourceFile());
-    return (defaultVisibilityForFile == null)
-        ? raw
-        : defaultVisibilityForFile;
   }
 
   private static boolean isPrivateAccessAllowed(Var var, Node name, Node parent) {
@@ -523,91 +502,33 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     }
   }
 
-  /**
-   * Returns the effective visibility of the given property. This can differ
-   * from the property's declared visibility if the property is inherited from
-   * a superclass, or if the file's {@code @fileoverview} JsDoc specifies
-   * a default visibility.
-   */
-  private Visibility getEffectivePropertyVisibility(
+  private void checkOverriddenPropertyVisibilityMismatch(
+      Visibility overriding,
+      Visibility overridden,
+      @Nullable Visibility fileOverview,
       NodeTraversal t,
-      Node getprop,
-      Node parent,
-      ObjectType objectType,
-      @Nullable Visibility fileOverviewVisibility) {
-    boolean isOverride = parent.getJSDocInfo() != null
-        && parent.isAssign()
-        && parent.getFirstChild() == getprop;
-    return isOverride
-        ? getEffectiveVisibilityForOverriddenProperty(
-        t, getprop, parent, objectType, fileOverviewVisibility)
-        : getEffectiveVisibilityForNonOverriddenProperty(
-            getprop, objectType, fileOverviewVisibility);
-  }
-
-  /**
-   * Returns the effective visibility of the given overridden property.
-   * An overridden propertiy inherits the visibility of the property it
-   * overrides.
-   */
-  private Visibility getEffectiveVisibilityForOverriddenProperty(
-      NodeTraversal t,
-      Node getprop,
-      Node parent,
-      ObjectType objectType,
-      @Nullable Visibility fileOverviewVisibility) {
-    // Check an ASSIGN statement that's trying to override a property
-    // on a superclass.
-    JSDocInfo overridingInfo = parent.getJSDocInfo();
-    Visibility overridingVisibility = overridingInfo == null
-        ? Visibility.INHERITED
-        : overridingInfo.getVisibility();
-    String propertyName = getprop.getLastChild().getString();
-    Visibility visibility = objectType != null
-        ? objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility()
-        : Visibility.INHERITED;
-    if (overridingVisibility == Visibility.INHERITED
-        && overridingVisibility != visibility
-        && fileOverviewVisibility != null
-        && fileOverviewVisibility != Visibility.INHERITED) {
+      Node getprop) {
+    if (overriding == Visibility.INHERITED
+        && overriding != overridden
+        && fileOverview != null
+        && fileOverview != Visibility.INHERITED) {
+      String propertyName = getprop.getLastChild().getString();
       compiler.report(
           t.makeError(getprop,
               BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY,
               propertyName,
-              fileOverviewVisibility.name()));
+              fileOverview.name()));
     }
-    if (isPrivateByConvention(propertyName)) {
-      return Visibility.PRIVATE;
-    }
-    return (fileOverviewVisibility != null
-        && visibility == Visibility.INHERITED)
-        ? fileOverviewVisibility
-        : visibility;
   }
 
-  /**
-   * Returns the effective visibility of the given non-overridden property.
-   * Non-overridden properties without an explicit visibility annotation
-   * receive the default visibility declared in the file's {@code @fileoverview}
-   * block, if one exists.
-   */
-  private Visibility getEffectiveVisibilityForNonOverriddenProperty(
-      Node getprop,
-      ObjectType objectType,
-      @Nullable Visibility fileOverviewVisibility) {
-    String propertyName = getprop.getLastChild().getString();
-    if (isPrivateByConvention(propertyName)) {
-      return Visibility.PRIVATE;
-    }
-    Visibility raw = Visibility.INHERITED;
-    if (objectType != null) {
-      raw = objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility();
-    }
-    if (raw != Visibility.INHERITED) {
-      return raw;
-    }
-    return (fileOverviewVisibility == null) ? raw : fileOverviewVisibility;
+  private static Visibility getOverridingPropertyVisibility(Node parent) {
+    JSDocInfo overridingInfo = parent.getJSDocInfo();
+    return overridingInfo == null
+        ? Visibility.INHERITED
+        : overridingInfo.getVisibility();
   }
+
+
 
   /**
    * Checks if a constructor is trying to override a final class.
@@ -714,9 +635,6 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     StaticSourceFile definingSource = getDefiningSource(
         getprop, referenceType, propertyName);
-    if (definingSource == null) {
-      return;
-    }
 
     boolean isClassType = false;
 
@@ -732,8 +650,19 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     Visibility fileOverviewVisibility =
         defaultVisibilityForFiles.get(definingSource);
 
-    Visibility visibility = getEffectivePropertyVisibility(
-        t, getprop, parent, objectType, fileOverviewVisibility);
+    Visibility visibility = AccessControlUtils.getEffectivePropertyVisibility(
+        getprop,
+        referenceType,
+        defaultVisibilityForFiles,
+        enforceCodingConventions ? compiler.getCodingConvention() : null);
+
+    if (isOverride) {
+      Visibility overriding = getOverridingPropertyVisibility(parent);
+      checkOverriddenPropertyVisibilityMismatch(
+          overriding, visibility, fileOverviewVisibility, t, getprop);
+    }
+
+
 
     if (objectType != null) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(propertyName);
