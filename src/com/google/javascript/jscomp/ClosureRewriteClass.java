@@ -339,8 +339,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     return result;
   }
 
-  private void rewriteGoogDefineClass(Node exprRoot, ClassDefinition cls) {
-
+  private void rewriteGoogDefineClass(Node exprRoot, final ClassDefinition cls) {
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
 
@@ -412,7 +411,26 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     if (cls.classModifier != null) {
-      // example: modifier(ctr)
+      // Inside the modifier function, replace references to the argument
+      // with the class name.
+      //   function(cls) { cls.Foo = bar; }
+      // becomes
+      //   function(cls) { theClassName.Foo = bar; }
+      // The cls parameter is unused, but leave it there so that it
+      // matches the JsDoc.
+      // TODO(tbreisacher): Add a warning if the param is shadowed or reassigned.
+      Node argList = cls.classModifier.getFirstChild().getNext();
+      Node arg = argList.getFirstChild();
+      final String argName = arg.getString();
+      NodeTraversal.traverse(compiler, cls.classModifier.getLastChild(),
+          new AbstractPostOrderCallback() {
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              if (n.isName() && n.getString().equals(argName)) {
+                parent.replaceChild(n, cls.name.cloneTree());
+              }
+            }
+          });
+
       block.addChildToBack(
           IR.exprResult(
               fixupFreeCall(
