@@ -22,28 +22,34 @@ import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.List;
 import java.util.Set;
 
 /**
- * Look for internal properties set using "this" but never read.  Explicitly
- * ignored is the possibility that these properties
- * may be indirectly referenced using "for-in" or "Object.keys".  This is the
- * same assumption used with RemoveUnusedPrototypeProperties but is by slightly
- * wider in scope.
+ * This pass looks for properties that are never read and removes them.
+ * These can be properties created using "this", or static properties of
+ * constructors or interfaces. Explicitly ignored is the possibility that 
+ * these properties may be indirectly referenced using "for-in" or 
+ * "Object.keys".  This is the same assumption used with 
+ * RemoveUnusedPrototypeProperties but is slightly wider in scope.
  *
  * @author johnlenz@google.com (John Lenz)
  */
 class RemoveUnusedClassProperties
     implements CompilerPass, NodeTraversal.Callback {
-  final AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
   private Set<String> used = Sets.newHashSet();
   private List<Node> candidates = Lists.newArrayList();
 
-  RemoveUnusedClassProperties(AbstractCompiler compiler) {
+  private final boolean removeUnusedConstructorProperties;
+
+  RemoveUnusedClassProperties(
+      AbstractCompiler compiler, boolean removeUnusedConstructorProperties) {
     this.compiler = compiler;
     used.addAll(compiler.getExternProperties());
+    this.removeUnusedConstructorProperties = removeUnusedConstructorProperties;
   }
 
   @Override
@@ -88,7 +94,7 @@ class RemoveUnusedClassProperties
          String propName = n.getLastChild().getString();
          if (compiler.getCodingConvention().isExported(propName)
              || isPinningPropertyUse(n)
-             || !isKnownClassProperty(n)) {
+             || !isRemovablePropertyDefinition(n)) {
            used.add(propName);
          } else {
            // This is a definition of a property but it is only removable
@@ -122,12 +128,18 @@ class RemoveUnusedClassProperties
      }
   }
 
-  private static boolean isKnownClassProperty(Node n) {
+  private boolean isRemovablePropertyDefinition(Node n) {
     Preconditions.checkState(n.isGetProp());
     Node target = n.getFirstChild();
     return target.isThis()
+        || (this.removeUnusedConstructorProperties && isConstructor(target))
         || (target.isGetProp()
             && target.getLastChild().getString().equals("prototype"));
+  }
+
+  private boolean isConstructor(Node n) {
+    JSType type = n.getJSType();
+    return type != null && (type.isConstructor() || type.isInterface());
   }
 
   /**

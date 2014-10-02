@@ -195,7 +195,7 @@ public class MultiPassTest extends CompilerTestCase {
         new PassFactory("removeUnusedClassProperties", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new RemoveUnusedClassProperties(compiler);
+            return new RemoveUnusedClassProperties(compiler, false);
           }
         });
   }

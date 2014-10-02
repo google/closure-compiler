@@ -1952,7 +1952,8 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("removeUnusedClassProperties", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new RemoveUnusedClassProperties(compiler);
+      return new RemoveUnusedClassProperties(
+          compiler, options.removeUnusedConstructorProperties);
     }
   };
 
