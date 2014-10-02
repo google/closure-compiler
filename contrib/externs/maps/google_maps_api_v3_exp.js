@@ -5728,11 +5728,6 @@ google.maps.places.AutocompletePrediction = function() {};
 google.maps.places.AutocompletePrediction.prototype.description;
 
 /**
- * @type {string}
- */
-google.maps.places.AutocompletePrediction.prototype.id;
-
-/**
  * @type {Array.<google.maps.places.PredictionSubstring>}
  */
 google.maps.places.AutocompletePrediction.prototype.matched_substrings;
@@ -5741,11 +5736,6 @@ google.maps.places.AutocompletePrediction.prototype.matched_substrings;
  * @type {string}
  */
 google.maps.places.AutocompletePrediction.prototype.place_id;
-
-/**
- * @type {string}
- */
-google.maps.places.AutocompletePrediction.prototype.reference;
 
 /**
  * @type {Array.<google.maps.places.PredictionTerm>}
@@ -5867,11 +5857,6 @@ google.maps.places.PlaceDetailsRequest = function() {};
 google.maps.places.PlaceDetailsRequest.prototype.placeId;
 
 /**
- * @type {string}
- */
-google.maps.places.PlaceDetailsRequest.prototype.reference;
-
-/**
  * @interface
  */
 google.maps.places.PlaceGeometry = function() {};
@@ -5955,11 +5940,6 @@ google.maps.places.PlaceResult.prototype.icon;
 /**
  * @type {string}
  */
-google.maps.places.PlaceResult.prototype.id;
-
-/**
- * @type {string}
- */
 google.maps.places.PlaceResult.prototype.international_phone_number;
 
 /**
@@ -5991,11 +5971,6 @@ google.maps.places.PlaceResult.prototype.price_level;
  * @type {number}
  */
 google.maps.places.PlaceResult.prototype.rating;
-
-/**
- * @type {string}
- */
-google.maps.places.PlaceResult.prototype.reference;
 
 /**
  * @type {Array.<google.maps.places.PlaceReview>}
@@ -6213,6 +6188,11 @@ google.maps.places.QueryAutocompletePrediction.prototype.description;
  * @type {Array.<google.maps.places.PredictionSubstring>}
  */
 google.maps.places.QueryAutocompletePrediction.prototype.matched_substrings;
+
+/**
+ * @type {string}
+ */
+google.maps.places.QueryAutocompletePrediction.prototype.place_id;
 
 /**
  * @type {Array.<google.maps.places.PredictionTerm>}
