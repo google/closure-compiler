@@ -1,3 +1,6 @@
 language: java
 jdk:
   - openjdk7
+
+notifications:
+  email: false
