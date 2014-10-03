@@ -3996,6 +3996,44 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function setObj() {\n" +
         "  ns.obj = {};\n" +
         "}");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @type {Object} */\n" +
+        "ns.obj = null;\n" +
+        "function setObj() {\n" +
+        "  ns.obj = {};\n" +
+        "  ns.obj.str = 'str';\n" +
+        "}");
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @type {Object} */\n" +
+        "ns.obj = null;\n" +
+        "ns.obj = {};\n" +
+        "ns.obj.x = 'str';\n" +
+        "ns.obj.x - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @type {Object} */\n" +
+        "ns.obj = null;\n" +
+        "ns.obj = { x : 1, y : 5};\n" +
+        "ns.obj.x = 'str';");
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @type {Object} */\n" +
+        "ns.obj = null;\n" +
+        "ns.obj = { x : 1, y : 5};\n" +
+        "ns.obj.x = 'str';\n" +
+        "ns.obj.x - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testNamespacedObjectsDontCrash() {
@@ -6414,6 +6452,20 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** !Foo<?> */ f) {\n" +
         "  if (f instanceof Foo) return true;\n" +
         "};");
+  }
+
+  public void testRedeclarationOfFunctionAsNamespaceDoesntCrash() {
+    checkNoWarnings("",
+        "/** @const */ var ns = ns || {};\n" +
+        "ns.fun = function(name) {};\n" +
+        "ns.fun = ns.fun || {};\n" +
+        "ns.fun.get = function(/** string */ name) {};");
+
+    checkNoWarnings("",
+        "/** @const */ var ns = ns || {};\n" +
+        "ns.fun = function(name) {};\n" +
+        "ns.fun.get = function(/** string */ name) {};\n" +
+        "ns.fun = ns.fun || {};");
   }
 
   public void testInvalidEnumDoesntCrash() {

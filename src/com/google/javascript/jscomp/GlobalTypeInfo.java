@@ -611,7 +611,8 @@ class GlobalTypeInfo implements CompilerPass {
     private void processQualifiedDefinition(Node qnameNode) {
       Preconditions.checkArgument(qnameNode.isGetProp());
       Preconditions.checkArgument(qnameNode.isQualifiedName());
-      if (!currentScope.isNamespace(qnameNode.getFirstChild())) {
+      Node recv = qnameNode.getFirstChild();
+      if (!currentScope.isNamespace(recv)) {
         return;
       }
       if (NodeUtil.isNamespaceDecl(qnameNode)) {
@@ -620,6 +621,15 @@ class GlobalTypeInfo implements CompilerPass {
         visitTypedef(qnameNode);
       } else if (NodeUtil.isEnumDecl(qnameNode)) {
         visitEnum(qnameNode);
+      } else if (!currentScope.isDefined(qnameNode)) {
+        Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
+        String pname = qnameNode.getLastChild().getString();
+        // A program can have an error where a namespace property is defined twice:
+        // the first time with a non-namespace type and the second time as a namespace.
+        // Adding the non-namespace property here as undeclared prevents us
+        // from mistakenly using the second definition later. We use ? for now,
+        // but may find a better type in ProcessScope
+        ns.addUndeclaredProperty(pname, JSType.UNKNOWN, /* isConst */ false);
       }
     }
 
@@ -652,11 +662,7 @@ class GlobalTypeInfo implements CompilerPass {
               // Class or prototype properties are handled later in ProcessScope
               return;
             }
-            if (NodeUtil.isNamespaceDecl(getProp)
-                || NodeUtil.isTypedefDecl(getProp)
-                || NodeUtil.isEnumDecl(getProp)) {
-              processQualifiedDefinition(getProp);
-            }
+            processQualifiedDefinition(getProp);
           }
           break;
         }
@@ -1040,7 +1046,8 @@ class GlobalTypeInfo implements CompilerPass {
             lendsObjlits.add(n);
           }
           Node receiver = parent.isAssign() ? parent.getFirstChild() : parent;
-          if (isNamespaceDecl(receiver)) {
+          if (NodeUtil.isNamespaceDecl(receiver)
+              && currentScope.isNamespace(receiver)) {
             for (Node prop : n.children()) {
               visitNamespacePropertyDeclaration(
                   prop, receiver, prop.getString());
@@ -1060,13 +1067,6 @@ class GlobalTypeInfo implements CompilerPass {
           break;
         }
       }
-    }
-
-    private boolean isNamespaceDecl(Node n) {
-      if (n.isGetProp() && !currentScope.isNamespace(n.getFirstChild())) {
-        return false;
-      }
-      return NodeUtil.isNamespaceDecl(n);
     }
 
     private void visitPropertyDeclaration(Node getProp) {
@@ -1188,7 +1188,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitNamespacePropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
-      if (currentScope.isNamespace(getProp)
+      if (NodeUtil.isNamespaceDecl(getProp) && currentScope.isNamespace(getProp)
           || NodeUtil.isTypedefDecl(getProp)) {
         // Named types have already been crawled in CollectNamedTypes
         return;
@@ -2071,7 +2071,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       JSType localType = locals.get(name);
       if (localType != null) {
-        Preconditions.checkState(!localType.isBottom());
+        Preconditions.checkState(!localType.isBottom(), name + " was bottom");
         return localType;
       }
       Scope s = localFunDefs.get(name);
