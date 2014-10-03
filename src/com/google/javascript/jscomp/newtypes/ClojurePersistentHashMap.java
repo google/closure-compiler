@@ -43,7 +43,7 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
 
   public PersistentMap<K, V> with(K key, V value) {
     try {
-      Map m = (Map) assoc.invoke(map, key, value);
+      Map m = (Map) assoc.invoke(this.map, key, value);
       return new ClojurePersistentHashMap<>(m);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -52,7 +52,7 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
 
   public PersistentMap<K, V> without(K key) {
     try {
-      Map m = (Map) without.invoke(map, key);
+      Map m = (Map) without.invoke(this.map, key);
       return new ClojurePersistentHashMap<>(m);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -61,32 +61,32 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
 
   @Override
   public V get(Object key) {
-    return (V) map.get(key);
+    return (V) this.map.get(key);
   }
 
   @Override
   public Set<K> keySet() {
-    return map.keySet();
+    return this.map.keySet();
   }
 
   @Override
   public boolean containsKey(Object key) {
-    return map.containsKey(key);
+    return this.map.containsKey(key);
   }
 
   @Override
   public Set<Map.Entry<K, V>> entrySet() {
-    return map.entrySet();
+    return this.map.entrySet();
   }
 
   @Override
   public int size() {
-    return map.size();
+    return this.map.size();
   }
 
   @Override
   public boolean isEmpty() {
-    return map.isEmpty();
+    return this.map.isEmpty();
   }
 
   @Override
@@ -100,6 +100,6 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
 
   @Override
   public int hashCode() {
-    return map.hashCode();
+    return this.map.hashCode();
   }
 }

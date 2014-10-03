@@ -43,7 +43,7 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
 
   public PersistentSet<K> with(K key) {
     try {
-      Set s = (Set) cons.invoke(set, key);
+      Set s = (Set) cons.invoke(this.set, key);
       return new ClojurePersistentHashSet<>(s);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -52,7 +52,7 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
 
   public PersistentSet<K> without(K key) {
     try {
-      Set s = (Set) disjoin.invoke(set, key);
+      Set s = (Set) disjoin.invoke(this.set, key);
       return new ClojurePersistentHashSet<>(s);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -61,22 +61,22 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
 
   @Override
   public boolean contains(Object key) {
-    return set.contains(key);
+    return this.set.contains(key);
   }
 
   @Override
   public int size() {
-    return set.size();
+    return this.set.size();
   }
 
   @Override
   public boolean isEmpty() {
-    return set.isEmpty();
+    return this.set.isEmpty();
   }
 
   @Override
   public Iterator<K> iterator() {
-    return set.iterator();
+    return this.set.iterator();
   }
 
   @Override
@@ -90,6 +90,6 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
 
   @Override
   public int hashCode() {
-    return set.hashCode();
+    return this.set.hashCode();
   }
 }

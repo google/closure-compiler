@@ -274,7 +274,7 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   JSType getArrayType() {
-    return getArrayType(JSType.TOP);
+    return getArrayType(JSType.UNKNOWN);
   }
 
   JSType getArrayType(JSType t) {
@@ -285,6 +285,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       arrayType = arrayCtor.getFunType().getReturnType();
     }
+    // Kind of ugly that we have hard-coded "T" here. Alternatives?
     return arrayType.substituteGenerics(ImmutableMap.of("T", t));
   }
 
