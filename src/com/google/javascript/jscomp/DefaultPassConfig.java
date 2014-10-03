@@ -225,12 +225,14 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(rewriteLetConst);
       checks.add(rewriteGenerators);
       checks.add(markTranspilationDone);
+    }
 
-      if (options.transpileOnly) {
-        return checks;
-      } else {
-        checks.add(es6RuntimeLibrary);
-      }
+    if (options.transpileOnly) {
+      return checks;
+    }
+
+    if (options.needsConversion()) {
+      checks.add(es6RuntimeLibrary);
     }
 
     checks.add(convertStaticInheritance);
@@ -423,7 +425,7 @@ public class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getOptimizations() {
     List<PassFactory> passes = Lists.newArrayList();
 
-    if (options.needsConversion() && options.transpileOnly) {
+    if (options.transpileOnly) {
       return passes;
     }
 
