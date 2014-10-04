@@ -3975,11 +3975,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   // }
 
   public void testNestedNamespaces() {
-    // ns.subns is not @const annotated, but we still get good checking for its
-    // properties. This is the same behavior as the previous type inference.
+    // In the previous type inference, ns.subns did not need a
+    // @const annotation, but we require it.
     typeCheck(
         "/** @const */\n" +
         "var ns = {};\n" +
+        "/** @const */\n" +
         "ns.subns = {};\n" +
         "/** @type {string} */\n" +
         "ns.subns.n = 'str';\n" +
@@ -7966,6 +7967,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @const */\n" +
         "var ns = {};\n" +
+        "/** @const */\n" +
         "ns.subns = {};\n" +
         "(/** @lends {ns.subns} */ { prop: 1 });\n" +
         "var /** string */ s = ns.subns.prop;",
@@ -8974,7 +8976,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     checkNoWarnings(
-        "/** @const */ var ns = {}; ns.o = { /** @const */ PROP: 5 };");
+        "/** @const */ var ns = {};\n" +
+        "/** @const */ ns.o = { /** @const */ PROP: 5 };");
 
     checkNoWarnings(
         "/** @const */ var ns = {};\n" +

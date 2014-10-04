@@ -826,15 +826,13 @@ public final class NodeUtil {
    */
   static boolean isNamespaceDecl(Node n) {
     JSDocInfo jsdoc = getBestJSDocInfo(n);
-    if (jsdoc != null && !jsdoc.getTypeNodes().isEmpty()) {
+    if (jsdoc == null || !jsdoc.isConstant()
+        || !jsdoc.getTypeNodes().isEmpty()) {
       return false;
     }
     Node qnameNode;
     Node initializer;
     if (n.getParent().isVar()) {
-      if (jsdoc == null || !jsdoc.isConstant()) {
-        return false;
-      }
       qnameNode = n;
       initializer = n.getFirstChild();
     } else if (n.isExprResult()) {
