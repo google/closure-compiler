@@ -2119,8 +2119,9 @@ public class NewTypeInference implements CompilerPass {
     boolean fuzzyDeclaration = declared == null || declared.isUnknown() ||
         (declared.isTop() && !inferred.isTop());
     return fuzzyDeclaration
-        // The intent is to be looser about warnings when a value can be passed
-        // to a function, so we have less information about the value.
+        // The intent is to be looser about warnings in the case when a value
+        // is passed to a function (as opposed to being created locally),
+        // because then we have less information about the value.
         // The accurate way to do this is to taint types so that we can track
         // where a type comes from (local or not).
         // Without tainting (eg, we used to have locations), we approximate this

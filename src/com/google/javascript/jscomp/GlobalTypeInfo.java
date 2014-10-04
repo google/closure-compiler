@@ -302,7 +302,8 @@ class GlobalTypeInfo implements CompilerPass {
 
   private NominalType getObjectNominalType() {
     if (objectNominalType == null) {
-      RawNominalType rawNominal = globalScope.getNominalType(new QualifiedName("Object"));
+      RawNominalType rawNominal =
+          globalScope.getNominalType(new QualifiedName("Object"));
       if (rawNominal != null) {
         objectNominalType = rawNominal.getAsNominalType();
       }
@@ -1386,7 +1387,7 @@ class GlobalTypeInfo implements CompilerPass {
               argTypes.add(t);
             }
             funType = funType
-                .instantiateGenericsFromArgumentList(argTypes.build());
+                .instantiateGenericsFromArgumentTypes(argTypes.build());
             if (funType == null) {
               return null;
             }

@@ -24,6 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -311,18 +312,15 @@ public class FunctionType {
     // us so we can handle looseness correctly.
     Preconditions.checkState(!isLoose && !other.isLoose);
     if (this.isGeneric()) {
-      // This can only happen when typechecking an assignment that "defines" a
-      // polymorphic function, eg,
-      // /**
-      //  * @template {T}
-      //  * @param {T} x
-      //  */
-      // Foo.prototype.method = function(x) {};
-
-      // TODO(dimvar): This also comes up in inheritance of classes with
-      // polymorphic methods; fix for that.
-      return true;
+      if (this.equals(other)) {
+        return true;
+      }
+      // NOTE(dimvar): This is a bug. The code that triggers this should be rare
+      // and the fix is not trivial, so for now we decided to not fix.
+      // See unit tests in NewTypeInferenceTest#testGenericsSubtyping
+      return instantiateGenericsWithUnknown(this).isSubtypeOf(other);
     }
+
     // The subtype must have an equal or smaller number of required formals
     if (requiredFormals.size() > other.requiredFormals.size()) {
       return false;
@@ -422,13 +420,12 @@ public class FunctionType {
     if (other == null ||
         !this.isLoose() && other.isLoose()) {
       return this;
-    } else {
-      FunctionType result = FunctionType.meet(this, other);
-      if (this.isLoose && !result.isLoose()) {
-        result = result.withLoose();
-      }
-      return result;
     }
+    FunctionType result = FunctionType.meet(this, other);
+    if (this.isLoose && !result.isLoose()) {
+      result = result.withLoose();
+    }
+    return result;
   }
 
   static FunctionType meet(FunctionType f1, FunctionType f2) {
@@ -444,6 +441,18 @@ public class FunctionType {
     if (f1.isLoose() || f2.isLoose()) {
       return FunctionType.looseJoin(f1, f2);
     }
+
+    if (f1.isGeneric() && f1.isSubtypeOf(f2)) {
+      return f1;
+    } else if (f2.isGeneric() && f2.isSubtypeOf(f1)) {
+      return f2;
+    }
+
+    // Here, f1 is not a subtype of f2 and f2 is not a subtype of f1.
+    // If we find that we need to handle generics in this case, instantiate f1
+    // and f2 with unknowns and then continue normally.
+    Preconditions.checkState(!f1.isGeneric());
+    Preconditions.checkState(!f2.isGeneric());
 
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int minRequiredArity = Math.min(
@@ -570,6 +579,17 @@ public class FunctionType {
     }
 
     return returnType.unifyWith(other.returnType, typeParameters, typeMultimap);
+  }
+
+  private static FunctionType instantiateGenericsWithUnknown(FunctionType f) {
+    if (!f.isGeneric()) {
+      return f;
+    }
+    HashMap<String, JSType> tmpTypeMap = new HashMap<>();
+    for (String typeParam : f.typeParameters) {
+      tmpTypeMap.put(typeParam, JSType.UNKNOWN);
+    }
+    return f.instantiateGenerics(tmpTypeMap);
   }
 
   /**
@@ -700,7 +720,8 @@ public class FunctionType {
     Map<String, JSType> typeMap = concreteTypes;
     if (typeParameters != null) {
       ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-      for (Map.Entry<String, JSType> concreteTypeEntry : concreteTypes.entrySet()) {
+      for (Map.Entry<String, JSType> concreteTypeEntry
+               : concreteTypes.entrySet()) {
         if (!typeParameters.contains(concreteTypeEntry.getKey())) {
           builder.put(concreteTypeEntry);
         }
@@ -717,8 +738,11 @@ public class FunctionType {
     return applyInstantiation(false, typeMap);
   }
 
-  public FunctionType instantiateGenericsFromArgumentList(
+  public FunctionType instantiateGenericsFromArgumentTypes(
       List<JSType> argTypes) {
+    if (argTypes.size() < getMinArity() || argTypes.size() > getMaxArity()) {
+      return null;
+    }
     Multimap<String, JSType> typeMultimap = HashMultimap.create();
     for (int i = 0, size = argTypes.size(); i < size; i++) {
       if (!this.getFormalType(i)

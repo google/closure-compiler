@@ -5761,7 +5761,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var /** Foo<number> */ x = new A();");
   }
 
-  public void testGenericsSubtyping1() {
+  public void testGenericsSubtyping() {
     typeCheck(
         "/** @interface */ function Parent() {}\n" +
         "/**\n" +
@@ -5795,9 +5795,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " */\n" +
         "Child.prototype.method = function(x, y){};",
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
-  }
 
-  public void testGenericsSubtyping2() {
     checkNoWarnings(
         "/** @interface */ function Parent() {}\n" +
         "/**\n" +
@@ -5829,9 +5827,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " * @param {?} y\n" +
         " */\n" +
         "Child.prototype.method = function(x, y){};");
-  }
 
-  public void testGenericsSubtyping3() {
     checkNoWarnings(
         "/** @interface */ function Parent() {}\n" +
         "/**\n" +
@@ -5863,9 +5859,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " * @return {?}\n" +
         " */\n" +
         "Child.prototype.method = function(x){ return x; };");
-  }
 
-  public void testGenericsSubtyping4() {
     typeCheck(
         "/** @interface */ function Parent() {}\n" +
         "/**\n" +
@@ -5916,12 +5910,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " */\n" +
         "Child.prototype.method = function(x){ return x; };",
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
-  }
 
-  public void testGenericsSubtyping5() {
-    // This is probably an uncommon case, but technically it is valid, and
-    // should not cause an error.
-    // TODO(blickly): Make this a checkNoWarnings
     typeCheck(
         "/** @interface */ function Parent() {}\n" +
         "/**\n" +
@@ -5936,6 +5925,121 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " */\n" +
         "Child.prototype.method = function(x){ return x; };",
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "/** @param {function(number, number)} x */\n" +
+        "function g(x) {}\n" +
+        "g(f);");
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "/** @param {function()} x */\n" +
+        "function g(x) {}\n" +
+        "g(f);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @interface */\n" +
+        "function Parent() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x) {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @implements {Parent}\n" +
+        " */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @template U\n" +
+        " * @param {U} x\n" +
+        " */\n" +
+        "Child.prototype.method = function(x) {};");
+
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/** @param {string} x */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){};");
+
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/** @param {*} x */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){};");
+
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/** @param {?} x */\n" +
+        "Parent.prototype.method = function(x){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "Child.prototype.method = function(x){};");
+
+    // This shows a bug in subtyping of generic functions.
+    // We don't catch the invalid prop override.
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @param {string} x\n" +
+        " * @param {number} y\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x, y){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "Child.prototype.method = function(x, y){};");
+
+    // This shows a bug in subtyping of generic functions.
+    // We don't catch the invalid prop override.
+    checkNoWarnings(
+        "/** @interface */ function Parent() {}\n" +
+        "/**\n" +
+        " * @template A, B\n" +
+        " * @param {A} x\n" +
+        " * @param {B} y\n" +
+        " * @return {A}\n" +
+        " */\n" +
+        "Parent.prototype.method = function(x, y){};\n" +
+        "/** @constructor @implements {Parent} */\n" +
+        "function Child() {}\n" +
+        "/**\n" +
+        " * @template A, B\n" +
+        " * @param {A} x\n" +
+        " * @param {B} y\n" +
+        " * @return {B}\n" +
+        " */\n" +
+        "Child.prototype.method = function(x, y){ return y; };");
   }
 
   public void testInferredArrayGenerics() {
@@ -6107,6 +6211,32 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         ImmutableList.of(
             GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
             NewTypeInference.NOT_UNIQUE_INSTANTIATION));
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function f(x) { return x; }\n" +
+        "/** @const */\n" +
+        "var y = f(1, 2);",
+        ImmutableList.of(
+            GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
+            TypeCheck.WRONG_ARGUMENT_COUNT));
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function f(x) { return x; }\n" +
+        "/** @const */\n" +
+        "var y = f();",
+        ImmutableList.of(
+            GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
+            TypeCheck.WRONG_ARGUMENT_COUNT));
   }
 
   public void testDifficultClassGenericsInstantiation() {
@@ -6603,7 +6733,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testArrayLiteralUsedGenericallyDoesntCrash() {
     checkNoWarnings(
-        "/** @param {!Array<T>} arr @return {T} @template T */\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {!Array<T>} arr\n" +
+        " * @return {T}\n" +
+        " */\n" +
         "function f(arr) { return arr[0]; }\n" +
         "f([1,2,3]);");
   }
