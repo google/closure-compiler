@@ -179,6 +179,14 @@ gadgets.rpc.setRelayUrl = function(targetId, url, opt_useLegacy) {};
 gadgets.rpc.setupReceiver = function(targetId, opt_receiverUrl, opt_authToken) {};
 
 /**
+ * Remove relay URL and auth token registration for a target frame.
+ *
+ * Note: Does not delete the iframe.
+ * @param {string} receiverId The id of the target gadget.
+ */
+gadgets.rpc.removeReceiver = function(receiverId) {};
+
+/**
  * @param {string} serviceName The RPC service to unregister the handler for.
  */
 gadgets.rpc.unregister = function(serviceName) {};
@@ -595,4 +603,3 @@ gadgets.util.createIframeElement = function(opt_attribs) {};
  * @return {Element} The DOM node representing body.
  */
 gadgets.util.getBodyElement = function() {};
-
