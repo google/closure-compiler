@@ -25,16 +25,16 @@ import static com.google.javascript.jscomp.parsing.JsDocToken.EOC;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EOF;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EOL;
 import static com.google.javascript.jscomp.parsing.JsDocToken.EQUALS;
-import static com.google.javascript.jscomp.parsing.JsDocToken.GT;
-import static com.google.javascript.jscomp.parsing.JsDocToken.LB;
-import static com.google.javascript.jscomp.parsing.JsDocToken.LC;
-import static com.google.javascript.jscomp.parsing.JsDocToken.LP;
-import static com.google.javascript.jscomp.parsing.JsDocToken.LT;
+import static com.google.javascript.jscomp.parsing.JsDocToken.LEFT_ANGLE;
+import static com.google.javascript.jscomp.parsing.JsDocToken.LEFT_CURLY;
+import static com.google.javascript.jscomp.parsing.JsDocToken.LEFT_PAREN;
+import static com.google.javascript.jscomp.parsing.JsDocToken.LEFT_SQUARE;
 import static com.google.javascript.jscomp.parsing.JsDocToken.PIPE;
 import static com.google.javascript.jscomp.parsing.JsDocToken.QMARK;
-import static com.google.javascript.jscomp.parsing.JsDocToken.RB;
-import static com.google.javascript.jscomp.parsing.JsDocToken.RC;
-import static com.google.javascript.jscomp.parsing.JsDocToken.RP;
+import static com.google.javascript.jscomp.parsing.JsDocToken.RIGHT_ANGLE;
+import static com.google.javascript.jscomp.parsing.JsDocToken.RIGHT_CURLY;
+import static com.google.javascript.jscomp.parsing.JsDocToken.RIGHT_PAREN;
+import static com.google.javascript.jscomp.parsing.JsDocToken.RIGHT_SQUARE;
 import static com.google.javascript.jscomp.parsing.JsDocToken.STAR;
 import static com.google.javascript.jscomp.parsing.JsDocToken.STRING;
 
@@ -51,7 +51,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization1() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        STAR, ANNOTATION, LC, STRING, RC, EOL, STAR, ANNOTATION);
+        STAR, ANNOTATION, LEFT_CURLY, STRING, RIGHT_CURLY, EOL, STAR, ANNOTATION);
     List<String> strings = ImmutableList.of("type", "string", "private");
     testJSDocTokenStream(" * @type {string}\n * @private", tokens, strings);
     testJSDocTokenStream(" *    @type { string } \n * @private",
@@ -64,7 +64,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization2() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        ANNOTATION, LC, STRING, LT, STRING, PIPE, STRING, GT, RC);
+        ANNOTATION, LEFT_CURLY, STRING, LEFT_ANGLE, STRING, PIPE, STRING, RIGHT_ANGLE, RIGHT_CURLY);
     List<String> strings = ImmutableList.of("param", "Array", "string", "null");
     testJSDocTokenStream("@param {Array.<string|null>}", tokens, strings);
     testJSDocTokenStream("@param {Array.<string|null>}", tokens, strings);
@@ -82,7 +82,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization3() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        ANNOTATION, LC, STRING, LT, STRING, PIPE, STRING, GT, RC);
+        ANNOTATION, LEFT_CURLY, STRING, LEFT_ANGLE, STRING, PIPE, STRING, RIGHT_ANGLE, RIGHT_CURLY);
     List<String> strings = ImmutableList.of("param", "Array", "string", "null");
     testJSDocTokenStream("@param {Array.<string||null>}", tokens, strings);
     testJSDocTokenStream("@param {Array.< string || null> }", tokens, strings);
@@ -98,7 +98,8 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization4() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        ANNOTATION, LC, STRING, LT, LP, STRING, COMMA, STRING, RP, GT, RC, EOF);
+        ANNOTATION, LEFT_CURLY, STRING, LEFT_ANGLE, LEFT_PAREN, STRING, COMMA,
+        STRING, RIGHT_PAREN, RIGHT_ANGLE, RIGHT_CURLY, EOF);
     List<String> strings = ImmutableList.of("param", "Array", "string", "null");
     testJSDocTokenStream("@param {Array.<(string,null)>}", tokens, strings);
     testJSDocTokenStream("@param {Array  .<(string,null)> } ", tokens, strings);
@@ -135,7 +136,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization7() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        ELLIPSIS, ELLIPSIS, ELLIPSIS, ELLIPSIS, ELLIPSIS, LT, EOC);
+        ELLIPSIS, ELLIPSIS, ELLIPSIS, ELLIPSIS, ELLIPSIS, LEFT_ANGLE, EOC);
     List<String> strings = ImmutableList.of();
 
     testJSDocTokenStream("................<*/", tokens, strings);
@@ -173,14 +174,14 @@ public class JsDocTokenStreamTest extends TestCase {
   }
 
   public void testJsDocTokenization10() throws Exception {
-    List<JsDocToken> tokens = ImmutableList.of(STRING, GT, EOC);
-    List<String> strings = ImmutableList.of("Array<String");
+    List<JsDocToken> tokens = ImmutableList.of(STRING, LEFT_ANGLE, STRING, RIGHT_ANGLE, EOC);
+    List<String> strings = ImmutableList.of("Array", "String");
     testJSDocTokenStream("Array<String>*/", tokens, strings);
   }
 
   public void testJsDocTokenization11() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        ANNOTATION, LC, STRING, QMARK, RC, EOC, EOF);
+        ANNOTATION, LEFT_CURLY, STRING, QMARK, RIGHT_CURLY, EOC, EOF);
     List<String> strings = ImmutableList.of("param", "string");
     testJSDocTokenStream("@param {string?}*/", tokens, strings);
     testJSDocTokenStream(" @param {string?}*/", tokens, strings);
@@ -199,7 +200,7 @@ public class JsDocTokenStreamTest extends TestCase {
   }
 
   public void testJsDocTokenization13() throws Exception {
-    List<JsDocToken> tokens = ImmutableList.of(ELLIPSIS, LB, STRING, RB, EOC);
+    List<JsDocToken> tokens = ImmutableList.of(ELLIPSIS, LEFT_SQUARE, STRING, RIGHT_SQUARE, EOC);
     List<String> strings = ImmutableList.of("number");
 
     testJSDocTokenStream("...[number]*/", tokens, strings);
@@ -210,7 +211,7 @@ public class JsDocTokenStreamTest extends TestCase {
     // followed by a comma (,) we are allowing this case to parse this way.
     // This is a simplification of the tokenizer, but the extra complexity is
     // never used.
-    List<JsDocToken> tokens = ImmutableList.of(STRING, LB, STRING, EOC);
+    List<JsDocToken> tokens = ImmutableList.of(STRING, LEFT_SQUARE, STRING, EOC);
     List<String> strings = ImmutableList.of("foo", "bar...");
 
     testJSDocTokenStream("foo[ bar...*/", tokens, strings);
@@ -218,7 +219,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization15() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        STRING, LB, STRING, COMMA, ELLIPSIS, EOC);
+        STRING, LEFT_SQUARE, STRING, COMMA, ELLIPSIS, EOC);
     List<String> strings = ImmutableList.of("foo", "bar");
 
     testJSDocTokenStream("foo[ bar,...*/", tokens, strings);
@@ -251,7 +252,7 @@ public class JsDocTokenStreamTest extends TestCase {
   }
 
   public void testJsDocTokenization19() throws Exception {
-    List<JsDocToken> tokens = ImmutableList.of(ANNOTATION, LC, STAR, RC, EOC);
+    List<JsDocToken> tokens = ImmutableList.of(ANNOTATION, LEFT_CURLY, STAR, RIGHT_CURLY, EOC);
     List<String> strings = ImmutableList.of("type", "*");
 
     testJSDocTokenStream("@type {*}*/", tokens, strings);
@@ -259,7 +260,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization20() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        ANNOTATION, LC, BANG, STRING, RC, EOC, EOF);
+        ANNOTATION, LEFT_CURLY, BANG, STRING, RIGHT_CURLY, EOC, EOF);
     List<String> strings = ImmutableList.of("param", "Object");
     testJSDocTokenStream("@param {!Object}*/", tokens, strings);
     testJSDocTokenStream(" @param {!Object}*/", tokens, strings);
@@ -272,7 +273,7 @@ public class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization21() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
-        ANNOTATION, LC, STRING, EQUALS, RC, EOC, EOF);
+        ANNOTATION, LEFT_CURLY, STRING, EQUALS, RIGHT_CURLY, EOC, EOF);
     List<String> strings = ImmutableList.of("param", "Object");
     testJSDocTokenStream("@param {Object=}*/", tokens, strings);
     testJSDocTokenStream(" @param {Object=}*/", tokens, strings);

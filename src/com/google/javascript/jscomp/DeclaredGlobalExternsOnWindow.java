@@ -58,22 +58,21 @@ class DeclaredGlobalExternsOnWindow
     }
   }
 
-  private static void addExtern(Node node) {
+  private void addExtern(Node node) {
     String name = node.getString();
     JSDocInfo oldJSDocInfo = NodeUtil.getBestJSDocInfo(node);
 
-    // TODO(tbreisacher): Consider adding externs to 'this' instead of 'window',
-    // for environments where the global object is not called 'window.'
-    Node window = IR.name("window");
-    Node string = IR.string(name);
-    Node getprop = IR.getprop(window, string);
+    // TODO(tbreisacher): Consider adding externs to 'this' instead of the
+    // Window prototype, for environments where Window is not in the externs.
+    Node getprop = NodeUtil.newQName(compiler, "Window.prototype." + name);
     Node newNode = getprop;
 
     if (oldJSDocInfo != null) {
       JSDocInfoBuilder builder;
 
       if (oldJSDocInfo.isConstructor() || oldJSDocInfo.isInterface()
-          || oldJSDocInfo.hasEnumParameterType()) {
+          || oldJSDocInfo.hasEnumParameterType()
+          || NodeUtil.isNamespaceDecl(node)) {
         Node nameNode = IR.name(name);
         newNode = IR.assign(getprop, nameNode);
 
@@ -104,16 +103,18 @@ class DeclaredGlobalExternsOnWindow
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isFunction()) {
-      nodes.add(n.getFirstChild());
+      Node name = n.getFirstChild();
+      if (!windowInExterns && name.getString().equals("Window")) {
+        windowInExterns = true;
+        return;
+      }
+      nodes.add(name);
     } else if (n.isVar()) {
       for (Node c : n.children()) {
         // Skip 'location' since there is an existing definition
         // for window.location which conflicts with the "var location" one.
         if (!c.getString().equals("location")) {
           nodes.add(c);
-        }
-        if (!windowInExterns && c.getString().equals("window")) {
-          windowInExterns = true;
         }
       }
     }

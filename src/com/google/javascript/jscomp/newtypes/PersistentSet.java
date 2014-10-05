@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import java.util.AbstractSet;
+import java.util.Set;
 
 /** A persistent set with non-destructive additions and removals */
 public abstract class PersistentSet<K> extends AbstractSet<K> {
@@ -25,7 +26,9 @@ public abstract class PersistentSet<K> extends AbstractSet<K> {
 
   static {
     try {
-      Class c = Class.forName("clojure.lang.PersistentHashSet");
+      @SuppressWarnings("unchecked")
+      Class<? extends Set> c =
+          (Class<? extends Set>) Class.forName("clojure.lang.PersistentHashSet");
       EMPTY = ClojurePersistentHashSet.create(c);
     } catch (ClassNotFoundException e) {
       EMPTY = NaivePersistentSet.create();

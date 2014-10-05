@@ -894,7 +894,8 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testPropertyInExterns3() {
     testSame(
-        "/** @constructor \n * @param {*=} x */ function Object(x) {}" +
+        "/** @constructor \n * @param {*=} x @return {!Object} */"
+        + "function Object(x) {}" +
         "/** @type {number} */ Object.one;", "", null);
 
     ObjectType obj = globalScope.getVar("Object").getType().dereference();

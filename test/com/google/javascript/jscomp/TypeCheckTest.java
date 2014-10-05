@@ -11227,7 +11227,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/**\n" +
         "* @constructor\n" +
         "* @param {*=} opt_value\n" +
-        "* @return {?}\n" +
+        "* @return {!Object}\n" +
         "*/\n" +
         "function Object(opt_value) {}\n" +
         "/**\n" +

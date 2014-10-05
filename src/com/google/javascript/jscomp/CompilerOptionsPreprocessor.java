@@ -33,6 +33,13 @@ final class CompilerOptionsPreprocessor {
           "Cannot check use of goog.getCssName because of empty blacklist.");
     }
 
+    if (options.removeUnusedPrototypePropertiesInExterns
+        && !options.removeUnusedPrototypeProperties) {
+      throw new InvalidOptionsException(
+          "remove_unused_prototype_properties_in_externs requires "
+          + "remove_unused_prototype_properties to be turned on.");
+    }
+
     if (options.getLanguageIn() == options.getLanguageOut()) {
       // No conversion.
     } else if (!options.getLanguageIn().isEs6OrHigher()) {

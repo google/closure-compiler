@@ -1068,6 +1068,28 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
+  public void testFileOverviewVisibilityComesFromDeclarationFileNotUseFile() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @package\n" +
+            " */\n" +
+            "/** @constructor */\n" +
+            "Foo = function() {};\n" +
+            "Foo.prototype.bar = function() {};\n"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @public\n" +
+            " */\n" +
+            "var foo = new Foo();\n" +
+            "foo.bar();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
   public void testNoExceptionsWithBadConstructors1() {
     testSame(new String[] {
       "function Foo() { (new SubFoo).bar(); } " +

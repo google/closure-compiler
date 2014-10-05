@@ -29,6 +29,21 @@
  * @externs
  */
 
+
+/**
+ * Note: In IE, the contains() method only exists on Elements, not Nodes.
+ * Therefore, it is recommended that you use the Conformance framework to
+ * prevent calling this on Nodes which are not Elements.
+ * @see https://connect.microsoft.com/IE/feedback/details/780874/node-contains-is-incorrect
+ *
+ * @param {Node} n The node to check
+ * @return {boolean} If 'n' is this Node, or is contained within this Node.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Node.contains
+ * @nosideeffects
+ */
+Node.prototype.contains = function(n) {};
+
+
 /**
  * @constructor
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#the-canvas-element
@@ -877,7 +892,7 @@ WebWorker.prototype.postMessage = function(message) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent)}
+ * @type {?function(!MessageEvent.<*>)}
  */
 WebWorker.prototype.onmessage;
 
@@ -933,7 +948,7 @@ Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent)}
+ * @type {?function(!MessageEvent.<*>)}
  */
 Worker.prototype.onmessage;
 
@@ -1071,7 +1086,7 @@ DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
 
 /**
  * Sent when the creator posts a message to this worker.
- * @type {?function(!MessageEvent)}
+ * @type {?function(!MessageEvent.<*>)}
  */
 DedicatedWorkerGlobalScope.prototype.onmessage;
 
@@ -1645,7 +1660,8 @@ MessagePort.prototype.start = function() {};
 MessagePort.prototype.close = function() {};
 
 /**
- * @type {?function(!MessageEvent)}
+ * TODO(blickly): Change this to MessageEvent.<*> and add casts as needed
+ * @type {?function(!MessageEvent.<?>)}
  */
 MessagePort.prototype.onmessage;
 
@@ -2021,7 +2037,8 @@ WebSocket.prototype.onopen;
 
 /**
  * An event handler called on message event.
- * @type {?function(!MessageEvent)}
+ * TODO(blickly): Change this to MessageEvent.<*> and add casts as needed
+ * @type {?function(!MessageEvent.<?>)}
  */
 WebSocket.prototype.onmessage;
 
@@ -2033,7 +2050,7 @@ WebSocket.prototype.onclose;
 
 /**
  * Transmits data using the connection.
- * @param {string|ArrayBuffer} data
+ * @param {string|ArrayBuffer|ArrayBufferView} data
  * @return {boolean}
  */
 WebSocket.prototype.send = function(data) {};

@@ -22,7 +22,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
-import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -36,6 +35,7 @@ import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -248,6 +248,12 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseUndefinedType3() throws Exception {
     assertTypeEquals(VOID_TYPE, parse("@type {void}*/").getType());
+  }
+
+  public void testParseTemplatizedTypeAlternateSyntax() throws Exception {
+    JSDocInfo info = parse("@type !Array<number> */");
+    assertTypeEquals(
+        createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
   public void testParseTemplatizedType1() throws Exception {
@@ -1310,7 +1316,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseDesc9() throws Exception {
     String comment = "@desc\n.\n,\n{\n)\n}\n|\n.<\n>\n<\n?\n~\n+\n-\n;\n:\n*/";
 
-    assertEquals(". , { ) } | .< > < ? ~ + - ; :",
+    assertEquals(". , { ) } | < > < ? ~ + - ; :",
         parse(comment).getDescription());
   }
 

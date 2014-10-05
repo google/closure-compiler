@@ -34,7 +34,7 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new RemoveUnusedClassProperties(compiler);
+    return new RemoveUnusedClassProperties(compiler, true);
   }
 
   public void testSimple1() {
@@ -188,5 +188,23 @@ public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
         "A.prototype._foo = 0;\n" +
         "A.prototype.method = function() {this._foo++};\n" +
         "new A().method()\n");
+  }
+
+  public void testConstructorProperty1() {
+    enableTypeCheck(CheckLevel.OFF);
+
+    test(
+        "/** @constructor */ function C() {} C.prop = 1;",
+        "/** @constructor */ function C() {} 1");
+  }
+
+  public void testConstructorProperty2() {
+    enableTypeCheck(CheckLevel.OFF);
+
+    testSame(
+        "/** @constructor */ function C() {} "
+        + "C.prop = 1; "
+        + "function use(a) { alert(a.prop) }; "
+        + "use(C)");
   }
 }

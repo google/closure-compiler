@@ -26,15 +26,15 @@ enum JsDocToken {
   // Tokens recycled from Rhino
   EOF,  // end of file token - (not EOF_CHAR)
   EOL,  // end of line
-  LT,
-  GT,
+  LEFT_ANGLE,
+  RIGHT_ANGLE,
   STRING,
-  LB,  // left and right brackets
-  RB,
-  LC,  // left and right curlies (braces)
-  RC,
-  LP,  // left and right parentheses
-  RP,
+  LEFT_SQUARE,
+  RIGHT_SQUARE,
+  LEFT_CURLY,
+  RIGHT_CURLY,
+  LEFT_PAREN,
+  RIGHT_PAREN,
   COMMA,  // comma operator
   COLON,
   // JsDoc-only tokens

@@ -55,9 +55,6 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
           "JSC_SUSPICIOUS_INSTANCEOF_LEFT",
           "\"instanceof\" with left non-object operand is always false.");
 
-  CheckSuspiciousCode() {
-  }
-
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     checkMissingSemicolon(t, n);

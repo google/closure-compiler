@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
@@ -943,6 +944,70 @@ public class SymbolTableTest extends TestCase {
     Symbol proto = getGlobalVar(table, "String.prototype");
     assertEquals(
         "externs1", proto.getDeclaration().getNode().getSourceFileName());
+  }
+
+  public void testJsDocNameVisibility() {
+    SymbolTable table = createSymbolTable(
+        "/** @public */ var foo;\n" +
+        "/** @protected */ var bar;\n" +
+        "/** @package */ var baz;\n" +
+        "/** @private */ var quux;\n" +
+        "var xyzzy;");
+
+    assertEquals(Visibility.PUBLIC,
+        getGlobalVar(table, "foo").getJSDocInfo().getVisibility());
+    assertEquals(Visibility.PROTECTED,
+        getGlobalVar(table, "bar").getJSDocInfo().getVisibility());
+    assertEquals(Visibility.PACKAGE,
+        getGlobalVar(table, "baz").getJSDocInfo().getVisibility());
+    assertEquals(Visibility.PRIVATE,
+        getGlobalVar(table, "quux").getJSDocInfo().getVisibility());
+    assertNull(
+        getGlobalVar(table, "xyzzy").getJSDocInfo());
+  }
+
+  public void testJsDocPropertyVisibility() {
+    SymbolTable table = createSymbolTable(
+        "/** @constructor */ var Foo = function() {};\n" +
+        "/** @public */ Foo.prototype.bar;\n" +
+        "/** @protected */ Foo.prototype.baz;\n" +
+        "/** @package */ Foo.prototype.quux;\n" +
+        "/** @private */ Foo.prototype.xyzzy;\n" +
+        "Foo.prototype.plugh;\n" +
+
+        "/** @constructor @extends {Foo} */ var SubFoo = function() {};\n" +
+        "/** @override */ SubFoo.prototype.bar = function() {};\n" +
+        "/** @override */ SubFoo.prototype.baz = function() {};\n" +
+        "/** @override */ SubFoo.prototype.quux = function() {};\n" +
+        "/** @override */ SubFoo.prototype.xyzzy = function() {};\n" +
+        "/** @override */ SubFoo.prototype.plugh = function() {};");
+
+    assertEquals(Visibility.PUBLIC, getGlobalVar(table, "Foo.prototype.bar")
+        .getJSDocInfo().getVisibility());
+    assertEquals(Visibility.PROTECTED, getGlobalVar(table, "Foo.prototype.baz")
+        .getJSDocInfo().getVisibility());
+    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "Foo.prototype.quux")
+        .getJSDocInfo().getVisibility());
+    assertEquals(Visibility.PRIVATE, getGlobalVar(table, "Foo.prototype.xyzzy")
+        .getJSDocInfo().getVisibility());
+    assertNull(getGlobalVar(table, "Foo.prototype.plugh")
+        .getJSDocInfo());
+
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.bar")
+        .getJSDocInfo().getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.baz")
+        .getJSDocInfo().getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.quux")
+        .getJSDocInfo().getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.xyzzy")
+        .getJSDocInfo().getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.plugh")
+        .getJSDocInfo().getVisibility());
   }
 
   private void assertSymmetricOrdering(

@@ -182,7 +182,8 @@ public abstract class Namespace {
   /** Add a new undeclared property to this namespace */
   public void addUndeclaredProperty(
       String pname, JSType t, boolean isConstant) {
-    if (otherProps.containsKey(pname)) {
+    if (otherProps.containsKey(pname)
+        && !otherProps.get(pname).getType().isUnknown()) {
       return;
     }
     otherProps = otherProps.with(pname, isConstant ?

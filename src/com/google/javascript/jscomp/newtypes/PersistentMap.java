@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import java.util.AbstractMap;
+import java.util.Map;
 
 /** A persistent map with non-destructive additions and removals  */
 public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
@@ -24,7 +25,9 @@ public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
   private static PersistentMap EMPTY;
   static {
     try {
-      Class c = Class.forName("clojure.lang.PersistentHashMap");
+      @SuppressWarnings("unchecked")
+      Class<? extends Map> c =
+          (Class<? extends Map>) Class.forName("clojure.lang.PersistentHashMap");
       EMPTY = ClojurePersistentHashMap.create(c);
     } catch (ClassNotFoundException e) {
       EMPTY = NaivePersistentMap.create();

@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
 import java.util.Map;
 
 /**
- * Insures '@constructor X' has a 'goog.provide("X")' .
+ * Ensures that '@constructor X' has a 'goog.provide("X")' .
  *
  */
 class CheckProvides implements HotSwapCompilerPass {

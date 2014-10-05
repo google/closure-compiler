@@ -24,6 +24,8 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET_INVALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_UNEXPECTED_PARAMS;
 
+import com.google.common.base.Joiner;
+
 /**
  * Unit tests for ClosureRewriteGoogClass
  * @author johnlenz@google.com (John Lenz)
@@ -251,17 +253,17 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "  aMethod: function() {}\n" +
         "});",
 
-        "/** @constructor */\n" +
-        "x.y=function(){this.foo=1};\n" +
-        "goog.inherits(x.y,some.Super);" +
-        "x.y.prototype.anotherProp=1;" +
-        "x.y.prototype.aMethod=function(){};" +
-        "(function(cls) {" +
-        "  cls.prop1=1;\n" +
-        "  /** @const */\n" +
-        "  cls.PROP2=2;" +
-        "})(x.y);\n" +
-        "");
+        Joiner.on('\n').join(
+            "/** @constructor */",
+            "x.y = function() { this.foo = 1; };",
+            "goog.inherits(x.y, some.Super);",
+            "x.y.prototype.anotherProp = 1;",
+            "x.y.prototype.aMethod = function() {};",
+            "(function(cls) {",
+            "  x.y.prop1 = 1;",
+            "  /** @const */",
+            "  x.y.PROP2 = 2;",
+            "})(x.y);"));
   }
 
   public void testInvalid1() {

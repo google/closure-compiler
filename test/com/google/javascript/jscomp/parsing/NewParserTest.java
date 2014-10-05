@@ -20,13 +20,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
-import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.util.List;
 
@@ -45,6 +45,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   private static final String UNEXPECTED_CONTINUE =
       "continue must be inside loop";
+
+  private static final String UNEXPECTED_RETURN =
+      "return must be inside function";
 
   private static final String UNEXPECTED_LABELED_CONTINUE =
       "continue can only use labeles of iteration statements";
@@ -103,6 +106,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("while(1) {for(var f = function () { break; };;) {}}", UNLABELED_BREAK);
   }
 
+  public void testBreakInForOf() {
+    parse(""
+        + "for (var x of [1, 2, 3]) {\n"
+        + "  if (x == 2) break;\n"
+        + "}");
+  }
+
   public void testContinueToSwitch() {
     parseError("switch(1) {case(1): continue; }", UNEXPECTED_CONTINUE);
   }
@@ -137,6 +147,19 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError(
         "a:switch(1){case(1):function f(){while(1){continue a;}}}",
         UNDEFINED_LABEL + " \"a\"");
+  }
+
+  public void testContinueInForOf() {
+    parse(""
+        + "for (var x of [1, 2, 3]) {\n"
+        + "  if (x == 2) continue;\n"
+        + "}");
+  }
+
+  public void testReturn() {
+    parse("function foo() { return 1; }");
+    parseError("return;", UNEXPECTED_RETURN);
+    parseError("return 1;", UNEXPECTED_RETURN);
   }
 
   public void testLabel1() {
@@ -901,8 +924,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("for (a; b\n)", "';' expected");
 
     assertNodeEquality(
-        parse("return\na + b"),
-        parse("return; a + b;"));
+        parse("function f() { return\na + b }"),
+        parse("function f() { return; a + b; }"));
 
     assertNodeEquality(
         parse("a = b\n++c"),

@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
@@ -224,12 +225,14 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(rewriteLetConst);
       checks.add(rewriteGenerators);
       checks.add(markTranspilationDone);
+    }
 
-      if (options.transpileOnly) {
-        return checks;
-      } else {
-        checks.add(es6RuntimeLibrary);
-      }
+    if (options.transpileOnly) {
+      return checks;
+    }
+
+    if (options.needsConversion()) {
+      checks.add(es6RuntimeLibrary);
     }
 
     checks.add(convertStaticInheritance);
@@ -422,7 +425,7 @@ public class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getOptimizations() {
     List<PassFactory> passes = Lists.newArrayList();
 
-    if (options.needsConversion() && options.transpileOnly) {
+    if (options.transpileOnly) {
       return passes;
     }
 
@@ -1501,11 +1504,13 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  final PassFactory lintChecks =
-      new PassFactory("lintChecks", true) {
+  final HotSwapPassFactory lintChecks =
+      new HotSwapPassFactory("lintChecks", true) {
     @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new CheckNullableReturn(compiler);
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return combineChecks(compiler, ImmutableList.<Callback>of(
+          new CheckNullableReturn(compiler),
+          new CheckEnums(compiler)));
     }
   };
 
@@ -1949,7 +1954,8 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("removeUnusedClassProperties", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new RemoveUnusedClassProperties(compiler);
+      return new RemoveUnusedClassProperties(
+          compiler, options.removeUnusedConstructorProperties);
     }
   };
 

@@ -51,6 +51,7 @@ var document;
  * @see https://developer.mozilla.org/en/DOM/window.location
  * @const
  * @suppress {duplicate}
+ * @implicitCast
  */
 var location;
 

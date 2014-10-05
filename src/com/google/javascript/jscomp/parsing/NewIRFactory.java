@@ -175,6 +175,8 @@ class NewIRFactory {
   static final String UNEXPECTED_LABLED_CONTINUE =
       "continue can only use labeles of iteration statements";
 
+  static final String UNEXPECTED_RETURN = "return must be inside function";
+
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final String sourceString;
@@ -320,6 +322,7 @@ class NewIRFactory {
     validateTypeAnnotations(n);
     validateParameters(n);
     validateBreakContinue(n);
+    validateReturn(n);
     validateLabel(n);
   }
 
@@ -380,9 +383,23 @@ class NewIRFactory {
     }
   }
 
+  private void validateReturn(Node n) {
+    if (n.isReturn()) {
+      Node parent = n;
+      while ((parent = parent.getParent()) != null) {
+        if (parent.isFunction()) {
+          return;
+        }
+      }
+      errorReporter.error(UNEXPECTED_RETURN,
+          sourceName, n.getLineno(), n.getCharno());
+    }
+  }
+
   private static boolean isBreakTarget(Node n) {
     switch (n.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.WHILE:
       case Token.DO:
       case Token.SWITCH:
@@ -394,6 +411,7 @@ class NewIRFactory {
   private static boolean isContinueTarget(Node n) {
     switch (n.getType()) {
       case Token.FOR:
+      case Token.FOR_OF:
       case Token.WHILE:
       case Token.DO:
         return true;

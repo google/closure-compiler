@@ -17,12 +17,12 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
-import com.google.javascript.jscomp.testing.TestErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.SimpleSourceFile;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import com.google.javascript.rhino.testing.TestErrorReporter;
 
 /**
  * Ported from rhino/testsrc/org/mozilla/javascript/tests/AttachJsDocsTest.java
