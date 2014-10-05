@@ -86,9 +86,9 @@ public class ProcessCommonJSModules implements CompilerPass {
    * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
    * and replaces - with _. All moduleNames get a "module$" prefix.
    */
-  public static String toModuleName(String name) {
+  public static String toModuleName(String filename) {
     return MODULE_NAME_PREFIX +
-        name.replaceAll("^\\." + Pattern.quote(ES6ModuleLoader.MODULE_SLASH), "")
+        filename.replaceAll("^\\." + Pattern.quote(ES6ModuleLoader.MODULE_SLASH), "")
             .replaceAll(Pattern.quote(ES6ModuleLoader.MODULE_SLASH), MODULE_NAME_SEPARATOR)
             .replaceAll(Pattern.quote("\\"), MODULE_NAME_SEPARATOR)
             .replaceAll("\\.js$", "")
@@ -129,12 +129,6 @@ public class ProcessCommonJSModules implements CompilerPass {
       return false;
     }
   }
-
-
-  /**
-   * Used to detect node.js- and webpack-style 'index.js' directory entries.
-   */
-  public static String INDEX_ENDING = ES6ModuleLoader.MODULE_SLASH + "index.js";
 
   /**
    * Visits require, every "script" and special module.exports assignments.
@@ -208,13 +202,7 @@ public class ProcessCommonJSModules implements CompilerPass {
           "ProcessCommonJSModules supports only one invocation per " +
           "CompilerInput / script node");
 
-      // Map "index.js" files to the parent directory name
-      String name = loader.getLoadAddress(t.getInput());
-      if (name.endsWith(INDEX_ENDING)) {
-        name = name.substring(0, name.length() - INDEX_ENDING.length());
-      }
-
-      String moduleName = toModuleName(name);
+      String moduleName = toModuleName(loader.getLoadAddress(t.getInput()));
 
       // Rename vars to not conflict in global scope.
       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(

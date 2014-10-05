@@ -135,11 +135,11 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
     setFilename("foo/index.js");
     test(
         "var name = require('../name'); exports.bar = 1;",
-        "goog.provide('module$foo');" +
-        "var module$foo = {};" +
+        "goog.provide('module$foo$index');" +
+        "var module$foo$index = {};" +
         "goog.require('module$name');" +
-        "var name$$module$foo = module$name;" +
-        "module$foo.bar = 1;");
+        "var name$$module$foo$index = module$name;" +
+        "module$foo$index.bar = 1;");
   }
 
   public void testModuleName() {
