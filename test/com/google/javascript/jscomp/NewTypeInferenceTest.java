@@ -6124,10 +6124,28 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
+        "/** @type {!Array<number>} */\n" +
+        "var arr = [1, 2, 3];\n" +
+        "arr[0] = 'str';",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "/** @type {!Array<number>} */\n" +
+        "var arr = [1, 2, 3];\n" +
+        "arr['0'] = 'str';");
+
+    // We warn here even though the declared type of the lvalue includes null.
+    typeCheck(
         "/** @type {Array<number>} */\n" +
         "var arr = [1, 2, 3];\n" +
         "arr[0] = 'str';",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "function f(/** Array<number> */ arr) {\n" +
+        "  arr[0] = 'str';\n" +
+        "}",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
 
     typeCheck(
         "/** @const */\n" +
@@ -6135,12 +6153,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "arr[0] = 'str';",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    // TODO(blickly): Distinguish between declared and inferred
-    // array types so that this test has no warnings
-    typeCheck(
+    checkNoWarnings(
         "var arr = [1, 2, 3];\n" +
-        "arr[0] = 'str';",
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "arr[0] = 'str';");
+
+    checkNoWarnings(
+        "/** @constructor */ function Super(){}\n" +
+        "/** @constructor @extends {Super} */ function Sub(){}\n" +
+        "/** @type {!Array<Super>} */ var arr = [new Sub];\n" +
+        "arr[0] = new Super;");
 
     typeCheck(
         "/** @type {Array<number>} */ var arr = [];\n" +

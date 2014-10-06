@@ -1600,7 +1600,6 @@ public class NewTypeInference implements CompilerPass {
         Preconditions.checkState(pair.type != null,
             "Array type %s has no element type at node: %s", recvType, expr);
         return pair;
-        // No precision for array elms yet.
       } else if (index.isString()) {
         return analyzePropAccessFwd(receiver, index.getString(), inEnv,
             requiredType, specializedType);
@@ -2721,7 +2720,8 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private JSType getArrayElementType(JSType arrayType) {
-    Preconditions.checkState(isArrayType(arrayType));
+    Preconditions.checkState(
+        isArrayType(arrayType), "Expected array but found %s", arrayType);
     return arrayType.getProp(NUMERIC_INDEX);
   }
 
@@ -3016,9 +3016,30 @@ public class NewTypeInference implements CompilerPass {
             currentScope.getDeclaredTypeOf(varName),
             varType.hasNonScalar() ? new QualifiedName(varName) : null);
       }
-      case Token.GETPROP:
+      case Token.GETPROP: {
+        Node obj = expr.getFirstChild();
+        QualifiedName pname =
+            new QualifiedName(expr.getLastChild().getString());
+        return analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
+      }
       case Token.GETELEM: {
-        return analyzePropLValFwd(expr, inEnv, type, insideQualifiedName);
+        Node obj = expr.getFirstChild();
+        Node prop = expr.getLastChild();
+        // (1) A getelem where the prop is a string literal is like a getprop
+        if (prop.isString()) {
+          QualifiedName pname = new QualifiedName(prop.getString());
+          return analyzePropLValFwd(
+              obj, pname, inEnv, type, insideQualifiedName);
+        }
+        // (2) A getelem where the receiver is an array
+        LValueResultFwd lvalue =
+            analyzeLValueFwd(obj, inEnv, JSType.UNKNOWN, true);
+        if (isArrayType(lvalue.type)) {
+          return analyzeArrayElmLvalFwd(obj, prop, lvalue);
+        }
+        // (3) All other getelems
+        EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
+        return new LValueResultFwd(pair.env, pair.type, null, null);
       }
       case Token.VAR: { // Can happen iff its parent is a for/in.
         Preconditions.checkState(NodeUtil.isForIn(expr.getParent()));
@@ -3040,30 +3061,32 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private LValueResultFwd analyzePropLValFwd(
-      Node parent, TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
-    Preconditions.checkArgument(parent.isGetProp() || parent.isGetElem());
-    Node obj = parent.getFirstChild();
-    Node prop = parent.getLastChild();
-    QualifiedName pname;
-    JSType reqObjType = pickReqObjType(obj).withLoose();
-    if (prop.isString()) {
-      pname = new QualifiedName(prop.getString());
-      reqObjType = reqObjType.withProperty(pname, type);
-    } else {
-      pname = NUMERIC_INDEX;
+  private LValueResultFwd analyzeArrayElmLvalFwd(
+      Node obj, Node prop, LValueResultFwd lvalue) {
+    EnvTypePair pair = analyzeExprFwd(prop, lvalue.env, JSType.NUMBER);
+    if (!pair.type.equals(JSType.NUMBER)) {
+      // Some unknown computed property; don't treat as element access.
+      return new LValueResultFwd(pair.env, JSType.UNKNOWN, null, null);
     }
-    LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
-    if (!prop.isString()) {
-      Preconditions.checkState(parent.isGetElem());
-      if (isArrayType(lvalue.type)) {
-        lvalue.env = analyzeExprFwd(prop, lvalue.env, JSType.NUMBER).env;
-      } else {
-        EnvTypePair pair = analyzeExprFwd(parent, inEnv, type);
-        return new LValueResultFwd(pair.env, pair.type, null, null);
+    JSType inferred = getArrayElementType(lvalue.type);
+    JSType declared = null;
+    if (lvalue.declType != null) {
+      JSType receiverAdjustedDeclType =
+          lvalue.declType.removeType(JSType.NULL_OR_UNDEF);
+      if (isArrayType(receiverAdjustedDeclType)) {
+        declared = getArrayElementType(receiverAdjustedDeclType);
       }
     }
+    return new LValueResultFwd(pair.env, inferred, declared, null);
+  }
+
+  private LValueResultFwd analyzePropLValFwd(Node obj, QualifiedName pname,
+      TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
+    Preconditions.checkArgument(pname.isIdentifier());
     String pnameAsString = pname.getLeftmostName();
+    JSType reqObjType =
+        pickReqObjType(obj).withLoose().withProperty(pname, type);
+    LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
     TypeEnv lvalueEnv = lvalue.env;
     JSType lvalueType = lvalue.type;
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
@@ -3071,13 +3094,14 @@ public class NewTypeInference implements CompilerPass {
               pnameAsString, lvalueType.toString()));
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
-    if (parent.isGetProp() &&
-        parent.getParent().isAssign() &&
-        mayWarnAboutPropCreation(pname, parent, lvalueType)) {
+    Node propAccessNode = obj.getParent();
+    if (propAccessNode.isGetProp() &&
+        propAccessNode.getParent().isAssign() &&
+        mayWarnAboutPropCreation(pname, propAccessNode, lvalueType)) {
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
     if (!insideQualifiedName &&
-        mayWarnAboutConstProp(parent, lvalueType, pname)) {
+        mayWarnAboutConstProp(propAccessNode, lvalueType, pname)) {
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
     if (!lvalueType.mayHaveProp(pname)) {
@@ -3085,9 +3109,9 @@ public class NewTypeInference implements CompilerPass {
         // For loose objects, create the inner property if it doesn't exist.
         lvalueType = lvalueType.withProperty(
             pname, JSType.TOP_OBJECT.withLoose());
-        if (lvalueType.isDict() && parent.isGetProp()) {
+        if (lvalueType.isDict() && propAccessNode.isGetProp()) {
           lvalueType = lvalueType.specialize(JSType.TOP_STRUCT);
-        } else if (lvalueType.isStruct() && parent.isGetElem()) {
+        } else if (lvalueType.isStruct() && propAccessNode.isGetElem()) {
           lvalueType = lvalueType.specialize(JSType.TOP_DICT);
         }
         lvalueEnv = updateLvalueTypeInEnv(
@@ -3096,7 +3120,7 @@ public class NewTypeInference implements CompilerPass {
         // Warn for inexistent prop either on the non-top-level of a qualified
         // name, or for assignment ops that won't create a new property.
         boolean warnForInexistentProp = insideQualifiedName ||
-            parent.getParent().getType() != Token.ASSIGN;
+            propAccessNode.getParent().getType() != Token.ASSIGN;
         if (warnForInexistentProp &&
             !lvalueType.isUnknown() &&
             !lvalueType.isDict()) {
@@ -3106,9 +3130,9 @@ public class NewTypeInference implements CompilerPass {
         }
       }
     }
-    if (parent.isGetElem()) {
+    if (propAccessNode.isGetElem()) {
       mayWarnAboutStructPropAccess(obj, lvalueType);
-    } else if (parent.isGetProp()) {
+    } else if (propAccessNode.isGetProp()) {
       mayWarnAboutDictPropAccess(obj, lvalueType);
     }
     QualifiedName setterPname =

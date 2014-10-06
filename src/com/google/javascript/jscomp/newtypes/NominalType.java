@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import java.util.HashMap;
@@ -152,6 +153,15 @@ public class NominalType {
   }
 
   Property getProp(String pname) {
+    if (rawType.name.equals("Array")
+        && NUMERIC_PATTERN.matcher(pname).matches()) {
+      if (typeMap.isEmpty()) {
+        return Property.make(JSType.UNKNOWN, null);
+      }
+      Preconditions.checkState(typeMap.size() == 1);
+      JSType elmType = Iterables.getOnlyElement(typeMap.values());
+      return Property.make(elmType, null);
+    }
     Property p = rawType.getProp(pname);
     return p == null ? null : p.substituteGenerics(typeMap);
   }
@@ -497,16 +507,6 @@ public class NominalType {
       Property p = getOwnProp(pname);
       if (p != null) {
         return p;
-      } else if ("Array".equals(name)
-          && NUMERIC_PATTERN.matcher(pname).matches()) {
-        if (typeParameters.isEmpty()) {
-          // This case is only needed when the externs are not templated
-          return Property.make(JSType.UNKNOWN, null);
-        }
-        Preconditions.checkState(typeParameters.size() == 1);
-        Preconditions.checkState(typeParameters.get(0).equals("T"));
-        JSType arrayElementType = JSType.fromTypeVar("T");
-        return Property.make(arrayElementType, arrayElementType);
       }
       if (superClass != null) {
         p = superClass.getProp(pname);
