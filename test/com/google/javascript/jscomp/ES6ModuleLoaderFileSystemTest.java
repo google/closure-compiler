@@ -60,7 +60,7 @@ public class ES6ModuleLoaderFileSystemTest {
       appFile = tempFolder.newFile("app.js");
       writeFile(appFile, "alert('app');");
     } catch (IOException e) {
-        throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
 
     SourceFile in1 = SourceFile.fromFile(indexA);
