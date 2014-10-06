@@ -222,6 +222,7 @@ Window.prototype.alert = function(message) {};
  * Decodes a string of data which has been encoded using base-64 encoding.
  *
  * @param {string} encodedData
+ * @return {string}
  * @see https://developer.mozilla.org/en/DOM/window.atob
  * @nosideeffects
  */
