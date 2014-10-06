@@ -34,7 +34,13 @@ class GatherRawExports extends AbstractPostOrderCallback
 
   private final AbstractCompiler compiler;
 
-  private static final String GLOBAL_THIS_NAMES[] = { "window", "top" };
+  // TODO(johnlenz): "goog$global" should be part of a coding convention.
+  // Note: GatherRawExports runs after property renaming and
+  // collapse properties, so the two entries here protect goog.global in the
+  // two common cases "collapse properties and renaming on" or both off
+  // but not the case where only property renaming is on.
+  private static final String GLOBAL_THIS_NAMES[] = {
+    "window", "top", "goog$global", "goog.global" };
 
   private final Set<String> exportedVariables = Sets.newHashSet();
 
@@ -54,8 +60,6 @@ class GatherRawExports extends AbstractPostOrderCallback
     if (sibling != null
         && sibling.isString()
         && NodeUtil.isGet(parent)) {
-      // TODO(johnlenz): Should we warn if we see a property name that
-      // hasn't been exported?
       if (isGlobalThisObject(t, n)) {
         exportedVariables.add(sibling.getString());
       }
@@ -65,11 +69,10 @@ class GatherRawExports extends AbstractPostOrderCallback
   private static boolean isGlobalThisObject(NodeTraversal t, Node n) {
     if (n.isThis()) {
       return t.inGlobalScope();
-    } else if (n.isName()) {
-      String varName = n.getString();
+    } else if (n.isQualifiedName()) {
       int items = GLOBAL_THIS_NAMES.length;
       for (int i = 0; i < items; i++) {
-        if (varName.equals(GLOBAL_THIS_NAMES[i])) {
+        if (n.matchesQualifiedName(GLOBAL_THIS_NAMES[i])) {
           return true;
         }
       }
