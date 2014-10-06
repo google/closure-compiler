@@ -946,7 +946,7 @@ public class SymbolTableTest extends TestCase {
         "externs1", proto.getDeclaration().getNode().getSourceFileName());
   }
 
-  public void testJsDocNameVisibility() {
+  public void testJSDocNameVisibility() {
     SymbolTable table = createSymbolTable(
         "/** @public */ var foo;\n" +
         "/** @protected */ var bar;\n" +
@@ -955,18 +955,40 @@ public class SymbolTableTest extends TestCase {
         "var xyzzy;");
 
     assertEquals(Visibility.PUBLIC,
-        getGlobalVar(table, "foo").getJSDocInfo().getVisibility());
+        getGlobalVar(table, "foo").getVisibility());
     assertEquals(Visibility.PROTECTED,
-        getGlobalVar(table, "bar").getJSDocInfo().getVisibility());
+        getGlobalVar(table, "bar").getVisibility());
     assertEquals(Visibility.PACKAGE,
-        getGlobalVar(table, "baz").getJSDocInfo().getVisibility());
+        getGlobalVar(table, "baz").getVisibility());
     assertEquals(Visibility.PRIVATE,
-        getGlobalVar(table, "quux").getJSDocInfo().getVisibility());
-    assertNull(
-        getGlobalVar(table, "xyzzy").getJSDocInfo());
+        getGlobalVar(table, "quux").getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "xyzzy").getVisibility());
+    assertNull(getGlobalVar(table, "xyzzy").getJSDocInfo());
   }
 
-  public void testJsDocPropertyVisibility() {
+  public void testJSDocNameVisibilityWithFileOverviewVisibility() {
+    SymbolTable table = createSymbolTable(
+        "/** @fileoverview\n @package */\n" +
+        "/** @public */ var foo;\n" +
+        "/** @protected */ var bar;\n" +
+        "/** @package */ var baz;\n" +
+        "/** @private */ var quux;\n" +
+        "var xyzzy;");
+    assertEquals(Visibility.PUBLIC,
+        getGlobalVar(table, "foo").getVisibility());
+    assertEquals(Visibility.PROTECTED,
+        getGlobalVar(table, "bar").getVisibility());
+    assertEquals(Visibility.PACKAGE,
+        getGlobalVar(table, "baz").getVisibility());
+    assertEquals(Visibility.PRIVATE,
+        getGlobalVar(table, "quux").getVisibility());
+    assertEquals(Visibility.PACKAGE,
+        getGlobalVar(table, "xyzzy").getVisibility());
+    assertNull(getGlobalVar(table, "xyzzy").getJSDocInfo());
+  }
+
+  public void testJSDocPropertyVisibility() {
     SymbolTable table = createSymbolTable(
         "/** @constructor */ var Foo = function() {};\n" +
         "/** @public */ Foo.prototype.bar;\n" +
@@ -982,32 +1004,71 @@ public class SymbolTableTest extends TestCase {
         "/** @override */ SubFoo.prototype.xyzzy = function() {};\n" +
         "/** @override */ SubFoo.prototype.plugh = function() {};");
 
-    assertEquals(Visibility.PUBLIC, getGlobalVar(table, "Foo.prototype.bar")
-        .getJSDocInfo().getVisibility());
-    assertEquals(Visibility.PROTECTED, getGlobalVar(table, "Foo.prototype.baz")
-        .getJSDocInfo().getVisibility());
-    assertEquals(Visibility.PACKAGE, getGlobalVar(table, "Foo.prototype.quux")
-        .getJSDocInfo().getVisibility());
-    assertEquals(Visibility.PRIVATE, getGlobalVar(table, "Foo.prototype.xyzzy")
-        .getJSDocInfo().getVisibility());
-    assertNull(getGlobalVar(table, "Foo.prototype.plugh")
-        .getJSDocInfo());
+    assertEquals(Visibility.PUBLIC,
+        getGlobalVar(table, "Foo.prototype.bar").getVisibility());
+    assertEquals(Visibility.PROTECTED,
+        getGlobalVar(table, "Foo.prototype.baz").getVisibility());
+    assertEquals(Visibility.PACKAGE,
+        getGlobalVar(table, "Foo.prototype.quux").getVisibility());
+    assertEquals(Visibility.PRIVATE,
+        getGlobalVar(table, "Foo.prototype.xyzzy").getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "Foo.prototype.plugh").getVisibility());
+    assertNull(getGlobalVar(table, "Foo.prototype.plugh").getJSDocInfo());
+
 
     assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.bar")
-        .getJSDocInfo().getVisibility());
+        getGlobalVar(table, "SubFoo.prototype.bar").getVisibility());
     assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.baz")
-        .getJSDocInfo().getVisibility());
+        getGlobalVar(table, "SubFoo.prototype.baz").getVisibility());
     assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.quux")
-        .getJSDocInfo().getVisibility());
+        getGlobalVar(table, "SubFoo.prototype.quux").getVisibility());
     assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.xyzzy")
-        .getJSDocInfo().getVisibility());
+        getGlobalVar(table, "SubFoo.prototype.xyzzy").getVisibility());
     assertEquals(Visibility.INHERITED,
-        getGlobalVar(table, "SubFoo.prototype.plugh")
-        .getJSDocInfo().getVisibility());
+        getGlobalVar(table, "SubFoo.prototype.plugh").getVisibility());
+  }
+
+  public void testJSDocPropertyVisibilityWithFileOverviewVisibility() {
+    SymbolTable table = createSymbolTable(
+        "/** @fileoverview\n @package */\n" +
+        "/** @constructor */ var Foo = function() {};\n" +
+        "/** @public */ Foo.prototype.bar;\n" +
+        "/** @protected */ Foo.prototype.baz;\n" +
+        "/** @package */ Foo.prototype.quux;\n" +
+        "/** @private */ Foo.prototype.xyzzy;\n" +
+        "Foo.prototype.plugh;\n" +
+
+        "/** @constructor @extends {Foo} */ var SubFoo = function() {};\n" +
+        "/** @override @public */ SubFoo.prototype.bar = function() {};\n" +
+        "/** @override @protected */ SubFoo.prototype.baz = function() {};\n" +
+        "/** @override @package */ SubFoo.prototype.quux = function() {};\n" +
+        "/** @override @private */ SubFoo.prototype.xyzzy = function() {};\n" +
+        "/** @override */ SubFoo.prototype.plugh = function() {};");
+
+    assertEquals(Visibility.PUBLIC,
+        getGlobalVar(table, "Foo.prototype.bar").getVisibility());
+    assertEquals(Visibility.PROTECTED,
+        getGlobalVar(table, "Foo.prototype.baz").getVisibility());
+    assertEquals(Visibility.PACKAGE,
+        getGlobalVar(table, "Foo.prototype.quux").getVisibility());
+    assertEquals(Visibility.PRIVATE,
+        getGlobalVar(table, "Foo.prototype.xyzzy").getVisibility());
+    assertEquals(Visibility.PACKAGE,
+        getGlobalVar(table, "Foo.prototype.plugh").getVisibility());
+    assertNull(getGlobalVar(table, "Foo.prototype.plugh").getJSDocInfo());
+
+
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.bar").getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.baz").getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.quux").getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.xyzzy").getVisibility());
+    assertEquals(Visibility.INHERITED,
+        getGlobalVar(table, "SubFoo.prototype.plugh").getVisibility());
   }
 
   private void assertSymmetricOrdering(

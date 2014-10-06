@@ -20,14 +20,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.jstype.EnumType;
@@ -41,6 +44,7 @@ import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticReference;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.StaticSymbolTable;
 import com.google.javascript.rhino.jstype.UnionType;
 
@@ -913,6 +917,19 @@ public final class SymbolTable
     }
   }
 
+  /** Records the visibility of each symbol. */
+  void fillSymbolVisibility(
+      AbstractCompiler compiler, Node externs, Node root) {
+        CollectFileOverviewVisibility collectPass =
+        new CollectFileOverviewVisibility(compiler);
+    collectPass.process(externs, root);
+    ImmutableMap<StaticSourceFile, Visibility> visibilityMap =
+        collectPass.getFileOverviewVisibilityMap();
+    NodeTraversal.traverseRoots(
+        compiler, Lists.newArrayList(externs, root),
+        new VisibilityCollector(visibilityMap, compiler.getCodingConvention()));
+  }
+
   /**
    * Build a property scope for the given symbol. Any properties of the symbol
    * will be added to the property scope.
@@ -1060,6 +1077,8 @@ public final class SymbolTable
 
     private JSDocInfo docInfo = null;
 
+    @Nullable private Visibility visibility = null;
+
     // A scope for symbols that are only documented in JSDoc.
     private SymbolScope docScope = null;
 
@@ -1128,6 +1147,14 @@ public final class SymbolTable
 
     void setJSDocInfo(JSDocInfo info) {
       this.docInfo = info;
+    }
+
+    @Nullable public Visibility getVisibility() {
+      return this.visibility;
+    }
+
+    void setVisibility(Visibility v) {
+      this.visibility = v;
     }
 
     /** Whether this is a property of another variable. */
@@ -1604,6 +1631,86 @@ public final class SymbolTable
             ? null : getSymbolForTypeHelper(autobox, true);
       }
       return result;
+    }
+  }
+
+  /** Collects the visibility information for each name/property. */
+  private class VisibilityCollector
+      extends NodeTraversal.AbstractPostOrderCallback {
+    private final ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap;
+    private final CodingConvention codingConvention;
+
+    private VisibilityCollector(
+        ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap,
+        CodingConvention codingConvention) {
+      this.fileVisibilityMap = fileVisibilityMap;
+      this.codingConvention = codingConvention;
+    }
+
+    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName()) {
+        visitName(t, n, parent);
+      } else if (n.isGetProp()) {
+        visitProperty(t, n, parent);
+      }
+    }
+
+    private void visitName(NodeTraversal t, Node n, Node parent) {
+      Symbol symbol = symbols.get(n, n.getString());
+      if (symbol == null) {
+        return;
+      }
+      // Visibility already set.
+      if (symbol.getVisibility() != null) {
+        return;
+      }
+      Var var = t.getScope().getVar(n.getString());
+      if (var == null) {
+        return;
+      }
+      Visibility v = AccessControlUtils.getEffectiveNameVisibility(
+          var, fileVisibilityMap);
+      if (v == null) {
+        return;
+      }
+      symbol.setVisibility(v);
+    }
+
+    private void visitProperty(NodeTraversal t, Node getprop, Node parent) {
+      String propertyName = getprop.getLastChild().getString();
+      Symbol symbol = symbols.get(getprop, propertyName);
+      if (symbol == null) {
+        return;
+      }
+      // Visibility already set.
+      if (symbol.getVisibility() != null) {
+        return;
+      }
+      JSType jsType = getprop.getFirstChild().getJSType();
+      if (jsType == null) {
+        return;
+      }
+      boolean isOverride = parent.getJSDocInfo() != null
+          && parent.isAssign()
+          && parent.getFirstChild() == getprop;
+      if (isOverride) {
+        // Don't bother with AccessControlUtils for overridden properties.
+        // AccessControlUtils currently has complicated logic for detecting
+        // visibility mismatches for overridden properties that is still
+        // too tightly coupled to CheckAccessControls. TODO(brndn): simplify.
+        symbol.setVisibility(Visibility.INHERITED);
+      } else {
+        ObjectType referenceType = ObjectType.cast(jsType.dereference());
+        Visibility v = AccessControlUtils.getEffectivePropertyVisibility(
+            getprop,
+            referenceType,
+            fileVisibilityMap,
+            codingConvention);
+        if (v == null) {
+          return;
+        }
+        symbol.setVisibility(v);
+      }
     }
   }
 
