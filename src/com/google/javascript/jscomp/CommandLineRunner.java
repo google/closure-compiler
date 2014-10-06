@@ -1285,7 +1285,8 @@ public class CommandLineRunner extends
               // Give the files an odd prefix, so that they do not conflict
               // with the user's files.
               "externs.zip//" + entry.getName(),
-              entryStream));
+              entryStream,
+              UTF_8));
     }
 
     Preconditions.checkState(
