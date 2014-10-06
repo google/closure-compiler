@@ -1224,7 +1224,9 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.THROW);
     ParseTree value = null;
-    if (!peekImplicitSemiColon()) {
+    if (peekImplicitSemiColon()) {
+      reportError("semicolon/newline not allowed after 'throw'");
+    } else {
       value = parseExpression();
     }
     eatPossibleImplicitSemiColon();

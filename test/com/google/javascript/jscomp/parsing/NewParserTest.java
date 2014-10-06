@@ -162,6 +162,14 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("return 1;", UNEXPECTED_RETURN);
   }
 
+  public void testThrow() {
+    parse("throw Error();");
+    parse("throw new Error();");
+    parse("throw '';");
+    parseError("throw;", "semicolon/newline not allowed after 'throw'");
+    parseError("throw\nError();", "semicolon/newline not allowed after 'throw'");
+  }
+
   public void testLabel1() {
     parse("foo:bar");
   }
