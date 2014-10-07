@@ -373,7 +373,7 @@ public class NewTypeInference implements CompilerPass {
       entryEnv = envPutType(entryEnv, local, JSType.UNDEFINED);
     }
     for (String fnName : currentScope.getLocalFunDefs()) {
-      JSType summaryType = summaries.get(currentScope.getScope(fnName));
+      JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.createConstructorObject();
@@ -406,7 +406,7 @@ public class NewTypeInference implements CompilerPass {
           declType == null ? JSType.UNKNOWN : pickInitialType(declType));
     }
     for (String fnName : currentScope.getLocalFunDefs()) {
-      JSType summaryType = summaries.get(currentScope.getScope(fnName));
+      JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.createConstructorObject();
@@ -417,6 +417,15 @@ public class NewTypeInference implements CompilerPass {
       env = envPutType(env, fnName, summaryType);
     }
     return env;
+  }
+
+  private JSType getSummaryOfLocalFunDef(String name) {
+    JSType summaryType = summaries.get(currentScope.getScope(name));
+    if (summaryType == null) {
+      // Functions defined in externs have no summary, so use the declared type
+      summaryType = currentScope.getDeclaredTypeOf(name);
+    }
+    return summaryType;
   }
 
   // Initialize the type environments on the CFG edges before the BWD analysis.
@@ -1541,7 +1550,8 @@ public class NewTypeInference implements CompilerPass {
     JSType retType = funType.getReturnType();
     if (callee.isName()) {
       String calleeName = callee.getQualifiedName();
-      if (currentScope.isKnownFunction(calleeName)) {
+      if (currentScope.isKnownFunction(calleeName)
+          && !currentScope.isExternalFunction(calleeName)) {
         // Local function definitions will be type-checked more
         // exactly using their summaries, and don't need deferred checks
         if (currentScope.isLocalFunDef(calleeName)) {
@@ -2786,8 +2796,9 @@ public class NewTypeInference implements CompilerPass {
     String calleeName = expr.getFirstChild().getQualifiedName();
     // Local function definitions will be type-checked more
     // exactly using their summaries, and don't need deferred checks
-    if (currentScope.isKnownFunction(calleeName) &&
-        !currentScope.isLocalFunDef(calleeName)) {
+    if (currentScope.isKnownFunction(calleeName)
+        && !currentScope.isLocalFunDef(calleeName)
+        && !currentScope.isExternalFunction(calleeName)) {
       Scope s = currentScope.getScope(calleeName);
       JSType expectedRetType;
       if (s.getDeclaredType().getReturnType() == null) {

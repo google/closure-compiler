@@ -783,7 +783,9 @@ class GlobalTypeInfo implements CompilerPass {
     private void createFunctionScope(
         Node fn, ArrayList<String> formals, String internalName) {
       Scope fnScope = new Scope(fn, currentScope, formals);
-      scopes.add(fnScope);
+      if (!fn.isFromExterns()) {
+        scopes.add(fnScope);
+      }
       currentScope.addLocalFunDef(internalName, fnScope);
     }
 
@@ -2125,6 +2127,11 @@ class GlobalTypeInfo implements CompilerPass {
 
     boolean isKnownFunction(String fnName) {
       return getScopeHelper(fnName) != null;
+    }
+
+    boolean isExternalFunction(String fnName) {
+      Scope s = Preconditions.checkNotNull(getScopeHelper(fnName));
+      return s.root.isFromExterns();
     }
 
     Scope getScope(String fnName) {
