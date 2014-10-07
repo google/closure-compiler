@@ -3697,7 +3697,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
-  public void testExtendedInterfacePropertiesCompatibility1() {
+  public void testExtendedInterfacePropertiesCompatibility() {
     typeCheck(
         "/** @interface */function Int0() {};" +
         "/** @interface */function Int1() {};" +
@@ -3707,6 +3707,42 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "Int1.prototype.foo;" +
         "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
         "function Int2() {};",
+        TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE);
+
+    typeCheck(
+        "/** @interface */\n" +
+        "function Parent1() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {number}\n" +
+        " */\n" +
+        "Parent1.prototype.method = function(x) {};\n" +
+        "/** @interface */\n" +
+        "function Parent2() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @return {string}\n" +
+        " */\n" +
+        "Parent2.prototype.method = function(x) {};\n" +
+        "/** @interface @extends {Parent1} @extends {Parent2} */\n" +
+        "function Child() {}",
+        TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor */ function Bar() {}\n" +
+        "/** @interface */\n" +
+        "function Parent1() {}\n" +
+        "/** @type {!Foo} */\n" +
+        "Parent1.prototype.obj;\n" +
+        "/** @interface */\n" +
+        "function Parent2() {}\n" +
+        "/** @type {!Bar} */\n" +
+        "Parent2.prototype.obj;\n" +
+        "/** @interface @extends {Parent1} @extends {Parent2} */\n" +
+        "function Child() {}",
         TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE);
   }
 

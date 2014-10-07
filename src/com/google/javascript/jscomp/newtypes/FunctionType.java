@@ -159,6 +159,8 @@ public class FunctionType {
   // Corresponds to Function, which is a subtype and supertype of all functions.
   static final FunctionType QMARK_FUNCTION = FunctionType.normalized(null,
       null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, null, false);
+  private static final FunctionType BOTTOM_FUNCTION = FunctionType.normalized(
+      null, null, null, JSType.BOTTOM, null, null, null, null, false);
 
   public boolean isTopFunction() {
     if (requiredFormals == null) {
@@ -178,6 +180,10 @@ public class FunctionType {
 
   public boolean isQmarkFunction() {
     return this == QMARK_FUNCTION;
+  }
+
+  static boolean isInhabitable(FunctionType f) {
+    return f != BOTTOM_FUNCTION;
   }
 
   // 0-indexed
@@ -448,11 +454,13 @@ public class FunctionType {
       return f2;
     }
 
-    // Here, f1 is not a subtype of f2 and f2 is not a subtype of f1.
-    // If we find that we need to handle generics in this case, instantiate f1
-    // and f2 with unknowns and then continue normally.
-    Preconditions.checkState(!f1.isGeneric());
-    Preconditions.checkState(!f2.isGeneric());
+    // We lose precision for generic funs that are not in a subtype relation.
+    if (f1.isGeneric()) {
+      f1 = instantiateGenericsWithUnknown(f1);
+    }
+    if (f2.isGeneric()) {
+      f2 = instantiateGenericsWithUnknown(f2);
+    }
 
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int minRequiredArity = Math.min(
@@ -472,7 +480,11 @@ public class FunctionType {
       builder.addRestFormals(
           JSType.nullAcceptingJoin(f1.restFormals, f2.restFormals));
     }
-    builder.addRetType(JSType.meet(f1.returnType, f2.returnType));
+    JSType retType = JSType.meet(f1.returnType, f2.returnType);
+    if (retType.isBottom()) {
+      return BOTTOM_FUNCTION;
+    }
+    builder.addRetType(retType);
     // TODO(dimvar): these two are not correct. We should be picking the
     // greatest lower bound of the types if they are incomparable.
     // Eg, this case arises when an interface extends multiple interfaces.

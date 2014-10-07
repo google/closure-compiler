@@ -58,6 +58,7 @@ public class ObjectType implements TypeWithProperties {
       ObjectKind objectKind) {
     Preconditions.checkArgument(fn == null || fn.isLoose() == isLoose,
         "isLoose: %s, fn: %s", isLoose, fn);
+    Preconditions.checkArgument(FunctionType.isInhabitable(fn));
     Preconditions.checkArgument(nominalType == null || !isLoose);
     Preconditions.checkArgument(nominalType == null || fn == null,
         "Cannot create object of %s that is callable", nominalType);
@@ -73,7 +74,7 @@ public class ObjectType implements TypeWithProperties {
       boolean isLoose, ObjectKind ok) {
     if (props == null) {
       props = PersistentMap.create();
-    } else if (containsBottomProp(props)) {
+    } else if (containsBottomProp(props) || !FunctionType.isInhabitable(fn)) {
       return BOTTOM_OBJECT;
     }
     return new ObjectType(nominalType, props, fn, isLoose, ok);
@@ -113,7 +114,6 @@ public class ObjectType implements TypeWithProperties {
         return true;
       }
     }
-    // TODO(dimvar): do we need a stricter check for functions?
     return false;
   }
 
@@ -542,6 +542,9 @@ public class ObjectType implements TypeWithProperties {
     NominalType resultNominalType =
         NominalType.pickSubclass(obj1.nominalType, obj2.nominalType);
     FunctionType fn = FunctionType.meet(obj1.fn, obj2.fn);
+    if (!FunctionType.isInhabitable(fn)) {
+      return BOTTOM_OBJECT;
+    }
     boolean isLoose = obj1.isLoose && obj2.isLoose ||
         fn != null && fn.isLoose();
     PersistentMap<String, Property> props;
