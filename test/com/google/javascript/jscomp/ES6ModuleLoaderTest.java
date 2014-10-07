@@ -26,6 +26,7 @@ import junit.framework.TestCase;
  *
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
+
 public class ES6ModuleLoaderTest extends TestCase {
   private ES6ModuleLoader loader;
   private Compiler compiler;

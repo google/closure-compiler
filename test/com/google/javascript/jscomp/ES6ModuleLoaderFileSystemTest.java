@@ -19,20 +19,23 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.InputId;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import junit.framework.Assert;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Tests for {@link ES6ModuleLoader} that exercise file system resolution.
  *
  * @author sayrer@gmail.com (Rob Sayre)
  */
+
 public class ES6ModuleLoaderFileSystemTest {
   private ES6ModuleLoader loader;
   private Compiler compiler;

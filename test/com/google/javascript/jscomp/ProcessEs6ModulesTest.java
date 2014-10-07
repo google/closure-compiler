@@ -23,6 +23,7 @@ import com.google.javascript.rhino.Node;
 /**
  * Unit tests for {@link ProcessEs6Modules}
  */
+
 public class ProcessEs6ModulesTest extends CompilerTestCase {
 
   public ProcessEs6ModulesTest() {
