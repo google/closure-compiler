@@ -1265,6 +1265,66 @@ public class CommandLineRunnerTest extends TestCase {
     assertEquals("", outReader.toString());
   }
 
+  /**
+   * closure requires mixed with cjs, raised in
+   * https://github.com/google/closure-compiler/pull/630
+   * https://gist.github.com/sayrer/c4c4ce0c1748573f863e
+   */
+  public void testProcessCJSWithClosureRequires() {
+    args.add("--process_common_js_modules");
+    args.add("--common_js_entry_module=app.js");
+    args.add("--manage_closure_dependencies");
+    setFilename(0, "base.js");
+    setFilename(1, "array.js");
+    setFilename(2, "Baz.js");
+    setFilename(3, "app.js");
+    test(new String[] {
+           "/** @provideGoog */\n" +
+           "/** @const */ var goog = goog || {};\n" +
+           "var COMPILED = false;\n" +
+           "goog.provide = function (arg) {};\n" +
+           "goog.require = function (arg) {};\n",
+
+           "goog.provide('goog.array');\n",
+
+           "goog.require('goog.array');\n" +
+           "function Baz() {}\n" +
+           "Baz.prototype = {\n" +
+           "  baz: function() {\n" +
+           "    return goog.array.last(['asdf','asd','baz']);\n" +
+           "  },\n" +
+           "  bar: function () {\n" +
+           "    return 4 + 4;\n" +
+           "  }\n" +
+           "}\n" +
+           "module.exports = Baz;",
+
+           "var Baz = require('./Baz');\n" +
+           "var baz = new Baz();\n" +
+           "console.log(baz.baz());\n" +
+           "console.log(baz.bar());\n"
+         },
+         new String[] {
+           "var goog=goog||{},COMPILED=!1;" +
+           "goog.provide=function(a){};goog.require=function(a){};",
+
+           "goog.array={};",
+
+           "function Baz$$module$Baz(){}" +
+           "Baz$$module$Baz.prototype={" +
+           "  baz:function(){return goog.array.last(['asdf','asd','baz'])}," +
+           "  bar:function(){return 8}" +
+           "};" +
+           "var module$Baz=Baz$$module$Baz;",
+
+           "var module$app={}," +
+           "    Baz$$module$app=module$Baz," +
+           "    baz$$module$app=new Baz$$module$app;" +
+           "console.log(baz$$module$app.baz());" +
+           "console.log(baz$$module$app.bar())"
+         });
+  }
+
   public void testFormattingSingleQuote() {
     testSame("var x = '';");
     assertEquals("var x=\"\";", lastCompiler.toSource());
@@ -1494,6 +1554,8 @@ public class CommandLineRunnerTest extends TestCase {
     if (filenames.isEmpty()) {
       return "input" + i;
     }
-    return filenames.get(i);
+    String name = filenames.get(i);
+    Preconditions.checkState(name != null && !name.isEmpty());
+    return name;
   }
 }

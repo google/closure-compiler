@@ -120,15 +120,14 @@ public class CompilerTest extends TestCase {
 
     Compiler compiler = initCompilerForCommonJS(inputs, entryPoints);
     JSModuleGraph graph = compiler.getModuleGraph();
-    assertEquals(4, graph.getModuleCount());
+    assertEquals(3, graph.getModuleCount());
     List<CompilerInput> result = graph.manageDependencies(entryPoints,
         compiler.getInputsForTesting());
-    assertEquals("[root]", result.get(0).getName());
-    assertEquals("[module$tonic]", result.get(1).getName());
-    assertEquals("[module$gin]", result.get(2).getName());
-    assertEquals("tonic.js", result.get(3).getName());
-    assertEquals("gin.js", result.get(4).getName());
-    assertEquals("mix.js", result.get(5).getName());
+    assertEquals("[module$tonic]", result.get(0).getName());
+    assertEquals("[module$gin]", result.get(1).getName());
+    assertEquals("tonic.js", result.get(2).getName());
+    assertEquals("gin.js", result.get(3).getName());
+    assertEquals("mix.js", result.get(4).getName());
   }
 
   public void testCommonJSMissingRequire() throws Exception {
