@@ -877,6 +877,16 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         null, BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
+  public void testNamespacedFunctionDoesNotNeedVisibilityRedeclInFileWithFileOverviewVisibility() {
+    testSame(
+        "/**\n" +
+        " * @fileoverview\n" +
+        " * @package\n" +
+        " */\n" +
+        "/** @return {string} */\n" +
+        "foo.bar = function() {};");
+  }
+
   public void testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
     test(new String[]{
       "/** @struct @constructor */\n" +

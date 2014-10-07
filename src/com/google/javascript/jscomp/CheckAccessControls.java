@@ -521,10 +521,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     }
   }
 
-  private static Visibility getOverridingPropertyVisibility(Node parent) {
+  @Nullable private static Visibility getOverridingPropertyVisibility(Node parent) {
     JSDocInfo overridingInfo = parent.getJSDocInfo();
-    return overridingInfo == null
-        ? Visibility.INHERITED
+    return overridingInfo == null || !overridingInfo.isOverride()
+        ? null
         : overridingInfo.getVisibility();
   }
 
@@ -658,8 +658,10 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     if (isOverride) {
       Visibility overriding = getOverridingPropertyVisibility(parent);
-      checkOverriddenPropertyVisibilityMismatch(
-          overriding, visibility, fileOverviewVisibility, t, getprop);
+      if (overriding != null) {
+        checkOverriddenPropertyVisibilityMismatch(
+            overriding, visibility, fileOverviewVisibility, t, getprop);
+      }
     }
 
 
