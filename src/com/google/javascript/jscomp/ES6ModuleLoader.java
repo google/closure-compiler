@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -34,6 +35,11 @@ abstract class ES6ModuleLoader {
    * platforms.
    */
   static final String MODULE_SLASH = "/";
+
+  /**
+   * When a module resolves to a directory, this index file is checked for.
+   */
+  static final String INDEX_FILE = "index.js";
 
   /**
    * Whether this is relative to the current file, or a top-level identifier.
@@ -105,10 +111,12 @@ abstract class ES6ModuleLoader {
     private final Map<String, CompilerInput> inputsByAddress =
         Maps.newHashMap();
     private final String moduleRoot;
+    private final URI moduleRootURI;
 
     private NaiveModuleLoader(AbstractCompiler compiler, String moduleRoot) {
       this.compiler = compiler;
       this.moduleRoot = moduleRoot;
+      this.moduleRootURI = new File(moduleRoot).toURI();
 
       // Precompute the module name of each source file.
       for (CompilerInput input : compiler.getInputsInOrder()) {
@@ -150,8 +158,22 @@ abstract class ES6ModuleLoader {
       }
     }
 
+    private String resolveInFileSystem(String filename) {
+      File f = new File(filename);
+
+      // Resolve index.js files within directories.
+      if (f.exists() && f.isDirectory()) {
+        File index = new File(f, INDEX_FILE);
+        if (index.exists()) {
+          return moduleRootURI.relativize(index.toURI()).getPath();
+        }
+      }
+
+      return filename;
+    }
+
     private String convertSourceUriToModuleAddress(URI uri) {
-      String filename = uri.normalize().toString();
+      String filename = resolveInFileSystem(uri.normalize().toString());
 
       // The DOS command shell will normalize "/" to "\", so we have to
       // wrestle it back to conform the the module standard.
