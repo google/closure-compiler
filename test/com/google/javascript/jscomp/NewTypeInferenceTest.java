@@ -7786,17 +7786,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         TypeCheck.INEXISTENT_PROPERTY);
 
     typeCheck(
-        "/** @const */ var s = (true) ? null : null;\n" +
+        "/** @const */ var s = true ? null : null;\n" +
         "function g() { s - 5; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
-        "/** @const */ var s = (true) ? void 0 : undefined;\n" +
+        "/** @const */ var s = true ? void 0 : undefined;\n" +
         "function g() { s - 5; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
-        "/** @const */ var b = (true) ? (1<2) : ('' in {});\n" +
+        "/** @const */ var b = true ? (1<2) : ('' in {});\n" +
         "function g() { b - 5; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
 

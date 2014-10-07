@@ -150,10 +150,10 @@ public class FunctionType {
   // We can't represent the theoretical top function, so we special-case
   // TOP_FUNCTION below. However, the outcome is the same; if our top function
   // is ever called, a warning is inevitable.
-  public static final FunctionType TOP_FUNCTION = new FunctionType(
+  static final FunctionType TOP_FUNCTION = new FunctionType(
       // Call the constructor directly to set fields to null
       null, null, null, null, null, null, null, null, false);
-  public static final FunctionType LOOSE_TOP_FUNCTION = new FunctionType(
+  private static final FunctionType LOOSE_TOP_FUNCTION = new FunctionType(
       // Call the constructor directly to set fields to null
       null, null, null, null, null, null, null, null, true);
   // Corresponds to Function, which is a subtype and supertype of all functions.
