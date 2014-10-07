@@ -66,6 +66,9 @@ class PeepholeSubstituteAlternateSyntax
   @SuppressWarnings("fallthrough")
   public Node optimizeSubtree(Node node) {
     switch(node.getType()) {
+      case Token.ASSIGN_SUB:
+        return reduceSubstractionAssignment(node);
+
       case Token.TRUE:
       case Token.FALSE:
         return reduceTrueFalse(node);
@@ -481,6 +484,24 @@ class PeepholeSubstituteAlternateSyntax
       return regexLiteral;
     }
 
+    return n;
+  }
+
+  private Node reduceSubstractionAssignment(Node n) {
+    Node right = n.getLastChild();
+    if (right.isNumber()) {
+      if (right.getDouble() == 1) {
+        Node newNode = IR.dec(n.removeFirstChild(), false);
+        n.getParent().replaceChild(n, newNode);
+        reportCodeChange();
+        return newNode;
+      } else if (right.getDouble() == -1) {
+        Node newNode = IR.inc(n.removeFirstChild(), false);
+        n.getParent().replaceChild(n, newNode);
+        reportCodeChange();
+        return newNode;
+      }
+    }
     return n;
   }
 
