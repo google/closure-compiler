@@ -234,19 +234,22 @@ public class NominalType {
 
     // class <: class
     if (rawType.equals(otherRawType)) {
-      if (!typeMap.isEmpty()) {
-        for (String typeVar : rawType.getTypeParameters()) {
-          Preconditions.checkState(typeMap.containsKey(typeVar),
-              "Type variable %s not in the domain: %s",
-              typeVar, typeMap.keySet());
-          JSType otherType = other.typeMap.containsKey(typeVar)
-              ? other.typeMap.get(typeVar) : JSType.fromTypeVar(typeVar);
-          if (!typeMap.get(typeVar).isSubtypeOf(otherType)) {
-            return false;
-          }
+      if (typeMap.isEmpty()) {
+        return instantiationIsUnknownOrIdentity(other);
+      }
+      if (other.typeMap.isEmpty()) {
+        return instantiationIsUnknownOrIdentity(this);
+      }
+      for (String typeVar : rawType.getTypeParameters()) {
+        Preconditions.checkState(typeMap.containsKey(typeVar),
+            "Type variable %s not in the domain: %s",
+            typeVar, typeMap.keySet());
+        Preconditions.checkState(other.typeMap.containsKey(typeVar),
+            "Other (%s) doesn't contain mapping (%s->%s) from this (%s)",
+            other, typeVar, typeMap.get(typeVar), this);
+        if (!typeMap.get(typeVar).isSubtypeOf(other.typeMap.get(typeVar))) {
+          return false;
         }
-      } else if (!other.typeMap.isEmpty()) {
-        return false;
       }
       return true;
     } else if (rawType.superClass == null) {
@@ -255,6 +258,22 @@ public class NominalType {
       return rawType.superClass.instantiateGenerics(typeMap)
           .isSubclassOf(other);
     }
+  }
+
+  private static boolean instantiationIsUnknownOrIdentity(NominalType nt) {
+    if (nt.typeMap.isEmpty()) {
+      return true;
+    }
+    for (String typeVar : nt.rawType.getTypeParameters()) {
+      Preconditions.checkState(nt.typeMap.containsKey(typeVar),
+          "Type variable %s not in the domain: %s",
+          typeVar, nt.typeMap.keySet());
+      JSType t = nt.typeMap.get(typeVar);
+      if (!t.isUnknown() && !t.equals(JSType.fromTypeVar(typeVar))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // A special-case of join

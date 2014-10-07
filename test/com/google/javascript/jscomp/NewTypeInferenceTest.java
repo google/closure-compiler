@@ -6854,7 +6854,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
   }
 
-  public void testThisReferenceUsedGenericallyDoesntCrash() {
+  public void testThisReferenceUsedGenerically() {
     checkNoWarnings(
         "/** @constructor @template T */\n" +
         "var Foo = function(t) {\n" +
@@ -6864,6 +6864,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "Foo.prototype.method = function() {\n" +
         "  var p = this;\n" +
         "  while (p != null) p = p.parent_;\n" +
+        "}");
+
+    checkNoWarnings(
+        "/** @constructor @template T */\n" +
+        "var Foo = function(t) {\n" +
+        "  /** @type {Foo<T>} */\n" +
+        "  var p = this;\n" +
         "}");
   }
 
