@@ -814,6 +814,7 @@ ProcessingInstruction.prototype.target;
  * @implements {EventTarget}
  */
 function Window() {}
+Window.prototype.Window;
 
 /**
  * @param {boolean=} opt_useCapture
