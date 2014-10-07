@@ -74,7 +74,7 @@ ui.router.$urlRouterProvider = function($urlMatcherFactory) {};
 
 
 /**
- * @param {string} url
+ * @param {string|RegExp} url
  * @param {string|function(...)|Array.<!Object>} route
  */
 ui.router.$urlRouterProvider.prototype.when = function(url, route) {};
