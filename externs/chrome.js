@@ -38,7 +38,7 @@ var chrome = {};
  *
  * @see http://goto.google.com/chromeloadtimesextension
  *
- * @return {function(): !ChromeLoadTimes}
+ * @return {!ChromeLoadTimes}
  */
 chrome.loadTimes = function() {};
 
