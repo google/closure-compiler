@@ -94,9 +94,11 @@ angular.$q.Promise;
 /**
  * @param {?function(?)} successCallback
  * @param {?function(?)=} opt_errorCallback
+ * @param {?function(?)=} opt_notifyCallback
  * @return {!angular.$q.Promise}
  */
-angular.$q.Promise.then = function(successCallback, opt_errorCallback) {};
+angular.$q.Promise.then =
+    function(successCallback, opt_errorCallback, opt_notifyCallback) {};
 
 /**
  * @param {?function(?)} callback

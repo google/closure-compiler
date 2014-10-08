@@ -81,11 +81,12 @@ angular.$q.Promise;
 /**
  * @param {?function(T): RESULT} successCallback
  * @param {?function(?)=} opt_errorCallback
+ * @param {?function(?)=} opt_notifyCallback
  * @return {!angular.$q.Promise.<RESULT>}
  * @template RESULT
  */
 angular.$q.Promise.prototype.then =
-    function(successCallback, opt_errorCallback) {};
+    function(successCallback, opt_errorCallback, opt_notifyCallback) {};
 
 /**
  * @param {?function(?)} callback
