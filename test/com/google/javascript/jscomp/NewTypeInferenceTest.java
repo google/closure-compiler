@@ -8630,6 +8630,95 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL);
   }
 
+  public void testEnumAliasing() {
+    checkNoWarnings(
+        "/** @enum {number} */\n" +
+        "var e1 = { A: 1 };\n" +
+        "/** @enum {number} */\n" +
+        "var e2 = e1;");
+
+    typeCheck(
+        "var x;\n" +
+        "/** @enum {number} */\n" +
+        "var e1 = { A: 1 };\n" +
+        "/** @enum {number} */\n" +
+        "var e2 = x;",
+        GlobalTypeInfo.MALFORMED_ENUM);
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns1 = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns1.e1 = { A: 1 };\n" +
+        "/** @const */\n" +
+        "var ns2 = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns2.e2 = ns1.e1;");
+
+    checkNoWarnings(
+        "/** @enum {number} */\n" +
+        "var e1 = { A: 1 };\n" +
+        "/** @enum {number} */\n" +
+        "var e2 = e1;\n" +
+        "function f(/** e2 */ x) {}\n" +
+        "f(e1.A);");
+
+    checkNoWarnings(
+        "/** @enum {number} */\n" +
+        "var e1 = { A: 1 };\n" +
+        "/** @enum {number} */\n" +
+        "var e2 = e1;\n" +
+        "function f(/** e2 */ x) {}\n" +
+        "f(e2.A);");
+
+    typeCheck(
+        "/** @enum {number} */\n" +
+        "var e1 = { A: 1 };\n" +
+        "/** @enum {number} */\n" +
+        "var e2 = e1;\n" +
+        "function f(/** e2 */ x) {}\n" +
+        "f('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns1 = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns1.e1 = { A: 1 };\n" +
+        "/** @const */\n" +
+        "var ns2 = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns2.e2 = ns1.e1;\n" +
+        "function f(/** ns2.e2 */ x) {}\n" +
+        "f(ns1.e1.A);");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns1 = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns1.e1 = { A: 1 };\n" +
+        "/** @const */\n" +
+        "var ns2 = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns2.e2 = ns1.e1;\n" +
+        "function f(/** ns1.e1 */ x) {}\n" +
+        "f(ns2.e2.A);");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns1 = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns1.e1 = { A: 1 };\n" +
+        "function g() {\n" +
+        "  /** @const */\n" +
+        "  var ns2 = {};\n" +
+        "  /** @enum {number} */\n" +
+        "  ns2.e2 = ns1.e1;\n" +
+        "  function f(/** ns1.e1 */ x) {}\n" +
+        "  f(ns2.e2.A);\n" +
+        "}");
+  }
+
   public void testNoDoubleWarnings() {
     typeCheck(
         "if ((4 - 'str') && true) { 4 + 5; }",

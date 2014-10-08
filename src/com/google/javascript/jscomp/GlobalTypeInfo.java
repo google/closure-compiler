@@ -625,11 +625,12 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (!currentScope.isDefined(qnameNode)) {
         Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
         String pname = qnameNode.getLastChild().getString();
-        // A program can have an error where a namespace property is defined twice:
-        // the first time with a non-namespace type and the second time as a namespace.
+        // A program can have an error where a namespace property is defined
+        // twice: the first time with a non-namespace type and the second time
+        // as a namespace.
         // Adding the non-namespace property here as undeclared prevents us
         // from mistakenly using the second definition later. We use ? for now,
-        // but may find a better type in ProcessScope
+        // but may find a better type in ProcessScope.
         ns.addUndeclaredProperty(pname, JSType.UNKNOWN, /* isConst */ false);
       }
     }
@@ -715,11 +716,21 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       Node init = NodeUtil.getInitializer(qnameNode);
+      // First check if the definition is an alias of a previous enum.
+      if (init != null && init.isQualifiedName()) {
+        EnumType et = currentScope.getEnum(init.getQualifiedName());
+        if (et != null) {
+          currentScope.addEnum(qnameNode, et);
+          return;
+        }
+      }
+      // Then check if the enum initializer is an object literal.
       if (init == null || !init.isObjectLit() ||
           init.getFirstChild() == null) {
         warnings.add(JSError.make(qnameNode, MALFORMED_ENUM));
         return;
       }
+      // Last, read the object-literal properties and create the EnumType.
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
       Set<String> propNames = new HashSet<>();
       for (Node prop : init.children()) {
