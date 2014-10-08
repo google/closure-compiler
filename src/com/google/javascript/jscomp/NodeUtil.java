@@ -75,7 +75,7 @@ public final class NodeUtil {
    * Note: unlike getPureBooleanValue this function does not return UNKNOWN
    * for expressions with side-effects.
    */
-  static TernaryValue getImpureBooleanValue(Node n) {
+  public static TernaryValue getImpureBooleanValue(Node n) {
     switch (n.getType()) {
       case Token.ASSIGN:
       case Token.COMMA:
@@ -2021,7 +2021,7 @@ public final class NodeUtil {
    * @param n a node with an outgoing conditional CFG edge
    * @return the condition node or null if the condition is not obviously a node
    */
-  static Node getConditionExpression(Node n) {
+  public static Node getConditionExpression(Node n) {
     switch (n.getType()) {
       case Token.IF:
       case Token.WHILE:
