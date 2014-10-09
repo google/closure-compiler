@@ -926,7 +926,7 @@ public class CommandLineRunner extends
 
     while ((c = buffer.read()) != -1) {
       
-      // Ignoring any found BOM (meaningless if not at the beginning anyway).
+      // Ignoring the BOM.
       if (isFirstCharacter && c == UTF8_BOM_CODE) {
         isFirstCharacter = false;
         continue;
