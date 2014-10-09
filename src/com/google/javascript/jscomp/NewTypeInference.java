@@ -348,28 +348,30 @@ public class NewTypeInference implements CompilerPass {
 
     // For function scopes, add the formal parameters and the free variables
     // from outer scopes to the environment.
+    Set<String> nonLocals = new HashSet<>();
     if (currentScope.isFunction()) {
-      Set<String> formalsAndOuters = currentScope.getOuterVars();
       if (currentScope.getName() != null) {
-        formalsAndOuters.add(currentScope.getName());
+        nonLocals.add(currentScope.getName());
       }
-      formalsAndOuters.addAll(currentScope.getFormals());
+      nonLocals.addAll(currentScope.getOuterVars());
+      nonLocals.addAll(currentScope.getFormals());
       if (currentScope.hasThis()) {
-        formalsAndOuters.add("this");
-      }
-      for (String name : formalsAndOuters) {
-        JSType declType = currentScope.getDeclaredTypeOf(name);
-        JSType initType = declType == null ?
-            envGetType(entryEnv, name) : pickInitialType(declType);
-        entryEnv = envPutType(entryEnv, name, initType);
+        nonLocals.add("this");
       }
       entryEnv = envPutType(entryEnv, RETVAL_ID, JSType.UNDEFINED);
+    } else {
+      nonLocals.addAll(currentScope.getExterns());
+    }
+    for (String name : nonLocals) {
+      JSType declType = currentScope.getDeclaredTypeOf(name);
+      JSType initType = declType == null
+          ? envGetType(entryEnv, name) : pickInitialType(declType);
+      entryEnv = envPutType(entryEnv, name, initType);
     }
 
     // For all scopes, add local variables and (local) function definitions
     // to the environment.
     for (String local : currentScope.getLocals()) {
-      // TODO(dimvar): Start vars declared in externs at their declared type.
       entryEnv = envPutType(entryEnv, local, JSType.UNDEFINED);
     }
     for (String fnName : currentScope.getLocalFunDefs()) {
@@ -391,6 +393,7 @@ public class NewTypeInference implements CompilerPass {
     TypeEnv env = new TypeEnv();
     Set<String> varNames = currentScope.getOuterVars();
     varNames.addAll(currentScope.getLocals());
+    varNames.addAll(currentScope.getExterns());
     if (currentScope.isFunction()) {
       if (currentScope.getName() != null) {
         varNames.add(currentScope.getName());
@@ -1153,6 +1156,7 @@ public class NewTypeInference implements CompilerPass {
       return new EnvTypePair(inEnv, JSType.UNDEFINED);
     }
     if (currentScope.isLocalVar(varName) ||
+        currentScope.isLocalExtern(varName) ||
         currentScope.isFormalParam(varName) ||
         currentScope.isLocalFunDef(varName) ||
         currentScope.isOuterVar(varName) ||

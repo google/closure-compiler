@@ -149,6 +149,42 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
+  public void testVarDefinitionsInExterns() {
+    checkNoWarnings("var undecl = {};", "if (undecl) { undecl.x = 7 };");
+
+    checkNoWarnings(
+        "var undecl = {};",
+        "function f() { if (undecl) { undecl.x = 7 }; }");
+
+    checkNoWarnings("var undecl;", "undecl(5);");
+
+    checkNoWarnings("/** @type {number} */ var num;", "num - 5;");
+
+    checkNoWarnings("var maybeStr; /** @type {string} */ var maybeStr;",
+        "maybeStr - 5;");
+
+    typeCheck("/** @type {string} */ var str;", "str - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // TODO(blickly): Warn if function in externs has body
+    checkNoWarnings(
+        "function f() {/** @type {string} */ var invisible;}",
+        "invisible - 5;");
+//         VarCheck.UNDEFINED_VAR_ERROR);
+
+    typeCheck("/** @type {number} */ var num;",
+        "/** @type {undefined} */ var x = num;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck("var untypedNum;",
+        "function f(x) {\n" +
+        " x < untypedNum;\n" +
+        " untypedNum - 5;\n" +
+        "}\n" +
+        "f('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
   public void testThisInFunctionJsdoc() {
     typeCheck(
         "/** @constructor */ function Foo(){};\n" +

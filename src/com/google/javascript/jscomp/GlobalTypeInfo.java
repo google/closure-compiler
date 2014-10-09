@@ -997,7 +997,8 @@ class GlobalTypeInfo implements CompilerPass {
                 || NodeUtil.isEnumDecl(n)) {
                 if (!currentScope.isDefinedLocally(name)) {
                   // Malformed enum or typedef
-                  currentScope.addLocal(name, JSType.UNKNOWN, false);
+                  currentScope.addLocal(
+                      name, JSType.UNKNOWN, false, n.isFromExterns());
                 }
               break;
             }
@@ -1014,14 +1015,16 @@ class GlobalTypeInfo implements CompilerPass {
               // }
               undeclaredVars.removeAll(name);
               if (parent.isCatch()) {
-                currentScope.addLocal(name, JSType.UNKNOWN, false);
+                currentScope.addLocal(
+                    name, JSType.UNKNOWN, false, n.isFromExterns());
               } else {
                 boolean isConst = NodeUtil.hasConstAnnotation(parent);
                 JSType declType = getVarTypeFromAnnotation(n);
                 if (isConst && !mayWarnAboutNoInit(n) && declType == null) {
                   declType = inferConstTypeFromRhs(n);
                 }
-                currentScope.addLocal(name, declType, isConst);
+                currentScope.addLocal(
+                    name, declType, isConst, n.isFromExterns());
               }
             }
           } else if (currentScope.isOuterVarEarly(name)) {
@@ -1818,6 +1821,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     // A local w/out declared type is mapped to null, not to JSType.UNKNOWN.
     private final Map<String, JSType> locals = new HashMap<>();
+    private final Map<String, JSType> externs;
     private final Set<String> constVars = new HashSet<>();
     private final List<String> formals;
     // outerVars are the variables that appear free in this scope
@@ -1839,9 +1843,11 @@ class GlobalTypeInfo implements CompilerPass {
     private Scope(Node root, Scope parent, List<String> formals) {
       if (parent == null) {
         this.name = null;
+        this.externs = new HashMap<>();
       } else {
         String nameOnAst = root.getFirstChild().getString();
         this.name = nameOnAst.isEmpty() ? null : nameOnAst;
+        this.externs = ImmutableMap.of();
       }
       this.root = root;
       this.parent = parent;
@@ -1860,7 +1866,7 @@ class GlobalTypeInfo implements CompilerPass {
     /** Used only for error messages; null for top scope */
     String getReadableName() {
       // TODO(dimvar): don't return null for anonymous functions
-      return parent == null ? null : NodeUtil.getFunctionName(root);
+      return isTopLevel() ? null : NodeUtil.getFunctionName(root);
     }
 
     String getName() {
@@ -1877,6 +1883,10 @@ class GlobalTypeInfo implements CompilerPass {
 
     boolean isFunction() {
       return root.isFunction();
+    }
+
+    private boolean isTopLevel() {
+      return parent == null;
     }
 
     private boolean isConstructor() {
@@ -1907,6 +1917,10 @@ class GlobalTypeInfo implements CompilerPass {
       return locals.containsKey(name);
     }
 
+    boolean isLocalExtern(String name) {
+      return externs.containsKey(name);
+    }
+
     boolean isLocalFunDef(String name) {
       return localFunDefs.containsKey(name);
     }
@@ -1920,6 +1934,7 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkState(!name.contains("."));
       return locals.containsKey(name) || formals.contains(name)
           || localFunDefs.containsKey(name) || "this".equals(name)
+          || externs.containsKey(name)
           || localNamespaces != null && localNamespaces.containsKey(name)
           || localTypedefs != null && localTypedefs.containsKey(name)
           || localEnums != null && localEnums.containsKey(name);
@@ -2088,6 +2103,11 @@ class GlobalTypeInfo implements CompilerPass {
         Preconditions.checkState(!localType.isBottom(), name + " was bottom");
         return localType;
       }
+      JSType externType = externs.get(name);
+      if (externType != null) {
+        Preconditions.checkState(!externType.isBottom());
+        return externType;
+      }
       Scope s = localFunDefs.get(name);
       if (s != null && s.getDeclaredType() != null) {
         return JSType.fromFunctionType(s.getDeclaredType().toFunctionType());
@@ -2155,12 +2175,21 @@ class GlobalTypeInfo implements CompilerPass {
       return ImmutableSet.copyOf(locals.keySet());
     }
 
-    private void addLocal(String name, JSType declType, boolean isConstant) {
+    Set<String> getExterns() {
+      return ImmutableSet.copyOf(externs.keySet());
+    }
+
+    private void addLocal(String name, JSType declType,
+        boolean isConstant, boolean isFromExterns) {
       Preconditions.checkArgument(!isDefinedLocally(name));
       if (isConstant) {
         constVars.add(name);
       }
-      locals.put(name, declType);
+      if (isFromExterns) {
+        externs.put(name, declType);
+      } else {
+        locals.put(name, declType);
+      }
     }
 
     private void addNamespace(Node qnameNode) {
@@ -2331,7 +2360,7 @@ class GlobalTypeInfo implements CompilerPass {
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
-      if (!root.isFunction()) {
+      if (isTopLevel()) {
         sb.append("<TOP SCOPE>");
       } else {
         sb.append(getReadableName());
