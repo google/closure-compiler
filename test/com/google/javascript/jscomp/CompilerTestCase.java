@@ -100,6 +100,9 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   private DiagnosticType expectedSymbolTableError = null;
 
+  /** Level of the lint check results */
+  private CheckLevel lintCheckLevel = CheckLevel.OFF;
+
   /**
    * Whether the MarkNoSideEffectsCalls pass runs before the pass being tested
    */
@@ -129,6 +132,7 @@ public abstract class CompilerTestCase extends TestCase  {
   private boolean astValidationEnabled = true;
 
   private String filename = "testcode";
+
 
   /**
    * Constructs a test.
@@ -207,6 +211,8 @@ public abstract class CompilerTestCase extends TestCase  {
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.LINT_CHECKS, lintCheckLevel);
     options.setCodingConvention(getCodingConvention());
     return options;
   }
@@ -259,6 +265,13 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   protected void enableInferConsts(boolean enable) {
     this.enableInferConsts = enable;
+  }
+
+  /**
+   * @param level of lint check results
+   */
+  protected void enableLintChecks(CheckLevel level) {
+    this.lintCheckLevel = level;
   }
 
   /**

@@ -15,16 +15,23 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CheckPathsBetweenNodes;
 import com.google.javascript.jscomp.ControlFlowGraph;
+import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
  * Checks when a function is annotated as returning {SomeType} (nullable)
@@ -47,6 +54,32 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
           + "returns a non-null value. Consider making the return type "
           + "non-nullable.");
 
+  // Skips impossible edges.
+  // Based on CheckMissingReturn.GOES_THROUGH_TRUE_CONDITION_PREDICATE
+  private static final Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>
+      GOES_THROUGH_TRUE_CONDITION_PREDICATE =
+        new Predicate<DiGraphEdge<Node, ControlFlowGraph.Branch>>() {
+    @Override
+    public boolean apply(DiGraphEdge<Node, ControlFlowGraph.Branch> input) {
+      Branch branch = input.getValue();
+      if (branch.isConditional()) {
+        Node condition = NodeUtil.getConditionExpression(
+            input.getSource().getValue());
+        // TODO(user): We CAN make this bit smarter just looking at
+        // constants. We DO have a full blown ReverseAbstractInterupter and
+        // type system that can evaluate some impressions' boolean value but
+        // for now we will keep this pass lightweight.
+        if (condition != null) {
+          TernaryValue val = NodeUtil.getImpureBooleanValue(condition);
+          if (val != TernaryValue.UNKNOWN) {
+            return val.toBoolean(true) == (Branch.ON_TRUE == branch);
+          }
+        }
+      }
+      return true;
+    }
+  };
+
   public CheckNullableReturn(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -57,6 +90,7 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
     // node, so that getControlFlowGraph will return the graph inside
     // the function, rather than the graph of the enclosing scope.
     if (n.isBlock() && n.hasChildren() && isReturnTypeNullable(parent)
+        && !hasSingleThrow(n) && !isSuperMethodOverride(parent)
         && !canReturnNull(t.getControlFlowGraph())) {
       String fnName = NodeUtil.getNearestFunctionName(parent);
       if (fnName != null && !fnName.isEmpty()) {
@@ -65,6 +99,62 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
         compiler.report(t.makeError(parent, NULLABLE_RETURN));
       }
     }
+  }
+
+  private static boolean isSuperMethodOverride(Node function) {
+    String functionName = NodeUtil.getNearestFunctionName(function);
+    if (functionName == null) {
+      return false;
+    }
+    FunctionType functionType = function.getJSType().toMaybeFunctionType();
+    JSType thisType = functionType.getTypeOfThis();
+    if (thisType == null) {
+      return false;
+    }
+    ObjectType objectType = thisType.toObjectType();
+    if (objectType == null) {
+      return false;
+    }
+    FunctionType ctorType = objectType.getConstructor();
+    if (ctorType == null) {
+      return false;
+    }
+    for (ObjectType interfaceType : ctorType.getAllImplementedInterfaces()) {
+      JSType superMethodType = interfaceType.findPropertyType(functionName);
+      if (superMethodType != null) {
+        // We do not check the actual property type here assuming it is a function, too.
+        return true;
+      }
+    }
+    return protoChainHasProperty(functionName, ctorType);
+  }
+
+  private static boolean protoChainHasProperty(String functionName, FunctionType ctorType) {
+    FunctionType superClassCtor = ctorType.getSuperClassConstructor();
+    if (superClassCtor == null) {
+      return false;
+    }
+
+    JSType extendedType = superClassCtor.getTypeOfThis();
+    if (extendedType != null && extendedType.findPropertyType(functionName) != null) {
+      // We do not check the actual property type here assuming it is a function, too.
+      return true;
+    }
+    return protoChainHasProperty(functionName, superClassCtor);
+  }
+
+  /**
+   * @return whether the blockNode contains only a single "throw" child node.
+   */
+  private static boolean hasSingleThrow(Node blockNode) {
+    if (blockNode.getChildCount() == 1
+        && blockNode.getFirstChild().getType() == Token.THROW) {
+      // Functions consisting of a single "throw FOO" can be actually abstract,
+      // so do not check their return type nullability.
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -78,7 +168,8 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
     if (!n.isFunction()) {
       return false;
     }
-    JSType returnType = n.getJSType().toMaybeFunctionType().getReturnType();
+    FunctionType functionType = n.getJSType().toMaybeFunctionType();
+    JSType returnType = functionType.getReturnType();
     if (returnType == null
         || returnType.isUnknownType() || !returnType.isNullable()) {
       return false;
@@ -91,18 +182,28 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
    * @return True if the given ControlFlowGraph could return null.
    */
   private static boolean canReturnNull(ControlFlowGraph<Node> graph) {
-    DiGraph.DiGraphNode<Node, ControlFlowGraph.Branch> ir = graph.getImplicitReturn();
-    for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge : ir.getInEdges()) {
-      DiGraph.DiGraphNode<Node, ControlFlowGraph.Branch> graphNode = inEdge.getSource();
-      Node possibleReturnNode = graphNode.getValue();
-      if (possibleReturnNode.isReturn()) {
-        Node returnValue = possibleReturnNode.getFirstChild();
-        if (returnValue != null && isNullable(returnValue)) {
-          return true;
+
+    Predicate<Node> nullableReturn = new Predicate<Node>() {
+      @Override
+      public boolean apply(Node input) {
+        // Check for null because the control flow graph's implicit return node is
+        // represented by null, so this value might be input.
+        if (input == null || !input.isReturn()) {
+          return false;
         }
+        Node returnValue = input.getFirstChild();
+        return returnValue != null && isNullable(returnValue);
       }
-    }
-    return false;
+    };
+
+    CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> test =
+        new CheckPathsBetweenNodes<>(
+            graph,
+            graph.getEntry(),
+            graph.getImplicitReturn(),
+            nullableReturn, GOES_THROUGH_TRUE_CONDITION_PREDICATE);
+
+    return test.somePathsSatisfyPredicate();
   }
 
   /**
