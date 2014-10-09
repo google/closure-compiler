@@ -448,6 +448,8 @@ public class Compiler extends AbstractCompiler {
     initBasedOnOptions();
 
     initInputsByIdMap();
+
+    initAST();
   }
 
   /**
@@ -583,6 +585,20 @@ public class Compiler extends AbstractCompiler {
         report(JSError.make(DUPLICATE_INPUT, input.getName()));
       }
     }
+  }
+
+  /**
+   * Sets up the skeleton of the AST (the externs and root).
+   */
+  private void initAST() {
+    jsRoot = IR.block();
+    jsRoot.setIsSyntheticBlock(true);
+
+    externsRoot = IR.block();
+    externsRoot.setIsSyntheticBlock(true);
+
+    externAndJsRoot = IR.block(externsRoot, jsRoot);
+    externAndJsRoot.setIsSyntheticBlock(true);
   }
 
   public Result compile(
@@ -1320,22 +1336,8 @@ public class Compiler extends AbstractCompiler {
 
     // If old roots exist (we are parsing a second time), detach each of the
     // individual file parse trees.
-    if (externsRoot != null) {
-      externsRoot.detachChildren();
-    }
-    if (jsRoot != null) {
-      jsRoot.detachChildren();
-    }
-
-    // Parse main JS sources.
-    jsRoot = IR.block();
-    jsRoot.setIsSyntheticBlock(true);
-
-    externsRoot = IR.block();
-    externsRoot.setIsSyntheticBlock(true);
-
-    externAndJsRoot = IR.block(externsRoot, jsRoot);
-    externAndJsRoot.setIsSyntheticBlock(true);
+    externsRoot.detachChildren();
+    jsRoot.detachChildren();
 
     if (options.tracer.isOn()) {
       tracker = new PerformanceTracker(jsRoot, options.tracer);
@@ -1364,7 +1366,7 @@ public class Compiler extends AbstractCompiler {
         processAMDAndCommonJSModules();
       }
 
-      hoistExterns(externsRoot);
+      hoistExterns();
 
       // Check if the sources need to be re-ordered.
       boolean staleInputs = false;
@@ -1451,7 +1453,7 @@ public class Compiler extends AbstractCompiler {
   /**
    * Hoists inputs with the @externs annotation into the externs list.
    */
-  private void hoistExterns(Node externsRoot) {
+  void hoistExterns() {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
       if (options.dependencyOptions.needsManagement()) {

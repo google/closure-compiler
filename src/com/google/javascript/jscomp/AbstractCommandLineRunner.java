@@ -815,6 +815,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       List<SourceFile> inputs = createSourceInputs(jsFiles);
       if (config.skipNormalOutputs) {
         compiler.init(externs, inputs, options);
+        compiler.hoistExterns();
       } else {
         result = compiler.compile(externs, inputs, options);
       }
