@@ -132,8 +132,8 @@ class GlobalTypeInfo implements CompilerPass {
   static final DiagnosticType COULD_NOT_INFER_CONST_TYPE =
       DiagnosticType.warning(
           "JSC_COULD_NOT_INFER_CONST_TYPE",
-          "All constants must be typed. The compiler could not infer the type " +
-          "of this constant. Please use an explicit type annotation.");
+          "All constants must be typed. The compiler could not infer the type "
+          + "of this constant. Please use an explicit type annotation.");
 
   static final DiagnosticType MISPLACED_CONST_ANNOTATION =
       DiagnosticType.warning(
@@ -1018,7 +1018,7 @@ class GlobalTypeInfo implements CompilerPass {
                 currentScope.addLocal(
                     name, JSType.UNKNOWN, false, n.isFromExterns());
               } else {
-                boolean isConst = NodeUtil.hasConstAnnotation(parent);
+                boolean isConst = isConst(parent);
                 JSType declType = getVarTypeFromAnnotation(n);
                 if (isConst && !mayWarnAboutNoInit(n) && declType == null) {
                   declType = inferConstTypeFromRhs(n);
@@ -1183,7 +1183,7 @@ class GlobalTypeInfo implements CompilerPass {
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       JSType propDeclType = getTypeAtPropDeclNode(getProp, jsdoc);
-      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
+      boolean isConst = isConst(getProp);
       if (propDeclType != null || isConst) {
         JSType previousPropType = classType.getCtorPropDeclaredType(pname);
         if (classType.hasCtorProp(pname) &&
@@ -1223,7 +1223,7 @@ class GlobalTypeInfo implements CompilerPass {
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
       JSType propDeclType = getTypeAtPropDeclNode(declNode, jsdoc);
-      boolean isConst = NodeUtil.hasConstAnnotation(declNode);
+      boolean isConst = isConst(declNode);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
         if (ns.hasProp(pname) &&
@@ -1241,7 +1241,8 @@ class GlobalTypeInfo implements CompilerPass {
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
         Node initializer = NodeUtil.getInitializer(declNode);
-        JSType t = initializer == null ? null : simpleInferExprType(initializer);
+        JSType t = initializer == null
+            ? null : simpleInferExprType(initializer);
         if (t == null) {
           t = JSType.UNKNOWN;
         }
@@ -1261,7 +1262,7 @@ class GlobalTypeInfo implements CompilerPass {
       // TODO(blickly): Support @param, @return style fun declarations here.
       JSType declType = getTypeDeclarationFromJsdoc(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
-      boolean isConst = NodeUtil.hasConstAnnotation(getProp);
+      boolean isConst = isConst(getProp);
       if (declType != null || isConst) {
         mayWarnAboutExistingProp(rawNominalType, pname, getProp, declType);
         // Intentionally, we keep going even if we warned for redeclared prop.
@@ -1716,7 +1717,7 @@ class GlobalTypeInfo implements CompilerPass {
           rawType, pname, new PropertyDef(defSite, methodType, methodScope));
 
       // Add the property to the class with the appropriate type.
-      boolean isConst = NodeUtil.hasConstAnnotation(defSite);
+      boolean isConst = isConst(defSite);
       if (propDeclType != null || isConst) {
         if (mayWarnAboutExistingProp(rawType, pname, defSite, propDeclType)) {
           return;
@@ -1789,6 +1790,12 @@ class GlobalTypeInfo implements CompilerPass {
   private static boolean isPrototypePropertyDeclaration(Node n) {
     return NodeUtil.isExprAssign(n)
         && isPrototypeProperty(n.getFirstChild().getFirstChild());
+  }
+
+  // TODO(dimvar): handle const by coding convention
+  private static boolean isConst(Node defSite) {
+    return NodeUtil.hasConstAnnotation(defSite)
+        && !NodeUtil.getBestJSDocInfo(defSite).isConstructor();
   }
 
   private static class PropertyDef {

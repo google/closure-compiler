@@ -7988,6 +7988,35 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var n2 = n1;\n" +
         "function g() { n2 < 'str'; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // Don't treat aliased constructors as if they were const variables.
+    checkNoWarnings(
+        "var Bar;",
+        "/**\n" +
+        " * @constructor\n" +
+        " * @final\n" +
+        " */\n" +
+        "var Foo = Bar;");
+
+    checkNoWarnings(
+        "var Bar;",
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @final\n" +
+        " */\n" +
+        "ns.Foo = Bar;");
+
+    // (Counterintuitive) On a constructor, @final means don't subclass, not
+    // that it's a const. We don't warn about reassignment.
+    checkNoWarnings(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @final\n" +
+        " */\n" +
+        "var Foo = function() {};\n" +
+        "Foo = /** @type {?} */ (function() {});");
   }
 
   public void testSuppressions() {
