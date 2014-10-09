@@ -44,6 +44,12 @@ public class DefaultDependencyResolver implements DependencyResolver  {
   /** Provide for Closure's base.js. */
   static final String CLOSURE_BASE_PROVIDE = "goog";
 
+  /** Whether a require is in the Closure base namespace */
+  public static final boolean IsClosureBaseRequire(String s) {
+    return (s == DefaultDependencyResolver.CLOSURE_BASE_PROVIDE ||
+            s.startsWith(DefaultDependencyResolver.CLOSURE_BASE_PROVIDE + "."));
+  }
+
   /** Source files used to look up the dependencies. */
   private final List<DependencyFile> depsFiles;
 
