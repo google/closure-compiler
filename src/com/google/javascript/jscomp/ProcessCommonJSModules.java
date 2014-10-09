@@ -49,7 +49,6 @@ public class ProcessCommonJSModules implements CompilerPass {
   private final Compiler compiler;
   private final ES6ModuleLoader loader;
   private final boolean reportDependencies;
-  private JSModule module;
 
   ProcessCommonJSModules(Compiler compiler, ES6ModuleLoader loader) {
     this(compiler, loader, true);
@@ -73,12 +72,8 @@ public class ProcessCommonJSModules implements CompilerPass {
         .traverse(compiler, root, new ProcessCommonJsModulesCallback());
   }
 
-  /**
-   * For every file that is being processed this returns the module that
-   * created for it.
-   */
-  JSModule getModule() {
-    return module;
+  String inputToModuleName(CompilerInput input) {
+    return toModuleName(loader.getLoadAddress(input));
   }
 
   /**
@@ -202,7 +197,7 @@ public class ProcessCommonJSModules implements CompilerPass {
           "ProcessCommonJSModules supports only one invocation per " +
           "CompilerInput / script node");
 
-      String moduleName = toModuleName(loader.getLoadAddress(t.getInput()));
+      String moduleName = inputToModuleName(t.getInput());
 
       // Rename vars to not conflict in global scope.
       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
@@ -217,9 +212,6 @@ public class ProcessCommonJSModules implements CompilerPass {
       if (reportDependencies) {
         CompilerInput ci = t.getInput();
         ci.addProvide(moduleName);
-        JSModule m = new JSModule(moduleName);
-        m.addAndOverrideModule(ci);
-        module = m;
       }
       script.addChildToFront(IR.exprResult(
           IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
