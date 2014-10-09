@@ -919,13 +919,16 @@ public class CommandLineRunner extends
     boolean quoted = false;
     // Indicates if the char being processed has been escaped.
     boolean escaped = false;
+    // Indicates whether this is the beginning of the file.
+    boolean isFirstCharacter = true;
 
     int c;
 
     while ((c = buffer.read()) != -1) {
       
       // Ignoring any found BOM (meaningless if not at the beginning anyway).
-      if (c == UTF8_BOM_CODE) {
+      if (isFirstCharacter && c == UTF8_BOM_CODE) {
+        isFirstCharacter = false;
         continue;
       }
 
