@@ -1370,6 +1370,68 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
+  public void testDifficultObjectSpecialization() {
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function X() { this.p = 1; }\n" +
+        "/** @constructor */\n" +
+        "function Y() { this.p = 2; }\n" +
+        "/** @param {(!X|!Y)} a */\n" +
+        "function fn(a) {\n" +
+        "  a.p;\n" +
+        "  /** @type {!X} */ (a);\n" +
+        "}");
+
+    // Currently, two types that have a common subtype specialize to bottom
+    // instead of to the common subtype. If we change that, then this test will
+    // have no warnings.
+    typeCheck(
+        "/** @interface */\n" +
+        "function High1() {}\n" +
+        "/** @interface */\n" +
+        "function High2() {}\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @implements {High1}\n" +
+        " * @implements {High2}\n" +
+        " */\n" +
+        "function Low() {}\n" +
+        "function f(x) {\n" +
+        "  var /** !High1 */ v1 = x;\n" +
+        "  var /** !High2 */ v2 = x;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Currently, two types that have a common subtype specialize to bottom
+    // instead of to the common subtype. If we change that, then this test will
+    // have no warnings, and the type of x will be !Low.
+    // (We must normalize the output of specialize to avoid getting (!Med|!Low))
+    typeCheck(
+        "/** @interface */\n" +
+        "function High1() {}\n" +
+        "/** @interface */\n" +
+        "function High2() {}\n" +
+        "/** @interface */\n" +
+        "function High3() {}\n" +
+        "/**\n" +
+        " * @interface\n" +
+        " * @extends {High1}\n" +
+        " * @extends {High2}\n" +
+        " */\n" +
+        "function Mid() {}\n" +
+        "/**\n" +
+        " * @interface\n" +
+        " * @extends {Mid}\n" +
+        " * @extends {High3}\n" +
+        " */\n" +
+        "function Low() {}\n" +
+        "function f(x) {\n" +
+        "  var /** !High1 */ v1 = x;\n" +
+        "  var /** (!High2|!High3) */ v2 = x;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testLooseConstructors() {
     checkNoWarnings(
         "function f(ctor) {\n" +
