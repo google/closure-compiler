@@ -390,6 +390,7 @@
    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
    <jar destfile="${refasterjs-jarfile}" update="true">
      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+     <fileset dir="${build.dir}" includes="externs.zip" />
      <fileset dir="${classes.dir}" />
      <fileset dir="${refasterjs-classes.dir}" />
      <manifest>
