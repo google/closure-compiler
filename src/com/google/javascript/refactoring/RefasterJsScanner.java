@@ -167,7 +167,8 @@ public final class RefasterJsScanner extends Scanner {
   void initialize(AbstractCompiler compiler) throws Exception {
     Preconditions.checkState(
         !Strings.isNullOrEmpty(templateJs),
-        "The template JS must be loaded before the scanner is used.");
+        "The template JS must be loaded before the scanner is used. "
+        + "Make sure that the template file is not empty.");
     Node scriptRoot = new JsAst(SourceFile.fromCode(
         "template", templateJs)).getAstRoot(compiler);
 
