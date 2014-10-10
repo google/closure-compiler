@@ -76,7 +76,7 @@ final class RefasterJs {
         !Strings.isNullOrEmpty(refasterJsTemplate), "--refasterjs_template must be provided");
     for (String input : inputs) {
       Preconditions.checkArgument(
-          new File(input).exists(), "Input file " + input + " does not exist.");
+          new File(input).exists(), "Input file %s does not exist.", input);
     }
 
     RefasterJsScanner scanner = new RefasterJsScanner();
