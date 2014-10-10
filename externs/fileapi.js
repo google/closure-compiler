@@ -855,9 +855,6 @@ function DOMURL() {}
  */
 function URL(urlString, opt_base) {}
 
-/** @constructor */
-window.URL = URL;
-
 /** @type {string} */
 URL.prototype.protocol;
 
