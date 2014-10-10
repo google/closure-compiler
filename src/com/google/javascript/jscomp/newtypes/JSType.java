@@ -253,17 +253,8 @@ public abstract class JSType {
     return getObjs() != null || EnumType.hasNonScalar(getEnums());
   }
 
-  public boolean isNullable() {
-    return (getMask() & NULL_MASK) != 0;
-  }
-
   boolean isTypeVariable() {
     return (getMask() & TYPEVAR_MASK) != 0 && (getMask() & ~TYPEVAR_MASK) == 0;
-  }
-
-  public boolean isRecordType() {
-    return getMask() == NON_SCALAR_MASK && getObjs().size() == 1
-        && Iterables.getOnlyElement(getObjs()).isRecordType();
   }
 
   public boolean isStruct() {

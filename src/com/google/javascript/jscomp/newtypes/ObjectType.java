@@ -117,10 +117,6 @@ public class ObjectType implements TypeWithProperties {
     return false;
   }
 
-  boolean isRecordType() {
-    return nominalType == null && fn == null && !isLoose;
-  }
-
   boolean isStruct() {
     return objectKind.isStruct();
   }

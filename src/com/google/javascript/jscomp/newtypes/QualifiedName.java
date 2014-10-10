@@ -64,10 +64,6 @@ public class QualifiedName {
     return parts.size() == 1;
   }
 
-  public int size() {
-    return parts.size();
-  }
-
   public QualifiedName getAllButLeftmost() {
     Preconditions.checkArgument(!isIdentifier());
     return new QualifiedName(parts.subList(1, parts.size()));

@@ -209,7 +209,6 @@ public class NewTypeInference implements CompilerPass {
   Map<Scope, JSType> summaries;
   Map<Node, DeferredCheck> deferredChecks;
   ControlFlowGraph<Node> cfg;
-  Node jsRoot;
   Scope currentScope;
   GlobalTypeInfo symbolTable;
   static final String RETVAL_ID = "%return";
@@ -232,16 +231,9 @@ public class NewTypeInference implements CompilerPass {
     this.isClosurePassOn = isClosurePassOn;
   }
 
-  @VisibleForTesting
-  public Scope processForTesting(Node externs, Node root) {
-    process(externs, root);
-    return symbolTable.getGlobalScope();
-  }
-
   @Override
   public void process(Node externs, Node root) {
     try {
-      jsRoot = root;
       symbolTable = compiler.getSymbolTable();
       for (Scope scope : symbolTable.getScopes()) {
         analyzeFunction(scope);

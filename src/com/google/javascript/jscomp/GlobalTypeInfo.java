@@ -259,10 +259,6 @@ class GlobalTypeInfo implements CompilerPass {
     return scopes;
   }
 
-  Scope getGlobalScope() {
-    return globalScope;
-  }
-
   JSType getCastType(Node n) {
     JSType t = castTypes.get(n);
     Preconditions.checkNotNull(t);
