@@ -3211,7 +3211,8 @@ public final class NodeUtil {
 
   /** Whether the given name is constant by coding convention. */
   static boolean isConstantByConvention(
-      CodingConvention convention, Node node, Node parent) {
+      CodingConvention convention, Node node) {
+    Node parent = node.getParent();
     if (parent.isGetProp() && node == parent.getLastChild()) {
       return convention.isConstantKey(node.getString());
     } else if (isObjectLitKey(node)) {
@@ -3240,11 +3241,10 @@ public final class NodeUtil {
 
     switch (node.getType()) {
       case Token.NAME:
-        return NodeUtil.isConstantByConvention(
-            convention, node, node.getParent());
+        return NodeUtil.isConstantByConvention(convention, node);
       case Token.GETPROP:
-        return node.isQualifiedName() && NodeUtil.isConstantByConvention(
-            convention, node.getLastChild(), node);
+        return node.isQualifiedName()
+            && NodeUtil.isConstantByConvention(convention, node.getLastChild());
     }
     return false;
   }

@@ -7603,6 +7603,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  /** @const */ this.prop = 1;\n" +
         "}",
         GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    // A final constructor isn't the same as a @const property
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /**\n" +
+        "   * @constructor\n" +
+        "   * @final\n" +
+        "   */\n" +
+        "  this.Bar = function() {};\n" +
+        "}");
   }
 
   public void testConstVarsDontReassign() {
@@ -7734,6 +7745,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function Bar() { /** @const */ this.X = 5; }\n" +
         "var fb = true ? new Foo : new Bar;\n" +
         "fb.X++;",
+        NewTypeInference.CONST_REASSIGNED);
+  }
+
+  public void testConstantByConvention() {
+    typeCheck(
+        "var ABC = 123;\n" +
+        "ABC = 321;",
+        NewTypeInference.CONST_REASSIGNED);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  this.ABC = 123;\n" +
+        "}\n" +
+        "(new Foo).ABC = 321;",
         NewTypeInference.CONST_REASSIGNED);
   }
 

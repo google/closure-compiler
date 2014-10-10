@@ -123,10 +123,14 @@ public class Node implements Cloneable, Serializable {
                                   // var obj = { get [prop]() {...} };
       COMPUTED_PROP_SETTER = 74,  // A computed property in a setter, e.g.
                                   // var obj = { set [prop](val) {...} };
-      ANALYZED_DURING_GTI  = 75;  // In GlobalTypeInfo, we mark some AST nodes
+      ANALYZED_DURING_GTI  = 75,  // In GlobalTypeInfo, we mark some AST nodes
                                   // to avoid analyzing them during
                                   // NewTypeInference. We remove this attribute
                                   // in the fwd direction of NewTypeInference.
+      CONSTANT_PROPERTY_DEF = 76; // Used to communicate information between
+                                  // GlobalTypeInfo and NewTypeInference.
+                                  // We use this to tag getprop nodes that
+                                  // declare properties.
 
 
   public static final int   // flags for INCRDECR_PROP
@@ -176,6 +180,7 @@ public class Node implements Cloneable, Serializable {
         case COMPUTED_PROP_GETTER: return "computed_prop_getter";
         case COMPUTED_PROP_SETTER: return "computed_prop_setter";
         case ANALYZED_DURING_GTI:  return "analyzed_during_gti";
+        case CONSTANT_PROPERTY_DEF: return "constant_property_def";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

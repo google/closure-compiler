@@ -161,6 +161,12 @@ public class EnumType extends Namespace implements TypeWithProperties {
     return declaredType.hasConstantProp(qname);
   }
 
+  // Unlike hasProp, this method asks about the object literal in the enum
+  // definition, not about the declared type of the enum.
+  public boolean enumLiteralHasKey(String name) {
+    return props.contains(name);
+  }
+
   static boolean hasNonScalar(ImmutableSet<EnumType> enums) {
     if (enums == null) {
       return false;

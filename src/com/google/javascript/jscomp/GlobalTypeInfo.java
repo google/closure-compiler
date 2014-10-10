@@ -1072,7 +1072,7 @@ class GlobalTypeInfo implements CompilerPass {
                     getTypeDeclarationFromJsdoc(
                         prop.getJSDocInfo(), currentScope));
               }
-              if (NodeUtil.hasConstAnnotation(prop)) {
+              if (isAnnotatedAsConst(prop)) {
                 warnings.add(JSError.make(prop, MISPLACED_CONST_ANNOTATION));
               }
             }
@@ -1085,8 +1085,7 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitPropertyDeclaration(Node getProp) {
       // Class property
       if (isClassPropAccess(getProp, currentScope)) {
-        if (NodeUtil.hasConstAnnotation(getProp) &&
-            currentScope.isPrototypeMethod()) {
+        if (isAnnotatedAsConst(getProp) && currentScope.isPrototypeMethod()) {
           warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
         }
         visitClassPropertyDeclaration(getProp);
@@ -1110,7 +1109,7 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       // Other property
-      if (NodeUtil.hasConstAnnotation(getProp)) {
+      if (isAnnotatedAsConst(getProp)) {
         warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
     }
@@ -1194,6 +1193,9 @@ class GlobalTypeInfo implements CompilerPass {
         }
         classType.addCtorProperty(pname, propDeclType, isConst);
         getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        if (isConst) {
+          getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+        }
       } else {
         classType.addUndeclaredCtorProperty(pname);
       }
@@ -1216,6 +1218,12 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(
           declNode.isGetProp() || declNode.isStringKey());
       Preconditions.checkArgument(currentScope.isNamespace(recv));
+      EnumType et = currentScope.getEnum(recv.getQualifiedName());
+      // If there is a reassignment to one of the enum's members, don't consider
+      // that a definition of a new property.
+      if (et != null && et.enumLiteralHasKey(pname)) {
+        return;
+      }
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
       JSType propDeclType = getTypeAtPropDeclNode(declNode, jsdoc);
@@ -1234,6 +1242,9 @@ class GlobalTypeInfo implements CompilerPass {
         }
         ns.addProperty(pname, propDeclType, isConst);
         declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        if (declNode.isGetProp() && isConst) {
+          declNode.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+        }
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
         Node initializer = NodeUtil.getInitializer(declNode);
@@ -1242,7 +1253,7 @@ class GlobalTypeInfo implements CompilerPass {
         if (t == null) {
           t = JSType.UNKNOWN;
         }
-        ns.addUndeclaredProperty(pname, t, isConst);
+        ns.addUndeclaredProperty(pname, t, false);
       }
     }
 
@@ -1270,6 +1281,9 @@ class GlobalTypeInfo implements CompilerPass {
         if (mayAddPropToType(getProp, rawNominalType)) {
           rawNominalType.addClassProperty(pname, declType, isConst);
         }
+        if (isConst) {
+          getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+        }
       } else if (mayAddPropToType(getProp, rawNominalType)) {
         rawNominalType.addUndeclaredClassProperty(pname);
       }
@@ -1283,6 +1297,10 @@ class GlobalTypeInfo implements CompilerPass {
         return JSType.fromFunctionType(
             currentScope.getScope(getFunInternalName(initializer))
             .getDeclaredType().toFunctionType());
+      }
+      EnumType et = currentScope.getEnum(declNode.getQualifiedName());
+      if (et != null) {
+        return et.toJSType();
       }
       return getTypeDeclarationFromJsdoc(jsdoc, currentScope);
     }
@@ -1725,6 +1743,9 @@ class GlobalTypeInfo implements CompilerPass {
         rawType.addProtoProperty(pname, propDeclType, isConst);
         if (defSite.isGetProp()) { // Don't bother saving for @lends
           defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+          if (isConst) {
+            defSite.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+          }
         }
       } else {
         rawType.addUndeclaredProtoProperty(pname);
@@ -1788,10 +1809,29 @@ class GlobalTypeInfo implements CompilerPass {
         && isPrototypeProperty(n.getFirstChild().getFirstChild());
   }
 
-  // TODO(dimvar): handle const by coding convention
-  private static boolean isConst(Node defSite) {
+  private static boolean isAnnotatedAsConst(Node defSite) {
     return NodeUtil.hasConstAnnotation(defSite)
         && !NodeUtil.getBestJSDocInfo(defSite).isConstructor();
+  }
+
+  private static Node fromDefsiteToName(Node defSite) {
+    if (defSite.isVar()) {
+      return defSite.getFirstChild();
+    }
+    if (defSite.isGetProp()) {
+      return defSite.getLastChild();
+    }
+    if (defSite.isStringKey()) {
+      return defSite;
+    }
+    throw new RuntimeException("Unknown defsite: "
+        + Token.name(defSite.getType()));
+  }
+
+  private boolean isConst(Node defSite) {
+    return isAnnotatedAsConst(defSite)
+        || NodeUtil.isConstantByConvention(
+            this.convention, fromDefsiteToName(defSite));
   }
 
   private static class PropertyDef {
@@ -2282,6 +2322,9 @@ class GlobalTypeInfo implements CompilerPass {
 
     @Override
     public EnumType getEnum(String name) {
+      if (name == null) {
+        return null;
+      }
       if (!name.contains(".")) {
         if (isDefinedLocally(name)) {
           return localEnums.get(name);

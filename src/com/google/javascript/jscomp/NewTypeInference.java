@@ -2207,8 +2207,7 @@ public class NewTypeInference implements CompilerPass {
   private boolean mayWarnAboutConstProp(
       Node propAccess, JSType recvType, QualifiedName pname) {
     if (recvType.hasConstantProp(pname) &&
-        // Don't warn about the prop declaration itself.
-        !NodeUtil.hasConstAnnotation(propAccess.getParent())) {
+        !propAccess.getBooleanProp(Node.CONSTANT_PROPERTY_DEF)) {
       warnings.add(JSError.make(propAccess, CONST_REASSIGNED));
       return true;
     }

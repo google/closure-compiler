@@ -251,8 +251,7 @@ class Normalize implements CompilerPass {
 
         boolean shouldBeConstant =
             (info != null && info.isConstant()) ||
-            NodeUtil.isConstantByConvention(
-                compiler.getCodingConvention(), n, parent);
+            NodeUtil.isConstantByConvention(compiler.getCodingConvention(), n);
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (shouldBeConstant && !isMarkedConstant) {
           if (assertOnChange) {
@@ -307,7 +306,7 @@ class Normalize implements CompilerPass {
           boolean expectedConst = false;
           CodingConvention convention = compiler.getCodingConvention();
           if (NodeUtil.isConstantName(n)
-              || NodeUtil.isConstantByConvention(convention, n, parent)) {
+              || NodeUtil.isConstantByConvention(convention, n)) {
             expectedConst = true;
           } else {
             expectedConst = false;
@@ -438,7 +437,7 @@ class Normalize implements CompilerPass {
         boolean isMarkedConstant = n.getBooleanProp(Node.IS_CONSTANT_NAME);
         if (!isMarkedConstant &&
             NodeUtil.isConstantByConvention(
-                compiler.getCodingConvention(), n, parent)) {
+                compiler.getCodingConvention(), n)) {
           if (assertOnChange) {
             String name = n.getString();
             throw new IllegalStateException(
