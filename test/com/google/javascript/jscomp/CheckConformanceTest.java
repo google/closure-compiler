@@ -38,8 +38,15 @@ public class CheckConformanceTest extends CompilerTestCase {
       "/** @constructor */ var Arguments;\n" +
       "Arguments.prototype.callee;\n" +
       "Arguments.prototype.caller;\n" +
-      "/** @type {Arguments} */ var arguments;\n"
-      ;
+      "/** @type {Arguments} */ var arguments;\n" +
+      "/** @constructor \n" +
+      " * @param {*=} opt_message\n" +
+      " * @param {*=} opt_file\n" +
+      " * @param {*=} opt_line\n" +
+      " * @return {!Error} \n" +
+      "*/" +
+      " var Error;" +
+      "";
 
   private static final String DEFAULT_CONFORMANCE =
       "requirement: {\n" +
@@ -738,5 +745,46 @@ public class CheckConformanceTest extends CompilerTestCase {
         "anything;",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: CustomRule Message");
+  }
+
+  public void testCustomBanExpose() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanExpose'\n" +
+        "  error_message: 'BanExpose Message'\n" +
+        "}";
+
+    testSame(
+        EXTERNS,
+        "/** @expose */ var x;",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanExpose Message");
+  }
+
+  public void testCustomRestrictThrow1() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanThrowOfNonErrorTypes'\n" +
+        "  error_message: 'BanThrowOfNonErrorTypes Message'\n" +
+        "}";
+
+    testSame(
+        EXTERNS,
+        "throw 'blah';",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanThrowOfNonErrorTypes Message");
+  }
+
+  public void testCustomRestrictThrow2() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanThrowOfNonErrorTypes'\n" +
+        "  error_message: 'BanThrowOfNonErrorTypes Message'\n" +
+        "}";
+
+    testSame("throw new Error('test');");
   }
 }

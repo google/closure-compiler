@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -751,7 +752,6 @@ public final class ConformanceRules {
     }
   }
 
-
   /**
    * A custom rule proxy, for rules that we load dynamically.
    */
@@ -836,4 +836,51 @@ public final class ConformanceRules {
     }
   }
 
+  /**
+   * Banned @expose
+   */
+  public static final class BanExpose extends AbstractRule {
+    public BanExpose(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null && info.isExpose()) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+  /**
+   * Banned throw of non-error object types.
+   */
+  public static final class BanThrowOfNonErrorTypes extends AbstractRule {
+    final JSType errorObjType;
+    public BanThrowOfNonErrorTypes(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      errorObjType = compiler.getTypeRegistry().getType("Error");
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (errorObjType != null && n.isThrow()) {
+        JSType thrown = n.getFirstChild().getJSType();
+        if (thrown != null) {
+          // Allow vague types, as is typical of re-throws of exceptions
+          if (!thrown.isUnknownType()
+              && !thrown.isAllType()
+              && !thrown.isEmptyType()
+              && !thrown.isSubtype(errorObjType)) {
+            return ConformanceResult.VIOLATION;
+          }
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
 }
