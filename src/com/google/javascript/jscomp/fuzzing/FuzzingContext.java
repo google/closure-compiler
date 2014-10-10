@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 import java.util.Random;
 
@@ -25,11 +25,11 @@ import java.util.Random;
 class FuzzingContext {
   Random random;
   ScopeManager scopeManager;
-  JSONObject config;
+  JsonObject config;
   boolean strict;
   StringNumberGenerator snGenerator;
 
-  FuzzingContext(Random random , JSONObject config, boolean strict) {
+  FuzzingContext(Random random, JsonObject config, boolean strict) {
     this.random = random;
     this.scopeManager = new ScopeManager(random);
     this.snGenerator = new StringNumberGenerator(random);

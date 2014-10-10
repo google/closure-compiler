@@ -20,8 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
-
-import org.json.JSONObject;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -114,8 +113,8 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   /**
    * A list of extensions to be added to sourcemap. The value is a object
-   * to permit single values, like strings or numbers, and JSONObject or
-   * JSONArray objects.
+   * to permit single values, like strings or numbers, and JsonObject or
+   * JsonArray objects.
    */
   private LinkedHashMap<String, Object> extensions = Maps.newLinkedHashMap();
 
@@ -393,7 +392,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
       Object objValue = this.extensions.get(key);
       String value = objValue.toString();
       if (objValue instanceof String){
-        value = JSONObject.quote(value);
+        value = new Gson().toJson(value);
       }
       appendField(out, key, value);
     }
@@ -414,8 +413,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   /**
    * Adds field extensions to the json source map. The value is allowed to be
-   * any value accepted by json, eg. string, JSONObject, JSONArray, etc.
-   * {@link org.json.JSONObject#put(String, Object)}
+   * any value accepted by json, eg. string, JsonObject, JsonArray, etc.
    *
    * Extensions must follow the format x_orgranization_field (based on V3
    * proposal), otherwise a {@code SourceMapParseExtension} will be thrown.

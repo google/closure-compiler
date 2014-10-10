@@ -38,7 +38,7 @@ class IdentifierFuzzer extends AbstractFuzzer {
     ScopeManager scopeManager = context.scopeManager;
     if (scopeManager.hasNonLocals() &&
         context.random.nextDouble() <
-        getOwnConfig().optDouble("shadow")) {
+        getOwnConfig().get("shadow").getAsDouble()) {
       Symbol symbol = scopeManager.getRandomSymbol(
           ScopeManager.EXCLUDE_EXTERNS | ScopeManager.EXCLUDE_LOCALS);
       if (symbol != null) {

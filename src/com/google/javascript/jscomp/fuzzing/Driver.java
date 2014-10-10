@@ -20,6 +20,9 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilationLevel;
 import com.google.javascript.jscomp.Compiler;
@@ -32,8 +35,6 @@ import com.google.javascript.jscomp.SyntheticAst;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.rhino.Node;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -101,7 +102,7 @@ public class Driver {
   private boolean stopOnError = false;
 
   private Logger logger;
-  private JSONObject config;
+  private JsonObject config;
 
   public Result compile(String code) throws IOException {
     Compiler.setLoggingLevel(level.getLevel());
@@ -131,13 +132,13 @@ public class Driver {
     return options;
   }
 
-  private JSONObject getConfig() {
+  private JsonObject getConfig() {
     if (config == null) {
       File file = new File(configFileName);
       try {
-        config = new JSONObject(Files.toString(
-            file, StandardCharsets.UTF_8));
-      } catch (JSONException | IOException e) {
+        config = new Gson().fromJson(Files.toString(
+            file, StandardCharsets.UTF_8), JsonObject.class);
+      } catch (JsonParseException | IOException e) {
         e.printStackTrace();
       }
     }

@@ -27,14 +27,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -148,36 +148,37 @@ public class JSModuleGraph {
 
   /**
    * Returns a JSON representation of the JSModuleGraph. Specifically a
-   * JSONArray of "Modules" where each module has a
+   * JsonArray of "Modules" where each module has a
    * - "name"
    * - "dependencies" (list of module names)
    * - "transitive-dependencies" (list of module names, deepest first)
    * - "inputs" (list of file names)
    * @return List of module JSONObjects.
    */
-  JSONArray toJson() {
-    JSONArray modules = new JSONArray();
+  JsonArray toJson() {
+    JsonArray modules = new JsonArray();
     for (JSModule module : getAllModules()) {
-      JSONObject node = new JSONObject();
+      JsonObject node = new JsonObject();
       try {
-        node.put("name", module.getName());
-        JSONArray deps = new JSONArray();
-        node.put("dependencies", deps);
+        node.add("name", new JsonPrimitive(module.getName()));
+        JsonArray deps = new JsonArray();
+        node.add("dependencies", deps);
         for (JSModule m : module.getDependencies()) {
-          deps.put(m.getName());
+          deps.add(new JsonPrimitive(m.getName()));
         }
-        JSONArray transitiveDeps = new JSONArray();
-        node.put("transitive-dependencies", transitiveDeps);
+        JsonArray transitiveDeps = new JsonArray();
+        node.add("transitive-dependencies", transitiveDeps);
         for (JSModule m : getTransitiveDepsDeepestFirst(module)) {
-          transitiveDeps.put(m.getName());
+          transitiveDeps.add(new JsonPrimitive(m.getName()));
         }
-        JSONArray inputs = new JSONArray();
-        node.put("inputs", inputs);
+        JsonArray inputs = new JsonArray();
+        node.add("inputs", inputs);
         for (CompilerInput input : module.getInputs()) {
-          inputs.put(input.getSourceFile().getOriginalPath());
+          inputs.add(new JsonPrimitive(
+              input.getSourceFile().getOriginalPath()));
         }
-        modules.put(node);
-      } catch (JSONException e) {
+        modules.add(node);
+      } catch (JsonParseException e) {
         Throwables.propagate(e);
       }
     }

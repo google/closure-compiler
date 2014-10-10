@@ -390,32 +390,32 @@ without make's wrinkles and with the full portability of pure java code.</td>
   </tr>
 </table>
 
-### JSON
+### GSON
 
 <table>
   <tr>
     <td>Code Path</td>
-    <td><code>lib/json.jar</code></td>
+    <td><code>lib/gson.jar</code></td>
   </tr>
 
   <tr>
     <td>URL</td>
-    <td>http://json.org/java/index.html</td>
+    <td>https://code.google.com/p/google-gson/</td>
   </tr>
 
   <tr>
     <td>Version</td>
-    <td>JSON version 20090211</td>
+    <td>2.2.4</td>
   </tr>
 
   <tr>
     <td>License</td>
-    <td>MIT license</td>
+    <td>Apache license 2.0</td>
   </tr>
 
   <tr>
     <td>Description</td>
-    <td>JSON is a set of java files for use in transmitting data in JSON format.</td>
+    <td>A Java library to convert JSON to Java objects and vice-versa</td>
   </tr>
 
   <tr>

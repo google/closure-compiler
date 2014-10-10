@@ -113,7 +113,7 @@
     <fileset dir="${lib.dir}">
       <include name="args4j.jar"/>
       <include name="guava.jar"/>
-      <include name="json.jar"/>
+      <include name="gson.jar"/>
       <include name="jsr305.jar"/>
       <include name="protobuf-java.jar"/>
     </fileset>
@@ -183,7 +183,7 @@
       <fileset dir="${build.dir}" includes="externs.zip" />
       <zipfileset src="${lib.dir}/args4j.jar"/>
       <zipfileset src="${lib.dir}/guava.jar"/>
-      <zipfileset src="${lib.dir}/json.jar"/>
+      <zipfileset src="${lib.dir}/gson.jar"/>
       <zipfileset src="${lib.dir}/jsr305.jar"/>
       <zipfileset src="${lib.dir}/protobuf-java.jar"/>
 

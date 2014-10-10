@@ -48,7 +48,7 @@ class ReturnFuzzer extends AbstractFuzzer {
   protected Node generate(int budget, Set<Type> types) {
     Node node = new Node(Token.RETURN);
     if (budget > 1 &&
-        context.random.nextDouble() < getOwnConfig().optDouble("hasValue")) {
+        context.random.nextDouble() < getOwnConfig().get("hasValue").getAsDouble()) {
       node.addChildToBack(
           new ExpressionFuzzer(context).
           generate(budget - 1));

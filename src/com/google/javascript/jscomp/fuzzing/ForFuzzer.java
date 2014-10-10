@@ -43,7 +43,7 @@ class ForFuzzer extends AbstractFuzzer {
   @Override
   protected Node generate(int budget, Set<Type> types) {
     int totalHeaderBudget =
-        (int) ((budget - 1) * getOwnConfig().optDouble("headBudget"));
+        (int) ((budget - 1) * getOwnConfig().get("headBudget").getAsDouble());
     int bodyBudget = budget - 1 - totalHeaderBudget;
     ExpressionFuzzer exprFuzzer =
         new ExpressionFuzzer(context);

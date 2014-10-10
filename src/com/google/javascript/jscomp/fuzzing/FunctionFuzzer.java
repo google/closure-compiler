@@ -71,7 +71,7 @@ class FunctionFuzzer extends AbstractFuzzer {
       paramBodyBudget = budget - 3;
       scopeManager.addScope();
     }
-    int numParams = context.random.nextInt(getOwnConfig().optInt("maxParams") + 1);
+    int numParams = context.random.nextInt(getOwnConfig().get("maxParams").getAsInt() + 1);
     int bodyBudget = paramBodyBudget - numParams - 1;
     Node params =
         new ParamListFuzzer(context).

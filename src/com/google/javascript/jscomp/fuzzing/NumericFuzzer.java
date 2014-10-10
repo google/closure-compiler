@@ -34,7 +34,7 @@ class NumericFuzzer extends AbstractFuzzer {
    */
   @Override
   protected Node generate(int budget, Set<Type> types) {
-    return Node.newNumber(context.random.nextInt(getOwnConfig().optInt("max")));
+    return Node.newNumber(context.random.nextInt(getOwnConfig().get("max").getAsInt()));
   }
 
   /* (non-Javadoc)

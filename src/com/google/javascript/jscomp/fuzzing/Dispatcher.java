@@ -18,10 +18,9 @@ package com.google.javascript.jscomp.fuzzing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.javascript.rhino.Node;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -86,7 +85,7 @@ abstract class Dispatcher extends AbstractFuzzer {
         typeCorrectCandidates.add(fuzzer);
       }
     }
-    JSONObject weightConfig = getOwnConfig().optJSONObject("weights");
+    JsonObject weightConfig = getOwnConfig().get("weights").getAsJsonObject();
     ArrayList<AbstractFuzzer> validFuzzers = Lists.newArrayList();
     ArrayList<Double> weights = Lists.newArrayList();
     int stepSize = 2;
@@ -98,8 +97,8 @@ abstract class Dispatcher extends AbstractFuzzer {
         if (fuzzer.isEnough(budget)) {
           validFuzzers.add(fuzzer);
           try {
-            weights.add(weightConfig.getDouble(fuzzer.getConfigName()));
-          } catch (JSONException e) {
+            weights.add(weightConfig.get(fuzzer.getConfigName()).getAsDouble());
+          } catch (JsonParseException e) {
             e.printStackTrace();
           }
         }

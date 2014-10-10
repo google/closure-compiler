@@ -48,7 +48,7 @@ class IfFuzzer extends AbstractFuzzer {
       numComponents = 2;
     } else {
       numComponents = context.random.nextDouble() <
-          getOwnConfig().optDouble("hasElse") ? 3 : 2;
+          getOwnConfig().get("hasElse").getAsDouble() ? 3 : 2;
     }
     AbstractFuzzer[] fuzzers = new AbstractFuzzer[numComponents];
     BlockFuzzer blockFuzzer =

@@ -18,15 +18,15 @@ package com.google.javascript.jscomp.fuzzing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.util.Map.Entry;
 import java.util.Random;
 
 /**
@@ -38,7 +38,7 @@ public class FuzzerTest extends TestCase{
   @Override
   public void setUp() {
     Random random = new Random(123);
-    JSONObject config = TestConfig.getConfig();
+    JsonObject config = TestConfig.getConfig();
     context = new FuzzingContext(random, config, true);
   }
 
@@ -50,12 +50,12 @@ public class FuzzerTest extends TestCase{
     String code = ArrayFuzzer.getPrettyCode(node);
     assertTrue(code.startsWith("["));
     assertTrue(code.endsWith("]"));
-    JSONObject config = fuzzer.getOwnConfig();
+    JsonObject config = fuzzer.getOwnConfig();
     assertTrue(
         "\nGenerated code: \n" + code,
-        code.split(",").length <
-            (int) (config.optDouble("maxLength") *
-                (budget - 1)));
+        code.split(",").length
+            < (int) (config.get("maxLength").getAsDouble()
+                * (budget - 1)));
   }
 
   public void testGenerateNull() {
@@ -106,7 +106,7 @@ public class FuzzerTest extends TestCase{
     assertTrue("\nGenerated code: \n" + code, code.endsWith("}"));
   }
 
-  public void testGenerateLiteral() throws JSONException {
+  public void testGenerateLiteral() throws JsonParseException {
     int budget = 0;
     LiteralFuzzer literalFuzzer = new LiteralFuzzer(context);
     LiteralFuzzer spyFuzzer = spy(literalFuzzer);
@@ -119,7 +119,7 @@ public class FuzzerTest extends TestCase{
     assertEquals("null", code.trim());
 }
 
-  public void testPostfixExpressions() throws JSONException {
+  public void testPostfixExpressions() throws JsonParseException {
     String[] postfixes = {"++", "--"};
     String[] types = {"postInc", "postDec"};
     for (int i = 0; i < postfixes.length; i++) {
@@ -132,7 +132,7 @@ public class FuzzerTest extends TestCase{
     }
   }
 
-  public void testPrefixExpressions() throws JSONException {
+  public void testPrefixExpressions() throws JsonParseException {
     String[] prefixes =
       {"void", "typeof", "+", "-", "~", "!", "++", "--", "delete"};
     String[] types = {"void", "typeof", "pos", "neg", "bitNot", "not", "inc",
@@ -147,7 +147,7 @@ public class FuzzerTest extends TestCase{
     }
   }
 
-  public void testNewExpression() throws JSONException {
+  public void testNewExpression() throws JsonParseException {
     FunctionCallFuzzer fuzzer =
         new FunctionCallFuzzer(context);
     leaveOneSubtype(fuzzer.getOwnConfig(), "constructorCall");
@@ -156,7 +156,7 @@ public class FuzzerTest extends TestCase{
     assertTrue(code.startsWith("new "));
   }
 
-  public void testCallExpression() throws JSONException {
+  public void testCallExpression() throws JsonParseException {
     FunctionCallFuzzer fuzzer =
         new FunctionCallFuzzer(context);
     leaveOneSubtype(fuzzer.getOwnConfig(), "normalCall");
@@ -165,7 +165,7 @@ public class FuzzerTest extends TestCase{
     assertFalse(code.startsWith("new "));
   }
 
-  public void testGenerateBinaryExpression() throws JSONException {
+  public void testGenerateBinaryExpression() throws JsonParseException {
     int budget = 50;
     String[] operators = {"*", "/", "%", "+", "-", "<<", ">>", ">>>", "<", ">",
         "<=", ">=", "instanceof", "in", "==", "!=", "===", "!==", "&", "^",
@@ -283,9 +283,9 @@ public class FuzzerTest extends TestCase{
     assertTrue("\nGenerated code: \n" + code, code.startsWith("function "));
   }
 
-  public void testBreakStatement() throws JSONException {
+  public void testBreakStatement() throws JsonParseException {
     BreakFuzzer fuzzer = new BreakFuzzer(context);
-    fuzzer.getOwnConfig().put("toLabel", 1);
+    fuzzer.getOwnConfig().addProperty("toLabel", 1);
     Scope scope = context.scopeManager.localScope();
     scope.otherLabels.add("testLabel");
     Node breakStmt = fuzzer.generate(10);
@@ -293,9 +293,9 @@ public class FuzzerTest extends TestCase{
     assertEquals("break testLabel;", code.trim());
   }
 
-  public void testContinueStatement() throws JSONException {
+  public void testContinueStatement() throws JsonParseException {
     ContinueFuzzer fuzzer = new ContinueFuzzer(context);
-    fuzzer.getOwnConfig().put("toLabel", 1);
+    fuzzer.getOwnConfig().addProperty("toLabel", 1);
     Scope scope = context.scopeManager.localScope();
     scope.loopLabels.add("testLabel");
     Node continueStmt = fuzzer.generate(10);
@@ -317,17 +317,16 @@ public class FuzzerTest extends TestCase{
 
     assertEquals(code1, code2);
   }
-  private static void leaveOneSubtype(JSONObject typeConfig, String subtypeName)
-      throws JSONException {
-    JSONObject weightConfig = typeConfig.getJSONObject("weights");
-    JSONArray names = weightConfig.names();
+  private static void leaveOneSubtype(JsonObject typeConfig, String subtypeName)
+      throws JsonParseException {
+    JsonObject weightConfig = typeConfig.get("weights").getAsJsonObject();
 
-    for (int i = 0; i < names.length(); i++) {
-      String name = names.getString(i);
+    for (Entry<String, JsonElement> entry : weightConfig.entrySet()) {
+      String name = entry.getKey();
       if (name.equals(subtypeName)) {
-        weightConfig.put(name, 1);
+        weightConfig.addProperty(name, 1);
       } else {
-        weightConfig.put(name, 0);
+        weightConfig.addProperty(name, 0);
       }
     }
   }

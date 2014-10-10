@@ -89,7 +89,7 @@ class SwitchFuzzer extends AbstractFuzzer {
       Node clause = new Node(nodeType);
       if (nodeType == Token.CASE) {
         int valueBudget =
-            (int) (budget * getOwnConfig().optDouble("valueBudget"));
+            (int) (budget * getOwnConfig().get("valueBudget").getAsDouble());
         if (valueBudget == 0) {
           valueBudget = 1;
         }

@@ -15,16 +15,17 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 
 /**
  * UNDER DEVELOPMENT. DO NOT USE!
  */
 class TestConfig {
-  static JSONObject getConfig() {
+  static JsonObject getConfig() {
     try {
-      return new JSONObject(
+      String json =
           "{\n" +
           "  \"script\": {\n" +
           "    \"maxLength\": 0.05\n" +
@@ -142,7 +143,7 @@ class TestConfig {
           "    \"weights\": {\n" +
           "        \"constructorCall\": 1,\n" +
           "        \"normalCall\": 1\n" +
-          "    },\n" +
+          "    }\n" +
           "  },\n" +
           "  \"constructorCall\": {\n" +
           "    \"argLength\": 1\n" +
@@ -215,8 +216,9 @@ class TestConfig {
           "  \"program\": {\n" +
           "    \"maxLength\": 0.1\n" +
           "  }\n" +
-          "}");
-    } catch (JSONException e) {
+          "}";
+      return new Gson().fromJson(json, JsonObject.class);
+    } catch (JsonParseException e) {
       e.printStackTrace();
       return null;
     }

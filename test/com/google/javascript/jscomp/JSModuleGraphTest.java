@@ -20,14 +20,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 
 import junit.framework.*;
 
 import java.util.*;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * Tests for {@link JSModuleGraph}
@@ -270,22 +269,22 @@ public class JSModuleGraphTest extends TestCase {
     assertTrue(results.isEmpty());
   }
 
-  public void testToJson() throws JSONException {
-    JSONArray modules = graph.toJson();
-    assertEquals(6, modules.length());
-    for (int i = 0; i < modules.length(); i++) {
-      JSONObject m = modules.getJSONObject(i);
-      assertNotNull(m.getString("name"));
-      assertNotNull(m.getJSONArray("dependencies"));
-      assertNotNull(m.getJSONArray("transitive-dependencies"));
-      assertNotNull(m.getJSONArray("inputs"));
+  public void testToJson() throws JsonParseException {
+    JsonArray modules = graph.toJson();
+    assertEquals(6, modules.size());
+    for (int i = 0; i < modules.size(); i++) {
+      JsonObject m = modules.get(i).getAsJsonObject();
+      assertNotNull(m.get("name"));
+      assertNotNull(m.get("dependencies"));
+      assertNotNull(m.get("transitive-dependencies"));
+      assertNotNull(m.get("inputs"));
     }
-    JSONObject m = modules.getJSONObject(3);
-    assertEquals("D", m.getString("name"));
-    assertEquals("[\"B\"]", m.getJSONArray("dependencies").toString());
+    JsonObject m = modules.get(3).getAsJsonObject();
+    assertEquals("D", m.get("name").getAsString());
+    assertEquals("[\"B\"]", m.get("dependencies").getAsJsonArray().toString());
     assertEquals(2,
-        m.getJSONArray("transitive-dependencies").length());
-    assertEquals("[]", m.getJSONArray("inputs").toString());
+        m.get("transitive-dependencies").getAsJsonArray().size());
+    assertEquals("[]", m.get("inputs").getAsJsonArray().toString());
   }
 
   private List<CompilerInput> setUpManageDependenciesTest() {

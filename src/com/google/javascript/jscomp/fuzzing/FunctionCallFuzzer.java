@@ -78,7 +78,7 @@ class FunctionCallFuzzer extends Dispatcher {
         maxParamBudget = 0;
       }
       // max number of arguments divided by maxParamBudget
-      double argLength = getOwnConfig().optDouble("argLength");
+      double argLength = getOwnConfig().get("argLength").getAsDouble();
       int numArgs = context.random.nextInt((int) (maxParamBudget * argLength) + 1);
       AbstractFuzzer[] fuzzers = new AbstractFuzzer[numArgs + 1];
       fuzzers[0] = getCallableExprFuzzer();

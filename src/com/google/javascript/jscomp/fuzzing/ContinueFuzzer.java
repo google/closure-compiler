@@ -49,7 +49,7 @@ class ContinueFuzzer extends AbstractFuzzer {
   protected Node generate(int budget, Set<Type> types) {
     Node node = new Node(Token.CONTINUE);
     Scope localScope = context.scopeManager.localScope();
-    double toLabel = getOwnConfig().optDouble("toLabel");
+    double toLabel = getOwnConfig().get("toLabel").getAsDouble();
     if (budget > 1 && !localScope.loopLabels.isEmpty()
         && context.random.nextDouble() < toLabel) {
       node.addChildToBack(

@@ -17,10 +17,9 @@ package com.google.javascript.jscomp.fuzzing;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.rhino.Node;
-
-import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -36,9 +35,9 @@ abstract class AbstractFuzzer {
     this.context = context;
   }
 
-  protected JSONObject getOwnConfig() {
+  protected JsonObject getOwnConfig() {
     Preconditions.checkNotNull(context.config);
-    return context.config.optJSONObject(getConfigName());
+    return context.config.get(getConfigName()).getAsJsonObject();
   }
 
   /**
@@ -93,7 +92,7 @@ abstract class AbstractFuzzer {
 
   protected int generateLength(int budget) {
     return context.random.nextInt(
-        (int) (budget * getOwnConfig().optDouble("maxLength")) + 1);
+        (int) (budget * getOwnConfig().get("maxLength").getAsDouble()) + 1);
   }
 
   public static String getPrettyCode(Node root) {
