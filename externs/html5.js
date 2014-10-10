@@ -1805,11 +1805,38 @@ DataTransfer.prototype.addElement = function(elem) {};
 MouseEvent.prototype.dataTransfer;
 
 /**
+ * @typedef {{
+ *   bubbles: (boolean|undefined),
+ *   cancelable: (boolean|undefined),
+ *   view: (Window|undefined),
+ *   detail: (number|undefined),
+ *   screenX: (number|undefined),
+ *   screenY: (number|undefined),
+ *   clientX: (number|undefined),
+ *   clientY: (number|undefined),
+ *   ctrlKey: (boolean|undefined),
+ *   shiftKey: (boolean|undefined),
+ *   altKey: (boolean|undefined),
+ *   metaKey: (boolean|undefined),
+ *   button: (number|undefined),
+ *   buttons: (number|undefined),
+ *   relatedTarget: (EventTarget|undefined),
+ *   deltaX: (number|undefined),
+ *   deltaY: (number|undefined),
+ *   deltaZ: (number|undefined),
+ *   deltaMode: (number|undefined)
+ * }}
+ */
+var WheelEventInit;
+
+/**
+ * @param {string} type
+ * @param {WheelEventInit=} opt_eventInitDict
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#interface-WheelEvent
  * @constructor
  * @extends {MouseEvent}
  */
-var WheelEvent = function() {};
+var WheelEvent = function(type, opt_eventInitDict) {};
 
 /** @const {number} */
 WheelEvent.prototype.deltaX;
