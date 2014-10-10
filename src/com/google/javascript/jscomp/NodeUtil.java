@@ -1247,11 +1247,6 @@ public final class NodeUtil {
     return canBeSideEffected(n, emptySet, null);
   }
 
-  static boolean canBeSideEffected(
-      Node n, Set<String> knownConstants) {
-    return canBeSideEffected(n, knownConstants, null);
-  }
-
   /**
    * @param knownConstants A set of names known to be constant value at
    * node 'n' (such as locals that are last written before n can execute).
@@ -1760,32 +1755,6 @@ public final class NodeUtil {
   static boolean referencesThis(Node n) {
     Node start = (n.isFunction()) ? n.getLastChild() : n;
     return containsType(start, Token.THIS, MATCH_NOT_FUNCTION);
-  }
-
-  /**
-   * Returns true if the shallow scope contains references to 'yield' keyword
-   */
-  static boolean referencesYield(Node n) {
-    Node start = n.isFunction() ? n.getLastChild() : n;
-    return containsType(start, Token.YIELD, MATCH_NOT_FUNCTION);
-  }
-
-  /**
-   * Returns true if the shallow scope contains references to 'return' keyword
-   */
-  static boolean referencesReturn(Node n) {
-    Node start = n.isFunction() ? n.getLastChild() : n;
-    return containsType(start, Token.RETURN, MATCH_NOT_FUNCTION);
-  }
-
-  static boolean referencesContinue(Node n) {
-    Node start = n.isFunction() ? n.getLastChild() : n;
-    return containsType(start, Token.CONTINUE, MATCH_NOT_FUNCTION);
-  }
-
-  static boolean referencesBreak(Node n) {
-    Node start = n.isFunction() ? n.getLastChild() : n;
-    return containsType(start, Token.BREAK, MATCH_NOT_FUNCTION);
   }
 
   /**
