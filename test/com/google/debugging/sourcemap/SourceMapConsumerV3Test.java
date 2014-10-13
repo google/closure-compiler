@@ -49,6 +49,32 @@ public class SourceMapConsumerV3Test extends TestCase {
     assertEquals("testcode", sources[0]);
   }
 
+  public void testMap() throws Exception{
+    String sourceMap = ""
+        + "{"
+        + "  \"version\": 3,"
+        + "  \"file\": \"testcode.js\","
+        + "  \"sections\": ["
+        + "    {"
+        + "      \"map\": {"
+        + "         \"version\": 3,"
+        + "         \"mappings\": \"AAAAA,QAASA,UAAS,EAAG;\","
+        + "         \"sources\": [\"testcode.js\"],"
+        + "         \"names\": [\"foo\"]"
+        + "      },"
+        + "      \"offset\": {"
+        + "        \"line\": 1,"
+        + "        \"column\": 1"
+        + "      }"
+        + "    }"
+        + "  ]"
+        + "}";
+
+    SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+    consumer.parse(sourceMap);
+
+  }
+
   public void testSourcesWithRoot() throws Exception{
     String sourceMap =  "{\n" +
                         "\"version\":3,\n" +
