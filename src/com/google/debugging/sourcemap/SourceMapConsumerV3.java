@@ -198,7 +198,7 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
             throw new SourceMapParseException("Unable to retrieve: " + url);
           }
         } else if (section.has("map")) {
-          mapSectionContents = section.get("map").getAsString();
+          mapSectionContents = section.get("map").toString();
         } else {
           throw new SourceMapParseException(
               "Invalid map format: section must have either 'map' or 'url'");
