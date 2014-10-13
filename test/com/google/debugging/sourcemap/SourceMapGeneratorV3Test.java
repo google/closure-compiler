@@ -16,6 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
+import static junit.framework.Assert.assertFalse;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3.ExtensionMergeAction;
@@ -556,7 +558,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     });
 
     assertEquals(5, mapper.getExtension("x_company_baz"));
-    assertEquals(false, ((JsonPrimitive) mapper.getExtension("x_company_bar")).getAsBoolean());
+    assertFalse(((JsonPrimitive) mapper.getExtension("x_company_bar")).getAsBoolean());
   }
 
   public void testSourceRoot() throws Exception{
