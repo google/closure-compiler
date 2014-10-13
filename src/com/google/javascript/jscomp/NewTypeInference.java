@@ -214,6 +214,7 @@ public class NewTypeInference implements CompilerPass {
   static final String RETVAL_ID = "%return";
   static final String GETTER_PREFIX = "%getter_fun";
   static final String SETTER_PREFIX = "%setter_fun";
+  private final String ABSTRACT_METHOD_NAME;
   private static final QualifiedName NUMERIC_INDEX = new QualifiedName("0");
   private final boolean isClosurePassOn;
 
@@ -229,6 +230,8 @@ public class NewTypeInference implements CompilerPass {
     this.summaries = new HashMap<>();
     this.deferredChecks = new HashMap<>();
     this.isClosurePassOn = isClosurePassOn;
+    this.ABSTRACT_METHOD_NAME =
+          compiler.getCodingConvention().getAbstractMethodName();
   }
 
   @Override
@@ -1358,6 +1361,9 @@ public class NewTypeInference implements CompilerPass {
     Node rhs = expr.getLastChild();
     if (lhs.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       lhs.removeProp(Node.ANALYZED_DURING_GTI);
+      if (rhs.matchesQualifiedName(ABSTRACT_METHOD_NAME)) {
+        return new EnvTypePair(inEnv, requiredType);
+      }
       JSType declType = getDeclaredTypeOfQname(lhs, inEnv);
       EnvTypePair rhsPair = analyzeExprFwd(rhs, inEnv, declType);
       if (!rhsPair.type.isSubtypeOf(declType)) {

@@ -1368,6 +1368,26 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "f('str');",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @const */ var goog = {};\n" +
+        "/** @type {!Function} */ goog.abstractMethod = function(){};\n" +
+        "/** @constructor */ function Foo(){};\n" +
+        "/** @return {!Foo} */ Foo.prototype.clone = goog.abstractMethod;\n" +
+        "/** @constructor @extends {Foo} */\n" +
+        "function Bar() {}\n" +
+        "/** @return {!Bar} */ Bar.prototype.clone = goog.abstractMethod;");
+
+    typeCheck(
+        "/** @const */ var goog = {};\n" +
+        "/** @type {!Function} */ goog.abstractMethod = function(){};\n" +
+        "/** @constructor */ function Foo(){};\n" +
+        "/** @return {!Foo} */ Foo.prototype.clone = goog.abstractMethod;\n" +
+        "/** @constructor @extends {Foo} */\n" +
+        "function Bar() {}\n" +
+        "/** @return {!Bar} */ Bar.prototype.clone = goog.abstractMethod;\n" +
+        "var /** null */ n = (new Bar).clone();",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testDifficultObjectSpecialization() {
