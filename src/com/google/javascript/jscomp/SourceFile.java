@@ -330,14 +330,34 @@ public class SourceFile implements StaticSourceFile, Serializable {
         .buildFromCode(fileName, code);
   }
 
+  /**
+   * @deprecated Use {@link #fromInputStream(String, InputStream, Charset)}
+   */
+  @Deprecated
   public static SourceFile fromInputStream(String fileName, InputStream s)
       throws IOException {
     return builder().buildFromInputStream(fileName, s);
   }
 
+  /**
+   * @deprecated Use
+   *     {@link #fromInputStream(String, String, InputStream, Charset)}
+   */
+  @Deprecated
   public static SourceFile fromInputStream(String fileName,
       String originalPath, InputStream s) throws IOException {
     return builder().withOriginalPath(originalPath)
+        .buildFromInputStream(fileName, s);
+  }
+
+  public static SourceFile fromInputStream(String fileName, InputStream s,
+      Charset charset) throws IOException {
+    return builder().withCharset(charset).buildFromInputStream(fileName, s);
+  }
+
+  public static SourceFile fromInputStream(String fileName,
+      String originalPath, InputStream s, Charset charset) throws IOException {
+    return builder().withCharset(charset).withOriginalPath(originalPath)
         .buildFromInputStream(fileName, s);
   }
 
