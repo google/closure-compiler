@@ -525,6 +525,14 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     }, null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
+  public void testNoPrivateAccessForNamespaces() {
+    test(new String[]{
+      "var foo = {};\n" +
+          "/** @private */ foo.bar_ = function() {};",
+      "foo.bar_();"
+    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+  }
+
   public void testProtectedAccessForProperties1() {
     testSame(new String[] {
       "/** @constructor */ function Foo() {}" +
@@ -813,6 +821,18 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
+  public void testNoPackagePrivateAccessForNamespaces() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "var foo = {};\n" +
+            "/** @package */ foo.bar = function() {};"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "foo.bar();")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
   public void testNoPackagePrivateAccessForProperties5() {
     test(ImmutableList.of(
         SourceFile.fromCode(
@@ -1022,6 +1042,22 @@ public class CheckAccessControlsTest extends CompilerTestCase {
             "baz/quux.js",
             "var foo = new Foo();\n" +
             "foo.bar();")));
+  }
+
+  public void testPackageFileOverviewVisibilityAppliesToNamespaceProperty() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            "  * @fileoverview\n" +
+            "  * @package\n" +
+            "  */\n" +
+            "/** @public */ var foo = {};\n" +
+            "foo.bar = function() {};"),
+        SourceFile.fromCode(
+            "baz/quux.js",
+            "foo.bar();")),
+    null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
