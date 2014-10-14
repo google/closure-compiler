@@ -117,6 +117,9 @@ public class CommandLineRunner extends
   public static final String OUTPUT_MARKER =
       AbstractCommandLineRunner.OUTPUT_MARKER;
 
+  // UTF-8 BOM is 0xEF, 0xBB, 0xBF, of which character code is 65279.
+  public static final int UTF8_BOM_CODE = 65279;
+
   private static class GuardLevel {
     final String name;
     final CheckLevel level;
@@ -916,10 +919,21 @@ public class CommandLineRunner extends
     boolean quoted = false;
     // Indicates if the char being processed has been escaped.
     boolean escaped = false;
+    // Indicates whether this is the beginning of the file.
+    boolean isFirstCharacter = true;
 
     int c;
 
     while ((c = buffer.read()) != -1) {
+      
+      // Ignoring the BOM.
+      if (isFirstCharacter) {
+        isFirstCharacter = false;
+        if (c == UTF8_BOM_CODE) {
+          continue;
+        }
+      }
+
       if (c == 32 || c == 9 || c == 10 || c == 13) {
         if (quoted) {
           builder.append((char) c);
@@ -1195,6 +1209,13 @@ public class CommandLineRunner extends
     String textProto = Files.toString(new File(configFile), UTF_8);
 
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
+
+    // Looking for BOM.
+    if ((int)textProto.charAt(0) == UTF8_BOM_CODE) {
+      // Stripping the BOM.
+      textProto = textProto.substring(1);
+    }
+
     try {
       TextFormat.merge(textProto, builder);
     } catch (Exception e) {
