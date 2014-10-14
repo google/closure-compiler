@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -193,6 +194,22 @@ public class SuggestedFixTest {
         .build();
     CodeReplacement replacement = new CodeReplacement(
         before.length(), "@type {Foo}".length(), "@type {Object}");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testChangeJsDocType2() {
+    String code = "/** @type {Foo} */\nvar foo = new Foo()";
+    Compiler compiler = getCompiler(code);
+    Node root = compileToScriptRoot(compiler);
+    Node varNode = root.getFirstChild();
+    Node jsdocRoot =
+        Iterables.getOnlyElement(varNode.getJSDocInfo().getTypeNodes());
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .insertBefore(jsdocRoot, "!")
+        .build();
+    CodeReplacement replacement = new CodeReplacement(
+        "/** @type {".length(), 0, "!");
     assertReplacement(fix, replacement);
   }
 

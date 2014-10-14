@@ -3104,7 +3104,7 @@ public final class NodeUtil {
    * Interface for use with the visit method.
    * @see #visit
    */
-  static interface Visitor {
+  public static interface Visitor {
     void visit(Node node);
   }
 
@@ -3112,7 +3112,7 @@ public final class NodeUtil {
    * A pre-order traversal, calling Visitor.visit for each child matching
    * the predicate.
    */
-  static void visitPreOrder(Node node,
+  public static void visitPreOrder(Node node,
                      Visitor visitor,
                      Predicate<Node> traverseChildrenPred) {
     visitor.visit(node);
