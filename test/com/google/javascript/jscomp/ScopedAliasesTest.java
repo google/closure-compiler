@@ -586,7 +586,9 @@ public class ScopedAliasesTest extends CompilerTestCase {
 
   public void testUsedImproperly() {
     testFailure("var x = goog.scope(function() {});",
-        ScopedAliases.GOOG_SCOPE_USED_IMPROPERLY);
+        ScopedAliases.GOOG_SCOPE_MUST_BE_ALONE);
+    testFailure("var f = function() { goog.scope(function() {}); }",
+        ScopedAliases.GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
   }
 
   public void testBadParameters() {
