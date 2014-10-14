@@ -9277,6 +9277,24 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @constructor */\n" +
         "E.Foo = function(x) {};\n" +
         "var /** E */ x = E.A;");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns.E = { A: 1 };\n" +
+        "/** @constructor */\n" +
+        "ns.E.Foo = function(x) {};");
+
+    typeCheck(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @enum {number} */\n" +
+        "ns.E = { A: 1 };\n" +
+        "/** @constructor */\n" +
+        "ns.E.Foo = function(x) {};\n" +
+        "function f() { ns.E.Foo(); }",
+        TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
   }
 
   public void testStringMethods() {
@@ -9461,5 +9479,59 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  obj.ns = { /** @const */ PROP: 5 };\n" +
         "}",
         GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+  }
+
+  // TODO(dimvar): fix
+  public void testAllTestsShouldHaveDupPropWarnings() {
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.Foo = {};\n" +
+        "ns.Foo = { a: 123 };");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.Foo = {};\n" +
+        "/** @const */\n" +
+        "ns.Foo = { a: 123 };");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.Foo = {};\n" +
+        "/**\n" +
+        " * @const\n" +
+        // @suppress is ignored here b/c there is no @type in the jsdoc.
+        " * @suppress {duplicate}\n" +
+        " */\n" +
+        "ns.Foo = { a: 123 };");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @const */\n" +
+        "ns.Foo = {};\n" +
+        "/** @type {number} */\n" +
+        "ns.Foo = 123;");
+
+    checkNoWarnings(
+        "/** @enum {number} */\n" +
+        "var en = { A: 5 };\n" +
+        "/** @const */\n" +
+        "en.Foo = {};\n" +
+        "/** @type {number} */\n" +
+        "en.Foo = 123;");
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @const */\n" +
+        "Foo.ns = {};\n" +
+        "/** @const */\n" +
+        "Foo.ns = {};");
   }
 }

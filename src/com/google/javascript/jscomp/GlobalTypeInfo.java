@@ -1171,6 +1171,10 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitConstructorPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
+      // Named types have already been crawled in CollectNamedTypes
+      if (isNamedType(getProp)) {
+        return;
+      }
       String ctorName = getProp.getFirstChild().getQualifiedName();
       QualifiedName ctorQname = QualifiedName.fromNode(getProp.getFirstChild());
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
@@ -1203,9 +1207,8 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitNamespacePropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
-      if (NodeUtil.isNamespaceDecl(getProp) && currentScope.isNamespace(getProp)
-          || NodeUtil.isTypedefDecl(getProp)) {
-        // Named types have already been crawled in CollectNamedTypes
+      // Named types have already been crawled in CollectNamedTypes
+      if (isNamedType(getProp)) {
         return;
       }
       Node recv = getProp.getFirstChild();
@@ -1292,15 +1295,12 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private JSType getTypeAtPropDeclNode(Node declNode, JSDocInfo jsdoc) {
+      Preconditions.checkArgument(!currentScope.isNamespace(declNode));
       Node initializer = NodeUtil.getInitializer(declNode);
       if (initializer != null && initializer.isFunction()) {
         return JSType.fromFunctionType(
             currentScope.getScope(getFunInternalName(initializer))
             .getDeclaredType().toFunctionType());
-      }
-      EnumType et = currentScope.getEnum(declNode.getQualifiedName());
-      if (et != null) {
-        return et.toJSType();
       }
       return getTypeDeclarationFromJsdoc(jsdoc, currentScope);
     }
@@ -1750,6 +1750,11 @@ class GlobalTypeInfo implements CompilerPass {
       } else {
         rawType.addUndeclaredProtoProperty(pname);
       }
+    }
+
+    private boolean isNamedType(Node getProp) {
+      return currentScope.isNamespace(getProp)
+          || NodeUtil.isTypedefDecl(getProp);
     }
   }
 
@@ -2388,7 +2393,6 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void removeTmpData() {
-
       // For now, we put types of namespaces directly into the locals.
       // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
       for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {
