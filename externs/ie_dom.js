@@ -851,11 +851,6 @@ Document.prototype.selection;
 Document.prototype.uniqueID;
 
 /**
- * @see http://msdn.microsoft.com/en-us/library/ms534708(VS.85).aspx
- */
-Document.prototype.URL;
-
-/**
  * @see http://msdn.microsoft.com/en-us/library/ms534709(VS.85).aspx
  */
 Document.prototype.URLUnencoded;
