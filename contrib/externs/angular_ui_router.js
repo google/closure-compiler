@@ -61,6 +61,36 @@ ui.router.$stateParams;
 
 
 /**
+ * This is the object that the ui-router passes to callback functions listening
+ * on ui router events such as {@code $stateChangeStart} or
+ * {@code $stateChangeError} as the {@code toState} and {@code fromState}.
+ * Example:
+ * $rootScope.$on('$stateChangeStart', function(
+ *     event, toState, toParams, fromState, fromParams){ ... });
+ *
+ * @typedef {{
+ *     'abstract': (boolean|undefined),
+ *     controller: (string|Function|undefined),
+ *     controllerAs: (string|undefined),
+ *     controllerProvider: (Function|undefined),
+ *     data: (Object|undefined),
+ *     name: string,
+ *     onEnter: (Object|undefined),
+ *     onExit: (Object|undefined),
+ *     params: (Object|undefined),
+ *     reloadOnSearch: (boolean|undefined),
+ *     resolve: (Object.<string, !Function>|undefined),
+ *     template: (string|Function|undefined),
+ *     templateUrl: (string|Function|undefined),
+ *     templateProvider: (Function|undefined),
+ *     url: (string|undefined),
+ *     views: (Object|undefined)
+ * }}
+ */
+ui.router.State;
+
+
+/**
  * @constructor
  */
 ui.router.$urlMatcherFactory = function() {};
