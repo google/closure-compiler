@@ -1402,6 +1402,15 @@ class GlobalTypeInfo implements CompilerPass {
           if (varName.equals("undefined")) {
             return JSType.UNDEFINED;
           } else if (currentScope.isNamespaceLiteral(varName)) {
+            // Namespaces (literals, enums, constructors) get populated during
+            // ProcessScope, so it's NOT safe to convert them to jstypes until
+            // after ProcessScope is done. So, we don't try to do sth clever
+            // here to find the type of a namespace property.
+            // However, in the GETPROP case, we special-case for enum
+            // properties, because enums get resolved right after
+            // CollectNamedTypes, so we know the enumerated type.
+            // (But we still don't know the types of enum properties outside
+            // the object-literal declaration.)
             return null;
           }
           return currentScope.getDeclaredTypeOf(varName);
@@ -1420,8 +1429,16 @@ class GlobalTypeInfo implements CompilerPass {
           return objLitType;
         }
         case Token.GETPROP:
-          JSType recvType = simpleInferExprType(n.getFirstChild());
+          Node recv = n.getFirstChild();
+          JSType recvType = simpleInferExprType(recv);
           if (recvType == null) {
+            EnumType et = currentScope.getEnum(recv.getQualifiedName());
+            if (et == null) {
+              return null;
+            }
+            if (et.enumLiteralHasKey(n.getLastChild().getString())) {
+              return et.getEnumeratedType();
+            }
             return null;
           }
           QualifiedName qname = new QualifiedName(n.getLastChild().getString());

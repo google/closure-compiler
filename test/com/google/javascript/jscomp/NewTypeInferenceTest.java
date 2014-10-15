@@ -9663,4 +9663,21 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}",
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }
+
+  public void testInferConstTypeFromEnumProps() {
+    checkNoWarnings(
+        "/** @enum */\n" +
+        "var e = { A: 1 };\n" +
+        "/** @const */\n" +
+        "var numarr = [ e.A ];");
+
+    typeCheck(
+        "/** @enum */\n" +
+        "var e = { A: 1 };\n" +
+        "/** @type {number} */\n" +
+        "e.prop = 123;\n" +
+        "/** @const */\n" +
+        "var x = e.prop;",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
 }
