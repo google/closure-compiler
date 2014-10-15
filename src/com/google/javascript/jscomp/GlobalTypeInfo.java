@@ -666,16 +666,30 @@ class GlobalTypeInfo implements CompilerPass {
         }
         case Token.EXPR_RESULT: {
           Node expr = n.getFirstChild();
-          if (expr.isGetProp()
-              || expr.isAssign() && expr.getFirstChild().isGetProp()) {
-            Node getProp = expr.isGetProp() ? expr : expr.getFirstChild();
-            if (isPrototypeProperty(getProp)
-                || NodeUtil.referencesThis(getProp)
-                || !getProp.isQualifiedName()) {
-              // Class or prototype properties are handled later in ProcessScope
-              return;
+          switch (expr.getType()) {
+            case Token.ASSIGN:
+              if (!expr.getFirstChild().isGetProp()) {
+                return;
+              }
+              expr = expr.getFirstChild();
+              // fall through
+            case Token.GETPROP:
+              if (isPrototypeProperty(expr)
+                  || NodeUtil.referencesThis(expr)
+                  || !expr.isQualifiedName()) {
+                // Class or prototype properties are handled later in ProcessScope
+                return;
+              }
+              processQualifiedDefinition(expr);
+              break;
+            case Token.CALL: {
+              List<String> decls = convention.identifyTypeDeclarationCall(expr);
+              if (decls == null || decls.isEmpty()) {
+                return;
+              }
+              currentScope.addUnknownTypeNames(decls);
+              break;
             }
-            processQualifiedDefinition(getProp);
           }
           break;
         }
@@ -1933,6 +1947,7 @@ class GlobalTypeInfo implements CompilerPass {
     // and are defined in an enclosing scope.
     private final Set<String> outerVars = new HashSet<>();
     private final Map<String, Scope> localFunDefs = new HashMap<>();
+    private Set<String> unknownTypeNames = new HashSet<>();
     private Map<String, RawNominalType> localClassDefs = new HashMap<>();
     private Map<String, Typedef> localTypedefs = new HashMap<>();
     private Map<String, EnumType> localEnums = new HashMap<>();
@@ -2005,6 +2020,11 @@ class GlobalTypeInfo implements CompilerPass {
     private boolean isPrototypeMethod() {
       Preconditions.checkArgument(root != null);
       return NodeUtil.isPrototypeMethod(root);
+    }
+
+    private void addUnknownTypeNames(List<String> names) {
+      Preconditions.checkState(this.isTopLevel());
+      unknownTypeNames.addAll(names);
     }
 
     private void addLocalFunDef(String name, Scope scope) {
@@ -2163,11 +2183,11 @@ class GlobalTypeInfo implements CompilerPass {
         QualifiedName qname = QualifiedName.fromQname(name);
         Namespace ns = getNamespace(qname.getLeftmostName());
         if (ns == null) {
-          return null;
+          return getUnresolvedTypeByName(name);
         }
         RawNominalType rawType = ns.getNominalType(qname.getAllButLeftmost());
         if (rawType == null) {
-          return null;
+          return getUnresolvedTypeByName(name);
         }
         return rawType.getInstanceAsJSType();
       }
@@ -2181,8 +2201,19 @@ class GlobalTypeInfo implements CompilerPass {
       if (rawNominalType != null) {
         return rawNominalType.getInstanceAsJSType();
       }
+      JSType t = getUnresolvedTypeByName(name);
+      if (t != null) {
+        return t;
+      }
       // O/w keep looking in the parent scope
       return parent == null ? null : parent.lookupTypeByName(name);
+    }
+
+    JSType getUnresolvedTypeByName(String name) {
+      if (unknownTypeNames.contains(name)) {
+        return JSType.UNKNOWN;
+      }
+      return null;
     }
 
     JSType getDeclaredTypeOf(String name) {
@@ -2449,6 +2480,16 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void removeTmpData() {
+      for (String qnameStr : unknownTypeNames) {
+         if (!qnameStr.contains(".")) {
+           continue;
+         }
+         QualifiedName qname = QualifiedName.fromQname(qnameStr);
+         Namespace ns = getNamespace(qname.getAllButRightmost());
+         String pname = qname.getRightmostName();
+         ns.addUndeclaredProperty(pname, JSType.UNKNOWN, /* isConst */ false);
+      }
+      unknownTypeNames = null;
       // For now, we put types of namespaces directly into the locals.
       // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
       for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {

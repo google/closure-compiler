@@ -9680,4 +9680,52 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var x = e.prop;",
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
+
+  public void testForwardDeclarations() {
+    final String DEFINITIONS =
+        "/** @const */ var goog = {};\n" +
+        "goog.addDependency = function(file, provides, requires){};\n" +
+        "goog.forwardDeclare = function(name){};";
+
+    checkNoWarnings(DEFINITIONS +
+        "goog.addDependency('', ['Foo'], []);\n" +
+        "goog.forwardDeclare('Bar');\n" +
+        "function f(/** !Foo */ x) {}\n" +
+        "function g(/** !Bar */ y) {}");
+
+    checkNoWarnings(DEFINITIONS +
+        "/** @const */ var ns = {};\n" +
+        "goog.addDependency('', ['ns.Foo'], []);\n" +
+        "goog.forwardDeclare('ns.Bar');\n" +
+        "function f(/** !ns.Foo */ x) {}\n" +
+        "function g(/** !ns.Bar */ y) {}");
+
+    checkNoWarnings(DEFINITIONS +
+        "goog.addDependency('', ['Foo'], []);\n" +
+        "goog.forwardDeclare('Bar');\n" +
+        "var f = new Foo;\n" +
+        "var b = new Bar;");
+
+    checkNoWarnings(DEFINITIONS +
+        "/** @const */ var ns = {};\n" +
+        "goog.addDependency('', ['ns.Foo'], []);\n" +
+        "goog.forwardDeclare('ns.Bar');\n" +
+        "var f = new ns.Foo;\n" +
+        "var b = new ns.Bar;");
+
+    // In the following cases the old type inference warned about arg type,
+    // but we allow rather than create synthetic named type
+    checkNoWarnings(DEFINITIONS +
+        "goog.forwardDeclare('Foo');\n" +
+        "function f(/** !Foo */ x) {}\n" +
+        "/** @constructor */ function Bar(){}\n" +
+        "f(new Bar);");
+
+    checkNoWarnings(DEFINITIONS +
+        "/** @const */ var ns = {};\n" +
+        "goog.forwardDeclare('ns.Foo');\n" +
+        "function f(/** !ns.Foo */ x) {}\n" +
+        "/** @constructor */ function Bar(){}\n" +
+        "f(new Bar);");
+  }
 }

@@ -255,6 +255,9 @@ public class JSTypeCreatorFromJSDoc {
             howmanyTypeVars++;
             return namedType;
           }
+          if (namedType.isUnknown()) {
+            return namedType;
+          }
           return getNominalTypeHelper(
               namedType, n, ownerType, registry, outerTypeParameters);
         }
