@@ -111,9 +111,17 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_DICT_IMPLEMENTS_INTERF",
       "Class {0} is a dict. Dicts can't implement interfaces.");
 
-  static final DiagnosticType CONSTRUCTOR_REQUIRED = DiagnosticType.warning(
-      "JSC_CONSTRUCTOR_REQUIRED",
+  static final DiagnosticType STRUCTDICT_WITHOUT_CTOR = DiagnosticType.warning(
+      "JSC_STRUCTDICT_WITHOUT_CTOR",
       "{0} used without @constructor.");
+
+  static final DiagnosticType EXPECTED_CONSTRUCTOR = DiagnosticType.warning(
+      "JSC_EXPECTED_CONSTRUCTOR",
+      "Expected constructor name but found {0}.");
+
+  static final DiagnosticType EXPECTED_INTERFACE = DiagnosticType.warning(
+      "JSC_EXPECTED_INTERFACE",
+      "Expected interface name but found {0}.");
 
   static final DiagnosticType INEXISTENT_PARAM = DiagnosticType.warning(
       "JSC_INEXISTENT_PARAM",
@@ -185,13 +193,14 @@ class GlobalTypeInfo implements CompilerPass {
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_INIT_TYPEDEF,
       CANNOT_OVERRIDE_FINAL_METHOD,
-      CONSTRUCTOR_REQUIRED,
       CONST_WITHOUT_INITIALIZER,
       COULD_NOT_INFER_CONST_TYPE,
       CTOR_IN_DIFFERENT_SCOPE,
       DICT_IMPLEMENTS_INTERF,
       DUPLICATE_JSDOC,
       DUPLICATE_PROP_IN_ENUM,
+      EXPECTED_CONSTRUCTOR,
+      EXPECTED_INTERFACE,
       EXTENDS_NON_OBJECT,
       EXTENDS_NOT_ON_CTOR_OR_INTERF,
       REDECLARED_PROPERTY,
@@ -203,6 +212,7 @@ class GlobalTypeInfo implements CompilerPass {
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
+      STRUCTDICT_WITHOUT_CTOR,
       UNDECLARED_NAMESPACE,
       UNRECOGNIZED_TYPE_NAME,
       RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
@@ -231,6 +241,7 @@ class GlobalTypeInfo implements CompilerPass {
   private final Map<Node, String> anonFunNames = new HashMap<>();
   private static final String ANON_FUN_PREFIX = "%anon_fun";
   private int freshId = 1;
+  // Only for original definitions, not for aliased constructors
   private Map<Node, RawNominalType> nominaltypesByNode = new HashMap<>();
   // Keyed on RawNominalTypes and property names
   private HashBasedTable<RawNominalType, String, PropertyDef> propertyDefs =
@@ -618,6 +629,8 @@ class GlobalTypeInfo implements CompilerPass {
         visitTypedef(qnameNode);
       } else if (NodeUtil.isEnumDecl(qnameNode)) {
         visitEnum(qnameNode);
+      } else if (NodeUtil.isAliasedNominalTypeDecl(qnameNode)) {
+        maybeRecordAliasedNominalType(qnameNode);
       } else if (!currentScope.isDefined(qnameNode)) {
         Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
         String pname = qnameNode.getLastChild().getString();
@@ -646,6 +659,8 @@ class GlobalTypeInfo implements CompilerPass {
             visitTypedef(nameNode);
           } else if (NodeUtil.isEnumDecl(nameNode)) {
             visitEnum(nameNode);
+          } else if (NodeUtil.isAliasedNominalTypeDecl(nameNode)) {
+            maybeRecordAliasedNominalType(nameNode);
           }
           break;
         }
@@ -866,16 +881,37 @@ class GlobalTypeInfo implements CompilerPass {
         }
       } else if (fnDoc != null) {
         if (fnDoc.makesStructs()) {
-          warnings.add(JSError.make(fn, CONSTRUCTOR_REQUIRED, "@struct"));
+          warnings.add(JSError.make(fn, STRUCTDICT_WITHOUT_CTOR, "@struct"));
         } else if (fnDoc.makesDicts()) {
-          warnings.add(JSError.make(fn, CONSTRUCTOR_REQUIRED, "@dict"));
+          warnings.add(JSError.make(fn, STRUCTDICT_WITHOUT_CTOR, "@dict"));
         }
       }
     }
-  }
 
-  private JSType getTypeDeclarationFromJsdoc(JSDocInfo jsdoc, Scope s) {
-    return typeParser.getNodeTypeDeclaration(jsdoc, null, s);
+    private void maybeRecordAliasedNominalType(Node nameNode) {
+      Preconditions.checkArgument(nameNode.isQualifiedName());
+      Node aliasedDef = nameNode.getParent();
+      Preconditions.checkState(aliasedDef.isVar() || aliasedDef.isAssign());
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(aliasedDef);
+      Node init = NodeUtil.getInitializer(nameNode);
+      RawNominalType rawType =
+          currentScope.getNominalType(QualifiedName.fromNode(init));
+      String initQname = init.getQualifiedName();
+      if (jsdoc.isConstructor()) {
+        if (rawType == null || rawType.isInterface()) {
+          warnings.add(JSError.make(init, EXPECTED_CONSTRUCTOR, initQname));
+          return;
+        }
+      } else if (jsdoc.isInterface()) {
+        if (rawType == null || !rawType.isInterface()) {
+          warnings.add(JSError.make(init, EXPECTED_INTERFACE, initQname));
+          return;
+        }
+      }
+      // TODO(dimvar): If init is an unknown type name, we shouldn't warn;
+      // Also, associate nameNode with an unknown type name when returning early
+      currentScope.addNominalType(nameNode, rawType);
+    }
   }
 
   private class ProcessScope extends AbstractShallowCallback {
@@ -1756,6 +1792,10 @@ class GlobalTypeInfo implements CompilerPass {
       return currentScope.isNamespace(getProp)
           || NodeUtil.isTypedefDecl(getProp);
     }
+  }
+
+  private JSType getTypeDeclarationFromJsdoc(JSDocInfo jsdoc, Scope s) {
+    return typeParser.getNodeTypeDeclaration(jsdoc, null, s);
   }
 
   private FunctionType getDeclaredFunctionTypeOfCalleeIfAny(

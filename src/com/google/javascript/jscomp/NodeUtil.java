@@ -808,6 +808,30 @@ public final class NodeUtil {
     return false;
   }
 
+  static boolean isAliasedNominalTypeDecl(Node n) {
+    if (n.isName()) {
+      n = n.getParent();
+    }
+    if (n.isVar() && n.getChildCount() == 1) {
+      Node name = n.getFirstChild();
+      Node init = name.getFirstChild();
+      JSDocInfo jsdoc = getBestJSDocInfo(n);
+      return jsdoc != null
+          && (jsdoc.isConstructor() || jsdoc.isInterface())
+          && init != null
+          && init.isQualifiedName();
+    }
+    Node parent = n.getParent();
+    if (n.isGetProp() && n.isQualifiedName()
+        && parent.isAssign() && parent.getParent().isExprResult()) {
+      JSDocInfo jsdoc = getBestJSDocInfo(n);
+      return jsdoc != null
+          && (jsdoc.isConstructor() || jsdoc.isInterface())
+          && parent.getLastChild().isQualifiedName();
+    }
+    return false;
+  }
+
   static Node getInitializer(Node n) {
     Preconditions.checkArgument(n.isQualifiedName() || n.isStringKey());
     switch (n.getParent().getType()) {

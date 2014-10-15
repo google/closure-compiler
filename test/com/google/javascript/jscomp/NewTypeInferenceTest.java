@@ -6785,6 +6785,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "    var y = x[0];\n" +
         "};",
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(
+        "var ns = {};\n" +
+        "function f() {\n" +
+        "  /** @enum {number} */ var EnumType = ns;\n" +
+        "}",
+        GlobalTypeInfo.MALFORMED_ENUM);
   }
 
   public void testRemoveNonexistentPropDoesntCrash() {
@@ -6874,15 +6881,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   //           VarCheck.UNDEFINED_VAR_ERROR,
   //           VarCheck.UNDEFINED_VAR_ERROR));
   // }
-
-  public void testInvalidEnumDeclarationDoesntCrash() {
-    typeCheck(
-        "var ns = {};\n" +
-        "function f() {\n" +
-        "  /** @enum {number} */ var EnumType = ns;\n" +
-        "}",
-        GlobalTypeInfo.MALFORMED_ENUM);
-  }
 
   public void testUninhabitableObjectTypeDoesntCrash() {
     checkNoWarnings(
@@ -7486,10 +7484,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   public void testMisplacedStructDictAnnotation() {
     typeCheck(
         "/** @struct */ function Struct1() {}",
-        GlobalTypeInfo.CONSTRUCTOR_REQUIRED);
+        GlobalTypeInfo.STRUCTDICT_WITHOUT_CTOR);
     typeCheck(
         "/** @dict */ function Dict() {}",
-        GlobalTypeInfo.CONSTRUCTOR_REQUIRED);
+        GlobalTypeInfo.STRUCTDICT_WITHOUT_CTOR);
   }
 
   // public void testGlobalVariableInJoin() {
@@ -8099,7 +8097,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     // Don't treat aliased constructors as if they were const variables.
     checkNoWarnings(
-        "var Bar;",
+        "/** @constructor */ function Bar() {}\n" +
         "/**\n" +
         " * @constructor\n" +
         " * @final\n" +
@@ -8107,7 +8105,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var Foo = Bar;");
 
     checkNoWarnings(
-        "var Bar;",
+        "/** @constructor */ function Bar() {}\n" +
         "/** @const */\n" +
         "var ns = {};\n" +
         "/**\n" +
@@ -9533,5 +9531,69 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "Foo.ns = {};\n" +
         "/** @const */\n" +
         "Foo.ns = {};");
+  }
+
+  public void testNominalTypeAliasing() {
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor */\n" +
+        "var Bar = Foo;\n" +
+        "var /** !Bar */ x = new Foo();");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @constructor */\n" +
+        "ns.Foo = function() {};\n" +
+        "/** @constructor */\n" +
+        "ns.Bar = ns.Foo;\n" +
+        "function g() {\n" +
+        "  var /** !ns.Bar */ x = new ns.Foo();\n" +
+        "  var /** !ns.Bar */ y = new ns.Bar();\n" +
+        "}");
+
+    typeCheck(
+        "/** @type {number} */\n" +
+        "var n = 123;\n" +
+        "/** @constructor */\n" +
+        "var Foo = n;",
+        GlobalTypeInfo.EXPECTED_CONSTRUCTOR);
+
+    typeCheck(
+        "/** @type {number} */\n" +
+        "var n = 123;\n" +
+        "/** @interface */\n" +
+        "var Foo = n;",
+        GlobalTypeInfo.EXPECTED_INTERFACE);
+
+    typeCheck(
+        "/** @interface */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor */\n" +
+        "var Bar = Foo;",
+        GlobalTypeInfo.EXPECTED_CONSTRUCTOR);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @interface */\n" +
+        "var Bar = Foo;",
+        GlobalTypeInfo.EXPECTED_INTERFACE);
+
+    // TODO(dimvar): When we allow unknown type names, eg, for fwd-declared
+    // types, then we can also fix this.
+    // Currently, the type checker doesn't know what !Foo is.
+    typeCheck(
+        "var Bar;",
+        "/**\n" +
+        " * @constructor\n" +
+        " * @final\n" +
+        " */\n" +
+        "var Foo = Bar;\n" +
+        "var /** !Foo */ x;",
+        ImmutableList.of(
+            GlobalTypeInfo.EXPECTED_CONSTRUCTOR,
+            GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME));
   }
 }

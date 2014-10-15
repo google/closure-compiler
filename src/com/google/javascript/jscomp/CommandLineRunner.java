@@ -925,7 +925,7 @@ public class CommandLineRunner extends
     int c;
 
     while ((c = buffer.read()) != -1) {
-      
+
       // Ignoring the BOM.
       if (isFirstCharacter) {
         isFirstCharacter = false;
