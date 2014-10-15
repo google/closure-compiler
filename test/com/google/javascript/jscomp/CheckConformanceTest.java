@@ -45,7 +45,8 @@ public class CheckConformanceTest extends CompilerTestCase {
       " * @param {*=} opt_line\n" +
       " * @return {!Error} \n" +
       "*/" +
-      " var Error;" +
+      "var Error;" +
+      "var alert;" +
       "";
 
   private static final String DEFAULT_CONFORMANCE =
@@ -786,5 +787,46 @@ public class CheckConformanceTest extends CompilerTestCase {
         "}";
 
     testSame("throw new Error('test');");
+  }
+
+  public void testCustomBanUnknownThis1() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n" +
+        "  error_message: 'BanUnknownThis Message'\n" +
+        "}";
+
+    testSame(
+        EXTERNS,
+        "function f() {alert(this);}",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanUnknownThis Message");
+  }
+
+  // TODO(johnlenz): add a unit test for templated "this" values.
+
+  public void testCustomBanUnknownThis2() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n" +
+        "  error_message: 'BanUnknownThis Message'\n" +
+        "}";
+
+    testSame(
+        "/** @constructor */ function C() {alert(this);}");
+  }
+
+  public void testCustomBanUnknownThis3() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n" +
+        "  error_message: 'BanUnknownThis Message'\n" +
+        "}";
+
+    testSame(
+        "function f() {alert(/** @type {Error} */(this));}");
   }
 }

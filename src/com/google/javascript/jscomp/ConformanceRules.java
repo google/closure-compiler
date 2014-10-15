@@ -22,6 +22,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Rule;
@@ -39,6 +40,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -876,6 +878,32 @@ public final class ConformanceRules {
               && !thrown.isAllType()
               && !thrown.isEmptyType()
               && !thrown.isSubtype(errorObjType)) {
+            return ConformanceResult.VIOLATION;
+          }
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+  /**
+   * Banned unknown "this" types.
+   */
+  public static final class BanUnknownThis extends AbstractRule {
+    private final Set<Node> reports = Sets.newIdentityHashSet();
+    public BanUnknownThis(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isThis() && !n.getParent().isCast()) {
+        JSType type = n.getJSType();
+        if (type != null && type.isUnknownType()) {
+          Node root = t.getScopeRoot();
+          if (!reports.contains(root)) {
+            reports.add(root);
             return ConformanceResult.VIOLATION;
           }
         }
