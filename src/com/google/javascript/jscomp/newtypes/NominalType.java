@@ -72,6 +72,10 @@ public class NominalType {
     return rawType.isDict();
   }
 
+  public boolean isUninstantiatedGenericType() {
+    return rawType.isGeneric() && typeMap.isEmpty();
+  }
+
   NominalType instantiateGenerics(List<JSType> types) {
     Preconditions.checkState(types.size() == rawType.typeParameters.size());
     Map<String, JSType> typeMap = new HashMap<>();

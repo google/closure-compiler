@@ -9596,4 +9596,71 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
             GlobalTypeInfo.EXPECTED_CONSTRUCTOR,
             GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME));
   }
+
+  public void testTypeVariablesVisibleInPrototypeMethods() {
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.method = function() {\n" +
+        "  /** @type {T} */\n" +
+        "  this.prop = 123;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/** @param {T} x */" +
+        "Foo.prototype.method = function(x) {\n" +
+        "  x = 123;\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/** @param {T} x */" +
+        "Foo.prototype.method = function(x) {\n" +
+        "  this.prop = x;\n" +
+        "}");
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/** @param {T} x */" +
+        "Foo.prototype.method = function(x) {\n" +
+        "  /** @const */\n" +
+        "  this.prop = x;\n" +
+        "}",
+        GlobalTypeInfo.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Parent() {}\n" +
+        "/**\n" +
+        " * @constructor\n" +
+        " * @extends {Parent<string>}\n" +
+        " */\n" +
+        "function Child() {}\n" +
+        "Child.prototype.method = function() {\n" +
+        "  /** @type {T} */\n" +
+        "  this.prop = 123;\n" +
+        "}",
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+  }
 }

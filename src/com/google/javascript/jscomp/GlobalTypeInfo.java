@@ -2156,8 +2156,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
 
       // First see if it's a type variable
-      if (declaredType != null && declaredType.isGeneric() &&
-          declaredType.getTypeParameters().contains(name)) {
+      if (declaredType != null && declaredType.isTypeVariableInScope(name)) {
         return JSType.fromTypeVar(name);
       }
       // Then if it's a class/interface name
