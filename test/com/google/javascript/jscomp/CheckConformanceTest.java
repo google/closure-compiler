@@ -65,6 +65,8 @@ public class CheckConformanceTest extends CompilerTestCase {
   public CheckConformanceTest() {
     super(EXTERNS, true);
     enableNormalize();
+    enableClosurePass();
+    enableClosurePassForExpected();
   }
 
   @Override
@@ -828,5 +830,38 @@ public class CheckConformanceTest extends CompilerTestCase {
 
     testSame(
         "function f() {alert(/** @type {Error} */(this));}");
+  }
+
+  public void testCustomBanGlobalVars1() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanGlobalVars'\n" +
+        "  error_message: 'BanGlobalVars Message'\n" +
+        "}";
+
+    testSame(
+        EXTERNS,
+        "var x;",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanGlobalVars Message");
+
+    testSame(
+        EXTERNS,
+        "function fn() {}",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanGlobalVars Message");
+
+    testSame(
+        "goog.provide('x');");
+
+
+    // TODO(johnlenz): This might be overly conservative but doing otherwise is more complicated
+    // so let see if we can get away with this.
+    testSame(
+        EXTERNS,
+        "goog.provide('x'); var x;",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanGlobalVars Message");
   }
 }

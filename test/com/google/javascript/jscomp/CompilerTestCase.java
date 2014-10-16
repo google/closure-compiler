@@ -64,6 +64,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** True iff closure pass runs before pass being tested. */
   private boolean closurePassEnabled = false;
 
+  /** Whether the closure pass is run on the expected JS. */
+  private boolean closurePassEnabledForExpected = false;
+
   /** True iff type checking pass runs before pass being tested. */
   private boolean typeCheckEnabled = false;
 
@@ -303,6 +306,10 @@ public abstract class CompilerTestCase extends TestCase  {
   // TODO(nicksantos): Fix other passes to use this when appropriate.
   void enableClosurePass() {
     closurePassEnabled = true;
+  }
+
+  void enableClosurePassForExpected() {
+    closurePassEnabledForExpected = true;
   }
 
   /**
@@ -1269,6 +1276,11 @@ public abstract class CompilerTestCase extends TestCase  {
     if (normalizeEnabled && normalizeExpected && !compiler.hasErrors()) {
       Normalize normalize = new Normalize(compiler, false);
       normalize.process(externsRoot, mainRoot);
+    }
+
+    if (closurePassEnabled && closurePassEnabledForExpected && !compiler.hasErrors()) {
+      new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
+          .process(null, mainRoot);
     }
     return mainRoot;
   }

@@ -911,4 +911,35 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
   }
+
+  /**
+   * Banned global var declarations.
+   */
+  public static final class BanGlobalVars extends AbstractRule {
+    public BanGlobalVars(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (t.inGlobalScope()
+          && isDeclaration(n)
+          && !n.getBooleanProp(Node.IS_NAMESPACE)
+          && !isWhitelisted(n)) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isDeclaration(Node n) {
+      return NodeUtil.isNameDeclaration(n)
+          || NodeUtil.isFunctionDeclaration(n)
+          || NodeUtil.isClassDeclaration(n);
+    }
+
+    private boolean isWhitelisted(Node n) {
+      return n.isVar() && n.getFirstChild().getString().equals("$jscomp");
+    }
+  }
 }
