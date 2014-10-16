@@ -15,15 +15,19 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.AbstractCompiler;
+import com.google.javascript.jscomp.CheckPathsBetweenNodes;
 import com.google.javascript.jscomp.ControlFlowGraph;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeUtil;
-import com.google.javascript.jscomp.graph.DiGraph;
+import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 
 /**
@@ -47,6 +51,20 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
           + "returns a non-null value. Consider making the return type "
           + "non-nullable.");
 
+  private static final Predicate<Node> NULLABLE_RETURN_PREDICATE =
+      new Predicate<Node>() {
+    @Override
+    public boolean apply(Node input) {
+      // Check for null because the control flow graph's implicit return node is
+      // represented by null, so this value might be input.
+      if (input == null || !input.isReturn()) {
+        return false;
+      }
+      Node returnValue = input.getFirstChild();
+      return returnValue != null && isNullable(returnValue);
+    }
+  };
+
   public CheckNullableReturn(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
@@ -57,7 +75,7 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
     // node, so that getControlFlowGraph will return the graph inside
     // the function, rather than the graph of the enclosing scope.
     if (n.isBlock() && n.hasChildren() && isReturnTypeNullable(parent)
-        && !canReturnNull(t.getControlFlowGraph())) {
+        && !hasSingleThrow(n) && !canReturnNull(t.getControlFlowGraph())) {
       String fnName = NodeUtil.getNearestFunctionName(parent);
       if (fnName != null && !fnName.isEmpty()) {
         compiler.report(t.makeError(parent, NULLABLE_RETURN_WITH_NAME, fnName));
@@ -65,6 +83,20 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
         compiler.report(t.makeError(parent, NULLABLE_RETURN));
       }
     }
+  }
+
+  /**
+   * @return whether the blockNode contains only a single "throw" child node.
+   */
+  private static boolean hasSingleThrow(Node blockNode) {
+    if (blockNode.getChildCount() == 1
+        && blockNode.getFirstChild().getType() == Token.THROW) {
+      // Functions consisting of a single "throw FOO" can be actually abstract,
+      // so do not check their return type nullability.
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -91,18 +123,15 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
    * @return True if the given ControlFlowGraph could return null.
    */
   private static boolean canReturnNull(ControlFlowGraph<Node> graph) {
-    DiGraph.DiGraphNode<Node, ControlFlowGraph.Branch> ir = graph.getImplicitReturn();
-    for (DiGraph.DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge : ir.getInEdges()) {
-      DiGraph.DiGraphNode<Node, ControlFlowGraph.Branch> graphNode = inEdge.getSource();
-      Node possibleReturnNode = graphNode.getValue();
-      if (possibleReturnNode.isReturn()) {
-        Node returnValue = possibleReturnNode.getFirstChild();
-        if (returnValue != null && isNullable(returnValue)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> test =
+        new CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>(
+            graph,
+            graph.getEntry(),
+            graph.getImplicitReturn(),
+            NULLABLE_RETURN_PREDICATE,
+            Predicates.<DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue());
+
+    return test.somePathsSatisfyPredicate();
   }
 
   /**

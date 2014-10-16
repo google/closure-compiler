@@ -30,8 +30,9 @@ import java.io.IOException;
  *
  */
 public class CheckNullableReturnTest extends CompilerTestCase {
-  private String externs = "/** @constructor */ function SomeType() {}";
+  private static String externs = "/** @constructor */ function SomeType() {}";
 
+  @Override
   public void setUp() throws IOException {
     enableTypeCheck(CheckLevel.ERROR);
   }
@@ -54,16 +55,76 @@ public class CheckNullableReturnTest extends CompilerTestCase {
   }
 
   public void testSimpleWarning() {
-    testSame(externs, ""
+    testError(""
         + "/** @return {SomeType} */\n"
         + "function f() {\n"
         + "  return new SomeType();\n"
-        + "}",
-        CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+        + "}");
+  }
+
+  public void testNullableReturn() {
+    testBodyOk("return null;");
+    testBodyOk("if (a) { return null; } return {};");
+    testBodyOk("switch(1) { case 12: return null; } return {};");
+    testBodyOk(
+        "/** @return {number} */ function f() { var x; }; return null;");
+  }
+
+  public void testNotNullableReturn()  {
+    // Empty function body. Ignore this case. The remainder of the functions in
+    // this test have non-empty bodies.
+    testBodyOk("");
+
+    // Simple case.
+    testBodyError("return {};");
+
+    // This implementation of an abstract method should not be reported.
+    testBodyOk("throw new Error('Not implemented');");
+
+    // Nested function.
+    testBodyError(
+        "/** @return {number} */ function f() { return 1; }; return {};");
+
+    testBodyError("switch(1) { default: return {}; } return null;");
+    testBodyError("switch(g) { case 1: return {}; default: return {}; } return null;");
+  }
+
+  public void testFinallyStatements() {
+    testBodyOk("try { return null; } finally { }");
+    testBodyOk("try { } finally { return null; }");
+    testBodyOk("try { return {}; } finally { return null; }");
+    testBodyOk("try { return null; } finally { return {}; }");
+    testBodyError("try { } catch (e) { return null; } finally { return {}; }");
+  }
+
+  public void testKnownConditions() {
+    testBodyOk("if (true) return {}; return null;");
+    testBodyOk("if (true) return null; else return {};");
+
+    testBodyOk("if (false) return {}; return null;");
+    testBodyOk("if (false) return null; else return {};");
+
+    testBodyError("if (1) return {}");
+    testBodyOk("if (1) { return null; } else { return {}; }");
+
+    testBodyOk("if (0) return {}; return null;");
+    testBodyOk("if (0) { return null; } else { return {}; }");
+
+    testBodyError("if (3) return {}");
+    testBodyOk("if (3) return null; else return {};");
+  }
+
+  public void testKnownWhileLoop() {
+    testBodyError("while (1) return {}");
+    testBodyError("while (1) { if (x) { return {}; } else { return {}; }}");
+    testBodyError("while (0) {} return {}");
+
+    // Not known.
+    testBodyError("while(x) { return {}; }");
   }
 
   public void testTwoBranches() {
-    testSame(externs, ""
+    testError(""
         + "/** @return {SomeType} */\n"
         + "function f() {\n"
         + "  if (foo) {\n"
@@ -71,12 +132,11 @@ public class CheckNullableReturnTest extends CompilerTestCase {
         + "  } else {\n"
         + "    return new SomeType();\n"
         + "  }\n"
-        + "}",
-        CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+        + "}");
   }
 
   public void testTryCatch() {
-    testSame(externs, ""
+    testError(""
         + "/** @return {SomeType} */\n"
         + "function f() {\n"
         + "  try {\n"
@@ -84,23 +144,35 @@ public class CheckNullableReturnTest extends CompilerTestCase {
         + "  } catch (e) {\n"
         + "    return new SomeType();\n"
         + "  }\n"
-        + "}",
-        CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+        + "}");
+
+    testBodyOk(""
+        + "try {\n"
+        + "  if (a) throw '';\n"
+        + "} catch (e) {\n"
+        + "  return null;\n"
+        + "}\n"
+        + "return {}");
+
+    testBodyOk(""
+        + "try {\n"
+        + "  return bar();\n"
+        + "} catch (e) {\n"
+        + "} finally { }");
   }
 
   public void testNoExplicitReturn() {
-    testSame(externs, ""
+    testError(""
         + "/** @return {SomeType} */\n"
         + "function f() {\n"
         + "  if (foo) {\n"
         + "    return new SomeType();\n"
         + "  }\n"
-        + "}",
-        CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+        + "}");
   }
 
   public void testNoWarningIfCanReturnNull() {
-    testSame(externs, ""
+    testOk(""
         + "/** @return {SomeType} */\n"
         + "function f() {\n"
         + "  if (foo) {\n"
@@ -108,26 +180,43 @@ public class CheckNullableReturnTest extends CompilerTestCase {
         + "  } else {\n"
         + "    return null;\n"
         + "  }\n"
-        + "}",
-        null);
+        + "}");
   }
 
   public void testNoWarningOnEmptyFunction() {
-    testSame(externs, ""
+    testOk(""
         + "/** @return {SomeType} */\n"
-        + "function f() {}",
-        null);
+        + "function f() {}");
   }
 
   public void testNoWarningOnXOrNull() {
-    testSame(externs, ""
+    testOk(""
         + "/**\n"
         + " * @param {!Array.<!Object>} arr\n"
         + " * @return {Object}\n"
         + " */\n"
         + "function f4(arr) {\n"
         + "  return arr[0] || null;\n"
-        + "}",
-        null);
+        + "}");
+  }
+
+  private static String createFunction(String body) {
+    return "/** @return {?Object} */ function foo() {" + body + "}";
+  }
+
+  private void testOk(String js) {
+    testSame(externs, js, null);
+  }
+
+  private void testError(String js) {
+    testSame(externs, js, CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+  }
+
+  private void testBodyOk(String body) {
+    testOk(createFunction(body));
+  }
+
+  private void testBodyError(String body) {
+    testError(createFunction(body));
   }
 }

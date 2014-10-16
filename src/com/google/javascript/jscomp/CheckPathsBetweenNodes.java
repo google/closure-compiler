@@ -31,7 +31,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
  * @param <N> The node type.
  * @param <E> The edge type.
  */
-class CheckPathsBetweenNodes<N, E> {
+public class CheckPathsBetweenNodes<N, E> {
 
   private final Predicate<N> nodePredicate;
   private final Predicate<DiGraphEdge<N, E>> edgePredicate;
@@ -96,7 +96,7 @@ class CheckPathsBetweenNodes<N, E> {
   /**
    * Inclusive check.
    */
-  CheckPathsBetweenNodes(DiGraph<N, E> graph, DiGraphNode<N, E> a,
+  public CheckPathsBetweenNodes(DiGraph<N, E> graph, DiGraphNode<N, E> a,
       DiGraphNode<N, E> b, Predicate<N> nodePredicate,
       Predicate<DiGraphEdge<N, E>> edgePredicate) {
     this(graph, a, b, nodePredicate, edgePredicate, true);
