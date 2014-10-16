@@ -2330,7 +2330,7 @@ chrome.bookmarks = {};
 
 /**
  * @typedef {?{
- *   pareintId: (string|undefined),
+ *   parentId: (string|undefined),
  *   index: (number|undefined),
  *   url: (string|undefined),
  *   title: (string|undefined)
@@ -2338,6 +2338,17 @@ chrome.bookmarks = {};
  * @see https://developer.chrome.com/extensions/bookmarks#method-create
  */
 chrome.bookmarks.CreateDetails;
+
+
+/**
+ * @typedef {?{
+ *   query: (string|undefined),
+ *   url: (string|undefined),
+ *   title: (string|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/bookmarks#method-search
+ */
+chrome.bookmarks.SearchDetails;
 
 
 /**
@@ -2385,7 +2396,7 @@ chrome.bookmarks.getSubTree = function(id, callback) {};
 
 
 /**
- * @param {string} query
+ * @param {string|!chrome.bookmarks.SearchDetails} query
  * @param {function(Array.<BookmarkTreeNode>): void} callback
  * @return {Array.<BookmarkTreeNode>}
  */
