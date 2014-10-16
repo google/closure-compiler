@@ -6613,6 +6613,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     checkNoWarnings(
         "function f(/** !Function */ fun) { return new fun(1, 2); }");
+
+    checkNoWarnings(
+        "function f(/** !Function */ fun) { [] instanceof fun; }");
   }
 
   public void testConditionalExBranch() {

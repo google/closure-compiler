@@ -1291,7 +1291,7 @@ public class NewTypeInference implements CompilerPass {
     FunctionType ctorFunType = ctorType.getFunType();
     if (!ctorType.isUnknown() &&
         (!ctorType.isSubtypeOf(JSType.topFunction()) ||
-            !ctorFunType.isConstructor())) {
+            !ctorFunType.isQmarkFunction() && !ctorFunType.isConstructor())) {
       warnInvalidOperand(
           ctor, Token.INSTANCEOF, "a constructor function", ctorType);
     }
