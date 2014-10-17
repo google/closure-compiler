@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.lint.CheckEnums;
+import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
@@ -1509,8 +1510,9 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return combineChecks(compiler, ImmutableList.<Callback>of(
-          new CheckNullableReturn(compiler),
-          new CheckEnums(compiler)));
+          new CheckEnums(compiler),
+          new CheckInterfaces(compiler),
+          new CheckNullableReturn(compiler)));
     }
   };
 

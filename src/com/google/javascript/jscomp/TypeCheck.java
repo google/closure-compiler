@@ -148,9 +148,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "interface members can only be empty property declarations,"
           + " empty functions{0}");
 
-  static final DiagnosticType INTERFACE_FUNCTION_NOT_EMPTY =
+  static final DiagnosticType INTERFACE_METHOD_NOT_EMPTY =
       DiagnosticType.warning(
-          "JSC_INTERFACE_FUNCTION_NOT_EMPTY",
+          "JSC_INTERFACE_METHOD_NOT_EMPTY",
           "interface member functions must have an empty body");
 
   static final DiagnosticType CONFLICTING_SHAPE_TYPE =
@@ -266,7 +266,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ENUM_DUP,
       ENUM_NOT_CONSTANT,
       INVALID_INTERFACE_MEMBER_DECLARATION,
-      INTERFACE_FUNCTION_NOT_EMPTY,
+      INTERFACE_METHOD_NOT_EMPTY,
       CONFLICTING_SHAPE_TYPE,
       CONFLICTING_EXTENDED_TYPE,
       CONFLICTING_IMPLEMENTED_TYPE,
@@ -1359,7 +1359,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (assign.getLastChild().isFunction()
         && !NodeUtil.isEmptyBlock(assign.getLastChild().getLastChild())) {
       compiler.report(
-          t.makeError(object, INTERFACE_FUNCTION_NOT_EMPTY,
+          t.makeError(object, INTERFACE_METHOD_NOT_EMPTY,
               abstractMethodName));
     }
   }

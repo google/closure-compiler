@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.lint.CheckEnums;
+import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 
 import java.util.Map;
@@ -330,9 +331,13 @@ public class DiagnosticGroups {
   // provide optional suggestions.
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup("lintChecks",
+          CheckEnums.DUPLICATE_ENUM_VALUE,
+          // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
+          // checkTypes DiagnosticGroup
+          CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
+          CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
           CheckNullableReturn.NULLABLE_RETURN,
-          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
-          CheckEnums.DUPLICATE_ENUM_VALUE);
+          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
       DiagnosticGroups.registerGroup("useOfGoogBase",

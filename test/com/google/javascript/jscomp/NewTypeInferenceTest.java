@@ -3639,10 +3639,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         GlobalTypeInfo.INHERITANCE_CYCLE);
   }
 
-  public void testInterfacesWithBody() {
-    typeCheck(
-        "/** @interface */ function I() { var x = 123; }",
-        GlobalTypeInfo.INTERFACE_WITH_A_BODY);
+  public void testInterfaceNonEmptyFunction() throws Exception {
+    typeCheck("/** @interface */ function T() {};\n" +
+        "T.prototype.x = function() { return 'foo'; }",
+        TypeCheck.INTERFACE_METHOD_NOT_EMPTY);
   }
 
   public void testInterfaceMistypedProp() {
@@ -5721,10 +5721,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/**\n" +
         " * @template T\n" +
-        " * @param {T} x\n" +
         " * @interface\n" +
         " */\n" +
-        "function I(x) {}\n" +
+        "function I() {}\n" +
         "/** @param {T} x */\n" +
         "I.prototype.bar = function(x) {};\n" +
         "/** @constructor @implements {I<number>} */\n" +
@@ -5736,10 +5735,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/**\n" +
         " * @template T\n" +
-        " * @param {T} x\n" +
         " * @interface\n" +
         " */\n" +
-        "function I(x) {}\n" +
+        "function I() {}\n" +
         "/** @param {T} x */\n" +
         "I.prototype.bar = function(x) {};\n" +
         "/** @constructor @implements {I<number>} */\n" +
@@ -5752,10 +5750,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/**\n" +
         " * @template T\n" +
-        " * @param {T} x\n" +
         " * @interface\n" +
         " */\n" +
-        "function I(x) {}\n" +
+        "function I() {}\n" +
         "/** @param {T} x */\n" +
         "I.prototype.bar = function(x) {};\n" +
         "/**\n" +
@@ -5772,10 +5769,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/**\n" +
         " * @template T\n" +
-        " * @param {T} x\n" +
         " * @interface\n" +
         " */\n" +
-        "function I(x) {}\n" +
+        "function I() {}\n" +
         "/** @param {T} x */\n" +
         "I.prototype.bar = function(x) {};\n" +
         "/** @constructor @implements {I<number>} */\n" +
@@ -5788,10 +5784,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/**\n" +
         " * @template T\n" +
-        " * @param {T} x\n" +
         " * @interface\n" +
         " */\n" +
-        "function I(x) {}\n" +
+        "function I() {}\n" +
         "/** @param {T} x */\n" +
         "I.prototype.bar = function(x) {};\n" +
         "/** @constructor @implements {I<number>} */\n" +
@@ -5803,10 +5798,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/**\n" +
         " * @template T\n" +
-        " * @param {T} x\n" +
         " * @interface\n" +
         " */\n" +
-        "function I(x) {}\n" +
+        "function I() {}\n" +
         "/** @param {T} x */\n" +
         "I.prototype.bar = function(x) {};\n" +
         "/**\n" +
@@ -5890,7 +5884,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " * @template T\n" +
         " * @interface\n" +
         " */\n" +
-        "function I(x) {}\n" +
+        "function I() {}\n" +
         "/**\n" +
         " * @template T\n" +
         " * @constructor\n" +

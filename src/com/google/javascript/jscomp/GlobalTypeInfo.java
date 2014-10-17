@@ -99,10 +99,6 @@ class GlobalTypeInfo implements CompilerPass {
       "JSC_UNRECOGNIZED_TYPE_NAME",
       "Type annotation references non-existent type {0}.");
 
-  static final DiagnosticType INTERFACE_WITH_A_BODY = DiagnosticType.warning(
-      "JSC_INTERFACE_WITH_A_BODY",
-      "Interface definitions should have an empty body.");
-
   static final DiagnosticType INHERITANCE_CYCLE = DiagnosticType.warning(
       "JSC_INHERITANCE_CYCLE",
       "Cycle detected in inheritance chain of type {0}");
@@ -207,7 +203,6 @@ class GlobalTypeInfo implements CompilerPass {
       IMPLEMENTS_WITHOUT_CONSTRUCTOR,
       INEXISTENT_PARAM,
       INHERITANCE_CYCLE,
-      INTERFACE_WITH_A_BODY,
       INVALID_PROP_OVERRIDE,
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
@@ -1660,10 +1655,6 @@ class GlobalTypeInfo implements CompilerPass {
           Preconditions.checkState(noCycles);
           builder.addNominalType(ctorType.getAsNominalType());
         } else if (fnDoc.isInterface()) {
-          if (declNode.isFunction() &&
-              !NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(declNode))) {
-            warnings.add(JSError.make(declNode, INTERFACE_WITH_A_BODY));
-          }
           if (!implementedIntfs.isEmpty()) {
             warnings.add(JSError.make(declNode,
                 TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, functionName));
@@ -1768,6 +1759,11 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Find the declared type of the property.
       if (initializer != null && initializer.isFunction()) {
+        if (initializer.getLastChild().hasChildren() && rawType.isInterface()) {
+          warnings.add(JSError.make(
+              initializer.getLastChild(), TypeCheck.INTERFACE_METHOD_NOT_EMPTY));
+        }
+
         // TODO(dimvar): we must do this for any function "defined" as the rhs
         // of an assignment to a property, not just when the property is a
         // prototype property.
