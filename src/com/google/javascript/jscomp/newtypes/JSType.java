@@ -873,7 +873,7 @@ public abstract class JSType {
       return UNKNOWN;
     }
     Preconditions.checkState(getObjs() != null || getEnums() != null,
-        "Can't getProp of type %s", this.toString());
+        "Can't getProp of type %s", this);
     return nullAcceptingJoin(
         TypeWithPropertiesStatics.getProp(getObjs(), qname),
         TypeWithPropertiesStatics.getProp(getEnums(), qname));
