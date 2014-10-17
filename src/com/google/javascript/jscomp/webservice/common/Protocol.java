@@ -65,6 +65,7 @@ public class Protocol {
     USE_TYPES_FOR_OPTIMIZATIONS("use_types_for_optimization"),
     ANGULAR_PASS("angular_pass"),
     GENERATE_EXPORTS("generate_exports"),
+    DISABLE_PROPERTY_RENAMING("disable_property_renaming"),
 
     // Old ROBOCOMP urls.
     RAWJS("rawjs"),
