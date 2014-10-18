@@ -9697,18 +9697,37 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** !ns.Foo */ x) {}\n" +
         "function g(/** !ns.Bar */ y) {}");
 
-    checkNoWarnings(DEFINITIONS +
-        "goog.addDependency('', ['Foo'], []);\n" +
-        "goog.forwardDeclare('Bar');\n" +
-        "var f = new Foo;\n" +
-        "var b = new Bar;");
-
-    checkNoWarnings(DEFINITIONS +
-        "/** @const */ var ns = {};\n" +
-        "goog.addDependency('', ['ns.Foo'], []);\n" +
-        "goog.forwardDeclare('ns.Bar');\n" +
-        "var f = new ns.Foo;\n" +
-        "var b = new ns.Bar;");
+    // TODO(blickly): Allow forward declared names that are used in code.
+//     checkNoWarnings(DEFINITIONS +
+//         "goog.addDependency('', ['Foo'], []);\n" +
+//         "goog.forwardDeclare('Bar');\n" +
+//         "var f = new Foo;\n" +
+//         "var b = new Bar;");
+//
+//     checkNoWarnings(DEFINITIONS +
+//         "/** @const */ var ns = {};\n" +
+//         "goog.addDependency('', ['ns.Foo'], []);\n" +
+//         "goog.forwardDeclare('ns.Bar');\n" +
+//         "var f = new ns.Foo;\n" +
+//         "var b = new ns.Bar;");
+//
+//     checkNoWarnings(DEFINITIONS +
+//         "/** @const */ var ns = {};\n" +
+//         "goog.addDependency('', ['ns.subns.Foo'], []);\n" +
+//         "goog.forwardDeclare('ns.subns.Bar');\n" +
+//         "var f = new ns.subns.Foo;\n" +
+//         "var b = new ns.subns.Bar;");
+//
+//     checkNoWarnings(DEFINITIONS +
+//         "goog.addDependency('', ['ns.subns.Foo'], []);\n" +
+//         "goog.forwardDeclare('ns.subns.Bar');\n" +
+//         "var f = new ns.subns.Foo;\n" +
+//         "var b = new ns.subns.Bar;");
+//
+//     checkNoWarnings(DEFINITIONS +
+//         "goog.forwardDeclare('ns.subns');\n" +
+//         "goog.forwardDeclare('ns.subns.Bar');\n" +
+//         "var b = new ns.subns.Bar;");
 
     // In the following cases the old type inference warned about arg type,
     // but we allow rather than create synthetic named type

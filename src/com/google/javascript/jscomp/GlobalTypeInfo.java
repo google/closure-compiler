@@ -2476,15 +2476,6 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void removeTmpData() {
-      for (String qnameStr : unknownTypeNames) {
-         if (!qnameStr.contains(".")) {
-           continue;
-         }
-         QualifiedName qname = QualifiedName.fromQname(qnameStr);
-         Namespace ns = getNamespace(qname.getAllButRightmost());
-         String pname = qname.getRightmostName();
-         ns.addUndeclaredProperty(pname, JSType.UNKNOWN, /* isConst */ false);
-      }
       unknownTypeNames = null;
       // For now, we put types of namespaces directly into the locals.
       // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
