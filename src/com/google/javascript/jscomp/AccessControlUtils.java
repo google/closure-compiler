@@ -21,7 +21,9 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.PrototypeObjectType;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import javax.annotation.Nullable;
@@ -43,12 +45,13 @@ public final class AccessControlUtils {
    * from the name's declared visibility if the file's {@code @fileoverview}
    * JsDoc specifies a default visibility.
    *
+   * @param name The name node to compute effective visibility for.
    * @param var The name to compute effective visibility for.
    * @param fileVisibilityMap A map of {@code @fileoverview} visibility
    *     annotations, used to compute the name's default visibility.
    */
-  static Visibility getEffectiveNameVisibility(
-      Var var, ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {
+  static Visibility getEffectiveNameVisibility(Node name, Var var,
+      ImmutableMap<StaticSourceFile, Visibility> fileVisibilityMap) {
     JSDocInfo jsDocInfo = var.getJSDocInfo();
     Visibility raw = (jsDocInfo == null || jsDocInfo.getVisibility() == null)
         ? Visibility.INHERITED
@@ -58,7 +61,23 @@ public final class AccessControlUtils {
     }
     Visibility defaultVisibilityForFile =
         fileVisibilityMap.get(var.getSourceFile());
-    return (defaultVisibilityForFile == null)
+    JSType type = name.getJSType();
+    boolean createdFromGoogProvide = (type instanceof PrototypeObjectType
+        && ((PrototypeObjectType) type).isAnonymous());
+    // Ignore @fileoverview visibility when computing the effective visibility
+    // for names created by goog.provide.
+    //
+    // ProcessClosurePrimitives rewrites goog.provide()s as object literal
+    // declarations, but the exact form depends on the ordering of the
+    // input files. If goog.provide('a.b') occurs in the inputs before
+    // goog.provide('a'), it is rewritten like
+    //
+    // var a={};a.b={};
+    //
+    // If the file containing goog.provide('a.b') also declares a @fileoverview
+    // visibility, it must not apply to a, as this would make every a.* namespace
+    // effectively package-private.
+    return (createdFromGoogProvide || defaultVisibilityForFile == null)
         ? raw
         : defaultVisibilityForFile;
   }

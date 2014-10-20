@@ -1384,7 +1384,8 @@ public class JSTypeRegistry implements Serializable {
    * @param info Used to mark object literals as structs; can be {@code null}
    */
   public ObjectType createAnonymousObjectType(JSDocInfo info) {
-    PrototypeObjectType type = new PrototypeObjectType(this, null, null);
+    PrototypeObjectType type = new PrototypeObjectType(
+        this, null, null, true /* anonymousType */);
     type.setPrettyPrint(true);
     type.setJSDocInfo(info);
     return type;

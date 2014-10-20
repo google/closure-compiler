@@ -66,12 +66,13 @@ import java.util.Set;
  * debugging purposes.  Looking up type name references goes through the
  * {@link JSTypeRegistry}.<p>
  */
-class PrototypeObjectType extends ObjectType {
+public class PrototypeObjectType extends ObjectType {
   private static final long serialVersionUID = 1L;
 
   private final String className;
   private final PropertyMap properties;
   private final boolean nativeType;
+  private final boolean anonymousType;
 
   // NOTE(nicksantos): The implicit prototype can change over time.
   // Modeling this is a bear. Always call getImplicitPrototype(), because
@@ -102,7 +103,36 @@ class PrototypeObjectType extends ObjectType {
    */
   PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype) {
-    this(registry, className, implicitPrototype, false, null);
+    this(
+        registry,
+        className,
+        implicitPrototype,
+        false /* nativeType */,
+        null /* templateTypeMap */,
+        false /* anonymousType */);
+  }
+
+  /**
+   * Creates an object type.
+   *
+   * @param className the name of the class.  May be {@code null} to
+   *        denote an anonymous class.
+   *
+   * @param implicitPrototype the implicit prototype
+   *        (a.k.a. {@code [[Prototype]]}) as defined by ECMA-262. If the
+   *        implicit prototype is {@code null} the implicit prototype will be
+   *        set to the {@link JSTypeNative#OBJECT_TYPE}.
+   * @param isAnonymous True if the class is intended to be anonymous.
+   */
+  PrototypeObjectType(JSTypeRegistry registry, String className,
+      ObjectType implicitPrototype, boolean anonymousType) {
+    this(
+        registry,
+        className,
+        implicitPrototype,
+        false /* nativeType */,
+        null /* templateTypeMap */,
+        anonymousType);
   }
 
   /**
@@ -112,12 +142,29 @@ class PrototypeObjectType extends ObjectType {
   PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype, boolean nativeType,
       TemplateTypeMap templateTypeMap) {
+    this(
+        registry,
+        className,
+        implicitPrototype,
+        nativeType,
+        templateTypeMap,
+        false /* anonymousType */);
+  }
+
+  /**
+   * Creates an object type, allowing specification of the implicit prototype,
+   * whether the object is native, and any templatized types.
+   */
+  PrototypeObjectType(JSTypeRegistry registry, String className,
+      ObjectType implicitPrototype, boolean nativeType,
+      TemplateTypeMap templateTypeMap, boolean anonymousType) {
     super(registry, templateTypeMap);
     this.properties = new PropertyMap();
     this.properties.setParentSource(this);
 
     this.className = className;
     this.nativeType = nativeType;
+    this.anonymousType = anonymousType;
     if (nativeType || implicitPrototype != null) {
       setImplicitPrototype(implicitPrototype);
     } else {
@@ -311,6 +358,10 @@ class PrototypeObjectType extends ObjectType {
   @Override
   public boolean hasReferenceName() {
     return className != null || ownerFunction != null;
+  }
+
+  public boolean isAnonymous() {
+    return anonymousType;
   }
 
   @Override

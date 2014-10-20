@@ -47,6 +47,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
     parseTypeInfo = true;
+    enableClosurePass();
     enableTypeCheck(CheckLevel.WARNING);
   }
 
@@ -1058,6 +1059,62 @@ public class CheckAccessControlsTest extends CompilerTestCase {
             "baz/quux.js",
             "foo.bar();")),
     null, BAD_PACKAGE_PROPERTY_ACCESS);
+  }
+
+  public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace1() {
+    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
+    // like @inherited.
+    compareJsDoc = false;
+
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo.js",
+            "goog.provide('foo');"),
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            "  * @fileoverview\n" +
+            "  * @package\n" +
+            "  */\n" +
+            "goog.provide('foo.bar');"),
+        SourceFile.fromCode(
+            "bar.js",
+            "goog.require('foo')")),
+        ImmutableList.of(
+            SourceFile.fromCode("foo.js", "var foo={};"),
+            SourceFile.fromCode("foo/bar.js", "foo.bar={};"),
+            SourceFile.fromCode("bar.js", "")),
+        null, null);
+
+    compareJsDoc = true;
+  }
+
+  public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace2() {
+    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
+    // like @inherited.
+    compareJsDoc = false;
+
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            "  * @fileoverview\n" +
+            "  * @package\n" +
+            "  */\n" +
+            "goog.provide('foo.bar');"),
+        SourceFile.fromCode(
+            "foo.js",
+            "goog.provide('foo');"),
+        SourceFile.fromCode(
+            "bar.js",
+            "goog.require('foo')")),
+        ImmutableList.of(
+            SourceFile.fromCode("foo/bar.js", "var foo={};foo.bar={};"),
+            SourceFile.fromCode("foo.js", ""),
+            SourceFile.fromCode("bar.js", "")),
+        null, null);
+
+    compareJsDoc = true;
   }
 
   public void testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {

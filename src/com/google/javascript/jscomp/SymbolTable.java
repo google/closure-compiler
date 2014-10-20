@@ -1669,7 +1669,7 @@ public final class SymbolTable
         return;
       }
       Visibility v = AccessControlUtils.getEffectiveNameVisibility(
-          var, fileVisibilityMap);
+          n ,var, fileVisibilityMap);
       if (v == null) {
         return;
       }

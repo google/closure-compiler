@@ -427,7 +427,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     Visibility v = checkPrivateNameConvention(
         AccessControlUtils.getEffectiveNameVisibility(
-            var, defaultVisibilityForFiles), name);
+            name, var, defaultVisibilityForFiles), name);
 
     switch (v) {
       case PACKAGE:
