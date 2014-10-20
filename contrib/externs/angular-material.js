@@ -19,3 +19,98 @@
  * @fileoverview an @externs file for the Angular Material library
  *
  */
+
+
+/**
+ * @const {Object}
+ */
+var md = {};
+
+
+/******************************************************************************
+ * $dialog Service
+ *****************************************************************************/
+
+
+/** @constructor */
+md.$dialog = function() {};
+
+
+/**
+ * @typedef {{
+ *   templateUrl: string=,
+ *   template: string=,
+ *   targetEvent: DOMClickEvent=,
+ *   hasBackdrop: boolean=,
+ *   clickOutsideToClose: boolean=,
+ *   escapeToClose: boolean=,
+ *   controller: (Function|string)=,
+ *   locals: Object,=
+ *   resolve: Object=,
+ *   controllerAs: string=,
+ *   parent: Element=
+ * }}
+ */
+md.$dialog.options;
+
+
+/**
+ * @param {md.$dialog.options} options
+ * @return {angular.$q.Promise}
+ */
+md.$dialog.prototype.show = function(options) {};
+
+
+/**
+ * @type {function(*)}
+ */
+md.$dialog.prototype.hide = function() {};
+
+
+/**
+ * @type {function(*)}
+ */
+md.$dialog.prototype.cancel = function() {};
+
+
+/******************************************************************************
+ * $toast Service
+ *****************************************************************************/
+
+
+/** @constructor */
+md.$toast = function() {};
+
+
+/**
+ * @typedef {{
+ *   templateUrl: string=,
+ *   template: string=,
+ *   hideDelay: number=,
+ *   position: string=,
+ *   controller: (Function|string)=,
+ *   locals: Object=,
+ *   resolve: Object=,
+ *   controllerAs: string=
+ * }}
+ */
+md.$toast.options;
+
+
+/**
+ * @param {md.$toast.options} options
+ * @return {angular.$q.Promise}
+ */
+md.$toast.prototype.show = function(options) {};
+
+
+/**
+ * @type {function(*)}
+ */
+md.$toast.prototype.hide = function() {};
+
+
+/**
+ * @type {function(*)}
+ */
+md.$toast.prototype.cancel = function() {};
