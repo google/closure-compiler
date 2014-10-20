@@ -6190,6 +6190,35 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "Child.prototype.method = function(x, y){ return y; };");
   }
 
+  public void testGenericsVariance() {
+    // Array generic parameter is co-variant
+    checkNoWarnings(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "var /** Array<Foo> */ a = [new Bar];");
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "var /** Array<Bar> */ a = [new Foo];",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // TODO(blickly): Make other generics invariant to match old type inference
+    checkNoWarnings(
+        "/** @constructor @param {T} x @template T */ function Gen(x){}\n" +
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "var /** Gen<Foo> */ a = new Gen(new Bar);");
+
+    typeCheck(
+        "/** @constructor @param {T} x @template T */ function Gen(x){}\n" +
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor @extends {Foo} */ function Bar() {}\n" +
+        "var /** Gen<Bar> */ a = new Gen(new Foo);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+  }
+
   public void testInferredArrayGenerics() {
     typeCheck(
         "/** @const */ var x = [];",
@@ -6626,6 +6655,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @type {[Object]} */ var arr = [];",
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+  }
+
+  public void testGenericInterfaceDoesntCrash() {
+    checkNoWarnings(
+        "/** @const */ var ns = {};\n" +
+        "/** @interface @template T */\n" +
+        "ns.Interface = function(){}");
   }
 
   public void testImplementsGenericInterfaceDoesntCrash() {
