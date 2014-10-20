@@ -840,6 +840,7 @@ angular.Module.requires;
  * @typedef {{
  *   $$phase: string,
  *   $apply: function((string|function(!angular.Scope))=):*,
+ *   $applyAsync: function((string|function(!angular.Scope))=),
  *   $broadcast: function(string, ...[*]),
  *   $destroy: function(),
  *   $digest: function(),
