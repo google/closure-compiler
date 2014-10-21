@@ -134,7 +134,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
         importMap.put(child.getString(),
             new ModuleOriginalNamePair(moduleName, child.getString()));
         namesToRequire.add(child.getString());
-      } else {
+      } else if (child.getType() == Token.IMPORT_SPECS) {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
           namesToRequire.add(origName);
@@ -148,6 +148,10 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
                 new ModuleOriginalNamePair(moduleName, origName));
           }
         }
+      } else {
+        Preconditions.checkState(child.getType() == Token.IMPORT_STAR);
+        compiler.report(t.makeError(importDecl,
+            Es6ToEs3Converter.CANNOT_CONVERT_YET, "import *"));
       }
     }
 

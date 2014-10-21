@@ -109,7 +109,7 @@ public class Node implements Cloneable, Serializable {
       ARROW_FN           = 60,
       YIELD_FOR          = 61,    // Set if a yield is a "yield all"
       EXPORT_DEFAULT     = 62,    // Set if a export is a "default" export
-      EXPORT_ALL_FROM    = 63,    // Set if a export is a "*" export
+      EXPORT_ALL_FROM    = 63,    // Set if an export is a "*"
       IS_CONSTANT_VAR    = 64,    // A lexical variable is inferred const
       GENERATOR_MARKER   = 65,    // Used by the ES6-to-ES3 translator.
       GENERATOR_SAFE     = 66,    // Used by the ES6-to-ES3 translator.

@@ -174,20 +174,21 @@ public class Token {
         IMPORT         = 165, // modules
         IMPORT_SPECS   = 166,
         IMPORT_SPEC    = 167,
-        EXPORT         = 168,
-        EXPORT_SPECS   = 169,
-        EXPORT_SPEC    = 170,
-        MODULE         = 171,
+        IMPORT_STAR    = 168, // "* as name", called NameSpaceImport in the spec.
+        EXPORT         = 169,
+        EXPORT_SPECS   = 170,
+        EXPORT_SPEC    = 171,
+        MODULE         = 172,
 
-        REST           = 172, // "..." in formal parameters, or an array pattern.
-        SPREAD         = 173, // "..." in a call expression, or an array literal.
+        REST           = 173, // "..." in formal parameters, or an array pattern.
+        SPREAD         = 174, // "..." in a call expression, or an array literal.
 
-        COMPUTED_PROP  = 174,
+        COMPUTED_PROP  = 175,
 
-        TEMPLATELIT     = 175, // template literal
-        TEMPLATELIT_SUB = 176, // template literal substitution
+        TEMPLATELIT     = 176, // template literal
+        TEMPLATELIT_SUB = 177, // template literal substitution
 
-        DEFAULT_VALUE   = 177, // Formal parameter or destructuring element
+        DEFAULT_VALUE   = 178, // Formal parameter or destructuring element
                                // with a default value
 
         // JSDoc-only tokens
@@ -326,6 +327,7 @@ public class Token {
           case IMPORT:          return "IMPORT";
           case IMPORT_SPECS:    return "IMPORT_SPECS";
           case IMPORT_SPEC:     return "IMPORT_SPEC";
+          case IMPORT_STAR:     return "IMPORT_STAR";
           case EXPORT:          return "EXPORT";
           case EXPORT_SPECS:    return "EXPORT_SPECS";
           case EXPORT_SPEC:     return "EXPORT_SPEC";
@@ -457,6 +459,7 @@ public class Token {
       case COLON:           return -1;
       case COMPUTED_PROP:   return 2;
       case IMPORT:          return 3;
+      case IMPORT_STAR:     return 0;
       case YIELD:           return -1;
     }
     throw new IllegalStateException(

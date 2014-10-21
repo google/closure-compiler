@@ -1984,15 +1984,13 @@ public class CodePrinterTest extends TestCase {
   public void testImports() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("import x from\"foo\"");
+    assertPrintSame("import\"foo\"");
     assertPrintSame("import x,{a as b}from\"foo\"");
     assertPrintSame("import{a as b,c as d}from\"foo\"");
     assertPrintSame("import x,{a}from\"foo\"");
     assertPrintSame("import{a,c}from\"foo\"");
-  }
-
-  public void testModuleImports() {
-    languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrint("module x from 'foo'", "module x from\"foo\"");
+    assertPrintSame("import x,*as f from\"foo\"");
+    assertPrintSame("import*as f from\"foo\"");
   }
 
   public void testExports() {

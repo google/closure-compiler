@@ -407,17 +407,20 @@ class CodeGenerator {
 
       case Token.IMPORT:
         add("import");
-        Node specList = first.getNext();
+
+        Node second = first.getNext();
         if (!first.isEmpty()) {
           add(first);
-          if (specList.hasChildren()) {
+          if (!second.isEmpty()) {
             cc.listSeparator();
           }
         }
-        if (specList.hasChildren()) {
-          add(specList);
+        if (!second.isEmpty()) {
+          add(second);
         }
-        add("from");
+        if (!first.isEmpty() || !second.isEmpty()) {
+          add("from");
+        }
         add(last);
         cc.endStatement();
         break;
@@ -441,6 +444,12 @@ class CodeGenerator {
           add("as");
           add(last);
         }
+        break;
+
+      case Token.IMPORT_STAR:
+        add("*");
+        add("as");
+        add(n.getString());
         break;
 
       // CLASS -> NAME,EXPR|EMPTY,BLOCK

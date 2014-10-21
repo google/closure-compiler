@@ -168,13 +168,8 @@ public class Parser {
 
   // ImportDeclaration
   // ExportDeclaration
-  // ModuleDeclaration
   // SourceElement
   private ParseTree parseScriptElement() {
-    if (peekModuleDeclaration()) {
-      return parseModuleDeclaration();
-    }
-
     if (peekImportDeclaration()) {
       return parseImportDeclaration();
     }
@@ -184,29 +179,6 @@ public class Parser {
     }
 
     return parseSourceElement();
-  }
-
-  // module [no LineTerminator here] indentifier from stringliteral ;
-  // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-imports
-  private boolean peekModuleDefinition() {
-    return peekPredefinedString(PredefinedName.MODULE)
-        && !peekImplicitSemiColon(1)
-        && peekId(1)
-        && peekPredefinedString(2, PredefinedName.FROM)
-        && peek(3, TokenType.STRING);
-  }
-
-  // TODO(tbreisacher): Remove this if it gets removed from the spec,
-  // which it probably will be:
-  // http://www.2ality.com/2014/09/es6-modules-final.html#comment-1586114058
-  private ParseTree parseModuleDefinition() {
-    SourcePosition start = getTreeStartLocation();
-    eatPredefinedString(PredefinedName.MODULE);
-    IdentifierToken name = eatId();
-    eatPredefinedString(PredefinedName.FROM);
-    LiteralToken moduleSpecifier = eat(TokenType.STRING).asLiteral();
-    eatPossibleImplicitSemiColon();
-    return new ModuleImportTree(getTreeLocation(start), name, moduleSpecifier);
   }
 
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-imports
@@ -224,22 +196,36 @@ public class Parser {
       eatPossibleImplicitSemiColon();
 
       return new ImportDeclarationTree(
-          getTreeLocation(start), null, null, moduleSpecifier);
+          getTreeLocation(start), null, null, null, moduleSpecifier);
     }
 
-    // import DefaultBinding , ImportSpecifierSet from ModuleSpecifier ;
-    // import DefaultBinding from ModuleSpecifier ;
-    // import ImportSpecifierSet from ModuleSpecifier ;
+    // import ImportedDefaultBinding from ModuleSpecifier
+    // import NameSpaceImport from ModuleSpecifier
+    // import NamedImports from ModuleSpecifier ;
+    // import ImportedDefaultBinding , NameSpaceImport from ModuleSpecifier ;
+    // import ImportedDefaultBinding , NamedImports from ModuleSpecifier ;
     IdentifierToken defaultBindingIdentifier = null;
+    IdentifierToken nameSpaceImportIdentifier = null;
     ImmutableList<ParseTree> identifierSet = null;
+
+    boolean parseExplicitNames = true;
     if (peekId()) {
       defaultBindingIdentifier = eatId();
       if (peek(TokenType.COMMA)) {
         eat(TokenType.COMMA);
+      } else {
+        parseExplicitNames = false;
+      }
+    }
+
+    if (parseExplicitNames) {
+      if (peek(TokenType.STAR)) {
+        eat(TokenType.STAR);
+        eatPredefinedString(PredefinedName.AS);
+        nameSpaceImportIdentifier = eatId();
+      } else {
         identifierSet = parseImportSpecifierSet();
       }
-    } else {
-      identifierSet = parseImportSpecifierSet();
     }
 
     eatPredefinedString(PredefinedName.FROM);
@@ -250,7 +236,7 @@ public class Parser {
 
     return new ImportDeclarationTree(
         getTreeLocation(start),
-        defaultBindingIdentifier, identifierSet, moduleSpecifier);
+        defaultBindingIdentifier, identifierSet, nameSpaceImportIdentifier, moduleSpecifier);
   }
 
   //  ImportSpecifierSet ::= '{' (ImportSpecifier (',' ImportSpecifier)* (,)? )?  '}'
@@ -389,15 +375,6 @@ public class Parser {
     }
     return new ExportSpecifierTree(
         getTreeLocation(start), importedName, destinationName);
-  }
-
-  // ModuleDefinition
-  private boolean peekModuleDeclaration() {
-    return peekModuleDefinition();
-  }
-
-  private ParseTree parseModuleDeclaration() {
-    return parseModuleDefinition();
   }
 
   private boolean peekClassDeclaration() {
@@ -2545,19 +2522,6 @@ public class Parser {
         || peek(TokenType.SEMI_COLON)
         || peek(TokenType.CLOSE_CURLY)
         || peek(TokenType.END_OF_FILE);
-  }
-
-  /**
-   * Returns true if an implicit or explicit semi colon is at the current location.
-   */
-  private boolean peekImplicitSemiColon(int lookahead) {
-    int last = (lookahead == 0) ? getLastLine() :
-      peekToken(lookahead - 1).location.end.line;
-    int next = peekToken(lookahead).location.start.line;
-    return next > last
-        || peek(lookahead, TokenType.SEMI_COLON)
-        || peek(lookahead, TokenType.CLOSE_CURLY)
-        || peek(lookahead, TokenType.END_OF_FILE);
   }
 
   /**

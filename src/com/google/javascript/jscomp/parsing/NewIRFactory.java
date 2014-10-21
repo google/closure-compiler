@@ -2079,10 +2079,14 @@ class NewIRFactory {
     @Override
     Node processImportDecl(ImportDeclarationTree tree) {
       maybeWarnEs6Feature(tree, "modules");
-      return newNode(Token.IMPORT,
-          transformOrEmpty(tree.defaultBindingIndentifier, tree),
-          transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList),
-          processString(tree.moduleSpecifier));
+
+      Node firstChild = transformOrEmpty(tree.defaultBindingIdentifier, tree);
+      Node secondChild = (tree.nameSpaceImportIdentifier != null)
+          ? newStringNode(Token.IMPORT_STAR, tree.nameSpaceImportIdentifier.value)
+          : transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList);
+      Node thirdChild = processString(tree.moduleSpecifier);
+
+      return newNode(Token.IMPORT, firstChild, secondChild, thirdChild);
     }
 
     @Override

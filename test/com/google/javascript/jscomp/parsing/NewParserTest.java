@@ -2480,12 +2480,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     parse("import 'someModule'");
     parse("import d from './someModule'");
+    parse("import {} from './someModule'");
     parse("import {x, y} from './someModule'");
     parse("import {x as x1, y as y1} from './someModule'");
-
-    // Not in the spec yet, but will be soon, per
-    // http://www.2ality.com/2014/09/es6-modules-final.html
-    parseError("import * as sm from './someModule'", "'{' expected");
+    parse("import {x as x1, y as y1, } from './someModule'");
+    parse("import * as sm from './someModule'");
   }
 
   public void testShebang() {
