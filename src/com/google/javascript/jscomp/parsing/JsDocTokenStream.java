@@ -236,7 +236,8 @@ class JsDocTokenStream {
 
   private String getStringFromBuffer() {
     tokenEnd = cursor;
-    return new String(stringBuffer, 0, stringBufferTop);
+    String s = new String(stringBuffer, 0, stringBufferTop);
+    return s.intern();
   }
 
   private void addToString(int c) {
