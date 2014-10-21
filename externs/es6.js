@@ -695,9 +695,9 @@ var IThenable = function() {};
 
 
 /**
- * @param {(function(TYPE):
+ * @param {?(function(TYPE):
  *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
- * @param {(function(*): *)=} opt_onRejected
+ * @param {?(function(*): *)=} opt_onRejected
  * @return {!IThenable.<RESULT>}
  * @template RESULT
  */
@@ -750,9 +750,9 @@ Promise.race = function(iterable) {};
 
 
 /**
- * @param {(function(TYPE):
+ * @param {?(function(TYPE):
  *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
- * @param {(function(*): *)=} opt_onRejected
+ * @param {?(function(*): *)=} opt_onRejected
  * @return {!Promise.<RESULT>}
  * @template RESULT
  * @override
