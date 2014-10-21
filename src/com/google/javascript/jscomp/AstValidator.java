@@ -322,22 +322,26 @@ public class AstValidator implements CompilerPass {
     validateEs6Feature("import statement", n);
     validateNodeType(Token.IMPORT, n);
     validateChildCount(n, Token.arity(Token.IMPORT));
-    if (n.getFirstChild().isEmpty()) {
-      if (n.getChildAtIndex(1).isEmpty()) { // import "mod"
-        validateString(n.getChildAtIndex(2));
-      } else {  // import {a as foo} from "mod"
-        validateImportSpecifiers(n.getChildAtIndex(1));
-        validateString(n.getChildAtIndex(2));
-      }
-    } else if (n.getFirstChild().isName()) {
+
+    if (n.getFirstChild().isName()) {
       validateName(n.getFirstChild());
-      if (n.getChildAtIndex(1).isEmpty()) { // import a from "mod"
-        validateString(n.getChildAtIndex(2));
-      } else { // import a, {b as bar} from "mod"
-        validateImportSpecifiers(n.getChildAtIndex(1));
-        validateString(n.getChildAtIndex(2));
-      }
+    } else {
+      validateNodeType(Token.EMPTY, n.getFirstChild());
     }
+
+    Node secondChild = n.getChildAtIndex(1);
+    switch (secondChild.getType()) {
+      case Token.IMPORT_SPECS:
+        validateImportSpecifiers(secondChild);
+        break;
+      case Token.IMPORT_STAR:
+        validateNonEmptyString(secondChild);
+        break;
+      default:
+        validateNodeType(Token.EMPTY, secondChild);
+    }
+
+    validateString(n.getChildAtIndex(2));
   }
 
   private void validateImportSpecifiers(Node n) {

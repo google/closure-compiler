@@ -79,6 +79,11 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
     ));
   }
 
+  public void testImportStar() {
+    test("import * as name from 'test'; use(name.foo);",
+        "goog.require('module$test'); use(module$test.foo)");
+  }
+
   public void testExport() {
     test("export var a = 1, b = 2;", Joiner.on('\n').join(
         "goog.provide('module$testcode');",
