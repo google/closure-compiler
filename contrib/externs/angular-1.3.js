@@ -1602,7 +1602,7 @@ angular.$location.url = function(opt_url) {};
  *   hashPrefix:
  *       function(string=): (string|!angular.$locationProvider),
  *   html5Mode:
- *       function(boolean=): (boolean|!angular.$locationProvider)
+ *       function((boolean|Object)=): (Object|!angular.$locationProvider)
  *   }}
  */
 angular.$locationProvider;
@@ -1614,10 +1614,10 @@ angular.$locationProvider;
 angular.$locationProvider.hashPrefix = function(opt_prefix) {};
 
 /**
- * @param {boolean=} opt_enabled
- * @return {boolean|!angular.$locationProvider}
+ * @param {(boolean|Object)=} opt_mode
+ * @return {Object|!angular.$locationProvider}
  */
-angular.$locationProvider.html5Mode = function(opt_enabled) {};
+angular.$locationProvider.html5Mode = function(opt_mode) {};
 
 /******************************************************************************
  * $log Service
