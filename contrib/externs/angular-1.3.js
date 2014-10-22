@@ -1030,43 +1030,69 @@ angular.$animate;
 
 /**
  * @param {JQLiteSelector} element
+ * @param {Object} from
+ * @param {Object} to
+ * @param {string=} opt_className
+ * @param {Object.<string, *>=} opt_options
+ * @return {!angular.$q.Promise}
+ */
+angular.$animate.prototype.animate = function(
+    element, from, to, opt_className, opt_options) {};
+
+/**
+ * @param {JQLiteSelector} element
  * @param {JQLiteSelector} parentElement
  * @param {JQLiteSelector} afterElement
- * @param {function()=} opt_doneCallback
+ * @param {Object.<string, *>=} opt_options
+ * @return {!angular.$q.Promise}
  */
 angular.$animate.prototype.enter = function(
-    element, parentElement, afterElement, opt_doneCallback) {};
+    element, parentElement, afterElement, opt_options) {};
 
 /**
  * @param {JQLiteSelector} element
- * @param {function()=} opt_doneCallback
+ * @param {Object.<string, *>=} opt_options
+ * @return {!angular.$q.Promise}
  */
-angular.$animate.prototype.leave = function(element, opt_doneCallback) {};
+angular.$animate.prototype.leave = function(element, opt_options) {};
 
 /**
  * @param {JQLiteSelector} element
  * @param {JQLiteSelector} parentElement
  * @param {JQLiteSelector} afterElement
- * @param {function()=} opt_doneCallback
+ * @param {Object.<string, *>=} opt_options
+ * @return {!angular.$q.Promise}
  */
 angular.$animate.prototype.move = function(
-    element, parentElement, afterElement, opt_doneCallback) {};
+    element, parentElement, afterElement, opt_options) {};
 
 /**
  * @param {JQLiteSelector} element
  * @param {string} className
- * @param {function()=} opt_doneCallback
+ * @param {Object.<string, *>=} opt_options
+ * @return {!angular.$q.Promise}
  */
 angular.$animate.prototype.addClass = function(
-    element, className, opt_doneCallback) {};
+    element, className, opt_options) {};
 
 /**
  * @param {JQLiteSelector} element
  * @param {string} className
- * @param {function()=} opt_doneCallback
+ * @param {Object.<string, *>=} opt_options
+ * @return {!angular.$q.Promise}
  */
 angular.$animate.prototype.removeClass = function(
-    element, className, opt_doneCallback) {};
+    element, className, opt_options) {};
+
+/**
+ * @param {JQLiteSelector} element
+ * @param {string} add
+ * @param {string} remove
+ * @param {Object.<string, *>=} opt_options
+ * @return {!angular.$q.Promise}
+ */
+angular.$animate.prototype.setClass = function(
+    element, add, remove, opt_options) {};
 
 /**
  * @param {boolean=} opt_value
@@ -1074,6 +1100,11 @@ angular.$animate.prototype.removeClass = function(
  * @return {boolean}
  */
 angular.$animate.prototype.enabled = function(opt_value, opt_element) {};
+
+/**
+ * @param {angular.$q.Promise} animationPromise
+ */
+angular.$animate.prototype.cancel = function(animationPromise) {};
 
 /******************************************************************************
  * $animateProvider Service

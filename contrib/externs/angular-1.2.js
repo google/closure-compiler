@@ -1065,6 +1065,15 @@ angular.$animate.prototype.removeClass = function(
     element, className, opt_doneCallback) {};
 
 /**
+ * @param {JQLiteSelector} element
+ * @param {string} add
+ * @param {string} remove
+ * @param {function()=} opt_doneCallback
+ */
+angular.$animate.prototype.setClass = function(
+    element, add, remove, opt_doneCallback) {};
+
+/**
  * @param {boolean=} opt_value
  * @param {JQLiteSelector=} opt_element
  * @return {boolean}
