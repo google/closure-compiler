@@ -96,7 +96,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       DiagnosticType.error(
           "JSC_BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY",
           "Overridden property {0} in file with fileoverview visibility {1}" +
-          " must explicity redeclare superclass visibility");
+          " must explicitly redeclare superclass visibility");
 
   static final DiagnosticType PRIVATE_OVERRIDE =
       DiagnosticType.warning(
