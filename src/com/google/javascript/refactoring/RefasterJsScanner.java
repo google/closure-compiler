@@ -67,7 +67,8 @@ public final class RefasterJsScanner extends Scanner {
   public void loadRefasterJsTemplate(String refasterjsTemplate) throws IOException  {
     Preconditions.checkState(
         templateJs == null, "Can't load RefasterJs template since a template is already loaded.");
-    this.templateJs = RefasterJsScanner.class.getResource(refasterjsTemplate) != null
+    this.templateJs =
+        Thread.currentThread().getContextClassLoader().getResource(refasterjsTemplate) != null
         ? Resources.toString(Resources.getResource(refasterjsTemplate), UTF_8)
         : Files.toString(new File(refasterjsTemplate), UTF_8);
   }
