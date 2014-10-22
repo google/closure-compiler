@@ -38,17 +38,17 @@ md.$dialog = function() {};
 
 /**
  * @typedef {{
- *   templateUrl: string=,
- *   template: string=,
- *   targetEvent: DOMClickEvent=,
- *   hasBackdrop: boolean=,
- *   clickOutsideToClose: boolean=,
- *   escapeToClose: boolean=,
- *   controller: (Function|string)=,
- *   locals: Object,=
- *   resolve: Object=,
- *   controllerAs: string=,
- *   parent: Element=
+ *   templateUrl: (string|undefined),
+ *   template: (string|undefined),
+ *   targetEvent: (Object|undefined),
+ *   hasBackdrop: (boolean|undefined),
+ *   clickOutsideToClose: (boolean|undefined),
+ *   escapeToClose: (boolean|undefined),
+ *   controller: (Function|string|undefined),
+ *   locals: (Object|undefined),
+ *   resolve: (Object|undefined),
+ *   controllerAs: (string|undefined),
+ *   parent: (Element|undefined)
  * }}
  */
 md.$dialog.options;
@@ -84,14 +84,14 @@ md.$toast = function() {};
 
 /**
  * @typedef {{
- *   templateUrl: string=,
- *   template: string=,
- *   hideDelay: number=,
- *   position: string=,
- *   controller: (Function|string)=,
- *   locals: Object=,
- *   resolve: Object=,
- *   controllerAs: string=
+ *   templateUrl: (string|undefined),
+ *   template: (string|undefined),
+ *   hideDelay: (number|undefined),
+ *   position: (string|undefined),
+ *   controller: (Function|string|undefined),
+ *   locals: (Object|undefined),
+ *   resolve: (Object|undefined),
+ *   controllerAs: (string|undefined)
  * }}
  */
 md.$toast.options;
