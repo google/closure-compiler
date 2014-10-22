@@ -25,6 +25,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +37,7 @@ import java.nio.file.Files;
  *
  * @author sayrer@gmail.com (Rob Sayre)
  */
+@RunWith(JUnit4.class)
 
 public class ES6ModuleLoaderFileSystemTest {
   private ES6ModuleLoader loader;
