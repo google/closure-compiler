@@ -1630,10 +1630,20 @@ angular.$location.url = function(opt_url) {};
 
 /**
  * @typedef {{
+ *   enabled: (boolean|undefined),
+ *   requireBase: (boolean|undefined)
+ * }}
+ */
+angular.$locationProvider.html5ModeConfig;
+
+/**
+ * @typedef {{
  *   hashPrefix:
  *       function(string=): (string|!angular.$locationProvider),
  *   html5Mode:
- *       function(boolean=): (boolean|!angular.$locationProvider)
+ *       function(
+ *           (boolean|angular.$locationProvider.html5ModeConfig)=):
+ *               (boolean|!angular.$locationProvider)
  *   }}
  */
 angular.$locationProvider;
