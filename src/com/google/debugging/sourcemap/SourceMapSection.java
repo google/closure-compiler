@@ -73,16 +73,6 @@ public class SourceMapSection {
   }
 
   /**
-   * @return the name of the map
-   * @deprecated
-   */
-  @Deprecated
-  public String getSectionUrl() {
-    assert(type.equals(SectionType.URL));
-    return value;
-  }
-
-  /**
    * @return the value that represents the map for this section.
    */
   public String getSectionValue() {

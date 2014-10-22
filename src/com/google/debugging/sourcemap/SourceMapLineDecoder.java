@@ -28,18 +28,7 @@ import java.util.List;
  */
 class SourceMapLineDecoder {
 
-  /**
-   * Decodes a line in a character map into a list of mapping IDs.
-   */
-  static List<Integer> decodeLine(String lineSource) {
-    return decodeLine(new StringParser(lineSource));
-  }
-
   private SourceMapLineDecoder() {}
-
-  static LineEntry decodeLineEntry(String in, int lastId) {
-    return decodeLineEntry(new StringParser(in), lastId);
-  }
 
   private static LineEntry decodeLineEntry(StringParser reader, int lastId) {
     int repDigits = 0;
