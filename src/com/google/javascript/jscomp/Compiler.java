@@ -1117,13 +1117,6 @@ public class Compiler extends AbstractCompiler {
     return inputsById.put(id, input);
   }
 
-  /** Add a source input dynamically. Intended for incremental compilation. */
-  void addIncrementalSourceAst(JsAst ast) {
-    InputId id = ast.getInputId();
-    Preconditions.checkState(getInput(id) == null, "Duplicate input %s", id.getIdName());
-    putCompilerInput(id, new CompilerInput(ast));
-  }
-
   /**
    * Replace a source input dynamically. Intended for incremental
    * re-compilation.
@@ -1222,10 +1215,6 @@ public class Compiler extends AbstractCompiler {
       typeRegistry = new JSTypeRegistry(oldErrorReporter);
     }
     return typeRegistry;
-  }
-
-  final void setTypeRegistry(JSTypeRegistry typeRegistry) {
-    this.typeRegistry = typeRegistry;
   }
 
   @Override
@@ -2008,12 +1997,6 @@ public class Compiler extends AbstractCompiler {
   public void processDefines() {
     (new DefaultPassConfig(options)).processDefines.create(this)
         .process(externsRoot, jsRoot);
-  }
-
-  boolean isInliningForbidden() {
-    return options.propertyRenaming == PropertyRenamingPolicy.HEURISTIC ||
-        options.propertyRenaming ==
-            PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC;
   }
 
   /** Control Flow Analysis. */

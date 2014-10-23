@@ -469,29 +469,6 @@ class TypeValidator {
   }
 
   /**
-   * Expect that the first type can override a property of the second
-   * type.
-   *
-   * @param t The node traversal.
-   * @param n The node to issue warnings on.
-   * @param overridingType The overriding type.
-   * @param hiddenType The type of the property being overridden.
-   * @param propertyName The name of the property, for use in the
-   *     warning message.
-   * @param ownerType The type of the owner of the property, for use
-   *     in the warning message.
-   */
-  void expectCanOverride(NodeTraversal t, Node n, JSType overridingType,
-      JSType hiddenType, String propertyName, JSType ownerType) {
-    if (!overridingType.isSubtype(hiddenType)) {
-      registerMismatch(overridingType, hiddenType,
-          report(t.makeError(n, HIDDEN_PROPERTY_MISMATCH, propertyName,
-            ownerType.toString(), hiddenType.toString(),
-            overridingType.toString())));
-    }
-  }
-
-  /**
    * Expect that the first type is the direct superclass of the second type.
    *
    * @param t The node traversal.

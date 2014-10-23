@@ -1206,10 +1206,6 @@ class CodeGenerator {
     addList(firstInList, true, Context.OTHER);
   }
 
-  void addList(Node firstInList, boolean isArrayOrFunctionArgument) {
-    addList(firstInList, isArrayOrFunctionArgument, Context.OTHER);
-  }
-
   void addList(Node firstInList, boolean isArrayOrFunctionArgument,
                Context lhsContext) {
     for (Node n = firstInList; n != null; n = n.getNext()) {
@@ -1380,13 +1376,6 @@ class CodeGenerator {
   /** Escapes regular expression */
   String regexpEscape(String s, CharsetEncoder outputCharsetEncoder) {
     return strEscape(s, '/', "\"", "'", "\\", outputCharsetEncoder, false, true);
-  }
-
-  /**
-   * Escapes the given string to a double quoted (") JavaScript/JSON string
-   */
-  String escapeToDoubleQuotedJsString(String s) {
-    return strEscape(s, '"',  "\\\"", "\'", "\\\\", null, false, false);
   }
 
   /* If the user doesn't want to specify an output charset encoder, assume

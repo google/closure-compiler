@@ -509,18 +509,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       this.in = in;
     }
 
-    List<L> getOut() {
-      return out;
-    }
-
-    void setOut(List<L> out) {
-      Preconditions.checkNotNull(out);
-      for (L item : out) {
-        Preconditions.checkNotNull(item);
-      }
-      this.out = out;
-    }
-
     @Override
     public String toString() {
       return String.format("IN: %s OUT: %s", in, out);

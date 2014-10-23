@@ -159,10 +159,6 @@ abstract class CodeConsumer {
     statementStarted = true;
   }
 
-  void endFunction() {
-    endFunction(false);
-  }
-
   void endFunction(boolean statementContext) {
     sawFunction = true;
     if (statementContext) {

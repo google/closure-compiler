@@ -95,10 +95,6 @@ class MemoizedScopeCreator
     return Collections.unmodifiableCollection(temp);
   }
 
-  Scope getScopeIfMemoized(Node n) {
-    return scopes.get(n);
-  }
-
   /**
    * Removes all scopes with root nodes from a given script file.
    *

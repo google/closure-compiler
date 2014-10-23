@@ -90,21 +90,6 @@ public class DotFormatter {
    * Converts an AST to dot representation.
    * @param n the root of the AST described in the dot formatted string
    * @param inCFG Control Flow Graph.
-   * @param printAnnotations print annotations.
-   * @return the dot representation of the AST
-   */
-  static String toDot(
-      Node n, ControlFlowGraph<Node> inCFG, boolean printAnnotations)
-      throws IOException  {
-    StringBuilder builder = new StringBuilder();
-    new DotFormatter(n, inCFG, builder, printAnnotations);
-    return builder.toString();
-  }
-
-  /**
-   * Converts an AST to dot representation.
-   * @param n the root of the AST described in the dot formatted string
-   * @param inCFG Control Flow Graph.
    * @return the dot representation of the AST
    */
   static String toDot(Node n, ControlFlowGraph<Node> inCFG)

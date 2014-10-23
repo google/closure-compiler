@@ -1278,10 +1278,6 @@ class GlobalNamespace
       return module;
     }
 
-    String getSourceName() {
-      return source == null ? "" : source.getName();
-    }
-
     Ref getTwin() {
       return twin;
     }

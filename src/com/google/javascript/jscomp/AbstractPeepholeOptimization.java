@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 
@@ -146,22 +145,4 @@ abstract class AbstractPeepholeOptimization {
     return compiler.getCodingConvention();
   }
 
-  /**
-   * Check if the specified node is null or is still in the AST.
-   */
-  @VisibleForTesting
-  static Node validateResult(Node n) {
-    done: {
-      if (n != null && !n.isScript()
-          && (!n.isBlock() || !n.isSyntheticBlock())) {
-        for (Node parent : n.getAncestors()) {
-          if (parent.isScript()) {
-            break done;
-          }
-        }
-        Preconditions.checkState(false);
-      }
-    }
-    return n;
-  }
 }

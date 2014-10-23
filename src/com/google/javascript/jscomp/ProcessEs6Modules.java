@@ -45,8 +45,6 @@ import java.util.regex.Pattern;
  */
 public class ProcessEs6Modules extends AbstractPostOrderCallback {
   private static final String MODULE_SLASH = ES6ModuleLoader.MODULE_SLASH;
-  public static final String DEFAULT_FILENAME_PREFIX =
-      "." + ES6ModuleLoader.MODULE_SLASH;
 
   private static final String MODULE_NAME_SEPARATOR = "\\$";
   private static final String MODULE_NAME_PREFIX = "module$";

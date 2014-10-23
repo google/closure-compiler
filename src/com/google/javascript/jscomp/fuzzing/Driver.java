@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.CompilerInput;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.JSModule;
 import com.google.javascript.jscomp.Result;
-import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SyntheticAst;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.rhino.Node;
@@ -103,13 +102,6 @@ public class Driver {
 
   private Logger logger;
   private JsonObject config;
-
-  public Result compile(String code) throws IOException {
-    Compiler.setLoggingLevel(level.getLevel());
-    Compiler compiler = new Compiler();
-    return compiler.compile(CommandLineRunner.getDefaultExterns(),
-        Arrays.asList(SourceFile.fromCode("[fuzzedCode]", code)), getOptions());
-  }
 
   public Result compile(Node script) throws IOException {
     CompilerInput input = new CompilerInput(new SyntheticAst(script));

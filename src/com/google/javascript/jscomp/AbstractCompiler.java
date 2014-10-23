@@ -279,13 +279,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   }
 
   /**
-   * Returns the parser configuration for the default context.
-   */
-  final Config getParserConfig() {
-    return getParserConfig(ConfigContext.DEFAULT);
-  }
-
-  /**
    * Returns the parser configuration for the specified context.
    */
   abstract Config getParserConfig(ConfigContext context);

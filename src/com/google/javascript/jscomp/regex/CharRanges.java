@@ -138,10 +138,6 @@ final class CharRanges {
     // =>  (idx & 1) == 0
   }
 
-  public int minSetBit() {
-    return ranges.length >= 0 ? ranges[0] : Integer.MIN_VALUE;
-  }
-
   public boolean isEmpty() {
     return ranges.length == 0;
   }

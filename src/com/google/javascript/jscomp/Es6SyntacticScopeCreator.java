@@ -261,19 +261,6 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     }
   }
 
-
-  /**
-   * Generates an untyped global scope from the root of AST of compiler (which
-   * includes externs).
-   *
-   * @param compiler The compiler for which the scope is generated.
-   * @return The new untyped global scope generated as a result of this call.
-   */
-  static Scope generateUntypedTopScope(AbstractCompiler compiler) {
-    return new Es6SyntacticScopeCreator(compiler).createScope(compiler.getRoot(),
-        null);
-  }
-
   /**
    * Determines whether the name should be declared at current lexical scope.
    * Assume the parent node is a BLOCK, FOR, FOR_OF, SCRIPT or LABEL.

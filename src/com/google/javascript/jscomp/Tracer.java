@@ -287,19 +287,6 @@ final class Tracer {
   }
 
   /**
-   * Construct a tracer whose type is based on the short name of the object
-   * @param object   Object to use as type name
-   * @param comment  A comment
-   * @return  new Tracer.
-   */
-  static Tracer shortName(Object object, String comment) {
-    if (object == null) {
-      return new Tracer(comment);
-    }
-    return new Tracer(object.getClass().getSimpleName(), comment);
-  }
-
-  /**
    * Converts 'v' to a string and pads it with up to 16 spaces for
    * improved alignment.
    * @param v The value to convert.
