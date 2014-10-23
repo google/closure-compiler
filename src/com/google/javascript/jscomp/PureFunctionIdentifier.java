@@ -40,8 +40,10 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -331,12 +333,12 @@ class PureFunctionIdentifier implements CompilerPass {
             flags.setMutatesArguments();
           }
 
-          if (functionInfo.functionThrows) {
+          if (functionInfo.functionThrows()) {
             flags.setThrows();
           }
 
           if (!callNode.isNew()) {
-            if (functionInfo.taintsThis) {
+            if (functionInfo.taintsThis()) {
               // A FunctionInfo for "f" maps to both "f()" and "f.call()" nodes.
               if (isCallOrApply(callNode)) {
                 flags.setMutatesArguments();
@@ -346,7 +348,7 @@ class PureFunctionIdentifier implements CompilerPass {
             }
           }
 
-          if (functionInfo.taintsReturn) {
+          if (functionInfo.taintsReturn()) {
             flags.setReturnsTainted();
           }
 
@@ -500,8 +502,8 @@ class PureFunctionIdentifier implements CompilerPass {
 
         boolean param = v.getParentNode().isParamList();
         if (param &&
-            !sideEffectInfo.blacklisted.contains(v) &&
-            sideEffectInfo.taintedLocals.contains(v)) {
+            !sideEffectInfo.blacklisted().contains(v) &&
+            sideEffectInfo.taintedLocals().contains(v)) {
           sideEffectInfo.setTaintsArguments();
           continue;
         }
@@ -510,13 +512,13 @@ class PureFunctionIdentifier implements CompilerPass {
         // Parameters and catch values come can from other scopes.
         if (v.getParentNode().isVar()) {
           // TODO(johnlenz): create a useful parameter list
-          sideEffectInfo.knownLocals.add(v.getName());
+//           sideEffectInfo.addKnownLocal(v.getName());
           localVar = true;
         }
 
         // Take care of locals that might have been tainted.
-        if (!localVar || sideEffectInfo.blacklisted.contains(v)) {
-          if (sideEffectInfo.taintedLocals.contains(v)) {
+        if (!localVar || sideEffectInfo.blacklisted().contains(v)) {
+          if (sideEffectInfo.taintedLocals().contains(v)) {
             // If the function has global side-effects
             // don't bother with the local side-effects.
             sideEffectInfo.setTaintsUnknown();
@@ -526,8 +528,8 @@ class PureFunctionIdentifier implements CompilerPass {
         }
       }
 
-      sideEffectInfo.taintedLocals = null;
-      sideEffectInfo.blacklisted = null;
+      sideEffectInfo.taintedLocals = Collections.emptySet();
+      sideEffectInfo.blacklisted = Collections.emptySet();
     }
 
 
@@ -883,41 +885,117 @@ class PureFunctionIdentifier implements CompilerPass {
    * list of calls that appear in a function's body.
    */
   private static class FunctionInformation {
-    private final boolean extern;
-    private final List<Node> callsInFunctionBody = Lists.newArrayList();
-    private Set<Var> blacklisted = Sets.newHashSet();
-    private Set<Var> taintedLocals = Sets.newHashSet();
-    private Set<String> knownLocals = Sets.newHashSet();
-    private boolean pureFunction = false;
-    private boolean functionThrows = false;
-    private boolean taintsGlobalState = false;
-    private boolean taintsThis = false;
-    private boolean taintsArguments = false;
-    private boolean taintsUnknown = false;
-    private boolean taintsReturn = false;
+    private List<Node> callsInFunctionBody = null;
+    private Set<Var> blacklisted = null;
+    private Set<Var> taintedLocals = null;
+//     private Set<String> knownLocals = null;
+    private int bitmask = 0;
+
+    private static final int EXTERN_MASK = 1 << 0;
+    private static final int PURE_FUNCTION_MASK = 1 << 1;
+    private static final int FUNCTION_THROWS_MASK = 1 << 2;
+    private static final int TAINTS_GLOBAL_STATE_MASK = 1 << 3;
+    private static final int TAINTS_THIS_MASK = 1 << 4;
+    private static final int TAINTS_ARGUMENTS_MASK = 1 << 5;
+    private static final int TAINTS_UNKNOWN_MASK = 1 << 6;
+    private static final int TAINTS_RETURN_MASK = 1 << 7;
+
+    private void setMask(int mask, boolean value) {
+      if (value) {
+        bitmask |= mask;
+      } else {
+        bitmask &= ~mask;
+      }
+    }
+
+    private boolean getMask(int mask) {
+      return (bitmask & mask) != 0;
+    }
+
+    private boolean extern() {
+      return getMask(EXTERN_MASK);
+    }
+
+    private boolean pureFunction() {
+      return getMask(PURE_FUNCTION_MASK);
+    }
+
+    private boolean taintsGlobalState() {
+      return getMask(TAINTS_GLOBAL_STATE_MASK);
+    }
+
+    private boolean taintsThis() {
+      return getMask(TAINTS_THIS_MASK);
+    }
+
+    private boolean taintsArguments() {
+      return getMask(TAINTS_ARGUMENTS_MASK);
+    }
+
+    private boolean taintsUnknown() {
+      return getMask(TAINTS_UNKNOWN_MASK);
+    }
+
+    private boolean taintsReturn() {
+      return getMask(TAINTS_RETURN_MASK);
+    }
+
+    /**
+     * Returns true if function has an explicit "throw".
+     */
+    boolean functionThrows() {
+      return getMask(FUNCTION_THROWS_MASK);
+    }
 
     FunctionInformation(boolean extern) {
-      this.extern = extern;
+      this.setMask(EXTERN_MASK, extern);
       checkInvariant();
+    }
+
+    public Set<Var> taintedLocals() {
+      if (taintedLocals == null) {
+        return Collections.emptySet();
+      }
+      return taintedLocals;
     }
 
     /**
      * @param var
      */
     void addTaintedLocalObject(Var var) {
+      if (taintedLocals == null) {
+        taintedLocals = new HashSet<>();
+      }
       taintedLocals.add(var);
     }
 
     void resetLocalVars() {
-      blacklisted = null;
-      taintedLocals = null;
-      knownLocals = Collections.emptySet();
+      blacklisted = Collections.emptySet();
+      taintedLocals = Collections.emptySet();
+//       knownLocals = Collections.emptySet();
+    }
+
+//     public void addKnownLocal(String name) {
+//       if (knownLocals == null) {
+//         knownLocals = new HashSet<>();
+//       }
+//       knownLocals.add(name);
+//     }
+
+    public Set<Var> blacklisted() {
+      if (blacklisted == null) {
+        return Collections.emptySet();
+      }
+      return blacklisted;
     }
 
     /**
      * @param var
      */
     public void blacklistLocal(Var var) {
+      if (blacklisted == null) {
+        blacklisted = new HashSet<>();
+      }
       blacklisted.add(var);
     }
 
@@ -925,25 +1003,26 @@ class PureFunctionIdentifier implements CompilerPass {
      * @return false if function known to have side effects.
      */
     boolean mayBePure() {
-      return !(functionThrows ||
-               taintsGlobalState ||
-               taintsThis ||
-               taintsArguments ||
-               taintsUnknown);
+      return !getMask(
+          FUNCTION_THROWS_MASK
+          | TAINTS_GLOBAL_STATE_MASK
+          | TAINTS_THIS_MASK
+          | TAINTS_ARGUMENTS_MASK
+          | TAINTS_UNKNOWN_MASK);
     }
 
     /**
      * @return false if function known to be pure.
      */
     boolean mayHaveSideEffects() {
-      return !pureFunction;
+      return !pureFunction();
     }
 
     /**
      * Mark the function as being pure.
      */
     void setIsPure() {
-      pureFunction = true;
+      this.setMask(PURE_FUNCTION_MASK, true);
       checkInvariant();
     }
 
@@ -951,7 +1030,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Marks the function as having "modifies globals" side effects.
      */
     void setTaintsGlobalState() {
-      taintsGlobalState = true;
+      setMask(TAINTS_GLOBAL_STATE_MASK, true);
       checkInvariant();
     }
 
@@ -959,7 +1038,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Marks the function as having "modifies this" side effects.
      */
     void setTaintsThis() {
-      taintsThis = true;
+      setMask(TAINTS_THIS_MASK, true);
       checkInvariant();
     }
 
@@ -967,7 +1046,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Marks the function as having "modifies arguments" side effects.
      */
     void setTaintsArguments() {
-      taintsArguments = true;
+      setMask(TAINTS_ARGUMENTS_MASK, true);
       checkInvariant();
     }
 
@@ -975,7 +1054,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Marks the function as having "throw" side effects.
      */
     void setFunctionThrows() {
-      functionThrows = true;
+      setMask(FUNCTION_THROWS_MASK, true);
       checkInvariant();
     }
 
@@ -984,7 +1063,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * not otherwise explicitly tracked.
      */
     void setTaintsUnknown() {
-      taintsUnknown = true;
+      setMask(TAINTS_UNKNOWN_MASK, true);
       checkInvariant();
     }
 
@@ -992,7 +1071,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Marks the function as having non-local return result.
      */
     void setTaintsReturn() {
-      taintsReturn = true;
+      setMask(TAINTS_RETURN_MASK, true);
       checkInvariant();
     }
 
@@ -1001,7 +1080,7 @@ class PureFunctionIdentifier implements CompilerPass {
      * Returns true if function mutates global state.
      */
     boolean mutatesGlobalState() {
-      return taintsGlobalState || taintsUnknown;
+      return getMask(TAINTS_GLOBAL_STATE_MASK | TAINTS_UNKNOWN_MASK);
     }
 
 
@@ -1009,21 +1088,17 @@ class PureFunctionIdentifier implements CompilerPass {
      * Returns true if function mutates its arguments.
      */
     boolean mutatesArguments() {
-      return taintsGlobalState || taintsArguments || taintsUnknown;
+      return getMask(
+          TAINTS_GLOBAL_STATE_MASK
+          | TAINTS_ARGUMENTS_MASK
+          | TAINTS_UNKNOWN_MASK);
     }
 
     /**
      * Returns true if function mutates "this".
      */
     boolean mutatesThis() {
-      return taintsThis;
-    }
-
-    /**
-     * Returns true if function has an explicit "throw".
-     */
-    boolean functionThrows() {
-      return functionThrows;
+      return taintsThis();
     }
 
     /**
@@ -1041,6 +1116,9 @@ class PureFunctionIdentifier implements CompilerPass {
      * Add a CALL or NEW node to the list of calls this function makes.
      */
     void appendCall(Node callNode) {
+      if (callsInFunctionBody == null) {
+        callsInFunctionBody = new ArrayList<>();
+      }
       callsInFunctionBody.add(callNode);
     }
 
@@ -1048,33 +1126,36 @@ class PureFunctionIdentifier implements CompilerPass {
      * Gets the list of CALL and NEW nodes.
      */
     List<Node> getCallsInFunctionBody() {
+      if (callsInFunctionBody == null) {
+        return Collections.emptyList();
+      }
       return callsInFunctionBody;
     }
 
     @Override
     public String toString() {
       List<String> status = Lists.newArrayList();
-      if (extern) {
+      if (extern()) {
         status.add("extern");
       }
 
-      if (pureFunction) {
+      if (pureFunction()) {
         status.add("pure");
       }
 
-      if (taintsThis) {
+      if (taintsThis()) {
         status.add("this");
       }
 
-      if (taintsGlobalState) {
+      if (taintsGlobalState()) {
         status.add("global");
       }
 
-      if (functionThrows) {
+      if (functionThrows()) {
         status.add("throw");
       }
 
-      if (taintsUnknown) {
+      if (taintsUnknown()) {
         status.add("complex");
       }
 
