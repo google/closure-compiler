@@ -682,6 +682,8 @@ public final class NodeUtil {
         return true;
 
       // Binary operators are only valid if both children are valid.
+      case Token.AND:
+      case Token.OR:
       case Token.ADD:
       case Token.BITAND:
       case Token.BITNOT:
