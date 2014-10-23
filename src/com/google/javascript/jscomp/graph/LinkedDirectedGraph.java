@@ -19,12 +19,11 @@ package com.google.javascript.jscomp.graph;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +40,7 @@ import java.util.Map;
  */
 public class LinkedDirectedGraph<N, E>
     extends DiGraph<N, E> implements GraphvizGraph {
-  protected final Map<N, LinkedDirectedGraphNode<N, E>> nodes =
-      Maps.newHashMap();
+  protected final Map<N, LinkedDirectedGraphNode<N, E>> nodes = new HashMap<>();
 
   @Override
   public SubGraph<N, E> newSubGraph() {
@@ -79,9 +77,9 @@ public class LinkedDirectedGraph<N, E>
     LinkedDirectedGraphNode<N, E> src = getNodeOrFail(srcValue);
     LinkedDirectedGraphNode<N, E> dest = getNodeOrFail(destValue);
     LinkedDirectedGraphEdge<N, E> edge =
-        useEdgeAnnotations ?
-        new AnnotatedLinkedDirectedGraphEdge<>(src, edgeValue, dest) :
-        new LinkedDirectedGraphEdge<>(src, edgeValue, dest);
+        useEdgeAnnotations
+        ? new AnnotatedLinkedDirectedGraphEdge<>(src, edgeValue, dest)
+        : new LinkedDirectedGraphEdge<>(src, edgeValue, dest);
     src.getOutEdges().add(edge);
     dest.getInEdges().add(edge);
   }
@@ -134,9 +132,9 @@ public class LinkedDirectedGraph<N, E>
   public DiGraphNode<N, E> createDirectedGraphNode(N nodeValue) {
     LinkedDirectedGraphNode<N, E> node = nodes.get(nodeValue);
     if (node == null) {
-      node = useNodeAnnotations ?
-          new AnnotatedLinkedDirectedGraphNode<N, E>(nodeValue) :
-          new LinkedDirectedGraphNode<N, E>(nodeValue);
+      node = useNodeAnnotations
+          ? new AnnotatedLinkedDirectedGraphNode<N, E>(nodeValue)
+          : new LinkedDirectedGraphNode<N, E>(nodeValue);
       nodes.put(nodeValue, node);
     }
     return node;
@@ -149,7 +147,7 @@ public class LinkedDirectedGraph<N, E>
     List<DiGraphEdge<N, E>> forwardEdges = getDirectedGraphEdges(n1, n2);
     List<DiGraphEdge<N, E>> backwardEdges = getDirectedGraphEdges(n2, n1);
     int totalSize = forwardEdges.size() + backwardEdges.size();
-    List<DiGraphEdge<N, E>> edges = Lists.newArrayListWithCapacity(totalSize);
+    List<DiGraphEdge<N, E>> edges = new ArrayList<>(totalSize);
     edges.addAll(forwardEdges);
     edges.addAll(backwardEdges);
     return edges;
@@ -181,7 +179,7 @@ public class LinkedDirectedGraph<N, E>
   public List<DiGraphEdge<N, E>> getDirectedGraphEdges(N n1, N n2) {
     DiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
     DiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
-    List<DiGraphEdge<N, E>> edges = Lists.newArrayList();
+    List<DiGraphEdge<N, E>> edges = new ArrayList<>();
     for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {
       if (outEdge.getDestination() == dNode2) {
         edges.add(outEdge);
@@ -205,8 +203,8 @@ public class LinkedDirectedGraph<N, E>
     DiGraphNode<N, E> dNode1 = getNodeOrFail(n1);
     DiGraphNode<N, E> dNode2 = getNodeOrFail(n2);
     for (DiGraphEdge<N, E> outEdge : dNode1.getOutEdges()) {
-      if (outEdge.getDestination() == dNode2 &&
-          edgeMatcher.apply(outEdge.getValue())) {
+      if (outEdge.getDestination() == dNode2
+          && edgeMatcher.apply(outEdge.getValue())) {
         return true;
       }
     }
@@ -227,10 +225,9 @@ public class LinkedDirectedGraph<N, E>
   @Override
   public List<DiGraphNode<N, E>> getDirectedPredNodes(
       DiGraphNode<N, E> dNode) {
-    if (dNode == null) {
-      throw new IllegalArgumentException(dNode + " is null");
-    }
-    List<DiGraphNode<N, E>> nodeList = Lists.newArrayList();
+    Preconditions.checkNotNull(dNode);
+    List<DiGraphNode<N, E>> nodeList =
+        new ArrayList<>(dNode.getInEdges().size());
     for (DiGraphEdge<N, E> edge : dNode.getInEdges()) {
       nodeList.add(edge.getSource());
     }
@@ -240,10 +237,9 @@ public class LinkedDirectedGraph<N, E>
   @Override
   public List<DiGraphNode<N, E>> getDirectedSuccNodes(
       DiGraphNode<N, E> dNode) {
-    if (dNode == null) {
-      throw new IllegalArgumentException(dNode + " is null");
-    }
-    List<DiGraphNode<N, E>> nodeList = Lists.newArrayList();
+    Preconditions.checkNotNull(dNode);
+    List<DiGraphNode<N, E>> nodeList =
+        new ArrayList<>(dNode.getOutEdges().size());
     for (DiGraphEdge<N, E> edge : dNode.getOutEdges()) {
       nodeList.add(edge.getDestination());
     }
@@ -252,7 +248,7 @@ public class LinkedDirectedGraph<N, E>
 
   @Override
   public List<GraphvizEdge> getGraphvizEdges() {
-    List<GraphvizEdge> edgeList = Lists.newArrayList();
+    List<GraphvizEdge> edgeList = new ArrayList<>();
     for (LinkedDirectedGraphNode<N, E> node : nodes.values()) {
       for (DiGraphEdge<N, E> edge : node.getOutEdges()) {
         edgeList.add((LinkedDirectedGraphEdge<N, E>) edge);
@@ -263,8 +259,7 @@ public class LinkedDirectedGraph<N, E>
 
   @Override
   public List<GraphvizNode> getGraphvizNodes() {
-    List<GraphvizNode> nodeList =
-        Lists.newArrayListWithCapacity(nodes.size());
+    List<GraphvizNode> nodeList = new ArrayList<>(nodes.size());
     for (LinkedDirectedGraphNode<N, E> node : nodes.values()) {
       nodeList.add(node);
     }
@@ -289,28 +284,20 @@ public class LinkedDirectedGraph<N, E>
   @Override
   public List<GraphNode<N, E>> getNeighborNodes(N value) {
     DiGraphNode<N, E> node = getDirectedGraphNode(value);
-    return getNeighborNodes(node);
-  }
-
-  public List<GraphNode<N, E>> getNeighborNodes(DiGraphNode<N, E> node) {
-    List<GraphNode<N, E>> result = Lists.newArrayList();
-    for (Iterator<GraphNode<N, E>> i =
-      ((LinkedDirectedGraphNode<N, E>) node).neighborIterator(); i.hasNext();) {
-      result.add(i.next());
+    List<GraphNode<N, E>> result = new ArrayList<>(
+        node.getInEdges().size() + node.getOutEdges().size());
+    for (DiGraphEdge<N, E> inEdge : node.getInEdges()) {
+      result.add(inEdge.getSource());
+    }
+    for (DiGraphEdge<N, E> outEdge : node.getOutEdges()) {
+      result.add(outEdge.getDestination());
     }
     return result;
   }
 
   @Override
-  public Iterator<GraphNode<N, E>> getNeighborNodesIterator(N value) {
-    LinkedDirectedGraphNode<N, E> node = nodes.get(value);
-    Preconditions.checkNotNull(node);
-    return node.neighborIterator();
-  }
-
-  @Override
   public List<DiGraphEdge<N, E>> getEdges() {
-    List<DiGraphEdge<N, E>> result = Lists.newArrayList();
+    List<DiGraphEdge<N, E>> result = new ArrayList<>();
     for (DiGraphNode<N, E> node : nodes.values()) {
       result.addAll(node.getOutEdges());
     }
@@ -330,9 +317,8 @@ public class LinkedDirectedGraph<N, E>
   static class LinkedDirectedGraphNode<N, E> implements DiGraphNode<N, E>,
       GraphvizNode {
 
-    List<DiGraphEdge<N, E>> inEdgeList = Lists.newArrayList();
-    List<DiGraphEdge<N, E>> outEdgeList =
-        Lists.newArrayList();
+    List<DiGraphEdge<N, E>> inEdgeList = new ArrayList<>();
+    List<DiGraphEdge<N, E>> outEdgeList = new ArrayList<>();
 
     protected final N value;
 
@@ -390,34 +376,6 @@ public class LinkedDirectedGraph<N, E>
     @Override
     public List<DiGraphEdge<N, E>> getOutEdges() {
       return outEdgeList;
-    }
-
-    private Iterator<GraphNode<N, E>> neighborIterator() {
-      return new NeighborIterator();
-    }
-
-    private class NeighborIterator implements Iterator<GraphNode<N, E>> {
-
-      private final Iterator<DiGraphEdge<N, E>> in = inEdgeList.iterator();
-      private final Iterator<DiGraphEdge<N, E>> out = outEdgeList.iterator();
-
-      @Override
-      public boolean hasNext() {
-        return in.hasNext() || out.hasNext();
-      }
-
-      @Override
-      public GraphNode<N, E> next() {
-        boolean isOut = !in.hasNext();
-        Iterator<DiGraphEdge<N, E>> curIterator =  isOut ? out : in;
-        DiGraphEdge<N, E> s = curIterator.next();
-        return isOut ? s.getDestination() : s.getSource();
-      }
-
-      @Override
-      public void remove() {
-        throw new UnsupportedOperationException("Remove not supported.");
-      }
     }
   }
 
