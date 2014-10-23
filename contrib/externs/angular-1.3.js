@@ -369,6 +369,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *   restrict: (string|undefined),
  *   scope: (boolean|Object.<string, string>|undefined),
  *   template: (string|undefined),
+ *   templateNamespace: (string|undefined),
  *   templateUrl: (string|
  *       function(!angular.JQLite=,!angular.Attributes=)|
  *       undefined),
