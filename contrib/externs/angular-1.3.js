@@ -1152,6 +1152,11 @@ angular.$compile;
  */
 angular.$cacheFactory;
 
+/**
+ * @typedef {function(string): ?angular.$cacheFactory.Cache}
+ */
+angular.$cacheFactory.get;
+
 /** @typedef {{capacity: (number|undefined)}} */
 angular.$cacheFactory.Options;
 
