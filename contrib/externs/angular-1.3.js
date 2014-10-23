@@ -1660,10 +1660,10 @@ angular.$locationProvider;
 angular.$locationProvider.hashPrefix = function(opt_prefix) {};
 
 /**
- * @param {boolean=} opt_enabled
+ * @param {(boolean|angular.$locationProvider.html5ModeConfig)=} opt_mode
  * @return {boolean|!angular.$locationProvider}
  */
-angular.$locationProvider.html5Mode = function(opt_enabled) {};
+angular.$locationProvider.html5Mode = function(opt_mode) {};
 
 /******************************************************************************
  * $log Service
