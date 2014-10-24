@@ -221,6 +221,19 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "});");
   }
 
+  public void testExport3() {
+    test(
+        "goog.module('xid');" +
+        "var xid = function() {};" +
+        "exports = xid;",
+
+        "goog.provide('xid');" +
+        "goog.scope(function(){" +
+        "  var xid_module = function() {};" +
+        "  xid = xid_module;" +
+        "});");
+  }
+
   public void testRequiresRetainOrder() {
     test(
         "goog.module('ns.a');" +

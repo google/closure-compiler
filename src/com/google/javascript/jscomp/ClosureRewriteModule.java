@@ -81,6 +81,7 @@ public class ClosureRewriteModule
     final Node moduleStatementRoot;
     final List<Node> requires = new ArrayList<>();
     final List<Node> provides = new ArrayList<>();
+    final List<Node> exports = new ArrayList<>();
     public Scope moduleScope = null;
 
     ModuleDescription(Node n) {
@@ -231,9 +232,7 @@ public class ClosureRewriteModule
 
       case Token.NAME:
         if (n.getString().equals("exports")) {
-          Node replacement = NodeUtil.newQName(compiler, current.moduleNamespace);
-          replacement.srcrefTree(n);
-          parent.replaceChild(n, replacement);
+          current.exports.add(n);
         }
         break;
 
@@ -336,6 +335,8 @@ public class ClosureRewriteModule
     ImmutableSet<String> roots = ImmutableSet.copyOf(collectRoots(current));
     updateRootShadows(current.moduleScope, roots);
     updateRequires(current.requires);
+    updateExports(current.exports);
+
 
     Node block = IR.block();
     Node scope = IR.exprResult(IR.call(
@@ -359,6 +360,14 @@ public class ClosureRewriteModule
 
     // reset the module.
     current = null;
+  }
+
+  private void updateExports(List<Node> exports) {
+    for (Node n : exports) {
+      Node replacement = NodeUtil.newQName(compiler, current.moduleNamespace);
+      replacement.srcrefTree(n);
+      n.getParent().replaceChild(n, replacement);
+    }
   }
 
   private void updateRootShadows(Scope s, ImmutableSet<String> roots) {
