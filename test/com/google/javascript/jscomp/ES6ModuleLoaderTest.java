@@ -45,7 +45,8 @@ public class ES6ModuleLoaderTest extends TestCase {
 
   public void testWindowsAddresses() {
     CompilerInput inputA = compiler.getInput(new InputId("js\\a.js"));
-    CompilerInput inputB = compiler.getInput(new InputId("js\\b.js"));
+    @SuppressWarnings("unused")
+	CompilerInput inputB = compiler.getInput(new InputId("js\\b.js"));
     assertEquals("js/a.js", loader.getLoadAddress(inputA));
     assertEquals("js/b.js", loader.locate("./b.js", inputA));
 

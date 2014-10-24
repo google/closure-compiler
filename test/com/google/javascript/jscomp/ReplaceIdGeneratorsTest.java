@@ -33,7 +33,11 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     RenamingMap xidTestMap = new RenamingMap() {
-      private final ImmutableMap<String, String> map = ImmutableMap.of(
+      /**
+		 * 
+		 */
+		private static final long serialVersionUID = -2341140795436569289L;
+	private final ImmutableMap<String, String> map = ImmutableMap.of(
           "foo", ":foo:",
           "bar", ":bar:");
       @Override

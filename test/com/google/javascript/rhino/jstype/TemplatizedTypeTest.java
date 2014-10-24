@@ -58,7 +58,6 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
   /**
    * Tests the behavior of variants type.
    */
-  @SuppressWarnings("checked")
   public void testTemplatizedType() throws Exception {
     TemplatizedType arrOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);

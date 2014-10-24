@@ -124,7 +124,6 @@ public class LinkedUndirectedGraph<N, E>
     return ((LinkedUndirectedGraphNode<N, E>) uNode).neighborIterator();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<UndiGraphEdge<N, E>> getUndirectedGraphEdges(N n1, N n2) {
     UndiGraphNode<N, E> dNode1 = nodes.get(n1);
@@ -251,7 +250,6 @@ public class LinkedUndirectedGraph<N, E>
     return Collections.<GraphNode<N, E>> unmodifiableCollection(nodes.values());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<GraphEdge<N, E>> getEdges() {
     List<GraphEdge<N, E>> result = Lists.newArrayList();
@@ -440,13 +438,11 @@ public class LinkedUndirectedGraph<N, E>
       return String.valueOf(value);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public String getNode1Id() {
       return ((LinkedUndirectedGraphNode<N, E>) nodeA).getId();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public String getNode2Id() {
       return ((LinkedUndirectedGraphNode<N, E>) nodeB).getId();

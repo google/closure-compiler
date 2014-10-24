@@ -20,7 +20,12 @@ package com.google.javascript.jscomp.deps;
  * An exception thrown by the compilation service.
  */
 public class ServiceException extends Exception {
-  public ServiceException(String message) {
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = -279849820717817465L;
+
+public ServiceException(String message) {
     super(message);
   }
 }

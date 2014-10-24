@@ -294,7 +294,6 @@ public class CommandLineRunner extends
     private List<String> sourceMapLocationMapping = Lists.newArrayList();
 
     // Used to define the flag, values are stored by the handler.
-    @SuppressWarnings("unused")
     @Option(name = "--jscomp_error",
         hidden = true,
         handler = WarningGuardErrorOptionHandler.class,
@@ -303,7 +302,6 @@ public class CommandLineRunner extends
     private List<String> jscompError = new ArrayList<>();
 
     // Used to define the flag, values are stored by the handler.
-    @SuppressWarnings("unused")
     @Option(name = "--jscomp_warning",
         hidden = true,
         handler = WarningGuardWarningOptionHandler.class,
@@ -312,7 +310,6 @@ public class CommandLineRunner extends
     private List<String> jscompWarning = new ArrayList<>();
 
     // Used to define the flag, values are stored by the handler.
-    @SuppressWarnings("unused")
     @Option(name = "--jscomp_off",
         hidden = true,
         handler = WarningGuardOffOptionHandler.class,

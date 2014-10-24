@@ -18,6 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 
 public class IllegalFormatPrecisionException extends RuntimeException {
 
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = -951643016052578336L;
+
   public IllegalFormatPrecisionException(int precision) {
       super("Precision: " + precision);
   }

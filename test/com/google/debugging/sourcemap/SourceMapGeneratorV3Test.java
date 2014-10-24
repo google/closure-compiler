@@ -16,8 +16,6 @@
 
 package com.google.debugging.sourcemap;
 
-import static junit.framework.Assert.assertFalse;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3.ExtensionMergeAction;

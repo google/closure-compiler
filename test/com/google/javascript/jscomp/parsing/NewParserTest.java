@@ -868,7 +868,6 @@ public class NewParserTest extends BaseJSTypeTestCase {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public void testParse() {
     mode = LanguageMode.ECMASCRIPT5;
     Node a = Node.newString(Token.NAME, "a");

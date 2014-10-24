@@ -427,8 +427,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     Node args = left.getNext();
     if (verifyDefine(t, parent, left, args)) {
       Node nameNode = args;
-      String name = args.getString();
-      Node value = args.getNext();
+      @SuppressWarnings("unused")
+	String name = args.getString();
+      @SuppressWarnings("unused")
+	Node value = args.getNext();
 
       maybeAddToSymbolTable(left);
       maybeAddStringNodeToSymbolTable(nameNode);
@@ -933,7 +935,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       }
 
       CssRenamingMap cssRenamingMap = new CssRenamingMap() {
-        @Override
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 2564372328067863564L;
+
+		@Override
         public String get(String value) {
           if (cssNames.containsKey(value)) {
             return cssNames.get(value);
@@ -1522,7 +1529,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private static class UnrecognizedRequire {
     final Node requireNode;
     final String namespace;
-    final String inputName;
+    @SuppressWarnings("unused")
+	final String inputName;
 
     UnrecognizedRequire(Node requireNode, String namespace, String inputName) {
       this.requireNode = requireNode;

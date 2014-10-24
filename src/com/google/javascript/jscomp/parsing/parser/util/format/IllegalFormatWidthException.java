@@ -18,6 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 
 public class IllegalFormatWidthException extends RuntimeException {
 
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 279513156964291045L;
+
   public IllegalFormatWidthException(int width) {
     super("Width:" + width);
   }

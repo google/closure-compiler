@@ -56,7 +56,11 @@ public class CodingConventions {
    */
   public static class Proxy implements CodingConvention {
 
-    protected final CodingConvention nextConvention;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3741240224648954887L;
+	protected final CodingConvention nextConvention;
 
     protected Proxy(CodingConvention convention) {
       this.nextConvention = convention;

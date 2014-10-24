@@ -813,13 +813,28 @@ public final class ConformanceRules {
     }
 
     private static final TypeToken<Rule> RULE_TYPE =
-        new TypeToken<Rule>() {};
+        new TypeToken<Rule>() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 8912281356853949768L;};
 
     private static final TypeToken<AbstractCompiler> COMPILER_TYPE =
-        new TypeToken<AbstractCompiler>() {};
+        new TypeToken<AbstractCompiler>() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -622929673274111813L;};
 
     private static final TypeToken<Requirement> REQUIREMENT_TYPE =
-        new TypeToken<Requirement>() {};
+        new TypeToken<Requirement>() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -4417584626614079543L;};
 
     private Class<Rule> getRuleClass(
         String className) throws InvalidRequirementSpec {

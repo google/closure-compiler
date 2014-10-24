@@ -80,7 +80,11 @@ abstract class ES6ModuleLoader {
    * Error thrown when a load fails.
    */
   static class LoadFailedException extends Exception {
-    final String loadAddress;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4661564811155036351L;
+	final String loadAddress;
 
     LoadFailedException(String reason, String loadAddress) {
       super(reason);
@@ -107,7 +111,8 @@ abstract class ES6ModuleLoader {
   }
 
   private static class NaiveModuleLoader extends ES6ModuleLoader {
-    private final AbstractCompiler compiler;
+    @SuppressWarnings("unused")
+	private final AbstractCompiler compiler;
     private final Map<String, CompilerInput> inputsByAddress =
         Maps.newHashMap();
     private final String moduleRoot;

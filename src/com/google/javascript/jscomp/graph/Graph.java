@@ -303,7 +303,8 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * A simple implementation of SubGraph that calculates adjacency by iterating
    * over a node's neighbors.
    */
-  class SimpleSubGraph<N, E> implements SubGraph<N, E> {
+  @SuppressWarnings("hiding")
+class SimpleSubGraph<N, E> implements SubGraph<N, E> {
     private Graph<N, E> graph;
     private List<GraphNode<N, E>> nodes = Lists.newArrayList();
 

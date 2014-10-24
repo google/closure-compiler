@@ -24,17 +24,19 @@ import java.util.Set;
 public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
   private static Method assoc;
   private static Method without;
-  private final Map map;
+  @SuppressWarnings("rawtypes")
+private final Map map;
 
-  private ClojurePersistentHashMap(Map m) {
+  private ClojurePersistentHashMap(@SuppressWarnings("rawtypes") Map m) {
     this.map = m;
   }
 
-  public static <K, V> PersistentMap<K, V> create(Class<? extends Map> cls)  {
+  public static <K, V> PersistentMap<K, V> create(@SuppressWarnings("rawtypes") Class<? extends Map> cls)  {
     try {
       assoc = cls.getDeclaredMethod("assoc", Object.class, Object.class);
       without = cls.getDeclaredMethod("without", Object.class);
-      Map m = (Map) cls.getDeclaredField("EMPTY").get(null);
+      @SuppressWarnings("rawtypes")
+	Map m = (Map) cls.getDeclaredField("EMPTY").get(null);
       return new ClojurePersistentHashMap<>(m);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -43,7 +45,8 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
 
   public PersistentMap<K, V> with(K key, V value) {
     try {
-      Map m = (Map) assoc.invoke(this.map, key, value);
+      @SuppressWarnings("rawtypes")
+	Map m = (Map) assoc.invoke(this.map, key, value);
       return new ClojurePersistentHashMap<>(m);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -52,19 +55,22 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
 
   public PersistentMap<K, V> without(K key) {
     try {
-      Map m = (Map) without.invoke(this.map, key);
+      @SuppressWarnings("rawtypes")
+	Map m = (Map) without.invoke(this.map, key);
       return new ClojurePersistentHashMap<>(m);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public V get(Object key) {
     return (V) this.map.get(key);
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public Set<K> keySet() {
     return this.map.keySet();
   }
@@ -74,7 +80,8 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
     return this.map.containsKey(key);
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public Set<Map.Entry<K, V>> entrySet() {
     return this.map.entrySet();
   }
@@ -92,7 +99,8 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
   @Override
   public boolean equals(Object o) {
     if (o instanceof ClojurePersistentHashMap) {
-      ClojurePersistentHashMap pm = (ClojurePersistentHashMap) o;
+      @SuppressWarnings("rawtypes")
+	ClojurePersistentHashMap pm = (ClojurePersistentHashMap) o;
       return this.map.equals(pm.map);
     }
     return false;

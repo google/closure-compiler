@@ -42,7 +42,12 @@ import java.io.Serializable;
  */
 public abstract class WarningsGuard implements Serializable {
 
-  /** Priority */
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7672610121238862353L;
+
+/** Priority */
   public static enum Priority {
     MAX(1),
     MIN(100),

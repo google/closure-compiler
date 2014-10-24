@@ -24,17 +24,19 @@ import java.util.Set;
 public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
   private static Method cons;
   private static Method disjoin;
-  private final Set set;
+  @SuppressWarnings("rawtypes")
+private final Set set;
 
-  private ClojurePersistentHashSet(Set s) {
+  private ClojurePersistentHashSet(@SuppressWarnings("rawtypes") Set s) {
     this.set = s;
   }
 
-  public static <K> PersistentSet<K> create(Class<? extends Set> cls)  {
+  public static <K> PersistentSet<K> create(@SuppressWarnings("rawtypes") Class<? extends Set> cls)  {
     try {
       cons = cls.getDeclaredMethod("cons", Object.class);
       disjoin = cls.getDeclaredMethod("disjoin", Object.class);
-      Set m = (Set) cls.getDeclaredField("EMPTY").get(null);
+      @SuppressWarnings("rawtypes")
+	Set m = (Set) cls.getDeclaredField("EMPTY").get(null);
       return new ClojurePersistentHashSet<>(m);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -43,7 +45,8 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
 
   public PersistentSet<K> with(K key) {
     try {
-      Set s = (Set) cons.invoke(this.set, key);
+      @SuppressWarnings("rawtypes")
+	Set s = (Set) cons.invoke(this.set, key);
       return new ClojurePersistentHashSet<>(s);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -52,7 +55,8 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
 
   public PersistentSet<K> without(K key) {
     try {
-      Set s = (Set) disjoin.invoke(this.set, key);
+      @SuppressWarnings("rawtypes")
+	Set s = (Set) disjoin.invoke(this.set, key);
       return new ClojurePersistentHashSet<>(s);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
@@ -74,7 +78,8 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
     return this.set.isEmpty();
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public Iterator<K> iterator() {
     return this.set.iterator();
   }
@@ -82,7 +87,8 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
   @Override
   public boolean equals(Object o) {
     if (o instanceof ClojurePersistentHashSet) {
-      ClojurePersistentHashSet ps = (ClojurePersistentHashSet) o;
+      @SuppressWarnings("rawtypes")
+	ClojurePersistentHashSet ps = (ClojurePersistentHashSet) o;
       return this.set.equals(ps.set);
     }
     return false;

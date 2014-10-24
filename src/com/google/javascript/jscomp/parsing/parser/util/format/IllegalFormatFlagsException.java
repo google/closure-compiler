@@ -18,6 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 
 public class IllegalFormatFlagsException extends RuntimeException {
 
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4858922820250376729L;
+
   public IllegalFormatFlagsException(String message) {
     super(message);
   }

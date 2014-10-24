@@ -54,7 +54,12 @@ public class JSTypeCreatorFromJSDoc {
 
   /** Exception for when unrecognized type names are encountered */
   public static class UnknownTypeException extends Exception {
-    UnknownTypeException(String cause) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8017115878031260006L;
+
+	UnknownTypeException(String cause) {
       super(cause);
     }
   }

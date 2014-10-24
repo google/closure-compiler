@@ -243,7 +243,8 @@ public  final class FunctionInformationMap extends
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       initFields();
-      int mutable_bitField0_ = 0;
+      @SuppressWarnings("unused")
+	int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -1421,7 +1422,8 @@ public  final class FunctionInformationMap extends
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       initFields();
-      int mutable_bitField0_ = 0;
+      @SuppressWarnings("unused")
+	int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -2277,7 +2279,8 @@ public  final class FunctionInformationMap extends
 
     public com.google.javascript.jscomp.FunctionInformationMap buildPartial() {
       com.google.javascript.jscomp.FunctionInformationMap result = new com.google.javascript.jscomp.FunctionInformationMap(this);
-      int from_bitField0_ = bitField0_;
+      @SuppressWarnings("unused")
+	int from_bitField0_ = bitField0_;
       if (entryBuilder_ == null) {
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           entry_ = java.util.Collections.unmodifiableList(entry_);

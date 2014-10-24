@@ -429,7 +429,8 @@ class ProcessTweaks implements CompilerPass {
    * Holds information about a call to a goog.tweak function.
    */
   private static final class TweakFunctionCall {
-    final String sourceName;
+    @SuppressWarnings("unused")
+	final String sourceName;
     final TweakFunction tweakFunc;
     final Node callNode;
     final Node valueNode;

@@ -31,6 +31,11 @@ import java.util.List;
 public abstract class Scanner implements Serializable {
 
   /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6778142380393416208L;
+
+/**
    * Returns true if the given node and node traversal should match for this
    * particular scanner. Typically this function uses the {@link Matcher} class
    * or predefined matchers from {@link Matchers} to match against the Node and

@@ -858,7 +858,8 @@ public final class SimpleFormat {
             return;
         }
 
-        boolean requireScientificRepresentation = true;
+        @SuppressWarnings("unused")
+		boolean requireScientificRepresentation = true;
         d = Math.abs(d);
         if (Double.isInfinite(d)) {
             precision = formatToken.getPrecision();
@@ -876,7 +877,8 @@ public final class SimpleFormat {
       result.append(arg);
     }
 
-    private void transform_a(StringBuilder result) {
+    @SuppressWarnings("unused")
+	private void transform_a(StringBuilder result) {
         if (arg instanceof Float) {
           if (true) {
             throw new RuntimeException("Float.toHexString is outside the GWT subset");

@@ -21,7 +21,12 @@ package com.google.javascript.jscomp.parsing.parser.util;
  * for speculative parses.
  */
 public class LookaheadErrorReporter extends ErrorReporter {
-  public static class ParseException extends RuntimeException {}
+  public static class ParseException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 888240998904638462L;}
 
   @Override
   protected void reportMessage(SourcePosition location, String message) {

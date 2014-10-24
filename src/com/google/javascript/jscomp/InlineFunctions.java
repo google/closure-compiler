@@ -238,7 +238,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
    * Updates the FunctionState object for the given function. Checks if the
    * given function matches the criteria for an inlinable function.
    */
-  private void maybeAddFunction(Function fn, JSModule module) {
+  @SuppressWarnings("static-access")
+private void maybeAddFunction(Function fn, JSModule module) {
     String name = fn.getName();
     FunctionState fs = getOrCreateFunctionState(name);
 

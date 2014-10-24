@@ -2334,7 +2334,8 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    private void updateType(String name, JSType newDeclType) {
+    @SuppressWarnings("unused")
+	private void updateType(String name, JSType newDeclType) {
       if (locals.containsKey(name)) {
         locals.put(name, newDeclType);
       } else if (parent != null) {

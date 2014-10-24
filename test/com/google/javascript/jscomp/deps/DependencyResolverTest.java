@@ -124,7 +124,8 @@ public class DependencyResolverTest extends TestCase {
     Set<String> seen = Sets.newHashSet();
     resolver = new DefaultDependencyResolver(ImmutableList.of(fakeDeps1), true);
     try {
-      Collection<String> deps = resolver.getDependencies(
+      @SuppressWarnings("unused")
+	  Collection<String> deps = resolver.getDependencies(
           "goog.require('foo');goog.require('a');", seen, false);
       fail("Service exception should be thrown");
     } catch (ServiceException expected) {}

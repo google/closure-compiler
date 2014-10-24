@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-class SourceMapLineDecoder {
+  class SourceMapLineDecoder {
 
   private SourceMapLineDecoder() {}
 
@@ -76,6 +76,7 @@ class SourceMapLineDecoder {
     return new LineEntry(mappingId, reps);
   }
 
+  @SuppressWarnings("unused")
   private static List<Integer> decodeLine(StringParser reader) {
     List<Integer> result = Lists.newArrayListWithCapacity(512);
     int lastId = 0;

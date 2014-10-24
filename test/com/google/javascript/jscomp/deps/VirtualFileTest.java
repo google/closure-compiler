@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.deps;
 
-import static junit.framework.Assert.assertEquals;
-
 import junit.framework.TestCase;
 
 /**

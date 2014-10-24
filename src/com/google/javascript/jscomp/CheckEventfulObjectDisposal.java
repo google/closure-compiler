@@ -1139,7 +1139,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         } else {
           // Parameter types
           int index = 0;
-          for (Node p : funType.getParameters()) {
+          for (@SuppressWarnings("unused") Node p : funType.getParameters()) {
               // Bail out if the paramNode is not there.
               if (paramNode == null) {
                 break;

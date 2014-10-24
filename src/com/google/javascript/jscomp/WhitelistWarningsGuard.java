@@ -50,7 +50,12 @@ import java.util.regex.Pattern;
  * @author bashir@google.com (Bashir Sadjad)
  */
 public class WhitelistWarningsGuard extends WarningsGuard {
-  private static final Splitter LINE_SPLITTER = Splitter.on("\n");
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7371815679894467642L;
+
+private static final Splitter LINE_SPLITTER = Splitter.on("\n");
 
   /** The set of white-listed warnings, same format as {@code formatWarning}. */
   private final Set<String> whitelist;

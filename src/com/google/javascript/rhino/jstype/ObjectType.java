@@ -80,6 +80,10 @@ import java.util.Set;
  *
  */
 public abstract class ObjectType extends JSType implements StaticScope<JSType> {
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7333072389356294650L;
   private boolean visited;
   private JSDocInfo docInfo = null;
   private boolean unknown = true;

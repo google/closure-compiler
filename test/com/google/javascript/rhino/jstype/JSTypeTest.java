@@ -4044,7 +4044,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests that the method {@link JSType#canTestForEqualityWith(JSType)} handles
    * special corner cases.
    */
-  @SuppressWarnings("checked")
   public void testCanTestForEqualityWithCornerCases() {
     // null == undefined is always true
     assertCannotTestForEqualityWith(NULL_TYPE, VOID_TYPE);
@@ -5516,8 +5515,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests the behavior of
    * {@link JSType#getRestrictedTypeGivenToBooleanOutcome(boolean)}.
    */
-  @SuppressWarnings("checked")
-      public void testRestrictedTypeGivenToBoolean() {
+  public void testRestrictedTypeGivenToBoolean() {
     // simple cases
     assertTypeEquals(BOOLEAN_TYPE,
         BOOLEAN_TYPE.getRestrictedTypeGivenToBooleanOutcome(true));
@@ -5686,7 +5684,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NULL_TYPE, VOID_TYPE);
   }
 
-  @SuppressWarnings("checked")
   public void testGetTypesUnderEquality4() {
     // (number,string) and number/string
     UnionType stringNumber =
@@ -5733,7 +5730,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(t2Eq, p21.typeA);
   }
 
-  @SuppressWarnings("checked")
   public void testGetTypesUnderInequality1() {
     // objects can be not equal to numbers
     UnionType numberObject =
@@ -5746,7 +5742,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         numberObject, OBJECT_TYPE);
   }
 
-  @SuppressWarnings("checked")
   public void testGetTypesUnderInequality2() {
     // null == undefined
     UnionType nullUndefined =
@@ -5759,7 +5754,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         NO_TYPE, NO_TYPE);
   }
 
-  @SuppressWarnings("checked")
   public void testGetTypesUnderInequality3() {
     // (number,string)
     UnionType stringNumber =
@@ -5772,7 +5766,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         stringNumber, STRING_TYPE);
   }
 
-  @SuppressWarnings("checked")
   public void testGetTypesUnderInequality4() throws Exception {
     // (number,undefined,null) and null
     UnionType nullableOptionalNumber =
@@ -5894,7 +5887,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   /**
    * Tests {@code (U2U_CONSTRUCTOR,undefined) <: (U2U_CONSTRUCTOR,undefined)}.
    */
-  @SuppressWarnings("checked")
   public void testBug903110() throws Exception {
     UnionType union =
         (UnionType) createUnionType(U2U_CONSTRUCTOR_TYPE, VOID_TYPE);

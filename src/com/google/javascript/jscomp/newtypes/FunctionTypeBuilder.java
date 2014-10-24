@@ -36,7 +36,12 @@ import java.util.Map;
  */
 public class FunctionTypeBuilder {
   static class WrongParameterOrderException extends RuntimeException {
-    WrongParameterOrderException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4492628909864003132L;
+
+	WrongParameterOrderException(String message) {
       super(message);
     }
   }

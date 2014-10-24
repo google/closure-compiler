@@ -288,13 +288,23 @@ public class SortedDependencies<INPUT extends DependencyInfo> {
   }
 
   public static class CircularDependencyException extends Exception {
-    CircularDependencyException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 28581941045544952L;
+
+	CircularDependencyException(String message) {
       super(message);
     }
   }
 
   public static class MissingProvideException extends Exception {
-    MissingProvideException(String provide) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8482792207937645736L;
+
+	MissingProvideException(String provide) {
       super(provide);
     }
   }

@@ -230,6 +230,7 @@ public class ParseTree {
   //    MemberExpression [ Expression ]
   //    MemberExpression . IdentifierName
   //    new MemberExpression Arguments
+  @SuppressWarnings("incomplete-switch")
   public boolean isMemberExpression() {
     switch (this.type) {
       // PrimaryExpression

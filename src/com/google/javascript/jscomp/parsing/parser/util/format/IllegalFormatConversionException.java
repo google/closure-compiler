@@ -18,6 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 
 public class IllegalFormatConversionException extends RuntimeException {
 
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2065236166086171076L;
+
   public IllegalFormatConversionException(char conversionType, Class<? extends Object> class1) {
     super("ConvertionType = " + conversionType + " class = " + class1);
   }

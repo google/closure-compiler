@@ -30,7 +30,8 @@ import java.util.logging.Logger;
  *
  */
 public class JsAst implements SourceAst {
-  private static final Logger logger_ = Logger.getLogger(JsAst.class.getName());
+  @SuppressWarnings("unused")
+private static final Logger logger_ = Logger.getLogger(JsAst.class.getName());
   private static final long serialVersionUID = 1L;
 
   private transient InputId inputId;

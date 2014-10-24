@@ -48,7 +48,12 @@ import java.util.regex.Pattern;
  */
 public final class RefasterJsScanner extends Scanner {
 
-  /** The JS code that contains the RefasterJs templates. */
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5536399416876384372L;
+
+/** The JS code that contains the RefasterJs templates. */
   private String templateJs;
 
   /** All templates that were found in the template file. */

@@ -516,7 +516,12 @@ public class IntegrationTest extends IntegrationTestCase {
 
     options.setIdGenerators(ImmutableMap.<String, RenamingMap>of(
         "xid", new RenamingMap() {
-      @Override
+      /**
+			 * 
+			 */
+			private static final long serialVersionUID = 2947392572269023197L;
+
+	@Override
       public String get(String value) {
         return ":" + value + ":";
       }

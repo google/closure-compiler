@@ -543,7 +543,12 @@ public class JSModuleGraph {
 
   /** Another exception class */
   public static class MissingModuleException extends Exception {
-    MissingModuleException(String moduleName) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1836523688767011901L;
+
+	MissingModuleException(String moduleName) {
       super(moduleName);
     }
   }

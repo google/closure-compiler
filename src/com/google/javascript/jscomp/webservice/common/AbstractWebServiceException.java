@@ -21,7 +21,12 @@ package com.google.javascript.jscomp.webservice.common;
  *
  */
 public abstract class AbstractWebServiceException extends Exception {
-  public abstract ErrorCode getErrorCode();
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7249414993197202535L;
+
+public abstract ErrorCode getErrorCode();
   public abstract String getFormattedError();
 
   @Override

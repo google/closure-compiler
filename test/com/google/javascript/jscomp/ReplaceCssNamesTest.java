@@ -77,7 +77,12 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
 
   protected CssRenamingMap getPartialMap() {
     CssRenamingMap map = new CssRenamingMap.ByPart() {
-      @Override public String get(String value) {
+      /**
+		 * 
+		 */
+		private static final long serialVersionUID = 5430681616019607732L;
+
+	@Override public String get(String value) {
         return replacementMap.get(value);
       }
     };
@@ -86,7 +91,12 @@ public class ReplaceCssNamesTest extends CompilerTestCase {
 
   protected CssRenamingMap getFullMap() {
     return new CssRenamingMap.ByWhole() {
-      @Override public String get(String value) {
+      /**
+		 * 
+		 */
+		private static final long serialVersionUID = 8693392872231873154L;
+
+	@Override public String get(String value) {
         return replacementMapFull.get(value);
       }
     };

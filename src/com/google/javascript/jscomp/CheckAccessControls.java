@@ -808,7 +808,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    String propertyName = getprop.getLastChild().getString();
+    @SuppressWarnings("unused")
+	String propertyName = getprop.getLastChild().getString();
     JSType ownerType = normalizeClassType(objectType);
 
     switch (visibility) {

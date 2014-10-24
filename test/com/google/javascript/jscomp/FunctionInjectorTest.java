@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
+
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -53,37 +54,44 @@ public class FunctionInjectorTest extends TestCase {
         assumeStrictThis, assumeMinimumCapture);
   }
 
-  public void testIsSimpleFunction1() {
+  @SuppressWarnings("static-access")
+public void testIsSimpleFunction1() {
     assertTrue(getInjector().isDirectCallNodeReplacementPossible(
         prep("function f(){}")));
   }
 
-  public void testIsSimpleFunction2() {
+  @SuppressWarnings("static-access")
+public void testIsSimpleFunction2() {
     assertTrue(getInjector().isDirectCallNodeReplacementPossible(
         prep("function f(){return 0;}")));
   }
 
-  public void testIsSimpleFunction3() {
+  @SuppressWarnings("static-access")
+public void testIsSimpleFunction3() {
     assertTrue(getInjector().isDirectCallNodeReplacementPossible(
         prep("function f(){return x ? 0 : 1}")));
   }
 
-  public void testIsSimpleFunction4() {
+  @SuppressWarnings("static-access")
+public void testIsSimpleFunction4() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
         prep("function f(){return;}")));
   }
 
-  public void testIsSimpleFunction5() {
+  @SuppressWarnings("static-access")
+public void testIsSimpleFunction5() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
         prep("function f(){return 0; return 0;}")));
   }
 
-  public void testIsSimpleFunction6() {
+  @SuppressWarnings("static-access")
+public void testIsSimpleFunction6() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
         prep("function f(){var x=true;return x ? 0 : 1}")));
   }
 
-  public void testIsSimpleFunction7() {
+  @SuppressWarnings("static-access")
+public void testIsSimpleFunction7() {
     assertFalse(getInjector().isDirectCallNodeReplacementPossible(
         prep("function f(){if (x) return 0; else return 1}")));
   }

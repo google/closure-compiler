@@ -119,7 +119,8 @@ public class ParserRunner {
     private ErrorReporter reporter;
     private boolean errorSeen = false;
     private boolean isIdeMode;
-    private SourceFile source;
+    @SuppressWarnings("unused")
+	private SourceFile source;
 
     Es6ErrorReporter(
         ErrorReporter reporter,

@@ -1065,7 +1065,12 @@ public final class SymbolTable
 
   /** A symbol-table entry */
   public static final class Symbol extends SimpleSlot {
-    // Use a linked hash map, so that the results are deterministic
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3330097780111991623L;
+
+	// Use a linked hash map, so that the results are deterministic
     // (and so the declaration always comes first).
     private final Map<Node, Reference> references = Maps.newLinkedHashMap();
 

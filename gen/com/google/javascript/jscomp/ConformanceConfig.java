@@ -334,7 +334,8 @@ public  final class ConformanceConfig extends
 
     public com.google.javascript.jscomp.ConformanceConfig buildPartial() {
       com.google.javascript.jscomp.ConformanceConfig result = new com.google.javascript.jscomp.ConformanceConfig(this);
-      int from_bitField0_ = bitField0_;
+      @SuppressWarnings("unused")
+	int from_bitField0_ = bitField0_;
       if (requirementBuilder_ == null) {
         if (((bitField0_ & 0x00000001) == 0x00000001)) {
           requirement_ = java.util.Collections.unmodifiableList(requirement_);

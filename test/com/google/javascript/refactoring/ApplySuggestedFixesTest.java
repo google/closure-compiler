@@ -175,7 +175,8 @@ public class ApplySuggestedFixesTest {
     Node root = compileToScriptRoot(compiler);
     List<SuggestedFix> fixes = ImmutableList.of(new SuggestedFix.Builder().delete(root).build());
     try {
-      Map<String, String> newCodeMap = ApplySuggestedFixes.applySuggestedFixesToCode(
+      @SuppressWarnings("unused")
+	Map<String, String> newCodeMap = ApplySuggestedFixes.applySuggestedFixesToCode(
           fixes, codeMap);
       fail("applySuggestedFixesToCode should have failed since file is missing from code map.");
     } catch (IllegalArgumentException expected) {}

@@ -444,7 +444,6 @@ class NewIRFactory {
     }
   }
 
-  @SuppressWarnings("incomplete-switch")
   private void validateTypeAnnotations(Node n) {
     JSDocInfo info = n.getJSDocInfo();
     if (info != null && info.hasType()) {
@@ -1334,7 +1333,8 @@ class NewIRFactory {
     }
 
     // Move this to a more maintainable location.
-    boolean isAssignmentOp(Node n) {
+    @SuppressWarnings("unused")
+	boolean isAssignmentOp(Node n) {
       switch (n.getType()){
         case Token.ASSIGN:
         case Token.ASSIGN_BITOR:
@@ -1948,7 +1948,8 @@ class NewIRFactory {
       return newNode(Token.EMPTY);
     }
 
-    void reportDestructuringAssign(ParseTree node) {
+    @SuppressWarnings("unused")
+	void reportDestructuringAssign(ParseTree node) {
       errorReporter.error(
           "destructuring assignment forbidden",
           sourceName,

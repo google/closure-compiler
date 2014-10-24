@@ -133,7 +133,12 @@ public final class CheckConformance extends AbstractPostOrderCallback
   }
 
   public static class InvalidRequirementSpec extends Exception {
-    InvalidRequirementSpec(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8047737553442058095L;
+
+	InvalidRequirementSpec(String message) {
       super(message);
     }
   }

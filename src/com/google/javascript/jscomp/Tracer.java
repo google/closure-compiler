@@ -860,8 +860,6 @@ final class Tracer {
     }
 
     /** Produces the lovely Trace seen in the class comments */
-    // Nullness checker does not understand that prettyPrint => indent != null
-    @SuppressWarnings("nullness")
     @Override public String toString() {
 
       int numDigits = getMaxDigits();
@@ -1041,10 +1039,7 @@ final class Tracer {
      * @param key      the name of the field
      * @param delta    the amount by which to increment the field
      */
-    // Nullness checker is not powerful enough to prove null-safety of
-    // this method
-    @SuppressWarnings("nullness")
-        void incrementBy(String key, long delta) {
+    void incrementBy(String key, long delta) {
       // We use a compareAndSet strategy to update the map, which is much
       // faster when there isn't too much contention.  Look at a value, and
       // conditionally update the map if the value hasn't changed.

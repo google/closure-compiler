@@ -802,7 +802,8 @@ public class FunctionType {
     return appendTo(new StringBuilder()).toString();
   }
 
-  public StringBuilder appendTo(StringBuilder builder) {
+  @SuppressWarnings("unused")
+public StringBuilder appendTo(StringBuilder builder) {
     if (this == LOOSE_TOP_FUNCTION) {
       return builder.append("LOOSE_TOP_FUNCTION");
     } else if (this == TOP_FUNCTION) {

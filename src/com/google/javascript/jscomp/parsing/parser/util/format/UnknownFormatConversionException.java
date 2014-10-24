@@ -18,7 +18,12 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 
 public class UnknownFormatConversionException extends RuntimeException {
 
-  public UnknownFormatConversionException(String message) {
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6444022271635935428L;
+
+public UnknownFormatConversionException(String message) {
     super(message);
   }
 }

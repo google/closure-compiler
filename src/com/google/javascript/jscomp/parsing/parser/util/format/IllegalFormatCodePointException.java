@@ -18,6 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 
 public class IllegalFormatCodePointException extends RuntimeException {
 
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5382279608025903543L;
+
   public IllegalFormatCodePointException(int codePoint) {
     super("codePoint:" + codePoint);
   }

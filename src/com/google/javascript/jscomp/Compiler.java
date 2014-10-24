@@ -674,7 +674,6 @@ public class Compiler extends AbstractCompiler {
     this.timeout = timeout;
   }
 
-  @SuppressWarnings("unchecked")
   <T> T runInCompilerThread(final Callable<T> callable) {
     T result = null;
     final Throwable[] exception = new Throwable[1];
@@ -1233,7 +1232,6 @@ public class Compiler extends AbstractCompiler {
     return getPassConfig().getTypedScopeCreator();
   }
 
-  @SuppressWarnings("unchecked")
   DefaultPassConfig ensureDefaultPassConfig() {
     PassConfig passes = getPassConfig().getBasePassConfig();
     Preconditions.checkState(passes instanceof DefaultPassConfig,

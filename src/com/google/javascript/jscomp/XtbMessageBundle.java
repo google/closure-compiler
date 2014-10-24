@@ -44,7 +44,6 @@ import javax.xml.parsers.SAXParserFactory;
  * file.
  *
  */
-@SuppressWarnings("sunapi")
 public class XtbMessageBundle implements MessageBundle {
   private static final SecureEntityResolver NOOP_RESOLVER
       = new SecureEntityResolver();
@@ -54,7 +53,7 @@ public class XtbMessageBundle implements MessageBundle {
 
   public XtbMessageBundle(
       InputStream xtb, @Nullable String projectId,
-      @SuppressWarnings("unused") boolean unused) {
+      boolean unused) {
     this(xtb, projectId);
   }
 

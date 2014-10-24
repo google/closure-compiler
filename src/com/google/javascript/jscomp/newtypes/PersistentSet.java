@@ -22,11 +22,12 @@ import java.util.Set;
 /** A persistent set with non-destructive additions and removals */
 public abstract class PersistentSet<K> extends AbstractSet<K> {
 
-  private static PersistentSet EMPTY;
+  @SuppressWarnings("rawtypes")
+private static PersistentSet EMPTY;
 
   static {
     try {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       Class<? extends Set> c =
           (Class<? extends Set>) Class.forName("clojure.lang.PersistentHashSet");
       EMPTY = ClojurePersistentHashSet.create(c);

@@ -51,7 +51,11 @@ import java.io.Serializable;
  * @author izaakr@google.com (Izaak Rubin)
  */
 public class TemplateTypeMap implements Serializable {
-  // The TemplateType keys of the map.
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5860512321358177649L;
+// The TemplateType keys of the map.
   private final ImmutableList<TemplateType> templateKeys;
   // The JSType values, which are index-aligned with their corresponding keys.
   // These values are left as specified in the TemplateTypeMap constructor; they

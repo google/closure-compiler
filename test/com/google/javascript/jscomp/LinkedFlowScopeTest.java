@@ -317,7 +317,6 @@ public class LinkedFlowScopeTest extends CompilerTypeTestCase {
     assertEquals(b, b);
   }
 
-  @SuppressWarnings("unchecked")
   private FlowScope join(FlowScope a, FlowScope b) {
     return (new LinkedFlowScope.FlowScopeJoinOp()).apply(
         Lists.newArrayList(a, b));

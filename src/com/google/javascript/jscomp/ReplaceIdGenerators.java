@@ -84,7 +84,12 @@ class ReplaceIdGenerators implements CompilerPass {
   public static final RenamingMap UNIQUE = new UniqueRenamingToken();
 
   private static class UniqueRenamingToken implements RenamingMap {
-    @Override public String get(String value) { return null; }
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5632941992263386773L;
+
+	@Override public String get(String value) { return null; }
   }
 
   public ReplaceIdGenerators(

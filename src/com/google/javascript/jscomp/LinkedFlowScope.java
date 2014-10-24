@@ -251,7 +251,6 @@ class LinkedFlowScope implements FlowScope {
 
   /** Join the two FlowScopes. */
   static class FlowScopeJoinOp extends JoinOp.BinaryJoinOp<FlowScope> {
-    @SuppressWarnings("unchecked")
     @Override
     public FlowScope apply(FlowScope a, FlowScope b) {
       // To join the two scopes, we have to
@@ -381,7 +380,11 @@ class LinkedFlowScope implements FlowScope {
    * A static slot that can be used in a linked list.
    */
   private static class LinkedFlowSlot extends SimpleSlot {
-    final LinkedFlowSlot parent;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8859887768200119647L;
+	final LinkedFlowSlot parent;
 
     LinkedFlowSlot(String name, JSType type, LinkedFlowSlot parent) {
       super(name, type, true);

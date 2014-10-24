@@ -34,7 +34,12 @@ public interface CssRenamingMap extends RenamingMap {
 
   /** ByPart renaming map */
   public abstract static class ByPart implements CssRenamingMap {
-    @Override
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -918745098904645717L;
+
+	@Override
     public abstract String get(String value);
 
     @Override
@@ -45,7 +50,12 @@ public interface CssRenamingMap extends RenamingMap {
 
   /** ByWhole renaming map */
   public abstract static class ByWhole implements CssRenamingMap {
-    @Override
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8773918007397839549L;
+
+	@Override
     public abstract String get(String value);
 
     @Override

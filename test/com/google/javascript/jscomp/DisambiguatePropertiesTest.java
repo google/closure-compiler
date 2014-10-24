@@ -438,7 +438,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "function Foo(){}Foo.prototype.Foo_prototype$a=0;"
         + "function Bar(){}Bar.prototype.Bar_prototype$a=0;"
         + "var F=new Foo;F.Bar_prototype$a=0;";
-    String ttOutput = ""
+    @SuppressWarnings("unused")
+	String ttOutput = ""
         + "function Foo(){}Foo.prototype.Foo_prototype$a=0;"
         + "function Bar(){}Bar.prototype.Bar_prototype$a=0;"
         + "var F=new Foo;F.Unique$1$a=0;";
@@ -457,7 +458,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "function Bar(){}"
         + "Bar.prototype.Bar_prototype$a=0;"
         + "new Foo";
-    String ttOutput = ""
+    @SuppressWarnings("unused")
+	String ttOutput = ""
         + "var Foo=function(){this.Foo_prototype$a=0};"
         + "function Bar(){}"
         + "Bar.prototype.Bar_prototype$a=0;"
@@ -498,7 +500,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "function Bar(){}Bar.prototype.Foo_prototype$a=0;"
         + "var B = new Bar;B.Foo_prototype$a=0;"
         + "function Baz(){}Baz.prototype.Baz_prototype$a=function(){};";
-    String ttOutput = ""
+    @SuppressWarnings("unused")
+	String ttOutput = ""
         + "function Foo(){}Foo.prototype.Foo_prototype$a=0;"
         + "function Bar(){}Bar.prototype.Bar_prototype$a=0;"
         + "var B = new Bar;B.Bar_prototype$a=0;"
@@ -569,7 +572,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Foo.prototype.a = fun();\n"
         + "fun().a;\n"
         + "Bar.prototype.a = 0;";
-    String ttOutput = ""
+    @SuppressWarnings("unused")
+	String ttOutput = ""
         + "var Foo=function(){};\n"
         + "var Bar=function(){};\n"
         + "function fun(){}\n"
@@ -597,7 +601,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "function Foo(){};"
         + "Foo.prototype.Foo_prototype$A=0;"
         + "Foo.prototype.Foo_prototype$B=0";
-    String ttOutput = ""
+    @SuppressWarnings("unused")
+	String ttOutput = ""
         + "var En={A:'first',B:'second'};"
         + "var EA=En.A;"
         + "var EB=En.B;"
@@ -762,7 +767,8 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
         + "var B = new Baz;"
         + "B.a = 1;"
         + "B = new Bar;";
-    String ttOutput = ""
+    @SuppressWarnings("unused")
+	String ttOutput = ""
         + "function Ind() { this.Unique$1$a = 0; }"
         + "function Foo() {}"
         + "Foo.prototype.a = 0;"
@@ -1311,20 +1317,17 @@ public class DisambiguatePropertiesTest extends CompilerTestCase {
             .getNativeType(JSTypeNative.OBJECT_PROTOTYPE));
   }
 
-  @SuppressWarnings("unchecked")
   private void testSets(String js, String expected, String fieldTypes) {
     test(js, expected);
     assertEquals(
         fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
-  @SuppressWarnings("unchecked")
   private void testSets(String externs, String js, String expected,
        String fieldTypes) {
     testSets(externs, js, expected, fieldTypes, null, null);
   }
 
-  @SuppressWarnings("unchecked")
   private void testSets(String externs, String js, String expected,
        String fieldTypes, DiagnosticType warning, String description) {
     test(externs, js, expected, null, warning, description);

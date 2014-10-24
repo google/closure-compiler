@@ -20,7 +20,12 @@ package com.google.debugging.sourcemap;
  * Throw if an invalid or unknown source map is encountered.
  */
 public class SourceMapParseException extends Exception {
-  public SourceMapParseException(String message) {
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8707174406136538644L;
+
+public SourceMapParseException(String message) {
     super(message);
   }
 }

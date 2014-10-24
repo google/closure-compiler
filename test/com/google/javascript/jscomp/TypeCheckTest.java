@@ -44,7 +44,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   private CheckLevel reportMissingOverrides = CheckLevel.WARNING;
 
-  private static final String SUGGESTION_CLASS =
+  @SuppressWarnings("unused")
+private static final String SUGGESTION_CLASS =
       "/** @constructor\n */\n" +
       "function Suggest() {}\n" +
       "Suggest.prototype.a = 1;\n" +

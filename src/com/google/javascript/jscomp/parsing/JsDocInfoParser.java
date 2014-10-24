@@ -305,7 +305,8 @@ public final class JsDocInfoParser {
     }
   }
 
-  private JsDocToken parseAnnotation(JsDocToken token,
+  @SuppressWarnings("incomplete-switch")
+private JsDocToken parseAnnotation(JsDocToken token,
       List<ExtendedTypeInfo> extendedTypes) {
     // JSTypes are represented as Rhino AST nodes, and then resolved later.
     JSTypeExpression type;

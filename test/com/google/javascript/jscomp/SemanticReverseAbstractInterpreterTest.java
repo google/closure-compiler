@@ -90,7 +90,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a ASSIGN expression.
    */
-  @SuppressWarnings("unchecked")
   public void testAssignCondition1() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -108,7 +107,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a SHEQ(NAME, NUMBER) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testSheqCondition1() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -123,7 +121,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a SHEQ(NUMBER, NAME) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testSheqCondition2() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -138,7 +135,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a SHEQ(NAME, NAME) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testSheqCondition3() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -153,7 +149,6 @@ public class SemanticReverseAbstractInterpreterTest
                 createUnionType(STRING_TYPE, BOOLEAN_TYPE))));
   }
 
-  @SuppressWarnings("unchecked")
   public void testSheqCondition4() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -166,7 +161,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("b", VOID_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testSheqCondition5() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -179,7 +173,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("b", VOID_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testSheqCondition6() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -199,7 +192,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a SHNE(NAME, NUMBER) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testShneCondition1() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -214,7 +206,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a SHNE(NUMBER, NAME) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testShneCondition2() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -229,7 +220,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a SHNE(NAME, NAME) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testShneCondition3() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -244,7 +234,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("b", STRING_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testShneCondition4() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -257,7 +246,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("b", VOID_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testShneCondition5() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -270,7 +258,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("b", NULL_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testShneCondition6() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -290,7 +277,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a EQ(NAME, NULL) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testEqCondition1() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -304,7 +290,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a NE(NULL, NAME) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testEqCondition2() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -318,7 +303,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of a EQ(NAME, NULL) expression.
    */
-  @SuppressWarnings("unchecked")
   public void testEqCondition3() throws Exception {
     FlowScope blind = newScope();
     // (number,undefined,null)
@@ -338,7 +322,6 @@ public class SemanticReverseAbstractInterpreterTest
   /**
    * Tests reverse interpretation of two undefineds.
    */
-  @SuppressWarnings("unchecked")
   public void testEqCondition4() throws Exception {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -357,7 +340,6 @@ public class SemanticReverseAbstractInterpreterTest
    * Tests reverse interpretation of a COMPARE(NAME, NUMBER) expression,
    * where COMPARE can be LE, LT, GE or GT.
    */
-  @SuppressWarnings("unchecked")
   public void testInequalitiesCondition1() {
     for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
       FlowScope blind = newScope();
@@ -376,7 +358,6 @@ public class SemanticReverseAbstractInterpreterTest
    * Tests reverse interpretation of a COMPARE(NAME, NAME) expression,
    * where COMPARE can be LE, LT, GE or GT.
    */
-  @SuppressWarnings("unchecked")
   public void testInequalitiesCondition2() {
     for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
       FlowScope blind = newScope();
@@ -403,7 +384,6 @@ public class SemanticReverseAbstractInterpreterTest
    * Tests reverse interpretation of a COMPARE(NUMBER-untyped, NAME) expression,
    * where COMPARE can be LE, LT, GE or GT.
    */
-  @SuppressWarnings("unchecked")
   public void testInequalitiesCondition3() {
     for (int op : Arrays.asList(Token.LT, Token.GT, Token.LE, Token.GE)) {
       FlowScope blind = newScope();
@@ -418,7 +398,6 @@ public class SemanticReverseAbstractInterpreterTest
     }
   }
 
-  @SuppressWarnings("unchecked")
   public void testAnd() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -433,7 +412,6 @@ public class SemanticReverseAbstractInterpreterTest
           createUnionType(STRING_TYPE, NULL_TYPE))));
   }
 
-  @SuppressWarnings("unchecked")
   public void testTypeof1() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -446,7 +424,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("a", OBJECT_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testTypeof2() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -459,7 +436,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("a", ALL_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testTypeof3() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -473,7 +449,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("a", OBJECT_NUMBER_STRING_BOOLEAN)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testTypeof4() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -488,7 +463,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("a", NUMBER_STRING_BOOLEAN)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testInstanceOf() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -502,7 +476,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("s", STRING_OBJECT_FUNCTION_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testInstanceOf2() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -518,7 +491,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("s", STRING_OBJECT_FUNCTION_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testInstanceOf3() {
     FlowScope blind = newScope();
     testBinop(blind,
@@ -533,7 +505,6 @@ public class SemanticReverseAbstractInterpreterTest
             new TypedName("s", STRING_OBJECT_FUNCTION_TYPE)));
   }
 
-  @SuppressWarnings("unchecked")
   public void testInstanceOf4() {
     FlowScope blind = newScope();
     testBinop(blind,

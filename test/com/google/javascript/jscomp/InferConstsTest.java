@@ -40,7 +40,8 @@ public class InferConstsTest extends TestCase {
   public void testInferConsts(String js, String... constants) {
     Compiler compiler = new Compiler();
 
-    SourceFile extern = SourceFile.fromCode("extern", "");
+    @SuppressWarnings("unused")
+	SourceFile extern = SourceFile.fromCode("extern", "");
     SourceFile input = SourceFile.fromCode("js", js);
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(input),
         new CompilerOptions());

@@ -45,7 +45,12 @@ import com.google.javascript.rhino.ErrorReporter;
  * Value types (null, void, number, boolean, string).
  */
 abstract class ValueType extends JSType {
-  ValueType(JSTypeRegistry registry) {
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7411092647862309728L;
+
+ValueType(JSTypeRegistry registry) {
     super(registry);
   }
 

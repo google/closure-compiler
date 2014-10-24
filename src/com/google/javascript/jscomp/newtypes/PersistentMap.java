@@ -22,10 +22,11 @@ import java.util.Map;
 /** A persistent map with non-destructive additions and removals  */
 public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
 
-  private static PersistentMap EMPTY;
+  @SuppressWarnings("rawtypes")
+private static PersistentMap EMPTY;
   static {
     try {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       Class<? extends Map> c =
           (Class<? extends Map>) Class.forName("clojure.lang.PersistentHashMap");
       EMPTY = ClojurePersistentHashMap.create(c);

@@ -18,6 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.util.format;
 
 public class MissingFormatArgumentException extends RuntimeException {
 
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1302214263810482719L;
+
   public MissingFormatArgumentException(String message) {
     super(message);
   }

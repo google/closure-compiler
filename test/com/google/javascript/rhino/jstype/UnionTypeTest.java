@@ -61,7 +61,6 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   /**
    * Tests the behavior of variants type.
    */
-  @SuppressWarnings("checked")
   public void testUnionType() throws Exception {
     UnionType nullOrString =
         (UnionType) createUnionType(NULL_TYPE, STRING_OBJECT_TYPE);
@@ -116,7 +115,6 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   /**
    * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
    */
-  @SuppressWarnings("checked")
   public void testGreatestSubtypeUnionTypes2() {
     UnionType evalUriError =
         (UnionType) createUnionType(EVAL_ERROR_TYPE, URI_ERROR_TYPE);
@@ -127,7 +125,6 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
   /**
    * Tests {@link JSType#getGreatestSubtype(JSType)} on union types.
    */
-  @SuppressWarnings("checked")
   public void testGreatestSubtypeUnionTypes3() {
     // (number,undefined,null)
     UnionType nullableOptionalNumber =
@@ -213,7 +210,6 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    * containing the unknown type should be able to assign to any other
    * type.
    */
-  @SuppressWarnings("checked")
   public void testSpecialUnionCanAssignTo() throws Exception {
     // autoboxing quirks
     UnionType numbers =
@@ -250,7 +246,6 @@ public class UnionTypeTest extends BaseJSTypeTestCase {
    * Tests the factory method
    * {@link JSTypeRegistry#createUnionType(JSType...)}.
    */
-  @SuppressWarnings("checked")
   public void testCreateUnionType() throws Exception {
     // number
     UnionType optNumber =

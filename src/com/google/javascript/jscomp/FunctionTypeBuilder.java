@@ -75,6 +75,7 @@ final class FunctionTypeBuilder {
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
   private final Node errorRoot;
+  @SuppressWarnings("unused")
   private final String sourceName;
   private final Scope scope;
 
