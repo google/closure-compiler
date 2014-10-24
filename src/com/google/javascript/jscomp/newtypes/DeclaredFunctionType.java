@@ -189,6 +189,7 @@ public class DeclaredFunctionType {
     builder.addRetType(returnType != null ? returnType : superType.returnType);
     builder.addNominalType(nominalType);
     builder.addReceiverType(receiverType);
+    builder.addTypeParameters(typeParameters);
     return builder.buildDeclaration();
   }
 

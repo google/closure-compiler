@@ -6745,6 +6745,44 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         TypeCheck.INEXISTENT_PROPERTY);
   }
 
+  public void testLooseFunctionSummaryDoesntCrash() {
+    checkNoWarnings(
+        "/** @interface */\n" +
+        "var IThenable = function() {};\n" +
+        "IThenable.prototype.then = function(onFulfilled) {};\n" +
+        "/** @constructor @implements {IThenable} */\n" +
+        "var Promise = function() {};\n" +
+        "/**\n" +
+        " * @param {function():RESULT} onFulfilled\n" +
+        " * @template RESULT\n" +
+        " */\n" +
+        "Promise.prototype.then = function(onFulfilled) {};",
+        "var /** !Promise */ p;\n" +
+        "function f(loose) {\n" +
+        "  function g(){ return 5; }\n" +
+        "  p.then(g);\n" +
+        "}");
+
+    typeCheck(
+        "/** @interface */\n" +
+        "var IThenable = function() {};\n" +
+        "IThenable.prototype.then = function(onFulfilled) {};\n" +
+        "/** @constructor @implements {IThenable} */\n" +
+        "var Promise = function() {};\n" +
+        "/**\n" +
+        " * @param {function():RESULT} onFulfilled\n" +
+        " * @return {RESULT}\n" +
+        " * @template RESULT\n" +
+        " */\n" +
+        "Promise.prototype.then = function(onFulfilled) {};",
+        "var /** !Promise */ p;\n" +
+        "function f(loose) {\n" +
+        "  function g(){ return 5; }\n" +
+        "  var /** null */ n = p.then(g);\n" +
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testSpecializeLooseNullDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ function Foo(){}\n" +
