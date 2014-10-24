@@ -16,8 +16,8 @@
 
 /**
  * @fileoverview RefasterJS templates for replacing direct access to the
- * Location.prototype.href DOM property with a call to the
- * goog.dom.safe.setLocationHref wrapper.
+ * Location.prototype.href and Window.prototype.location DOM properties with a
+ * call to the goog.dom.safe.setLocationHref wrapper.
  *
  * For benign URLs, setLocationHref simply forwards the provided URL to the
  * underlying DOM property. For malicious URLs (such as 'javascript:evil()')
@@ -34,7 +34,7 @@ goog.require('goog.dom.safe');
  * Replaces writes to Location.property.href with a call to the corresponding
  * goog.dom.safe.setLocationHref wrapper.
  * +require {goog.dom.safe}
- * @param {!Location} loc The location object
+ * @param {!Location} loc The location object.
  * @param {string} url The url.
  */
 function before_setLocationHref(loc, url) {
@@ -42,9 +42,28 @@ function before_setLocationHref(loc, url) {
 }
 
 /**
- * @param {!Location} loc The location object
+ * @param {!Location} loc The location object.
  * @param {string} url The url.
  */
 function after_setLocationHref(loc, url) {
   goog.dom.safe.setLocationHref(loc, url);
+}
+
+/**
+ * Replaces writes to Window.property.location with a call to the corresponding
+ * goog.dom.safe.setLocationHref wrapper.
+ * +require {goog.dom.safe}
+ * @param {!Window} win The window object.
+ * @param {string} url The url.
+ */
+function before_setWindowLocation(win, url) {
+  win.location = url;
+}
+
+/**
+ * @param {!Window} win The window object.
+ * @param {string} url The url.
+ */
+function after_setWindowLocation(win, url) {
+  goog.dom.safe.setLocationHref(win.location, url);
 }
