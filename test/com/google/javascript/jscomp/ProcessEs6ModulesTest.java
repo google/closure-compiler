@@ -63,19 +63,21 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   public void testImport() {
-    test("import name from 'test';", Joiner.on('\n').join(
-        "goog.require('module$test.name');",
-        "goog.require('module$test');"
+    test("import name from 'test'; use(name);", Joiner.on('\n').join(
+        "goog.require('module$test.default');",
+        "goog.require('module$test');",
+        "use(module$test.default);"
     ));
     test("import {n as name} from 'test';",  Joiner.on('\n').join(
         "goog.require('module$test.n');",
         "goog.require('module$test');"
     ));
-    test("import x, {f as foo, b as bar} from 'test';", Joiner.on('\n').join(
+    test("import x, {f as foo, b as bar} from 'test'; use(x);", Joiner.on('\n').join(
         "goog.require('module$test.b');",
         "goog.require('module$test.f');",
-        "goog.require('module$test.x');",
-        "goog.require('module$test');"
+        "goog.require('module$test.default');",
+        "goog.require('module$test');",
+        "use(module$test.default);"
     ));
   }
 

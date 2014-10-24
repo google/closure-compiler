@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ProcessCommonJSModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.Scope.Var;
@@ -48,6 +49,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private static final String MODULE_NAME_SEPARATOR = "\\$";
   private static final String MODULE_NAME_PREFIX = "module$";
+  private static final String DEFAULT_EXPORT_NAME = "$jscompDefaultExport";
 
   private final ES6ModuleLoader loader;
 
@@ -130,8 +132,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
         continue;
       } else if (child.isName()) { // import a from "mod"
         importMap.put(child.getString(),
-            new ModuleOriginalNamePair(moduleName, child.getString()));
-        namesToRequire.add(child.getString());
+            new ModuleOriginalNamePair(moduleName, "default"));
+        namesToRequire.add("default");
       } else if (child.getType() == Token.IMPORT_SPECS) {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
@@ -186,8 +188,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private void visitExport(NodeTraversal t, Node n, Node parent) {
     if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
-      compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-          "Default export"));
+      Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), n.removeFirstChild());
+      n.getParent().replaceChild(n, var);
+      exportMap.put("default", DEFAULT_EXPORT_NAME);
     } else if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) {
       compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Wildcard export"));
@@ -297,10 +300,19 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
     for (String name : exportMap.keySet()) {
       String qualifiedName = moduleName + "." + name;
-      script.addChildAfter(IR.exprResult(
+      Node newGoogProvide = IR.exprResult(
           IR.call(NodeUtil.newQName(compiler, "goog.provide"),
-              IR.string(qualifiedName)))
-              .copyInformationFromForTree(script), googProvide);
+              IR.string(qualifiedName)));
+      newGoogProvide.copyInformationFromForTree(script);
+      if (name.equals("default")) {
+        JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
+            ? new JSDocInfoBuilder(false)
+            : JSDocInfoBuilder.copyFrom(script.getJSDocInfo());
+        jsDocInfo.recordSuppressions(ImmutableSet.of("invalidProvide"));
+        script.setJSDocInfo(jsDocInfo.build(script));
+      }
+
+      script.addChildAfter(newGoogProvide, googProvide);
       if (reportDependencies) {
         t.getInput().addProvide(qualifiedName);
       }

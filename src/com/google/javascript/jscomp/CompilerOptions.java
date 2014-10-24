@@ -2337,6 +2337,12 @@ public class CompilerOptions implements Serializable, Cloneable {
       }
     }
 
+    /** Whether this is ECMAScript 5 or higher. */
+    public boolean isEs5OrHigher() {
+      Preconditions.checkState(this != NO_TRANSPILE);
+      return this != LanguageMode.ECMASCRIPT3;
+    }
+
     /** Whether this is ECMAScript 6 or higher. */
     public boolean isEs6OrHigher() {
       Preconditions.checkState(this != NO_TRANSPILE);

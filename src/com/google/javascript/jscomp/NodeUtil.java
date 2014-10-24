@@ -21,7 +21,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -37,6 +37,8 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -2823,33 +2825,48 @@ public final class NodeUtil {
         isLatin(name);
   }
 
+  @Deprecated
+  public static boolean isValidQualifiedName(String name) {
+    return isValidQualifiedName(LanguageMode.ECMASCRIPT3, name);
+  }
+
+
   /**
    * Determines whether the given name is a valid qualified name.
    */
-  // TODO(nicksantos): This should be moved into a "Language" API,
-  // so that the results are different for es5 and es3.
-  public static boolean isValidQualifiedName(String name) {
+  public static boolean isValidQualifiedName(LanguageMode mode, String name) {
     if (name.endsWith(".") || name.startsWith(".")) {
       return false;
     }
-    for (String part : Splitter.on('.').split(name)) {
-      if (!isValidSimpleName(part)) {
+
+    List<String> parts = Splitter.on('.').splitToList(name);
+    for (String part : parts) {
+      if (!isValidPropertyName(mode, part)) {
         return false;
       }
     }
-    return true;
+    return isValidSimpleName(parts.get(0));
   }
 
-  /**
-   * Determines whether the given name can appear on the right side of
-   * the dot operator. Many properties (like reserved words) cannot.
-   */
+  @Deprecated
   static boolean isValidPropertyName(String name) {
     return isValidSimpleName(name);
   }
 
+  /**
+   * Determines whether the given name can appear on the right side of
+   * the dot operator. Many properties (like reserved words) cannot, in ES3.
+   */
+  static boolean isValidPropertyName(LanguageMode mode, String name) {
+    if (isValidSimpleName(name)) {
+      return true;
+    } else {
+      return mode.isEs5OrHigher() && TokenStream.isKeyword(name);
+    }
+  }
+
   private static class VarCollector implements Visitor {
-    final Map<String, Node> vars = Maps.newLinkedHashMap();
+    final Map<String, Node> vars = new LinkedHashMap<>();
 
     @Override
     public void visit(Node n) {

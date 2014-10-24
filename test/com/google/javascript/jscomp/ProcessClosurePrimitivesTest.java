@@ -34,6 +34,7 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_P
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NULL_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.TOO_MANY_ARGUMENTS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 import com.google.javascript.rhino.Node;
 
@@ -640,7 +641,13 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   public void testInvalidProvide() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    test("goog.provide('a.class');", "var a = {}; a.class = {};");
+    test("goog.provide('class.a');", null, INVALID_PROVIDE_ERROR);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     test("goog.provide('a.class');", null, INVALID_PROVIDE_ERROR);
+    test("goog.provide('class.a');", null, INVALID_PROVIDE_ERROR);
   }
 
   private static final String METHOD_FORMAT =

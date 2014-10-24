@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -89,7 +88,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   static final DiagnosticType INVALID_PROVIDE_ERROR = DiagnosticType.error(
       "JSC_INVALID_PROVIDE_ERROR",
-      "\"{0}\" is not a valid JS identifier name");
+      "\"{0}\" is not a valid {1} qualified name");
 
   static final DiagnosticType INVALID_DEFINE_NAME_ERROR = DiagnosticType.error(
       "JSC_INVALID_DEFINE_NAME_ERROR",
@@ -963,11 +962,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       return false;
     }
 
-    for (String part : Splitter.on('.').split(arg.getString())) {
-      if (!NodeUtil.isValidPropertyName(part)) {
-        compiler.report(t.makeError(arg, INVALID_PROVIDE_ERROR, part));
-        return false;
-      }
+    if (!NodeUtil.isValidQualifiedName(compiler.getLanguageMode(), arg.getString())) {
+      compiler.report(t.makeError(arg, INVALID_PROVIDE_ERROR,
+          arg.getString(), compiler.getLanguageMode().toString()));
     }
     return true;
   }
