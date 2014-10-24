@@ -109,6 +109,11 @@ public class NewTypeInference implements CompilerPass {
           "JSC_POSSIBLY_INEXISTENT_PROPERTY",
           "Property {0} may not be present on {1}.");
 
+  static final DiagnosticType NULLABLE_DEREFERENCE =
+      DiagnosticType.warning(
+          "JSC_NULLABLE_DEREFERENCE",
+          "Attempt to access property of nullable type {0}.");
+
   static final DiagnosticType PROPERTY_ACCESS_ON_NONOBJECT =
       DiagnosticType.warning(
           "JSC_PROPERTY_ACCESS_ON_NONOBJECT",
@@ -177,6 +182,7 @@ public class NewTypeInference implements CompilerPass {
       NON_NUMERIC_ARRAY_INDEX,
       NOT_A_CONSTRUCTOR,
       NOT_UNIQUE_INSTANTIATION,
+      NULLABLE_DEREFERENCE,
       POSSIBLY_INEXISTENT_PROPERTY,
       PROPERTY_ACCESS_ON_NONOBJECT,
       RETURN_NONDECLARED_TYPE,
@@ -2160,8 +2166,7 @@ public class NewTypeInference implements CompilerPass {
     if (isNotAnObject ||
         (!specializedType.isTruthy() && !specializedType.isFalsy() &&
             mayNotBeAnObject)) {
-      warnings.add(JSError.make(
-          receiver, PROPERTY_ACCESS_ON_NONOBJECT, pname, recvType.toString()));
+      warnPropAccessOnNonobject(receiver, pname, recvType);
       return true;
     }
     return false;
@@ -2287,6 +2292,16 @@ public class NewTypeInference implements CompilerPass {
     }
     // Any potential type mismatch will be caught by the context
     return new EnvTypePair(pair.env, resultType);
+  }
+
+  private void warnPropAccessOnNonobject(
+      Node node, String pname, JSType type) {
+    if (type.removeType(JSType.NULL).hasProp(new QualifiedName(pname))) {
+      warnings.add(JSError.make(node, NULLABLE_DEREFERENCE, type.toString()));
+    } else {
+      warnings.add(JSError.make(node, PROPERTY_ACCESS_ON_NONOBJECT,
+          pname, type.toString()));
+    }
   }
 
   private static TypeEnv updateLvalueTypeInEnv(
@@ -3102,8 +3117,7 @@ public class NewTypeInference implements CompilerPass {
     TypeEnv lvalueEnv = lvalue.env;
     JSType lvalueType = lvalue.type;
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
-      warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
-              pnameAsString, lvalueType.toString()));
+      warnPropAccessOnNonobject(obj, pnameAsString, lvalueType);
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
     Node propAccessNode = obj.getParent();

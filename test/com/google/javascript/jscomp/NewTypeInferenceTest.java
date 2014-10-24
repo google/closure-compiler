@@ -1692,7 +1692,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function g(/** Foo */ f) {\n" +
         "  f.prop1.prop2 = 'str';\n" +
         "};",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testNonexistentProperty() {
@@ -1724,6 +1724,23 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     //     "  if (x.foo) {} else { x.foo(); }\n" +
     //     "}",
     //     TypeCheck.INEXISTENT_PROPERTY);
+  }
+
+  public void testNullableDereference() {
+    typeCheck(
+        "function f(/** ?{ p : number } */ o) { return o.p; }",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(
+        "/** @constructor */ function Foo() { /** @const */ this.p = 5; }\n" +
+        "function f(/** ?Foo */ f) { return f.p; }",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n" +
+        "Foo.prototype.p = function(){};\n" +
+        "function f(/** ?Foo */ f) { f.p(); }",
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testDontInferBottom() {
@@ -3960,7 +3977,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @constructor */ function Foo(){ this.prop = 123; }\n" +
         "function f(/** Foo */ obj) { obj.prop; }",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(
         "/** @interface */\n" +
@@ -3968,7 +3985,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "I.prototype.method = function() {};\n" +
         "/** @param {I} x */\n" +
         "function foo(x) { x.method(); }",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testGetElem() {
