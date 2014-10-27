@@ -396,6 +396,13 @@ Function.prototype.arity;
 Function.prototype.caller;
 
 /**
+ * Nonstandard.
+ * @type {?}
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/displayName
+ */
+Function.prototype.displayName;
+
+/**
  * Expected number of arguments.
  * @type {number}
  * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function/length
