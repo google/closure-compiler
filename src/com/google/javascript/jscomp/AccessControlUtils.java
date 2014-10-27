@@ -210,10 +210,27 @@ public final class AccessControlUtils {
     if (objectType != null) {
       raw = objectType.getOwnPropertyJSDocInfo(propertyName).getVisibility();
     }
-    if (raw != Visibility.INHERITED) {
-      return raw;
-    }
-    return (fileOverviewVisibility == null) ? raw : fileOverviewVisibility;
+    JSType type = getprop.getJSType();
+    boolean createdFromGoogProvide = (type instanceof PrototypeObjectType
+        && ((PrototypeObjectType) type).isAnonymous());
+    // Ignore @fileoverview visibility when computing the effective visibility
+    // for properties created by goog.provide.
+    //
+    // ProcessClosurePrimitives rewrites goog.provide()s as object literal
+    // declarations, but the exact form depends on the ordering of the
+    // input files. If goog.provide('a.b.c') occurs in the inputs before
+    // goog.provide('a'), it is rewritten like
+    //
+    // var a={};a.b={}a.b.c={};
+    //
+    // If the file containing goog.provide('a.b.c') also declares
+    // a @fileoverview visibility, it must not apply to b, as this would make
+    // every a.b.* namespace effectively package-private.
+    return (raw != Visibility.INHERITED
+        || fileOverviewVisibility == null
+        || createdFromGoogProvide)
+        ? raw
+        : fileOverviewVisibility;
   }
 }
 

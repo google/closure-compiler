@@ -1045,22 +1045,6 @@ public class CheckAccessControlsTest extends CompilerTestCase {
             "foo.bar();")));
   }
 
-  public void testPackageFileOverviewVisibilityAppliesToNamespaceProperty() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            "  * @fileoverview\n" +
-            "  * @package\n" +
-            "  */\n" +
-            "/** @public */ var foo = {};\n" +
-            "foo.bar = function() {};"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "foo.bar();")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
-  }
-
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace1() {
     // Don't compare the generated JsDoc. It includes annotations we're not interested in,
     // like @inherited.
@@ -1107,14 +1091,62 @@ public class CheckAccessControlsTest extends CompilerTestCase {
             "goog.provide('foo');"),
         SourceFile.fromCode(
             "bar.js",
-            "goog.require('foo')")),
+            "goog.require('foo');\n" +
+            "var x = foo;")),
         ImmutableList.of(
             SourceFile.fromCode("foo/bar.js", "var foo={};foo.bar={};"),
             SourceFile.fromCode("foo.js", ""),
-            SourceFile.fromCode("bar.js", "")),
+            SourceFile.fromCode("bar.js", "var x=foo")),
         null, null);
 
     compareJsDoc = true;
+  }
+
+  public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace3() {
+    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
+    // like @inherited.
+    compareJsDoc = false;
+
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @package\n" +
+            " */\n" +
+            "goog.provide('one.two');\n" +
+            "one.two.three = function(){};"),
+        SourceFile.fromCode(
+            "baz.js",
+            "goog.require('one.two');\n" +
+            "var x = one.two;")),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "var one={};one.two={};one.two.three=function(){};"),
+            SourceFile.fromCode(
+                "baz.js",
+                "var x=one.two")),
+        null, null);
+
+    compareJsDoc = true;
+  }
+
+  public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4() {
+    test(ImmutableList.of(
+        SourceFile.fromCode(
+            "foo/bar.js",
+            "/**\n" +
+            " * @fileoverview\n" +
+            " * @package\n" +
+            " */\n" +
+            "goog.provide('one.two');\n" +
+            "one.two.three = function(){};"),
+        SourceFile.fromCode(
+            "baz.js",
+            "goog.require('one.two');\n" +
+            "var x = one.two.three();")),
+      null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
