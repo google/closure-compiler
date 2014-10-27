@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -93,29 +92,11 @@ class ReplaceStrings extends AbstractPostOrderCallback
     // {@code placeholderToken}.
     public final String original;
     public final String replacement;
-    public final List<Location> replacementLocations = Lists.newLinkedList();
+    public boolean didReplacement = false;
 
     Result(String original, String replacement) {
       this.original = original;
       this.replacement = replacement;
-    }
-
-    void addLocation(Node n) {
-      replacementLocations.add(new Location(
-          n.getSourceFileName(),
-          n.getLineno(), n.getCharno()));
-    }
-  }
-
-  /** Represent a source location where a replacement occurred. */
-  static class Location {
-    public final String sourceFile;
-    public final int line;
-    public final int column;
-    Location(String sourceFile, int line, int column) {
-      this.sourceFile = sourceFile;
-      this.line = line;
-      this.column = column;
     }
   }
 
@@ -171,7 +152,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
     public boolean apply(Result result) {
       // The list of locations may be empty if the map
       // was pre-populated from a previous map.
-      return !result.replacementLocations.isEmpty();
+      return result.didReplacement;
     }
   };
 
@@ -348,7 +329,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
     Preconditions.checkNotNull(key);
     Preconditions.checkNotNull(replacementString);
-    recordReplacement(expr, key);
+    recordReplacement(key);
 
     parent.replaceChild(expr, replacement);
     compiler.reportCodeChange();
@@ -373,11 +354,11 @@ class ReplaceStrings extends AbstractPostOrderCallback
   /**
    * Record the location the replacement was made.
    */
-  private void recordReplacement(Node n, String key) {
+  private void recordReplacement(String key) {
     Result result = results.get(key);
     Preconditions.checkState(result != null);
 
-    result.addLocation(n);
+    result.didReplacement = true;
   }
 
   /**
