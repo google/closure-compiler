@@ -939,7 +939,7 @@ final class TypedScopeCreator implements ScopeCreator {
           }
 
           FunctionTypeBuilder builder =
-              new FunctionTypeBuilder(name, compiler, errorRoot, sourceName,
+              new FunctionTypeBuilder(name, compiler, errorRoot,
                   scope)
               .setContents(getFunctionAnalysisResults(fnRoot))
               .inferFromOverriddenFunction(overriddenType, parametersNode)

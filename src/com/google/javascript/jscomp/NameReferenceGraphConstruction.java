@@ -434,7 +434,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
         // Don't count reference in extern as a use.
         return null;
       } else {
-        Reference reference = new Reference(n, parent);
+        Reference reference = new Reference(n);
         Name name = graph.defineNameIfNotExists(n.getQualifiedName(), isExtern);
         name.setType(getType(n));
         graph.connect(getNamedContainingFunction(), reference, name);
@@ -455,7 +455,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
 
       if (!isExtern) {
         // Don't count reference in extern as a use.
-        Reference ref = new Reference(n, parent);
+        Reference ref = new Reference(n);
 
         FunctionType constructor = objType.getConstructor();
         if (constructor != null) {
@@ -514,7 +514,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
         return;
       } else {
         Preconditions.checkArgument(n.isGetProp());
-        Reference ref = new Reference(n, parent);
+        Reference ref = new Reference(n);
         ref.setUnknown(true);
         unknownNameUse.put(n.getLastChild().getString(),
             new NameUse(getNamedContainingFunction(), ref));

@@ -79,14 +79,7 @@ abstract class ES6ModuleLoader {
   /**
    * Error thrown when a load fails.
    */
-  static class LoadFailedException extends Exception {
-    final String loadAddress;
-
-    LoadFailedException(String reason, String loadAddress) {
-      super(reason);
-      this.loadAddress = loadAddress;
-    }
-  }
+  static class LoadFailedException extends Exception {}
 
   /**
    * A naive module loader treats all module references as direct file paths.
@@ -107,14 +100,12 @@ abstract class ES6ModuleLoader {
   }
 
   private static class NaiveModuleLoader extends ES6ModuleLoader {
-    private final AbstractCompiler compiler;
     private final Map<String, CompilerInput> inputsByAddress =
         Maps.newHashMap();
     private final String moduleRoot;
     private final URI moduleRootURI;
 
     private NaiveModuleLoader(AbstractCompiler compiler, String moduleRoot) {
-      this.compiler = compiler;
       this.moduleRoot = moduleRoot;
       this.moduleRootURI = new File(moduleRoot).toURI();
 

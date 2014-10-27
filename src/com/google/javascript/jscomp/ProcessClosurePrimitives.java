@@ -356,8 +356,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       String ns = arg.getString();
       ProvidedName provided = providedNames.get(ns);
       if (provided == null || !provided.isExplicitlyProvided()) {
-        unrecognizedRequires.add(
-            new UnrecognizedRequire(n, ns, t.getSourceName()));
+        unrecognizedRequires.add(new UnrecognizedRequire(n, ns));
       } else {
         JSModule providedModule = provided.explicitModule;
 
@@ -1515,12 +1514,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private static class UnrecognizedRequire {
     final Node requireNode;
     final String namespace;
-    final String inputName;
 
-    UnrecognizedRequire(Node requireNode, String namespace, String inputName) {
+    UnrecognizedRequire(Node requireNode, String namespace) {
       this.requireNode = requireNode;
       this.namespace = namespace;
-      this.inputName = inputName;
     }
   }
 }
