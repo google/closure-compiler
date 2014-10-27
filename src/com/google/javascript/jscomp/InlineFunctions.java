@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
@@ -28,7 +27,9 @@ import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -58,8 +59,8 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
   // uniquely named variables. There's currently a stopgap scope-check
   // to ensure that this doesn't produce invalid code. But in the long run,
   // this needs a major refactor.
-  private final Map<String, FunctionState> fns = Maps.newHashMap();
-  private final Map<Node, String> anonFns = Maps.newHashMap();
+  private final Map<String, FunctionState> fns = new LinkedHashMap<>();
+  private final Map<Node, String> anonFns = new HashMap<>();
 
   private final AbstractCompiler compiler;
 
@@ -253,7 +254,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
       if (fs.canInline()) {
         // store it for use when inlining.
         fs.setFn(fn);
-        if (injector.isDirectCallNodeReplacementPossible(
+        if (FunctionInjector.isDirectCallNodeReplacementPossible(
             fn.getFunctionNode())) {
           fs.inlineDirectly(true);
         }
@@ -966,7 +967,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     public void addReference(Reference ref) {
       if (references == null) {
-        references = Maps.newLinkedHashMap();
+        references = new LinkedHashMap<>();
       }
       references.put(ref.callNode, ref);
     }

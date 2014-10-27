@@ -1437,19 +1437,19 @@ public class InlineFunctionsTest extends CompilerTestCase {
       "else " +
         "var head$$inline_3=0;" +
       "{" +
-        "var element$$inline_4=" +
+        "var element$$inline_0=" +
             "styleSheet$$inline_2;" +
-        "var stylesString$$inline_5=a;" +
+        "var stylesString$$inline_1=a;" +
         "if(goog$userAgent$IE)" +
-          "element$$inline_4.cssText=" +
-              "stylesString$$inline_5;" +
+          "element$$inline_0.cssText=" +
+              "stylesString$$inline_1;" +
         "else " +
         "{" +
-          "var propToSet$$inline_6=" +
+          "var propToSet$$inline_2=" +
               "\"innerText\";" +
-          "element$$inline_4[" +
-              "propToSet$$inline_6]=" +
-                  "stylesString$$inline_5" +
+          "element$$inline_0[" +
+              "propToSet$$inline_2]=" +
+                  "stylesString$$inline_1" +
         "}" +
       "}" +
       "styleSheet$$inline_2" +
