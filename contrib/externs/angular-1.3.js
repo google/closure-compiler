@@ -1539,7 +1539,7 @@ angular.$interpolateProvider.endSymbol;
 
 /**
  * @typedef {
- *  function(function(), number=, number=, boolean=):angular.$q.Promise
+ *  function(function(), number=, number=, boolean=):!angular.$q.Promise
  * }
  */
 angular.$interval;
