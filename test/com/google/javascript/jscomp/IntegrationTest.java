@@ -120,6 +120,38 @@ public class IntegrationTest extends IntegrationTestCase {
          "goog.inherits(G, F); goog.exportSymbol('G', G);");
   }
 
+  public void testBug18078936() {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    test(options,
+        "var goog = {};" +
+        "goog.inherits = function(a,b) {};" +
+        "goog.defineClass = function(a,b) {};" +
+
+         "/** @template T */\n" +
+         "var ClassA = goog.defineClass(null, {\n" +
+         "  constructor: function() {},\n" +
+         "" +
+         "  /** @param {T} x */\n" +
+         "  fn: function(x) {}\n" +
+         "});\n" +
+         "" +
+         "/** @extends {ClassA.<string>} */\n" +
+         "var ClassB = goog.defineClass(ClassA, {\n" +
+         "  constructor: function() {},\n" +
+         "" +
+         "  /** @override */\n" +
+         "  fn: function(x) {}\n" +
+         "});\n" +
+         "" +
+         "(new ClassB).fn(3);\n" +
+         "",
+         TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
   public void testIssue90() {
     CompilerOptions options = createCompilerOptions();
     options.foldConstants = true;

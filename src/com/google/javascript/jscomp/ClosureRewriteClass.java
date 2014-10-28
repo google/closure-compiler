@@ -424,6 +424,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       final String argName = arg.getString();
       NodeTraversal.traverse(compiler, cls.classModifier.getLastChild(),
           new AbstractPostOrderCallback() {
+            @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
               if (n.isName() && n.getString().equals(argName)) {
                 parent.replaceChild(n, cls.name.cloneTree());
@@ -567,8 +568,11 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         mergedInfo.recordStruct();
       }
 
-      // a "super" implies @extends
-      if (superNode != null) {
+
+      if (classInfo.getBaseType() != null) {
+        mergedInfo.recordBaseType(classInfo.getBaseType());
+      } else if (superNode != null) {
+        // a "super" implies @extends, build a default.
         JSTypeExpression baseType = new JSTypeExpression(
             new Node(Token.BANG,
               IR.string(superNode.getQualifiedName())),

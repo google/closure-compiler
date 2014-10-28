@@ -423,7 +423,7 @@ public class JSDocInfo implements Serializable {
   @Override
   public JSDocInfo clone() {
     JSDocInfo other = new JSDocInfo();
-    other.info = this.info;
+    other.info = this.info;  // this should be cloned as it isn't immutable
     other.documentation = this.documentation;
     other.visibility = this.visibility;
     other.bitset = this.bitset;
