@@ -1605,10 +1605,6 @@ public class JSTypeRegistry implements Serializable {
       case Token.STAR: // The AllType
         return getNativeType(ALL_TYPE);
 
-      case Token.LB: // Array type
-        // TODO(nicksantos): Enforce membership restrictions on the Array.
-        return getNativeType(ARRAY_TYPE);
-
       case Token.PIPE: // Union type
         UnionTypeBuilder builder = new UnionTypeBuilder(this);
         for (Node child = n.getFirstChild(); child != null;
