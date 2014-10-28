@@ -149,8 +149,12 @@ class NewIRFactory {
   static final String INVALID_NUMBER_LITERAL =
       "Invalid number literal.";
 
-  static final String STRING_CONTINUATION_WARNING =
+  static final String STRING_CONTINUATION_ERROR =
       "String continuations are not supported in this language mode.";
+
+  static final String STRING_CONTINUATION_WARNING =
+      "String continuations are not recommended. See"
+      + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals";
 
   static final String BINARY_NUMBER_LITERAL_WARNING =
       "Binary integer literals are not supported in this language mode.";
@@ -2196,8 +2200,12 @@ class NewIRFactory {
           result.append('\u000B');
           break;
         case '\n':
-          if (!isEs5OrBetterMode()) {
+          if (isEs5OrBetterMode()) {
             errorReporter.warning(STRING_CONTINUATION_WARNING,
+                sourceName,
+                lineno(token.location.start), charno(token.location.start));
+          } else {
+            errorReporter.error(STRING_CONTINUATION_ERROR,
                 sourceName,
                 lineno(token.location.start), charno(token.location.start));
           }

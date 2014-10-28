@@ -879,11 +879,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
             createScript(new Node(Token.EXPR_RESULT, Node.newNumber(3.0)))),
         new ParserResult(
             "var a = b;",
-             createScript(new Node(Token.VAR, a))),
-        new ParserResult(
-            "\"hell\\\no\\ world\\\n\\\n!\"",
-             createScript(new Node(Token.EXPR_RESULT,
-             Node.newString(Token.STRING, "hello world!"))))
+             createScript(new Node(Token.VAR, a)))
         );
 
     for (ParserResult testCase : testCases) {
@@ -1612,23 +1608,37 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parseError("function * f() { yield , yield; }");
   }
 
-  public void testStringContinuations() {
+  public void testStringLineContinuation() {
     mode = LanguageMode.ECMASCRIPT3;
-    parseWarning("'\\\n';",
+    Node n = parseError("'one\\\ntwo';",
         "String continuations are not supported in this language mode.");
+    assertEquals("onetwo", n.getFirstChild().getFirstChild().getString());
+
     mode = LanguageMode.ECMASCRIPT5;
-    parse("'\\\n';");
+    parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
+        + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
+    assertEquals("onetwo", n.getFirstChild().getFirstChild().getString());
+
     mode = LanguageMode.ECMASCRIPT6;
-    parse("'\\\n';");
+    parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
+        + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
+    assertEquals("onetwo", n.getFirstChild().getFirstChild().getString());
   }
 
-  private void testTemplateLiteral(String s) {
+  public void testStringLiteral() {
+    Node n = parse("'foo'");
+    Node stringNode = n.getFirstChild().getFirstChild();
+    assertEquals(Token.STRING, stringNode.getType());
+    assertEquals("foo", stringNode.getString());
+  }
+
+  private Node testTemplateLiteral(String s) {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(s,
         "this language feature is only supported in es6 mode: template literals");
 
     mode = LanguageMode.ECMASCRIPT6;
-    parse(s);
+    return parse(s);
   }
 
   public void testUseTemplateLiteral() {
@@ -1646,6 +1656,17 @@ public class NewParserTest extends BaseJSTypeTestCase {
     testTemplateLiteral("`string containing \\`escaped\\` backticks`;");
     testTemplateLiteral("{ `in block` }");
     testTemplateLiteral("{ `in ${block}` }");
+  }
+
+  public void testTemplateLiteralWithLineContinuation() {
+    mode = LanguageMode.ECMASCRIPT6;
+    Node n = parseWarning("`string \\\ncontinuation`",
+        "String continuations are not recommended. See"
+        + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
+    Node templateLiteral = n.getFirstChild().getFirstChild();
+    Node stringNode = templateLiteral.getFirstChild();
+    assertEquals(Token.STRING, stringNode.getType());
+    assertEquals("string continuation", stringNode.getString());
   }
 
   public void testTemplateLiteralSubstitution() {
