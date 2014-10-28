@@ -1811,6 +1811,11 @@ google.maps.GeocoderRequest.prototype.address;
 google.maps.GeocoderRequest.prototype.bounds;
 
 /**
+ * @type {google.maps.GeocoderComponentRestrictions}
+ */
+google.maps.GeocoderRequest.prototype.componentRestrictions;
+
+/**
  * @type {google.maps.LatLng|google.maps.LatLngLiteral}
  */
 google.maps.GeocoderRequest.prototype.location;
