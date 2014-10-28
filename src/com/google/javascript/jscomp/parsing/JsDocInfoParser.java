@@ -2273,19 +2273,25 @@ public final class JsDocInfoParser {
             paramType = newNode(Token.ELLIPSIS);
           } else {
             skipEOLs();
-            if (!match(JsDocToken.LEFT_SQUARE)) {
-              return reportTypeSyntaxWarning("msg.jsdoc.missing.lb");
+
+            // Whether the optional square brackets are present.
+            // TODO(tbreisacher): Remove this option after no one is
+            // using the brackets anymore.
+            boolean squareBrackets = match(JsDocToken.LEFT_SQUARE);
+            if (squareBrackets) {
+              next();
             }
 
-            next();
             skipEOLs();
             paramType = wrapNode(Token.ELLIPSIS, parseTypeExpression(next()));
             skipEOLs();
-            if (!match(JsDocToken.RIGHT_SQUARE)) {
-              return reportTypeSyntaxWarning("msg.jsdoc.missing.rb");
+            if (squareBrackets) {
+              if (match(JsDocToken.RIGHT_SQUARE)) {
+                next();
+              } else {
+                return reportTypeSyntaxWarning("msg.jsdoc.missing.rb");
+              }
             }
-            skipEOLs();
-            next();
           }
 
           isVarArgs = true;

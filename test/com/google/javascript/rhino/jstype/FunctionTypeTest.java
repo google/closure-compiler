@@ -90,7 +90,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertLeastSupertype(
         "Function", retString, retNumber);
     assertGreatestSubtype(
-        "function (...[*]): None", retString, retNumber);
+        "function (...*): None", retString, retNumber);
   }
 
   public void testSupAndInfWithDifferentParams() {
@@ -104,7 +104,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     assertLeastSupertype(
         "Function", retString, retNumber);
     assertGreatestSubtype(
-        "function (...[*]): None", retString, retNumber);
+        "function (...*): None", retString, retNumber);
   }
 
   public void testSupAndInfWithDifferentThisTypes() {
@@ -327,7 +327,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
 
     assertEquals(
         "function ((Date|null|undefined), string=, number=):" +
-        " function (...[?]): boolean",
+        " function (...?): boolean",
         fn.getPropertyType("bind").toString());
   }
 
@@ -374,7 +374,7 @@ public class FunctionTypeTest extends BaseJSTypeTestCase {
     FunctionType fn = new FunctionBuilder(registry)
       .withTypeOfThis(new TemplateType(registry, "T"))
       .withReturnType(BOOLEAN_TYPE).build();
-    assertEquals("function (this:T, ...[?]): boolean", fn.toString());
+    assertEquals("function (this:T, ...?): boolean", fn.toString());
   }
 
   public void testSetImplementsOnInterface() {

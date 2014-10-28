@@ -1003,8 +1003,8 @@ public class FunctionType extends PrototypeObjectType {
       paramType = paramType.toMaybeUnionType().getRestrictedUnion(
           registry.getNativeType(JSTypeNative.VOID_TYPE));
     }
-    builder.append("...[").append(
-        paramType.toStringHelper(forAnnotations)).append("]");
+    builder.append("...").append(
+        paramType.toStringHelper(forAnnotations));
   }
 
   /** Gets the string representation of an optional param. */

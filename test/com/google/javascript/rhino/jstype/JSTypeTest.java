@@ -2999,7 +2999,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createFunctionType(BOOLEAN_TYPE, false, NUMBER_TYPE,
             STRING_TYPE).toString());
 
-    assertEquals("function (new:Array, ...[*]): Array",
+    assertEquals("function (new:Array, ...*): Array",
         ARRAY_FUNCTION_TYPE.toString());
 
     assertEquals("function (new:Boolean, *=): boolean",
@@ -3011,11 +3011,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertEquals("function (new:String, *=): string",
         STRING_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (...[number]): boolean",
+    assertEquals("function (...number): boolean",
         registry.createFunctionType(BOOLEAN_TYPE, true, NUMBER_TYPE)
         .toString());
 
-    assertEquals("function (number, ...[string]): boolean",
+    assertEquals("function (number, ...string): boolean",
         registry.createFunctionType(BOOLEAN_TYPE, true, NUMBER_TYPE,
             STRING_TYPE).toString());
 
@@ -4723,7 +4723,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         unresolvedNamedType.getLeastSupertype(U2U_FUNCTION_TYPE));
     assertTypeEquals(expected,
         U2U_FUNCTION_TYPE.getLeastSupertype(unresolvedNamedType));
-    assertEquals("(function (...[?]): ?|not.resolved.named.type)",
+    assertEquals("(function (...?): ?|not.resolved.named.type)",
         expected.toString());
   }
 

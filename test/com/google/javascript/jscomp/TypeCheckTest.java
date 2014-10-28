@@ -1766,13 +1766,13 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionInference3() throws Exception {
     testFunctionType(
         "function f(var_args) {}",
-        "function (...[?]): undefined");
+        "function (...?): undefined");
   }
 
   public void testFunctionInference4() throws Exception {
     testFunctionType(
         "function f(a,b,c,var_args) {}",
-        "function (?, ?, ?, ...[?]): undefined");
+        "function (?, ?, ?, ...?): undefined");
   }
 
   public void testFunctionInference5() throws Exception {
@@ -1790,7 +1790,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testFunctionInference7() throws Exception {
     testFunctionType(
         "/** @this Date */function f(a,b,c,var_args) {}",
-        "function (this:Date, ?, ?, ?, ...[?]): undefined");
+        "function (this:Date, ?, ?, ?, ...?): undefined");
   }
 
   public void testFunctionInference8() throws Exception {
@@ -3437,7 +3437,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @extends {base}\n * @constructor */function derived() {}\n" +
         "derived.inherits(base);",
         "(new derived).constructor",
-        "function (new:derived, ...[?]): ?");
+        "function (new:derived, ...?): ?");
   }
 
   public void testGoodExtends8() throws Exception {
@@ -5506,7 +5506,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "SubFoo.prototype.bar = function(x) {};",
         "mismatch of the bar property type and the type of the " +
         "property it overrides from superclass Foo\n" +
-        "original: function (this:Foo, ...[number]): undefined\n" +
+        "original: function (this:Foo, ...number): undefined\n" +
         "override: function (this:SubFoo, number): undefined");
   }
 
@@ -5526,7 +5526,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "SubFoo.prototype.bar = function(x) {};",
         "mismatch of the bar property type and the type of the " +
         "property it overrides from superclass Foo\n" +
-        "original: function (...[number]): ?\n" +
+        "original: function (...number): ?\n" +
         "override: function (number): ?");
   }
 

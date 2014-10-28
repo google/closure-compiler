@@ -496,11 +496,21 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseFunctionalType4() throws Exception {
-    testParseType("function (...[number]): boolean");
+    testParseType("function (...number): boolean");
+  }
+
+  public void testParseFunctionalType4a() throws Exception {
+    testParseType("function (...[number]): boolean",
+        "function (...number): boolean");
   }
 
   public void testParseFunctionalType5() throws Exception {
-    testParseType("function (number, ...[string]): boolean");
+    testParseType("function (number, ...string): boolean");
+  }
+
+  public void testParseFunctionalType5a() throws Exception {
+    testParseType("function (number, ...[string]): boolean",
+        "function (number, ...string): boolean");
   }
 
   public void testParseFunctionalType6() throws Exception {
@@ -515,31 +525,31 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseFunctionalType8() throws Exception {
     testParseType(
         "function(this:Array,...[boolean])",
-        "function (this:Array, ...[boolean]): ?");
+        "function (this:Array, ...boolean): ?");
   }
 
   public void testParseFunctionalType9() throws Exception {
     testParseType(
         "function(this:Array,!Date,...[boolean?])",
-        "function (this:Array, Date, ...[(boolean|null)]): ?");
+        "function (this:Array, Date, ...(boolean|null)): ?");
   }
 
   public void testParseFunctionalType10() throws Exception {
     testParseType(
         "function(...[Object?]):boolean?",
-        "function (...[(Object|null)]): (boolean|null)");
+        "function (...(Object|null)): (boolean|null)");
   }
 
   public void testParseFunctionalType12() throws Exception {
     testParseType(
         "function(...)",
-        "function (...[?]): ?");
+        "function (...?): ?");
   }
 
   public void testParseFunctionalType13() throws Exception {
     testParseType(
         "function(...): void",
-        "function (...[?]): undefined");
+        "function (...?): undefined");
   }
 
   public void testParseFunctionalType14() throws Exception {
@@ -564,8 +574,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseFunctionalType19() throws Exception {
     testParseType(
-        "function(...[?]): void",
-        "function (...[?]): undefined");
+        "function(...?): void",
+        "function (...?): undefined");
   }
 
   public void testStructuralConstructor() throws Exception {
@@ -646,7 +656,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseFunctionalTypeError8() throws Exception {
     parse("@type {function(...number])}*/",
-        "Bad type annotation. missing opening [");
+        "Bad type annotation. missing closing )");
   }
 
   public void testParseFunctionalTypeError9() throws Exception {
