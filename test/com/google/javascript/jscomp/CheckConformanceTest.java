@@ -864,4 +864,45 @@ public class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanGlobalVars Message");
   }
+
+  public void testRequireFileoverviewVisibility() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$" +
+                       "RequireFileoverviewVisibility'\n" +
+        "  error_message: 'RequireFileoverviewVisibility Message'\n" +
+        "}";
+
+    testSame(
+        EXTERNS,
+        "var foo = function() {};",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: RequireFileoverviewVisibility Message");
+
+    testSame(
+        EXTERNS,
+        "/**\n" +
+        "  * @fileoverview\n" +
+        "  */\n" +
+        "var foo = function() {};",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: RequireFileoverviewVisibility Message");
+
+    testSame(
+        EXTERNS,
+        "/**\n" +
+        "  * @package\n" +
+        "  */\n" +
+        "var foo = function() {};",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: RequireFileoverviewVisibility Message");
+
+    testSame(
+        "/**\n" +
+        "  * @fileoverview\n" +
+        "  * @package\n" +
+        "  */\n" +
+        "var foo = function() {};");
+  }
 }

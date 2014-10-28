@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -940,6 +941,34 @@ public final class ConformanceRules {
 
     private boolean isWhitelisted(Node n) {
       return n.isVar() && n.getFirstChild().getString().equals("$jscomp");
+    }
+  }
+
+  /**
+   * Requires source files to contain a top-level {@code @fileoverview} block
+   * with an explicit visibility annotation.
+   */
+  public static final class RequireFileoverviewVisibility extends AbstractRule {
+    public RequireFileoverviewVisibility(
+        AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (!n.isScript()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      JSDocInfo docInfo = n.getJSDocInfo();
+      if (docInfo == null || !docInfo.hasFileOverview()) {
+        return ConformanceResult.VIOLATION;
+      }
+      Visibility v = docInfo.getVisibility();
+      if (v == null || v == Visibility.INHERITED) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
     }
   }
 }
