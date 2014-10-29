@@ -31,6 +31,26 @@ google.maps.Animation = {
 };
 
 /**
+ * @interface
+ */
+google.maps.Attribution = function() {};
+
+/**
+ * @type {string}
+ */
+google.maps.Attribution.prototype.iosDeepLinkId;
+
+/**
+ * @type {string}
+ */
+google.maps.Attribution.prototype.source;
+
+/**
+ * @type {string}
+ */
+google.maps.Attribution.prototype.webUrl;
+
+/**
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -3266,6 +3286,12 @@ google.maps.Marker.prototype.getAnimation = function() {};
 
 /**
  * @nosideeffects
+ * @return {google.maps.Attribution}
+ */
+google.maps.Marker.prototype.getAttribution = function() {};
+
+/**
+ * @nosideeffects
  * @return {boolean}
  */
 google.maps.Marker.prototype.getClickable = function() {};
@@ -3302,6 +3328,12 @@ google.maps.Marker.prototype.getOpacity = function() {};
 
 /**
  * @nosideeffects
+ * @return {google.maps.Place}
+ */
+google.maps.Marker.prototype.getPlace = function() {};
+
+/**
+ * @nosideeffects
  * @return {google.maps.LatLng}
  */
 google.maps.Marker.prototype.getPosition = function() {};
@@ -3335,6 +3367,12 @@ google.maps.Marker.prototype.getZIndex = function() {};
  * @return {undefined}
  */
 google.maps.Marker.prototype.setAnimation = function(animation) {};
+
+/**
+ * @param {google.maps.Attribution} attribution
+ * @return {undefined}
+ */
+google.maps.Marker.prototype.setAttribution = function(attribution) {};
 
 /**
  * @param {boolean} flag
@@ -3377,6 +3415,12 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
  * @return {undefined}
  */
 google.maps.Marker.prototype.setOptions = function(options) {};
+
+/**
+ * @param {google.maps.Place} place
+ * @return {undefined}
+ */
+google.maps.Marker.prototype.setPlace = function(place) {};
 
 /**
  * @param {google.maps.LatLng|google.maps.LatLngLiteral} latlng
@@ -3430,6 +3474,11 @@ google.maps.MarkerOptions.prototype.anchorPoint;
 google.maps.MarkerOptions.prototype.animation;
 
 /**
+ * @type {google.maps.Attribution}
+ */
+google.maps.MarkerOptions.prototype.attribution;
+
+/**
  * @type {boolean}
  */
 google.maps.MarkerOptions.prototype.clickable;
@@ -3468,6 +3517,11 @@ google.maps.MarkerOptions.prototype.opacity;
  * @type {boolean}
  */
 google.maps.MarkerOptions.prototype.optimized;
+
+/**
+ * @type {google.maps.Place}
+ */
+google.maps.MarkerOptions.prototype.place;
 
 /**
  * @type {google.maps.LatLng}
@@ -3638,6 +3692,26 @@ google.maps.PathElevationRequest.prototype.path;
  * @type {number}
  */
 google.maps.PathElevationRequest.prototype.samples;
+
+/**
+ * @interface
+ */
+google.maps.Place = function() {};
+
+/**
+ * @type {google.maps.LatLng|google.maps.LatLngLiteral}
+ */
+google.maps.Place.prototype.location;
+
+/**
+ * @type {string}
+ */
+google.maps.Place.prototype.placeId;
+
+/**
+ * @type {string}
+ */
+google.maps.Place.prototype.query;
 
 /**
  * @param {number} x
@@ -4157,6 +4231,58 @@ google.maps.RotateControlOptions = function() {};
  * @type {google.maps.ControlPosition}
  */
 google.maps.RotateControlOptions.prototype.position;
+
+/**
+ * @param {Node} container
+ * @param {(google.maps.SaveWidgetOptions|Object.<string>)=} opt_opts
+ * @constructor
+ */
+google.maps.SaveWidget = function(container, opt_opts) {};
+
+/**
+ * @nosideeffects
+ * @return {google.maps.Attribution}
+ */
+google.maps.SaveWidget.prototype.getAttribution = function() {};
+
+/**
+ * @nosideeffects
+ * @return {google.maps.Place}
+ */
+google.maps.SaveWidget.prototype.getPlace = function() {};
+
+/**
+ * @param {google.maps.Attribution} attribution
+ * @return {undefined}
+ */
+google.maps.SaveWidget.prototype.setAttribution = function(attribution) {};
+
+/**
+ * @param {google.maps.SaveWidgetOptions|Object.<string>} opts
+ * @return {undefined}
+ */
+google.maps.SaveWidget.prototype.setOptions = function(opts) {};
+
+/**
+ * @param {google.maps.Place} place
+ * @return {undefined}
+ */
+google.maps.SaveWidget.prototype.setPlace = function(place) {};
+
+/**
+ * @interface
+ */
+google.maps.SaveWidgetOptions = function() {};
+
+/**
+ * @type {google.maps.Attribution}
+ */
+google.maps.SaveWidgetOptions.prototype.attribution;
+
+/**
+ * @type {google.maps.Place}
+ */
+google.maps.SaveWidgetOptions.prototype.place;
 
 /**
  * @interface
