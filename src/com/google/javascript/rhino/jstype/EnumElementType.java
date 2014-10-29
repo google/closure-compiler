@@ -146,7 +146,7 @@ public class EnumElementType extends ObjectType {
   String toStringHelper(boolean forAnnotations) {
     return forAnnotations ?
         primitiveType.toString() :
-        (getReferenceName() + ".<" + primitiveType + ">");
+        (getReferenceName() + "<" + primitiveType + ">");
   }
 
   @Override

@@ -38,9 +38,9 @@ import java.util.regex.Pattern;
  */
 public class NominalType {
   // In the case of a generic type (rawType.typeParameters non-empty) either:
-  // a) typeMap is empty, this is an uninstantiated generic type (Foo.<T>), or
+  // a) typeMap is empty, this is an uninstantiated generic type (Foo<T>), or
   // b) typeMap's keys exactly correspond to the type parameters of rawType;
-  //    this represents a completely instantiated generic type (Foo.<number>).
+  //    this represents a completely instantiated generic type (Foo<number>).
   private final ImmutableMap<String, JSType> typeMap;
   private final RawNominalType rawType;
   private static final Pattern NUMERIC_PATTERN = Pattern.compile("\\d+");
@@ -713,7 +713,7 @@ public class NominalType {
         return builder;
       }
       boolean firstIteration = true;
-      builder.append(".<");
+      builder.append("<");
       for (String typeParam : typeParameters) {
         if (!firstIteration) {
           builder.append(',');

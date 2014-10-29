@@ -979,12 +979,12 @@ public class CodePrinterTest extends TestCase {
     // typedefs but currently they are resolved into the basic types in the
     // type registry.
     assertTypeAnnotations(
-        "/** @typedef {Array.<number>} */ goog.java.Long;\n"
+        "/** @typedef {Array<number>} */ goog.java.Long;\n"
         + "/** @param {!goog.java.Long} a*/\n"
         + "function f(a){};\n",
         "goog.java.Long;\n"
         + "/**\n"
-        + " * @param {(Array.<number>|null)} a\n"
+        + " * @param {(Array<number>|null)} a\n"
         + " * @return {undefined}\n"
         + " */\n"
         + "function f(a) {\n}\n");

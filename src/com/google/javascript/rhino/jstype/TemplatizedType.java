@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * An object type with declared template types, such as
- * <code>Array.<string></code>.
+ * <code>Array<string></code>.
  *
  */
 public final class TemplatizedType extends ProxyObjectType {
@@ -78,7 +78,7 @@ public final class TemplatizedType extends ProxyObjectType {
     String typeString = super.toStringHelper(forAnnotations);
 
     if (!templateTypes.isEmpty()) {
-      typeString += ".<" + Joiner.on(",").join(templateTypes) + ">";
+      typeString += "<" + Joiner.on(",").join(templateTypes) + ">";
     }
 
     return typeString;

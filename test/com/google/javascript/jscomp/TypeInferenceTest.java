@@ -745,28 +745,28 @@ public class TypeInferenceTest extends TestCase {
         " * @template T\n" +
         " */" +
         "function F(x) {}\n" +
-        "var x = /** @type {!Array.<number>} */ ([]);\n" +
+        "var x = /** @type {!Array<number>} */ ([]);\n" +
         "var result = new F(x);");
 
-    assertEquals("F.<Array.<number>>", getType("result").toString());
+    assertEquals("F<Array<number>>", getType("result").toString());
   }
 
   public void testNew3() {
     inFunction(
         "/**\n" +
         " * @constructor\n" +
-        " * @param {Array.<T>} x\n" +
+        " * @param {Array<T>} x\n" +
         " * @param {T} y\n" +
         " * @param {S} z\n" +
         " * @template T,S\n" +
         " */" +
         "function F(x,y,z) {}\n" +
-        "var x = /** @type {!Array.<number>} */ ([]);\n" +
+        "var x = /** @type {!Array<number>} */ ([]);\n" +
         "var y = /** @type {string} */ ('foo');\n" +
         "var z = /** @type {boolean} */ (true);\n" +
         "var result = new F(x,y,z);");
 
-    assertEquals("F.<(number|string),boolean>", getType("result").toString());
+    assertEquals("F<(number|string),boolean>", getType("result").toString());
   }
 
   public void testInnerFunction1() {
@@ -1487,9 +1487,9 @@ public class TypeInferenceTest extends TestCase {
         + " * @template R := record(T) =:"
         + " */\n"
         + "function f(a) {}\n"
-        + "/** @type {{foo:!Array.<number>}} */"
+        + "/** @type {{foo:!Array<number>}} */"
         + "var e;"
-        + "/** @type {!Array.<number>} */"
+        + "/** @type {!Array<number>} */"
         + "var something;"
         + "var r = f({foo:something});");
     assertTrue(getType("r").isRecordType());

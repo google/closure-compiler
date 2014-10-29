@@ -84,19 +84,19 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
   public void testPrint1() throws Exception {
     TemplatizedType arrOfString = createTemplatizedType(
         ARRAY_TYPE, STRING_TYPE);
-    assertEquals("Array.<string>", arrOfString.toString());
+    assertEquals("Array<string>", arrOfString.toString());
   }
 
   public void testPrint2() throws Exception {
     TemplatizedType arrOfTemplateType = createTemplatizedType(
         ARRAY_TYPE, new TemplateType(registry, "T"));
-    assertEquals("Array.<T>", arrOfTemplateType.toString());
+    assertEquals("Array<T>", arrOfTemplateType.toString());
   }
 
   public void testPrint3() throws Exception {
     TemplatizedType arrOfUnknown = createTemplatizedType(
         ARRAY_TYPE, UNKNOWN_TYPE);
-    assertEquals("Array.<?>", arrOfUnknown.toString());
+    assertEquals("Array<?>", arrOfUnknown.toString());
   }
 
   public void testDifferentRawTypes() throws Exception {
