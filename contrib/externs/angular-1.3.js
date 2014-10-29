@@ -267,7 +267,7 @@ angular.Animation.removeClass = function(element, done) {};
  * @typedef {{
  *   $attr: Object.<string,string>,
  *   $normalize: function(string): string,
- *   $observe: function(string, function(*)): function(*),
+ *   $observe: function(string, function(*)): function(),
  *   $set: function(string, ?(string|boolean), boolean=, string=)
  *   }}
  */
@@ -303,7 +303,7 @@ angular.Attributes.$normalize = function(name) {};
 /**
  * @param {string} key
  * @param {function(*)} fn
- * @return {function(*)}
+ * @return {function()}
  */
 angular.Attributes.$observe = function(key, fn) {};
 
