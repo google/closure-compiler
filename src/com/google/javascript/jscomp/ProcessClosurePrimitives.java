@@ -103,6 +103,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "namespace \"{0}\" provided in module {1} " +
       "but required in module {2}");
 
+  static final DiagnosticType INVALID_CLOSURE_CALL_ERROR = DiagnosticType.error(
+      "JSC_INVALID_CLOSURE_CALL_ERROR",
+      "Closure primitive methods must be called at file scope.");
+
   static final DiagnosticType NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR =
       DiagnosticType.error(
           "JSC_NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR",
@@ -239,18 +243,23 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             String methodName = name.getNext().getString();
             if ("base".equals(methodName)) {
               processBaseClassCall(t, n);
-            } else if (!isExpr) {
-              // All other methods must be called in an EXPR.
-              break;
             } else if ("define".equals(methodName)) {
-              processDefineCall(t, n, parent);
+              if (validPrimitiveCall(t, n)) {
+                processDefineCall(t, n, parent);
+              }
             } else if ("require".equals(methodName)) {
-              processRequireCall(t, n, parent);
+              if (validPrimitiveCall(t, n)) {
+                processRequireCall(t, n, parent);
+              }
             } else if ("provide".equals(methodName)) {
-              processProvideCall(t, n, parent);
+              if (validPrimitiveCall(t, n)) {
+                processProvideCall(t, n, parent);
+              }
             } else if ("inherits".equals(methodName)) {
+              // Note: inherits is allowed in local scope
               processInheritsCall(t, n);
             } else if ("exportSymbol".equals(methodName)) {
+              // Note: exportSymbol is allowed in local scope
               Node arg = left.getNext();
               if (arg.isString()) {
                 int dot = arg.getString().indexOf('.');
@@ -261,11 +270,17 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 }
               }
             } else if ("forwardDeclare".equals(methodName)){
-              processForwardDeclare(t, n, parent);
+              if (validPrimitiveCall(t, n)) {
+                processForwardDeclare(t, n, parent);
+              }
             } else if ("addDependency".equals(methodName)) {
-              processAddDependency(n, parent);
+              if (validPrimitiveCall(t, n)) {
+                processAddDependency(n, parent);
+              }
             } else if ("setCssNameMapping".equals(methodName)) {
-              processSetCssNameMapping(t, n, parent);
+              if (validPrimitiveCall(t, n)) {
+                processSetCssNameMapping(t, n, parent);
+              }
             }
           } else if (left.getLastChild().getString().equals("base")) {
             // maybe an "base" setup by goog.inherits
@@ -313,9 +328,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
   }
 
-  /**
-   * @param n
-   */
+  private boolean validPrimitiveCall(NodeTraversal t, Node n) {
+    if (!n.getParent().isExprResult() || !t.inGlobalScope()) {
+      compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_ERROR));
+      return false;
+    }
+    return true;
+  }
+
   private void handleClosureDefinesValues(NodeTraversal t, Node n) {
     // var CLOSURE_DEFINES = {};
     if (n.getParent().isVar() && n.hasOneChild() && n.getFirstChild().isObjectLit()) {
@@ -417,7 +437,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
   }
 
-    /**
+  /**
    * Handles a goog.define call.
    */
   private void processDefineCall(NodeTraversal t, Node n, Node parent) {

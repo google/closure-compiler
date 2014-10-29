@@ -23,6 +23,7 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.EXPECTED_OBJ
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.FUNCTION_NAMESPACE_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.GOOG_BASE_CLASS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CLOSURE_CALL_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_CSS_RENAMING_MAP;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_DEFINE_NAME_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.INVALID_PROVIDE_ERROR;
@@ -34,8 +35,8 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_P
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NULL_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.TOO_MANY_ARGUMENTS_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -648,6 +649,19 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     test("goog.provide('a.class');", null, INVALID_PROVIDE_ERROR);
     test("goog.provide('class.a');", null, INVALID_PROVIDE_ERROR);
+  }
+
+  public void testInvalidRequire() {
+    test("goog.provide('a.b'); goog.require('a.b');", "var a = {}; a.b = {};");
+    test("goog.provide('a.b'); var x = x || goog.require('a.b');", null, INVALID_CLOSURE_CALL_ERROR);
+    test("goog.provide('a.b'); x = goog.require('a.b');", null, INVALID_CLOSURE_CALL_ERROR);
+    test("goog.provide('a.b'); function f() { goog.require('a.b'); }", null, INVALID_CLOSURE_CALL_ERROR);
+  }
+
+  public void testValidGoogMethod() {
+    testSame("function f() { if (x) goog.isDef('a.b'); }");
+    testSame("function f() { if (x) goog.inherits(a, b); }");
+    testSame("function f() { if (x) goog.exportSymbol(a, b); }");
   }
 
   private static final String METHOD_FORMAT =
