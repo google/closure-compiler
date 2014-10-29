@@ -16,10 +16,12 @@
 
 /**
  * @fileoverview Externs for the $q service in Angular 1.2
+ * NOTE: Due to a JS compiler bug, any use of a templated class must occur after
+ * the class is defined. Please be careful with the ordering of the classes and
+ * functions.
  * @see https://docs.angularjs.org/api/ng/service/$q
  * @externs
  */
-
 
 /******************************************************************************
  * $q Service
@@ -29,48 +31,6 @@
  * @constructor
  */
 angular.$q;
-
-/**
- * @param {!Object.<!angular.$q.Promise>|!Array.<!angular.$q.Promise>} promises
- * @return {!angular.$q.Promise.<!Object|!Array>}
- */
-angular.$q.prototype.all = function(promises) {};
-
-/**
- * @return {!angular.$q.Deferred}
- */
-angular.$q.prototype.defer = function() {};
-
-/**
- * @param {*} reason
- * @return {!angular.$q.Promise}
- */
-angular.$q.prototype.reject = function(reason) {};
-
-/**
- * @param {RESULT} value
- * @return {!angular.$q.Promise.<RESULT>}
- * @template RESULT
- */
-angular.$q.prototype.when = function(value) {};
-
-/**
- * @constructor
- * @template T
- */
-angular.$q.Deferred;
-
-/** @param {T=} opt_value */
-angular.$q.Deferred.prototype.resolve = function(opt_value) {};
-
-/** @param {*=} opt_reason */
-angular.$q.Deferred.prototype.reject = function(opt_reason) {};
-
-/** @param {*=} opt_value */
-angular.$q.Deferred.prototype.notify = function(opt_value) {};
-
-/** @type {!angular.$q.Promise.<T>} */
-angular.$q.Deferred.prototype.promise;
 
 /**
  * @constructor
@@ -100,3 +60,44 @@ angular.$q.Promise.prototype.catch = function(callback) {};
  */
 angular.$q.Promise.prototype.finally = function(callback) {};
 
+/**
+ * @constructor
+ * @template T
+ */
+angular.$q.Deferred;
+
+/** @param {T=} opt_value */
+angular.$q.Deferred.prototype.resolve = function(opt_value) {};
+
+/** @param {*=} opt_reason */
+angular.$q.Deferred.prototype.reject = function(opt_reason) {};
+
+/** @param {*=} opt_value */
+angular.$q.Deferred.prototype.notify = function(opt_value) {};
+
+/** @type {!angular.$q.Promise.<T>} */
+angular.$q.Deferred.prototype.promise;
+
+/**
+ * @param {!Object.<!angular.$q.Promise>|!Array.<!angular.$q.Promise>} promises
+ * @return {!angular.$q.Promise.<!Object|!Array>}
+ */
+angular.$q.prototype.all = function(promises) {};
+
+/**
+ * @return {!angular.$q.Deferred}
+ */
+angular.$q.prototype.defer = function() {};
+
+/**
+ * @param {*} reason
+ * @return {!angular.$q.Promise}
+ */
+angular.$q.prototype.reject = function(reason) {};
+
+/**
+ * @param {RESULT} value
+ * @return {!angular.$q.Promise.<RESULT>}
+ * @template RESULT
+ */
+angular.$q.prototype.when = function(value) {};
