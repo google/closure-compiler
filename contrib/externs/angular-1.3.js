@@ -469,6 +469,7 @@ angular.Directive.transclude;
  *   controller: function(string=): Object,
  *   css: function((string|!Object), string=): (!angular.JQLite|string),
  *   data: function(string=, *=): *,
+ *   detach: function(): !angular.JQLite,
  *   empty: function(): !angular.JQLite,
  *   eq: function(number): !angular.JQLite,
  *   find: function(string): !angular.JQLite,
