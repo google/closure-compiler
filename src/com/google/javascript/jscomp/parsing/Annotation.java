@@ -58,7 +58,6 @@ enum Annotation {
   MODIFIES,
   NO_ALIAS,
   NO_COMPILE,
-  NO_SHADOW,
   NO_SIDE_EFFECTS,
   NO_TYPE_CHECK,
   NOT_IMPLEMENTED,
@@ -123,7 +122,6 @@ enum Annotation {
       put("modifies", Annotation.MODIFIES).
       put("noalias", Annotation.NO_ALIAS).
       put("nocompile", Annotation.NO_COMPILE).
-      put("noshadow", Annotation.NO_SHADOW).
       put("nosideeffects", Annotation.NO_SIDE_EFFECTS).
       put("notypecheck", Annotation.NO_TYPE_CHECK).
       put("override", Annotation.OVERRIDE).

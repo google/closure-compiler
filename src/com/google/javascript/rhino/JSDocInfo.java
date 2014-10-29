@@ -385,7 +385,6 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_DEPRECATED    = 0x00000100; // @deprecated
   private static final int MASK_INTERFACE     = 0x00000200; // @interface
   private static final int MASK_EXPORT        = 0x00000400; // @export
-  private static final int MASK_NOSHADOW      = 0x00000800; // @noshadow
   private static final int MASK_FILEOVERVIEW  = 0x00001000; // @fileoverview
   private static final int MASK_IMPLICITCAST  = 0x00002000; // @implicitCast
   private static final int MASK_NOSIDEEFFECTS = 0x00004000; // @nosideeffects
@@ -554,10 +553,6 @@ public class JSDocInfo implements Serializable {
 
   void setExpose(boolean value) {
     setFlag(value, MASK_EXPOSE);
-  }
-
-  void setNoShadow(boolean value) {
-    setFlag(value, MASK_NOSHADOW);
   }
 
   void setIdGenerator(boolean value) {
@@ -736,14 +731,6 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Returns whether the {@code @noshadow} annotation is present on this
-   * {@link JSDocInfo}.
-   */
-  public boolean isNoShadow() {
-    return getFlag(MASK_NOSHADOW);
-  }
-
-  /**
    * @return whether the {@code @idGenerator} is present on
    * this {@link JSDocInfo}
    */
@@ -808,7 +795,6 @@ public class JSDocInfo implements Serializable {
             | MASK_NOALIAS
             | MASK_DEPRECATED
             | MASK_INTERFACE
-            | MASK_NOSHADOW
             | MASK_IMPLICITCAST
             | MASK_NOSIDEEFFECTS));
   }

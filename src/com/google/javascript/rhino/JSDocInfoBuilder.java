@@ -984,20 +984,6 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoShadow()} flag set to {@code true}.
-   */
-  public boolean recordNoShadow() {
-    if (!currentInfo.isNoShadow()) {
-      currentInfo.setNoShadow(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isImplicitCast()} flag set to {@code true}.
    */
   public boolean recordImplicitCast() {

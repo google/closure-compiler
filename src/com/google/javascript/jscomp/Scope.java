@@ -291,11 +291,6 @@ public class Scope
       return input.getName();
     }
 
-    public boolean isNoShadow() {
-      JSDocInfo info = getJSDocInfo();
-      return info != null && info.isNoShadow();
-    }
-
     @Override public boolean equals(Object other) {
       if (!(other instanceof Var)) {
         return false;

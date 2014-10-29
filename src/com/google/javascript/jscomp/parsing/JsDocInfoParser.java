@@ -834,13 +834,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case NO_SHADOW:
-          if (!jsdocBuilder.recordNoShadow()) {
-            parser.addParserWarning("msg.jsdoc.noshadow",
-                stream.getLineno(), stream.getCharno());
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case NO_SIDE_EFFECTS:
           if (!jsdocBuilder.recordNoSideEffects()) {
             parser.addParserWarning("msg.jsdoc.nosideeffects",
