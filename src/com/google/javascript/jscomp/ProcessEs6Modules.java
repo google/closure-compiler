@@ -249,24 +249,19 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
     String moduleName = toModuleName(loader.getLoadAddress(t.getInput()));
 
-    // Rename vars to not conflict in global scope.
-    NodeTraversal.traverse(compiler, script, new RenameGlobalVars(moduleName));
-
-    if (exportMap.isEmpty()) {
-      return;
+    if (!exportMap.isEmpty()) {
+      // Creates an export object for this module.
+      // var moduleName = {};
+      Node objectlit = IR.objectlit();
+      Node varNode = IR.var(IR.name(moduleName), objectlit)
+          .useSourceInfoIfMissingFromForTree(script);
+      script.addChildToBack(varNode);
     }
 
-    // Creates an export object for this module.
-    // var moduleName = {};
-    Node objectlit = IR.objectlit();
-    Node varNode = IR.var(IR.name(moduleName), objectlit)
-        .useSourceInfoIfMissingFromForTree(script);
-    script.addChildToBack(varNode);
-
-    // moduleName.foo = moduleName$$foo;
+    // moduleName.foo = foo;
     for (Map.Entry<String, String> entry : exportMap.entrySet()) {
       String exportedName = entry.getKey();
-      String withSuffix = entry.getValue() + "$$" + moduleName;
+      String withSuffix = entry.getValue();
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
       Node exprResult = IR.exprResult(IR.assign(
           getProp,
@@ -276,7 +271,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
 
     // Add @typedefs for the the type checker.
-    // /** @typedef {moduleName$$foo} */ moduleName.foo;
+    // /** @typedef {foo$$moduleName} */ moduleName.foo;
     for (String name : typedefs) {
       Node typedef = IR.getprop(IR.name(moduleName), IR.string(name));
       JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
@@ -286,37 +281,43 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       JSDocInfo info = builder.build(typedef);
       typedef.setJSDocInfo(info);
       script.addChildToBack(IR.exprResult(typedef)
-          .useSourceInfoIfMissingFromForTree(varNode));
+          .useSourceInfoIfMissingFromForTree(script));
     }
 
-    // Add goog.provide call.
-    Node googProvide = IR.exprResult(
-        IR.call(NodeUtil.newQName(compiler, "goog.provide"),
-            IR.string(moduleName)));
-    script.addChildToFront(googProvide.copyInformationFromForTree(script));
-    if (reportDependencies) {
-      t.getInput().addProvide(moduleName);
-    }
+    // Rename vars to not conflict in global scope.
+    NodeTraversal.traverse(compiler, script, new RenameGlobalVars(moduleName));
 
-    for (String name : exportMap.keySet()) {
-      String qualifiedName = moduleName + "." + name;
-      Node newGoogProvide = IR.exprResult(
+    if (!exportMap.isEmpty()) {
+      // Add goog.provide call.
+      Node googProvide = IR.exprResult(
           IR.call(NodeUtil.newQName(compiler, "goog.provide"),
-              IR.string(qualifiedName)));
-      newGoogProvide.copyInformationFromForTree(script);
-      if (name.equals("default")) {
-        JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
-            ? new JSDocInfoBuilder(false)
-            : JSDocInfoBuilder.copyFrom(script.getJSDocInfo());
-        jsDocInfo.recordSuppressions(ImmutableSet.of("invalidProvide"));
-        script.setJSDocInfo(jsDocInfo.build(script));
+              IR.string(moduleName)));
+      script.addChildToFront(googProvide.copyInformationFromForTree(script));
+      if (reportDependencies) {
+        t.getInput().addProvide(moduleName);
       }
 
-      script.addChildAfter(newGoogProvide, googProvide);
-      if (reportDependencies) {
-        t.getInput().addProvide(qualifiedName);
+      for (String name : exportMap.keySet()) {
+        String qualifiedName = moduleName + "." + name;
+        Node newGoogProvide = IR.exprResult(
+            IR.call(NodeUtil.newQName(compiler, "goog.provide"),
+                IR.string(qualifiedName)));
+        newGoogProvide.copyInformationFromForTree(script);
+        if (name.equals("default")) {
+          JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
+              ? new JSDocInfoBuilder(false)
+              : JSDocInfoBuilder.copyFrom(script.getJSDocInfo());
+          jsDocInfo.recordSuppressions(ImmutableSet.of("invalidProvide"));
+          script.setJSDocInfo(jsDocInfo.build(script));
+        }
+
+        script.addChildAfter(newGoogProvide, googProvide);
+        if (reportDependencies) {
+          t.getInput().addProvide(qualifiedName);
+        }
       }
     }
+
     exportMap.clear();
     compiler.reportCodeChange();
   }

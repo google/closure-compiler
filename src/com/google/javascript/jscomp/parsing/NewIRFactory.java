@@ -1829,7 +1829,7 @@ class NewIRFactory {
 
     @Override
     Node processUnaryExpression(UnaryExpressionTree exprNode) {
-      int type = transformUniaryTokenType(exprNode.operator.type);
+      int type = transformUnaryTokenType(exprNode.operator.type);
       Node operand = transform(exprNode.operand);
       if (type == Token.NEG && operand.isNumber()) {
         operand.setDouble(-operand.getDouble());
@@ -2059,6 +2059,7 @@ class NewIRFactory {
       if (decls == null) {
         decls = newNode(Token.EMPTY);
       }
+      setSourceInfo(decls, tree);
       Node export = newNode(Token.EXPORT, decls);
       if (tree.from != null) {
         Node from = processString(tree.from);
@@ -2072,12 +2073,12 @@ class NewIRFactory {
 
     @Override
     Node processExportSpec(ExportSpecifierTree tree) {
-      Node importSpec = newNode(Token.EXPORT_SPEC,
+      Node exportSpec = newNode(Token.EXPORT_SPEC,
           processName(tree.importedName));
       if (tree.destinationName != null) {
-        importSpec.addChildToBack(processName(tree.destinationName));
+        exportSpec.addChildToBack(processName(tree.destinationName));
       }
-      return importSpec;
+      return exportSpec;
     }
 
     @Override
@@ -2437,7 +2438,7 @@ class NewIRFactory {
     }
   }
 
-  private static int transformUniaryTokenType(TokenType token) {
+  private static int transformUnaryTokenType(TokenType token) {
     switch (token) {
       case BANG:
         return Token.NOT;

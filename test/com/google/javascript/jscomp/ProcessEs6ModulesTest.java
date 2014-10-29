@@ -112,27 +112,32 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "var module$testcode = {};",
         "module$testcode.f = f$$module$testcode;"
     ));
-    test("export {f as foo, b as bar};", Joiner.on('\n').join(
-        "goog.provide('module$testcode');",
-        "goog.provide('module$testcode.bar');",
-        "goog.provide('module$testcode.foo');",
-        "var module$testcode = {};",
-        "module$testcode.foo = f$$module$testcode;",
-        "module$testcode.bar = b$$module$testcode;"
-    ));
+    test(
+        "var f = 1; var b = 2; export {f as foo, b as bar};",
+        Joiner.on('\n').join(
+            "goog.provide('module$testcode');",
+            "goog.provide('module$testcode.bar');",
+            "goog.provide('module$testcode.foo');",
+            "var f$$module$testcode = 1;",
+            "var b$$module$testcode = 2;",
+            "var module$testcode = {};",
+            "module$testcode.foo = f$$module$testcode;",
+            "module$testcode.bar = b$$module$testcode;"));
   }
 
   public void testImportAndExport() {
     test(Joiner.on('\n').join(
-        "import {name as n} from 'test';",
+        "import {name as n} from 'other';",
+        "use(n);",
         "export {n as name};"
     ), Joiner.on('\n').join(
         "goog.provide('module$testcode');",
         "goog.provide('module$testcode.name');",
-        "goog.require('module$test.name');",
-        "goog.require('module$test');",
+        "goog.require('module$other.name');",
+        "goog.require('module$other');",
+        "use(module$other.name);",
         "var module$testcode = {};",
-        "module$testcode.name = n$$module$testcode;"
+        "module$testcode.name = module$other.name;"
     ));
   }
 
