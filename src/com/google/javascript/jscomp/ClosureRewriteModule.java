@@ -203,8 +203,8 @@ public class ClosureRewriteModule
     }
 
     switch (n.getType()) {
-      case Token.FUNCTION:
-        if (current.moduleScopeRoot == n) {
+      case Token.BLOCK:
+        if (current.moduleScopeRoot == parent && parent.isFunction()) {
           current.moduleScope = t.getScope();
         }
         break;

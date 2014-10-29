@@ -118,6 +118,60 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "});");
   }
 
+  public void testBundle3() {
+    test(
+        "goog.loadModule(function(exports) {'use strict';" +
+        "goog.module('ns.a');" +
+        "goog.module.declareLegacyNamespace();" +
+        "var b = goog.require('ns.b');" +
+        "return exports;});",
+
+        "'use strict';" +
+        "goog.provide('ns.a');" +
+        "goog.require('ns.b');" +
+        "goog.scope(function(){" +
+        "  var b = ns.b;" +
+        "});");
+  }
+
+  public void testBundle4() {
+    test(
+        "goog.loadModule(function(exports) {'use strict';" +
+        "goog.module('ns.a');" +
+        "var b = goog.require('goog.asserts');" +
+        "return exports;});",
+
+        "'use strict';" +
+        "goog.provide('ns.a');" +
+        "goog.require('goog.asserts');" +
+        "goog.scope(function(){" +
+        "  var b = goog.asserts;" +
+        "});");
+  }
+
+  public void testBundle5() {
+    test(
+        "goog.loadModule(function(exports) {'use strict';" +
+        "goog.module('xid');" +
+        "" +
+        "goog.module.declareLegacyNamespace();" +
+        "" +
+        "var asserts = goog.require('goog.asserts');" +
+        "" +
+        "exports = function(id) {" +
+        "  return xid.internal_(id);" +
+        "};" +
+        "var xid = exports;" +
+        "return exports;});",
+
+        "goog.provide('xid');" +
+        "goog.require('goog.asserts');" +
+        "goog.scope(function(){" +
+        "var asserts=goog.asserts;" +
+        "xid=function(id){return xid_module.internal_(id)};" +
+        "var xid_module=xid})");
+  }
+
   public void testAliasShadowsGlobal1() {
     // If locals shadow globals they need to be renamed.
     test(
