@@ -653,15 +653,23 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   public void testInvalidRequire() {
     test("goog.provide('a.b'); goog.require('a.b');", "var a = {}; a.b = {};");
-    test("goog.provide('a.b'); var x = x || goog.require('a.b');", null, INVALID_CLOSURE_CALL_ERROR);
-    test("goog.provide('a.b'); x = goog.require('a.b');", null, INVALID_CLOSURE_CALL_ERROR);
-    test("goog.provide('a.b'); function f() { goog.require('a.b'); }", null, INVALID_CLOSURE_CALL_ERROR);
+    test("goog.provide('a.b'); var x = x || goog.require('a.b');",
+        null, INVALID_CLOSURE_CALL_ERROR);
+    test("goog.provide('a.b'); x = goog.require('a.b');",
+        null, INVALID_CLOSURE_CALL_ERROR);
+    test("goog.provide('a.b'); function f() { goog.require('a.b'); }",
+        null, INVALID_CLOSURE_CALL_ERROR);
   }
 
   public void testValidGoogMethod() {
-    testSame("function f() { if (x) goog.isDef('a.b'); }");
-    testSame("function f() { if (x) goog.inherits(a, b); }");
-    testSame("function f() { if (x) goog.exportSymbol(a, b); }");
+    testSame("function f() { goog.isDef('a.b'); }");
+    testSame("function f() { goog.inherits(a, b); }");
+    testSame("function f() { goog.exportSymbol(a, b); }");
+    test("function f() { goog.setCssNameMapping({}); }", "function f() {}");
+    testSame("x || goog.isDef('a.b');");
+    testSame("x || goog.inherits(a, b);");
+    testSame("x || goog.exportSymbol(a, b);");
+    testSame("x || void 0");
   }
 
   private static final String METHOD_FORMAT =

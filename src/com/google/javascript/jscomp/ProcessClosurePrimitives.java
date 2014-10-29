@@ -278,9 +278,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 processAddDependency(n, parent);
               }
             } else if ("setCssNameMapping".equals(methodName)) {
-              if (validPrimitiveCall(t, n)) {
-                processSetCssNameMapping(t, n, parent);
-              }
+              processSetCssNameMapping(t, n, parent);
             }
           } else if (left.getLastChild().getString().equals("base")) {
             // maybe an "base" setup by goog.inherits
