@@ -195,8 +195,22 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Wildcard export"));
     } else if (n.getChildCount() == 2) {
-      compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
-          "Export with FromClause"));
+      //   export {x, y as z} from 'moduleIdentifier';
+      Node moduleIdentifier = n.getLastChild();
+      Node importNode = new Node(Token.IMPORT, moduleIdentifier.cloneNode());
+      importNode.copyInformationFrom(n);
+      parent.addChildBefore(importNode, n);
+      visit(t, importNode, parent);
+
+      String loadAddress = loader.locate(moduleIdentifier.getString(), t.getInput());
+      String moduleName = toModuleName(loadAddress);
+
+      for (Node exportSpec : n.getFirstChild().children()) {
+        String nameFromOtherModule = exportSpec.getFirstChild().getString();
+        String exportedName = exportSpec.getLastChild().getString();
+        exportMap.put(exportedName, moduleName + "." + nameFromOtherModule);
+      }
+      parent.removeChild(n);
     } else {
       if (n.getFirstChild().getType() == Token.EXPORT_SPECS) {
         for (Node exportSpec : n.getFirstChild().children()) {

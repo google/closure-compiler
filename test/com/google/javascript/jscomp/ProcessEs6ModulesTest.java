@@ -141,6 +141,26 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
     ));
   }
 
+  public void testExportFrom() {
+    test("export {name} from 'other';", Joiner.on('\n').join(
+        "goog.provide('module$testcode');",
+        "goog.provide('module$testcode.name');",
+        "goog.require('module$other');",
+        "var module$testcode={};",
+        "module$testcode.name = module$other.name;"));
+
+    test("export {a, b as c, d} from 'other';", Joiner.on('\n').join(
+        "goog.provide('module$testcode');",
+        "goog.provide('module$testcode.d');",
+        "goog.provide('module$testcode.c');",
+        "goog.provide('module$testcode.a');",
+        "goog.require('module$other');",
+        "var module$testcode={};",
+        "module$testcode.a = module$other.a;",
+        "module$testcode.c = module$other.b;",
+        "module$testcode.d = module$other.d;"));
+  }
+
   public void testExtendImportedClass() {
     test(Joiner.on('\n').join(
         "import {Parent} from 'parent';",
