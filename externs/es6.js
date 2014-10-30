@@ -734,8 +734,8 @@ Promise.reject = function(opt_error) {};
 /**
  * @template T
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
- * @param {!Array.<T|!Promise.<T>>} iterable
- * @return {!Promise.<!Array.<T>>}
+ * @param {!Array<T|!Promise<T>>} iterable
+ * @return {!Promise<!Array<T>>}
  */
 Promise.all = function(iterable) {};
 
