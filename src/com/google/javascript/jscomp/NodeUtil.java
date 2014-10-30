@@ -959,8 +959,9 @@ public final class NodeUtil {
       case Token.EMPTY:
         break;
 
-      // Throws are by definition side effects
+      // Throws are by definition side effects, and yields are similar.
       case Token.THROW:
+      case Token.YIELD:
         return true;
 
       case Token.OBJECTLIT:
@@ -1242,6 +1243,7 @@ public final class NodeUtil {
       case Token.DELPROP:
       case Token.DEC:
       case Token.INC:
+      case Token.YIELD:
       case Token.THROW:
         return true;
       case Token.CALL:
@@ -1286,6 +1288,7 @@ public final class NodeUtil {
   static boolean canBeSideEffected(
       Node n, Set<String> knownConstants, Scope scope) {
     switch (n.getType()) {
+      case Token.YIELD:
       case Token.CALL:
       case Token.NEW:
         // Function calls or constructor can reference changed values.

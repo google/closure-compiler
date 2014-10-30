@@ -102,9 +102,6 @@ class Normalize implements CompilerPass {
     Node js = compiler.parseTestCode(code);
     NodeTraversal.traverse(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
-    NodeTraversal.traverse(
-        compiler, js,
-        new MakeDeclaredNamesUnique());
     return js;
   }
 

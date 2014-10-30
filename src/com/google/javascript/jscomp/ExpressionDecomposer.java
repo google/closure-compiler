@@ -653,8 +653,8 @@ class ExpressionDecomposer {
   }
 
   /**
-   * @return The statement containing the expression. null if subExpression
-   *     is not contain by in by a Node where inlining is known to be possible.
+   * @return The statement containing the expression or null if the subExpression
+   *     is not contain in a Node where inlining is known to be possible.
    *     For example, a WHILE node condition expression.
    */
   static Node findExpressionRoot(Node subExpression) {
@@ -670,10 +670,15 @@ class ExpressionDecomposer {
         case Token.IF:
         case Token.SWITCH:
         case Token.RETURN:
+        case Token.THROW:
         case Token.VAR:
           Preconditions.checkState(child == parent.getFirstChild());
           return parent;
         // Any of these indicate an unsupported expression:
+        case Token.FOR:
+          if (!NodeUtil.isForIn(parent) && child == parent.getFirstChild()) {
+            return parent;
+          }
         case Token.SCRIPT:
         case Token.BLOCK:
         case Token.LABEL:
