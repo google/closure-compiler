@@ -35,18 +35,20 @@ angular.$q;
 /**
  * @constructor
  * @template T
+ * @extends {IThenable.<T>}
  */
 angular.$q.Promise;
 
 /**
- * @param {?function(T): RESULT} successCallback
- * @param {?function(?)=} opt_errorCallback
- * @param {?function(?)=} opt_notifyCallback
+ * @param {?(function(T):
+ *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
+ * @param {?(function(*): *)=} opt_onRejected
+ * @param {?(function(*): *)=} opt_notifyCallback
  * @return {!angular.$q.Promise.<RESULT>}
  * @template RESULT
  */
 angular.$q.Promise.prototype.then =
-    function(successCallback, opt_errorCallback, opt_notifyCallback) {};
+    function(opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};
 
 /**
  * @param {?function(?)} callback
