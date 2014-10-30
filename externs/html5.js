@@ -1338,6 +1338,12 @@ HTMLMediaElement.prototype.load = function() {};
  */
 HTMLMediaElement.prototype.canPlayType = function(type) {};
 
+/**
+ * Callback when the media is buffered and ready to play through.
+ * @type {function(!Event)}
+ */
+HTMLMediaElement.prototype.oncanplaythrough;
+
 /** @type {number} */
 HTMLMediaElement.prototype.readyState;
 
