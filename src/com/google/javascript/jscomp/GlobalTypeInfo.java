@@ -1598,7 +1598,7 @@ class GlobalTypeInfo implements CompilerPass {
             warnings.add(JSError.make(
                 declNode, EXTENDS_NOT_ON_CTOR_OR_INTERF, functionName));
           } else {
-            Node docNode = fnDoc.getBaseType().getRootNode();
+            Node docNode = fnDoc.getBaseType().getRoot();
             if (typeParser.hasKnownType(
                 docNode, ownerType, parentScope, typeParameters)) {
               parentClass = typeParser.getNominalType(

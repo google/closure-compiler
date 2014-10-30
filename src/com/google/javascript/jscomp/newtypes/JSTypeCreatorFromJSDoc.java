@@ -100,8 +100,7 @@ public class JSTypeCreatorFromJSDoc {
     if (expr == null) {
       return null;
     }
-    JSType result = getTypeFromNode(expr.getRootNode(), ownerType, registry,
-        typeParameters);
+    JSType result = getTypeFromNode(expr.getRoot(), ownerType, registry,        typeParameters);
     return result;
   }
 
@@ -280,7 +279,7 @@ public class JSTypeCreatorFromJSDoc {
     JSType tdType;
     if (texp == null) {
       warn("Circular type definitions are not allowed.",
-          td.getTypeExprForErrorReporting().getRootNode());
+          td.getTypeExprForErrorReporting().getRoot());
       tdType = JSType.UNKNOWN;
     } else {
       tdType = getTypeFromJSTypeExpression(texp, null, registry, null);
@@ -303,22 +302,22 @@ public class JSTypeCreatorFromJSDoc {
     JSType enumeratedType;
     if (texp == null) {
       warn("Circular type definitions are not allowed.",
-          e.getTypeExprForErrorReporting().getRootNode());
+          e.getTypeExprForErrorReporting().getRoot());
       enumeratedType = JSType.UNKNOWN;
     } else {
       int numTypeVars = howmanyTypeVars;
       enumeratedType = getTypeFromJSTypeExpression(texp, null, registry, null);
       if (howmanyTypeVars > numTypeVars) {
-        warn("An enum type cannot include type variables.", texp.getRootNode());
+        warn("An enum type cannot include type variables.", texp.getRoot());
         enumeratedType = JSType.UNKNOWN;
         howmanyTypeVars = numTypeVars;
       } else if (enumeratedType.isTop()) {
         warn("An enum type cannot be *. " +
             "Use ? if you do not want the elements checked.",
-            texp.getRootNode());
+            texp.getRoot());
         enumeratedType = JSType.UNKNOWN;
       } else if (enumeratedType.isUnion()) {
-        warn("An enum type cannot be a union type.", texp.getRootNode());
+        warn("An enum type cannot be a union type.", texp.getRoot());
         enumeratedType = JSType.UNKNOWN;
       }
     }
@@ -482,7 +481,7 @@ public class JSTypeCreatorFromJSDoc {
     for (JSTypeExpression texp : (implementedIntfs ?
           jsdoc.getImplementedInterfaces() :
           jsdoc.getExtendedInterfaces())) {
-      Node expRoot = texp.getRootNode();
+      Node expRoot = texp.getRoot();
       if (hasKnownType(expRoot, ownerType, registry, typeParameters)) {
         NominalType nt =
             getNominalType(expRoot, ownerType, registry, typeParameters);
@@ -517,7 +516,7 @@ public class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry) {
     try {
       if (jsdoc != null && jsdoc.getType() != null) {
-        Node jsdocNode = jsdoc.getType().getRootNode();
+        Node jsdocNode = jsdoc.getType().getRoot();
         int tokenType = jsdocNode.getType();
         if (tokenType == Token.FUNCTION) {
           if (declNode.isFunction()) {
@@ -552,7 +551,7 @@ public class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry) {
     Preconditions.checkArgument(funNode.isFunction());
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    Node childJsdoc = jsdoc.getType().getRootNode().getFirstChild();
+    Node childJsdoc = jsdoc.getType().getRoot().getFirstChild();
     Node param = funNode.getFirstChild().getNext().getFirstChild();
     Node paramType;
     boolean warnedForMissingTypes = false;
@@ -721,7 +720,7 @@ public class JSTypeCreatorFromJSDoc {
       boolean isRequired = true, isRestFormals = false;
       JSTypeExpression texp = jsdoc == null ?
           null : jsdoc.getParameterType(pname);
-      Node jsdocNode = texp == null ? null : texp.getRootNode();
+      Node jsdocNode = texp == null ? null : texp.getRoot();
       if (param != null) {
         if (convention.isOptionalParameter(param)) {
           isRequired = false;
@@ -793,7 +792,7 @@ public class JSTypeCreatorFromJSDoc {
       return false;
     }
     JSTypeExpression texp = funJsdoc.getParameterType(formalParamName);
-    Node jsdocNode = texp == null ? null : texp.getRootNode();
+    Node jsdocNode = texp == null ? null : texp.getRoot();
     return jsdocNode != null && jsdocNode.getType() == Token.ELLIPSIS;
   }
 
