@@ -42,6 +42,9 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileList;
 import org.apache.tools.ant.types.Parameter;
 import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.types.ResourceCollection;
+import org.apache.tools.ant.types.resources.FileResource;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,12 +53,12 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.Arrays;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
@@ -436,7 +439,13 @@ public final class CompileTask
     if (!Strings.isNullOrEmpty(sourceMapFormat)) {
       options.sourceMapFormat = Format.valueOf(sourceMapFormat);
     }
-    
+
+    if (!Strings.isNullOrEmpty(sourceMapLocationMapping)) {
+      String tokens[] = sourceMapLocationMapping.split("\\|", -1);
+      LocationMapping lm = new LocationMapping(tokens[0], tokens[1]);
+      options.sourceMapLocationMappings = Arrays.asList(lm);
+    }
+
     if (!Strings.isNullOrEmpty(sourceMapLocationMapping)) {
       String tokens[] = sourceMapLocationMapping.split("\\|", -1);
       LocationMapping lm = new LocationMapping(tokens[0], tokens[1]);
@@ -606,14 +615,14 @@ public final class CompileTask
   }
 
   /**
-   * Translates an Ant resource collection into the file list format that 
+   * Translates an Ant resource collection into the file list format that
    * the compiler expects.
    */
   private List<SourceFile> findJavaScriptFiles(ResourceCollection rc) {
-    List<SourceFile> files = Lists.newLinkedList();      
+    List<SourceFile> files = Lists.newLinkedList();
     Iterator<Resource> iter = rc.iterator();
     while (iter.hasNext()) {
-      FileResource fr = iter.next().as(FileResource.class);
+      FileResource fr = (FileResource) iter.next().as(FileResource.class);
       // Construct path to file, relative to current working directory.
       File file = Paths.get("")
           .toAbsolutePath()
@@ -623,7 +632,7 @@ public final class CompileTask
     }
     return files;
   }
-  
+
   /**
    * Gets the default externs set.
    *
@@ -726,7 +735,7 @@ public final class CompileTask
   public void setSourceMapOutputFile(File sourceMapOutputFile) {
     this.sourceMapOutputFile = sourceMapOutputFile;
   }
-  
+
   public void setSourceMapLocationMapping(String mapping) {
     this.sourceMapLocationMapping = mapping;
   }
