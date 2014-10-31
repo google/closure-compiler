@@ -362,7 +362,7 @@ public class ExpressionDecomposerTest extends TestCase {
         "var temp$$0; if (temp$$0 = bar()) temp$$0 = foo(); throw temp$$0;");
   }
 
-  public void testExposeYieldExpression() {
+  public void testExposeYieldExpression1() {
     helperMoveExpression(
         "function *f() { return { a: yield 1, c: foo(yield 2, yield 3) }; }",
         "yield",
@@ -389,6 +389,27 @@ public class ExpressionDecomposerTest extends TestCase {
         "function *f() {" +
         "  var result$$0 = yield 3;" +
         "  return { a: 0, c: foo(1, result$$0) };" +
+        "}");
+  }
+
+  public void testExposeYieldExpression2() {
+    helperMoveExpression(
+        "function *f() { return (yield 1) || (yield 2); }",
+        "yield",
+        "function *f() {" +
+        "  var result$$0 = yield 1;" +
+        "  return result$$0 || (yield 2);" +
+        "}");
+
+    helperExposeExpression(
+        "function *f(x) {" +
+        "  return x || (yield 2);" +
+        "}",
+        "yield",
+        "function *f(x) {" +
+        "  var temp$$0;" +
+        "  if (temp$$0=x); else temp$$0 = yield 2;" +
+        "  return temp$$0" +
         "}");
   }
 

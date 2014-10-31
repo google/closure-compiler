@@ -337,6 +337,40 @@ public class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "  }",
         "}"
     ));
+
+    rewriteGeneratorBodyWithVars(
+        "var i = 0; for (var j = 0; j < 10; j++) { i += j; throw 5; } yield i;",
+        "var j; var i;",
+        Joiner.on('\n').join(
+        "      case 0:",
+        "        i = 0;",
+        "        j = 0;",
+        "      case 1:",
+        "        if (!(j < 10)) {",
+        "          $jscomp$generator$state = 3;",
+        "          break;",
+        "        }",
+        "        i += j;",
+        "        $jscomp$generator$state = -1;",
+        "        throw 5;",
+        "      case 2:",
+        "        j++;",
+        "        $jscomp$generator$state = 1;",
+        "        break;",
+        "      case 3:",
+        "        $jscomp$generator$state = 4;",
+        "        return {value: i, done: false};",
+        "      case 4:",
+        "        if (!($jscomp$generator$throw$arg !== undefined)) {",
+        "          $jscomp$generator$state = 5; break;",
+        "        }",
+        "        $jscomp$generator$state = -1;",
+        "        throw $jscomp$generator$throw$arg;",
+        "      case 5:",
+        "        $jscomp$generator$state = -1;",
+        "      default:",
+        "        return {value: undefined, done: true}"
+        ));
   }
 
   public void testWhileLoopsGenerator() {
@@ -414,62 +448,19 @@ public class Es6RewriteGeneratorsTest extends CompilerTestCase {
     ));
   }
 
-  public void testGeneratorCannotConvertYet() {
-    test(Joiner.on('\n').join(
-        "function *f() {",
-        "  var i = 0; for (var j = 0; j < 10; j++) { i += j; throw 5; } yield i;",
-        "}"
-    ), Joiner.on('\n').join(
-        "/** @suppress {uselessCode} */",
-        "function f() {",
-        "  var $jscomp$generator$state = 0;",
-        "  var j;",
-        "  var i;",
-        "  function $jscomp$generator$impl($jscomp$generator$next$arg,",
-        "      $jscomp$generator$throw$arg) {",
-        "    while (1) switch ($jscomp$generator$state) {",
-        "      case 0:",
-        "        i = 0;",
-        "        j = 0;",
-        "      case 1:",
-        "        if (!(j < 10)) {",
-        "          $jscomp$generator$state = 3;",
-        "          break;",
-        "        }",
-        "        i += j;",
-        "        $jscomp$generator$state = -1;",
-        "        throw 5;",
-        "      case 2:",
-        "        j++;",
-        "        $jscomp$generator$state = 1;",
-        "        break;",
-        "      case 3:",
-        "        $jscomp$generator$state = 4;",
-        "        return {value: i, done: false};",
-        "      case 4:",
-        "        if (!($jscomp$generator$throw$arg !== undefined)) {",
-        "          $jscomp$generator$state = 5; break;",
-        "        }",
-        "        $jscomp$generator$state = -1;",
-        "        throw $jscomp$generator$throw$arg;",
-        "      case 5:",
-        "        $jscomp$generator$state = -1;",
-        "      default:",
-        "        return {value: undefined, done: true}",
-        "    }",
-        "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
-        "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
-        "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-        "  }",
-        "}"
-    ));
+  public void testUndecomposableExpression() {
+    test("function *f() { obj.bar(yield 5); }",
+      null, Es6ToEs3Converter.CANNOT_CONVERT);
+  }
 
+  public void testGeneratorCannotConvertYet() {
     test("function *f() {switch (i) {default: case 1: yield 1;}}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
     test("function *f() { l: if (true) { var x = 5; break l; x++; yield x; }; }",
+      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+
+    test("function *f(b, i) {switch (i) { case (b || (yield 1)): yield 2; }}",
       null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
@@ -1135,6 +1126,81 @@ public class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
         "}"
+    ));
+  }
+
+  public void testGeneratorShortCircuit() {
+    rewriteGeneratorBody("0 || (yield 1);", Joiner.on('\n').join(
+        "      case 0:",
+        "        if (!0) {",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "        }",
+        "        $jscomp$generator$state = 2;",
+        "        break;",
+        "      case 1:",
+        "        $jscomp$generator$state = 3;",
+        "        return{value:1, done:false};",
+        "      case 3:",
+        "        if (!($jscomp$generator$throw$arg !== undefined)) {",
+        "          $jscomp$generator$state = 4;",
+        "          break;",
+        "        }",
+        "        $jscomp$generator$state = -1;",
+        "        throw $jscomp$generator$throw$arg;",
+        "      case 4:",
+        "      case 2:",
+        "        $jscomp$generator$state = -1;",
+        "      default:",
+        "        return {value: undefined, done: true}"
+    ));
+
+    rewriteGeneratorBody("0 && (yield 1);", Joiner.on('\n').join(
+        "      case 0:",
+        "        if (!0) {",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "        }",
+        "        $jscomp$generator$state = 2;",
+        "        return{value:1, done:false};",
+        "      case 2:",
+        "        if (!($jscomp$generator$throw$arg !== undefined)) {",
+        "          $jscomp$generator$state = 3;",
+        "          break;",
+        "        }",
+        "        $jscomp$generator$state = -1;",
+        "        throw $jscomp$generator$throw$arg;",
+        "      case 3:",
+        "      case 1:",
+        "        $jscomp$generator$state = -1;",
+        "      default:",
+        "        return {value: undefined, done: true}"
+    ));
+
+    rewriteGeneratorBody("0 ? 1 : (yield 1);", Joiner.on('\n').join(
+        "      case 0:",
+        "        if (!0) {",
+        "          $jscomp$generator$state = 1;",
+        "          break;",
+        "        }",
+        "        1;",
+        "        $jscomp$generator$state = 2;",
+        "        break;",
+        "      case 1:",
+        "        $jscomp$generator$state = 3;",
+        "        return{value:1, done:false};",
+        "      case 3:",
+        "        if (!($jscomp$generator$throw$arg !== undefined)) {",
+        "          $jscomp$generator$state = 4;",
+        "          break;",
+        "        }",
+        "        $jscomp$generator$state = -1;",
+        "        throw $jscomp$generator$throw$arg;",
+        "      case 4:",
+        "      case 2:",
+        "        $jscomp$generator$state = -1;",
+        "      default:",
+        "        return {value: undefined, done: true}"
     ));
   }
 

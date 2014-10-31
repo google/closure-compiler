@@ -26,7 +26,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Converts ES6 generator functions to valid ES3 code. This pass runs after all ES6 features
@@ -34,7 +36,8 @@ import java.util.List;
  *
  * @author mattloring@google.com (Matthew Loring)
  */
-public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapCompilerPass {
+public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallback
+    implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   // The current case statement onto which translated statements from the
@@ -108,53 +111,14 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverse(compiler, root, new DecomposeYields(compiler));
     NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, new DecomposeYields(compiler));
     NodeTraversal.traverse(compiler, scriptRoot, this);
-  }
-
-  @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    Node enclosing = NodeUtil.getEnclosingFunction(n);
-    if (enclosing == null || !enclosing.isGeneratorFunction()
-        || !NodeUtil.isLoopStructure(n) || NodeUtil.isForIn(n)) {
-      return true;
-    }
-    Node guard = null, incr = null;
-    switch (n.getType()) {
-      case Token.FOR:
-        guard = n.getFirstChild().getNext();
-        incr = guard.getNext();
-        break;
-      case Token.WHILE:
-        guard = n.getFirstChild();
-        incr = IR.empty();
-        break;
-      case Token.DO:
-        guard = n.getLastChild();
-        incr = IR.empty();
-        break;
-    }
-    if (!controlCanExit(guard) && !controlCanExit(incr)) {
-      return true;
-    }
-    Node guardName = IR.name(GENERATOR_LOOP_GUARD + generatorCounter.get());
-    if (!guard.isEmpty()) {
-      Node container = new Node(Token.BLOCK);
-      n.replaceChild(guard, container);
-      container.addChildToFront(IR.block(IR.exprResult(IR.assign(
-        guardName.cloneTree(), guard.cloneTree()))));
-      container.addChildToBack(guardName.cloneTree());
-    }
-    if (!incr.isEmpty()) {
-      n.addChildBefore(IR.block(IR.exprResult(incr.detachFromParent())), n.getLastChild());
-    }
-    Node block = NodeUtil.getEnclosingType(n, Token.BLOCK);
-    block.addChildToFront(IR.var(guardName));
-    return true;
   }
 
   @Override
@@ -797,12 +761,8 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
     Node incr;
     Node body;
 
-    // Used only in the case of DO loops.
-    Node firstEntry;
-
     if (currentStatement.isWhile()) {
       guard = currentStatement.removeFirstChild();
-      firstEntry = null;
       body = currentStatement.removeFirstChild();
       initializer = IR.empty();
       incr = IR.empty();
@@ -812,14 +772,12 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
         initializer = IR.exprResult(initializer);
       }
       guard = currentStatement.removeFirstChild();
-      firstEntry = null;
       incr = currentStatement.removeFirstChild();
       body = currentStatement.removeFirstChild();
     } else {
       Preconditions.checkState(currentStatement.isDo());
-      firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
-      initializer = IR.var(firstEntry.cloneTree(), IR.trueNode());
-      incr = IR.assign(firstEntry.cloneTree(), IR.falseNode());
+      initializer = IR.empty();
+      incr = IR.assign(IR.name(GENERATOR_DO_WHILE_INITIAL), IR.falseNode());
 
       body = currentStatement.removeFirstChild();
       guard = currentStatement.removeFirstChild();
@@ -833,10 +791,6 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
     } else {
       prestatement = IR.block();
       condition = guard;
-    }
-
-    if (currentStatement.isDo()) {
-      condition = IR.or(firstEntry, condition);
     }
 
     int loopBeginState = generatorCaseCount++;
@@ -979,6 +933,124 @@ public class Es6RewriteGenerators implements NodeTraversal.Callback, HotSwapComp
     }
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
       insertAll(c, type, matchingNodes);
+    }
+  }
+
+  /**
+   * Decompose expressions with yields inside of them to equivalent
+   * sequence of expressions in which all non-statement yields are
+   * of the form:
+   * <pre>
+   *   var name = yield expr;
+   * </pre>
+   *
+   * For example, change the following code:
+   * <pre>
+   *   return x || yield y;
+   * </pre>
+   * into
+   * <pre>
+   *  var temp$$0;
+   *  if (temp$$0 = x); else temp$$0 = yield y;
+   *  return temp$$0
+   * </pre>
+   *
+   * This uses the {@link #ExpressionDecomposer} class
+   */
+  class DecomposeYields extends NodeTraversal.AbstractPreOrderCallback {
+
+    private final AbstractCompiler compiler;
+
+    private final ExpressionDecomposer decomposer;
+
+    public DecomposeYields(AbstractCompiler compiler) {
+      this.compiler = compiler;
+      Set<String> consts = new HashSet<>();
+      decomposer = new ExpressionDecomposer(
+        compiler, compiler.getUniqueNameIdSupplier(), consts,
+          Scope.createGlobalScope(new Node(Token.SCRIPT)));
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.YIELD:
+          visitYieldExpression(n);
+          break;
+        case Token.DO:
+        case Token.FOR:
+        case Token.WHILE:
+          visitLoop(n);
+          break;
+        case Token.CASE:
+          if (controlCanExit(n.getFirstChild())) {
+            compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+              "Case statements that contain yields"));
+            return false;
+          }
+          break;
+      }
+      return true;
+    }
+
+    private void visitYieldExpression(Node n) {
+      if (n.getParent().isExprResult()) {
+        return;
+      }
+      if (decomposer.canExposeExpression(n)
+          != ExpressionDecomposer.DecompositionType.UNDECOMPOSABLE) {
+        decomposer.exposeExpression(n);
+        compiler.reportCodeChange();
+      } else {
+        compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT,
+          "Undecomposable expression"));
+      }
+    }
+
+    private void visitLoop(Node n) {
+      Node enclosingFunc = NodeUtil.getEnclosingFunction(n);
+      if (enclosingFunc  == null || !enclosingFunc.isGeneratorFunction()
+          || NodeUtil.isForIn(n)) {
+        return;
+      }
+      Node enclosingBlock = NodeUtil.getEnclosingType(n, Token.BLOCK);
+      Node guard = null, incr = null;
+      switch (n.getType()) {
+        case Token.FOR:
+          guard = n.getFirstChild().getNext();
+          incr = guard.getNext();
+          break;
+        case Token.WHILE:
+          guard = n.getFirstChild();
+          incr = IR.empty();
+          break;
+        case Token.DO:
+          guard = n.getLastChild();
+          if (!guard.isEmpty()) {
+            Node firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
+            enclosingBlock.addChildToFront(IR.var(firstEntry.cloneTree(), IR.trueNode()));
+            guard = IR.or(firstEntry, n.getLastChild().detachFromParent());
+            n.addChildToBack(guard);
+          }
+          incr = IR.empty();
+          break;
+      }
+      if (!controlCanExit(guard) && !controlCanExit(incr)) {
+        return;
+      }
+      Node guardName = IR.name(GENERATOR_LOOP_GUARD + generatorCounter.get());
+      if (!guard.isEmpty()) {
+        Node container = new Node(Token.BLOCK);
+        n.replaceChild(guard, container);
+        container.addChildToFront(IR.block(IR.exprResult(IR.assign(
+          guardName.cloneTree(), guard.cloneTree()))));
+        container.addChildToBack(guardName.cloneTree());
+      }
+      if (!incr.isEmpty()) {
+        n.addChildBefore(IR.block(IR.exprResult(incr.detachFromParent())), n.getLastChild());
+      }
+      enclosingBlock.addChildToFront(IR.var(guardName));
+      compiler.reportCodeChange();
     }
   }
 
