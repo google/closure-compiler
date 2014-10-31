@@ -59,9 +59,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import org.apache.tools.ant.types.Resource;
-import org.apache.tools.ant.types.ResourceCollection;
-import org.apache.tools.ant.types.resources.FileResource;
 
 /**
  * This class implements a simple Ant task to do almost the same as
@@ -438,12 +435,6 @@ public final class CompileTask
 
     if (!Strings.isNullOrEmpty(sourceMapFormat)) {
       options.sourceMapFormat = Format.valueOf(sourceMapFormat);
-    }
-
-    if (!Strings.isNullOrEmpty(sourceMapLocationMapping)) {
-      String tokens[] = sourceMapLocationMapping.split("\\|", -1);
-      LocationMapping lm = new LocationMapping(tokens[0], tokens[1]);
-      options.sourceMapLocationMappings = Arrays.asList(lm);
     }
 
     if (!Strings.isNullOrEmpty(sourceMapLocationMapping)) {
