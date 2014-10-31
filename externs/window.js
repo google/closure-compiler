@@ -177,7 +177,6 @@ function setImmediate(callback) {}
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setInterval
  * @see https://msdn.microsoft.com/en-us/library/ms536749(v=VS.85).aspx
- * @suppress {duplicate}
  */
 function setInterval(callback, delay) {}
 
@@ -188,6 +187,5 @@ function setInterval(callback, delay) {}
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setTimeout
  * @see https://msdn.microsoft.com/en-us/library/ms536753(VS.85).aspx
- * @suppress {duplicate}
  */
 function setTimeout(callback, delay, var_args) {}
