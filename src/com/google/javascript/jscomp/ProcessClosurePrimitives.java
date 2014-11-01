@@ -105,7 +105,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   static final DiagnosticType INVALID_CLOSURE_CALL_ERROR = DiagnosticType.error(
       "JSC_INVALID_CLOSURE_CALL_ERROR",
-      "Closure primitive methods must be called at file scope.");
+      "Closure dependency methods(goog.provide, goog.require, etc) must be called at file scope.");
 
   static final DiagnosticType NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR =
       DiagnosticType.error(
@@ -231,7 +231,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.CALL:
-        boolean isExpr = parent.isExprResult();
         Node left = n.getFirstChild();
         if (left.isGetProp()) {
           Node name = left.getFirstChild();

@@ -2372,6 +2372,19 @@ public class IntegrationTest extends IntegrationTestCase {
         "a.b.c.myFunc = function(x) {};");
   }
 
+  public void testSuppressBadGoogRequire() throws Exception {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+    options.checkTypes = true;
+    test(
+        options,
+        "/** @suppress {closureDepMethodUsageChecks} */\n" +
+        "function f() { goog.require('foo'); }\n" +
+        "f();",
+        "function f() { goog.require('foo'); }\n" +
+        "f();");
+  }
+
   public void testIssue1204() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS

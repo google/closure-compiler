@@ -343,6 +343,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("useOfGoogBase",
           ProcessClosurePrimitives.USE_OF_GOOG_BASE);
 
+  public static final DiagnosticGroup CLOSURE_DEP_METHOD_USAGE_CHECKS =
+      DiagnosticGroups.registerGroup("closureDepMethodUsageChecks",
+          ProcessClosurePrimitives.INVALID_CLOSURE_CALL_ERROR);
+
   // This group exists so that generated code can suppress these
   // warnings. Not for general use. These diagnostics will most likely
   // be moved to the suspiciousCode group.
