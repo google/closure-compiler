@@ -226,7 +226,7 @@ options/arguments in your CUI application.</td>
 
   <tr>
     <td>URL</td>
-    <td>http://code.google.com/p/guava-libraries/</td>
+    <td>https://github.com/google/guava</td>
   </tr>
 
   <tr>
