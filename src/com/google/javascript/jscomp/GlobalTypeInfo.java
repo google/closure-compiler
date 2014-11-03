@@ -285,7 +285,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (arrayCtor == null) {
         return JSType.UNKNOWN;
       }
-      arrayType = arrayCtor.getFunType().getReturnType();
+      arrayType = arrayCtor.getFunType().getTypeOfThis();
     }
     // Kind of ugly that we have hard-coded "T" here. Alternatives?
     return arrayType.substituteGenerics(ImmutableMap.of("T", t));
@@ -297,7 +297,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (regexpCtor == null) {
         return JSType.UNKNOWN;
       }
-      regexpType = regexpCtor.getFunType().getReturnType();
+      regexpType = regexpCtor.getFunType().getTypeOfThis();
     }
     return regexpType;
   }
@@ -2150,10 +2150,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     boolean hasThis() {
-      if (isFunction() && getDeclaredType().getThisType() != null) {
-        return true;
-      }
-      return false;
+      return isFunction() && getDeclaredType().getThisType() != null;
     }
 
     private RawNominalType getNominalType(QualifiedName qname) {
@@ -2212,7 +2209,8 @@ class GlobalTypeInfo implements CompilerPass {
       return null;
     }
 
-    JSType getDeclaredTypeOf(String name) {
+    @Override
+    public JSType getDeclaredTypeOf(String name) {
       Preconditions.checkArgument(!name.contains("."));
       if ("this".equals(name)) {
         if (!hasThis()) {
@@ -2231,7 +2229,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       JSType localType = locals.get(name);
       if (localType != null) {
-        Preconditions.checkState(!localType.isBottom(), name + " was bottom");
+        Preconditions.checkState(!localType.isBottom(), "%s was bottom", name);
         return localType;
       }
       JSType externType = externs.get(name);
@@ -2503,7 +2501,7 @@ class GlobalTypeInfo implements CompilerPass {
         sb.append(')');
       }
       sb.append(" with root: ");
-      sb.append(root.toString());
+      sb.append(root);
       return sb.toString();
     }
   }

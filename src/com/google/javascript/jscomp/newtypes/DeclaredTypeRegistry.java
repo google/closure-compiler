@@ -20,14 +20,20 @@ package com.google.javascript.jscomp.newtypes;
 public interface DeclaredTypeRegistry {
 
   /**
-   * Returns a JSType from a given named type,
-   * or null if the identifier is not defined.
+   * Returns the named type from a given potentially qualified type name,
+   * or null if the name is not defined.
    */
-  public JSType lookupTypeByName(String name);
+  JSType lookupTypeByName(String name);
 
   /** Returns the instance of the typedef named {@code name} */
-  public Typedef getTypedef(String name);
+  Typedef getTypedef(String name);
 
   /** Returns the instance of the enum named {@code name} */
-  public EnumType getEnum(String name);
+  EnumType getEnum(String name);
+
+  /**
+   * Returns the declared JSType of the given identifier,
+   * or null if the identifier is not defined.
+   */
+  JSType getDeclaredTypeOf(String name);
 }

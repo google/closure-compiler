@@ -232,8 +232,20 @@ public class FunctionType {
     }
   }
 
+  public JSType getInstanceTypeOfCtor() {
+    if (!isGeneric()) {
+      return getTypeOfThis();
+    }
+    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+    for (String typeVar : getTypeParameters()) {
+      builder.put(typeVar, JSType.UNKNOWN);
+    }
+    return instantiateGenerics(builder.build()).getTypeOfThis();
+  }
+
+
   public JSType getTypeOfThis() {
-    Preconditions.checkNotNull(nominalType);
+    Preconditions.checkNotNull(nominalType, this);
     return JSType.fromObjectType(ObjectType.fromNominalType(nominalType));
   }
 

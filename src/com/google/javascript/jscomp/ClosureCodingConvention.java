@@ -21,9 +21,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
+import com.google.javascript.jscomp.newtypes.JSType;
+import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -397,17 +399,16 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public Collection<AssertionFunctionSpec> getAssertionFunctions() {
     return ImmutableList.of(
-        new AssertionFunctionSpec("goog.asserts.assert"),
+        new AssertionFunctionSpec("goog.asserts.assert", JSType.TRUTHY),
         new AssertionFunctionSpec("goog.asserts.assertNumber",
-            JSTypeNative.NUMBER_TYPE),
+            JSType.NUMBER, JSTypeNative.NUMBER_TYPE),
         new AssertionFunctionSpec("goog.asserts.assertString",
-            JSTypeNative.STRING_TYPE),
+            JSType.STRING, JSTypeNative.STRING_TYPE),
         new AssertionFunctionSpec("goog.asserts.assertFunction",
-            JSTypeNative.FUNCTION_INSTANCE_TYPE),
+            JSType.topFunction(), JSTypeNative.FUNCTION_INSTANCE_TYPE),
         new AssertionFunctionSpec("goog.asserts.assertObject",
-            JSTypeNative.OBJECT_TYPE),
-        new AssertionFunctionSpec("goog.asserts.assertArray",
-            JSTypeNative.ARRAY_TYPE),
+            JSType.TOP_OBJECT, JSTypeNative.OBJECT_TYPE),
+        new AssertFunctionByTypeName("goog.asserts.assertArray", "Array"),
         new AssertFunctionByTypeName("goog.asserts.assertElement", "Element"),
         new AssertInstanceofSpec("goog.asserts.assertInstanceof")
     );
@@ -472,7 +473,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
    */
   public static class AssertInstanceofSpec extends AssertionFunctionSpec {
     public AssertInstanceofSpec(String functionName) {
-      super(functionName, JSTypeNative.OBJECT_TYPE);
+      super(functionName, JSType.TOP_OBJECT, JSTypeNative.OBJECT_TYPE);
     }
 
     /**
@@ -480,11 +481,13 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
      * that the node must not be null or undefined.
      */
     @Override
-    public JSType getAssertedType(Node call, JSTypeRegistry registry) {
+    public com.google.javascript.rhino.jstype.JSType
+        getAssertedOldType(Node call, JSTypeRegistry registry) {
       if (call.getChildCount() > 2) {
         Node constructor = call.getFirstChild().getNext().getNext();
         if (constructor != null) {
-          JSType ownerType = constructor.getJSType();
+          com.google.javascript.rhino.jstype.JSType ownerType =
+              constructor.getJSType();
           if (ownerType != null
               && ownerType.isFunctionType()
               && ownerType.isConstructor()) {
@@ -494,6 +497,26 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
         }
       }
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+
+    @Override
+    public JSType getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
+      if (call.getChildCount() > 2) {
+        Node constructor = call.getFirstChild().getNext().getNext();
+        if (constructor != null && constructor.isQualifiedName()) {
+          QualifiedName qname = QualifiedName.fromNode(constructor);
+          JSType leftmost = scope.getDeclaredTypeOf(qname.getLeftmostName());
+          JSType functionType = leftmost;
+          if (functionType != null && !qname.isIdentifier()) {
+            functionType = functionType.getProp(qname.getAllButLeftmost());
+          }
+          if (functionType != null) {
+            return functionType
+                .getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
+          }
+        }
+      }
+      return JSType.UNKNOWN;
     }
   }
 
@@ -505,15 +528,21 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     private final String typeName;
 
     public AssertFunctionByTypeName(String functionName, String typeName) {
-      super(functionName);
+      super(functionName, null);
       this.typeName = typeName;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public JSType getAssertedType(Node call, JSTypeRegistry registry) {
+    public com.google.javascript.rhino.jstype.JSType
+        getAssertedOldType(Node call, JSTypeRegistry registry) {
       return registry.getType(typeName);
     }
-  }
 
+    @Override
+    public JSType getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
+      JSType result = scope.getDeclaredTypeOf(typeName)
+          .getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
+      return result;
+    }
+  }
 }

@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.GlobalTypeInfo.Scope;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -167,7 +168,13 @@ public class NewTypeInference implements CompilerPass {
           "JSC_NOT_A_CONSTRUCTOR",
           "Expected a constructor but found type {0}.");
 
+  static final DiagnosticType ASSERT_FALSE =
+      DiagnosticType.warning(
+          "JSC_ASSERT_FALSE",
+          "Assertion is always false. Please use a throw or fail() instead.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      ASSERT_FALSE,
       CALL_FUNCTION_WITH_BOTTOM_FORMAL,
       CONST_REASSIGNED,
       CROSS_SCOPE_GOTCHA,
@@ -221,6 +228,7 @@ public class NewTypeInference implements CompilerPass {
   static final String GETTER_PREFIX = "%getter_fun";
   static final String SETTER_PREFIX = "%setter_fun";
   private final String ABSTRACT_METHOD_NAME;
+  private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
   private static final QualifiedName NUMERIC_INDEX = new QualifiedName("0");
   private final boolean isClosurePassOn;
 
@@ -238,6 +246,12 @@ public class NewTypeInference implements CompilerPass {
     this.isClosurePassOn = isClosurePassOn;
     this.ABSTRACT_METHOD_NAME =
           compiler.getCodingConvention().getAbstractMethodName();
+    assertionFunctionsMap = new HashMap<>();
+    for (AssertionFunctionSpec assertionFunction :
+        compiler.getCodingConvention().getAssertionFunctions()) {
+      assertionFunctionsMap.put(assertionFunction.getFunctionName(),
+          assertionFunction);
+    }
   }
 
   @Override
@@ -1307,15 +1321,8 @@ public class NewTypeInference implements CompilerPass {
       return ctorPair;
     }
 
-    if (ctorFunType.isGeneric()) {
-      ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-      for (String typeVar : ctorFunType.getTypeParameters()) {
-        builder.put(typeVar, JSType.UNKNOWN);
-      }
-      ctorFunType = ctorFunType.instantiateGenerics(builder.build());
-    }
     // We are in a specialized context *and* we know the constructor type
-    JSType instanceType = ctorFunType.getTypeOfThis();
+    JSType instanceType = ctorFunType.getInstanceTypeOfCtor();
     objPair = analyzeExprFwd(obj, inEnv, JSType.UNKNOWN,
         specializedType.isTruthy() ?
         objPair.type.specialize(instanceType) :
@@ -1488,6 +1495,11 @@ public class NewTypeInference implements CompilerPass {
       return analyzeClosureCallFwd(expr, inEnv, specializedType);
     }
     Node callee = expr.getFirstChild();
+    AssertionFunctionSpec assertionFunctionSpec =
+        assertionFunctionsMap.get(callee.getQualifiedName());
+    if (assertionFunctionSpec != null) {
+      return analyzeAssertionCall(expr, inEnv, assertionFunctionSpec);
+    }
     EnvTypePair calleePair =
         analyzeExprFwd(callee, inEnv, JSType.topFunction());
     JSType calleeType = calleePair.type;
@@ -1594,6 +1606,29 @@ public class NewTypeInference implements CompilerPass {
       }
     }
     return new EnvTypePair(tmpEnv, retType);
+  }
+
+  private EnvTypePair analyzeAssertionCall(
+      Node callNode, TypeEnv env, AssertionFunctionSpec assertionFunctionSpec) {
+    Node left = callNode.getFirstChild();
+    Node firstParam = left.getNext();
+    if (firstParam == null) {
+      return new EnvTypePair(env, JSType.UNKNOWN);
+    }
+    Node assertedNode = assertionFunctionSpec.getAssertedParam(firstParam);
+    if (assertedNode == null) {
+      return new EnvTypePair(env, JSType.UNKNOWN);
+    }
+    JSType assertedType =
+        assertionFunctionSpec.getAssertedNewType(callNode, currentScope);
+    EnvTypePair pair =
+        analyzeExprFwd(assertedNode, env, JSType.UNKNOWN, assertedType);
+    if (pair.type.isBottom()) {
+      warnings.add(JSError.make(assertedNode, NewTypeInference.ASSERT_FALSE));
+      pair.type = JSType.UNKNOWN;
+      pair.env = env;
+    }
+    return pair;
   }
 
   private EnvTypePair analyzeGetElemFwd(

@@ -1733,14 +1733,71 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck(
         "/** @constructor */ function Foo() { /** @const */ this.p = 5; }\n" +
-        "function f(/** ?Foo */ f) { return f.p; }",
+        "function g(/** ?Foo */ f) { return f.p; }",
         NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(
         "/** @constructor */ function Foo() {}\n" +
         "Foo.prototype.p = function(){};\n" +
-        "function f(/** ?Foo */ f) { f.p(); }",
+        "function g(/** ?Foo */ f) { f.p(); }",
         NewTypeInference.NULLABLE_DEREFERENCE);
+
+    checkNoWarnings(
+        CLOSURE_BASE +
+        "function f(/** ?{ p : number } */ o) {\n" +
+        "  goog.asserts.assert(o);\n" +
+        "  return o.p;\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_BASE +
+        "function f(/** ?{ p : number } */ o) {\n" +
+        "  goog.asserts.assertObject(o);\n" +
+        "  return o.p;\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_BASE +
+        "function f(/** ?Array<string> */ a) {\n" +
+        "  goog.asserts.assertArray(a);\n" +
+        "  return a.length;\n" +
+        "}");
+
+    checkNoWarnings(
+        CLOSURE_BASE +
+        "/** @constructor */ function Foo() {}\n" +
+        "Foo.prototype.p = function(){};\n" +
+        "function g(/** ?Foo */ f) {\n" +
+        "  goog.asserts.assertInstanceof(f, Foo);\n" +
+        "  f.p();\n" +
+        "}");
+  }
+
+  public void testAsserts() {
+    typeCheck(
+        CLOSURE_BASE +
+        "function f(/** ({ p : string }|null|undefined) */ o) {\n" +
+        "  goog.asserts.assert(o);\n" +
+        "  o.p - 5;\n" +
+        "}", NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        CLOSURE_BASE +
+        "/** @constructor */ function Foo() {}\n" +
+        "function f(/** (Array.<string>|Foo) */ o) {\n" +
+        "  goog.asserts.assert(o instanceof Array);\n" +
+        "  var /** string */ s = o.length;\n" +
+        "}", NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        CLOSURE_BASE +
+        "/** @constructor */ function Foo() {}\n" +
+        "Foo.prototype.p = function(/** number */ x){};\n" +
+        "function f(/** (function(new:Foo)) */ ctor,\n" +
+        "           /** ?Foo */ o) {\n" +
+        "  goog.asserts.assertInstanceof(o, ctor);\n" +
+        "  o.p('str');\n" +
+        "}", NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testDontInferBottom() {
