@@ -38,7 +38,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   static final DiagnosticType SUSPICIOUS_SEMICOLON = DiagnosticType.warning(
       "JSC_SUSPICIOUS_SEMICOLON",
-      "If this if/for/while really shouldn't have a body, use {}");
+      "If this if/for/while really shouldn''t have a body, use '{}'");
 
   static final DiagnosticType SUSPICIOUS_COMPARISON_WITH_NAN =
       DiagnosticType.warning(
