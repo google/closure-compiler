@@ -253,7 +253,7 @@ public class SourceMapGeneratorV3 implements SourceMapGenerator {
       Preconditions.checkState(nextLine > lastLine
           || (nextLine == lastLine && nextColumn >= lastColumn),
           "Incorrect source mappings order, previous : (%s,%s)\n"
-          + "new : (%s,%s)\nnode : %s",
+          + "new : (%s,%s)",
           lastLine, lastColumn, nextLine, nextColumn);
     }
 
