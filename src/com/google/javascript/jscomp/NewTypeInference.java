@@ -2267,7 +2267,7 @@ public class NewTypeInference implements CompilerPass {
     QualifiedName propQname = new QualifiedName(pname);
     Node propAccessNode = receiver.getParent();
     EnvTypePair pair;
-    JSType objWithProp = pickReqObjType(receiver)
+    JSType objWithProp = pickReqObjType(propAccessNode)
         .withLoose().withProperty(propQname, requiredType);
     JSType recvReqType, recvSpecType, recvType;
 
@@ -2870,7 +2870,8 @@ public class NewTypeInference implements CompilerPass {
       Node receiver, String pname, TypeEnv outEnv, JSType requiredType) {
     QualifiedName qname = new QualifiedName(pname);
     EnvTypePair pair = analyzeExprBwd(receiver, outEnv,
-        pickReqObjType(receiver).withLoose().withProperty(qname, requiredType));
+        pickReqObjType(receiver.getParent()).withLoose()
+        .withProperty(qname, requiredType));
     JSType receiverType = pair.type;
     JSType propAccessType = receiverType.mayHaveProp(qname) ?
         receiverType.getProp(qname) : requiredType;
@@ -3147,7 +3148,7 @@ public class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(pname.isIdentifier());
     String pnameAsString = pname.getLeftmostName();
     JSType reqObjType =
-        pickReqObjType(obj).withLoose().withProperty(pname, type);
+        pickReqObjType(obj.getParent()).withLoose().withProperty(pname, type);
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
     TypeEnv lvalueEnv = lvalue.env;
     JSType lvalueType = lvalue.type;
@@ -3280,7 +3281,7 @@ public class NewTypeInference implements CompilerPass {
       TypeEnv outEnv, JSType type, boolean doSlicing) {
     Preconditions.checkArgument(pname.isIdentifier());
     JSType reqObjType =
-        pickReqObjType(obj).withLoose().withProperty(pname, type);
+        pickReqObjType(obj.getParent()).withLoose().withProperty(pname, type);
     LValueResultBwd lvalue =
         analyzeLValueBwd(obj, outEnv, reqObjType, false, true);
     if (lvalue.ptr != null) {
@@ -3302,6 +3303,8 @@ public class NewTypeInference implements CompilerPass {
   private static JSType pickReqObjType(Node expr) {
     int exprKind = expr.getType();
     switch (exprKind) {
+      case Token.GETPROP:
+        return JSType.TOP_STRUCT;
       case Token.GETELEM:
       case Token.IN:
         return JSType.TOP_DICT;
@@ -3318,17 +3321,9 @@ public class NewTypeInference implements CompilerPass {
         }
         return JSType.TOP_OBJECT;
       }
-      default: {
-        Node parent = expr.getParent();
-        if (parent.isGetProp()) {
-          return JSType.TOP_STRUCT;
-        }
-        if (parent.isGetElem()) {
-          return JSType.TOP_DICT;
-        }
+      default:
         throw new RuntimeException(
             "Unhandled node for pickReqObjType: " + Token.name(exprKind));
-      }
     }
   }
 

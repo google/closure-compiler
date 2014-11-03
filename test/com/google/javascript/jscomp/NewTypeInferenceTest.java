@@ -4086,6 +4086,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "f({});", NewTypeInference.INVALID_OPERAND_TYPE);
 
+    checkNoWarnings("function f(/** ? */ o) { return o[0].prop; }");
+
     // TODO(blickly): The fact that this has no warnings is somewhat unpleasant.
     checkNoWarnings(
         "function f(x) {\n" +
