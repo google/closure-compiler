@@ -1952,6 +1952,11 @@ public class Compiler extends AbstractCompiler {
   //------------------------------------------------------------------------
 
   public void optimize() {
+    List<PassFactory> optimizations = getPassConfig().getOptimizations();
+    if (optimizations.isEmpty()) {
+      return;
+    }
+
     // Ideally, this pass should be the first pass run, however:
     // 1) VariableReferenceCheck reports unexpected warnings if Normalize
     // is done first.
@@ -1972,7 +1977,7 @@ public class Compiler extends AbstractCompiler {
     if (options.getCheckDeterminism()) {
       phaseOptimizer.setPrintAstHashcodes(true);
     }
-    phaseOptimizer.consume(getPassConfig().getOptimizations());
+    phaseOptimizer.consume(optimizations);
     phaseOptimizer.process(externsRoot, jsRoot);
     phaseOptimizer = null;
   }
