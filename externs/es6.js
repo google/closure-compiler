@@ -134,8 +134,7 @@ Object.is;
 
 /**
  * Returns a language-sensitive string representation of this number.
- * @this {Number|number}
- * @param {(string|Array.<string>)=} opt_locales
+ * @param {(string|!Array<string>)=} opt_locales
  * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
