@@ -133,6 +133,19 @@ Object.is;
 
 
 /**
+ * Returns a language-sensitive string representation of this number.
+ * @param {(string|!Array<string>)=} opt_locales
+ * @param {Object=} opt_options
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString
+ * @see http://www.ecma-international.org/ecma-402/1.0/#sec-13.2.1
+ * @override
+ */
+Number.prototype.toLocaleString = function(opt_locales, opt_options) {};
+
+
+/**
  * @see http://dev.w3.org/html5/postmsg/
  * @interface
  */
