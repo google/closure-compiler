@@ -505,14 +505,17 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
         Node constructor = call.getFirstChild().getNext().getNext();
         if (constructor != null && constructor.isQualifiedName()) {
           QualifiedName qname = QualifiedName.fromNode(constructor);
-          JSType leftmost = scope.getDeclaredTypeOf(qname.getLeftmostName());
-          JSType functionType = leftmost;
-          if (functionType != null && !qname.isIdentifier()) {
-            functionType = functionType.getProp(qname.getAllButLeftmost());
-          }
+          JSType functionType = scope.getDeclaredTypeOf(qname.getLeftmostName());
           if (functionType != null) {
-            return functionType
-                .getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
+            if (!qname.isIdentifier()) {
+              functionType = functionType.getProp(qname.getAllButLeftmost());
+            }
+            com.google.javascript.jscomp.newtypes.FunctionType ctorType =
+                functionType.getFunTypeIfSingletonObj();
+            if (ctorType != null && ctorType.isConstructor()) {
+              return ctorType.getInstanceTypeOfCtor();
+            }
+
           }
         }
       }

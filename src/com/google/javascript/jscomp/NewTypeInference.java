@@ -173,6 +173,11 @@ public class NewTypeInference implements CompilerPass {
           "JSC_ASSERT_FALSE",
           "Assertion is always false. Please use a throw or fail() instead.");
 
+  static final DiagnosticType UNKNOWN_ASSERTION_TYPE =
+      DiagnosticType.warning(
+          "JSC_UNKNOWN_ASSERTION_TYPE",
+          "Assert with unknown asserted type.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
       CALL_FUNCTION_WITH_BOTTOM_FORMAL,
@@ -193,6 +198,7 @@ public class NewTypeInference implements CompilerPass {
       POSSIBLY_INEXISTENT_PROPERTY,
       PROPERTY_ACCESS_ON_NONOBJECT,
       RETURN_NONDECLARED_TYPE,
+      UNKNOWN_ASSERTION_TYPE,
       CheckGlobalThis.GLOBAL_THIS,
       CheckMissingReturn.MISSING_RETURN_STATEMENT,
       TypeCheck.CONSTRUCTOR_NOT_CALLABLE,
@@ -1621,6 +1627,9 @@ public class NewTypeInference implements CompilerPass {
     }
     JSType assertedType =
         assertionFunctionSpec.getAssertedNewType(callNode, currentScope);
+    if (assertedType.isUnknown()) {
+      warnings.add(JSError.make(callNode, NewTypeInference.UNKNOWN_ASSERTION_TYPE));
+    }
     EnvTypePair pair =
         analyzeExprFwd(assertedNode, env, JSType.UNKNOWN, assertedType);
     if (pair.type.isBottom()) {
@@ -3098,7 +3107,7 @@ public class NewTypeInference implements CompilerPass {
         LValueResultFwd lvalue =
             analyzeLValueFwd(obj, inEnv, JSType.UNKNOWN, true);
         if (isArrayType(lvalue.type)) {
-          return analyzeArrayElmLvalFwd(obj, prop, lvalue);
+          return analyzeArrayElmLvalFwd(prop, lvalue);
         }
         // (3) All other getelems
         EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
@@ -3125,7 +3134,7 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private LValueResultFwd analyzeArrayElmLvalFwd(
-      Node obj, Node prop, LValueResultFwd lvalue) {
+      Node prop, LValueResultFwd lvalue) {
     EnvTypePair pair = analyzeExprFwd(prop, lvalue.env, JSType.NUMBER);
     if (!pair.type.equals(JSType.NUMBER)) {
       // Some unknown computed property; don't treat as element access.

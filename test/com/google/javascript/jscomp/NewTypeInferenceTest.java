@@ -1771,6 +1771,37 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  goog.asserts.assertInstanceof(f, Foo);\n" +
         "  f.p();\n" +
         "}");
+
+    typeCheck(
+        CLOSURE_BASE +
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @constructor */ function Bar() {}\n" +
+        "function g(/** !Bar */ o) {\n" +
+        "  goog.asserts.assertInstanceof(o, Foo);\n" +
+        "}", NewTypeInference.ASSERT_FALSE);
+
+    typeCheck(
+        CLOSURE_BASE +
+        "/** @constructor */ function Foo() {}\n" +
+        "function g(/** !Foo */ o) {\n" +
+        "  goog.asserts.assertInstanceof(o, 42);\n" +
+        "}", NewTypeInference.UNKNOWN_ASSERTION_TYPE);
+
+    typeCheck(
+        CLOSURE_BASE +
+        "/** @constructor */ function Foo() {}\n" +
+        "function Bar() {}\n" +
+        "function g(/** !Foo */ o) {\n" +
+        "  goog.asserts.assertInstanceof(o, Bar);\n" +
+        "}", NewTypeInference.UNKNOWN_ASSERTION_TYPE);
+
+    typeCheck(
+        CLOSURE_BASE +
+        "/** @constructor */ function Foo() {}\n" +
+        "/** @interface */ function Bar() {}\n" +
+        "function g(/** !Foo */ o) {\n" +
+        "  goog.asserts.assertInstanceof(o, Bar);\n" +
+        "}", NewTypeInference.UNKNOWN_ASSERTION_TYPE);
   }
 
   public void testAsserts() {
