@@ -246,7 +246,7 @@ public class FunctionType {
 
   public JSType getThisType() {
     Preconditions.checkNotNull(nominalType, this);
-    return JSType.fromObjectType(ObjectType.fromNominalType(nominalType));
+    return nominalType.getInstanceAsJSType();
   }
 
   public JSType createConstructorObject() {

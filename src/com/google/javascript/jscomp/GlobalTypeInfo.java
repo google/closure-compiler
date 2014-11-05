@@ -37,7 +37,6 @@ import com.google.javascript.jscomp.newtypes.Namespace;
 import com.google.javascript.jscomp.newtypes.NamespaceLit;
 import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
-import com.google.javascript.jscomp.newtypes.ObjectType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.rhino.JSDocInfo;
@@ -2220,8 +2219,7 @@ class GlobalTypeInfo implements CompilerPass {
         if (!hasThis()) {
           return null;
         }
-        return JSType.fromObjectType(ObjectType.fromNominalType(
-            getDeclaredType().getThisType()));
+        return getDeclaredType().getThisType().getInstanceAsJSType();
       }
       int formalIndex = formals.indexOf(name);
       if (formalIndex != -1) {

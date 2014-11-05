@@ -84,7 +84,7 @@ public class ObjectType implements TypeWithProperties {
         null, null, fn, fn.isLoose(), ObjectKind.UNRESTRICTED);
   }
 
-  public static ObjectType fromNominalType(NominalType cl) {
+  static ObjectType fromNominalType(NominalType cl) {
     return ObjectType.makeObjectType(cl, null, null, false, cl.getObjectKind());
   }
 

@@ -60,6 +60,12 @@ public class NominalType {
     return rawType;
   }
 
+  public JSType getInstanceAsJSType() {
+    return (rawType.isGeneric() && !typeMap.isEmpty())
+        ? JSType.fromObjectType(ObjectType.fromNominalType(this))
+        : rawType.getInstanceAsJSType();
+  }
+
   ObjectKind getObjectKind() {
     return rawType.objectKind;
   }
