@@ -2615,32 +2615,111 @@ chrome.contextMenus = {};
 
 
 /**
- * @param {!Object} createProperties
+ * @typedef {?{
+ *   type: (string|undefined),
+ *   id: (string|undefined),
+ *   title: (string|undefined),
+ *   checked: (boolean|undefined),
+ *   contexts: (!Array.<string>|undefined),
+ *   onclick: (function(!Object, !Tab)|undefined),
+ *   parentId: (number|string|undefined),
+ *   documentUrlPatterns: (!Array.<string>|undefined),
+ *   targetUrlPatterns: (!Array.<string>|undefined),
+ *   enabled: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/contextMenus#method-create
+ */
+chrome.contextMenus.CreateProperties;
+
+
+/**
+ * @typedef {?{
+ *   type: (string|undefined),
+ *   title: (string|undefined),
+ *   checked: (boolean|undefined),
+ *   contexts: (!Array.<string>|undefined),
+ *   onclick: (function(!Object, !Tab)|undefined),
+ *   parentId: (number|string|undefined),
+ *   documentUrlPatterns: (!Array.<string>|undefined),
+ *   targetUrlPatterns: (!Array.<string>|undefined),
+ *   enabled: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/contextMenus#method-update
+ */
+chrome.contextMenus.UpdateProperties;
+
+
+/**
+ * @param {!chrome.contextMenus.CreateProperties} createProperties
  * @param {function()=} opt_callback
- * @return {number} The id of the newly created window.
+ * @return {(number|string)} The id of the newly created window.
+ * @see https://developer.chrome.com/extensions/contextMenus#method-create
  */
 chrome.contextMenus.create = function(createProperties, opt_callback) {};
 
 
 /**
- * @param {number} menuItemId
+ * @param {(number|string)} id
+ * @param {!chrome.contextMenus.UpdateProperties} updateProperties
  * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/extensions/contextMenus#method-update
+ */
+chrome.contextMenus.update = function(id, updateProperties, opt_callback) {};
+
+
+/**
+ * @param {(number|string)} menuItemId
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/extensions/contextMenus#method-remove
  */
 chrome.contextMenus.remove = function(menuItemId, opt_callback) {};
 
 
 /**
  * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/extensions/contextMenus#method-removeAll
  */
 chrome.contextMenus.removeAll = function(opt_callback) {};
 
 
 /**
- * @param {number} id
- * @param {!Object} updateProperties
- * @param {function()=} opt_callback
+ * @interface
+ * @see https://developer.chrome.com/extensions/contextMenus#event-onClicked
  */
-chrome.contextMenus.update = function(id, updateProperties, opt_callback) {};
+chrome.contextMenus.ClickedEvent = function() {};
+
+
+/**
+ * @param {function(!Object, !Tab=)} callback
+ */
+chrome.contextMenus.ClickedEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object, !Tab=)} callback
+ */
+chrome.contextMenus.ClickedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!Object, !Tab=)} callback
+ * @return {boolean}
+ */
+chrome.contextMenus.ClickedEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.contextMenus.ClickedEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.contextMenus.ClickedEvent}
+ * @see https://developer.chrome.com/extensions/contextMenus#event-onClicked
+ */
+chrome.contextMenus.onClicked;
 
 
 /**
@@ -3029,13 +3108,71 @@ chrome.contentSettings.notifications;
 
 /**
  * @const
- * @see https://developer.chrome.com/extensions/fileBrowserHandle.html
+ * @see https://developer.chrome.com/extensions/fileBrowserHandler
  */
-chrome.fileBrowserHandle = {};
+chrome.fileBrowserHandler = {};
 
 
-/** @type {!ChromeEvent} */
-chrome.fileBrowserHandle.onExecute;
+/**
+ * @typedef {?{
+ *   suggestedName: string,
+ *   allowedFileExtensions: (!Array.<string>|undefined)
+ * }}
+ */
+chrome.fileBrowserHandler.SelectFileSelectionParams;
+
+
+/**
+ * Prompts user to select file path under which file should be saved.
+ * @see https://developer.chrome.com/extensions/fileBrowserHandler#method-selectFile
+ * @param {!chrome.fileBrowserHandler.SelectFileSelectionParams} selectionParams
+ *     Parameters that will be used while selecting the file.
+ * @param {function(!Object)} callback Function called upon completion.
+ */
+chrome.fileBrowserHandler.selectFile = function(selectionParams, callback) {};
+
+
+/**
+ * @interface
+ * @see https://developer.chrome.com/extensions/fileBrowserHandler#event-onExecute
+ */
+chrome.fileBrowserHandler.ExecuteEvent = function() {};
+
+
+/**
+ * @param {function(string, !FileHandlerExecuteEventDetails)} callback
+ */
+chrome.fileBrowserHandler.ExecuteEvent.prototype.addListener = function(
+    callback) {};
+
+
+/**
+ * @param {function(string, !FileHandlerExecuteEventDetails)} callback
+ */
+chrome.fileBrowserHandler.ExecuteEvent.prototype.removeListener = function(
+    callback) {};
+
+
+/**
+ * @param {function(string, !FileHandlerExecuteEventDetails)} callback
+ * @return {boolean}
+ */
+chrome.fileBrowserHandler.ExecuteEvent.prototype.hasListener = function(
+    callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.fileBrowserHandler.ExecuteEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * Fired when file system action is executed from ChromeOS file browser.
+ * @see https://developer.chrome.com/extensions/fileBrowserHandler#event-onExecute
+ * @type {!chrome.fileBrowserHandler.ExecuteEvent}
+ */
+chrome.fileBrowserHandler.onExecute;
 
 
 /**
@@ -3641,8 +3778,8 @@ chrome.permissions = {};
  *   permissions: (Array.<string>|undefined),
  *   origins: (Array.<string>|undefined)
  * }}
-* @see http://developer.chrome.com/extensions/permissions.html#type-Permissions
-*/
+ * @see http://developer.chrome.com/extensions/permissions.html#type-Permissions
+ */
 chrome.permissions.Permissions;
 
 
@@ -5301,7 +5438,7 @@ function FileHandlerExecuteEventDetails() {}
 FileHandlerExecuteEventDetails.prototype.entries;
 
 
-/** @type {number} */
+/** @type {number|undefined} */
 FileHandlerExecuteEventDetails.prototype.tab_id;
 
 
