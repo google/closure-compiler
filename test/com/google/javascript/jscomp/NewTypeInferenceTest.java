@@ -99,6 +99,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
       String externs, String js, List<DiagnosticType> warningKinds) {
     Preconditions.checkNotNull(warningKinds);
     NewTypeInference typeInf = parseAndTypeCheck(externs, js);
+    if (compiler.getErrors().length > 0) {
+      fail("Expected no errors, but found: "
+          + Arrays.toString(compiler.getErrors()));
+    }
     JSError[] warnings = compiler.getWarnings();
     String errorMessage =
         "Expected warning of type:\n" +
@@ -109,7 +113,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "----------------------------------------------------------------\n" +
         Arrays.toString(warnings) + "\n" +
         "----------------------------------------------------------------\n";
-    assertEquals(errorMessage + "For warnings",
+    assertEquals(errorMessage + "Warning count",
         warningKinds.size(), warnings.length);
     for (JSError warning : warnings) {
       assertTrue("Wrong warning type\n" + errorMessage,
@@ -1680,11 +1684,33 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck("null[123];", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
 
     checkNoWarnings(
-        "function f(/** Object */ x) { if (x[123]) { return 1; } }");
+        "function f(/** !Object */ x) { if (x[123]) { return 1; } }");
 
     typeCheck(
         "function f(/** number */ x) { if (x[123]) { return 1; } }",
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck(
+        "function f(/** (number|null) */ n) {\n" +
+        "  n.foo;\n" +
+        "}", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck(
+        "function f(/** (number|null|undefined) */ n) {\n" +
+        "  n.foo;\n" +
+        "}", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck(
+        "function f(/** (!Object|number|null|undefined) */ n) {\n" +
+        "  n.foo;\n" +
+        "}", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck(
+        "/** @constructor */ function Foo(){}\n" +
+        "Foo.prototype.prop;\n" +
+        "function f(/** (!Foo|undefined) */ n) {\n" +
+        "  n.prop;\n" +
+        "}", NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(
         "/** @constructor */ function Foo(){}\n" +
@@ -1692,7 +1718,9 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function g(/** Foo */ f) {\n" +
         "  f.prop1.prop2 = 'str';\n" +
         "};",
-        NewTypeInference.NULLABLE_DEREFERENCE);
+        ImmutableList.of(
+          NewTypeInference.NULLABLE_DEREFERENCE,
+          NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT));
   }
 
   public void testNonexistentProperty() {
@@ -6429,7 +6457,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** Array<number> */ arr) {\n" +
         "  arr[0] = 'str';\n" +
         "}",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(
         "/** @const */\n" +
@@ -7015,8 +7043,18 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "    /** @private {Obj} */ this.obj;\n" +
         "};\n" +
         "Foo.prototype.update = function() {\n" +
-        "    if (!this.obj.size) {}\n" +
+        "    if (!this.obj) {}\n" +
         "};");
+
+    typeCheck(
+        "/** @constructor */ function Obj(){}\n" +
+        "/** @constructor */ var Foo = function() {\n" +
+        "    /** @private {Obj} */ this.obj;\n" +
+        "};\n" +
+        "Foo.prototype.update = function() {\n" +
+        "    if (!this.obj.size) {}\n" +
+        "};",
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testLooseFunctionSubtypeDoesntCrash() {

@@ -1646,6 +1646,8 @@ public class NewTypeInference implements CompilerPass {
     Node index = expr.getLastChild();
     JSType reqObjType = pickReqObjType(expr);
     EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
+    pair =
+        mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, pair.env);
     JSType recvType = pair.type;
     // TODO(dimvar): we don't know the prop name here so we're passing the
     // empty string. Consider improving the error msg.
@@ -2210,7 +2212,8 @@ public class NewTypeInference implements CompilerPass {
     if (isNotAnObject ||
         (!specializedType.isTruthy() && !specializedType.isFalsy() &&
             mayNotBeAnObject)) {
-      warnPropAccessOnNonobject(receiver, pname, recvType);
+      warnings.add(JSError.make(receiver, PROPERTY_ACCESS_ON_NONOBJECT,
+          pname, recvType.toString()));
       return true;
     }
     return false;
@@ -2288,6 +2291,8 @@ public class NewTypeInference implements CompilerPass {
       recvReqType = recvSpecType = objWithProp;
     }
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
+    pair =
+        mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, pair.env);
     recvType = pair.type;
     if (recvType.isUnknown() ||
         mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
@@ -2336,16 +2341,6 @@ public class NewTypeInference implements CompilerPass {
     }
     // Any potential type mismatch will be caught by the context
     return new EnvTypePair(pair.env, resultType);
-  }
-
-  private void warnPropAccessOnNonobject(
-      Node node, String pname, JSType type) {
-    if (type.removeType(JSType.NULL).hasProp(new QualifiedName(pname))) {
-      warnings.add(JSError.make(node, NULLABLE_DEREFERENCE, type.toString()));
-    } else {
-      warnings.add(JSError.make(node, PROPERTY_ACCESS_ON_NONOBJECT,
-          pname, type.toString()));
-    }
   }
 
   private static TypeEnv updateLvalueTypeInEnv(
@@ -3152,6 +3147,24 @@ public class NewTypeInference implements CompilerPass {
     return new LValueResultFwd(pair.env, inferred, declared, null);
   }
 
+  private EnvTypePair mayWarnAboutNullableReferenceAndTighten(
+      Node obj, JSType recvType, TypeEnv inEnv) {
+    if (!recvType.isUnknown()
+        && (JSType.NULL.isSubtypeOf(recvType)
+            || JSType.UNDEFINED.isSubtypeOf(recvType))) {
+      JSType minusNull = recvType.removeType(JSType.NULL_OR_UNDEF);
+      if (!minusNull.isBottom() && minusNull != recvType
+          && minusNull.isSubtypeOf(JSType.TOP_OBJECT)) {
+        warnings.add(JSError.make(
+            obj, NULLABLE_DEREFERENCE, recvType.toString()));
+        EnvTypePair pair = analyzeExprFwd(obj, inEnv, minusNull);
+        pair.type = minusNull;
+        return pair;
+      }
+    }
+    return new EnvTypePair(inEnv, recvType);
+  }
+
   private LValueResultFwd analyzePropLValFwd(Node obj, QualifiedName pname,
       TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
     Preconditions.checkArgument(pname.isIdentifier());
@@ -3159,10 +3172,13 @@ public class NewTypeInference implements CompilerPass {
     JSType reqObjType =
         pickReqObjType(obj.getParent()).withLoose().withProperty(pname, type);
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
-    TypeEnv lvalueEnv = lvalue.env;
-    JSType lvalueType = lvalue.type;
+    EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
+        obj, lvalue.type, lvalue.env);
+    TypeEnv lvalueEnv = pair.env;
+    JSType lvalueType = pair.type;
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
-      warnPropAccessOnNonobject(obj, pnameAsString, lvalueType);
+      warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
+          pnameAsString, lvalueType.toString()));
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
     Node propAccessNode = obj.getParent();
