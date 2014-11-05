@@ -60,11 +60,13 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public V get(Object key) {
     return (V) this.map.get(key);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Set<K> keySet() {
     return this.map.keySet();
   }
@@ -75,6 +77,7 @@ public class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Set<Map.Entry<K, V>> entrySet() {
     return this.map.entrySet();
   }

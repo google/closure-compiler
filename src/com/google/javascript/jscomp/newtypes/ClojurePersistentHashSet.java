@@ -75,6 +75,7 @@ public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Iterator<K> iterator() {
     return this.set.iterator();
   }
