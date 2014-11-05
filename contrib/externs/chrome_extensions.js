@@ -28,6 +28,7 @@
  * D. Events
  * E. Nullability
  * F. Private APIs
+ * G. Enums
  *
  * The best practices for each are described in more detail below.  It
  * should be noted that, due to historical reasons, and the evolutionary
@@ -162,6 +163,11 @@
  * Private Chrome APIs (such as those that end in "Private") should go at the
  * bottom of this file.
  *
+ * G. Enums
+ * The Chrome extension APIs define many enums that define a set of acceptable
+ * strings, however, they do not reify those enum types, therefore, enum
+ * parameters should be defined as {@code string}.
+ *
  * @externs
  *
  */
@@ -181,6 +187,7 @@ chrome.app = {};
 chrome.app.runtime = {};
 
 
+
 /**
  * @constructor
  * @see http://developer.chrome.com/apps/app_runtime.html
@@ -194,6 +201,7 @@ chrome.app.runtime.LaunchItem.prototype.entry;
 
 /** @type {string} */
 chrome.app.runtime.LaunchItem.prototype.type;
+
 
 
 /**
@@ -221,6 +229,7 @@ chrome.app.runtime.LaunchData.prototype.referrerUrl;
 
 /** @type {boolean|undefined} */
 chrome.app.runtime.LaunchData.prototype.isKioskSession;
+
 
 
 /**
@@ -287,6 +296,7 @@ chrome.app.window.getAll = function() {};
  * @return {chrome.app.window.AppWindow}
  */
 chrome.app.window.get = function(id) {};
+
 
 
 /**
@@ -554,6 +564,7 @@ chrome.app.window.onRestored;
 chrome.bluetooth = function() {};
 
 
+
 /**
  * @constructor
  * @see https://developer.chrome.com/apps/bluetooth#type-AdapterState
@@ -579,6 +590,7 @@ chrome.bluetooth.AdapterState.prototype.available;
 
 /** @type {boolean} */
 chrome.bluetooth.AdapterState.prototype.discovering;
+
 
 
 /**
@@ -668,6 +680,7 @@ chrome.bluetooth.startDiscovery = function(opt_callback) {};
 chrome.bluetooth.stopDiscovery = function(opt_callback) {};
 
 
+
 /**
  * Event whose listeners take an AdapaterState parameter.
  * @constructor
@@ -702,6 +715,7 @@ chrome.bluetooth.AdapterStateEvent.prototype.hasListeners = function() {};
  * @see https://developer.chrome.com/apps/bluetooth#event-onAdapterStateChanged
  */
 chrome.bluetooth.onAdapterStateChanged;
+
 
 
 /**
@@ -778,6 +792,7 @@ chrome.bluetoothSocket.SocketProperties;
  * @see https://developer.chrome.com/apps/bluetoothSocket#type-ListenOptions
  */
 chrome.bluetoothSocket.ListenOptions;
+
 
 
 /**
@@ -918,6 +933,7 @@ chrome.bluetoothSocket.getInfo = function(socketId, callback) {};
 chrome.bluetoothSocket.getSockets = function(callback) {};
 
 
+
 /**
  * @constructor
  * @see https://developer.chrome.com/apps/bluetoothSocket#event-onAccept
@@ -931,6 +947,7 @@ chrome.bluetoothSocket.AcceptEventData.prototype.socketId;
 
 /** @type {number} */
 chrome.bluetoothSocket.AcceptEventData.prototype.clientSocketId;
+
 
 
 /**
@@ -970,6 +987,7 @@ chrome.bluetoothSocket.AcceptEvent.prototype.hasListeners = function() {};
 chrome.bluetoothSocket.onAccept;
 
 
+
 /**
  * @constructor
  * @see https://developer.chrome.com/apps/bluetoothSocket#event-onAcceptError
@@ -987,6 +1005,7 @@ chrome.bluetoothSocket.AcceptErrorEventData.prototype.errorMessage;
 
 /** @type {string} */
 chrome.bluetoothSocket.AcceptErrorEventData.prototype.error;
+
 
 
 /**
@@ -1030,6 +1049,7 @@ chrome.bluetoothSocket.AcceptErrorEvent.prototype.hasListeners =
 chrome.bluetoothSocket.onAcceptError;
 
 
+
 /**
  * @constructor
  * @see https://developer.chrome.com/apps/bluetoothSocket#event-onReceive
@@ -1043,6 +1063,7 @@ chrome.bluetoothSocket.ReceiveEventData.prototype.socketId;
 
 /** @type {!ArrayBuffer} */
 chrome.bluetoothSocket.ReceiveEventData.prototype.data;
+
 
 
 /**
@@ -1082,6 +1103,7 @@ chrome.bluetoothSocket.ReceiveEvent.prototype.hasListeners = function() {};
 chrome.bluetoothSocket.onReceive;
 
 
+
 /**
  * @constructor
  * @see https://developer.chrome.com/apps/bluetoothSocket#event-onReceiveError
@@ -1099,6 +1121,7 @@ chrome.bluetoothSocket.ReceiveErrorEventData.prototype.errorMessage;
 
 /** @type {string} */
 chrome.bluetoothSocket.ReceiveErrorEventData.prototype.error;
+
 
 
 /**
@@ -1505,6 +1528,7 @@ chrome.runtime.Manifest.Oauth2 = function() {};
 /** @type {string} */
 chrome.runtime.Manifest.Oauth2.prototype.client_id;
 
+
 /**@type {!Array.<string>} */
 chrome.runtime.Manifest.Oauth2.prototype.scopes;
 
@@ -1524,11 +1548,13 @@ chrome.runtime.getManifest = function() {};
  */
 chrome.runtime.getURL = function(path) {};
 
+
 /**
  * @param {string} url This may be used to clean up server-side data, do
  *     analytics, and implement surveys. Maximum 255 characters.
  */
 chrome.runtime.setUninstallUrl = function(url) {};
+
 
 /**
  * Reloads the app or extension.
@@ -1542,6 +1568,7 @@ chrome.runtime.reload = function() {};
  *     contains more information about the available update.
  */
 chrome.runtime.requestUpdateCheck = function(callback) {};
+
 
 /**
  * Restart the ChromeOS device when the app runs in kiosk mode. Otherwise, it's
@@ -1606,6 +1633,7 @@ chrome.runtime.sendMessage = function(
 chrome.runtime.sendNativeMessage = function(
     application, message, opt_callback) {};
 
+
 /**
  *
  * @param {function(!Object)} callback
@@ -1657,6 +1685,7 @@ chrome.runtime.onUpdateAvailable;
 
 /** @type {!ChromeStringEvent} */
 chrome.runtime.onRestartRequired;
+
 
 
 /**
@@ -2203,6 +2232,7 @@ chrome.i18n.getAcceptLanguages = function(callback) {};
  */
 chrome.i18n.getMessage = function(messageName, opt_args) {};
 
+
 /**
  * @return {string}
  */
@@ -2249,6 +2279,7 @@ chrome.pageAction.show = function(tabId) {};
 
 /** @type {!ChromeEvent} */
 chrome.pageAction.onClicked;
+
 
 /**
  * @const
@@ -2500,6 +2531,7 @@ var SuggestResult;
 chrome.omnibox = {};
 
 
+
 /** @constructor */
 chrome.omnibox.InputChangedEvent = function() {};
 
@@ -2526,6 +2558,7 @@ chrome.omnibox.InputChangedEvent.prototype.hasListener = function(callback) {};
 
 /** @return {boolean} */
 chrome.omnibox.InputChangedEvent.prototype.hasListeners = function() {};
+
 
 
 /** @constructor */
@@ -3086,6 +3119,7 @@ chrome.gcm.onMessagesDeleted;
 chrome.gcm.onSendError;
 
 
+
 /**
  * @constructor
  */
@@ -3117,6 +3151,7 @@ chrome.gcm.OnMessageEvent.prototype.hasListener = function(callback) {};
 chrome.gcm.OnMessageEvent.prototype.hasListeners = function() {};
 
 
+
 /**
  * @constructor
  */
@@ -3133,6 +3168,7 @@ chrome.gcm.OnSendErrorEvent.prototype.addListener = function(callback) {};
  * @param {function(!Object): void} callback Callback.
  */
 chrome.gcm.OnSendErrorEvent.prototype.removeListener = function(callback) {};
+
 
 /**
  * @param {function(!Object): void} callback Callback.
@@ -4047,6 +4083,7 @@ chrome.system.display = {};
 chrome.system.display.onDisplayChanged;
 
 
+
 /**
  * @constructor
  */
@@ -4078,6 +4115,7 @@ chrome.system.display.Bounds.prototype.height;
  * }}
  */
 chrome.system.display.Insets;
+
 
 
 /**
@@ -4485,6 +4523,7 @@ IconInfo.prototype.url;
  */
 function Tab() {}
 
+
 // TODO: Make this field optional once dependent projects have been updated.
 /**
  * @type {number}
@@ -4563,6 +4602,7 @@ Tab.prototype.height;
 Tab.prototype.sessionId;
 
 
+
 /**
  * @see https://developer.chrome.com/extensions/windows.html
  * @constructor
@@ -4639,6 +4679,7 @@ ChromeEvent.prototype.hasListener = function(callback) {};
 
 /** @return {boolean} */
 ChromeEvent.prototype.hasListeners = function() {};
+
 
 
 /**
@@ -4793,6 +4834,7 @@ ChromeExtensionInfoEvent.prototype.hasListener = function(callback) {};
 
 /** @return {boolean} */
 ChromeExtensionInfoEvent.prototype.hasListeners = function() {};
+
 
 
 /**
@@ -5763,6 +5805,138 @@ chrome.fileSystem.retainEntry = function(entry) {};
 
 /**
  * @const
+ * @see https://developer.chrome.com/apps/syncFileSystem
+ */
+chrome.syncFileSystem = {};
+
+
+/**
+ * Returns a syncable filesystem backed by Google Drive. The returned
+ * DOMFileSystem instance can be operated on in the same way as
+ * the Temporary and Persistant file systems (see
+ * http://www.w3.org/TR/file-system-api/), except that the filesystem
+ * object returned for Sync FileSystem does NOT support directory
+ * operations (yet). You can get a list of file entries by reading
+ * the root directory (by creating a new DirectoryReader),
+ * but cannot create a new directory in it.
+ *
+ * <p>Calling this multiple times from the same app will return the same
+ * handle to the same file system.
+ *
+ * <p>Note this call can fail. For example, if the user is not signed in
+ * to Chrome or if there is no network operation. To handle these errors
+ * it is important chrome.runtime.lastError is checked in the callback.
+ *
+ * @param {function(!FileSystem)} callback A callback type for
+ *     requestFileSystem.
+ * @see https://developer.chrome.com/apps/syncFileSystem#method-requestFileSystem
+ */
+chrome.syncFileSystem.requestFileSystem = function(callback) {};
+
+
+/**
+ * Sets the default conflict resolution policy for the 'syncable' file
+ * storage for the app. By default it is set to 'last_write_win'.
+ * When conflict resolution policy is set to 'last_write_win' conflicts
+ * for existing files are automatically resolved next time the file is updated.
+ * {@code callback} can be optionally given to know if the request has
+ * succeeded or not.
+ *
+ * @param {string} policy Any of 'last_write_win' or 'manual'
+ * @param {function()=} opt_callback
+ *
+ * @see https://developer.chrome.com/apps/syncFileSystem#method-setConflictResolutionPolicy
+ */
+chrome.syncFileSystem.setConflictResolutionPolicy =
+    function(policy, opt_callback) {};
+
+
+/**
+ * Gets the current conflict resolution policy.
+ *
+ * @param {function(string)} callback Accepting any of 'last_write_win'
+ *     or 'manual'.
+ * @see https://developer.chrome.com/apps/syncFileSystem#method-getConflictResolutionPolicy
+ */
+chrome.syncFileSystem.getConflictResolutionPolicy = function(callback) {};
+
+
+/**
+ * Returns the current usage and quota in bytes for the 'syncable' file
+ * storage for the app.
+ *
+ * @param {!FileSystem} fileSystem
+ * @param {function(!Object)} callback Taking an object substantially similar
+ *     to {@code {'usageBytes': number, quotaBytes: number}}.
+ * @see https://developer.chrome.com/apps/syncFileSystem#method-getUsageAndQuota
+ */
+chrome.syncFileSystem.getUsageAndQuota = function(fileSystem, callback) {};
+
+
+/**
+ * Returns the FileStatus for the given fileEntry. The status value can be
+ * 'synced', 'pending' or 'conflicting'. Note that 'conflicting' state only
+ * happens when the service's conflict resolution policy is set to 'manual'.
+ *
+ * @param {!Entry} fileEntry
+ * @param {function(string)} callback Called with any of 'synced', 'pending'
+ *     or 'conflicting'.
+ *
+ * @see https://developer.chrome.com/apps/syncFileSystem#method-getFileStatus
+ */
+chrome.syncFileSystem.getFileStatus = function(fileEntry, callback) {};
+
+
+/**
+ * Returns each FileStatus for the given fileEntry array. Typically called
+ * with the result from dirReader.readEntries().
+ *
+ * @param {!Array.<!FileEntry>} fileEntries
+ * @param {function(!Array.<!Object>)} callback Each object will look like:
+ *     {@code {'fileEntry': Entry, 'status': string, 'error': string?}}.
+ *
+ * @see https://developer.chrome.com/apps/syncFileSystem#method-getFileStatuses
+ */
+chrome.syncFileSystem.getFileStatuses = function(fileEntries, callback) {};
+
+
+/**
+ * Since Chrome 31.
+ *
+ * <p>Returns the current sync backend status.
+ *
+ * @param {function(string)} callback Arg is any of 'initializing', 'running',
+ *     'authentication_required', 'temporary_unavailable', or 'disabled'.
+ *
+ * @see https://developer.chrome.com/apps/syncFileSystem#method-getServiceStatus
+ */
+chrome.syncFileSystem.getServiceStatus = function(callback) {};
+
+
+/**
+ * Fired when an error or other status change has happened in the sync
+ * backend (for example, when the sync is temporarily disabled due
+ * to network or authentication error).
+ *
+ * @type {!ChromeObjectEvent}
+ *
+ * @see https://developer.chrome.com/apps/syncFileSystem#event-onServiceStatusChanged
+ */
+chrome.syncFileSystem.onServiceStatusChanged;
+
+
+/**
+ * Fired when a file has been updated by the background sync service.
+ *
+ * @type {!ChromeObjectEvent}
+ *
+ * @see https://developer.chrome.com/apps/syncFileSystem#event-onFileStatusChanged
+ */
+chrome.syncFileSystem.onFileStatusChanged;
+
+
+/**
+ * @const
  * @see http://developer.chrome.com/extensions/alarms.html
  */
 chrome.alarms = {};
@@ -5916,6 +6090,7 @@ chrome.hid = {};
  */
 chrome.hid.HidGetDevicesOptions;
 
+
 /**
  * @typedef {?{
  *   usagePage: number,
@@ -5925,6 +6100,7 @@ chrome.hid.HidGetDevicesOptions;
 * @see https://developer.chrome.com/apps/hid#method-getDevices
 */
 chrome.hid.HidDeviceUsage;
+
 
 /**
  * @typedef {?{
@@ -6257,7 +6433,6 @@ chrome.notifications.ButtonClickedEvent.prototype.hasListener =
 chrome.notifications.ButtonClickedEvent.prototype.hasListeners = function() {};
 
 
-
 /**
  * @const
  * @see http://developer.chrome.com/apps/system_storage.html
@@ -6389,7 +6564,6 @@ chrome.usb.ConnectionHandle.prototype.vendorId;
 
 /** @type {number} */
 chrome.usb.ConnectionHandle.prototype.productId;
-
 
 
 /**
@@ -7017,6 +7191,7 @@ chrome.mdns = {};
 chrome.mdns.MdnsService;
 
 
+
 /**
  * Event whose listeners take an array of MdnsService parameter.
  * @constructor
@@ -7076,6 +7251,7 @@ chrome.gcdPrivate = {};
  * }}
  */
 chrome.gcdPrivate.Device;
+
 
 
 /** @constructor */
@@ -7214,6 +7390,7 @@ chrome.gcdPrivate.getCommandsList = function(
     deviceId, byUser, state, callback) {};
 
 
+
 /**
  * Event whose listeners take a chrome.gcdPrivate.Device.
  * @constructor
@@ -7262,6 +7439,7 @@ chrome.gcdPrivate.onDeviceRemoved;
  * @see http://goo.gl/bKHibo
  */
 chrome.bluetoothPrivate = {};
+
 
 
 /** @constructor */
@@ -7322,6 +7500,7 @@ chrome.bluetoothPrivate.setAdapterState = function(adapterState, callback) {};
  * @param {function()} callback
  */
 chrome.bluetoothPrivate.setPairingResponse = function(options, callback) {};
+
 
 
 /**
