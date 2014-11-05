@@ -285,7 +285,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (arrayCtor == null) {
         return JSType.UNKNOWN;
       }
-      arrayType = arrayCtor.getFunType().getTypeOfThis();
+      arrayType = arrayCtor.getFunType().getThisType();
     }
     // Kind of ugly that we have hard-coded "T" here. Alternatives?
     return arrayType.substituteGenerics(ImmutableMap.of("T", t));
@@ -297,7 +297,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (regexpCtor == null) {
         return JSType.UNKNOWN;
       }
-      regexpType = regexpCtor.getFunType().getTypeOfThis();
+      regexpType = regexpCtor.getFunType().getThisType();
     }
     return regexpType;
   }
@@ -1606,6 +1606,10 @@ class GlobalTypeInfo implements CompilerPass {
               if (parentClass == null) {
                 warnings.add(JSError.make(
                     declNode, EXTENDS_NON_OBJECT, functionName,
+                    // The string in this error msg is bad, but getting the
+                    // actual type is not straightforward b/c
+                    // JSTypeCreatorFromJSDoc#getTypeFromNode isn't public.
+                    // Consider changing this.
                     docNode.toStringTree()));
               } else if (parentClass.isInterface()) {
                 warnings.add(JSError.make(

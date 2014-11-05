@@ -100,7 +100,8 @@ public class JSTypeCreatorFromJSDoc {
     if (expr == null) {
       return null;
     }
-    JSType result = getTypeFromNode(expr.getRoot(), ownerType, registry,        typeParameters);
+    JSType result =
+        getTypeFromNode(expr.getRoot(), ownerType, registry, typeParameters);
     return result;
   }
 
