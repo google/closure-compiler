@@ -374,6 +374,10 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkStrictMode);
     }
 
+    if (!options.getConformanceConfigs().isEmpty()) {
+      checks.add(checkConformance);
+    }
+
     // Replace 'goog.getCssName' before processing defines but after the
     // other checks have been done.
     if (options.closurePass) {
@@ -410,10 +414,6 @@ public class DefaultPassConfig extends PassConfig {
     if (options.nameReferenceReportPath != null &&
         !options.nameReferenceReportPath.isEmpty()) {
       checks.add(printNameReferenceReport);
-    }
-
-    if (!options.getConformanceConfigs().isEmpty()) {
-      checks.add(checkConformance);
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));
