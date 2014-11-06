@@ -7316,17 +7316,25 @@ chrome.mdns = {};
 
 /**
  * Data type sent to the event handler of chrome.mdns.onServiceList.
- * TODO: This one event handler data type is being made a typedef
- * as an experiment. This allows us to create these objects in tests to pass
- * to the handlers which isn't possible by using the object form.
- * @typedef {{
- *     serviceName: string,
- *     serviceHostPort: string,
- *     ipAddress: string,
- *     serviceData: !Array.<string>}}
+ * @constructor
  */
-chrome.mdns.MdnsService;
+chrome.mdns.MdnsService = function() {};
 
+
+/** @type {string} */
+chrome.mdns.MdnsService.prototype.serviceName;
+
+
+/** @type {string} */
+chrome.mdns.MdnsService.prototype.serviceHostPort;
+
+
+/** @type {string} */
+chrome.mdns.MdnsService.prototype.ipAddress;
+
+
+/** @type {!Array.<string>} */
+chrome.mdns.MdnsService.prototype.serviceData;
 
 
 /**
