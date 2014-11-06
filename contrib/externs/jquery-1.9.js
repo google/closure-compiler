@@ -602,7 +602,7 @@ jQuery.prototype.detach = function(selector) {};
 
 /**
  * @param {Object} collection
- * @param {function(?,?)} callback
+ * @param {function((number|string),?)} callback
  * @return {Object}
  */
 jQuery.each = function(collection, callback) {};
@@ -615,7 +615,7 @@ jQuery.prototype.each = function(fnc) {};
 
 /**
  * @param {Object} collection
- * @param {function(?,?)} callback
+ * @param {function((number|string),?)} callback
  * @return {Object}
  */
 $.each = function(collection, callback) {};
