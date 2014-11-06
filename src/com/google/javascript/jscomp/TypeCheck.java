@@ -1485,14 +1485,15 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           pair = getClosestPropertySuggestion(objectType, propName);
         }
         if (pair != null && pair.distance * 4 < propName.length()) {
-          report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
+          report(t, n.getLastChild(), INEXISTENT_PROPERTY_WITH_SUGGESTION,
+              propName,
               validator.getReadableJSTypeName(n.getFirstChild(), true),
               pair.suggestion);
         } else {
           DiagnosticType reportType = lowConfidence ?
               POSSIBLE_INEXISTENT_PROPERTY :
               INEXISTENT_PROPERTY;
-          report(t, n, reportType, propName,
+          report(t, n.getLastChild(), reportType, propName,
               validator.getReadableJSTypeName(n.getFirstChild(), true));
         }
       }

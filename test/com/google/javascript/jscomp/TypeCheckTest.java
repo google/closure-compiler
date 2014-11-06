@@ -4209,9 +4209,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "function Foo() {}\n" +
               "(new Foo()).x--;",
               new String[] {
-                "Property x never defined on Foo",
                 "Cannot add a property to a struct instance " +
-                "after it is constructed."
+                "after it is constructed.",
+                "Property x never defined on Foo"
               });
   }
 
@@ -4224,9 +4224,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               "function Foo() {}\n" +
               "(new Foo()).x += 123;",
               new String[] {
-                "Property x never defined on Foo",
                 "Cannot add a property to a struct instance " +
-                "after it is constructed."
+                "after it is constructed.",
+                "Property x never defined on Foo"
               });
   }
 
