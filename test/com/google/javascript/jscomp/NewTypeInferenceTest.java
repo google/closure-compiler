@@ -5171,6 +5171,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "f('asdf') - 5;",
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {*} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "f(123);");
   }
 
   public void testUnification() {

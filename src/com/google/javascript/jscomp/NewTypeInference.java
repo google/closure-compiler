@@ -1904,7 +1904,10 @@ public class NewTypeInference implements CompilerPass {
         for (String typeParam : typeParameters) {
           tmpTypeMap.put(typeParam, JSType.UNKNOWN);
         }
-        if (unifSource.isSubtypeOf(unifTarget.substituteGenerics(tmpTypeMap))) {
+        JSType targetAfterInstantiation =
+            unifTarget.substituteGenerics(tmpTypeMap);
+        if (!unifTarget.equals(targetAfterInstantiation)
+            && unifSource.isSubtypeOf(targetAfterInstantiation)) {
           warnings.add(JSError.make(arg, FAILED_TO_UNIFY,
                   unifTarget.toString(), unifSource.toString()));
         }
