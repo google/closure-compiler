@@ -31,7 +31,7 @@ import java.util.Map;
 public class ReplaceMessagesTest extends CompilerTestCase {
 
   private Map<String, JsMessage> messages;
-  private Style style = RELAX;
+  private Style style;
   private boolean strictReplacement;
 
   @Override
@@ -191,12 +191,16 @@ public class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   public void testStrictModeAndMessageReplacementAbsentInBundle()  {
+    style = Style.LEGACY;
+
     strictReplacement = true;
     test("var MSG_E = 'Hello';", "var MSG_E = 'Hello';",
          ReplaceMessages.BUNDLE_DOES_NOT_HAVE_THE_MESSAGE);
   }
 
   public void testStrictModeAndMessageReplacementAbsentInNonEmptyBundle()  {
+    style = Style.LEGACY;
+
     registerMessage(new JsMessage.Builder("MSG_J")
         .appendStringPart("One ")
         .appendPlaceholderReference("measly")
@@ -308,6 +312,8 @@ public class ReplaceMessagesTest extends CompilerTestCase {
   }
 
   public void testLegacyStyleBadPlaceholderReferenceInReplacemen() {
+    style = Style.LEGACY;
+
     registerMessage(new JsMessage.Builder("MSG_B")
         .appendStringPart("Ola, ")
         .appendPlaceholderReference("chimp")

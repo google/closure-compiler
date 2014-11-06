@@ -44,12 +44,12 @@ public class JsMessageVisitorTest extends TestCase {
   private CompilerOptions compilerOptions;
   private Compiler compiler;
   private List<JsMessage> messages;
-  private boolean allowLegacyMessages;
+  private JsMessage.Style mode;
 
   @Override
   protected void setUp() throws Exception {
     messages = Lists.newLinkedList();
-    allowLegacyMessages = true;
+    mode = JsMessage.Style.LEGACY;
     compilerOptions = null;
   }
 
@@ -99,6 +99,18 @@ public class JsMessageVisitorTest extends TestCase {
   public void testJsMessageOnProperty() {
     extractMessagesSafely("/** @desc a */ " +
         "pint.sub.MSG_MENU_MARK_AS_UNREAD = goog.getMsg('a')");
+    assertEquals(0, compiler.getWarningCount());
+    assertEquals(1, messages.size());
+
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_MENU_MARK_AS_UNREAD", msg.getKey());
+    assertEquals("a", msg.getDesc());
+  }
+
+  public void testJsMessageOnObjLit() {
+    extractMessagesSafely("" +
+        "pint.sub = {" +
+        "/** @desc a */ MSG_MENU_MARK_AS_UNREAD: goog.getMsg('a')}");
     assertEquals(0, compiler.getWarningCount());
     assertEquals(1, messages.size());
 
@@ -191,7 +203,7 @@ public class JsMessageVisitorTest extends TestCase {
         "/** @desc The description */ var MSG_A = 'The Message';");
 
     assertEquals(1, messages.size());
-    assertEquals(1, compiler.getWarningCount());
+    assertEquals(0, compiler.getWarningCount());
     JsMessage msg = messages.get(0);
     assertEquals("MSG_A", msg.getKey());
     assertEquals("The Message", msg.toString());
@@ -199,6 +211,8 @@ public class JsMessageVisitorTest extends TestCase {
   }
 
   public void testLegacyMessageWithDescAnnotationAndHelpVar() {
+    mode = RELAX;
+
     // Well, is was better do not allow legacy messages with @desc annotations,
     // but people love to mix styles so we need to check @desc also.
     extractMessagesSafely(
@@ -225,15 +239,15 @@ public class JsMessageVisitorTest extends TestCase {
   }
 
   public void testClosureMessageWithoutGoogGetmsg() {
-    allowLegacyMessages = false;
+    mode = CLOSURE;
 
     extractMessages("var MSG_FOO_HELP = 'I am a bad message';");
 
-    assertEquals(1, messages.size());
-    assertEquals(1, compiler.getErrors().length);
-    JSError error = compiler.getErrors()[0];
+    assertEquals(0, messages.size());
+    assertEquals(1, compiler.getWarnings().length);
+    JSError warning = compiler.getWarnings()[0];
     assertEquals(JsMessageVisitor.MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX,
-        error.getType());
+        warning.getType());
   }
 
   public void testClosureFormatParametizedFunction() {
@@ -363,7 +377,7 @@ public class JsMessageVisitorTest extends TestCase {
   }
 
   public void testUnrecognizedFunction() {
-    allowLegacyMessages = false;
+    mode = CLOSURE;
     extractMessages("DP_DatePicker.MSG_DATE_SELECTION = somefunc('a')");
 
     assertEquals(0, messages.size());
@@ -617,8 +631,7 @@ public class JsMessageVisitorTest extends TestCase {
   private class CollectMessages extends JsMessageVisitor {
 
     private CollectMessages(Compiler compiler) {
-      super(compiler, true, Style.getFromParams(true, allowLegacyMessages),
-            null);
+      super(compiler, true, mode, null);
     }
 
     @Override

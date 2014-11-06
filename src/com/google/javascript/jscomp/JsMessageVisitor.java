@@ -16,13 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Builder;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -75,7 +74,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
           "() function could be used only with MSG_* property or variable");
 
   static final DiagnosticType MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX =
-      DiagnosticType.error("JSC_MSG_NOT_INITIALIZED_USING_NEW_SYNTAX",
+      DiagnosticType.warning("JSC_MSG_NOT_INITIALIZED_USING_NEW_SYNTAX",
           "message not initialized using " + MSG_FUNCTION_NAME);
 
   static final DiagnosticType BAD_FALLBACK_SYNTAX =
@@ -227,6 +226,16 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
         messageKey = propNode.getString();
         msgNode = node.getLastChild();
         break;
+
+      case Token.STRING_KEY:
+        if (node.isQuotedString() || node.getFirstChild() == null) {
+          return;
+        }
+        isVar = false;
+        messageKey = node.getString();
+        msgNode = node.getFirstChild();
+        break;
+
       case Token.CALL:
         // goog.getMsg()
         if (node.getFirstChild().matchesQualifiedName(MSG_FUNCTION_NAME)) {
@@ -253,13 +262,19 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
       return;
     }
 
-    // Just report a warning if a qualified messageKey that looks like a message
+    // Report a warning if a qualified messageKey that looks like a message
     // (e.g. "a.b.MSG_X") doesn't use goog.getMsg().
     if (isNewStyleMessage) {
       googMsgNodes.remove(msgNode);
     } else if (style != JsMessage.Style.LEGACY) {
-      compiler.report(traversal.makeError(node, checkLevel,
+      // TODO(johnlenz): promote this to an error once existing conflicts have been
+      // cleaned up.
+      compiler.report(traversal.makeError(node,
           MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX));
+      if (style == JsMessage.Style.CLOSURE) {
+        // Don't extract the message if we aren't accepting LEGACY messages
+        return;
+      }
     }
 
     boolean isUnnamedMsg = isUnnamedMessageName(messageKey);

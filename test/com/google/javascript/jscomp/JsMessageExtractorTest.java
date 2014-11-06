@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -34,10 +33,18 @@ import java.util.List;
  */
 public class JsMessageExtractorTest extends TestCase {
 
+  private JsMessage.Style mode;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    mode = JsMessage.Style.LEGACY;
+  }
+
   private Collection<JsMessage> extractMessages(String... js) {
     try {
       String sourceCode = Joiner.on("\n").join(js);
-      return new JsMessageExtractor(null, RELAX)
+      return new JsMessageExtractor(null, mode)
           .extractMessages(SourceFile.fromCode("testcode", sourceCode));
     } catch (IOException e) {
       fail(e.getMessage());
