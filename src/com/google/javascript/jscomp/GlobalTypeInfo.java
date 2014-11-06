@@ -2252,6 +2252,10 @@ class GlobalTypeInfo implements CompilerPass {
           return ns.toJSType();
         }
       }
+      // For names defined in the current scope w/out a declared type
+      if (isDefinedLocally(name)) {
+        return null;
+      }
       if (parent != null) {
         return parent.getDeclaredTypeOf(name);
       }

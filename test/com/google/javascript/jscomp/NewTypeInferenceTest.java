@@ -9965,4 +9965,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @constructor */ function Bar(){}\n" +
         "f(new Bar);");
   }
+
+  public void testDontLookupInParentScopeForNamesWithoutDeclaredType() {
+    checkNoWarnings(
+        "/** @type {number} */\n" +
+        "var x;\n" +
+        "function f() {\n" +
+        "  var x = true;\n" +
+        "}");
+  }
 }
