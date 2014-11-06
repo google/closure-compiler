@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -83,6 +84,6 @@ public class QualifiedName {
   }
 
   public String toString() {
-    return isIdentifier() ? parts.get(0).toString() : parts.toString();
+    return Joiner.on(".").join(parts);
   }
 }
