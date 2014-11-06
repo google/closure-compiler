@@ -2320,12 +2320,12 @@ class NewIRFactory {
                 sourceName,
                 lineno(token.location.start), charno(token.location.start));
           }
-          long v = 0;
+          double v = 0;
           int c = 1;
           while (++c < length) {
             v = (v * 2) + binarydigit(value.charAt(c));
           }
-          return Double.valueOf(v);
+          return v;
         }
         case 'o':
         case 'O': {
@@ -2334,33 +2334,33 @@ class NewIRFactory {
                 sourceName,
                 lineno(token.location.start), charno(token.location.start));
           }
-          long v = 0;
+          double v = 0;
           int c = 1;
           while (++c < length) {
             v = (v * 8) + octaldigit(value.charAt(c));
           }
-          return Double.valueOf(v);
+          return v;
         }
         case 'x':
         case 'X': {
-          long v = 0;
+          double v = 0;
           int c = 1;
           while (++c < length) {
             v = (v * 0x10) + hexdigit(value.charAt(c));
           }
-          return Double.valueOf(v);
+          return v;
         }
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
           errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
               lineno(location.start), charno(location.start));
           if (!inStrictContext()) {
-            long v = 0;
+            double v = 0;
             int c = 0;
             while (++c < length) {
               v = (v * 8) + octaldigit(value.charAt(c));
             }
-            return Double.valueOf(v);
+            return v;
           } else {
             return Double.valueOf(value);
           }
