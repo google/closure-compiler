@@ -49,7 +49,7 @@ var jQueryCallback;
                converters: (Object.<string, Function>|undefined),
                crossDomain: (?boolean|undefined),
                data: (Object.<?, ?>|?string|Array.<?>|undefined),
-               dataFilter: (function(string, string):Object.<?,?>|undefined),
+               dataFilter: (function(string, string):?|undefined),
                dataType: (?string|undefined),
                error: (function(jQuery.jqXHR, string, string)|undefined),
                global: (?boolean|undefined),
@@ -350,7 +350,7 @@ jQuery.prototype.click = function(arg1, handler) {};
  * @param {boolean=} withDataAndEvents
  * @param {boolean=} deepWithDataAndEvents
  * @return {!jQuery}
- * @suppress {checkTypes} see issue 583
+ * @suppress {checkTypes} see https://code.google.com/p/closure-compiler/issues/detail?id=583
  */
 jQuery.prototype.clone = function(withDataAndEvents, deepWithDataAndEvents) {};
 
@@ -602,7 +602,7 @@ jQuery.prototype.detach = function(selector) {};
 
 /**
  * @param {Object} collection
- * @param {function(number,?)} callback
+ * @param {function((number|string),?)} callback
  * @return {Object}
  */
 jQuery.each = function(collection, callback) {};
@@ -615,7 +615,7 @@ jQuery.prototype.each = function(fnc) {};
 
 /**
  * @param {Object} collection
- * @param {function(number,?)} callback
+ * @param {function((number|string),?)} callback
  * @return {Object}
  */
 $.each = function(collection, callback) {};
@@ -1546,7 +1546,7 @@ $.parseHTML = function(data, context, keepScripts) {};
 
 /**
  * @param {string} json
- * @return {Object.<string, *>}
+ * @return {string|number|Object.<string, *>|Array.<?>|boolean}
  */
 jQuery.parseJSON = function(json) {};
 
@@ -1909,10 +1909,14 @@ jQuery.prototype.stop = function(arg1, arg2, jumpToEnd) {};
  */
 jQuery.prototype.submit = function(arg1, handler) {};
 
-/** @type {Object.<string, *>} */
+/** @type {Object.<string, *>}
+ * @deprecated Please try to use feature detection instead.
+ */
 jQuery.support;
 
-/** @type {Object.<string, *>} */
+/** @type {Object.<string, *>}
+ * @deprecated Please try to use feature detection instead.
+ */
 $.support;
 
 /**
