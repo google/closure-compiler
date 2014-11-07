@@ -395,10 +395,8 @@ class GlobalTypeInfo implements CompilerPass {
     }
     // The jsdoc parser doesn't have access to the error functions in the jscomp
     // package, so we collect its warnings here.
-    for (String warningText : typeParser.getWarnings()) {
-      // TODO(blickly): Make warnings better
-      warnings.add(JSError.make(
-          root, RhinoErrorReporter.BAD_JSDOC_ANNOTATION, warningText));
+    for (JSError warning : typeParser.getWarnings()) {
+      warnings.add(warning);
     }
     typeParser = null;
     compiler.setSymbolTable(this);

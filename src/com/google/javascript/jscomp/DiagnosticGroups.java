@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
+import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 import java.util.Map;
 
@@ -212,6 +213,11 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("newCheckTypes",
           GlobalTypeInfo.ALL_DIAGNOSTICS,
           NewTypeInference.ALL_DIAGNOSTICS);
+
+  public static final DiagnosticGroup NEW_WARNINGS_OVERLOAD =
+      DiagnosticGroups.registerGroup("newCheckTypesWarningsOverload",
+          JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION,
+          NewTypeInference.NULLABLE_DEREFERENCE);
 
   public static final DiagnosticGroup CHECK_EVENTFUL_OBJECT_DISPOSAL =
       DiagnosticGroups.registerGroup("checkEventfulObjectDisposal",

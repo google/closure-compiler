@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.newtypes.JSType;
+import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
@@ -4980,7 +4981,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function Foo(x) {}\n" +
         "/** @constructor */\n" +
         "function Bar() {}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
 
     typeCheck(
         "/**\n" +
@@ -4991,7 +4992,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function Foo(x) {}\n" +
         "/** @param {Foo<number, string>} x */\n" +
         "function f(x) {}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
 
     checkNoWarnings(
         "/** @type {Array<number>} */ var x;");
@@ -6018,7 +6019,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " * @extends {High<number>}\n" +
         " */\n" +
         "function Low() {}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
 
     // BAD INHERITANCE, WE DON'T HAVE A WARNING TYPE FOR THIS
     // TODO(dimvar): fix
@@ -6680,7 +6681,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function fn(x) {}\n" +
         "fn(new Foo('asdf'));",
         // {!Foo<T>} is instantiating only the 1st template var of Foo
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
 
     typeCheck(
         "/**\n" +
@@ -6700,7 +6701,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "fn(new Foo('asdf')) - 5;",
         ImmutableList.of(
             // {!Foo<T>} is instantiating only the 1st template var of Foo
-            RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
+            JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION,
             NewTypeInference.INVALID_OPERAND_TYPE));
   }
 
@@ -7297,7 +7298,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @constructor @extends {Grandparent} */\n" +
         "var Parent = function(){};\n" +
         "/** @constructor @extends {Parent} */ function Child(){}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
   }
 
   public void testDebuggerStatementDoesntCrash() {

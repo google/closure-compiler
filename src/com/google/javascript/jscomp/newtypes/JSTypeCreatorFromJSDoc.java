@@ -21,11 +21,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention;
+import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 
 import java.util.HashMap;
@@ -41,6 +42,16 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public class JSTypeCreatorFromJSDoc {
+  public static final DiagnosticType INVALID_GENERICS_INSTANTIATION =
+      DiagnosticType.warning(
+        "JSC_INVALID_GENERICS_INSTANTIATION",
+        "Invalid generics instantiation for {0}.\n"
+        + "Expected {1} type argument(s), but found {2}.");
+
+  public static final DiagnosticType BAD_JSDOC_ANNOTATION =
+      DiagnosticType.warning(
+        "JSC_BAD_JSDOC_ANNOTATION",
+        "Bad JSDoc annotation. {0}");
 
   private final CodingConvention convention;
 
@@ -59,7 +70,7 @@ public class JSTypeCreatorFromJSDoc {
     }
   }
 
-  private SimpleErrorReporter reporter = new SimpleErrorReporter();
+  private Set<JSError> warnings = new HashSet<>();
   // Unknown type names indexed by JSDoc AST node at which they were found.
   private Map<Node, String> unknownTypeNames = new HashMap<>();
 
@@ -82,11 +93,7 @@ public class JSTypeCreatorFromJSDoc {
         jsdoc.getType(), ownerType, registry, typeParameters);
   }
 
-  public Set<String> getWarnings() {
-    Set<String> warnings = new HashSet<>();
-    if (reporter.warnings() != null) {
-      warnings.addAll(reporter.warnings());
-    }
+  public Set<JSError> getWarnings() {
     return warnings;
   }
 
@@ -352,11 +359,9 @@ public class JSTypeCreatorFromJSDoc {
       String nominalTypeName = uninstantiated.getName();
       if (!nominalTypeName.equals("Object")) {
         // TODO(dimvar): remove this once we handle parameterized Object
-        warn("Invalid generics instantiation for " + nominalTypeName + ".\n"
-            + "Expected " + typeParamsSize
-            + " type argument(s), but found "
-            + typeArgsSize,
-            n);
+        warnings.add(JSError.make(
+            n, INVALID_GENERICS_INSTANTIATION,
+            nominalTypeName, String.valueOf(typeParamsSize), String.valueOf(typeArgsSize)));
       }
       return JSType.join(JSType.NULL,
           JSType.fromObjectType(ObjectType.fromNominalType(
@@ -797,9 +802,9 @@ public class JSTypeCreatorFromJSDoc {
     return jsdocNode != null && jsdocNode.getType() == Token.ELLIPSIS;
   }
 
+  // TODO(blickly): Add more DiagnosticTypes and remove this method
   void warn(String msg, Node faultyNode) {
-    reporter.warning(msg, faultyNode.getSourceFileName(),
-        faultyNode.getLineno(), faultyNode.getCharno());
+    warnings.add(JSError.make(faultyNode, BAD_JSDOC_ANNOTATION, msg));
   }
 
 }
