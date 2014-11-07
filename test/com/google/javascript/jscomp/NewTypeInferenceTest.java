@@ -6765,6 +6765,81 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         TypeCheck.UNKNOWN_OVERRIDE);
   }
 
+  public void testOverrideNoInitializer() {
+    typeCheck(
+        "/** @interface */ function Intf() {}\n" +
+        "/** @param {number} x */\n" +
+        "Intf.prototype.method = function(x) {};\n" +
+        "/** @interface @extends {Intf} */\n" +
+        "function Subintf() {}\n" +
+        "/** @override */\n" +
+        "Subintf.prototype.method;\n" +
+        "function f(/** !Subintf */ x) { x.method('asdf'); }",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @interface */ function Intf() {}\n" +
+        "/** @param {number} x */\n" +
+        "Intf.prototype.method = function(x) {};\n" +
+        "/** @interface @extends {Intf} */\n" +
+        "function Subintf() {}\n" +
+        "Subintf.prototype.method;\n" +
+        "function f(/** !Subintf */ x) { x.method('asdf'); }",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @interface */ function Intf() {}\n" +
+        "/** @param {number} x */\n" +
+        "Intf.prototype.method = function(x) {};\n" +
+        "/** @constructor  @implements {Intf} */\n" +
+        "function C() {}\n" +
+        "/** @override */\n" +
+        "C.prototype.method = (function(){ return function(x){}; })();\n" +
+        "(new C).method('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @interface */ function Intf() {}\n" +
+        "/** @param {number} x */\n" +
+        "Intf.prototype.method = function(x) {};\n" +
+        "/** @constructor  @implements {Intf} */\n" +
+        "function C() {}\n" +
+        "C.prototype.method = (function(){ return function(x){}; })();\n" +
+        "(new C).method('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @interface */ function Intf() {}\n" +
+        "/** @type {string} */\n" +
+        "Intf.prototype.s = 'str';\n" +
+        "/** @constructor @implements {Intf} */\n" +
+        "function C() {}\n" +
+        "/** @override */\n" +
+        "C.prototype.s = 'str2';\n" +
+        "(new C).s - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @interface */ function Intf() {}\n" +
+        "/** @type {string} */\n" +
+        "Intf.prototype.s = 'str';\n" +
+        "/** @constructor @implements {Intf} */\n" +
+        "function C() {}\n" +
+        "/** @type {number} @override */\n" +
+        "C.prototype.s = 72;",
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    typeCheck(
+        "/** @interface */ function Intf() {}\n" +
+        "/** @type {string} */\n" +
+        "Intf.prototype.s = 'str';\n" +
+        "/** @constructor @implements {Intf} */\n" +
+        "function C() {}\n" +
+        "/** @override */\n" +
+        "C.prototype.s = 72;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testFunctionConstructor() {
     checkNoWarnings(
         "/** @type {Function} */ function topFun() {}\n" +

@@ -807,9 +807,7 @@ public class JSDocInfo implements Serializable {
         || hasReturnType()
         || hasThisType()
         || getParameterCount() > 0
-        || getFlag(MASK_CONSTRUCTOR
-            | MASK_OVERRIDE
-            | MASK_NOSIDEEFFECTS));
+        || getFlag(MASK_CONSTRUCTOR | MASK_NOSIDEEFFECTS));
   }
 
   private boolean getFlag(int mask) {
