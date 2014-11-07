@@ -3194,7 +3194,7 @@ public class NewTypeInference implements CompilerPass {
         mayWarnAboutConstProp(propAccessNode, lvalueType, pname)) {
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
-    if (!lvalueType.mayHaveProp(pname)) {
+    if (!lvalueType.hasProp(pname)) {
       if (insideQualifiedName && lvalueType.isLoose()) {
         // For loose objects, create the inner property if it doesn't exist.
         lvalueType = lvalueType.withProperty(
@@ -3214,7 +3214,9 @@ public class NewTypeInference implements CompilerPass {
         if (warnForInexistentProp &&
             !lvalueType.isUnknown() &&
             !lvalueType.isDict()) {
-          warnings.add(JSError.make(obj, TypeCheck.INEXISTENT_PROPERTY,
+          boolean mayExist = lvalueType.mayHaveProp(pname);
+          warnings.add(JSError.make(obj,
+                  mayExist ? POSSIBLY_INEXISTENT_PROPERTY : TypeCheck.INEXISTENT_PROPERTY,
                   pnameAsString, lvalueType.toString()));
           return new LValueResultFwd(lvalueEnv, type, null, null);
         }

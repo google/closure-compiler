@@ -7238,6 +7238,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testGetpropOnPossiblyInexistentPropertyDoesntCrash() {
+    typeCheck(
+        "/** @constructor */ function Foo(){};\n" +
+        "function f() {\n" +
+        "  var obj = 3 ? new Foo : { prop : { subprop : 'str'}};\n" +
+        "  obj.prop.subprop = 'str';\n" +
+        "};", NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY);
+  }
+
   public void testCtorManipulationDoesntCrash() {
     checkNoWarnings(
         "/** @constructor */ var X = function() {};\n" +
