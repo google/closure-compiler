@@ -283,13 +283,6 @@ final class NameAnalyzer implements CompilerPass {
     JsName name;
 
     /**
-     * Top GETPROP or NAME or STRING [objlit key] node defining the name of
-     * this node
-     */
-    @SuppressWarnings("unused")
-    Node node;
-
-    /**
      * Parent node of the name access
      * (ASSIGN, VAR, FUNCTION, OBJECTLIT, or CALL)
      */
@@ -304,7 +297,6 @@ final class NameAnalyzer implements CompilerPass {
      */
     JsNameRefNode(JsName name, Node node) {
       this.name = name;
-      this.node = node;
       this.parent = node.getParent();
     }
 

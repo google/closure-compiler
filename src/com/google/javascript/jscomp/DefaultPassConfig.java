@@ -1025,7 +1025,6 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Closure pre-processing pass. */
-  @SuppressWarnings("deprecation")
   final HotSwapPassFactory closurePrimitives =
       new HotSwapPassFactory("closurePrimitives", true) {
     @Override

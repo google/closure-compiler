@@ -424,12 +424,12 @@ public class JSModuleGraph {
     }
 
     // Now, generate the sorted result.
-    List<CompilerInput> result = Lists.newArrayList();
+    ImmutableList.Builder<CompilerInput> result = ImmutableList.builder();
     for (JSModule module : getAllModules()) {
       result.addAll(module.getInputs());
     }
 
-    return result;
+    return result.build();
   }
 
   private Collection<CompilerInput> createEntryPointInputs(

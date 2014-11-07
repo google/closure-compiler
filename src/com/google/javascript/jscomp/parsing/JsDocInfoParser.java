@@ -925,10 +925,9 @@ public final class JsDocInfoParser {
           }
 
           // Obtain the template type names
-          List<String> names = Lists.newArrayList(
-              Splitter.on(',')
-                  .trimResults()
-                  .split(templateNames));
+          List<String> names = Splitter.on(',')
+              .trimResults()
+              .splitToList(templateNames);
 
           if (names.size() == 1 && names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.templatemissing",
@@ -993,10 +992,9 @@ public final class JsDocInfoParser {
 
         case DISPOSES: {
           ExtractionInfo templateInfo = extractSingleLineBlock();
-          List<String> names = Lists.newArrayList(
-              Splitter.on(',')
-                  .trimResults()
-                  .split(templateInfo.string));
+          List<String> names = Splitter.on(',')
+              .trimResults()
+              .splitToList(templateInfo.string);
 
           if (names.isEmpty() || names.get(0).isEmpty()) {
             parser.addTypeWarning("msg.jsdoc.disposeparameter.missing",
