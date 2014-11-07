@@ -1393,7 +1393,8 @@ angular.$http.Interceptor;
 /**
  * @typedef {{
  *   defaults: !angular.$http.Config,
- *   interceptors: !Array.<string|function(...[*]): !angular.$http.Interceptor>
+ *   interceptors: !Array.<string|function(...[*]): !angular.$http.Interceptor>,
+ *   useApplyAsync: function(boolean=):(boolean|!angular.$HttpProvider)
  * }}
  */
 angular.$HttpProvider;
@@ -1402,6 +1403,12 @@ angular.$HttpProvider;
  * @type {angular.$http.Config}
  */
 angular.$HttpProvider.defaults;
+
+/**
+ * @param {boolean=} opt_value
+ * @return {boolean|!angular.$HttpProvider}
+ */
+angular.$HttpProvider.useApplyAsync = function(opt_value) {};
 
 /******************************************************************************
  * $injector Service
