@@ -10049,4 +10049,37 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  var x = true;\n" +
         "}");
   }
+
+  public void testSpecializationInPropertyAccesses() {
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @type {?number} */ ns.n = 123;\n" +
+        "if (ns.n === null) {\n" +
+        "} else {\n" +
+        "  ns.n - 5;\n" +
+        "}");
+
+    checkNoWarnings(
+        "/** @const */\n" +
+        "var ns = {};\n" +
+        "/** @type {?number} */ ns.n = 123;\n" +
+        "if (ns.n !== null) {\n" +
+        "  ns.n - 5;\n" +
+        "}");
+
+    checkNoWarnings(
+        "var obj = { n: (1 < 2 ? null : 123) };\n" +
+        "if (obj.n !== null) {\n" +
+        "  obj.n - 123;\n" +
+        "}");
+
+    typeCheck(
+        "var obj = { n: (1 < 2 ? null : 123) };\n" +
+        "if (obj.n !== null) {\n" +
+        "  obj.n - 123;\n" +
+        "}\n" +
+        "obj.n - 123;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

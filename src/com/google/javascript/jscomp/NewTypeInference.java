@@ -2282,21 +2282,21 @@ public class NewTypeInference implements CompilerPass {
     QualifiedName propQname = new QualifiedName(pname);
     Node propAccessNode = receiver.getParent();
     EnvTypePair pair;
-    JSType objWithProp = pickReqObjType(propAccessNode)
-        .withLoose().withProperty(propQname, requiredType);
-    JSType recvReqType, recvSpecType, recvType;
+    JSType reqObjType = pickReqObjType(propAccessNode).withLoose();
+    JSType recvReqType, recvSpecType;
 
     // First, analyze the receiver object.
     if (specializedType.isTruthy() || specializedType.isFalsy()) {
       recvReqType = JSType.UNKNOWN;
-      recvSpecType = objWithProp;
+      recvSpecType = reqObjType.withProperty(propQname, requiredType);
     } else {
-      recvReqType = recvSpecType = objWithProp;
+      recvReqType = reqObjType.withProperty(propQname, requiredType);
+      recvSpecType = reqObjType.withProperty(propQname, specializedType);
     }
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
-    pair =
-        mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, pair.env);
-    recvType = pair.type;
+    pair = mayWarnAboutNullableReferenceAndTighten(
+        receiver, pair.type, pair.env);
+    JSType recvType = pair.type;
     if (recvType.isUnknown() ||
         mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
@@ -2329,7 +2329,7 @@ public class NewTypeInference implements CompilerPass {
               recvType.getDeclaredProp(propQname),
               resultType, requiredType)) {
         // Tighten the inferred type and don't warn.
-        // See Token.NAME fwd for explanation about types as lower/upper bounds.
+        // See analyzeNameFwd for explanation about types as lower/upper bounds.
         resultType = resultType.specialize(requiredType);
         LValueResultFwd lvr =
             analyzeLValueFwd(propAccessNode, inEnv, resultType);

@@ -591,7 +591,7 @@ public abstract class JSType {
   // Specialize might still not be symmetric however, b/c of truthy/falsy.
 
   public JSType specialize(JSType other) {
-    if (other.isTop() || other.isUnknown()) {
+    if (other.isTop() || other.isUnknown() || this == other) {
       return this;
     } else if (other.isTruthy()) {
       return makeTruthy();
