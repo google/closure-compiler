@@ -1892,8 +1892,8 @@ public class NewTypeInference implements CompilerPass {
     Node arg = callNode.getChildAtIndex(1);
     int i = 0;
     while (arg != null) {
-      EnvTypePair pair = isFwd ?
-          analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
+      EnvTypePair pair =
+          isFwd ? analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
       JSType unifTarget = funType.getFormalType(i);
       JSType unifSource = pair.type;
       if (!unifTarget.unifyWith(unifSource, typeParameters, typeMultimap)) {

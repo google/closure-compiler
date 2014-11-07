@@ -565,9 +565,9 @@ public abstract class JSType {
       return thisTypevar.equals(otherTypevar) && getMask() == other.getMask();
     } else {
       // this is (T | ...)
-      int templateMask = 0;
+      int templateMask = BOTTOM_MASK;
       int thisScalarBits = getMask() & ~NON_SCALAR_MASK & ~TYPEVAR_MASK;
-      int otherScalarBits = other.getMask() & ~NON_SCALAR_MASK & ~TYPEVAR_MASK;
+      int otherScalarBits = other.getMask() & ~NON_SCALAR_MASK;
       templateMask |= otherScalarBits & ~thisScalarBits;
 
       if (templateMask == BOTTOM_MASK) {

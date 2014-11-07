@@ -5286,6 +5286,59 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function takesFoo(x) {}\n" +
         "takesFoo(undefined);",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T|undefined} x\n" +
+        " */\n" +
+        "function f(x) {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T|undefined} x\n" +
+        " */\n" +
+        "function g(x) { f(x); }");
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T|undefined} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  if (x === undefined) {\n" +
+        "    throw new Error('');\n" +
+        "  }\n" +
+        "  return x;\n" +
+        "}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T|undefined} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function g(x) { return f(x); }\n" +
+        "g(123) - 5;");
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T|undefined} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  if (x === undefined) {\n" +
+        "    throw new Error('');\n" +
+        "  }\n" +
+        "  return x;\n" +
+        "}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T|undefined} x\n" +
+        " * @return {T}\n" +
+        " */\n" +
+        "function g(x) { return f(x); }\n" +
+        "g(123) < 'asdf';",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testUnifyObjects() {
