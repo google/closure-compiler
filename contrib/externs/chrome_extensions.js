@@ -7398,19 +7398,6 @@ chrome.gcdPrivate = {};
 chrome.gcdPrivate.Device;
 
 
-
-/** @constructor */
-chrome.gcdPrivate.ConfirmationInfo = function() {};
-
-
-/** @type {string} */
-chrome.gcdPrivate.ConfirmationInfo.prototype.type;
-
-
-/** @type {string|undefined} */
-chrome.gcdPrivate.ConfirmationInfo.prototype.code;
-
-
 /**
  * Returns the list of cloud devices visible locally or available in the
  * cloud for user account.
@@ -7442,20 +7429,26 @@ chrome.gcdPrivate.prefetchWifiPassword = function(ssid, callback) {};
  * Establish the session.
  * @param {string} ipAddress
  * @param {number} port
- * @param {function(number, string, !chrome.gcdPrivate.ConfirmationInfo): void}
+ * @param {function(number, string, !Array.<string>): void}
  *     callback Called when the session is established or on error. 1st param,
  *     |sessionId|, is the session ID (identifies the session for future calls).
  *     2nd param, |status|, is the status (success or type of error). 3rd param,
- *     |confirmationInfo|, is the info about how the device handles
- *     confirmation.
+ *     |pairingTypes|, is a list of pairing types supported by this device.
  */
 chrome.gcdPrivate.establishSession = function(ipAddress, port, callback) {};
 
 
 /**
- * Confirm that the code is correct. Device will still need to confirm. |code|
- * must be present and must match the code from the device, even when the code
- * is supplied in the |ConfirmationInfo| object.
+ * Start pairing with the selected method.
+ * @param {number} sessionId
+ * @param {string} pairingType
+ * @param {function(string): void} callback
+ */
+chrome.gcdPrivate.startPairing = function(sessionId, pairingType, callback) {};
+
+
+/**
+ * Confirm pairing code.
  * @param {number} sessionId
  * @param {string} code
  * @param {function(string): void} callback
