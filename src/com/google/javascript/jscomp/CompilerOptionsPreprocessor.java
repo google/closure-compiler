@@ -49,6 +49,12 @@ final class CompilerOptionsPreprocessor {
           options.getLanguageIn(), options.getLanguageOut());
     }
 
+    if (options.getLanguageOut().isEs6OrHigher()) {
+      throw new InvalidOptionsException(
+          "ES6 is only supported for transpilation to a lower ECMAScript"
+          + " version. Set --language_in to ES3, ES5, or ES5_strict.");
+    }
+
     if (options.useNewTypeInference) {
       options.checkTypes = false;
       options.inferTypes = false;
