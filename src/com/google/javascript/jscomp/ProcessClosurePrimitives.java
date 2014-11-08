@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -73,6 +74,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   static final DiagnosticType DUPLICATE_NAMESPACE_ERROR = DiagnosticType.error(
       "JSC_DUPLICATE_NAMESPACE_ERROR",
       "namespace \"{0}\" cannot be provided twice");
+
+  static final DiagnosticType WEAK_NAMESPACE_TYPE = DiagnosticType.warning(
+      "JSC_WEAK_NAMESPACE_TYPE",
+      "Provided symbol declared with type Object. This is rarely useful. "
+      + "Use @enum for enumerations, "
+      + "Object with type parameters for simple maps, "
+      + "or untyped @const for namespaces.");
 
   static final DiagnosticType FUNCTION_NAMESPACE_ERROR = DiagnosticType.error(
       "JSC_FUNCTION_NAMESPACE_ERROR",
@@ -1288,6 +1296,30 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       if (candidateDefinition != null && explicitNode != null) {
         explicitNode.detachFromParent();
         compiler.reportCodeChange();
+
+        JSDocInfo info;
+        if (candidateDefinition.isExprResult()) {
+          info = candidateDefinition.getFirstChild().getJSDocInfo();
+        } else {
+          info = candidateDefinition.getJSDocInfo();
+        }
+
+        // Validate that the namespace is not declared as a generic object type.
+        if (info != null) {
+          JSTypeExpression expr = info.getType();
+          if (expr != null) {
+            Node n = expr.getRoot();
+            if (n.getType() == Token.BANG) {
+              n = n.getFirstChild();
+            }
+            if (n.getType() == Token.STRING
+                && !n.hasChildren()  // templated object types are ok.
+                && n.getString().equals("Object")) {
+              compiler.report(
+                  JSError.make(candidateDefinition, WEAK_NAMESPACE_TYPE));
+            }
+          }
+        }
 
         // Does this need a VAR keyword?
         replacementNode = candidateDefinition;

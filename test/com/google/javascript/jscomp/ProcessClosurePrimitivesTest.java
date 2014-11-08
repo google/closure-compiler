@@ -34,6 +34,7 @@ import static com.google.javascript.jscomp.ProcessClosurePrimitives.MISSING_PROV
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.NULL_ARGUMENT_ERROR;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.TOO_MANY_ARGUMENTS_ERROR;
+import static com.google.javascript.jscomp.ProcessClosurePrimitives.WEAK_NAMESPACE_TYPE;
 import static com.google.javascript.jscomp.ProcessClosurePrimitives.XMODULE_REQUIRE_ERROR;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -281,6 +282,25 @@ public class ProcessClosurePrimitivesTest extends CompilerTestCase {
         DUPLICATE_NAMESPACE_ERROR);
     test("goog.provide('foo.bar'); goog.provide('foo'); goog.provide('foo');",
         "", DUPLICATE_NAMESPACE_ERROR);
+  }
+
+  public void testProvideErrorCases2() {
+    test("goog.provide('foo'); /** @type {Object} */ var foo = {};",
+         "var foo={};", null, WEAK_NAMESPACE_TYPE);
+    test("goog.provide('foo'); /** @type {!Object} */ var foo = {};",
+        "var foo={};", null, WEAK_NAMESPACE_TYPE);
+    test("goog.provide('foo.bar'); /** @type {Object} */ foo.bar = {};",
+        "var foo={};foo.bar={};", null, WEAK_NAMESPACE_TYPE);
+    test("goog.provide('foo.bar'); /** @type {!Object} */ foo.bar = {};",
+        "var foo={};foo.bar={};", null, WEAK_NAMESPACE_TYPE);
+
+    test("goog.provide('foo'); /** @type {Object.<string>} */ var foo = {};",
+        "var foo={};");
+  }
+
+  public void testProvideValidObjectType() {
+    test("goog.provide('foo'); /** @type {Object.<string>} */ var foo = {};",
+        "var foo={};");
   }
 
   public void testRemovalOfRequires() {
