@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -75,12 +76,16 @@ class ReplaceStrings extends AbstractPostOrderCallback
     // reuse strings.  For example, event-id can reuse the names used for logger
     // classes.
     final String name;
-    final int parameter;
+    final List<Integer> parameters;
     static final int REPLACE_ALL_VALUE = 0;
 
-    Config(String name, int parameter) {
+    Config(String name, List<Integer> replacementParameters) {
       this.name = name;
-      this.parameter = parameter;
+      this.parameters = replacementParameters;
+    }
+
+    public boolean isReplaceAll() {
+      return parameters.size() == 1 && parameters.contains(REPLACE_ALL_VALUE);
     }
   }
 
@@ -266,11 +271,13 @@ class ReplaceStrings extends AbstractPostOrderCallback
     Preconditions.checkState(
         n.isNew() || n.isCall());
 
-    if (config.parameter != Config.REPLACE_ALL_VALUE) {
+    if (!config.isReplaceAll()) {
       // Note: the first child is the function, but the parameter id is 1 based.
-      Node arg = n.getChildAtIndex(config.parameter);
-      if (arg != null) {
-        replaceExpression(t, arg, n);
+      for (int parameter : config.parameters) {
+        Node arg = n.getChildAtIndex(parameter);
+        if (arg != null) {
+          replaceExpression(t, arg, n);
+        }
       }
     } else {
       // Replace all parameters.
@@ -453,25 +460,26 @@ class ReplaceStrings extends AbstractPostOrderCallback
     String params = function.substring(first + 1, last);
 
     int paramCount = 0;
-    int replacementParameter = -1;
+    List<Integer> replacementParameters = new ArrayList<>();
     String[] parts = params.split(",");
     for (String param : parts) {
       paramCount++;
       if (param.equals(REPLACE_ALL_MARKER)) {
         Preconditions.checkState(paramCount == 1 && parts.length == 1);
-        replacementParameter = Config.REPLACE_ALL_VALUE;
+        replacementParameters.add(Config.REPLACE_ALL_VALUE);
       } else if (param.equals(REPLACE_ONE_MARKER)) {
         // TODO(johnlenz): Support multiple.
-        Preconditions.checkState(replacementParameter == -1);
-        replacementParameter = paramCount;
+        Preconditions.checkState(!replacementParameters.contains(
+            Config.REPLACE_ALL_VALUE));
+        replacementParameters.add(paramCount);
       } else {
         // TODO(johnlenz): report an error.
         Preconditions.checkState(param.isEmpty(), "Unknown marker", param);
       }
     }
 
-    Preconditions.checkState(replacementParameter != -1);
-    return new Config(name, replacementParameter);
+    Preconditions.checkState(!replacementParameters.isEmpty());
+    return new Config(name, replacementParameters);
   }
 
   /**

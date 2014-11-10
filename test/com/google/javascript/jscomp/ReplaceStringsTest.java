@@ -44,7 +44,8 @@ public class ReplaceStringsTest extends CompilerTestCase {
       "goog.debug.Logger.getLogger(?)",
       "goog.debug.Logger.prototype.info(?)",
       "goog.log.getLogger(?)",
-      "goog.log.info(,?)"
+      "goog.log.info(,?)",
+      "goog.log.multiString(,?,?,)"
       );
 
   private static final String EXTERNS =
@@ -63,7 +64,8 @@ public class ReplaceStringsTest extends CompilerTestCase {
     "goog.debug.Logger.getLogger = function(name){};\n" +
     "goog.log = {}\n" +
     "goog.log.getLogger = function(name){};\n" +
-    "goog.log.info = function(logger, msg, opt_ex) {};\n"
+    "goog.log.info = function(logger, msg, opt_ex) {};\n" +
+    "goog.log.multiString = function(logger, replace1, replace2, keep) {};\n"
     ;
 
   public ReplaceStringsTest() {
@@ -435,6 +437,20 @@ public class ReplaceStringsTest extends CompilerTestCase {
         new String[] {
             "a", "foo",
             "b", "Some message"});
+  }
+
+  public void testLoggerWithSomeParametersNotReplaced() {
+    testDebugStrings(
+        "var x = {};" +
+        "x.logger_ = goog.log.getLogger('foo');" +
+        "goog.log.multiString(x.logger_, 'Some message', 'Some message2', " +
+            "'Do not replace');",
+        "var x$logger_ = goog.log.getLogger('a');" +
+        "goog.log.multiString(x$logger_, 'b', 'c', 'Do not replace');",
+        new String[] {
+            "a", "foo",
+            "b", "Some message",
+            "c", "Some message2"});
   }
 
   public void testWithDisambiguateProperties() throws Exception {
