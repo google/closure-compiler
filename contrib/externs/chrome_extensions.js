@@ -2303,53 +2303,162 @@ chrome.browserAction = {};
 
 
 /**
- * @param {Object} details An object whose keys are 'color' and
- *     optionally 'tabId'.
+ * @typedef {?{
+ *   tabId: (number|undefined)
+ * }}
  */
-chrome.browserAction.setBadgeBackgroundColor = function(details) {};
+chrome.browserAction.Tab;
 
 
 /**
- * @param {Object} details An object whose keys are 'text' and
- *     optionally 'tabId'.
+ * @typedef {Array<number>}
+ * @see https://developer.chrome.com/extensions/browserAction#type-ColorArray
  */
-chrome.browserAction.setBadgeText = function(details) {};
+chrome.browserAction.ColorArray;
 
 
 /**
- * @param {Object} details An object which may have 'imageData',
- *     'path', or 'tabId' as keys.
+ * @typedef {{
+ *   imageData: (!ImageData|!Object.<number, !ImageData>|undefined),
+ *   path: (string|!Object.<number, string>|undefined),
+ *   tabId: (number|undefined)
+ * }}
  */
-chrome.browserAction.setIcon = function(details) {};
+chrome.browserAction.SetIconImageData;
 
 
 /**
- * @param {Object} details An object which may have 'popup' or 'tabId' as keys.
+ * @param {{
+ *   title: string,
+ *   tabId: (number|undefined)
+ * }} details
+ * @see https://developer.chrome.com/extensions/browserAction#method-setTitle
+ */
+chrome.browserAction.setTitle = function(details) {};
+
+
+/**
+ * @param {!chrome.browserAction.Tab} details
+ * @param {function(string): void} callback
+ * @see https://developer.chrome.com/extensions/browserAction#method-getTitle
+ */
+chrome.browserAction.getTitle = function(details, callback) {};
+
+
+/**
+ * @param {!chrome.browserAction.SetIconImageData} details
+ * @param {function(): void=} opt_callback
+ * @see https://developer.chrome.com/extensions/browserAction#method-setIcon
+ */
+chrome.browserAction.setIcon = function(details, opt_callback) {};
+
+
+/**
+ * @param {{
+ *   tabId: (number|undefined),
+ *   popup: string
+ * }} details
+ * @see https://developer.chrome.com/extensions/browserAction#method-setPopup
  */
 chrome.browserAction.setPopup = function(details) {};
 
 
 /**
- * @param {Object} details An object which has 'title' and optionally
- *     'tabId'.
+ * @param {!chrome.browserAction.Tab} details
+ * @param {function(string): void} callback
+ * @see https://developer.chrome.com/extensions/browserAction#method-getPopup
  */
-chrome.browserAction.setTitle = function(details) {};
+chrome.browserAction.getPopup = function(details, callback) {};
 
 
-/** @type {!ChromeEvent} */
+/**
+ * @param {{
+ *   text: string,
+ *   tabId: (number|undefined)
+ * }} details
+ * @see https://developer.chrome.com/extensions/browserAction#method-setBadgeText
+ */
+chrome.browserAction.setBadgeText = function(details) {};
+
+
+/**
+ * @param {!chrome.browserAction.Tab} details
+ * @param {function(string): void} callback
+ * @see https://developer.chrome.com/extensions/browserAction#method-getBadgeText
+ */
+chrome.browserAction.getBadgeText = function(details, callback) {};
+
+
+/**
+ * @param {{
+ *   color: (string|chrome.browserAction.ColorArray),
+ *   tabId: (number|undefined)
+ * }} details
+ * @see https://developer.chrome.com/extensions/browserAction#method-setBadgeBackgroundColor
+ */
+chrome.browserAction.setBadgeBackgroundColor = function(details) {};
+
+
+/**
+ * @param {!chrome.browserAction.Tab} details
+ * @param {function(chrome.browserAction.ColorArray): void} callback
+ * @see https://developer.chrome.com/extensions/browserAction#method-getBadgeBackgroundColor
+ */
+chrome.browserAction.getBadgeBackgroundColor = function(details, callback) {};
+
+
+/**
+ * @param {number=} opt_tabId
+ * @see https://developer.chrome.com/extensions/browserAction#method-enable
+ */
+chrome.browserAction.enable = function(opt_tabId) {};
+
+
+/**
+ * @param {number=} opt_tabId
+ * @see https://developer.chrome.com/extensions/browserAction#method-disable
+ */
+chrome.browserAction.disable = function(opt_tabId) {};
+
+
+/**
+ * @constructor
+ */
+chrome.browserAction.BrowserActionTabEvent = function() {};
+
+
+/**
+ * @param {function(!Tab): void} callback
+ */
+chrome.browserAction.BrowserActionTabEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!Tab): void} callback
+ */
+chrome.browserAction.BrowserActionTabEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!Tab): void} callback
+ * @return {boolean}
+ */
+chrome.browserAction.BrowserActionTabEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.browserAction.BrowserActionTabEvent.prototype.hasListeners =
+    function() {};
+
+
+/**
+ * @type {!chrome.browserAction.BrowserActionTabEvent}
+ * @see https://developer.chrome.com/extensions/browserAction#event-onClicked
+ */
 chrome.browserAction.onClicked;
-
-
-/**
- * @param {number} tabId the ID of the tab on which to disable this action.
- */
-chrome.browserAction.disable = function(tabId) {};
-
-
-/**
- * @param {number} tabId the ID of the tab on which to enable this action.
- */
-chrome.browserAction.enable = function(tabId) {};
 
 
 /**
