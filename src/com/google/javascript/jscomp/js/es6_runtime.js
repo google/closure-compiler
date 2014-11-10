@@ -20,9 +20,6 @@
  * @author mattloring@google.com (Matthew Loring)
  */
 
-/** @const */
-$jscomp = $jscomp || {};
-
 /**
  * @constructor
  * @template T

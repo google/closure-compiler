@@ -22,9 +22,7 @@
  * @author nicksantos@google.com (Nick Santos)
  */
 
-// Because this is injected at compile-time, we don't annotate
-// it as a constant, because that would just be extra work for
-// the compiler.
+/** @const */
 var $jscomp = {};
 
 /** Locals for goog.scope */
