@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
+import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 import java.util.Map;
@@ -343,7 +344,8 @@ public class DiagnosticGroups {
           CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
           CheckNullableReturn.NULLABLE_RETURN,
-          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME);
+          CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
+          CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
       DiagnosticGroups.registerGroup("useOfGoogBase",

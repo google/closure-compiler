@@ -2901,7 +2901,7 @@ public final class NodeUtil {
    * @return {@code true} if the node an assignment to a prototype property of
    *     some constructor.
    */
-  static boolean isPrototypePropertyDeclaration(Node n) {
+  public static boolean isPrototypePropertyDeclaration(Node n) {
     return isExprAssign(n) &&
         isPrototypeProperty(n.getFirstChild().getFirstChild());
   }
