@@ -1129,6 +1129,73 @@ google.visualization.AnnotatedTimeLine.prototype.showDataColumns =
 google.visualization.AnnotatedTimeLine.prototype.hideDataColumns =
     function(columnIndexes) {};
 
+/**
+ * @param {Node} container
+ * @constructor
+ */
+google.visualization.AnnotationChart = function(container) {};
+/**
+ * @return {!Array.<Object>}
+ */
+google.visualization.AnnotationChart.prototype.clearChart = function() {};
+
+/**
+ * @param {!Object} data
+ * @param {Object=} opt_options
+ * @return {undefined}
+ */
+google.visualization.AnnotationChart.prototype.draw =
+    function(data, opt_options) {};
+
+/**
+ * @return {!Array.<Object>}
+ */
+google.visualization.AnnotationChart.prototype.getContainer = function() {};
+
+/**
+ * @return {!Array.<Object>}
+ */
+google.visualization.AnnotationChart.prototype.getSelection = function() {};
+
+/**
+ * @param {(!Array.<Object>|Array|null)=} opt_selection
+ * @return {undefined}
+ */
+google.visualization.AnnotationChart.prototype.setSelection =
+    function(opt_selection) {};
+
+
+/**
+ * @return {!Object}
+ */
+google.visualization.AnnotationChart.prototype.getVisibleChartRange =
+    function() {};
+
+
+/**
+ * @param {Date} firstDate
+ * @param {Date} lastDate
+ * @return {undefined}
+ */
+google.visualization.AnnotationChart.prototype.setVisibleChartRange =
+    function(firstDate, lastDate) {};
+
+
+/**
+ * @param {number|!Array.<number>} columnIndexes
+ * @return {undefined}
+ */
+google.visualization.AnnotationChart.prototype.showDataColumns =
+    function(columnIndexes) {};
+
+
+/**
+ * @param {number|!Array.<number>} columnIndexes
+ * @return {undefined}
+ */
+google.visualization.AnnotationChart.prototype.hideDataColumns =
+    function(columnIndexes) {};
+
 
 
 /**
