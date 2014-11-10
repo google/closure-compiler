@@ -6930,6 +6930,24 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "ns.Interface = function(){}");
   }
 
+  public void testGetpropOnTopDoesntCrash() {
+    typeCheck(
+        "/** @constructor */ function Foo() {};\n" +
+        "/** @type {*} */ Foo.prototype.stuff;\n" +
+        "function f(/** !Foo */ foo, x) {\n" +
+        "  (foo.stuff.prop = x) || false;\n" +
+        "};",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck(
+        "/** @constructor */ function Foo() {};\n" +
+        "/** @type {*} */ Foo.prototype.stuff;\n" +
+        "function f(/** Foo */ foo) {\n" +
+        "  foo.stuff.prop || false;\n" +
+        "};",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+  }
+
   public void testImplementsGenericInterfaceDoesntCrash() {
     checkNoWarnings(
         "/** @interface @template Z */\n" +

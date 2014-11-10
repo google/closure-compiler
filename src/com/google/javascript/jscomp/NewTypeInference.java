@@ -2305,6 +2305,9 @@ public class NewTypeInference implements CompilerPass {
         mayWarnAboutDictPropAccess(receiver, recvType)) {
       return new EnvTypePair(pair.env, requiredType);
     }
+    if (recvType.isTop()) {
+      recvType = JSType.TOP_OBJECT;
+    }
     // Then, analyze the property access.
     QualifiedName getterPname = new QualifiedName(GETTER_PREFIX + pname);
     if (recvType.hasProp(getterPname)) {
