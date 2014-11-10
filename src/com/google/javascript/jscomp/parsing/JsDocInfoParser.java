@@ -1267,7 +1267,10 @@ public final class JsDocInfoParser {
    * @param token The current token.
    */
   private JsDocToken parseSuppressTag(JsDocToken token) {
-    if (token == JsDocToken.LEFT_CURLY) {
+    if (token != JsDocToken.LEFT_CURLY) {
+      parser.addParserWarning("msg.jsdoc.suppress",
+          stream.getLineno(), stream.getCharno());
+    } else {
       Set<String> suppressions = new HashSet<>();
       while (true) {
         if (match(JsDocToken.STRING)) {

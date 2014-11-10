@@ -2256,6 +2256,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "unknown @suppress parameter: impossible");
   }
 
+  public void testBadSuppress8() throws Exception {
+    parse("@suppress */", "malformed @suppress tag");
+  }
+
   public void testModifies1() throws Exception {
     JSDocInfo info = parse("@modifies {this} */");
     assertEquals(Sets.newHashSet("this"), info.getModifies());
