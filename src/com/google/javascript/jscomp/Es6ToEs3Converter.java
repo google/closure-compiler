@@ -462,7 +462,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private void checkClassReassignment(Node clazz) {
     Node name = NodeUtil.getClassNameNode(clazz);
-    Node enclosingFunction = getEnclosingFunction(clazz);
+    Node enclosingFunction = NodeUtil.getEnclosingFunction(clazz);
     if (enclosingFunction == null) {
       return;
     }
@@ -535,7 +535,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   }
 
   private Node baseCall(Node clazz, String methodName, Node arguments) {
-    boolean useUnique = NodeUtil.isStatement(clazz) && !isInFunction(clazz);
+    boolean useUnique = NodeUtil.isStatement(clazz) && !NodeUtil.isInFunction(clazz);
     String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
         : NodeUtil.getClassName(clazz);
     Node uniqueClassName = NodeUtil.newQName(compiler,
@@ -797,7 +797,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       return;
     }
 
-    boolean useUnique = NodeUtil.isStatement(classNode) && !isInFunction(classNode);
+    boolean useUnique = NodeUtil.isStatement(classNode) && !NodeUtil.isInFunction(classNode);
     String uniqueFullClassName = useUnique ? getUniqueClassName(fullClassName) : fullClassName;
     String superClassString = superClassName.getQualifiedName();
 
@@ -1036,15 +1036,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
   private static String getUniqueClassName(String qualifiedName) {
     return qualifiedName;
-  }
-
-  //TODO(mattloring) move this functionality to scopes once class scopes are computed.
-  private static Node getEnclosingFunction(Node n) {
-    return NodeUtil.getEnclosingType(n, Token.FUNCTION);
-  }
-
-  private static boolean isInFunction(Node n) {
-    return getEnclosingFunction(n) != null;
   }
 
   /**

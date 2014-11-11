@@ -1772,6 +1772,10 @@ public final class NodeUtil {
     return getEnclosingType(n, Token.FUNCTION);
   }
 
+  static boolean isInFunction(Node n) {
+    return getEnclosingFunction(n) != null;
+  }
+
   static Node getEnclosingStatement(Node n) {
     Node curr = n;
     while (curr != null && !isStatement(curr)) {
