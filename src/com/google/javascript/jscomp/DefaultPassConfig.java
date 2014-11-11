@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
+import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -1511,7 +1512,8 @@ public class DefaultPassConfig extends PassConfig {
       return combineChecks(compiler, ImmutableList.<Callback>of(
           new CheckEnums(compiler),
           new CheckInterfaces(compiler),
-          new CheckNullableReturn(compiler)));
+          new CheckNullableReturn(compiler),
+          new CheckPrototypeProperties(compiler)));
     }
   };
 
