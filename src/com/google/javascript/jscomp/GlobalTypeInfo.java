@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
+import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.Namespace;
 import com.google.javascript.jscomp.newtypes.NamespaceLit;
 import com.google.javascript.jscomp.newtypes.NominalType;
@@ -253,15 +254,22 @@ class GlobalTypeInfo implements CompilerPass {
   // to handle the implicit inheritance from Object of all classes.
   private NominalType objectNominalType;
 
+  private JSTypes commonTypes;
+
   GlobalTypeInfo(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.convention = compiler.getCodingConvention();
     this.typeParser = new JSTypeCreatorFromJSDoc(this.convention);
+    this.commonTypes = JSTypes.make();
   }
 
   Collection<Scope> getScopes() {
     return scopes;
+  }
+
+  JSTypes getTypesUtilObject() {
+    return commonTypes;
   }
 
   JSType getCastType(Node n) {
@@ -280,11 +288,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   JSType getArrayType(JSType t) {
     if (arrayType == null) {
-      JSType arrayCtor = globalScope.getDeclaredTypeOf("Array");
-      if (arrayCtor == null) {
-        return JSType.UNKNOWN;
-      }
-      arrayType = arrayCtor.getFunType().getThisType();
+      arrayType = getInstanceOfBuiltinType("Array");
     }
     // Kind of ugly that we have hard-coded "T" here. Alternatives?
     return arrayType.substituteGenerics(ImmutableMap.of("T", t));
@@ -292,13 +296,14 @@ class GlobalTypeInfo implements CompilerPass {
 
   JSType getRegexpType() {
     if (regexpType == null) {
-      JSType regexpCtor = globalScope.getDeclaredTypeOf("RegExp");
-      if (regexpCtor == null) {
-        return JSType.UNKNOWN;
-      }
-      regexpType = regexpCtor.getFunType().getThisType();
+      regexpType = getInstanceOfBuiltinType("RegExp");
     }
     return regexpType;
+  }
+
+  private JSType getInstanceOfBuiltinType(String typeName) {
+    JSType ctor = globalScope.getDeclaredTypeOf(typeName);
+    return ctor == null ? JSType.UNKNOWN : ctor.getFunType().getThisType();
   }
 
   private NominalType getObjectNominalType() {
@@ -401,6 +406,13 @@ class GlobalTypeInfo implements CompilerPass {
     typeParser = null;
     compiler.setSymbolTable(this);
     warnings = null;
+
+    // We use these for automatic conversion between scalars
+    // and the corresponding object types.
+    commonTypes.setNumberInstance(getInstanceOfBuiltinType("Number"));
+    commonTypes.setStringInstance(getInstanceOfBuiltinType("String"));
+    commonTypes.setBooleanInstance(getInstanceOfBuiltinType("Boolean"));
+
     // If a scope s1 contains a scope s2, then s2 must be before s1 in scopes.
     // The type inference relies on this fact to process deeper scopes
     // before shallower scopes.

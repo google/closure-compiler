@@ -318,7 +318,8 @@ public abstract class JSType {
   public static boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
     Preconditions.checkArgument(
         lhs.isSubtypeOf(TOP_SCALAR) || rhs.isSubtypeOf(TOP_SCALAR));
-    return lhs.isBottom() || rhs.isBottom() || lhs.isUnknown() || rhs.isUnknown()
+    return lhs.isBottom() || rhs.isBottom()
+        || lhs.isUnknown() || rhs.isUnknown()
         || (lhs.isBoolean() && rhs.isBoolean()) || lhs.equals(rhs);
   }
 

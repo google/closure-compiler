@@ -31,6 +31,7 @@ import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
+import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.TypeEnv;
 import com.google.javascript.rhino.JSDocInfo;
@@ -224,15 +225,16 @@ public class NewTypeInference implements CompilerPass {
 
   private WarningReporter warnings;
   private final AbstractCompiler compiler;
-  Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
-  Map<Scope, JSType> summaries;
-  Map<Node, DeferredCheck> deferredChecks;
-  ControlFlowGraph<Node> cfg;
-  Scope currentScope;
-  GlobalTypeInfo symbolTable;
-  static final String RETVAL_ID = "%return";
-  static final String GETTER_PREFIX = "%getter_fun";
-  static final String SETTER_PREFIX = "%setter_fun";
+  private Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
+  private Map<Scope, JSType> summaries;
+  private Map<Node, DeferredCheck> deferredChecks;
+  private ControlFlowGraph<Node> cfg;
+  private Scope currentScope;
+  private GlobalTypeInfo symbolTable;
+  private JSTypes commonTypes;
+  private static final String RETVAL_ID = "%return";
+  private static final String GETTER_PREFIX = "%getter_fun";
+  private static final String SETTER_PREFIX = "%setter_fun";
   private final String ABSTRACT_METHOD_NAME;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
   private static final QualifiedName NUMERIC_INDEX = new QualifiedName("0");
@@ -264,6 +266,7 @@ public class NewTypeInference implements CompilerPass {
   public void process(Node externs, Node root) {
     try {
       symbolTable = compiler.getSymbolTable();
+      commonTypes = symbolTable.getTypesUtilObject();
       for (Scope scope : symbolTable.getScopes()) {
         analyzeFunction(scope);
         envs.clear();
@@ -761,7 +764,7 @@ public class NewTypeInference implements CompilerPass {
             Node lhs = n.getFirstChild();
             LValueResultFwd lval = analyzeLValueFwd(lhs, inEnv, JSType.STRING);
             if (lval.declType != null &&
-                !lval.declType.isSubtypeOf(JSType.STRING)) {
+                !commonTypes.isStringScalarOrObj(lval.declType)) {
               warnings.add(JSError.make(lhs, FORIN_EXPECTS_STRING_KEY,
                   lval.declType.toString()));
               outEnv = lval.env;
@@ -1288,7 +1291,7 @@ public class NewTypeInference implements CompilerPass {
     // for structness separately here.
     Node child = expr.getFirstChild();
     EnvTypePair pair = analyzeExprFwd(child, inEnv, JSType.NUMBER);
-    if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
+    if (!commonTypes.isNumberScalarOrObj(pair.type)) {
       warnInvalidOperand(child, expr.getType(), JSType.NUMBER, pair.type);
     }
     pair.type = JSType.NUMBER;
@@ -1345,10 +1348,10 @@ public class NewTypeInference implements CompilerPass {
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.NUM_OR_STR);
     JSType lhsType = lhsPair.type;
     JSType rhsType = rhsPair.type;
-    if (!lhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
+    if (!commonTypes.isNumStrScalarOrObj(lhsType)) {
       warnInvalidOperand(lhs, expr.getType(), JSType.NUM_OR_STR, lhsType);
     }
-    if (!rhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
+    if (!commonTypes.isNumStrScalarOrObj(rhsType)) {
       warnInvalidOperand(rhs, expr.getType(), JSType.NUM_OR_STR, rhsType);
     }
     return new EnvTypePair(rhsPair.env, JSType.plus(lhsType, rhsType));
@@ -1359,10 +1362,10 @@ public class NewTypeInference implements CompilerPass {
     Node rhs = expr.getLastChild();
     EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, JSType.NUMBER);
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.NUMBER);
-    if (!lhsPair.type.isSubtypeOf(JSType.NUMBER)) {
+    if (!commonTypes.isNumberScalarOrObj(lhsPair.type)) {
       warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsPair.type);
     }
-    if (!rhsPair.type.isSubtypeOf(JSType.NUMBER)) {
+    if (!commonTypes.isNumberScalarOrObj(rhsPair.type)) {
       warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, rhsPair.type);
     }
     rhsPair.type = JSType.NUMBER;
@@ -1434,12 +1437,12 @@ public class NewTypeInference implements CompilerPass {
     LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, JSType.NUMBER);
     JSType lhsType = lvalue.type;
     boolean lhsWarned = false;
-    if (!lhsType.isSubtypeOf(JSType.NUMBER)) {
+    if (!commonTypes.isNumberScalarOrObj(lhsType)) {
       warnInvalidOperand(lhs, expr.getType(), JSType.NUMBER, lhsType);
       lhsWarned = true;
     }
     EnvTypePair pair = analyzeExprFwd(rhs, lvalue.env, JSType.NUMBER);
-    if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
+    if (!commonTypes.isNumberScalarOrObj(pair.type)) {
       warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, pair.type);
     }
     if (!lhsWarned) {
@@ -1655,7 +1658,7 @@ public class NewTypeInference implements CompilerPass {
         !mayWarnAboutStructPropAccess(receiver, recvType)) {
       if (isArrayType(recvType)) {
         pair = analyzeExprFwd(index, pair.env, JSType.NUMBER);
-        if (!pair.type.isSubtypeOf(JSType.NUMBER)) {
+        if (!commonTypes.isNumberScalarOrObj(pair.type)) {
           warnings.add(JSError.make(
               index, NewTypeInference.NON_NUMERIC_ARRAY_INDEX,
               pair.type.toString()));
