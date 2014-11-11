@@ -124,8 +124,8 @@ final class FunctionTypeBuilder {
       "JSC_OPTIONAL_ARG_AT_END",
       "optional arguments must be at the end");
 
-  static final DiagnosticType INEXISTANT_PARAM = DiagnosticType.warning(
-      "JSC_INEXISTANT_PARAM",
+  static final DiagnosticType INEXISTENT_PARAM = DiagnosticType.warning(
+      "JSC_INEXISTENT_PARAM",
       "parameter {0} does not appear in {1}''s parameter list");
 
   static final DiagnosticType TYPE_REDEFINITION = DiagnosticType.warning(
@@ -542,7 +542,7 @@ final class FunctionTypeBuilder {
     }
 
     for (String inexistentName : allJsDocParams) {
-      reportWarning(INEXISTANT_PARAM, inexistentName, formatFnName());
+      reportWarning(INEXISTENT_PARAM, inexistentName, formatFnName());
     }
 
     parametersNode = builder.build();

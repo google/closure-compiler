@@ -42,8 +42,8 @@ class InlineCostEstimator {
   /**
    * Determines the estimated size of the JS snippet represented by the node.
    */
-  static int getCost(Node root, int costThreshhold) {
-    CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshhold);
+  static int getCost(Node root, int costThreshold) {
+    CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshold);
     estimator.add(root);
     return estimator.getCost();
   }
@@ -58,8 +58,8 @@ class InlineCostEstimator {
     private char last = '\0';
     private boolean continueProcessing = true;
 
-    CompiledSizeEstimator(int costThreshhold) {
-      this.maxCost = costThreshhold;
+    CompiledSizeEstimator(int costThreshold) {
+      this.maxCost = costThreshold;
     }
 
     void add(Node root) {

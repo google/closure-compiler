@@ -276,7 +276,7 @@ final class RenameVars implements CompilerPass {
         if (local) {
           // Blindly de-uniquify for the Prototype library for issue 103.
           String newName = MakeDeclaredNamesUnique.ContextualRenameInverter
-              .getOrginalName(name);
+              .getOriginalName(name);
           if (!newName.equals(name)) {
             n.setString(newName);
           }
