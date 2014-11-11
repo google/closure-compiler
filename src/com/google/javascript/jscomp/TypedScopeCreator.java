@@ -1993,7 +1993,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // Gather the properties declared in the function,
       // if that function has a @this type that we can
       // build properties on.
-      // TODO(nick): It's not clear to me why this is neccessary;
+      // TODO(nick): It's not clear to me why this is necessary;
       // it appears to be papering over bugs in the main analyzer.
       if (thisTypeForProperties != null && n.getParent().isExprResult()) {
         if (n.isAssign()) {

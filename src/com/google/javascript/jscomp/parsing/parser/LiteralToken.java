@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
  * A token representing a javascript literal. Includes string, regexp, and number literals.
  * Boolean and null literals are represented as regular keyword tokens.
  *
- * The value just includes the raw lexeme. For string literals it includes the begining and ending
+ * The value just includes the raw lexeme. For string literals it includes the beginning and ending
  * delimiters.
  *
  * TODO: Regexp literals should have their own token type.

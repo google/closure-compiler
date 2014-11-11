@@ -309,7 +309,7 @@ abstract class CodeConsumer {
   /**
    * Allows a consumer to insert spaces in locations where it is unnecessary
    * but may improve the readability of the code. This will be called in such
-   * places as after a statement and before opening parantheses, or after the
+   * places as after a statement and before opening parentheses, or after the
    * end of a if block before the start of an else block.
    */
   void maybeInsertSpace() {}

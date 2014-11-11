@@ -1353,7 +1353,7 @@ public class CodePrinterTest extends TestCase {
         "\n" + explanation, explanation);
   }
 
-  public void testDoLoopIECompatiblity() {
+  public void testDoLoopIECompatibility() {
     // Do loops within IFs cause syntax errors in IE6 and IE7.
     assertPrint("function f(){if(e1){do foo();while(e2)}else foo()}",
         "function f(){if(e1){do foo();while(e2)}else foo()}");
@@ -1380,7 +1380,7 @@ public class CodePrinterTest extends TestCase {
         "var i=0;a:do{b:do{i++;break b}while(0)}while(0)");
   }
 
-  public void testFunctionSafariCompatiblity() {
+  public void testFunctionSafariCompatibility() {
     // Functions within IFs cause syntax errors on Safari.
     assertPrint("function f(){if(e1){function goo(){return true}}else foo()}",
         "function f(){if(e1){function goo(){return true}}else foo()}");

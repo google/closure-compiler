@@ -5105,7 +5105,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  function f(x) {}\n" +
         "  f(x)\n" +
         "}");
-    // TODO(blickly): Catching the INVALID_ARUGMENT_TYPE here requires
+    // TODO(blickly): Catching the INVALID_ARGUMENT_TYPE here requires
     // return-type unification.
     checkNoWarnings(
         "function g(x) {\n" +

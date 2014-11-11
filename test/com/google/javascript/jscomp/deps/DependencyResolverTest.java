@@ -111,7 +111,7 @@ public class DependencyResolverTest extends TestCase {
     assertEquals("a.js,b.js,c.js,g.js,d.js,h.js", Joiner.on(",").useForNull("null").join(deps));
   }
 
-  public void testNonExistantProvideLoose() throws Exception {
+  public void testNonExistentProvideLoose() throws Exception {
     Set<String> seen = Sets.newHashSet();
     resolver = new DefaultDependencyResolver(ImmutableList.of(fakeDeps1), false);
     Collection<String> deps = resolver.getDependencies(
@@ -120,7 +120,7 @@ public class DependencyResolverTest extends TestCase {
     assertEquals("b.js,a.js,c.js,d.js", Joiner.on(",").useForNull("null").join(deps));
   }
 
-  public void testNonExistantProvideStrict() throws Exception {
+  public void testNonExistentProvideStrict() throws Exception {
     Set<String> seen = Sets.newHashSet();
     resolver = new DefaultDependencyResolver(ImmutableList.of(fakeDeps1), true);
     try {

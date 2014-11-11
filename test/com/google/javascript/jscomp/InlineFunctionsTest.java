@@ -1386,33 +1386,33 @@ public class InlineFunctionsTest extends CompilerTestCase {
          "var x;var z;{a(1);z=void 0}var y=blah()");
   }
 
-  public void testComplexInlineInExpresssions1() {
+  public void testComplexInlineInExpressionss1() {
     test("function f(){a()}var z=f()",
          "var z;{a();z=void 0}");
   }
 
-  public void testComplexInlineInExpresssions2() {
+  public void testComplexInlineInExpressionss2() {
     test("function f(){a()}c=z=f()",
          "var JSCompiler_inline_result$$0;" +
          "{a();JSCompiler_inline_result$$0=void 0;}" +
          "c=z=JSCompiler_inline_result$$0");
   }
 
-  public void testComplexInlineInExpresssions3() {
+  public void testComplexInlineInExpressionss3() {
     test("function f(){a()}c=z=f()",
         "var JSCompiler_inline_result$$0;" +
         "{a();JSCompiler_inline_result$$0=void 0;}" +
         "c=z=JSCompiler_inline_result$$0");
   }
 
-  public void testComplexInlineInExpresssions4() {
+  public void testComplexInlineInExpressionss4() {
     test("function f(){a()}if(z=f());",
         "var JSCompiler_inline_result$$0;" +
         "{a();JSCompiler_inline_result$$0=void 0;}" +
         "if(z=JSCompiler_inline_result$$0);");
   }
 
-  public void testComplexInlineInExpresssions5() {
+  public void testComplexInlineInExpressionss5() {
     test("function f(){a()}if(z.y=f());",
          "var JSCompiler_temp_const$$0=z;" +
          "var JSCompiler_inline_result$$1;" +
