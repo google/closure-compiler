@@ -38,18 +38,24 @@ import java.util.List;
 public class NewTypeInferenceTest extends CompilerTypeTestCase {
   private static final String CLOSURE_BASE = "var goog;";
   static final String DEFAULT_EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS +
+      "/** @return {string} */\n" +
+      "String.prototype.toString = function() { return '' };\n" +
       "/**\n" +
       " * @constructor\n" +
       " * @param {*=} arg\n" +
       " * @return {number}\n" +
       " */\n" +
       "function Number(arg) {}\n" +
+      "/** @return {string} */\n" +
+      "Number.prototype.toString = function() { return '' };\n" +
       "/**\n" +
       " * @constructor\n" +
       " * @param {*=} arg\n" +
       " * @return {boolean}\n" +
       " */\n" +
-      "function Boolean(arg) {}";
+      "function Boolean(arg) {}\n" +
+      "/** @return {string} */\n" +
+      "Boolean.prototype.toString = function() { return '' };";
 
   private NewTypeInference parseAndTypeCheck(String externs, String js) {
     setUp();
@@ -1665,17 +1671,17 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testGetpropOnNonObjects() {
-    typeCheck("(1).foo;", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+    typeCheck("(null).foo;", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
 
     typeCheck(
-        "var /** number */ n;\n" +
+        "var /** undefined */ n;\n" +
         "n.foo;", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
 
     typeCheck(
         "var x = {}; x.foo.bar = 1;", TypeCheck.INEXISTENT_PROPERTY);
 
     typeCheck(
-        "var /** number */ n;\n" +
+        "var /** undefined */ n;\n" +
         "n.foo = 5;", NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
 
     checkNoWarnings(
@@ -1686,10 +1692,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  }\n" +
         "}");
 
-    // TODO(blickly): Currently, this warning is not good, referring to
-    // props of BOTTOM. Ideally, we could warn about accessing a prop on number.
+    // TODO(blickly): Currently, this warning is not good, referring to props of
+    // BOTTOM. Ideally, we could warn about accessing a prop on undefined.
     typeCheck(
-        "/** @param {number} x */\n" +
+        "/** @param {undefined} x */\n" +
         "function f(x) {\n" +
         "  if (x.prop) {}\n" +
         "}",
@@ -1701,7 +1707,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** !Object */ x) { if (x[123]) { return 1; } }");
 
     typeCheck(
-        "function f(/** number */ x) { if (x[123]) { return 1; } }",
+        "function f(/** undefined */ x) { if (x[123]) { return 1; } }",
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
 
     typeCheck(
@@ -1732,9 +1738,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function g(/** Foo */ f) {\n" +
         "  f.prop1.prop2 = 'str';\n" +
         "};",
-        ImmutableList.of(
-          NewTypeInference.NULLABLE_DEREFERENCE,
-          NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT));
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testNonexistentProperty() {
@@ -4979,7 +4983,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
-        "function f(/** number */ n, pname) { n[pname] = 3; }",
+        "function f(/** undefined */ n, pname) { n[pname] = 3; }",
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
 
@@ -9689,15 +9693,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testStringMethods() {
-    // TODO(blickly): This warning is spurious
-    typeCheck(
+    checkNoWarnings(
         "/** @constructor */ function String(){}\n" +
         "/** @this {String|string} */\n" +
         "String.prototype.substr = function(start) {};\n" +
         "/** @const */ var ns = {};\n" +
         "/** @const */ var s = 'str';\n" +
-        "ns.r = s.substr(2);",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        "ns.r = s.substr(2);");
   }
 
   public void testOutOfOrderDeclarations() {
@@ -10261,6 +10263,54 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     checkNoWarnings(
         "function f(/** !Boolean */ x) {\n" +
         "  if (x) { return 123; };\n" +
+        "}");
+  }
+
+  public void testAutoconvertScalarsToBoxedScalars() {
+    checkNoWarnings(
+        "var /** number */ n = 123;\n" +
+        "n.toString();");
+
+    checkNoWarnings(
+        "var /** boolean */ b = true;\n" +
+        "b.toString();");
+
+    checkNoWarnings(
+        "var /** string */ s = '';\n" +
+        "s.toString();");
+
+    typeCheck(
+        "var /** number */ n = 123;\n" +
+        "n.prop = 0;\n" +
+        "n.prop - 5;",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    checkNoWarnings(
+        "var /** number */ n = 123;\n" +
+        "n['to' + 'String'];");
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {\n" +
+        "  /** @type {number} */\n" +
+        "  this.prop = 123;\n" +
+        "}\n" +
+        "(new Foo).prop.newprop = 5;");
+
+    typeCheck(
+        "/** @enum */\n" +
+        "var E = { A: 1 };\n" +
+        "function f(/** E */ x) {\n" +
+        "  return x.toString();\n" +
+        "}",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "Foo.prototype.toString = function() {};\n" +
+        "function f(/** (number|!Foo) */ x) {\n" +
+        "  return x.toString();\n" +
         "}");
   }
 }

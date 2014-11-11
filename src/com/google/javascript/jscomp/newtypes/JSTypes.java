@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
 /**
  * This class contains commonly used types, accessible from the jscomp package.
@@ -35,9 +35,12 @@ public class JSTypes {
   private JSType BOOLEAN_INSTANCE;
   private JSType STRING_INSTANCE;
 
+  private ObjectType NUMBER_INSTANCE_OBJTYPE;
+  private ObjectType BOOLEAN_INSTANCE_OBJTYPE;
+  private ObjectType STRING_INSTANCE_OBJTYPE;
+
   private JSType NUMBER_OR_number;
   private JSType STRING_OR_string;
-  private JSType BOOLEAN_OR_boolean;
   private JSType anyNumOrStr;
 
   private JSTypes() {}
@@ -46,12 +49,41 @@ public class JSTypes {
     return new JSTypes();
   }
 
+  JSType getNumberInstance() {
+    return NUMBER_INSTANCE;
+  }
+
+  JSType getBooleanInstance() {
+    return BOOLEAN_INSTANCE;
+  }
+
+  JSType getStringInstance() {
+    return STRING_INSTANCE;
+  }
+
+  ObjectType getNumberInstanceObjType() {
+    return NUMBER_INSTANCE_OBJTYPE;
+  }
+
+  ObjectType getBooleanInstanceObjType() {
+    return BOOLEAN_INSTANCE_OBJTYPE;
+  }
+
+  ObjectType getStringInstanceObjType() {
+    return STRING_INSTANCE_OBJTYPE;
+  }
+
   public void setNumberInstance(JSType t) {
     Preconditions.checkState(NUMBER_INSTANCE == null);
     Preconditions.checkNotNull(t);
     NUMBER_INSTANCE = t;
-    NUMBER_OR_number = t.isUnknown()
-        ? JSType.NUMBER : JSType.join(JSType.NUMBER, NUMBER_INSTANCE);
+    if (t.isUnknown()) {
+      NUMBER_OR_number = JSType.NUMBER;
+      NUMBER_INSTANCE_OBJTYPE = ObjectType.TOP_OBJECT;
+    } else {
+      NUMBER_OR_number = JSType.join(JSType.NUMBER, NUMBER_INSTANCE);
+      NUMBER_INSTANCE_OBJTYPE = Iterables.getOnlyElement(t.getObjs());
+    }
     if (STRING_INSTANCE != null) {
       anyNumOrStr = JSType.join(NUMBER_OR_number, STRING_OR_string);
     }
@@ -61,16 +93,24 @@ public class JSTypes {
     Preconditions.checkState(BOOLEAN_INSTANCE == null);
     Preconditions.checkNotNull(t);
     BOOLEAN_INSTANCE = t;
-    BOOLEAN_OR_boolean = t.isUnknown()
-        ? JSType.BOOLEAN : JSType.join(JSType.BOOLEAN, BOOLEAN_INSTANCE);
+    if (t.isUnknown()) {
+      BOOLEAN_INSTANCE_OBJTYPE = ObjectType.TOP_OBJECT;
+    } else {
+      BOOLEAN_INSTANCE_OBJTYPE = Iterables.getOnlyElement(t.getObjs());
+    }
   }
 
   public void setStringInstance(JSType t) {
     Preconditions.checkState(STRING_INSTANCE == null);
     Preconditions.checkNotNull(t);
     STRING_INSTANCE = t;
-    STRING_OR_string = t.isUnknown()
-        ? JSType.STRING : JSType.join(JSType.STRING, STRING_INSTANCE);
+    if (t.isUnknown()) {
+      STRING_OR_string = JSType.STRING;
+      STRING_INSTANCE_OBJTYPE = ObjectType.TOP_OBJECT;
+    } else {
+      STRING_OR_string = JSType.join(JSType.STRING, STRING_INSTANCE);
+      STRING_INSTANCE_OBJTYPE = Iterables.getOnlyElement(t.getObjs());
+    }
     if (NUMBER_INSTANCE != null) {
       anyNumOrStr = JSType.join(NUMBER_OR_number, STRING_OR_string);
     }

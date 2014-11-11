@@ -1651,7 +1651,7 @@ public class NewTypeInference implements CompilerPass {
     EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
     pair =
         mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, pair.env);
-    JSType recvType = pair.type;
+    JSType recvType = pair.type.autobox(commonTypes);
     // TODO(dimvar): we don't know the prop name here so we're passing the
     // empty string. Consider improving the error msg.
     if (!mayWarnAboutNonObject(receiver, "", recvType, specializedType) &&
@@ -2299,7 +2299,7 @@ public class NewTypeInference implements CompilerPass {
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
     pair = mayWarnAboutNullableReferenceAndTighten(
         receiver, pair.type, pair.env);
-    JSType recvType = pair.type;
+    JSType recvType = pair.type.autobox(commonTypes);
     if (recvType.isUnknown() ||
         mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
@@ -3184,7 +3184,7 @@ public class NewTypeInference implements CompilerPass {
     EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
         obj, lvalue.type, lvalue.env);
     TypeEnv lvalueEnv = pair.env;
-    JSType lvalueType = pair.type;
+    JSType lvalueType = pair.type.autobox(commonTypes);
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
       warnings.add(JSError.make(obj, PROPERTY_ACCESS_ON_NONOBJECT,
           pnameAsString, lvalueType.toString()));
@@ -3220,10 +3220,10 @@ public class NewTypeInference implements CompilerPass {
         if (warnForInexistentProp &&
             !lvalueType.isUnknown() &&
             !lvalueType.isDict()) {
-          boolean mayExist = lvalueType.mayHaveProp(pname);
-          warnings.add(JSError.make(obj,
-                  mayExist ? POSSIBLY_INEXISTENT_PROPERTY : TypeCheck.INEXISTENT_PROPERTY,
-                  pnameAsString, lvalueType.toString()));
+          DiagnosticType dt = lvalueType.mayHaveProp(pname)
+              ? POSSIBLY_INEXISTENT_PROPERTY : TypeCheck.INEXISTENT_PROPERTY;
+          warnings.add(
+              JSError.make(obj, dt, pnameAsString, lvalueType.toString()));
           return new LValueResultFwd(lvalueEnv, type, null, null);
         }
       }

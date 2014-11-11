@@ -103,7 +103,7 @@ public abstract class JSType {
 
   protected abstract int getMask();
 
-  protected abstract ImmutableSet<ObjectType> getObjs();
+  abstract ImmutableSet<ObjectType> getObjs();
 
   protected abstract String getTypeVar();
 
@@ -327,6 +327,43 @@ public abstract class JSType {
   public JSType getEnumeratedType() {
     return isEnumElement() ?
         Iterables.getOnlyElement(getEnums()).getEnumeratedType() : null;
+  }
+
+  public JSType autobox(JSTypes commonTypes) {
+    if (isTop() || isUnknown()) {
+      return this;
+    }
+    int mask = getMask();
+    if ((mask & (NUMBER_MASK | STRING_MASK | BOOLEAN_MASK)) == BOTTOM_MASK) {
+      return this;
+    }
+    switch (mask) {
+      case NUMBER_MASK:
+        return commonTypes.getNumberInstance();
+      case BOOLEAN_MASK:
+        return commonTypes.getBooleanInstance();
+      case STRING_MASK:
+        return commonTypes.getStringInstance();
+    }
+    // For each set bit, add the corresponding obj to the new objs
+    // construct and return the new type.
+    // Don't bother autoboxing enums.
+    ImmutableSet.Builder<ObjectType> builder = ImmutableSet.builder();
+    if (getObjs() != null) {
+      builder.addAll(getObjs());
+    }
+    if ((mask & NUMBER_MASK) != 0) {
+      builder.add(commonTypes.getNumberInstanceObjType());
+    }
+    if ((mask & STRING_MASK) != 0) {
+      builder.add(commonTypes.getStringInstanceObjType());
+    }
+    if ((mask & BOOLEAN_MASK) != 0) { // may have truthy or falsy
+      builder.add(commonTypes.getBooleanInstanceObjType());
+    }
+    return makeType(
+        mask & ~(NUMBER_MASK | STRING_MASK | BOOLEAN_MASK),
+        builder.build(), getTypeVar(), getEnums());
   }
 
   static JSType nullAcceptingJoin(JSType t1, JSType t2) {
@@ -922,10 +959,9 @@ public abstract class JSType {
 
   public JSType withProperty(QualifiedName qname, JSType type) {
     Preconditions.checkArgument(type != null);
-    if (isUnknown() || isBottom()) {
+    if (isUnknown() || isBottom() || getObjs() == null) {
       return this;
     }
-    Preconditions.checkState(getObjs() != null);
     return makeType(getMask(), ObjectType.withProperty(getObjs(), qname, type),
         getTypeVar(), getEnums());
   }
