@@ -66,7 +66,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
           info = current.getJSDocInfo();
         } else if (current.isVar() || current.isAssign()) {
           // There's one edge case we're worried about:
-          // if the warning points to an assigment to a function, we
+          // if the warning points to an assignment to a function, we
           // want the suppressions on that function to apply.
           // It's OK if we double-count some cases.
           Node rhs = NodeUtil.getRValueOfLValue(current.getFirstChild());

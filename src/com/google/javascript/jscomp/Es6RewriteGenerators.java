@@ -826,7 +826,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
 
   /**
    * {@code var} statements are hoisted into the closure containing the iterator
-   * to preserve their state accross
+   * to preserve their state across
    * multiple calls to next().
    */
   private void visitVar() {

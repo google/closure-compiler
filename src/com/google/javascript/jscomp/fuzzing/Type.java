@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.fuzzing;
 /**
  * JavaScript data types
  *
- * According to Clause 8 of ECMA-262 Edition 5.1, there are 6 types. FUNTION is
+ * According to Clause 8 of ECMA-262 Edition 5.1, there are 6 types. FUNCTION is
  * added in this enum to represent callable objects
  */
 enum Type {

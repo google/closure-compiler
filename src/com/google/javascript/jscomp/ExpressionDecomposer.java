@@ -143,7 +143,7 @@ class ExpressionDecomposer {
    * The following terms are used:
    *    expressionRoot: The top-level node before which the any extracted
    *                    expressions should be placed before.
-   *    nonconditionalExpr: The node that will be extracted either expres.
+   *    nonconditionalExpr: The node that will be extracted either express.
    *
    */
   private void exposeExpression(Node expressionRoot, Node subExpression) {

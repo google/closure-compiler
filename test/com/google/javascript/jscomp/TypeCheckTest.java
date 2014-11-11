@@ -5725,7 +5725,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOverriddenProperty6() throws Exception {
-    // The override keyword shouldn't be neccessary if the subclass property
+    // The override keyword shouldn't be necessary if the subclass property
     // is inferred.
     testTypes(
         "/** @constructor */ function Foo() {}" +

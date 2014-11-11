@@ -192,7 +192,7 @@ public class AliasExternalsTest extends CompilerTestCase {
   /**
    * Global variables that get re-assigned should not be aliased.
    */
-  public void testGlobalAssigment() {
+  public void testGlobalAssignment() {
     test("var x=_USER_ID+window;" +
          "var y=_USER_ID+window;" +
          "var z=_USER_ID+window;" +

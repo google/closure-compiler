@@ -256,7 +256,7 @@ class AngularPass extends AbstractPostOrderCallback
    * var z = x = y = function() {}; // FUNCTION node
    * }</pre>
    * @param n VAR node.
-   * @return the assigned intial value, or the rightmost rvalue of an assignment
+   * @return the assigned initial value, or the rightmost rvalue of an assignment
    * chain, or null.
    */
   private static Node getDeclarationRValue(Node n) {

@@ -105,7 +105,7 @@ class GatherCharacterEncodingBias extends AbstractPostOrderCallback
         }
         return;
       case Token.STRING_KEY:
-        // TODO(user): Currently not taking into accout of quoted properties
+        // TODO(user): Currently not taking into account of quoted properties
         // and 'advanced mode' stuff.
         nameGenerator.favors(n.getString());
         return;

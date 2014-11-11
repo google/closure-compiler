@@ -83,7 +83,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
     testTTL(STRING_TYPE, "S");
   }
 
-  public void testTransformationWithMulipleTypeVars() {
+  public void testTransformationWithMultipleTypeVars() {
     testTTL(STRING_TYPE, "S");
     testTTL(NUMBER_TYPE, "N");
   }

@@ -207,7 +207,7 @@ public class UnreachableCodeEliminationTest extends CompilerTestCase {
     test("do { continue } while(1);", "do {  } while(1);");
   }
 
-  public void testUselessUnconditonalBreak() {
+  public void testUselessUnconditionalBreak() {
     test("switch (a) { case 'a': break }", "switch (a) { case 'a': }");
     test("switch (a) { case 'a': break; case foo(): }",
          "switch (a) { case 'a':        case foo(): }");

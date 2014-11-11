@@ -557,7 +557,7 @@ public class RemoveUnusedVarsTest extends CompilerTestCase {
          "var b=function(){};var b=function(){};b(1,2)");
   }
 
-  public void testCallSiteInteraction_contructors() {
+  public void testCallSiteInteraction_constructors() {
     this.modifyCallSites = true;
     // The third level tests that the functions which have already been looked
     // at get re-visited if they are changed by a call site removal.
