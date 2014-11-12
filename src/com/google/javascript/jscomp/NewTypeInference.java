@@ -3162,13 +3162,16 @@ public class NewTypeInference implements CompilerPass {
         && (JSType.NULL.isSubtypeOf(recvType)
             || JSType.UNDEFINED.isSubtypeOf(recvType))) {
       JSType minusNull = recvType.removeType(JSType.NULL_OR_UNDEF);
-      if (!minusNull.isBottom() && minusNull != recvType
+      if (!minusNull.isBottom() && !minusNull.equals(recvType)
           && minusNull.isSubtypeOf(JSType.TOP_OBJECT)) {
         warnings.add(JSError.make(
             obj, NULLABLE_DEREFERENCE, recvType.toString()));
-        EnvTypePair pair = analyzeExprFwd(obj, inEnv, minusNull);
-        pair.type = minusNull;
-        return pair;
+        TypeEnv outEnv = inEnv;
+        if (obj.isQualifiedName()) {
+          QualifiedName qname = QualifiedName.fromNode(obj);
+          outEnv = updateLvalueTypeInEnv(inEnv, obj, qname, minusNull);
+        }
+        return new EnvTypePair(outEnv, minusNull);
       }
     }
     return new EnvTypePair(inEnv, recvType);
