@@ -1448,22 +1448,22 @@ class GlobalTypeInfo implements CompilerPass {
         }
         case Token.GETPROP:
           Node recv = n.getFirstChild();
-          JSType recvType = simpleInferExprType(recv);
-          if (recvType == null) {
+          if (recv.isQualifiedName()) {
             EnumType et = currentScope.getEnum(recv.getQualifiedName());
-            if (et == null) {
-              return null;
-            }
-            if (et.enumLiteralHasKey(n.getLastChild().getString())) {
+            if (et != null
+                && et.enumLiteralHasKey(n.getLastChild().getString())) {
               return et.getEnumeratedType();
             }
-            return null;
+            if (currentScope.isNamespace(recv)) {
+              return currentScope.lookupTypeByQname(QualifiedName.fromNode(n));
+            }
+            JSType recvType = simpleInferExprType(recv);
+            QualifiedName qname = new QualifiedName(n.getLastChild().getString());
+            if (recvType != null && recvType.mayHaveProp(qname)) {
+              return recvType.getProp(qname);
+            }
           }
-          QualifiedName qname = new QualifiedName(n.getLastChild().getString());
-          if (!recvType.mayHaveProp(qname)) {
-            return null;
-          }
-          return recvType.getProp(qname);
+          return null;
         case Token.COMMA:
         case Token.ASSIGN:
           return simpleInferExprType(n.getLastChild());
@@ -2183,19 +2183,25 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     // Only used during symbol-table construction, not during type inference.
+    private JSType lookupTypeByQname(QualifiedName qname) {
+      Preconditions.checkArgument(!qname.isIdentifier());
+      Namespace ns = getNamespace(qname.getLeftmostName());
+      if (ns == null) {
+        return null;
+      }
+      RawNominalType rawType = ns.getNominalType(qname.getAllButLeftmost());
+      if (rawType == null) {
+        return null;
+      }
+      return rawType.getInstanceAsJSType();
+    }
+
+    // Only used during symbol-table construction, not during type inference.
     @Override
     public JSType lookupTypeByName(String name) {
       if (name.contains(".")) {
-        QualifiedName qname = QualifiedName.fromQname(name);
-        Namespace ns = getNamespace(qname.getLeftmostName());
-        if (ns == null) {
-          return getUnresolvedTypeByName(name);
-        }
-        RawNominalType rawType = ns.getNominalType(qname.getAllButLeftmost());
-        if (rawType == null) {
-          return getUnresolvedTypeByName(name);
-        }
-        return rawType.getInstanceAsJSType();
+        JSType type = lookupTypeByQname(QualifiedName.fromQname(name));
+        return type != null ? type : getUnresolvedTypeByName(name);
       }
 
       // First see if it's a type variable
