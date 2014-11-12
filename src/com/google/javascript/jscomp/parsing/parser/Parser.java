@@ -536,6 +536,9 @@ public class Parser {
     } else {
       formalParameterList = parseFormalParameterList();
     }
+    if (peekImplicitSemiColon()) {
+      reportError("No newline allowed before '=>'");
+    }
     eat(TokenType.ARROW);
     ParseTree functionBody;
     if (peek(TokenType.OPEN_CURLY)) {

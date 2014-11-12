@@ -2350,9 +2350,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "short function syntax");
   }
 
-  public void testArrow2() {
+  public void testArrowInvalid() {
     mode = LanguageMode.ECMASCRIPT6;
     parseError("*()=>1;", "primary expression expected");
+    parseError("var f = x\n=>2", "No newline allowed before '=>'");
+    parseError("f = (x,y)\n=>2;", "No newline allowed before '=>'");
+    parseError("f( (x,y)\n=>2)", "No newline allowed before '=>'");
   }
 
   public void testForIn_ES6() {
