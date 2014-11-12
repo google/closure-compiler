@@ -216,7 +216,7 @@ public class InlineProperties implements CompilerPass {
       if (src.isThis()) {
         // This is a simple assignment like:
         //    this.foo = 1;
-        if (inContructor(t)) {
+        if (inConstructor(t)) {
           // This maybe a valid assignment.
           isCandidate = maybeStoreCandidateValue(
               getJSType(src), propName, value);
@@ -261,7 +261,7 @@ public class InlineProperties implements CompilerPass {
       return false;
     }
 
-    private boolean inContructor(NodeTraversal t) {
+    private boolean inConstructor(NodeTraversal t) {
       Node root = t.getScopeRoot();
       JSDocInfo info = NodeUtil.getBestJSDocInfo(root);
       return info != null && info.isConstructor();
