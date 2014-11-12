@@ -51,10 +51,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       "JSC_DYNAMIC_EXTENDS_TYPE",
       "The class in an extends clause must be a qualified name.");
 
-  static final DiagnosticType NO_SUPERTYPE = DiagnosticType.error(
-      "JSC_NO_SUPERTYPE",
-      "The super keyword may only appear in classes with an extends clause.");
-
   static final DiagnosticType CLASS_REASSIGNMENT = DiagnosticType.error(
       "CLASS_REASSIGNMENT",
       "Class names defined inside a function cannot be reassigned.");
@@ -108,10 +104,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           visitArrowFunction(t, n);
         }
         break;
-      case Token.CLASS:
-        // Need to check for super references before they get rewritten.
-        checkClassSuperReferences(n);
-        break;
       case Token.PARAM_LIST:
         visitParamList(n, parent);
         break;
@@ -144,9 +136,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         break;
       case Token.FOR_OF:
         visitForOf(n, parent);
-        break;
-      case Token.SUPER:
-        visitSuper(n, parent);
         break;
       case Token.STRING_KEY:
         visitStringKey(n);
@@ -470,71 +459,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
   }
 
-  private void visitSuper(Node node, Node parent) {
-    Node enclosing = parent;
-    Node potentialCallee = node;
-    if (!parent.isCall()) {
-      enclosing = parent.getParent();
-      potentialCallee = parent;
-    }
-    if (!enclosing.isCall() || enclosing.getFirstChild() != potentialCallee) {
-      cannotConvertYet(node, "Only calls to super or to a method of super are supported.");
-      return;
-    }
-    Node clazz = NodeUtil.getEnclosingClass(node);
-    if (clazz == null) {
-      compiler.report(JSError.make(node, NO_SUPERTYPE));
-      return;
-    }
-    if (NodeUtil.getClassNameNode(clazz) == null) {
-      // Unnamed classes of the form:
-      //   f(class extends D { ... });
-      // give the problem that there is no name to be used in the call to goog.base for the
-      // translation of super calls.
-      // This will throw an error when the class is processed.
-      return;
-    }
-
-    Node enclosingMemberDef = NodeUtil.getEnclosingClassMember(node);
-    if (enclosingMemberDef.isStaticMember()) {
-      Node superName = clazz.getFirstChild().getNext();
-      if (!superName.isQualifiedName()) {
-        // This has already been reported, just don't need to continue processing the class.
-        return;
-      }
-      Node callTarget;
-      potentialCallee.detachFromParent();
-      if (potentialCallee == node) {
-        // of the form super()
-        potentialCallee =
-            IR.getprop(superName.cloneTree(), IR.string(enclosingMemberDef.getString()));
-        enclosing.putBooleanProp(Node.FREE_CALL, false);
-      } else {
-        // of the form super.method()
-        potentialCallee.replaceChild(node, superName.cloneTree());
-      }
-      callTarget = IR.getprop(potentialCallee, IR.string("call"));
-      enclosing.addChildToFront(callTarget);
-      enclosing.addChildAfter(IR.thisNode(), callTarget);
-      enclosing.useSourceInfoIfMissingFromForTree(enclosing);
-      compiler.reportCodeChange();
-      return;
-    }
-
-    String methodName;
-    Node callName = enclosing.removeFirstChild();
-    if (callName.isSuper()) {
-      methodName = enclosingMemberDef.getString();
-    } else {
-      methodName = callName.getLastChild().getString();
-    }
-    Node baseCall = baseCall(clazz, methodName, enclosing.removeChildren())
-        .useSourceInfoIfMissingFromForTree(enclosing);
-    enclosing.getParent().replaceChild(enclosing, baseCall);
-    compiler.reportCodeChange();
-  }
-
-  private Node baseCall(Node clazz, String methodName, Node arguments) {
+  static Node baseCall(AbstractCompiler compiler, Node clazz, String methodName, Node arguments) {
     boolean useUnique = NodeUtil.isStatement(clazz) && !NodeUtil.isInFunction(clazz);
     String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
         : NodeUtil.getClassName(clazz);
@@ -724,14 +649,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     compiler.reportCodeChange();
   }
 
-  private void checkClassSuperReferences(Node classNode) {
-    Node className = classNode.getFirstChild();
-    Node superClassName = className.getNext();
-    if (NodeUtil.referencesSuper(classNode) && !superClassName.isQualifiedName()) {
-      compiler.report(JSError.make(classNode, NO_SUPERTYPE));
-    }
-  }
-
   /**
    * Classes are processed in 3 phases:
    *   1) The class name is extracted.
@@ -773,7 +690,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       // example.C = class {}; example.C.prototype.foo = function() {};
       fullClassName = parent.getFirstChild().getQualifiedName();
       if (fullClassName == null) {
-        cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
+        cannotConvert(classNode, "Can only convert classes that are declarations or the right hand"
             + " side of a simple assignment.");
         return;
       }
@@ -786,7 +703,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       anonymous = true;
       insertionPoint = parent.getParent();
     } else {
-      cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
+      cannotConvert(classNode, "Can only convert classes that are declarations or the right hand"
             + " side of a simple assignment.");
       return;
     }
@@ -886,7 +803,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     if (constructor == null) {
       Node body = IR.block();
       if (!superClassName.isEmpty()) {
-        Node superCall = baseCall(classNode, "constructor", null);
+        Node superCall = baseCall(this.compiler, classNode, "constructor", null);
         body.addChildToBack(IR.exprResult(superCall));
       }
       Node name = anonymous

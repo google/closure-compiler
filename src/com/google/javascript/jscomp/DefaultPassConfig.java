@@ -223,6 +223,7 @@ public class DefaultPassConfig extends PassConfig {
     if (options.needsConversion()) {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
+      checks.add(es6ConvertSuper);
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);
       checks.add(rewriteGenerators);
@@ -1134,6 +1135,14 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new Es6SplitVariableDeclarations(compiler);
+    }
+  };
+
+  final HotSwapPassFactory es6ConvertSuper =
+      new HotSwapPassFactory("es6ConvertSuper", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new Es6ConvertSuper(compiler);
     }
   };
 
