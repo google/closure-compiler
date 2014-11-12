@@ -459,20 +459,6 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     NodeTraversal.traverse(compiler, enclosingFunction, checkAssigns);
   }
 
-  static Node baseCall(AbstractCompiler compiler, Node clazz, String methodName, Node arguments) {
-    boolean useUnique = NodeUtil.isStatement(clazz) && !NodeUtil.isInFunction(clazz);
-    String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
-        : NodeUtil.getClassName(clazz);
-    Node uniqueClassName = NodeUtil.newQName(compiler,
-        uniqueClassString);
-    Node base = IR.getprop(uniqueClassName, IR.string("base"));
-    Node call = IR.call(base, IR.thisNode(), IR.string(methodName));
-    if (arguments != null) {
-      call.addChildrenToBack(arguments);
-    }
-    return call;
-  }
-
   /**
    * Processes trailing default and rest parameters.
    */
@@ -690,7 +676,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       // example.C = class {}; example.C.prototype.foo = function() {};
       fullClassName = parent.getFirstChild().getQualifiedName();
       if (fullClassName == null) {
-        cannotConvert(classNode, "Can only convert classes that are declarations or the right hand"
+        cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
             + " side of a simple assignment.");
         return;
       }
@@ -703,7 +689,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       anonymous = true;
       insertionPoint = parent.getParent();
     } else {
-      cannotConvert(classNode, "Can only convert classes that are declarations or the right hand"
+      cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
             + " side of a simple assignment.");
       return;
     }
@@ -799,24 +785,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       }
     }
 
-    // Rewrite constructor
-    if (constructor == null) {
-      Node body = IR.block();
-      if (!superClassName.isEmpty()) {
-        Node superCall = baseCall(this.compiler, classNode, "constructor", null);
-        body.addChildToBack(IR.exprResult(superCall));
-      }
-      Node name = anonymous
-          ? IR.name("").srcref(className) : className.detachFromParent();
-      constructor = IR.function(
-          name,
-          IR.paramList(),
-          body).useSourceInfoIfMissingFromForTree(classNode);
-    }
+    Preconditions.checkNotNull(constructor);
     JSDocInfo classJSDoc = classNode.getJSDocInfo();
-    JSDocInfoBuilder newInfo = (classJSDoc != null) ?
-        JSDocInfoBuilder.copyFrom(classJSDoc) :
-        new JSDocInfoBuilder(true);
+    JSDocInfoBuilder newInfo = (classJSDoc != null)
+        ? JSDocInfoBuilder.copyFrom(classJSDoc)
+        : new JSDocInfoBuilder(true);
 
     newInfo.recordConstructor();
     if (!superClassName.isEmpty()) {
@@ -951,7 +924,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
   }
 
-  private static String getUniqueClassName(String qualifiedName) {
+  static String getUniqueClassName(String qualifiedName) {
     return qualifiedName;
   }
 

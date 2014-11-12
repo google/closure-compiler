@@ -15,8 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.baseCall;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.getUniqueClassName;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -39,7 +40,7 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
   private void checkClassSuperReferences(Node classNode) {
     Node className = classNode.getFirstChild();
     Node superClassName = className.getNext();
-    if (NodeUtil.referencesSuper(classNode) && !superClassName.isQualifiedName()) {
+    if (NodeUtil.referencesSuper(classNode) && superClassName.isEmpty()) {
       compiler.report(JSError.make(classNode, NO_SUPERTYPE));
     }
   }
@@ -47,6 +48,24 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     if (n.isClass()) {
+      boolean hasConstructor = false;
+      for (Node member = n.getLastChild().getFirstChild();
+          member != null;
+          member = member.getNext()) {
+        if (member.isGetterDef() || member.isSetterDef()
+            || member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+            || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
+          compiler.report(JSError.make(member, CANNOT_CONVERT,
+              "getters or setters in class definitions"));
+          return false;
+        }
+        if (member.isMemberDef() && member.getString().equals("constructor")) {
+          hasConstructor = true;
+        }
+      }
+      if (!hasConstructor) {
+        addSyntheticConstructor(n);
+      }
       checkClassSuperReferences(n);
     }
     return true;
@@ -57,6 +76,29 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
     if (n.isSuper()) {
       visitSuper(n, parent);
     }
+  }
+
+  private void addSyntheticConstructor(Node classNode) {
+    Node superClass = classNode.getFirstChild().getNext();
+    Node classMembers = classNode.getLastChild();
+    Node memberDef;
+    if (superClass.isEmpty()) {
+      memberDef = IR.memberDef("constructor",
+          IR.function(IR.name(""), IR.paramList(), IR.block()));
+    } else {
+      Node paramList = IR.paramList(IR.rest("args"));
+      Node body = IR.block(
+          IR.exprResult(IR.call(
+              IR.superNode(),
+              IR.spread(IR.name("args")))));
+      Node constructor = IR.function(
+          IR.name(""),
+          paramList,
+          body);
+      memberDef = IR.memberDef("constructor", constructor);
+    }
+    memberDef.useSourceInfoIfMissingFromForTree(classNode);
+    classMembers.addChildToFront(memberDef);
   }
 
   private void visitSuper(Node node, Node parent) {
@@ -118,10 +160,24 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
     } else {
       methodName = callName.getLastChild().getString();
     }
-    Node baseCall = baseCall(compiler, clazz, methodName, enclosing.removeChildren())
+    Node baseCall = baseCall(clazz, methodName, enclosing.removeChildren())
         .useSourceInfoIfMissingFromForTree(enclosing);
     enclosing.getParent().replaceChild(enclosing, baseCall);
     compiler.reportCodeChange();
+  }
+
+  private Node baseCall(Node clazz, String methodName, Node arguments) {
+    boolean useUnique = NodeUtil.isStatement(clazz) && !NodeUtil.isInFunction(clazz);
+    String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
+        : NodeUtil.getClassName(clazz);
+    Node uniqueClassName = NodeUtil.newQName(compiler,
+        uniqueClassString);
+    Node base = IR.getprop(uniqueClassName, IR.string("base"));
+    Node call = IR.call(base, IR.thisNode(), IR.string(methodName));
+    if (arguments != null) {
+      call.addChildrenToBack(arguments);
+    }
+    return call;
   }
 
   @Override

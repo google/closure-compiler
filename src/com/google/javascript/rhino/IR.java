@@ -66,14 +66,14 @@ public class IR {
   }
 
   public static Node paramList(Node param) {
-    Preconditions.checkState(param.isName());
+    Preconditions.checkState(param.isName() || param.isRest());
     return new Node(Token.PARAM_LIST, param);
   }
 
   public static Node paramList(Node ... params) {
     Node paramList = paramList();
     for (Node param : params) {
-      Preconditions.checkState(param.isName());
+      Preconditions.checkState(param.isName() || param.isRest());
       paramList.addChildToBack(param);
     }
     return paramList;
@@ -82,7 +82,7 @@ public class IR {
   public static Node paramList(List<Node> params) {
     Node paramList = paramList();
     for (Node param : params) {
-      Preconditions.checkState(param.isName());
+      Preconditions.checkState(param.isName() || param.isRest());
       paramList.addChildToBack(param);
     }
     return paramList;
@@ -517,6 +517,26 @@ public class IR {
     return stringKey;
   }
 
+  public static Node rest(String name) {
+    return Node.newString(Token.REST, name);
+  }
+
+  public static Node spread(Node expr) {
+    Preconditions.checkState(mayBeExpression(expr));
+    return new Node(Token.SPREAD, expr);
+  }
+
+  public static Node superNode() {
+    return new Node(Token.SUPER);
+  }
+
+  public static Node memberDef(String name, Node function) {
+    Preconditions.checkState(function.isFunction());
+    Node member = Node.newString(Token.MEMBER_DEF, name);
+    member.addChildToBack(function);
+    return member;
+  }
+
   public static Node number(double d) {
     return Node.newNumber(d);
   }
@@ -669,6 +689,7 @@ public class IR {
       case Token.RSH:
       case Token.SHEQ:
       case Token.SHNE:
+      case Token.SPREAD:
       case Token.STRING:
       case Token.SUB:
       case Token.THIS:
