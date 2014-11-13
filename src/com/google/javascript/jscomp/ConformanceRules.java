@@ -29,13 +29,15 @@ import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -44,6 +46,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import javax.annotation.Nullable;
 
 /**
  * Standard conformance rules. See
@@ -969,6 +973,88 @@ public final class ConformanceRules {
         return ConformanceResult.VIOLATION;
       }
       return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+  /**
+   * Requires top-level Closure-style "declarations"
+   * (example: {@code foo.bar.Baz = ...;}) to have explicit visibility
+   * annotations, either at the declaration site or in the {@code @fileoverview}
+   * block.
+   */
+  public static final class NoImplicitlyPublicDecls extends AbstractRule {
+    public NoImplicitlyPublicDecls(
+        AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (!t.inGlobalScope()
+          || !n.isExprResult()
+          || !n.getFirstChild().isAssign()
+          || n.getFirstChild().getLastChild() == null
+          || n.getFirstChild().getLastChild().isObjectLit()) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      JSDocInfo ownJsDoc = n.getFirstChild().getJSDocInfo();
+      if (ownJsDoc != null && ownJsDoc.isConstructor()) {
+        FunctionType functionType = n.getFirstChild()
+            .getJSType()
+            .toMaybeFunctionType();
+        if (functionType == null) {
+          return ConformanceResult.CONFORMANCE;
+        }
+        ObjectType instanceType = functionType.getInstanceType();
+        if (instanceType == null) {
+          return ConformanceResult.CONFORMANCE;
+        }
+        ConformanceResult result = checkCtorProperties(instanceType);
+        if (result != ConformanceResult.CONFORMANCE) {
+          return result;
+        }
+      }
+
+      return visibilityAtDeclarationOrFileoverview(ownJsDoc, getScriptNode(n));
+    }
+
+    private static ConformanceResult checkCtorProperties(ObjectType type) {
+      for (String propertyName : type.getOwnPropertyNames()) {
+        Property prop = type.getOwnSlot(propertyName);
+        JSDocInfo docInfo = prop.getJSDocInfo();
+        Node scriptNode = getScriptNode(prop.getNode());
+        ConformanceResult result = visibilityAtDeclarationOrFileoverview(
+            docInfo, scriptNode);
+        if (result != ConformanceResult.CONFORMANCE) {
+          return result;
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    @Nullable private static Node getScriptNode(Node start) {
+      for (Node up : start.getAncestors()) {
+        if (up.isScript()) {
+          return up;
+        }
+      }
+      return null;
+    }
+
+    private static ConformanceResult visibilityAtDeclarationOrFileoverview(
+        @Nullable JSDocInfo declaredJsDoc, @Nullable Node scriptNode) {
+      if (declaredJsDoc != null
+          && declaredJsDoc.getVisibility() != Visibility.INHERITED) {
+        return ConformanceResult.CONFORMANCE;
+      } else if (scriptNode != null
+          && scriptNode.getJSDocInfo() != null
+          && scriptNode.getJSDocInfo().getVisibility() !=
+          Visibility.INHERITED) {
+        return ConformanceResult.CONFORMANCE;
+      } else {
+        return ConformanceResult.VIOLATION;
+      }
     }
   }
 }
