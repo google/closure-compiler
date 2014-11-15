@@ -61,6 +61,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -617,70 +618,14 @@ public class CommandLineRunner extends
      * respect to {@code goog.provide()} and {@code goog.requires()}.
      */
     protected List<String> getJsFiles() throws CmdLineException, IOException {
-      final Set<String> allJsInputs = new LinkedHashSet<>();
       List<String> patterns = new ArrayList<>();
       patterns.addAll(js);
       patterns.addAll(arguments);
-      for (String pattern : patterns) {
-        if (!pattern.contains("*") && !pattern.startsWith("!")) {
-          File matchedFile = new File(pattern);
-          if (matchedFile.isDirectory()) {
-            matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs);
-          } else {
-            allJsInputs.add(pattern);
-          }
-        } else {
-          matchPaths(pattern, allJsInputs);
-        }
-      }
-
+      List<String> allJsInputs = findJsFiles(patterns);
       if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
         throw new CmdLineException(new CmdLineParser(this), "No inputs matched");
       }
-
-      return new ArrayList<>(allJsInputs);
-    }
-
-    private void matchPaths(String pattern, final Set<String> allJsInputs)
-        throws IOException {
-      FileSystem fs = FileSystems.getDefault();
-      final boolean remove = pattern.indexOf('!') == 0;
-      if (remove) pattern = pattern.substring(1);
-
-      if (File.separator.equals("\\")) {
-        pattern = pattern.replace('\\', '/');
-      }
-
-      // Split the pattern into two pieces: the globbing part
-      // and the non-globbing prefix.
-      List<String> patternParts = Splitter.on('/').splitToList(pattern);
-      String prefix = ".";
-      for (int i = 0; i < patternParts.size(); i++) {
-        if (patternParts.get(i).contains("*")) {
-          if (i == 0) {
-            break;
-          } else {
-            prefix = Joiner.on("/").join(patternParts.subList(0, i));
-            pattern = Joiner.on("/").join(patternParts.subList(i, patternParts.size()));
-          }
-        }
-      }
-
-      final PathMatcher matcher = fs.getPathMatcher("glob:" + pattern);
-      java.nio.file.Files.walkFileTree(
-          fs.getPath(prefix), new SimpleFileVisitor<Path>() {
-            @Override public FileVisitResult visitFile(
-                Path p, BasicFileAttributes attrs) {
-              if (matcher.matches(p)) {
-                if (remove) {
-                  allJsInputs.remove(p.toString());
-                } else {
-                  allJsInputs.add(p.toString());
-                }
-              }
-              return FileVisitResult.CONTINUE;
-            }
-          });
+      return allJsInputs;
     }
 
     @SuppressWarnings("deprecation")
@@ -1322,6 +1267,71 @@ public class CommandLineRunner extends
     }
 
     return externs;
+  }
+
+  /**
+   * Returns all the JavaScript files from the set of patterns. The patterns support
+   * globs, such as '*.js' for all JS files in a directory and '**.js' for all JS files
+   * within the directory and sub-directories.
+   */
+  public static List<String> findJsFiles(Collection<String> patterns) throws IOException {
+    Set<String> allJsInputs = new LinkedHashSet<>();
+    for (String pattern : patterns) {
+      if (!pattern.contains("*") && !pattern.startsWith("!")) {
+        File matchedFile = new File(pattern);
+        if (matchedFile.isDirectory()) {
+          matchPaths(new File(matchedFile, "**.js").toString(), allJsInputs);
+        } else {
+          allJsInputs.add(pattern);
+        }
+      } else {
+        matchPaths(pattern, allJsInputs);
+      }
+    }
+
+    return new ArrayList<>(allJsInputs);
+  }
+
+  private static void matchPaths(String pattern, final Set<String> allJsInputs)
+      throws IOException {
+    FileSystem fs = FileSystems.getDefault();
+    final boolean remove = pattern.indexOf('!') == 0;
+    if (remove) pattern = pattern.substring(1);
+
+    if (File.separator.equals("\\")) {
+      pattern = pattern.replace('\\', '/');
+    }
+
+    // Split the pattern into two pieces: the globbing part
+    // and the non-globbing prefix.
+    List<String> patternParts = Splitter.on('/').splitToList(pattern);
+    String prefix = ".";
+    for (int i = 0; i < patternParts.size(); i++) {
+      if (patternParts.get(i).contains("*")) {
+        if (i == 0) {
+          break;
+        } else {
+          prefix = Joiner.on("/").join(patternParts.subList(0, i));
+          pattern = Joiner.on("/").join(patternParts.subList(i, patternParts.size()));
+        }
+      }
+    }
+
+    final PathMatcher matcher = fs.getPathMatcher("glob:" + pattern);
+    java.nio.file.Files.walkFileTree(
+        fs.getPath(prefix), new SimpleFileVisitor<Path>() {
+          @Override public FileVisitResult visitFile(
+              Path p, BasicFileAttributes attrs) {
+            if (matcher.matches(p)) {
+              if (remove) {
+                allJsInputs.remove(p.toString());
+              } else {
+                allJsInputs.add(p.toString());
+              }
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
   }
 
   /**
