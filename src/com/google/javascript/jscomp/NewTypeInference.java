@@ -295,12 +295,12 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private boolean isArrayType(JSType t) {
-    if (symbolTable.getArrayType().isUnknown() // no externs
+    if (commonTypes.getArrayInstance().isUnknown() // no externs
         || t.isUnknown() || t.isLoose()
         || t.isEnumElement() && t.getEnumeratedType().isUnknown()) {
       return false;
     }
-    return t.isSubtypeOf(symbolTable.getArrayType());
+    return t.isSubtypeOf(commonTypes.getArrayInstance());
   }
 
   private static void println(Object ... objs) {
@@ -912,7 +912,7 @@ public class NewTypeInference implements CompilerPass {
                 declRetType.toString()));
       }
     }
-    JSType summary = builder.buildType();
+    JSType summary = commonTypes.fromFunctionType(builder.buildFunction());
     println("Function summary for ", fn.getReadableName());
     println("\t", summary);
     summaries.put(fn, summary);
@@ -1154,7 +1154,7 @@ public class NewTypeInference implements CompilerPass {
         return pair;
       }
       case Token.REGEXP:
-        return new EnvTypePair(inEnv, symbolTable.getRegexpType());
+        return new EnvTypePair(inEnv, commonTypes.getRegexpType());
       case Token.ARRAYLIT:
         return analyzeArrayLitFwd(expr, inEnv);
       case Token.CAST:
@@ -1315,11 +1315,11 @@ public class NewTypeInference implements CompilerPass {
           "an object or a union type that includes an object",
           objPair.type);
     }
-    ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
+    ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());
     JSType ctorType = ctorPair.type;
     FunctionType ctorFunType = ctorType.getFunType();
     if (!ctorType.isUnknown() &&
-        (!ctorType.isSubtypeOf(JSType.topFunction()) ||
+        (!ctorType.isSubtypeOf(commonTypes.topFunction()) ||
             !ctorFunType.isQmarkFunction() && !ctorFunType.isConstructor())) {
       warnInvalidOperand(
           ctor, Token.INSTANCEOF, "a constructor function", ctorType);
@@ -1336,7 +1336,7 @@ public class NewTypeInference implements CompilerPass {
         specializedType.isTruthy() ?
         objPair.type.specialize(instanceType) :
         objPair.type.removeType(instanceType));
-    ctorPair = analyzeExprFwd(ctor, objPair.env, JSType.topFunction());
+    ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());
     ctorPair.type = JSType.BOOLEAN;
     return ctorPair;
   }
@@ -1510,9 +1510,9 @@ public class NewTypeInference implements CompilerPass {
       return analyzeAssertionCall(expr, inEnv, assertionFunctionSpec);
     }
     EnvTypePair calleePair =
-        analyzeExprFwd(callee, inEnv, JSType.topFunction());
+        analyzeExprFwd(callee, inEnv, commonTypes.topFunction());
     JSType calleeType = calleePair.type;
-    if (!calleeType.isSubtypeOf(JSType.topFunction())) {
+    if (!calleeType.isSubtypeOf(commonTypes.topFunction())) {
       warnings.add(JSError.make(
           expr, TypeCheck.NOT_CALLABLE, calleeType.toString()));
     }
@@ -1735,7 +1735,7 @@ public class NewTypeInference implements CompilerPass {
     if (elementType.isBottom()) {
       elementType = JSType.UNKNOWN;
     }
-    return new EnvTypePair(env, symbolTable.getArrayType(elementType));
+    return new EnvTypePair(env, commonTypes.getArrayInstance(elementType));
   }
 
   private EnvTypePair analyzeCastFwd(Node expr, TypeEnv inEnv) {
@@ -1825,7 +1825,7 @@ public class NewTypeInference implements CompilerPass {
     return pair;
   }
 
-  private static JSType getTypeFromString(Node typeString) {
+  private JSType getTypeFromString(Node typeString) {
     if (!typeString.isString()) {
       return JSType.UNKNOWN;
     }
@@ -1839,7 +1839,7 @@ public class NewTypeInference implements CompilerPass {
       case "undefined":
         return JSType.UNDEFINED;
       case "function":
-        return JSType.looseTopFunction();
+        return commonTypes.looseTopFunction();
       case "object":
         return JSType.join(JSType.NULL, JSType.TOP_OBJECT);
       default:
@@ -2133,7 +2133,7 @@ public class NewTypeInference implements CompilerPass {
     switch (typeHint) {
       case "array":
       case "isArray":
-        JSType arrayType = symbolTable.getArrayType();
+        JSType arrayType = commonTypes.getArrayInstance();
         if (arrayType.isUnknown()) {
           return JSType.UNKNOWN;
         }
@@ -2146,8 +2146,8 @@ public class NewTypeInference implements CompilerPass {
       case "function":
       case "isFunction":
         return booleanContext.isTruthy()
-            ? JSType.looseTopFunction()
-            : beforeType.removeType(JSType.topFunction());
+            ? commonTypes.looseTopFunction()
+            : beforeType.removeType(commonTypes.topFunction());
       case "null":
       case "isNull":
         return booleanContext.isTruthy() ?
@@ -2417,11 +2417,11 @@ public class NewTypeInference implements CompilerPass {
       builder.addReqFormal(pair.type);
     }
     JSType looseRetType = retType.isUnknown() ? JSType.BOTTOM : retType;
-    JSType looseFunctionType =
-        builder.addRetType(looseRetType).addLoose().buildType();
+    JSType looseFunctionType = commonTypes.fromFunctionType(
+        builder.addRetType(looseRetType).addLoose().buildFunction());
     // Unsound if the arguments and callee have interacting side effects
     EnvTypePair calleePair = analyzeExprFwd(
-        callee, tmpEnv, JSType.topFunction(), looseFunctionType);
+        callee, tmpEnv, commonTypes.topFunction(), looseFunctionType);
     return new EnvTypePair(calleePair.env, retType);
   }
 
@@ -2439,8 +2439,8 @@ public class NewTypeInference implements CompilerPass {
       builder.addReqFormal(JSType.BOTTOM);
     }
     JSType looseRetType = retType.isUnknown() ? JSType.BOTTOM : retType;
-    JSType looseFunctionType =
-        builder.addRetType(looseRetType).addLoose().buildType();
+    JSType looseFunctionType = commonTypes.fromFunctionType(
+        builder.addRetType(looseRetType).addLoose().buildFunction());
     println("loose function type is ", looseFunctionType);
     EnvTypePair calleePair = analyzeExprBwd(callee, tmpEnv, looseFunctionType);
     return new EnvTypePair(calleePair.env, retType);
@@ -2496,7 +2496,7 @@ public class NewTypeInference implements CompilerPass {
       }
       case Token.INSTANCEOF: {
         TypeEnv env = analyzeExprBwd(
-            expr.getLastChild(), outEnv, JSType.topFunction()).env;
+            expr.getLastChild(), outEnv, commonTypes.topFunction()).env;
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), env);
         pair.type = JSType.BOOLEAN;
         return pair;
@@ -2591,7 +2591,7 @@ public class NewTypeInference implements CompilerPass {
             envPutType(outEnv, name, JSType.UNKNOWN), JSType.UNKNOWN);
       }
       case Token.REGEXP:
-        return new EnvTypePair(outEnv, symbolTable.getRegexpType());
+        return new EnvTypePair(outEnv, commonTypes.getRegexpType());
       case Token.ARRAYLIT:
         return analyzeArrayLitBwd(expr, outEnv);
       case Token.CAST:
@@ -2750,7 +2750,7 @@ public class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv outEnv, JSType requiredType) {
     Node callee = expr.getFirstChild();
     JSType calleeTypeGeneral =
-        analyzeExprBwd(callee, outEnv, JSType.topFunction()).type;
+        analyzeExprBwd(callee, outEnv, commonTypes.topFunction()).type;
     FunctionType funType = calleeTypeGeneral.getFunType();
     if (funType == null) {
       return analyzeCallNodeArgumentsBwd(expr, outEnv);
@@ -2842,7 +2842,7 @@ public class NewTypeInference implements CompilerPass {
     if (elementType.isBottom()) {
       elementType = JSType.UNKNOWN;
     }
-    return new EnvTypePair(env, symbolTable.getArrayType(elementType));
+    return new EnvTypePair(env, commonTypes.getArrayInstance(elementType));
   }
 
   private EnvTypePair analyzeCallNodeArgumentsBwd(
@@ -3461,7 +3461,6 @@ public class NewTypeInference implements CompilerPass {
       }
       for (JSType argType : this.argTypes) {
         JSType formalType = fnSummary.getFormalType(i);
-        Preconditions.checkState(!formalType.equals(JSType.topFunction()));
         if (argNode.isName() &&
             callerScope.isKnownFunction(argNode.getString())) {
           argType = summaries.get(callerScope.getScope(argNode.getString()));

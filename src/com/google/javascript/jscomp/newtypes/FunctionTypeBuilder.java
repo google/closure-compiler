@@ -138,8 +138,4 @@ public class FunctionTypeBuilder {
     result.checkValid();
     return result;
   }
-
-  public JSType buildType() {
-    return JSType.fromFunctionType(buildFunction());
-  }
 }

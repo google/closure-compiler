@@ -404,10 +404,9 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
             JSType.NUMBER, JSTypeNative.NUMBER_TYPE),
         new AssertionFunctionSpec("goog.asserts.assertString",
             JSType.STRING, JSTypeNative.STRING_TYPE),
-        new AssertionFunctionSpec("goog.asserts.assertFunction",
-            JSType.topFunction(), JSTypeNative.FUNCTION_INSTANCE_TYPE),
         new AssertionFunctionSpec("goog.asserts.assertObject",
             JSType.TOP_OBJECT, JSTypeNative.OBJECT_TYPE),
+        new AssertFunctionByTypeName("goog.asserts.assertFunction", "Function"),
         new AssertFunctionByTypeName("goog.asserts.assertArray", "Array"),
         new AssertFunctionByTypeName("goog.asserts.assertElement", "Element"),
         new AssertInstanceofSpec("goog.asserts.assertInstanceof")

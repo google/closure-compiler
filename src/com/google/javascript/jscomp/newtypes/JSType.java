@@ -110,7 +110,7 @@ public abstract class JSType {
   protected abstract ImmutableSet<EnumType> getEnums();
 
   // Factory method for wrapping a function in a JSType
-  public static JSType fromFunctionType(FunctionType fn) {
+  static JSType fromFunctionType(FunctionType fn) {
     return makeType(NON_SCALAR_MASK,
         ImmutableSet.of(ObjectType.fromFunction(fn)), null, null);
   }
@@ -165,8 +165,6 @@ public abstract class JSType {
   public static final JSType TOP_OBJECT = fromObjectType(ObjectType.TOP_OBJECT);
   public static final JSType TOP_STRUCT = fromObjectType(ObjectType.TOP_STRUCT);
   public static final JSType TOP_DICT = fromObjectType(ObjectType.TOP_DICT);
-  private static JSType TOP_FUNCTION = null;
-  private static JSType QMARK_FUNCTION = null;
 
   // Some commonly used types
   public static final JSType NULL_OR_UNDEF =
@@ -179,25 +177,6 @@ public abstract class JSType {
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | NULL_MASK |
       UNDEFINED_MASK | NON_SCALAR_MASK,
       ImmutableSet.of(ObjectType.TOP_OBJECT), null, null);
-
-  public static JSType looseTopFunction() {
-    return topFunction().withLoose();
-  }
-
-  public static JSType topFunction() {
-    if (TOP_FUNCTION == null) {
-      TOP_FUNCTION = fromFunctionType(FunctionType.TOP_FUNCTION);
-    }
-    return TOP_FUNCTION;
-  }
-
-  // Corresponds to Function, which is a subtype and supertype of all functions.
-  static JSType qmarkFunction() {
-    if (QMARK_FUNCTION == null) {
-      QMARK_FUNCTION = fromFunctionType(FunctionType.QMARK_FUNCTION);
-    }
-    return QMARK_FUNCTION;
-  }
 
   public boolean isTop() {
     return TOP_MASK == getMask();
@@ -341,6 +320,8 @@ public abstract class JSType {
       case NUMBER_MASK:
         return commonTypes.getNumberInstance();
       case BOOLEAN_MASK:
+      case TRUE_MASK:
+      case FALSE_MASK:
         return commonTypes.getBooleanInstance();
       case STRING_MASK:
         return commonTypes.getStringInstance();

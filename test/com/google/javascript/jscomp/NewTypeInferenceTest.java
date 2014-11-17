@@ -10266,6 +10266,23 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testNoautoboxingWithoutExterns() {
+    typeCheck("",
+        "var /** number */ n = 123;\n" +
+        "n.toString();",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck("",
+        "var /** string */ s = '';\n" +
+        "s.toString();",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+
+    typeCheck("",
+        "var /** boolean */ b = true;\n" +
+        "b.toString();",
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+  }
+
   public void testAutoconvertScalarsToBoxedScalars() {
     checkNoWarnings(
         "var /** number */ n = 123;\n" +

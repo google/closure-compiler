@@ -36,4 +36,6 @@ public interface DeclaredTypeRegistry {
    * or null if the identifier is not defined.
    */
   JSType getDeclaredTypeOf(String name);
+
+  JSTypes getCommonTypes();
 }

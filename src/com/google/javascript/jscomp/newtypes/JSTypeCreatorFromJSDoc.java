@@ -58,8 +58,6 @@ public class JSTypeCreatorFromJSDoc {
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
 
-  private static final JSType UNKNOWN_FUNCTION_OR_NULL =
-      JSType.join(JSType.qmarkFunction(), JSType.NULL);
   private static final JSType OBJECT_OR_NULL =
       JSType.join(JSType.TOP_OBJECT, JSType.NULL);
 
@@ -76,6 +74,16 @@ public class JSTypeCreatorFromJSDoc {
 
   public JSTypeCreatorFromJSDoc(CodingConvention convention) {
     this.convention = convention;
+  }
+
+  private JSType qmarkFunctionOrNull = null;
+
+  private JSType getQmarkFunctionOrNull(JSTypes commonTypes) {
+    if (qmarkFunctionOrNull == null) {
+      qmarkFunctionOrNull =
+          JSType.join(commonTypes.qmarkFunction(), JSType.NULL);
+    }
+    return qmarkFunctionOrNull;
   }
 
   public JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
@@ -237,7 +245,7 @@ public class JSTypeCreatorFromJSDoc {
       case "void":
         return JSType.UNDEFINED;
       case "Function":
-        return UNKNOWN_FUNCTION_OR_NULL;
+        return getQmarkFunctionOrNull(registry.getCommonTypes());
       case "Object":
         return OBJECT_OR_NULL;
       default: {
@@ -392,8 +400,10 @@ public class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
-    return getFunTypeBuilder(jsdocNode, ownerType, registry, typeParameters)
-        .buildType();
+    FunctionType funType =
+        getFunTypeBuilder(jsdocNode, ownerType, registry, typeParameters)
+        .buildFunction();
+    return registry.getCommonTypes().fromFunctionType(funType);
   }
 
   private FunctionTypeBuilder getFunTypeBuilder(

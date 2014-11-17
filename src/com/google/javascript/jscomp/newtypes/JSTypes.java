@@ -17,11 +17,18 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 
 /**
  * This class contains commonly used types, accessible from the jscomp package.
  * Also, any JSType utility methods that do not need to be in JSType.
+ *
+ * Built-in nominal types (Function, Object, Array, String, etc.) must be set
+ * explicitly in externs, and are set with the corresponding setter methods
+ * as they are crawled. They will remain null if not defined anywhere.
  *
  * There should only be one instance of this class per Compiler object.
  *
@@ -30,18 +37,23 @@ import com.google.common.collect.Iterables;
  */
 public class JSTypes {
   // Instances of Boolean, Number and String; used for auto-boxing scalars.
-  // Set at the end of GlobalTypeInfo.
-  private JSType NUMBER_INSTANCE;
-  private JSType BOOLEAN_INSTANCE;
-  private JSType STRING_INSTANCE;
+  // Set when they are crawled in GlobalTypeInfo.
+  private JSType numberInstance;
+  private JSType booleanInstance;
+  private JSType stringInstance;
 
-  private ObjectType NUMBER_INSTANCE_OBJTYPE;
-  private ObjectType BOOLEAN_INSTANCE_OBJTYPE;
-  private ObjectType STRING_INSTANCE_OBJTYPE;
+  private ObjectType numberInstanceObjtype;
+  private ObjectType booleanInstanceObjtype;
+  private ObjectType stringInstanceObjtype;
 
-  private JSType NUMBER_OR_number;
-  private JSType STRING_OR_string;
+  private JSType numberOrNumber;
+  private JSType stringOrString;
   private JSType anyNumOrStr;
+
+  private JSType regexpType;
+  private RawNominalType arrayType;
+  private RawNominalType builtinObject;
+  private RawNominalType builtinFunction;
 
   private JSTypes() {}
 
@@ -49,84 +61,147 @@ public class JSTypes {
     return new JSTypes();
   }
 
+  public JSType fromFunctionType(FunctionType fn) {
+    return JSType.fromFunctionType(fn);
+  }
+
+  public RawNominalType getFunctionType() {
+    return builtinFunction;
+  }
+
+  public JSType looseTopFunction() {
+    return topFunction().withLoose();
+  }
+
+  public JSType topFunction() {
+    return fromFunctionType(FunctionType.TOP_FUNCTION);
+  }
+
+  // Corresponds to Function, which is a subtype and supertype of all functions.
+  JSType qmarkFunction() {
+    return fromFunctionType(FunctionType.QMARK_FUNCTION);
+  }
+
+  public JSType getArrayInstance() {
+    return getArrayInstance(JSType.UNKNOWN);
+  }
+
+  public NominalType getObjectType() {
+    if (builtinObject == null) {
+      return null;
+    }
+    return builtinObject.getAsNominalType();
+  }
+
+  public JSType getArrayInstance(JSType t) {
+    if (arrayType == null) {
+      return JSType.UNKNOWN;
+    }
+    ImmutableList<String> typeParams = arrayType.getTypeParameters();
+    JSType result = arrayType.getInstanceAsJSType();
+    if (typeParams.size() == 1) {
+      String typeParam = Iterables.getOnlyElement(typeParams);
+      result = result.substituteGenerics(ImmutableMap.of(typeParam, t));
+    }
+    return result;
+  }
+
+  public JSType getRegexpType() {
+    return regexpType != null ? regexpType : JSType.UNKNOWN;
+  }
+
   JSType getNumberInstance() {
-    return NUMBER_INSTANCE;
+    return numberInstance != null ? numberInstance : JSType.NUMBER;
   }
 
   JSType getBooleanInstance() {
-    return BOOLEAN_INSTANCE;
+    return booleanInstance != null ? booleanInstance : JSType.BOOLEAN;
   }
 
   JSType getStringInstance() {
-    return STRING_INSTANCE;
+    return stringInstance != null ? stringInstance : JSType.STRING;
   }
 
   ObjectType getNumberInstanceObjType() {
-    return NUMBER_INSTANCE_OBJTYPE;
+    return numberInstanceObjtype != null
+        ? numberInstanceObjtype : ObjectType.TOP_OBJECT;
   }
 
   ObjectType getBooleanInstanceObjType() {
-    return BOOLEAN_INSTANCE_OBJTYPE;
+    return booleanInstanceObjtype != null
+        ? booleanInstanceObjtype : ObjectType.TOP_OBJECT;
   }
 
   ObjectType getStringInstanceObjType() {
-    return STRING_INSTANCE_OBJTYPE;
+    return stringInstanceObjtype != null
+        ? stringInstanceObjtype : ObjectType.TOP_OBJECT;
+  }
+
+  public void setFunctionType(RawNominalType builtinFunction) {
+    this.builtinFunction = builtinFunction;
+  }
+
+  public void setObjectType(RawNominalType builtinObject) {
+    this.builtinObject = builtinObject;
+  }
+
+  public void setArrayType(RawNominalType arrayType) {
+    this.arrayType = arrayType;
+  }
+
+  public void setRegexpInstance(JSType regexpType) {
+    this.regexpType = regexpType;
   }
 
   public void setNumberInstance(JSType t) {
-    Preconditions.checkState(NUMBER_INSTANCE == null);
+    Preconditions.checkState(numberInstance == null);
     Preconditions.checkNotNull(t);
-    NUMBER_INSTANCE = t;
-    if (t.isUnknown()) {
-      NUMBER_OR_number = JSType.NUMBER;
-      NUMBER_INSTANCE_OBJTYPE = ObjectType.TOP_OBJECT;
-    } else {
-      NUMBER_OR_number = JSType.join(JSType.NUMBER, NUMBER_INSTANCE);
-      NUMBER_INSTANCE_OBJTYPE = Iterables.getOnlyElement(t.getObjs());
-    }
-    if (STRING_INSTANCE != null) {
-      anyNumOrStr = JSType.join(NUMBER_OR_number, STRING_OR_string);
+    numberInstance = t;
+    numberOrNumber = JSType.join(JSType.NUMBER, numberInstance);
+    numberInstanceObjtype = Iterables.getOnlyElement(t.getObjs());
+    if (stringInstance != null) {
+      anyNumOrStr = JSType.join(numberOrNumber, stringOrString);
     }
   }
 
   public void setBooleanInstance(JSType t) {
-    Preconditions.checkState(BOOLEAN_INSTANCE == null);
+    Preconditions.checkState(booleanInstance == null);
     Preconditions.checkNotNull(t);
-    BOOLEAN_INSTANCE = t;
-    if (t.isUnknown()) {
-      BOOLEAN_INSTANCE_OBJTYPE = ObjectType.TOP_OBJECT;
-    } else {
-      BOOLEAN_INSTANCE_OBJTYPE = Iterables.getOnlyElement(t.getObjs());
-    }
+    booleanInstance = t;
+    booleanInstanceObjtype = Iterables.getOnlyElement(t.getObjs());
   }
 
   public void setStringInstance(JSType t) {
-    Preconditions.checkState(STRING_INSTANCE == null);
+    Preconditions.checkState(stringInstance == null);
     Preconditions.checkNotNull(t);
-    STRING_INSTANCE = t;
-    if (t.isUnknown()) {
-      STRING_OR_string = JSType.STRING;
-      STRING_INSTANCE_OBJTYPE = ObjectType.TOP_OBJECT;
-    } else {
-      STRING_OR_string = JSType.join(JSType.STRING, STRING_INSTANCE);
-      STRING_INSTANCE_OBJTYPE = Iterables.getOnlyElement(t.getObjs());
-    }
-    if (NUMBER_INSTANCE != null) {
-      anyNumOrStr = JSType.join(NUMBER_OR_number, STRING_OR_string);
+    stringInstance = t;
+    stringOrString = JSType.join(JSType.STRING, stringInstance);
+    stringInstanceObjtype = Iterables.getOnlyElement(t.getObjs());
+    if (numberInstance != null) {
+      anyNumOrStr = JSType.join(numberOrNumber, stringOrString);
     }
   }
 
   public boolean isNumberScalarOrObj(JSType t) {
-    return t.isSubtypeOf(NUMBER_OR_number);
+    if (numberOrNumber == null) {
+      return t.isSubtypeOf(JSType.NUMBER);
+    }
+    return t.isSubtypeOf(numberOrNumber);
   }
 
   public boolean isStringScalarOrObj(JSType t) {
-    return t.isSubtypeOf(STRING_OR_string);
+    if (numberOrNumber == null) {
+      return t.isSubtypeOf(JSType.STRING);
+    }
+    return t.isSubtypeOf(stringOrString);
   }
 
   // This method is a bit ad-hoc, but it allows us to not make the boxed
   // instances (which are not final) public.
   public boolean isNumStrScalarOrObj(JSType t) {
+    if (anyNumOrStr == null) {
+      return t.isSubtypeOf(JSType.NUM_OR_STR);
+    }
     return t.isSubtypeOf(anyNumOrStr);
   }
 }
