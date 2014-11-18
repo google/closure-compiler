@@ -214,6 +214,73 @@ public class CheckConformanceTest extends CompilerTestCase {
         "eval()");
   }
 
+  public void testFileOnOnlyApplyToIsChecked() {
+    configuration =
+        "requirement: {\n" +
+        "  type: BANNED_NAME\n" +
+        "  value: 'eval'\n" +
+        "  error_message: 'eval is not allowed'\n" +
+        "  only_apply_to: 'foo.js'\n " +
+        "}";
+    ImmutableList<SourceFile> input = ImmutableList.of(
+            SourceFile.fromCode("foo.js", "eval()"));
+    test(input, input, null, CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: eval is not allowed");
+  }
+
+  public void testFileNotOnOnlyApplyToIsNotChecked() {
+    configuration =
+        "requirement: {\n" +
+        "  type: BANNED_NAME\n" +
+        "  value: 'eval'\n" +
+        "  error_message: 'eval is not allowed'\n" +
+        "  only_apply_to: 'foo.js'\n " +
+        "}";
+    testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
+  }
+
+  public void testFileOnOnlyApplyToRegexpIsChecked() {
+    configuration =
+        "requirement: {\n" +
+        "  type: BANNED_NAME\n" +
+        "  value: 'eval'\n" +
+        "  error_message: 'eval is not allowed'\n" +
+        "  only_apply_to_regexp: 'test.js$'\n " +
+        "}";
+    ImmutableList<SourceFile> input = ImmutableList.of(
+            SourceFile.fromCode("foo_test.js", "eval()"));
+    test(input, input, null, CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: eval is not allowed");
+  }
+
+  public void testFileNotOnOnlyApplyToRegexpIsNotChecked() {
+    configuration =
+        "requirement: {\n" +
+        "  type: BANNED_NAME\n" +
+        "  value: 'eval'\n" +
+        "  error_message: 'eval is not allowed'\n" +
+        "  only_apply_to_regexp: 'test.js$'\n " +
+        "}";
+    testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
+  }
+
+  public void testSpecifyingWhitelistAndOnlyApplyToIsRuntimeError() {
+    configuration =
+        "requirement: {\n" +
+        "  type: BANNED_NAME\n" +
+        "  value: 'eval'\n" +
+        "  error_message: 'eval is not allowed'\n" +
+        "  whitelist: 'blah'\n" +
+        "  only_apply_to_regexp: 'test.js$'\n " +
+        "}";
+    try {
+      testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
+      fail("expected IllegalArgumentException");
+    } catch (Exception e) {
+      assertTrue(e instanceof IllegalArgumentException);
+    }
+  }
+
   public void testBannedCodePattern1() {
     configuration =
         "requirement: {\n" +

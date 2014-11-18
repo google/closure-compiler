@@ -116,9 +116,101 @@ public interface RequirementOrBuilder extends
   com.google.protobuf.ByteString
       getWhitelistRegexpBytes(int index);
 
-  // optional .jscomp.Requirement.Type type = 4;
+  // repeated string only_apply_to = 4;
   /**
-   * <code>optional .jscomp.Requirement.Type type = 4;</code>
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  java.util.List<java.lang.String>
+  getOnlyApplyToList();
+  /**
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  int getOnlyApplyToCount();
+  /**
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  java.lang.String getOnlyApplyTo(int index);
+  /**
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  com.google.protobuf.ByteString
+      getOnlyApplyToBytes(int index);
+
+  // repeated string only_apply_to_regexp = 5;
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  java.util.List<java.lang.String>
+  getOnlyApplyToRegexpList();
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  int getOnlyApplyToRegexpCount();
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  java.lang.String getOnlyApplyToRegexp(int index);
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  com.google.protobuf.ByteString
+      getOnlyApplyToRegexpBytes(int index);
+
+  // optional .jscomp.Requirement.Type type = 6;
+  /**
+   * <code>optional .jscomp.Requirement.Type type = 6;</code>
    *
    * <pre>
    * Required: The type of requirement.
@@ -126,7 +218,7 @@ public interface RequirementOrBuilder extends
    */
   boolean hasType();
   /**
-   * <code>optional .jscomp.Requirement.Type type = 4;</code>
+   * <code>optional .jscomp.Requirement.Type type = 6;</code>
    *
    * <pre>
    * Required: The type of requirement.
@@ -134,9 +226,9 @@ public interface RequirementOrBuilder extends
    */
   com.google.javascript.jscomp.Requirement.Type getType();
 
-  // repeated string value = 5;
+  // repeated string value = 7;
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -145,7 +237,7 @@ public interface RequirementOrBuilder extends
   java.util.List<java.lang.String>
   getValueList();
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -153,7 +245,7 @@ public interface RequirementOrBuilder extends
    */
   int getValueCount();
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -161,7 +253,7 @@ public interface RequirementOrBuilder extends
    */
   java.lang.String getValue(int index);
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -170,9 +262,9 @@ public interface RequirementOrBuilder extends
   com.google.protobuf.ByteString
       getValueBytes(int index);
 
-  // optional string java_class = 6;
+  // optional string java_class = 8;
   /**
-   * <code>optional string java_class = 6;</code>
+   * <code>optional string java_class = 8;</code>
    *
    * <pre>
    * For "custom" requirements, the Java class used to enforce the requirement.
@@ -181,7 +273,7 @@ public interface RequirementOrBuilder extends
    */
   boolean hasJavaClass();
   /**
-   * <code>optional string java_class = 6;</code>
+   * <code>optional string java_class = 8;</code>
    *
    * <pre>
    * For "custom" requirements, the Java class used to enforce the requirement.
@@ -190,7 +282,7 @@ public interface RequirementOrBuilder extends
    */
   java.lang.String getJavaClass();
   /**
-   * <code>optional string java_class = 6;</code>
+   * <code>optional string java_class = 8;</code>
    *
    * <pre>
    * For "custom" requirements, the Java class used to enforce the requirement.

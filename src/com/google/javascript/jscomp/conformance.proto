@@ -39,6 +39,17 @@ message Requirement {
   // requirement.
   repeated string whitelist_regexp = 3;
 
+  // Optional: A list of source paths that will be checked for the requirement
+  // (the opposite of whitelist). It is an error to specify both
+  // (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+  repeated string only_apply_to = 4;
+
+  // Optional: A list of source path regexps that will be checked for
+  // the requirement (the opposite of whitelist_regexp).
+  // It is an error to specify both
+  // (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+  repeated string only_apply_to_regexp = 5;
+
   // A classification of the requirement and how it is enforced.
   enum Type {
     // A requirement enforced with code a external java class.
@@ -96,14 +107,14 @@ message Requirement {
   }
 
   // Required: The type of requirement.
-  optional Type type = 4;
+  optional Type type = 6;
 
   // The value banned, optional for "custom" requirements.
-  repeated string value = 5;
+  repeated string value = 7;
 
   // For "custom" requirements, the Java class used to enforce the requirement.
   // Ignored otherwise.
-  optional string java_class = 6;
+  optional string java_class = 8;
 
   // CUSTOM requirements may use extensions, each extension should use
   // a CL number as a unique identifier.

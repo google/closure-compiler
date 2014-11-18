@@ -79,26 +79,42 @@ public  final class Requirement extends
             whitelistRegexp_.add(input.readBytes());
             break;
           }
-          case 32: {
+          case 34: {
+            if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              onlyApplyTo_ = new com.google.protobuf.LazyStringArrayList();
+              mutable_bitField0_ |= 0x00000008;
+            }
+            onlyApplyTo_.add(input.readBytes());
+            break;
+          }
+          case 42: {
+            if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+              onlyApplyToRegexp_ = new com.google.protobuf.LazyStringArrayList();
+              mutable_bitField0_ |= 0x00000010;
+            }
+            onlyApplyToRegexp_.add(input.readBytes());
+            break;
+          }
+          case 48: {
             int rawValue = input.readEnum();
             com.google.javascript.jscomp.Requirement.Type value = com.google.javascript.jscomp.Requirement.Type.valueOf(rawValue);
             if (value == null) {
-              unknownFields.mergeVarintField(4, rawValue);
+              unknownFields.mergeVarintField(6, rawValue);
             } else {
               bitField0_ |= 0x00000002;
               type_ = value;
             }
             break;
           }
-          case 42: {
-            if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          case 58: {
+            if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
               value_ = new com.google.protobuf.LazyStringArrayList();
-              mutable_bitField0_ |= 0x00000010;
+              mutable_bitField0_ |= 0x00000040;
             }
             value_.add(input.readBytes());
             break;
           }
-          case 50: {
+          case 66: {
             bitField0_ |= 0x00000004;
             javaClass_ = input.readBytes();
             break;
@@ -117,7 +133,13 @@ public  final class Requirement extends
       if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
         whitelistRegexp_ = new com.google.protobuf.UnmodifiableLazyStringList(whitelistRegexp_);
       }
+      if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        onlyApplyTo_ = new com.google.protobuf.UnmodifiableLazyStringList(onlyApplyTo_);
+      }
       if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+        onlyApplyToRegexp_ = new com.google.protobuf.UnmodifiableLazyStringList(onlyApplyToRegexp_);
+      }
+      if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
         value_ = new com.google.protobuf.UnmodifiableLazyStringList(value_);
       }
       this.unknownFields = unknownFields.build();
@@ -593,11 +615,123 @@ public  final class Requirement extends
     return whitelistRegexp_.getByteString(index);
   }
 
-  // optional .jscomp.Requirement.Type type = 4;
-  public static final int TYPE_FIELD_NUMBER = 4;
+  // repeated string only_apply_to = 4;
+  public static final int ONLY_APPLY_TO_FIELD_NUMBER = 4;
+  private com.google.protobuf.LazyStringList onlyApplyTo_;
+  /**
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public java.util.List<java.lang.String>
+      getOnlyApplyToList() {
+    return onlyApplyTo_;
+  }
+  /**
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public int getOnlyApplyToCount() {
+    return onlyApplyTo_.size();
+  }
+  /**
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public java.lang.String getOnlyApplyTo(int index) {
+    return onlyApplyTo_.get(index);
+  }
+  /**
+   * <code>repeated string only_apply_to = 4;</code>
+   *
+   * <pre>
+   * Optional: A list of source paths that will be checked for the requirement
+   * (the opposite of whitelist). It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public com.google.protobuf.ByteString
+      getOnlyApplyToBytes(int index) {
+    return onlyApplyTo_.getByteString(index);
+  }
+
+  // repeated string only_apply_to_regexp = 5;
+  public static final int ONLY_APPLY_TO_REGEXP_FIELD_NUMBER = 5;
+  private com.google.protobuf.LazyStringList onlyApplyToRegexp_;
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public java.util.List<java.lang.String>
+      getOnlyApplyToRegexpList() {
+    return onlyApplyToRegexp_;
+  }
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public int getOnlyApplyToRegexpCount() {
+    return onlyApplyToRegexp_.size();
+  }
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public java.lang.String getOnlyApplyToRegexp(int index) {
+    return onlyApplyToRegexp_.get(index);
+  }
+  /**
+   * <code>repeated string only_apply_to_regexp = 5;</code>
+   *
+   * <pre>
+   * Optional: A list of source path regexps that will be checked for
+   * the requirement (the opposite of whitelist_regexp).
+   * It is an error to specify both
+   * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+   * </pre>
+   */
+  public com.google.protobuf.ByteString
+      getOnlyApplyToRegexpBytes(int index) {
+    return onlyApplyToRegexp_.getByteString(index);
+  }
+
+  // optional .jscomp.Requirement.Type type = 6;
+  public static final int TYPE_FIELD_NUMBER = 6;
   private com.google.javascript.jscomp.Requirement.Type type_;
   /**
-   * <code>optional .jscomp.Requirement.Type type = 4;</code>
+   * <code>optional .jscomp.Requirement.Type type = 6;</code>
    *
    * <pre>
    * Required: The type of requirement.
@@ -607,7 +741,7 @@ public  final class Requirement extends
     return ((bitField0_ & 0x00000002) == 0x00000002);
   }
   /**
-   * <code>optional .jscomp.Requirement.Type type = 4;</code>
+   * <code>optional .jscomp.Requirement.Type type = 6;</code>
    *
    * <pre>
    * Required: The type of requirement.
@@ -617,11 +751,11 @@ public  final class Requirement extends
     return type_;
   }
 
-  // repeated string value = 5;
-  public static final int VALUE_FIELD_NUMBER = 5;
+  // repeated string value = 7;
+  public static final int VALUE_FIELD_NUMBER = 7;
   private com.google.protobuf.LazyStringList value_;
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -632,7 +766,7 @@ public  final class Requirement extends
     return value_;
   }
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -642,7 +776,7 @@ public  final class Requirement extends
     return value_.size();
   }
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -652,7 +786,7 @@ public  final class Requirement extends
     return value_.get(index);
   }
   /**
-   * <code>repeated string value = 5;</code>
+   * <code>repeated string value = 7;</code>
    *
    * <pre>
    * The value banned, optional for "custom" requirements.
@@ -663,11 +797,11 @@ public  final class Requirement extends
     return value_.getByteString(index);
   }
 
-  // optional string java_class = 6;
-  public static final int JAVA_CLASS_FIELD_NUMBER = 6;
+  // optional string java_class = 8;
+  public static final int JAVA_CLASS_FIELD_NUMBER = 8;
   private java.lang.Object javaClass_;
   /**
-   * <code>optional string java_class = 6;</code>
+   * <code>optional string java_class = 8;</code>
    *
    * <pre>
    * For "custom" requirements, the Java class used to enforce the requirement.
@@ -678,7 +812,7 @@ public  final class Requirement extends
     return ((bitField0_ & 0x00000004) == 0x00000004);
   }
   /**
-   * <code>optional string java_class = 6;</code>
+   * <code>optional string java_class = 8;</code>
    *
    * <pre>
    * For "custom" requirements, the Java class used to enforce the requirement.
@@ -700,7 +834,7 @@ public  final class Requirement extends
     }
   }
   /**
-   * <code>optional string java_class = 6;</code>
+   * <code>optional string java_class = 8;</code>
    *
    * <pre>
    * For "custom" requirements, the Java class used to enforce the requirement.
@@ -725,6 +859,8 @@ public  final class Requirement extends
     errorMessage_ = "";
     whitelist_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     whitelistRegexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    onlyApplyTo_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    onlyApplyToRegexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     type_ = com.google.javascript.jscomp.Requirement.Type.CUSTOM;
     value_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     javaClass_ = "";
@@ -757,14 +893,20 @@ public  final class Requirement extends
     for (int i = 0; i < whitelistRegexp_.size(); i++) {
       output.writeBytes(3, whitelistRegexp_.getByteString(i));
     }
+    for (int i = 0; i < onlyApplyTo_.size(); i++) {
+      output.writeBytes(4, onlyApplyTo_.getByteString(i));
+    }
+    for (int i = 0; i < onlyApplyToRegexp_.size(); i++) {
+      output.writeBytes(5, onlyApplyToRegexp_.getByteString(i));
+    }
     if (((bitField0_ & 0x00000002) == 0x00000002)) {
-      output.writeEnum(4, type_.getNumber());
+      output.writeEnum(6, type_.getNumber());
     }
     for (int i = 0; i < value_.size(); i++) {
-      output.writeBytes(5, value_.getByteString(i));
+      output.writeBytes(7, value_.getByteString(i));
     }
     if (((bitField0_ & 0x00000004) == 0x00000004)) {
-      output.writeBytes(6, getJavaClassBytes());
+      output.writeBytes(8, getJavaClassBytes());
     }
     extensionWriter.writeUntil(536870912, output);
     getUnknownFields().writeTo(output);
@@ -798,9 +940,27 @@ public  final class Requirement extends
       size += dataSize;
       size += 1 * getWhitelistRegexpList().size();
     }
+    {
+      int dataSize = 0;
+      for (int i = 0; i < onlyApplyTo_.size(); i++) {
+        dataSize += com.google.protobuf.CodedOutputStream
+          .computeBytesSizeNoTag(onlyApplyTo_.getByteString(i));
+      }
+      size += dataSize;
+      size += 1 * getOnlyApplyToList().size();
+    }
+    {
+      int dataSize = 0;
+      for (int i = 0; i < onlyApplyToRegexp_.size(); i++) {
+        dataSize += com.google.protobuf.CodedOutputStream
+          .computeBytesSizeNoTag(onlyApplyToRegexp_.getByteString(i));
+      }
+      size += dataSize;
+      size += 1 * getOnlyApplyToRegexpList().size();
+    }
     if (((bitField0_ & 0x00000002) == 0x00000002)) {
       size += com.google.protobuf.CodedOutputStream
-        .computeEnumSize(4, type_.getNumber());
+        .computeEnumSize(6, type_.getNumber());
     }
     {
       int dataSize = 0;
@@ -813,7 +973,7 @@ public  final class Requirement extends
     }
     if (((bitField0_ & 0x00000004) == 0x00000004)) {
       size += com.google.protobuf.CodedOutputStream
-        .computeBytesSize(6, getJavaClassBytes());
+        .computeBytesSize(8, getJavaClassBytes());
     }
     size += extensionsSerializedSize();
     size += getUnknownFields().getSerializedSize();
@@ -942,12 +1102,16 @@ public  final class Requirement extends
       bitField0_ = (bitField0_ & ~0x00000002);
       whitelistRegexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000004);
-      type_ = com.google.javascript.jscomp.Requirement.Type.CUSTOM;
+      onlyApplyTo_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000008);
-      value_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      onlyApplyToRegexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000010);
-      javaClass_ = "";
+      type_ = com.google.javascript.jscomp.Requirement.Type.CUSTOM;
       bitField0_ = (bitField0_ & ~0x00000020);
+      value_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000040);
+      javaClass_ = "";
+      bitField0_ = (bitField0_ & ~0x00000080);
       return this;
     }
 
@@ -992,17 +1156,29 @@ public  final class Requirement extends
         bitField0_ = (bitField0_ & ~0x00000004);
       }
       result.whitelistRegexp_ = whitelistRegexp_;
-      if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        onlyApplyTo_ = new com.google.protobuf.UnmodifiableLazyStringList(
+            onlyApplyTo_);
+        bitField0_ = (bitField0_ & ~0x00000008);
+      }
+      result.onlyApplyTo_ = onlyApplyTo_;
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        onlyApplyToRegexp_ = new com.google.protobuf.UnmodifiableLazyStringList(
+            onlyApplyToRegexp_);
+        bitField0_ = (bitField0_ & ~0x00000010);
+      }
+      result.onlyApplyToRegexp_ = onlyApplyToRegexp_;
+      if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
         to_bitField0_ |= 0x00000002;
       }
       result.type_ = type_;
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         value_ = new com.google.protobuf.UnmodifiableLazyStringList(
             value_);
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000040);
       }
       result.value_ = value_;
-      if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
         to_bitField0_ |= 0x00000004;
       }
       result.javaClass_ = javaClass_;
@@ -1047,13 +1223,33 @@ public  final class Requirement extends
         }
         onChanged();
       }
+      if (!other.onlyApplyTo_.isEmpty()) {
+        if (onlyApplyTo_.isEmpty()) {
+          onlyApplyTo_ = other.onlyApplyTo_;
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          ensureOnlyApplyToIsMutable();
+          onlyApplyTo_.addAll(other.onlyApplyTo_);
+        }
+        onChanged();
+      }
+      if (!other.onlyApplyToRegexp_.isEmpty()) {
+        if (onlyApplyToRegexp_.isEmpty()) {
+          onlyApplyToRegexp_ = other.onlyApplyToRegexp_;
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          ensureOnlyApplyToRegexpIsMutable();
+          onlyApplyToRegexp_.addAll(other.onlyApplyToRegexp_);
+        }
+        onChanged();
+      }
       if (other.hasType()) {
         setType(other.getType());
       }
       if (!other.value_.isEmpty()) {
         if (value_.isEmpty()) {
           value_ = other.value_;
-          bitField0_ = (bitField0_ & ~0x00000010);
+          bitField0_ = (bitField0_ & ~0x00000040);
         } else {
           ensureValueIsMutable();
           value_.addAll(other.value_);
@@ -1061,7 +1257,7 @@ public  final class Requirement extends
         onChanged();
       }
       if (other.hasJavaClass()) {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000080;
         javaClass_ = other.javaClass_;
         onChanged();
       }
@@ -1474,20 +1670,323 @@ public  final class Requirement extends
       return this;
     }
 
-    // optional .jscomp.Requirement.Type type = 4;
+    // repeated string only_apply_to = 4;
+    private com.google.protobuf.LazyStringList onlyApplyTo_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    private void ensureOnlyApplyToIsMutable() {
+      if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        onlyApplyTo_ = new com.google.protobuf.LazyStringArrayList(onlyApplyTo_);
+        bitField0_ |= 0x00000008;
+       }
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getOnlyApplyToList() {
+      return java.util.Collections.unmodifiableList(onlyApplyTo_);
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public int getOnlyApplyToCount() {
+      return onlyApplyTo_.size();
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public java.lang.String getOnlyApplyTo(int index) {
+      return onlyApplyTo_.get(index);
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getOnlyApplyToBytes(int index) {
+      return onlyApplyTo_.getByteString(index);
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder setOnlyApplyTo(
+        int index, java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureOnlyApplyToIsMutable();
+      onlyApplyTo_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder addOnlyApplyTo(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureOnlyApplyToIsMutable();
+      onlyApplyTo_.add(value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder addAllOnlyApplyTo(
+        java.lang.Iterable<java.lang.String> values) {
+      ensureOnlyApplyToIsMutable();
+      super.addAll(values, onlyApplyTo_);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder clearOnlyApplyTo() {
+      onlyApplyTo_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000008);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to = 4;</code>
+     *
+     * <pre>
+     * Optional: A list of source paths that will be checked for the requirement
+     * (the opposite of whitelist). It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder addOnlyApplyToBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureOnlyApplyToIsMutable();
+      onlyApplyTo_.add(value);
+      onChanged();
+      return this;
+    }
+
+    // repeated string only_apply_to_regexp = 5;
+    private com.google.protobuf.LazyStringList onlyApplyToRegexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    private void ensureOnlyApplyToRegexpIsMutable() {
+      if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+        onlyApplyToRegexp_ = new com.google.protobuf.LazyStringArrayList(onlyApplyToRegexp_);
+        bitField0_ |= 0x00000010;
+       }
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getOnlyApplyToRegexpList() {
+      return java.util.Collections.unmodifiableList(onlyApplyToRegexp_);
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public int getOnlyApplyToRegexpCount() {
+      return onlyApplyToRegexp_.size();
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public java.lang.String getOnlyApplyToRegexp(int index) {
+      return onlyApplyToRegexp_.get(index);
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getOnlyApplyToRegexpBytes(int index) {
+      return onlyApplyToRegexp_.getByteString(index);
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder setOnlyApplyToRegexp(
+        int index, java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureOnlyApplyToRegexpIsMutable();
+      onlyApplyToRegexp_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder addOnlyApplyToRegexp(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureOnlyApplyToRegexpIsMutable();
+      onlyApplyToRegexp_.add(value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder addAllOnlyApplyToRegexp(
+        java.lang.Iterable<java.lang.String> values) {
+      ensureOnlyApplyToRegexpIsMutable();
+      super.addAll(values, onlyApplyToRegexp_);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder clearOnlyApplyToRegexp() {
+      onlyApplyToRegexp_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000010);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string only_apply_to_regexp = 5;</code>
+     *
+     * <pre>
+     * Optional: A list of source path regexps that will be checked for
+     * the requirement (the opposite of whitelist_regexp).
+     * It is an error to specify both
+     * (whitelist/whitelist_regexp) and (only_apply_to/only_apply_to_regexp).
+     * </pre>
+     */
+    public Builder addOnlyApplyToRegexpBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureOnlyApplyToRegexpIsMutable();
+      onlyApplyToRegexp_.add(value);
+      onChanged();
+      return this;
+    }
+
+    // optional .jscomp.Requirement.Type type = 6;
     private com.google.javascript.jscomp.Requirement.Type type_ = com.google.javascript.jscomp.Requirement.Type.CUSTOM;
     /**
-     * <code>optional .jscomp.Requirement.Type type = 4;</code>
+     * <code>optional .jscomp.Requirement.Type type = 6;</code>
      *
      * <pre>
      * Required: The type of requirement.
      * </pre>
      */
     public boolean hasType() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
-     * <code>optional .jscomp.Requirement.Type type = 4;</code>
+     * <code>optional .jscomp.Requirement.Type type = 6;</code>
      *
      * <pre>
      * Required: The type of requirement.
@@ -1497,7 +1996,7 @@ public  final class Requirement extends
       return type_;
     }
     /**
-     * <code>optional .jscomp.Requirement.Type type = 4;</code>
+     * <code>optional .jscomp.Requirement.Type type = 6;</code>
      *
      * <pre>
      * Required: The type of requirement.
@@ -1507,35 +2006,35 @@ public  final class Requirement extends
       if (value == null) {
         throw new NullPointerException();
       }
-      bitField0_ |= 0x00000008;
+      bitField0_ |= 0x00000020;
       type_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional .jscomp.Requirement.Type type = 4;</code>
+     * <code>optional .jscomp.Requirement.Type type = 6;</code>
      *
      * <pre>
      * Required: The type of requirement.
      * </pre>
      */
     public Builder clearType() {
-      bitField0_ = (bitField0_ & ~0x00000008);
+      bitField0_ = (bitField0_ & ~0x00000020);
       type_ = com.google.javascript.jscomp.Requirement.Type.CUSTOM;
       onChanged();
       return this;
     }
 
-    // repeated string value = 5;
+    // repeated string value = 7;
     private com.google.protobuf.LazyStringList value_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureValueIsMutable() {
-      if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (!((bitField0_ & 0x00000040) == 0x00000040)) {
         value_ = new com.google.protobuf.LazyStringArrayList(value_);
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000040;
        }
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1546,7 +2045,7 @@ public  final class Requirement extends
       return java.util.Collections.unmodifiableList(value_);
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1556,7 +2055,7 @@ public  final class Requirement extends
       return value_.size();
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1566,7 +2065,7 @@ public  final class Requirement extends
       return value_.get(index);
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1577,7 +2076,7 @@ public  final class Requirement extends
       return value_.getByteString(index);
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1594,7 +2093,7 @@ public  final class Requirement extends
       return this;
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1611,7 +2110,7 @@ public  final class Requirement extends
       return this;
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1625,7 +2124,7 @@ public  final class Requirement extends
       return this;
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1633,12 +2132,12 @@ public  final class Requirement extends
      */
     public Builder clearValue() {
       value_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000010);
+      bitField0_ = (bitField0_ & ~0x00000040);
       onChanged();
       return this;
     }
     /**
-     * <code>repeated string value = 5;</code>
+     * <code>repeated string value = 7;</code>
      *
      * <pre>
      * The value banned, optional for "custom" requirements.
@@ -1655,10 +2154,10 @@ public  final class Requirement extends
       return this;
     }
 
-    // optional string java_class = 6;
+    // optional string java_class = 8;
     private java.lang.Object javaClass_ = "";
     /**
-     * <code>optional string java_class = 6;</code>
+     * <code>optional string java_class = 8;</code>
      *
      * <pre>
      * For "custom" requirements, the Java class used to enforce the requirement.
@@ -1666,10 +2165,10 @@ public  final class Requirement extends
      * </pre>
      */
     public boolean hasJavaClass() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
-     * <code>optional string java_class = 6;</code>
+     * <code>optional string java_class = 8;</code>
      *
      * <pre>
      * For "custom" requirements, the Java class used to enforce the requirement.
@@ -1688,7 +2187,7 @@ public  final class Requirement extends
       }
     }
     /**
-     * <code>optional string java_class = 6;</code>
+     * <code>optional string java_class = 8;</code>
      *
      * <pre>
      * For "custom" requirements, the Java class used to enforce the requirement.
@@ -1709,7 +2208,7 @@ public  final class Requirement extends
       }
     }
     /**
-     * <code>optional string java_class = 6;</code>
+     * <code>optional string java_class = 8;</code>
      *
      * <pre>
      * For "custom" requirements, the Java class used to enforce the requirement.
@@ -1721,13 +2220,13 @@ public  final class Requirement extends
       if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  bitField0_ |= 0x00000080;
       javaClass_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional string java_class = 6;</code>
+     * <code>optional string java_class = 8;</code>
      *
      * <pre>
      * For "custom" requirements, the Java class used to enforce the requirement.
@@ -1735,13 +2234,13 @@ public  final class Requirement extends
      * </pre>
      */
     public Builder clearJavaClass() {
-      bitField0_ = (bitField0_ & ~0x00000020);
+      bitField0_ = (bitField0_ & ~0x00000080);
       javaClass_ = getDefaultInstance().getJavaClass();
       onChanged();
       return this;
     }
     /**
-     * <code>optional string java_class = 6;</code>
+     * <code>optional string java_class = 8;</code>
      *
      * <pre>
      * For "custom" requirements, the Java class used to enforce the requirement.
@@ -1753,7 +2252,7 @@ public  final class Requirement extends
       if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  bitField0_ |= 0x00000080;
       javaClass_ = value;
       onChanged();
       return this;

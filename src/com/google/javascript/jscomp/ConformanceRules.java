@@ -77,7 +77,9 @@ public final class ConformanceRules {
     final AbstractCompiler compiler;
     final String message;
     final ImmutableList<String> whitelist;
-    final Pattern whitelistRegexp;
+    final ImmutableList<String> onlyApplyTo;
+    @Nullable final Pattern whitelistRegexp;
+    @Nullable final Pattern onlyApplyToRegexp;
 
     public AbstractRule(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -85,14 +87,26 @@ public final class ConformanceRules {
         throw new InvalidRequirementSpec("missing message");
       }
       this.compiler = compiler;
-      this.whitelist = ImmutableList.copyOf(requirement.getWhitelistList());
-
-      this.whitelistRegexp = buildPattern(
+      message = requirement.getErrorMessage();
+      whitelist = ImmutableList.copyOf(requirement.getWhitelistList());
+      whitelistRegexp = buildPattern(
           requirement.getWhitelistRegexpList());
+      onlyApplyTo = ImmutableList.copyOf(requirement.getOnlyApplyToList());
+      onlyApplyToRegexp = buildPattern(
+          requirement.getOnlyApplyToRegexpList());
 
-      this.message = requirement.getErrorMessage();
+      boolean hasWhitelist = !whitelist.isEmpty()
+          || whitelistRegexp != null;
+      boolean hasOnlyApplyTo = !onlyApplyTo.isEmpty()
+          || onlyApplyToRegexp != null;
+
+      if (hasWhitelist && hasOnlyApplyTo) {
+        throw new IllegalArgumentException(
+            "It is an error to specify both whitelist and only_apply_to");
+      }
     }
 
+    @Nullable
     private static Pattern buildPattern(List<String> reqPatterns)
         throws InvalidRequirementSpec {
       if (reqPatterns == null || reqPatterns.isEmpty()) {
@@ -126,24 +140,36 @@ public final class ConformanceRules {
         NodeTraversal t, Node n);
 
     /**
-     * @return Whether the specified Node originated from a source file
-     * that has been whitelisted for this rule.
+     * @return Whether the specified Node should be checked for conformance,
+     *     according to this rule's whitelist configuration.
      */
-    private boolean isWhitelisted(Node n) {
+    private boolean shouldCheckConformance(Node n) {
       String srcfile = NodeUtil.getSourceName(n);
-      for (int i = 0; i < whitelist.size(); i++) {
-        String entry = whitelist.get(i);
+      if (srcfile == null) {
+        return true;
+      } else if (!onlyApplyTo.isEmpty() || onlyApplyToRegexp != null) {
+        return pathIsInListOrRegexp(srcfile, onlyApplyTo, onlyApplyToRegexp);
+      } else {
+        return !pathIsInListOrRegexp(srcfile, whitelist, whitelistRegexp);
+      }
+    }
+
+    private static boolean pathIsInListOrRegexp(
+        String srcfile, ImmutableList<String> list, @Nullable Pattern regexp) {
+      for (int i = 0; i < list.size(); i++) {
+        String entry = list.get(i);
         if (!entry.isEmpty() && srcfile.startsWith(entry)) {
           return true;
         }
       }
-      return whitelistRegexp != null && whitelistRegexp.matcher(srcfile).find();
+      return regexp != null && regexp.matcher(srcfile).find();
     }
 
     @Override
     public final void check(NodeTraversal t, Node n) {
       ConformanceResult confidence = checkConformance(t, n);
-      if (confidence != ConformanceResult.CONFORMANCE && !isWhitelisted(n)) {
+      if (confidence != ConformanceResult.CONFORMANCE
+          && shouldCheckConformance(n)) {
         report(t, n, confidence);
       }
     }
