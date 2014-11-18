@@ -45,12 +45,10 @@ class SanityCheck implements CompilerPass {
           "Internal compiler error. Extern properties modified.");
 
   private final AbstractCompiler compiler;
-  private final boolean gatherExternsFromTypes;
   private final AstValidator astValidator;
 
-  SanityCheck(AbstractCompiler compiler, boolean gatherExternsFromTypes) {
+  SanityCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.gatherExternsFromTypes = gatherExternsFromTypes;
     this.astValidator = new AstValidator(compiler);
   }
 
@@ -147,8 +145,7 @@ class SanityCheck implements CompilerPass {
       // GatherExternProperties hasn't run yet. Don't report a violation.
       return;
     }
-    (new GatherExternProperties(compiler, gatherExternsFromTypes))
-        .process(externs, null);
+    (new GatherExternProperties(compiler)).process(externs, null);
     if (!compiler.getExternProperties().equals(externProperties)) {
       compiler.report(JSError.make(EXTERN_PROPERTIES_CHANGED));
       // Throw an exception, so that the infrastructure will tell us

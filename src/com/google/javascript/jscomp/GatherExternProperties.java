@@ -42,14 +42,11 @@ class GatherExternProperties extends AbstractPostOrderCallback
     implements CompilerPass {
   private final Set<String> externProperties = Sets.newHashSet();
   private final AbstractCompiler compiler;
-  private final boolean gatherPropertiesFromTypes;
   private final ExtractRecordTypePropertyNames typeVisitor =
       new ExtractRecordTypePropertyNames();
 
-  public GatherExternProperties(AbstractCompiler compiler,
-      boolean gatherPropertiesFromTypes) {
+  public GatherExternProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.gatherPropertiesFromTypes = gatherPropertiesFromTypes;
   }
 
   @Override
@@ -78,26 +75,24 @@ class GatherExternProperties extends AbstractPostOrderCallback
         break;
     }
 
-    if (gatherPropertiesFromTypes) {
-      // Gather field names from the type of the node (if any).
-      JSType type = n.getJSType();
-      if (type != null) {
-        typeVisitor.visitOnce(type);
-      }
+    // Gather field names from the type of the node (if any).
+    JSType type = n.getJSType();
+    if (type != null) {
+      typeVisitor.visitOnce(type);
+    }
 
-      // Gather field names from the @typedef declaration.
-      // Typedefs are declared on qualified name nodes.
-      if (n.isQualifiedName()) {
-        // Get the JSDoc for the current node and check if it contains a
-        // typedef.
-        JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
-        if (jsDoc != null && jsDoc.hasTypedefType()) {
-          // Get the corresponding type by looking at the type registry.
-          JSType typedefType =
-              compiler.getTypeRegistry().getType(n.getQualifiedName());
-          if (typedefType != null) {
-            typeVisitor.visitOnce(typedefType);
-          }
+    // Gather field names from the @typedef declaration.
+    // Typedefs are declared on qualified name nodes.
+    if (n.isQualifiedName()) {
+      // Get the JSDoc for the current node and check if it contains a
+      // typedef.
+      JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+      if (jsDoc != null && jsDoc.hasTypedefType()) {
+        // Get the corresponding type by looking at the type registry.
+        JSType typedefType =
+            compiler.getTypeRegistry().getType(n.getQualifiedName());
+        if (typedefType != null) {
+          typeVisitor.visitOnce(typedefType);
         }
       }
     }
@@ -117,6 +112,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
 
     // Interesting cases first, no-ops later.
 
+    @Override
     public Set<String> caseEnumElementType(EnumElementType type) {
       // Descend into the enum's element type.
       // @enum {T}
@@ -125,6 +121,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
       return externProperties;
     }
 
+    @Override
     public Set<String> caseFunctionType(FunctionType type) {
       // Visit parameter types.
       // function(T1, T2), as well as @param {T}
@@ -163,6 +160,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
       return externProperties;
     }
 
+    @Override
     public Set<String> caseObjectType(ObjectType type) {
       // Record types.
       // {a: T1, b: T2}.
@@ -182,11 +180,13 @@ class GatherExternProperties extends AbstractPostOrderCallback
       return externProperties;
     }
 
+    @Override
     public Set<String> caseNamedType(NamedType type) {
       // Treat as all other proxy objects.
       return caseProxyObjectType(type);
     }
 
+    @Override
     public Set<String> caseProxyObjectType(ProxyObjectType type) {
       // Visit the proxied type.
       // @typedef {T}
@@ -195,6 +195,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
       return externProperties;
     }
 
+    @Override
     public Set<String> caseUnionType(UnionType type) {
       // Visit the alternatives.
       // T1|T2|T3
@@ -204,6 +205,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
       return externProperties;
     }
 
+    @Override
     public Set<String> caseTemplatizedType(TemplatizedType type) {
       // Visit the type arguments.
       // SomeType.<T1, T2>
@@ -213,42 +215,52 @@ class GatherExternProperties extends AbstractPostOrderCallback
       return externProperties;
     }
 
+    @Override
     public Set<String> caseNoType(NoType type) {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseAllType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseBooleanType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseNoObjectType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseUnknownType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseNullType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseNumberType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseStringType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseVoidType() {
       return externProperties;
     }
 
+    @Override
     public Set<String> caseTemplateType(TemplateType templateType) {
       return externProperties;
     }

@@ -22,8 +22,6 @@ import com.google.common.collect.Sets;
  * Test case for {@link GatherExternProperties}.
  */
 public class GatherExternPropertiesTest extends CompilerTestCase {
-  private boolean gatherPropertiesFromTypes = false;
-
   public GatherExternPropertiesTest() {
     super();
     enableTypeCheck(CheckLevel.WARNING);
@@ -31,12 +29,10 @@ public class GatherExternPropertiesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new GatherExternProperties(compiler, gatherPropertiesFromTypes);
+    return new GatherExternProperties(compiler);
   }
 
   public void testGatherExternProperties() {
-    gatherPropertiesFromTypes = false;
-
     // Properties.
     assertExternProperties(
         "foo.bar;",
@@ -59,15 +55,9 @@ public class GatherExternPropertiesTest extends CompilerTestCase {
     // String-key access does not count.
     assertExternProperties(
         "foo['bar'] = {};");
-
-    // Record types are ignored.
-    assertExternProperties(
-        "/** @type {{bar: string, baz: string}} */ var foo;");
   }
 
   public void testGatherExternPropertiesIncludingRecordTypes() {
-    gatherPropertiesFromTypes = true;
-
     // Properties.
     assertExternProperties(
         "foo.bar;",

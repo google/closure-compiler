@@ -43,7 +43,7 @@ public class SanityCheckTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         otherPass.process(externs, root);
-        (new SanityCheck(compiler, false)).process(externs, root);
+        (new SanityCheck(compiler)).process(externs, root);
       }
     };
   }

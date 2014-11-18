@@ -891,7 +891,7 @@ public class Compiler extends AbstractCompiler {
       new PassFactory("sanityCheck", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new SanityCheck(compiler, options.gatherExternsFromTypes);
+      return new SanityCheck(compiler);
     }
   };
 
@@ -2393,6 +2393,7 @@ public class Compiler extends AbstractCompiler {
     return getPassConfig().getIntermediateState().propertyMap;
   }
 
+  @Override
   CompilerOptions getOptions() {
     return options;
   }

@@ -79,9 +79,6 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether to scan externs for property names. */
   private boolean gatherExternPropertiesEnabled = false;
 
-  /** Whether types in externs should also be scanned for property names. */
-  private boolean gatherExternsFromTypes = false;
-
   /** Whether the Normalize pass runs before pass being tested. */
   private boolean normalizeEnabled = false;
 
@@ -366,19 +363,7 @@ public abstract class CompilerTestCase extends TestCase  {
    * Scan externs for properties that should not be renamed.
    */
   void enableGatherExternProperties() {
-    // By default do not look at the types.
-    enableGatherExternProperties(false);
-  }
-
-  /**
-   * Scan externs for properties that should not be renamed.
-   *
-   * @param gatherExternsFromTypes Whether to gather externs from properties
-   *     defined in types (record types).
-   */
-  void enableGatherExternProperties(boolean gatherExternsFromTypes) {
     gatherExternPropertiesEnabled = true;
-    this.gatherExternsFromTypes = gatherExternsFromTypes;
   }
 
   /**
@@ -1052,7 +1037,7 @@ public abstract class CompilerTestCase extends TestCase  {
         }
 
         if (gatherExternPropertiesEnabled && i == 0) {
-          (new GatherExternProperties(compiler, gatherExternsFromTypes))
+          (new GatherExternProperties(compiler))
               .process(externsRoot, mainRoot);
         }
 

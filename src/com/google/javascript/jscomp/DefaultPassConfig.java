@@ -2536,8 +2536,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("gatherExternProperties", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new GatherExternProperties(
-              compiler, options.gatherExternsFromTypes);
+          return new GatherExternProperties(compiler);
         }
       };
 
