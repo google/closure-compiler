@@ -78,9 +78,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   static final DiagnosticType WEAK_NAMESPACE_TYPE = DiagnosticType.warning(
       "JSC_WEAK_NAMESPACE_TYPE",
       "Provided symbol declared with type Object. This is rarely useful. "
-      + "Use @enum for enumerations, "
-      + "Object with type parameters for simple maps, "
-      + "or untyped @const for namespaces.");
+      + "For more information see "
+      + "https://github.com/google/closure-compiler/wiki/A-word-about-the-type-Object");
 
   static final DiagnosticType FUNCTION_NAMESPACE_ERROR = DiagnosticType.error(
       "JSC_FUNCTION_NAMESPACE_ERROR",
