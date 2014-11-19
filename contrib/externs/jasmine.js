@@ -408,6 +408,13 @@ function it(description, handler) {}
 
 
 /**
+ * @param {string} description
+ * @param {function(this:jasmine.Spec)} handler
+ */
+function iit(description, handler) {}
+
+
+/**
  * Provided by angular-mocks.js.
  * @param {...(string|Function|Array.<(string,Function)>)} var_args
  */
@@ -447,7 +454,6 @@ function xdescribe(description, handler) {}
 
 
 /**
- * @nosideeffects
  * @param {string} description
  * @param {function(this:jasmine.Spec)} handler
  */
