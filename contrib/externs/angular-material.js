@@ -62,13 +62,13 @@ md.$dialog.prototype.show = function(options) {};
 
 
 /**
- * @type {function(*)}
+ * @type {function(*=)}
  */
 md.$dialog.prototype.hide = function() {};
 
 
 /**
- * @type {function(*)}
+ * @type {function(*=)}
  */
 md.$dialog.prototype.cancel = function() {};
 
