@@ -139,7 +139,7 @@ public class SuggestedFixTest {
   @Test
   public void testReplace() {
     String before = "var someRandomCode = {};\n/** some comment */\n";
-    String after = "goog.foo()";
+    String after = "goog.foo();";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
     Node newNode = IR.exprResult(IR.call(
@@ -149,7 +149,43 @@ public class SuggestedFixTest {
         .replace(root.getLastChild().getFirstChild(), newNode, compiler)
         .build();
     CodeReplacement replacement = new CodeReplacement(
-        before.length(), after.length(), "goog2.get('service');\n");
+        before.length(), after.length(), "goog2.get('service');");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testReplace_functionArgument() {
+    String before = ""
+        + "var MyClass = function() {};\n"
+        + "MyClass.prototype.foo = function() {};\n"
+        + "MyClass.prototype.bar = function() {};\n"
+        + "var clazz = new MyClass();\n";
+    String after = "alert(clazz.foo());";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    Node newNode = IR.call(IR.getprop(IR.name("clazz"), IR.string("bar")));
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .replace(root.getLastChild().getFirstChild().getLastChild(), newNode, compiler)
+        .build();
+    CodeReplacement replacement = new CodeReplacement(
+        before.length() + "alert(".length(), "clazz.foo()".length(), "clazz.bar()");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testReplace_leftHandSideAssignment() {
+    String before = "var MyClass = function() {};\n";
+    String after = "MyClass.prototype.foo = function() {};\n";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    Node newNode = IR.getprop(
+        IR.getprop(IR.name("MyClass"), IR.string("prototype")),
+        IR.string("bar"));
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .replace(root.getLastChild().getFirstChild().getFirstChild(), newNode, compiler)
+        .build();
+    CodeReplacement replacement = new CodeReplacement(
+        before.length(), "MyClass.prototype.foo".length(), "MyClass.prototype.bar");
     assertReplacement(fix, replacement);
   }
 

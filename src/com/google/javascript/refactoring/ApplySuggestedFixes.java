@@ -118,7 +118,7 @@ public final class ApplySuggestedFixes {
       sb.append(replacement.getNewContent());
       lastIndex = replacement.getStartPosition() + replacement.getLength();
     }
-    if (lastIndex <= sb.length()) {
+    if (lastIndex <= code.length()) {
       sb.append(code.substring(lastIndex));
     }
     return sb.toString();

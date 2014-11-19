@@ -17,22 +17,19 @@
 package com.google.javascript.refactoring;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.rhino.Node;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Unit tests for {RefasterJsScanner}.
@@ -113,6 +110,8 @@ public class RefasterJsScannerTest {
 
   @Test
   public void test_simple() throws Exception {
+    String originalCode = "var loc = 'str';";
+    String expectedCode = "'bar';";
     String template = ""
         + "function before_foo() {\n"
         + "  var a = 'str';\n"
@@ -120,21 +119,7 @@ public class RefasterJsScannerTest {
         + "function after_foo() {\n"
         + "  'bar';\n"
         + "}\n";
-    Compiler compiler = createCompiler();
-    String testCode = "var loc = 'str';";
-    compileTestCode(compiler, testCode, "");
-    Node root = getScriptRoot(compiler);
-    RefasterJsScanner scanner = createScanner(compiler, template);
-    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
-    assertTrue(scanner.matches(match.getNode(), match.getMetadata()));
-
-    List<SuggestedFix> fixes = scanner.processMatch(match);
-    assertEquals(1, fixes.size());
-    Set<CodeReplacement> replacements = fixes.get(0).getReplacements().get("test");
-    assertEquals(1, replacements.size());
-    assertEquals(
-        new CodeReplacement(0, "var loc = 'str';".length(), "'bar';\n"),
-        replacements.iterator().next());
+    assertChanges("", originalCode, expectedCode, template);
   }
 
   @Test
@@ -144,7 +129,10 @@ public class RefasterJsScannerTest {
         + "function Location() {};\n"
         + "/** @type {string} */\n"
         + "Location.prototype.href;\n"
-        + "function foo() {}";
+        + "function foo() {}\n"
+        + "/** @type {Location} var loc;";
+    String originalCode = "loc.href = 'str';";
+    String expectedCode = "foo();";
     String template = ""
         + "/** @param {Location} loc */"
         + "function before_foo(loc) {\n"
@@ -153,23 +141,7 @@ public class RefasterJsScannerTest {
         + "function after_foo() {\n"
         + "  foo();\n"
         + "}\n";
-    Compiler compiler = createCompiler();
-    String preamble = "var loc = new Location();";
-    String testCode = "loc.href = 'str';";
-    compileTestCode(compiler, preamble + testCode, externs);
-    Node root = getScriptRoot(compiler);
-    RefasterJsScanner scanner = createScanner(compiler, template);
-    Match match = new Match(
-        root.getFirstChild().getNext().getFirstChild(), new NodeMetadata(compiler));
-    assertTrue(scanner.matches(match.getNode(), match.getMetadata()));
-
-    List<SuggestedFix> fixes = scanner.processMatch(match);
-    assertEquals(1, fixes.size());
-    Set<CodeReplacement> replacements = fixes.get(0).getReplacements().get("test");
-    assertEquals(1, replacements.size());
-    assertEquals(
-        new CodeReplacement(preamble.length(), testCode.length(), "foo();\n"),
-        replacements.iterator().next());
+    assertChanges(externs, originalCode, expectedCode, template);
   }
 
   @Test
@@ -177,8 +149,11 @@ public class RefasterJsScannerTest {
     String externs = ""
         + "/** @constructor */\n"
         + "function FooType() {}\n"
-        + "FooType.prototype.bar = function() {};";
-    String template = externs
+        + "FooType.prototype.bar = function() {};\n"
+        + "var obj = new FooType();";
+    String originalCode = "obj.bar();";
+    String expectedCode = "obj.baz();";
+    String template = ""
         + "/**\n"
         + " * @param {FooType} foo\n"
         + " */\n"
@@ -191,24 +166,8 @@ public class RefasterJsScannerTest {
         + "function after_foo(foo) {\n"
         + "  foo.baz();\n"
         + "}\n";
-    Compiler compiler = createCompiler();
-    String preamble = "var obj = new FooType();\n";
-    String testCode = preamble + "obj.bar();";
-    compileTestCode(compiler, testCode, externs);
-    Node root = getScriptRoot(compiler);
-    RefasterJsScanner scanner = createScanner(compiler, template);
-    Match match = new Match(root.getLastChild().getFirstChild(), new NodeMetadata(compiler));
-    assertTrue(scanner.matches(match.getNode(), match.getMetadata()));
-
-    List<SuggestedFix> fixes = scanner.processMatch(match);
-    assertEquals(1, fixes.size());
-    Set<CodeReplacement> replacements = fixes.get(0).getReplacements().get("test");
-    assertEquals(1, replacements.size());
-    assertEquals(
-        new CodeReplacement(preamble.length(), "obj.bar();".length(), "obj.baz();\n"),
-        replacements.iterator().next());
+    assertChanges(externs, originalCode, expectedCode, template);
   }
-
 
   @Test
   public void test_multiLines() throws Exception {
@@ -217,7 +176,16 @@ public class RefasterJsScannerTest {
         + "function FooType() {}\n"
         + "FooType.prototype.bar = function() {};"
         + "FooType.prototype.baz = function() {};";
-    String template = externs
+    String preamble = "var obj = new FooType();\n";
+    String postamble = "var someOtherCode = 3;\n";
+    String originalCode = ""
+        + preamble
+        + "obj.bar();\n"
+        + "obj.baz();\n"
+        + postamble;
+    // TODO(mknichel): Correctly handle removing newlines in the multiline case.
+    String expectedCode = preamble + "\n\n" + postamble;
+    String template = ""
         + "/**\n"
         + " * @param {FooType} foo\n"
         + " */\n"
@@ -225,33 +193,299 @@ public class RefasterJsScannerTest {
         + "  foo.bar();\n"
         + "  foo.baz();\n"
         + "};\n"
-        + "function after_foo() {\n"
+        + "/**\n"
+        + " * @param {FooType} foo\n"
+        + " */\n"
+        + "function after_foo(foo) {\n"
         + "}\n";
-    Compiler compiler = createCompiler();
-    String preamble = "var obj = new FooType();\n";
-    String postamble = "var someOtherCode = 3;\n";
-    String testCode = ""
-        + preamble
-        + "obj.bar();\n"
-        + "obj.baz();\n"
-        + postamble;
-    compileTestCode(compiler, testCode, externs);
-    Node root = getScriptRoot(compiler);
-    RefasterJsScanner scanner = createScanner(compiler, template);
-    Match match = new Match(root.getFirstChild().getNext(), new NodeMetadata(compiler));
-    assertTrue(scanner.matches(match.getNode(), match.getMetadata()));
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
 
-    List<SuggestedFix> fixes = scanner.processMatch(match);
-    assertEquals(1, fixes.size());
-    Set<CodeReplacement> replacements = fixes.get(0).getReplacements().get("test");
-    assertEquals(2, replacements.size());
-    Iterator<CodeReplacement> iterator = replacements.iterator();
-    assertEquals(
-        new CodeReplacement(preamble.length(), "obj.bar();".length(), ""),
-        iterator.next());
-    assertEquals(
-        new CodeReplacement(preamble.length() + "obj.bar();\n".length(), "obj.baz();".length(), ""),
-        iterator.next());
+  @Test
+  public void test_replaceFunctionArgument() throws Exception {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function MyClass() {};\n"
+        + "MyClass.prototype.foo = function() {};\n"
+        + "MyClass.prototype.bar = function() {};\n"
+        + "var clazz = new MyClass();";
+    String originalCode = "alert(clazz.foo());";
+    String expectedCode = "alert(clazz.bar());";
+    String template = ""
+        + "/** @param {MyClass} clazz */"
+        + "function before_foo(clazz) {\n"
+        + "  clazz.foo();\n"
+        + "};\n"
+        + "/** @param {MyClass} clazz */"
+        + "function after_foo(clazz) {\n"
+        + "  clazz.bar();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_replaceLeftHandSideOfAssignment() throws Exception {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function MyClass() {};\n";
+    String originalCode = "MyClass.prototype.foo = function() {};\n";
+    String expectedCode = "MyClass.prototype.bar = function() {};\n";
+    String template = ""
+        + "function before_foo() {\n"
+        + "  MyClass.prototype.foo\n"
+        + "};\n"
+        + "function after_foo() {\n"
+        + "  MyClass.prototype.bar\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_replaceRightHandSideOfAssignment() throws Exception {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function MyClass() {};\n"
+        + "MyClass.prototype.foo = function() {};\n"
+        + "MyClass.prototype.bar = function() {};\n";
+    String originalCode = "var x = MyClass.prototype.foo;";
+    String expectedCode = "var x = MyClass.prototype.bar;";
+    String template = ""
+        + "function before_foo() {\n"
+        + "  MyClass.prototype.foo\n"
+        + "};\n"
+        + "function after_foo() {\n"
+        + "  MyClass.prototype.bar\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_doesNotAddSpuriousNewline() throws Exception {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function MyClass() {};\n"
+        + "MyClass.prototype.foo = function() {};\n"
+        + "MyClass.prototype.bar = function() {};\n"
+        + "var clazz = new MyClass();\n";
+    String originalCode = "clazz.foo();";
+    String expectedCode = "clazz.bar();";
+    String template = ""
+        + "/** @param {MyClass} clazz */"
+        + "function before_foo(clazz) {\n"
+        + "  clazz.foo();\n"
+        + "};\n"
+        + "/** @param {MyClass} clazz */"
+        + "function after_foo(clazz) {\n"
+        + "  clazz.bar();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_throwStatements() throws Exception {
+    String externs = "";
+    String originalCode = "throw Error('foo');";
+    String expectedCode = "throw getError();";
+    String template = ""
+        + "/** @param {string} msg */\n"
+        + "function before_template(msg) {\n"
+        + "  throw Error(msg);\n"
+        + "}\n"
+        + "/** @param {string} msg */\n"
+        + "function after_template(msg) {\n"
+        + "  throw getError();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+
+    originalCode = "function f() {throw Error('foo');}";
+    expectedCode = "function f() {throw getError();}";
+    assertChanges(externs, originalCode, expectedCode, template);
+
+    originalCode = ""
+        + "if (true) {\n"
+        + "  throw Error('foo');\n"
+        + "}";
+    expectedCode = ""
+        + "if (true) {\n"
+        + "  throw getError();\n"
+        + "}";
+    assertChanges(externs, originalCode, expectedCode, template);
+}
+
+  @Test
+  public void test_whileStatements() throws Exception {
+    String externs = "/** @return {string} */ function getFoo() {return 'foo';}";
+    String originalCode = "while(getFoo()) {}";
+    String expectedCode = "while(getBar()) {}";
+    String template = ""
+        + "function before_template() {\n"
+        + "  getFoo();\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  getBar();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_doWhileStatements() throws Exception {
+    String externs = "/** @return {string} */ function getFoo() {return 'foo';}";
+    String originalCode = "do {} while(getFoo());";
+    String expectedCode = "do {} while(getBar());";
+    String template = ""
+        + "function before_template() {\n"
+        + "  getFoo();\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  getBar();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_returnStatement() throws Exception {
+    String externs = "/** @return {string} */ function getFoo() {return 'foo';}";
+    String originalCode = "function() { return getFoo(); }";
+    String expectedCode = "function() { return getBar(); }";
+    String template = ""
+        + "function before_template() {\n"
+        + "  getFoo();\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  getBar();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+
+    originalCode = "function() { return getFoo() == 'foo'; }";
+    expectedCode = "function() { return getBar() == 'foo'; }";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_switchStatement() throws Exception {
+    String externs = "/** @return {string} */ function getFoo() {return 'foo';}";
+    String originalCode = ""
+        + "switch(getFoo()) {\n"
+        + "  default:\n"
+        + "    break;\n"
+        + "}";
+    String expectedCode = ""
+        + "switch(getBar()) {\n"
+        + "  default:\n"
+        + "    break;\n"
+        + "}";
+    String template = ""
+        + "function before_template() {\n"
+        + "  getFoo();\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  getBar();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_caseStatement() throws Exception {
+    String externs = ""
+        + "var str = 'foo';\n"
+        + "var CONSTANT = 'bar';n";
+    String originalCode = ""
+        + "switch(str) {\n"
+        + "  case CONSTANT:\n"
+        + "    break;\n"
+        + "}";
+    String expectedCode = ""
+        + "switch(str) {\n"
+        + "  case getValue():\n"
+        + "    break;\n"
+        + "}";
+    String template = ""
+        + "function before_template() {\n"
+        + "  CONSTANT\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  getValue()\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_forStatement() throws Exception {
+    String externs = ""
+        + "var obj = {};\n"
+        + "obj.prop = 6;"
+        + "var CONSTANT = 3;n";
+    String originalCode = "for (var i = CONSTANT; i < 5; i++) {}";
+    String expectedCode = "for (var i = CONSTANT2; i < 5; i++) {}";
+    String template = ""
+        + "function before_template() {\n"
+        + "  CONSTANT\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  CONSTANT2\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+
+    originalCode = "for (var i = 0; i < CONSTANT; i++) {}";
+    expectedCode = "for (var i = 0; i < CONSTANT2; i++) {}";
+    assertChanges(externs, originalCode, expectedCode, template);
+
+    originalCode = "for (var i = 0; i < CONSTANT; i++) {}";
+    expectedCode = "for (var i = 0; i < obj.prop; i++) {}";
+    template = ""
+        + "function before_template() {\n"
+        + "  CONSTANT\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  obj.prop\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+
+    originalCode = "for (var prop in obj) {}";
+    expectedCode = "for (var prop in getObj()) {}";
+    template = ""
+        + "function before_template() {\n"
+        + "  obj\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  getObj()\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_comparisons() throws Exception {
+    String externs = ""
+        + "var obj = {};\n"
+        + "obj.prop = 5;";
+    String originalCode = "if (obj.prop == 5) {}";
+    String expectedCode = "if (3 == 5) {}";
+    String template = ""
+        + "function before_template() {\n"
+        + "  obj.prop;\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  3;\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_arrayAccess() throws Exception {
+    String externs = ""
+        + "var arr = [];\n"
+        + "var i = 0;\n"
+        + "/** @return {number} */ function getNewIndex() {}";
+    String originalCode = "arr[i];";
+    String expectedCode = "arr[getNewIndex()];";
+    String template = ""
+        + "function before_template() {\n"
+        + "  i;\n"
+        + "}\n"
+        + "function after_template() {\n"
+        + "  getNewIndex();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
   }
 
   private Compiler createCompiler() {
@@ -273,10 +507,19 @@ public class RefasterJsScannerTest {
         options);
   }
 
-  private Node getScriptRoot(Compiler compiler) {
-    Node root = compiler.getRoot();
-    // The last child of the compiler root is a Block node, and the first child
-    // of that is the Script node.
-    return root.getLastChild().getFirstChild();
+  private void assertChanges(
+      String externs, String originalCode, String expectedCode, String refasterJsTemplate)
+      throws Exception {
+    RefasterJsScanner scanner = new RefasterJsScanner();
+    scanner.loadRefasterJsTemplateFromCode(refasterJsTemplate);
+
+    RefactoringDriver driver = new RefactoringDriver.Builder(scanner)
+        .addExternsFromCode(externs)
+        .addInputsFromCode(originalCode)
+        .build();
+    List<SuggestedFix> fixes = driver.drive();
+    String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
+        fixes, ImmutableMap.of("input", originalCode)).get("input");
+    assertEquals(expectedCode, newCode);
   }
 }

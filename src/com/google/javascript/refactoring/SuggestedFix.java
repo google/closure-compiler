@@ -173,10 +173,28 @@ public final class SuggestedFix {
      * Replaces the provided node with new node in the source file.
      */
     public Builder replace(Node original, Node newNode, AbstractCompiler compiler) {
+      Node parent = original.getParent();
+      // EXPR_RESULT nodes will contain the trailing semicolons, but the child node
+      // will not. Replace the EXPR_RESULT node to ensure that the semicolons are
+      // correct in the final output.
+      if (original.getParent().isExprResult()) {
+        original = original.getParent();
+      }
+      // TODO(mknichel): Move this logic to CodePrinter.
+      String newCode = generateCode(compiler, newNode);
+      // The generated code may contain a trailing newline but that is never wanted.
+      if (newCode.endsWith("\n")) {
+        newCode = newCode.substring(0, newCode.length() - 1);
+      }
+      // Most replacements don't need the semicolon in the new generated code - however, some
+      // statements that are blocks or expressions will need the semicolon.
+      boolean needsSemicolon = parent.isExprResult() || parent.isBlock() || parent.isScript();
+      if (newCode.endsWith(";") && !needsSemicolon) {
+        newCode = newCode.substring(0, newCode.length() - 1);
+      }
       replacements.put(
           original.getSourceFileName(),
-          new CodeReplacement(
-              original.getSourceOffset(), original.getLength(), generateCode(compiler, newNode)));
+          new CodeReplacement(original.getSourceOffset(), original.getLength(), newCode));
       return this;
     }
 

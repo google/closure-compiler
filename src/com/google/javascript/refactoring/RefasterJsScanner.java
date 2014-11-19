@@ -106,12 +106,6 @@ public final class RefasterJsScanner extends Scanner {
         matchedTemplate.afterTemplate.getLastChild(),
         matchedTemplate.matcher.getTemplateNodeToMatchMap());
     Node nodeToReplace = match.getNode();
-    // EXPR_RESULT nodes will contain the trailing semicolons, but the child node
-    // will not. Replace the EXPR_RESULT node to ensure that the semicolons are
-    // correct in the final output.
-    if (nodeToReplace.getParent().isExprResult()) {
-      nodeToReplace = nodeToReplace.getParent();
-    }
     fix.replace(nodeToReplace, newNode, match.getMetadata().getCompiler());
     // If the template is a multiline template, make sure to delete the same number of sibling nodes
     // as the template has.
