@@ -1021,7 +1021,8 @@ public final class ConformanceRules {
           || !n.isExprResult()
           || !n.getFirstChild().isAssign()
           || n.getFirstChild().getLastChild() == null
-          || n.getFirstChild().getLastChild().isObjectLit()) {
+          || n.getFirstChild().getLastChild().isObjectLit()
+          || isWizDeclaration(n)) {
         return ConformanceResult.CONFORMANCE;
       }
       JSDocInfo ownJsDoc = n.getFirstChild().getJSDocInfo();
@@ -1043,6 +1044,33 @@ public final class ConformanceRules {
       }
 
       return visibilityAtDeclarationOrFileoverview(ownJsDoc, getScriptNode(n));
+    }
+
+    /**
+     * Do not check Wiz-style declarations for implicit public visibility.
+     * Example:
+     * <code>
+     * foo.Bar = wiz.service(...);
+     * </code>
+     * {@link WizPass} rewrites portions of the AST, and I believe it
+     * does not propagate the constructor JsDoc properly. Until I have time
+     * to investigate, this seems like a reasonable workaround.
+     * TODO(brndn): get to the bottom of this. See b/18436759.
+     */
+    private static boolean isWizDeclaration(Node n) {
+      Node lastChild = n.getFirstChild().getLastChild();
+      if (!lastChild.isCall()) {
+        return false;
+      }
+      Node getprop = lastChild.getFirstChild();
+      if (getprop == null || !getprop.isGetProp()) {
+        return false;
+      }
+      Node name = getprop.getFirstChild();
+      if (name == null || !name.isName()) {
+        return false;
+      }
+      return "wiz".equals(name.getString());
     }
 
     private static ConformanceResult checkCtorProperties(ObjectType type) {
