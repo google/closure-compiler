@@ -546,13 +546,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case JAVA_DISPATCH:
-          if (!jsdocBuilder.recordJavaDispatch()) {
-            parser.addParserWarning("msg.jsdoc.javadispatch",
-                stream.getLineno(), stream.getCharno());
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case EXTENDS:
         case IMPLEMENTS:
           skipEOLs();

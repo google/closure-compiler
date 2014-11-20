@@ -194,10 +194,6 @@ class TypedCodeGenerator extends CodeGenerator {
       sb.append("\n");
     }
 
-    if (fnNode != null && fnNode.getBooleanProp(Node.IS_DISPATCHER)) {
-      sb.append(" * @javadispatch\n");
-    }
-
     sb.append(" */\n");
     return sb.toString();
   }

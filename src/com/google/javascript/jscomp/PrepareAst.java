@@ -133,10 +133,6 @@ class PrepareAst implements CompilerPass {
         case Token.CALL:
           annotateCalls(n);
           break;
-
-        case Token.FUNCTION:
-          annotateDispatchers(n, parent);
-          break;
       }
     }
 
@@ -174,20 +170,6 @@ class PrepareAst implements CompilerPass {
       if (first.isName() &&
           "eval".equals(first.getString())) {
         first.putBooleanProp(Node.DIRECT_EVAL, true);
-      }
-    }
-
-    /**
-     * Translate dispatcher info into the property expected node.
-     */
-    private static void annotateDispatchers(Node n, Node parent) {
-      Preconditions.checkState(n.isFunction());
-      if (parent.getJSDocInfo() != null
-          && parent.getJSDocInfo().isJavaDispatch()) {
-        if (parent.isAssign()) {
-          Preconditions.checkState(parent.getLastChild() == n);
-          n.putBooleanProp(Node.IS_DISPATCHER, true);
-        }
       }
     }
 

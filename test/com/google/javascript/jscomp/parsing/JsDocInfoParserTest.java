@@ -1681,19 +1681,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertNull(parse("@externs*/"));
   }
 
-  public void testParseJavaDispatch1() throws Exception {
-    assertTrue(parse("@javadispatch*/").isJavaDispatch());
-  }
-
-  public void testParseJavaDispatch2() throws Exception {
-    parse("@javadispatch\n@javadispatch*/",
-        "extra @javadispatch tag");
-  }
-
-  public void testParseJavaDispatch3() throws Exception {
-    assertNull(parseFileOverview("@javadispatch*/"));
-  }
-
   public void testParseNoCompile1() throws Exception {
     assertTrue(parseFileOverview("@nocompile*/").isNoCompile());
   }

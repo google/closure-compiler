@@ -441,20 +441,14 @@ public class NodeTest extends TestCase {
   public void testCloneAnnontations2() {
     Node n = getVarRef("a");
     n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-    n.putBooleanProp(Node.IS_DISPATCHER, true);
     assertTrue(n.getBooleanProp(Node.IS_CONSTANT_NAME));
-    assertTrue(n.getBooleanProp(Node.IS_DISPATCHER));
 
     Node nodeClone = n.cloneNode();
     assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
-    assertTrue(nodeClone.getBooleanProp(Node.IS_DISPATCHER));
 
-    n.putBooleanProp(Node.IS_DISPATCHER, false);
     assertTrue(n.getBooleanProp(Node.IS_CONSTANT_NAME));
-    assertFalse(n.getBooleanProp(Node.IS_DISPATCHER));
 
     assertTrue(nodeClone.getBooleanProp(Node.IS_CONSTANT_NAME));
-    assertTrue(nodeClone.getBooleanProp(Node.IS_DISPATCHER));
   }
 
   public void testGetIndexOfChild() {

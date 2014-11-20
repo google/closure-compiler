@@ -1086,49 +1086,6 @@ public class CodePrinterTest extends TestCase {
         + "a.Bar = function() {\n};\n");
   }
 
-  public void testTypeAnnotationsDispatcher1() {
-    assertTypeAnnotations(
-        "var a = {};\n" +
-        "/** \n" +
-        " * @constructor \n" +
-        " * @javadispatch \n" +
-        " */\n" +
-        "a.Foo = function(){}",
-        "var a = {};\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @javadispatch\n" +
-        " */\n" +
-        "a.Foo = function() {\n" +
-        "};\n");
-  }
-
-  public void testTypeAnnotationsDispatcher2() {
-    assertTypeAnnotations(
-        "var a = {};\n" +
-        "/** \n" +
-        " * @constructor \n" +
-        " */\n" +
-        "a.Foo = function(){}\n" +
-        "/**\n" +
-        " * @javadispatch\n" +
-        " */\n" +
-        "a.Foo.prototype.foo = function() {};",
-
-        "var a = {};\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " */\n" +
-        "a.Foo = function() {\n" +
-        "};\n" +
-        "/**\n" +
-        " * @return {undefined}\n" +
-        " * @javadispatch\n" +
-        " */\n" +
-        "a.Foo.prototype.foo = function() {\n" +
-        "};\n");
-  }
-
   public void testU2UFunctionTypeAnnotation1() {
     assertTypeAnnotations(
         "/** @type {!Function} */ var x = function() {}",

@@ -82,10 +82,6 @@ public class Node implements Cloneable, Serializable {
       // Coding convention props
       IS_CONSTANT_NAME   = 43,    // The variable or property is constant.
       IS_NAMESPACE       = 46,    // The variable creates a namespace.
-      IS_DISPATCHER      = 47,    // The function is a dispatcher function,
-                                  // probably generated from Java code, and
-                                  // should be resolved to the proper
-                                  // overload if possible.
       DIRECTIVES         = 48,    // The ES5 directives on this node.
       DIRECT_EVAL        = 49,    // ES5 distinguishes between direct and
                                   // indirect calls to eval.
@@ -154,7 +150,6 @@ public class Node implements Cloneable, Serializable {
 
         case IS_CONSTANT_NAME:   return "is_constant_name";
         case IS_NAMESPACE:       return "is_namespace";
-        case IS_DISPATCHER:      return "is_dispatcher";
         case DIRECTIVES:         return "directives";
         case DIRECT_EVAL:        return "direct_eval";
         case FREE_CALL:          return "free_call";

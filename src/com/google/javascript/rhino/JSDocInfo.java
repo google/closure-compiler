@@ -389,7 +389,8 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_IMPLICITCAST  = 0x00002000; // @implicitCast
   private static final int MASK_NOSIDEEFFECTS = 0x00004000; // @nosideeffects
   private static final int MASK_EXTERNS       = 0x00008000; // @externs
-  private static final int MASK_JAVADISPATCH  = 0x00010000; // @javadispatch
+  @SuppressWarnings("unused")
+  private static final int MASK_UNUSED_1      = 0x00010000; //
   private static final int MASK_NOCOMPILE     = 0x00020000; // @nocompile
   private static final int MASK_CONSISTIDGEN  = 0x00040000; // @consistentIdGenerator
   private static final int MASK_IDGEN         = 0x00080000; // @idGenerator
@@ -569,10 +570,6 @@ public class JSDocInfo implements Serializable {
 
   void setExterns(boolean value) {
     setFlag(value, MASK_EXTERNS);
-  }
-
-  void setJavaDispatch(boolean value) {
-    setFlag(value, MASK_JAVADISPATCH);
   }
 
   void setNoCompile(boolean value) {
@@ -760,14 +757,6 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isExterns() {
     return getFlag(MASK_EXTERNS);
-  }
-
-  /**
-   * Returns whether the {@code @javadispatch} annotation is present on this
-   * {@link JSDocInfo}.
-   */
-  public boolean isJavaDispatch() {
-    return getFlag(MASK_JAVADISPATCH);
   }
 
   /**
