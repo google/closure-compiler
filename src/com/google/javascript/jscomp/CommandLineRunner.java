@@ -62,6 +62,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -133,7 +134,8 @@ public class CommandLineRunner extends
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
   private static class Flags {
-    private static List<GuardLevel> guardLevels = new ArrayList<>();
+    private static List<GuardLevel> guardLevels =
+        Collections.synchronizedList(new ArrayList<CommandLineRunner.GuardLevel>());
 
     @Option(name = "--help",
         hidden = true,
