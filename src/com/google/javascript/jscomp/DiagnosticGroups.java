@@ -371,10 +371,11 @@ public class DiagnosticGroups {
           CheckConformance.CONFORMANCE_VIOLATION,
           CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
-  // For internal use only.
-  private static final DiagnosticGroup INVALID_PROVIDE =
-      DiagnosticGroups.registerGroup("invalidProvide",
-          ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
+  static {
+    // For internal use only, so there is no constant for it.
+    DiagnosticGroups.registerGroup("invalidProvide",
+        ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
+  }
 
   /**
    * Adds warning levels by name.
