@@ -3086,6 +3086,16 @@ public class IntegrationTest extends IntegrationTestCase {
     } catch (CompilerOptionsPreprocessor.InvalidOptionsException e) {}
   }
 
+  public void testMaxFunSizeAfterInliningUsage() {
+    CompilerOptions options = new CompilerOptions();
+    options.inlineFunctions = false;
+    options.setMaxFunctionSizeAfterInlining(1);
+    try {
+      test(options, "", "");
+      fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
+    } catch (CompilerOptionsPreprocessor.InvalidOptionsException expected) {}
+  }
+
   public void testManyAdds() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;

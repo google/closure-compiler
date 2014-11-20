@@ -29,6 +29,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   final boolean allowLocalFunctionInlining = true;
   boolean assumeStrictThis = false;
   boolean assumeMinimumCapture = false;
+  int maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
 
   final static String EXTERNS =
       "/** @nosideeffects */ function nochg(){}\n" +
@@ -62,7 +63,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         allowLocalFunctionInlining,
         allowBlockInlining,
         assumeStrictThis,
-        assumeMinimumCapture);
+        assumeMinimumCapture,
+        maxSizeAfterInlining);
   }
 
   /**
@@ -2077,7 +2079,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
           true,  // allowLocalFunctionInlining
           true,  // allowBlockInlining
           true,  // assumeStrictThis
-          true); // assumeMinimumCapture
+          true, // assumeMinimumCapture
+          CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING);
     }
 
     public void testInlineObject() {
@@ -2433,5 +2436,51 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "  var saved$$inline_0=obj[\"prop\"];x=modifyObjProp(obj)+\n" +
         "     saved$$inline_0" +
         "}");
+  }
+
+  public void testMaxFunSizeAfterInlining() {
+    this.maxSizeAfterInlining = 1;
+    test(// Always inline single-statement functions
+        "function g() { return 123; }\n" +
+        "function f() { g(); }",
+        "function f() { 123; }");
+
+    this.maxSizeAfterInlining = 10;
+    test(// Always inline at the top level
+        "function g() { 123; return 123; }\n" +
+        "g();",
+        "{ 123; 123; }");
+
+    this.maxSizeAfterInlining = 1;
+    testSame(// g is too big to be inlined
+        "function g() { 123; return 123; }\n" +
+        "g();");
+
+    this.maxSizeAfterInlining = 20;
+    test(
+        "function g() { 123; return 123; }\n" +
+        "function f() {\n" +
+        "  g();\n" +
+        "}",
+        "");
+
+    // g's size grows as functions are being inlined, and by the time we get to
+    // f4, the max size is exceeded.
+    this.maxSizeAfterInlining = 25;
+    test(
+        "function f1() { 1; return 1; }\n" +
+        "function f2() { 2; return 2; }\n" +
+        "function f3() { 3; return 3; }\n" +
+        "function f4() { 4; return 4; }\n" +
+        "function g() {\n" +
+        "  f1(); f2(); f3(); f4();\n" +
+        "}\n" +
+        "g(); g(); g();",
+        "function f4() { 4; return 4; }\n" +
+        "function g() { {1; 1;} {2; 2;} {3; 3;} f4(); }\n" +
+        "g(); g(); g();");
+
+    this.maxSizeAfterInlining =
+        CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
   }
 }

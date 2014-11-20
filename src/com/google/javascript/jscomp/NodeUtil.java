@@ -3821,6 +3821,26 @@ public final class NodeUtil {
         Predicates.<Node>alwaysTrue());
   }
 
+  static int countAstSizeUpToLimit(Node n, final int limit) {
+    // Java doesn't allow accessing mutable local variables from another class.
+    final int[] wrappedSize = {0};
+    visitPreOrder(
+        n,
+        new Visitor() {
+          @Override
+          public void visit(Node n) {
+            wrappedSize[0]++;
+          }
+        },
+        new Predicate<Node>() {
+          @Override
+            public boolean apply(Node n) {
+            return wrappedSize[0] < limit;
+          }
+        });
+    return wrappedSize[0];
+  }
+
   /**
    * @return Whether the two node are equivalent while ignoring
    * differences any descendant functions differences.

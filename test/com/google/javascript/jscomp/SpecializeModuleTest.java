@@ -40,7 +40,8 @@ public class SpecializeModuleTest extends CompilerTestCase {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new InlineFunctions(compiler,
-          compiler.getUniqueNameIdSupplier(), true, false, true, true, true);
+          compiler.getUniqueNameIdSupplier(), true, false, true, true, true,
+          CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING);
     }
   };
 
