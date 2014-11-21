@@ -541,7 +541,7 @@ public class NormalizeTest extends CompilerTestCase {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node root) {
-          new CollapseProperties(compiler, false, true).process(externs, root);
+          new CollapseProperties(compiler, true).process(externs, root);
         }
       };
     }

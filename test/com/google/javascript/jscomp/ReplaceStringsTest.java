@@ -103,7 +103,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
           Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
           propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
-          new CollapseProperties(compiler, true, true).process(externs, js);
+          new CollapseProperties(compiler, true).process(externs, js);
           if (runDisambiguateProperties) {
             SourceInformationAnnotator sia =
                 new SourceInformationAnnotator(

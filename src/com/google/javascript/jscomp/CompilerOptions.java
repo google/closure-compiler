@@ -546,9 +546,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     collapseObjectLiterals = enabled;
   }
 
-  /** Flattens multi-level property names on extern types (e.g. String$f = x) */
-  boolean collapsePropertiesOnExternTypes;
-
   /**
    * Devirtualize prototype method by rewriting them to be static calls that
    * take the this pointer as their first argument
@@ -1035,7 +1032,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     renamePrefix = null;
     aliasKeywords = false;
     collapseProperties = false;
-    collapsePropertiesOnExternTypes = false;
     collapseObjectLiterals = false;
     devirtualizePrototypeMethods = false;
     disambiguateProperties = false;
@@ -1312,15 +1308,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Should shadow outer scope variable name during renaming. */
   public void setShadowVariables(boolean shadow) {
     this.shadowVariables = shadow;
-  }
-
-  /**
-   * If true, flattens multi-level property names on extern types
-   * (e.g. String$f = x). This should only be used with the typed version of
-   * the externs files.
-   */
-  public void setCollapsePropertiesOnExternTypes(boolean collapse) {
-    collapsePropertiesOnExternTypes = collapse;
   }
 
   /**

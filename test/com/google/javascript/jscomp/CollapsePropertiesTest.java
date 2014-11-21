@@ -34,15 +34,12 @@ public class CollapsePropertiesTest extends CompilerTestCase {
       "/** @constructor */ function String() {};\n" +
       "var arguments";
 
-  private boolean collapsePropertiesOnExternTypes = false;
-
   public CollapsePropertiesTest() {
     super(EXTERNS);
   }
 
   @Override public CompilerPass getProcessor(Compiler compiler) {
-    return new CollapseProperties(
-        compiler, collapsePropertiesOnExternTypes, true);
+    return new CollapseProperties(compiler, true);
   }
 
   @Override
@@ -1086,48 +1083,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "var x$x = 10; function f() {var y=x$x; x$x+=1; alert(y)}");
   }
 
-  public void testCollapsePropertyOnExternType() {
-    collapsePropertiesOnExternTypes = true;
-    test("String.myFunc = function() {}; String.myFunc();",
-         "var String$myFunc = function() {}; String$myFunc()");
-  }
-
-  public void testCollapseForEachWithoutExterns() {
-    collapsePropertiesOnExternTypes = true;
-    test("/** @constructor */function Array(){};\n",
-         "if (!Array.forEach) {\n" +
-         "  Array.forEach = function() {};\n" +
-         "}",
-         "if (!Array$forEach) {\n" +
-         "  var Array$forEach = function() {};\n" +
-         "}", null, null);
-  }
-
-  public void testNoCollapseForEachInExterns() {
-    collapsePropertiesOnExternTypes = true;
-    test("/** @constructor */ function Array() {}" +
-         "Array.forEach = function() {}",
-         "if (!Array.forEach) {\n" +
-         "  Array.forEach = function() {};\n" +
-         "}",
-         "if (!Array.forEach) {\n" +
-         "  Array.forEach = function() {};\n" +
-         "}", null, null);
-  }
-
-  public void testIssue931() {
-    collapsePropertiesOnExternTypes = true;
-    testSame(
-      "function f() {\n" +
-      "  return function () {\n" +
-      "    var args = arguments;\n" +
-      "    setTimeout(function() { alert(args); }, 0);\n" +
-      "  }\n" +
-      "};\n");
-  }
-
   public void testDoNotCollapsePropertyOnExternType() {
-    collapsePropertiesOnExternTypes = false;
     test("String.myFunc = function() {}; String.myFunc()",
          "String.myFunc = function() {}; String.myFunc()");
   }

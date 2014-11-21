@@ -1774,9 +1774,7 @@ public class DefaultPassConfig extends PassConfig {
       new PassFactory("collapseProperties", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new CollapseProperties(
-          compiler, options.collapsePropertiesOnExternTypes,
-          !isInliningForbidden());
+      return new CollapseProperties(compiler, !isInliningForbidden());
     }
   };
 

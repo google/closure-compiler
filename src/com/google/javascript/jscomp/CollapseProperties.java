@@ -93,33 +93,24 @@ class CollapseProperties implements CompilerPass {
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private Map<String, Name> nameMap;
 
-  private final boolean collapsePropertiesOnExternTypes;
   private final boolean inlineAliases;
 
   /**
    * Creates an instance.
    *
    * @param compiler The JSCompiler, for reporting code changes
-   * @param collapsePropertiesOnExternTypes if true, will rename user-defined
-   *     static properties on externed typed. E.g. String.foo.
    * @param inlineAliases Whether we're allowed to inline local aliases of
    *     namespaces, etc.
    */
-  CollapseProperties(AbstractCompiler compiler,
-      boolean collapsePropertiesOnExternTypes, boolean inlineAliases) {
+  CollapseProperties(AbstractCompiler compiler, boolean inlineAliases) {
     this.compiler = compiler;
-    this.collapsePropertiesOnExternTypes = collapsePropertiesOnExternTypes;
     this.inlineAliases = inlineAliases;
   }
 
   @Override
   public void process(Node externs, Node root) {
     GlobalNamespace namespace;
-    if (collapsePropertiesOnExternTypes) {
-      namespace = new GlobalNamespace(compiler, externs, root);
-    } else {
-      namespace = new GlobalNamespace(compiler, root);
-    }
+    namespace = new GlobalNamespace(compiler, root);
 
     if (inlineAliases) {
       inlineAliases(namespace);
