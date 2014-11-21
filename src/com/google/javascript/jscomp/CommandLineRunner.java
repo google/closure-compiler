@@ -134,6 +134,9 @@ public class CommandLineRunner extends
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
   private static class Flags {
+    // Some clients run a few copies of the compiler through CommandLineRunner
+    // on parallel threads (thankfully, with the same flags),
+    // so the access to |guardLevels| should be at least synchronized.
     private static List<GuardLevel> guardLevels =
         Collections.synchronizedList(new ArrayList<CommandLineRunner.GuardLevel>());
 
