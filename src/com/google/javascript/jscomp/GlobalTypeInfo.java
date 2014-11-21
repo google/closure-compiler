@@ -1669,7 +1669,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       DeclaredFunctionType result = builder.buildDeclaration();
       if (ctorType != null) {
-        ctorType.setCtorFunction(result.toFunctionType());
+        ctorType.setCtorFunction(result.toFunctionType(), commonTypes.getFunctionType());
       }
       return result;
     }

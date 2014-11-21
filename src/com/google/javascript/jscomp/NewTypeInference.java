@@ -307,7 +307,7 @@ public class NewTypeInference implements CompilerPass {
     if (showDebuggingPrints) {
       StringBuilder b = new StringBuilder();
       for (Object obj : objs) {
-        b.append(obj == null ? "null" : obj.toString());
+        b.append(String.valueOf(obj));
       }
       System.out.println(b.toString());
     }
@@ -402,7 +402,7 @@ public class NewTypeInference implements CompilerPass {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
-        summaryType = fnType.createConstructorObject();
+        summaryType = fnType.createConstructorObject(commonTypes.getFunctionType());
       } else {
         summaryType = summaryType.withProperty(
             new QualifiedName("prototype"), JSType.TOP_OBJECT);
@@ -436,7 +436,7 @@ public class NewTypeInference implements CompilerPass {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
-        summaryType = fnType.createConstructorObject();
+        summaryType = fnType.createConstructorObject(commonTypes.getFunctionType());
       } else {
         summaryType = summaryType.withProperty(
             new QualifiedName("prototype"), JSType.TOP_OBJECT);
@@ -470,7 +470,7 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
-  private static JSType pickInitialType(JSType declType) {
+  private JSType pickInitialType(JSType declType) {
     Preconditions.checkNotNull(declType);
     FunctionType funType = declType.getFunTypeIfSingletonObj();
     if (funType == null) {
@@ -478,7 +478,7 @@ public class NewTypeInference implements CompilerPass {
     } else if (funType.isConstructor() || funType.isInterfaceDefinition()) {
       // TODO(dimvar): when declType is a union, consider also creating
       // appropriate ctor objs. (This is going to be rare.)
-      return funType.createConstructorObject();
+      return funType.createConstructorObject(commonTypes.getFunctionType());
     } else {
       return declType.withProperty(
           new QualifiedName("prototype"), JSType.TOP_OBJECT);

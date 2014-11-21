@@ -58,9 +58,10 @@ public class ObjectType implements TypeWithProperties {
     Preconditions.checkArgument(fn == null || fn.isLoose() == isLoose,
         "isLoose: %s, fn: %s", isLoose, fn);
     Preconditions.checkArgument(FunctionType.isInhabitable(fn));
-    Preconditions.checkArgument(nominalType == null || !isLoose);
-    Preconditions.checkArgument(nominalType == null || fn == null,
-        "Cannot create object of %s that is callable", nominalType);
+    if (nominalType != null) {
+      Preconditions.checkArgument(!nominalType.isClassy() || !isLoose);
+      Preconditions.checkArgument(fn == null || nominalType.isFunction());
+    }
     this.nominalType = nominalType;
     this.props = props;
     this.fn = fn;
@@ -79,9 +80,9 @@ public class ObjectType implements TypeWithProperties {
     return new ObjectType(nominalType, props, fn, isLoose, ok);
   }
 
-  static ObjectType fromFunction(FunctionType fn) {
+  static ObjectType fromFunction(FunctionType fn, NominalType fnNominal) {
     return ObjectType.makeObjectType(
-        null, null, fn, fn.isLoose(), ObjectKind.UNRESTRICTED);
+        fnNominal, null, fn, fn.isLoose(), ObjectKind.UNRESTRICTED);
   }
 
   static ObjectType fromNominalType(NominalType cl) {
@@ -142,7 +143,7 @@ public class ObjectType implements TypeWithProperties {
 
   private ObjectType withLoose() {
     // Don't loosen nominal types
-    if (this.nominalType != null) {
+    if (this.nominalType != null && this.nominalType.isClassy()) {
       return this;
     }
     FunctionType fn = this.fn == null ? null : this.fn.withLoose();
@@ -502,7 +503,7 @@ public class ObjectType implements TypeWithProperties {
         areRelatedClasses(this.nominalType, other.nominalType));
     NominalType resultNominalType =
         NominalType.pickSubclass(this.nominalType, other.nominalType);
-    if (resultNominalType != null) {
+    if (resultNominalType != null && resultNominalType.isClassy()) {
       if (fn != null || other.fn != null) {
         return null;
       }
@@ -519,12 +520,12 @@ public class ObjectType implements TypeWithProperties {
           ObjectKind.meet(this.objectKind, other.objectKind));
     }
     PersistentMap<String, Property> newProps =
-        meetPropsHelper(true, null, this.props, other.props);
+        meetPropsHelper(true, resultNominalType, this.props, other.props);
     if (newProps == BOTTOM_MAP) {
       return BOTTOM_OBJECT;
     }
     return new ObjectType(
-        null,
+        resultNominalType,
         newProps,
         this.fn == null ? null : this.fn.specialize(other.fn),
         this.isLoose,
@@ -644,8 +645,6 @@ public class ObjectType implements TypeWithProperties {
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj2 : objs2) {
       for (ObjectType obj1 : objs1) {
-        // TODO(blickly): Add nominal type for functions (Function) and rethink
-        // the logic here.
         if (areRelatedClasses(obj1.nominalType, obj2.nominalType)) {
           ObjectType newObj;
           if (specializeObjs1) {
@@ -777,18 +776,18 @@ public class ObjectType implements TypeWithProperties {
    */
   boolean unifyWith(ObjectType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
+    if (fn != null) {
+      if (other.fn == null ||
+          !fn.unifyWith(other.fn, typeParameters, typeMultimap)) {
+        return false;
+      }
+    }
     if (nominalType != null && other.nominalType != null) {
       return nominalType.unifyWith(
           other.nominalType, typeParameters, typeMultimap);
     }
     if (nominalType != null || other.nominalType != null) {
       return false;
-    }
-    if (fn != null) {
-      if (other.fn == null ||
-          !fn.unifyWith(other.fn, typeParameters, typeMultimap)) {
-        return false;
-      }
     }
     for (String propName : this.props.keySet()) {
       Property thisProp = props.get(propName);

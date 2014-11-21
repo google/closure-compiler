@@ -70,6 +70,15 @@ public class NominalType {
     return rawType.objectKind;
   }
 
+  boolean isClassy() {
+    // TODO(blickly): Also make Objects not classy
+    return !isFunction();
+  }
+
+  boolean isFunction() {
+    return "Function".equals(rawType.name);
+  }
+
   public boolean isStruct() {
     return rawType.isStruct();
   }
@@ -189,8 +198,10 @@ public class NominalType {
     return p != null && p.isConstant();
   }
 
-  static JSType createConstructorObject(FunctionType ctorFn) {
-    return ctorFn.nominalType.rawType.createConstructorObject(ctorFn);
+  static JSType createConstructorObject(
+      FunctionType ctorFn, NominalType builtinFunction) {
+    return ctorFn.nominalType.rawType
+        .createConstructorObject(ctorFn, builtinFunction);
   }
 
   boolean isSubclassOf(NominalType other) {
@@ -376,6 +387,7 @@ public class NominalType {
     private final ImmutableList<String> typeParameters;
     private final ObjectKind objectKind;
     private FunctionType ctorFn;
+    private NominalType builtinFunction;
 
     private RawNominalType(String name, ImmutableList<String> typeParameters,
         boolean isInterface, ObjectKind objectKind) {
@@ -448,9 +460,10 @@ public class NominalType {
       return typeParameters;
     }
 
-    public void setCtorFunction(FunctionType ctorFn) {
+    public void setCtorFunction(FunctionType ctorFn, NominalType builtinFunction) {
       Preconditions.checkState(!isFinalized);
       this.ctorFn = ctorFn;
+      this.builtinFunction = builtinFunction;
     }
 
     private boolean hasAncestorClass(RawNominalType ancestor) {
@@ -701,13 +714,13 @@ public class NominalType {
       return super.getPropDeclaredType(pname);
     }
 
-
     // Returns the (function) object referred to by the constructor of this
     // class.
-    private JSType createConstructorObject(FunctionType ctorFn) {
-      return withNamedTypes(
-          ObjectType.makeObjectType(null, otherProps, ctorFn,
-              ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
+    private JSType createConstructorObject(
+        FunctionType ctorFn, NominalType builtinFunction) {
+      return withNamedTypes(ObjectType.makeObjectType(
+          builtinFunction, otherProps, ctorFn,
+          ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
     }
 
     private StringBuilder appendGenericSuffixTo(
@@ -758,8 +771,8 @@ public class NominalType {
 
     @Override
     public JSType toJSType() {
-      Preconditions.checkState(ctorFn != null);
-      return createConstructorObject(ctorFn);
+      Preconditions.checkState(this.isFinalized);
+      return createConstructorObject(ctorFn, builtinFunction);
     }
 
     public NominalType getAsNominalType() {

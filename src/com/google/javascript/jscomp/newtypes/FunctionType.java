@@ -249,9 +249,9 @@ public class FunctionType {
     return nominalType.getInstanceAsJSType();
   }
 
-  public JSType createConstructorObject() {
+  public JSType createConstructorObject(NominalType fnNominal) {
     Preconditions.checkState(nominalType != null);
-    return NominalType.createConstructorObject(this);
+    return NominalType.createConstructorObject(this, fnNominal);
   }
 
   // Used to get a declared type for an unannotated function that appears in

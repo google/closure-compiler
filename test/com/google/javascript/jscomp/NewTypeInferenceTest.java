@@ -2958,6 +2958,36 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}");
   }
 
+  public void testFunctionsExtendFunction() {
+    checkNoWarnings(
+        "function f(/** (null|function()) */ x) {\n" +
+        "  if (x instanceof Function) { x(); }\n" +
+        "}");
+
+    typeCheck(
+        "function f(/** (null|function()) */ x) {\n" +
+        "  if (x instanceof Function) {} else { x(); }\n" +
+        "}",
+        TypeCheck.NOT_CALLABLE);
+
+    checkNoWarnings("(function(){}).call(null);");
+
+    checkNoWarnings(
+        "function greet(name) {}\n" +
+        "greet.call(null, 'bob');\n" +
+        "greet.apply(null, ['bob']);");
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo(){}\n" +
+        "Foo.prototype.greet = function(name){};\n" +
+        "Foo.prototype.greet.call(new Foo, 'bob');");
+
+    typeCheck(
+        "Function.prototype.method = function(/** string */ x){};\n" +
+        "(function(){}).method(5);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
   public void testFunctionWithProps() {
     typeCheck(
         "function f() {}\n" +

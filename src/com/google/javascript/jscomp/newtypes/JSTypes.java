@@ -62,11 +62,14 @@ public class JSTypes {
   }
 
   public JSType fromFunctionType(FunctionType fn) {
-    return JSType.fromFunctionType(fn);
+    return JSType.fromFunctionType(fn, getFunctionType());
   }
 
-  public RawNominalType getFunctionType() {
-    return builtinFunction;
+  public NominalType getFunctionType() {
+    if (builtinFunction == null) {
+      return null;
+    }
+    return builtinFunction.getAsNominalType();
   }
 
   public JSType looseTopFunction() {
