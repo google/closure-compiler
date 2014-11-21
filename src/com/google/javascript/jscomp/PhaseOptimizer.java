@@ -293,8 +293,12 @@ class PhaseOptimizer implements CompilerPass {
           progress += progressStep;
           compiler.setProgress(progress, name);
         }
+        // Don't move this line in the IF. We create a Tracer even when the tracker
+        // is null; so we must also stop the tracer when the tracker is null.
+        // Otherwise, Tracer.ThreadTrace#events can become too big.
+        long traceRuntime = tracer.stop();
         if (tracker != null) {
-          tracker.recordPassStop(name, tracer.stop());
+          tracker.recordPassStop(name, traceRuntime);
         }
         maybePrintAstHashcodes(name, root);
         maybeSanityCheck(externs, root);
