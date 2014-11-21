@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -69,7 +68,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
    */
   private Map<String, ModuleOriginalNamePair> importMap = new HashMap<>();
 
-  private Set<String> typedefs = new LinkedHashSet<>();
+  private Set<String> types = new LinkedHashSet<>();
 
   private Set<String> alreadyRequired = new HashSet<>();
 
@@ -244,7 +243,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           // TODO(moz): Currently we only record ES6 classes, need to handle
           // other kinds of type declarations too.
           if (declaration.isClass()) {
-            typedefs.add(name);
+            types.add(name);
           }
         }
         parent.replaceChild(n, n.removeFirstChild());
@@ -277,25 +276,19 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       String exportedName = entry.getKey();
       String withSuffix = entry.getValue();
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
-      Node exprResult = IR.exprResult(IR.assign(
+      Node assign = IR.assign(
           getProp,
-          NodeUtil.newQName(compiler, withSuffix)))
+          NodeUtil.newQName(compiler, withSuffix));
+      Node exprResult = IR.exprResult(assign)
           .useSourceInfoIfMissingFromForTree(script);
+      // Hack: Remove this annotation, once type inference improves.
+      if (types.contains(exportedName)) {
+        JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+        builder.recordConstancy();
+        JSDocInfo info = builder.build(assign);
+        assign.setJSDocInfo(info);
+      }
       script.addChildToBack(exprResult);
-    }
-
-    // Add @typedefs for the the type checker.
-    // /** @typedef {foo$$moduleName} */ moduleName.foo;
-    for (String name : typedefs) {
-      Node typedef = IR.getprop(IR.name(moduleName), IR.string(name));
-      JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
-      builder.recordTypedef(new JSTypeExpression(
-          Node.newString(exportMap.get(name) + "$$" + moduleName),
-          t.getSourceName()));
-      JSDocInfo info = builder.build(typedef);
-      typedef.setJSDocInfo(info);
-      script.addChildToBack(IR.exprResult(typedef)
-          .useSourceInfoIfMissingFromForTree(script));
     }
 
     // Rename vars to not conflict in global scope.

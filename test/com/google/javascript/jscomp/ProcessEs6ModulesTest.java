@@ -208,9 +208,7 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "  useParent(parent) {}",
         "}",
         "var module$testcode = {};",
-        "module$testcode.Child = Child$$module$testcode;",
-        "/** @typedef {Child$$module$testcode} */",
-        "module$testcode.Child;"
+        "/** @const */ module$testcode.Child = Child$$module$testcode;"
     ));
   }
 
@@ -228,9 +226,7 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "  useChild(child) {}",
         "}",
         "var module$testcode = {};",
-        "module$testcode.Child = Child$$module$testcode;",
-        "/** @typedef {Child$$module$testcode} */",
-        "module$testcode.Child;"
+        "/** @const */ module$testcode.Child = Child$$module$testcode;"
     ));
 
     test(Joiner.on('\n').join(
@@ -246,9 +242,7 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "  useBaz(baz) {}",
         "}",
         "var module$testcode = {};",
-        "module$testcode.Child = Child$$module$testcode;",
-        "/** @typedef {Child$$module$testcode} */",
-        "module$testcode.Child;"
+        "/** @const */ module$testcode.Child = Child$$module$testcode;"
     ));
   }
 
