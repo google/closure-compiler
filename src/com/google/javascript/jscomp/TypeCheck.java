@@ -1072,6 +1072,30 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
+  private void checkPropertyInheritanceOnPrototypeLitKey(
+      NodeTraversal t, Node key, String propertyName, ObjectType type) {
+    // Inheritance checks for prototype objlit properties.
+    //
+    // TODO(nicksantos): This isn't the right place to do this check. We
+    // really want to do this when we're looking at the constructor.
+    // We'd find all its properties and make sure they followed inheritance
+    // rules, like we currently do for @implements to make sure
+    // all the methods are implemented.
+    //
+    // As-is, this misses many other ways to override a property.
+    //
+    // object.prototype = { key: function() {} };
+    FunctionType ctorType = type.getOwnerFunction();
+    if (ctorType == null || (!ctorType.isConstructor() && !ctorType.isInterface())) {
+      return;
+    }
+
+    JSType propertyType = type.getPropertyType(propertyName);
+    checkDeclaredPropertyInheritance(
+        t, key, ctorType, propertyName,
+        key.getJSDocInfo(), propertyType);
+  }
+
   /**
    * Visits an object literal field definition <code>key : value</code>.
    *
@@ -1141,6 +1165,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         objlitType.restrictByNotNullOrUndefined());
     if (type != null) {
       String property = NodeUtil.getObjectLitKeyName(key);
+      checkPropertyInheritanceOnPrototypeLitKey(t, key, property, type);
       if (type.hasProperty(property) &&
           !type.isPropertyTypeInferred(property) &&
           !propertyIsImplicitCast(type, property)) {

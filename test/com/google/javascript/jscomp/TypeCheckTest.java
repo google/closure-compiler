@@ -3593,6 +3593,41 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testGoodExtends20() throws Exception {
+    testTypes(""
+        + "/** @interface */\n"
+        + "var MyInterface = function() {};\n"
+        + "MyInterface.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() {}\n"
+        + "}\n"
+        + "/** @extends {MyInterface}\n * @interface */\n"
+        + "var MyOtherInterface = function() {};\n"
+        + "MyOtherInterface.prototype = {\n"
+        + "  /** @return {number} \n @override */\n"
+        + "  method: function() {}\n"
+        + "}");
+  }
+
+  public void testGoodExtends21() throws Exception {
+    testTypes(""
+        + "/** @constructor */\n"
+        + "var MyType = function() {};\n"
+        + "MyType.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() {}\n"
+        + "}\n"
+        + "/** @constructor \n"
+        + " *  @extends {MyType}\n"
+        + " */\n"
+        + "var MyOtherType = function() {};\n"
+        + "MyOtherType.prototype = {\n"
+        + "  /** @return {number}\n"
+        + "   * @override */\n"
+        + "  method: function() {}\n"
+        + "}");
+  }
+
   public void testBadExtends1() throws Exception {
     testTypes("/** @constructor */function base() {}\n" +
         "/** @constructor\n * @extends {not_base} */function derived() {}\n",
@@ -3629,6 +3664,52 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {Sub} x */ function foo(x) {}" +
         "foo(new Sub2());",
         "Bad type annotation. Unknown type bad");
+  }
+
+  public void testBadExtends5() throws Exception {
+    testTypes(""
+        + "/** @interface */\n"
+        + "var MyInterface = function() {};\n"
+        + "MyInterface.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() {}\n"
+        + "}\n"
+        + "/** @extends {MyInterface}\n * @interface */\n"
+        + "var MyOtherInterface = function() {};\n"
+        + "MyOtherInterface.prototype = {\n"
+        + "  /** @return {string} \n @override */\n"
+        + "  method: function() {}\n"
+        + "}",
+        ""
+        + "mismatch of the method property type and the type of the property "
+        + "it overrides from superclass MyInterface\n"
+        + "original: function (this:MyInterface): number\n"
+        + "override: function (this:MyOtherInterface): string");
+  }
+
+
+  public void testBadExtends6() throws Exception {
+    testTypes(""
+        + "/** @constructor */\n"
+        + "var MyType = function() {};\n"
+        + "MyType.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() {}\n"
+        + "}\n"
+        + "/** @constructor \n"
+        + " *  @extends {MyType}\n"
+        + " */\n"
+        + "var MyOtherType = function() {};\n"
+        + "MyOtherType.prototype = {\n"
+        + "  /** @return {string}\n"
+        + "   * @override */\n"
+        + "  method: function() { return ''; }\n"
+        + "}",
+        ""
+        + "mismatch of the method property type and the type of the property "
+        + "it overrides from superclass MyType\n"
+        + "original: function (this:MyType): number\n"
+        + "override: function (this:MyOtherType): string");
   }
 
   public void testLateExtends() throws Exception {
@@ -3803,6 +3884,22 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "goog.SubDisposable.prototype.dispose = function() { return 0; };");
   }
 
+  public void testGoodImplements8() throws Exception {
+    testTypes(""
+        + "/** @interface */\n"
+        + "MyInterface = function() {};\n"
+        + "MyInterface.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() {}\n"
+        + "}\n"
+        + "/** @implements {MyInterface}\n * @constructor */\n"
+        + "MyClass = function() {};\n"
+        + "MyClass.prototype = {\n"
+        + "  /** @return {number} \n @override */\n"
+        + "  method: function() { return 0; }\n"
+        + "}");
+  }
+
   public void testBadImplements1() throws Exception {
     testTypes("/** @interface */function Base1() {}\n" +
         "/** @interface */function Base2() {}\n" +
@@ -3854,6 +3951,46 @@ public class TypeCheckTest extends CompilerTypeTestCase {
             "required: function (): ?",
             "interface members can only be empty property declarations, " +
             "empty functions, or goog.abstractMethod"));
+  }
+
+  public void testBadImplements7() throws Exception {
+    testTypes(""
+        + "/** @interface */\n"
+        + "MyInterface = function() {};\n"
+        + "MyInterface.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() {}\n"
+        + "}\n"
+        + "/** @implements {MyInterface}\n * @constructor */\n"
+        + "MyClass = function() {};\n"
+        + "MyClass.prototype = {\n"
+        + "  /** @return {string} \n @override */\n"
+        + "  method: function() { return ''; }\n"
+        + "}",
+        ""
+        + "mismatch of the method property type and the type of the property "
+        + "it overrides from interface MyInterface\n"
+        + "original: function (): number\n"
+        + "override: function (): string");
+  }
+
+  public void testBadImplements8() throws Exception {
+    testTypes(""
+        + "/** @interface */\n"
+        + "MyInterface = function() {};\n"
+        + "MyInterface.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() {}\n"
+        + "}\n"
+        + "/** @implements {MyInterface}\n * @constructor */\n"
+        + "MyClass = function() {};\n"
+        + "MyClass.prototype = {\n"
+        + "  /** @return {number} */\n"
+        + "  method: function() { return 0; }\n"
+        + "}",
+        ""
+        + "property method already defined on interface MyInterface; "
+        + "use @override to override it");
   }
 
   public void testConstructorClassTemplate() throws Exception {
@@ -6672,6 +6809,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIssue537d() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype = {" +
@@ -11122,6 +11260,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testLends11() throws Exception {
+    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
         "function defineClass(x, y) { return function() {}; } " +
         "/** @constructor */" +
