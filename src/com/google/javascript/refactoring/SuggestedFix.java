@@ -158,10 +158,13 @@ public final class SuggestedFix {
         }
       } else if (n.isStringKey()) {
         nodeToRename = n;
+      } else if (n.isString()) {
+        Preconditions.checkState(n.getParent().isGetProp());
+        nodeToRename = n;
       } else {
         // TODO(mknichel): Implement the rest of this function.
         throw new UnsupportedOperationException(
-            "Rename is not implemented for node type: " + n.getType());
+            "Rename is not implemented for this node type: " + n);
       }
       replacements.put(
           nodeToRename.getSourceFileName(),
