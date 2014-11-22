@@ -2464,8 +2464,8 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "}",
         "");
 
-    // g's size grows as functions are being inlined, and by the time we get to
-    // f4, the max size is exceeded.
+    // g's size ends up exceeding the max size because all inlining decisions
+    // were made in the same inlining round.
     this.maxSizeAfterInlining = 25;
     test(
         "function f1() { 1; return 1; }\n" +
@@ -2476,8 +2476,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "  f1(); f2(); f3(); f4();\n" +
         "}\n" +
         "g(); g(); g();",
-        "function f4() { 4; return 4; }\n" +
-        "function g() { {1; 1;} {2; 2;} {3; 3;} f4(); }\n" +
+        "function g() { {1; 1;} {2; 2;} {3; 3;} {4; 4;} }\n" +
         "g(); g(); g();");
 
     this.maxSizeAfterInlining =

@@ -561,6 +561,17 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
         NodeTraversal t, FunctionState fs, Node callNode,
         JSModule module, InliningMode mode) {
 
+      // If many functions are inlined into the same function F in the same
+      // inlining round, then the size of F may exceed the max size.
+      // This could be avoided if we bail later, during the inlining phase, eg,
+      // in Inline#visitCallSite. However, that is not safe, because at that
+      // point expression decomposition has already run, and we want to
+      // decompose expressions only for the calls that are actually inlined.
+      if (enforceMaxSizeAfterInlining
+          && targetSizeAfterInlineExceedsLimit(t, fs)) {
+        return false;
+      }
+
       if (specializationState != null) {
         // If we're specializing, make sure we can fixup
         // the containing function before inlining
@@ -665,19 +676,6 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
               specializationState.reportSpecializedFunction(containingFunction);
             }
           }
-
-          // Check that after inlining, we won't create a huge function.
-          // This check also makes sense in
-          // FindCandidatesReferences#maybeAddReferenceUsingMode.
-          // However, if many functions are marked for inlining in the same
-          // round, the size of the target function can grow; so we put the
-          // check here to detect that.
-          if (enforceMaxSizeAfterInlining
-              && targetSizeAfterInlineExceedsLimit(t, fs)) {
-            fs.setRemove(false);
-            return;
-          }
-
           inlineFunction(t, ref, fs);
           // Keep track of references that have been inlined so that
           // we can verify that none have been missed.
