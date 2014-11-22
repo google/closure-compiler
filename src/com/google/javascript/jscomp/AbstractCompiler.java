@@ -46,6 +46,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read: {0}");
 
+  boolean needsEs6Runtime = false;
+
   /**
    * Will be called before each pass runs.
    */

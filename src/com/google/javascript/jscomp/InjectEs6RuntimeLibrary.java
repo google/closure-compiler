@@ -28,7 +28,9 @@ class InjectEs6RuntimeLibrary implements CompilerPass {
   }
 
   public void process(Node externs, Node root) {
-    compiler.ensureLibraryInjected("es6_runtime", false);
+    if (compiler.needsEs6Runtime) {
+      compiler.ensureLibraryInjected("es6_runtime", false);
+    }
   }
 }
 

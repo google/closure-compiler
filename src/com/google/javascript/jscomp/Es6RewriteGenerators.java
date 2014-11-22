@@ -191,6 +191,7 @@ public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallbac
             NodeUtil.newQName(compiler, Es6ToEs3Converter.MAKE_ITER),
             n.removeFirstChild()));
     Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
+    compiler.needsEs6Runtime = true;
 
     Node assignIterResult = IR.assign(
         IR.name(GENERATOR_YIELD_ALL_ENTRY),

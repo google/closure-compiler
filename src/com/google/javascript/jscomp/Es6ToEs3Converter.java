@@ -432,6 +432,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         NodeUtil.newQName(
             compiler, MAKE_ITER),
         iterable);
+    compiler.needsEs6Runtime = true;
 
     Node init = IR.var(iterName.cloneTree(), makeIter);
     Node initIterResult = iterResult.cloneTree();
@@ -804,6 +805,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             NodeUtil.newQName(compiler, fullClassName),
             NodeUtil.newQName(compiler, superClassString));
         Node inheritsCall = IR.exprResult(inherits);
+        compiler.needsEs6Runtime = true;
+
         inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
         Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
         enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
@@ -815,6 +818,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
             NodeUtil.newQName(compiler, COPY_PROP),
             NodeUtil.newQName(compiler, fullClassName),
             NodeUtil.newQName(compiler, superClassString));
+        compiler.needsEs6Runtime = true;
+
         copyProps.useSourceInfoIfMissingFromForTree(classNode);
         enclosingStatement.getParent().addChildAfter(
             IR.exprResult(copyProps).srcref(classNode), enclosingStatement);
