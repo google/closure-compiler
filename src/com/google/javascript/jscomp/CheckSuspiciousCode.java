@@ -43,7 +43,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
   static final DiagnosticType SUSPICIOUS_COMPARISON_WITH_NAN =
       DiagnosticType.warning(
           "JSC_SUSPICIOUS_NAN",
-          "Comparison again NaN is always false. Did you mean isNaN()?");
+          "Comparison against NaN is always false. Did you mean isNaN()?");
 
   static final DiagnosticType SUSPICIOUS_IN_OPERATOR =
       DiagnosticType.warning(
