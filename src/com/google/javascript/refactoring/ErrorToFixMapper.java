@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.refactoring;
 
 import com.google.common.base.Preconditions;
@@ -41,6 +40,8 @@ public final class ErrorToFixMapper {
         return getFixForInexistentProperty(error);
       case "JSC_MISSING_REQUIRE_WARNING":
         return getFixForMissingRequire(error, compiler);
+      case "JSC_UNNECESSARY_CAST":
+        return getFixForUnnecessaryCast(error, compiler);
       default:
         return null;
     }
@@ -70,5 +71,8 @@ public final class ErrorToFixMapper {
         .addGoogRequire(match, namespaceToRequire)
         .build();
   }
-}
 
+  private static SuggestedFix getFixForUnnecessaryCast(JSError error, AbstractCompiler compiler) {
+    return new SuggestedFix.Builder().removeCast(error.node, compiler).build();
+  }
+}

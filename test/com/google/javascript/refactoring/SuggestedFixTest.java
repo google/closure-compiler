@@ -16,11 +16,11 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.javascript.refactoring.testing.SuggestedFixes.assertReplacement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.Compiler;
@@ -32,8 +32,6 @@ import com.google.javascript.rhino.Node;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.Set;
 
 /**
  * Unit tests for JsFlume {@link SuggestedFix}.
@@ -422,18 +420,6 @@ public class SuggestedFixTest {
         .build();
     SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
     assertEquals(0, replacementMap.size());
-  }
-
-  private void assertReplacement(SuggestedFix fix, CodeReplacement expectedReplacement) {
-    assertReplacements(fix, ImmutableSet.of(expectedReplacement));
-  }
-
-  private void assertReplacements(SuggestedFix fix, Set<CodeReplacement> expectedReplacements) {
-    SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
-    assertEquals(1, replacementMap.size());
-    Set<CodeReplacement> replacements = replacementMap.get("test");
-    assertEquals(expectedReplacements.size(), replacements.size());
-    assertEquals(expectedReplacements, replacements);
   }
 
   /**
