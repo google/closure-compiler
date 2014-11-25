@@ -1245,7 +1245,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             interfaceHasProperty;
         if (reportMissingOverride.isOn()
             && !declaredOverride
-            && interfaceHasProperty) {
+            && interfaceHasProperty
+            && !"__proto__".equals(propertyName)) {
           // @override not present, but the property does override an interface
           // property
           compiler.report(t.makeError(n, reportMissingOverride,
@@ -1271,7 +1272,8 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (reportMissingOverride.isOn()
         && !declaredOverride
         && superClassHasDeclaredProperty
-        && declaredLocally) {
+        && declaredLocally
+        && !"__proto__".equals(propertyName)) {
       // @override not present, but the property does override a superclass
       // property
       compiler.report(t.makeError(n, reportMissingOverride,
