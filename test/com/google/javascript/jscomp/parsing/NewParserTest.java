@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_FUNCTION_ANNOTATION;
+import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_TYPE_ANNOTATION;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -58,9 +61,6 @@ public class NewParserTest extends BaseJSTypeTestCase {
       "and '-->' are treated as a '//' " +
       "for legacy reasons. Removing this from your code is " +
       "safe for all browsers currently in use.";
-
-  private static final String MISPLACED_TYPE_ANNOTATION =
-      NewIRFactory.MISPLACED_TYPE_ANNOTATION;
 
   private Config.LanguageMode mode;
   private boolean isIdeMode = false;
@@ -532,9 +532,10 @@ public class NewParserTest extends BaseJSTypeTestCase {
    * propagate to following code due to {@link JSDocInfo} aggregation.
    */
   public void testJSDocAttachment6() throws Exception {
-    Node functionNode = parse(
-        "var a = /** @param {number} index */5;" +
-        "/** @return boolean */function f(index){}")
+    Node functionNode = parseWarning(
+        "var a = /** @param {number} index */5;"
+        + "/** @return boolean */function f(index){}",
+        MISPLACED_FUNCTION_ANNOTATION)
         .getFirstChild().getNext();
 
     assertEquals(Token.FUNCTION, functionNode.getType());

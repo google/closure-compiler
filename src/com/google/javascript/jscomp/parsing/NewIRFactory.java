@@ -137,6 +137,9 @@ class NewIRFactory {
   static final String MISPLACED_TYPE_ANNOTATION =
       "Type annotations are not allowed here. Are you missing parentheses?";
 
+  static final String MISPLACED_FUNCTION_ANNOTATION =
+      "This JSDoc is not attached to a function node. Are you missing parentheses?";
+
   static final String INVALID_ES3_PROP_NAME =
       "Keywords and reserved words are not allowed as unquoted property " +
       "names in older versions of JavaScript. " +
@@ -323,7 +326,7 @@ class NewIRFactory {
   }
 
   private void validate(Node n) {
-    validateTypeAnnotations(n);
+    validateJsDoc(n);
     validateParameters(n);
     validateBreakContinue(n);
     validateReturn(n);
@@ -448,6 +451,53 @@ class NewIRFactory {
     }
   }
 
+  private void validateJsDoc(Node n) {
+    validateTypeAnnotations(n);
+    validateFunctionJsDoc(n);
+  }
+
+  /**
+   * Checks that JSDoc intended for a function is actually attached to a
+   * function.
+   */
+  private void validateFunctionJsDoc(Node n) {
+    JSDocInfo info = n.getJSDocInfo();
+    if (info == null) {
+      return;
+    }
+    if (info.containsFunctionDeclaration() && !info.hasType()) {
+      // This JSDoc should be attached to a FUNCTION node, or an assignment
+      // with a function as the RHS, etc.
+      switch (n.getType()) {
+        case Token.FUNCTION:
+        case Token.VAR:
+        case Token.GETTER_DEF:
+        case Token.SETTER_DEF:
+        case Token.MEMBER_DEF:
+        case Token.STRING_KEY:
+          return;
+        case Token.GETELEM:
+        case Token.GETPROP:
+          if (n.getFirstChild().isQualifiedName()) {
+            return;
+          }
+          break;
+        case Token.ASSIGN: {
+          // TODO(tbreisacher): Check that the RHS of the assignment is a
+          // function. Note that it can be a FUNCTION node, but it can also be
+          // a call to goog.abstractMethod, goog.functions.constant, etc.
+          return;
+        }
+      }
+      errorReporter.warning(MISPLACED_FUNCTION_ANNOTATION,
+          sourceName,
+          n.getLineno(), n.getCharno());
+    }
+  }
+
+  /**
+   * Check that JSDoc with a {@code @type} annotation is in a valid place.
+   */
   @SuppressWarnings("incomplete-switch")
   private void validateTypeAnnotations(Node n) {
     JSDocInfo info = n.getJSDocInfo();

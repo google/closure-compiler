@@ -62,6 +62,10 @@ class RhinoErrorReporter {
           "Type annotations are not allowed here. " +
           "Are you missing parentheses?");
 
+  static final DiagnosticType MISPLACED_FUNCTION_ANNOTATION =
+      DiagnosticType.warning("JSC_MISPLACED_FUNCTION_ANNOTATION",
+          "Misplaced function annotation.");
+
   static final DiagnosticType INVALID_ES3_PROP_NAME = DiagnosticType.warning(
       "JSC_INVALID_ES3_PROP_NAME",
       "Keywords and reserved words are not allowed as unquoted property " +
@@ -126,7 +130,10 @@ class RhinoErrorReporter {
         .put(Pattern.compile("^Type annotations are not allowed here.*"),
             MISPLACED_TYPE_ANNOTATION)
 
-        // Unexpected @type annotations
+        // Unexpected function JsDoc
+        .put(Pattern.compile("^This JSDoc is not attached to a function node.*"),
+            MISPLACED_FUNCTION_ANNOTATION)
+
         .put(Pattern.compile("^Keywords and reserved words" +
             " are not allowed as unquoted property.*"),
             INVALID_ES3_PROP_NAME)
