@@ -1099,7 +1099,8 @@ public final class ConformanceRules {
     private static ConformanceResult visibilityAtDeclarationOrFileoverview(
         @Nullable JSDocInfo declaredJsDoc, @Nullable Node scriptNode) {
       if (declaredJsDoc != null
-          && declaredJsDoc.getVisibility() != Visibility.INHERITED) {
+          && (declaredJsDoc.getVisibility() != Visibility.INHERITED
+              || declaredJsDoc.isOverride())) {
         return ConformanceResult.CONFORMANCE;
       } else if (scriptNode != null
           && scriptNode.getJSDocInfo() != null

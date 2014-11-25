@@ -1038,6 +1038,15 @@ public class CheckConformanceTest extends CompilerTestCase {
 
     testSame("goog.provide('foo.bar');");
 
+    testSame(
+        "goog.provide('foo');\n" +
+        "/** @public @constructor */" +
+        "foo.Bar = function() {};\n" +
+        "/** @public */foo.Bar.prototype.baz = function() {};\n" +
+        "/** @public @constructor @extends {foo.Bar} */\n" +
+        "foo.Quux = function() {};\n" +
+        "/** @override */foo.Quux.prototype.baz = function() {};");
+
     // These kinds of declarations aren't currently caught by
     // NoImplicitlyPublicDecls, but they could be.
     testSame("var foo");
