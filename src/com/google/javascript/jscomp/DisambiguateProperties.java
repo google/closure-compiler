@@ -305,13 +305,20 @@ class DisambiguateProperties<T> implements CompilerPass {
   public void process(Node externs, Node root) {
     Preconditions.checkState(
         compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+    // TypeValidator records places where a type A is used in a context that
+    // expects a type B.
+    // For each pair (A, B), here we mark both A and B as types whose properties
+    // cannot be renamed.
     for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
       addInvalidatingType(mis.typeA, mis.src);
       addInvalidatingType(mis.typeB, mis.src);
     }
-
+    // Gather names of properties in externs; these properties can't be renamed.
     NodeTraversal.traverse(compiler, externs, new FindExternProperties());
+    // Look at each unquoted property access and decide if that property will
+    // be renamed.
     NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
+    // Do the actual renaming.
     renameProperties();
   }
 
@@ -433,9 +440,6 @@ class DisambiguateProperties<T> implements CompilerPass {
       }
     }
 
-    /**
-     * Processes a GETPROP node.
-     */
     private void handleGetProp(NodeTraversal t, Node n) {
       String name = n.getLastChild().getString();
       T type = typeSystem.getType(getScope(), n.getFirstChild(), name);
@@ -460,7 +464,8 @@ class DisambiguateProperties<T> implements CompilerPass {
               List<String> errors = Lists.newArrayList();
               printErrorLocations(errors, jsType);
               if (!errors.isEmpty()) {
-                suggestion = "Consider fixing errors for the following types:\n";
+                suggestion =
+                    "Consider fixing errors for the following types:\n";
                 suggestion += Joiner.on("\n").join(errors);
               }
             }
@@ -474,9 +479,6 @@ class DisambiguateProperties<T> implements CompilerPass {
       }
     }
 
-    /**
-     * Processes a OBJECTLIT node.
-     */
     private void handleObjectLit(NodeTraversal t, Node n) {
       for (Node child = n.getFirstChild();
           child != null;
@@ -574,6 +576,9 @@ class DisambiguateProperties<T> implements CompilerPass {
 
         ++propsRenamed;
         prop.expandTypesToSkip();
+        // This loop has poor locality, because instead of walking the AST,
+        // we iterate over all accesses of a property, which can be in very
+        // different places in the code.
         for (Node node : prop.renameNodes) {
           T rootType = prop.rootTypes.get(node);
           if (prop.shouldRename(rootType)) {
@@ -633,7 +638,8 @@ class DisambiguateProperties<T> implements CompilerPass {
       if ("{...}".equals(typeName)) {
         newName = name;
       } else {
-        newName = NONWORD_PATTERN.matcher(typeName).replaceAll("_") + '$' + name;
+        newName = NONWORD_PATTERN.matcher(typeName).replaceAll("_") + '$'
+            + name;
       }
 
       for (T type : set) {
