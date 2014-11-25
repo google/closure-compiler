@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -82,8 +83,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   private static String getOutermostClassName(String className) {
     for (String part : Splitter.on('.').split(className)) {
       if (isClassName(part)) {
-        return className.substring(0, className.indexOf(part) +
-                                   part.length());
+        return className.substring(0,
+            className.indexOf(part) + part.length());
       }
     }
 
@@ -98,12 +99,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   private class CheckRequiresForConstructorsCallback implements Callback {
     private final Set<String> constructors = new HashSet<>();
     private final Set<String> requires = new HashSet<>();
-    private final List<Node> newNodes = new ArrayList<>();
+    private final List<Node> newAndImplementsNodes = new ArrayList<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return parent == null || !parent.isScript() ||
-          !t.getInput().isExtern();
+      return parent == null || !parent.isScript() || !t.getInput().isExtern();
     }
 
     @Override
@@ -118,6 +118,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
           if (NodeUtil.isStatement(n)) {
             maybeAddConstructor(t, n);
           }
+          maybeAddImplements(t, n);
           break;
         case Token.CALL:
           visitCallNode(n, parent);
@@ -132,8 +133,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
     private void visitScriptNode(NodeTraversal t) {
       Set<String> classNames = new HashSet<>();
-      for (Node node : newNodes) {
-        String className = node.getFirstChild().getQualifiedName();
+      for (Node node : newAndImplementsNodes) {
+        String className;
+        if (node.isNew()) {
+          className = node.getFirstChild().getQualifiedName();
+        } else {
+          className = node.getString();
+        }
         String outermostClassName = getOutermostClassName(className);
         boolean notProvidedByConstructors =
             (constructors == null || !constructors.contains(className));
@@ -149,7 +155,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
       // for the next script, if there is one, we don't want the new, ctor, and
       // require nodes to spill over.
-      this.newNodes.clear();
+      this.newAndImplementsNodes.clear();
       this.requires.clear();
       this.constructors.clear();
     }
@@ -170,28 +176,27 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
 
       // Grab the root ctor namespace.
-      Node nameNode = qNameNode;
-      for (; nameNode.hasChildren(); nameNode = nameNode.getFirstChild()) {}
+      Node root = NodeUtil.getRootOfQualifiedName(qNameNode);
 
       // We only consider programmer-defined constructors that are
       // global variables, or are defined on global variables.
-      if (!nameNode.isName()) {
+      if (!root.isName()) {
         return;
       }
 
-      String name = nameNode.getString();
+      String name = root.getString();
       Scope.Var var = t.getScope().getVar(name);
       if (var == null || var.isLocal() || var.isExtern()) {
         return;
       }
-      newNodes.add(n);
+      newAndImplementsNodes.add(n);
     }
 
     private void maybeAddConstructor(NodeTraversal t, Node n) {
-      JSDocInfo info = (JSDocInfo) n.getProp(Node.JSDOC_INFO_PROP);
+      JSDocInfo info = n.getJSDocInfo();
       if (info != null) {
         String ctorName = n.getFirstChild().getQualifiedName();
-        if (info.isConstructor()) {
+        if (info.isConstructor() || info.isInterface()) {
           constructors.add(ctorName);
         } else {
           JSTypeExpression typeExpr = info.getType();
@@ -201,6 +206,26 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
               constructors.add(ctorName);
             }
           }
+        }
+      }
+    }
+
+    private void maybeAddImplements(NodeTraversal t, Node n) {
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+      if (info != null) {
+        for (JSTypeExpression expr : info.getImplementedInterfaces()) {
+          Node implementsNode = expr.getRoot();
+          Preconditions.checkState(implementsNode.getType() == Token.BANG);
+          Node child = implementsNode.getFirstChild();
+          Preconditions.checkState(child.isString());
+
+          String rootName = Splitter.on('.').split(child.getString()).iterator().next();
+          Scope.Var var = t.getScope().getVar(rootName);
+          if (var != null && var.isExtern()) {
+            return;
+          }
+
+          newAndImplementsNodes.add(child);
         }
       }
     }
