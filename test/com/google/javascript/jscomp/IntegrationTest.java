@@ -152,6 +152,150 @@ public class IntegrationTest extends IntegrationTestCase {
          TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testTypedef() {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    test(options,
+         "var a = {};\n" +
+         "/** @typedef {string} */\n" +
+         "a.b = {}\n",
+         "var a={};a.b={}");
+
+    // We don't really want to support this, but there is a bunch of uses.
+    test(options,
+        "/** @typedef {string} */\n"
+        + "var a = {};\n"
+        + "a.b = {}\n",
+        "var a={};a.b={}");
+  }
+
+  public void testGoogModuleAliasConstructor1() {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+    options.inferConsts = true;
+    options.collapseProperties = true;
+    options.removeUnusedVars = true;
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    test(options,
+        new String[] {
+            "goog.module('a');\n" +
+            "/** @constructor */\n" +
+            "var C = function(){};\n" +
+            "exports = C;",
+
+            "goog.module('b');\n" +
+            "\n" +
+            "var a = goog.require('a');\n" +
+            "\n" +
+            "/** @type {a} */\n" +
+            "var x = new a"
+        },
+
+        new String[] {
+            "var $jscomp$scope$C=function(){};var a=$jscomp$scope$C\n",
+
+            "new a"
+        });
+  }
+
+  // TOOD(johnlenz): support this.
+  public void disable_testGoogModuleAliasConstructor2() {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+    options.inferConsts = true;
+    options.collapseProperties = true;
+    options.removeUnusedVars = true;
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    test(options,
+        new String[] {
+            "goog.module('a.b');\n" +
+            "/** @constructor */\n" +
+            "var C = function(){};\n" +
+            "exports = C;",
+
+            "goog.module('a.c');\n" +
+            "\n" +
+            "var b = goog.require('a.b');\n" +
+            "\n" +
+            "/** @type {b} */\n" +
+            "var x = new b"
+        },
+
+        new String[] {
+            "var $jscomp$scope$C=function(){};\n",
+
+            "new $jscomp$scope$C"
+        });
+  }
+
+  public void testGoogModuleAliasEnum() {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+    options.inferConsts = true;
+    options.collapseProperties = true;
+    options.removeUnusedVars = true;
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    test(options,
+        new String[] {
+            "goog.module('a.b');\n" +
+            "/** @enum {string} */\n" +
+            "var C = {X:'x'};\n" +
+            "exports = C;",
+
+            "goog.module('a.c');\n" +
+            "\n" +
+            "var b = goog.require('a.b');\n" +
+            "\n" +
+            "/** @type {b} */\n" +
+            "var x = b.X"
+        },
+
+        new String[] {
+            "",
+            ""
+        });
+  }
+
+  // TODO(johnlenz): support this
+  public void disable_testGoogModuleAliasTypedef() {
+    CompilerOptions options = createCompilerOptions();
+    options.closurePass = true;
+    options.inferConsts = true;
+    options.collapseProperties = true;
+    options.removeUnusedVars = true;
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+
+    test(options,
+        new String[] {
+            "goog.module('a.b');\n" +
+            "/** @typedef {string} */\n" +
+            "var C;\n" +
+            "/** @const */ exports = C;",
+
+            "goog.module('a.c');\n" +
+            "\n" +
+            "var b = goog.require('a.b');\n" +
+            "\n" +
+            "/** @type {b} */\n" +
+            "var x = 0;"
+        },
+
+        new String[] {
+            "",
+            ""
+        });
+  }
+
   public void testIssue90() {
     CompilerOptions options = createCompilerOptions();
     options.foldConstants = true;
