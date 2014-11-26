@@ -206,11 +206,7 @@ public class FunctionType {
 
   public JSType getReturnType() {
     Preconditions.checkArgument(!isTopFunction());
-    if (isConstructor()) {
-      return getThisType();
-    } else {
-      return returnType;
-    }
+    return returnType;
   }
 
   public JSType getOuterVarPrecondition(String name) {

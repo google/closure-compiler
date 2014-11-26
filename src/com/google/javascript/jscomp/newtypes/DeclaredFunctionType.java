@@ -45,7 +45,7 @@ public class DeclaredFunctionType {
   // Non-null iff this is a prototype method
   private final NominalType receiverType;
   // Non-null iff this function has an @template annotation
-  private ImmutableList<String> typeParameters;
+  private final ImmutableList<String> typeParameters;
 
   private DeclaredFunctionType(
       List<JSType> requiredFormals,

@@ -900,9 +900,7 @@ public class NewTypeInference implements CompilerPass {
     JSType declRetType = declType.getReturnType();
     JSType actualRetType = envGetType(exitEnv, RETVAL_ID);
 
-    if (declRetType == null) {
-      builder.addRetType(actualRetType);
-    } else {
+    if (declRetType != null) {
       builder.addRetType(declRetType);
       if (!isAllowedToNotReturn(fn) &&
           !JSType.UNDEFINED.isSubtypeOf(declRetType) &&
@@ -911,6 +909,11 @@ public class NewTypeInference implements CompilerPass {
                 CheckMissingReturn.MISSING_RETURN_STATEMENT,
                 declRetType.toString()));
       }
+    } else if (declType.getNominalType() == null) {
+      builder.addRetType(actualRetType);
+    } else {
+      // Don't infer a return type for constructors
+      builder.addRetType(JSType.UNKNOWN);
     }
     JSType summary = commonTypes.fromFunctionType(builder.buildFunction());
     println("Function summary for ", fn.getReadableName());
@@ -1522,9 +1525,8 @@ public class NewTypeInference implements CompilerPass {
       return analyzeCallNodeArgumentsFwd(expr, inEnv);
     } else if (funType.isLoose()) {
       return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
-    } else if (expr.isCall() && funType.isConstructor()) {
-      // TODO(dimvar): handle constructors with @return; they can be called
-      // without new, eg, Number in es3.js
+    } else if (expr.isCall() && funType.isConstructor()
+        && funType.getReturnType().isUnknown()) {
       warnings.add(JSError.make(
           expr, TypeCheck.CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
       return analyzeCallNodeArgumentsFwd(expr, inEnv);
@@ -1576,7 +1578,6 @@ public class NewTypeInference implements CompilerPass {
       tmpEnv = pair.env;
       arg = arg.getNext();
     }
-    JSType retType = funType.getReturnType();
     if (callee.isName()) {
       String calleeName = callee.getQualifiedName();
       if (currentScope.isKnownFunction(calleeName)
@@ -1614,6 +1615,7 @@ public class NewTypeInference implements CompilerPass {
         }
       }
     }
+    JSType retType = expr.isNew() ? funType.getThisType() : funType.getReturnType();
     return new EnvTypePair(tmpEnv, retType);
   }
 
@@ -2748,6 +2750,7 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeCallNewBwd(
       Node expr, TypeEnv outEnv, JSType requiredType) {
+    Preconditions.checkArgument(expr.isNew() || expr.isCall());
     Node callee = expr.getFirstChild();
     JSType calleeTypeGeneral =
         analyzeExprBwd(callee, outEnv, commonTypes.topFunction()).type;
@@ -2790,7 +2793,8 @@ public class NewTypeInference implements CompilerPass {
     if (callee.isName() && currentScope.isLocalFunDef(callee.getString())) {
       tmpEnv = collectTypesForFreeVarsBwd(callee, tmpEnv);
     }
-    return new EnvTypePair(tmpEnv, funType.getReturnType());
+    JSType retType = expr.isNew() ? funType.getThisType() : funType.getReturnType();
+    return new EnvTypePair(tmpEnv, retType);
   }
 
   private JSType getArrayElementType(JSType arrayType) {

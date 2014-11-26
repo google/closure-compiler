@@ -10360,4 +10360,36 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  return x.toString();\n" +
         "}");
   }
+
+  public void testConstructorsCalledWithoutNew() {
+    checkNoWarnings(
+        "var n = new Number();\n" +
+        "n.prop = 0;\n" +
+        "n.prop - 5;");
+
+    typeCheck(
+        "var n = Number();\n" +
+        "n.prop = 0;\n" +
+        "n.prop - 5;",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    checkNoWarnings(
+        "/** @constructor @return {number} */ function Foo(){ return 5; }\n" +
+        "var /** !Foo */ f = new Foo;\n" +
+        "var /** number */ n = Foo();");
+
+    typeCheck(
+        "/** @constructor */ function Foo(){ return 5; }\n" +
+        "var /** !Foo */ f = new Foo;\n" +
+        "var n = Foo();",
+        TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+
+    // For constructors, return of ? is interpreted the same as undeclared
+    typeCheck(
+        "/** @constructor @return {?} */ function Foo(){}\n" +
+        "var /** !Foo */ f = new Foo;\n" +
+        "var n = Foo();",
+        TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+  }
+
 }

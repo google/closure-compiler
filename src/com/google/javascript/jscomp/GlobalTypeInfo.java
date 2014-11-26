@@ -1446,7 +1446,7 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.ASSIGN:
           return simpleInferExprType(n.getLastChild());
         case Token.CALL:
-        case Token.NEW:
+        case Token.NEW: {
           JSType ratorType = simpleInferExprType(n.getFirstChild());
           if (ratorType == null) {
             return null;
@@ -1472,7 +1472,9 @@ class GlobalTypeInfo implements CompilerPass {
               return null;
             }
           }
-          return funType.getReturnType();
+          JSType retType = n.isNew() ? funType.getThisType() : funType.getReturnType();
+          return retType;
+        }
         default:
           switch (NodeUtil.getKnownValueType(n)) {
             case NULL:
