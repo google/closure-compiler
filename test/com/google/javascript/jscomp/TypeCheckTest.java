@@ -3993,6 +3993,21 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         + "use @override to override it");
   }
 
+  public void testProtoDoesNotRequireOverrideFromInterface() throws Exception {
+    testTypes(DEFAULT_EXTERNS + "/** @type {Object} */ Object.prototype.__proto__;",
+        "/** @interface */\n"
+        + "var MyInterface = function() {};\n"
+        + "/** @constructor\n @implements {MyInterface} */\n"
+        + "var MySuper = function() {};\n"
+        + "/** @constructor\n @extends {MySuper} */\n"
+        + "var MyClass = function() {};\n"
+        + "MyClass.prototype = {\n"
+        + "  __proto__: MySuper.prototype\n"
+        + "}",
+        (String) null,
+        false);
+  }
+
   public void testConstructorClassTemplate() throws Exception {
     testTypes("/** @constructor \n @template S,T */ function A() {}\n");
   }
