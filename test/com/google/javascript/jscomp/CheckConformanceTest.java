@@ -75,7 +75,7 @@ public class CheckConformanceTest extends CompilerTestCase {
     super.getOptions(options);
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
-    // options.setConformanceConfig(this.conformanceConfig);
+    options.setCodingConvention(getCodingConvention());
     return options;
   }
 
@@ -897,6 +897,18 @@ public class CheckConformanceTest extends CompilerTestCase {
 
     testSame(
         "function f() {alert(/** @type {Error} */(this));}");
+  }
+
+  public void testCustomBanUnknownThis4() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnknownThis'\n" +
+        "  error_message: 'BanUnknownThis Message'\n" +
+        "}";
+
+    testSame(
+        "function f() {goog.asserts.assertInstanceof(this, Error);}");
   }
 
   public void testCustomBanGlobalVars1() {

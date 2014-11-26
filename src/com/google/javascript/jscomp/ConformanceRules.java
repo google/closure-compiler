@@ -26,6 +26,7 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Rule;
+import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
@@ -922,16 +923,19 @@ public final class ConformanceRules {
    */
   public static final class BanUnknownThis extends AbstractRule {
     private final Set<Node> reports = Sets.newIdentityHashSet();
+    private final ImmutableList<AssertionFunctionSpec> assertions;
     public BanUnknownThis(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
+      assertions = ImmutableList.copyOf(
+          compiler.getCodingConvention().getAssertionFunctions());
     }
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (n.isThis() && !n.getParent().isCast()) {
+      if (n.isThis()) {
         JSType type = n.getJSType();
-        if (type != null && type.isUnknownType()) {
+        if (type != null && type.isUnknownType() && !isWhiteListed(n)) {
           Node root = t.getScopeRoot();
           if (!reports.contains(root)) {
             reports.add(root);
@@ -940,6 +944,23 @@ public final class ConformanceRules {
         }
       }
       return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isWhiteListed(Node n) {
+      return n.getParent().isCast() || isAssertionCall(n.getParent());
+    }
+
+    private boolean isAssertionCall(Node n) {
+      if (n.isCall() && n.getFirstChild().isQualifiedName()) {
+        Node target = n.getFirstChild();
+        for (int i = 0; i < assertions.size(); i++) {
+          if (target.matchesQualifiedName(
+              assertions.get(i).getFunctionName())) {
+            return true;
+          }
+        }
+      }
+      return false;
     }
   }
 
