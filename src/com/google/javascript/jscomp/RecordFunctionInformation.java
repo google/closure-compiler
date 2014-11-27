@@ -15,13 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
-import java.util.Comparator;
-import java.util.TreeSet;
 
 /**
  * Records information about functions and modules.
@@ -62,22 +57,6 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverse(compiler, root, this);
-
-    if (moduleGraph == null) {
-      addModuleInformation(null);
-    } else {
-      // The test expects a consistent module order.
-      TreeSet<JSModule> modules = Sets.newTreeSet(new Comparator<JSModule>() {
-        @Override
-        public int compare(JSModule o1, JSModule o2) {
-          return o1.getName().compareTo(o2.getName());
-        }
-      });
-      Iterables.addAll(modules, moduleGraph.getAllModules());
-      for (JSModule m : modules) {
-        addModuleInformation(m);
-      }
-    }
   }
 
   @Override
@@ -102,32 +81,5 @@ class RecordFunctionInformation extends AbstractPostOrderCallback
       .setSize(compiledSource.length())
       .setName(functionNames.getFunctionName(n))
       .setCompiledSource(compiledSource).build());
-  }
-
-  /**
-   * Record a module's compiled source.  The view of the source we get
-   * from function sources alone is not complete; it doesn't contain
-   * assignments and function calls in the global scope which are
-   * crucial to understanding how the application works.
-   *
-   * This version of the source is also written out to js_output_file,
-   * module_output_path_prefix or other places.  Duplicating it here
-   * simplifies the process of writing tools that combine and present
-   * module and function for debugging purposes.
-   */
-  private void addModuleInformation(JSModule module) {
-    String name;
-    String source;
-    if (module != null) {
-      name = module.getName();
-      source = compiler.toSource(module);
-    } else {
-      name = "";
-      source = compiler.toSource();
-    }
-
-    mapBuilder.addModule(FunctionInformationMap.Module.newBuilder()
-        .setName(name)
-        .setCompiledSource(source).build());
   }
 }

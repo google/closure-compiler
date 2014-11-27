@@ -54,60 +54,8 @@ public class RecordFunctionInformationTest extends TestCase {
         .setSize(fAndG.length())
         .setName("f")
         .setCompiledSource(fAndG).build());
-    expected.addModule(
-        FunctionInformationMap.Module.newBuilder()
-        .setName("")
-        .setCompiledSource(js + ";").build());
 
     test(js, expected.build());
-  }
-
-  public void testModule() {
-    String g = "function g(){}";
-    String fAndG = "function f(){" + g + "}";
-    String m0_js = "var h=" + fAndG + ";h()";
-    String sum = "function(a,b){return a+b}";
-    String m1_js = "var x=" + sum + "(1,2)";
-
-    FunctionInformationMap.Builder expected =
-        FunctionInformationMap.newBuilder();
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(0)
-        .setSourceName("i0")
-        .setLineNumber(1)
-        .setModuleName("m0")
-        .setSize(g.length())
-        .setName("f::g")
-        .setCompiledSource(g).build());
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(1)
-        .setSourceName("i0")
-        .setLineNumber(1)
-        .setModuleName("m0")
-        .setSize(fAndG.length())
-        .setName("f")
-        .setCompiledSource(fAndG).build());
-    expected.addEntry(
-        FunctionInformationMap.Entry.newBuilder()
-        .setId(2)
-        .setSourceName("i1")
-        .setLineNumber(1)
-        .setModuleName("m1")
-        .setSize(sum.length())
-        .setName("<anonymous>")
-        .setCompiledSource(sum).build());
-    expected.addModule(
-        FunctionInformationMap.Module.newBuilder()
-        .setName("m0")
-        .setCompiledSource(m0_js + ";").build());
-    expected.addModule(
-        FunctionInformationMap.Module.newBuilder()
-        .setName("m1")
-        .setCompiledSource(m1_js + ";").build());
-
-    test(CompilerTestCase.createModules(m0_js, m1_js), expected.build());
   }
 
   public void testMotionPreservesOriginalSourceName() {
@@ -149,14 +97,6 @@ public class RecordFunctionInformationTest extends TestCase {
         .setSize(g.length())
         .setName("g")
         .setCompiledSource(g).build());
-    expected.addModule(
-        FunctionInformationMap.Module.newBuilder()
-        .setName("m0")
-        .setCompiledSource(m0_after + ";").build());
-    expected.addModule(
-        FunctionInformationMap.Module.newBuilder()
-        .setName("m1")
-        .setCompiledSource(m1_after + ";").build());
 
     test(compiler, externsRoot, mainRoot, expected.build());
   }

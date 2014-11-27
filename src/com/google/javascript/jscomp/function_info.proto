@@ -18,9 +18,4 @@ message FunctionInformationMap {
     required string name = 7;
     required string compiled_source = 8;
   }
-
-  repeated group Module = 101 {
-    required string name = 102;
-    required string compiled_source = 103;
-  }
 }
