@@ -305,7 +305,7 @@ google.maps.Data.prototype.getStyle = function() {};
 /**
  * @param {string} url
  * @param {(google.maps.Data.GeoJsonOptions|Object.<string>)=} opt_options
- * @param {function(Array.<google.maps.Data.Feature>)=} opt_callback
+ * @param {function(Array<google.maps.Data.Feature>)=} opt_callback
  * @return {undefined}
  */
 google.maps.Data.prototype.loadGeoJson = function(url, opt_options, opt_callback) {};
