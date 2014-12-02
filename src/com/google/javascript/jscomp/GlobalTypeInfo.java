@@ -259,6 +259,10 @@ class GlobalTypeInfo implements CompilerPass {
     return scopes;
   }
 
+  Scope getGlobalScope() {
+    return globalScope;
+  }
+
   JSTypes getTypesUtilObject() {
     return commonTypes;
   }

@@ -232,6 +232,10 @@ public abstract class JSType {
     return getObjs() != null || EnumType.hasNonScalar(getEnums());
   }
 
+  public boolean isNullable() {
+    return (getMask() & NULL_MASK) != 0;
+  }
+
   boolean isTypeVariable() {
     return (getMask() & TYPEVAR_MASK) != 0 && (getMask() & ~TYPEVAR_MASK) == 0;
   }

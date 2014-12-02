@@ -262,6 +262,13 @@ public class NewTypeInference implements CompilerPass {
     }
   }
 
+  @VisibleForTesting // Only used from tests
+  public Scope processForTesting(Node externs, Node root) {
+    process(externs, root);
+    return symbolTable.getGlobalScope();
+  }
+
+
   @Override
   public void process(Node externs, Node root) {
     try {
