@@ -149,6 +149,11 @@ AudioContext.prototype.createWaveShaper = function() {};
 AudioContext.prototype.createPanner = function() {};
 
 /**
+ * @return {!StereoPannerNode}
+ */
+AudioContext.prototype.createStereoPanner = function() {};
+
+/**
  * @return {!ConvolverNode}
  */
 AudioContext.prototype.createConvolver = function() {};
@@ -645,6 +650,16 @@ AudioPannerNode.prototype.coneGain;
  * @type {AudioGain}
  */
 AudioPannerNode.prototype.distanceGain;
+
+/**
+ * @constructor
+ * @extends {AudioNode}
+ * @see http://webaudio.github.io/web-audio-api/#the-stereopannernode-interface
+ */
+var StereoPannerNode = function() {};
+
+/** @type {!AudioParam} */
+StereoPannerNode.prototype.pan;
 
 /**
  * @constructor
