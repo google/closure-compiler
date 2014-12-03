@@ -550,6 +550,7 @@ public class CommandLineRunner extends
     private boolean useNewTypeInference = false;
 
     @Option(name = "--conformance_configs",
+        hidden = true,
         usage = "A list of JS Conformance configurations in text protocol buffer format.")
     private List<String> conformanceConfigs = new ArrayList<>();
 
