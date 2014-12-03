@@ -1722,6 +1722,11 @@ angular.NgModelController.prototype.$viewValue;
 angular.NgModelController.prototype.$validators;
 
 /**
+ * @type {Object.<string, function(?, ?):*>}
+ */
+angular.NgModelController.prototype.$asyncValidators;
+
+/**
  * @type {boolean}
  */
 angular.NgModelController.prototype.$untouched;
