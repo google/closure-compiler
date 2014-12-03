@@ -6562,6 +6562,26 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testSpecializedInstanceofCantGoToBottom() {
+    checkNoWarnings(
+        "/** @const */ var ns = {};\n" +
+        "ns.f = function() {};\n" +
+        "if (ns.f instanceof Function) {}");
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @const */ var ns = {};\n" +
+        "ns.f = new Foo;\n" +
+        "if (ns.f instanceof Foo) {}");
+
+    checkNoWarnings(
+        "/** @constructor */ function Foo(){}\n" +
+        "/** @constructor */ function Bar(){}\n" +
+        "/** @const */ var ns = {};\n" +
+        "ns.f = new Foo;\n" +
+        "if (ns.f instanceof Bar) {}");
+  }
+
   public void testDeclaredGenericArrayTypes() {
     typeCheck(
         "/** @type {Array<string>} */\n" +

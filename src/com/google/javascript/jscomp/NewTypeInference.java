@@ -1342,11 +1342,13 @@ public class NewTypeInference implements CompilerPass {
 
     // We are in a specialized context *and* we know the constructor type
     JSType instanceType = ctorFunType.getInstanceTypeOfCtor();
-    objPair = analyzeExprFwd(obj, inEnv, JSType.UNKNOWN,
-        specializedType.isTruthy() ?
-        objPair.type.specialize(instanceType) :
-        objPair.type.removeType(instanceType));
-    ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());
+    JSType instanceSpecType = specializedType.isTruthy()
+        ? objPair.type.specialize(instanceType)
+        : objPair.type.removeType(instanceType);
+    if (!instanceSpecType.isBottom()) {
+      objPair = analyzeExprFwd(obj, inEnv, JSType.UNKNOWN, instanceSpecType);
+      ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());
+    }
     ctorPair.type = JSType.BOOLEAN;
     return ctorPair;
   }
