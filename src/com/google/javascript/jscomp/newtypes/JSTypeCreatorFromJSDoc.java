@@ -213,9 +213,14 @@ public class JSTypeCreatorFromJSDoc {
         return union;
       }
       case Token.BANG: {
-        return getTypeFromNodeHelper(
-            n.getFirstChild(), registry, typeParameters)
-            .removeType(JSType.NULL);
+        JSType nullableType = getTypeFromNodeHelper(
+            n.getFirstChild(), registry, typeParameters);
+        if (nullableType.isTypeVariable()) {
+          warn("Cannot use ! to restrict type variable type.\n"
+              + "Prefer to make type argument non-nullable and add "
+              + "null explicitly where needed (e.g. through ?T or T|null)", n);
+        }
+        return nullableType.removeType(JSType.NULL);
       }
       case Token.QMARK: {
         Node child = n.getFirstChild();

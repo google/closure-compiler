@@ -5072,6 +5072,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     checkNoWarnings(
         "/** @type {Object<number>} */ var x;");
+
+    typeCheck(
+        "/** @template T\n@param {!T} x */ function f(x) {}",
+        JSTypeCreatorFromJSDoc.BAD_JSDOC_ANNOTATION);
   }
 
   public void testPolymorphicFunctionInstantiation() {
