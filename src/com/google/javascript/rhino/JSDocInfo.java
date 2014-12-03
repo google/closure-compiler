@@ -792,11 +792,13 @@ public class JSDocInfo implements Serializable {
    * @return Whether there is a declaration of a callable type.
    */
   public boolean containsFunctionDeclaration() {
-    return (hasType() && getType().getRoot().isFunction()
+    boolean hasFunctionType = hasType() && getType().getRoot().isFunction();
+    return hasFunctionType
         || hasReturnType()
         || hasThisType()
         || getParameterCount() > 0
-        || getFlag(MASK_CONSTRUCTOR | MASK_NOSIDEEFFECTS));
+        || getFlag(MASK_CONSTRUCTOR)
+        || (getFlag(MASK_NOSIDEEFFECTS) && (!hasType() || hasFunctionType));
   }
 
   private boolean getFlag(int mask) {

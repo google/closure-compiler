@@ -93,11 +93,13 @@ public class FunctionTypeBuilder {
   }
 
   public FunctionTypeBuilder addRestFormals(JSType t) {
+    Preconditions.checkState(restFormals == null);
     restFormals = t;
     return this;
   }
 
   public FunctionTypeBuilder addRetType(JSType t) {
+    Preconditions.checkState(returnType == null);
     returnType = t;
     return this;
   }
@@ -108,17 +110,20 @@ public class FunctionTypeBuilder {
   }
 
   public FunctionTypeBuilder addNominalType(NominalType cl) {
+    Preconditions.checkState(nominalType == null);
     nominalType = cl;
     return this;
   }
 
   public FunctionTypeBuilder addTypeParameters(
       ImmutableList<String> typeParameters) {
+    Preconditions.checkState(this.typeParameters == null);
     this.typeParameters = typeParameters;
     return this;
   }
 
   public FunctionTypeBuilder addReceiverType(NominalType cl) {
+    Preconditions.checkState(receiverType == null);
     receiverType = cl;
     return this;
   }

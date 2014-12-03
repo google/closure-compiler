@@ -209,7 +209,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
-  public void testThisInFunctionJsdoc() {
+  public void testThisInAtTypeFunction() {
     typeCheck(
         "/** @constructor */ function Foo(){};\n" +
         "/** @type {number} */ Foo.prototype.n;",
@@ -289,6 +289,26 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(fun) { return fun; }\n" +
         "var /** function(this:Foo<string>) */ x =\n" +
         "    f(/** @type {function(this:Foo<number>)} */ (function() {}));",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testThisInFunctionJsdoc() {
+    typeCheck(
+        "/** @constructor */ function Foo() {};\n" +
+        "/** @type {number} */ Foo.prototype.n;\n" +
+        "/** @this {Foo} */\n" +
+        "function f() { this.n = 'str'; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @this {gibberish} */ function foo() {}",
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() { /** @type {number} */ this.prop = 1; }\n" +
+        "/** @this {Foo} */\n" +
+        "function f() { this.prop = 'asdf'; }",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
@@ -3390,11 +3410,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "/** @constructor */\n" +
         "function Parent() {}\n" +
         "/** @extends {Parent} */ function Child() {}",
-        GlobalTypeInfo.EXTENDS_NOT_ON_CTOR_OR_INTERF);
+        JSTypeCreatorFromJSDoc.EXTENDS_NOT_ON_CTOR_OR_INTERF);
 
     typeCheck(
         "/** @constructor @extends{number} */ function Foo() {}",
-        GlobalTypeInfo.EXTENDS_NON_OBJECT);
+        JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT);
 
     typeCheck(
         "/**\n" +
@@ -3415,7 +3435,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @interface */ function Foo() {}\n" +
         "/** @implements {Foo} */ function bar() {}",
-        GlobalTypeInfo.IMPLEMENTS_WITHOUT_CONSTRUCTOR);
+        JSTypeCreatorFromJSDoc.IMPLEMENTS_WITHOUT_CONSTRUCTOR);
 
     typeCheck(
         "/** @constructor */\n" +
@@ -3814,16 +3834,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @constructor @extends {Bar} */ function Foo() {}\n" +
         "/** @constructor @extends {Foo} */ function Bar() {}",
-        GlobalTypeInfo.INHERITANCE_CYCLE);
+        JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
 
     typeCheck(
         "/** @interface @extends {Bar} */ function Foo() {}\n" +
         "/** @interface @extends {Foo} */ function Bar() {}",
-        GlobalTypeInfo.INHERITANCE_CYCLE);
+        JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
 
     typeCheck(
         "/** @constructor @extends {Foo} */ function Foo() {}",
-        GlobalTypeInfo.INHERITANCE_CYCLE);
+        JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
   }
 
   public void testInterfaceNonEmptyFunction() throws Exception {
@@ -5233,6 +5253,18 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         " */\n" +
         "function f(x) {}\n" +
         "f(123);");
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @template U\n" +
+        " * @param {function(U)} x\n" +
+        " */\n" +
+        "Foo.prototype.f = function(x) { this.f(x); };");
   }
 
   public void testUnification() {
@@ -7815,7 +7847,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function Foo() {}\n" +
         "/** @constructor @dict @implements {Foo} */\n" +
         "function Bar() {}",
-        GlobalTypeInfo.DICT_IMPLEMENTS_INTERF);
+        JSTypeCreatorFromJSDoc.DICT_IMPLEMENTS_INTERF);
   }
 
   public void testStructPropCreation() {
@@ -10391,5 +10423,4 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var n = Foo();",
         TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
   }
-
 }

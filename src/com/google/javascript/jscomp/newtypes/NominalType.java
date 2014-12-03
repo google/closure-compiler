@@ -54,7 +54,7 @@ public class NominalType {
     this.rawType = rawType;
   }
 
-  // This should only be called during GlobalTypeInfo
+  // This should only be called during GlobalTypeInfo.
   public RawNominalType getRawNominalType() {
     Preconditions.checkState(typeMap.isEmpty());
     return rawType;
@@ -323,9 +323,14 @@ public class NominalType {
       // Non-generic nominal types don't contribute to the unification.
       return true;
     }
-    // Both nominal types must already be instantiated when unifyWith is called.
+    // Most of the time, both nominal types are already instantiated when
+    // unifyWith is called. Rarely, when we call a polymorphic function from the
+    // body of a method of a polymorphic class, then other.typeMap is empty.
+    // For now, don't do anything fancy in that case.
     Preconditions.checkState(!typeMap.isEmpty());
-    Preconditions.checkState(!other.typeMap.isEmpty());
+    if (other.typeMap.isEmpty()) {
+      return true;
+    }
     boolean hasUnified = true;
     for (String typeParam : rawType.typeParameters) {
       hasUnified = hasUnified && typeMap.get(typeParam).unifyWith(
@@ -460,7 +465,8 @@ public class NominalType {
       return typeParameters;
     }
 
-    public void setCtorFunction(FunctionType ctorFn, NominalType builtinFunction) {
+    public void setCtorFunction(
+        FunctionType ctorFn, NominalType builtinFunction) {
       Preconditions.checkState(!isFinalized);
       this.ctorFn = ctorFn;
       this.builtinFunction = builtinFunction;

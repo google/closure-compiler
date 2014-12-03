@@ -30,7 +30,6 @@ import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.EnumType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
-import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.JSTypes;
@@ -81,15 +80,6 @@ class GlobalTypeInfo implements CompilerPass {
       "inherited type  : {1}\n" +
       "overriding type : {2}\n");
 
-  static final DiagnosticType EXTENDS_NOT_ON_CTOR_OR_INTERF =
-      DiagnosticType.warning(
-          "JSC_EXTENDS_NOT_ON_CTOR_OR_INTERF",
-          "@extends used without @constructor or @interface for {0}.\n");
-
-  static final DiagnosticType EXTENDS_NON_OBJECT = DiagnosticType.warning(
-      "JSC_EXTENDS_NON_OBJECT",
-      "{0} extends non-object type {1}.\n");
-
   static final DiagnosticType CTOR_IN_DIFFERENT_SCOPE = DiagnosticType.warning(
       "JSC_CTOR_IN_DIFFERENT_SCOPE",
       "Modifying the prototype is only allowed if the constructor is " +
@@ -98,14 +88,6 @@ class GlobalTypeInfo implements CompilerPass {
   static final DiagnosticType UNRECOGNIZED_TYPE_NAME = DiagnosticType.warning(
       "JSC_UNRECOGNIZED_TYPE_NAME",
       "Type annotation references non-existent type {0}.");
-
-  static final DiagnosticType INHERITANCE_CYCLE = DiagnosticType.warning(
-      "JSC_INHERITANCE_CYCLE",
-      "Cycle detected in inheritance chain of type {0}");
-
-  static final DiagnosticType DICT_IMPLEMENTS_INTERF = DiagnosticType.warning(
-      "JSC_DICT_IMPLEMENTS_INTERF",
-      "Class {0} is a dict. Dicts can't implement interfaces.");
 
   static final DiagnosticType STRUCTDICT_WITHOUT_CTOR = DiagnosticType.warning(
       "JSC_STRUCTDICT_WITHOUT_CTOR",
@@ -122,11 +104,6 @@ class GlobalTypeInfo implements CompilerPass {
   static final DiagnosticType INEXISTENT_PARAM = DiagnosticType.warning(
       "JSC_INEXISTENT_PARAM",
       "parameter {0} does not appear in {1}''s parameter list");
-
-  static final DiagnosticType IMPLEMENTS_WITHOUT_CONSTRUCTOR =
-      DiagnosticType.warning(
-          "JSC_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
-          "@implements used without @constructor or @interface for {0}");
 
   static final DiagnosticType CONST_WITHOUT_INITIALIZER =
       DiagnosticType.warning(
@@ -192,17 +169,12 @@ class GlobalTypeInfo implements CompilerPass {
       CONST_WITHOUT_INITIALIZER,
       COULD_NOT_INFER_CONST_TYPE,
       CTOR_IN_DIFFERENT_SCOPE,
-      DICT_IMPLEMENTS_INTERF,
       DUPLICATE_JSDOC,
       DUPLICATE_PROP_IN_ENUM,
       EXPECTED_CONSTRUCTOR,
       EXPECTED_INTERFACE,
-      EXTENDS_NON_OBJECT,
-      EXTENDS_NOT_ON_CTOR_OR_INTERF,
       REDECLARED_PROPERTY,
-      IMPLEMENTS_WITHOUT_CONSTRUCTOR,
       INEXISTENT_PARAM,
-      INHERITANCE_CYCLE,
       INVALID_PROP_OVERRIDE,
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
@@ -212,8 +184,6 @@ class GlobalTypeInfo implements CompilerPass {
       UNRECOGNIZED_TYPE_NAME,
       RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
       TypeCheck.CONFLICTING_EXTENDED_TYPE,
-      TypeCheck.CONFLICTING_IMPLEMENTED_TYPE,
-      TypeCheck.CONFLICTING_SHAPE_TYPE,
       TypeCheck.ENUM_NOT_CONSTANT,
       TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
       TypeCheck.MULTIPLE_VAR_DEF,
@@ -294,7 +264,8 @@ class GlobalTypeInfo implements CompilerPass {
   public void process(Node externs, Node root) {
     Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
-    globalScope = new Scope(root, null, ImmutableList.<String>of(), commonTypes);
+    globalScope =
+        new Scope(root, null, ImmutableList.<String>of(), commonTypes);
     scopes.add(globalScope);
 
     // Processing of a scope is split into many separate phases, and it's not
@@ -862,7 +833,8 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-   private void maybeRecordBuiltinType(String name, RawNominalType rawNominalType) {
+   private void maybeRecordBuiltinType(
+       String name, RawNominalType rawNominalType) {
      switch (name) {
        case "Function":
          commonTypes.setFunctionType(rawNominalType);
@@ -1440,7 +1412,8 @@ class GlobalTypeInfo implements CompilerPass {
               return currentScope.lookupTypeByQname(QualifiedName.fromNode(n));
             }
             JSType recvType = simpleInferExprType(recv);
-            QualifiedName qname = new QualifiedName(n.getLastChild().getString());
+            QualifiedName qname =
+                new QualifiedName(n.getLastChild().getString());
             if (recvType != null && recvType.mayHaveProp(qname)) {
               return recvType.getProp(qname);
             }
@@ -1476,7 +1449,8 @@ class GlobalTypeInfo implements CompilerPass {
               return null;
             }
           }
-          JSType retType = n.isNew() ? funType.getThisType() : funType.getReturnType();
+          JSType retType =
+              n.isNew() ? funType.getThisType() : funType.getReturnType();
           return retType;
         }
         default:
@@ -1573,109 +1547,14 @@ class GlobalTypeInfo implements CompilerPass {
       // When any of the above IFs fails, fall through to treat the function as
       // a function without jsdoc.
 
-      ImmutableList<String> typeParameters =
-          fnDoc == null ? null : fnDoc.getTemplateTypeNames();
-
       // TODO(dimvar): warn if multiple jsdocs for a fun
-
-      // Compute the types of formals and the return type
-      FunctionTypeBuilder builder =
-          typeParser.getFunctionType(fnDoc, declNode, ownerType, parentScope);
-      RawNominalType ctorType = null;
-
-      // Look at other annotations, eg, @constructor
-      if (fnDoc != null) {
-        NominalType parentClass = null;
-        if (fnDoc.hasBaseType()) {
-          if (!fnDoc.isConstructor()) {
-            warnings.add(JSError.make(
-                declNode, EXTENDS_NOT_ON_CTOR_OR_INTERF, functionName));
-          } else {
-            Node docNode = fnDoc.getBaseType().getRoot();
-            if (typeParser.hasKnownType(
-                docNode, ownerType, parentScope, typeParameters)) {
-              parentClass = typeParser.getNominalType(
-                      docNode, ownerType, parentScope, typeParameters);
-              if (parentClass == null) {
-                warnings.add(JSError.make(
-                    declNode, EXTENDS_NON_OBJECT, functionName,
-                    // The string in this error msg is bad, but getting the
-                    // actual type is not straightforward b/c
-                    // JSTypeCreatorFromJSDoc#getTypeFromNode isn't public.
-                    // Consider changing this.
-                    docNode.toStringTree()));
-              } else if (parentClass.isInterface()) {
-                warnings.add(JSError.make(
-                    declNode, TypeCheck.CONFLICTING_EXTENDED_TYPE,
-                    "constructor", functionName));
-                parentClass = null;
-              }
-            }
-          }
-        }
-        ctorType =
-            declNode.isFunction() ? nominaltypesByNode.get(declNode) : null;
-        ImmutableSet<NominalType> implementedIntfs =
-            typeParser.getImplementedInterfaces(
-                fnDoc, ownerType, parentScope, typeParameters);
-
-        if (ctorType == null &&
-            (fnDoc.isConstructor() || fnDoc.isInterface())) {
-          // Anonymous type, don't register it.
-          return builder.buildDeclaration();
-        } else if (fnDoc.isConstructor()) {
-          String className = ctorType.toString();
-          if (parentClass == null && !"Object".equals(functionName)) {
-            parentClass = commonTypes.getObjectType();
-          }
-          if (parentClass != null) {
-            if (!ctorType.addSuperClass(parentClass)) {
-              warnings.add(JSError.make(
-                  declNode, INHERITANCE_CYCLE, className));
-            } else if (parentClass != commonTypes.getObjectType()) {
-              if (ctorType.isStruct() && !parentClass.isStruct()) {
-                warnings.add(JSError.make(
-                    declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
-                        "struct", className));
-              } else if (ctorType.isDict() && !parentClass.isDict()) {
-                warnings.add(JSError.make(
-                    declNode, TypeCheck.CONFLICTING_SHAPE_TYPE,
-                    "dict", className));
-              }
-            }
-          }
-          if (ctorType.isDict() && !implementedIntfs.isEmpty()) {
-            warnings.add(JSError.make(
-                declNode, DICT_IMPLEMENTS_INTERF, className));
-          }
-          boolean noCycles = ctorType.addInterfaces(implementedIntfs);
-          Preconditions.checkState(noCycles);
-          builder.addNominalType(ctorType.getAsNominalType());
-        } else if (fnDoc.isInterface()) {
-          if (!implementedIntfs.isEmpty()) {
-            warnings.add(JSError.make(declNode,
-                TypeCheck.CONFLICTING_IMPLEMENTED_TYPE, functionName));
-          }
-          boolean noCycles = ctorType.addInterfaces(
-              typeParser.getExtendedInterfaces(
-                  fnDoc, ownerType, parentScope, typeParameters));
-          if (!noCycles) {
-            warnings.add(JSError.make(
-                declNode, INHERITANCE_CYCLE, ctorType.toString()));
-          }
-          builder.addNominalType(ctorType.getAsNominalType());
-        } else if (!implementedIntfs.isEmpty()) {
-          warnings.add(JSError.make(
-              declNode, IMPLEMENTS_WITHOUT_CONSTRUCTOR, functionName));
-        }
-      }
-
-      if (ownerType != null) {
-        builder.addReceiverType(ownerType.getAsNominalType());
-      }
-      DeclaredFunctionType result = builder.buildDeclaration();
+      RawNominalType ctorType =
+          declNode.isFunction() ? nominaltypesByNode.get(declNode) : null;
+      DeclaredFunctionType result = typeParser.getFunctionType(
+          fnDoc, functionName, declNode, ctorType, ownerType, parentScope);
       if (ctorType != null) {
-        ctorType.setCtorFunction(result.toFunctionType(), commonTypes.getFunctionType());
+        ctorType.setCtorFunction(
+            result.toFunctionType(), commonTypes.getFunctionType());
       }
       return result;
     }
@@ -1757,8 +1636,8 @@ class GlobalTypeInfo implements CompilerPass {
       // Find the declared type of the property.
       if (initializer != null && initializer.isFunction()) {
         if (initializer.getLastChild().hasChildren() && rawType.isInterface()) {
-          warnings.add(JSError.make(
-              initializer.getLastChild(), TypeCheck.INTERFACE_METHOD_NOT_EMPTY));
+          warnings.add(JSError.make(initializer.getLastChild(),
+                  TypeCheck.INTERFACE_METHOD_NOT_EMPTY));
         }
 
         // TODO(dimvar): we must do this for any function "defined" as the rhs
@@ -1766,7 +1645,8 @@ class GlobalTypeInfo implements CompilerPass {
         // prototype property.
         methodScope = visitFunctionLate(initializer, rawType);
         methodType = methodScope.getDeclaredType();
-        propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
+        propDeclType =
+            commonTypes.fromFunctionType(methodType.toFunctionType());
       } else {
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
         if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
@@ -1774,7 +1654,8 @@ class GlobalTypeInfo implements CompilerPass {
           methodScope = null;
           methodType = computeFnDeclaredType(
               jsdoc, pname, defSite, rawType, currentScope);
-          propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
+          propDeclType =
+              commonTypes.fromFunctionType(methodType.toFunctionType());
         } else if (jsdoc != null && jsdoc.hasType()) {
           // We are parsing a non-function prototype property
           methodScope = null;

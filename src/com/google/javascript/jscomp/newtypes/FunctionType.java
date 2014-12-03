@@ -589,12 +589,11 @@ public class FunctionType {
       return false;
     }
 
-    if (receiverType == null && other.receiverType != null
-        || receiverType != null && other.receiverType == null) {
-      return false;
-    }
-    if (receiverType != null && !receiverType.unifyWith(
-        other.receiverType, typeParameters, typeMultimap)) {
+    // If one of the two functions doesn't use THIS in the body, we can still
+    // unify.
+    if (this.receiverType != null && other.receiverType != null
+        && !this.receiverType.unifyWith(
+            other.receiverType, typeParameters, typeMultimap)) {
       return false;
     }
 
