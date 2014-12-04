@@ -692,8 +692,9 @@ public class IR {
       case Token.SPREAD:
       case Token.STRING:
       case Token.SUB:
-      case Token.THIS:
       case Token.SUPER:
+      case Token.TEMPLATELIT:
+      case Token.THIS:
       case Token.TYPEOF:
       case Token.TRUE:
       case Token.URSH:
