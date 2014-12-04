@@ -21,6 +21,11 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Provides a framework for checking code against a set of user configured
  * conformance rules.  The rules are specified by the ConformanceConfig
@@ -87,15 +92,76 @@ public final class CheckConformance extends AbstractPostOrderCallback
   private static ImmutableList<Rule> initRules(
       AbstractCompiler compiler, ImmutableList<ConformanceConfig> configs) {
     ImmutableList.Builder<Rule> builder = ImmutableList.builder();
-    for (ConformanceConfig config : configs) {
-      for (Requirement requirement : config.getRequirementList()) {
-        Rule rule = initRule(compiler, requirement);
-        if (rule != null) {
-          builder.add(rule);
-        }
+    List<Requirement> requirements = mergeRequirements(compiler, configs);
+    for (Requirement requirement : requirements) {
+      Rule rule = initRule(compiler, requirement);
+      if (rule != null) {
+        builder.add(rule);
       }
     }
     return builder.build();
+  }
+
+  /**
+   * Gets requirements from all configs. Merges whitelists of requirements with 'extends' equal to
+   * 'rule_id' of other rule.
+   */
+  static List<Requirement> mergeRequirements(AbstractCompiler compiler,
+      List<ConformanceConfig> configs) {
+    List<Requirement.Builder> builders = new ArrayList<>();
+    Map<String, Requirement.Builder> extendable = new HashMap<>();
+    for (ConformanceConfig config : configs) {
+      for (Requirement requirement : config.getRequirementList()) {
+        Requirement.Builder builder = requirement.toBuilder();
+        if (requirement.hasRuleId()) {
+          if (requirement.getRuleId().isEmpty()) {
+            reportInvalidRequirement(compiler, requirement, "empty rule_id");
+            continue;
+          }
+          if (extendable.containsKey(requirement.getRuleId())) {
+            reportInvalidRequirement(compiler, requirement,
+                "two requirements with the same rule_id: " + requirement.getRuleId());
+            continue;
+          }
+          extendable.put(requirement.getRuleId(), builder);
+        }
+        if (!requirement.hasExtends()) {
+          builders.add(builder);
+        }
+      }
+    }
+
+    for (ConformanceConfig config : configs) {
+      for (Requirement requirement : config.getRequirementList()) {
+        if (requirement.hasExtends()) {
+          Requirement.Builder existing = extendable.get(requirement.getExtends());
+          if (existing == null) {
+            reportInvalidRequirement(compiler, requirement,
+                "no requirement with rule_id: " + requirement.getExtends());
+            continue;
+          }
+          if (requirement.hasErrorMessage()
+              || requirement.hasType()
+              || requirement.getValueCount() != 0
+              || requirement.hasJavaClass()
+              || requirement.hasRuleId()) {
+            reportInvalidRequirement(compiler, requirement,
+                "extending rules allow only whitelist, whitelist_regexp, only_apply_to and "
+                    + "only_apply_to_regexp.");
+          }
+          existing.addAllWhitelist(requirement.getWhitelistList());
+          existing.addAllWhitelistRegexp(requirement.getWhitelistRegexpList());
+          existing.addAllOnlyApplyTo(requirement.getOnlyApplyToList());
+          existing.addAllOnlyApplyToRegexp(requirement.getOnlyApplyToRegexpList());
+        }
+      }
+    }
+
+    List<Requirement> requirements = new ArrayList<>();
+    for (Requirement.Builder builder : builders) {
+      requirements.add(builder.build());
+    }
+    return requirements;
   }
 
   private static Rule initRule(

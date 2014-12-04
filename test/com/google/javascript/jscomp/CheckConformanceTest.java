@@ -24,6 +24,8 @@ import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
 
+import java.util.List;
+
 /**
  * Tests for {@link CheckConformance}.
  *
@@ -1068,5 +1070,18 @@ public class CheckConformanceTest extends CompilerTestCase {
         "foo.Bar.prototype = {\n" +
         "  baz: function(){}\n" +
         "};");
+  }
+
+  public void testMergeRequirements() {
+    Compiler compiler = createCompiler();
+    ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
+    builder.addRequirementBuilder().setRuleId("a").addWhitelist("x").addWhitelistRegexp("m");
+    builder.addRequirementBuilder().setExtends("a").addWhitelist("y").addWhitelistRegexp("n");
+    List<Requirement> requirements =
+        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+    assertEquals(1, requirements.size());
+    Requirement requirement = requirements.get(0);
+    assertEquals(2, requirement.getWhitelistCount());
+    assertEquals(2, requirement.getWhitelistRegexpCount());
   }
 }

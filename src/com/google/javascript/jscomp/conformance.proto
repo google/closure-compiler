@@ -116,6 +116,15 @@ message Requirement {
   // Ignored otherwise.
   optional string java_class = 8;
 
+  // Gives the rule an unique ID that can be used for extending in other rules
+  // through 'extends'. An example of ID is 'closure:innerHtml'.
+  optional string rule_id = 9;
+
+  // Allows extending whitelists of rules with the specified rule_id. If this
+  // field is specified then all fields except whitelist, whitelist_regexp,
+  // only_apply_to and only_apply_to_regexp are ignored.
+  optional string extends = 10;
+
   // CUSTOM requirements may use extensions, each extension should use
   // a CL number as a unique identifier.
   extensions 1000000 to max;

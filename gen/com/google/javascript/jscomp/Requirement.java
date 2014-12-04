@@ -119,6 +119,16 @@ public  final class Requirement extends
             javaClass_ = input.readBytes();
             break;
           }
+          case 74: {
+            bitField0_ |= 0x00000008;
+            ruleId_ = input.readBytes();
+            break;
+          }
+          case 82: {
+            bitField0_ |= 0x00000010;
+            extends_ = input.readBytes();
+            break;
+          }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -855,6 +865,125 @@ public  final class Requirement extends
     }
   }
 
+  // optional string rule_id = 9;
+  public static final int RULE_ID_FIELD_NUMBER = 9;
+  private java.lang.Object ruleId_;
+  /**
+   * <code>optional string rule_id = 9;</code>
+   *
+   * <pre>
+   * Gives the rule an unique ID that can be used for extending in other rules
+   * through 'extends'. An example of ID is 'closure:innerHtml'.
+   * </pre>
+   */
+  public boolean hasRuleId() {
+    return ((bitField0_ & 0x00000008) == 0x00000008);
+  }
+  /**
+   * <code>optional string rule_id = 9;</code>
+   *
+   * <pre>
+   * Gives the rule an unique ID that can be used for extending in other rules
+   * through 'extends'. An example of ID is 'closure:innerHtml'.
+   * </pre>
+   */
+  public java.lang.String getRuleId() {
+    java.lang.Object ref = ruleId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      if (bs.isValidUtf8()) {
+        ruleId_ = s;
+      }
+      return s;
+    }
+  }
+  /**
+   * <code>optional string rule_id = 9;</code>
+   *
+   * <pre>
+   * Gives the rule an unique ID that can be used for extending in other rules
+   * through 'extends'. An example of ID is 'closure:innerHtml'.
+   * </pre>
+   */
+  public com.google.protobuf.ByteString
+      getRuleIdBytes() {
+    java.lang.Object ref = ruleId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      ruleId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  // optional string extends = 10;
+  public static final int EXTENDS_FIELD_NUMBER = 10;
+  private java.lang.Object extends_;
+  /**
+   * <code>optional string extends = 10;</code>
+   *
+   * <pre>
+   * Allows extending whitelists of rules with the specified rule_id. If this
+   * field is specified then all fields except whitelist, whitelist_regexp,
+   * only_apply_to and only_apply_to_regexp are ignored.
+   * </pre>
+   */
+  public boolean hasExtends() {
+    return ((bitField0_ & 0x00000010) == 0x00000010);
+  }
+  /**
+   * <code>optional string extends = 10;</code>
+   *
+   * <pre>
+   * Allows extending whitelists of rules with the specified rule_id. If this
+   * field is specified then all fields except whitelist, whitelist_regexp,
+   * only_apply_to and only_apply_to_regexp are ignored.
+   * </pre>
+   */
+  public java.lang.String getExtends() {
+    java.lang.Object ref = extends_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      if (bs.isValidUtf8()) {
+        extends_ = s;
+      }
+      return s;
+    }
+  }
+  /**
+   * <code>optional string extends = 10;</code>
+   *
+   * <pre>
+   * Allows extending whitelists of rules with the specified rule_id. If this
+   * field is specified then all fields except whitelist, whitelist_regexp,
+   * only_apply_to and only_apply_to_regexp are ignored.
+   * </pre>
+   */
+  public com.google.protobuf.ByteString
+      getExtendsBytes() {
+    java.lang.Object ref = extends_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      extends_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private void initFields() {
     errorMessage_ = "";
     whitelist_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -864,6 +993,8 @@ public  final class Requirement extends
     type_ = com.google.javascript.jscomp.Requirement.Type.CUSTOM;
     value_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     javaClass_ = "";
+    ruleId_ = "";
+    extends_ = "";
   }
   private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
@@ -907,6 +1038,12 @@ public  final class Requirement extends
     }
     if (((bitField0_ & 0x00000004) == 0x00000004)) {
       output.writeBytes(8, getJavaClassBytes());
+    }
+    if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      output.writeBytes(9, getRuleIdBytes());
+    }
+    if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      output.writeBytes(10, getExtendsBytes());
     }
     extensionWriter.writeUntil(536870912, output);
     getUnknownFields().writeTo(output);
@@ -974,6 +1111,14 @@ public  final class Requirement extends
     if (((bitField0_ & 0x00000004) == 0x00000004)) {
       size += com.google.protobuf.CodedOutputStream
         .computeBytesSize(8, getJavaClassBytes());
+    }
+    if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBytesSize(9, getRuleIdBytes());
+    }
+    if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBytesSize(10, getExtendsBytes());
     }
     size += extensionsSerializedSize();
     size += getUnknownFields().getSerializedSize();
@@ -1112,6 +1257,10 @@ public  final class Requirement extends
       bitField0_ = (bitField0_ & ~0x00000040);
       javaClass_ = "";
       bitField0_ = (bitField0_ & ~0x00000080);
+      ruleId_ = "";
+      bitField0_ = (bitField0_ & ~0x00000100);
+      extends_ = "";
+      bitField0_ = (bitField0_ & ~0x00000200);
       return this;
     }
 
@@ -1182,6 +1331,14 @@ public  final class Requirement extends
         to_bitField0_ |= 0x00000004;
       }
       result.javaClass_ = javaClass_;
+      if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+        to_bitField0_ |= 0x00000008;
+      }
+      result.ruleId_ = ruleId_;
+      if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+        to_bitField0_ |= 0x00000010;
+      }
+      result.extends_ = extends_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -1259,6 +1416,16 @@ public  final class Requirement extends
       if (other.hasJavaClass()) {
         bitField0_ |= 0x00000080;
         javaClass_ = other.javaClass_;
+        onChanged();
+      }
+      if (other.hasRuleId()) {
+        bitField0_ |= 0x00000100;
+        ruleId_ = other.ruleId_;
+        onChanged();
+      }
+      if (other.hasExtends()) {
+        bitField0_ |= 0x00000200;
+        extends_ = other.extends_;
         onChanged();
       }
       this.mergeExtensionFields(other);
@@ -2254,6 +2421,220 @@ public  final class Requirement extends
   }
   bitField0_ |= 0x00000080;
       javaClass_ = value;
+      onChanged();
+      return this;
+    }
+
+    // optional string rule_id = 9;
+    private java.lang.Object ruleId_ = "";
+    /**
+     * <code>optional string rule_id = 9;</code>
+     *
+     * <pre>
+     * Gives the rule an unique ID that can be used for extending in other rules
+     * through 'extends'. An example of ID is 'closure:innerHtml'.
+     * </pre>
+     */
+    public boolean hasRuleId() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional string rule_id = 9;</code>
+     *
+     * <pre>
+     * Gives the rule an unique ID that can be used for extending in other rules
+     * through 'extends'. An example of ID is 'closure:innerHtml'.
+     * </pre>
+     */
+    public java.lang.String getRuleId() {
+      java.lang.Object ref = ruleId_;
+      if (!(ref instanceof java.lang.String)) {
+        java.lang.String s = ((com.google.protobuf.ByteString) ref)
+            .toStringUtf8();
+        ruleId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>optional string rule_id = 9;</code>
+     *
+     * <pre>
+     * Gives the rule an unique ID that can be used for extending in other rules
+     * through 'extends'. An example of ID is 'closure:innerHtml'.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getRuleIdBytes() {
+      java.lang.Object ref = ruleId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        ruleId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>optional string rule_id = 9;</code>
+     *
+     * <pre>
+     * Gives the rule an unique ID that can be used for extending in other rules
+     * through 'extends'. An example of ID is 'closure:innerHtml'.
+     * </pre>
+     */
+    public Builder setRuleId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+      ruleId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>optional string rule_id = 9;</code>
+     *
+     * <pre>
+     * Gives the rule an unique ID that can be used for extending in other rules
+     * through 'extends'. An example of ID is 'closure:innerHtml'.
+     * </pre>
+     */
+    public Builder clearRuleId() {
+      bitField0_ = (bitField0_ & ~0x00000100);
+      ruleId_ = getDefaultInstance().getRuleId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>optional string rule_id = 9;</code>
+     *
+     * <pre>
+     * Gives the rule an unique ID that can be used for extending in other rules
+     * through 'extends'. An example of ID is 'closure:innerHtml'.
+     * </pre>
+     */
+    public Builder setRuleIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+      ruleId_ = value;
+      onChanged();
+      return this;
+    }
+
+    // optional string extends = 10;
+    private java.lang.Object extends_ = "";
+    /**
+     * <code>optional string extends = 10;</code>
+     *
+     * <pre>
+     * Allows extending whitelists of rules with the specified rule_id. If this
+     * field is specified then all fields except whitelist, whitelist_regexp,
+     * only_apply_to and only_apply_to_regexp are ignored.
+     * </pre>
+     */
+    public boolean hasExtends() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional string extends = 10;</code>
+     *
+     * <pre>
+     * Allows extending whitelists of rules with the specified rule_id. If this
+     * field is specified then all fields except whitelist, whitelist_regexp,
+     * only_apply_to and only_apply_to_regexp are ignored.
+     * </pre>
+     */
+    public java.lang.String getExtends() {
+      java.lang.Object ref = extends_;
+      if (!(ref instanceof java.lang.String)) {
+        java.lang.String s = ((com.google.protobuf.ByteString) ref)
+            .toStringUtf8();
+        extends_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>optional string extends = 10;</code>
+     *
+     * <pre>
+     * Allows extending whitelists of rules with the specified rule_id. If this
+     * field is specified then all fields except whitelist, whitelist_regexp,
+     * only_apply_to and only_apply_to_regexp are ignored.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getExtendsBytes() {
+      java.lang.Object ref = extends_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        extends_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>optional string extends = 10;</code>
+     *
+     * <pre>
+     * Allows extending whitelists of rules with the specified rule_id. If this
+     * field is specified then all fields except whitelist, whitelist_regexp,
+     * only_apply_to and only_apply_to_regexp are ignored.
+     * </pre>
+     */
+    public Builder setExtends(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+      extends_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>optional string extends = 10;</code>
+     *
+     * <pre>
+     * Allows extending whitelists of rules with the specified rule_id. If this
+     * field is specified then all fields except whitelist, whitelist_regexp,
+     * only_apply_to and only_apply_to_regexp are ignored.
+     * </pre>
+     */
+    public Builder clearExtends() {
+      bitField0_ = (bitField0_ & ~0x00000200);
+      extends_ = getDefaultInstance().getExtends();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>optional string extends = 10;</code>
+     *
+     * <pre>
+     * Allows extending whitelists of rules with the specified rule_id. If this
+     * field is specified then all fields except whitelist, whitelist_regexp,
+     * only_apply_to and only_apply_to_regexp are ignored.
+     * </pre>
+     */
+    public Builder setExtendsBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+      extends_ = value;
       onChanged();
       return this;
     }

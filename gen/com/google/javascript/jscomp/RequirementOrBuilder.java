@@ -291,4 +291,67 @@ public interface RequirementOrBuilder extends
    */
   com.google.protobuf.ByteString
       getJavaClassBytes();
+
+  // optional string rule_id = 9;
+  /**
+   * <code>optional string rule_id = 9;</code>
+   *
+   * <pre>
+   * Gives the rule an unique ID that can be used for extending in other rules
+   * through 'extends'. An example of ID is '//javascript/closure:innerHtml'.
+   * </pre>
+   */
+  boolean hasRuleId();
+  /**
+   * <code>optional string rule_id = 9;</code>
+   *
+   * <pre>
+   * Gives the rule an unique ID that can be used for extending in other rules
+   * through 'extends'. An example of ID is '//javascript/closure:innerHtml'.
+   * </pre>
+   */
+  java.lang.String getRuleId();
+  /**
+   * <code>optional string rule_id = 9;</code>
+   *
+   * <pre>
+   * Gives the rule an unique ID that can be used for extending in other rules
+   * through 'extends'. An example of ID is '//javascript/closure:innerHtml'.
+   * </pre>
+   */
+  com.google.protobuf.ByteString
+      getRuleIdBytes();
+
+  // optional string extends = 10;
+  /**
+   * <code>optional string extends = 10;</code>
+   *
+   * <pre>
+   * Allows extending whitelists of rules with the specified rule_id. If this
+   * field is specified then all fields except whitelist and whitelist_regexp
+   * are ignored.
+   * </pre>
+   */
+  boolean hasExtends();
+  /**
+   * <code>optional string extends = 10;</code>
+   *
+   * <pre>
+   * Allows extending whitelists of rules with the specified rule_id. If this
+   * field is specified then all fields except whitelist and whitelist_regexp
+   * are ignored.
+   * </pre>
+   */
+  java.lang.String getExtends();
+  /**
+   * <code>optional string extends = 10;</code>
+   *
+   * <pre>
+   * Allows extending whitelists of rules with the specified rule_id. If this
+   * field is specified then all fields except whitelist and whitelist_regexp
+   * are ignored.
+   * </pre>
+   */
+  com.google.protobuf.ByteString
+      getExtendsBytes();
 }
