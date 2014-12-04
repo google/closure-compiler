@@ -1751,15 +1751,16 @@ final class TypedScopeCreator implements ScopeCreator {
         }
       }
 
-      boolean inferred = !(
-          (info != null && (info.hasType()
-          || info.hasEnumParameterType()
-          || FunctionTypeBuilder.isFunctionTypeDeclaration(info)))
-          || (NodeUtil.isConstantDeclaration(
-                  compiler.getCodingConvention(), info, n)
-              && valueType != null
-              && !valueType.isUnknownType())
-          );
+      boolean inferred = true;
+      if (info != null) {
+        inferred = !(info.hasType()
+            || info.hasEnumParameterType()
+            || (NodeUtil.isConstantDeclaration(
+                    compiler.getCodingConvention(), info, n)
+                && valueType != null
+                && !valueType.isUnknownType())
+            || FunctionTypeBuilder.isFunctionTypeDeclaration(info));
+      }
 
       if (inferred && rhsValue != null && rhsValue.isFunction()) {
         if (info != null) {

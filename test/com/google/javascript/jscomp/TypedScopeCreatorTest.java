@@ -237,7 +237,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     // This used to cause a compiler crash.
     testSame("/** @const */ var goog = {}; " +
         "goog.F = {}; /** @const */ goog.F.prototype = {};" +
-        "/** @constructor @suppress {duplicate} */ goog.F = function() {};");
+        "/** @constructor */ goog.F = function() {};");
   }
 
   public void testInferredPrototypeProperty1() {
@@ -2065,41 +2065,6 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         "*/\n" +
         "var C = function(a) { /** @const */ this.x = a.y;};\n" +
         "var instance = new C({y:'str'})");
-    ObjectType instance = (ObjectType) findNameType("instance", globalScope);
-    assertEquals("C", instance.toString());
-    assertTrue(instance.hasProperty("x"));
-    assertEquals("string",
-        instance.getPropertyType("x").toString());
-    assertFalse(instance.isPropertyTypeInferred("x"));
-  }
-
-  public void testDeclaredConstType7() throws Exception {
-    testSame(
-        "/** " +
-        " * @param {string} a\n" +
-        " * @constructor\n" +
-        "*/\n" +
-        "var C = function(a) { /** @const */ this.x = a;};\n" +
-        "var ALIAS = C;" +
-        "var instance = new ALIAS('a')");
-    ObjectType instance = (ObjectType) findNameType("instance", globalScope);
-    assertEquals("C", instance.toString());
-    assertTrue(instance.hasProperty("x"));
-    assertEquals("string",
-        instance.getPropertyType("x").toString());
-    assertFalse(instance.isPropertyTypeInferred("x"));
-  }
-
-  public void testDeclaredConstType8() throws Exception {
-    testSame(
-        "/** " +
-        " * @param {string} a\n" +
-        " * @constructor\n" +
-        "*/\n" +
-        "var C = function(a) { /** @const */ this.x = a;};\n" +
-        "/** @const */ var ns = {};" +
-        "ns.alias = C;" +
-        "var instance = new ns.alias('a')");
     ObjectType instance = (ObjectType) findNameType("instance", globalScope);
     assertEquals("C", instance.toString());
     assertTrue(instance.hasProperty("x"));
