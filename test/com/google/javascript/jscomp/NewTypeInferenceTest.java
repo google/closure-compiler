@@ -2980,6 +2980,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testFunctionsExtendFunction() {
     checkNoWarnings(
+        "function f(x) {\n" +
+        "  if (x instanceof Function) { x(); }\n" +
+        "}");
+
+    checkNoWarnings(
+        "function f(x) {\n" +
+        "  if (x instanceof Function) { x(1); x('str') }\n" +
+        "}");
+
+    checkNoWarnings(
         "function f(/** (null|function()) */ x) {\n" +
         "  if (x instanceof Function) { x(); }\n" +
         "}");

@@ -406,8 +406,10 @@ public class NominalType {
       this.objectKind = objectKind;
       this.wrappedAsNominal =
           new NominalType(ImmutableMap.<String, JSType>of(), this);
-      this.wrappedAsJSType = JSType.fromObjectType(
-          ObjectType.fromNominalType(this.wrappedAsNominal));
+      ObjectType objInstance = "Function".equals(name)
+          ? ObjectType.fromFunction(FunctionType.TOP_FUNCTION, this.wrappedAsNominal)
+          : ObjectType.fromNominalType(this.wrappedAsNominal);
+      this.wrappedAsJSType = JSType.fromObjectType(objInstance);
       this.wrappedAsNullableJSType = JSType.join(JSType.NULL,
           this.wrappedAsJSType);
     }
