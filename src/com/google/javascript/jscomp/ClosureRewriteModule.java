@@ -19,7 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -127,17 +130,34 @@ public class ClosureRewriteModule
     if (isGetModuleCall(n)) {
       rewriteGetModuleCall(t, n);
     }
+
+    if (inModule()) {
+      switch (n.getType()) {
+        case Token.BLOCK:
+          if (current.moduleScopeRoot == parent && parent.isFunction()) {
+            current.moduleScope = t.getScope();
+          }
+          break;
+        case Token.SCRIPT:
+          current.moduleScope = t.getScope();
+          break;
+      }
+    }
+
     return true;
   }
 
-  private static boolean isLoadModuleCall(Node n) {
+  private static boolean isCallTo(Node n, String qname) {
     return n.isCall()
-        && n.getFirstChild().matchesQualifiedName("goog.loadModule");
+        && n.getFirstChild().matchesQualifiedName(qname);
+  }
+
+  private static boolean isLoadModuleCall(Node n) {
+    return isCallTo(n, "goog.loadModule");
   }
 
   private static boolean isGetModuleCall(Node n) {
-    return n.isCall()
-        && n.getFirstChild().matchesQualifiedName("goog.module.get");
+    return isCallTo(n, "goog.module.get");
   }
 
   private void rewriteGetModuleCall(NodeTraversal t, Node n) {
@@ -203,51 +223,129 @@ public class ClosureRewriteModule
     }
 
     switch (n.getType()) {
-      case Token.BLOCK:
-        if (current.moduleScopeRoot == parent && parent.isFunction()) {
-          current.moduleScope = t.getScope();
-        }
-        break;
-
       case Token.EXPR_RESULT:
-        if (n.getFirstChild().isCall()) {
-          Node target = n.getFirstChild().getFirstChild();
-          if (target.matchesQualifiedName(
-              "goog.module.declareLegacyNamespace")) {
-            n.detachFromParent();
-          }
+        // Handle "goog.module.declareLegacyNamespace".  Currently, we simply
+        // need to remove it.
+        if (isCallTo(n.getFirstChild(),
+            "goog.module.declareLegacyNamespace")) {
+          n.detachFromParent();
         }
         break;
 
       case Token.CALL:
-        Node first = n.getFirstChild();
-        if (first.matchesQualifiedName("goog.module")) {
+        if (isCallTo(n, "goog.module")) {
           recordAndUpdateModule(t, n);
-        } else if (first.matchesQualifiedName("goog.require")) {
+        } else if (isCallTo(n, "goog.require")) {
           recordRequire(t, n);
         } else if (isLoadModuleCall(n)) {
           rewriteModuleAsScope(n);
         }
         break;
 
+      case Token.GETPROP:
+        if (isExportPropAssign(n)) {
+          Node rhs = parent.getLastChild();
+          maybeUpdateExportDeclToNode(t, parent, rhs);
+        }
+        break;
+
       case Token.NAME:
         if (n.getString().equals("exports")) {
           current.exports.add(n);
+          if (isAssignTarget(n)) {
+            maybeUpdateExportObjectDecl(t, n);
+          }
         }
         break;
 
       case Token.SCRIPT:
-        current.moduleScope = t.getScope();
         // Exiting the script, fixup everything else;
         rewriteModuleAsScope(n);
         break;
 
       case Token.RETURN:
+        // Remove the "return exports" for bundled goog.module files.
         if (t.getScopeRoot() == current.moduleScopeRoot) {
           n.detachFromParent();
         }
         break;
     }
+  }
+
+  /**
+   * For exports like "exports = {prop: value}" update the declarations to enforce
+   * @const ness (and typedef exports).
+   */
+  private void maybeUpdateExportObjectDecl(NodeTraversal t, Node n) {
+    Node parent = n.getParent();
+    Node rhs = parent.getLastChild();
+    // The export declaration itself
+    maybeUpdateExportDeclToNode(t, parent, rhs);
+
+    if (rhs.isObjectLit()) {
+      for (Node c = rhs.getFirstChild(); c != null; c = c.getNext()) {
+        if (c.isStringKey()) {
+          Node value = c.getFirstChild();
+          maybeUpdateExportDeclToNode(t, c, value);
+        }
+      }
+    }
+  }
+
+  private void maybeUpdateExportDeclToNode(
+      NodeTraversal t, Node target, Node value) {
+    // If the RHS is a typedef, clone the declaration.
+    // Hack alert: clone the typedef declaration if one exists
+    // this is a simple attempt that covers the common case of the
+    // exports being in the same scope as the typedef declaration.
+    // Otherwise the type name might be invalid.
+    if (value.isName()) {
+      Scope currentScope = t.getScope();
+      Var v = t.getScope().getVar(value.getString());
+      if (v != null) {
+        Scope varScope = v.getScope();
+        if (varScope.getDepth() == currentScope.getDepth()) {
+          JSDocInfo info = v.getJSDocInfo();
+          if (info != null && info.hasTypedefType()) {
+            JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(info);
+            target.setJSDocInfo(builder.build(target));
+            return;
+          }
+        }
+      }
+    }
+
+    // Not a known typedef export, simple declare the props to be @const,
+    // this is valid because we freeze module export objects.
+    JSDocInfo info = target.getJSDocInfo();
+    if (info == null) {
+      JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+      builder.recordConstancy();
+      target.setJSDocInfo(builder.build(target));
+    } else if (!info.isConstant() && !info.hasTypedefType()) {
+      JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(info);
+      builder.recordConstancy();
+      target.setJSDocInfo(builder.build(target));
+    }
+  }
+
+
+  /**
+   * @return Whether the getprop is used as an assignment target, and that
+   *     target represents a module export.
+   * Note: that "export.name = value" is an export, while "export.name.foo = value"
+   *     is not (it is an assignment to a property of an exported value).
+   */
+  private static boolean isExportPropAssign(Node n) {
+    Preconditions.checkState(n.isGetProp());
+    Node target = n.getFirstChild();
+    return isAssignTarget(n) && target.isName()
+        && target.getString().equals("exports");
+  }
+
+  private static boolean isAssignTarget(Node n) {
+    Node parent = n.getParent();
+    return parent.isAssign() && parent.getFirstChild() == n;
   }
 
   private void recordAndUpdateModule(NodeTraversal t, Node call) {

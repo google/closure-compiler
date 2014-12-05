@@ -168,7 +168,7 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "goog.require('goog.asserts');" +
         "goog.scope(function(){" +
         "var asserts=goog.asserts;" +
-        "xid=function(id){return xid_module.internal_(id)};" +
+        "/** @const */ xid=function(id){return xid_module.internal_(id)};" +
         "var xid_module=xid})");
   }
 
@@ -260,7 +260,7 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
 
         "goog.provide('ns.a');" +
         "goog.scope(function(){" +
-        "  ns.a = {};" +
+        "  /** @const */ ns.a = {};" +
         "});");
   }
 
@@ -271,7 +271,7 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
 
         "goog.provide('ns.a');" +
         "goog.scope(function(){" +
-        "  ns.a.x = 1;" +
+        "  /** @const */ ns.a.x = 1;" +
         "});");
   }
 
@@ -284,8 +284,45 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
         "goog.provide('xid');" +
         "goog.scope(function(){" +
         "  var xid_module = function() {};" +
-        "  xid = xid_module;" +
+        "  /** @const */ xid = xid_module;" +
         "});");
+  }
+
+  public void testExport4() {
+    test(
+        "goog.module('ns.a');" +
+        "exports = { something: 1 };",
+
+        "goog.provide('ns.a');" +
+        "goog.scope(function(){" +
+        "  /** @const */ ns.a = { /** @const */ something: 1 };" +
+        "});");
+  }
+
+  public void testExport5() {
+    test(
+        "goog.module('ns.a');"
+        + "/** @typedef {string} */ var x;"
+        + "exports.x = x;",
+
+        "goog.provide('ns.a');"
+        + "goog.scope(function(){"
+        + "  /** @typedef {string} */ var x;"
+        + "  /** @typedef {string} */ ns.a.x = x;"
+        + "});");
+  }
+
+  public void testExport6() {
+    test(
+        "goog.module('ns.a');"
+        + "/** @typedef {string} */ var x;"
+        + "exports = { something: x };",
+
+        "goog.provide('ns.a');"
+        + "goog.scope(function(){"
+        + "  /** @typedef {string} */ var x;"
+        + "  /** @const */ ns.a = { /** @typedef {string} */ something: x };"
+        + "});");
   }
 
   public void testRequiresRetainOrder() {
