@@ -186,6 +186,10 @@ public class FunctionType {
     return f != BOTTOM_FUNCTION;
   }
 
+  public boolean hasRestFormals() {
+    return restFormals != null;
+  }
+
   // 0-indexed
   // Returns null if argpos indexes past the arguments
   public JSType getFormalType(int argpos) {
@@ -228,21 +232,35 @@ public class FunctionType {
     }
   }
 
+  public boolean isRequiredArg(int i) {
+    return i < requiredFormals.size();
+  }
+
+  public boolean isOptionalArg(int i) {
+    return i >= requiredFormals.size()
+        && i < requiredFormals.size() + optionalFormals.size();
+  }
+
   public JSType getInstanceTypeOfCtor() {
     if (!isGeneric()) {
-      return getThisType();
+      return nominalType.getInstanceAsJSType();
     }
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     for (String typeVar : getTypeParameters()) {
       builder.put(typeVar, JSType.UNKNOWN);
     }
-    return instantiateGenerics(builder.build()).getThisType();
+    return instantiateGenerics(builder.build())
+        .nominalType.getInstanceAsJSType();
   }
 
-
   public JSType getThisType() {
-    Preconditions.checkNotNull(nominalType, this);
-    return nominalType.getInstanceAsJSType();
+    if (receiverType != null) {
+      return receiverType.getInstanceAsJSType();
+    }
+    if (nominalType != null) {
+      return nominalType.getInstanceAsJSType();
+    }
+    return null;
   }
 
   public JSType createConstructorObject(NominalType fnNominal) {

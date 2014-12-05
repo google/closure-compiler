@@ -10457,4 +10457,179 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var n = Foo();",
         TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
   }
+
+  public void testFunctionBind() {
+    typeCheck(// Don't handle specially
+        "var obj = { bind: function() { return 'asdf'; } };\n" +
+        "obj.bind() - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "function f(x) { return x; }\n" +
+        "f.bind(null, 1, 2);",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(
+        "function f(x) { return x; }\n" +
+        "f.bind();",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(
+        "function f(x) { return x - 1; }\n" +
+        "var g = f.bind(null);\n" +
+        "g();",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(
+        "function f() {}\n" +
+        "f.bind(1);",
+        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/** @constructor */\n" +
+        "function Bar() {}\n" +
+        "/** @this {!Foo} */\n" +
+        "function f() {}\n" +
+        "f.bind(new Bar);",
+        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+
+    typeCheck(
+        "function f(/** number */ x, /** number */ y) { return x - y; }\n" +
+        "var g = f.bind(null, 123);\n" +
+        "g('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f(x, y) { return x - y; }\n" +
+        "var g = f.bind(null, 123);\n" +
+        "g('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f(/** number */ x) { return x - 1; }\n" +
+        "var g = f.bind(null, 'asdf');\n" +
+        "g() - 3;",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @param {number=} x */\n" +
+        "function f(x) {}\n" +
+        "var g = f.bind(null);\n" +
+        "g();\n" +
+        "g('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @param {...number} var_args */\n" +
+        "function f(var_args) {}\n" +
+        "var g = f.bind(null);\n" +
+        "g();\n" +
+        "g(123, 'asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @param {number=} x */\n" +
+        "function f(x) {}\n" +
+        "f.bind(null, undefined);");
+
+    checkNoWarnings(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "f.bind(null, 1, 2);");
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "var g = f.bind(null, 1);\n" +
+        "g(2);\n" +
+        "g('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(// T was instantiated to ? in the f.bind call.
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "var g = f.bind(null);\n" +
+        "g(2, 'asdf');");
+
+    typeCheck(
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "f.bind(null, 1, 'asdf');",
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        " function Foo(x) {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @this {Foo<T>}\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "function f(x, y) {}\n" +
+        "f.bind(new Foo('asdf'), 1, 2);",
+        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+
+    typeCheck(
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        " function Foo(x) {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " * @param {T} y\n" +
+        " */\n" +
+        "Foo.prototype.f = function(x, y) {};\n" +
+        "Foo.prototype.f.bind(new Foo('asdf'), 1, 2);",
+        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+
+    typeCheck(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "Foo.bind(new Foo);",
+        NewTypeInference.CANNOT_BIND_CTOR);
+
+    checkNoWarnings(// We can't detect that f takes a string
+        "/**\n" +
+        " * @constructor\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function Foo(x) {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @this {Foo<T>}\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function poly(x) {}\n" +
+        "function f(x) {\n" +
+        "  poly.bind(new Foo('asdf'), x);\n" +
+        "}\n" +
+        "f(123);");
+  }
 }
