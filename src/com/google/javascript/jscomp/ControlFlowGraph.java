@@ -82,16 +82,6 @@ public class ControlFlowGraph<N> extends
   }
 
   /**
-   * Connects the node to the explicit return.
-   *
-   * @param srcValue Node.
-   * @param edgeValue Edge.
-   */
-  public void connectToImplicitReturn(N srcValue, Branch edgeValue) {
-    super.connect(srcValue, edgeValue, null);
-  }
-
-  /**
    * Gets a comparator for the nodes. The default implementation returns
    * {@code null}. See {@link ControlFlowGraph#getOptionalNodeComparator}.
    * @param isForward Whether the comparator sorts the nodes in the direction of

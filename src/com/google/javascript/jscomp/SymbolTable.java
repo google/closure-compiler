@@ -425,6 +425,7 @@ public final class SymbolTable
     }
   }
 
+  @SuppressWarnings("unused")
   public String toDebugString() {
     StringBuilder builder = new StringBuilder();
     for (Symbol symbol : getAllSymbols()) {

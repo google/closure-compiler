@@ -51,14 +51,6 @@ public class LinkedDirectedGraph<N, E>
     return new LinkedDirectedGraph<>(false, false);
   }
 
-  public static <N, E> LinkedDirectedGraph<N, E> createWithNodeAnnotations() {
-    return new LinkedDirectedGraph<>(true, false);
-  }
-
-  public static <N, E> LinkedDirectedGraph<N, E> createWithEdgeAnnotations() {
-    return new LinkedDirectedGraph<>(false, true);
-  }
-
   public static <N, E> LinkedDirectedGraph<N, E> create() {
     return new LinkedDirectedGraph<>(true, true);
   }

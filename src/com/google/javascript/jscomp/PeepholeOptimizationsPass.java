@@ -51,10 +51,6 @@ class PeepholeOptimizationsPass implements CompilerPass {
     this.retraverseOnChange = retraverse;
   }
 
-  public AbstractCompiler getCompiler() {
-    return compiler;
-  }
-
   @Override
   public void process(Node externs, Node root) {
     compiler.addChangeHandler(handler);

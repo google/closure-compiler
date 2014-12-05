@@ -480,6 +480,7 @@ public class JSModuleGraph {
     return entryPointInputs;
   }
 
+  @SuppressWarnings("unused")
   LinkedDirectedGraph<JSModule, String> toGraphvizGraph() {
     LinkedDirectedGraph<JSModule, String> graphViz =
         LinkedDirectedGraph.create();

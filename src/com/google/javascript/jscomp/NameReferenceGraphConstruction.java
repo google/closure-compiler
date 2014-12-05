@@ -515,7 +515,6 @@ class NameReferenceGraphConstruction implements CompilerPass {
       } else {
         Preconditions.checkArgument(n.isGetProp());
         Reference ref = new Reference(n);
-        ref.setUnknown(true);
         unknownNameUse.put(n.getLastChild().getString(),
             new NameUse(getNamedContainingFunction(), ref));
       }

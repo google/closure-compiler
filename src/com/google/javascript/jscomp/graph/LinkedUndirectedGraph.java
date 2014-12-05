@@ -49,14 +49,6 @@ public class LinkedUndirectedGraph<N, E>
     return new LinkedUndirectedGraph<>(false, false);
   }
 
-  public static <N, E> LinkedUndirectedGraph<N, E> createWithNodeAnnotations() {
-    return new LinkedUndirectedGraph<>(true, false);
-  }
-
-  public static <N, E> LinkedUndirectedGraph<N, E> createWithEdgeAnnotations() {
-    return new LinkedUndirectedGraph<>(false, true);
-  }
-
   public static <N, E> LinkedUndirectedGraph<N, E> create() {
     return new LinkedUndirectedGraph<>(true, true);
   }

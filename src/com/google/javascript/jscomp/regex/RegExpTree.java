@@ -89,12 +89,6 @@ public abstract class RegExpTree {
     return sb.toString();
   }
 
-  public final String toDebugString() {
-    StringBuilder sb = new StringBuilder();
-    appendDebugString(sb);
-    return sb.toString();
-  }
-
   private void appendDebugString(StringBuilder sb) {
     sb.append('(').append(getClass().getSimpleName());
     int len = sb.length();

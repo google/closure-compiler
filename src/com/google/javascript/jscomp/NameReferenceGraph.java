@@ -255,10 +255,6 @@ class NameReferenceGraph extends
       this.isAliased = isAliased;
     }
 
-    public boolean hasSideEffect() {
-      return isCallable();
-    }
-
     public String getQualifiedName() {
       return qName;
     }
@@ -299,42 +295,6 @@ class NameReferenceGraph extends
     }
 
     /**
-     * Return true if it's safe to change the signature of the function
-     * references by this name. It is safe to change the signature if the Name
-     * is:
-     * <ul>
-     * <li>callable</li>
-     * <li>not an extern</li>
-     * <li>not been aliased</li>
-     * <li>not been exported</li>
-     * <li>Referred by call or apply functions</li>
-     * <li>The function uses the arguments property</li>
-     * </ul>
-     *
-     * @return true if it's safe to change the signature of the name.
-     */
-    public boolean canChangeSignature() {
-      // Ignore anything that is extern as they should not be changed.
-      // Also skip over any non-function names. Finally if a function has been
-      // alias, we don't know all of its callers and should not optimize.
-      //
-      // Also, if the function is called using .call or .apply, we don't try to
-      // optimize those call because the name graph does not give us enough
-      // information on the parameters.
-
-      // TODO(user) We'll be able to remove the check for call or apply once
-      // the name graph handles those call. The issue for now is that those
-      // calls aren't edges in the graph, so we don't have enough information to
-      // know if it's safe to change the method's signature.
-      return !(isExtern() ||
-          !isCallable() ||
-          isAliased() ||
-          isExported() ||
-          exposedToCallOrApply() ||
-          nameUsesArgumentsProperty());
-    }
-
-    /**
      * Returns true if the the arguments property is used in any of the function
      * definition.
      * Ex. function foo(a,b,c) {return arguments.size;};
@@ -360,33 +320,12 @@ class NameReferenceGraph extends
 
     private JSModule module = null;
 
-    // A reference is unknown because we don't know the object's type.
-    // If A.x->B.y in the name graph and the edge is unknown. It implies
-    // A.x() reference to someObject.y and B.y MAY be the site.
-    private boolean isUnknown = false;
-
     public Reference(Node site) {
       this.site = site;
     }
 
-    public boolean isUnknown() {
-      return isUnknown;
-    }
-
-    public void setUnknown(boolean isUnknown) {
-      this.isUnknown = isUnknown;
-    }
-
     public JSModule getModule() {
       return module;
-    }
-
-    public void setModule(JSModule module) {
-      this.module = module;
-    }
-
-    boolean isCall() {
-      return site.isCall();
     }
 
     /**

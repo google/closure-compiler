@@ -102,10 +102,6 @@ public class CompilerInput
     return id.getIdName();
   }
 
-  public SourceAst getAst() {
-    return ast;
-  }
-
   /** Gets the path relative to closure-base, if one is available. */
   @Override
   public String getPathRelativeToClosureBase() {
@@ -137,11 +133,6 @@ public class CompilerInput
   @Override
   public void setSourceFile(SourceFile file) {
     ast.setSourceFile(file);
-  }
-
-  /** Returns the SourceAst object on which this input is based. */
-  public SourceAst getSourceAst() {
-    return ast;
   }
 
   /** Sets an abstract compiler for doing parsing. */
@@ -194,11 +185,6 @@ public class CompilerInput
   void addRequire(String require) {
     getRequires();
     requires.add(require);
-  }
-
-  public void removeRequire(String require) {
-    getRequires();
-    requires.remove(require);
   }
 
   /**
@@ -293,31 +279,6 @@ public class CompilerInput
         visitSubtree(child, n);
       }
     }
-  }
-
-  /**
-   * Gets the source line for the indicated line number.
-   *
-   * @param lineNumber the line number, 1 being the first line of the file.
-   * @return The line indicated. Does not include the newline at the end
-   *     of the file. Returns {@code null} if it does not exist,
-   *     or if there was an IO exception.
-   */
-  public String getLine(int lineNumber) {
-    return getSourceFile().getLine(lineNumber);
-  }
-
-  /**
-   * Get a region around the indicated line number. The exact definition of a
-   * region is implementation specific, but it must contain the line indicated
-   * by the line number. A region must not start or end by a carriage return.
-   *
-   * @param lineNumber the line number, 1 being the first line of the file.
-   * @return The line indicated. Returns {@code null} if it does not exist,
-   *     or if there was an IO exception.
-   */
-  public Region getRegion(int lineNumber) {
-    return getSourceFile().getRegion(lineNumber);
   }
 
   public String getCode() throws IOException {

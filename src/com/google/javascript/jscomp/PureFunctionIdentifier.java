@@ -928,10 +928,6 @@ class PureFunctionIdentifier implements CompilerPass {
       return getMask(TAINTS_THIS_MASK);
     }
 
-    private boolean taintsArguments() {
-      return getMask(TAINTS_ARGUMENTS_MASK);
-    }
-
     private boolean taintsUnknown() {
       return getMask(TAINTS_UNKNOWN_MASK);
     }
