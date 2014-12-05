@@ -1338,11 +1338,79 @@ HTMLMediaElement.prototype.load = function() {};
  */
 HTMLMediaElement.prototype.canPlayType = function(type) {};
 
-/**
- * Callback when the media is buffered and ready to play through.
- * @type {function(!Event)}
- */
+/** Event handlers */
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onabort;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.oncanplay;
+
+/** @type {?function(!Event)} */
 HTMLMediaElement.prototype.oncanplaythrough;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.ondurationchange;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onemptied;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onended;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onerror;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onloadeddata;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onloadedmetadata;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onloadstart;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onpause;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onplay;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onplaying;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onprogress;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onratechange;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onseeked;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onseeking;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onstalled;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onsuspend;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.ontimeupdate;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onvolumechange;
+
+/** @type {?function(!Event)} */
+HTMLMediaElement.prototype.onwaiting;
+
+/** @type {?function(!Event)} */
+HTMLImageElement.prototype.onload;
+
+/** @type {?function(!Event)} */
+HTMLImageElement.prototype.onerror;
 
 /** @type {number} */
 HTMLMediaElement.prototype.readyState;
