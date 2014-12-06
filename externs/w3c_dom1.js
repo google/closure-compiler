@@ -385,8 +385,7 @@ Document.prototype.createCDATASection = function(data) {};
 Document.prototype.createDocumentFragment = function() {};
 
 /**
- * Create a DOM element. Surprisingly, this has side-effects on IE (creating an
- * element with a custom tag boots up a sub-system that handles custom tags).
+ * Create a DOM element.
  *
  * Web components introduced the second parameter as a way of extending existing
  * tags (e.g. document.createElement('button', 'fancy-button')).
@@ -394,6 +393,7 @@ Document.prototype.createDocumentFragment = function() {};
  * @param {string} tagName
  * @param {string=} opt_typeExtension
  * @return {!Element}
+ * @nosideeffects
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-createElement
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-instantiate
  */
