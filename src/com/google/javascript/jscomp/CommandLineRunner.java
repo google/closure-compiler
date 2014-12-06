@@ -202,6 +202,8 @@ public class CommandLineRunner extends
         + "depends on. Modules must be listed in dependency order, and JS "
         + "source files must be listed in the corresponding order. Where "
         + "--module flags occur in relation to --js flags is unimportant. "
+        + "<num-js-files> may be set to 'auto' for the first module if it "
+        + "has no dependencies. "
         + "Provide the value 'auto' to trigger module creation from CommonJS"
         + "modules.")
     private List<String> module = new ArrayList<>();
