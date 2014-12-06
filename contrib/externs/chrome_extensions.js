@@ -8102,3 +8102,21 @@ chrome.bluetoothPrivate.PairingEventEvent.prototype.hasListeners =
 
 /** @type {!chrome.bluetoothPrivate.PairingEventEvent} */
 chrome.bluetoothPrivate.onPairing;
+
+
+
+/**
+ * @const
+ * @see http://goo.gl/nvlmVv
+ */
+chrome.inlineInstallPrivate = {};
+
+
+/**
+ * Installs the given app ID.
+ * @param {string} id
+ * @param {function(string, string): void=} opt_callback Response callback that
+ *     returns two string: (1) an error string (or empty string on success) and
+ *     (2) an error code in case of error
+ */
+chrome.inlineInstallPrivate.install = function(id, opt_callback) {};
