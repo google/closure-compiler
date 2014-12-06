@@ -142,8 +142,9 @@ public class ObjectType implements TypeWithProperties {
   }
 
   private ObjectType withLoose() {
-    // Don't loosen nominal types
-    if (this.nominalType != null && this.nominalType.isClassy()) {
+    if (isLoose()
+        // Don't loosen nominal types
+        || this.nominalType != null && this.nominalType.isClassy()) {
       return this;
     }
     FunctionType fn = this.fn == null ? null : this.fn.withLoose();
@@ -490,7 +491,7 @@ public class ObjectType implements TypeWithProperties {
     }
 
     if (obj2.fn == null) {
-      return true;
+      return this.fn == null || obj2.isLoose();
     } else if (this.fn == null) {
       // Can only be executed if we have declared types for callable objects.
       return false;

@@ -7098,13 +7098,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    checkNoWarnings(
+    typeCheck(
         "/** @constructor */ function Foo(){}\n" +
         "function f(x) {\n" +
         "  if (typeof x == 'function') {\n" +
         "    var /** !Foo */ y = x;\n" +
         "  }\n" +
-        "}");
+        "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testPrototypeMethodOnUndeclaredDoesntCrash() {
@@ -7344,6 +7345,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  var fooFun = opt_fooFun || declaredFooFun;\n" +
         "  reqFooFun(fooFun);\n" +
         "};");
+
+    checkNoWarnings(
+        "var /** @type {function(number)} */ f;\n" +
+        "f = (function(x) {\n" +
+        "  x(1, 2);\n" +
+        "  return x;\n" +
+        "})(function(x, y) {});");
   }
 
   public void testMeetOfLooseObjAndNamedDoesntCrash() {

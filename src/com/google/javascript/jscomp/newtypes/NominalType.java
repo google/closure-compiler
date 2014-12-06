@@ -407,7 +407,8 @@ public class NominalType {
       this.wrappedAsNominal =
           new NominalType(ImmutableMap.<String, JSType>of(), this);
       ObjectType objInstance = "Function".equals(name)
-          ? ObjectType.fromFunction(FunctionType.TOP_FUNCTION, this.wrappedAsNominal)
+          ? ObjectType.fromFunction(
+              FunctionType.TOP_FUNCTION, this.wrappedAsNominal)
           : ObjectType.fromNominalType(this.wrappedAsNominal);
       this.wrappedAsJSType = JSType.fromObjectType(objInstance);
       this.wrappedAsNullableJSType = JSType.join(JSType.NULL,
