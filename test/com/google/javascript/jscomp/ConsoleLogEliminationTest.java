@@ -60,20 +60,10 @@ public class ConsoleLogEliminationTest extends CompilerTestCase {
   }
 
   public void testConsoleSideEffect() {
-    try {
-      test("var a; console.log(a++);", "var a; console.log(a++);");
-      fail("Expected an Exception");
-    } catch (RuntimeException ex) {
-      assertTrue(ex.getMessage().contains("Cannot remove console statement with side effects on line 1"));
-    }
+    test("var a; console.log(a++);", "var a;");
   }
 
   public void testWindowConsoleSideEffect() {
-    try {
-      test("var a; window.console.log(a++);", "var a; window.console.log(a++);");
-      fail("Expected an Exception");
-    } catch (RuntimeException ex) {
-      assertTrue(ex.getMessage().contains("Cannot remove console statement with side effects on line 1"));
-    }
+    test("var a; window.console.log(a++);", "var a;");
   }
 }

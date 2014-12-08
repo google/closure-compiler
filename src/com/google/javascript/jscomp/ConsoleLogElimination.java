@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static java.lang.String.format;
 import static java.util.logging.Logger.getLogger;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -61,7 +62,8 @@ public class ConsoleLogElimination extends AbstractPostOrderCallback implements 
   private void removeExpressionResult(Node fnCall) {
     for (int i = 1; i < fnCall.getChildCount(); i++) {
       if (NodeUtil.mayHaveSideEffects(fnCall.getChildAtIndex(i))) {
-        throw new IllegalStateException("Cannot remove console statement with side effects on line " + fnCall.getLineno());
+        logger.warning(format("Removing console statement with possible side effects on line %d of '%s'", fnCall.getLineno(), fnCall.getSourceFileName()));
+        break;
       }
     }
     fnCall.getParent().getParent().removeChild(fnCall.getParent());
