@@ -867,6 +867,10 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(removeUnreachableCode);
     }
 
+    if (options.consoleLogElimination) {
+      passes.add(consoleLogElimination);
+    }
+
     if (options.removeUnusedPrototypeProperties) {
       passes.add(removeUnusedPrototypeProperties);
     }
@@ -1941,6 +1945,17 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new UnreachableCodeElimination(compiler, true);
+    }
+  };
+
+  /**
+   * Use data flow analysis to remove dead branches.
+   */
+  final PassFactory consoleLogElimination =
+      new PassFactory("consoleLogElimination", false) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new ConsoleLogElimination(compiler);
     }
   };
 

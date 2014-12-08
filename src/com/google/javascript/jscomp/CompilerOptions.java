@@ -356,6 +356,9 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
+  /** Removes console.log statements */
+  public boolean consoleLogElimination;
+
   public CheckLevel checkMissingReturn;
 
   /** Checks for missing return statements */
@@ -1000,6 +1003,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     smartNameRemoval = false;
     extraSmartNameRemoval = false;
     removeDeadCode = false;
+    consoleLogElimination = false;
     extractPrototypeMemberDeclarations =
         ExtractPrototypeMemberDeclarationsMode.OFF;
     removeUnusedPrototypeProperties = false;
@@ -1864,6 +1868,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   public void setRemoveDeadCode(boolean removeDeadCode) {
     this.removeDeadCode = removeDeadCode;
   }
+
+
+  public void setConsoleLogElimination(boolean consoleLogElimination) {
+    this.consoleLogElimination = consoleLogElimination;
+  }
+
 
   public void setExtractPrototypeMemberDeclarations(boolean enabled) {
     this.extractPrototypeMemberDeclarations =
