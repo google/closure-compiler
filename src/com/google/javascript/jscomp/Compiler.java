@@ -760,7 +760,7 @@ public class Compiler extends AbstractCompiler {
       }
 
       // IDE-mode is defined to stop here, before the heavy rewriting begins.
-      if (!options.ideMode) {
+      if (!options.checksOnly && !options.ideMode) {
         optimize();
       }
     }

@@ -359,6 +359,10 @@ public class CommandLineRunner extends
     private String compilationLevel = "SIMPLE";
     private CompilationLevel compilationLevelParsed = null;
 
+    @Option(name = "--checks-only",
+        usage = "Don't generate output. Run checks, but no compiler passes.")
+    private boolean checksOnly = false;
+
     @Option(name = "--use_types_for_optimization",
         hidden = true,
         handler = BooleanOptionHandler.class,
@@ -1128,6 +1132,8 @@ public class CommandLineRunner extends
     if (flags.debug) {
       level.setDebugOptionsForCompilationLevel(options);
     }
+
+    options.setChecksOnly(flags.checksOnly);
 
     if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);
