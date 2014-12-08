@@ -111,7 +111,6 @@ public enum CompilationLevel {
     options.convertToDottedProperties = true;
     options.labelRenaming = true;
     options.removeDeadCode = true;
-    options.consoleLogElimination = true;
     options.optimizeArgumentsArray = true;
     options.setRemoveUnusedVariables(Reach.LOCAL_ONLY);
     options.collapseObjectLiterals = true;
