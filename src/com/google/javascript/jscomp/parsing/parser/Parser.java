@@ -2265,7 +2265,7 @@ public class Parser {
   }
 
   private boolean peekParenPatternAssignment() {
-    return peekParenPattern(PatternKind.ANY, EnumSet.of(TokenType.EQUAL));
+    return peekParenPattern(PatternKind.ANY, assignmentFollowSet);
   }
 
   private boolean peekParenPatternStart() {
@@ -2346,6 +2346,9 @@ public class Parser {
 
   private static final EnumSet<TokenType> arraySubPatternFollowSet =
       EnumSet.of(TokenType.COMMA, TokenType.CLOSE_SQUARE, TokenType.EQUAL);
+
+  private static final EnumSet<TokenType> assignmentFollowSet =
+      EnumSet.of(TokenType.EQUAL);
 
   // Element ::= Pattern | LValue | ... LValue
   private ParseTree parseArrayPatternElement(PatternKind kind) {
