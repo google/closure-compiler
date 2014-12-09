@@ -1579,7 +1579,7 @@ jQuery.prototype.position = function() {};
  * @param {string} url
  * @param {(Object.<string,*>|string|
  *     function(string,string,jQuery.jqXHR))=} data
- * @param {(function(string,string,jQuery.jqXHR)|string)=} success
+ * @param {(function(string,string,jQuery.jqXHR)|string|null)=} success
  * @param {string=} dataType
  * @return {jQuery.jqXHR}
  */
@@ -1589,7 +1589,7 @@ jQuery.post = function(url, data, success, dataType) {};
  * @param {string} url
  * @param {(Object.<string,*>|string|
  *     function(string,string,jQuery.jqXHR))=} data
- * @param {(function(string,string,jQuery.jqXHR)|string)=} success
+ * @param {(function(string,string,jQuery.jqXHR)|string|null)=} success
  * @param {string=} dataType
  * @return {jQuery.jqXHR}
  */
