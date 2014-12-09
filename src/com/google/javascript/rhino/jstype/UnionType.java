@@ -436,7 +436,7 @@ public class UnionType extends JSType {
     boolean firstAlternate = true;
 
     result.append("(");
-    SortedSet<JSType> sorted = new TreeSet<JSType>(ALPHA);
+    SortedSet<JSType> sorted = new TreeSet<>(ALPHA);
     sorted.addAll(alternates);
     for (JSType t : sorted) {
       if (!firstAlternate) {

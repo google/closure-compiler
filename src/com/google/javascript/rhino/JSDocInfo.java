@@ -977,8 +977,7 @@ public class JSDocInfo implements Serializable {
     }
 
     if (documentation.throwsDescriptions == null) {
-      documentation.throwsDescriptions =
-          new LinkedHashMap<JSTypeExpression, String>();
+      documentation.throwsDescriptions = new LinkedHashMap<>();
     }
 
     if (!documentation.throwsDescriptions.containsKey(type)) {
@@ -1003,7 +1002,7 @@ public class JSDocInfo implements Serializable {
     }
 
     if (documentation.parameters == null) {
-      documentation.parameters = new LinkedHashMap<String, String>();
+      documentation.parameters = new LinkedHashMap<>();
     }
 
     if (!documentation.parameters.containsKey(parameter)) {
@@ -1081,7 +1080,7 @@ public class JSDocInfo implements Serializable {
   boolean declareParam(JSTypeExpression jsType, String parameter) {
     lazyInitInfo();
     if (info.parameters == null) {
-      info.parameters = new LinkedHashMap<String, JSTypeExpression>();
+      info.parameters = new LinkedHashMap<>();
     }
     if (!info.parameters.containsKey(parameter)) {
       info.parameters.put(parameter, jsType);
@@ -1104,7 +1103,7 @@ public class JSDocInfo implements Serializable {
       return false;
     }
     if (info.templateTypeNames == null){
-      info.templateTypeNames = new ArrayList<String>();
+      info.templateTypeNames = new ArrayList<>();
     } else if (info.templateTypeNames.contains(newTemplateTypeName)) {
       return false;
     }
@@ -1144,7 +1143,7 @@ public class JSDocInfo implements Serializable {
     if (info.typeTransformations == null){
       // A LinkedHashMap is used to keep the insertion order. The type
       // transformation expressions will be evaluated in this order.
-      info.typeTransformations = new LinkedHashMap<String, Node>();
+      info.typeTransformations = new LinkedHashMap<>();
     } else if (info.typeTransformations.containsKey(newName)) {
       return false;
     }

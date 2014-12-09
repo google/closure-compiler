@@ -65,7 +65,7 @@ public class EnumType extends PrototypeObjectType {
   // the type of the individual elements
   private EnumElementType elementsType;
   // the elements' names (they all have the same type)
-  private final Set<String> elements = new HashSet<String>();
+  private final Set<String> elements = new HashSet<>();
 
   /**
    * Creates an enum type.

@@ -664,8 +664,7 @@ public abstract class JSType implements Serializable {
 
   @Override
   public boolean equals(Object jsType) {
-    return (jsType instanceof JSType) ?
-        isEquivalentTo((JSType) jsType) : false;
+    return (jsType instanceof JSType) && isEquivalentTo((JSType) jsType);
   }
 
   @Override

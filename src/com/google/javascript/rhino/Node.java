@@ -2276,9 +2276,9 @@ public class Node implements Cloneable, Serializable {
    */
   public void setSideEffectFlags(int flags) {
     Preconditions.checkArgument(
-       getType() == Token.CALL || getType() == Token.NEW,
-       "setIsNoSideEffectsCall only supports CALL and NEW nodes, got " +
-       Token.name(getType()));
+        getType() == Token.CALL || getType() == Token.NEW,
+        "setIsNoSideEffectsCall only supports CALL and NEW nodes, got %s",
+        Token.name(getType()));
 
     putIntProp(SIDE_EFFECT_FLAGS, flags);
   }

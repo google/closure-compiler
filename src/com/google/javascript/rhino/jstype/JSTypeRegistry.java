@@ -117,7 +117,7 @@ public class JSTypeRegistry implements Serializable {
   private final Map<String, JSType> namesToTypes;
 
   // Set of namespaces in which types (or other namespaces) exist.
-  private final Set<String> namespaces = new HashSet<String>();
+  private final Set<String> namespaces = new HashSet<>();
 
   // NOTE(nicksantos): This is a terrible terrible hack. When type expressions
   // are evaluated, we need to be able to decide whether that type name
@@ -132,12 +132,12 @@ public class JSTypeRegistry implements Serializable {
   // undecidable territory. Instead, we "pre-declare" enum types and typedefs,
   // so that the expression resolver can decide whether a given name is
   // nullable or not.
-  private final Set<String> nonNullableTypeNames = new HashSet<String>();
+  private final Set<String> nonNullableTypeNames = new HashSet<>();
 
   // Types that have been "forward-declared."
   // If these types are not declared anywhere in the binary, we shouldn't
   // try to type-check them at all.
-  private final Set<String> forwardDeclaredTypes = new HashSet<String>();
+  private final Set<String> forwardDeclaredTypes = new HashSet<>();
 
   // A map of properties to the types on which those properties have been
   // declared.
@@ -187,7 +187,7 @@ public class JSTypeRegistry implements Serializable {
     this.emptyTemplateTypeMap = new TemplateTypeMap(
         this, ImmutableList.<TemplateType>of(), ImmutableList.<JSType>of());
     nativeTypes = new JSType[JSTypeNative.values().length];
-    namesToTypes = new HashMap<String, JSType>();
+    namesToTypes = new HashMap<>();
     resetForTypeCheck();
   }
 
@@ -923,7 +923,7 @@ public class JSTypeRegistry implements Serializable {
     if (thisType != null) {
       type = thisType.getTemplateTypeMap().getTemplateTypeKeyByName(jsTypeName);
       if (type != null) {
-        Preconditions.checkState(type.isTemplateType(), "expected:" + type);
+        Preconditions.checkState(type.isTemplateType(), "expected:%s", type);
         return type;
       }
     }
@@ -1745,8 +1745,7 @@ public class JSTypeRegistry implements Serializable {
             .build();
     }
 
-    throw new IllegalStateException(
-        "Unexpected node in type expression: " + n.toString());
+    throw new IllegalStateException("Unexpected node in type expression: " + n);
   }
 
   /**

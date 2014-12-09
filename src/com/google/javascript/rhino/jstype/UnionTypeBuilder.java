@@ -301,7 +301,7 @@ class UnionTypeBuilder implements Serializable {
       } else if (size > 1) {
         return null;
       } else if (size == 1) {
-        return alternates.iterator().next();
+        return alternates.get(0);
       } else {
         return registry.getNativeType(NO_TYPE);
       }

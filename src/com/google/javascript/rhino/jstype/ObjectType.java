@@ -217,7 +217,7 @@ public abstract class ObjectType extends JSType implements StaticScope<JSType> {
   public String getNormalizedReferenceName() {
     String name = getReferenceName();
     if (name != null) {
-      int pos = name.indexOf("(");
+      int pos = name.indexOf('(');
       if (pos != -1) {
         return name.substring(0, pos);
       }

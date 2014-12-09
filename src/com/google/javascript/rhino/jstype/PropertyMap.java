@@ -171,9 +171,7 @@ class PropertyMap implements Serializable {
   }
 
   void collectPropertyNames(Set<String> props) {
-    for (String prop : properties.keySet()) {
-      props.add(prop);
-    }
+    props.addAll(properties.keySet());
     PropertyMap primaryParent = getPrimaryParent();
     if (primaryParent != null) {
       primaryParent.collectPropertyNames(props);

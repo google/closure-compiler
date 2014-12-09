@@ -5803,8 +5803,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * {@link JSTypeRegistry#createRecordType}.
    */
   public void testCreateRecordType() throws Exception {
-    Map<String, RecordProperty> properties =
-        new HashMap<String, RecordProperty>();
+    Map<String, RecordProperty> properties = new HashMap<>();
     properties.put("hello", new RecordProperty(NUMBER_TYPE, null));
 
     JSType recordType = registry.createRecordType(properties);

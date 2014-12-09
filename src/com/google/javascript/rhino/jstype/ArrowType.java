@@ -161,13 +161,8 @@ final class ArrowType extends JSType {
     }
 
     // "that" can't be a supertype, because it's missing a required argument.
-    if (thisParam != null
-        && !thisParam.isOptionalArg() && !thisParam.isVarArgs()
-        && thatParam == null) {
-      return false;
-    }
-
-    return true;
+    return thisParam == null || thisParam.isOptionalArg() || thisParam.isVarArgs()
+        || thatParam != null;
   }
 
   /**
