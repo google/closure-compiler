@@ -553,6 +553,11 @@ public class CommandLineRunner extends
         usage = "A list of JS Conformance configurations in text protocol buffer format.")
     private List<String> conformanceConfigs = new ArrayList<>();
 
+    @Option(name = "--rename_prefix_namespace",
+        usage = "Specifies the name of an object that will be used to store all "
+        + "non-extern globals")
+    private String renamePrefixNamespace = null;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
 
@@ -1040,7 +1045,8 @@ public class CommandLineRunner extends
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
           .setAngularPass(flags.angularPass)
           .setTracerMode(flags.tracerMode)
-          .setNewTypeInference(flags.useNewTypeInference);
+          .setNewTypeInference(flags.useNewTypeInference)
+          .setRenamePrefixNamespace(flags.renamePrefixNamespace);
     }
     errorStream = null;
   }
@@ -1089,6 +1095,8 @@ public class CommandLineRunner extends
         flags.processJqueryPrimitives;
 
     options.angularPass = flags.angularPass;
+
+    options.renamePrefixNamespace = flags.renamePrefixNamespace;
 
     if (!flags.translationsFile.isEmpty()) {
       try {
