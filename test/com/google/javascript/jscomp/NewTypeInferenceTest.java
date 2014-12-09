@@ -112,7 +112,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   private NewTypeInference typeCheck(
       String js, List<DiagnosticType> warningKinds) {
-    return typeCheck("", js, warningKinds);
+    return typeCheck(DEFAULT_EXTERNS, js, warningKinds);
   }
 
   private NewTypeInference typeCheck(
@@ -144,7 +144,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   // Only for tests where there is a single top-level function in the program
   private void inferFirstFormalType(String js, JSType expected) {
-    NewTypeInference typeInf = parseAndTypeCheck("", js);
+    NewTypeInference typeInf = parseAndTypeCheck(DEFAULT_EXTERNS, js);
     JSError[] warnings = compiler.getWarnings();
     if (warnings.length > 0) {
       fail("Expected no warnings, but found: " + Arrays.toString(warnings));
@@ -154,7 +154,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   // Only for tests where there is a single top-level function in the program
   private void inferReturnType(String js, JSType expected) {
-    NewTypeInference typeInf = parseAndTypeCheck("", js);
+    NewTypeInference typeInf = parseAndTypeCheck(DEFAULT_EXTERNS, js);
     JSError[] warnings = compiler.getWarnings();
     if (warnings.length > 0) {
       fail("Expected no warnings, but found: " + Arrays.toString(warnings));
@@ -163,7 +163,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   private void checkDeclaredType(String js, String varName, JSType expected) {
-    NewTypeInference typeInf = parseAndTypeCheck("", js);
+    NewTypeInference typeInf = parseAndTypeCheck(DEFAULT_EXTERNS, js);
     assertEquals(expected, typeInf.getDeclaredType(varName));
   }
 
@@ -174,33 +174,40 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testVarDefinitionsInExterns() {
-    checkNoWarnings("var undecl = {};", "if (undecl) { undecl.x = 7 };");
+    checkNoWarnings(
+        DEFAULT_EXTERNS + "var undecl = {};",
+        "if (undecl) { undecl.x = 7 };");
 
     checkNoWarnings(
-        "var undecl = {};",
+        DEFAULT_EXTERNS + "var undecl = {};",
         "function f() { if (undecl) { undecl.x = 7 }; }");
 
-    checkNoWarnings("var undecl;", "undecl(5);");
+    checkNoWarnings(DEFAULT_EXTERNS + "var undecl;", "undecl(5);");
 
-    checkNoWarnings("/** @type {number} */ var num;", "num - 5;");
+    checkNoWarnings(
+        DEFAULT_EXTERNS + "/** @type {number} */ var num;",
+        "num - 5;");
 
-    checkNoWarnings("var maybeStr; /** @type {string} */ var maybeStr;",
+    checkNoWarnings(
+        DEFAULT_EXTERNS + "var maybeStr; /** @type {string} */ var maybeStr;",
         "maybeStr - 5;");
 
-    typeCheck("/** @type {string} */ var str;", "str - 5;",
+    typeCheck(
+        DEFAULT_EXTERNS + "/** @type {string} */ var str;",
+        "str - 5;",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     // TODO(blickly): Warn if function in externs has body
     checkNoWarnings(
-        "function f() {/** @type {string} */ var invisible;}",
+        DEFAULT_EXTERNS + "function f() {/** @type {string} */ var invisible;}",
         "invisible - 5;");
 //         VarCheck.UNDEFINED_VAR_ERROR);
 
-    typeCheck("/** @type {number} */ var num;",
+    typeCheck(DEFAULT_EXTERNS + "/** @type {number} */ var num;",
         "/** @type {undefined} */ var x = num;",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck("var untypedNum;",
+    typeCheck(DEFAULT_EXTERNS + "var untypedNum;",
         "function f(x) {\n" +
         " x < untypedNum;\n" +
         " untypedNum - 5;\n" +
@@ -212,7 +219,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   public void testThisInAtTypeFunction() {
     typeCheck(
         "/** @constructor */ function Foo(){};\n" +
-        "/** @type {number} */ Foo.prototype.n;",
+        "/** @type {number} */ Foo.prototype.n;\n" +
         "/** @type {function(this:Foo)} */ function f() { this.n = 'str' };",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
@@ -2948,13 +2955,10 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     //     "function f(x) { if (x instanceof UndefinedClass) {} }",
     //     VarCheck.UNDEFINED_VAR_ERROR);
 
-    // TODO(blickly): The second warning here is wrong. Remove it.
     typeCheck(
         "/** @constructor */ function Foo() { this.prop = 123; }\n" +
         "function f(x) { x = 123; if (x instanceof Foo) { x.prop; } }",
-        ImmutableList.of(
-            NewTypeInference.INVALID_OPERAND_TYPE,
-            NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT));
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     checkNoWarnings(
         "/** @constructor */ function Foo() {}\n" +
@@ -3016,6 +3020,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "Function.prototype.method = function(/** string */ x){};\n" +
         "(function(){}).method(5);",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "function f(value) {\n" +
+        "  if (value instanceof Function) {} else if (value instanceof Object) {\n" +
+        "    return value.displayName || value.name || '';\n" +
+        "  }\n" +
+        "};");
   }
 
   public void testFunctionWithProps() {
@@ -3594,7 +3605,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testInheritanceImplicitObjectSubtyping() {
     String objectExterns =
-        "/** @constructor */ function Object() {}\n" +
+        DEFAULT_EXTERNS +
         "/** @return {string} */ Object.prototype.toString = function() {};";
 
     checkNoWarnings(objectExterns,
@@ -7150,7 +7161,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testUnannotatedFunctionSummaryDoesntCrash() {
-    checkNoWarnings(
+    checkNoWarnings(DEFAULT_EXTERNS +
         "/** @interface */\n" +
         "var IThenable = function() {};\n" +
         "IThenable.prototype.then = function(onFulfilled) {};\n" +
@@ -7167,7 +7178,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "  p.then(g);\n" +
         "}");
 
-    typeCheck(
+    typeCheck(DEFAULT_EXTERNS +
         "/** @interface */\n" +
         "var IThenable = function() {};\n" +
         "IThenable.prototype.then = function(onFulfilled) {};\n" +
@@ -7219,6 +7230,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testUnparameterizedArrayDefinitionDoesntCrash() {
     checkNoWarnings(
+        "/** @constructor */ function Function(){}\n" +
         "/** @constructor */ function Array(){}",
         "function f(/** !Array */ arr) {\n" +
         "  var newarr = [];\n" +
@@ -7229,24 +7241,26 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
   public void testInstanceofGenericTypeDoesntCrash() {
     checkNoWarnings(
-        "/** @constructor @template T */ function Foo(){}",
+        "/** @constructor @template T */ function Foo(){}\n" +
         "function f(/** !Foo<?> */ f) {\n" +
         "  if (f instanceof Foo) return true;\n" +
         "};");
   }
 
   public void testRedeclarationOfFunctionAsNamespaceDoesntCrash() {
-    checkNoWarnings("",
+    typeCheck(
         "/** @const */ var ns = ns || {};\n" +
         "ns.fun = function(name) {};\n" +
         "ns.fun = ns.fun || {};\n" +
-        "ns.fun.get = function(/** string */ name) {};");
+        "ns.fun.get = function(/** string */ name) {};",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    checkNoWarnings("",
+    typeCheck(
         "/** @const */ var ns = ns || {};\n" +
         "ns.fun = function(name) {};\n" +
         "ns.fun.get = function(/** string */ name) {};\n" +
-        "ns.fun = ns.fun || {};");
+        "ns.fun = ns.fun || {};",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testInvalidEnumDoesntCrash() {
@@ -9405,7 +9419,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     typeCheck(
         "/** @constructor */\n" +
         "function Foo() { /** @type {number|string} */ this.x = 5 };\n" +
-        "var o = true ? {x:5} : {};\n" +
+        "var o = true ? {x:5} : {y:'str'};\n" +
         "if (o instanceof Foo) {\n" +
         "  var /** {x:number} */ o2 = o;\n" +
         "}\n" +
@@ -10368,23 +10382,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function f(/** !Boolean */ x) {\n" +
         "  if (x) { return 123; };\n" +
         "}");
-  }
-
-  public void testNoautoboxingWithoutExterns() {
-    typeCheck("",
-        "var /** number */ n = 123;\n" +
-        "n.toString();",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
-
-    typeCheck("",
-        "var /** string */ s = '';\n" +
-        "s.toString();",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
-
-    typeCheck("",
-        "var /** boolean */ b = true;\n" +
-        "b.toString();",
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
 
   public void testAutoconvertScalarsToBoxedScalars() {

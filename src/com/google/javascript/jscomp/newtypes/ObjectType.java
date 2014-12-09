@@ -58,9 +58,14 @@ public class ObjectType implements TypeWithProperties {
     Preconditions.checkArgument(fn == null || fn.isLoose() == isLoose,
         "isLoose: %s, fn: %s", isLoose, fn);
     Preconditions.checkArgument(FunctionType.isInhabitable(fn));
+    Preconditions.checkArgument(fn == null || nominalType != null,
+          "Cannot create function %s without nominal type", fn);
     if (nominalType != null) {
-      Preconditions.checkArgument(!nominalType.isClassy() || !isLoose);
-      Preconditions.checkArgument(fn == null || nominalType.isFunction());
+      Preconditions.checkArgument(!nominalType.isClassy() || !isLoose,
+          "Cannot create loose objectType with nominal type %s", nominalType);
+      Preconditions.checkArgument(fn == null || nominalType.isFunction(),
+          "Cannot create objectType of nominal type %s with function (%s)",
+          nominalType, fn);
     }
     this.nominalType = nominalType;
     this.props = props;
@@ -576,8 +581,14 @@ public class ObjectType implements TypeWithProperties {
     } else {
       props = joinProps(obj1.props, obj2.props);
     }
+    NominalType nominal =
+        NominalType.pickSuperclass(obj1.nominalType, obj2.nominalType);
+    // TODO(blickly): Split TOP_OBJECT from empty object and remove this case
+    if (nominal == null || !nominal.isFunction()) {
+      fn = null;
+    }
     return ObjectType.makeObjectType(
-        NominalType.pickSuperclass(obj1.nominalType, obj2.nominalType),
+        nominal,
         props,
         fn,
         isLoose,
