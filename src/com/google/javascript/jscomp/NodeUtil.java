@@ -2064,9 +2064,19 @@ public final class NodeUtil {
    * @return Whether the node creates a block scope.
    */
   static boolean createsBlockScope(Node n) {
-    return ((n.isBlock() && !(n.hasChildren() && n.getFirstChild().isScript())
-        && !(n.getParent() != null && n.getParent().isCatch()))
-        || n.isFor() || n.isForOf());
+    switch (n.getType()) {
+      case Token.BLOCK:
+        Node parent = n.getParent();
+        if (parent == null || parent.isCatch()) {
+          return false;
+        }
+        Node child = n.getFirstChild();
+        return child != null && !child.isScript();
+      case Token.FOR:
+      case Token.FOR_OF:
+        return true;
+    }
+    return false;
   }
 
   /**

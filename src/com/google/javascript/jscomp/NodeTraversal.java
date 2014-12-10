@@ -74,6 +74,7 @@ public class NodeTraversal {
 
   /** The scope creator */
   private final ScopeCreator scopeCreator;
+  private final boolean useBlockScope;
 
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
@@ -247,6 +248,7 @@ public class NodeTraversal {
     this.inputId = null;
     this.sourceName = "";
     this.scopeCreator = scopeCreator;
+    this.useBlockScope = scopeCreator.hasBlockScope();
   }
 
   private void throwUnexpectedException(Exception unexpectedException) {
@@ -570,8 +572,7 @@ public class NodeTraversal {
 
     if (type == Token.FUNCTION) {
       traverseFunction(n, parent);
-    } else if (NodeUtil.createsBlockScope(n)
-        && scopeCreator.hasBlockScope()) {
+    } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
       traverseBlockScope(n);
     } else {
       for (Node child = n.getFirstChild(); child != null; ) {
