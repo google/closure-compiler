@@ -3010,3 +3010,40 @@ ErrorEvent.prototype.error;
  * @return {!HTMLDocument}
  */
 DOMImplementation.prototype.createHTMLDocument = function(opt_title) {};
+
+
+
+/**
+ * @constructor
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#the-picture-element
+ * @extends {HTMLElement}
+ */
+function HTMLPictureElement() {}
+
+/**
+ * @constructor
+ * @see https://html.spec.whatwg.org/multipage/embedded-content.html#the-picture-element
+ * @extends {HTMLElement}
+ */
+function HTMLSourceElement() {}
+
+/** @type {string} */
+HTMLSourceElement.prototype.media;
+
+/** @type {string} */
+HTMLSourceElement.prototype.sizes;
+
+/** @type {string} */
+HTMLSourceElement.prototype.src;
+
+/** @type {string} */
+HTMLSourceElement.prototype.srcset;
+
+/** @type {string} */
+HTMLSourceElement.prototype.type;
+
+/** @type {string} */
+HTMLImageElement.prototype.sizes;
+
+/** @type {string} */
+HTMLImageElement.prototype.srcset;
