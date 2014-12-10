@@ -718,10 +718,10 @@ IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 
 /**
- * @see http://dom.spec.whatwg.org/#futures
+ * @see https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects
  * @param {function(
- *             function((TYPE|IThenable.<TYPE>|Thenable)),
- *             function(*))} resolver
+ *             function((TYPE|IThenable.<TYPE>|Thenable|null)=),
+ *             function(*=))} resolver
  * @constructor
  * @implements {IThenable.<TYPE>}
  * @template TYPE
