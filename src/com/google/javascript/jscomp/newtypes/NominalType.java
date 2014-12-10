@@ -71,12 +71,15 @@ public class NominalType {
   }
 
   boolean isClassy() {
-    // TODO(blickly): Also make Objects not classy
-    return !isFunction();
+    return !isFunction() && !isObject();
   }
 
   boolean isFunction() {
     return "Function".equals(rawType.name);
+  }
+
+  private boolean isObject() {
+    return "Object".equals(rawType.name);
   }
 
   public boolean isStruct() {

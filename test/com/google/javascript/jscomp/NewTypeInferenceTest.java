@@ -3029,6 +3029,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "};");
   }
 
+  public void testObjectsAreNotClassy() {
+    typeCheck(
+        "function g(obj) {\n" +
+        "  if (!(obj instanceof Object)) { throw -1; }\n" +
+        "  return obj.x - 5;\n" +
+        "}\n" +
+        "g(new Object);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
   public void testFunctionWithProps() {
     typeCheck(
         "function f() {}\n" +
