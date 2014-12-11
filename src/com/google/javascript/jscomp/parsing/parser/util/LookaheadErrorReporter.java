@@ -24,6 +24,12 @@ public class LookaheadErrorReporter extends ErrorReporter {
   public static class ParseException extends RuntimeException {}
 
   @Override
+  protected void reportMessage(
+      SourcePosition location, String kind, String format, Object... arguments) {
+    throw new ParseException();
+  }
+
+  @Override
   protected void reportMessage(SourcePosition location, String message) {
     throw new ParseException();
   }
