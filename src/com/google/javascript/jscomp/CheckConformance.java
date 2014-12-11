@@ -17,14 +17,18 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Provides a framework for checking code against a set of user configured
@@ -102,6 +106,9 @@ public final class CheckConformance extends AbstractPostOrderCallback
     return builder.build();
   }
 
+  private static final Set<String> EXTENDABLE_FIELDS = ImmutableSet.of(
+      "extends", "whitelist", "whitelist_regexp", "only_apply_to", "only_apply_to_regexp");
+
   /**
    * Gets requirements from all configs. Merges whitelists of requirements with 'extends' equal to
    * 'rule_id' of other rule.
@@ -140,14 +147,11 @@ public final class CheckConformance extends AbstractPostOrderCallback
                 "no requirement with rule_id: " + requirement.getExtends());
             continue;
           }
-          if (requirement.hasErrorMessage()
-              || requirement.hasType()
-              || requirement.getValueCount() != 0
-              || requirement.hasJavaClass()
-              || requirement.hasRuleId()) {
-            reportInvalidRequirement(compiler, requirement,
-                "extending rules allow only whitelist, whitelist_regexp, only_apply_to and "
-                    + "only_apply_to_regexp.");
+          for (Descriptors.FieldDescriptor field : requirement.getAllFields().keySet()) {
+            if (!EXTENDABLE_FIELDS.contains(field.getName())) {
+              reportInvalidRequirement(compiler, requirement,
+                  "extending rules allow only " + EXTENDABLE_FIELDS);
+            }
           }
           existing.addAllWhitelist(requirement.getWhitelistList());
           existing.addAllWhitelistRegexp(requirement.getWhitelistRegexpList());
@@ -157,11 +161,43 @@ public final class CheckConformance extends AbstractPostOrderCallback
       }
     }
 
-    List<Requirement> requirements = new ArrayList<>();
+    List<Requirement> requirements = new ArrayList<>(builders.size());
     for (Requirement.Builder builder : builders) {
-      requirements.add(builder.build());
+      Requirement requirement = builder.build();
+      checkRequirementList(compiler, requirement, "whitelist");
+      checkRequirementList(compiler, requirement, "whitelist_regexp");
+      checkRequirementList(compiler, requirement, "only_apply_to");
+      checkRequirementList(compiler, requirement, "only_apply_to_regexp");
+      requirements.add(requirement);
     }
     return requirements;
+  }
+
+  private static void checkRequirementList(AbstractCompiler compiler, Requirement requirement,
+      String field) {
+    Set<String> existing = new HashSet<>();
+    for (String value : getRequirementList(requirement, field)) {
+      if (existing.contains(value)) {
+        reportInvalidRequirement(compiler, requirement, "duplicate " + field + " value: " + value);
+      } else {
+        existing.add(value);
+      }
+    }
+  }
+
+  private static List<String> getRequirementList(Requirement requirement, String field) {
+    switch (field) {
+      case "whitelist":
+        return requirement.getWhitelistList();
+      case "whitelist_regexp":
+        return requirement.getWhitelistRegexpList();
+      case "only_apply_to":
+        return requirement.getOnlyApplyToList();
+      case "only_apply_to_regexp":
+        return requirement.getOnlyApplyToRegexpList();
+      default:
+        throw new AssertionError("Unrecognized field: " + field);
+    }
   }
 
   private static Rule initRule(

@@ -2206,6 +2206,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     if (level.isOn()) {
+      initCompilerOptionsIfTesting();
       if (getOptions().errorHandler != null) {
         getOptions().errorHandler.report(level, error);
       }

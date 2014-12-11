@@ -1383,8 +1383,8 @@ public abstract class CompilerTestCase extends TestCase  {
     return modules;
   }
 
-  private static class BlackHoleErrorManager extends BasicErrorManager {
-    private BlackHoleErrorManager(Compiler compiler) {
+  static class BlackHoleErrorManager extends BasicErrorManager {
+    BlackHoleErrorManager(Compiler compiler) {
       compiler.setErrorManager(this);
     }
 

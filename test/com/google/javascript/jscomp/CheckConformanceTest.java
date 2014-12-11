@@ -1084,4 +1084,13 @@ public class CheckConformanceTest extends CompilerTestCase {
     assertEquals(2, requirement.getWhitelistCount());
     assertEquals(2, requirement.getWhitelistRegexpCount());
   }
+
+  public void testMergeRequirements_findsDuplicates() {
+    Compiler compiler = createCompiler();
+    ErrorManager errorManager = new BlackHoleErrorManager(compiler);
+    ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
+    builder.addRequirementBuilder().addWhitelist("x").addWhitelist("x");
+    CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+    assertEquals(1, errorManager.getErrorCount());
+  }
 }
