@@ -76,6 +76,36 @@ public class LinkedDirectedGraph<N, E>
     dest.getInEdges().add(edge);
   }
 
+  // TODO(johnlenz): make this part of the general graph interface.
+  /**
+   * DiGraphNode look ups can be expensive for a large graph operation, prefer this
+   * method if you have the DiGraphNode available.
+   */
+  public void connect(
+      DiGraphNode<N, E> src,
+      E edgeValue,
+      DiGraphNode<N, E> dest) {
+    LinkedDirectedGraphEdge<N, E> edge =
+        useEdgeAnnotations
+        ? new AnnotatedLinkedDirectedGraphEdge<>(src, edgeValue, dest)
+        : new LinkedDirectedGraphEdge<>(src, edgeValue, dest);
+    src.getOutEdges().add(edge);
+    dest.getInEdges().add(edge);
+  }
+
+  // TODO(johnlenz): make this part of the general graph interface.
+  /**
+   * DiGraphNode look ups can be expensive for a large graph operation, prefer this
+   * method if you have the DiGraphNode available.
+   */
+  public void connectIfNotConnectedInDirection(N srcValue, E edgeValue, N destValue) {
+    LinkedDirectedGraphNode<N, E> src = createDirectedGraphNode(srcValue);
+    LinkedDirectedGraphNode<N, E> dest = createDirectedGraphNode(destValue);
+    if (!this.isConnectedInDirection(src, Predicates.equalTo(edgeValue), dest)) {
+      this.connect(src, edgeValue, dest);
+    }
+  }
+
   @Override
   public void disconnect(N n1, N n2) {
     disconnectInDirection(n1, n2);
@@ -121,7 +151,7 @@ public class LinkedDirectedGraph<N, E>
   }
 
   @Override
-  public DiGraphNode<N, E> createDirectedGraphNode(N nodeValue) {
+  public LinkedDirectedGraphNode<N, E> createDirectedGraphNode(N nodeValue) {
     LinkedDirectedGraphNode<N, E> node = nodes.get(nodeValue);
     if (node == null) {
       node = useNodeAnnotations
@@ -180,14 +210,44 @@ public class LinkedDirectedGraph<N, E>
     return edges;
   }
 
+  /**
+   * DiGraphNode look ups can be expensive for a large graph operation, prefer the
+   * version below that takes DiGraphNodes, if you have them available.
+   */
   @Override
   public boolean isConnectedInDirection(N n1, N n2) {
     return isConnectedInDirection(n1, Predicates.<E>alwaysTrue(), n2);
   }
 
+  /**
+   * DiGraphNode look ups can be expensive for a large graph operation, prefer the
+   * version below that takes DiGraphNodes, if you have them available.
+   */
   @Override
   public boolean isConnectedInDirection(N n1, E edgeValue, N n2) {
     return isConnectedInDirection(n1, Predicates.equalTo(edgeValue), n2);
+  }
+
+  /**
+   * DiGraphNode look ups can be expensive for a large graph operation, prefer this
+   * method if you have the DiGraphNodes available.
+   */
+  public boolean isConnectedInDirection(
+      DiGraphNode<N, E> dNode1,
+      Predicate<E> edgeMatcher,
+      DiGraphNode<N, E>  dNode2) {
+    // Verify the nodes.
+    List<DiGraphEdge<N, E>> outEdges = dNode1.getOutEdges();
+    int len = outEdges.size();
+    for (int i = 0; i < len; i++) {
+      DiGraphEdge<N, E> outEdge = outEdges.get(i);
+      if (outEdge.getDestination() == dNode2
+          && edgeMatcher.apply(outEdge.getValue())) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private boolean isConnectedInDirection(N n1, Predicate<E> edgeMatcher, N n2) {
@@ -306,7 +366,7 @@ public class LinkedDirectedGraph<N, E>
    * A directed graph node that stores outgoing edges and incoming edges as an
    * list within the node itself.
    */
-  static class LinkedDirectedGraphNode<N, E> implements DiGraphNode<N, E>,
+  public static class LinkedDirectedGraphNode<N, E> implements DiGraphNode<N, E>,
       GraphvizNode {
 
     List<DiGraphEdge<N, E>> inEdgeList = new ArrayList<>();
