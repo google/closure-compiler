@@ -78,7 +78,7 @@ public final class SourceCodeEscapers {
             if (c < 0x100) {
               char[] r = new char[4];
               r[3] = HEX_DIGITS[c & 0xF];
-              c >>>= 4;
+              c = (char) (c >>> 4);
               r[2] = HEX_DIGITS[c & 0xF];
               r[1] = 'x';
               r[0] = '\\';
@@ -96,11 +96,11 @@ public final class SourceCodeEscapers {
     r[0] = '\\';
     r[1] = 'u';
     r[5] = HEX_DIGITS[c & 0xF];
-    c >>>= 4;
+    c = (char) (c >>> 4);
     r[4] = HEX_DIGITS[c & 0xF];
-    c >>>= 4;
+    c = (char) (c >>> 4);
     r[3] = HEX_DIGITS[c & 0xF];
-    c >>>= 4;
+    c = (char) (c >>> 4);
     r[2] = HEX_DIGITS[c & 0xF];
     return r;
   }
