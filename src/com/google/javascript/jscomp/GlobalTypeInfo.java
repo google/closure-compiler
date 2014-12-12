@@ -606,7 +606,7 @@ class GlobalTypeInfo implements CompilerPass {
               if (isPrototypeProperty(expr)
                   || NodeUtil.referencesThis(expr)
                   || !expr.isQualifiedName()) {
-                // Class or prototype properties are handled later in ProcessScope
+                // Class & prototype properties are handled in ProcessScope
                 return;
               }
               processQualifiedDefinition(expr);

@@ -10647,4 +10647,49 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "}\n" +
         "f(123);");
   }
+
+  public void testClosureStyleFunctionBind() {
+    typeCheck(
+        "goog.bind(123, null);",
+        NewTypeInference.GOOG_BIND_EXPECTS_FUNCTION);
+
+    typeCheck(
+        "function f(x) { return x; }\n" +
+        "goog.bind(f, null, 1, 2);",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(
+        "function f(x) { return x; }\n" +
+        "goog.bind(f);",
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(
+        "function f() {}\n" +
+        "goog.bind(f, 1);",
+        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+
+    typeCheck(
+        "function f(/** number */ x, /** number */ y) { return x - y; }\n" +
+        "var g = goog.bind(f, null, 123);\n" +
+        "g('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f(/** number */ x) { return x - 1; }\n" +
+        "var g = goog.partial(f, 'asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f(/** number */ x) { return x - 1; }\n" +
+        "var g = goog.partial(f, 'asdf');\n" +
+        "g() - 3;",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "function f(x) {\n" +
+        "  if (typeof x == 'function') {\n" +
+        "    goog.bind(x, {}, 1, 2);\n" +
+        "  }\n" +
+        "}");
+  }
 }

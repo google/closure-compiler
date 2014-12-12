@@ -414,16 +414,11 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public Bind describeFunctionBind(Node n, boolean useTypeInfo) {
-    Bind result = super.describeFunctionBind(n, useTypeInfo);
-    if (result != null) {
-      return result;
-    }
-
+  public Bind describeFunctionBind(
+      Node n, boolean callerChecksTypes, boolean iCheckTypes) {
     if (!n.isCall()) {
       return null;
     }
-
     Node callTarget = n.getFirstChild();
     if (callTarget.isQualifiedName()) {
       if (callTarget.matchesQualifiedName("goog.bind")
@@ -450,8 +445,7 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
         return new Bind(fn, thisValue, parameters);
       }
     }
-
-    return null;
+    return super.describeFunctionBind(n, callerChecksTypes, iCheckTypes);
   }
 
   @Override

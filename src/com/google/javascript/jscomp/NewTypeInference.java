@@ -20,10 +20,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.jscomp.GlobalTypeInfo.Scope;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -189,6 +189,11 @@ public class NewTypeInference implements CompilerPass {
           "JSC_CANNOT_BIND_CTOR",
           "We do not support using .bind on constructor functions.");
 
+  static final DiagnosticType GOOG_BIND_EXPECTS_FUNCTION =
+      DiagnosticType.warning(
+          "JSC_GOOG_BIND_EXPECTS_FUNCTION",
+          "The first argument to goog.bind/goog.partial must be a function.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
       CALL_FUNCTION_WITH_BOTTOM_FORMAL,
@@ -198,6 +203,7 @@ public class NewTypeInference implements CompilerPass {
       FAILED_TO_UNIFY,
       FORIN_EXPECTS_OBJECT,
       FORIN_EXPECTS_STRING_KEY,
+      GOOG_BIND_EXPECTS_FUNCTION,
       INVALID_ARGUMENT_TYPE,
       INVALID_INFERRED_RETURN_TYPE,
       INVALID_OBJLIT_PROPERTY_TYPE,
@@ -237,6 +243,7 @@ public class NewTypeInference implements CompilerPass {
 
   private WarningReporter warnings;
   private final AbstractCompiler compiler;
+  private final CodingConvention convention;
   private Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
   private Map<Scope, JSType> summaries;
   private Map<Node, DeferredCheck> deferredChecks;
@@ -260,15 +267,15 @@ public class NewTypeInference implements CompilerPass {
   NewTypeInference(AbstractCompiler compiler, boolean isClosurePassOn) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
+    this.convention = compiler.getCodingConvention();
     this.envs = new HashMap<>();
     this.summaries = new HashMap<>();
     this.deferredChecks = new HashMap<>();
     this.isClosurePassOn = isClosurePassOn;
-    this.ABSTRACT_METHOD_NAME =
-          compiler.getCodingConvention().getAbstractMethodName();
+    this.ABSTRACT_METHOD_NAME = convention.getAbstractMethodName();
     assertionFunctionsMap = new HashMap<>();
     for (AssertionFunctionSpec assertionFunction :
-        compiler.getCodingConvention().getAssertionFunctions()) {
+             convention.getAssertionFunctions()) {
       assertionFunctionsMap.put(assertionFunction.getFunctionName(),
           assertionFunction);
     }
@@ -1572,8 +1579,8 @@ public class NewTypeInference implements CompilerPass {
     }
     FunctionType origFunType = funType; // save for later
     if (funType.isGeneric()) {
-      Map<String, JSType> typeMap =
-          calcTypeInstantiationFwd(expr, funType, inEnv);
+      Map<String, JSType> typeMap = calcTypeInstantiationFwd(
+          expr, expr.getChildAtIndex(1), funType, inEnv);
       funType = funType.instantiateGenerics(typeMap);
       println("Instantiated function type: " + funType);
     }
@@ -1625,25 +1632,42 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeFunctionBindFwd(Node call, TypeEnv inEnv) {
     Preconditions.checkArgument(call.isCall());
-    Node boundFunNode = call.getFirstChild().getFirstChild();
+    Bind bindComponents = convention.describeFunctionBind(call, true, false);
+    Node boundFunNode = bindComponents.target;
     EnvTypePair pair = analyzeExprFwd(boundFunNode, inEnv);
     TypeEnv env = pair.env;
     FunctionType boundFunType = pair.type.getFunTypeIfSingletonObj();
-    Preconditions.checkNotNull(boundFunType);
-
+    if (!pair.type.isSubtypeOf(commonTypes.topFunction())) {
+      warnings.add(JSError.make(boundFunNode, GOOG_BIND_EXPECTS_FUNCTION));
+    }
+    // For some function types, we don't know enough to handle .bind specially.
+    if (boundFunType == null
+        || boundFunType.isTopFunction()
+        || boundFunType.isQmarkFunction()
+        || boundFunType.isLoose()) {
+      return analyzeCallNodeArgsFwdWhenError(call, env);
+    }
     if (boundFunType.isConstructor()) {
       warnings.add(JSError.make(call, CANNOT_BIND_CTOR));
       return new EnvTypePair(env, JSType.UNKNOWN);
     }
-    int maxArity = boundFunType.hasRestFormals()
-        ? Integer.MAX_VALUE : boundFunType.getMaxArity() + 1;
-    int minArity = 1; // the THIS argument is not optional
-    int numArgs = call.getChildCount() - 1;
-    if (numArgs < minArity || numArgs > maxArity) {
+    // Check if the receiver argument is there
+    if (isGoogBind(call) && call.getChildCount() <= 2
+        || !isGoogPartial(call) && call.getChildCount() == 1) {
       warnings.add(JSError.make(
           call, TypeCheck.WRONG_ARGUMENT_COUNT,
           getReadableCalleeName(call.getFirstChild()),
-          Integer.toString(numArgs), Integer.toString(minArity),
+          "0", "1", ""));
+    }
+    // Check that there are not too many of the other arguments
+    int maxArity = boundFunType.hasRestFormals()
+        ? Integer.MAX_VALUE : boundFunType.getMaxArity();
+    int numArgs = bindComponents.getBoundParameterCount();
+    if (numArgs > maxArity) {
+      warnings.add(JSError.make(
+          call, TypeCheck.WRONG_ARGUMENT_COUNT,
+          getReadableCalleeName(call.getFirstChild()),
+          Integer.toString(numArgs), "0",
           " and at most " + maxArity));
       return analyzeCallNodeArgsFwdWhenError(call, inEnv);
     }
@@ -1651,29 +1675,53 @@ public class NewTypeInference implements CompilerPass {
     // If the bound function is polymorphic, we only support the case where we
     // can completely calculate the type instantiation at the .bind call site.
     // We don't support splitting the instantiation between call sites.
+    //
+    // Also, we don't use the THIS argument when calculating the instantiation
+    // of a .bind call.
+    // See the following snippet:
+    // /**
+    //  * @constructor
+    //  * @template T
+    //  * @param {T} x
+    //  */
+    // function Foo(x) {}
+    // /**
+    //  * @template T
+    //  * @param {T} x
+    //  */
+    // Foo.prototype.f = function(x) {};
+    // Foo.prototype.f.bind(new Foo(123), 'asdf');
+    //
+    // Here, the receiver type of f is Foo<T>, but the T is the class's T,
+    // not the T of f's template declaration.
+    // Otoh, if f had an @this annotation that contained T, T would refer to
+    // f's T. There is no way of knowing what's the scope of the type variables
+    // in the receiver of the function type, that's why we don't use it here.
     if (boundFunType.isGeneric()) {
-      Map<String, JSType> typeMap =
-          calcTypeInstantiationFwd(call, boundFunType, env);
+      Map<String, JSType> typeMap = calcTypeInstantiationFwd(
+          call, bindComponents.parameters, boundFunType, env);
       boundFunType = boundFunType.instantiateGenerics(typeMap);
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    Node receiver = call.getChildAtIndex(1);
-    JSType reqThisType = boundFunType.getThisType();
-    if (reqThisType == null || boundFunType.isConstructor()) {
-      reqThisType = JSType.join(JSType.NULL, JSType.TOP_OBJECT);
-    }
-    pair = analyzeExprFwd(receiver, env, reqThisType);
-    env = pair.env;
-    if (!pair.type.isSubtypeOf(reqThisType)) {
-      warnings.add(JSError.make(call, INVALID_THIS_TYPE_IN_BIND,
-              pair.type.toString(), reqThisType.toString()));
+    Node receiver = bindComponents.thisValue;
+    if (receiver != null) {// receiver is null for goog.partial
+      JSType reqThisType = boundFunType.getThisType();
+      if (reqThisType == null || boundFunType.isConstructor()) {
+        reqThisType = JSType.join(JSType.NULL, JSType.TOP_OBJECT);
+      }
+      pair = analyzeExprFwd(receiver, env, reqThisType);
+      env = pair.env;
+      if (!pair.type.isSubtypeOf(reqThisType)) {
+        warnings.add(JSError.make(call, INVALID_THIS_TYPE_IN_BIND,
+                pair.type.toString(), reqThisType.toString()));
+      }
     }
 
     // We're passing an arraylist but don't do deferred checks for bind.
-    env = analyzeCallNodeArgumentsFwd(
-        call, receiver.getNext(), boundFunType, new ArrayList<JSType>(), env);
+    env = analyzeCallNodeArgumentsFwd(call, bindComponents.parameters,
+        boundFunType, new ArrayList<JSType>(), env);
     // For any formal not bound here, add it to the resulting function type.
-    for (int j = numArgs - 1; j < boundFunType.getMaxArity(); j++) {
+    for (int j = numArgs; j < boundFunType.getMaxArity(); j++) {
       JSType formalType = boundFunType.getFormalType(j);
       if (boundFunType.isRequiredArg(j)) {
         builder.addReqFormal(formalType);
@@ -1972,13 +2020,14 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private Map<String, JSType> calcTypeInstantiationFwd(
-      Node callNode, FunctionType funType, TypeEnv typeEnv) {
-    return calcTypeInstantiation(callNode, funType, typeEnv, true);
+      Node callNode, Node firstArg, FunctionType funType, TypeEnv typeEnv) {
+    return calcTypeInstantiation(callNode, firstArg, funType, typeEnv, true);
   }
 
   private Map<String, JSType> calcTypeInstantiationBwd(
       Node callNode, FunctionType funType, TypeEnv typeEnv) {
-    return calcTypeInstantiation(callNode, funType, typeEnv, false);
+    return calcTypeInstantiation(
+        callNode, callNode.getChildAtIndex(1), funType, typeEnv, false);
   }
 
   /*
@@ -1992,33 +2041,11 @@ public class NewTypeInference implements CompilerPass {
    *
    * We don't take the arg evaluation order into account during instantiation.
    */
-  private ImmutableMap<String, JSType> calcTypeInstantiation(
-      Node callNode, FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
+  private ImmutableMap<String, JSType> calcTypeInstantiation(Node callNode,
+      Node firstArg, FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
     List<String> typeParameters = funType.getTypeParameters();
     Multimap<String, JSType> typeMultimap = HashMultimap.create();
-    // We don't use the THIS argument when calculating the instantiation of a
-    // .bind call.
-    // See the following snippet:
-    // /**
-    //  * @constructor
-    //  * @template T
-    //  * @param {T} x
-    //  */
-    // function Foo(x) {}
-    // /**
-    //  * @template T
-    //  * @param {T} x
-    //  */
-    // Foo.prototype.f = function(x) {};
-    // Foo.prototype.f.bind(new Foo(123), 'asdf');
-    //
-    // Here, the receiver type of f is Foo<T>, but the T is the class's T,
-    // not the T of f's template declaration.
-    // Otoh, if f had an @this annotation that contained T, T would refer to
-    // f's T. There is no way of knowing what's the scope of the type variables
-    // in the receiver of the function type, that's why we don't use it here.
-    Node arg = callNode.getChildAtIndex(
-        isFunctionBind(callNode.getFirstChild(), typeEnv, isFwd) ? 2 : 1);
+    Node arg = firstArg;
     int i = 0;
     while (arg != null) {
       EnvTypePair pair =
@@ -3073,44 +3100,44 @@ public class NewTypeInference implements CompilerPass {
     return new EnvTypePair(env, requiredType);
   }
 
-  static final ImmutableSet<String> googPredicates =
-      ImmutableSet.of("isArray", "isBoolean", "isDef", "isDefAndNotNull",
-          "isFunction", "isNull", "isNumber", "isObject", "isString");
-
   private boolean isClosureSpecificCall(Node expr) {
     if (!isClosurePassOn || !expr.isCall()) {
       return false;
     }
-    Node callee = expr.getFirstChild();
-    if (!callee.isGetProp() ||
-        !callee.getFirstChild().isName() ||
-        !callee.getFirstChild().getString().equals("goog")) {
-      return false;
-    }
-    return googPredicates.contains(callee.getLastChild().getString());
+    return expr.getFirstChild().isQualifiedName()
+        && convention.isPropertyTestFunction(expr);
+  }
+
+  private boolean isGoogBind(Node n) {
+    return n.isCall()
+        && n.getFirstChild().isQualifiedName()
+        && n.getFirstChild().matchesQualifiedName("goog.bind");
+  }
+
+  private boolean isGoogPartial(Node n) {
+    return n.isCall()
+        && n.getFirstChild().isQualifiedName()
+        && n.getFirstChild().matchesQualifiedName("goog.partial");
   }
 
   private boolean isFunctionBind(Node expr, TypeEnv env, boolean isFwd) {
     if (!expr.isGetProp()) {
       return false;
     }
-    if (!expr.getLastChild().getString().equals("bind")) {
-      return false;
-    }
     Node recv = expr.getFirstChild();
     if (!recv.isFunction() && !recv.isQualifiedName()) {
       return false;
     }
-    JSType recvType = isFwd
-        ? analyzeExprFwd(recv, env).type : analyzeExprBwd(recv, env).type;
-    if (recvType.isUnknown()
-        || !recvType.isSubtypeOf(commonTypes.topFunction())) {
+    if (isGoogBind(expr.getParent()) || isGoogPartial(expr.getParent())) {
+      return true;
+    }
+    if (!expr.getLastChild().getString().equals("bind")) {
       return false;
     }
-    FunctionType funType = recvType.getFunTypeIfSingletonObj();
-    // For some function types, we don't know enough to handle .bind specially.
-    return !(funType == null || funType.isTopFunction()
-        || funType.isQmarkFunction() || funType.isLoose());
+    JSType recvType = isFwd
+        ? analyzeExprFwd(recv, env).type : analyzeExprBwd(recv, env).type;
+    return !recvType.isUnknown()
+        && recvType.isSubtypeOf(commonTypes.topFunction());
   }
 
   private boolean isGoogTypeof(Node expr) {

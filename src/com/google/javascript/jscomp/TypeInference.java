@@ -1024,7 +1024,7 @@ class TypeInference
    */
   private void updateBind(Node n) {
     CodingConvention.Bind bind =
-        compiler.getCodingConvention().describeFunctionBind(n, true);
+        compiler.getCodingConvention().describeFunctionBind(n, false, true);
     if (bind == null) {
       return;
     }
