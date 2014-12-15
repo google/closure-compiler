@@ -36,7 +36,6 @@ var ui = {};
 ui.router = {};
 
 
-// TODO: Provide stronger types for properties on $state.
 /**
  * @typedef {{
  *   params: Object,
@@ -52,6 +51,81 @@ ui.router = {};
  * }}
  */
 ui.router.$state;
+
+
+/**
+ * @typedef {ui.router.State}
+ */
+ui.router.$state.current;
+
+
+/**
+ * @typedef {Object}
+ */
+ui.router.$state.params;
+
+
+/**
+ * @typedef {?angular.$q.Promise}
+ */
+ui.router.$state.transition;
+
+
+/**
+ * @param {string|object=} stateOrName
+ * @param {string|object=} context
+ * @return {Object|Array}
+ */
+ui.router.$state.get = function(stateOrName, context) {};
+
+
+/**
+ * @param {string} to
+ * @param {object=} params
+ * @param {object=} options
+ * @returns {promise}
+ */
+ui.router.$state.go = function(to, params, options) {};
+
+
+/**
+ * @param {string|object} stateOrName
+ * @param {object=} params
+ * @param {object=} options
+ * @returns {string} compiled state url
+ */
+ui.router.$state.href = function(stateOrName, params, options) {};
+
+
+/**
+ * @param {string} stateOrName
+ * @param {object=} params
+ * @param {object=} options
+ */
+ui.router.$state.includes = function(stateOrName, params, options) {};
+
+
+/**
+ * @param {string|object} stateOrName
+ * @param {object=} params
+ * @param {object=} options
+ * @returns {boolean}
+ */
+ui.router.$state.is = function(stateOrName, params, options) {};
+
+
+/**
+ * @returns {promise}
+ */
+ui.router.$state.reload = function() {};
+
+
+/**
+ * @param {string} to
+ * @param {object=} toParams
+ * @param {object=} options
+ */
+ui.router.$state.transitionTo = function(to, toParams, options) {};
 
 
 /**
@@ -137,5 +211,4 @@ ui.router.$stateProvider = function(
  * @param {Object} definition
  * @return {!ui.router.$stateProvider}
  */
-ui.router.$stateProvider.prototype.state = function(
-    name, definition) {};
+ui.router.$stateProvider.prototype.state = function(name, definition) {};
