@@ -114,3 +114,27 @@ md.$toast.prototype.hide = function() {};
  * @type {function(*=)}
  */
 md.$toast.prototype.cancel = function() {};
+
+
+/******************************************************************************
+ * $sidenav Service
+ *****************************************************************************/
+
+
+/**
+ * @typedef {{
+ *   isOpen: function():boolean,
+ *   toggle: function(),
+ *   open: function(),
+ *   close: function()
+ * }}
+ */
+md._sidenavService;
+
+/**
+ * Sidenav service is actually a function that returns an object.
+ * @typedef {
+ *   function(string):md._sidenavService
+ * }
+ */
+md.$sidenav;
