@@ -50,7 +50,8 @@ public class AmbiguatePropertiesTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        lastPass = new AmbiguateProperties(compiler, new char[]{'$'});
+        lastPass = AmbiguateProperties.makePassForTesting(
+            compiler, new char[]{'$'});
         lastPass.process(externs, root);
       }
     };
