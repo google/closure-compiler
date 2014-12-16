@@ -2457,6 +2457,14 @@ public class NewTypeInference implements CompilerPass {
         mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
     }
+    if (convention.isSuperClassReference(pname)) {
+      FunctionType ft = recvType.getFunTypeIfSingletonObj();
+      if (ft != null && ft.isConstructor()) {
+        JSType result = ft.getSuperPrototype();
+        pair.type = result != null ? result : JSType.UNDEFINED;
+        return pair;
+      }
+    }
     if (propAccessNode.isGetProp() &&
         mayWarnAboutDictPropAccess(receiver, recvType)) {
       return new EnvTypePair(pair.env, requiredType);

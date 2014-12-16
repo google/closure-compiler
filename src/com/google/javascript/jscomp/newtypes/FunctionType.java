@@ -192,6 +192,12 @@ public class FunctionType {
     return nominalType != null && nominalType.isInterface();
   }
 
+  public JSType getSuperPrototype() {
+    Preconditions.checkState(isConstructor());
+    NominalType superClass = nominalType.getInstantiatedSuperclass();
+    return superClass == null ? null : superClass.getPrototype();
+  }
+
   public boolean isQmarkFunction() {
     return this == QMARK_FUNCTION;
   }

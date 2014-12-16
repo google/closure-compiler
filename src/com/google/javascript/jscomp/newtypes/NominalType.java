@@ -165,6 +165,12 @@ public class NominalType {
     return rawType.superClass.instantiateGenerics(typeMap);
   }
 
+  public JSType getPrototype() {
+    Preconditions.checkState(rawType.isFinalized);
+    return rawType.getCtorPropDeclaredType("prototype")
+        .substituteGenerics(typeMap);
+  }
+
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
     Preconditions.checkState(rawType.isFinalized);
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();

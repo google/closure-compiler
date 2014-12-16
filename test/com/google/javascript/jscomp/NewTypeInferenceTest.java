@@ -9698,6 +9698,63 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
             NewTypeInference.INVALID_OPERAND_TYPE));
   }
 
+  public void testSuperClassCtorProperty() throws Exception {
+    String CLOSURE_DEFS = "/** @const */ var goog = {};\n"
+        + "goog.inherits = function(child, parent){};\n";
+
+    checkNoWarnings(CLOSURE_DEFS +
+        "/** @constructor */function base() {}\n" +
+        "/** @return {number} */ " +
+        "  base.prototype.foo = function() { return 1; };\n" +
+        "/** @extends {base}\n * @constructor */function derived() {}\n" +
+        "goog.inherits(derived, base);\n" +
+        "var /** number */ n = derived.superClass_.foo()");
+
+    typeCheck(
+        CLOSURE_DEFS +
+        "/** @constructor */ function OldType() {}" +
+        "/** @param {?function(new:OldType)} f */ function g(f) {" +
+        "  /**\n" +
+        "    * @constructor\n" +
+        "    * @extends {OldType}\n" +
+        "    */\n" +
+        "  function NewType() {};" +
+        "  goog.inherits(NewType, f);" +
+        "  NewType.prototype.method = function() {" +
+        "    NewType.superClass_.foo.call(this);" +
+        "  };" +
+        "}",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    checkNoWarnings(
+        CLOSURE_DEFS +
+        "/** @constructor */ function Foo() {}\n" +
+        "goog.inherits(Foo, Object);\n" +
+        "var /** !Object */ b = Foo.superClass_;");
+
+    typeCheck(
+        CLOSURE_DEFS +
+        "/** @constructor */ function base() {}\n" +
+        "/** @constructor @extends {base} */ function derived() {}\n" +
+        "goog.inherits(derived, base);\n" +
+        "var /** null */ b = derived.superClass_",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        CLOSURE_DEFS +
+        "var /** !Object */ b = Object.superClass_",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        CLOSURE_DEFS +
+        "var o = {x: 'str'}; var q = o.superClass_;",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    checkNoWarnings(
+        CLOSURE_DEFS +
+        "var o = {superClass_: 'str'}; var /** string */ s = o.superClass_;");
+  }
+
   public void testAcrossScopeNamespaces() {
     typeCheck(
         "/** @const */\n" +
