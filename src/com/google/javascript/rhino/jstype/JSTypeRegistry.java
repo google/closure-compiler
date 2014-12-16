@@ -1588,7 +1588,7 @@ public class JSTypeRegistry implements Serializable {
         if (firstChild == null) {
           return getNativeType(UNKNOWN_TYPE);
         }
-        return createDefaultObjectUnion(
+        return createNullableType(
             createFromTypeNodesInternal(
                 firstChild, sourceName, scope));
 

@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+
+import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1278,6 +1281,48 @@ public class IntegrationTest extends IntegrationTestCase {
 
     test(options, code, expected);
 
+  }
+
+  public void testQMarkTIsNullable() {
+    CompilerOptions options = createCompilerOptions();
+    options.checkTypes = true;
+
+    String code = Joiner.on('\n').join(
+        "/** @constructor @template T */",
+        "function F() {}",
+        "",
+        "/** @return {?T} */",
+        "F.prototype.foo = function() {",
+        "  return null;",
+        "}",
+        "",
+        "/** @type {F<string>} */",
+        "var f = new F;",
+        "/** @type {string} */",
+        "var s = f.foo(); // Type error: f.foo() has type {?string}.");
+
+    test(options, code, TYPE_MISMATCH_WARNING);
+  }
+
+  public void testTIsNotNullable() {
+    CompilerOptions options = createCompilerOptions();
+    options.checkTypes = true;
+
+    String code = Joiner.on('\n').join(
+        "/** @constructor @template T */",
+        "function F() {}",
+        "",
+        "/** @param {T} t */",
+        "F.prototype.foo = function(t) {",
+        "}",
+        "",
+        "/** @type {F<string>} */",
+        "var f = new F;",
+        "/** @type {?string} */",
+        "var s = null;",
+        "f.foo(s); // Type error: f.foo() takes a {string}, not a {?string}");
+
+    test(options, code, TYPE_MISMATCH_WARNING);
   }
 
   public void testDeadAssignmentsElimination() {
