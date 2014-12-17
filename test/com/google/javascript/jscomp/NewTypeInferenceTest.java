@@ -1815,6 +1815,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "function g(/** ?Foo */ f) { f.p(); }",
         NewTypeInference.NULLABLE_DEREFERENCE);
 
+    typeCheck(
+        "var f = 5 ? function() {} : null; f();",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(
+        "var f = 5 ? function(/** number */ n) {} : null; f('str');",
+        ImmutableList.of(
+            NewTypeInference.NULLABLE_DEREFERENCE,
+            NewTypeInference.INVALID_ARGUMENT_TYPE));
+
     checkNoWarnings(
         CLOSURE_BASE +
         "function f(/** ?{ p : number } */ o) {\n" +

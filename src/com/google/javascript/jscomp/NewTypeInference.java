@@ -113,7 +113,7 @@ public class NewTypeInference implements CompilerPass {
   static final DiagnosticType NULLABLE_DEREFERENCE =
       DiagnosticType.warning(
           "JSC_NULLABLE_DEREFERENCE",
-          "Attempt to access property of nullable type {0}.");
+          "Attempt to use nullable type {0}.");
 
   static final DiagnosticType PROPERTY_ACCESS_ON_NONOBJECT =
       DiagnosticType.warning(
@@ -1545,6 +1545,8 @@ public class NewTypeInference implements CompilerPass {
     }
     EnvTypePair calleePair =
         analyzeExprFwd(callee, inEnv, commonTypes.topFunction());
+    calleePair = mayWarnAboutNullableReferenceAndTighten(
+        callee, calleePair.type, inEnv, commonTypes.topFunction());
     JSType calleeType = calleePair.type;
     if (!calleeType.isSubtypeOf(commonTypes.topFunction())) {
       warnings.add(JSError.make(
@@ -1801,8 +1803,8 @@ public class NewTypeInference implements CompilerPass {
     Node index = expr.getLastChild();
     JSType reqObjType = pickReqObjType(expr);
     EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
-    pair =
-        mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, pair.env);
+    pair = mayWarnAboutNullableReferenceAndTighten(
+        receiver, pair.type, pair.env, JSType.TOP_OBJECT);
     JSType recvType = pair.type.autobox(commonTypes);
     // TODO(dimvar): we don't know the prop name here so we're passing the
     // empty string. Consider improving the error msg.
@@ -2451,7 +2453,7 @@ public class NewTypeInference implements CompilerPass {
     }
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
     pair = mayWarnAboutNullableReferenceAndTighten(
-        receiver, pair.type, pair.env);
+        receiver, pair.type, pair.env, JSType.TOP_OBJECT);
     JSType recvType = pair.type.autobox(commonTypes);
     if (recvType.isUnknown() ||
         mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
@@ -3344,13 +3346,12 @@ public class NewTypeInference implements CompilerPass {
   }
 
   private EnvTypePair mayWarnAboutNullableReferenceAndTighten(
-      Node obj, JSType recvType, TypeEnv inEnv) {
+      Node obj, JSType recvType, TypeEnv inEnv, JSType requiredType) {
     if (!recvType.isUnknown()
         && (JSType.NULL.isSubtypeOf(recvType)
             || JSType.UNDEFINED.isSubtypeOf(recvType))) {
       JSType minusNull = recvType.removeType(JSType.NULL_OR_UNDEF);
-      if (!minusNull.isBottom() && !minusNull.equals(recvType)
-          && minusNull.isSubtypeOf(JSType.TOP_OBJECT)) {
+      if (!minusNull.isBottom() && minusNull.isSubtypeOf(requiredType)) {
         warnings.add(JSError.make(
             obj, NULLABLE_DEREFERENCE, recvType.toString()));
         TypeEnv outEnv = inEnv;
@@ -3372,7 +3373,7 @@ public class NewTypeInference implements CompilerPass {
         pickReqObjType(obj.getParent()).withLoose().withProperty(pname, type);
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
     EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
-        obj, lvalue.type, lvalue.env);
+        obj, lvalue.type, lvalue.env, JSType.TOP_OBJECT);
     TypeEnv lvalueEnv = pair.env;
     JSType lvalueType = pair.type.autobox(commonTypes);
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
