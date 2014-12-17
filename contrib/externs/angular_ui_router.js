@@ -54,19 +54,19 @@ ui.router.$state;
 
 
 /**
- * @typedef {ui.router.State}
+ * @type {ui.router.State}
  */
 ui.router.$state.current;
 
 
 /**
- * @typedef {Object}
+ * @type {Object}
  */
 ui.router.$state.params;
 
 
 /**
- * @typedef {?angular.$q.Promise}
+ * @type {?angular.$q.Promise}
  */
 ui.router.$state.transition;
 
