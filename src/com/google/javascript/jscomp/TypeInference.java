@@ -1021,6 +1021,7 @@ class TypeInference
   /**
    * When "bind" is called on a function, we infer the type of the returned
    * "bound" function by looking at the number of parameters in the call site.
+   * We also infer the "this" type of the target, if it's a function expression.
    */
   private void updateBind(Node n) {
     CodingConvention.Bind bind =
@@ -1029,10 +1030,23 @@ class TypeInference
       return;
     }
 
-    FunctionType callTargetFn = getJSType(bind.target)
+    Node target = bind.target;
+    FunctionType callTargetFn = getJSType(target)
         .restrictByNotNullOrUndefined().toMaybeFunctionType();
     if (callTargetFn == null) {
       return;
+    }
+
+    if (bind.thisValue != null && target.isFunction()) {
+      JSType thisType = bind.thisValue.getJSType();
+      if (thisType.toObjectType() != null && !thisType.isUnknownType()
+          && callTargetFn.getTypeOfThis().isUnknownType()) {
+        callTargetFn = new FunctionBuilder(registry)
+            .copyFromOtherFunction(callTargetFn)
+            .withTypeOfThis(thisType.toObjectType())
+            .build();
+        target.setJSType(callTargetFn);
+      }
     }
 
     n.setJSType(

@@ -8157,6 +8157,65 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: (number|undefined)");
   }
 
+  public void testFunctionBind6() throws Exception {
+    testTypes(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function MyType() {",
+        "  /** @type {number} */",
+        "  this.x = 0;",
+        "  var f = function() {",
+        "    this.x = 'str';",
+        "  }.bind(this);",
+        "}"), Joiner.on('\n').join(
+        "assignment to property x of MyType",
+        "found   : string",
+        "required: number"));
+  }
+
+  public void testFunctionBind7() throws Exception {
+    testTypes(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function MyType() {",
+        "  /** @type {number} */",
+        "  this.x = 0;",
+        "}",
+        "var m = new MyType;",
+        "(function f() {this.x = 'str';}).bind(m);"),
+        Joiner.on('\n').join(
+        "assignment to property x of MyType",
+        "found   : string",
+        "required: number"));
+  }
+
+  public void testFunctionBind8() throws Exception {
+    testTypes(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function MyType() {}",
+        "",
+        "/** @constructor */",
+        "function AnotherType() {}",
+        "AnotherType.prototype.foo = function() {};",
+        "",
+        "/** @type {?} */",
+        "var m = new MyType;",
+        "(function f() {this.foo();}).bind(m);"),
+        (DiagnosticType) null);
+  }
+
+  public void testFunctionBind9() throws Exception {
+    testTypes(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function MyType() {}",
+        "",
+        "/** @constructor */",
+        "function AnotherType() {}",
+        "AnotherType.prototype.foo = function() {};",
+        "",
+        "var m = new MyType;",
+        "(function f() {this.foo();}).bind(m);"),
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
+
   public void testGoogBind1() throws Exception {
     testClosureTypes(
         "var goog = {}; goog.bind = function(var_args) {};" +
