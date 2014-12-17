@@ -1038,9 +1038,9 @@ GEvent.callback = function(object, method) {};
 
 /**
  * @param {Object} object
- * @param {function(...[*])} method
+ * @param {function(...*)} method
  * @param {...*} var_args
- * @return {function(...[*])}
+ * @return {function(...*)}
  */
 GEvent.callbackArgs = function(object, method, var_args) {};
 

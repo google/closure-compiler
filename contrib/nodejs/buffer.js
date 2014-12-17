@@ -25,7 +25,7 @@
  */
 var buffer = {};
 
-/** @const {function(new:Buffer, ...[?])} */
+/** @const {function(new:Buffer, ...?)} */
 buffer.Buffer;
 
 /**

@@ -727,7 +727,7 @@ angular.JQLite.wrap = function(element) {};
 /**
  * @typedef {{
  *   animation:
- *       function(string, function(...[*]):angular.Animation):!angular.Module,
+ *       function(string, function(...*):angular.Animation):!angular.Module,
  *   config: function((Function|Array.<string|Function>)):!angular.Module,
  *   constant: function(string, *):angular.Module,
  *   controller:
@@ -756,7 +756,7 @@ angular.Module;
 
 /**
  * @param {string} name
- * @param {function(...[*]):angular.Animation} animationFactory
+ * @param {function(...*):angular.Animation} animationFactory
  */
 angular.Module.animation = function(name, animationFactory) {};
 
@@ -843,15 +843,15 @@ angular.Module.requires;
  *   $$phase: string,
  *   $apply: function((string|function(!angular.Scope))=):*,
  *   $applyAsync: function((string|function(!angular.Scope))=),
- *   $broadcast: function(string, ...[*]),
+ *   $broadcast: function(string, ...*),
  *   $destroy: function(),
  *   $digest: function(),
- *   $emit: function(string, ...[*]),
+ *   $emit: function(string, ...*),
  *   $eval: function((string|function(!angular.Scope))=, Object=):*,
  *   $evalAsync: function((string|function())=),
  *   $id: string,
  *   $new: function(boolean=):!angular.Scope,
- *   $on: function(string, function(!angular.Scope.Event, ...[?])):function(),
+ *   $on: function(string, function(!angular.Scope.Event, ...?)):function(),
  *   $parent: !angular.Scope,
  *   $root: !angular.Scope,
  *   $watch: function(
@@ -912,7 +912,7 @@ angular.Scope.$new = function(opt_isolate) {};
 
 /**
  * @param {string} name
- * @param {function(!angular.Scope.Event, ...[?])} listener
+ * @param {function(!angular.Scope.Event, ...?)} listener
  * @return {function()}
  */
 angular.Scope.$on = function(name, listener) {};
@@ -1393,7 +1393,7 @@ angular.$http.Interceptor;
 /**
  * @typedef {{
  *   defaults: !angular.$http.Config,
- *   interceptors: !Array.<string|function(...[*]): !angular.$http.Interceptor>,
+ *   interceptors: !Array.<string|function(...*): !angular.$http.Interceptor>,
  *   useApplyAsync: function(boolean=):(boolean|!angular.$HttpProvider)
  * }}
  */
@@ -1616,10 +1616,10 @@ angular.$locationProvider.html5Mode = function(opt_mode) {};
 
 /**
  * @typedef {{
- *   error: function(...[*]),
- *   info: function(...[*]),
- *   log: function(...[*]),
- *   warn: function(...[*])
+ *   error: function(...*),
+ *   info: function(...*),
+ *   log: function(...*),
+ *   warn: function(...*)
  *   }}
  */
 angular.$log;

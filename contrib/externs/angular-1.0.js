@@ -725,15 +725,15 @@ angular.Module.requires;
  * @typedef {{
  *   $$phase: string,
  *   $apply: function((string|function(angular.Scope))=):*,
- *   $broadcast: function(string, ...[*]),
+ *   $broadcast: function(string, ...*),
  *   $destroy: function(),
  *   $digest: function(),
- *   $emit: function(string, ...[*]),
+ *   $emit: function(string, ...*),
  *   $eval: function((string|function(!angular.Scope))=, Object=):*,
  *   $evalAsync: function((string|function())=),
  *   $id: string,
  *   $new: function(boolean=):!angular.Scope,
- *   $on: function(string, function(!angular.Scope.Event, ...[?])):function(),
+ *   $on: function(string, function(!angular.Scope.Event, ...?)):function(),
  *   $parent: !angular.Scope,
  *   $root: !angular.Scope,
  *   $watch: function(
@@ -790,7 +790,7 @@ angular.Scope.$new = function(opt_isolate) {};
 
 /**
  * @param {string} name
- * @param {function(!angular.Scope.Event, ...[?])} listener
+ * @param {function(!angular.Scope.Event, ...?)} listener
  * @return {function()}
  */
 angular.Scope.$on = function(name, listener) {};
@@ -1345,10 +1345,10 @@ angular.$locationProvider.html5Mode = function(opt_enabled) {};
 
 /**
  * @typedef {{
- *   error: function(...[*]),
- *   info: function(...[*]),
- *   log: function(...[*]),
- *   warn: function(...[*])
+ *   error: function(...*),
+ *   info: function(...*),
+ *   log: function(...*),
+ *   warn: function(...*)
  *   }}
  */
 angular.$log;

@@ -66,14 +66,14 @@ domain.Domain.prototype.add;
 domain.Domain.prototype.remove;
 
 /**
- * @param {function(...[*])} callback
- * @return {function(...[*])}
+ * @param {function(...*)} callback
+ * @return {function(...*)}
  */
 domain.Domain.prototype.bind;
 
 /**
- * @param {function(...[*])} callback
- * @return {function(...[*])}
+ * @param {function(...*)} callback
+ * @return {function(...*)}
  */
 domain.Domain.prototype.intercept;
 

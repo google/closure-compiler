@@ -209,7 +209,7 @@ Loader.prototype.translate;
  * @param {{address: string, source: string}} load
  * @return {Promise.<(undefined|{
  *   deps:Array.<string>,
- *   execute:(function(...[Module]):Promise.<Module>)
+ *   execute:(function(...Module):Promise.<Module>)
  *   })>} The requested module.
  * @see https://people.mozilla.org/~jorendorff/es6-draft.html#sec-loader.prototype.instantiate
  */
