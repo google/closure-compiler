@@ -1357,9 +1357,10 @@ final class NameAnalyzer implements CompilerPass {
    */
   private void referenceAliases() {
 
-    // Minimize the number of connections in the graph by creating a connected cluster for
-    // names that are used to modify the alias and then assure there is at least one link to the
-    // cluster from the other alias names to the cluster.
+    // Minimize the number of connections in the graph by creating a connected
+    // cluster for names that are used to modify the object and then ensure
+    // there is at least one link to the cluster from the other names (which are
+    // removalable on there own) in the AliasSet.
 
     Set<AliasSet> sets = new HashSet<>(aliases.values());
     for (AliasSet set : sets) {
@@ -1377,13 +1378,16 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       if (!required.isEmpty()) {
-        // link the required nodes to themselves
+        // link the required nodes together to form a cluster so that if one
+        // is needed, all are kept.
         for (DiGraphNode<JsName, RefType> node : required) {
           recordReference(node, first, RefType.REGULAR);
           recordReference(first, node, RefType.REGULAR);
         }
 
-        // link all the other aliases to the one of the required nodes
+        // link all the other aliases to the one of the required nodes, so
+        // that if they are kept only if referenced directly, but all the
+        // required nodes are kept if any are referenced.
         for (String key : set.names) {
           DiGraphNode<JsName, RefType> alias = getGraphNode(getName(key, false));
           recordReference(alias, first, RefType.REGULAR);
