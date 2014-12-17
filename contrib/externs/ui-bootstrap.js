@@ -25,12 +25,13 @@
 
 /**
  * @type {Object}
+ * @suppress {duplicate}
  */
 var ui = {};
 
 
 /**
- * @type {Object}
+ * @type {!Object}
  * @const
  */
 ui.bootstrap = {};
@@ -220,8 +221,8 @@ ui.bootstrap.$tooltip;
 
 
 /**
- * @typedef {{ animation:boolean|undefined, appendToBody:boolean|undefined,
- *   placement:string|undefined, popupDelay:number|undefined}}
+ * @typedef {{ animation:(boolean|undefined), appendToBody:(boolean|undefined),
+ *   placement:(string|undefined), popupDelay:(number|undefined)}}
  */
 ui.bootstrap.tooltipOptions;
 
