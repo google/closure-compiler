@@ -349,7 +349,7 @@ public class CommandLineRunner extends
     @Option(name = "--use_types_for_optimization",
         hidden = true,
         usage = "Experimental: perform additional optimizations " +
-        "based on available information.  Inaccurate type annotations " +
+        "based on available information. Inaccurate type annotations " +
         "may result in incorrect results.")
     private boolean useTypesForOptimization = false;
 
@@ -420,7 +420,8 @@ public class CommandLineRunner extends
         hidden = true,
         handler = BooleanOptionHandler.class,
         usage = "Processes built-ins from the Closure library, such as "
-        + "goog.require(), goog.provide(), and goog.exportSymbol()")
+        + "goog.require(), goog.provide(), and goog.exportSymbol(). "
+        + "True by default.")
     private boolean processClosurePrimitives = true;
 
     @Option(name = "--manage_closure_dependencies",
