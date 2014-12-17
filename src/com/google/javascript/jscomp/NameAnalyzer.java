@@ -1364,7 +1364,7 @@ final class NameAnalyzer implements CompilerPass {
     Set<AliasSet> sets = new HashSet<>(aliases.values());
     for (AliasSet set : sets) {
       DiGraphNode<JsName, RefType> first = null;
-      Set<DiGraphNode<JsName, RefType>> required = new HashSet();
+      Set<DiGraphNode<JsName, RefType>> required = new HashSet<>();
       for (String key : set.names) {
         JsName name = getName(key, false);
         if (name.hasWrittenDescendants || name.hasInstanceOfReference) {
