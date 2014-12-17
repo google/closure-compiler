@@ -72,8 +72,8 @@ ui.router.$state.transition;
 
 
 /**
- * @param {string|object=} stateOrName
- * @param {string|object=} context
+ * @param {string|Object=} stateOrName
+ * @param {string|Object=} context
  * @return {Object|Array}
  */
 ui.router.$state.get = function(stateOrName, context) {};
@@ -81,17 +81,17 @@ ui.router.$state.get = function(stateOrName, context) {};
 
 /**
  * @param {string} to
- * @param {object=} params
- * @param {object=} options
- * @returns {promise}
+ * @param {Object=} params
+ * @param {Object=} options
+ * @returns {angular.$q.Promise}
  */
 ui.router.$state.go = function(to, params, options) {};
 
 
 /**
- * @param {string|object} stateOrName
- * @param {object=} params
- * @param {object=} options
+ * @param {string|Object} stateOrName
+ * @param {Object=} params
+ * @param {Object=} options
  * @returns {string} compiled state url
  */
 ui.router.$state.href = function(stateOrName, params, options) {};
@@ -99,31 +99,31 @@ ui.router.$state.href = function(stateOrName, params, options) {};
 
 /**
  * @param {string} stateOrName
- * @param {object=} params
- * @param {object=} options
+ * @param {Object=} params
+ * @param {Object=} options
  */
 ui.router.$state.includes = function(stateOrName, params, options) {};
 
 
 /**
- * @param {string|object} stateOrName
- * @param {object=} params
- * @param {object=} options
+ * @param {string|Object} stateOrName
+ * @param {Object=} params
+ * @param {Object=} options
  * @returns {boolean}
  */
 ui.router.$state.is = function(stateOrName, params, options) {};
 
 
 /**
- * @returns {promise}
+ * @returns {angular.$q.Promise}
  */
 ui.router.$state.reload = function() {};
 
 
 /**
  * @param {string} to
- * @param {object=} toParams
- * @param {object=} options
+ * @param {Object=} toParams
+ * @param {Object=} options
  */
 ui.router.$state.transitionTo = function(to, toParams, options) {};
 
