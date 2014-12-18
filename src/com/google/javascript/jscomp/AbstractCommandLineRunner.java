@@ -541,12 +541,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     Preconditions.checkState(!specs.isEmpty());
     Preconditions.checkState(jsFiles != null);
 
-    final int totalNumJsFiles = jsFiles.size();
-    int nextJsFileIndex = 0;
-
+    List<String> moduleNames = new ArrayList<>(specs.size()); 
     Map<String, JSModule> modulesByName = Maps.newLinkedHashMap();
+    Map<String, Integer> modulesFileCountMap = Maps.newLinkedHashMap();
+    int numJsFilesExpected = 0, minJsFilesRequired = 0;
+    boolean isFirstModule = true;
     for (String spec : specs) {
-
       // Format is "<name>:<num-js-files>[:[<dep>,...][:]]".
       String[] parts = spec.split(":");
       if (parts.length < 2 || parts.length > 4) {
@@ -558,35 +558,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       String name = parts[0];
       checkModuleName(name);
       if (modulesByName.containsKey(name)) {
-              throw new FlagUsageException("Duplicate module name: " + name);
-          }
+        throw new FlagUsageException("Duplicate module name: " + name);
+      }
       JSModule module = new JSModule(name);
-
-      // Parse module inputs.
-      int numJsFiles = -1;
-      try {
-        numJsFiles = Integer.parseInt(parts[1]);
-      } catch (NumberFormatException ignored) {
-        numJsFiles = -1;
-      }
-
-      // We will allow modules of zero input.
-      if (numJsFiles < 0) {
-        throw new FlagUsageException("Invalid JS file count '" + parts[1]
-            + "' for module: " + name);
-      }
-      if (nextJsFileIndex + numJsFiles > totalNumJsFiles) {
-        throw new FlagUsageException("Not enough JS files specified. Expected "
-            + (nextJsFileIndex + numJsFiles - totalNumJsFiles)
-            + " more in module:" + name);
-      }
-      List<String> moduleJsFiles =
-          jsFiles.subList(nextJsFileIndex, nextJsFileIndex + numJsFiles);
-      for (SourceFile input : createInputs(moduleJsFiles, false)) {
-        module.add(input);
-      }
-      nextJsFileIndex += numJsFiles;
-
+      
       if (parts.length > 2) {
         // Parse module dependencies.
         String depList = parts[2];
@@ -603,13 +578,82 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           }
         }
       }
+      
+      // Parse module inputs.
+      int numJsFiles = -1;
+      try {
+        numJsFiles = Integer.parseInt(parts[1]);
+      } catch (NumberFormatException ignored) {
+        numJsFiles = -1;
+      }
 
+      // We will allow modules of zero input.
+      if (numJsFiles < 0) {
+        // A size of 'auto' is only allowed on the base module if
+        // and it must also be the first module
+        if (parts.length == 2 && "auto".equals(parts[1])) {
+          if (isFirstModule) {
+            numJsFilesExpected = -1;
+          } else {
+            throw new FlagUsageException("Invalid JS file count '" + parts[1]
+                + "' for module: " + name + ". Only the first module may specify " +
+                "a size of 'auto' and it must have no dependencies.");
+          }
+        } else {
+          throw new FlagUsageException("Invalid JS file count '" + parts[1]
+              + "' for module: " + name);
+        }
+      } else {
+        minJsFilesRequired += numJsFiles;
+      }
+      
+      
+      if (numJsFilesExpected >= 0) {
+        numJsFilesExpected += numJsFiles;
+      }
+      
+      // Add modules in reverse order so that source files are allocated to
+      // modules in reverse order. This allows the first module
+      // (presumably the base module) to have a size of 'auto'
+      moduleNames.add(0, name);
+      modulesFileCountMap.put(name, numJsFiles);
       modulesByName.put(name, module);
     }
+        
+    final int totalNumJsFiles = jsFiles.size();
+    
+    if (numJsFilesExpected >= 0 || minJsFilesRequired > totalNumJsFiles) {
+      if (minJsFilesRequired > totalNumJsFiles) {
+        numJsFilesExpected = minJsFilesRequired;
+      }
+      
+      if (numJsFilesExpected > totalNumJsFiles) {        
+        throw new FlagUsageException("Not enough JS files specified. Expected "
+            + numJsFilesExpected + " but found " + totalNumJsFiles);
+      } else if (numJsFilesExpected < totalNumJsFiles) {
+        throw new FlagUsageException("Too many JS files specified. Expected "
+                + numJsFilesExpected + " but found " + totalNumJsFiles);
+      }
+    }
+    
+    int numJsFilesLeft = totalNumJsFiles, moduleIndex = 0;
+    for(String moduleName : moduleNames) {
+      // Parse module inputs.
+      int numJsFiles = modulesFileCountMap.get(moduleName);
+      JSModule module = modulesByName.get(moduleName);
 
-    if (nextJsFileIndex < totalNumJsFiles) {
-      throw new FlagUsageException("Too many JS files specified. Expected "
-          + nextJsFileIndex + " but found " + totalNumJsFiles);
+      // Check if the first module specified 'auto' for the number of files
+      if (moduleIndex == moduleNames.size() - 1 && numJsFiles == -1) {
+        numJsFiles = numJsFilesLeft;
+      }
+      
+      List<String> moduleJsFiles =
+          jsFiles.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
+      for (SourceFile input : createInputs(moduleJsFiles, false)) {
+        module.add(input);
+      }
+      numJsFilesLeft -= numJsFiles;
+      moduleIndex++;
     }
 
     return Lists.newArrayList(modulesByName.values());
