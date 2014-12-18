@@ -82,7 +82,7 @@ ui.router.$state.get = function(stateOrName, context) {};
 /**
  * @param {string} to
  * @param {Object=} params
- * @param {(ui.router.state.$state.GoOptions_|undefined)} options
+ * @param {(ui.router.state.$state.GoOptions_|Object)=} options
  * @returns {angular.$q.Promise}
  */
 ui.router.$state.go = function(to, params, options) {};
@@ -130,11 +130,11 @@ ui.router.$state.transitionTo = function(to, toParams, options) {};
 
 /**
  * @typedef {{
- *   location: (boolean|string),
- *   inherit: boolean,
- *   relative: Object,
- *   notify: boolean,
- *   reload: boolean
+ *   location: (boolean|string|undefined),
+ *   inherit: (boolean|undefined),
+ *   relative: (Object|undefined),
+ *   notify: (boolean|undefined),
+ *   reload: (boolean|undefined)
  * }}
  */
 ui.router.state.$state.GoOptions_;
