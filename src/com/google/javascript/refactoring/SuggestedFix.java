@@ -99,6 +99,8 @@ public final class SuggestedFix {
       if (jsDoc != null) {
         startPosition = jsDoc.getOriginalCommentPosition();
       }
+      Preconditions.checkNotNull(nodeToInsertBefore.getSourceFileName(),
+          "No source file name for node: %s", nodeToInsertBefore);
       replacements.put(
           nodeToInsertBefore.getSourceFileName(),
           new CodeReplacement(startPosition, 0, content));
