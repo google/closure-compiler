@@ -24,14 +24,13 @@
 
 
 /**
- * @type {Object}
+ * @const
  * @suppress {duplicate}
  */
 var ui = {};
 
 
 /**
- * @type {!Object}
  * @const
  */
 ui.bootstrap = {};
@@ -106,79 +105,7 @@ ui.bootstrap.modalInstance.result;
 
 /**
  * @typedef {{
- *   backdrop: (boolean|string|undefined),
- *   backdropClass: (string|undefined),
- *   controller: (Function|Array.<string|Function>|string|undefined),
- *   controllerAs: (string|undefined),
- *   keyboard: (boolean|undefined),
- *   resolve: (Object.<string, (
- *       string|Function|Array.<string|Function>|!angular.$q.Promise
- *       )>|undefined),
- *   scope: (!angular.Scope|undefined),
- *   size: (string|undefined),
- *   template: (string|undefined),
- *   templateUrl: (string|undefined),
- *   windowClass: (string|undefined),
- *   windowTemplateUrl: (string|undefined)
- * }}
- */
-ui.bootstrap.modalOptions;
-
-
-/** @type {(boolean|string)} */
-ui.bootstrap.modalOptions.backdrop;
-
-
-/** @type {string} */
-ui.bootstrap.modalOptions.backdropClass;
-
-
-/** @type {(Function|Array.<string|Function>|string)} */
-ui.bootstrap.modalOptions.controller;
-
-
-/** @type {string} */
-ui.bootstrap.modalOptions.controllerAs;
-
-
-/** @type {boolean} */
-ui.bootstrap.modalOptions.keyboard;
-
-
-/**
- * @type {Object.<string, (string|Function|Array.<string|Function>|
- *   !angular.$q.Promise)>}
- */
-ui.bootstrap.modalOptions.resolve;
-
-
-/** @type {!angular.Scope} */
-ui.bootstrap.modalOptions.scope;
-
-
-/** @type {string} */
-ui.bootstrap.modalOptions.size;
-
-
-/** @type {string} */
-ui.bootstrap.modalOptions.template;
-
-
-/** @type {string} */
-ui.bootstrap.modalOptions.templateUrl;
-
-
-/** @type {string} */
-ui.bootstrap.modalOptions.windowClass;
-
-
-/** @type {string} */
-ui.bootstrap.modalOptions.windowTemplateUrl;
-
-
-/**
- * @typedef {{
- *   open: function(Object=):!ui.bootstrap.modalInstance
+ *   open: function(!Object):!ui.bootstrap.modalInstance
  * }}
  */
 ui.bootstrap.$modal;
@@ -238,10 +165,10 @@ ui.bootstrap.$tooltipProvider;
 
 
 /**
- * @param {!ui.bootstrap.tooltipOptions} options
+ * @param {!Object.<string,(boolean|number|string)>=} opt_options
  * @return {!ui.bootstrap.tooltipOptions}
  */
-ui.bootstrap.$tooltipProvider.options = function(options) {};
+ui.bootstrap.$tooltipProvider.options = function(opt_options) {};
 
 
 /**
