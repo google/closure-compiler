@@ -65,12 +65,16 @@ var angular = {};
  */
 angular.bind = function(self, fn, args) {};
 
+/** @typedef {{strictDi: (boolean|undefined)}} */
+angular.BootstrapOptions;
+
 /**
  * @param {Element|HTMLDocument} element
  * @param {Array.<string|Function>=} opt_modules
+ * @param {angular.BootstrapOptions=} opt_config
  * @return {!angular.$injector}
  */
-angular.bootstrap = function(element, opt_modules) {};
+angular.bootstrap = function(element, opt_modules, opt_config) {};
 
 /**
  * @param {T} source
