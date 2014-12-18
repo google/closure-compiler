@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -260,7 +262,7 @@ public class PerformanceTracker {
    */
   public void outputTracerReport(PrintStream pstr) {
     JvmMetrics.maybeWriteJvmMetrics(pstr, "verbose:pretty:all");
-    OutputStreamWriter output = new OutputStreamWriter(pstr);
+    OutputStreamWriter output = new OutputStreamWriter(pstr, UTF_8);
     try {
       calcTotalStats();
 
@@ -347,7 +349,7 @@ public class PerformanceTracker {
         lastChar = str.charAt(len - 1);
         if (trackGzSize) {
           try {
-            stream.write(str.getBytes());
+            stream.write(str.getBytes(UTF_8));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }

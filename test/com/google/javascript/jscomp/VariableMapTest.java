@@ -43,7 +43,7 @@ public class VariableMapTest extends TestCase {
       throws ParseException {
     VariableMap in = new VariableMap(map);
     String serialized = new String(in.toBytes(), UTF_8);
-    VariableMap out = VariableMap.fromBytes(serialized.getBytes());
+    VariableMap out = VariableMap.fromBytes(serialized.getBytes(UTF_8));
     assertMapsEquals(in.toMap(), out.toMap());
   }
 
@@ -67,7 +67,7 @@ public class VariableMapTest extends TestCase {
   }
 
   public void testFromBytes() throws ParseException {
-    VariableMap vm = VariableMap.fromBytes("AAA:a\nBBB:b\n".getBytes());
+    VariableMap vm = VariableMap.fromBytes("AAA:a\nBBB:b\n".getBytes(UTF_8));
     assertEquals(2, vm.getOriginalNameToNewNameMap().size());
     assertEquals("a", vm.lookupNewName("AAA"));
     assertEquals("b", vm.lookupNewName("BBB"));
@@ -77,36 +77,24 @@ public class VariableMapTest extends TestCase {
 
   public void testFileFormat1() {
     assertEqual(
-        new VariableMap(ImmutableMap.of("x\ny", "a")).toBytes(),
-        "x\\ny:a\n".getBytes());
+        new VariableMap(ImmutableMap.of("x\ny", "a")).toBytes(), "x\\ny:a\n".getBytes(UTF_8));
 
     assertEqual(
-        new VariableMap(ImmutableMap.of("x:y", "a")).toBytes(),
-        "x\\:y:a\n".getBytes());
+        new VariableMap(ImmutableMap.of("x:y", "a")).toBytes(), "x\\:y:a\n".getBytes(UTF_8));
 
     assertEqual(
-        new VariableMap(ImmutableMap.of("x\ny", "a")).toBytes(),
-        "x\\ny:a\n".getBytes());
+        new VariableMap(ImmutableMap.of("x\ny", "a")).toBytes(), "x\\ny:a\n".getBytes(UTF_8));
 
     assertEqual(
-        new VariableMap(ImmutableMap.of("x\\y", "a")).toBytes(),
-        "x\\\\y:a\n".getBytes());
+        new VariableMap(ImmutableMap.of("x\\y", "a")).toBytes(), "x\\\\y:a\n".getBytes(UTF_8));
 
-    assertEqual(
-        new VariableMap(ImmutableMap.of("\n", "a")).toBytes(),
-        "\\n:a\n".getBytes());
+    assertEqual(new VariableMap(ImmutableMap.of("\n", "a")).toBytes(), "\\n:a\n".getBytes(UTF_8));
 
-    assertEqual(
-        new VariableMap(ImmutableMap.of(":", "a")).toBytes(),
-        "\\::a\n".getBytes());
+    assertEqual(new VariableMap(ImmutableMap.of(":", "a")).toBytes(), "\\::a\n".getBytes(UTF_8));
 
-    assertEqual(
-        new VariableMap(ImmutableMap.of("\n", "a")).toBytes(),
-        "\\n:a\n".getBytes());
+    assertEqual(new VariableMap(ImmutableMap.of("\n", "a")).toBytes(), "\\n:a\n".getBytes(UTF_8));
 
-    assertEqual(
-        new VariableMap(ImmutableMap.of("\\", "a")).toBytes(),
-        "\\\\:a\n".getBytes());
+    assertEqual(new VariableMap(ImmutableMap.of("\\", "a")).toBytes(), "\\\\:a\n".getBytes(UTF_8));
   }
 
   public void testFromBytesComplex1() throws ParseException {
@@ -115,11 +103,11 @@ public class VariableMapTest extends TestCase {
 
     // Verify the file format is as expected.
     VariableMap in = new VariableMap(ImmutableMap.of("AAA[':f']", "a"));
-    assertEqual(in.toBytes(), "AAA['\\:f']:a\n".getBytes());
+    assertEqual(in.toBytes(), "AAA['\\:f']:a\n".getBytes(UTF_8));
   }
 
   public void testFromBytesComplex2() throws ParseException {
-    VariableMap vm = VariableMap.fromBytes("AAA['\\:f']:a\n".getBytes());
+    VariableMap vm = VariableMap.fromBytes("AAA['\\:f']:a\n".getBytes(UTF_8));
 
     assertEquals(1, vm.getOriginalNameToNewNameMap().size());
     assertEquals("a", vm.lookupNewName("AAA[':f']"));

@@ -24,7 +24,6 @@ import com.google.common.io.Files;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +31,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -494,7 +494,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
         return super.getCodeReader();
       } else {
         // If we haven't pulled the code into memory yet, don't.
-        return new FileReader(file);
+        return Files.newReader(file, StandardCharsets.UTF_8);
       }
     }
 

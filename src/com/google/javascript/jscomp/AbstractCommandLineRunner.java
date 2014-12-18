@@ -30,7 +30,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
@@ -1209,8 +1208,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   private Writer streamToLegacyOutputWriter(OutputStream stream)
       throws IOException {
     if (legacyOutputCharset == null) {
-      return new BufferedWriter(
-          new OutputStreamWriter(stream));
+      return new BufferedWriter(new OutputStreamWriter(stream, UTF_8));
     } else {
       return new BufferedWriter(
           new OutputStreamWriter(stream, legacyOutputCharset));
@@ -1222,8 +1220,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   private Writer streamToOutputWriter2(OutputStream stream) {
     if (outputCharset2 == null) {
-      return new BufferedWriter(
-          new OutputStreamWriter(stream));
+      return new BufferedWriter(new OutputStreamWriter(stream, UTF_8));
     } else {
       return new BufferedWriter(
           new OutputStreamWriter(stream, outputCharset2));

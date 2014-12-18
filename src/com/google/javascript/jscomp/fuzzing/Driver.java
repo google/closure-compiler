@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.fuzzing;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -376,10 +378,8 @@ public class Driver {
       Runtime runtime = Runtime.getRuntime();
       process = runtime.exec(command);
       String[] results = new String[2];
-      results[0] = CharStreams.toString(
-          new InputStreamReader(process.getInputStream()));
-      results[1] = CharStreams.toString(
-          new InputStreamReader(process.getErrorStream()));
+      results[0] = CharStreams.toString(new InputStreamReader(process.getInputStream(), UTF_8));
+      results[1] = CharStreams.toString(new InputStreamReader(process.getErrorStream(), UTF_8));
       return results;
     }
 

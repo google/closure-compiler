@@ -596,7 +596,7 @@ public class CommandLineRunner extends
 
     private void printUsage(PrintStream ps) {
       CmdLineParser p = new CmdLineParser(this);
-      p.printUsage(new OutputStreamWriter(ps), null, OptionHandlerFilter.ALL);
+      p.printUsage(new OutputStreamWriter(ps, UTF_8), null, OptionHandlerFilter.ALL);
       ps.flush();
     }
 

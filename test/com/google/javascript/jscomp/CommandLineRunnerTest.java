@@ -990,8 +990,9 @@ public class CommandLineRunnerTest extends TestCase {
 
     CommandLineRunner runner = createCommandLineRunner(new String[0]);
     assertFalse(runner.shouldRunCompiler());
-    assertTrue(new String(errReader.toByteArray()).contains(
-        "Bad value for --source_map_location_mapping"));
+    assertTrue(
+        new String(errReader.toByteArray(), UTF_8)
+            .contains("Bad value for --source_map_location_mapping"));
   }
 
   public void testModuleWrapperBaseNameExpansion() throws Exception {
@@ -1103,19 +1104,19 @@ public class CommandLineRunnerTest extends TestCase {
     args.add("--print_ast=true");
     testSame("");
     assertEquals(
-        "digraph AST {\n" +
-        "  node [color=lightblue2, style=filled];\n" +
-        "  node0 [label=\"BLOCK\"];\n" +
-        "  node1 [label=\"SCRIPT\"];\n" +
-        "  node0 -> node1 [weight=1];\n" +
-        "  node1 -> RETURN [label=\"UNCOND\", " +
-            "fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-        "  node0 -> RETURN [label=\"SYN_BLOCK\", " +
-            "fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-        "  node0 -> node1 [label=\"UNCOND\", " +
-            "fontcolor=\"red\", weight=0.01, color=\"red\"];\n" +
-        "}\n\n",
-        new String(outReader.toByteArray()));
+        "digraph AST {\n"
+        + "  node [color=lightblue2, style=filled];\n"
+        + "  node0 [label=\"BLOCK\"];\n"
+        + "  node1 [label=\"SCRIPT\"];\n"
+        + "  node0 -> node1 [weight=1];\n"
+        + "  node1 -> RETURN [label=\"UNCOND\", "
+        + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node0 -> RETURN [label=\"SYN_BLOCK\", "
+        + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node0 -> node1 [label=\"UNCOND\", "
+        + "fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "}\n\n",
+        new String(outReader.toByteArray(), UTF_8));
   }
 
   public void testSyntheticExterns() {
@@ -1488,7 +1489,7 @@ public class CommandLineRunnerTest extends TestCase {
     CommandLineRunner runner = createCommandLineRunner(original);
     if (!runner.shouldRunCompiler()) {
       assertTrue(runner.hasErrors());
-      fail(new String(errReader.toByteArray()));
+      fail(new String(errReader.toByteArray(), UTF_8));
     }
     Supplier<List<SourceFile>> inputsSupplier = null;
     Supplier<List<JSModule>> modulesSupplier = null;

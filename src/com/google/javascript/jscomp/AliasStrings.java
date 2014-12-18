@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -439,7 +441,7 @@ class AliasStrings extends AbstractPostOrderCallback
       // The identifier is not unique because we omitted part, so add a
       // checksum as a hashcode.
       CRC32 crc32 = new CRC32();
-      crc32.update(s.getBytes());
+      crc32.update(s.getBytes(UTF_8));
       long hash = crc32.getValue() & unitTestHashReductionMask;
       sb.append('_');
       sb.append(Long.toHexString(hash));

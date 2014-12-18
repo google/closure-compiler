@@ -20,12 +20,14 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.ErrorManager;
 
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,7 +96,7 @@ public class DepsFileParser extends JsFileLineParser {
    * @throws IOException Thrown if the file could not be read.
    */
   public List<DependencyInfo> parseFile(String filePath) throws IOException {
-    return parseFileReader(filePath, new FileReader(filePath));
+    return parseFileReader(filePath, Files.newReader(new File(filePath), StandardCharsets.UTF_8));
   }
 
   /**

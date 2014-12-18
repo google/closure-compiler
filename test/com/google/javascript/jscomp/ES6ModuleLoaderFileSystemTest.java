@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.InputId;
 
@@ -48,7 +50,7 @@ public class ES6ModuleLoaderFileSystemTest {
   public TemporaryFolder tempFolder = new TemporaryFolder();
 
   private void writeFile(File f, String s) throws IOException {
-    Files.write(f.toPath(), s.getBytes());
+    Files.write(f.toPath(), s.getBytes(UTF_8));
   }
 
   @Before

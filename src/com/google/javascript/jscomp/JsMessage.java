@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -511,7 +513,7 @@ public class JsMessage {
       if (value == null) {
         return hash64(null, 0, 0, seed);
       }
-      return hash64(value.getBytes(), seed);
+      return hash64(value.getBytes(UTF_8), seed);
     }
 
     /**
