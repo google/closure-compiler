@@ -1721,7 +1721,7 @@ angular.NgModelController.prototype.$viewChangeListeners;
 angular.NgModelController.prototype.$viewValue;
 
 /**
- * @type {!Object.<string, function(?):*>}
+ * @type {!Object.<string, function(?, ?):*>}
  */
 angular.NgModelController.prototype.$validators;
 
