@@ -623,6 +623,19 @@ public class CheckAccessControlsTest extends CompilerTestCase {
     });
   }
 
+  public void testProtectedAccessForProperties10() {
+    testSame(ImmutableList.of(
+        SourceFile.fromCode("foo.js",
+            "/** @constructor */ var Foo = function() {};" +
+            "/** @protected */ Foo.prototype.bar = function() {};"),
+        SourceFile.fromCode("sub_foo.js",
+            "/** @constructor @extends {Foo} */" +
+            "var SubFoo = function() {};" +
+            "(function() {" +
+              "SubFoo.prototype.baz = function() { this.bar(); }" +
+            "})();")));
+  }
+
   public void testNoProtectedAccessForProperties1() {
     test(new String[] {
       "/** @constructor */ function Foo() {} " +

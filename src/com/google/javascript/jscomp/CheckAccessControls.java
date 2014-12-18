@@ -27,8 +27,11 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
+
+import java.util.ArrayDeque;
 
 import javax.annotation.Nullable;
 
@@ -134,8 +137,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
   // State about the current traversal.
   private int deprecatedDepth = 0;
-  private int methodDepth = 0;
-  private JSType currentClass = null;
+  private final ArrayDeque<JSType> currentClassStack = new ArrayDeque<>();
+  private final JSType noTypeSentinel;
 
   private ImmutableMap<StaticSourceFile, Visibility> defaultVisibilityForFiles;
   private final Multimap<JSType, String> initializedConstantProperties;
@@ -147,6 +150,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     this.validator = compiler.getTypeValidator();
     this.initializedConstantProperties = HashMultimap.create();
     this.enforceCodingConventions = enforceCodingConventions;
+    this.noTypeSentinel = compiler.getTypeRegistry()
+        .getNativeType(JSTypeNative.NO_TYPE);
   }
 
   @Override
@@ -176,11 +181,15 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       if (isDeprecatedFunction(n)) {
         deprecatedDepth++;
       }
-
-      if (methodDepth == 0) {
-        currentClass = getClassOfMethod(n, parent);
-      }
-      methodDepth++;
+      JSType prevClass = getCurrentClass();
+      JSType currentClass = prevClass == null
+          ? getClassOfMethod(n, parent)
+          : prevClass;
+      // ArrayDeques can't handle nulls, so we reuse the bottom type
+      // as a null sentinel.
+      currentClassStack.addFirst(currentClass == null
+          ? noTypeSentinel
+          : currentClass);
     }
   }
 
@@ -191,11 +200,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       if (isDeprecatedFunction(n)) {
         deprecatedDepth--;
       }
-
-      methodDepth--;
-      if (methodDepth == 0) {
-        currentClass = null;
-      }
+      currentClassStack.pop();
     }
   }
 
@@ -846,12 +851,20 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       }
   }
 
+  @Nullable private JSType getCurrentClass() {
+    JSType cur = currentClassStack.peekFirst();
+    return cur == noTypeSentinel
+        ? null
+        : cur;
+  }
+
   private void checkPrivatePropertyVisibility(
       NodeTraversal t,
       Node getprop,
       Node parent,
       boolean isClassType,
       JSType ownerType) {
+    JSType currentClass = getCurrentClass();
     if (currentClass != null && ownerType.isEquivalentTo(currentClass)) {
       return;
     }
@@ -883,6 +896,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     // 2) Overriding the property in a subclass
     // 3) Accessing the property from inside a subclass
     // The first two have already been checked for.
+    JSType currentClass = getCurrentClass();
     if (currentClass == null || !currentClass.isSubtype(ownerType)) {
       String propertyName = getprop.getLastChild().getString();
       compiler.report(
