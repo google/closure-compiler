@@ -82,7 +82,7 @@ ui.router.$state.get = function(stateOrName, context) {};
 /**
  * @param {string} to
  * @param {Object=} params
- * @param {(ui.router.state.$state.GoOptions_|Object)=} options
+ * @param {(ui.router.state.$state.GoOptions_|undefined)} options
  * @returns {angular.$q.Promise}
  */
 ui.router.$state.go = function(to, params, options) {};
