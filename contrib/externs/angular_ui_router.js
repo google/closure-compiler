@@ -130,11 +130,11 @@ ui.router.$state.transitionTo = function(to, toParams, options) {};
 
 /**
  * @typedef {{
- *   location: (boolean|string=),
- *   inherit: (boolean),
- *   relative: (Object=),
- *   notify: (boolean),
- *   reload: (boolean)
+ *   location: (boolean|string),
+ *   inherit: boolean,
+ *   relative: Object,
+ *   notify: boolean,
+ *   reload: boolean
  * }}
  */
 ui.router.state.$state.GoOptions_;
