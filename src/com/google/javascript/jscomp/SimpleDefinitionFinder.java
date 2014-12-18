@@ -376,11 +376,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     }
 
     CodingConvention codingConvention = compiler.getCodingConvention();
-    if (codingConvention.isExported(partialName)) {
-      return true;
-    }
-
-    return false;
+    return codingConvention.isExported(partialName);
   }
 
   /**
@@ -417,12 +413,8 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
 
     // example: a = function(){};
     // example: var a = function(){};
-    if (fn.getFirstChild().getString().isEmpty()
-        && (NodeUtil.isExprAssign(gramps) || parent.isName())) {
-      return true;
-    }
-
-    return false;
+    return fn.getFirstChild().getString().isEmpty()
+        && (NodeUtil.isExprAssign(gramps) || parent.isName());
   }
 
   /**

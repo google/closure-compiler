@@ -156,8 +156,7 @@ public final class SymbolTable
    * Always returns a mutable list.
    */
   public List<Symbol> getAllSymbolsSorted() {
-    List<Symbol> sortedSymbols = Lists.newArrayList(symbols.values());
-    Collections.sort(sortedSymbols, getNaturalSymbolOrdering());
+    List<Symbol> sortedSymbols = getNaturalSymbolOrdering().sortedCopy(symbols.values());
     return sortedSymbols;
   }
 
@@ -759,8 +758,7 @@ public final class SymbolTable
     //
     // To prevent this, we sort the list by the reverse of the
     // default symbol order, which will do the right thing.
-    Collections.sort(types,
-        Collections.reverseOrder(getNaturalSymbolOrdering()));
+    Collections.sort(types, getNaturalSymbolOrdering().reverse());
     for (Symbol s : types) {
       createPropertyScopeFor(s);
     }
@@ -788,13 +786,8 @@ public final class SymbolTable
     }
 
     // Enums
-    if (type.isEnumType() &&
-        sym.getName().equals(
-            type.toMaybeEnumType().getElementsType().getReferenceName())) {
-      return true;
-    }
-
-    return false;
+    return type.isEnumType()
+        && sym.getName().equals(type.toMaybeEnumType().getElementsType().getReferenceName());
   }
 
   /**
@@ -973,7 +966,7 @@ public final class SymbolTable
         // Merge the properties of "Foo.prototype" and "new Foo()" together.
         instanceType = instanceType.getOwnerFunction().getInstanceType();
         Set<String> set = Sets.newHashSet(propNames);
-        Iterables.addAll(set, instanceType.getOwnPropertyNames());
+        set.addAll(instanceType.getOwnPropertyNames());
         propNames = set;
       }
     }

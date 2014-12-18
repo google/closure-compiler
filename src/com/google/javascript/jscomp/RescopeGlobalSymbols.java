@@ -476,7 +476,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           parent.addChildBefore(expr, n);
         }
       }
-      if (commas.size() > 0) {
+      if (!commas.isEmpty()) {
         Node comma = joinOnComma(commas, n);
         parent.addChildBefore(comma, n);
       }

@@ -365,8 +365,7 @@ class MakeDeclaredNamesUnique
       String newName = original;
       int i = 0;
       while (!isValidName(newName)) {
-        newName = original +
-            ContextualRenamer.UNIQUE_ID_SEPARATOR + String.valueOf(i++);
+        newName = original + ContextualRenamer.UNIQUE_ID_SEPARATOR + i++;
       }
       return newName;
     }
@@ -375,12 +374,8 @@ class MakeDeclaredNamesUnique
      * @return Whether the name is valid to use in the local scope.
      */
     private boolean isValidName(String name) {
-      if (TokenStream.isJSIdentifier(name) &&
-          !referencedNames.contains(name) &&
-          !name.equals(ARGUMENTS)) {
-        return true;
-      }
-      return false;
+      return TokenStream.isJSIdentifier(name) && !referencedNames.contains(name)
+          && !name.equals(ARGUMENTS);
     }
 
     @Override

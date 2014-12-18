@@ -812,7 +812,7 @@ class TypeValidator {
         if (objectType != null &&
             (objectType.getConstructor() != null ||
              objectType.isFunctionPrototypeType())) {
-          return objectType.toString() + "." + propName;
+          return objectType + "." + propName;
         }
       }
     }

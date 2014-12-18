@@ -121,9 +121,7 @@ class NameReferenceGraph extends
     Preconditions.checkArgument(
         site.isGetProp() || site.isName());
     List<Name> result = new ArrayList<>();
-    for (Name target : referenceMap.get(site)) {
-      result.add(target);
-    }
+    result.addAll(referenceMap.get(site));
     return result;
   }
 

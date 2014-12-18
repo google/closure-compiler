@@ -21,7 +21,6 @@ import com.google.gson.JsonObject;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.rhino.Node;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -58,7 +57,6 @@ abstract class AbstractFuzzer {
     Preconditions.checkArgument(fuzzers.length > 0);
     int numNodes = fuzzers.length;
     int[] subBudgets = new int[numNodes];
-    Arrays.fill(subBudgets, 0);
     if (budget > 3 * numNodes) {
       // when the budget is much greater than numNodes
       double[] rands = new double[numNodes];

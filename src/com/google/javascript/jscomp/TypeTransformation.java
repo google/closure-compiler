@@ -235,39 +235,33 @@ class TypeTransformation {
   }
 
   private String getFunctionParameter(Node n, int i) {
-    Preconditions.checkArgument(n.isFunction(),
-        "Expected a function node, found " + n);
+    Preconditions.checkArgument(n.isFunction(), "Expected a function node, found %s", n);
     return n.getChildAtIndex(1).getChildAtIndex(i).getString();
   }
 
   private Node getFunctionBody(Node n) {
-    Preconditions.checkArgument(n.isFunction(),
-        "Expected a function node, found " + n);
+    Preconditions.checkArgument(n.isFunction(), "Expected a function node, found %s", n);
     return n.getChildAtIndex(2);
   }
 
   private String getCallName(Node n) {
-    Preconditions.checkArgument(n.isCall(),
-        "Expected a call node, found " + n);
+    Preconditions.checkArgument(n.isCall(), "Expected a call node, found %s", n);
     return n.getFirstChild().getString();
   }
 
   private Node getCallArgument(Node n, int i) {
-    Preconditions.checkArgument(n.isCall(),
-        "Expected a call node, found " + n);
+    Preconditions.checkArgument(n.isCall(), "Expected a call node, found %s", n);
     return n.getChildAtIndex(i + 1);
   }
 
   private int getCallParamCount(Node n) {
-    Preconditions.checkArgument(n.isCall(),
-        "Expected a call node, found " + n);
+    Preconditions.checkArgument(n.isCall(), "Expected a call node, found %s", n);
     return n.getChildCount() - 1;
   }
 
   private ImmutableList<Node> getCallParams(Node n) {
-    Preconditions.checkArgument(n.isCall(),
-        "Expected a call node, found " + n);
-    ImmutableList.Builder<Node> builder = new ImmutableList.Builder<Node>();
+    Preconditions.checkArgument(n.isCall(), "Expected a call node, found %s", n);
+    ImmutableList.Builder<Node> builder = new ImmutableList.Builder<>();
     for (int i = 0; i < getCallParamCount(n); i++) {
       builder.add(getCallArgument(n, i));
     }
@@ -275,14 +269,14 @@ class TypeTransformation {
   }
 
   private Node getComputedPropValue(Node n) {
-    Preconditions.checkArgument(n.isComputedProp(),
-        "Expected a computed property node, found " + n);
+    Preconditions.checkArgument(
+        n.isComputedProp(), "Expected a computed property node, found %s", n);
     return n.getChildAtIndex(1);
   }
 
   private String getComputedPropName(Node n) {
-    Preconditions.checkArgument(n.isComputedProp(),
-        "Expected a computed property node, found " + n);
+    Preconditions.checkArgument(
+        n.isComputedProp(), "Expected a computed property node, found %s", n);
     return n.getFirstChild().getString();
   }
 
@@ -500,7 +494,7 @@ class TypeTransformation {
     // If any of the parameters evaluates to the empty string then they were
     // not resolved by the name resolver. In this case we always return false.
     for (int i = 0; i < params.length; i++) {
-      if (params[i].equals("")) {
+      if (params[i].isEmpty()) {
         return false;
       }
     }
@@ -520,8 +514,7 @@ class TypeTransformation {
     Keywords keyword = nameToKeyword(name);
     switch (keyword) {
       case ISDEFINED:
-        return nameResolver.typeVars.get(
-            getCallArgument(ttlAst, 0).getString()) != null;
+        return nameResolver.typeVars.containsKey(getCallArgument(ttlAst, 0).getString());
       default:
         throw new IllegalStateException(
             "Invalid typevar predicate in the type transformation");
@@ -686,8 +679,7 @@ class TypeTransformation {
     if (propNames.isEmpty()) {
       return getObjectType();
     }
-    ImmutableMap.Builder<String, JSType> props =
-        new ImmutableMap.Builder<String, JSType>();
+    ImmutableMap.Builder<String, JSType> props = new ImmutableMap.Builder<>();
     // Otherwise collect the properties and build a record type
     for (String propName : propNames) {
       props.put(propName, objType.getPropertyType(propName));
@@ -697,8 +689,7 @@ class TypeTransformation {
 
   private JSType evalRecordType(Node ttlAst, NameResolver nameResolver) {
     int paramCount = getCallParamCount(ttlAst);
-    ImmutableList.Builder<RecordType> recTypesBuilder =
-        new ImmutableList.Builder<RecordType>();
+    ImmutableList.Builder<RecordType> recTypesBuilder = new ImmutableList.Builder<>();
     for (int i = 0; i < paramCount; i++) {
       JSType type = evalRecordParam(getCallArgument(ttlAst, i), nameResolver);
       // Check that each parameter evaluates to an object
@@ -757,12 +748,11 @@ class TypeTransformation {
    * is transformed into {r:{s:string, n:number}, a:boolean}
    */
   private JSType joinRecordTypes(ImmutableList<RecordType> recTypes) {
-    Map<String, JSType> props = new HashMap<String, JSType>();
+    Map<String, JSType> props = new HashMap<>();
     for (int i = 0; i < recTypes.size(); i++) {
       addNewPropsFromRecordType(props, recTypes.get(i));
     }
-    return createRecordType(
-        new ImmutableMap.Builder<String, JSType>().putAll(props).build());
+    return createRecordType(ImmutableMap.copyOf(props));
   }
 
   private JSType evalMaprecord(Node ttlAst, NameResolver nameResolver) {
@@ -803,7 +793,7 @@ class TypeTransformation {
 
     // Compute the new properties using the map function
     Node mapFnBody = getFunctionBody(mapFunction);
-    Map<String, JSType> newProps = new HashMap<String, JSType>();
+    Map<String, JSType> newProps = new HashMap<>();
     for (String propName : ownPropsNames) {
       // The value of the current property
       JSType propValue = recType.getSlot(propName).getType();
@@ -841,8 +831,7 @@ class TypeTransformation {
         putNewPropInPropertyMap(newProps, newPropName, newPropValue);
       }
     }
-    return createRecordType(
-        new ImmutableMap.Builder<String, JSType>().putAll(newProps).build());
+    return createRecordType(ImmutableMap.copyOf(newProps));
   }
 
   private JSType evalTypeOfVar(Node ttlAst) {
@@ -871,7 +860,7 @@ class TypeTransformation {
 
   private JSType evalPrintType(Node ttlAst, NameResolver nameResolver) {
     JSType type = evalInternal(getCallArgument(ttlAst, 1), nameResolver);
-    String msg = getCallArgument(ttlAst, 0).getString() + type.toString();
+    String msg = getCallArgument(ttlAst, 0).getString() + type;
     System.out.println(msg);
     return type;
   }

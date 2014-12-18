@@ -240,8 +240,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         .setDependencySorting(true)
         .setMoocherDropping(false)
         .setEntryPoints(closureEntryPoints);
-    } else if (manageClosureDependencies ||
-        closureEntryPoints.size() > 0) {
+    } else if (manageClosureDependencies || !closureEntryPoints.isEmpty()) {
       return new DependencyOptions()
           .setDependencyPruning(true)
           .setDependencySorting(true)

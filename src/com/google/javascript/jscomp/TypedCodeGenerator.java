@@ -189,8 +189,7 @@ class TypedCodeGenerator extends CodeGenerator {
 
     if (!funType.getTemplateTypeMap().getTemplateKeys().isEmpty()) {
       sb.append(" * @template ");
-      sb.append(Joiner.on(",").join(
-          funType.getTemplateTypeMap().getTemplateKeys()));
+      Joiner.on(",").appendTo(sb, funType.getTemplateTypeMap().getTemplateKeys());
       sb.append("\n");
     }
 

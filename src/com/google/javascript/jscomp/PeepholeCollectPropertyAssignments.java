@@ -120,11 +120,7 @@ public class PeepholeCollectPropertyAssignments
 
     // of a variable.
     Node obj = lhs.getFirstChild();
-    if (!obj.isName()) {
-      return false;
-    }
-
-    return true;
+    return obj.isName();
   }
 
   private boolean collectProperty(

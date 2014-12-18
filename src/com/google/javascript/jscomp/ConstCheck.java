@@ -72,10 +72,8 @@ class ConstCheck extends AbstractPostOrderCallback
             if (n.isFromExterns()) {
               initializedConstants.add(var);
             } else if (n.hasChildren()) {
-              if (initializedConstants.contains(var)) {
+              if (!initializedConstants.add(var)) {
                 reportError(t, n, var, name);
-              } else {
-                initializedConstants.add(var);
               }
             }
           }
@@ -99,10 +97,8 @@ class ConstCheck extends AbstractPostOrderCallback
           String name = lhs.getString();
           Scope.Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
-            if (initializedConstants.contains(var)) {
+            if (!initializedConstants.add(var)) {
               reportError(t, n, var, name);
-            } else {
-              initializedConstants.add(var);
             }
           }
         }

@@ -680,7 +680,7 @@ final class Tracer {
         }
       }
       sb.append(indent);
-      sb.append(tracer.toString());
+      sb.append(tracer);
       return sb.toString();
     }
   }

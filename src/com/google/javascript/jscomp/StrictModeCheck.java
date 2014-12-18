@@ -212,18 +212,14 @@ class StrictModeCheck extends AbstractPostOrderCallback
          key = key.getNext()) {
       if (!key.isSetterDef()) {
         // normal property and getter cases
-        if (getters.contains(key.getString())) {
+        if (!getters.add(key.getString())) {
           t.report(key, DUPLICATE_OBJECT_KEY);
-        } else {
-          getters.add(key.getString());
         }
       }
       if (!key.isGetterDef()) {
         // normal property and setter cases
-        if (setters.contains(key.getString())) {
+        if (!setters.add(key.getString())) {
           t.report(key, DUPLICATE_OBJECT_KEY);
-        } else {
-          setters.add(key.getString());
         }
       }
     }

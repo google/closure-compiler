@@ -306,7 +306,7 @@ public class NewTypeInference implements CompilerPass {
     } catch (Exception unexpectedException) {
       String message = unexpectedException.getMessage();
       if (currentScope != null) {
-        message += "\nIn scope: " + currentScope.toString();
+        message += "\nIn scope: " + currentScope;
       }
       compiler.throwInternalError(message, unexpectedException);
     }
@@ -333,9 +333,9 @@ public class NewTypeInference implements CompilerPass {
     if (showDebuggingPrints) {
       StringBuilder b = new StringBuilder();
       for (Object obj : objs) {
-        b.append(String.valueOf(obj));
+        b.append(obj);
       }
-      System.out.println(b.toString());
+      System.out.println(b);
     }
   }
 
@@ -1506,8 +1506,7 @@ public class NewTypeInference implements CompilerPass {
     if (!lhsType.isSubtypeOf(JSType.TOP_SCALAR) ||
         !rhsType.isSubtypeOf(JSType.TOP_SCALAR) ||
         !JSType.areCompatibleScalarTypes(lhsType, rhsType)) {
-      warnInvalidOperand(expr, expr.getType(), "matching scalar types",
-          lhsType.toString() + ", " + rhsType.toString());
+      warnInvalidOperand(expr, expr.getType(), "matching scalar types", lhsType + ", " + rhsType);
     }
     rhsPair.type = JSType.BOOLEAN;
     return rhsPair;
@@ -2618,8 +2617,7 @@ public class NewTypeInference implements CompilerPass {
    */
   private EnvTypePair analyzeExprBwd(
       Node expr, TypeEnv outEnv, JSType requiredType) {
-    Preconditions.checkArgument(requiredType != null,
-        "Required type null at: " + expr);
+    Preconditions.checkArgument(requiredType != null, "Required type null at: %s", expr);
     Preconditions.checkArgument(!requiredType.isBottom());
     switch (expr.getType()) {
       case Token.EMPTY: // can be created by a FOR with empty condition

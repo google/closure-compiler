@@ -94,12 +94,11 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
     this.assumeMinimumCapture = assumeMinimumCapture;
 
     this.maxSizeAfterInlining = maxSizeAfterInlining;
-    this.enforceMaxSizeAfterInlining = (maxSizeAfterInlining
-        == CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) ? false : true;
+    this.enforceMaxSizeAfterInlining =
+        maxSizeAfterInlining != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
 
     this.injector = new FunctionInjector(
-        compiler, safeNameIdSupplier,
-        true, assumeStrictThis, assumeMinimumCapture);
+        compiler, safeNameIdSupplier, true, assumeStrictThis, assumeMinimumCapture);
   }
 
   FunctionState getOrCreateFunctionState(String fnName) {
@@ -981,7 +980,7 @@ class InlineFunctions implements SpecializationAwareCompilerPass {
 
     public void setInline(boolean inline) {
       this.inline = inline;
-      if (inline == false) {
+      if (!inline) {
         // No need to keep references to function that can't be inlined.
         references = null;
         // Don't remove functions that we aren't inlining.

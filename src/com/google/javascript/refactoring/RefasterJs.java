@@ -143,7 +143,7 @@ final class RefasterJs {
     Set<String> patterns = new HashSet<>();
     // The args4j library can't handle multiple files provided within the same flag option,
     // like --inputs=file1.js,file2.js so handle that here.
-    Splitter commaSplitter = Splitter.on(",");
+    Splitter commaSplitter = Splitter.on(',');
     for (String input : inputs) {
       patterns.addAll(commaSplitter.splitToList(input));
     }

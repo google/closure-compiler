@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -50,7 +49,7 @@ import java.util.regex.Pattern;
  * @author bashir@google.com (Bashir Sadjad)
  */
 public class WhitelistWarningsGuard extends WarningsGuard {
-  private static final Splitter LINE_SPLITTER = Splitter.on("\n");
+  private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 
   /** The set of white-listed warnings, same format as {@code formatWarning}. */
   private final Set<String> whitelist;
@@ -160,9 +159,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     Preconditions.checkNotNull(reader);
     Set<String> result = Sets.newHashSet();
 
-    for (String line : CharStreams.readLines(reader)) {
-      result.add(line);
-    }
+    result.addAll(CharStreams.readLines(reader));
 
     return result;
   }
@@ -185,8 +182,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
     if (withMetaData) {
       sb.append(error.lineNumber);
     }
-    List<String> lines = ImmutableList.copyOf(
-        LINE_SPLITTER.split(error.description));
+    List<String> lines = LINE_SPLITTER.splitToList(error.description);
     sb.append("  ").append(lines.get(0));
 
     // Add the rest of the message as a comment.
@@ -267,9 +263,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
       }
 
       if (headerNote != null) {
-        out.append("#"
-            + Joiner.on("\n# ").join(Splitter.on("\n").split(headerNote))
-            + "\n");
+        out.append("#" + Joiner.on("\n# ").join(Splitter.on('\n').split(headerNote)) + "\n");
       }
 
       Multimap<DiagnosticType, String> warningsByType = TreeMultimap.create();

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing.parser.util.format;
 
 
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -589,9 +590,7 @@ public final class SimpleFormat {
             start = 0;
         }
         char[] paddingChars = new char[width - length];
-        for (int i = 0; i < paddingChars.length; i++) {
-          paddingChars[i] = paddingChar;
-        }
+        Arrays.fill(paddingChars, paddingChar);
 
         boolean paddingRight = formatToken.flagMinus;
         StringBuilder result = toStringBuilder(source);
@@ -824,9 +823,7 @@ public final class SimpleFormat {
         if (formatToken.getPrecision() > 0) {
             pattern.append('.');
             char[] zeros = new char[formatToken.getPrecision()];
-            for (int i = 0; i < zeros.length; i++) {
-              zeros[i] = '0';
-            }
+            Arrays.fill(zeros, '0');
             pattern.append(zeros);
         }
         pattern.append("E+00");
@@ -905,9 +902,7 @@ public final class SimpleFormat {
 
         if (fractionalLength < precision) {
             char zeros[] = new char[precision - fractionalLength];
-            for (int i = 0; i < zeros.length; i++) {
-              zeros[i] = '0';
-            }
+            Arrays.fill(zeros, '0');
             result.insert(indexOfP, zeros);
             return;
         }

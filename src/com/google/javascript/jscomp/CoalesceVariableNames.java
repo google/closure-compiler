@@ -98,12 +98,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return false;
     }
 
-    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE <
-        scope.getVarCount()) {
-      return false;
-    }
-
-    return true;
+    return LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE >= scope.getVarCount();
   }
 
   @Override

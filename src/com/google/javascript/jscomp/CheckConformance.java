@@ -177,10 +177,8 @@ public final class CheckConformance extends AbstractPostOrderCallback
       String field) {
     Set<String> existing = new HashSet<>();
     for (String value : getRequirementList(requirement, field)) {
-      if (existing.contains(value)) {
+      if (!existing.add(value)) {
         reportInvalidRequirement(compiler, requirement, "duplicate " + field + " value: " + value);
-      } else {
-        existing.add(value);
       }
     }
   }

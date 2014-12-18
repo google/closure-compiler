@@ -69,10 +69,8 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
         return;
       }
 
-      if (values.contains(value)) {
+      if (!values.add(value)) {
         t.report(valueNode, DUPLICATE_ENUM_VALUE, value);
-      } else {
-        values.add(value);
       }
     }
   }

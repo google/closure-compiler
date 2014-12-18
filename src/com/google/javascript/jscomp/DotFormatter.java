@@ -151,9 +151,10 @@ public class DotFormatter {
           toNode = formatNodeName(keySucc);
         }
 
-        edgeList[i] = formatNodeName(keyParent) + ARROW + toNode + " [label=\""
-          + edge.getValue().toString() + "\", " + "fontcolor=\"red\", " +
-          "weight=0.01, color=\"red\"];\n";
+        edgeList[i] =
+            formatNodeName(keyParent) + ARROW + toNode + " [label=\"" + edge.getValue() + "\", "
+            + "fontcolor=\"red\", "
+            + "weight=0.01, color=\"red\"];\n";
       }
 
       Arrays.sort(edgeList);

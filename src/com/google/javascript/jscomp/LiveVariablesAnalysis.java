@@ -297,12 +297,7 @@ class LiveVariablesAnalysis extends
   }
 
   private boolean isArgumentsName(Node n) {
-    if (!n.isName() ||
-        !n.getString().equals(ARGUMENT_ARRAY_ALIAS) ||
-        jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false)) {
-      return false;
-    } else {
-      return true;
-    }
+    return n.isName() && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
+        && !jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
   }
 }

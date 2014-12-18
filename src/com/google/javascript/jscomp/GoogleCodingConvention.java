@@ -163,7 +163,7 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
     if (m.find()) {
       return m.group(1);
     } else {
-      int lastSlash = name.lastIndexOf("/");
+      int lastSlash = name.lastIndexOf('/');
       return lastSlash == -1 ? "" : name.substring(0, lastSlash);
     }
   }

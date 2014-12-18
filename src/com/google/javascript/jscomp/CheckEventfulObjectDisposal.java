@@ -355,7 +355,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
          * the function name to create ID.
          */
         if (!parentScopeType.isGlobalThisType()) {
-          key = parentScopeType.toString() + "~" + key;
+          key = parentScopeType + "~" + key;
         }
         key = NodeUtil.getFunctionName(scopeNode) + "=" + key;
       }
@@ -389,11 +389,10 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
           //    this.eh = new goog.events.EventHandler();
           //  }
           //};
-          key = t.getScope().getParentScope().getTypeOfThis().toString() + "~"
-              + key;
+          key = t.getScope().getParentScope().getTypeOfThis() + "~" + key;
         } else {
           if (n.getFirstChild() == null) {
-            key = base.getJSType().toString() + "=" + key;
+            key = base.getJSType() + "=" + key;
           } else {
             ObjectType objectType =
                 ObjectType.cast(dereference(n.getFirstChild().getJSType()));
@@ -417,7 +416,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
                 break;
               }
             }
-            key = hObjT.toString() + "=" + key;
+            key = hObjT + "=" + key;
           }
         }
       }
@@ -510,7 +509,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
     int indx = 0;
     for (String s : eventizes.keySet()) {
       dfsStack.push(s);
-      while (dfsStack.size() > 0) {
+      while (!dfsStack.isEmpty()) {
         String top = dfsStack.pop();
         if (!color.containsKey(top)) {
           continue;
@@ -616,7 +615,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
 
     private Boolean inConstructorScope() {
       Preconditions.checkNotNull(isConstructorStack);
-      if (isDisposalStack.size() > 0) {
+      if (!isDisposalStack.isEmpty()) {
         return isConstructorStack.peek();
       }
       return null;
@@ -624,7 +623,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
 
     private Boolean inDisposalScope() {
       Preconditions.checkNotNull(isDisposalStack);
-      if (isDisposalStack.size() > 0) {
+      if (!isDisposalStack.isEmpty()) {
         return isDisposalStack.peek();
       }
       return null;
@@ -638,13 +637,8 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
         return true;
       }
 
-      if (type.isEmptyType() ||
-          type.isUnknownType() ||
-          !isPossiblySubtype(type, googDisposableInterfaceType)) {
-        return true;
-      }
-
-      return false;
+      return type.isEmptyType() || type.isUnknownType()
+          || !isPossiblySubtype(type, googDisposableInterfaceType);
     }
 
     /*

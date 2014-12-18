@@ -291,11 +291,7 @@ public class InlineProperties implements CompilerPass {
     private boolean isMatchingType(Node n, JSType src) {
       src = src.restrictByNotNullOrUndefined();
       JSType dest = getJSType(n).restrictByNotNullOrUndefined();
-      if (!isInvalidatingType(dest)
-          && dest.isSubtype(src)) {
-        return true;
-      }
-      return false;
+      return !isInvalidatingType(dest) && dest.isSubtype(src);
     }
   }
 }

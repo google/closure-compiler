@@ -18,11 +18,11 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
@@ -120,7 +120,7 @@ final class RenameLabels implements CompilerPass {
 
     // A stack of labels namespaces. Labels in an outer scope aren't part of an
     // inner scope, so a new namespace is created each time a scope is entered.
-    final Deque<LabelNamespace> namespaceStack = Lists.newLinkedList();
+    final Deque<LabelNamespace> namespaceStack = new ArrayDeque<>();
 
     // The list of generated names. Typically, the first name will be "a",
     // the second "b", etc.

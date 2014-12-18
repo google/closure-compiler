@@ -304,7 +304,7 @@ class RuntimeTypeCheck implements CompilerPass {
       Collection<JSType> alternates;
       if (type.isUnionType()) {
         alternates = Sets.newTreeSet(ALPHA);
-        Iterables.addAll(alternates, type.toMaybeUnionType().getAlternates());
+        alternates.addAll(type.toMaybeUnionType().getAlternates());
       } else {
         alternates = ImmutableList.of(type);
       }

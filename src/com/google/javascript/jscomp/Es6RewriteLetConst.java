@@ -264,7 +264,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
       for (Scope s = referencedIn; s != declaredIn; s = s.getParent()) {
         if (s.isFunctionBlockScope()) {
           Node function = s.getRootNode().getParent();
-          if (functionHandledMap.get(function).contains(name)) {
+          if (functionHandledMap.containsEntry(function, name)) {
             return;
           }
           functionHandledMap.put(function, name);

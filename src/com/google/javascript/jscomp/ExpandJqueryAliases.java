@@ -117,11 +117,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
   public boolean isJqueryExpandedEachCall(Node call, String qName) {
     Preconditions.checkArgument(call.isCall());
-    if (call.getFirstChild() != null &&
-        JQUERY_EXPANDED_EACH_NAME.equals(qName)) {
-      return true;
-    }
-    return false;
+    return call.getFirstChild() != null && JQUERY_EXPANDED_EACH_NAME.equals(qName);
   }
 
   @Override

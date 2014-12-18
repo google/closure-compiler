@@ -16,12 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -74,8 +73,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
 
       // Output the placeholders, sorted alphabetically by placeholder name,
       // regardless of what order they appear in the original message.
-      List<String> placeholderNames = Lists.newArrayList(message.placeholders());
-      Collections.sort(placeholderNames);
+      List<String> placeholderNames = Ordering.natural().sortedCopy(message.placeholders());
 
       Node placeholderValueArray = IR.arraylit();
       for (String name : placeholderNames) {

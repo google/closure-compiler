@@ -141,10 +141,9 @@ public class CompilerInput
   }
 
   private void checkErrorManager() {
-    Preconditions.checkNotNull(compiler,
-        "Expected setCompiler to be called first: " + this);
-    Preconditions.checkNotNull(compiler.getErrorManager(),
-        "Expected compiler to call an error manager: " + this);
+    Preconditions.checkNotNull(compiler, "Expected setCompiler to be called first: %s", this);
+    Preconditions.checkNotNull(
+        compiler.getErrorManager(), "Expected compiler to call an error manager: %s", this);
   }
 
   /** Gets a list of types depended on by this input. */

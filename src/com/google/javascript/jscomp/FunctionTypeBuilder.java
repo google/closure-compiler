@@ -387,11 +387,8 @@ final class FunctionTypeBuilder {
                 baseInterface =
                     baseInterface.toMaybeTemplatizedType().getReferencedType();
               }
-              if (baseInterfaces.contains(baseInterface)) {
-                reportWarning(SAME_INTERFACE_MULTIPLE_IMPLEMENTS,
-                              baseInterface.toString());
-              } else {
-                baseInterfaces.add(baseInterface);
+              if (!baseInterfaces.add(baseInterface)) {
+                reportWarning(SAME_INTERFACE_MULTIPLE_IMPLEMENTS, baseInterface.toString());
               }
 
               implementedInterfaces.add((ObjectType) maybeInterType);
@@ -846,11 +843,7 @@ final class FunctionTypeBuilder {
     Preconditions.checkArgument(objectType.isUnknownType());
     if (objectType.getImplicitPrototype() != null) {
       // constructor extends class
-      if (objectType.getImplicitPrototype().isResolved()) {
-        return false;
-      } else {
-        return true;
-      }
+      return !objectType.getImplicitPrototype().isResolved();
     } else {
       // interface extends interfaces
       FunctionType ctor = objectType.getConstructor();

@@ -104,8 +104,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
 
     public void visitOnce(JSType type) {
       // Handle recursive types by only ever visiting the same type once.
-      if (!seenTypes.contains(type)) {
-        seenTypes.add(type);
+      if (seenTypes.add(type)) {
         type.visit(this);
       }
     }

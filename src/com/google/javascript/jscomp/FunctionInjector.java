@@ -844,10 +844,7 @@ class FunctionInjector {
       // Special case single reference function that are being block inlined:
       // If the cost of the inline is greater than the function definition size,
       // don't inline.
-      if (blockInlines > 0 && costDeltaBlock > 0) {
-        return false;
-      }
-      return true;
+      return blockInlines <= 0 || costDeltaBlock <= 0;
     }
 
     int costDelta = (directInlines * costDeltaDirect) +

@@ -426,7 +426,7 @@ public class ProcessCommonJSModules implements CompilerPass {
       if (typeNode.isString()) {
         String name = typeNode.getString();
         if (ES6ModuleLoader.isRelativeIdentifier(name)) {
-          int lastSlash = name.lastIndexOf("/");
+          int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
           String localTypeName = null;
           if (endIndex == -1) {

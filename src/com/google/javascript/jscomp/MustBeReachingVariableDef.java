@@ -87,7 +87,7 @@ final class MustBeReachingVariableDef extends
 
     @Override
     public String toString() {
-      return "Definition@" + node.toString();
+      return "Definition@" + node;
     }
 
     @Override

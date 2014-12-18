@@ -25,6 +25,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -249,9 +250,7 @@ public final class TemplateAstMatcher {
 
   private void reset() {
     isLooseMatch = false;
-    for (int i = 0; i < localVarMatches.size(); i++) {
-      localVarMatches.set(i, null);
-    }
+    Collections.fill(localVarMatches, null);
     for (int i = 0; i < paramNodeMatches.size(); i++) {
       this.paramNodeMatches.set(i, null);
     }

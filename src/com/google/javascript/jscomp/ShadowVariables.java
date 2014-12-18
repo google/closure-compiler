@@ -238,8 +238,7 @@ class ShadowVariables implements CompilerPass {
       // Search for the candidate starting from the most used local.
       for (Assignment assignment : varsByFrequency) {
         if (assignment.oldName.startsWith(RenameVars.LOCAL_VAR_PREFIX)) {
-          if (!scopeUpRefMap.get(curScope.getRootNode()).contains(
-              assignment.oldName)) {
+          if (!scopeUpRefMap.containsEntry(curScope.getRootNode(), assignment.oldName)) {
             if (curScope.isDeclared(assignment.oldName, true)) {
               return assignment;
             }

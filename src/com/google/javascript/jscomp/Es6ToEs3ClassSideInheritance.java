@@ -130,8 +130,7 @@ public class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallback
   }
 
   private class FindStaticMembers extends NodeTraversal.AbstractPostOrderCallback {
-
-    private final Set<String> classNames = new HashSet<String>();
+    private final Set<String> classNames = new HashSet<>();
 
     @Override
     public void visit(NodeTraversal nodeTraversal, Node n, Node parent) {

@@ -286,8 +286,7 @@ class CollapseProperties implements CompilerPass {
                 target = gparent;
               }
             } else {
-              throw new IllegalStateException(
-                  "unexpected: " + target.toString());
+              throw new IllegalStateException("unexpected: " + target);
             }
           }
           Preconditions.checkState(target.isGetProp() || target.isName());

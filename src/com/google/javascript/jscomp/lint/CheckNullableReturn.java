@@ -128,13 +128,9 @@ public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.C
    * @return True if the given ControlFlowGraph could return null.
    */
   public static boolean canReturnNull(ControlFlowGraph<Node> graph) {
-    CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> test =
-        new CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch>(
-            graph,
-            graph.getEntry(),
-            graph.getImplicitReturn(),
-            NULLABLE_RETURN_PREDICATE,
-            Predicates.<DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue());
+    CheckPathsBetweenNodes<Node, ControlFlowGraph.Branch> test = new CheckPathsBetweenNodes<>(graph,
+        graph.getEntry(), graph.getImplicitReturn(), NULLABLE_RETURN_PREDICATE,
+        Predicates.<DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue());
 
     return test.somePathsSatisfyPredicate();
   }

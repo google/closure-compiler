@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.IR;
@@ -89,12 +90,7 @@ class AstParallelizer {
     };
 
     // Always traverse until it finds a split point.
-    Predicate<Node> shouldTraverse = new Predicate<Node>() {
-      @Override
-      public boolean apply(Node ignored) {
-        return true;
-      }
-    };
+    Predicate<Node> shouldTraverse = Predicates.alwaysTrue();
 
     // Use a function declaration of the same name.
     Supplier<Node> placeHolders = new Supplier<Node>() {

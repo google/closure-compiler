@@ -25,6 +25,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
@@ -1587,9 +1588,7 @@ public class Compiler extends AbstractCompiler {
       throws CircularDependencyException, MissingProvideException, MissingModuleException {
     List<CompilerInput> inputs = new ArrayList<>();
     for (JSModule module : inputModules) {
-      for (CompilerInput input : module.getInputs()) {
-        inputs.add(input);
-      }
+      inputs.addAll(module.getInputs());
     }
 
     modules = new ArrayList<>();
@@ -1606,7 +1605,7 @@ public class Compiler extends AbstractCompiler {
 
     // The compiler expects a module tree, so add a dependency of all modules on
     // the first one.
-    JSModule firstModule = modules.size() > 0 ? modules.get(0) : null;
+    JSModule firstModule = Iterables.getFirst(modules, null);
     for (int i = 1; i < modules.size(); i++) {
       if (!modules.get(i).getDependencies().contains(firstModule)) {
         modules.get(i).addDependency(firstModule);
@@ -2364,7 +2363,7 @@ public class Compiler extends AbstractCompiler {
     }
 
     List<CompilerInput> moduleInputs = module.getInputs();
-    if (moduleInputs.size() > 0) {
+    if (!moduleInputs.isEmpty()) {
       return moduleInputs.get(0).getAstRoot(this);
     }
     throw new IllegalStateException("Root module has no inputs");

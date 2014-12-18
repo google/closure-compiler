@@ -256,7 +256,7 @@ class UnreachableCodeElimination implements CompilerPass {
       NodeUtil.redeclareVarsInsideBranch(n);
       compiler.reportChangeToEnclosingScope(n);
       if (logger.isLoggable(Level.FINE)) {
-        logger.fine("Removing " + n.toString());
+        logger.fine("Removing " + n);
       }
       NodeUtil.removeChild(n.getParent(), n);
     }

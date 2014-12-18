@@ -279,12 +279,7 @@ class CheckGlobalNames implements CompilerPass {
       return true;
     }
 
-    if (name.parent.type == Name.Type.FUNCTION &&
-        name.parent.isDeclaredType() &&
-        !functionPrototypeProps.contains(name.getBaseName())) {
-      return true;
-    }
-
-    return false;
+    return name.parent.type == Name.Type.FUNCTION && name.parent.isDeclaredType()
+        && !functionPrototypeProps.contains(name.getBaseName());
   }
 }

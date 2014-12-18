@@ -51,8 +51,7 @@ import javax.annotation.Nullable;
  * @author johnlenz@google.com (John Lenz)
  */
 public final class NodeUtil {
-
-  static final long MAX_POSITIVE_INTEGER_NUMBER = (long) Math.pow(2, 53);
+  static final long MAX_POSITIVE_INTEGER_NUMBER = 1L << 53;
 
   static final String JSC_PROPERTY_NAME_FN = "JSCompiler_renameProperty";
 
@@ -1106,12 +1105,7 @@ public final class NodeUtil {
     }
 
     Node nameNode = callNode.getFirstChild();
-    if (nameNode.isName() &&
-        CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString())) {
-      return false;
-    }
-
-    return true;
+    return !nameNode.isName() || !CONSTRUCTORS_WITHOUT_SIDE_EFFECTS.contains(nameNode.getString());
   }
 
   // A list of built-in object creation or primitive type cast functions that
@@ -2178,8 +2172,7 @@ public final class NodeUtil {
       // or the structure removed.
       parent.replaceChild(node, IR.empty());
     } else {
-      throw new IllegalStateException("Invalid attempt to remove node: " +
-          node.toString() + " of " + parent.toString());
+      throw new IllegalStateException("Invalid attempt to remove node: " + node + " of " + parent);
     }
   }
 
@@ -3649,8 +3642,7 @@ public final class NodeUtil {
       case Token.HOOK:
       case Token.AND:
       case Token.OR:
-        return (expr == parent.getFirstChild())
-            ? true : isExpressionResultUsed(parent);
+        return (expr == parent.getFirstChild()) || isExpressionResultUsed(parent);
       case Token.COMMA:
         Node gramps = parent.getParent();
         if (gramps.isCall() &&
@@ -3759,13 +3751,9 @@ public final class NodeUtil {
   }
 
   static boolean isNaN(Node n) {
-    if ((n.isName() && n.getString().equals("NaN")) ||
-        (n.getType() == Token.DIV &&
-         n.getFirstChild().isNumber() && n.getFirstChild().getDouble() == 0 &&
-         n.getLastChild().isNumber() && n.getLastChild().getDouble() == 0)) {
-      return true;
-    }
-    return false;
+    return (n.isName() && n.getString().equals("NaN")) || (n.getType() == Token.DIV
+               && n.getFirstChild().isNumber() && n.getFirstChild().getDouble() == 0
+               && n.getLastChild().isNumber() && n.getLastChild().getDouble() == 0);
   }
 
   /**

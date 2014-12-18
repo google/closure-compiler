@@ -206,13 +206,9 @@ import java.util.Set;
     // source across the environment could cause some later code that reads
     // a modified location to get an incorrect value.
 
-    if (!environmentModSet.intersectsLocation(sourceRefSet)
+    return !environmentModSet.intersectsLocation(sourceRefSet)
         && !environmentRefSet.intersectsLocation(sourceModSet)
-        && !environmentModSet.intersectsLocation(sourceModSet)) {
-      return true;
-    }
-
-    return false;
+        && !environmentModSet.intersectsLocation(sourceModSet);
   }
 
   /**

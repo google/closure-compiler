@@ -103,7 +103,7 @@ final class NameReferenceGraphReport {
       if (!outEdges.isEmpty() || !inEdges.isEmpty()) {
         builder.append("<ul>");
 
-        if (outEdges.size() > 0) {
+        if (!outEdges.isEmpty()) {
           builder.append("<li>REFERS TO:<br>\n");
           builder.append("<ul>");
           for (DiGraphEdge<Name, Reference> edge : outEdges) {
@@ -113,7 +113,7 @@ final class NameReferenceGraphReport {
           builder.append("</ul>\n");
         }
 
-        if (inEdges.size() > 0) {
+        if (!inEdges.isEmpty()) {
           builder.append("<li>REFERENCED BY:<br>\n");
           builder.append("<ul>");
           for (DiGraphEdge<Name, Reference> edge : inEdges) {
@@ -280,8 +280,7 @@ final class NameReferenceGraphReport {
     } else if (defType.isUnknownType()) {
       builder.append(" (type: unknown) ");
     } else {
-      builder.append(" (type: " +
-          defType.toString() + ") ");
+      builder.append(" (type: " + defType + ") ");
     }
   }
 

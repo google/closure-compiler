@@ -207,9 +207,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
       List<DiGraphNode<Node, Branch>> successors =
           cfg.getDirectedSuccNodes(current);
-      for (DiGraphNode<Node, Branch> candidate : successors) {
-        worklist.add(candidate);
-      }
+      worklist.addAll(successors);
     }
   }
 
@@ -730,12 +728,11 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           } else if (parent.getNext().isDefaultCase()) {
             return parent.getNext().getFirstChild();
           } else {
-            Preconditions.checkState(false, "Not reachable");
+            throw new IllegalStateException("Not reachable");
           }
         } else {
           return computeFollowNode(fromNode, parent, cfa);
         }
-        break;
       case Token.FOR:
         if (NodeUtil.isForIn(parent)) {
           return parent;

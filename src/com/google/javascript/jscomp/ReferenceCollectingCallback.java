@@ -567,10 +567,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     boolean firstReferenceIsAssigningDeclaration() {
       int size = references.size();
-      if (size > 0 && references.get(0).isInitializingDeclaration()) {
-        return true;
-      }
-      return false;
+      return size > 0 && references.get(0).isInitializingDeclaration();
     }
   }
 
@@ -824,10 +821,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       if (currentBlock == this) {
         return true;
       }
-      if (isGlobalScopeBlock() && thatBlock.isGlobalScopeBlock()) {
-        return true;
-      }
-      return false;
+      return isGlobalScopeBlock() && thatBlock.isGlobalScopeBlock();
     }
   }
 }

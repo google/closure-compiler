@@ -171,9 +171,8 @@ class PureFunctionIdentifier implements CompilerPass {
         }
       }
 
-      sb.append(functionNames.getFunctionName(function) + " " +
-                functionInfo.toString() +
-                " Calls: " + depFunctionNames + "\n");
+      sb.append(functionNames.getFunctionName(function) + " " + functionInfo + " Calls: "
+          + depFunctionNames + "\n");
     }
 
     return sb.toString();
@@ -1104,7 +1103,7 @@ class PureFunctionIdentifier implements CompilerPass {
     private void checkInvariant() {
       boolean invariant = mayBePure() || mayHaveSideEffects();
       if (!invariant) {
-        throw new IllegalStateException("Invariant failed.  " + toString());
+        throw new IllegalStateException("Invariant failed.  " + this);
       }
     }
 
@@ -1155,7 +1154,7 @@ class PureFunctionIdentifier implements CompilerPass {
         status.add("complex");
       }
 
-      return "Side effects: " + status.toString();
+      return "Side effects: " + status;
     }
   }
 

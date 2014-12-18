@@ -184,9 +184,8 @@ class ScopedAliases implements HotSwapCompilerPass {
         NodeUtil.tryMergeBlock(scopeClosureBlock);
       }
 
-      if (traversal.getAliasUsages().size() > 0 ||
-          traversal.getAliasDefinitionsInOrder().size() > 0 ||
-          traversal.getScopeCalls().size() > 0) {
+      if (!traversal.getAliasUsages().isEmpty() || !traversal.getAliasDefinitionsInOrder().isEmpty()
+          || !traversal.getScopeCalls().isEmpty()) {
         compiler.reportCodeChange();
       }
     }

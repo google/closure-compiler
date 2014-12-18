@@ -132,10 +132,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     }
 
     Node retVal = leftChild.getNext();
-    if (NodeUtil.getStringValue(retVal) == null) {
-      return false;
-    }
-    return true;
+    return NodeUtil.getStringValue(retVal) != null;
   }
 
   /**

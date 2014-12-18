@@ -158,11 +158,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
     Node script = NodeUtil.getEnclosingType(parent, Token.SCRIPT);
     // Emit goog.require call for the module.
-    if (!alreadyRequired.contains(moduleName)) {
-      alreadyRequired.add(moduleName);
-      Node require = IR.exprResult(IR.call(NodeUtil.newQName(
-          compiler, "goog.require"),
-          IR.string(moduleName)));
+    if (alreadyRequired.add(moduleName)) {
+      Node require = IR.exprResult(
+          IR.call(NodeUtil.newQName(compiler, "goog.require"), IR.string(moduleName)));
       require.copyInformationFromForTree(importDecl);
       script.addChildToFront(require);
       if (reportDependencies) {
@@ -382,9 +380,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
             parent.putBooleanProp(Node.FREE_CALL, false);
           }
           ModuleOriginalNamePair pair = importMap.get(name);
-          if (pair.originalName.equals("")) {
-            n.getParent().replaceChild(n,
-                IR.name(pair.module).useSourceInfoIfMissingFromForTree(n));
+          if (pair.originalName.isEmpty()) {
+            n.getParent().replaceChild(
+                n, IR.name(pair.module).useSourceInfoIfMissingFromForTree(n));
           } else {
             n.getParent().replaceChild(n,
                 IR.getprop(IR.name(pair.module), IR.string(pair.originalName))
@@ -402,7 +400,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       if (typeNode.isString()) {
         String name = typeNode.getString();
         if (ES6ModuleLoader.isRelativeIdentifier(name)) {
-          int lastSlash = name.lastIndexOf("/");
+          int lastSlash = name.lastIndexOf('/');
           int endIndex = name.indexOf('.', lastSlash);
           String localTypeName = null;
           if (endIndex == -1) {

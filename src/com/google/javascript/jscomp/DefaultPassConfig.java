@@ -1529,7 +1529,7 @@ public class DefaultPassConfig extends PassConfig {
   /** Executes the given callbacks with a {@link CombinedCompilerPass}. */
   private static HotSwapCompilerPass combineChecks(AbstractCompiler compiler,
       List<Callback> callbacks) {
-    Preconditions.checkArgument(callbacks.size() > 0);
+    Preconditions.checkArgument(!callbacks.isEmpty());
     return new CombinedCompilerPass(compiler, callbacks);
   }
 

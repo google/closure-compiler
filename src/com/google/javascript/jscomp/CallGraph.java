@@ -135,10 +135,9 @@ public class CallGraph implements CompilerPass {
    */
   @Override
   public void process(Node externsRoot, Node jsRoot) {
-    Preconditions.checkState(alreadyRun == false);
+    Preconditions.checkState(!alreadyRun);
 
-    DefinitionProvider definitionProvider =
-        constructDefinitionProvider(externsRoot, jsRoot);
+    DefinitionProvider definitionProvider = constructDefinitionProvider(externsRoot, jsRoot);
 
     createFunctionsAndCallsites(jsRoot, definitionProvider);
 

@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
@@ -64,7 +65,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   private final AbstractCompiler compiler;
 
   // A stack of arguments access list to the corresponding outer functions.
-  private final Deque<List<Node>> argumentsAccessStack = Lists.newLinkedList();
+  private final Deque<List<Node>> argumentsAccessStack = new ArrayDeque<>();
 
   // This stores a list of argument access in the current scope.
   private List<Node> currentArgumentsAccess = null;

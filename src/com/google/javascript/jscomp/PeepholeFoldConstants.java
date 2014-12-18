@@ -1291,10 +1291,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     // we can fold in the case "" + new String("")
-    if (n.getParent().isAdd()) {
-      return true;
-    }
-    return false;
+    return n.getParent().isAdd();
   }
 
   private Node tryFoldInForcedStringContext(Node n) {

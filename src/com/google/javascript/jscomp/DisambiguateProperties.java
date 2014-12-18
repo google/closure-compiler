@@ -470,11 +470,8 @@ class DisambiguateProperties<T> implements CompilerPass {
               }
             }
           }
-          compiler.report(JSError.make(
-              n, propertiesToErrorFor.get(name),
-              Warnings.INVALIDATION, name,
-              (type == null ? "null" : type.toString()),
-              n.toString(), suggestion));
+          compiler.report(JSError.make(n, propertiesToErrorFor.get(name), Warnings.INVALIDATION,
+              name, (String.valueOf(type)), n.toString(), suggestion));
         }
       }
     }
@@ -498,10 +495,8 @@ class DisambiguateProperties<T> implements CompilerPass {
           // TODO(user): It doesn't look like the user can do much in this
           // case right now.
           if (propertiesToErrorFor.containsKey(name)) {
-            compiler.report(JSError.make(
-                child, propertiesToErrorFor.get(name),
-                Warnings.INVALIDATION, name,
-                (type == null ? "null" : type.toString()), n.toString(), ""));
+            compiler.report(JSError.make(child, propertiesToErrorFor.get(name),
+                Warnings.INVALIDATION, name, (String.valueOf(type)), n.toString(), ""));
           }
         }
       }
@@ -524,8 +519,7 @@ class DisambiguateProperties<T> implements CompilerPass {
           return;
         }
 
-        errors.add(
-            t.toString() + " at " + error.sourceName + ":" + error.lineNumber);
+        errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
       }
     }
 

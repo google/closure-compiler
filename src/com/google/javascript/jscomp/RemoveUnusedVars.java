@@ -322,11 +322,7 @@ class RemoveUnusedVars
     }
 
     // Exported variables are off-limits.
-    if (codingConvention.isExported(var.getName())) {
-      return false;
-    }
-
-    return true;
+    return !codingConvention.isExported(var.getName());
   }
 
   /**

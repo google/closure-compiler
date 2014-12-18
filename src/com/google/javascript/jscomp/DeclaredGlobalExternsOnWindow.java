@@ -50,7 +50,7 @@ class DeclaredGlobalExternsOnWindow
   }
 
   private void addWindowProperties() {
-    if (nodes.size() > 0 && windowInExterns) {
+    if (!nodes.isEmpty() && windowInExterns) {
       for (Node node : nodes) {
         addExtern(node);
       }

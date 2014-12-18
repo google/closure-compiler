@@ -704,10 +704,7 @@ class GlobalNamespace
 
       // Look for calls to goog.addSingletonGetter calls.
       String className = convention.getSingletonGetterClassName(callNode);
-      if (className != null) {
-        return true;
-      }
-      return false;
+      return className != null;
     }
 
     /**
@@ -1352,13 +1349,13 @@ class GlobalNamespace
 
       for (String sym : currentSymbols) {
         if (!previousSymbolsInTree.contains(sym)) {
-          stream.println(String.format("%s: Added by %s", sym, passName));
+          stream.printf("%s: Added by %s%n", sym, passName);
         }
       }
 
       for (String sym : previousSymbolsInTree) {
         if (!currentSymbols.contains(sym)) {
-          stream.println(String.format("%s: Removed by %s", sym, passName));
+          stream.printf("%s: Removed by %s%n", sym, passName);
         }
       }
 

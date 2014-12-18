@@ -1020,11 +1020,8 @@ final class NameAnalyzer implements CompilerPass {
           parent.isAssign()
           && NodeUtil.isPrototypeProperty(parent.getFirstChild());
 
-      if ((parent.isName() ||
-          parent.isAssign()) &&
-          !isPrototypePropAssignment &&
-          referring != null &&
-          scopes.get(parent).contains(referring)) {
+      if ((parent.isName() || parent.isAssign()) && !isPrototypePropAssignment && referring != null
+          && scopes.containsEntry(parent, referring)) {
         recordAlias(referringName, name);
         return true;
       }
@@ -1239,7 +1236,7 @@ final class NameAnalyzer implements CompilerPass {
     sb.append("ALL NAMES<ul>\n");
     for (JsName node : allNames.values()) {
       sb.append("<li>" + nameAnchor(node.name) + "<ul>");
-      if (node.prototypeNames.size() > 0) {
+      if (!node.prototypeNames.isEmpty()) {
         sb.append("<li>PROTOTYPES: ");
         Iterator<String> protoIter = node.prototypeNames.iterator();
         while (protoIter.hasNext()) {
@@ -1253,7 +1250,7 @@ final class NameAnalyzer implements CompilerPass {
       if (referenceGraph.hasNode(node)) {
         List<DiGraphEdge<JsName, RefType>> refersTo =
             referenceGraph.getOutEdges(node);
-        if (refersTo.size() > 0) {
+        if (!refersTo.isEmpty()) {
           sb.append("<li>REFERS TO: ");
           Iterator<DiGraphEdge<JsName, RefType>> toIter = refersTo.iterator();
           while (toIter.hasNext()) {
@@ -1266,7 +1263,7 @@ final class NameAnalyzer implements CompilerPass {
 
         List<DiGraphEdge<JsName, RefType>> referencedBy =
             referenceGraph.getInEdges(node);
-        if (referencedBy.size() > 0) {
+        if (!referencedBy.isEmpty()) {
           sb.append("<li>REFERENCED BY: ");
           Iterator<DiGraphEdge<JsName, RefType>> fromIter = refersTo.iterator();
           while (fromIter.hasNext()) {
@@ -1709,11 +1706,10 @@ final class NameAnalyzer implements CompilerPass {
   private int countOf(TriState isClass, TriState referenced) {
     int count = 0;
     for (JsName name : allNames.values()) {
+      boolean nodeIsClass = !name.prototypeNames.isEmpty();
 
-      boolean nodeIsClass = name.prototypeNames.size() > 0;
-
-      boolean classMatch = isClass == TriState.BOTH
-          || (nodeIsClass && isClass == TriState.TRUE)
+      boolean classMatch =
+          isClass == TriState.BOTH || (nodeIsClass && isClass == TriState.TRUE)
           || (!nodeIsClass && isClass == TriState.FALSE);
 
       boolean referenceMatch = referenced == TriState.BOTH

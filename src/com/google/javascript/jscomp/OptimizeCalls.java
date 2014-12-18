@@ -50,7 +50,7 @@ class OptimizeCalls implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    if (passes.size() > 0) {
+    if (!passes.isEmpty()) {
       SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
       defFinder.process(externs, root);
       for (CallGraphCompilerPass pass : passes) {

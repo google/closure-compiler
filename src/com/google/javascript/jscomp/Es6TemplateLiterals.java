@@ -139,7 +139,7 @@ class Es6TemplateLiterals {
    * removing line continuations.
    */
   private static String cookString(String s) {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     for (int i = 0; i < s.length();) {
       char c = s.charAt(i++);
       switch (c) {

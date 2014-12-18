@@ -265,17 +265,13 @@ public class PerformanceTracker {
       calcTotalStats();
 
       ArrayList<Entry<String, Stats>> statEntries = Lists.newArrayList();
-      for (Entry<String, Stats> entry : summary.entrySet()) {
-        statEntries.add(entry);
-      }
-      Collections.sort(statEntries,
-          new Comparator<Entry<String, Stats>>() {
-            @Override
-            public int compare(
-                Entry<String, Stats> e1, Entry<String, Stats> e2) {
-              return (int) (e1.getValue().runtime - e2.getValue().runtime);
-            }
-          });
+      statEntries.addAll(summary.entrySet());
+      Collections.sort(statEntries, new Comparator<Entry<String, Stats>>() {
+        @Override
+        public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
+          return (int) (e1.getValue().runtime - e2.getValue().runtime);
+        }
+      });
 
       output.write("Summary:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction\n");
@@ -285,17 +281,12 @@ public class PerformanceTracker {
         output.write(String.format("%s,%d,%d,%d,%d,%d\n", key, stats.runtime,
             stats.runs, stats.changes, stats.diff, stats.gzDiff));
       }
-      output.write("\nTOTAL:" +
-          "\nRuntime(ms): " + String.valueOf(runtime) +
-          "\n#Runs: " + String.valueOf(runs) +
-          "\n#Changing runs: " + String.valueOf(changes) +
-          "\n#Loopable runs: " + String.valueOf(loopRuns) +
-          "\n#Changing loopable runs: " + String.valueOf(loopChanges) +
-          "\nEstimated Reduction(bytes): " + String.valueOf(diff) +
-          "\nEstimated GzReduction(bytes): " + String.valueOf(gzDiff) +
-          "\nEstimated Size(bytes): " + String.valueOf(codeSize) +
-          "\nEstimated GzSize(bytes): " + String.valueOf(gzCodeSize) +
-          "\n\n");
+      output.write("\nTOTAL:"
+          + "\nRuntime(ms): " + runtime + "\n#Runs: " + runs
+          + "\n#Changing runs: " + changes + "\n#Loopable runs: " + loopRuns
+          + "\n#Changing loopable runs: " + loopChanges + "\nEstimated Reduction(bytes): " + diff
+          + "\nEstimated GzReduction(bytes): " + gzDiff + "\nEstimated Size(bytes): " + codeSize
+          + "\nEstimated GzSize(bytes): " + gzCodeSize + "\n\n");
 
       output.write("Log:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction,size,gzSize\n");
