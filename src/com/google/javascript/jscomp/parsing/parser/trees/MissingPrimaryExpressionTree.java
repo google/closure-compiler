@@ -16,17 +16,10 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.Token;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class MissingPrimaryExpressionTree extends ParseTree {
-
-  public final Token nextToken;
-
-  public MissingPrimaryExpressionTree(SourceRange location, Token nextToken) {
+  public MissingPrimaryExpressionTree(SourceRange location) {
     super(ParseTreeType.MISSING_PRIMARY_EXPRESSION, location);
-
-    this.nextToken = nextToken;
   }
-
 }

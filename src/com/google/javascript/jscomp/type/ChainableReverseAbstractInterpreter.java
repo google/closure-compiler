@@ -29,7 +29,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.CodingConvention;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumElementType;
@@ -53,7 +52,6 @@ import com.google.javascript.rhino.jstype.Visitor;
  */
 public abstract class ChainableReverseAbstractInterpreter
     implements ReverseAbstractInterpreter {
-  protected final CodingConvention convention;
   final JSTypeRegistry typeRegistry;
   private ChainableReverseAbstractInterpreter firstLink;
   private ChainableReverseAbstractInterpreter nextLink;
@@ -62,10 +60,7 @@ public abstract class ChainableReverseAbstractInterpreter
    * Constructs an interpreter, which is the only link in a chain. Interpreters
    * can be appended using {@link #append}.
    */
-  public ChainableReverseAbstractInterpreter(CodingConvention convention,
-      JSTypeRegistry typeRegistry) {
-    Preconditions.checkNotNull(convention);
-    this.convention = convention;
+  public ChainableReverseAbstractInterpreter(JSTypeRegistry typeRegistry) {
     this.typeRegistry = typeRegistry;
     firstLink = this;
     nextLink = null;

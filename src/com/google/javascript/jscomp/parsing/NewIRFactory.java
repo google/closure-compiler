@@ -1387,26 +1387,6 @@ class NewIRFactory {
           transform(exprNode.right));
     }
 
-    // Move this to a more maintainable location.
-    boolean isAssignmentOp(Node n) {
-      switch (n.getType()){
-        case Token.ASSIGN:
-        case Token.ASSIGN_BITOR:
-        case Token.ASSIGN_BITXOR:
-        case Token.ASSIGN_BITAND:
-        case Token.ASSIGN_LSH:
-        case Token.ASSIGN_RSH:
-        case Token.ASSIGN_URSH:
-        case Token.ASSIGN_ADD:
-        case Token.ASSIGN_SUB:
-        case Token.ASSIGN_MUL:
-        case Token.ASSIGN_DIV:
-        case Token.ASSIGN_MOD:
-          return true;
-      }
-      return false;
-    }
-
     @Override
     Node processDebuggerStatement(DebuggerStatementTree node) {
       return newNode(Token.DEBUGGER);
@@ -2000,13 +1980,6 @@ class NewIRFactory {
       errorReporter.error(
           "Unsupported syntax: " + node.type, sourceName, lineno(node), 0);
       return newNode(Token.EMPTY);
-    }
-
-    void reportDestructuringAssign(ParseTree node) {
-      errorReporter.error(
-          "destructuring assignment forbidden",
-          sourceName,
-          lineno(node), 0);
     }
 
     void reportGetter(ParseTree node) {

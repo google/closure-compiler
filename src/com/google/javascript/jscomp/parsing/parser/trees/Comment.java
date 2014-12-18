@@ -53,15 +53,7 @@ public class Comment {
     return location.start.offset;
   }
 
-  public int getLine() {
-    return location.start.line;
-  }
-
   public int getLength() {
     return location.end.offset - location.start.offset;
-  }
-
-  public String getText() {
-    return value;
   }
 }

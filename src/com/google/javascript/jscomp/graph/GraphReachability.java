@@ -86,16 +86,14 @@ public class GraphReachability<N, E> implements EdgeCallback<N, E> {
   public static final Annotation REACHABLE = new Annotation() {};
 
   /**
-   * Represents Source Node, Edge and Destination Node.
+   * Represents a Source Node and an Edge.
    */
   public static final class EdgeTuple<N, E> {
     public final N sourceNode;
     public final E edge;
-    public final N destNode;
     public EdgeTuple(N sourceNode, E edge, N destNode) {
       this.sourceNode = sourceNode;
       this.edge = edge;
-      this.destNode = destNode;
     }
   }
 }

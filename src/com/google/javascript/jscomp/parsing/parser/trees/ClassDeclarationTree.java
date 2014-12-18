@@ -21,9 +21,7 @@ import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class ClassDeclarationTree extends ParseTree {
-
   public final IdentifierToken name;
-  public final boolean isExpression;
   public final ParseTree superClass;
   public final ImmutableList<ParseTree> elements;
 
@@ -33,12 +31,7 @@ public class ClassDeclarationTree extends ParseTree {
     super(ParseTreeType.CLASS_DECLARATION, location);
 
     this.name = name;
-    this.isExpression = isExpression;
     this.superClass = superClass;
     this.elements = elements;
-  }
-
-  public String getClassName() {
-    return name.value;
   }
 }

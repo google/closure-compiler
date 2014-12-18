@@ -2648,10 +2648,6 @@ public final class JsDocInfoParser {
     return jsdocBuilder.isPopulatedWithFileOverview();
   }
 
-  boolean hasParsedJSDocInfo() {
-    return jsdocBuilder.isPopulated();
-  }
-
   JSDocInfo retrieveAndResetParsedJSDocInfo() {
     return jsdocBuilder.build(associatedNode);
   }

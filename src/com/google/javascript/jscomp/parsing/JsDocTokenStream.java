@@ -232,10 +232,7 @@ class JsDocTokenStream {
 
   final String getString() { return string; }
 
-  final boolean eof() { return hitEOF; }
-
   private String getStringFromBuffer() {
-    tokenEnd = cursor;
     String s = new String(stringBuffer, 0, stringBufferTop);
     return s.intern();
   }
@@ -261,7 +258,6 @@ class JsDocTokenStream {
   private boolean matchChar(int test) {
     int c = getCharIgnoreLineEnd();
     if (c == test) {
-      tokenEnd = cursor;
       return true;
     } else {
       ungetCharIgnoreLineEnd(c);
@@ -492,8 +488,4 @@ class JsDocTokenStream {
   // source stream, tracking exactly how far scanning has progressed.
   // Its value is the index of the next character to be scanned.
   int cursor;
-
-  // Record start and end positions of last scanned token.
-  int tokenBeg;
-  int tokenEnd;
 }

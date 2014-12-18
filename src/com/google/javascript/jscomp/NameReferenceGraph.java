@@ -270,10 +270,6 @@ class NameReferenceGraph extends
       }
     }
 
-    public boolean isCallable() {
-      return type.canBeCalled();
-    }
-
     public boolean exposedToCallOrApply() {
       return exposedToCallOrApply;
     }
@@ -290,21 +286,6 @@ class NameReferenceGraph extends
     @Override
     public int hashCode() {
       return qName.hashCode();
-    }
-
-    /**
-     * Returns true if the the arguments property is used in any of the function
-     * definition.
-     * Ex. function foo(a,b,c) {return arguments.size;};
-     * @return True is arguments is present in one of the definitions.
-     */
-    private boolean nameUsesArgumentsProperty() {
-      for (Definition definition : getDeclarations()) {
-        if (NodeUtil.isVarArgsFunction(definition.getRValue())) {
-          return true;
-        }
-      }
-      return false;
     }
   }
 

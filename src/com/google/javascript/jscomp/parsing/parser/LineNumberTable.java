@@ -93,11 +93,6 @@ public class LineNumberTable {
     return lineStartOffsets[line];
   }
 
-  public int getColumn(int offset) {
-    int line = getLine(offset);
-    return getColumn(line, offset);
-  }
-
   private int getColumn(int line, int offset) {
     return offset - offsetOfLine(line);
   }

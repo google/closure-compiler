@@ -855,7 +855,6 @@ public final class SimpleFormat {
             return;
         }
 
-        boolean requireScientificRepresentation = true;
         d = Math.abs(d);
         if (Double.isInfinite(d)) {
             precision = formatToken.getPrecision();

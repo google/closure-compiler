@@ -1272,11 +1272,9 @@ public class Compiler extends AbstractCompiler {
   public ReverseAbstractInterpreter getReverseAbstractInterpreter() {
     if (abstractInterpreter == null) {
       ChainableReverseAbstractInterpreter interpreter =
-          new SemanticReverseAbstractInterpreter(
-              getCodingConvention(), getTypeRegistry());
+          new SemanticReverseAbstractInterpreter(getTypeRegistry());
       if (options.closurePass) {
-        interpreter = new ClosureReverseAbstractInterpreter(
-            getCodingConvention(), getTypeRegistry())
+        interpreter = new ClosureReverseAbstractInterpreter(getTypeRegistry())
             .append(interpreter).getFirst();
       }
       abstractInterpreter = interpreter;

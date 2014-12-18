@@ -11425,8 +11425,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
     new TypeCheck(
         compiler,
-        new SemanticReverseAbstractInterpreter(
-            compiler.getCodingConvention(), registry),
+        new SemanticReverseAbstractInterpreter(registry),
         registry, topScope, scopeCreator, CheckLevel.WARNING)
         .process(null, second);
 
@@ -13269,12 +13268,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
         .process(null, n);
 
-    CodingConvention convention = compiler.getCodingConvention();
     new TypeCheck(compiler,
-        new ClosureReverseAbstractInterpreter(
-            convention, registry).append(
-                new SemanticReverseAbstractInterpreter(
-                    convention, registry))
+        new ClosureReverseAbstractInterpreter(registry).append(
+                new SemanticReverseAbstractInterpreter(registry))
             .getFirst(),
         registry)
         .processForTesting(null, n);
@@ -13424,8 +13420,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   private TypeCheck makeTypeCheck() {
     return new TypeCheck(
         compiler,
-        new SemanticReverseAbstractInterpreter(
-            compiler.getCodingConvention(), registry),
+        new SemanticReverseAbstractInterpreter(registry),
         registry,
         reportMissingOverrides);
   }

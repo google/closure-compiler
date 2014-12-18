@@ -46,9 +46,5 @@ public abstract class ErrorReporter {
     return hadError;
   }
 
-  public final void clearError() {
-    hadError = false;
-  }
-
   private boolean hadError;
 }

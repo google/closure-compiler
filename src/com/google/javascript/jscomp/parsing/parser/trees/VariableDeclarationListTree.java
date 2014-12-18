@@ -24,10 +24,6 @@ public class VariableDeclarationListTree extends ParseTree {
   public final TokenType declarationType; // const, var, let
   public final ImmutableList<VariableDeclarationTree> declarations;
 
-  public boolean isConst() {
-    return declarationType == TokenType.CONST;
-  }
-
   public VariableDeclarationListTree(
       SourceRange location, TokenType declarationType,
       ImmutableList<VariableDeclarationTree> declarations) {

@@ -371,12 +371,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return this;
     }
 
-    /** Set the original path to use. */
-    public Builder withOriginalPath(String originalPath) {
-      this.originalPath = originalPath;
-      return this;
-    }
-
     public SourceFile buildFromFile(String fileName) {
       return buildFromFile(new File(fileName));
     }

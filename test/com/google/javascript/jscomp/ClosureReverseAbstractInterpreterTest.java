@@ -279,10 +279,9 @@ public class ClosureReverseAbstractInterpreterTest extends
     assertEquals(Token.CALL, call.getType());
     assertEquals(Token.NAME, name.getType());
 
-    GoogleCodingConvention convention = new GoogleCodingConvention();
     flowScope.inferSlotType("a", type);
     ClosureReverseAbstractInterpreter rai =
-        new ClosureReverseAbstractInterpreter(convention, registry);
+        new ClosureReverseAbstractInterpreter(registry);
 
     // trueScope
     Asserts.assertTypeEquals(

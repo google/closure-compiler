@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.type;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
-import com.google.javascript.jscomp.CodingConvention;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -115,9 +114,8 @@ public class SemanticReverseAbstractInterpreter
   /**
    * Creates a semantic reverse abstract interpreter.
    */
-  public SemanticReverseAbstractInterpreter(CodingConvention convention,
-      JSTypeRegistry typeRegistry) {
-    super(convention, typeRegistry);
+  public SemanticReverseAbstractInterpreter(JSTypeRegistry typeRegistry) {
+    super(typeRegistry);
   }
 
   @Override

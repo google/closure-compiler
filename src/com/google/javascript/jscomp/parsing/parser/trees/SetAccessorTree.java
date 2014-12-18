@@ -40,8 +40,4 @@ public class SetAccessorTree extends ParseTree {
     this.parameter = parameter;
     this.body = body;
   }
-
-  public String getParameterName() {
-    return parameter.value;
-  }
 }

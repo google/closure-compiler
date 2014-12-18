@@ -28,15 +28,6 @@ public class FormalParameterListTree extends ParseTree {
     this.parameters = parameters;
   }
 
-  public RestParameterTree getRestParameter() {
-    if (hasRestParameter()) {
-      return getLastParameter().asRestParameter();
-    } else {
-      throw new IllegalStateException(
-          "formal parameter list has no rest parameter");
-    }
-  }
-
   public boolean hasRestParameter() {
     return !parameters.isEmpty() && getLastParameter().isRestParameter();
   }

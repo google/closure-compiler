@@ -389,8 +389,7 @@ public abstract class CompilerTestCase extends TestCase  {
   private static TypeCheck createTypeCheck(Compiler compiler,
       CheckLevel level) {
     ReverseAbstractInterpreter rai =
-        new SemanticReverseAbstractInterpreter(compiler.getCodingConvention(),
-            compiler.getTypeRegistry());
+        new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
 
     return new TypeCheck(compiler, rai, compiler.getTypeRegistry(), level);
   }

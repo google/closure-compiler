@@ -119,7 +119,6 @@ public class ParserRunner {
     private ErrorReporter reporter;
     private boolean errorSeen = false;
     private boolean isIdeMode;
-    private SourceFile source;
 
     Es6ErrorReporter(
         ErrorReporter reporter,
@@ -127,7 +126,6 @@ public class ParserRunner {
         Config config) {
       this.reporter = reporter;
       this.isIdeMode = config.isIdeMode;
-      this.source = source;
     }
 
     @Override

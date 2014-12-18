@@ -121,12 +121,6 @@ public class JSModule implements DependencyInfo, Serializable {
     input.overrideModule(this);
   }
 
-  /** Adds a source code input to this module. */
-  public void addFirst(CompilerInput input) {
-    inputs.add(0, input);
-    input.setModule(this);
-  }
-
   /** Adds a source code input to this module directly after other. */
   public void addAfter(CompilerInput input, CompilerInput other) {
     Preconditions.checkState(inputs.contains(other));

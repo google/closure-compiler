@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
-import com.google.javascript.jscomp.CodingConvention;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
@@ -121,12 +120,8 @@ public class ClosureReverseAbstractInterpreter
   /** Functions used to restrict types. */
   private Map<String, Function<TypeRestriction, JSType>> restricters;
 
-  /**
-   * Creates a {@link ClosureReverseAbstractInterpreter}.
-   */
-  public ClosureReverseAbstractInterpreter(CodingConvention convention,
-      final JSTypeRegistry typeRegistry) {
-    super(convention, typeRegistry);
+  public ClosureReverseAbstractInterpreter(final JSTypeRegistry typeRegistry) {
+    super(typeRegistry);
     this.restricters =
       new ImmutableMap.Builder<String, Function<TypeRestriction, JSType>>()
       .put("isDef", new Function<TypeRestriction, JSType>() {

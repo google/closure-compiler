@@ -1709,9 +1709,9 @@ public class Parser {
 
   private ParseTree parseMissingPrimaryExpression() {
     SourcePosition start = getTreeStartLocation();
-    Token token = nextToken();
+    nextToken();
     reportError("primary expression expected");
-    return new MissingPrimaryExpressionTree(getTreeLocation(start), token);
+    return new MissingPrimaryExpressionTree(getTreeLocation(start));
   }
 
   /**

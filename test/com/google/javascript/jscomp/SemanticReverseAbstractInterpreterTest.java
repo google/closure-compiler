@@ -29,16 +29,14 @@ import java.util.Collection;
 
 public class SemanticReverseAbstractInterpreterTest
     extends CompilerTypeTestCase {
-  private CodingConvention codingConvention = new GoogleCodingConvention();
-  private ReverseAbstractInterpreter interpreter;
+{ new GoogleCodingConvention(); }  private ReverseAbstractInterpreter interpreter;
   private Scope functionScope;
 
   @Override
   protected void setUp() {
     super.setUp();
 
-    interpreter = new SemanticReverseAbstractInterpreter(
-        codingConvention, registry);
+    interpreter = new SemanticReverseAbstractInterpreter(registry);
   }
 
   public FlowScope newScope() {
