@@ -47,7 +47,7 @@ class PrepareAst implements CompilerPass {
 
   private void reportChange() {
     if (checkOnly) {
-      Preconditions.checkState(false, "normalizeNodeType constraints violated");
+      throw new IllegalStateException("normalizeNodeType constraints violated");
     }
   }
 

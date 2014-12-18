@@ -432,7 +432,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         def.removeChild(rhs);
         useParent.replaceChild(use, rhs);
       } else {
-        Preconditions.checkState(false, "No other definitions can be inlined.");
+        throw new IllegalStateException("No other definitions can be inlined.");
       }
       compiler.reportCodeChange();
     }

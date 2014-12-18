@@ -260,7 +260,7 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
         }
       } else {
         // Not reachable.
-        Preconditions.checkState(false, "Unknown statement");
+        throw new IllegalStateException("Unknown statement");
       }
 
       compiler.reportCodeChange();

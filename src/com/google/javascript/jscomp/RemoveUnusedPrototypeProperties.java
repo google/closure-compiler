@@ -128,7 +128,7 @@ class RemoveUnusedPrototypeProperties implements
 
       return null;
     } else {
-      Preconditions.checkState(false, "Should be unreachable.");
+      throw new IllegalStateException("Should be unreachable.");
     }
 
     if (specializableFunction != null &&
