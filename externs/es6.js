@@ -14,6 +14,49 @@
  * limitations under the License.
  */
 
+// TODO(johnlenz): symbol should be a primitive type.
+/** @typedef {?} */
+var symbol;
+
+/**
+ * @param {string} description
+ * @return {symbol}
+ */
+function Symbol(description) {}
+
+/** @const {symbol} */
+Symbol.iterator;
+
+
+/**
+ * @interface
+ * @template VALUE
+ */
+var Iterable;
+
+// TODO(johnlenz): remove this when the compiler understands "symbol" natively
+/**
+ * @return {Iterator.<VALUE>}
+ * @suppress {externsValidation}
+ */
+Iterable[Symbol.iterator] = function() {};
+
+
+
+// TODO(johnlenz): Iterator should be a templated record type.
+/**
+ * @interface
+ * @template VALUE
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
+ */
+var Iterator;
+
+/**
+ * @return {{value:VALUE, done:boolean}}
+ */
+Iterator.prototype.next;
+
+
 /**
  * @fileoverview Definitions for ECMAScript 6.
  * @see http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts
