@@ -8107,7 +8107,7 @@ chrome.bluetoothPrivate.onPairing;
 
 /**
  * @const
- * @see http://goo.gl/nvlmVv
+ * @see http://goo.gl/XmVdHm
  */
 chrome.inlineInstallPrivate = {};
 
