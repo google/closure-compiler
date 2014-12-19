@@ -445,7 +445,11 @@ public class JsMessage {
     private static String fingerprint(List<CharSequence> messageParts) {
       StringBuilder sb = new StringBuilder();
       for (CharSequence part : messageParts) {
-        sb.append(part);
+        if (part instanceof JsMessage.PlaceholderReference) {
+          sb.append(part.toString());
+        } else {
+          sb.append(part);
+        }
       }
       long nonnegativeHash = Long.MAX_VALUE & Hash.hash64(sb.toString());
       return Long.toString(nonnegativeHash, 36).toUpperCase();
