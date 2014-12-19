@@ -22,9 +22,12 @@
  * @externs
  */
 
+
 /**
- * @type {Object}
- * @const
+ * Suppresses the compiler warning when multiple externs files declare the
+ * ui namespace.
+ * @suppress {duplicate}
+ * @noalias
  */
 var ui = {};
 
@@ -90,10 +93,12 @@ ui.router.$stateParams;
 ui.router.State;
 
 
+
 /**
  * @constructor
  */
 ui.router.$urlMatcherFactory = function() {};
+
 
 
 /**
@@ -120,6 +125,7 @@ ui.router.$urlRouterProvider.prototype.otherwise = function(path) {};
  * @param {function(...)} rule
  */
 ui.router.$urlRouterProvider.prototype.rule = function(rule) {};
+
 
 
 /**
