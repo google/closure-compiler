@@ -861,7 +861,7 @@ public class Parser {
 
     SourcePosition start = getTreeStartLocation();
     ParseTree lvalue;
-    if (peekPattern(PatternKind.INITIALIZER)) {
+    if (peekPatternStart()) {
       lvalue = parsePattern(PatternKind.INITIALIZER);
     } else {
       lvalue = parseIdentifierExpression();
@@ -998,6 +998,7 @@ public class Parser {
     }
 
     Predicate<Token> followPred = new Predicate<Token>() {
+      @Override
       public boolean apply(Token t) {
         return EnumSet.of(TokenType.IN, TokenType.EQUAL).contains(t.type)
             || (t.type == TokenType.IDENTIFIER
@@ -1238,7 +1239,7 @@ public class Parser {
     eat(TokenType.CATCH);
     eat(TokenType.OPEN_PAREN);
     ParseTree exception;
-    if (peekPattern(PatternKind.INITIALIZER)) {
+    if (peekPatternStart()) {
       exception = parsePattern(PatternKind.INITIALIZER);
     } else {
       exception = parseIdentifierExpression();
@@ -2239,7 +2240,7 @@ public class Parser {
    * Whether we have a spread expression or an assignment next.
    *
    * This does not peek the operand for the spread expression. This means that
-   * {@link parseAssignmentOrSpread} might still fail when this returns true.
+   * {@link #parseAssignmentOrSpread} might still fail when this returns true.
    */
   private boolean peekAssignmentOrSpread() {
     return peek(TokenType.SPREAD) || peekAssignmentExpression();
@@ -2582,7 +2583,7 @@ public class Parser {
 
   /**
    * Consumes an identifier token that is not a reserved word.
-   * @see http://www.ecma-international.org/ecma-262/5.1/#sec-7.6
+   * @see "http://www.ecma-international.org/ecma-262/5.1/#sec-7.6"
    */
   private IdentifierToken eatId() {
     if (peekId()) {
@@ -2608,7 +2609,7 @@ public class Parser {
   /**
    * Consumes an identifier token that may be a reserved word, i.e.
    * an IdentifierName, not necessarily an Identifier.
-   * @see http://www.ecma-international.org/ecma-262/5.1/#sec-7.6
+   * @see "http://www.ecma-international.org/ecma-262/5.1/#sec-7.6"
    */
   private IdentifierToken eatIdOrKeywordAsId() {
     Token token = nextToken();

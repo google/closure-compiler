@@ -1202,10 +1202,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testArrayDestructuringTrailingComma() {
     mode = LanguageMode.ECMASCRIPT6;
-    // TODO(tbreisacher): Make this error clearer. The error we want
-    // ("Array pattern may not end with a comma") is reported in a
-    // lookahead parser so it doesn't get reported to the user.
-    parseError("var [x,] = ['x',];", "'identifier' expected");
+    parseError("var [x,] = ['x',];", "Array pattern may not end with a comma");
   }
 
   public void testArrayDestructuringRest() {
@@ -1214,9 +1211,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("let [first, ...rest] = foo();");
     parse("const [first, ...rest] = foo();");
 
-    // TODO(tbreisacher): Make these errors clearer.
-    parseError("var [first, ...more, last] = foo();", "'identifier' expected");
-    parseError("var [first, ...[re, st]] = foo();", "'identifier' expected");
+    parseError("var [first, ...more, last] = foo();", "']' expected");
+    parseError("var [first, ...[re, st]] = foo();", "lvalues in rest elements must be identifiers");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",
@@ -1282,7 +1278,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testObjectDestructuringWithInitializerInvalid() {
-    parseError("var {{x}} = foo();", "'identifier' expected");
+    parseError("var {{x}} = foo();", "'}' expected");
     parseError("({{x}}) = foo();", "'}' expected");
     parseError("({{a} = {a: 'b'}}) = foo();", "'}' expected");
     parseError("({{a : b} = {a: 'b'}}) = foo();", "'}' expected");
@@ -1300,7 +1296,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {[x]: y} = z;");
     parse("var { [foo()] : [x,y,z] = bar() } = baz();");
-    parseError("var {[x]} = z;", "'identifier' expected");
+    parseError("var {[x]} = z;", "':' expected");
   }
 
   public void testObjectDestructuringStringAndNumberKeys() {
@@ -1308,27 +1304,27 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("var {'s': x} = foo();");
     parse("var {3: x} = foo();");
 
-    parseError("var { 'hello world' } = foo();", "'identifier' expected");
-    parseError("var { 4 } = foo();", "'identifier' expected");
-    parseError("var { 'hello' = 'world' } = foo();", "'identifier' expected");
-    parseError("var { 2 = 5 } = foo();", "'identifier' expected");
+    parseError("var { 'hello world' } = foo();", "':' expected");
+    parseError("var { 4 } = foo();", "':' expected");
+    parseError("var { 'hello' = 'world' } = foo();", "':' expected");
+    parseError("var { 2 = 5 } = foo();", "':' expected");
   }
 
   public void testObjectDestructuringKeywordKeys() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {if: x, else: y} = foo();");
     parse("var {while: x=1, for: y} = foo();");
-    parseError("var {while} = foo();", "'identifier' expected");
-    parseError("var {implements} = foo();", "'identifier' expected");
+    parseError("var {while} = foo();", "cannot use keyword 'while' here.");
+    parseError("var {implements} = foo();", "cannot use keyword 'implements' here.");
   }
 
   public void testObjectDestructuringComplexTarget() {
     mode = LanguageMode.ECMASCRIPT6;
-    parseError("var {foo: bar.x} = baz();", "'identifier' expected");
+    parseError("var {foo: bar.x} = baz();", "'}' expected");
     parse("({foo: bar.x} = baz());");
     parse("for ({foo: bar.x} in baz());");
 
-    parseError("var {foo: bar[x]} = baz();", "'identifier' expected");
+    parseError("var {foo: bar[x]} = baz();", "'}' expected");
     parse("({foo: bar[x]} = baz());");
     parse("for ({foo: bar[x]} in baz());");
   }
