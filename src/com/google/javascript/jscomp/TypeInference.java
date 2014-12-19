@@ -1038,7 +1038,7 @@ class TypeInference
     }
 
     if (bind.thisValue != null && target.isFunction()) {
-      JSType thisType = bind.thisValue.getJSType();
+      JSType thisType = getJSType(bind.thisValue);
       if (thisType.toObjectType() != null && !thisType.isUnknownType()
           && callTargetFn.getTypeOfThis().isUnknownType()) {
         callTargetFn = new FunctionBuilder(registry)
