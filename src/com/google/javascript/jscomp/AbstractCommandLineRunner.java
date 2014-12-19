@@ -346,8 +346,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       if (languageMode != null) {
         options.setLanguageIn(languageMode);
       } else {
-        throw new FlagUsageException("Unknown language `" + config.languageIn +
-                                     "' specified.");
+        throw new FlagUsageException("Unknown language `" + config.languageIn
+                                     + "' specified.");
       }
     }
 
@@ -539,7 +539,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     Preconditions.checkState(!specs.isEmpty());
     Preconditions.checkState(jsFiles != null);
 
-    List<String> moduleNames = new ArrayList<>(specs.size()); 
+    List<String> moduleNames = new ArrayList<>(specs.size());
     Map<String, JSModule> modulesByName = Maps.newLinkedHashMap();
     Map<String, Integer> modulesFileCountMap = Maps.newLinkedHashMap();
     int numJsFilesExpected = 0, minJsFilesRequired = 0;
@@ -559,7 +559,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         throw new FlagUsageException("Duplicate module name: " + name);
       }
       JSModule module = new JSModule(name);
-      
+
       if (parts.length > 2) {
         // Parse module dependencies.
         String depList = parts[2];
@@ -576,7 +576,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           }
         }
       }
-      
+
       // Parse module inputs.
       int numJsFiles = -1;
       try {
@@ -604,12 +604,12 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         minJsFilesRequired += numJsFiles;
       }
-      
-      
+
+
       if (numJsFilesExpected >= 0) {
         numJsFilesExpected += numJsFiles;
       }
-      
+
       // Add modules in reverse order so that source files are allocated to
       // modules in reverse order. This allows the first module
       // (presumably the base module) to have a size of 'auto'
@@ -617,15 +617,15 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       modulesFileCountMap.put(name, numJsFiles);
       modulesByName.put(name, module);
     }
-        
+
     final int totalNumJsFiles = jsFiles.size();
-    
+
     if (numJsFilesExpected >= 0 || minJsFilesRequired > totalNumJsFiles) {
       if (minJsFilesRequired > totalNumJsFiles) {
         numJsFilesExpected = minJsFilesRequired;
       }
-      
-      if (numJsFilesExpected > totalNumJsFiles) {        
+
+      if (numJsFilesExpected > totalNumJsFiles) {
         throw new FlagUsageException("Not enough JS files specified. Expected "
             + numJsFilesExpected + " but found " + totalNumJsFiles);
       } else if (numJsFilesExpected < totalNumJsFiles) {
@@ -633,9 +633,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
                 + numJsFilesExpected + " but found " + totalNumJsFiles);
       }
     }
-    
+
     int numJsFilesLeft = totalNumJsFiles, moduleIndex = 0;
-    for(String moduleName : moduleNames) {
+    for (String moduleName : moduleNames) {
       // Parse module inputs.
       int numJsFiles = modulesFileCountMap.get(moduleName);
       JSModule module = modulesByName.get(moduleName);
@@ -644,7 +644,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       if (moduleIndex == moduleNames.size() - 1 && numJsFiles == -1) {
         numJsFiles = numJsFilesLeft;
       }
-      
+
       List<String> moduleJsFiles =
           jsFiles.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
       for (SourceFile input : createInputs(moduleJsFiles, false)) {
