@@ -393,6 +393,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.angularPass = config.angularPass;
     options.tracer = config.tracerMode;
     options.useNewTypeInference = config.useNewTypeInference;
+    options.renamePrefixNamespace = config.renamePrefixNamespace;
   }
 
   protected final A getCompiler() {
