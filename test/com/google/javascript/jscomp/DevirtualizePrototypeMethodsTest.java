@@ -469,6 +469,12 @@ public class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     testSame(source);
   }
 
+  public void testRewriteImplementedMethod5() throws Exception {
+    String source = newlineJoin(
+        "(function() {this.foo()}).prototype.foo = function() {extern();};");
+    testSame(source);
+  }
+
   public void testRewriteImplementedMethodInObj() throws Exception {
     String source = newlineJoin(
         "function a(){}",

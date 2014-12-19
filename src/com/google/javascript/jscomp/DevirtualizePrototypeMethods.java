@@ -246,18 +246,26 @@ class DevirtualizePrototypeMethods
     // Functions that access "arguments" are not eligible since
     // rewrite changes the structure of this object.
     Node rValue = definition.getRValue();
-    if (rValue == null ||
-        !rValue.isFunction() ||
-        NodeUtil.isVarArgsFunction(rValue)) {
+    if (rValue == null
+        || !rValue.isFunction()
+        || NodeUtil.isVarArgsFunction(rValue)) {
+      return false;
+    }
+
+    Node lValue = definition.getLValue();
+    if ((lValue == null)
+        || !lValue.isGetProp()) {
+      return false;
+    }
+
+    // Note: the definition for prototype defined with an object literal returns
+    // a mock return LValue of the form "{}.prop".
+    if (!lValue.isQualifiedName()
+        && !lValue.getFirstChild().isObjectLit()) {
       return false;
     }
 
     // Exporting a method prevents rewrite.
-    Node lValue = definition.getLValue();
-    if ((lValue == null) ||
-        !lValue.isGetProp()) {
-      return false;
-    }
     CodingConvention codingConvention = compiler.getCodingConvention();
     if (codingConvention.isExported(lValue.getLastChild().getString())) {
       return false;
