@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -127,7 +127,7 @@ public abstract class GraphColoring<N, E> {
 
     @Override
     public int color() {
-      List<GraphNode<N, E>> worklist = Lists.newArrayList(graph.getNodes());
+      List<GraphNode<N, E>> worklist = new ArrayList<>(graph.getNodes());
 
       // Sort nodes by degree.
       Collections.sort(worklist, new Comparator<GraphNode<N, E>>() {

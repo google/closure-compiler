@@ -40,13 +40,12 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /**
@@ -211,18 +210,18 @@ class AmbiguateProperties implements CompilerPass {
 
     int numRenamedPropertyNames = 0;
     int numSkippedPropertyNames = 0;
-    Set<Property> propsByFreq = new TreeSet<>(FREQUENCY_COMPARATOR);
-    for (Property p : propertyMap.values()) {
-      if (p.skipAmbiguating) {
+    ArrayList<PropertyGraphNode> nodes = new ArrayList<>(propertyMap.size());
+    for (Property prop : propertyMap.values()) {
+      if (prop.skipAmbiguating) {
         ++numSkippedPropertyNames;
-        reservedNames.add(p.oldName);
+        reservedNames.add(prop.oldName);
       } else {
         ++numRenamedPropertyNames;
-        propsByFreq.add(p);
+        nodes.add(new PropertyGraphNode(prop));
       }
     }
 
-    PropertyGraph graph = new PropertyGraph(propsByFreq);
+    PropertyGraph graph = new PropertyGraph(nodes);
     GraphColoring<Property, Void> coloring =
         new GreedyGraphColoring<>(graph, FREQUENCY_COMPARATOR);
     int numNewPropertyNames = coloring.color();
@@ -236,7 +235,7 @@ class AmbiguateProperties implements CompilerPass {
     }
 
     // Translate the color of each Property instance to a name.
-    for (PropertyGraphNode node : graph.getNodesWithoutCopy()) {
+    for (PropertyGraphNode node : graph.getNodes()) {
       node.getValue().newName = colorMap[node.getAnnotation().hashCode()];
       if (renamingMap != null) {
         renamingMap.put(node.getValue().oldName, node.getValue().newName);
@@ -355,26 +354,20 @@ class AmbiguateProperties implements CompilerPass {
   }
 
   class PropertyGraph implements AdjacencyGraph<Property, Void> {
-    protected final Map<Property, PropertyGraphNode> nodes = Maps.newHashMap();
+    private final ArrayList<PropertyGraphNode> nodes;
 
-    PropertyGraph(Collection<Property> props) {
-      for (Property prop : props) {
-        nodes.put(prop, new PropertyGraphNode(prop));
-      }
-    }
-
-    Collection<PropertyGraphNode> getNodesWithoutCopy() {
-      return nodes.values();
+    PropertyGraph(ArrayList<PropertyGraphNode> nodes) {
+      this.nodes = nodes;
     }
 
     @Override
-    public List<GraphNode<Property, Void>> getNodes() {
-      return Lists.<GraphNode<Property, Void>>newArrayList(nodes.values());
+    public List<PropertyGraphNode> getNodes() {
+      return nodes;
     }
 
     @Override
     public GraphNode<Property, Void> getNode(Property property) {
-      return nodes.get(property);
+      throw new RuntimeException("PropertyGraph#getNode is never called.");
     }
 
     @Override
@@ -384,7 +377,7 @@ class AmbiguateProperties implements CompilerPass {
 
     @Override
     public void clearNodeAnnotations() {
-      for (PropertyGraphNode node : nodes.values()) {
+      for (PropertyGraphNode node : nodes) {
         node.setAnnotation(null);
       }
     }
