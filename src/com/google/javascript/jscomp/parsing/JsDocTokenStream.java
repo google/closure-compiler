@@ -345,7 +345,6 @@ class JsDocTokenStream {
     for (;;) {
       int c;
       if (sourceCursor == sourceEnd) {
-        hitEOF = true;
         if (charno == -1) {
           charno = getOffset();
         }
@@ -401,7 +400,6 @@ class JsDocTokenStream {
     for (;;) {
       int c;
       if (sourceCursor == sourceEnd) {
-        hitEOF = true;
         if (charno == -1) {
           charno = getOffset();
         }
@@ -467,8 +465,6 @@ class JsDocTokenStream {
   // Room to backtrace from to < on failed match of the last - in <!--
   private final int[] ungetBuffer = new int[3];
   private int ungetCursor;
-
-  private boolean hitEOF = false;
 
   private int lineStart = 0;
   private int lineEndChar = -1;
