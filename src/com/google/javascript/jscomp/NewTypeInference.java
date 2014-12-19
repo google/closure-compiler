@@ -1088,9 +1088,14 @@ public class NewTypeInference implements CompilerPass {
       case Token.DEC:
         return analyzeIncDecFwd(expr, inEnv, requiredType);
       case Token.BITNOT:
-      case Token.POS:
       case Token.NEG:
         return analyzeUnaryNumFwd(expr, inEnv);
+      case Token.POS: {
+        // We are more permissive with +, because it is used to coerce to number
+        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+        pair.type = JSType.NUMBER;
+        return pair;
+      }
       case Token.TYPEOF: {
         EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
         pair.type = JSType.STRING;
@@ -1379,6 +1384,11 @@ public class NewTypeInference implements CompilerPass {
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.NUM_OR_STR);
     JSType lhsType = lhsPair.type;
     JSType rhsType = rhsPair.type;
+    if (lhsType.isString() || rhsType.isString()) {
+      // Don't warn, since '' + expr is used for type coercions
+      rhsPair.type = JSType.STRING;
+      return rhsPair;
+    }
     if (!commonTypes.isNumStrScalarOrObj(lhsType)) {
       warnInvalidOperand(lhs, expr.getType(), JSType.NUM_OR_STR, lhsType);
     }
@@ -2647,9 +2657,13 @@ public class NewTypeInference implements CompilerPass {
       case Token.INC:
       case Token.DEC:
       case Token.BITNOT:
-      case Token.POS:
       case Token.NEG: // Unary operations on numbers
         return analyzeExprBwd(expr.getFirstChild(), outEnv, JSType.NUMBER);
+      case Token.POS: {
+        EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
+        pair.type = JSType.NUMBER;
+        return pair;
+      }
       case Token.TYPEOF: {
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
         pair.type = JSType.STRING;

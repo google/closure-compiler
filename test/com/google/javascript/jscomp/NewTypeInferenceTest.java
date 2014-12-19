@@ -730,7 +730,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var y = 123; var x; var z = x - y;",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    typeCheck("+true;", NewTypeInference.INVALID_OPERAND_TYPE);
+    checkNoWarnings("+true;"); // This is considered an explicit coercion
 
     typeCheck("true + 5;", NewTypeInference.INVALID_OPERAND_TYPE);
 
@@ -4720,6 +4720,31 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
 
     typeCheck(
         "var s = 'asdf'; s += true;", NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
+  public void testTypeCoercions() {
+    typeCheck(
+        "function f(/** * */ x) {\n"
+        + "  var /** string */ s = !x;\n"
+        + "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "function f(/** * */ x) {\n"
+        + "  var /** string */ s = +x;\n"
+        + "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    checkNoWarnings(
+        "function f(/** * */ x) {\n"
+        + "  var /** string */ s = '' + x;\n"
+        + "}");
+
+    typeCheck(
+        "function f(/** * */ x) {\n"
+        + "  var /** number */ s = '' + x;\n"
+        + "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testSwitch() {

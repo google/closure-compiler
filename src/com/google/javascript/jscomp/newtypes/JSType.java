@@ -202,6 +202,10 @@ public abstract class JSType {
     return (getMask() & ~BOOLEAN_MASK) == 0 && (getMask() & BOOLEAN_MASK) != 0;
   }
 
+  public boolean isString() {
+    return STRING_MASK == getMask();
+  }
+
   public boolean isNullOrUndef() {
     int nullUndefMask = NULL_MASK | UNDEFINED_MASK;
     return getMask() != 0 && (getMask() | nullUndefMask) == nullUndefMask;
