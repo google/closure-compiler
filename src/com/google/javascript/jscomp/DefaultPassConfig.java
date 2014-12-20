@@ -276,7 +276,8 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(suspiciousCode);
     }
 
-    if (options.checkRequires.isOn()) {
+    if (options.checkRequires.isOn()
+        || options.enables(DiagnosticGroups.MISSING_REQUIRE)) {
       checks.add(checkRequires);
     }
 
@@ -947,7 +948,7 @@ public class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkRequires", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new CheckRequiresForConstructors(compiler, options.checkRequires);
+      return new CheckRequiresForConstructors(compiler, CheckLevel.WARNING);
     }
   };
 

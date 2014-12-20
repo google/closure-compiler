@@ -195,8 +195,10 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /** Checks for missing goog.require() calls **/
+  @Deprecated
   public CheckLevel checkRequires;
 
+  @Deprecated
   public void setCheckRequires(CheckLevel level) {
     checkRequires = level;
   }
