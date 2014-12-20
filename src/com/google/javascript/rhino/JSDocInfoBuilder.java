@@ -611,6 +611,10 @@ final public class JSDocInfoBuilder {
     }
   }
 
+  // TODO(tbreisacher): Disallow nullable types here. If someone writes
+  // "@this {Foo}" in their JS we automatically treat it as though they'd written
+  // "@this {!Foo}". But, if the type node is created in the compiler
+  // (e.g. in the WizPass) we should explicitly add the '!'
   /**
    * Records a type for {@code @this} annotation.
    *
