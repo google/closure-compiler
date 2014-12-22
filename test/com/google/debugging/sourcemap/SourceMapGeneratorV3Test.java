@@ -16,7 +16,7 @@
 
 package com.google.debugging.sourcemap;
 
-import static junit.framework.Assert.assertFalse;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

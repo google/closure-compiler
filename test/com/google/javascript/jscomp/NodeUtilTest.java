@@ -1581,15 +1581,15 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testValidNames() {
-    assertTrue(NodeUtil.isValidPropertyName("a"));
-    assertTrue(NodeUtil.isValidPropertyName("a3"));
-    assertFalse(NodeUtil.isValidPropertyName("3a"));
-    assertFalse(NodeUtil.isValidPropertyName("a."));
-    assertFalse(NodeUtil.isValidPropertyName(".a"));
-    assertFalse(NodeUtil.isValidPropertyName("a.b"));
-    assertFalse(NodeUtil.isValidPropertyName("true"));
-    assertFalse(NodeUtil.isValidPropertyName("a.true"));
-    assertFalse(NodeUtil.isValidPropertyName("a..b"));
+    assertTrue(isValidPropertyName("a"));
+    assertTrue(isValidPropertyName("a3"));
+    assertFalse(isValidPropertyName("3a"));
+    assertFalse(isValidPropertyName("a."));
+    assertFalse(isValidPropertyName(".a"));
+    assertFalse(isValidPropertyName("a.b"));
+    assertFalse(isValidPropertyName("true"));
+    assertFalse(isValidPropertyName("a.true"));
+    assertFalse(isValidPropertyName("a..b"));
 
     assertTrue(NodeUtil.isValidSimpleName("a"));
     assertTrue(NodeUtil.isValidSimpleName("a3"));
@@ -1601,15 +1601,15 @@ public class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isValidSimpleName("a.true"));
     assertFalse(NodeUtil.isValidSimpleName("a..b"));
 
-    assertTrue(NodeUtil.isValidQualifiedName("a"));
-    assertTrue(NodeUtil.isValidQualifiedName("a3"));
-    assertFalse(NodeUtil.isValidQualifiedName("3a"));
-    assertFalse(NodeUtil.isValidQualifiedName("a."));
-    assertFalse(NodeUtil.isValidQualifiedName(".a"));
-    assertTrue(NodeUtil.isValidQualifiedName("a.b"));
-    assertFalse(NodeUtil.isValidQualifiedName("true"));
-    assertFalse(NodeUtil.isValidQualifiedName("a.true"));
-    assertFalse(NodeUtil.isValidQualifiedName("a..b"));
+    assertTrue(isValidQualifiedName("a"));
+    assertTrue(isValidQualifiedName("a3"));
+    assertFalse(isValidQualifiedName("3a"));
+    assertFalse(isValidQualifiedName("a."));
+    assertFalse(isValidQualifiedName(".a"));
+    assertTrue(isValidQualifiedName("a.b"));
+    assertFalse(isValidQualifiedName("true"));
+    assertFalse(isValidQualifiedName("a.true"));
+    assertFalse(isValidQualifiedName("a..b"));
   }
 
   public void testGetNearestFunctionName() {
@@ -1782,5 +1782,13 @@ public class NodeUtilTest extends TestCase {
       }
     }
     return null;
+  }
+
+  static boolean isValidPropertyName(String s) {
+    return NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, s);
+  }
+
+  static boolean isValidQualifiedName(String s) {
+    return NodeUtil.isValidQualifiedName(LanguageMode.ECMASCRIPT3, s);
   }
 }

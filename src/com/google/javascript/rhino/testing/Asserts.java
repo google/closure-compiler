@@ -39,14 +39,14 @@
 
 package com.google.javascript.rhino.testing;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticScope;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import java.util.Iterator;
 

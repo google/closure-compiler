@@ -138,6 +138,7 @@
            destdir="${classes.dir}"
            excludes=".svn,.git"
            debug="${javac.debug}"
+           deprecation="on"
            includeantruntime="false">
       <classpath refid="srcclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
@@ -146,6 +147,7 @@
            destdir="${classes.dir}"
            excludes=".svn,.git,**/refactoring/**,**/webservice/**,**/testing/**"
            debug="${javac.debug}"
+           deprecation="on"
            includeantruntime="true">
       <classpath refid="srcclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
@@ -202,6 +204,7 @@
            destdir="${testClasses.dir}"
            excludes=".svn,.git"
            debug="on"
+           deprecation="on"
            includeantruntime="false">
       <classpath refid="allclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
@@ -210,6 +213,7 @@
            destdir="${testClasses.dir}"
            excludes=".svn,.git"
            debug="on"
+           deprecation="on"
            includeantruntime="false">
       <classpath refid="allclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
@@ -342,7 +346,8 @@
     <javac srcdir="${webservice.dir}"
            destdir="${webservice-classes.dir}"
            excludes=".svn,.git"
-           debug="${javac.debug}">
+           debug="${javac.debug}"
+           deprecation="on">
       <classpath refid="webservice-classpath.path" />
     </javac>
   </target>
@@ -379,7 +384,8 @@
     <javac srcdir="${refasterjs.dir}"
            destdir="${refasterjs-classes.dir}"
            excludes=".svn,.git"
-           debug="${javac.debug}">
+           debug="${javac.debug}"
+           deprecation="on">
       <classpath refid="refasterjs-classpath.path" />
     </javac>
   </target>
