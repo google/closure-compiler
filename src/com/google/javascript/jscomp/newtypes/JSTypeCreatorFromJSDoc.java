@@ -207,8 +207,12 @@ public class JSTypeCreatorFromJSDoc {
           // TODO(dimvar): When the union has many things, we join and throw
           // away types, except the result of the last join. Very inefficient.
           // Consider optimizing.
-          union = JSType.join(
-              union, getTypeFromNodeHelper(child, registry, typeParameters));
+          JSType nextType = getTypeFromNodeHelper(child, registry, typeParameters);
+          if (nextType.isUnknown()) {
+            warn("This union type is equivalent to '?'.", n);
+            return JSType.UNKNOWN;
+          }
+          union = JSType.join(union, nextType);
         }
         return union;
       }

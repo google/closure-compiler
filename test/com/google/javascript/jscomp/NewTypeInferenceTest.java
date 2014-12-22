@@ -5026,6 +5026,20 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
   }
 
+  public void testQuestionableUnionJsDoc() {
+    // 'string|?' is the same as '?'
+    typeCheck(
+        "/** @type {string|?} */ var x;",
+        JSTypeCreatorFromJSDoc.BAD_JSDOC_ANNOTATION);
+
+    checkNoWarnings(""
+        + "/**\n"
+        + " * @return {T|S}\n"
+        + " * @template T, S\n"
+        + " */\n"
+        + "function f(){};");
+  }
+
   public void testGenericsJsdocParsing() {
     checkNoWarnings("/** @template T\n@param {T} x */ function f(x) {}");
 
