@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -47,7 +48,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
       case Token.STRING_KEY:
-        if (NodeUtil.isValidPropertyName(n.getString())) {
+        if (NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, n.getString())) {
           n.putBooleanProp(Node.QUOTED_PROP, false);
           compiler.reportCodeChange();
         }
@@ -57,7 +58,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
         Node left = n.getFirstChild();
         Node right = left.getNext();
         if (right.isString() &&
-            NodeUtil.isValidPropertyName(right.getString())) {
+            NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, right.getString())) {
           n.removeChild(left);
           n.removeChild(right);
           parent.replaceChild(n, IR.getprop(left, right));

@@ -1018,7 +1018,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     String name = args.getString();
-    if (!NodeUtil.isValidQualifiedName(name)) {
+    if (!NodeUtil.isValidQualifiedName(compiler.getLanguageMode(), name)) {
       compiler.report(t.makeError(args, INVALID_DEFINE_NAME_ERROR, name));
       return false;
     }

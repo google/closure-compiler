@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.Scope.Var;
@@ -389,7 +390,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
           Node prop = ancestorClone.getChildAtIndex(1);
 
           if (prop.isString() &&
-            NodeUtil.isValidPropertyName(prop.getString())) {
+            NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
             Node target = ancestorClone.getFirstChild();
             Node newGetProp = IR.getprop(target.detachFromParent(),
                 prop.detachFromParent());
@@ -398,7 +399,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
             ancestor.getParent().replaceChild(ancestor, newGetProp);
           } else {
             if (prop.isString() &&
-                !NodeUtil.isValidPropertyName(prop.getString())) {
+                !NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, prop.getString())) {
               t.report(n,
                   JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_ERROR,
                   prop.getString());
