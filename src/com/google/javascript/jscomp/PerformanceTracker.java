@@ -370,7 +370,6 @@ public class PerformanceTracker {
     private int calcZippedSize() {
       try {
         stream.finish();
-        stream.flush();
         stream.close();
         return output.size();
       } catch (IOException e) {

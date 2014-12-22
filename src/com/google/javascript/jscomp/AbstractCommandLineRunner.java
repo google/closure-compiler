@@ -1340,11 +1340,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (functionInformationMapOutputPath != null) {
       if (compiler.getFunctionalInformationMap() != null) {
-        try (OutputStream file = filenameToOutputStream(functionInformationMapOutputPath)) {
+        try (final OutputStream file = filenameToOutputStream(functionInformationMapOutputPath)) {
           CodedOutputStream outputStream = CodedOutputStream.newInstance(file);
           compiler.getFunctionalInformationMap().writeTo(outputStream);
           outputStream.flush();
-          file.flush();
         }
       }
     }

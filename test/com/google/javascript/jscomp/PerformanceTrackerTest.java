@@ -106,7 +106,6 @@ public class PerformanceTrackerTest extends TestCase {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     PrintStream outstream = new PrintStream(output);
     tracker.outputTracerReport(outstream);
-    outstream.flush();
     outstream.close();
     Pattern p = Pattern.compile(
         ".*Summary:\npass,runtime,runs,changingRuns,reduction,gzReduction" +
