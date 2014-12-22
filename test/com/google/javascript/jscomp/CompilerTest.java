@@ -821,6 +821,11 @@ public class CompilerTest extends TestCase {
     }
   }
 
+  public void testGetEmptyResult() {
+    Result result = new Compiler().getResult();
+    assertEquals(0, result.errors.length);
+  }
+
   private static CompilerOptions createNewFlagBasedOptions() {
     CompilerOptions opt = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(opt);
