@@ -997,6 +997,9 @@ public class Compiler extends AbstractCompiler {
    * Returns the array of errors (never null).
    */
   public JSError[] getErrors() {
+    if (errorManager == null) {
+      return new JSError[] {};
+    }
     return errorManager.getErrors();
   }
 
@@ -1004,6 +1007,9 @@ public class Compiler extends AbstractCompiler {
    * Returns the array of warnings (never null).
    */
   public JSError[] getWarnings() {
+    if (errorManager == null) {
+      return new JSError[] {};
+    }
     return errorManager.getWarnings();
   }
 
