@@ -182,7 +182,6 @@ class GlobalTypeInfo implements CompilerPass {
       STRUCTDICT_WITHOUT_CTOR,
       UNDECLARED_NAMESPACE,
       UNRECOGNIZED_TYPE_NAME,
-      RhinoErrorReporter.BAD_JSDOC_ANNOTATION,
       TypeCheck.CONFLICTING_EXTENDED_TYPE,
       TypeCheck.ENUM_NOT_CONSTANT,
       TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
