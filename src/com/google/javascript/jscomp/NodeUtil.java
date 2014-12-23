@@ -411,17 +411,24 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * Gets the node of a class's name. This method recognizes five forms:
+   * <ul>
+   * <li>{@code class name {...}}</li>
+   * <li>{@code var name = class {...}}</li>
+   * <li>{@code qualified.name = class {...}}</li>
+   * <li>{@code var name2 = class name1 {...}}</li>
+   * <li>{@code qualified.name2 = class name1 {...}}</li>
+   * </ul>
+   * In two last cases with named function expressions, the second name is
+   * returned (the variable or qualified name).
+   *
+   * @param n A class node
+   * @return the node best representing the class's name
+   */
   static Node getClassNameNode(Node clazz) {
-    Node parent = clazz.getParent();
-    if (NodeUtil.isStatement(clazz)) {
-      return clazz.getFirstChild();
-    } else if (parent.isAssign() && parent.getParent().isExprResult()) {
-      return parent.getFirstChild();
-    } else if (parent.isName()) {
-      return parent;
-    } else {
-      return null;
-    }
+    Preconditions.checkState(clazz.isClass());
+    return getNameNode(clazz);
   }
 
   static String getClassName(Node n) {
@@ -441,11 +448,21 @@ public final class NodeUtil {
    * In two last cases with named function expressions, the second name is
    * returned (the variable or qualified name).
    *
-   * @param n a node whose type is {@link Token#FUNCTION}
+   * @param n A function node
    * @return the node best representing the function's name
    */
   static Node getFunctionNameNode(Node n) {
     Preconditions.checkState(n.isFunction());
+    return getNameNode(n);
+  }
+
+  static String getFunctionName(Node n) {
+    Node nameNode = getFunctionNameNode(n);
+    return nameNode == null ? null : nameNode.getQualifiedName();
+  }
+
+  /** Implementation for getFunctionNameNode and getClassNameNode. */
+  private static Node getNameNode(Node n) {
     Node parent = n.getParent();
     switch (parent.getType()) {
       case Token.NAME:
@@ -461,14 +478,13 @@ public final class NodeUtil {
       default:
         // function name() ...
         Node funNameNode = n.getFirstChild();
-        // Don't return the name node for anonymous functions
-        return funNameNode.getString().isEmpty() ? null : funNameNode;
+        // Don't return the name node for anonymous functions/classes.
+        // TODO(tbreisacher): Currently we do two kinds of "empty" checks because
+        // anonymous classes have an EMPTY name node while anonymous functions
+        // have a STRING node with an empty string. Consider making these the same.
+        return (funNameNode.isEmpty() || funNameNode.getString().isEmpty())
+            ? null : funNameNode;
     }
-  }
-
-  static String getFunctionName(Node n) {
-    Node nameNode = getFunctionNameNode(n);
-    return nameNode == null ? null : nameNode.getQualifiedName();
   }
 
   /**
