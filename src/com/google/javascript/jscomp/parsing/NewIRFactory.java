@@ -471,6 +471,8 @@ class NewIRFactory {
       switch (n.getType()) {
         case Token.FUNCTION:
         case Token.VAR:
+        case Token.LET:
+        case Token.CONST:
         case Token.GETTER_DEF:
         case Token.SETTER_DEF:
         case Token.MEMBER_DEF:

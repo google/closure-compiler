@@ -701,6 +701,13 @@ public class NewParserTest extends BaseJSTypeTestCase {
     assertNotNull(ret.getJSDocInfo());
   }
 
+  public void testJSDocAttachment21() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("/** @param {string} x */ const f = function() {};");
+    parse("/** @param {string} x */ let f = function() {};");
+  }
+
   public void testInlineJSDocAttachment1() {
     Node fn = parse("function f(/** string */ x) {}").getFirstChild();
     assertTrue(fn.isFunction());
