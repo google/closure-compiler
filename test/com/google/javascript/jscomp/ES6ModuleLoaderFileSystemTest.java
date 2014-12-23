@@ -80,12 +80,12 @@ public class ES6ModuleLoaderFileSystemTest {
         ImmutableList.of(in1, in2, in3),
         new CompilerOptions());
 
-    rootPath = tempFolder.getRoot().getPath() + "/";
+    rootPath = tempFolder.getRoot().getPath().replace(File.separatorChar, '/') + "/";
     loader = ES6ModuleLoader.createNaiveLoader(compiler, rootPath);
   }
 
   private CompilerInput getInput(String s) {
-    return compiler.getInput(new InputId(rootPath + s));
+    return compiler.getInput(new InputId((rootPath + s).replace('/', File.separatorChar)));
   }
 
   @Test
