@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.InputId;
 
 import org.junit.Assert;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

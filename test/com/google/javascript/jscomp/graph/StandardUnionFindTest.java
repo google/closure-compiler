@@ -19,8 +19,9 @@ package com.google.javascript.jscomp.graph;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
 
-import org.junit.Assert;
 import junit.framework.TestCase;
+
+import org.junit.Assert;
 
 import java.util.Arrays;
 import java.util.Collection;

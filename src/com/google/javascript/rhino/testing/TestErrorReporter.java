@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.testing;
 
 import com.google.javascript.rhino.ErrorReporter;
+
 import org.junit.Assert;
 
 /**
