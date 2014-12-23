@@ -1268,10 +1268,14 @@ class NewIRFactory {
         }
       }
 
-      IdentifierToken name = functionTree.name;
+      com.google.javascript.jscomp.parsing.parser.Token name = functionTree.name;
       Node newName;
       if (name != null) {
-        newName = processNameWithInlineJSDoc(name);
+        if (name.type == TokenType.IDENTIFIER) {
+          newName = processNameWithInlineJSDoc(name.asIdentifier());
+        } else {
+          newName = processObjectLitKeyAsString(name);
+        }
       } else {
         if (isDeclaration || isMember) {
           errorReporter.error(
@@ -1321,7 +1325,8 @@ class NewIRFactory {
 
       if (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER) {
         setSourceInfo(node, functionTree);
-        Node member = newStringNode(Token.MEMBER_DEF, name.value);
+        Node member = newName.cloneNode();
+        member.setType(Token.MEMBER_DEF);
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
         result = member;

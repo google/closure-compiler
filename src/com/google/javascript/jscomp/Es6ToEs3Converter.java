@@ -401,6 +401,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   private void visitMemberDefInObjectLit(Node n, Node parent) {
     String name = n.getString();
     Node stringKey = IR.stringKey(name, n.getFirstChild().detachFromParent());
+    if (n.isQuotedString()) {
+      stringKey.setQuotedString();
+    }
     parent.replaceChild(n, stringKey);
     compiler.reportCodeChange();
   }

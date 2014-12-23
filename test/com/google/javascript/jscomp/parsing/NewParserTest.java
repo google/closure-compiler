@@ -952,6 +952,10 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testMethodInObjectLiteral() {
     testMethodInObjectLiteral("var a = {b() {}};");
     testMethodInObjectLiteral("var a = {b() { alert('b'); }};");
+    testMethodInObjectLiteral("var a = {if() {}};");
+    testMethodInObjectLiteral("var a = {0() {}};");
+    testMethodInObjectLiteral("var a = {'abc'() {}};");
+    testMethodInObjectLiteral("var a = {\"while\"() {}};");
 
     // Static methods not allowed in object literals.
     parseError("var a = {static b() { alert('b'); }};",
