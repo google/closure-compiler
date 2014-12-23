@@ -254,7 +254,7 @@ public class DiagnosticGroups {
           TypeCheck.ENUM_NOT_CONSTANT,
           TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
           TypeCheck.MULTIPLE_VAR_DEF,
-          TypeCheck.UNKNOWN_OVERRIDE,
+//           TypeCheck.UNKNOWN_OVERRIDE,
           TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED,
 //           NewTypeInference.ASSERT_FALSE,
           NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL,

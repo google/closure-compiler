@@ -25,5 +25,5 @@
 /** @const */
 var $jscomp = {};
 
-/** Locals for goog.scope */
+/** @const Locals for goog.scope */
 $jscomp.scope = {};
