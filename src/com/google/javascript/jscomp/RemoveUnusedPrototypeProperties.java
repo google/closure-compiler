@@ -16,15 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.AnalyzePrototypeProperties.AssignmentProperty;
-import com.google.javascript.jscomp.AnalyzePrototypeProperties.GlobalFunction;
-import com.google.javascript.jscomp.AnalyzePrototypeProperties.LiteralProperty;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.NameInfo;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Symbol;
 import com.google.javascript.rhino.Node;
 
-import java.util.Collection;
 import java.util.logging.Logger;
 
 /**
@@ -32,8 +27,7 @@ import java.util.logging.Logger;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class RemoveUnusedPrototypeProperties implements
-    SpecializationAwareCompilerPass {
+class RemoveUnusedPrototypeProperties implements CompilerPass {
 
   private static final Logger logger =
     Logger.getLogger(RemoveUnusedPrototypeProperties.class.getName());
@@ -41,7 +35,6 @@ class RemoveUnusedPrototypeProperties implements
   private final AbstractCompiler compiler;
   private final boolean canModifyExterns;
   private final boolean anchorUnusedVars;
-  private SpecializeModule.SpecializationState specializationState;
 
   /**
    * Creates a new pass for removing unused prototype properties, based
@@ -62,80 +55,21 @@ class RemoveUnusedPrototypeProperties implements
   }
 
   @Override
-  public void enableSpecialization(SpecializeModule.SpecializationState state) {
-    this.specializationState = state;
-  }
-
-  @Override
   public void process(Node externRoot, Node root) {
     AnalyzePrototypeProperties analyzer =
         new AnalyzePrototypeProperties(compiler,
             null /* no module graph */, canModifyExterns, anchorUnusedVars);
     analyzer.process(externRoot, root);
-    removeUnusedSymbols(analyzer.getAllNameInfo());
-  }
-
-  /**
-   * Remove all properties under a given name if the property name is
-   * never referenced.
-   */
-  private void removeUnusedSymbols(Collection<NameInfo> allNameInfo) {
-    for (NameInfo nameInfo : allNameInfo) {
+    // Remove all properties under a given name if the property name is
+    // never referenced.
+    for (NameInfo nameInfo : analyzer.getAllNameInfo()) {
       if (!nameInfo.isReferenced()) {
         for (Symbol declaration : nameInfo.getDeclarations()) {
-          boolean canRemove = false;
-          if (specializationState == null) {
-            canRemove = true;
-          } else {
-            Node specializableFunction =
-              getSpecializableFunctionFromSymbol(declaration);
-
-            if (specializableFunction != null) {
-              specializationState.reportRemovedFunction(
-                  specializableFunction, null);
-              canRemove = true;
-            }
-          }
-          if (canRemove) {
-            // Code-change reporting happens at the remove methods
-            declaration.remove(compiler);
-          }
+          // Code-change reporting happens at the remove methods
+          declaration.remove(compiler);
         }
         logger.fine("Removed unused prototype property: " + nameInfo.name);
       }
-    }
-  }
-
-  /**
-   * Attempts to find a specializable function from the Symbol.
-   */
-  private Node getSpecializableFunctionFromSymbol(Symbol symbol) {
-    Preconditions.checkNotNull(specializationState);
-
-    Node specializableFunction = null;
-
-    if (symbol instanceof GlobalFunction) {
-      specializableFunction = ((GlobalFunction) symbol).getFunctionNode();
-    } else if (symbol instanceof AssignmentProperty) {
-      Node propertyValue = ((AssignmentProperty) symbol).getValue();
-      if (propertyValue.isFunction()) {
-        specializableFunction = propertyValue;
-      }
-    } else if (symbol instanceof LiteralProperty) {
-      // Module specialization doesn't know how to handle these
-      // because the "name" of the function isn't the name
-      // it needs to add an unspecialized version of.
-
-      return null;
-    } else {
-      throw new IllegalStateException("Should be unreachable.");
-    }
-
-    if (specializableFunction != null &&
-        specializationState.canFixupFunction(specializableFunction)) {
-      return specializableFunction;
-    } else {
-      return null;
     }
   }
 }

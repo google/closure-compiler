@@ -64,18 +64,11 @@ import java.util.List;
  *
  */
 class DevirtualizePrototypeMethods
-    implements OptimizeCalls.CallGraphCompilerPass,
-               SpecializationAwareCompilerPass {
+    implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
   private final AbstractCompiler compiler;
-  private SpecializeModule.SpecializationState specializationState;
 
   DevirtualizePrototypeMethods(AbstractCompiler compiler) {
     this.compiler = compiler;
-  }
-
-  @Override
-  public void enableSpecialization(SpecializeModule.SpecializationState state) {
-    this.specializationState = state;
   }
 
   @Override
@@ -288,14 +281,6 @@ class DevirtualizePrototypeMethods
 
       Node nameNode = site.node;
 
-      // Don't rewrite methods called in functions that can't be specialized
-      // if we are specializing
-      if (specializationState != null &&
-          !specializationState.canFixupSpecializedFunctionContainingNode(
-              nameNode)) {
-        return false;
-      }
-
       // Multiple definitions prevent rewrite.
       Collection<Definition> singleSiteDefinitions =
           defFinder.getDefinitionsReferencedAt(nameNode);
@@ -344,10 +329,6 @@ class DevirtualizePrototypeMethods
       Preconditions.checkState(parent.isCall());
       parent.putBooleanProp(Node.FREE_CALL, true);
       compiler.reportCodeChange();
-
-      if (specializationState != null) {
-        specializationState.reportSpecializedFunctionContainingNode(parent);
-      }
     }
   }
 
@@ -379,10 +360,6 @@ class DevirtualizePrototypeMethods
       parent.removeChild(functionNode);
       newNameNode.addChildToFront(functionNode);
       block.replaceChild(expr, newVarNode);
-
-      if (specializationState != null) {
-        specializationState.reportRemovedFunction(functionNode, block);
-      }
     } else {
       Preconditions.checkState(parent.isObjectLit());
       functionNode = node.getFirstChild();
@@ -394,10 +371,6 @@ class DevirtualizePrototypeMethods
       parent.removeChild(node);
       newNameNode.addChildToFront(functionNode);
       block.addChildAfter(newVarNode, expr);
-
-      if (specializationState != null) {
-        specializationState.reportRemovedFunction(functionNode, block);
-      }
     }
 
     // add extra argument

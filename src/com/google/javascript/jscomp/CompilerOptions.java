@@ -598,13 +598,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Whether to export test functions. */
   public boolean exportTestFunctions;
 
-  boolean specializeInitialModule;
-
-  /** Specialize the initial module at the cost of later modules */
-  public void setSpecializeInitialModule(boolean enabled) {
-    specializeInitialModule = enabled;
-  }
-
   /** Whether to declare globals declared in externs as properties on window */
   boolean declaredGlobalExternsOnWindow;
 

@@ -593,24 +593,6 @@ public class DefaultPassConfig extends PassConfig {
 
     passes.addAll(getMainOptimizationLoop());
 
-    if (options.specializeInitialModule) {
-      // When specializing the initial module, we want our fixups to be
-      // as lean as possible, so we run the entire optimization loop to a
-      // fixed point before specializing, then specialize, and then run the
-      // main optimization loop again.
-
-      if (options.crossModuleCodeMotion) {
-        passes.add(crossModuleCodeMotion);
-      }
-
-      if (options.crossModuleMethodMotion) {
-        passes.add(crossModuleMethodMotion);
-      }
-
-      passes.add(specializeInitialModule);
-      passes.addAll(getMainOptimizationLoop());
-    }
-
     passes.add(createEmptyPass("beforeModuleMotion"));
 
     if (options.crossModuleCodeMotion) {
@@ -2116,18 +2098,6 @@ public class DefaultPassConfig extends PassConfig {
           // Only move properties in externs if we're not treating
           // them as exports.
           options.removeUnusedPrototypePropertiesInExterns);
-    }
-  };
-
-  /**
-   * Specialize the initial module at the cost of later modules
-   */
-  final PassFactory specializeInitialModule =
-      new PassFactory("specializeInitialModule", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new SpecializeModule(compiler, devirtualizePrototypeMethods,
-          inlineFunctions, removeUnusedPrototypeProperties);
     }
   };
 
