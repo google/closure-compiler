@@ -1799,9 +1799,15 @@ public class NewTypeInference implements CompilerPass {
     EnvTypePair pair =
         analyzeExprFwd(assertedNode, env, JSType.UNKNOWN, assertedType);
     if (pair.type.isBottom()) {
-      warnings.add(JSError.make(assertedNode, NewTypeInference.ASSERT_FALSE));
-      pair.type = JSType.UNKNOWN;
-      pair.env = env;
+      JSType t = analyzeExprFwd(assertedNode, env)
+          .type.substituteGenericsWithUnknown();
+      if (t.isSubtypeOf(assertedType)) {
+        pair.type = t;
+      } else {
+        warnings.add(JSError.make(assertedNode, NewTypeInference.ASSERT_FALSE));
+        pair.type = JSType.UNKNOWN;
+        pair.env = env;
+      }
     }
     return pair;
   }
@@ -2067,12 +2073,8 @@ public class NewTypeInference implements CompilerPass {
         // Unification may fail b/c of types irrelevant to generics, eg,
         // number vs string.
         // In this case, don't warn here; we'll show invalid-arg-type later.
-        HashMap<String, JSType> tmpTypeMap = new HashMap<>();
-        for (String typeParam : typeParameters) {
-          tmpTypeMap.put(typeParam, JSType.UNKNOWN);
-        }
         JSType targetAfterInstantiation =
-            unifTarget.substituteGenerics(tmpTypeMap);
+            unifTarget.substituteGenericsWithUnknown();
         if (!unifTarget.equals(targetAfterInstantiation)
             && unifSource.isSubtypeOf(targetAfterInstantiation)) {
           warnings.add(JSError.make(arg, FAILED_TO_UNIFY,

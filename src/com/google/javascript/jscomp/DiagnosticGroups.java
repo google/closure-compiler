@@ -256,7 +256,7 @@ public class DiagnosticGroups {
           TypeCheck.MULTIPLE_VAR_DEF,
           TypeCheck.UNKNOWN_OVERRIDE,
           TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED,
-//           NewTypeInference.ASSERT_FALSE,
+          NewTypeInference.ASSERT_FALSE,
           NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL,
           NewTypeInference.CANNOT_BIND_CTOR,
 //           NewTypeInference.CONST_REASSIGNED,

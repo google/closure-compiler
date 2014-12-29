@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,65 @@ public abstract class JSType {
   protected static final int BOOLEAN_MASK = TRUE_MASK | FALSE_MASK;
   protected static final int TOP_SCALAR_MASK =
       NUMBER_MASK | STRING_MASK | BOOLEAN_MASK | NULL_MASK | UNDEFINED_MASK;
+
+  static final Map<String, JSType> MAP_TO_UNKNOWN =
+      new Map<String, JSType>() {
+    public void clear() {
+      throw new UnsupportedOperationException();
+    }
+
+    public boolean containsKey(Object k) {
+      return true;
+    }
+
+    public boolean containsValue(Object v) {
+      return v == JSType.UNKNOWN;
+    }
+
+    public Set<Map.Entry<String, JSType>> entrySet() {
+      throw new UnsupportedOperationException();
+    }
+
+    public JSType get(Object k) {
+      return JSType.UNKNOWN;
+    }
+
+    public boolean isEmpty() {
+      return false;
+    }
+
+    public Set<String> keySet() {
+      throw new UnsupportedOperationException();
+    }
+
+    public JSType put(String k, JSType v) {
+      throw new UnsupportedOperationException();
+    }
+
+    public void putAll(Map<? extends String, ? extends JSType> m) {
+      throw new UnsupportedOperationException();
+    }
+
+    public JSType remove(Object k) {
+      throw new UnsupportedOperationException();
+    }
+
+    public int size() {
+      throw new UnsupportedOperationException();
+    }
+
+    public Collection<JSType> values() {
+      return ImmutableSet.of(JSType.UNKNOWN);
+    }
+
+    public int hashCode() {
+      throw new UnsupportedOperationException();
+    }
+
+    public boolean equals(Object o) {
+      return o == this;
+    }
+  };
 
   // Used only for development
   public static boolean mockToString = false;
@@ -418,6 +478,10 @@ public abstract class JSType {
           concreteTypes.get(getTypeVar()) : fromTypeVar(getTypeVar()));
     }
     return current;
+  }
+
+  public JSType substituteGenericsWithUnknown() {
+    return substituteGenerics(MAP_TO_UNKNOWN);
   }
 
   private static void updateTypemap(

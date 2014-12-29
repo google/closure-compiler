@@ -24,7 +24,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -644,11 +643,7 @@ public class FunctionType {
     if (!f.isGeneric()) {
       return f;
     }
-    HashMap<String, JSType> tmpTypeMap = new HashMap<>();
-    for (String typeParam : f.typeParameters) {
-      tmpTypeMap.put(typeParam, JSType.UNKNOWN);
-    }
-    return f.instantiateGenerics(tmpTypeMap);
+    return f.instantiateGenerics(JSType.MAP_TO_UNKNOWN);
   }
 
   /**
@@ -791,9 +786,6 @@ public class FunctionType {
   }
 
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
-    for (String typeParam : typeMap.keySet()) {
-      Preconditions.checkState(typeParameters.contains(typeParam));
-    }
     return applyInstantiation(false, typeMap);
   }
 

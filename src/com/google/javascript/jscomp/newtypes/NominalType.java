@@ -116,10 +116,9 @@ public class NominalType {
         builder.put(oldKey, typeMap.get(oldKey).substituteGenerics(newTypeMap));
       }
     } else {
-      for (Map.Entry<String, JSType> newTypeEntry : newTypeMap.entrySet()) {
-        String newKey = newTypeEntry.getKey();
-        if (rawType.typeParameters.contains(newKey)) {
-          builder.put(newKey, newTypeEntry.getValue());
+      for (String newKey : rawType.typeParameters) {
+        if (newTypeMap.containsKey(newKey)) {
+          builder.put(newKey, newTypeMap.get(newKey));
         }
       }
     }

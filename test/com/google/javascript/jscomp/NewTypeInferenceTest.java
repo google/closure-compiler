@@ -1875,6 +1875,18 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + "  o.p('str');\n"
         + "}",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/** @constructor */\n" +
+        "function Foo() {}\n" +
+        "/**\n" +
+        " * @template T\n" +
+        " * @param {T} x\n" +
+        " */\n" +
+        "function f(x) {\n" +
+        "  var y = x;\n" +
+        "  goog.asserts.assertInstanceof(y, Foo);\n" +
+        "}");
   }
 
   public void testDontInferBottom() {
