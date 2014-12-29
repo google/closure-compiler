@@ -60,6 +60,18 @@ public class RhinoErrorReporterTest extends TestCase {
     assertEquals(8, error.getCharno());
   }
 
+  public void testMisplacedLendsAnnotation() throws Exception {
+      assertNoWarningOrError("var A = {}; alert(/** @lends {A} */ {});");
+
+      String message = "Lends annotations are only allowed on object literals.";
+      JSError error = assertWarning(
+          "var A = {}; var b = {}; alert(/** @lends {A} */ b);",
+          RhinoErrorReporter.MISPLACED_LENDS_ANNOTATION,
+          message);
+      assertEquals(1, error.getLineNumber());
+      assertEquals(48, error.getCharno());
+  }
+
   public void testMisplacedTypeAnnotation() throws Exception {
     reportMisplacedTypeAnnotations = false;
 

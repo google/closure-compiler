@@ -57,6 +57,10 @@ class RhinoErrorReporter {
   static final DiagnosticType JSDOC_IN_BLOCK_COMMENT =
       DiagnosticType.warning("JSC_JSDOC_IN_BLOCK_COMMENT", "Parse error. {0}");
 
+  static final DiagnosticType MISPLACED_LENDS_ANNOTATION =
+      DiagnosticType.warning("JSC_MISPLACED_LENDS_ANNOTATION",
+          "Lends annotations are only allowed on object literals.");
+
   static final DiagnosticType MISPLACED_TYPE_ANNOTATION =
       DiagnosticType.warning("JSC_MISPLACED_TYPE_ANNOTATION",
           "Type annotations are not allowed here. " +
@@ -125,6 +129,9 @@ class RhinoErrorReporter {
             "^\\QNon-JSDoc comment has annotations. " +
             "Did you mean to start it with '/**'?\\E"),
             JSDOC_IN_BLOCK_COMMENT)
+
+        .put(Pattern.compile("^Lends annotations are only allowed on object literals.*"),
+            MISPLACED_LENDS_ANNOTATION)
 
         // Unexpected @type annotations
         .put(Pattern.compile("^Type annotations are not allowed here.*"),
