@@ -441,8 +441,9 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
     Node cond = IR.not(IR.getprop(iterResult.cloneTree(), IR.string("done")));
     Node incr = IR.assign(iterResult.cloneTree(), getNext.cloneTree());
-    body.addChildToFront(IR.var(IR.name(variableName),
-        IR.getprop(iterResult.cloneTree(), IR.string("value"))));
+    body.addChildToFront(IR.declaration(IR.name(variableName),
+        IR.getprop(iterResult.cloneTree(), IR.string("value")),
+        variable.isLet() ? Token.LET : Token.VAR));
 
     Node newFor = IR.forNode(init, cond, incr, body);
     newFor.useSourceInfoIfMissingFromForTree(node);
