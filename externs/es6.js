@@ -32,14 +32,14 @@ Symbol.iterator;
  * @interface
  * @template VALUE
  */
-var Iterable;
+function Iterable() {}
 
 // TODO(johnlenz): remove this when the compiler understands "symbol" natively
 /**
  * @return {Iterator.<VALUE>}
  * @suppress {externsValidation}
  */
-Iterable[Symbol.iterator] = function() {};
+Iterable.prototype[Symbol.iterator] = function() {};
 
 
 
@@ -49,7 +49,7 @@ Iterable[Symbol.iterator] = function() {};
  * @template VALUE
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/The_Iterator_protocol
  */
-var Iterator;
+function Iterator() {}
 
 /**
  * @return {{value:VALUE, done:boolean}}
