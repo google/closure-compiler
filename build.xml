@@ -54,7 +54,6 @@
   <property name="tools.dir" value="${basedir}/tools" />
   <property name="compiler-jarfile"
             value="${build.dir}/${ant.project.name}.jar" />
-  <property name="num-fuzz-tests" value="10000"/>
 
   <property name="webservice.dir" value="${basedir}/src/com/google/javascript/jscomp/webservice" />
   <property name="webservice-classes.dir" value = "${build.dir}/webservice-classes" />
@@ -279,19 +278,6 @@
     </junitreport>
     <fail if="junit.failure"
           message="Unit tests failed. See build/testoutput/index.html" />
-  </target>
-
-  <target name="fuzz-test"
-          depends="all-classes-jar"
-          description="checks the compiler against a variety of js programs">
-      <exec executable="java" failonerror="true">
-        <arg value="-cp" />
-        <arg value="${compiler-jarfile}" />
-        <arg value="com.google.javascript.jscomp.regtests.CompileEachLineOfProgramOutput" />
-        <arg value="generatejs"/>
-        <arg value="--stdout"/>
-        <arg value="${num-fuzz-tests}"/>
-      </exec>
   </target>
 
   <target name="javadoc"

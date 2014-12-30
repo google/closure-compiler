@@ -10,7 +10,6 @@
         <classpathentry kind="lib" path="lib/guava.jar"/>
         <classpathentry kind="lib" path="lib/jsr305.jar"/>
         <classpathentry kind="lib" path="lib/junit.jar"/>
-        <classpathentry kind="lib" path="lib/mockito-core.jar"/>
         <classpathentry kind="lib" path="lib/protobuf-java.jar"/>
 
         <!--
