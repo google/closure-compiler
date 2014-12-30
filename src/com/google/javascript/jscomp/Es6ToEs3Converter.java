@@ -424,17 +424,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
     Node iterName = IR.name(ITER_BASE + compiler.getUniqueNameIdSupplier().get());
     Node getNext = IR.call(IR.getprop(iterName.cloneTree(), IR.string("next")));
-    String variableName;
-    int declType;
-    if (variable.isName()) {
-      declType = Token.NAME;
-      variableName = variable.getQualifiedName();
-    } else {
-      Preconditions.checkState(NodeUtil.isNameDeclaration(variable),
-          "Expected var, let, or const. Got %s", variable);
-      declType = variable.getType();
-      variableName = variable.getFirstChild().getQualifiedName();
-    }
+    String variableName = variable.isName() ? variable.getQualifiedName()
+        : variable.getFirstChild().getQualifiedName(); // var or let
     Node iterResult = IR.name(ITER_RESULT + variableName);
 
     Node makeIter = IR.call(
@@ -450,18 +441,8 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
 
     Node cond = IR.not(IR.getprop(iterResult.cloneTree(), IR.string("done")));
     Node incr = IR.assign(iterResult.cloneTree(), getNext.cloneTree());
-
-    Node declarationOrAssign;
-    if (declType == Token.NAME) {
-      declarationOrAssign = IR.exprResult(IR.assign(
-          IR.name(variableName),
-          IR.getprop(iterResult.cloneTree(), IR.string("value"))));
-    } else {
-      declarationOrAssign = new Node(declType, IR.name(variableName));
-      declarationOrAssign.getFirstChild().addChildToBack(
-          IR.getprop(iterResult.cloneTree(), IR.string("value")));
-    }
-    body.addChildToFront(declarationOrAssign);
+    body.addChildToFront(IR.var(IR.name(variableName),
+        IR.getprop(iterResult.cloneTree(), IR.string("value"))));
 
     Node newFor = IR.forNode(init, cond, incr, body);
     newFor.useSourceInfoIfMissingFromForTree(node);
