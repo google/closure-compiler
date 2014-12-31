@@ -2170,6 +2170,7 @@ public class Compiler extends AbstractCompiler {
   protected Config createConfig(Config.LanguageMode mode) {
     return ParserRunner.createConfig(
         isIdeMode(),
+        options.isParseJsDocDocumentation(),
         mode,
         acceptConstKeyword(),
         options.extraAnnotationNames);
