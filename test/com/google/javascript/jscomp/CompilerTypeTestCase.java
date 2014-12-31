@@ -114,6 +114,9 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
+        DiagnosticGroups.MISPLACED_LENDS_ANNOTATION, CheckLevel.WARNING
+    );
+    options.setWarningLevel(
         DiagnosticGroups.MISPLACED_TYPE_ANNOTATION, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);

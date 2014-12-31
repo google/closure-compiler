@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_FUNCTION_ANNOTATION;
+import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_LENDS_ANNOTATION;
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_TYPE_ANNOTATION;
 
 import com.google.common.base.Joiner;
@@ -2097,6 +2098,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "  }\n" +
         "};",
         "'(' expected");
+  }
+
+  public void testMisplacedLendsAnnotation() {
+    parseWarning(
+        "var A = {};" +
+        "var b = {};" +
+        "alert(/** @lends {A} */ b);",
+        MISPLACED_LENDS_ANNOTATION
+    );
+  }
+
+  public void testValidLendsAnnotation() {
+    parse(
+        "var A = {};" +
+        "alert(/** @lends {A} */ {});"
+    );
   }
 
   public void testMisplacedTypeAnnotation1() {

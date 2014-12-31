@@ -394,6 +394,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("duplicateMessage",
           JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
 
+  public static final DiagnosticGroup MISPLACED_LENDS_ANNOTATION =
+      DiagnosticGroups.registerGroup("misplacedLendsAnnotation",
+              RhinoErrorReporter.MISPLACED_LENDS_ANNOTATION);
+
   public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
           RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION,

@@ -134,6 +134,9 @@ class NewIRFactory {
       "Non-JSDoc comment has annotations. " +
       "Did you mean to start it with '/**'?";
 
+  static final String MISPLACED_LENDS_ANNOTATION =
+      "Lends annotations are only allowed on object literals.";
+
   static final String MISPLACED_TYPE_ANNOTATION =
       "Type annotations are not allowed here. Are you missing parentheses?";
 
@@ -452,6 +455,7 @@ class NewIRFactory {
   }
 
   private void validateJsDoc(Node n) {
+    validateLendsAnnotations(n);
     validateTypeAnnotations(n);
     validateFunctionJsDoc(n);
   }
@@ -494,6 +498,20 @@ class NewIRFactory {
       errorReporter.warning(MISPLACED_FUNCTION_ANNOTATION,
           sourceName,
           n.getLineno(), n.getCharno());
+    }
+  }
+
+  /**
+   * Check that JSDoc with a {@code @lends} annotation is in a valid place.
+   */
+  private void validateLendsAnnotations(Node n) {
+    JSDocInfo info = n.getJSDocInfo();
+    if (info != null && info.getLendsName() != null) {
+      if(!n.isObjectLit()) {
+        errorReporter.warning(MISPLACED_LENDS_ANNOTATION,
+            sourceName,
+            n.getLineno(), n.getCharno());
+      }
     }
   }
 
