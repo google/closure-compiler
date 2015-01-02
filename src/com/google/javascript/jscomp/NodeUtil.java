@@ -1843,7 +1843,7 @@ public final class NodeUtil {
    * @param n The node
    * @return True if {@code n} is VAR, LET or CONST
    */
-  static boolean isNameDeclaration(Node n) {
+  public static boolean isNameDeclaration(Node n) {
     return n.isVar() || n.isLet() || n.isConst();
   }
 

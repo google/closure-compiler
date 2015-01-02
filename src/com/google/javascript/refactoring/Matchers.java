@@ -16,7 +16,9 @@
 
 package com.google.javascript.refactoring;
 
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -294,6 +296,51 @@ public final class Matchers {
         JSType jsType = node.getJSType();
         return jsDoc != null && jsType != null
             && providedJsType.isEquivalentTo(jsType.restrictByNotNullOrUndefined());
+      }
+    };
+  }
+
+  /**
+   * Returns a Matcher that matches against properties that are declared in the constructor.
+   */
+  public static Matcher constructorPropertyDeclaration() {
+    return new Matcher() {
+      @Override public boolean matches(Node node, NodeMetadata metadata) {
+        // This will match against code that looks like:
+        // /** @constructor */
+        // function constructor() {
+        //   this.variable = 3;
+        // }
+        if (!node.isAssign()
+            || !node.getFirstChild().isGetProp()
+            || !node.getFirstChild().getFirstChild().isThis()) {
+          return false;
+        }
+        while (node != null && !node.isFunction()) {
+          node = node.getParent();
+        }
+        if (node != null && node.isFunction()) {
+          JSDocInfo jsDoc = NodeUtil.getFunctionJSDocInfo(node);
+          if (jsDoc != null) {
+            return jsDoc.isConstructor();
+          }
+        }
+        return false;
+      }
+    };
+  }
+
+  /**
+   * Returns a Matcher that matches against nodes that are declared {@code @private}.
+   */
+  public static Matcher isPrivate() {
+    return new Matcher() {
+      @Override public boolean matches(Node node, NodeMetadata metadata) {
+        JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(node);
+        if (jsDoc != null) {
+          return jsDoc.getVisibility() == Visibility.PRIVATE;
+        }
+        return false;
       }
     };
   }

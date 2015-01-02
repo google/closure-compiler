@@ -314,6 +314,48 @@ public class MatchersTest {
           node, new NodeMetadata(compiler)));
   }
 
+  @Test
+  public void testConstructorPropertyDeclaration() {
+    String externs = "";
+    String input = ""
+        + "/** @constructor */\n"
+        + "function MyClass() {\n"
+        + "  this.foo = 5;\n"
+        + "  var bar = 10;\n"
+        + "}";
+    Compiler compiler = getCompiler(externs, input);
+    Node root = compileToScriptRoot(compiler);
+    // The ASSIGN node
+    Node node = root.getFirstChild().getLastChild().getFirstChild().getFirstChild();
+    assertTrue(
+        Matchers.constructorPropertyDeclaration().matches(node, new NodeMetadata(compiler)));
+
+    // The VAR node
+    node = root.getFirstChild().getLastChild().getLastChild().getFirstChild();
+    assertFalse(
+        Matchers.constructorPropertyDeclaration().matches(node, new NodeMetadata(compiler)));
+  }
+
+  @Test
+  public void testIsPrivate() {
+    String externs = "";
+    String input = ""
+        + "/** @private */\n"
+        + "var foo = 3;";
+    Compiler compiler = getCompiler(externs, input);
+    Node root = compileToScriptRoot(compiler);
+    Node node = root.getFirstChild();
+    assertTrue(Matchers.isPrivate().matches(node, new NodeMetadata(compiler)));
+
+    input = ""
+        + "/** @package */\n"
+        + "var foo = 3;";
+    compiler = getCompiler(externs, input);
+    root = compileToScriptRoot(compiler);
+    node = root.getFirstChild();
+    assertFalse(Matchers.isPrivate().matches(node, new NodeMetadata(compiler)));
+}
+
   /**
    * Returns the root script node produced from the compiled JS input.
    */
