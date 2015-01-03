@@ -117,11 +117,10 @@ abstract class ES6ModuleLoader {
 
     @Override
     String locate(String name, CompilerInput referrer) {
-      if (isRelativeIdentifier(name)) {
-        return convertSourceUriToModuleAddress(
-            createUri(referrer).resolve(createUri(name)));
-      }
-      return createUri(name).normalize().toString();
+      URI base = isRelativeIdentifier(name) ? createUri(referrer)
+          : createUri(moduleRoot);
+
+      return convertSourceUriToModuleAddress(base.resolve(createUri(name)));
     }
 
     @Override
