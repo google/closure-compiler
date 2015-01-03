@@ -2505,7 +2505,7 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.CHECK_PROVIDES,
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
         CheckLevel.WARNING);
     options.setCheckProvides(CheckLevel.WARNING);
     test(options,
@@ -2517,12 +2517,12 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testSuppressCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.CHECK_PROVIDES,
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE,
         CheckLevel.WARNING);
     options.setCheckProvides(CheckLevel.WARNING);
     testSame(options,
         "/** @constructor\n" +
-        " *  @suppress{checkProvides} */\n" +
+        " *  @suppress{missingProvide} */\n" +
         "function f() {}");
   }
 

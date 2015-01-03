@@ -372,12 +372,6 @@ public class DiagnosticGroups {
           ES5_STRICT_UNCOMMON,
           ES5_STRICT_REFLECTION);
 
-  // TODO(johnlenz): Remove this in favor or "missingProvide" which matches
-  // the existing and more popular linter suppression
-  public static final DiagnosticGroup CHECK_PROVIDES =
-      DiagnosticGroups.registerGroup("checkProvides",
-          CheckProvides.MISSING_PROVIDE_WARNING);
-
   public static final DiagnosticGroup MISSING_PROVIDE =
       DiagnosticGroups.registerGroup("missingProvide",
           CheckProvides.MISSING_PROVIDE_WARNING);
