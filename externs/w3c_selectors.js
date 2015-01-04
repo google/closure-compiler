@@ -51,6 +51,14 @@ Element.prototype.querySelector = function(selectors) {};
 Element.prototype.querySelectorAll = function(selectors) {};
 
 /**
+ * https://dom.spec.whatwg.org/#dom-element-matches
+ * https://developer.mozilla.org/en-US/docs/Web/API/Element.matches
+ * @param {string} selectors
+ * @return {boolean}
+ */
+Element.prototype.matches = function(selectors) {};
+
+/**
  * @param {string} selectors
  * @param {(Node|NodeList)=} refNodes
  * @return {boolean}
