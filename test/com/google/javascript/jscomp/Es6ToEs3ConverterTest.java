@@ -1133,7 +1133,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
         "    $jscomp$key$i = $jscomp$iter$0.next();",
         "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-        "  var i = $jscomp$key$i.value;",
+        "  i = $jscomp$key$i.value;",
         "  console.log(i);",
         "}"
     ));
@@ -1163,6 +1163,24 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  var i = $jscomp$key$i.value;",
         "  console.log(i);",
         "}"
+    ));
+
+    // Iteration var shadows an outer var ()
+    test(Joiner.on('\n').join(
+      "var i = 'outer';",
+      "for (let i of [1, 2, 3]) {",
+      "  alert(i);",
+      "}",
+      "alert(i);"
+    ), Joiner.on('\n').join(
+        "var i = 'outer';",
+        "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
+        "    $jscomp$key$i = $jscomp$iter$0.next();",
+        "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
+        "  var i$1 = $jscomp$key$i.value;",
+        "  alert(i$1);",
+        "}",
+        "alert(i);"
     ));
   }
 

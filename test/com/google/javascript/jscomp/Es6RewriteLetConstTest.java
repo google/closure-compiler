@@ -205,6 +205,26 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
     ));
   }
 
+  public void testForOfLoop() {
+    test(Joiner.on('\n').join(
+        "function f() {",
+        "  let x = 5;",
+        "  for (let x of [1,2,3]) {",
+        "    console.log(x);",
+        "  }",
+        "  console.log(x);",
+        "}"
+    ), Joiner.on('\n').join(
+        "function f() {",
+        "  var x = 5;",
+        "  for(var x$0 of [1,2,3]) {",
+        "    console.log(x$0);",
+        "  }",
+        "  console.log(x);",
+        "}"
+    ));
+  }
+
   public void testForLoop() {
     test(Joiner.on('\n').join(
         "function f() {",
