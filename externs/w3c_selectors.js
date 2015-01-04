@@ -77,3 +77,10 @@ Element.prototype.webkitMatchesSelector = function(selectors) {};
  * @return {boolean}
  */
 Element.prototype.msMatchesSelector = function(selectors) {};
+
+/**
+ * @see http://www.opera.com/docs/changelogs/windows/1150/
+ * @param {string} selectors
+ * @return {boolean}
+ */
+Element.prototype.oMatchesSelector = function(selectors) {};
