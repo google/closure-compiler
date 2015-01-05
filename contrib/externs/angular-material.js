@@ -55,7 +55,29 @@ md.$dialog.options;
 
 
 /**
- * @param {md.$dialog.options} options
+ * @typedef {{
+ *   title: (function(string): md.$dialog.AlertConfig_),
+ *   content: (function(string): md.$dialog.AlertConfig_),
+ *   ok: (function(string): md.$dialog.AlertConfig_)
+ * }}
+ */
+md.$dialog.AlertConfig_;
+
+
+/**
+ * @typedef {{
+ *   title: (function(string): md.$dialog.ConfirmConfig_),
+ *   content: (function(string): md.$dialog.ConfirmConfig_),
+ *   ok: (function(string): md.$dialog.ConfirmConfig_),
+ *   cancel: (function(string): md.$dialog.ConfirmConfig_)
+ * }}
+ */
+md.$dialog.ConfirmConfig_;
+
+
+/**
+ * @param {md.$dialog.options|md.$dialog.ConfirmConfig_|
+ *     md.$dialog.AlertConfig_} options
  * @return {angular.$q.Promise}
  */
 md.$dialog.prototype.show = function(options) {};
@@ -71,6 +93,14 @@ md.$dialog.prototype.hide = function() {};
  * @type {function(*=)}
  */
 md.$dialog.prototype.cancel = function() {};
+
+
+/** @return {!md.$dialog.AlertConfig_} */
+md.$dialog.prototype.alert = function() {};
+
+
+/** @return {!md.$dialog.ConfirmConfig_} */
+md.$dialog.prototype.confirm = function() {};
 
 
 /******************************************************************************
