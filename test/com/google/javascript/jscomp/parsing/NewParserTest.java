@@ -2521,6 +2521,24 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "primary expression expected");
   }
 
+
+  public void testLookaheadGithubIssue699() {
+    long start = System.currentTimeMillis();
+    parse(
+        "[1,[1,[1,[1,[1,[1,\n" +
+        "[1,[1,[1,[1,[1,[1,\n" +
+        "[1,[1,[1,[1,[1,[1,\n" +
+        "[1,[1,[1,[1,[1,[1,\n" +
+        "[1,[1,[1,[1,[1,[1,\n" +
+        "[1,[1,\n" +
+        "[1]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] ");
+
+    long stop = System.currentTimeMillis();
+
+    assertTrue("Long runtime: " + (stop - start) , stop - start < 5000);
+
+  }
+
   private Node script(Node stmt) {
     Node n = new Node(Token.SCRIPT, stmt);
     n.setIsSyntheticBlock(true);
