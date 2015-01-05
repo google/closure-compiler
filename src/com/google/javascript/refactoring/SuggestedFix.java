@@ -46,11 +46,23 @@ import java.util.regex.Pattern;
  */
 public final class SuggestedFix {
 
+  private final Node originalMatchedNode;
   // Multimap of filename to a modification to that file.
   private final SetMultimap<String, CodeReplacement> replacements;
 
-  private SuggestedFix(SetMultimap<String, CodeReplacement> replacements) {
+  private SuggestedFix(
+      Node originalMatchedNode,
+      SetMultimap<String, CodeReplacement> replacements) {
+    this.originalMatchedNode = originalMatchedNode;
     this.replacements = replacements;
+  }
+
+  /**
+   * Returns the JS Compiler Node for the original node that caused this SuggestedFix to
+   * be constructed.
+   */
+  public Node getOriginalMatchedNode() {
+    return originalMatchedNode;
   }
 
   /**
@@ -75,8 +87,18 @@ public final class SuggestedFix {
    * manipulate JS nodes.
    */
   public static final class Builder {
+    private Node originalMatchedNode = null;
     private final ImmutableSetMultimap.Builder<String, CodeReplacement> replacements =
         ImmutableSetMultimap.builder();
+
+    /**
+     * Sets the node on this SuggestedFix that caused this SuggestedFix to be built
+     * in the first place.
+     */
+    public Builder setOriginalMatchedNode(Node node) {
+      originalMatchedNode = node;
+      return this;
+    }
 
     /**
      * Inserts a new node before the provided node.
@@ -439,7 +461,7 @@ public final class SuggestedFix {
     }
 
     public SuggestedFix build() {
-      return new SuggestedFix(replacements.build());
+      return new SuggestedFix(originalMatchedNode, replacements.build());
     }
   }
 }

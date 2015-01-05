@@ -114,13 +114,13 @@ public final class RefactoringDriver {
       return this;
     }
 
-    public Builder addExterns(List<SourceFile> externs) {
+    public Builder addExterns(Iterable<SourceFile> externs) {
       this.externs.addAll(externs);
       return this;
     }
 
-    public Builder addExternsFromFile(List<String> externs) {
-      this.externs.addAll(Lists.transform(externs, TO_SOURCE_FILE_FN));
+    public Builder addExternsFromFile(Iterable<String> externs) {
+      this.externs.addAll(Lists.transform(ImmutableList.copyOf(externs), TO_SOURCE_FILE_FN));
       return this;
     }
 
@@ -134,13 +134,13 @@ public final class RefactoringDriver {
       return this;
     }
 
-    public Builder addInputs(List<SourceFile> inputs) {
+    public Builder addInputs(Iterable<SourceFile> inputs) {
       this.inputs.addAll(inputs);
       return this;
     }
 
-    public Builder addInputsFromFile(List<String> inputs) {
-      this.inputs.addAll(Lists.transform(inputs, TO_SOURCE_FILE_FN));
+    public Builder addInputsFromFile(Iterable<String> inputs) {
+      this.inputs.addAll(Lists.transform(ImmutableList.copyOf(inputs), TO_SOURCE_FILE_FN));
       return this;
     }
 

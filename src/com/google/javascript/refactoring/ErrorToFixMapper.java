@@ -48,14 +48,18 @@ public final class ErrorToFixMapper {
   }
 
   private static SuggestedFix getFixForDebuggerStatement(JSError error) {
-    return new SuggestedFix.Builder().delete(error.node).build();
+    return new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
+        .delete(error.node).build();
   }
 
   private static SuggestedFix getFixForInexistentProperty(JSError error) {
     Matcher m = DID_YOU_MEAN.matcher(error.description);
     if (m.matches()) {
       String suggestedPropName = m.group(1);
-      return new SuggestedFix.Builder().rename(error.node, suggestedPropName).build();
+      return new SuggestedFix.Builder()
+          .setOriginalMatchedNode(error.node)
+          .rename(error.node, suggestedPropName).build();
     }
     return null;
   }
@@ -68,11 +72,14 @@ public final class ErrorToFixMapper {
     NodeMetadata metadata = new NodeMetadata(compiler);
     Match match = new Match(error.node, metadata);
     return new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
         .addGoogRequire(match, namespaceToRequire)
         .build();
   }
 
   private static SuggestedFix getFixForUnnecessaryCast(JSError error, AbstractCompiler compiler) {
-    return new SuggestedFix.Builder().removeCast(error.node, compiler).build();
+    return new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
+        .removeCast(error.node, compiler).build();
   }
 }
