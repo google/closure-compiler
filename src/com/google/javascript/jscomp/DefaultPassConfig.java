@@ -697,10 +697,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(aliasExternals);
     }
 
-    if (options.aliasKeywords) {
-      passes.add(aliasKeywords);
-    }
-
     // Passes after this point can no longer depend on normalized AST
     // assumptions.
     passes.add(markUnnormalized);
@@ -2251,14 +2247,6 @@ public class DefaultPassConfig extends PassConfig {
           options.aliasAllStrings ? null : options.aliasableStrings,
           options.aliasStringsBlacklist,
           options.outputJsStringUsage);
-    }
-  };
-
-  /** Aliases common keywords (true, false) */
-  final PassFactory aliasKeywords = new PassFactory("aliasKeywords", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new AliasKeywords(compiler);
     }
   };
 

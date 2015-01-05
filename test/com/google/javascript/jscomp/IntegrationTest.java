@@ -1644,21 +1644,6 @@ public class IntegrationTest extends IntegrationTestCase {
     test(options, code, expected);
   }
 
-  public void testAliasKeywords() {
-    CompilerOptions options = createCompilerOptions();
-    String code =
-        "function f() { return true + true + true + true + true + true; }";
-    String expected = "var JSCompiler_alias_TRUE = true;" +
-        "function f() { return JSCompiler_alias_TRUE + " +
-        "    JSCompiler_alias_TRUE + JSCompiler_alias_TRUE + " +
-        "    JSCompiler_alias_TRUE + JSCompiler_alias_TRUE + " +
-        "    JSCompiler_alias_TRUE; }";
-    testSame(options, code);
-
-    options.aliasKeywords = true;
-    test(options, code, expected);
-  }
-
   public void testRenameVars1() {
     CompilerOptions options = createCompilerOptions();
     String code =
