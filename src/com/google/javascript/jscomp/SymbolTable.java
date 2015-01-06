@@ -1582,10 +1582,6 @@ public final class SymbolTable
         Symbol symbol = lookupPossiblyDottedName(scope, n.getString());
         if (symbol != null) {
           symbol.defineReferenceAt(n);
-        } else {
-         // TODO(johnlenz): filter out "class" template vars or remove this logging.
-          logger.info(NodeUtil.getSourceName(refNode) + ":" + refNode.getLineno() +
-             "  Could not find symbol for type: " + n.getString());
         }
       }
 
