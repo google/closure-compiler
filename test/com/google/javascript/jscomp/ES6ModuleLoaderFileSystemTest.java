@@ -96,5 +96,6 @@ public class ES6ModuleLoaderFileSystemTest {
     Assert.assertEquals("A/index.js", loader.getLoadAddress(inputA));
     Assert.assertEquals("A/index.js", loader.locate("../A", inputB));
     Assert.assertEquals("A/index.js", loader.locate("./A", inputApp));
+    Assert.assertEquals("A/index.js", loader.locate("A", inputApp));
   }
 }

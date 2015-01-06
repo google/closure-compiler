@@ -107,7 +107,7 @@ abstract class ES6ModuleLoader {
 
     private NaiveModuleLoader(AbstractCompiler compiler, String moduleRoot) {
       this.moduleRoot = moduleRoot;
-      this.moduleRootURI = new File(moduleRoot).toURI();
+      this.moduleRootURI = createUri(moduleRoot);
 
       // Precompute the module name of each source file.
       for (CompilerInput input : compiler.getInputsInOrder()) {
@@ -117,11 +117,10 @@ abstract class ES6ModuleLoader {
 
     @Override
     String locate(String name, CompilerInput referrer) {
-      if (isRelativeIdentifier(name)) {
-        return convertSourceUriToModuleAddress(
-            createUri(referrer).resolve(createUri(name)));
-      }
-      return createUri(name).normalize().toString();
+      URI base = isRelativeIdentifier(name) ? createUri(referrer)
+          : moduleRootURI;
+
+      return convertSourceUriToModuleAddress(base.resolve(createUri(name)));
     }
 
     @Override
