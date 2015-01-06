@@ -81,27 +81,27 @@ public class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType RETURN_NONDECLARED_TYPE = DiagnosticType.warning(
       "JSC_RETURN_NONDECLARED_TYPE",
-      "Returned type does not match declared return type.\n " +
+      "Returned type does not match declared return type.\n" +
       "declared : {0}\n" +
       "found    : {1}\n");
 
   static final DiagnosticType INVALID_INFERRED_RETURN_TYPE =
       DiagnosticType.warning(
           "JSC_INVALID_INFERRED_RETURN_TYPE",
-          "Function called in context that expects incompatible type.\n " +
+          "Function called in context that expects incompatible type.\n" +
           "expected : {0}\n" +
           "found    : {1}\n");
 
   static final DiagnosticType INVALID_ARGUMENT_TYPE = DiagnosticType.warning(
       "JSC_INVALID_ARGUMENT_TYPE",
-      "Invalid type for parameter {0} of function {1}.\n " +
+      "Invalid type for parameter {0} of function {1}.\n" +
       "expected : {2}\n" +
       "found    : {3}\n");
 
   static final DiagnosticType CROSS_SCOPE_GOTCHA = DiagnosticType.warning(
       "JSC_CROSS_SCOPE_GOTCHA",
       "You thought we weren't going to notice? Guess again.\n" +
-      "Variable {0} typed inconsistently across scopes.\n " +
+      "Variable {0} typed inconsistently across scopes.\n" +
       "In outer scope : {1}\n" +
       "In inner scope : {2}\n");
 
@@ -1766,8 +1766,9 @@ public class NewTypeInference implements CompilerPass {
       if (funType.isOptionalArg(i) && pair.type.equals(JSType.UNDEFINED)) {
         argTypeForDeferredCheck = null; // No deferred check needed.
       } else if (!pair.type.isSubtypeOf(formalType)) {
+        String fnName = getReadableCalleeName(call.getFirstChild());
         warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
-                Integer.toString(i + 1), "",
+                Integer.toString(i + 1), fnName,
                 formalType.toString(), pair.type.toString()));
         argTypeForDeferredCheck = null; // No deferred check needed.
       }
