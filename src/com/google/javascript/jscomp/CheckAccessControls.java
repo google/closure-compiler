@@ -575,6 +575,11 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     // Check whether constant properties are reassigned
     if (isConstant) {
+      JSDocInfo info = parent.getJSDocInfo();
+      if (info != null && info.getSuppressions().contains("const")) {
+        return;
+      }
+
       if (isDelete) {
         compiler.report(
             t.makeError(getprop, CONST_PROPERTY_DELETED, propertyName));
