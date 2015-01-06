@@ -392,7 +392,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       if (lValue == null ||
           lValue.getParent() == null ||
           lValue.getParent().getParent() == null ||
-          !(NodeUtil.isObjectLitKey(lValue) ||
+          !((NodeUtil.isObjectLitKey(lValue) && !lValue.isQuotedString()) ||
             NodeUtil.isExprAssign(lValue.getParent().getParent()))) {
         return null;
       }
@@ -481,13 +481,15 @@ class AnalyzePrototypeProperties implements CompilerPass {
           if (map.isObjectLit()) {
             for (Node key = map.getFirstChild();
                  key != null; key = key.getNext()) {
-              // May be STRING, GETTER_DEF, or SETTER_DEF,
-              String name = key.getString();
-              Property prop = new LiteralProperty(
-                  key, key.getFirstChild(), map, n,
-                  maybeGetVar(t, root),
-                  t.getModule());
-              getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
+              if (!key.isQuotedString()) {
+                // May be STRING, GETTER_DEF, or SETTER_DEF,
+                String name = key.getString();
+                Property prop = new LiteralProperty(
+                    key, key.getFirstChild(), map, n,
+                    maybeGetVar(t, root),
+                    t.getModule());
+                getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
+              }
             }
             return true;
           }

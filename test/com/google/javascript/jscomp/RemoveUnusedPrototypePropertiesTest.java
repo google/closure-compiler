@@ -313,6 +313,12 @@ public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
     testSame("function Foo() {} Foo.prototype[1 + 1] = function() {};");
   }
 
+  public void testQuotedProperties() {
+    // Basic removal for prototype replacement
+    testSame("function e(){}" +
+           "e.prototype = {'a': function(){}, 'b': function(){}};");
+  }
+
   public void testNeverRemoveImplicitlyUsedProperties() {
     testSame("function Foo() {} " +
              "Foo.prototype.length = 3; " +
