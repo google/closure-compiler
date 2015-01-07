@@ -535,9 +535,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     renamePrefixNamespaceAssumeCrossModuleNames = assume;
   }
 
-  /** Aliases true, false, and null to variables with shorter names. */
-  public boolean aliasKeywords;
-
   /** Flattens multi-level property names (e.g. a$b = x) */
   public boolean collapseProperties;
 
@@ -1025,7 +1022,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     shadowVariables = false;
     preferStableNames = false;
     renamePrefix = null;
-    aliasKeywords = false;
     collapseProperties = false;
     collapseObjectLiterals = false;
     devirtualizePrototypeMethods = false;
@@ -1973,10 +1969,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setRenamePrefixNamespace(String renamePrefixNamespace) {
     this.renamePrefixNamespace = renamePrefixNamespace;
-  }
-
-  public void setAliasKeywords(boolean aliasKeywords) {
-    this.aliasKeywords = aliasKeywords;
   }
 
   public void setCollapseProperties(boolean collapseProperties) {
