@@ -372,7 +372,9 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *   require: (string|Array.<string>|undefined),
  *   restrict: (string|undefined),
  *   scope: (boolean|Object.<string, string>|undefined),
- *   template: (string|undefined),
+ *   template: (string|
+ *       function(!angular.JQLite=,!angular.Attributes=): string|
+ *       undefined),
  *   templateNamespace: (string|undefined),
  *   templateUrl: (string|
  *       function(!angular.JQLite=,!angular.Attributes=)|
@@ -439,8 +441,11 @@ angular.Directive.restrict;
 angular.Directive.scope;
 
 /**
- * @type {(string|undefined)}
- * TODO: This can also be a function which returns a string.
+ * @type {(
+ *   string|
+ *   function(!angular.JQLite=,!angular.Attributes=): string|
+ *   undefined
+ * )}
  */
 angular.Directive.template;
 
