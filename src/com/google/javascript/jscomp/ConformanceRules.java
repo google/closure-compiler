@@ -314,6 +314,7 @@ public final class ConformanceRules {
         if (methodClassType != null && lhs.getJSType() != null) {
           JSType targetType = lhs.getJSType().restrictByNotNullOrUndefined();
           if (targetType.isUnknownType()
+             || targetType.isEmptyType()
              || targetType.isAllType()
              || targetType.isEquivalentTo(
                  registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
