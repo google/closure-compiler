@@ -168,3 +168,27 @@ md._sidenavService;
  * }
  */
 md.$sidenav;
+
+
+/******************************************************************************
+ * $mdThemingProvider Service
+ *****************************************************************************/
+
+
+/**
+ * @typedef {{
+ *   setDefaultTheme: function(string),
+ *   alwaysWatchTheme: function(boolean)
+ * }}
+ */
+md.$mdThemingProvider;
+
+/**
+ * @param {string} theme
+ */
+md.$mdThemingProvider.setDefaultTheme = function(theme) {};
+
+/**
+ * @param {boolean} alwaysWatch
+ */
+md.$mdThemingProvider.alwaysWatchTheme = function(alwaysWatch) {};
