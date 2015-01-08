@@ -6340,88 +6340,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testNoTypeCheck1() throws Exception {
-    testTypes("/** @notypecheck */function foo() { new 4 }");
-  }
-
-  public void testNoTypeCheck2() throws Exception {
-    testTypes("/** @notypecheck */var foo = function() { new 4 }");
-  }
-
-  public void testNoTypeCheck3() throws Exception {
-    testTypes("/** @notypecheck */var foo = function bar() { new 4 }");
-  }
-
-  public void testNoTypeCheck4() throws Exception {
-    testTypes("var foo;" +
-        "/** @notypecheck */foo = function() { new 4 }");
-  }
-
-  public void testNoTypeCheck5() throws Exception {
-    testTypes("var foo;" +
-        "foo = /** @notypecheck */function() { new 4 }");
-  }
-
-  public void testNoTypeCheck6() throws Exception {
-    testTypes("var foo;" +
-        "/** @notypecheck */foo = function bar() { new 4 }");
-  }
-
-  public void testNoTypeCheck7() throws Exception {
-    testTypes("var foo;" +
-        "foo = /** @notypecheck */function bar() { new 4 }");
-  }
-
-  public void testNoTypeCheck8() throws Exception {
-    testTypes("/** @fileoverview \n * @notypecheck */ var foo;" +
-        "var bar = 3; /** @param {string} x */ function f(x) {} f(bar);");
-  }
-
-  public void testNoTypeCheck9() throws Exception {
-    testTypes("/** @notypecheck */ function g() { }" +
-        " /** @type {string} */ var a = 1",
-        "initializing variable\n" +
-        "found   : number\n" +
-        "required: string"
-        );
-  }
-
-  public void testNoTypeCheck10() throws Exception {
-    testTypes("/** @notypecheck */ function g() { }" +
-        " function h() {/** @type {string} */ var a = 1}",
-        "initializing variable\n" +
-        "found   : number\n" +
-        "required: string"
-        );
-  }
-
-  public void testNoTypeCheck11() throws Exception {
-    testTypes("/** @notypecheck */ function g() { }" +
-        "/** @notypecheck */ function h() {/** @type {string} */ var a = 1}"
-        );
-  }
-
-  public void testNoTypeCheck12() throws Exception {
-    testTypes("/** @notypecheck */ function g() { }" +
-        "function h() {/** @type {string}\n * @notypecheck\n*/ var a = 1}"
-        );
-  }
-
-  public void testNoTypeCheck13() throws Exception {
-    testTypes("/** @notypecheck */ function g() { }" +
-        "function h() {/** @type {string}\n * @notypecheck\n*/ var a = 1;" +
-        "/** @type {string}*/ var b = 1}",
-        "initializing variable\n" +
-        "found   : number\n" +
-        "required: string"
-        );
-  }
-
-  public void testNoTypeCheck14() throws Exception {
-    testTypes("/** @fileoverview \n * @notypecheck */ function g() { }" +
-        "g(1,2,3)");
-  }
-
   public void testImplicitCast() throws Exception {
     testTypesWithExterns("/** @constructor */ function Element() {};\n" +
              "/** @type {string}\n" +
@@ -6935,7 +6853,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         " * @return {string}\n" +
         " */\n" +
         "function temp2(opt_data) {\n" +
-        "  /** @notypecheck */\n" +
+        "  /** @suppress {checkTypes} */\n" +
         "  function __inner() {\n" +
         "    return temp1(opt_data.activity);\n" +
         "  }\n" +

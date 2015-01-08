@@ -1606,14 +1606,6 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "type annotation incompatible with other annotations");
   }
 
-  public void testParseNoCheck1() throws Exception {
-    assertTrue(parse("@notypecheck*/").isNoTypeCheck());
-  }
-
-  public void testParseNoCheck2() throws Exception {
-    parse("@notypecheck\n@notypecheck*/", "extra @notypecheck tag");
-  }
-
   public void testParseOverride1() throws Exception {
     assertTrue(parse("@override*/").isOverride());
   }

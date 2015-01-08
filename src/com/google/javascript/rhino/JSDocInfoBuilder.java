@@ -750,23 +750,6 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
-   * {@link JSDocInfo#isNoTypeCheck()} flag set to {@code true}.
-   *
-   * @return {@code true} if the no check flag was recorded and {@code false}
-   *     if it was already recorded
-   */
-  public boolean recordNoTypeCheck() {
-    if (!currentInfo.isNoTypeCheck()) {
-      currentInfo.setNoCheck(true);
-      populated = true;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isConstructor()} flag set to {@code true}.
    *
    * @return {@code true} if the constructor was recorded and {@code false}

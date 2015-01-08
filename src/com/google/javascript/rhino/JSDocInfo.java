@@ -379,7 +379,8 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_DEFINE        = 0x00000004; // @define
   private static final int MASK_HIDDEN        = 0x00000008; // @hidden
   private static final int MASK_PRESERVETRY   = 0x00000010; // @preserveTry
-  private static final int MASK_NOCHECK       = 0x00000020; // @notypecheck
+  @SuppressWarnings("unused")
+  private static final int MASK_UNUSED_1      = 0x00000020; //
   private static final int MASK_OVERRIDE      = 0x00000040; // @override
   private static final int MASK_NOALIAS       = 0x00000080; // @noalias
   private static final int MASK_DEPRECATED    = 0x00000100; // @deprecated
@@ -390,7 +391,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_NOSIDEEFFECTS = 0x00004000; // @nosideeffects
   private static final int MASK_EXTERNS       = 0x00008000; // @externs
   @SuppressWarnings("unused")
-  private static final int MASK_UNUSED_1      = 0x00010000; //
+  private static final int MASK_UNUSED_2      = 0x00010000; //
   private static final int MASK_NOCOMPILE     = 0x00020000; // @nocompile
   private static final int MASK_CONSISTIDGEN  = 0x00040000; // @consistentIdGenerator
   private static final int MASK_IDGEN         = 0x00080000; // @idGenerator
@@ -521,10 +522,6 @@ public class JSDocInfo implements Serializable {
 
   void setHidden(boolean value) {
     setFlag(value, MASK_HIDDEN);
-  }
-
-  void setNoCheck(boolean value) {
-    setFlag(value, MASK_NOCHECK);
   }
 
   void setShouldPreserveTry(boolean value) {
@@ -661,14 +658,6 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isHidden() {
     return getFlag(MASK_HIDDEN);
-  }
-
-  /**
-   * Returns whether the {@code @nocheck} annotation is present on this
-   * {@link JSDocInfo}.
-   */
-  public boolean isNoTypeCheck() {
-    return getFlag(MASK_NOCHECK);
   }
 
   /**

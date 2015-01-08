@@ -658,13 +658,6 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
-        case NO_TYPE_CHECK:
-          if (!jsdocBuilder.recordNoTypeCheck()) {
-            parser.addParserWarning("msg.jsdoc.nocheck",
-                stream.getLineno(), stream.getCharno());
-          }
-          return eatUntilEOLIfNotAnnotation();
-
         case NOT_IMPLEMENTED:
           return eatUntilEOLIfNotAnnotation();
 

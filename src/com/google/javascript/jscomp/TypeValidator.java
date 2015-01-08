@@ -64,7 +64,6 @@ class TypeValidator {
   private final AbstractCompiler compiler;
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
-  private boolean shouldReport = true;
   private final JSType nullOrUndefined;
   private final boolean reportUnnecessaryCasts;
 
@@ -189,10 +188,6 @@ class TypeValidator {
    */
   Iterable<TypeMismatch> getMismatches() {
     return mismatches;
-  }
-
-  void setShouldReport(boolean report) {
-    this.shouldReport = report;
   }
 
   // All non-private methods should have the form:
@@ -849,9 +844,7 @@ class TypeValidator {
   }
 
   private JSError report(JSError error) {
-    if (shouldReport) {
-      compiler.report(error);
-    }
+    compiler.report(error);
     return error;
   }
 

@@ -130,7 +130,7 @@ public class RemoveUnusedNamesTest extends CompilerTestCase {
   public void testStatement() {
     test("/**\n" +
          " * @fileoverview\n" +
-         " * @notypecheck\n" +
+         " * @suppress {checkTypes} \n" +
          " */ \n" +
          "/** @constructor */" +
         "function e(){}" +

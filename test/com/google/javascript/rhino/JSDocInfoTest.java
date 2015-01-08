@@ -321,16 +321,6 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.shouldPreserveTry());
   }
 
-  public void testSetNoTypeCheck() {
-    JSDocInfo info = new JSDocInfo();
-    info.setNoCheck(true);
-
-    assertFalse(info.isDeprecated());
-    assertFalse(info.isNoAlias());
-    assertFalse(info.isOverride());
-    assertTrue(info.isNoTypeCheck());
-  }
-
   public void testSetOverride() {
     JSDocInfo info = new JSDocInfo();
     info.setOverride(true);

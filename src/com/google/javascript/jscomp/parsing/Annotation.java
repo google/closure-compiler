@@ -58,7 +58,6 @@ enum Annotation {
   NO_ALIAS,
   NO_COMPILE,
   NO_SIDE_EFFECTS,
-  NO_TYPE_CHECK,
   NOT_IMPLEMENTED,
   OVERRIDE,
   PACKAGE,
@@ -121,7 +120,6 @@ enum Annotation {
       put("noalias", Annotation.NO_ALIAS).
       put("nocompile", Annotation.NO_COMPILE).
       put("nosideeffects", Annotation.NO_SIDE_EFFECTS).
-      put("notypecheck", Annotation.NO_TYPE_CHECK).
       put("override", Annotation.OVERRIDE).
       put("owner", Annotation.AUTHOR).
       put("package", Annotation.PACKAGE).
