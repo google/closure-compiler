@@ -205,7 +205,7 @@ public abstract class JSType implements Serializable {
 
   /**
    * Tests whether the type is a string (value or Object).
-   * @return {@code this &lt;: (String, string)}
+   * @return <code>this &lt;: (String, string)</code>
    */
   public final boolean isString() {
     return isSubtype(
@@ -214,7 +214,7 @@ public abstract class JSType implements Serializable {
 
   /**
    * Tests whether the type is a number (value or Object).
-   * @return {@code this &lt;: (Number, number)}
+   * @return <code>this &lt;: (Number, number)</code>
    */
   public final boolean isNumber() {
     return isSubtype(
@@ -466,7 +466,7 @@ public abstract class JSType implements Serializable {
 
   /**
    * Tests whether this type is an {@code Object}, or any subtype thereof.
-   * @return {@code this &lt;: Object}
+   * @return <code>this &lt;: Object</code>
    */
   public boolean isObject() {
     return false;
@@ -921,11 +921,11 @@ public abstract class JSType implements Serializable {
    * type lattice.<p>
    * Examples:
    * <ul>
-   * <li>{@code number &#8744; *} = {@code *}</li>
-   * <li>{@code number &#8744; Object} = {@code (number, Object)}</li>
-   * <li>{@code Number &#8744; Object} = {@code Object}</li>
+   * <li><code>number &#8744; *</code> = {@code *}</li>
+   * <li><code>number &#8744; Object</code> = {@code (number, Object)}</li>
+   * <li><code>Number &#8744; Object</code> = {@code Object}</li>
    * </ul>
-   * @return {@code this &#8744; that}
+   * @return <code>this &#8744; that</code>
    */
   public JSType getLeastSupertype(JSType that) {
     if (that.isUnionType()) {
@@ -952,11 +952,11 @@ public abstract class JSType implements Serializable {
    * type lattice.<p>
    * Examples
    * <ul>
-   * <li>{@code Number &#8743; Any} = {@code Any}</li>
-   * <li>{@code number &#8743; Object} = {@code Any}</li>
-   * <li>{@code Number &#8743; Object} = {@code Number}</li>
+   * <li><code>Number &#8743; Any</code> = {@code Any}</li>
+   * <li><code>number &#8743; Object</code> = {@code Any}</li>
+   * <li><code>Number &#8743; Object</code> = {@code Number}</li>
    * </ul>
-   * @return {@code this &#8744; that}
+   * @return <code>this &#8744; that</code>
    */
   public JSType getGreatestSubtype(JSType that) {
     return getGreatestSubtype(this, that);
@@ -1230,19 +1230,19 @@ public abstract class JSType implements Serializable {
    * <li>(ref) &mdash; a type is a subtype of itself.</li>
    * <li>(union-l) &mdash; A union type is a subtype of a type U if all the
    * union type's constituents are a subtype of U. Formally<br>
-   * {@code (T<sub>1</sub>, &hellip;, T<sub>n</sub>) &lt;: U} if and only
-   * {@code T<sub>k</sub> &lt;: U} for all {@code k &isin; 1..n}.</li>
+   * <code>(T<sub>1</sub>, &hellip;, T<sub>n</sub>) &lt;: U</code> if and only
+   * <code>T<sub>k</sub> &lt;: U</code> for all <code>k &isin; 1..n</code>.</li>
    * <li>(union-r) &mdash; A type U is a subtype of a union type if it is a
    * subtype of one of the union type's constituents. Formally<br>
-   * {@code U &lt;: (T<sub>1</sub>, &hellip;, T<sub>n</sub>)} if and only
-   * if {@code U &lt;: T<sub>k</sub>} for some index {@code k}.</li>
-   * <li>(objects) &mdash; an Object {@code O<sub>1</sub>} is a subtype
-   * of an object {@code O<sub>2</sub>} if it has more properties
-   * than {@code O<sub>2</sub>} and all common properties are
+   * <code>U &lt;: (T<sub>1</sub>, &hellip;, T<sub>n</sub>)</code> if and only
+   * if <code>U &lt;: T<sub>k</sub></code> for some index {@code k}.</li>
+   * <li>(objects) &mdash; an Object <code>O<sub>1</sub></code> is a subtype
+   * of an object <code>O<sub>2</sub></code> if it has more properties
+   * than <code>O<sub>2</sub></code> and all common properties are
    * pairwise subtypes.</li>
    * </ul>
    *
-   * @return {@code this &lt;: that}
+   * @return <code>this &lt;: that</code>
    */
   public boolean isSubtype(JSType that) {
     return isSubtypeHelper(this, that);
