@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/**
+ * @fileoverview Definitions for ECMAScript 6.
+ * @see http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts
+ * @see https://www.khronos.org/registry/typedarray/specs/latest/
+ * @externs
+ */
+
 // TODO(johnlenz): symbol should be a primitive type.
 /** @typedef {?} */
 var symbol;
@@ -58,11 +65,35 @@ Iterator.prototype.next;
 
 
 /**
- * @fileoverview Definitions for ECMAScript 6.
- * @see http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts
- * @see https://www.khronos.org/registry/typedarray/specs/latest/
- * @externs
+ * @constructor
+ * @see http://people.mozilla.org/~jorendorff/es6-draft.html#sec-generator-objects
+ * @implements {Iterator<VALUE>}
+ * @template VALUE
  */
+var Generator = function() {};
+
+/**
+ * @param {?=} opt_value
+ * @return {{value:VALUE, done:boolean}}
+ * @override
+ */
+Generator.prototype.next = function(opt_value) {};
+
+/**
+ * @param {VALUE} value
+ * @return {{value:VALUE, done:boolean}}
+ */
+Generator.prototype.return = function(value) {};
+
+/**
+ * @param {?} exception
+ * @return {{value:VALUE, done:boolean}}
+ */
+Generator.prototype.throw = function(exception) {};
+
+
+// TODO(johnlenz): Array should be Iterable.
+
 
 
 /**
