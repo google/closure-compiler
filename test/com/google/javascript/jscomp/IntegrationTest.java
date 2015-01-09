@@ -1569,7 +1569,6 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testPropertyRenaming() {
     CompilerOptions options = createCompilerOptions();
-    options.propertyAffinity = true;
     String code =
         "function f() { return this.foo + this['bar'] + this.Baz; }" +
         "f.prototype.bar = 3; f.prototype.Baz = 3;";
@@ -1580,8 +1579,8 @@ public class IntegrationTest extends IntegrationTestCase {
         "function f() { return this.foo + this['b'] + this.a; } " +
         "f.prototype.b = 3; f.prototype.a = 3;";
     String all =
-        "function f() { return this.b + this['bar'] + this.a; }" +
-        "f.prototype.c = 3; f.prototype.a = 3;";
+        "function f() { return this.c + this['bar'] + this.a; }" +
+        "f.prototype.b = 3; f.prototype.a = 3;";
     testSame(options, code);
 
     options.propertyRenaming = PropertyRenamingPolicy.HEURISTIC;

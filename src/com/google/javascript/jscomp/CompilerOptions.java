@@ -491,9 +491,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Controls which properties get renamed. */
   public PropertyRenamingPolicy propertyRenaming;
 
-  /** Should we use affinity information when generating property names. */
-  boolean propertyAffinity;
-
   /** Controls label renaming. */
   public boolean labelRenaming;
 
@@ -1016,7 +1013,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;
     propertyRenaming = PropertyRenamingPolicy.OFF;
-    propertyAffinity = false;
     labelRenaming = false;
     generatePseudoNames = false;
     shadowVariables = false;
@@ -1292,8 +1288,12 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.propertyRenaming = newPropertyPolicy;
   }
 
+  /**
+   * @param useAffinity
+   * @deprecated No longer does anything.
+   */
+  @Deprecated
   public void setPropertyAffinity(boolean useAffinity) {
-    this.propertyAffinity = useAffinity;
   }
 
   /** Should shadow outer scope variable name during renaming. */
