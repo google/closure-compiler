@@ -444,7 +444,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseUnionType14() throws Exception {
     testParseType(
-        "(function(...[function(number):boolean]):number)|" +
+        "(function(...(function(number):boolean)):number)|" +
         "function(this:String, string):number",
         "Function");
   }
@@ -499,18 +499,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("function (...number): boolean");
   }
 
-  public void testParseFunctionalType4a() throws Exception {
-    testParseType("function (...[number]): boolean",
-        "function (...number): boolean");
-  }
-
   public void testParseFunctionalType5() throws Exception {
     testParseType("function (number, ...string): boolean");
-  }
-
-  public void testParseFunctionalType5a() throws Exception {
-    testParseType("function (number, ...[string]): boolean",
-        "function (number, ...string): boolean");
   }
 
   public void testParseFunctionalType6() throws Exception {
@@ -522,21 +512,15 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("function()", "function (): ?");
   }
 
-  public void testParseFunctionalType8() throws Exception {
-    testParseType(
-        "function(this:Array,...[boolean])",
-        "function (this:Array, ...boolean): ?");
-  }
-
   public void testParseFunctionalType9() throws Exception {
     testParseType(
-        "function(this:Array,!Date,...[boolean?])",
+        "function(this:Array,!Date,...(boolean?))",
         "function (this:Array, Date, ...(boolean|null)): ?");
   }
 
   public void testParseFunctionalType10() throws Exception {
     testParseType(
-        "function(...[Object?]):boolean?",
+        "function(...(Object?)):boolean?",
         "function (...(Object|null)): (boolean|null)");
   }
 
@@ -631,11 +615,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseFunctionalTypeError3() throws Exception {
     parse("@type {function(...[number], string)}*/",
-        "Bad type annotation. variable length argument must be last");
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseFunctionalTypeError4() throws Exception {
-    parse("@type {function(string, ...[number], boolean):string}*/",
+    parse("@type {function(string, ...number, boolean):string}*/",
         "Bad type annotation. variable length argument must be last");
   }
 
@@ -651,7 +635,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseFunctionalTypeError7() throws Exception {
     parse("@type {function(...[number)}*/",
-        "Bad type annotation. missing closing ]");
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseFunctionalTypeError8() throws Exception {
@@ -677,6 +661,21 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseFunctionalTypeError12() throws Exception {
     resolve(parse("@type {function (new:number)}*/").getType(),
         "constructed type must be an object type");
+  }
+
+  public void testParseFunctionalTypeError13() throws Exception {
+    parse("@type {function (...[number]): boolean} */",
+        "Bad type annotation. type not recognized due to syntax error");
+  }
+
+  public void testParseFunctionalTypeError14() throws Exception {
+    parse("@type {function (number, ...[string]): boolean} */",
+        "Bad type annotation. type not recognized due to syntax error");
+  }
+
+  public void testParseFunctionalType8() throws Exception {
+    parse("@type {function(this:Array,...[boolean])} */",
+        "Bad type annotation. type not recognized due to syntax error");
   }
 
   public void testParseArrayTypeError1() throws Exception {
@@ -3840,7 +3839,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParserWithTTLNativeTypeExprFunctionVarargs() {
-    parse("@template T := typeExpr('function(string, ...[number]): number') =: */");
+    parse("@template T := typeExpr('function(string, ...number): number') =: */");
   }
 
   public void testParserWithTTLNativeTypeExprFunctionOptional() {

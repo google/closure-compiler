@@ -2009,7 +2009,6 @@ public final class JsDocInfoParser {
       // {?=} - equals
       // {function(?, number)} - comma
       // {function(number, ?)} - right paren
-      // {function(number, ...[?])} - right bracket
       // {function(): ?|number} - pipe
       // {Array.<?>} - greater than
       // /** ? */ - EOC (inline types)
@@ -2253,25 +2252,8 @@ public final class JsDocInfoParser {
             paramType = newNode(Token.ELLIPSIS);
           } else {
             skipEOLs();
-
-            // Whether the optional square brackets are present.
-            // TODO(tbreisacher): Remove this option after no one is
-            // using the brackets anymore.
-            boolean squareBrackets = match(JsDocToken.LEFT_SQUARE);
-            if (squareBrackets) {
-              next();
-            }
-
-            skipEOLs();
             paramType = wrapNode(Token.ELLIPSIS, parseTypeExpression(next()));
             skipEOLs();
-            if (squareBrackets) {
-              if (match(JsDocToken.RIGHT_SQUARE)) {
-                next();
-              } else {
-                return reportTypeSyntaxWarning("msg.jsdoc.missing.rb");
-              }
-            }
           }
 
           isVarArgs = true;

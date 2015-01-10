@@ -145,9 +145,9 @@ public class JSDocInfoPrinterTest extends TestCase {
         JSDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
-        JsDocInfoParser.parseTypeString("function(...[number])"), ""));
+        JsDocInfoParser.parseTypeString("function(...number)"), ""));
     info = builder.build(null);
-    assertEquals("/**@type {function(...[number])} */",
+    assertEquals("/**@type {function(...number)} */",
         JSDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(

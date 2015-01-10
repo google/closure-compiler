@@ -449,7 +449,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testOptionalArgFunctionParamError() throws Exception {
     String expectedWarning =
         "Bad type annotation. variable length argument must be last";
-    testTypes("/** @param {function(...[number], number=)} a */" +
+    testTypes("/** @param {function(...number, number=)} a */" +
               "function f(a) {};", expectedWarning, false);
   }
 
@@ -5153,14 +5153,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testHigherOrderFunctions4() throws Exception {
     testTypes(
-        "/** @type {function(this:Error,...[number]):Date} */var f; new f",
+        "/** @type {function(this:Error, ...number):Date} */var f; new f",
         "cannot instantiate non-constructor");
   }
 
   public void testHigherOrderFunctions5() throws Exception {
     testTypes(
         "/** @param {number} x */ function g(x) {}" +
-        "/** @type {function(new:Error,...[number]):Date} */ var f;" +
+        "/** @type {function(new:Error, ...number):Date} */ var f;" +
         "g(new f());",
         "actual parameter 1 of g does not match formal parameter\n" +
         "found   : Error\n" +
@@ -5629,7 +5629,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testOverriddenParams2() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +
-        "/** @type {function(...[?])} */" +
+        "/** @type {function(...?)} */" +
         "Foo.prototype.bar = function(var_args) {};" +
         "/**\n" +
         " * @constructor\n" +
@@ -5665,7 +5665,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testOverriddenParams4() throws Exception {
     testTypes(
         "/** @constructor */ function Foo() {}" +
-        "/** @type {function(...[number])} */" +
+        "/** @type {function(...number)} */" +
         "Foo.prototype.bar = function(var_args) {};" +
         "/**\n" +
         " * @constructor\n" +

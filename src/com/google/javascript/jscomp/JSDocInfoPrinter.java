@@ -155,16 +155,7 @@ public final class JSDocInfoPrinter {
     } else if (typeNode.getType() == Token.ELLIPSIS) {
       sb.append("...");
       if (typeNode.hasChildren()) {
-        boolean inFunction = typeNode.getParent() != null
-            && typeNode.getParent().getParent() != null
-            && typeNode.getParent().getParent().isFunction();
-        if (inFunction) {
-          sb.append("[");
-        }
         appendTypeNode(sb, typeNode.getFirstChild());
-        if (inFunction) {
-          sb.append("]");
-        }
       }
     } else if (typeNode.getType() == Token.STAR) {
       sb.append("*");

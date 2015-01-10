@@ -1423,11 +1423,11 @@ public class TypeInferenceTest extends TestCase {
   }
 
  public void testTypeTransformationWithNativeTypeExpressionFunctionVarargs() {
-    inFunction("/** @type {function(string, ...[number]): number} */\n"
+    inFunction("/** @type {function(string, ...number): number} */\n"
         + "var x;\n"
         + "/**\n"
         + " * @return {R}\n"
-        + " * @template R := typeExpr('function(string, ...[number]): number') =:\n"
+        + " * @template R := typeExpr('function(string, ...number): number') =:\n"
         + " */\n"
         + "function f(){}\n"
         + "var r = f();");
