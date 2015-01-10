@@ -1473,7 +1473,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       NodeTraversal t, Node n) {
     if (!objectType.isEmptyType() &&
         reportMissingProperties &&
-        (!isPropertyTest(n) || objectType.isStruct())) {
+        (!NodeUtil.isPropertyTest(compiler, n) || objectType.isStruct())) {
       if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
         boolean lowConfidence = objectType.isUnknownType()
             || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
@@ -1550,43 +1550,6 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     return null;
-  }
-
-  /**
-   * Determines whether this node is testing for the existence of a property.
-   * If true, we will not emit warnings about a missing property.
-   *
-   * @param getProp The GETPROP being tested.
-   */
-  private boolean isPropertyTest(Node getProp) {
-    Node parent = getProp.getParent();
-    switch (parent.getType()) {
-      case Token.CALL:
-        return parent.getFirstChild() != getProp &&
-            compiler.getCodingConvention().isPropertyTestFunction(parent);
-
-      case Token.IF:
-      case Token.WHILE:
-      case Token.DO:
-      case Token.FOR:
-        return NodeUtil.getConditionExpression(parent) == getProp;
-
-      case Token.INSTANCEOF:
-      case Token.TYPEOF:
-        return true;
-
-      case Token.AND:
-      case Token.HOOK:
-        return parent.getFirstChild() == getProp;
-
-      case Token.NOT:
-        return parent.getParent().isOr() &&
-            parent.getParent().getFirstChild() == parent;
-
-      case Token.CAST:
-        return isPropertyTest(parent);
-    }
-    return false;
   }
 
   /**

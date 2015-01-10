@@ -3062,10 +3062,15 @@ public class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzePropAccessBwd(
       Node receiver, String pname, TypeEnv outEnv, JSType requiredType) {
+    Node propAccessNode = receiver.getParent();
     QualifiedName qname = new QualifiedName(pname);
-    EnvTypePair pair = analyzeExprBwd(receiver, outEnv,
-        pickReqObjType(receiver.getParent()).withLoose()
-        .withProperty(qname, requiredType));
+    JSType reqObjType = pickReqObjType(propAccessNode).withLoose();
+    // In the BWD direction we don't have specialized types, so we use
+    // isPropertyTest to avoid spurious addition of properties to loose objects.
+    if (!NodeUtil.isPropertyTest(compiler, propAccessNode)) {
+      reqObjType = reqObjType.withProperty(qname, requiredType);
+    }
+    EnvTypePair pair = analyzeExprBwd(receiver, outEnv, reqObjType);
     JSType receiverType = pair.type;
     JSType propAccessType = receiverType.mayHaveProp(qname) ?
         receiverType.getProp(qname) : requiredType;

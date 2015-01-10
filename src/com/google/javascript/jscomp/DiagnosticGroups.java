@@ -285,7 +285,7 @@ public class DiagnosticGroups {
 //           TypeCheck.ILLEGAL_PROPERTY_CREATION,
           TypeCheck.IN_USED_WITH_STRUCT,
 //           TypeCheck.INEXISTENT_PROPERTY,
-//           TypeCheck.NOT_CALLABLE,
+          TypeCheck.NOT_CALLABLE,
 //           TypeCheck.WRONG_ARGUMENT_COUNT,
 //           TypeValidator.ILLEGAL_PROPERTY_ACCESS,
 //           TypeValidator.INVALID_CAST,

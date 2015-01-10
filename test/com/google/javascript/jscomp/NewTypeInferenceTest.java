@@ -1877,16 +1877,16 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     checkNoWarnings(
-        "/** @constructor */\n" +
-        "function Foo() {}\n" +
-        "/**\n" +
-        " * @template T\n" +
-        " * @param {T} x\n" +
-        " */\n" +
-        "function f(x) {\n" +
-        "  var y = x;\n" +
-        "  goog.asserts.assertInstanceof(y, Foo);\n" +
-        "}");
+        "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {T} x\n"
+        + " */\n"
+        + "function f(x) {\n"
+        + "  var y = x;\n"
+        + "  goog.asserts.assertInstanceof(y, Foo);\n"
+        + "}");
   }
 
   public void testDontInferBottom() {
@@ -2283,6 +2283,31 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + "  obj.x = 123;\n"
         + "  f(obj);\n"
         + "}");
+
+    checkNoWarnings(
+        "function f(g) {\n"
+        + "  if (g.randomName) {\n"
+        + "  } else {\n"
+        + "    return g();\n"
+        + "  }\n"
+        + "}");
+
+    checkNoWarnings(
+        "function f(x) {\n"
+        + "  if (x.a) {} else {}\n"
+        + "}\n"
+        + "f({ b: 123 }); ");
+
+    // TODO(dimvar): We could warn about this since x is callable and we're
+    // passing a non-function, but we don't catch it for now.
+    checkNoWarnings(
+        "function f(x) {\n"
+        + "  if (x.randomName) {\n"
+        + "  } else {\n"
+        + "    return x();\n"
+        + "  }\n"
+        + "}\n"
+        + "f({ abc: 123 }); ");
   }
 
   public void testUnionOfRecords() {

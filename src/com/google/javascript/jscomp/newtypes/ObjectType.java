@@ -146,6 +146,21 @@ public class ObjectType implements TypeWithProperties {
     return newObjs.build();
   }
 
+  // Trade-offs about property behavior on loose object types:
+  // We never mark properties as optional on loose objects. The reason is that
+  // we cannot know for sure when a property is optional or not.
+  // Eg, when we see an assignment to a loose obj
+  //   obj.p1 = 123;
+  // we cannot know if obj already has p1, or if this is a property creation.
+  // If the assignment is inside an IF branch, we should not say after the IF
+  // that p1 is optional. But as a consequence, this means that any property we
+  // see on a loose object might be optional. That's why we don't warn about
+  // possibly-inexistent properties on loose objects.
+  // Last, say we infer a loose object type with a property p1 for a formal
+  // parameter of a function f. If we pass a non-loose object to f that does not
+  // have a p1, we warn. This may create spurious warnings, if p1 is optional,
+  // but mostly it catches real bugs.
+
   private ObjectType withLoose() {
     if (isLoose()
         // Don't loosen nominal types
@@ -498,8 +513,7 @@ public class ObjectType implements TypeWithProperties {
     if (obj2.fn == null) {
       return this.fn == null || obj2.isLoose();
     } else if (this.fn == null) {
-      // Can only be executed if we have declared types for callable objects.
-      return false;
+      return isLoose;
     }
     return fn.isLooseSubtypeOf(obj2.fn);
   }
