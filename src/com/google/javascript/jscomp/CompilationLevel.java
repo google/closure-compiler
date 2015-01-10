@@ -137,6 +137,7 @@ public enum CompilationLevel {
     options.convertToDottedProperties = true;
     options.labelRenaming = true;
     options.removeDeadCode = true;
+    options.consoleLogElimination = true;
     options.optimizeArgumentsArray = true;
     options.collapseObjectLiterals = true;
     options.protectHiddenSideEffects = true;

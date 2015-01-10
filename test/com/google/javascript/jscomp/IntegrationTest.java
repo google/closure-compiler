@@ -174,7 +174,7 @@ public class IntegrationTest extends IntegrationTestCase {
     testSame(
         options,
         "var goog = {}; goog.getCssName = function(x) {};" +
-        "goog.getCssName('foo');");
+            "goog.getCssName('foo');");
   }
 
   public void testClosurePassOn() {
@@ -187,11 +187,11 @@ public class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "/** @define {boolean} */ var COMPILED = false;" +
-        "var goog = {}; goog.getCssName = function(x) {};" +
-        "goog.getCssName('foo');",
+            "var goog = {}; goog.getCssName = function(x) {};" +
+            "goog.getCssName('foo');",
         "var COMPILED = true;" +
-        "var goog = {}; goog.getCssName = function(x) {};" +
-        "'foo';");
+            "var goog = {}; goog.getCssName = function(x) {};" +
+            "'foo';");
   }
 
   public void testCssNameCheck() {
@@ -244,13 +244,13 @@ public class IntegrationTest extends IntegrationTestCase {
     options.checkMissingGetCssNameBlacklist = "foo";
     test(options,
         "var goog = {};\n" +
-        "/**\n" +
-        " * @param {string} className\n" +
-        " * @param {string=} opt_modifier\n" +
-        " * @return {string}\n" +
-        "*/\n" +
-        "goog.getCssName = function(className, opt_modifier) {}\n" +
-        "var x = goog.getCssName(123, 'a');",
+            "/**\n" +
+            " * @param {string} className\n" +
+            " * @param {string=} opt_modifier\n" +
+            " * @return {string}\n" +
+            "*/\n" +
+            "goog.getCssName = function(className, opt_modifier) {}\n" +
+            "var x = goog.getCssName(123, 'a');",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -322,9 +322,9 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testCheckRequiresOn() {
     CompilerOptions options = createCompilerOptions();
     options.checkRequires = CheckLevel.ERROR;
-    test(options, new String[] {
-      "/** @constructor */ function Foo() {}",
-      "new Foo();"
+    test(options, new String[]{
+        "/** @constructor */ function Foo() {}",
+        "new Foo();"
     }, CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
   }
 
@@ -345,16 +345,16 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.generateExports = true;
     test(options, "/** @export */ function f() {}",
-         "/** @export */ function f() {} goog.exportSymbol('f', f);");
+        "/** @export */ function f() {} goog.exportSymbol('f', f);");
   }
 
   public void testInstrumentMemoryAllocationPassOff() {
     testSame(createCompilerOptions(),
         "var obj = new Object(); " +
-        "var o = {}; " +
-        "var a = []; " +
-        "var f = function() {};" +
-        "var s = 'a' + 'b'");
+            "var o = {}; " +
+            "var a = []; " +
+            "var f = function() {};" +
+            "var s = 'a' + 'b'");
   }
 
   public void testInstrumentMemoryAllocationPassOn() {
@@ -364,24 +364,24 @@ public class IntegrationTest extends IntegrationTestCase {
 
     test(options,
         "var obj = new Object(); " +
-        "var o = {}; " +
-        "var a = []; " +
-        "var f = function() {};" +
-        "var s = 'a' + 'b'",
+            "var o = {}; " +
+            "var a = []; " +
+            "var f = function() {};" +
+            "var s = 'a' + 'b'",
 
         InstrumentMemoryAllocPass.JS_INSTRUMENT_ALLOCATION_CODE +
-        "var obj=__alloc(new Object(),\"i0:1\",1,\"new Unknown\");" +
-        "var o=__alloc({},\"i0:1\",2,\"Object\");" +
-        "var a=__alloc([],\"i0:1\",3,\"Array\");" +
-        "var f=__alloc(function() {},\"i0:1\",4,\"Function\");" +
-        "var s=\"a\"+\"b\";");
+            "var obj=__alloc(new Object(),\"i0:1\",1,\"new Unknown\");" +
+            "var o=__alloc({},\"i0:1\",2,\"Object\");" +
+            "var a=__alloc([],\"i0:1\",3,\"Array\");" +
+            "var f=__alloc(function() {},\"i0:1\",4,\"Function\");" +
+            "var s=\"a\"+\"b\";");
   }
 
   public void testAngularPassOff() {
     testSame(createCompilerOptions(),
         "/** @ngInject */ function f() {} " +
-        "/** @ngInject */ function g(a){} " +
-        "/** @ngInject */ var b = function f(a) {} ");
+            "/** @ngInject */ function g(a){} " +
+            "/** @ngInject */ var b = function f(a) {} ");
   }
 
   public void testAngularPassOn() {
@@ -389,12 +389,12 @@ public class IntegrationTest extends IntegrationTestCase {
     options.angularPass = true;
     test(options,
         "/** @ngInject */ function f() {} " +
-        "/** @ngInject */ function g(a){} " +
-        "/** @ngInject */ var b = function f(a, b, c) {} ",
+            "/** @ngInject */ function g(a){} " +
+            "/** @ngInject */ var b = function f(a, b, c) {} ",
 
         "function f() {} " +
-        "function g(a) {} g['$inject']=['a'];" +
-        "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']");
+            "function g(a) {} g['$inject']=['a'];" +
+            "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']");
   }
 
   public void testExportTestFunctionsOff() {
@@ -405,8 +405,8 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.exportTestFunctions = true;
     test(options, "function testFoo() {}",
-         "/** @export */ function testFoo() {}" +
-         "goog.exportSymbol('testFoo', testFoo);");
+        "/** @export */ function testFoo() {}" +
+            "goog.exportSymbol('testFoo', testFoo);");
   }
 
   public void testExpose() {
@@ -453,7 +453,7 @@ public class IntegrationTest extends IntegrationTestCase {
     options.checkSymbols = true;
     options.aggressiveVarCheck = CheckLevel.ERROR;
     test(options, "x = 3; var x = 5;",
-         VariableReferenceCheck.EARLY_REFERENCE);
+        VariableReferenceCheck.EARLY_REFERENCE);
   }
 
   public void testInferTypes() {
@@ -486,7 +486,7 @@ public class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.checkTypes = true;
     test(options, "/** @type {n} */ var n = window.name;",
-         RhinoErrorReporter.TYPE_PARSE_ERROR);
+        RhinoErrorReporter.TYPE_PARSE_ERROR);
   }
 
   // This tests that the TypedScopeCreator is memoized so that it only creates a
@@ -558,14 +558,14 @@ public class IntegrationTest extends IntegrationTestCase {
     }));
 
     test(options, "/** @idGenerator {mapped} */"
-         + "var xid = function() {};\n"
-         + "function f() {\n"
-         + "  return xid('foo');\n"
-         + "}",
-         "var xid = function() {};\n"
-         + "function f() {\n"
-         + "  return ':foo:';\n"
-         + "}");
+            + "var xid = function() {};\n"
+            + "function f() {\n"
+            + "  return xid('foo');\n"
+            + "}",
+        "var xid = function() {};\n"
+            + "function f() {\n"
+            + "  return ':foo:';\n"
+            + "}");
   }
 
   public void testRemoveClosureAsserts() {
@@ -573,7 +573,7 @@ public class IntegrationTest extends IntegrationTestCase {
     options.closurePass = true;
     testSame(options,
         "var goog = {};"
-        + "goog.asserts.assert(goog);");
+            + "goog.asserts.assert(goog);");
     options.removeClosureAsserts = true;
     test(options,
         "var goog = {};"
@@ -759,10 +759,10 @@ public class IntegrationTest extends IntegrationTestCase {
     options.collapseObjectLiterals = true;
     test(options, code,
         "function f(){" +
-        "var JSCompiler_object_inline_FOO_0;" +
-        "var JSCompiler_object_inline_bar_1;" +
-        "JSCompiler_object_inline_FOO_0=5;" +
-        "JSCompiler_object_inline_bar_1=3}");
+            "var JSCompiler_object_inline_FOO_0;" +
+            "var JSCompiler_object_inline_bar_1;" +
+            "JSCompiler_object_inline_FOO_0=5;" +
+            "JSCompiler_object_inline_bar_1=3}");
   }
 
   public void testDisambiguateProperties() {
@@ -879,12 +879,12 @@ public class IntegrationTest extends IntegrationTestCase {
     testSame(
         options,
         "/** @param {number} x */ function f(x) {}" +
-        "function g() {" +
-        " synStart('foo');" +
-        " var progress = 1;" +
-        " f(progress);" +
-        " synEnd('foo');" +
-        "}");
+            "function g() {" +
+            " synStart('foo');" +
+            " var progress = 1;" +
+            " f(progress);" +
+            " synEnd('foo');" +
+            "}");
   }
 
   public void testCompilerDoesNotBlowUpIfUndefinedSymbols() {
@@ -1335,6 +1335,15 @@ public class IntegrationTest extends IntegrationTestCase {
 
     options.removeUnusedVars = true;
     test(options, code, "function f() { var x = 3; 4; x = 5; return x; } f();");
+  }
+
+  public void testConsoleLogElimination() {
+    CompilerOptions options = createCompilerOptions();
+    String code = "function f() { var x = 3; console.log(x); return x; } f(); ";
+    testSame(options, code);
+
+    options.consoleLogElimination = true;
+    test(options, code, "function f() { var x = 3; return x; } f(); ");
   }
 
   public void testInlineFunctions() {
