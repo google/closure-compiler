@@ -2392,6 +2392,8 @@ public final class JsDocInfoParser {
   private Node parseFieldTypeList(JsDocToken token) {
     Node fieldTypeList = newNode(Token.LB);
 
+    Set<String> names = new HashSet<>();
+
     do {
       Node fieldType = parseFieldType(token);
 
@@ -2399,7 +2401,14 @@ public final class JsDocInfoParser {
         return null;
       }
 
-      fieldTypeList.addChildToBack(fieldType);
+      String name = fieldType.isStringKey() ? fieldType.getString()
+          : fieldType.getFirstChild().getString();
+      if (names.add(name)) {
+        fieldTypeList.addChildToBack(fieldType);
+      } else {
+        parser.addTypeWarning(
+            "msg.jsdoc.type.record.duplicate", name, stream.getLineno(), stream.getCharno());
+      }
 
       skipEOLs();
       if (!match(JsDocToken.COMMA)) {

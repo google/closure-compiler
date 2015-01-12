@@ -39,11 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.javascript.rhino.Node;
-
-import java.util.Collections;
-import java.util.HashMap;
 
 /**
  * A builder for record types.
@@ -53,7 +50,8 @@ public class RecordTypeBuilder {
   private boolean isEmpty = true;
   private boolean isDeclared = true;
   private final JSTypeRegistry registry;
-  private final HashMap<String, RecordProperty> properties = Maps.newHashMap();
+  private final ImmutableSortedMap.Builder<String, RecordProperty> properties =
+      ImmutableSortedMap.naturalOrder();
 
   public RecordTypeBuilder(JSTypeRegistry registry) {
     this.registry = registry;
@@ -66,24 +64,23 @@ public class RecordTypeBuilder {
 
   /**
    * Adds a property with the given name and type to the record type.
+   * If you add a property that has already been added, then {@link #build}
+   * will fail.
+   *
    * @param name the name of the new property
    * @param type the JSType of the new property
    * @param propertyNode the node that holds this property definition
-   * @return The builder itself for chaining purposes, or null if there's
-   *          a duplicate.
+   * @return The builder itself for chaining purposes.
    */
   public RecordTypeBuilder addProperty(String name, JSType type, Node
       propertyNode) {
     isEmpty = false;
-    if (properties.containsKey(name)) {
-      return null;
-    }
     properties.put(name, new RecordProperty(type, propertyNode));
     return this;
   }
 
   /**
-   * Creates a record.
+   * Creates a record. Fails if any duplicate property names were added.
    * @return The record type.
    */
   public JSType build() {
@@ -92,8 +89,7 @@ public class RecordTypeBuilder {
        return registry.getNativeObjectType(JSTypeNative.OBJECT_TYPE);
     }
 
-    return new RecordType(
-        registry, Collections.unmodifiableMap(properties), isDeclared);
+    return new RecordType(registry, properties.build(), isDeclared);
   }
 
   static class RecordProperty {

@@ -12238,7 +12238,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
          + "* @param {{x:string, x:number}} a"
          + "*/"
          + "function f(a) {};",
-         "Parse error. Duplicate record field x");
+         "Bad type annotation. Duplicate record field x");
   }
 
   public void testDuplicateRecordFields2() throws Exception {
@@ -12247,8 +12247,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
          + " */"
          + "function f(a) {};",
          new String[] {"Bad type annotation. Unknown type x",
-           "Parse error. Duplicate record field number",
-           "Bad type annotation. Unknown type y"});
+           "Bad type annotation. Duplicate record field number"});
   }
 
   public void testMultipleExtendsInterface1() throws Exception {
