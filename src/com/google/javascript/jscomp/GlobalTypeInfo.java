@@ -1423,11 +1423,17 @@ class GlobalTypeInfo implements CompilerPass {
           return simpleInferExprType(n.getLastChild());
         case Token.CALL:
         case Token.NEW: {
-          JSType ratorType = simpleInferExprType(n.getFirstChild());
-          if (ratorType == null) {
+          Node callee = n.getFirstChild();
+          // We special-case the function goog.getMsg, which is used by the
+          // compiler for i18n.
+          if (callee.matchesQualifiedName("goog.getMsg")) {
+            return JSType.STRING;
+          }
+          JSType calleeType = simpleInferExprType(callee);
+          if (calleeType == null) {
             return null;
           }
-          FunctionType funType = ratorType.getFunType();
+          FunctionType funType = calleeType.getFunType();
           if (funType == null) {
             return null;
           }

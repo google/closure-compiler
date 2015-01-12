@@ -6659,6 +6659,14 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + "var /** Array<string> */ as = arr;");
   }
 
+  public void testInferConstTypeFromGoogGetMsg() {
+    typeCheck(
+        "/** @const */\n"
+        + "var s = goog.getMsg('asdf');\n"
+        + "s - 1;\n",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
   public void testInferConstTypeFromGenerics() {
     typeCheck(
         "/**\n"
