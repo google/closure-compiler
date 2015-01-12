@@ -1288,14 +1288,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.propertyRenaming = newPropertyPolicy;
   }
 
-  /**
-   * @param useAffinity
-   * @deprecated No longer does anything.
-   */
-  @Deprecated
-  public void setPropertyAffinity(boolean useAffinity) {
-  }
-
   /** Should shadow outer scope variable name during renaming. */
   public void setShadowVariables(boolean shadow) {
     this.shadowVariables = shadow;
