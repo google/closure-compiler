@@ -465,6 +465,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     testParseType("(string,*,number)", "*");
   }
 
+  public void testParseUnionType19() throws Exception {
+    JSDocInfo info = parse("@type {(?)} */");
+    assertTypeEquals(UNKNOWN_TYPE, info.getType());
+  }
+
   public void testParseUnionTypeError1() throws Exception {
     parse("@type {(string,|number)} */",
         "Bad type annotation. type not recognized due to syntax error");

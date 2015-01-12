@@ -5075,6 +5075,8 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + " * @template T, S\n"
         + " */\n"
         + "function f(){};");
+
+    checkNoWarnings("/** @param {(?)} x */ function f(x) {}");
   }
 
   public void testGenericsJsdocParsing() {

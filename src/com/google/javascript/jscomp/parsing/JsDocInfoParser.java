@@ -2356,6 +2356,11 @@ public final class JsDocInfoParser {
       }
       next();
     }
+    if (union.getChildCount() == 1) {
+      Node firstChild = union.getFirstChild();
+      union.removeChild(firstChild);
+      return firstChild;
+    }
     return union;
   }
 
