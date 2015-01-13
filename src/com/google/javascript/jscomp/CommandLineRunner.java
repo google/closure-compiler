@@ -1227,6 +1227,7 @@ public class CommandLineRunner extends
     "v8.js",
     "webstorage.js",
     "w3c_anim_timing.js",
+    "w3c_encoding.js",
     "w3c_css3d.js",
     "w3c_elementtraversal.js",
     "w3c_geolocation.js",
