@@ -53,6 +53,7 @@ public class ParserRunner {
   public static Config createConfig(boolean isIdeMode,
                                     LanguageMode languageMode,
                                     boolean acceptConstKeyword,
+                                    boolean acceptTypeSyntax,
                                     Set<String> extraAnnotationNames) {
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
@@ -63,7 +64,7 @@ public class ParserRunner {
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
     return new Config(effectiveAnnotationNames, suppressionNames,
-        isIdeMode, languageMode, acceptConstKeyword);
+        isIdeMode, languageMode, acceptConstKeyword, acceptTypeSyntax);
   }
 
   public static Set<String> getReservedVars() {

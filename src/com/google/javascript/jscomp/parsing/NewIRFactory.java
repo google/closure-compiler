@@ -2165,6 +2165,15 @@ class NewIRFactory {
       }
     }
 
+    void maybeWarnTypeSyntax(ParseTree node) {
+      if (!config.acceptTypeSyntax) {
+        errorReporter.warning(
+            "support for type syntax is not enabled",
+            sourceName,
+            lineno(node), charno(node));
+      }
+    }
+
     @Override
     Node unsupportedLanguageFeature(ParseTree node, String feature) {
       errorReporter.error(

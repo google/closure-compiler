@@ -2177,6 +2177,7 @@ public class Compiler extends AbstractCompiler {
         isIdeMode(),
         mode,
         acceptConstKeyword(),
+        options.acceptTypeSyntax,
         options.extraAnnotationNames);
   }
 

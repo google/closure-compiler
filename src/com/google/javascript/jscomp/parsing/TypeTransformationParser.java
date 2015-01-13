@@ -250,7 +250,7 @@ public final class TypeTransformationParser {
    */
   public boolean parseTypeTransformation() {
     Config config = new Config(new HashSet<String>(),
-        new HashSet<String>(), true, LanguageMode.ECMASCRIPT6, false);
+        new HashSet<String>(), true, LanguageMode.ECMASCRIPT6, false, false);
     // TODO(lpino): ParserRunner reports errors if the expression is not
     // ES6 valid. We need to abort the validation of the type transformation
     // whenever an error is reported.

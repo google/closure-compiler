@@ -69,15 +69,21 @@ public class Config {
    */
   final boolean acceptConstKeyword;
 
+  /**
+   * Accept type syntax ({@code var foo: string;}).
+   */
+  final boolean acceptTypeSyntax;
+
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
       boolean isIdeMode, LanguageMode languageMode,
-      boolean acceptConstKeyword) {
+      boolean acceptConstKeyword, boolean acceptTypeSyntax) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
     this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
     this.languageMode = languageMode;
     this.acceptConstKeyword = acceptConstKeyword;
+    this.acceptTypeSyntax = acceptTypeSyntax;
   }
 
   /**

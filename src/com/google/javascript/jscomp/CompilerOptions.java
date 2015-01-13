@@ -87,6 +87,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean acceptConstKeyword;
 
   /**
+   * Whether the compiler accepts type syntax ({@code var foo: string;}).
+   */
+  boolean acceptTypeSyntax;
+
+  /**
    * Whether to infer consts. This should not be configurable by
    * external clients. This is a transitional flag for a new type
    * of const analysis.
@@ -943,6 +948,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     // Language variation
     acceptConstKeyword = false;
+    acceptTypeSyntax = false;
 
     // Checks
     transpileOnly = false;

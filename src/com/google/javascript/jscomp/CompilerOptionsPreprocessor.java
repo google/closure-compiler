@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+
 /**
  * Checks for combinations of options that are incompatible, i.e. will produce
  * incorrect code.
@@ -73,6 +74,7 @@ final class CompilerOptionsPreprocessor {
       // But VarCheck is always added in DefaultPassConfig, and
       // VariableReferenceCheck finds warnings that we don't, so leave them on.
     }
+
   }
 
   /**
