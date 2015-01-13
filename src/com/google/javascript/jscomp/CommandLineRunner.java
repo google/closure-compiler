@@ -1187,6 +1187,7 @@ public class CommandLineRunner extends
     "es3.js",
     "es5.js",
     "es6.js",
+    "es6_collections.js",
     "intl.js",
 
     // Event APIs
