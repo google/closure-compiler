@@ -6827,7 +6827,7 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testNominalTypeUnification() {
-    typeCheck(
+    checkNoWarnings(
         "/**\n"
         + " * @constructor\n"
         + " * @template T, U\n"
@@ -6836,12 +6836,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + "function Foo(x) {}\n"
         + "/**\n"
         + " * @template T\n"
+        // {!Foo<T>} is instantiating only the 1st template var of Foo
         + " * @param {!Foo<T>} x\n"
         + " */\n"
         + "function fn(x) {}\n"
-        + "fn(new Foo('asdf'));",
-        // {!Foo<T>} is instantiating only the 1st template var of Foo
-        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
+        + "fn(new Foo('asdf'));");
 
     typeCheck(
         "/**\n"
@@ -6854,15 +6853,13 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + "}\n"
         + "/**\n"
         + " * @template T\n"
+        // {!Foo<T>} is instantiating only the 1st template var of Foo
         + " * @param {!Foo<T>} x\n"
         + " * @return {T}\n"
         + " */\n"
         + "function fn(x) { return x.prop; }\n"
         + "fn(new Foo('asdf')) - 5;",
-        ImmutableList.of(
-            // {!Foo<T>} is instantiating only the 1st template var of Foo
-            JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION,
-            NewTypeInference.INVALID_OPERAND_TYPE));
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testCasts() {
@@ -7460,13 +7457,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + "var Parent = function(){};\n"
         + "/** @constructor @extends {Parent} */ function Child(){}");
 
-    typeCheck(
+    checkNoWarnings(
         "/** @constructor @template VALUE */\n"
         + "var Grandparent = function() {};\n"
         + "/** @constructor @extends {Grandparent} */\n"
         + "var Parent = function(){};\n"
-        + "/** @constructor @extends {Parent} */ function Child(){}",
-        JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION);
+        + "/** @constructor @extends {Parent} */ function Child(){}");
   }
 
   public void testDebuggerStatementDoesntCrash() {
