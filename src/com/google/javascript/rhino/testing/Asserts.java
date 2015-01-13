@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.testing;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Iterables;
@@ -121,7 +122,7 @@ public class Asserts {
 
   public static <T extends JSType, S extends JSType> void
       assertTypeCollectionEquals(Iterable<T> a, Iterable<S> b) {
-    Assert.assertEquals(Iterables.size(a), Iterables.size(b));
+    assertThat(b).hasSize(Iterables.size(a));
     Iterator<T> aIterator = a.iterator();
     Iterator<S> bIterator = b.iterator();
     while (aIterator.hasNext()) {

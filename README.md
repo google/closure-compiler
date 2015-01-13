@@ -354,6 +354,40 @@ an encoding of structured data.</td>
   </tr>
 </table>
 
+### Truth
+
+<table>
+  <tr>
+    <td>Code Path</td>
+    <td><code>lib/truth.jar</code></td>
+  </tr>
+
+  <tr>
+    <td>URL</td>
+    <td>https://github.com/google/truth</td>
+  </tr>
+
+  <tr>
+    <td>Version</td>
+    <td>0.24</td>
+  </tr>
+
+  <tr>
+    <td>License</td>
+    <td>Apache License 2.0</td>
+  </tr>
+
+  <tr>
+    <td>Description</td>
+    <td>Assertion/Proposition framework for Java unit tests</td>
+  </tr>
+
+  <tr>
+    <td>Local Modifications</td>
+    <td>None</td>
+  </tr>
+</table>
+
 ### Ant
 
 <table>
