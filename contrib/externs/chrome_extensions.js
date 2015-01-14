@@ -3741,7 +3741,17 @@ chrome.mediaGalleries.getMediaFileSystems = function(
  */
 chrome.mediaGalleries.addUserSelectedFolder = function(callback) {};
 
+
+/**
+ * @param {string} galleryId ID of the media gallery.
+ * @param {function()=} opt_callback Optional callback function.
+ */
+chrome.mediaGalleries.dropPermissionForMediaFileSystem =
+    function(galleryId, opt_callback) {};
+
+
 chrome.mediaGalleries.startMediaScan = function() {};
+
 
 chrome.mediaGalleries.cancelMediaScan = function() {};
 
@@ -3784,8 +3794,17 @@ chrome.mediaGalleries.getAllMediaFileSystemMetadata = function(callback) {};
  *   mimeType: string,
  *   height: (number|undefined),
  *   width: (number|undefined),
+ *   xResolution: (number|undefined),
+ *   yResolution: (number|undefined),
  *   duration: (number|undefined),
  *   rotation: (number|undefined),
+ *   cameraMake: (string|undefined),
+ *   cameraModel: (string|undefined),
+ *   exposureTimeSeconds: (number|undefined),
+ *   flashFired: (boolean|undefined),
+ *   fNumber: (number|undefined),
+ *   focalLengthMm: (number|undefined),
+ *   isoEquivalent: (number|undefined),
  *   album: (string|undefined),
  *   artist: (string|undefined),
  *   comment: (string|undefined),
@@ -3794,10 +3813,28 @@ chrome.mediaGalleries.getAllMediaFileSystemMetadata = function(callback) {};
  *   genre: (string|undefined),
  *   language: (string|undefined),
  *   title: (string|undefined),
- *   track: (number|undefined)
+ *   track: (number|undefined),
+ *   rawTags: !Array.<!chrome.mediaGalleries.metadata.RawTag>,
+ *   attachedImages: !Array.<!Blob>
  * }}
  */
 chrome.mediaGalleries.MetaData;
+
+
+/** @const */
+chrome.mediaGalleries.metadata = {};
+
+
+/** @constructor */
+chrome.mediaGalleries.metadata.RawTag = function() {};
+
+
+/** @type {string} */
+chrome.mediaGalleries.metadata.RawTag.prototype.type;
+
+
+/** @type {!Object.<string, string>} */
+chrome.mediaGalleries.metadata.RawTag.prototype.tags;
 
 
 /**
@@ -3812,6 +3849,82 @@ chrome.mediaGalleries.MetaData;
  */
 chrome.mediaGalleries.getMetadata = function(
     mediaFile, optionsOrCallback, opt_callback) {};
+
+
+/**
+ * @typedef {function({galleryId: string, success: boolean}): void}
+ */
+chrome.mediaGalleries.AddGalleryWatchCallback;
+
+
+/**
+ * @param {string} galleryId The media gallery's ID.
+ * @param {!chrome.mediaGalleries.AddGalleryWatchCallback} callback Fired with
+ *     success or failure result.
+ */
+chrome.mediaGalleries.addGalleryWatch = function(galleryId, callback) {};
+
+
+/**
+ * @param {string} galleryId The media gallery's ID.
+ */
+chrome.mediaGalleries.removeGalleryWatch = function(galleryId) {};
+
+
+/**
+ * @param {function(!Array.<string>): void} callback Callback function notifies
+ *     which galleries are being watched.
+ */
+chrome.mediaGalleries.getAllGalleryWatch = function(callback) {};
+
+
+chrome.mediaGalleries.removeAllGalleryWatch = function() {};
+
+
+
+/**
+ * @constructor
+ */
+chrome.mediaGalleries.GalleryChangeEvent = function() {};
+
+
+/**
+ * @typedef {function({type: string, galleryId: string}): void}
+ */
+chrome.mediaGalleries.GalleryChangeCallback;
+
+
+/**
+ * @param {!chrome.mediaGalleries.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleries.GalleryChangeEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleries.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleries.GalleryChangeEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {!chrome.mediaGalleries.GalleryChangeCallback} callback
+ */
+chrome.mediaGalleries.GalleryChangeEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+chrome.mediaGalleries.GalleryChangeEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.mediaGalleries.GalleryChangeEvent}
+ */
+chrome.mediaGalleries.onGalleryChanged;
 
 
 /**
