@@ -45,6 +45,8 @@ import com.google.javascript.rhino.jstype.StaticSourceFile;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * A builder for {@link JSDocInfo} objects. This builder abstracts the
  * construction process of {@link JSDocInfo} objects whilst minimizing the
@@ -80,6 +82,13 @@ final public class JSDocInfoBuilder {
   public static JSDocInfoBuilder copyFrom(JSDocInfo info) {
     populateDefaults(info);
     return new JSDocInfoBuilder(info.clone(), info.isDocumentationIncluded(), true);
+  }
+
+  public static JSDocInfoBuilder maybeCopyFrom(@Nullable JSDocInfo info) {
+    if (info == null) {
+      return new JSDocInfoBuilder(true);
+    }
+    return copyFrom(info);
   }
 
   /**

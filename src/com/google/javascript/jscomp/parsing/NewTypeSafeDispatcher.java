@@ -101,6 +101,8 @@ abstract class NewTypeSafeDispatcher<T> {
   abstract T processImportSpec(ImportSpecifierTree tree);
   abstract T processModuleImport(ModuleImportTree tree);
 
+  abstract T processTypedParameter(TypedParameterTree asTypeAnnotation);
+
   abstract T processMissingExpression(MissingPrimaryExpressionTree tree);
 
   abstract T processIllegalToken(ParseTree node);
@@ -284,6 +286,9 @@ abstract class NewTypeSafeDispatcher<T> {
       // TODO(johnlenz): handle these or remove parser support
       case ARGUMENT_LIST:
         break;
+
+      case TYPE_ANNOTATION:
+        return processTypedParameter(node.asTypedParameter());
 
       default:
         break;

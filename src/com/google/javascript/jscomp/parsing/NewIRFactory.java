@@ -94,6 +94,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.TemplateSubstitutionTre
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TypedParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree;
@@ -106,6 +107,8 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -456,6 +459,13 @@ class NewIRFactory {
     validateFunctionJsDoc(n);
   }
 
+  private void reportJsDocTypeSyntaxConflict(ParseTree parseTree) {
+    errorReporter.error("Bad type annotation"
+            + " - can only have JSDoc or inline type annotations, not both",
+        sourceName, lineno(parseTree), charno(parseTree));
+  }
+
+
   /**
    * Checks that JSDoc intended for a function is actually attached to a
    * function.
@@ -523,6 +533,7 @@ class NewIRFactory {
         // Object literal properties, catch declarations and variable
         // initializers are valid.
         case Token.NAME:
+        case Token.DEFAULT_VALUE:
           Node parent = n.getParent();
           switch (parent.getType()) {
             case Token.STRING_KEY:
@@ -799,6 +810,9 @@ class NewIRFactory {
     JSDocInfo info = handleInlineJsDoc(node, optionalInline);
     Node irNode = justTransform(node);
     if (info != null) {
+      if (irNode.getJSDocInfo() != null) {
+        reportJsDocTypeSyntaxConflict(node);
+      }
       irNode.setJSDocInfo(info);
     }
     setSourceInfo(irNode, node);
@@ -1305,6 +1319,16 @@ class NewIRFactory {
         node.addChildToBack(emptyName);
       }
       node.addChildToBack(transform(functionTree.formalParameterList));
+
+      if (functionTree.returnType != null) {
+        JSTypeExpression returnType = convertTypeTree(functionTree.returnType);
+        JSDocInfoBuilder jsdocBuilder = JSDocInfoBuilder.maybeCopyFrom(node.getJSDocInfo());
+        if (!jsdocBuilder.recordReturnType(returnType)) {
+          reportJsDocTypeSyntaxConflict(functionTree.returnType);
+        }
+        JSDocInfo info = jsdocBuilder.build(node);
+        node.setJSDocInfo(info);
+      }
 
       Node bodyNode = transform(functionTree.functionBody);
       if (!isArrow && !bodyNode.isBlock()) {
@@ -1942,6 +1966,7 @@ class NewIRFactory {
         Node initializer = transform(decl.initializer);
         node.addChildToBack(initializer);
       }
+      maybeProcessType(node, decl.declaredType);
       return node;
     }
 
@@ -2136,6 +2161,35 @@ class NewIRFactory {
           processName(tree.name),
           processString(tree.from));
       return module;
+    }
+
+    @Override
+    Node processTypedParameter(TypedParameterTree typeAnnotation) {
+      Node param = process(typeAnnotation.param);
+      maybeProcessType(param, typeAnnotation.typeAnnotation);
+      return param;
+    }
+
+    private void maybeProcessType(Node typeTarget, ParseTree typeTree) {
+      if (typeTree == null) {
+        return;
+      }
+      JSTypeExpression typeExpression = convertTypeTree(typeTree);
+      JSDocInfoBuilder jsdocBuilder = JSDocInfoBuilder.maybeCopyFrom(typeTarget.getJSDocInfo());
+      if (!jsdocBuilder.recordType(typeExpression)) {
+        reportJsDocTypeSyntaxConflict(typeTree);
+      }
+      JSDocInfo info = jsdocBuilder.build(typeTarget);
+      typeTarget.setJSDocInfo(info);
+    }
+
+    private JSTypeExpression convertTypeTree(ParseTree typeTree) {
+      maybeWarnTypeSyntax(typeTree);
+
+      // TODO(martinprobst): More types.
+      IdentifierExpressionTree typeName = typeTree.asIdentifierExpression();
+      Node typeExpr = Node.newString(typeName.identifierToken.value);
+      return new JSTypeExpression(typeExpr, sourceName);
     }
 
     private Node transformList(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 The Closure Compiler Authors.
+ * Copyright 2015 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,17 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-import javax.annotation.Nullable;
+/**
+ * A parameter with a type specified.
+ */
+public class TypedParameterTree extends ParseTree {
 
-public class VariableDeclarationTree extends ParseTree {
-  // An IdentifierExpressionTree, ArrayPatternTree or ObjectLiteralTree
-  public final ParseTree lvalue;
-  @Nullable public final ParseTree declaredType;
-  public final ParseTree initializer;
+  public final ParseTree param;
+  public final ParseTree typeAnnotation;
 
-  public VariableDeclarationTree(SourceRange location, ParseTree lvalue,
-      @Nullable ParseTree declaredType, ParseTree initializer) {
-    super(ParseTreeType.VARIABLE_DECLARATION, location);
-    this.lvalue = lvalue;
-    this.declaredType = declaredType;
-    this.initializer = initializer;
+  public TypedParameterTree(SourceRange location, ParseTree param, ParseTree typeAnnotation) {
+    super(ParseTreeType.TYPE_ANNOTATION, location);
+    this.param = param;
+    this.typeAnnotation = typeAnnotation;
   }
 }
