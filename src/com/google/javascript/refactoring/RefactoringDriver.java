@@ -76,12 +76,12 @@ public final class RefactoringDriver {
     deps.setDependencySorting(true);
     options.setDependencyOptions(deps);
 
-    options.ideMode = true;
-    options.checkSuspiciousCode = true;
-    options.checkSymbols = true;
-    options.checkTypes = true;
-    options.closurePass = true;
-    options.preserveGoogRequires = true;
+    options.setIdeMode(true);
+    options.setCheckSuspiciousCode(true);
+    options.setCheckSymbols(true);
+    options.setCheckTypes(true);
+    options.setClosurePass(true);
+    options.setPreserveGoogRequires(true);
 
     options.setAcceptConstKeyword(true);
 
