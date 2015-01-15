@@ -78,6 +78,16 @@ ui.router.$state.transition;
  */
 ui.router.$state.get = function(stateOrName, context) {};
 
+/**
+ * @typedef {{
+ *   location: (boolean|string|undefined),
+ *   inherit: (boolean|undefined),
+ *   relative: (Object|undefined),
+ *   notify: (boolean|undefined),
+ *   reload: (boolean|undefined)
+ * }}
+ */
+ui.router.$state.GoOptions_;
 
 /**
  * @param {string} to
@@ -126,18 +136,6 @@ ui.router.$state.reload = function() {};
  * @param {Object=} options
  */
 ui.router.$state.transitionTo = function(to, toParams, options) {};
-
-
-/**
- * @typedef {{
- *   location: (boolean|string|undefined),
- *   inherit: (boolean|undefined),
- *   relative: (Object|undefined),
- *   notify: (boolean|undefined),
- *   reload: (boolean|undefined)
- * }}
- */
-ui.router.$state.GoOptions_;
 
 
 /**
