@@ -1999,7 +1999,7 @@ jQuery.support.tbody;
 $.support.tbody;
 
 /**
- * @param {(string|function(number,string))=} arg1
+ * @param {(string|number|boolean|function(number,string))=} arg1
  * @return {(string|!jQuery)}
  */
 jQuery.prototype.text = function(arg1) {};
