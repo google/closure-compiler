@@ -813,7 +813,7 @@ public class Compiler extends AbstractCompiler {
     // Important to check for null because if setPassConfig(null) is
     // called before this.passes is set, getPassConfig() will create a
     // new PassConfig object and use that, which is probably not what
-    // the client wanted since he or she probably meant to use their
+    // the client wanted since they probably meant to use their
     // own PassConfig object.
     Preconditions.checkNotNull(passes);
 

@@ -185,7 +185,7 @@ public class JsFileParserTest extends TestCase {
   }
 
   public void testIncludeGoog3() {
-    // This guy is pretending to provide goog, but he really doesn't.
+    // This is pretending to provide goog, but it really doesn't.
     String contents = "goog.provide('x');\n" +
         "/**\n" +
         " * the first constant in base.js\n" +
