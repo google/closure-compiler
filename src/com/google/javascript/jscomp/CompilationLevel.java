@@ -67,7 +67,7 @@ public enum CompilationLevel {
   }
 
   public void setDebugOptionsForCompilationLevel(CompilerOptions options) {
-    options.anonymousFunctionNaming = AnonymousFunctionNamingPolicy.UNMAPPED;
+    options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
     options.generatePseudoNames = true;
     options.removeClosureAsserts = false;
     // Don't shadow variables as it is too confusing.
@@ -95,23 +95,22 @@ public enum CompilationLevel {
     // Does not call applyBasicCompilationOptions(options) because the call to
     // skipAllCompilerPasses() cannot be easily undone.
     options.dependencyOptions.setDependencySorting(true);
-    options.closurePass = true;
-    options.setRenamingPolicy(
-        VariableRenamingPolicy.LOCAL, PropertyRenamingPolicy.OFF);
+    options.setClosurePass(true);
+    options.setRenamingPolicy(VariableRenamingPolicy.LOCAL, PropertyRenamingPolicy.OFF);
     options.shadowVariables = true;
     options.setInlineVariables(Reach.LOCAL_ONLY);
-    options.flowSensitiveInlineVariables = true;
+    options.setFlowSensitiveInlineVariables(true);
     options.setInlineFunctions(Reach.LOCAL_ONLY);
     options.setAssumeClosuresOnlyCaptureReferences(false);
-    options.checkGlobalThisLevel = CheckLevel.OFF;
-    options.foldConstants = true;
-    options.coalesceVariableNames = true;
-    options.deadAssignmentElimination = true;
-    options.collapseVariableDeclarations = true;
+    options.setCheckGlobalThisLevel(CheckLevel.OFF);
+    options.setFoldConstants(true);
+    options.setCoalesceVariableNames(true);
+    options.setDeadAssignmentElimination(true);
+    options.setCollapseVariableDeclarations(true);
     options.convertToDottedProperties = true;
     options.labelRenaming = true;
-    options.removeDeadCode = true;
-    options.optimizeArgumentsArray = true;
+    options.setRemoveDeadCode(true);
+    options.setOptimizeArgumentsArray(true);
     options.setRemoveUnusedVariables(Reach.LOCAL_ONLY);
     options.collapseObjectLiterals = true;
     options.protectHiddenSideEffects = true;
@@ -128,16 +127,16 @@ public enum CompilationLevel {
 
     // All the safe optimizations.
     options.dependencyOptions.setDependencySorting(true);
-    options.closurePass = true;
-    options.foldConstants = true;
-    options.coalesceVariableNames = true;
-    options.deadAssignmentElimination = true;
+    options.setClosurePass(true);
+    options.setFoldConstants(true);
+    options.setCoalesceVariableNames(true);
+    options.setDeadAssignmentElimination(true);
     options.setExtractPrototypeMemberDeclarations(true);
-    options.collapseVariableDeclarations = true;
+    options.setCollapseVariableDeclarations(true);
     options.convertToDottedProperties = true;
     options.labelRenaming = true;
-    options.removeDeadCode = true;
-    options.optimizeArgumentsArray = true;
+    options.setRemoveDeadCode(true);
+    options.setOptimizeArgumentsArray(true);
     options.collapseObjectLiterals = true;
     options.protectHiddenSideEffects = true;
 
@@ -147,31 +146,31 @@ public enum CompilationLevel {
     options.setRenamingPolicy(
         VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
     options.shadowVariables = true;
-    options.removeUnusedPrototypeProperties = true;
-    options.removeUnusedPrototypePropertiesInExterns = false;
-    options.removeUnusedClassProperties = true;
-    options.collapseAnonymousFunctions = true;
-    options.collapseProperties = true;
-    options.checkGlobalThisLevel = CheckLevel.WARNING;
-    options.rewriteFunctionExpressions = false;
-    options.smartNameRemoval = true;
-    options.inlineConstantVars = true;
+    options.setRemoveUnusedPrototypeProperties(true);
+    options.setRemoveUnusedPrototypePropertiesInExterns(false);
+    options.setRemoveUnusedClassProperties(true);
+    options.setCollapseAnonymousFunctions(true);
+    options.setCollapseProperties(true);
+    options.setCheckGlobalThisLevel(CheckLevel.WARNING);
+    options.setRewriteFunctionExpressions(false);
+    options.setSmartNameRemoval(true);
+    options.setInlineConstantVars(true);
     options.setInlineFunctions(Reach.ALL);
     options.setAssumeClosuresOnlyCaptureReferences(false);
-    options.inlineGetters = true;
+    options.setInlineGetters(true);
     options.setInlineVariables(Reach.ALL);
-    options.flowSensitiveInlineVariables = true;
-    options.computeFunctionSideEffects = true;
+    options.setFlowSensitiveInlineVariables(true);
+    options.setComputeFunctionSideEffects(true);
 
     // Remove unused vars also removes unused functions.
     options.setRemoveUnusedVariables(Reach.ALL);
 
     // Move code around based on the defined modules.
-    options.crossModuleCodeMotion = true;
-    options.crossModuleMethodMotion = true;
+    options.setCrossModuleCodeMotion(true);
+    options.setCrossModuleMethodMotion(true);
 
     // Call optimizations
-    options.devirtualizePrototypeMethods = true;
+    options.setDevirtualizePrototypeMethods(true);
     options.optimizeParameters = true;
     options.optimizeReturns = true;
     options.optimizeCalls = true;

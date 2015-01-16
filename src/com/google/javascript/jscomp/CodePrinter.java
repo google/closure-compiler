@@ -588,7 +588,7 @@ public final class CodePrinter {
      * @param prettyPrint If true, pretty printing will be used.
      */
     public Builder setPrettyPrint(boolean prettyPrint) {
-      options.prettyPrint = prettyPrint;
+      options.setPrettyPrint(prettyPrint);
       return this;
     }
 
@@ -597,7 +597,7 @@ public final class CodePrinter {
      * @param lineBreak If true, line breaking is done automatically.
      */
     public Builder setLineBreak(boolean lineBreak) {
-      options.lineBreak = lineBreak;
+      options.setLineBreak(lineBreak);
       return this;
     }
 

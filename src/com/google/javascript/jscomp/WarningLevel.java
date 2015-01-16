@@ -55,20 +55,20 @@ public enum WarningLevel {
 
     // Allow passes that aren't going to report anything to be skipped.
 
-    options.checkRequires = CheckLevel.OFF;
-    options.checkProvides = CheckLevel.OFF;
-    options.checkMissingGetCssNameLevel = CheckLevel.OFF;
-    options.aggressiveVarCheck = CheckLevel.OFF;
-    options.checkTypes = false;
+    options.setCheckRequires(CheckLevel.OFF);
+    options.setCheckProvides(CheckLevel.OFF);
+    options.setCheckMissingGetCssNameLevel(CheckLevel.OFF);
+    options.setAggressiveVarCheck(CheckLevel.OFF);
+    options.setCheckTypes(false);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
-    options.checkMissingReturn = CheckLevel.OFF;
+    options.setCheckMissingReturn(CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.CONST, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY, CheckLevel.OFF);
-    options.checkGlobalNamesLevel = CheckLevel.OFF;
-    options.checkSuspiciousCode = false;
-    options.checkGlobalThisLevel = CheckLevel.OFF;
+    options.setCheckGlobalNamesLevel(CheckLevel.OFF);
+    options.setCheckSuspiciousCode(false);
+    options.setCheckGlobalThisLevel(CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.GLOBAL_THIS, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
 
@@ -82,7 +82,7 @@ public enum WarningLevel {
    * @param options The CompilerOptions object to set the options on.
    */
   private static void addDefaultWarnings(CompilerOptions options) {
-    options.checkSuspiciousCode = true;
+    options.setCheckSuspiciousCode(true);
 
     // Allows annotations that are not standard.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
@@ -97,21 +97,20 @@ public enum WarningLevel {
     addDefaultWarnings(options);
 
     // checkSuspiciousCode needs to be enabled for CheckGlobalThis to get run.
-    options.checkSuspiciousCode = true;
-    options.checkGlobalThisLevel = CheckLevel.WARNING;
-    options.checkSymbols = true;
-    options.checkMissingReturn = CheckLevel.WARNING;
+    options.setCheckSuspiciousCode(true);
+    options.setCheckGlobalThisLevel(CheckLevel.WARNING);
+    options.setCheckSymbols(true);
+    options.setCheckMissingReturn(CheckLevel.WARNING);
 
     // checkTypes has the side-effect of asserting that the
     // correct number of arguments are passed to a function.
     // Because the CodingConvention used with the web service does not provide a
     // way for optional arguments to be specified, these warnings may result in
     // false positives.
-    options.checkTypes = true;
-    options.checkGlobalNamesLevel = CheckLevel.WARNING;
-    options.aggressiveVarCheck = CheckLevel.WARNING;
-    options.setWarningLevel(
-        DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
+    options.setCheckTypes(true);
+    options.setCheckGlobalNamesLevel(CheckLevel.WARNING);
+    options.setAggressiveVarCheck(CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.DEPRECATED, CheckLevel.WARNING);
     options.setWarningLevel(
