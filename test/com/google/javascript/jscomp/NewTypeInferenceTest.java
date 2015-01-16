@@ -6824,6 +6824,57 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
     //     "function f(x) { x.method('sadf'); };\n" +
     //     "f(new Bar('asdf'));",
     //     NewTypeInference.FAILED_TO_UNIFY);
+
+    checkNoWarnings(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @template T,U\n"
+        + " */\n"
+        + "function Foo() {}\n"
+        + "Foo.prototype.m1 = function() {\n"
+        + "  this.m2(123);\n"
+        + "};\n"
+        + "/**\n"
+        + " * @template U\n"
+        + " * @param {U} x\n"
+        + " */\n"
+        + "Foo.prototype.m2 = function(x) {};");
+
+    typeCheck(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @template T, U\n"
+        + " */\n"
+        + "function Foo() {}\n"
+        + "/**\n"
+        + " * @template T\n" // shadows Foo#T, U still visible
+        + " * @param {T} x\n"
+        + " * @param {U} y\n"
+        + " */\n"
+        + "Foo.prototype.method = function(x, y) {};\n"
+        + "var obj = /** @type {!Foo<number, number>} */ (new Foo);\n"
+        + "obj.method('asdf', 123);\n" // OK
+        + "obj.method('asdf', 'asdf');", // warning
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    checkNoWarnings(
+        "/**\n"
+        + " * @interface\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function High() {}\n"
+        + "/** @param {T} x */\n"
+        + "High.prototype.method = function(x) {};\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @implements {High<number>}\n"
+        + " */\n"
+        + "function Low() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {T} x\n"
+        + " */\n"
+        + "Low.prototype.method = function(x) {};");
   }
 
   public void testNominalTypeUnification() {
