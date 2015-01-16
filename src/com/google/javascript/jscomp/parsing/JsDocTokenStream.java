@@ -315,7 +315,7 @@ class JsDocTokenStream {
   }
 
   private static boolean isJSFormatChar(int c) {
-    return c > 127 && Character.getType((char) c) == Character.FORMAT;
+    return c > 127 && Character.getType(c) == Character.FORMAT;
   }
 
   /**
