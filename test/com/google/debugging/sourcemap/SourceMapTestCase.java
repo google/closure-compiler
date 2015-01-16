@@ -273,9 +273,9 @@ public abstract class SourceMapTestCase extends TestCase {
 
   protected CompilerOptions getCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.sourceMapOutputPath = "testcode_source_map.out";
-    options.sourceMapFormat = getSourceMapFormat();
-    options.sourceMapDetailLevel = detailLevel;
+    options.setSourceMapOutputPath("testcode_source_map.out");
+    options.setSourceMapFormat(getSourceMapFormat());
+    options.setSourceMapDetailLevel(detailLevel);
     return options;
   }
 
