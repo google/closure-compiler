@@ -1,24 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-        <classpathentry including="**/*.java" kind="src" output="build/test-classes" path="test"/>
-        <classpathentry including="**/*.java" kind="src" path="src"/>
-        <classpathentry including="**/*.java" kind="src" path="gen"/>
-        <classpathentry kind="lib" path="lib/ant.jar"/>
-        <classpathentry kind="lib" path="lib/ant-launcher.jar"/>
-        <classpathentry kind="lib" path="lib/args4j.jar"/>
-        <classpathentry kind="lib" path="lib/gson.jar"/>
-        <classpathentry kind="lib" path="lib/guava.jar"/>
-        <classpathentry kind="lib" path="lib/jsr305.jar"/>
-        <classpathentry kind="lib" path="lib/junit.jar"/>
-        <classpathentry kind="lib" path="lib/protobuf-java.jar"/>
-
-        <!--
-        You need to tell Eclipse to build the compiler jar first, and then
-        normal source warnings will work because it will pick up the artifact.
-
-        If anyone has any better ideas, I'd be glad to hear them.
-        -->
-
-        <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-        <classpathentry kind="output" path="build/classes"/>
+	<classpathentry including="**/*.java|**/*.properties" kind="src" path="src"/>
+	<classpathentry including="**/*.java" kind="src" path="gen"/>
+	<classpathentry including="**/*.java" kind="src" output="build/test-classes" path="test"/>
+	<classpathentry kind="lib" path="lib/ant.jar"/>
+	<classpathentry kind="lib" path="lib/ant-launcher.jar"/>
+	<classpathentry kind="lib" path="lib/args4j.jar"/>
+	<classpathentry kind="lib" path="lib/gson.jar"/>
+	<classpathentry kind="lib" path="lib/guava.jar"/>
+	<classpathentry kind="lib" path="lib/jsr305.jar"/>
+	<classpathentry kind="lib" path="lib/junit.jar"/>
+	<classpathentry kind="lib" path="lib/protobuf-java.jar"/>
+	<classpathentry kind="lib" path="lib/truth.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="build/classes"/>
 </classpath>
