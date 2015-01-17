@@ -104,8 +104,8 @@ public class CodePrinterTest extends TestCase {
     return new CodePrinter.Builder(parse(js)).setCompilerOptions(options).build();
   }
 
-  private interface CompilerOptionBuilder {
-    void setOptions(CompilerOptions options);
+  private abstract class CompilerOptionBuilder {
+    abstract void setOptions(CompilerOptions options);
   }
 
   CompilerOptions newCompilerOptions(CompilerOptionBuilder builder) {
