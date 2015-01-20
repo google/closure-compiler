@@ -21,6 +21,7 @@
  * http://www.w3.org/TR/file-system-api/
  *
  * @externs
+ * @author dpapad@google.com (Demetrios Papadopoulos)
  */
 
 
