@@ -1160,6 +1160,11 @@ google.maps.DirectionsRoute.prototype.bounds;
 google.maps.DirectionsRoute.prototype.copyrights;
 
 /**
+ * @type {google.maps.TransitFare}
+ */
+google.maps.DirectionsRoute.prototype.fare;
+
+/**
  * @type {Array<google.maps.DirectionsLeg>}
  */
 google.maps.DirectionsRoute.prototype.legs;
@@ -1340,6 +1345,11 @@ google.maps.DistanceMatrixRequest.prototype.origins;
 google.maps.DistanceMatrixRequest.prototype.region;
 
 /**
+ * @type {google.maps.TransitOptions|Object.<string>}
+ */
+google.maps.DistanceMatrixRequest.prototype.transitOptions;
+
+/**
  * @type {google.maps.TravelMode}
  */
 google.maps.DistanceMatrixRequest.prototype.travelMode;
@@ -1383,6 +1393,11 @@ google.maps.DistanceMatrixResponseElement.prototype.distance;
  * @type {google.maps.Duration}
  */
 google.maps.DistanceMatrixResponseElement.prototype.duration;
+
+/**
+ * @type {google.maps.TransitFare}
+ */
+google.maps.DistanceMatrixResponseElement.prototype.fare;
 
 /**
  * @type {google.maps.DistanceMatrixElementStatus}
@@ -4986,6 +5001,11 @@ google.maps.TransitDetails.prototype.line;
 google.maps.TransitDetails.prototype.num_stops;
 
 /**
+ * @interface
+ */
+google.maps.TransitFare = function() {};
+
+/**
  * @extends {google.maps.MVCObject}
  * @constructor
  */
@@ -5049,6 +5069,17 @@ google.maps.TransitLine.prototype.url;
 google.maps.TransitLine.prototype.vehicle;
 
 /**
+ * @enum {number|string}
+ */
+google.maps.TransitMode = {
+  BUS: '',
+  RAIL: '',
+  SUBWAY: '',
+  TRAIN: '',
+  TRAM: ''
+};
+
+/**
  * @interface
  */
 google.maps.TransitOptions = function() {};
@@ -5062,6 +5093,24 @@ google.maps.TransitOptions.prototype.arrivalTime;
  * @type {Date}
  */
 google.maps.TransitOptions.prototype.departureTime;
+
+/**
+ * @type {Array<google.maps.TransitMode>}
+ */
+google.maps.TransitOptions.prototype.modes;
+
+/**
+ * @type {google.maps.TransitRoutePreference}
+ */
+google.maps.TransitOptions.prototype.routingPreference;
+
+/**
+ * @enum {number|string}
+ */
+google.maps.TransitRoutePreference = {
+  FEWER_TRANSFERS: '',
+  LESS_WALKING: ''
+};
 
 /**
  * @interface
@@ -5939,7 +5988,7 @@ google.maps.places.AutocompletionRequest.prototype.radius;
 google.maps.places.AutocompletionRequest.prototype.types;
 
 /**
- * @constructor
+ * @interface
  */
 google.maps.places.ComponentRestrictions = function() {};
 
