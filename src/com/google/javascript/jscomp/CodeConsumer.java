@@ -199,7 +199,7 @@ abstract class CodeConsumer {
       // is valid and should print like
       // / // / /
       append(" ");
-    } else if ((c == '"' || c == '\'') && isWordChar(getLastChar())) {
+    } else if (c == '"' && isWordChar(getLastChar())) {
       maybeInsertSpace();
     }
 
