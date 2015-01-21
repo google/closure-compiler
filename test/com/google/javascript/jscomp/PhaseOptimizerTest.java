@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
@@ -171,7 +173,7 @@ public class PhaseOptimizerTest extends TestCase {
     addOneTimePass("x3");
     addOneTimePass("x4");
     optimizer.process(null, dummyRoot);
-    assertEquals(4, progressList.size());
+    assertThat(progressList).hasSize(4);
     assertEquals(25, Math.round(progressList.get(0)));
     assertEquals(50, Math.round(progressList.get(1)));
     assertEquals(75, Math.round(progressList.get(2)));

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.rhino.Node;
@@ -89,7 +91,7 @@ public class NodeTraversalTest extends TestCase {
     DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");
 
     t.report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
-    assertEquals(1, errors.size());
+    assertThat(errors).hasSize(1);
     assertEquals("Foo, Bar - Hello", errors.get(0).description);
   }
 
@@ -113,10 +115,10 @@ public class NodeTraversalTest extends TestCase {
       t.traverse(tree);
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().startsWith(
-          "INTERNAL COMPILER ERROR.\n" +
-          "Please report this problem.\n\n" +
-          "test me"));
+      assertThat(e.getMessage())
+          .startsWith("INTERNAL COMPILER ERROR.\n"
+              + "Please report this problem.\n\n"
+              + "test me");
     }
   }
 

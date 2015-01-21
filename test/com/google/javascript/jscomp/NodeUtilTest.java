@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -211,11 +213,11 @@ public class NodeUtilTest extends TestCase {
     assertEquals("0", NodeUtil.getStringValue(getNode("'0'")));
     assertEquals(null, NodeUtil.getStringValue(getNode("/a/")));
     assertEquals("[object Object]", NodeUtil.getStringValue(getNode("{}")));
-    assertEquals("", NodeUtil.getStringValue(getNode("[]")));
+    assertThat(NodeUtil.getStringValue(getNode("[]"))).isEmpty();
     assertEquals("false", NodeUtil.getStringValue(getNode("false")));
     assertEquals("null", NodeUtil.getStringValue(getNode("null")));
     assertEquals("0", NodeUtil.getStringValue(getNode("0")));
-    assertEquals("", NodeUtil.getStringValue(getNode("''")));
+    assertThat(NodeUtil.getStringValue(getNode("''"))).isEmpty();
     assertEquals("undefined", NodeUtil.getStringValue(getNode("undefined")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("void 0")));
     assertEquals("undefined", NodeUtil.getStringValue(getNode("void foo()")));
@@ -226,11 +228,11 @@ public class NodeUtilTest extends TestCase {
   }
 
   public void testGetArrayStringValue() {
-    assertEquals("", NodeUtil.getStringValue(getNode("[]")));
-    assertEquals("", NodeUtil.getStringValue(getNode("['']")));
-    assertEquals("", NodeUtil.getStringValue(getNode("[null]")));
-    assertEquals("", NodeUtil.getStringValue(getNode("[undefined]")));
-    assertEquals("", NodeUtil.getStringValue(getNode("[void 0]")));
+    assertThat(NodeUtil.getStringValue(getNode("[]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(getNode("['']"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(getNode("[null]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(getNode("[undefined]"))).isEmpty();
+    assertThat(NodeUtil.getStringValue(getNode("[void 0]"))).isEmpty();
     assertEquals("NaN", NodeUtil.getStringValue(getNode("[NaN]")));
     assertEquals(",", NodeUtil.getStringValue(getNode("[,'']")));
     assertEquals(",,", NodeUtil.getStringValue(getNode("[[''],[''],['']]")));

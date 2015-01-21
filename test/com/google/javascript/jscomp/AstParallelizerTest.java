@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
@@ -108,7 +110,7 @@ public class AstParallelizerTest extends TestCase {
     AstParallelizer parallelizer =
       AstParallelizer.createNewFunctionLevelAstParallelizer(root, true);
     List<Node> forest = parallelizer.split();
-    assertEquals(output.length, forest.size());
+    assertThat(forest).hasSize(output.length);
     int i = 0;
     for (Node n : forest) {
       Node tree = compiler.parseTestCode(output[i++]);
@@ -136,7 +138,7 @@ public class AstParallelizerTest extends TestCase {
     AstParallelizer parallelizer =
       AstParallelizer.createNewFileLevelAstParallelizer(root);
     List<Node> forest = parallelizer.split();
-    assertEquals(input.length, forest.size());
+    assertThat(forest).hasSize(input.length);
     int i = 0;
     for (Node n : forest) {
       Node tree = compiler.parseTestCode(input[i++]);

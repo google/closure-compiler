@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -413,7 +415,7 @@ public class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
-    assertEquals(2, constantNodes.size());
+    assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertEquals("CONST", hasProp.getString());
     }
@@ -424,7 +426,7 @@ public class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
-    assertEquals(2, constantNodes.size());
+    assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertEquals("CONST", hasProp.getString());
     }
@@ -435,7 +437,7 @@ public class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
-    assertEquals(2, constantNodes.size());
+    assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertEquals("CONST", hasProp.getString());
     }
@@ -447,7 +449,7 @@ public class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
-    assertEquals(2, constantNodes.size());
+    assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertEquals("CONST", hasProp.getString());
     }
@@ -460,7 +462,7 @@ public class NormalizeTest extends CompilerTestCase {
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
-    assertEquals(2, constantNodes.size());
+    assertThat(constantNodes).hasSize(2);
     for (Node hasProp : constantNodes) {
       assertEquals("CONST", hasProp.getString());
     }

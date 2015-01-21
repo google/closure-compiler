@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -61,7 +63,7 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("var x = 3;", "var x=3;0;0");
     } catch (IllegalStateException e) {
-      assertTrue(e.getMessage().contains("Expected BLOCK but was EMPTY"));
+      assertThat(e.getMessage()).contains("Expected BLOCK but was EMPTY");
       exceptionCaught = true;
     }
     assertTrue(exceptionCaught);
@@ -78,8 +80,7 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("while(1){}", "while(1){}");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().contains(
-          "Normalize constraints violated:\nWHILE node"));
+      assertThat(e.getMessage()).contains("Normalize constraints violated:\nWHILE node");
       exceptionCaught = true;
     }
     assertTrue(exceptionCaught);
@@ -100,8 +101,7 @@ public class SanityCheckTest extends CompilerTestCase {
     try {
       test("var x;", "var x; x;");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().contains(
-          "The name x is not consistently annotated as constant."));
+      assertThat(e.getMessage()).contains("The name x is not consistently annotated as constant.");
       exceptionCaught = true;
     }
     assertTrue(exceptionCaught);

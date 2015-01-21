@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -86,7 +88,7 @@ public class DependencyResolverTest extends TestCase {
     "goog.require('f');goog.require('c');", seen, false);
 
     assertEquals("a.js,b.js,c.js,g.js,f.js", Joiner.on(",").useForNull("null").join(deps));
-    assertEquals("", Joiner.on(",").useForNull("null").join(depsLater));
+    assertThat(depsLater).isEmpty();
   }
 
   public void testSharedSeenSetNoBaseFileNewRequires() throws Exception {

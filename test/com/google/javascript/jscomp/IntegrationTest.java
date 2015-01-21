@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.common.base.Joiner;
@@ -2462,7 +2463,7 @@ public class IntegrationTest extends IntegrationTestCase {
            "function f() { return x + z; }");
       fail("Expected run-time exception");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().contains("Unexpected variable x"));
+      assertThat(e.getMessage()).contains("Unexpected variable x");
     }
   }
 
@@ -2741,8 +2742,8 @@ public class IntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compile(options,
         "/** @return {number} */ function f() { return true; }");
-    assertEquals(1, compiler.getErrors().length);
-    assertEquals(0, compiler.getWarnings().length);
+    assertThat(compiler.getErrors()).hasLength(1);
+    assertThat(compiler.getWarnings()).isEmpty();
   }
 
   public void testStrictWarningsGuardEmergencyMode() throws Exception {
@@ -2753,8 +2754,8 @@ public class IntegrationTest extends IntegrationTestCase {
 
     Compiler compiler = compile(options,
         "/** @return {number} */ function f() { return true; }");
-    assertEquals(0, compiler.getErrors().length);
-    assertEquals(1, compiler.getWarnings().length);
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).hasLength(1);
   }
 
   public void testInlineProperties() {

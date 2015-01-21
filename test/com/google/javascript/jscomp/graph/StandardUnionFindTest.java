@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.graph;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
 
@@ -40,14 +42,14 @@ public class StandardUnionFindTest extends TestCase {
   }
 
   public void testEmpty() {
-    assertEquals(0, union.allEquivalenceClasses().size());
+    assertThat(union.allEquivalenceClasses()).isEmpty();
   }
 
   public void testAdd() {
     union.add("foo");
     union.add("bar");
     assertTrue(null != union.find("foo"));
-    assertEquals(2, union.allEquivalenceClasses().size());
+    assertThat(union.allEquivalenceClasses()).hasSize(2);
   }
 
   public void testUnion() {
@@ -64,12 +66,11 @@ public class StandardUnionFindTest extends TestCase {
     union.union("D", "E");
     union.union("F", "F");
 
-    assertEquals(3, union.findAll("A").size());
-    assertEquals(3, union.findAll("B").size());
-    assertEquals(3, union.findAll("C").size());
-    assertEquals(2, union.findAll("D").size());
-    assertEquals(1, union.findAll("F").size());
-
+    assertThat(union.findAll("A")).hasSize(3);
+    assertThat(union.findAll("B")).hasSize(3);
+    assertThat(union.findAll("C")).hasSize(3);
+    assertThat(union.findAll("D")).hasSize(2);
+    assertThat(union.findAll("F")).hasSize(1);
   }
 
   public void testFind() {
@@ -97,11 +98,9 @@ public class StandardUnionFindTest extends TestCase {
     union.union("F", "F");
 
     Collection<Set<String>> classes = union.allEquivalenceClasses();
-    assertEquals(3, classes.size());
-    assertContentsAnyOrder(classes,
-        ImmutableSet.of("A", "B", "C"),
-        ImmutableSet.of("D", "E"),
-        ImmutableSet.of("F"));
+    assertThat(classes).hasSize(3);
+    assertContentsAnyOrder(
+        classes, ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F"));
   }
 
   public void testFindAll() {
@@ -112,17 +111,11 @@ public class StandardUnionFindTest extends TestCase {
     union.union("F", "F");
 
     Set<String> aSet = union.findAll("A");
-    assertEquals(2, aSet.size());
-    assertTrue(aSet.contains("A"));
-    assertTrue(aSet.contains("B"));
-    assertFalse(aSet.contains("C"));
-    assertFalse(aSet.contains("D"));
-    assertFalse(aSet.contains("E"));
-    assertFalse(aSet.contains("F"));
+    assertThat(aSet).containsExactly("A", "B");
 
     union.union("B", "C");
-    assertTrue(aSet.contains("C"));
-    assertEquals(3, aSet.size());
+    assertThat(aSet).contains("C");
+    assertThat(aSet).hasSize(3);
 
     try {
       union.findAll("Z");
@@ -156,15 +149,15 @@ public class StandardUnionFindTest extends TestCase {
   public void testFindAllSize() {
     union.union("A", "B");
     union.union("B", "C");
-    assertEquals(3, union.findAll("A").size());
-    assertEquals(3, union.findAll("B").size());
-    assertEquals(3, union.findAll("C").size());
+    assertThat(union.findAll("A")).hasSize(3);
+    assertThat(union.findAll("B")).hasSize(3);
+    assertThat(union.findAll("C")).hasSize(3);
     union.union("D", "E");
-    assertEquals(3, union.findAll("C").size());
-    assertEquals(2, union.findAll("D").size());
+    assertThat(union.findAll("C")).hasSize(3);
+    assertThat(union.findAll("D")).hasSize(2);
     union.union("B", "E");
-    assertEquals(5, union.findAll("C").size());
-    assertEquals(5, union.findAll("D").size());
+    assertThat(union.findAll("C")).hasSize(5);
+    assertThat(union.findAll("D")).hasSize(5);
   }
 
   public void testElements(){
@@ -175,7 +168,7 @@ public class StandardUnionFindTest extends TestCase {
 
     Set<String> elements = union.elements();
     assertEquals(ImmutableSet.of("A", "B", "C", "D", "E"), elements);
-    assertFalse(elements.contains("F"));
+    assertThat(elements).doesNotContain("F");
   }
 
   public void testCopy() {
@@ -224,18 +217,9 @@ public class StandardUnionFindTest extends TestCase {
    * exactly the same.
    */
   private static void assertContentsAnyOrder(
-      String message, Iterable<?> actual, Object... expected) {
-    Assert.assertEquals(message,
+      Iterable<?> actual, Object... expected) {
+    Assert.assertEquals(null,
         HashMultiset.create(Arrays.asList(expected)),
         HashMultiset.create(actual));
-  }
-
-  /**
-   * Variant of {@link #assertContentsAnyOrder(String,Iterable,Object...)}
-   * using a generic message.
-   */
-  private static void assertContentsAnyOrder(
-      Iterable<?> actual, Object... expected) {
-    assertContentsAnyOrder(null, actual, expected);
   }
 }

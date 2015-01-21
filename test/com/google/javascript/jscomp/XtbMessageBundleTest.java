@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import junit.framework.TestCase;
@@ -66,7 +67,7 @@ public class XtbMessageBundleTest extends TestCase {
         message.toString());
 
     message = bundle.getMessage("3945720239421293834");
-    assertEquals("", message.toString());
-    assertFalse(message.parts().isEmpty());
+    assertThat(message.toString()).isEmpty();
+    assertThat(message.parts()).isNotEmpty();
   }
 }

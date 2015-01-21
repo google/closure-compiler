@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
@@ -31,7 +32,6 @@ import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.rhino.Node;
-
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
@@ -587,8 +587,8 @@ public class CommandLineRunnerTest extends TestCase {
     assertFalse(runner.shouldRunCompiler());
     assertFalse(runner.hasErrors());
     String output = new String(outReader.toByteArray(), UTF_8);
-    assertTrue(output.contains(" --help "));
-    assertTrue(output.contains(" --version "));
+    assertThat(output).contains(" --help ");
+    assertThat(output).contains(" --version ");
   }
 
   public void testHoistedFunction1() {
@@ -608,19 +608,19 @@ public class CommandLineRunnerTest extends TestCase {
     test(new String[] {code},
          new String[] {});
 
-    assertEquals(2, lastCompiler.getExternsForTesting().size());
+    assertThat(lastCompiler.getExternsForTesting()).hasSize(2);
 
     CompilerInput extern = lastCompiler.getExternsForTesting().get(1);
     assertNull(extern.getModule());
     assertTrue(extern.isExtern());
     assertEquals(code, extern.getCode());
 
-    assertEquals(1, lastCompiler.getInputsForTesting().size());
+    assertThat(lastCompiler.getInputsForTesting()).hasSize(1);
 
     CompilerInput input = lastCompiler.getInputsForTesting().get(0);
     assertNotNull(input.getModule());
     assertFalse(input.isExtern());
-    assertEquals("", input.getCode());
+    assertThat(input.getCode()).isEmpty();
   }
 
   public void testExternsLifting2() {
@@ -990,9 +990,8 @@ public class CommandLineRunnerTest extends TestCase {
 
     CommandLineRunner runner = createCommandLineRunner(new String[0]);
     assertFalse(runner.shouldRunCompiler());
-    assertTrue(
-        new String(errReader.toByteArray(), UTF_8)
-            .contains("Bad value for --source_map_location_mapping"));
+    assertThat(new String(errReader.toByteArray(), UTF_8))
+        .contains("Bad value for --source_map_location_mapping");
   }
 
   public void testModuleWrapperBaseNameExpansion() throws Exception {
@@ -1071,7 +1070,7 @@ public class CommandLineRunnerTest extends TestCase {
 
     StringBuilder builder = new StringBuilder();
     lastCommandLineRunner.printModuleGraphJsonTo(builder);
-    assertTrue(builder.toString().contains("transitive-dependencies"));
+    assertThat(builder.toString()).contains("transitive-dependencies");
   }
 
   public void testVersionFlag() {
@@ -1171,7 +1170,7 @@ public class CommandLineRunnerTest extends TestCase {
       "var a b;",
       "var b c;"
     });
-    assertEquals(2, compiler.getErrors().length);
+    assertThat(compiler.getErrors()).hasLength(2);
   }
 
   public void testES3ByDefault() {
@@ -1263,7 +1262,7 @@ public class CommandLineRunnerTest extends TestCase {
     test("exports.test = 1",
         "var module$foo$bar={test:1};");
     // With modules=auto no direct output is created.
-    assertEquals("", outReader.toString());
+    assertThat(outReader.toString()).isEmpty();
   }
 
   /**
@@ -1410,7 +1409,7 @@ public class CommandLineRunnerTest extends TestCase {
           "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
           0, compiler.getErrors().length + compiler.getWarnings().length);
     } else {
-      assertEquals(1, compiler.getWarnings().length);
+      assertThat(compiler.getWarnings()).hasLength(1);
       assertEquals(warning, compiler.getWarnings()[0].getType());
     }
 
@@ -1447,15 +1446,15 @@ public class CommandLineRunnerTest extends TestCase {
         "\nWarnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         1, compiler.getErrors().length + compiler.getWarnings().length);
 
-    assertFalse(exitCodes.isEmpty());
+    assertThat(exitCodes).isNotEmpty();
     int lastExitCode = exitCodes.get(exitCodes.size() - 1);
 
     if (compiler.getErrors().length > 0) {
-      assertEquals(1, compiler.getErrors().length);
+      assertThat(compiler.getErrors()).hasLength(1);
       assertEquals(warning, compiler.getErrors()[0].getType());
       assertEquals(1, lastExitCode);
     } else {
-      assertEquals(1, compiler.getWarnings().length);
+      assertThat(compiler.getWarnings()).hasLength(1);
       assertEquals(warning, compiler.getWarnings()[0].getType());
       assertEquals(0, lastExitCode);
     }

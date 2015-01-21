@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CallGraph.Callsite;
@@ -78,10 +80,9 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Function> functions = callgraph.getAllFunctions();
 
     // 3 Functions, plus one for the main function
-    assertEquals(4, functions.size());
+    assertThat(functions).hasSize(4);
 
-    CallGraph.Function functionA =
-        callgraph.getUniqueFunctionWithName("A");
+    CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
     CallGraph.Function functionB =
         callgraph.getUniqueFunctionWithName("B");
     CallGraph.Function functionC =
@@ -100,10 +101,9 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Function> allFunctions = callgraph.getAllFunctions();
 
     // 2 functions: one for A() and one for the main function
-    assertEquals(2, allFunctions.size());
-
-   assertTrue(allFunctions.contains(callgraph.getUniqueFunctionWithName("A")));
-   assertTrue(allFunctions.contains(callgraph.getMainFunction()));
+    assertThat(allFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("A"),
+        callgraph.getMainFunction());
   }
 
   public void testGetAllFunctionsContainsVarAssignedLiteralFunction() {
@@ -114,11 +114,9 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Function> allFunctions = callgraph.getAllFunctions();
 
     // 2 functions: one for A() and one for the global function
-    assertEquals(2, allFunctions.size());
-
-    Function functionA = callgraph.getUniqueFunctionWithName("A");
-    assertTrue(allFunctions.contains(functionA));
-    assertTrue(allFunctions.contains(callgraph.getMainFunction()));
+    assertThat(allFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("A"),
+        callgraph.getMainFunction());
   }
 
   public void testGetAllFunctionsContainsNamespaceAssignedLiteralFunction() {
@@ -131,11 +129,9 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Function> allFunctions = callgraph.getAllFunctions();
 
     // 2 functions: one for namespace.A() and one for the global function
-    assertEquals(2, allFunctions.size());
-
-    assertTrue(allFunctions.contains(
-        callgraph.getUniqueFunctionWithName("namespace.A")));
-    assertTrue(allFunctions.contains(callgraph.getMainFunction()));
+    assertThat(allFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("namespace.A"),
+        callgraph.getMainFunction());
   }
 
   public void testGetAllFunctionsContainsLocalFunction() {
@@ -147,11 +143,10 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Function> allFunctions = callgraph.getAllFunctions();
 
     // 3 functions: one for A, B, and global function
-    assertEquals(3, allFunctions.size());
-
-    assertTrue(allFunctions.contains(callgraph.getUniqueFunctionWithName("A")));
-    assertTrue(allFunctions.contains(callgraph.getUniqueFunctionWithName("B")));
-    assertTrue(allFunctions.contains(callgraph.getMainFunction()));
+    assertThat(allFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("A"),
+        callgraph.getUniqueFunctionWithName("B"),
+        callgraph.getMainFunction());
   }
 
   public void testGetAllFunctionsContainsAnonymousFunction() {
@@ -163,12 +158,10 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Function> allFunctions = callgraph.getAllFunctions();
 
     // 3 functions: A, anonymous, and global function
-    assertEquals(3, allFunctions.size());
-
-    assertTrue(allFunctions.contains(callgraph.getUniqueFunctionWithName("A")));
-    assertTrue(
-        allFunctions.contains(callgraph.getUniqueFunctionWithName(null)));
-    assertTrue(allFunctions.contains(callgraph.getMainFunction()));
+    assertThat(allFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("A"),
+        callgraph.getUniqueFunctionWithName(null),
+        callgraph.getMainFunction());
   }
 
   public void testGetCallsiteForAstNode() {
@@ -200,10 +193,9 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Callsite> callsitesInA =
         functionA.getCallsitesInFunction();
 
-    assertEquals(1, callsitesInA.size());
+    assertThat(callsitesInA).hasSize(1);
 
-    CallGraph.Callsite firstCallsiteInA =
-        callsitesInA.iterator().next();
+    CallGraph.Callsite firstCallsiteInA = callsitesInA.iterator().next();
 
     Node aTargetExpression = firstCallsiteInA.getAstNode().getFirstChild();
     assertEquals(Token.NAME, aTargetExpression.getType());
@@ -215,10 +207,9 @@ public class CallGraphTest extends CompilerTestCase {
     Collection<CallGraph.Callsite> callsitesInB =
         functionB.getCallsitesInFunction();
 
-    assertEquals(1, callsitesInB.size());
+    assertThat(callsitesInB).hasSize(1);
 
-    CallGraph.Callsite firstCallsiteInB =
-      callsitesInB.iterator().next();
+    CallGraph.Callsite firstCallsiteInB = callsitesInB.iterator().next();
 
     Node bTargetExpression = firstCallsiteInB.getAstNode().getFirstChild();
     assertEquals(Token.FUNCTION, bTargetExpression.getType());
@@ -229,10 +220,9 @@ public class CallGraphTest extends CompilerTestCase {
 
     Collection<CallGraph.Callsite> callsitesInC =
         functionC.getCallsitesInFunction();
-    assertEquals(1, callsitesInC.size());
+    assertThat(callsitesInC).hasSize(1);
 
-    CallGraph.Callsite firstCallsiteInC =
-      callsitesInC.iterator().next();
+    CallGraph.Callsite firstCallsiteInC = callsitesInC.iterator().next();
 
     Node cTargetExpression = firstCallsiteInC.getAstNode().getFirstChild();
     assertEquals(Token.NAME, aTargetExpression.getType());
@@ -248,7 +238,7 @@ public class CallGraphTest extends CompilerTestCase {
         callgraph.getUniqueFunctionWithName("A");
     Collection<CallGraph.Callsite> callsitesInA =
         functionA.getCallsitesInFunction();
-    assertEquals(1, callsitesInA.size());
+    assertThat(callsitesInA).hasSize(1);
 
     Node callsiteInA = callsitesInA.iterator().next().getAstNode();
     assertEquals(Token.NEW, callsiteInA.getType());
@@ -278,7 +268,7 @@ public class CallGraphTest extends CompilerTestCase {
         callsiteInC.getPossibleTargets();
 
     assertNotNull(targetsOfCallsiteInC);
-    assertEquals(1, targetsOfCallsiteInC.size());
+    assertThat(targetsOfCallsiteInC).hasSize(1);
   }
 
   public void testFindCallsiteTargetAliasedGlobalProperty() {
@@ -302,7 +292,7 @@ public class CallGraphTest extends CompilerTestCase {
         callsiteInC.getPossibleTargets();
 
     assertNotNull(targetsOfCallsiteInC);
-    assertEquals(1, targetsOfCallsiteInC.size());
+    assertThat(targetsOfCallsiteInC).hasSize(1);
   }
 
   public void testGetAllCallsitesContainsMultiple() {
@@ -318,7 +308,7 @@ public class CallGraphTest extends CompilerTestCase {
 
     Collection<CallGraph.Callsite> allCallsites = callgraph.getAllCallsites();
 
-    assertEquals(4, allCallsites.size());
+    assertThat(allCallsites).hasSize(4);
   }
 
   public void testGetAllCallsitesContainsGlobalSite() {
@@ -329,7 +319,7 @@ public class CallGraphTest extends CompilerTestCase {
     CallGraph callgraph = compileAndRunBackward(source);
 
     Collection<CallGraph.Callsite> allCallsites = callgraph.getAllCallsites();
-    assertEquals(1, allCallsites.size());
+    assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
     assertEquals(Token.CALL, callsiteNode.getType());
@@ -344,7 +334,7 @@ public class CallGraphTest extends CompilerTestCase {
     CallGraph callgraph = compileAndRunBackward(source);
 
     Collection<CallGraph.Callsite> allCallsites = callgraph.getAllCallsites();
-    assertEquals(1, allCallsites.size());
+    assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
     assertEquals(Token.CALL, callsiteNode.getType());
@@ -357,7 +347,7 @@ public class CallGraphTest extends CompilerTestCase {
     CallGraph callgraph = compileAndRunBackward(source);
 
     Collection<CallGraph.Callsite> allCallsites = callgraph.getAllCallsites();
-    assertEquals(1, allCallsites.size());
+    assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
     assertEquals(Token.CALL, callsiteNode.getType());
@@ -372,7 +362,7 @@ public class CallGraphTest extends CompilerTestCase {
     CallGraph callgraph = compileAndRunBackward(source);
 
     Collection<CallGraph.Callsite> allCallsites = callgraph.getAllCallsites();
-    assertEquals(1, allCallsites.size());
+    assertThat(allCallsites).hasSize(1);
 
     Node callsiteNode = allCallsites.iterator().next().getAstNode();
     assertEquals(Token.NEW, callsiteNode.getType());
@@ -430,14 +420,10 @@ public class CallGraphTest extends CompilerTestCase {
         .computeFixedPoint(callgraph.getBackwardDirectedGraph());
 
     // We expect B, C, and E to poisoned.
-    assertEquals(3, poisonedFunctions.size());
-
-    assertTrue(poisonedFunctions.contains(
-        callgraph.getUniqueFunctionWithName("B")));
-    assertTrue(poisonedFunctions.contains(
-        callgraph.getUniqueFunctionWithName("C")));
-    assertTrue(poisonedFunctions.contains(
-        callgraph.getUniqueFunctionWithName("E")));
+    assertThat(poisonedFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("B"),
+        callgraph.getUniqueFunctionWithName("C"),
+        callgraph.getUniqueFunctionWithName("E"));
   }
 
   /**
@@ -491,14 +477,10 @@ public class CallGraphTest extends CompilerTestCase {
         .computeFixedPoint(callgraph.getBackwardDirectedGraph());
 
     // We expect B, C, and E to poisoned.
-    assertEquals(3, poisonedFunctions.size());
-
-    assertTrue(poisonedFunctions.contains(
-        callgraph.getUniqueFunctionWithName("B")));
-    assertTrue(poisonedFunctions.contains(
-        callgraph.getUniqueFunctionWithName("C")));
-    assertTrue(poisonedFunctions.contains(
-        callgraph.getUniqueFunctionWithName("E")));
+    assertThat(poisonedFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("B"),
+        callgraph.getUniqueFunctionWithName("C"),
+        callgraph.getUniqueFunctionWithName("E"));
   }
 
   /**
@@ -554,27 +536,17 @@ public class CallGraphTest extends CompilerTestCase {
     // We expect B, C, D, X, Y, Z and the main function should be reachable.
     // A and E should not be reachable.
 
-    assertEquals(7, reachableFunctions.size());
+    assertThat(reachableFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("B"),
+        callgraph.getUniqueFunctionWithName("C"),
+        callgraph.getUniqueFunctionWithName("D"),
+        callgraph.getUniqueFunctionWithName("X"),
+        callgraph.getUniqueFunctionWithName("Y"),
+        callgraph.getUniqueFunctionWithName("Z"),
+        callgraph.getMainFunction());
 
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("B")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("C")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("D")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("X")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("Y")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("Z")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getMainFunction()));
-
-    assertFalse(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("A")));
-    assertFalse(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("E")));
+    assertThat(reachableFunctions).doesNotContain(callgraph.getUniqueFunctionWithName("A"));
+    assertThat(reachableFunctions).doesNotContain(callgraph.getUniqueFunctionWithName("E"));
   }
 
   /**
@@ -630,27 +602,17 @@ public class CallGraphTest extends CompilerTestCase {
     // We expect B, C, D, X, Y, Z and the main function should be reachable.
     // A and E should not be reachable.
 
-    assertEquals(7, reachableFunctions.size());
+    assertThat(reachableFunctions).containsExactly(
+        callgraph.getUniqueFunctionWithName("B"),
+        callgraph.getUniqueFunctionWithName("C"),
+        callgraph.getUniqueFunctionWithName("D"),
+        callgraph.getUniqueFunctionWithName("X"),
+        callgraph.getUniqueFunctionWithName("Y"),
+        callgraph.getUniqueFunctionWithName("Z"),
+        callgraph.getMainFunction());
 
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("B")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("C")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("D")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("X")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("Y")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("Z")));
-    assertTrue(reachableFunctions.contains(
-        callgraph.getMainFunction()));
-
-    assertFalse(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("A")));
-    assertFalse(reachableFunctions.contains(
-        callgraph.getUniqueFunctionWithName("E")));
+    assertThat(reachableFunctions).doesNotContain(callgraph.getUniqueFunctionWithName("A"));
+    assertThat(reachableFunctions).doesNotContain(callgraph.getUniqueFunctionWithName("E"));
   }
 
   public void testFunctionIsMain() {
@@ -743,21 +705,18 @@ public class CallGraphTest extends CompilerTestCase {
     List<String> callsiteNamesInMain =
         getCallsiteTargetNames(mainFunction.getCallsitesInFunction());
 
-    assertEquals(2, callsiteNamesInMain.size());
-    assertTrue(callsiteNamesInMain.contains("A"));
-    assertTrue(callsiteNamesInMain.contains("B"));
+    assertThat(callsiteNamesInMain).containsExactly("A", "B");
 
     // A calls no functions
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
-    assertEquals(0, functionA.getCallsitesInFunction().size());
+    assertThat(functionA.getCallsitesInFunction()).isEmpty();
 
     // B calls A
     CallGraph.Function functionB = callgraph.getUniqueFunctionWithName("B");
     List<String> callsiteNamesInB =
         getCallsiteTargetNames(functionB.getCallsitesInFunction());
 
-    assertEquals(1, callsiteNamesInB.size());
-    assertTrue(callsiteNamesInMain.contains("A"));
+    assertThat(callsiteNamesInB).containsExactly("A");
   }
 
   public void testFunctionGetCallsitesInFunction_ignoreInnerFunction() {
@@ -769,7 +728,7 @@ public class CallGraphTest extends CompilerTestCase {
 
     // A calls no functions (and especially not C)
     CallGraph.Function functionA = callgraph.getUniqueFunctionWithName("A");
-    assertEquals(0, functionA.getCallsitesInFunction().size());
+    assertThat(functionA.getCallsitesInFunction()).isEmpty();
   }
 
   public void testFunctionGetCallsitesPossiblyTargetingFunction() {
@@ -786,29 +745,26 @@ public class CallGraphTest extends CompilerTestCase {
     Function functionB = callgraph.getUniqueFunctionWithName("B");
     Function functionC = callgraph.getUniqueFunctionWithName("C");
 
-    assertEquals(0, main.getCallsitesPossiblyTargetingFunction().size());
+    assertThat(main.getCallsitesPossiblyTargetingFunction()).isEmpty();
 
-    Collection<Callsite> callsitesTargetingA =
-        functionA.getCallsitesPossiblyTargetingFunction();
+    Collection<Callsite> callsitesTargetingA = functionA.getCallsitesPossiblyTargetingFunction();
 
     // A is called only from the main function
-    assertEquals(1, callsitesTargetingA.size());
-    assertEquals(main,
-        callsitesTargetingA.iterator().next().getContainingFunction());
+    assertThat(callsitesTargetingA).hasSize(1);
+    assertEquals(main, callsitesTargetingA.iterator().next().getContainingFunction());
 
     Collection<Callsite> callsitesTargetingB =
       functionB.getCallsitesPossiblyTargetingFunction();
 
     // B is called only from A
-    assertEquals(1, callsitesTargetingB.size());
-    assertEquals(functionA,
-        callsitesTargetingB.iterator().next().getContainingFunction());
+    assertThat(callsitesTargetingB).hasSize(1);
+    assertEquals(functionA, callsitesTargetingB.iterator().next().getContainingFunction());
 
     Collection<Callsite> callsitesTargetingC =
       functionC.getCallsitesPossiblyTargetingFunction();
 
     // C is called 3 times: twice from B and once from C
-    assertEquals(3, callsitesTargetingC.size());
+    assertThat(callsitesTargetingC).hasSize(3);
 
     Collection<Callsite> expectedFunctionsCallingC =
         Sets.newHashSet(functionB.getCallsitesInFunction());
@@ -826,7 +782,7 @@ public class CallGraphTest extends CompilerTestCase {
 
     // The call to new A() in C() should count as a callsite
     CallGraph.Function functionC = callgraph.getUniqueFunctionWithName("C");
-    assertEquals(1, functionC.getCallsitesInFunction().size());
+    assertThat(functionC.getCallsitesInFunction()).hasSize(1);
   }
 
   public void testFunctionGetIsAliased() {
@@ -993,13 +949,12 @@ public class CallGraphTest extends CompilerTestCase {
 
     Collection<Function> targetsOfCallInMain = callInMain.getPossibleTargets();
 
-    assertEquals(1, targetsOfCallInMain.size());
-    assertTrue(targetsOfCallInMain.contains(functionA));
+    assertThat(targetsOfCallInMain).containsExactly(functionA);
 
     Callsite callInA = functionA.getCallsitesInFunction().iterator().next();
     Collection<Function> targetsOfCallInA = callInA.getPossibleTargets();
 
-    assertTrue(targetsOfCallInA.contains(functionB));
+    assertThat(targetsOfCallInA).contains(functionB);
   }
 
   public void testCallsiteHasUnknownTarget() {
@@ -1024,7 +979,7 @@ public class CallGraphTest extends CompilerTestCase {
 
     // A() has an unknown target and no known targets
     assertTrue(callInB.hasUnknownTarget());
-    assertEquals(0, callInB.getPossibleTargets().size());
+    assertThat(callInB.getPossibleTargets()).isEmpty();
   }
 
   public void testCallsiteHasExternTarget() {
@@ -1051,7 +1006,7 @@ public class CallGraphTest extends CompilerTestCase {
 
     // ExternalFunction(6) is a call to an extern function
     assertTrue(callInB.hasExternTarget());
-    assertEquals(0, callInB.getPossibleTargets().size());
+    assertThat(callInB.getPossibleTargets()).isEmpty();
   }
 
   public void testThrowForBackwardOpOnForwardGraph() {

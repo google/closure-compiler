@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -713,7 +715,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
     transformationHandler = spy;
     test(fullJsCode, fullJsCode);
 
-    assertTrue(spy.observedPositions.isEmpty());
+    assertThat(spy.observedPositions).isEmpty();
   }
 
   public void testRecordOneAlias() {
@@ -726,15 +728,14 @@ public class ScopedAliasesTest extends CompilerTestCase {
     transformationHandler = spy;
     test(fullJsCode, expectedJsCode);
 
-    assertTrue(spy.observedPositions.containsKey("testcode"));
-    List<SourcePosition<AliasTransformation>> positions =
-        spy.observedPositions.get("testcode");
-    assertEquals(1, positions.size());
+    assertThat(spy.observedPositions).containsKey("testcode");
+    List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
+    assertThat(positions).hasSize(1);
     verifyAliasTransformationPosition(1, 0, 2, 1, positions.get(0));
 
-    assertEquals(1, spy.constructedAliases.size());
+    assertThat(spy.constructedAliases).hasSize(1);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
-    assertEquals("goog", aliasSpy.observedDefinitions.get("g"));
+    assertThat(aliasSpy.observedDefinitions).containsEntry("g", "goog");
   }
 
   public void testRecordOneAlias2() {
@@ -747,15 +748,14 @@ public class ScopedAliasesTest extends CompilerTestCase {
     transformationHandler = spy;
     test(fullJsCode, expectedJsCode);
 
-    assertTrue(spy.observedPositions.containsKey("testcode"));
-    List<SourcePosition<AliasTransformation>> positions =
-        spy.observedPositions.get("testcode");
-    assertEquals(1, positions.size());
+    assertThat(spy.observedPositions).containsKey("testcode");
+    List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
+    assertThat(positions).hasSize(1);
     verifyAliasTransformationPosition(1, 0, 2, 1, positions.get(0));
 
-    assertEquals(1, spy.constructedAliases.size());
+    assertThat(spy.constructedAliases).hasSize(1);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
-    assertEquals("goog", aliasSpy.observedDefinitions.get("g$1"));
+    assertThat(aliasSpy.observedDefinitions).containsEntry("g$1", "goog");
   }
 
   public void testRecordMultipleAliases() {
@@ -769,17 +769,16 @@ public class ScopedAliasesTest extends CompilerTestCase {
     transformationHandler = spy;
     test(fullJsCode, expectedJsCode);
 
-    assertTrue(spy.observedPositions.containsKey("testcode"));
-    List<SourcePosition<AliasTransformation>> positions =
-        spy.observedPositions.get("testcode");
-    assertEquals(1, positions.size());
+    assertThat(spy.observedPositions).containsKey("testcode");
+    List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
+    assertThat(positions).hasSize(1);
     verifyAliasTransformationPosition(1, 0, 3, 1, positions.get(0));
 
-    assertEquals(1, spy.constructedAliases.size());
+    assertThat(spy.constructedAliases).hasSize(1);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
-    assertEquals("goog", aliasSpy.observedDefinitions.get("g"));
-    assertEquals("g.bar", aliasSpy.observedDefinitions.get("b"));
-    assertEquals("goog.something.foo", aliasSpy.observedDefinitions.get("f"));
+    assertThat(aliasSpy.observedDefinitions).containsEntry("g", "goog");
+    assertThat(aliasSpy.observedDefinitions).containsEntry("b", "g.bar");
+    assertThat(aliasSpy.observedDefinitions).containsEntry("f", "goog.something.foo");
   }
 
   public void testRecordAliasFromMultipleGoogScope() {
@@ -799,21 +798,20 @@ public class ScopedAliasesTest extends CompilerTestCase {
     test(fullJsCode, expectedJsCode);
 
 
-    assertTrue(spy.observedPositions.containsKey("testcode"));
-    List<SourcePosition<AliasTransformation>> positions =
-        spy.observedPositions.get("testcode");
-    assertEquals(2, positions.size());
+    assertThat(spy.observedPositions).containsKey("testcode");
+    List<SourcePosition<AliasTransformation>> positions = spy.observedPositions.get("testcode");
+    assertThat(positions).hasSize(2);
 
     verifyAliasTransformationPosition(1, 0, 6, 0, positions.get(0));
 
     verifyAliasTransformationPosition(8, 0, 11, 4, positions.get(1));
 
-    assertEquals(2, spy.constructedAliases.size());
+    assertThat(spy.constructedAliases).hasSize(2);
     AliasSpy aliasSpy = (AliasSpy) spy.constructedAliases.get(0);
-    assertEquals("goog", aliasSpy.observedDefinitions.get("g"));
+    assertThat(aliasSpy.observedDefinitions).containsEntry("g", "goog");
 
     aliasSpy = (AliasSpy) spy.constructedAliases.get(1);
-    assertEquals("namespace.Zoo", aliasSpy.observedDefinitions.get("z"));
+    assertThat(aliasSpy.observedDefinitions).containsEntry("z", "namespace.Zoo");
   }
 
   private void verifyAliasTransformationPosition(int startLine, int startChar,

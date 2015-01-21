@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
 import com.google.common.collect.Lists;
@@ -296,7 +297,7 @@ public class VarCheckTest extends CompilerTestCase {
     try {
       checkSynthesizedExtern("x", "");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage().contains("Unexpected variable x"));
+      assertThat(e.getMessage()).contains("Unexpected variable x");
     }
   }
 

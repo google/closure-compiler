@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -253,8 +255,8 @@ public class CombinedCompilerPassTest extends TestCase  {
     CombinedCompilerPass pass = new CombinedCompilerPass(compiler, c1, c2, c3);
     pass.process(null, root);
 
-    assertEquals(1, c1.getVisitedScopes().size());
-    assertEquals(2, c2.getVisitedScopes().size());
-    assertEquals(3, c3.getVisitedScopes().size());
+    assertThat(c1.getVisitedScopes()).hasSize(1);
+    assertThat(c2.getVisitedScopes()).hasSize(2);
+    assertThat(c3.getVisitedScopes()).hasSize(3);
   }
 }

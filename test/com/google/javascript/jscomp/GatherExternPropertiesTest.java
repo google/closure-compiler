@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Sets;
 
 /**
@@ -173,7 +175,7 @@ public class GatherExternPropertiesTest extends CompilerTestCase {
         "/** @typedef {{bar: string, baz: string}} */ var NonExternType;",
         null);
     // Check that no properties were found.
-    assertTrue(getLastCompiler().getExternProperties().isEmpty());
+    assertThat(getLastCompiler().getExternProperties()).isEmpty();
   }
 
   private void assertExternProperties(String externs, String... properties) {

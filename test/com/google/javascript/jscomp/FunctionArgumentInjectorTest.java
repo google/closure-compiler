@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
@@ -39,15 +41,15 @@ public class FunctionArgumentInjectorTest extends TestCase {
   private static final Set<String> EMPTY_STRING_SET = Collections.emptySet();
 
   public void testFindModifiedParameters1() {
-    assertEquals(0,
+    assertThat(
         FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a){ return a==0; }")).size());
+            parseFunction("function f(a){ return a==0; }"))).isEmpty();
   }
 
   public void testFindModifiedParameters2() {
-    assertEquals(0,
-        FunctionArgumentInjector.findModifiedParameters(
-            parseFunction("function f(a){ b=a }")).size());
+    assertThat(
+        FunctionArgumentInjector.findModifiedParameters(parseFunction("function f(a){ b=a }")))
+        .isEmpty();
   }
 
   public void testFindModifiedParameters3() {

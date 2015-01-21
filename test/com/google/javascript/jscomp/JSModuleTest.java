@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -61,7 +63,7 @@ public class JSModuleTest extends TestCase {
   }
 
   public void testDependencies() {
-    assertTrue(mod1.getAllDependencies().isEmpty());
+    assertThat(mod1.getAllDependencies()).isEmpty();
     assertEquals(ImmutableSet.of(mod1), mod2.getAllDependencies());
     assertEquals(ImmutableSet.of(mod1), mod3.getAllDependencies());
     assertEquals(ImmutableSet.of(mod1, mod2, mod3), mod4.getAllDependencies());

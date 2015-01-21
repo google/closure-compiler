@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 
@@ -38,13 +40,13 @@ public class GlobalNamespaceTest extends TestCase {
 
     assertEquals(set1, n.getDeclaration());
     assertEquals(2, n.globalSets);
-    assertEquals(2, n.getRefs().size());
+    assertThat(n.getRefs()).hasSize(2);
 
     n.removeRef(set1);
 
     assertEquals(set2, n.getDeclaration());
     assertEquals(1, n.globalSets);
-    assertEquals(1, n.getRefs().size());
+    assertThat(n.getRefs()).hasSize(1);
   }
 
   public void testRemoveDeclaration2() {
@@ -58,7 +60,7 @@ public class GlobalNamespaceTest extends TestCase {
     assertEquals(set1, n.getDeclaration());
     assertEquals(1, n.globalSets);
     assertEquals(1, n.localSets);
-    assertEquals(2, n.getRefs().size());
+    assertThat(n.getRefs()).hasSize(2);
 
     n.removeRef(set1);
 

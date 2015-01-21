@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -501,7 +503,7 @@ public class ReplaceStringsTest extends CompilerTestCase {
 
     List<Result> results = pass.getResult();
     assertEquals(0, substitutedStrings.length % 2);
-    assertEquals(substitutedStrings.length / 2, results.size());
+    assertThat(results).hasSize(substitutedStrings.length / 2);
 
     // Verify that substituted strings are decoded correctly.
     for (int i = 0; i < substitutedStrings.length; i += 2) {

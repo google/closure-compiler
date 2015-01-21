@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 
 import com.google.common.base.Joiner;
@@ -230,7 +231,7 @@ public class CheckRequiresForConstructorsTest extends CompilerTestCase {
     Result result = compiler.compile(ImmutableList.<SourceFile>of(), ImmutableList.of(input), opts);
     JSError[] warnings = result.warnings;
     assertNotNull(warnings);
-    assertTrue(warnings.length > 0);
+    assertThat(warnings).isNotEmpty();
 
     String expectation = "'foo.bar.goo' used but not goog.require'd";
 

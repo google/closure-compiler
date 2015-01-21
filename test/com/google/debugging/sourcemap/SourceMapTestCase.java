@@ -16,6 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
@@ -215,7 +217,7 @@ public abstract class SourceMapTestCase extends TestCase {
     // to the original source code.
 
     // Ensure the token counts match.
-    assertEquals(originalTokens.size(), resultTokens.size());
+    assertThat(resultTokens).hasSize(originalTokens.size());
 
     SourceMapping reader;
     try {

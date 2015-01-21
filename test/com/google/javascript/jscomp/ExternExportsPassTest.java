@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
@@ -429,16 +431,16 @@ public class ExternExportsPassTest extends TestCase {
 
     Result libraryCompileResult = compileAndExportExterns(librarySource);
 
-    assertEquals(0, libraryCompileResult.warnings.length);
-    assertEquals(0, libraryCompileResult.errors.length);
+    assertThat(libraryCompileResult.warnings).isEmpty();
+    assertThat(libraryCompileResult.errors).isEmpty();
 
     String generatedExterns = libraryCompileResult.externExport;
 
     Result clientCompileResult = compileAndExportExterns(clientSource,
         generatedExterns);
 
-    assertEquals(0, clientCompileResult.warnings.length);
-    assertEquals(0, clientCompileResult.errors.length);
+    assertThat(clientCompileResult.warnings).isEmpty();
+    assertThat(clientCompileResult.errors).isEmpty();
   }
 
   public void testDontWarnOnExportFunctionWithUnknownReturnType() {
@@ -450,8 +452,8 @@ public class ExternExportsPassTest extends TestCase {
 
       Result libraryCompileResult = compileAndExportExterns(librarySource);
 
-      assertEquals(0, libraryCompileResult.warnings.length);
-      assertEquals(0, libraryCompileResult.errors.length);
+      assertThat(libraryCompileResult.warnings).isEmpty();
+      assertThat(libraryCompileResult.errors).isEmpty();
   }
 
   public void testDontWarnOnExportConstructorWithUnknownReturnType() {
@@ -465,8 +467,8 @@ public class ExternExportsPassTest extends TestCase {
 
       Result libraryCompileResult = compileAndExportExterns(librarySource);
 
-      assertEquals(0, libraryCompileResult.warnings.length);
-      assertEquals(0, libraryCompileResult.errors.length);
+      assertThat(libraryCompileResult.warnings).isEmpty();
+      assertThat(libraryCompileResult.errors).isEmpty();
   }
 
   public void testTypedef() {
@@ -580,8 +582,8 @@ public class ExternExportsPassTest extends TestCase {
 
       Result libraryCompileResult = compileAndExportExterns(librarySource);
 
-      assertEquals(0, libraryCompileResult.warnings.length);
-      assertEquals(0, libraryCompileResult.errors.length);
+      assertThat(libraryCompileResult.warnings).isEmpty();
+      assertThat(libraryCompileResult.errors).isEmpty();
   }
 
   private Result compileAndExportExterns(String js) {

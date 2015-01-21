@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -140,13 +142,13 @@ public class JSModuleGraphTest extends TestCase {
 
     graph.coalesceDuplicateFiles();
 
-    assertEquals(2, A.getInputs().size());
+    assertThat(A.getInputs()).hasSize(2);
     assertEquals("a.js", A.getInputs().get(0).getName());
     assertEquals("b.js", A.getInputs().get(1).getName());
-    assertEquals(0, B.getInputs().size());
-    assertEquals(1, C.getInputs().size());
+    assertThat(B.getInputs()).isEmpty();
+    assertThat(C.getInputs()).hasSize(1);
     assertEquals("c.js", C.getInputs().get(0).getName());
-    assertEquals(1, E.getInputs().size());
+    assertThat(E.getInputs()).hasSize(1);
     assertEquals("d.js", E.getInputs().get(0).getName());
   }
 
@@ -266,7 +268,7 @@ public class JSModuleGraphTest extends TestCase {
     List<CompilerInput> inputs = Lists.newArrayList();
     List<CompilerInput> results = graph.manageDependencies(
         depOptions, inputs);
-    assertTrue(results.isEmpty());
+    assertThat(results).isEmpty();
   }
 
   public void testToJson() throws JsonParseException {

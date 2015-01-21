@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.rhino.Node;
@@ -184,7 +186,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
         "var DEF=3;true;3");
 
     Name def = namespace.getNameIndex().get("DEF");
-    assertEquals(1, def.getRefs().size());
+    assertThat(def.getRefs()).hasSize(1);
     assertEquals(1, def.globalSets);
     assertNotNull(def.getDeclaration());
   }
@@ -234,7 +236,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
         "var DEF=false;var x=function(){var y=DEF};false");
 
     Name def = namespace.getNameIndex().get("DEF");
-    assertEquals(2, def.getRefs().size());
+    assertThat(def.getRefs()).hasSize(2);
     assertEquals(1, def.globalSets);
     assertNotNull(def.getDeclaration());
   }
@@ -270,7 +272,7 @@ public class ProcessDefinesTest extends CompilerTestCase {
          "var a = {}; a.B = true; true;");
 
     Name aDotB = namespace.getNameIndex().get("a.B");
-    assertEquals(1, aDotB.getRefs().size());
+    assertThat(aDotB.getRefs()).hasSize(1);
     assertEquals(1, aDotB.globalSets);
     assertNotNull(aDotB.getDeclaration());
   }

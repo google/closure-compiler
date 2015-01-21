@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
@@ -137,7 +139,7 @@ public class ControlFlowAnalysisTest extends TestCase {
    */
   private static void assertNoEdge(ControlFlowGraph<Node> cfg, int startToken,
       int endToken) {
-    assertEquals(0, getAllEdges(cfg, startToken, endToken).size());
+    assertThat(getAllEdges(cfg, startToken, endToken)).isEmpty();
   }
 
   /**

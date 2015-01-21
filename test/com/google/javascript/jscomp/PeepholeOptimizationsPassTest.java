@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -117,12 +119,8 @@ public class PeepholeOptimizationsPassTest extends CompilerTestCase {
      * visited by optimization2 "y" visited by optimization1 "y" visited by
      * optimization2
      */
-
-    assertEquals(4, visitationLog.size());
-    assertEquals("x1", visitationLog.get(0));
-    assertEquals("x2", visitationLog.get(1));
-    assertEquals("y1", visitationLog.get(2));
-    assertEquals("y2", visitationLog.get(3));
+    assertThat(visitationLog)
+        .containsExactly("x1", "x2", "y1", "y2").inOrder();
   }
 
   /**

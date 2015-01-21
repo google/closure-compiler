@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -1065,14 +1067,14 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseThrows1() throws Exception {
     JSDocInfo info = parse("@throws {number} Some number */");
-    assertEquals(1, info.getThrownTypes().size());
+    assertThat(info.getThrownTypes()).hasSize(1);
     assertTypeEquals(NUMBER_TYPE, info.getThrownTypes().get(0));
   }
 
   public void testParseThrows2() throws Exception {
     JSDocInfo info = parse("@throws {number} Some number\n "
                            + "*@throws {String} A string */");
-    assertEquals(2, info.getThrownTypes().size());
+    assertThat(info.getThrownTypes()).hasSize(2);
     assertTypeEquals(NUMBER_TYPE, info.getThrownTypes().get(0));
   }
 
@@ -1222,9 +1224,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     List<JSTypeExpression> interfaces =
         parse("@implements {SomeInterface.<*>} */")
         .getImplementedInterfaces();
-    assertEquals(1, interfaces.size());
-    assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1),
-        interfaces.get(0));
+    assertThat(interfaces).hasSize(1);
+    assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1), interfaces.get(0));
   }
 
   public void testParseExtends4() throws Exception {
@@ -1288,11 +1289,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseDesc3() throws Exception {
-    assertEquals("", parse("@desc*/").getDescription());
+    assertThat(parse("@desc*/").getDescription()).isEmpty();
   }
 
   public void testParseDesc4() throws Exception {
-    assertEquals("", parse("@desc\n*/").getDescription());
+    assertThat(parse("@desc\n*/").getDescription()).isEmpty();
   }
 
   public void testParseDesc5() throws Exception {
@@ -1446,7 +1447,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testStackedAnnotation8() throws Exception {
     JSDocInfo info = parse("@throws {number} @constructor */", true);
-    assertFalse(info.getThrownTypes().isEmpty());
+    assertThat(info.getThrownTypes()).isNotEmpty();
     assertTrue(info.isConstructor());
 
     info = parse("@return {number} @constructor */", false);
@@ -1548,8 +1549,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "@define {string} description of element \n next line*/", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
     assertEquals("define", defineMarker.getAnnotation().getItem());
-    assertTrue(defineMarker.getDescription().getItem().contains("description of element"));
-    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+    assertThat(defineMarker.getDescription().getItem()).contains("description of element");
+    assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
   public void testParsePrivateDescription() throws Exception {
@@ -1557,16 +1558,16 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         parse("@private {string} description \n next line*/", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
     assertEquals("private", defineMarker.getAnnotation().getItem());
-    assertTrue(defineMarker.getDescription().getItem().contains("description "));
-    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+    assertThat(defineMarker.getDescription().getItem()).contains("description ");
+    assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
   public void testParsePackagePrivateDescription() throws Exception {
     JSDocInfo doc = parse("@package {string} description \n next line */", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
     assertEquals("package", defineMarker.getAnnotation().getItem());
-    assertTrue(defineMarker.getDescription().getItem().contains("description "));
-    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+    assertThat(defineMarker.getDescription().getItem()).contains("description ");
+    assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
   public void testParseProtectedDescription() throws Exception {
@@ -1574,8 +1575,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         parse("@protected {string} description \n next line*/", true);
     Marker defineMarker = doc.getMarkers().iterator().next();
     assertEquals("protected", defineMarker.getAnnotation().getItem());
-    assertTrue(defineMarker.getDescription().getItem().contains("description "));
-    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+    assertThat(defineMarker.getDescription().getItem()).contains("description ");
+    assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
   public void testParseDefineErrors1() throws Exception {
@@ -2010,9 +2011,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseImplements() throws Exception {
     List<JSTypeExpression> interfaces = parse("@implements {SomeInterface}*/")
         .getImplementedInterfaces();
-    assertEquals(1, interfaces.size());
-    assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1),
-        interfaces.get(0));
+    assertThat(interfaces).hasSize(1);
+    assertTypeEquals(registry.createNamedType("SomeInterface", null, -1, -1), interfaces.get(0));
   }
 
   public void testParseImplementsTwo() throws Exception {
@@ -2022,9 +2022,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
             "* @implements {SomeInterface2}\n" +
             "*/")
         .getImplementedInterfaces();
-    assertEquals(2, interfaces.size());
-    assertTypeEquals(registry.createNamedType("SomeInterface1", null, -1, -1),
-        interfaces.get(0));
+    assertThat(interfaces).hasSize(2);
+    assertTypeEquals(registry.createNamedType("SomeInterface1", null, -1, -1), interfaces.get(0));
     assertTypeEquals(registry.createNamedType("SomeInterface2", null, -1, -1),
         interfaces.get(1));
   }
@@ -2192,7 +2191,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Collection<String> authors = jsdoc.getAuthors();
 
     assertNotNull(authors);
-    assertEquals(3, authors.size());
+    assertThat(authors).hasSize(3);
 
     assertContains(authors, "a@google.com (A Person)");
     assertContains(authors, "b@google.com (B Person)");
@@ -2375,7 +2374,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     Collection<String> references = jsdoc.getReferences();
 
     assertNotNull(references);
-    assertEquals(4, references.size());
+    assertThat(references).hasSize(4);
 
     assertContains(references, "A cool place!");
     assertContains(references, "The world.");
@@ -2822,8 +2821,8 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     Marker defineMarker = jsdoc.getMarkers().iterator().next();
     assertEquals("export", defineMarker.getAnnotation().getItem());
-    assertTrue(defineMarker.getDescription().getItem().contains("descr"));
-    assertTrue(defineMarker.getDescription().getItem().contains("next line"));
+    assertThat(defineMarker.getDescription().getItem()).contains("descr");
+    assertThat(defineMarker.getDescription().getItem()).contains("next line");
   }
 
   public void testMixedVisibility() throws Exception {
@@ -4217,7 +4216,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     Collection<JSDocInfo.Marker> markers = jsdoc.getMarkers();
 
-    assertFalse(markers.isEmpty());
+    assertThat(markers).isNotEmpty();
 
     int counter = 0;
 
@@ -4246,7 +4245,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   private <T> void assertContains(Collection<T> collection, T item) {
-    assertTrue(collection.contains(item));
+    assertThat(collection).contains(item);
   }
 
   private Node parseFull(String code, String... warnings) {

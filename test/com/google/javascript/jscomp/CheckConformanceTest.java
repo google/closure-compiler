@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
@@ -1079,7 +1081,7 @@ public class CheckConformanceTest extends CompilerTestCase {
     builder.addRequirementBuilder().setExtends("a").addWhitelist("y").addWhitelistRegexp("n");
     List<Requirement> requirements =
         CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
-    assertEquals(1, requirements.size());
+    assertThat(requirements).hasSize(1);
     Requirement requirement = requirements.get(0);
     assertEquals(2, requirement.getWhitelistCount());
     assertEquals(2, requirement.getWhitelistRegexpCount());

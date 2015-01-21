@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -123,7 +125,7 @@ public class MaybeReachingVariableUseTest extends TestCase {
   private void assertMatch(String src) {
     computeUseDef(src);
     Collection<Node> result = useDef.getUses("x", def);
-    assertEquals(uses.size(), result.size());
+    assertThat(result).hasSize(uses.size());
     assertTrue(result.containsAll(uses));
   }
 
@@ -132,7 +134,7 @@ public class MaybeReachingVariableUseTest extends TestCase {
    */
   private void assertNotMatch(String src) {
     computeUseDef(src);
-    assertFalse(useDef.getUses("x", def).contains(uses));
+    assertThat(useDef.getUses("x", def)).doesNotContain(uses);
   }
 
   /**

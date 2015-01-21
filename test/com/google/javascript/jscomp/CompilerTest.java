@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
@@ -59,7 +61,7 @@ public class CompilerTest extends TestCase {
 
     cb.reset();
 
-    assertTrue(cb.toString().isEmpty());
+    assertThat(cb.toString()).isEmpty();
     assertEquals(1, cb.getLineIndex());
     assertEquals(6, cb.getColumnIndex());
   }
@@ -584,7 +586,7 @@ public class CompilerTest extends TestCase {
 
     // equality of nodes compares by reference, so instead,
     // compare the maps manually using Node.checkTreeEqualsSilent
-    assertEquals(expected.size(), actual.size());
+    assertThat(actual).hasSize(expected.size());
     for (Map.Entry<String, Node> entry : expected.entrySet()) {
       assertTrue(entry.getKey(), actual.containsKey(entry.getKey()));
 
@@ -606,7 +608,7 @@ public class CompilerTest extends TestCase {
       String outputSource = compiler.toSource();
       assertEquals(expected, outputSource);
     } else {
-      assertEquals(1, result.errors.length);
+      assertThat(result.errors).hasLength(1);
       assertEquals(error, result.errors[0].getType());
     }
     return result;
@@ -767,7 +769,7 @@ public class CompilerTest extends TestCase {
 
     Map<String, Node> replacements = DefaultPassConfig.getAdditionalReplacements(options);
 
-    assertEquals(2, replacements.size());
+    assertThat(replacements).hasSize(2);
     assertEquals("it_IT", replacements.get("goog.LOCALE").getString());
   }
 
@@ -821,7 +823,7 @@ public class CompilerTest extends TestCase {
 
   public void testGetEmptyResult() {
     Result result = new Compiler().getResult();
-    assertEquals(0, result.errors.length);
+    assertThat(result.errors).isEmpty();
   }
 
   private static CompilerOptions createNewFlagBasedOptions() {

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReferenceCollectingCallback.Reference.createRefForTest;
 
 import com.google.common.collect.Lists;
@@ -118,11 +119,11 @@ public class GlobalVarReferenceMapTest extends TestCase {
     ReferenceCollection refs = map.getReferences(globalScope.getVar(VAR2));
     assertEquals(var2Refs.references, refs.references);
     refs = map.getReferences(globalScope.getVar(VAR1));
-    assertEquals(2, refs.references.size());
+    assertThat(refs.references).hasSize(2);
     assertEquals(var1Refs.references.get(0), refs.references.get(0));
     assertEquals(var1Refs.references.get(2), refs.references.get(1));
     refs = map.getReferences(globalScope.getVar(VAR3));
-    assertEquals(1, refs.references.size());
+    assertThat(refs.references).hasSize(1);
     assertEquals(var3Refs.references.get(0), refs.references.get(0));
   }
 
@@ -147,17 +148,17 @@ public class GlobalVarReferenceMapTest extends TestCase {
     scriptMap.put(globalScope.getVar(VAR3), newVar3Refs);
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(VAR1));
-    assertEquals(3, refs.references.size());
+    assertThat(refs.references).hasSize(3);
     assertEquals(var1Refs.references.get(0), refs.references.get(0));
     assertEquals(newVar1In2Ref, refs.references.get(1));
     assertEquals(var1Refs.references.get(2), refs.references.get(2));
     refs = map.getReferences(globalScope.getVar(VAR2));
-    assertEquals(3, refs.references.size());
+    assertThat(refs.references).hasSize(3);
     assertEquals(var2Refs.references.get(0), refs.references.get(0));
     assertEquals(newVar2In2Ref, refs.references.get(1));
     assertEquals(var2Refs.references.get(1), refs.references.get(2));
     refs = map.getReferences(globalScope.getVar(VAR3));
-    assertEquals(2, refs.references.size());
+    assertThat(refs.references).hasSize(2);
     assertEquals(var3Refs.references.get(0), refs.references.get(0));
     assertEquals(newVar3In2Ref, refs.references.get(1));
   }
@@ -173,7 +174,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
     scriptMap.put(globalScope.getVar(var4), newVar3Refs);
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(var4));
-    assertEquals(1, refs.references.size());
+    assertThat(refs.references).hasSize(1);
     assertEquals(newVar3In2Ref, refs.references.get(0));
   }
 
