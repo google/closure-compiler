@@ -487,7 +487,7 @@ angular.Directive.transclude;
  *   remove: function(): !angular.JQLite,
  *   removeAttr: function(string): !angular.JQLite,
  *   removeClass: function(string): !angular.JQLite,
- *   removeData: function(): !angular.JQLite,
+ *   removeData: function(string=): !angular.JQLite,
  *   replaceWith: function(JQLiteSelector): !angular.JQLite,
  *   scope: function(): !angular.Scope,
  *   text: function(string=): (!angular.JQLite|string),
@@ -667,9 +667,10 @@ angular.JQLite.removeAttr = function(name) {};
 angular.JQLite.removeClass = function(name) {};
 
 /**
+ * @param {string=} opt_name
  * @return {!angular.JQLite}
  */
-angular.JQLite.removeData = function() {};
+angular.JQLite.removeData = function(opt_name) {};
 
 /**
  * @param {JQLiteSelector} element
