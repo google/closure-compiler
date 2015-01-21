@@ -851,6 +851,7 @@ public class CodePrinterTest extends TestCase {
         "}\n");
 
     assertPrettyPrint("var a;", "var a;\n");
+    assertPrettyPrint("i--", "i--;\n");
 
     // There must be a space before and after binary operators.
     assertPrettyPrint("var foo = 3+5;",
