@@ -375,7 +375,7 @@ public class RenamePropertiesTest extends CompilerTestCase {
     SourceFile externsInput = SourceFile.fromCode("externs", externs);
 
     CompilerOptions options = new CompilerOptions();
-    options.propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
 
     Compiler compiler = new Compiler();
     compiler.compileModules(

@@ -492,10 +492,9 @@ public class TemplateAstMatcherTest extends TestCase {
     Compiler compiler = lastCompiler = new Compiler();
     compiler.disableThreads();
     CompilerOptions options = new CompilerOptions();
-    options.checkTypes = true;
+    options.setCheckTypes(true);
 
-    Node templateNode = compiler.parse(SourceFile.fromCode(
-        "template", template));
+    Node templateNode = compiler.parse(SourceFile.fromCode("template", template));
 
     compiler.compile(
         ImmutableList.of(SourceFile.fromCode("externs", externs)),

@@ -62,7 +62,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.ideMode = true;
+    options.setIdeMode(true);
     return options;
   }
 

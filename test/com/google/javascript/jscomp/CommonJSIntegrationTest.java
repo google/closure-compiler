@@ -252,8 +252,8 @@ public class CommonJSIntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setCodingConvention(new GoogleCodingConvention());
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
-    options.processCommonJSModules = true;
-    options.closurePass = true;
+    options.setProcessCommonJSModules(true);
+    options.setClosurePass(true);
     return options;
   }
 }

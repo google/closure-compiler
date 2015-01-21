@@ -53,7 +53,7 @@ public class SymbolTableTest extends TestCase {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
         options);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
-    options.ideMode = true;
+    options.setIdeMode(true);
   }
 
   public void testGlobalVar() throws Exception {
@@ -286,9 +286,8 @@ public class SymbolTableTest extends TestCase {
   }
 
   public void testGoogRequireReferences2() throws Exception {
-    options.brokenClosureRequiresLevel = CheckLevel.OFF;
-    SymbolTable table = createSymbolTable(
-        "foo.bar = function(){};  // definition\n"
+    options.setBrokenClosureRequiresLevel(CheckLevel.OFF);
+    SymbolTable table = createSymbolTable("foo.bar = function(){};  // definition\n"
         + "goog.require('foo.bar')\n");
     Symbol fooBar = getGlobalVar(table, "foo.bar");
     assertNotNull(fooBar);

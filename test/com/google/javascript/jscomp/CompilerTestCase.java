@@ -201,10 +201,9 @@ public abstract class CompilerTestCase extends TestCase  {
 
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
-    options.checkSymbols = true;
+    options.setCheckSymbols(true);
 
-    options.setWarningLevel(
-        DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());
@@ -532,7 +531,7 @@ public abstract class CompilerTestCase extends TestCase  {
     options.setLanguageIn(acceptedLanguage);
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
-    options.checkTypes = parseTypeInfo;
+    options.setCheckTypes(parseTypeInfo);
     compiler.init(externs, js, options);
 
     BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());

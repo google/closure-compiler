@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 
@@ -603,22 +603,21 @@ public class ExternExportsPassTest extends TestCase {
     options.declaredGlobalExternsOnWindow = false;
 
     // Turn off IDE mode.
-    options.ideMode = false;
+    options.setIdeMode(false);
 
     /* Check types so we can make sure our exported externs have
      * type information.
      */
-    options.checkSymbols = true;
-    options.checkTypes = runCheckTypes;
+    options.setCheckSymbols(true);
+    options.setCheckTypes(runCheckTypes);
 
-    List<SourceFile> inputs = Lists.newArrayList(
-      SourceFile.fromCode("testcode",
-                            "var goog = {};" +
-                            "goog.exportSymbol = function(a, b) {}; " +
-                            "goog.exportProperty = function(a, b, c) {}; " +
-                            js));
+    List<SourceFile> inputs = ImmutableList.of(SourceFile.fromCode(
+        "testcode",
+        "var goog = {};"
+        + "goog.exportSymbol = function(a, b) {}; "
+        + "goog.exportProperty = function(a, b, c) {}; " + js));
 
-    List<SourceFile> externFiles = Lists.newArrayList(
+    List<SourceFile> externFiles = ImmutableList.of(
         SourceFile.fromCode("externs", externs));
 
     Result result = compiler.compile(externFiles, inputs, options);
