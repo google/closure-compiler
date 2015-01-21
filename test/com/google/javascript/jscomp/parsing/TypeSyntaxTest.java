@@ -116,7 +116,7 @@ public class TypeSyntaxTest extends TestCase {
   }
 
   public void testFunctionReturn() {
-    Node fn = parse("function foo(): string {\n  return'hello';\n}").getFirstChild();
+    Node fn = parse("function foo(): string {\n  return 'hello';\n}").getFirstChild();
     Node fnType = fn.getDeclaredTypeExpression();
     assertTreeEquals("string type", TypeDeclarationsIRFactory.stringType(), fnType);
   }
@@ -135,7 +135,7 @@ public class TypeSyntaxTest extends TestCase {
 
   public void testFunctionReturn_typeInJsdocOnly() throws Exception {
     parse("function /** string */ foo() { return 'hello'; }",
-        "function/** string */foo() {\n  return'hello';\n}");
+        "function/** string */foo() {\n  return 'hello';\n}");
   }
 
   public void testCompositeType() {
