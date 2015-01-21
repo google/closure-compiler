@@ -1847,6 +1847,11 @@ angular.FormController.prototype.$setPristine = function() {};
 /**
  * @type {function()}
  */
+angular.FormController.prototype.$setUntouched = function() {};
+
+/**
+ * @type {function()}
+ */
 angular.FormController.prototype.$setSubmitted = function() {};
 
 /**
