@@ -234,8 +234,10 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
      *    - goog.dispose(X)
      *    - goog.disposeAll(X...)
      *    - X.removeAll() (X is of type goog.events.EventHandler)
+     *    - goog.array.extend(_, X...)
      *    - Y.add(X...) or Y.push(X)
      */
+    this.addDisposeCall("goog.array.extend", ImmutableList.of(DISPOSE_ALL));
     this.addDisposeCall("goog.dispose", ImmutableList.of(0));
     this.addDisposeCall("goog.Disposable.registerDisposable", ImmutableList.of(0));
     this.addDisposeCall("goog.disposeAll", ImmutableList.of(DISPOSE_ALL));
