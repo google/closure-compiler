@@ -44,6 +44,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 import com.google.common.base.Predicate;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.TypeI;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -63,7 +64,7 @@ import java.util.Comparator;
  * {@link AllType} and at the bottom by the {@link NoType}.<p>
  *
  */
-public abstract class JSType implements Serializable {
+public abstract class JSType implements TypeI, Serializable {
   private static final long serialVersionUID = 1L;
 
   private boolean resolved = false;
@@ -1457,4 +1458,14 @@ public abstract class JSType implements Serializable {
    * @param constraint
    */
   public void matchConstraint(JSType constraint) {}
+
+  @Override
+  public boolean isSubtypeOf(TypeI other) {
+    return isSubtype((JSType) other);
+  }
+
+  @Override
+  public boolean isBottom() {
+    return isNoType() || isNoResolvedType() || isNoObjectType();
+  }
 }

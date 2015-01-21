@@ -1097,8 +1097,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     // For getter and setter property definitions the
     // r-value type != the property type.
     Node rvalue = key.getFirstChild();
-    JSType rightType = NodeUtil.getObjectLitKeyTypeFromValueType(
-        key, getJSType(rvalue));
+    JSType rightType = getObjectLitKeyTypeFromValueType(key, getJSType(rvalue));
     if (rightType == null) {
       rightType = getNativeType(UNKNOWN_TYPE);
     }
@@ -1322,6 +1321,38 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
       Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
     }
+  }
+
+  /**
+   * @param key A OBJECTLIT key node.
+   * @return The type expected when using the key.
+   */
+  static JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
+    if (valueType != null) {
+      switch (key.getType()) {
+        case Token.GETTER_DEF:
+          // GET must always return a function type.
+          if (valueType.isFunctionType()) {
+            FunctionType fntype = valueType.toMaybeFunctionType();
+            valueType = fntype.getReturnType();
+          } else {
+            return null;
+          }
+          break;
+        case Token.SETTER_DEF:
+          if (valueType.isFunctionType()) {
+            // SET must always return a function type.
+            FunctionType fntype = valueType.toMaybeFunctionType();
+            Node param = fntype.getParametersNode().getFirstChild();
+            // SET function must always have one parameter.
+            valueType = param.getJSType();
+          } else {
+            return null;
+          }
+          break;
+      }
+    }
+    return valueType;
   }
 
   /**

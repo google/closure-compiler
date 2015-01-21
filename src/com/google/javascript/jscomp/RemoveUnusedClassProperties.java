@@ -22,7 +22,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.List;
 import java.util.Set;
@@ -30,9 +30,9 @@ import java.util.Set;
 /**
  * This pass looks for properties that are never read and removes them.
  * These can be properties created using "this", or static properties of
- * constructors or interfaces. Explicitly ignored is the possibility that 
- * these properties may be indirectly referenced using "for-in" or 
- * "Object.keys".  This is the same assumption used with 
+ * constructors or interfaces. Explicitly ignored is the possibility that
+ * these properties may be indirectly referenced using "for-in" or
+ * "Object.keys".  This is the same assumption used with
  * RemoveUnusedPrototypeProperties but is slightly wider in scope.
  *
  * @author johnlenz@google.com (John Lenz)
@@ -138,7 +138,7 @@ class RemoveUnusedClassProperties
   }
 
   private boolean isConstructor(Node n) {
-    JSType type = n.getJSType();
+    TypeI type = n.getTypeI();
     return type != null && (type.isConstructor() || type.isInterface());
   }
 

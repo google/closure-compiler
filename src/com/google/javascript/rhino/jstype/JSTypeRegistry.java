@@ -58,6 +58,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
 import java.io.Serializable;
@@ -74,7 +75,7 @@ import java.util.Set;
  * <p>This class is not thread-safe.
  *
  */
-public class JSTypeRegistry implements Serializable {
+public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private static final long serialVersionUID = 1L;
 
   /**

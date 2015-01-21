@@ -50,6 +50,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
@@ -1207,6 +1208,11 @@ public class Compiler extends AbstractCompiler {
    */
   JSModuleGraph getDegenerateModuleGraph() {
     return moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph;
+  }
+
+  @Override
+  public TypeIRegistry getTypeIRegistry() {
+    return getTypeRegistry();
   }
 
   @Override

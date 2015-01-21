@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.Map;
 import java.util.Set;
@@ -113,7 +113,7 @@ class ReplaceCssNames implements CompilerPass {
 
   private final Set<String> whitelist;
 
-  private final JSType nativeStringType;
+  private final TypeI nativeStringType;
 
   ReplaceCssNames(AbstractCompiler compiler,
       @Nullable Map<String, Integer> cssNames,
@@ -121,8 +121,8 @@ class ReplaceCssNames implements CompilerPass {
     this.compiler = compiler;
     this.cssNames = cssNames;
     this.whitelist = whitelist;
-    this.nativeStringType =  compiler.getTypeRegistry()
-        .getNativeType(STRING_TYPE);
+    this.nativeStringType =
+        compiler.getTypeIRegistry().getNativeType(STRING_TYPE);
   }
 
   @Override
@@ -181,7 +181,7 @@ class ReplaceCssNames implements CompilerPass {
                   IR.string("-" + second.getString())
                       .copyInformationFrom(second))
                   .copyInformationFrom(n);
-              replacement.setJSType(nativeStringType);
+              replacement.setTypeI(nativeStringType);
               parent.replaceChild(n, replacement);
               compiler.reportCodeChange();
             }

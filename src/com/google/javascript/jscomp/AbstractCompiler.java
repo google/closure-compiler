@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.util.List;
@@ -105,6 +106,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Gets a central registry of type information from the compiled JS.
    */
   public abstract JSTypeRegistry getTypeRegistry();
+
+  public abstract TypeIRegistry getTypeIRegistry();
 
   /**
    * Gets a memoized scope creator with type information.

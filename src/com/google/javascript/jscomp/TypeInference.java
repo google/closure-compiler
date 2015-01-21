@@ -807,8 +807,8 @@ class TypeInference
       String memberName = NodeUtil.getObjectLitKeyName(name);
       if (memberName != null) {
         JSType rawValueType =  name.getFirstChild().getJSType();
-        JSType valueType = NodeUtil.getObjectLitKeyTypeFromValueType(
-            name, rawValueType);
+        JSType valueType =
+            TypeCheck.getObjectLitKeyTypeFromValueType(name, rawValueType);
         if (valueType == null) {
           valueType = unknownType;
         }

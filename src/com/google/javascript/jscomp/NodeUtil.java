@@ -29,8 +29,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
@@ -2466,38 +2464,6 @@ public final class NodeUtil {
         return key.getString();
     }
     throw new IllegalStateException("Unexpected node type: " + key);
-  }
-
-  /**
-   * @param key A OBJECTLIT key node.
-   * @return The type expected when using the key.
-   */
-  static JSType getObjectLitKeyTypeFromValueType(Node key, JSType valueType) {
-    if (valueType != null) {
-      switch (key.getType()) {
-        case Token.GETTER_DEF:
-          // GET must always return a function type.
-          if (valueType.isFunctionType()) {
-            FunctionType fntype = valueType.toMaybeFunctionType();
-            valueType = fntype.getReturnType();
-          } else {
-            return null;
-          }
-          break;
-        case Token.SETTER_DEF:
-          if (valueType.isFunctionType()) {
-            // SET must always return a function type.
-            FunctionType fntype = valueType.toMaybeFunctionType();
-            Node param = fntype.getParametersNode().getFirstChild();
-            // SET function must always have one parameter.
-            valueType = param.getJSType();
-          } else {
-            return null;
-          }
-          break;
-      }
-    }
-    return valueType;
   }
 
   /**

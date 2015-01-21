@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -62,7 +63,7 @@ import java.util.Set;
  * actual NAME node containing the parsed argument list (annotated with
  * JSDOC_TYPE_PROP's for the compile-time type of each argument.
  */
-public class FunctionType extends PrototypeObjectType {
+public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private static final long serialVersionUID = 1L;
 
   private enum Kind {

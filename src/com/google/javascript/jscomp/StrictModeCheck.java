@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.Set;
 
@@ -266,7 +266,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   private static boolean isFunctionType(Node n) {
-    JSType type = n.getJSType();
+    TypeI type = n.getTypeI();
     return (type != null && type.isFunctionType());
   }
 }

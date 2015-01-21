@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -28,8 +30,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIRegistry;
 
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
@@ -158,10 +160,10 @@ class ProcessDefines implements CompilerPass {
    * Only defines of literal number, string, or boolean are supported.
    */
   private boolean isValidDefineType(JSTypeExpression expression) {
-    JSType type = expression.evaluate(null, compiler.getTypeRegistry());
-    return !type.isUnknownType() && type.isSubtype(
-        compiler.getTypeRegistry().getNativeType(
-            JSTypeNative.NUMBER_STRING_BOOLEAN));
+    TypeIRegistry registry = compiler.getTypeIRegistry();
+    TypeI type = expression.evaluateInEmptyScope(registry);
+    return !type.isUnknownType()
+        && type.isSubtypeOf(registry.getNativeType(NUMBER_STRING_BOOLEAN));
   }
 
   /**
