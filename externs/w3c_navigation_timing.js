@@ -104,6 +104,12 @@ function Performance() {}
 Performance.prototype.clearResourceTimings = function() {};
 
 /**
+ * Clear out the buffer of performance timing events for webkit browsers.
+ * @return {undefined}
+ */
+Performance.prototype.webkitClearResourceTimings = function() {};
+
+/**
  * Set the maximum number of PerformanceResourceTiming resources that may be
  * stored in the buffer.
  * @param {number} maxSize
