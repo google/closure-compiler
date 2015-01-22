@@ -2166,8 +2166,13 @@ public class Compiler extends AbstractCompiler {
           parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6_STRICT);
           externsParserConfig = parserConfig;
           break;
+        case ECMASCRIPT6_TYPED:
+          parserConfig = createConfig(Config.LanguageMode.ECMASCRIPT6_TYPED);
+          externsParserConfig = parserConfig;
+          break;
         default:
-          throw new IllegalStateException("unexpected language mode");
+          throw new IllegalStateException("unexpected language mode: "
+              + options.getLanguageIn());
       }
     }
     switch (context) {
@@ -2183,7 +2188,6 @@ public class Compiler extends AbstractCompiler {
         isIdeMode(),
         mode,
         acceptConstKeyword(),
-        options.acceptTypeSyntax,
         options.extraAnnotationNames);
   }
 

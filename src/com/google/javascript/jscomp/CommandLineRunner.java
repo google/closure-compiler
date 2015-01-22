@@ -490,23 +490,21 @@ public class CommandLineRunner extends
         usage = "Allows usage of const keyword.")
     private boolean acceptConstKeyword = false;
 
-    @Option(name = "--accept_type_syntax",
-        usage = "Allows usage of type syntax.")
-    private boolean acceptTypeSyntax = false;
-
     // TODO(tbreisacher): Remove the "(experimental)" for ES6 when it's stable enough.
     @Option(name = "--language_in",
         hidden = true,
         usage = "Sets what language spec that input sources conform. "
         + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-        + "ECMASCRIPT6 (experimental), ECMASCRIPT6_STRICT (experimental)")
+        + "ECMASCRIPT6 (experimental), ECMASCRIPT6_STRICT (experimental), "
+        + "ECMASCRIPT6_TYPED (experimental)")
     private String languageIn = "ECMASCRIPT3";
 
     @Option(name = "--language_out",
         hidden = true,
         usage = "Sets what language spec the output should conform to. "
         + " If omitted, defaults to the value of language_in. "
-        + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT")
+        + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT"
+        + "ECMASCRIPT6_TYPED (experimental)")
     private String languageOut = "";
 
     @Option(name = "--version",
@@ -1043,7 +1041,6 @@ public class CommandLineRunner extends
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputModuleDependencies(flags.outputModuleDependencies)
           .setAcceptConstKeyword(flags.acceptConstKeyword)
-          .setAcceptTypeSyntax(flags.acceptTypeSyntax)
           .setLanguageIn(flags.languageIn)
           .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)

@@ -1299,6 +1299,10 @@ public class JSDocInfo implements Serializable {
     return (bitset & MASK_TYPEFIELD) == mask;
   }
 
+  public boolean hasTypeInformation() {
+    return (bitset & MASK_TYPEFIELD) != 0;
+  }
+
   /**
    * Gets the type specified by the {@code @type} annotation.
    */

@@ -123,10 +123,12 @@ public class Node implements Cloneable, Serializable {
                                   // to avoid analyzing them during
                                   // NewTypeInference. We remove this attribute
                                   // in the fwd direction of NewTypeInference.
-      CONSTANT_PROPERTY_DEF = 76; // Used to communicate information between
+      CONSTANT_PROPERTY_DEF = 76, // Used to communicate information between
                                   // GlobalTypeInfo and NewTypeInference.
                                   // We use this to tag getprop nodes that
                                   // declare properties.
+      JS_TYPE_EXPRESSION = 77;    // Holds JsTypeExpression objects representing type syntax
+                                  // annotations on nodes.
 
 
   public static final int   // flags for INCRDECR_PROP
@@ -176,6 +178,7 @@ public class Node implements Cloneable, Serializable {
         case COMPUTED_PROP_SETTER: return "computed_prop_setter";
         case ANALYZED_DURING_GTI:  return "analyzed_during_gti";
         case CONSTANT_PROPERTY_DEF: return "constant_property_def";
+        case JS_TYPE_EXPRESSION: return "js_type_expression";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -898,6 +901,18 @@ public class Node implements Cloneable, Serializable {
     if (value != 0) {
       propListHead = createProp(propType, value, propListHead);
     }
+  }
+
+  public void setJsTypeExpression(JSTypeExpression typeExpression) {
+    putProp(JS_TYPE_EXPRESSION, typeExpression);
+  }
+
+  /**
+   * Returns the syntactical type specified on this node. Not to be confused
+   * with {@link #getJSType()} which returns the compiler-inferred type.
+   */
+  public JSTypeExpression getJSTypeExpression() {
+    return (JSTypeExpression) getProp(JS_TYPE_EXPRESSION);
   }
 
   PropListItem createProp(int propType, Object value, PropListItem next) {
@@ -1987,6 +2002,11 @@ public class Node implements Cloneable, Serializable {
   //==========================================================================
   // Custom annotations
 
+  /**
+   * Returns the compiled inferred type on this node. Not to be confused
+   * with {@link #getJSTypeExpression()} which returns the syntactically
+   * specified type.
+   */
   public JSType getJSType() {
     return (JSType) typei;
   }

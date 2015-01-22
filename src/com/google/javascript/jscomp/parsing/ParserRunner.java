@@ -53,7 +53,6 @@ public class ParserRunner {
   public static Config createConfig(boolean isIdeMode,
                                     LanguageMode languageMode,
                                     boolean acceptConstKeyword,
-                                    boolean acceptTypeSyntax,
                                     Set<String> extraAnnotationNames) {
     initResourceConfig();
     Set<String> effectiveAnnotationNames;
@@ -64,7 +63,7 @@ public class ParserRunner {
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
     return new Config(effectiveAnnotationNames, suppressionNames,
-        isIdeMode, languageMode, acceptConstKeyword, acceptTypeSyntax);
+        isIdeMode, languageMode, acceptConstKeyword);
   }
 
   public static Set<String> getReservedVars() {
@@ -160,8 +159,7 @@ public class ParserRunner {
     }
   }
 
-  private static Mode mode(
-      LanguageMode mode) {
+  private static Mode mode(LanguageMode mode) {
     switch (mode) {
       case ECMASCRIPT3:
         return Mode.ES3;
@@ -173,8 +171,10 @@ public class ParserRunner {
         return Mode.ES6;
       case ECMASCRIPT6_STRICT:
         return Mode.ES6_STRICT;
+      case ECMASCRIPT6_TYPED:
+        return Mode.ES6_TYPED;
       default:
-        throw new IllegalStateException("unexpected");
+        throw new IllegalStateException("unexpected language mode: " + mode);
     }
   }
 

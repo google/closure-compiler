@@ -36,6 +36,7 @@ public class Config {
     ECMASCRIPT5_STRICT,
     ECMASCRIPT6,
     ECMASCRIPT6_STRICT,
+    ECMASCRIPT6_TYPED,  // Implies STRICT.
   }
 
   /**
@@ -69,21 +70,15 @@ public class Config {
    */
   final boolean acceptConstKeyword;
 
-  /**
-   * Accept type syntax ({@code var foo: string;}).
-   */
-  final boolean acceptTypeSyntax;
-
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
       boolean isIdeMode, LanguageMode languageMode,
-      boolean acceptConstKeyword, boolean acceptTypeSyntax) {
+      boolean acceptConstKeyword) {
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = isIdeMode;
     this.suppressionNames = suppressionNames;
     this.isIdeMode = isIdeMode;
     this.languageMode = languageMode;
     this.acceptConstKeyword = acceptConstKeyword;
-    this.acceptTypeSyntax = acceptTypeSyntax;
   }
 
   /**

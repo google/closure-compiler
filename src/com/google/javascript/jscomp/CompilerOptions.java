@@ -2302,7 +2302,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     ECMASCRIPT6_STRICT,
 
     /**
-     * A superset of ES6 which adds Typescript-style type declarations.
+     * A superset of ES6 which adds Typescript-style type declarations. Always strict.
      */
     ECMASCRIPT6_TYPED,
 
@@ -2317,6 +2317,7 @@ public class CompilerOptions implements Serializable, Cloneable {
       switch (this) {
         case ECMASCRIPT5_STRICT:
         case ECMASCRIPT6_STRICT:
+        case ECMASCRIPT6_TYPED:
           return true;
         default:
           return false;
@@ -2335,6 +2336,7 @@ public class CompilerOptions implements Serializable, Cloneable {
       switch (this) {
         case ECMASCRIPT6:
         case ECMASCRIPT6_STRICT:
+        case ECMASCRIPT6_TYPED:
           return true;
         default:
           return false;

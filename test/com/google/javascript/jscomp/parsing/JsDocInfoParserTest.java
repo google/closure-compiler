@@ -55,10 +55,10 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void setUp() throws Exception {
     super.setUp();
     extraAnnotations = new HashSet<>(ParserRunner.createConfig(
-        true, LanguageMode.ECMASCRIPT3, false, false, null)
+        true, LanguageMode.ECMASCRIPT3, false, null)
             .annotationNames.keySet());
     extraSuppressions = new HashSet<>(ParserRunner.createConfig(
-        true, LanguageMode.ECMASCRIPT3, false, false, null).suppressionNames);
+        true, LanguageMode.ECMASCRIPT3, false, null).suppressionNames);
 
     extraSuppressions.add("x");
     extraSuppressions.add("y");
@@ -4252,7 +4252,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Config config =
         new Config(extraAnnotations, extraSuppressions,
-            true, LanguageMode.ECMASCRIPT3, false, false);
+            true, LanguageMode.ECMASCRIPT3, false);
 
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("source", false), code, config, testErrorReporter);
@@ -4286,7 +4286,7 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
     Config config = new Config(extraAnnotations, extraSuppressions,
-        parseDocumentation, LanguageMode.ECMASCRIPT3, false, false);
+        parseDocumentation, LanguageMode.ECMASCRIPT3, false);
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
     Node associatedNode = new Node(Token.SCRIPT);
     associatedNode.setInputId(new InputId(file.getName()));

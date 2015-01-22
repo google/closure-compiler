@@ -100,6 +100,7 @@ public class Parser {
       ES5_STRICT,
       ES6,
       ES6_STRICT,
+      ES6_TYPED,
     }
 
     public final boolean atLeast6;
@@ -110,9 +111,11 @@ public class Parser {
     public final boolean warnES6NumberLiteral;
 
     public Config(Mode mode) {
-      atLeast6 = mode == Mode.ES6 || mode == Mode.ES6_STRICT;
+      atLeast6 = mode == Mode.ES6 || mode == Mode.ES6_STRICT
+          || mode == Mode.ES6_TYPED;
       atLeast5 = atLeast6 || mode == Mode.ES5 || mode == Mode.ES5_STRICT;
-      this.isStrictMode = mode == Mode.ES5_STRICT || mode == Mode.ES6_STRICT;
+      this.isStrictMode = mode == Mode.ES5_STRICT || mode == Mode.ES6_STRICT
+          || mode == Mode.ES6_TYPED;
 
       // Generally, we allow everything that is valid in any mode
       // we only warn about things that are not represented in the AST.
