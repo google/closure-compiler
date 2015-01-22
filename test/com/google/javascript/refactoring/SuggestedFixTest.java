@@ -71,6 +71,35 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testDelete_multipleVarDeclaration() {
+    String input = "var foo = 3, bar, baz;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+
+    // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
+    // trailing comma.
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .delete(root.getFirstChild().getFirstChild())
+        .build();
+    CodeReplacement replacement = new CodeReplacement(4, "foo = 3, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the 2nd variable.
+    fix = new SuggestedFix.Builder()
+        .delete(root.getFirstChild().getFirstChild().getNext())
+        .build();
+    replacement = new CodeReplacement(13, "bar, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the last variable. Make sure it removes the leading comma.
+    fix = new SuggestedFix.Builder()
+        .delete(root.getFirstChild().getLastChild())
+        .build();
+    replacement = new CodeReplacement(16, ", baz".length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testRenameStringKey() {
     String input = "var obj = {foo: 'bar'};";
     Compiler compiler = getCompiler(input);

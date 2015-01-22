@@ -931,11 +931,11 @@ public final class NodeUtil {
   /**
    * Returns true if the node which may have side effects when executed.
    */
-  static boolean mayHaveSideEffects(Node n) {
+  public static boolean mayHaveSideEffects(Node n) {
     return mayHaveSideEffects(n, null);
   }
 
-  static boolean mayHaveSideEffects(Node n, AbstractCompiler compiler) {
+  public static boolean mayHaveSideEffects(Node n, AbstractCompiler compiler) {
     return checkForStateChangeHelper(n, false, compiler);
   }
 

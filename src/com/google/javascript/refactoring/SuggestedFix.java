@@ -141,6 +141,35 @@ public final class SuggestedFix {
         length = n.getLength() + (startPosition - jsDoc.getOriginalCommentPosition());
         startPosition = jsDoc.getOriginalCommentPosition();
       }
+      // Variable declarations require special handling since the NAME node doesn't contain enough
+      // information if the variable is declared in a multi-variable declaration. The NAME node
+      // in a VAR declaration doesn't include its child in its length if there is an inline
+      // assignment, and the code needs to know how to delete the commas. See SuggestedFixTest for
+      // more information.
+      // TODO(mknichel): Move this logic and the start position logic to a helper function
+      // so that it can be reused in other methods.
+      if (n.isName() && n.getParent().isVar()) {
+        if (n.getNext() != null) {
+          length = n.getNext().getSourceOffset() - startPosition;
+        } else if (n.hasChildren()) {
+          Node child = n.getFirstChild();
+          length = (child.getSourceOffset() + child.getLength()) - startPosition;
+        }
+        if (n.getParent().getLastChild() == n && n != n.getParent().getFirstChild()) {
+          Node previousSibling = n.getParent().getChildBefore(n);
+          if (previousSibling.hasChildren()) {
+            Node child = previousSibling.getFirstChild();
+            int startPositionDiff = startPosition - (child.getSourceOffset() + child.getLength());
+            startPosition -= startPositionDiff;
+            length += startPositionDiff;
+          } else {
+            int startPositionDiff = startPosition - (
+                previousSibling.getSourceOffset() + previousSibling.getLength());
+            startPosition -= startPositionDiff;
+            length += startPositionDiff;
+          }
+        }
+      }
       replacements.put(n.getSourceFileName(), new CodeReplacement(startPosition, length, ""));
       return this;
     }
