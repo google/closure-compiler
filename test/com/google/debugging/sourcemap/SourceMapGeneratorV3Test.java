@@ -16,7 +16,7 @@
 
 package com.google.debugging.sourcemap;
 
-import static org.junit.Assert.assertFalse;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -339,7 +339,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     String files1 = map1.split("\n")[4];
     String files2 = map2.split("\n")[4];
 
-    assertEquals(files1, files2);
+    assertThat(files2).isEqualTo(files1);
   }
 
   public void testWriteMetaMap() throws IOException {
@@ -353,35 +353,34 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     generator.appendIndexMapTo(out, name, appSections);
 
-    assertEquals(
-            "{\n" +
-            "\"version\":3,\n" +
-            "\"file\":\"./app.js\",\n" +
-            "\"sections\":[\n" +
-            "{\n" +
-            "\"offset\":{\n" +
-            "\"line\":0,\n" +
-            "\"column\":0\n" +
-            "},\n" +
-            "\"url\":\"src1\"\n" +
-            "},\n" +
-            "{\n" +
-            "\"offset\":{\n" +
-            "\"line\":100,\n" +
-            "\"column\":10\n" +
-            "},\n" +
-            "\"url\":\"src2\"\n" +
-            "},\n" +
-            "{\n" +
-            "\"offset\":{\n" +
-            "\"line\":150,\n" +
-            "\"column\":5\n" +
-            "},\n" +
-            "\"url\":\"src3\"\n" +
-            "}\n" +
-            "]\n" +
-            "}\n",
-            out.toString());
+    assertThat(out.toString())
+        .isEqualTo("{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"./app.js\",\n"
+            + "\"sections\":[\n"
+            + "{\n"
+            + "\"offset\":{\n"
+            + "\"line\":0,\n"
+            + "\"column\":0\n"
+            + "},\n"
+            + "\"url\":\"src1\"\n"
+            + "},\n"
+            + "{\n"
+            + "\"offset\":{\n"
+            + "\"line\":100,\n"
+            + "\"column\":10\n"
+            + "},\n"
+            + "\"url\":\"src2\"\n"
+            + "},\n"
+            + "{\n"
+            + "\"offset\":{\n"
+            + "\"line\":150,\n"
+            + "\"column\":5\n"
+            + "},\n"
+            + "\"url\":\"src3\"\n"
+            + "}\n"
+            + "]\n"
+            + "}\n");
   }
 
   private String getEmptyMapFor(String name) throws IOException {
@@ -402,36 +401,35 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     SourceMapGeneratorV3 generator = new SourceMapGeneratorV3();
     generator.appendIndexMapTo(out, name, appSections);
 
-    assertEquals(
-            "{\n" +
-            "\"version\":3,\n" +
-            "\"file\":\"./app.js\",\n" +
-            "\"sections\":[\n" +
-            "{\n" +
-            "\"offset\":{\n" +
-            "\"line\":0,\n" +
-            "\"column\":0\n" +
-            "},\n" +
-            "\"map\":{\n" +
-              "\"version\":3,\n" +
-              "\"file\":\"./part.js\",\n" +
-              "\"lineCount\":1,\n" +
-              "\"mappings\":\";\",\n" +
-              "\"sources\":[],\n" +
-              "\"names\":[]\n" +
-            "}\n" +
-            "\n" +
-            "},\n" +
-            "{\n" +
-            "\"offset\":{\n" +
-            "\"line\":100,\n" +
-            "\"column\":10\n" +
-            "},\n" +
-            "\"url\":\"src2\"\n" +
-            "}\n" +
-            "]\n" +
-            "}\n",
-            out.toString());
+    assertThat(out.toString())
+        .isEqualTo("{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"./app.js\",\n"
+            + "\"sections\":[\n"
+            + "{\n"
+            + "\"offset\":{\n"
+            + "\"line\":0,\n"
+            + "\"column\":0\n"
+            + "},\n"
+            + "\"map\":{\n"
+            + "\"version\":3,\n"
+            + "\"file\":\"./part.js\",\n"
+            + "\"lineCount\":1,\n"
+            + "\"mappings\":\";\",\n"
+            + "\"sources\":[],\n"
+            + "\"names\":[]\n"
+            + "}\n"
+            + "\n"
+            + "},\n"
+            + "{\n"
+            + "\"offset\":{\n"
+            + "\"line\":100,\n"
+            + "\"column\":10\n"
+            + "},\n"
+            + "\"url\":\"src2\"\n"
+            + "}\n"
+            + "]\n"
+            + "}\n");
   }
 
   public void testParseSourceMetaMap() throws Exception {
@@ -508,17 +506,18 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     StringBuilder out = new StringBuilder();
     mapper.appendTo(out, "out.js");
 
-    assertTrue(mapper.hasExtension("x_google_test"));
+    assertThat(mapper.hasExtension("x_google_test")).isTrue();
 
     //reading & checking the extension properties
     JsonObject sourceMap = parseJsonObject(out.toString());
 
-    assertFalse(sourceMap.has("x_google_foo"));
-    assertFalse(sourceMap.has("google_test"));
-    assertEquals(1, sourceMap.get("x_google_test").getAsJsonObject().get("number").getAsInt());
-    assertEquals(0, sourceMap.get("x_google_array").getAsJsonArray().size());
-    assertEquals(2, sourceMap.get("x_google_int").getAsInt());
-    assertEquals("Some text", sourceMap.get("x_google_str").getAsString());
+    assertThat(sourceMap.has("x_google_foo")).isFalse();
+    assertThat(sourceMap.has("google_test")).isFalse();
+    assertThat(sourceMap.get("x_google_test").getAsJsonObject().get("number").getAsInt())
+        .isEqualTo(1);
+    assertThat(sourceMap.get("x_google_array").getAsJsonArray().size()).isEqualTo(0);
+    assertThat(sourceMap.get("x_google_int").getAsInt()).isEqualTo(2);
+    assertThat(sourceMap.get("x_google_str").getAsString()).isEqualTo("Some text");
   }
 
   public void testSourceMapMergeExtensions() throws Exception {
@@ -534,7 +533,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
         "\"x_company_foo\":2\n" +
         "}\n");
 
-    assertFalse(mapper.hasExtension("x_company_foo"));
+    assertThat(mapper.hasExtension("x_company_foo")).isFalse();
 
     mapper.addExtension("x_company_baz", new Integer(2));
 
@@ -557,8 +556,8 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
       }
     });
 
-    assertEquals(5, mapper.getExtension("x_company_baz"));
-    assertFalse(((JsonPrimitive) mapper.getExtension("x_company_bar")).getAsBoolean());
+    assertThat(mapper.getExtension("x_company_baz")).isEqualTo(5);
+    assertThat(((JsonPrimitive) mapper.getExtension("x_company_bar")).getAsBoolean()).isFalse();
   }
 
   public void testSourceRoot() throws Exception{
@@ -569,15 +568,15 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     mapper.appendTo(out, "out.js");
     JsonObject mapping = parseJsonObject(out.toString());
 
-    assertEquals(3, mapping.get("version").getAsInt());
-    assertFalse(mapping.has("sourceRoot"));
+    assertThat(mapping.get("version").getAsInt()).isEqualTo(3);
+    assertThat(mapping.has("sourceRoot")).isFalse();
 
     out = new StringBuilder();
     mapper.setSourceRoot("");
     mapper.appendTo(out, "out2.js");
     mapping = parseJsonObject(out.toString());
 
-    assertFalse(mapping.has("sourceRoot"));
+    assertThat(mapping.has("sourceRoot")).isFalse();
 
     //checking sourceRoot
     out = new StringBuilder();
@@ -585,7 +584,7 @@ public class SourceMapGeneratorV3Test extends SourceMapTestCase {
     mapper.appendTo(out, "out3.js");
     mapping = parseJsonObject(out.toString());
 
-    assertEquals("http://url/path", mapping.get("sourceRoot").getAsString());
+    assertThat(mapping.get("sourceRoot").getAsString()).isEqualTo("http://url/path");
   }
 
   FilePosition count(String js) {

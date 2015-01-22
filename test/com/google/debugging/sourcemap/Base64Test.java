@@ -16,6 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 /**
@@ -29,14 +31,14 @@ public class Base64Test extends TestCase {
   }
 
   public void testBase64EncodeInt() {
-    assertEquals("AAAAAA", Base64.base64EncodeInt(0));
-    assertEquals("AAAAAQ", Base64.base64EncodeInt(1));
-    assertEquals("AAAAKg", Base64.base64EncodeInt(42));
-    assertEquals("////nA", Base64.base64EncodeInt(-100));
-    assertEquals("/////w", Base64.base64EncodeInt(0xffffffff));
+    assertThat(Base64.base64EncodeInt(0)).isEqualTo("AAAAAA");
+    assertThat(Base64.base64EncodeInt(1)).isEqualTo("AAAAAQ");
+    assertThat(Base64.base64EncodeInt(42)).isEqualTo("AAAAKg");
+    assertThat(Base64.base64EncodeInt(-100)).isEqualTo("////nA");
+    assertThat(Base64.base64EncodeInt(0xffffffff)).isEqualTo("/////w");
   }
 
   private void testValue(int value) {
-    assertEquals(value, Base64.fromBase64(Base64.toBase64(value)));
+    assertThat(Base64.fromBase64(Base64.toBase64(value))).isEqualTo(value);
   }
 }

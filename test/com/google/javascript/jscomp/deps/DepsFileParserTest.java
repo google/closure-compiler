@@ -16,12 +16,13 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.deps.DependencyInfo;
-import com.google.javascript.jscomp.deps.DepsFileParser;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
-
+import com.google.javascript.jscomp.deps.DependencyInfo;
+import com.google.javascript.jscomp.deps.DepsFileParser;
 import junit.framework.TestCase;
 
 import java.util.Collections;
@@ -75,27 +76,27 @@ public class DepsFileParserTest extends TestCase {
             "yes4", SRC_PATH, EMPTY, ImmutableList.of("a", "b", "c"), false)
     );
 
-    assertEquals(EXPECTED, result);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(result).isEqualTo(EXPECTED);
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testTooFewArgs() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', []);");
-    assertEquals(1, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(errorManager.getErrorCount()).isEqualTo(1);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testTooManyArgs1() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], []);");
-    assertEquals(1, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(errorManager.getErrorCount()).isEqualTo(1);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testTooManyArgs2() {
     parser.parseFile(SRC_PATH, "goog.addDependency('a', [], [], false, []);");
-    assertEquals(1, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(errorManager.getErrorCount()).isEqualTo(1);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testModule() {
@@ -106,7 +107,7 @@ public class DepsFileParserTest extends TestCase {
         new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, true),
         new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false)
         );
-    assertEquals(EXPECTED, result);
+    assertThat(result).isEqualTo(EXPECTED);
   }
 
   public void testShortcutMode() {
@@ -116,7 +117,7 @@ public class DepsFileParserTest extends TestCase {
         "goog.addDependency('no1', [], []);");
     ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
         new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false));
-    assertEquals(EXPECTED, result);
+    assertThat(result).isEqualTo(EXPECTED);
   }
 
   public void testNoShortcutMode() {
@@ -128,6 +129,6 @@ public class DepsFileParserTest extends TestCase {
     ImmutableList<DependencyInfo> EXPECTED = ImmutableList.<DependencyInfo>of(
         new SimpleDependencyInfo("yes1", SRC_PATH, EMPTY, EMPTY, false),
         new SimpleDependencyInfo("yes2", SRC_PATH, EMPTY, EMPTY, false));
-    assertEquals(EXPECTED, result);
+    assertThat(result).isEqualTo(EXPECTED);
   }
 }

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
@@ -118,7 +120,7 @@ public class SortedDependenciesTest extends TestCase {
           Lists.newArrayList(a, b, c));
       fail("expected exception");
     } catch (CircularDependencyException e) {
-      assertEquals("a -> a", e.getMessage());
+      assertThat(e.getMessage()).isEqualTo("a -> a");
     }
   }
 
@@ -153,7 +155,7 @@ public class SortedDependenciesTest extends TestCase {
       List<SimpleDependencyInfo> shuffled) throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted =
         new SortedDependencies<>(shuffled);
-    assertEquals(expected, sorted.getSortedList());
+    assertThat(sorted.getSortedList()).isEqualTo(expected);
   }
 
   private void assertSortedDeps(
@@ -162,7 +164,7 @@ public class SortedDependenciesTest extends TestCase {
       List<SimpleDependencyInfo> roots) throws Exception {
     SortedDependencies<SimpleDependencyInfo> sorted =
         new SortedDependencies<>(shuffled);
-    assertEquals(expected, sorted.getSortedDependenciesOf(roots));
+    assertThat(sorted.getSortedDependenciesOf(roots)).isEqualTo(expected);
   }
 
   private List<String> requires(String ... strings) {

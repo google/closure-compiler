@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -33,11 +35,10 @@ public class ClosureBundlerTest extends TestCase {
   public void testGoogModule() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler().appendTo(sb, MODULE, "\"a string\"");
-    assertEquals(
-        "goog.loadModule(function(exports) {'use strict';"
-        + "\"a string\"\n"
-        + ";return exports;});\n",
-        sb.toString());
+    assertThat(sb.toString())
+        .isEqualTo("goog.loadModule(function(exports) {'use strict';"
+            + "\"a string\"\n"
+            + ";return exports;});\n");
   }
 
   public void testGoogModuleWithSourceURL() throws IOException {
@@ -46,9 +47,8 @@ public class ClosureBundlerTest extends TestCase {
         .useEval(true)
         .withSourceUrl("URL")
         .appendTo(sb, MODULE, "\"a string\"");
-    assertEquals(
-        "goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");",
-        sb.toString());
+    assertThat(sb.toString())
+        .isEqualTo("goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");");
   }
 
   public void testGoogModuleWithEval() throws IOException {
@@ -56,7 +56,7 @@ public class ClosureBundlerTest extends TestCase {
     new ClosureBundler()
         .useEval(true)
         .appendTo(sb, MODULE, "\"a string\"");
-    assertEquals("goog.loadModule(\"\\x22a string\\x22\");", sb.toString());
+    assertThat(sb.toString()).isEqualTo("goog.loadModule(\"\\x22a string\\x22\");");
   }
 
   public void testGoogModuleWithEvalWithURL() throws IOException {
@@ -65,15 +65,14 @@ public class ClosureBundlerTest extends TestCase {
         .useEval(true)
         .withSourceUrl("URL")
         .appendTo(sb, MODULE, "\"a string\"");
-    assertEquals(
-        "goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");",
-        sb.toString());
+    assertThat(sb.toString())
+        .isEqualTo("goog.loadModule(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\");");
   }
 
   public void testTraditional() throws IOException {
     StringBuilder sb = new StringBuilder();
     new ClosureBundler().appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertEquals("\"a string\"", sb.toString());
+    assertThat(sb.toString()).isEqualTo("\"a string\"");
   }
 
   public void testTraditionalWithSourceURL() throws IOException {
@@ -81,10 +80,9 @@ public class ClosureBundlerTest extends TestCase {
     new ClosureBundler()
         .withSourceUrl("URL")
         .appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertEquals(
-        "\"a string\"\n" +
-        "//# sourceURL=URL\n",
-        sb.toString());
+    assertThat(sb.toString())
+        .isEqualTo("\"a string\"\n"
+            + "//# sourceURL=URL\n");
   }
 
   public void testTraditionalWithEval() throws IOException {
@@ -92,9 +90,7 @@ public class ClosureBundlerTest extends TestCase {
     new ClosureBundler()
         .useEval(true)
         .appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertEquals(
-        "(0,eval(\"\\x22a string\\x22\"));",
-        sb.toString());
+    assertThat(sb.toString()).isEqualTo("(0,eval(\"\\x22a string\\x22\"));");
   }
 
   public void testTraditionalWithEvalWithSourceUrl() throws IOException {
@@ -103,8 +99,7 @@ public class ClosureBundlerTest extends TestCase {
         .useEval(true)
         .withSourceUrl("URL")
         .appendTo(sb, TRADITIONAL, "\"a string\"");
-    assertEquals(
-        "(0,eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\"));",
-        sb.toString());
+    assertThat(sb.toString())
+        .isEqualTo("(0,eval(\"\\x22a string\\x22\\n//# sourceURL\\x3dURL\\n\"));");
   }
 }

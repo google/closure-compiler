@@ -16,6 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import junit.framework.TestCase;
 
 /**
@@ -90,7 +92,7 @@ public class Base64VLQTest extends TestCase {
         Base64VLQ.encode(sb, i);
         ci.set(sb);
         int result = Base64VLQ.decode(ci);
-        assertEquals(i, result);
+        assertThat(result).isEqualTo(i);
         sb.setLength(0);
       }
     } catch (Exception e) {
@@ -98,7 +100,7 @@ public class Base64VLQTest extends TestCase {
     }
     long end = System.currentTimeMillis();
     // Was 200ms or less, use a larger number to prevent flakiness
-    assertTrue("too slow", end-start < 1000);
+    assertThat(end - start).named("encode+decode time").isLessThan(1000L);
   }
 
   private void testValue(int value) {
@@ -108,7 +110,7 @@ public class Base64VLQTest extends TestCase {
       CharIteratorImpl ci = new CharIteratorImpl();
       ci.set(sb);
       int result = Base64VLQ.decode(ci);
-      assertEquals(value, result);
+      assertThat(result).isEqualTo(value);
     } catch (Exception e) {
       throw new RuntimeException("failed for value " + value, e);
     }

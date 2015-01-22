@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.JsDocToken.ANNOTATION;
 import static com.google.javascript.jscomp.parsing.JsDocToken.BANG;
 import static com.google.javascript.jscomp.parsing.JsDocToken.COLON;
@@ -293,12 +294,12 @@ public class JsDocTokenStreamTest extends TestCase {
 
       // token equality
       if (token != readToken) {
-        assertEquals(token, readToken);
+        assertThat(readToken).isEqualTo(token);
       }
 
       // string equality
       if (token == ANNOTATION || token == STRING) {
-        assertEquals(strings.get(stringsIndex++), stream.getString());
+        assertThat(stream.getString()).isEqualTo(strings.get(stringsIndex++));
       }
     }
   }

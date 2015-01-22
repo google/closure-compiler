@@ -18,12 +18,9 @@ package com.google.javascript.jscomp.graph;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
 
 import junit.framework.TestCase;
-
-import org.junit.Assert;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,16 +45,16 @@ public class StandardUnionFindTest extends TestCase {
   public void testAdd() {
     union.add("foo");
     union.add("bar");
-    assertTrue(null != union.find("foo"));
+    assertThat(null != union.find("foo")).isTrue();
     assertThat(union.allEquivalenceClasses()).hasSize(2);
   }
 
   public void testUnion() {
     union.union("A", "B");
     union.union("C", "D");
-    assertEquals(union.find("A"), union.find("B"));
-    assertEquals(union.find("C"), union.find("D"));
-    assertFalse(union.find("A").equals(union.find("D")));
+    assertThat(union.find("B")).isEqualTo(union.find("A"));
+    assertThat(union.find("D")).isEqualTo(union.find("C"));
+    assertThat(union.find("A").equals(union.find("D"))).isFalse();
   }
 
   public void testSetSize() {
@@ -76,11 +73,11 @@ public class StandardUnionFindTest extends TestCase {
   public void testFind() {
     union.add("A");
     union.add("B");
-    assertEquals("A", union.find("A"));
-    assertEquals("B", union.find("B"));
+    assertThat(union.find("A")).isEqualTo("A");
+    assertThat(union.find("B")).isEqualTo("B");
 
     union.union("A", "B");
-    assertEquals(union.find("A"), union.find("B"));
+    assertThat(union.find("B")).isEqualTo(union.find("A"));
 
     try {
       union.find("Z");
@@ -132,18 +129,18 @@ public class StandardUnionFindTest extends TestCase {
 
     Set<String> aSet = union.findAll("A");
     Iterator<String> aIter = aSet.iterator();
-    assertTrue(aIter.hasNext());
-    assertEquals("A", aIter.next());
-    assertEquals("B", aIter.next());
-    assertEquals("C", aIter.next());
-    assertFalse(aIter.hasNext());
+    assertThat(aIter.hasNext()).isTrue();
+    assertThat(aIter.next()).isEqualTo("A");
+    assertThat(aIter.next()).isEqualTo("B");
+    assertThat(aIter.next()).isEqualTo("C");
+    assertThat(aIter.hasNext()).isFalse();
 
     Set<String> dSet = union.findAll("D");
     Iterator<String> dIter = dSet.iterator();
-    assertTrue(dIter.hasNext());
-    assertEquals("D", dIter.next());
-    assertEquals("E", dIter.next());
-    assertFalse(dIter.hasNext());
+    assertThat(dIter.hasNext()).isTrue();
+    assertThat(dIter.next()).isEqualTo("D");
+    assertThat(dIter.next()).isEqualTo("E");
+    assertThat(dIter.hasNext()).isFalse();
   }
 
   public void testFindAllSize() {
@@ -167,7 +164,7 @@ public class StandardUnionFindTest extends TestCase {
     union.union("D", "E");
 
     Set<String> elements = union.elements();
-    assertEquals(ImmutableSet.of("A", "B", "C", "D", "E"), elements);
+    assertThat(elements).isEqualTo(ImmutableSet.of("A", "B", "C", "D", "E"));
     assertThat(elements).doesNotContain("F");
   }
 
@@ -200,9 +197,9 @@ public class StandardUnionFindTest extends TestCase {
   public void testCheckEquivalent() {
     union.union("A", "B");
     union.add("C");
-    assertTrue(union.areEquivalent("A", "B"));
-    assertFalse(union.areEquivalent("C", "A"));
-    assertFalse(union.areEquivalent("C", "B"));
+    assertThat(union.areEquivalent("A", "B")).isTrue();
+    assertThat(union.areEquivalent("C", "A")).isFalse();
+    assertThat(union.areEquivalent("C", "B")).isFalse();
     try {
       union.areEquivalent("A", "F");
     } catch (IllegalArgumentException e) {
@@ -218,8 +215,6 @@ public class StandardUnionFindTest extends TestCase {
    */
   private static void assertContentsAnyOrder(
       Iterable<?> actual, Object... expected) {
-    Assert.assertEquals(null,
-        HashMultiset.create(Arrays.asList(expected)),
-        HashMultiset.create(actual));
+    assertThat(actual).containsExactlyElementsIn(Arrays.asList(expected));
   }
 }

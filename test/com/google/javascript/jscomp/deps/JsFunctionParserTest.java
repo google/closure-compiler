@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
@@ -67,25 +69,24 @@ public class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes1");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes1").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
     symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes2");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes2").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
     symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes3");
-    assertEquals(symbolInfo.functionName, "goog.require");
+    assertThat("yes3").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.require").isEqualTo(symbolInfo.functionName);
 
     symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol,
-        "bar.data.SuperstarAddStarThreadActionRequestDelegate");
-    assertEquals(symbolInfo.functionName, "goog.require");
+    assertThat("bar.data.SuperstarAddStarThreadActionRequestDelegate").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.require").isEqualTo(symbolInfo.functionName);
 
-    assertEquals(symbols.size(), 4);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(4).isEqualTo(symbols.size());
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testMultiplePerLine() {
@@ -96,20 +97,20 @@ public class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes1");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes1").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
     symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes2");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes2").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
     symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes3");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes3").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
-    assertEquals(symbols.size(), 3);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(3).isEqualTo(symbols.size());
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testShortcutMode1() {
@@ -124,16 +125,16 @@ public class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes1");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes1").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
     symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes2");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes2").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
-    assertEquals(symbols.size(), 2);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(2).isEqualTo(symbols.size());
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testShortcutMode2() {
@@ -145,12 +146,12 @@ public class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes1");
-    assertEquals(symbolInfo.functionName, "goog.provide");
+    assertThat("yes1").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
 
-    assertEquals(symbols.size(), 1);
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat(1).isEqualTo(symbols.size());
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 
   public void testShortcutMode3() {
@@ -162,9 +163,9 @@ public class JsFunctionParserTest extends TestCase {
 
     Iterator<SymbolInfo> i = symbols.iterator();
     SymbolInfo symbolInfo = i.next();
-    assertEquals(symbolInfo.symbol, "yes1");
-    assertEquals(symbolInfo.functionName, "goog.provide");
-    assertEquals(0, errorManager.getErrorCount());
-    assertEquals(0, errorManager.getWarningCount());
+    assertThat("yes1").isEqualTo(symbolInfo.symbol);
+    assertThat("goog.provide").isEqualTo(symbolInfo.functionName);
+    assertThat(errorManager.getErrorCount()).isEqualTo(0);
+    assertThat(errorManager.getWarningCount()).isEqualTo(0);
   }
 }

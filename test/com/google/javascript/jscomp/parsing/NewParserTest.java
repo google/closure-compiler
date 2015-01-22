@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_FUNCTION_ANNOTATION;
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_TYPE_ANNOTATION;
 
@@ -205,145 +206,145 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testLinenoCharnoAssign1() throws Exception {
     Node assign = parse("a = b").getFirstChild().getFirstChild();
 
-    assertEquals(Token.ASSIGN, assign.getType());
-    assertEquals(1, assign.getLineno());
-    assertEquals(0, assign.getCharno());
+    assertThat(assign.getType()).isEqualTo(Token.ASSIGN);
+    assertThat(assign.getLineno()).isEqualTo(1);
+    assertThat(assign.getCharno()).isEqualTo(0);
   }
 
   public void testLinenoCharnoAssign2() throws Exception {
     Node assign = parse("\n a.g.h.k    =  45").getFirstChild().getFirstChild();
 
-    assertEquals(Token.ASSIGN, assign.getType());
-    assertEquals(2, assign.getLineno());
-    assertEquals(1, assign.getCharno());
+    assertThat(assign.getType()).isEqualTo(Token.ASSIGN);
+    assertThat(assign.getLineno()).isEqualTo(2);
+    assertThat(assign.getCharno()).isEqualTo(1);
   }
 
   public void testLinenoCharnoCall() throws Exception {
     Node call = parse("\n foo(123);").getFirstChild().getFirstChild();
 
-    assertEquals(Token.CALL, call.getType());
-    assertEquals(2, call.getLineno());
-    assertEquals(1, call.getCharno());
+    assertThat(call.getType()).isEqualTo(Token.CALL);
+    assertThat(call.getLineno()).isEqualTo(2);
+    assertThat(call.getCharno()).isEqualTo(1);
   }
 
   public void testLinenoCharnoGetProp1() throws Exception {
     Node getprop = parse("\n foo.bar").getFirstChild().getFirstChild();
 
-    assertEquals(Token.GETPROP, getprop.getType());
-    assertEquals(2, getprop.getLineno());
-    assertEquals(1, getprop.getCharno());
+    assertThat(getprop.getType()).isEqualTo(Token.GETPROP);
+    assertThat(getprop.getLineno()).isEqualTo(2);
+    assertThat(getprop.getCharno()).isEqualTo(1);
 
     Node name = getprop.getFirstChild().getNext();
-    assertEquals(Token.STRING, name.getType());
-    assertEquals(2, name.getLineno());
-    assertEquals(5, name.getCharno());
+    assertThat(name.getType()).isEqualTo(Token.STRING);
+    assertThat(name.getLineno()).isEqualTo(2);
+    assertThat(name.getCharno()).isEqualTo(5);
   }
 
   public void testLinenoCharnoGetProp2() throws Exception {
     Node getprop = parse("\n foo.\nbar").getFirstChild().getFirstChild();
 
-    assertEquals(Token.GETPROP, getprop.getType());
-    assertEquals(2, getprop.getLineno());
-    assertEquals(1, getprop.getCharno());
+    assertThat(getprop.getType()).isEqualTo(Token.GETPROP);
+    assertThat(getprop.getLineno()).isEqualTo(2);
+    assertThat(getprop.getCharno()).isEqualTo(1);
 
     Node name = getprop.getFirstChild().getNext();
-    assertEquals(Token.STRING, name.getType());
-    assertEquals(3, name.getLineno());
-    assertEquals(0, name.getCharno());
+    assertThat(name.getType()).isEqualTo(Token.STRING);
+    assertThat(name.getLineno()).isEqualTo(3);
+    assertThat(name.getCharno()).isEqualTo(0);
   }
 
   public void testLinenoCharnoGetelem1() throws Exception {
     Node call = parse("\n foo[123]").getFirstChild().getFirstChild();
 
-    assertEquals(Token.GETELEM, call.getType());
-    assertEquals(2, call.getLineno());
-    assertEquals(1, call.getCharno());
+    assertThat(call.getType()).isEqualTo(Token.GETELEM);
+    assertThat(call.getLineno()).isEqualTo(2);
+    assertThat(call.getCharno()).isEqualTo(1);
   }
 
   public void testLinenoCharnoGetelem2() throws Exception {
     Node call = parse("\n   \n foo()[123]").getFirstChild().getFirstChild();
 
-    assertEquals(Token.GETELEM, call.getType());
-    assertEquals(3, call.getLineno());
-    assertEquals(1, call.getCharno());
+    assertThat(call.getType()).isEqualTo(Token.GETELEM);
+    assertThat(call.getLineno()).isEqualTo(3);
+    assertThat(call.getCharno()).isEqualTo(1);
   }
 
   public void testLinenoCharnoGetelem3() throws Exception {
     Node call = parse("\n   \n (8 + kl)[123]").getFirstChild().getFirstChild();
 
-    assertEquals(Token.GETELEM, call.getType());
-    assertEquals(3, call.getLineno());
-    assertEquals(1, call.getCharno());
+    assertThat(call.getType()).isEqualTo(Token.GETELEM);
+    assertThat(call.getLineno()).isEqualTo(3);
+    assertThat(call.getCharno()).isEqualTo(1);
   }
 
   public void testLinenoCharnoForComparison() throws Exception {
     Node lt =
       parse("for (; i < j;){}").getFirstChild().getFirstChild().getNext();
 
-    assertEquals(Token.LT, lt.getType());
-    assertEquals(1, lt.getLineno());
-    assertEquals(7, lt.getCharno());
+    assertThat(lt.getType()).isEqualTo(Token.LT);
+    assertThat(lt.getLineno()).isEqualTo(1);
+    assertThat(lt.getCharno()).isEqualTo(7);
   }
 
   public void testLinenoCharnoHook() throws Exception {
     Node n = parse("\n a ? 9 : 0").getFirstChild().getFirstChild();
 
-    assertEquals(Token.HOOK, n.getType());
-    assertEquals(2, n.getLineno());
-    assertEquals(1, n.getCharno());
+    assertThat(n.getType()).isEqualTo(Token.HOOK);
+    assertThat(n.getLineno()).isEqualTo(2);
+    assertThat(n.getCharno()).isEqualTo(1);
   }
 
   public void testLinenoCharnoArrayLiteral() throws Exception {
     Node n = parse("\n  [8, 9]").getFirstChild().getFirstChild();
 
-    assertEquals(Token.ARRAYLIT, n.getType());
-    assertEquals(2, n.getLineno());
-    assertEquals(2, n.getCharno());
+    assertThat(n.getType()).isEqualTo(Token.ARRAYLIT);
+    assertThat(n.getLineno()).isEqualTo(2);
+    assertThat(n.getCharno()).isEqualTo(2);
 
     n = n.getFirstChild();
 
-    assertEquals(Token.NUMBER, n.getType());
-    assertEquals(2, n.getLineno());
-    assertEquals(3, n.getCharno());
+    assertThat(n.getType()).isEqualTo(Token.NUMBER);
+    assertThat(n.getLineno()).isEqualTo(2);
+    assertThat(n.getCharno()).isEqualTo(3);
 
     n = n.getNext();
 
-    assertEquals(Token.NUMBER, n.getType());
-    assertEquals(2, n.getLineno());
-    assertEquals(6, n.getCharno());
+    assertThat(n.getType()).isEqualTo(Token.NUMBER);
+    assertThat(n.getLineno()).isEqualTo(2);
+    assertThat(n.getCharno()).isEqualTo(6);
   }
 
   public void testLinenoCharnoObjectLiteral() throws Exception {
     Node n = parse("\n\n var a = {a:0\n,b :1};")
         .getFirstChild().getFirstChild().getFirstChild();
 
-    assertEquals(Token.OBJECTLIT, n.getType());
-    assertEquals(3, n.getLineno());
-    assertEquals(9, n.getCharno());
+    assertThat(n.getType()).isEqualTo(Token.OBJECTLIT);
+    assertThat(n.getLineno()).isEqualTo(3);
+    assertThat(n.getCharno()).isEqualTo(9);
 
     Node key = n.getFirstChild();
 
-    assertEquals(Token.STRING_KEY, key.getType());
-    assertEquals(3, key.getLineno());
-    assertEquals(10, key.getCharno());
+    assertThat(key.getType()).isEqualTo(Token.STRING_KEY);
+    assertThat(key.getLineno()).isEqualTo(3);
+    assertThat(key.getCharno()).isEqualTo(10);
 
     Node value = key.getFirstChild();
 
-    assertEquals(Token.NUMBER, value.getType());
-    assertEquals(3, value.getLineno());
-    assertEquals(12, value.getCharno());
+    assertThat(value.getType()).isEqualTo(Token.NUMBER);
+    assertThat(value.getLineno()).isEqualTo(3);
+    assertThat(value.getCharno()).isEqualTo(12);
 
     key = key.getNext();
 
-    assertEquals(Token.STRING_KEY, key.getType());
-    assertEquals(4, key.getLineno());
-    assertEquals(1, key.getCharno());
+    assertThat(key.getType()).isEqualTo(Token.STRING_KEY);
+    assertThat(key.getLineno()).isEqualTo(4);
+    assertThat(key.getCharno()).isEqualTo(1);
 
     value = key.getFirstChild();
 
-    assertEquals(Token.NUMBER, value.getType());
-    assertEquals(4, value.getLineno());
-    assertEquals(4, value.getCharno());
+    assertThat(value.getType()).isEqualTo(Token.NUMBER);
+    assertThat(value.getLineno()).isEqualTo(4);
+    assertThat(value.getCharno()).isEqualTo(4);
   }
 
   public void testLinenoCharnoAdd() throws Exception {
@@ -406,79 +407,79 @@ public class NewParserTest extends BaseJSTypeTestCase {
     Node op = parse("var a = 89 " + binop + " 76;").getFirstChild().
         getFirstChild().getFirstChild();
 
-    assertEquals(1, op.getLineno());
-    assertEquals(8, op.getCharno());
+    assertThat(op.getLineno()).isEqualTo(1);
+    assertThat(op.getCharno()).isEqualTo(8);
   }
 
   public void testJSDocAttachment1() {
     Node varNode = parse("/** @type number */var a;").getFirstChild();
 
     // VAR
-    assertEquals(Token.VAR, varNode.getType());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
     JSDocInfo varInfo = varNode.getJSDocInfo();
-    assertNotNull(varInfo);
+    assertThat(varInfo).isNotNull();
     assertTypeEquals(NUMBER_TYPE, varInfo.getType());
 
     // VAR NAME
     Node varNameNode = varNode.getFirstChild();
-    assertEquals(Token.NAME, varNameNode.getType());
-    assertNull(varNameNode.getJSDocInfo());
+    assertThat(varNameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(varNameNode.getJSDocInfo()).isNull();
 
     mode = LanguageMode.ECMASCRIPT6;
 
     Node letNode = parse("/** @type number */let a;").getFirstChild();
 
     // LET
-    assertEquals(Token.LET, letNode.getType());
+    assertThat(letNode.getType()).isEqualTo(Token.LET);
     JSDocInfo letInfo = letNode.getJSDocInfo();
-    assertNotNull(letInfo);
+    assertThat(letInfo).isNotNull();
     assertTypeEquals(NUMBER_TYPE, letInfo.getType());
 
     // LET NAME
     Node letNameNode = letNode.getFirstChild();
-    assertEquals(Token.NAME, letNameNode.getType());
-    assertNull(letNameNode.getJSDocInfo());
+    assertThat(letNameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(letNameNode.getJSDocInfo()).isNull();
 
     Node constNode = parse("/** @type number */const a = 0;").getFirstChild();
 
     // CONST
-    assertEquals(Token.CONST, constNode.getType());
+    assertThat(constNode.getType()).isEqualTo(Token.CONST);
     JSDocInfo constInfo = constNode.getJSDocInfo();
-    assertNotNull(constInfo);
+    assertThat(constInfo).isNotNull();
     assertTypeEquals(NUMBER_TYPE, constInfo.getType());
 
     // LET NAME
     Node constNameNode = constNode.getFirstChild();
-    assertEquals(Token.NAME, constNameNode.getType());
-    assertNull(constNameNode.getJSDocInfo());
+    assertThat(constNameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(constNameNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment2() {
     Node varNode = parse("/** @type number */var a,b;").getFirstChild();
 
     // VAR
-    assertEquals(Token.VAR, varNode.getType());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
     JSDocInfo info = varNode.getJSDocInfo();
-    assertNotNull(info);
+    assertThat(info).isNotNull();
     assertTypeEquals(NUMBER_TYPE, info.getType());
 
     // First NAME
     Node nameNode1 = varNode.getFirstChild();
-    assertEquals(Token.NAME, nameNode1.getType());
-    assertNull(nameNode1.getJSDocInfo());
+    assertThat(nameNode1.getType()).isEqualTo(Token.NAME);
+    assertThat(nameNode1.getJSDocInfo()).isNull();
 
     // Second NAME
     Node nameNode2 = nameNode1.getNext();
-    assertEquals(Token.NAME, nameNode2.getType());
-    assertNull(nameNode2.getJSDocInfo());
+    assertThat(nameNode2.getType()).isEqualTo(Token.NAME);
+    assertThat(nameNode2.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment3() {
     Node assignNode = parse(
         "/** @type number */goog.FOO = 5;").getFirstChild().getFirstChild();
-    assertEquals(Token.ASSIGN, assignNode.getType());
+    assertThat(assignNode.getType()).isEqualTo(Token.ASSIGN);
     JSDocInfo info = assignNode.getJSDocInfo();
-    assertNotNull(info);
+    assertThat(info).isNotNull();
     assertTypeEquals(NUMBER_TYPE, info.getType());
   }
 
@@ -487,18 +488,18 @@ public class NewParserTest extends BaseJSTypeTestCase {
         "var a, /** @define {number} */ b = 5;").getFirstChild();
 
     // ASSIGN
-    assertEquals(Token.VAR, varNode.getType());
-    assertNull(varNode.getJSDocInfo());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
+    assertThat(varNode.getJSDocInfo()).isNull();
 
     // a
     Node a = varNode.getFirstChild();
-    assertNull(a.getJSDocInfo());
+    assertThat(a.getJSDocInfo()).isNull();
 
     // b
     Node b = a.getNext();
     JSDocInfo info = b.getJSDocInfo();
-    assertNotNull(info);
-    assertTrue(info.isDefine());
+    assertThat(info).isNotNull();
+    assertThat(info.isDefine()).isTrue();
     assertTypeEquals(NUMBER_TYPE, info.getType());
   }
 
@@ -508,22 +509,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
         .getFirstChild();
 
     // ASSIGN
-    assertEquals(Token.VAR, varNode.getType());
-    assertNull(varNode.getJSDocInfo());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
+    assertThat(varNode.getJSDocInfo()).isNull();
 
     // a
     Node a = varNode.getFirstChild();
-    assertNotNull(a.getJSDocInfo());
+    assertThat(a.getJSDocInfo()).isNotNull();
     JSDocInfo info = a.getJSDocInfo();
-    assertNotNull(info);
-    assertFalse(info.isDefine());
+    assertThat(info).isNotNull();
+    assertThat(info.isDefine()).isFalse();
     assertTypeEquals(NUMBER_TYPE, info.getType());
 
     // b
     Node b = a.getNext();
     info = b.getJSDocInfo();
-    assertNotNull(info);
-    assertTrue(info.isDefine());
+    assertThat(info).isNotNull();
+    assertThat(info.isDefine()).isTrue();
     assertTypeEquals(NUMBER_TYPE, info.getType());
   }
 
@@ -538,11 +539,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
         MISPLACED_FUNCTION_ANNOTATION)
         .getFirstChild().getNext();
 
-    assertEquals(Token.FUNCTION, functionNode.getType());
+    assertThat(functionNode.getType()).isEqualTo(Token.FUNCTION);
     JSDocInfo info = functionNode.getJSDocInfo();
-    assertNotNull(info);
-    assertFalse(info.hasParameter("index"));
-    assertTrue(info.hasReturnType());
+    assertThat(info).isNotNull();
+    assertThat(info.hasParameter("index")).isFalse();
+    assertThat(info.hasReturnType()).isTrue();
     assertTypeEquals(UNKNOWN_TYPE, info.getReturnType());
   }
 
@@ -550,48 +551,48 @@ public class NewParserTest extends BaseJSTypeTestCase {
     Node varNode = parse("/** */var a;").getFirstChild();
 
     // VAR
-    assertEquals(Token.VAR, varNode.getType());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
 
     // NAME
     Node nameNode = varNode.getFirstChild();
-    assertEquals(Token.NAME, nameNode.getType());
-    assertNull(nameNode.getJSDocInfo());
+    assertThat(nameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(nameNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment8() {
     Node varNode = parse("/** x */var a;").getFirstChild();
 
     // VAR
-    assertEquals(Token.VAR, varNode.getType());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
 
     // NAME
     Node nameNode = varNode.getFirstChild();
-    assertEquals(Token.NAME, nameNode.getType());
-    assertNull(nameNode.getJSDocInfo());
+    assertThat(nameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(nameNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment9() {
     Node varNode = parse("/** \n x */var a;").getFirstChild();
 
     // VAR
-    assertEquals(Token.VAR, varNode.getType());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
 
     // NAME
     Node nameNode = varNode.getFirstChild();
-    assertEquals(Token.NAME, nameNode.getType());
-    assertNull(nameNode.getJSDocInfo());
+    assertThat(nameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(nameNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment10() {
     Node varNode = parse("/** x\n */var a;").getFirstChild();
 
     // VAR
-    assertEquals(Token.VAR, varNode.getType());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
 
     // NAME
     Node nameNode = varNode.getFirstChild();
-    assertEquals(Token.NAME, nameNode.getType());
-    assertNull(nameNode.getJSDocInfo());
+    assertThat(nameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(nameNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment11() {
@@ -600,21 +601,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
         .getFirstChild();
 
     // VAR
-    assertEquals(Token.VAR, varNode.getType());
+    assertThat(varNode.getType()).isEqualTo(Token.VAR);
     JSDocInfo info = varNode.getJSDocInfo();
-    assertNotNull(info);
+    assertThat(info).isNotNull();
 
-    assertTypeEquals(createRecordTypeBuilder().
-                     addProperty("x", NUMBER_TYPE, null).
-                     addProperty("y", STRING_TYPE, null).
-                     addProperty("z", UNKNOWN_TYPE, null).
-                     build(),
-                     info.getType());
+    assertTypeEquals(
+        createRecordTypeBuilder()
+            .addProperty("x", NUMBER_TYPE, null)
+            .addProperty("y", STRING_TYPE, null)
+            .addProperty("z", UNKNOWN_TYPE, null)
+            .build(),
+        info.getType());
 
     // NAME
     Node nameNode = varNode.getFirstChild();
-    assertEquals(Token.NAME, nameNode.getType());
-    assertNull(nameNode.getJSDocInfo());
+    assertThat(nameNode.getType()).isEqualTo(Token.NAME);
+    assertThat(nameNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment12() {
@@ -622,31 +624,31 @@ public class NewParserTest extends BaseJSTypeTestCase {
        parse("var a = {/** @type {Object} */ b: c};")
         .getFirstChild();
     Node objectLitNode = varNode.getFirstChild().getFirstChild();
-    assertEquals(Token.OBJECTLIT, objectLitNode.getType());
-    assertNotNull(objectLitNode.getFirstChild().getJSDocInfo());
+    assertThat(objectLitNode.getType()).isEqualTo(Token.OBJECTLIT);
+    assertThat(objectLitNode.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
   public void testJSDocAttachment13() {
     Node varNode = parse("/** foo */ var a;").getFirstChild();
-    assertNotNull(varNode.getJSDocInfo());
+    assertThat(varNode.getJSDocInfo()).isNotNull();
   }
 
   public void testJSDocAttachment14() {
     Node varNode = parse("/** */ var a;").getFirstChild();
-    assertNull(varNode.getJSDocInfo());
+    assertThat(varNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment15() {
     Node varNode = parse("/** \n * \n */ var a;").getFirstChild();
-    assertNull(varNode.getJSDocInfo());
+    assertThat(varNode.getJSDocInfo()).isNull();
   }
 
   public void testJSDocAttachment16() {
     Node exprCall =
         parse("/** @private */ x(); function f() {};").getFirstChild();
-    assertEquals(Token.EXPR_RESULT, exprCall.getType());
-    assertNull(exprCall.getNext().getJSDocInfo());
-    assertNotNull(exprCall.getFirstChild().getJSDocInfo());
+    assertThat(exprCall.getType()).isEqualTo(Token.EXPR_RESULT);
+    assertThat(exprCall.getNext().getJSDocInfo()).isNull();
+    assertThat(exprCall.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
   public void testJSDocAttachment17() {
@@ -655,9 +657,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "function f() { " +
             "  return /** @type {string} */ (g(1 /** @desc x */));" +
             "};").getFirstChild();
-    assertEquals(Token.FUNCTION, fn.getType());
+    assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstChild().getFirstChild();
-    assertEquals(Token.CAST, cast.getType());
+    assertThat(cast.getType()).isEqualTo(Token.CAST);
   }
 
   public void testJSDocAttachment18() {
@@ -666,10 +668,9 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "function f() { " +
             "  var x = /** @type {string} */ (y);" +
             "};").getFirstChild();
-    assertEquals(Token.FUNCTION, fn.getType());
-    Node cast =
-        fn.getLastChild().getFirstChild().getFirstChild().getFirstChild();
-    assertEquals(Token.CAST, cast.getType());
+    assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
+    Node cast = fn.getLastChild().getFirstChild().getFirstChild().getFirstChild();
+    assertThat(cast.getType()).isEqualTo(Token.CAST);
   }
 
   public void testJSDocAttachment19() {
@@ -680,11 +681,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "  return;" +
             "};",
             MISPLACED_TYPE_ANNOTATION).getFirstChild();
-    assertEquals(Token.FUNCTION, fn.getType());
+    assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
 
     Node ret = fn.getLastChild().getFirstChild();
-    assertEquals(Token.RETURN, ret.getType());
-    assertNotNull(ret.getJSDocInfo());
+    assertThat(ret.getType()).isEqualTo(Token.RETURN);
+    assertThat(ret.getJSDocInfo()).isNotNull();
   }
 
   public void testJSDocAttachment20() {
@@ -694,11 +695,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
             "  /** @type {string} */" +
             "  if (true) return;" +
             "};", MISPLACED_TYPE_ANNOTATION).getFirstChild();
-    assertEquals(Token.FUNCTION, fn.getType());
+    assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
 
     Node ret = fn.getLastChild().getFirstChild();
-    assertEquals(Token.IF, ret.getType());
-    assertNotNull(ret.getJSDocInfo());
+    assertThat(ret.getType()).isEqualTo(Token.IF);
+    assertThat(ret.getJSDocInfo()).isNotNull();
   }
 
   public void testJSDocAttachment21() {
@@ -710,22 +711,20 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testInlineJSDocAttachment1() {
     Node fn = parse("function f(/** string */ x) {}").getFirstChild();
-    assertTrue(fn.isFunction());
+    assertThat(fn.isFunction()).isTrue();
 
-    JSDocInfo info =
-        fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
-    assertNotNull(info);
+    JSDocInfo info = fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertThat(info).isNotNull();
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
   public void testInlineJSDocAttachment2() {
     Node fn = parse(
         "function f(/** ? */ x) {}").getFirstChild();
-    assertTrue(fn.isFunction());
+    assertThat(fn.isFunction()).isTrue();
 
-    JSDocInfo info =
-        fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
-    assertNotNull(info);
+    JSDocInfo info = fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertThat(info).isNotNull();
     assertTypeEquals(UNKNOWN_TYPE, info.getType());
   }
 
@@ -746,22 +745,19 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testInlineJSDocAttachment5() {
     Node vardecl = parse("var /** string */ x = 'asdf';").getFirstChild();
     JSDocInfo info = vardecl.getFirstChild().getJSDocInfo();
-    assertNotNull(info);
-    assertTrue(info.hasType());
+    assertThat(info).isNotNull();
+    assertThat(info.hasType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getType());
   }
 
   public void testInlineJSDocAttachment6() {
     Node fn = parse("function f(/** {attr: number} */ x) {}").getFirstChild();
-    assertTrue(fn.isFunction());
+    assertThat(fn.isFunction()).isTrue();
 
-    JSDocInfo info =
-        fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
-    assertNotNull(info);
-    assertTypeEquals(createRecordTypeBuilder().
-        addProperty("attr", NUMBER_TYPE, null).
-        build(),
-        info.getType());
+    JSDocInfo info = fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertThat(info).isNotNull();
+    assertTypeEquals(
+        createRecordTypeBuilder().addProperty("attr", NUMBER_TYPE, null).build(), info.getType());
   }
 
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
@@ -1501,30 +1497,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
     isIdeMode = true;
 
     Node n = parse("/** @fileoverview Hi mom! */ function Foo() {}");
-    assertEquals(Token.FUNCTION, n.getFirstChild().getType());
-    assertNotNull(n.getJSDocInfo());
-    assertNull(n.getFirstChild().getJSDocInfo());
-    assertEquals("Hi mom!",
-        n.getJSDocInfo().getFileOverview());
+    assertThat(n.getFirstChild().getType()).isEqualTo(Token.FUNCTION);
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getFirstChild().getJSDocInfo()).isNull();
+    assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("Hi mom!");
   }
 
   public void testFileOverviewJSDocDoesNotHoseParsing() {
-    assertEquals(
-        Token.FUNCTION,
-        parse("/** @fileoverview Hi mom! \n */ function Foo() {}")
-            .getFirstChild().getType());
-    assertEquals(
-        Token.FUNCTION,
-        parse("/** @fileoverview Hi mom! \n * * * */ function Foo() {}")
-            .getFirstChild().getType());
-    assertEquals(
-        Token.FUNCTION,
-        parse("/** @fileoverview \n * x */ function Foo() {}")
-            .getFirstChild().getType());
-    assertEquals(
-        Token.FUNCTION,
-        parse("/** @fileoverview \n * x \n */ function Foo() {}")
-            .getFirstChild().getType());
+    assertThat(parse("/** @fileoverview Hi mom! \n */ function Foo() {}").getFirstChild().getType())
+        .isEqualTo(Token.FUNCTION);
+    assertThat(
+        parse("/** @fileoverview Hi mom! \n * * * */ function Foo() {}").getFirstChild().getType())
+        .isEqualTo(Token.FUNCTION);
+    assertThat(parse("/** @fileoverview \n * x */ function Foo() {}").getFirstChild().getType())
+        .isEqualTo(Token.FUNCTION);
+    assertThat(parse("/** @fileoverview \n * x \n */ function Foo() {}").getFirstChild().getType())
+        .isEqualTo(Token.FUNCTION);
   }
 
   public void testFileOverviewJSDoc2() {
@@ -1532,22 +1520,22 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     Node n = parse("/** @fileoverview Hi mom! */"
         + " /** @constructor */ function Foo() {}");
-    assertNotNull(n.getJSDocInfo());
-    assertEquals("Hi mom!", n.getJSDocInfo().getFileOverview());
-    assertNotNull(n.getFirstChild().getJSDocInfo());
-    assertFalse(n.getFirstChild().getJSDocInfo().hasFileOverview());
-    assertTrue(n.getFirstChild().getJSDocInfo().isConstructor());
+    assertThat(n.getJSDocInfo()).isNotNull();
+    assertThat(n.getJSDocInfo().getFileOverview()).isEqualTo("Hi mom!");
+    assertThat(n.getFirstChild().getJSDocInfo()).isNotNull();
+    assertThat(n.getFirstChild().getJSDocInfo().hasFileOverview()).isFalse();
+    assertThat(n.getFirstChild().getJSDocInfo().isConstructor()).isTrue();
   }
 
   public void testObjectLiteralDoc1() {
     Node n = parse("var x = {/** @type {number} */ 1: 2};");
 
     Node objectLit = n.getFirstChild().getFirstChild().getFirstChild();
-    assertEquals(Token.OBJECTLIT, objectLit.getType());
+    assertThat(objectLit.getType()).isEqualTo(Token.OBJECTLIT);
 
     Node number = objectLit.getFirstChild();
-    assertEquals(Token.STRING_KEY, number.getType());
-    assertNotNull(number.getJSDocInfo());
+    assertThat(number.getType()).isEqualTo(Token.STRING_KEY);
+    assertThat(number.getJSDocInfo()).isNotNull();
   }
 
   public void testDuplicatedParam() {
@@ -1616,24 +1604,24 @@ public class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT3;
     Node n = parseError("'one\\\ntwo';",
         "String continuations are not supported in this language mode.");
-    assertEquals("onetwo", n.getFirstChild().getFirstChild().getString());
+    assertThat(n.getFirstChild().getFirstChild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
         + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
-    assertEquals("onetwo", n.getFirstChild().getFirstChild().getString());
+    assertThat(n.getFirstChild().getFirstChild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT6;
     parseWarning("'one\\\ntwo';", "String continuations are not recommended. See"
         + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
-    assertEquals("onetwo", n.getFirstChild().getFirstChild().getString());
+    assertThat(n.getFirstChild().getFirstChild().getString()).isEqualTo("onetwo");
   }
 
   public void testStringLiteral() {
     Node n = parse("'foo'");
     Node stringNode = n.getFirstChild().getFirstChild();
-    assertEquals(Token.STRING, stringNode.getType());
-    assertEquals("foo", stringNode.getString());
+    assertThat(stringNode.getType()).isEqualTo(Token.STRING);
+    assertThat(stringNode.getString()).isEqualTo("foo");
   }
 
   private Node testTemplateLiteral(String s) {
@@ -1669,8 +1657,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
         + " https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml#Multiline_string_literals");
     Node templateLiteral = n.getFirstChild().getFirstChild();
     Node stringNode = templateLiteral.getFirstChild();
-    assertEquals(Token.STRING, stringNode.getType());
-    assertEquals("string continuation", stringNode.getString());
+    assertThat(stringNode.getType()).isEqualTo(Token.STRING);
+    assertThat(stringNode.getString()).isEqualTo("string continuation");
   }
 
   public void testTemplateLiteralSubstitution() {
@@ -1846,9 +1834,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     Node n = parse("/** This is a variable. */ var x;");
     Node var = n.getFirstChild();
-    assertNotNull(var.getJSDocInfo());
-    assertEquals("This is a variable.",
-        var.getJSDocInfo().getBlockDescription());
+    assertThat(var.getJSDocInfo()).isNotNull();
+    assertThat(var.getJSDocInfo().getBlockDescription()).isEqualTo("This is a variable.");
   }
 
   public void testUnnamedFunctionStatement() {
@@ -2078,12 +2065,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testIdeModePartialTree() {
     Node partialTree = parseError("function Foo() {} f.",
         "'identifier' expected");
-    assertNull(partialTree);
+    assertThat(partialTree).isNull();
 
     isIdeMode = true;
     partialTree = parseError("function Foo() {} f.",
         "'identifier' expected");
-    assertNotNull(partialTree);
+    assertThat(partialTree).isNotNull();
   }
 
   public void testForEach() {
@@ -2535,8 +2522,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     long stop = System.currentTimeMillis();
 
-    assertTrue("Long runtime: " + (stop - start) , stop - start < 5000);
-
+    assertThat(stop - start).named("runtime").isLessThan(5000L);
   }
 
   private Node script(Node stmt) {
@@ -2567,8 +2553,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
     Node script = result.ast;
 
     // verifying that all errors were seen
-    assertTrue(testErrorReporter.hasEncounteredAllErrors());
-    assertTrue(testErrorReporter.hasEncounteredAllWarnings());
+    assertThat(testErrorReporter.hasEncounteredAllErrors()).isTrue();
+    assertThat(testErrorReporter.hasEncounteredAllWarnings()).isTrue();
 
     return script;
   }
@@ -2588,8 +2574,8 @@ public class NewParserTest extends BaseJSTypeTestCase {
       testErrorReporter).ast;
 
     // verifying that all warnings were seen
-    assertTrue(testErrorReporter.hasEncounteredAllErrors());
-    assertTrue(testErrorReporter.hasEncounteredAllWarnings());
+    assertThat(testErrorReporter.hasEncounteredAllErrors()).isTrue();
+    assertThat(testErrorReporter.hasEncounteredAllWarnings()).isTrue();
 
     return script;
   }
