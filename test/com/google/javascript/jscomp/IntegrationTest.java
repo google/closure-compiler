@@ -348,35 +348,6 @@ public class IntegrationTest extends IntegrationTestCase {
         "/** @export */ function f() {} goog.exportSymbol('f', f);");
   }
 
-  public void testInstrumentMemoryAllocationPassOff() {
-    testSame(createCompilerOptions(),
-        "var obj = new Object(); " +
-        "var o = {}; " +
-        "var a = []; " +
-        "var f = function() {};" +
-        "var s = 'a' + 'b'");
-  }
-
-  public void testInstrumentMemoryAllocationPassOn() {
-    CompilerOptions options = createCompilerOptions();
-    options.setInstrumentMemoryAllocations(true);
-    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
-
-    test(options,
-        "var obj = new Object(); " +
-        "var o = {}; " +
-        "var a = []; " +
-        "var f = function() {};" +
-        "var s = 'a' + 'b'",
-
-        InstrumentMemoryAllocPass.JS_INSTRUMENT_ALLOCATION_CODE +
-        "var obj=__alloc(new Object(),\"i0:1\",1,\"new Unknown\");" +
-        "var o=__alloc({},\"i0:1\",2,\"Object\");" +
-        "var a=__alloc([],\"i0:1\",3,\"Array\");" +
-        "var f=__alloc(function() {},\"i0:1\",4,\"Function\");" +
-        "var s=\"a\"+\"b\";");
-  }
-
   public void testAngularPassOff() {
     testSame(createCompilerOptions(),
         "/** @ngInject */ function f() {} " +

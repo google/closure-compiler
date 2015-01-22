@@ -700,9 +700,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Move top-level function declarations to the top */
   public boolean moveFunctionDeclarations;
 
-  /** Instrument / Intercept memory allocations. */
-  private boolean instrumentMemoryAllocations;
-
   /** Instrumentation template to use with #recordFunctionInformation */
   public String instrumentationTemplate;
 
@@ -1072,7 +1069,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     // Instrumentation
     instrumentationTemplate = null;  // instrument functions
-    instrumentMemoryAllocations = false; // instrument allocations
     instrumentForCoverage = false;  // instrument lines
 
     // Output
@@ -2231,21 +2227,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setCommonJSModulePathPrefix(String commonJSModulePathPrefix) {
     this.commonJSModulePathPrefix = commonJSModulePathPrefix;
-  }
-
-  /**
-   * @return Whether memory allocations are instrumented.
-   */
-  public boolean getInstrumentMemoryAllocations() {
-    return instrumentMemoryAllocations;
-  }
-
-  /**
-   * Sets the option to instrument memory allocations.
-   */
-  public void setInstrumentMemoryAllocations(
-      boolean instrumentMemoryAllocations) {
-    this.instrumentMemoryAllocations = instrumentMemoryAllocations;
   }
 
   /**

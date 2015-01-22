@@ -724,11 +724,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(instrumentFunctions);
     }
 
-    // Instrument calls to memory allocations
-    if (options.getInstrumentMemoryAllocations()) {
-      passes.add(instrumentMemoryAllocations);
-    }
-
     if (options.aggressiveRenaming) {
       passes.add(gatherCharBias);
     }
@@ -2469,15 +2464,6 @@ public class DefaultPassConfig extends PassConfig {
       };
     }
   };
-
-  /** Adds instrumentation for memory allocations. */
-  final PassFactory instrumentMemoryAllocations =
-      new PassFactory("instrumentMemoryAllocations", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new InstrumentMemoryAllocPass(compiler);
-        }
-      };
 
   final PassFactory instrumentForCodeCoverage =
       new PassFactory("instrumentForCodeCoverage", true) {
