@@ -18,6 +18,7 @@ package com.google.javascript.refactoring;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.Compiler;
@@ -41,9 +42,13 @@ public final class RefactoringDriver {
   private final Compiler compiler;
   private final Node rootNode;
 
-  private RefactoringDriver(Scanner scanner, List<SourceFile> inputs, List<SourceFile> externs) {
+  private RefactoringDriver(
+      Scanner scanner,
+      List<SourceFile> inputs,
+      List<SourceFile> externs,
+      CompilerOptions compilerOptions) {
     this.scanner = scanner;
-    this.compiler = createCompiler(inputs, externs);
+    this.compiler = createCompiler(inputs, externs, compilerOptions);
     this.rootNode = this.compiler.getRoot();
   }
 
@@ -53,18 +58,20 @@ public final class RefactoringDriver {
   public List<SuggestedFix> drive() {
     JsFlumeCallback callback = new JsFlumeCallback(scanner, null);
     NodeTraversal.traverse(compiler, rootNode, callback);
-    return callback.getFixes();
+    List<SuggestedFix> fixes = callback.getFixes();
+    fixes.addAll(scanner.processAllMatches(callback.getMatches()));
+    return fixes;
   }
 
   public Compiler getCompiler() {
     return compiler;
   }
 
-  private Compiler createCompiler(List<SourceFile> inputs, List<SourceFile> externs) {
-    CompilerOptions options = getCompilerOptions();
+  private Compiler createCompiler(
+      List<SourceFile> inputs, List<SourceFile> externs, CompilerOptions compilerOptions) {
     Compiler compiler = new Compiler();
     compiler.disableThreads();
-    compiler.compile(externs, inputs, options);
+    compiler.compile(externs, inputs, compilerOptions);
     return compiler;
   }
 
@@ -99,6 +106,7 @@ public final class RefactoringDriver {
     private final Scanner scanner;
     private final ImmutableList.Builder<SourceFile> inputs = ImmutableList.builder();
     private final ImmutableList.Builder<SourceFile> externs = ImmutableList.builder();
+    private CompilerOptions compilerOptions = getCompilerOptions();
 
     public Builder(Scanner scanner) {
       this.scanner = scanner;
@@ -144,8 +152,13 @@ public final class RefactoringDriver {
       return this;
     }
 
+    public Builder withCompilerOptions(CompilerOptions compilerOptions) {
+      this.compilerOptions = Preconditions.checkNotNull(compilerOptions);
+      return this;
+    }
+
     public RefactoringDriver build() {
-      return new RefactoringDriver(scanner, inputs.build(), externs.build());
+      return new RefactoringDriver(scanner, inputs.build(), externs.build(), compilerOptions);
     }
   }
 }
