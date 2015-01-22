@@ -2414,16 +2414,15 @@ public class IntegrationTest extends IntegrationTestCase {
 
   public void testAlwaysRunSafetyCheck() {
     Multimap<CustomPassExecutionTime, CompilerPass> custom =
-        new ImmutableMultimap.Builder<CustomPassExecutionTime, CompilerPass>()
-        .put(CustomPassExecutionTime.BEFORE_OPTIMIZATIONS, new CompilerPass() {
-                @Override
-                public void process(Node externs, Node root) {
-                  Node var = root.getLastChild().getFirstChild();
-                  assertEquals(Token.VAR, var.getType());
-                  var.detachFromParent();
-                }
-              })
-        .build();
+        ImmutableMultimap.<CustomPassExecutionTime, CompilerPass>of(
+            CustomPassExecutionTime.BEFORE_OPTIMIZATIONS, new CompilerPass() {
+              @Override
+              public void process(Node externs, Node root) {
+                Node var = root.getLastChild().getFirstChild();
+                assertEquals(Token.VAR, var.getType());
+                var.detachFromParent();
+              }
+            });
 
     CompilerOptions options = createCompilerOptions();
     options.setCheckSymbols(false);
