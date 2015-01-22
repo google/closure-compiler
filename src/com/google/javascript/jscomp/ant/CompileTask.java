@@ -404,9 +404,9 @@ public final class CompileTask
       this.compilationLevel.setDebugOptionsForCompilationLevel(options);
     }
 
-    options.prettyPrint = this.prettyPrint;
-    options.printInputDelimiter = this.printInputDelimiter;
-    options.generateExports = this.generateExports;
+    options.setPrettyPrint(this.prettyPrint);
+    options.setPrintInputDelimiter(this.printInputDelimiter);
+    options.setGenerateExports(this.generateExports);
 
     options.setLanguageIn(this.languageIn);
     options.setOutputCharset(this.outputEncoding);
@@ -434,13 +434,13 @@ public final class CompileTask
     }
 
     if (!Strings.isNullOrEmpty(sourceMapFormat)) {
-      options.sourceMapFormat = Format.valueOf(sourceMapFormat);
+      options.setSourceMapFormat(Format.valueOf(sourceMapFormat));
     }
 
     if (!Strings.isNullOrEmpty(sourceMapLocationMapping)) {
       String tokens[] = sourceMapLocationMapping.split("\\|", -1);
       LocationMapping lm = new LocationMapping(tokens[0], tokens[1]);
-      options.sourceMapLocationMappings = Arrays.asList(lm);
+      options.setSourceMapLocationMappings(Arrays.asList(lm));
     }
 
     if (sourceMapOutputFile != null) {
@@ -448,7 +448,7 @@ public final class CompileTask
       if (parentFile.mkdirs()) {
         log("Created missing parent directory " + parentFile, Project.MSG_DEBUG);
       }
-      options.sourceMapOutputPath = parentFile.getAbsolutePath();
+      options.setSourceMapOutputPath(parentFile.getAbsolutePath());
     }
     return options;
   }
@@ -572,7 +572,7 @@ public final class CompileTask
   private Compiler createCompiler(CompilerOptions options) {
     Compiler compiler = new Compiler();
     MessageFormatter formatter =
-        options.errorFormat.toFormatter(compiler, false);
+        options.getErrorFormat().toFormatter(compiler, false);
     AntErrorManager errorManager = new AntErrorManager(formatter, this);
     compiler.setErrorManager(errorManager);
     return compiler;

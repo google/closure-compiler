@@ -1868,8 +1868,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.removeUnusedPrototypeProperties = enabled;
   }
 
-  public void setRemoveUnusedPrototypePropertiesInExterns(
-      boolean enabled) {
+  public void setRemoveUnusedPrototypePropertiesInExterns(boolean enabled) {
     this.removeUnusedPrototypePropertiesInExterns = enabled;
   }
 
@@ -2165,6 +2164,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setErrorFormat(ErrorFormat errorFormat) {
     this.errorFormat = errorFormat;
+  }
+
+  public ErrorFormat getErrorFormat() {
+    return this.errorFormat;
   }
 
   public void setWarningsGuard(ComposeWarningsGuard warningsGuard) {
