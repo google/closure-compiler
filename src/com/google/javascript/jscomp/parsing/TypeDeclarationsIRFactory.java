@@ -128,8 +128,7 @@ public class TypeDeclarationsIRFactory {
    * RECORD_TYPE
    *   STRING_KEY myNum
    *     NUMBER_TYPE
-   *   STRING_KEY myObject
-   *     UNKNOWN_TYPE
+   *   STRING myObject
    * </pre>
    * @param properties a map from property name to property type
    * @return a new node representing the record type
@@ -138,9 +137,13 @@ public class TypeDeclarationsIRFactory {
       LinkedHashMap<String, TypeDeclarationNode> properties) {
     TypeDeclarationNode node = new TypeDeclarationNode(Token.RECORD_TYPE);
     for (Map.Entry<String, TypeDeclarationNode> property : properties.entrySet()) {
-      Node stringKey = IR.stringKey(property.getKey());
-      stringKey.addChildToFront(property.getValue());
-      node.addChildToBack(stringKey);
+      if (property.getValue() == null) {
+        node.addChildrenToBack(IR.string(property.getKey()));
+      } else {
+        Node stringKey = IR.stringKey(property.getKey());
+        stringKey.addChildToFront(property.getValue());
+        node.addChildToBack(stringKey);
+      }
     }
     return node;
   }
@@ -269,9 +272,10 @@ public class TypeDeclarationsIRFactory {
         }
       };
 
+  @Nullable
   public static TypeDeclarationNode convert(@Nullable JSTypeExpression typeExpr) {
     if (typeExpr == null) {
-      return anyType();
+      return null;
     }
     return convertTypeNodeAST(typeExpr.getRoot());
   }
@@ -333,7 +337,7 @@ public class TypeDeclarationsIRFactory {
             fieldName = fieldName.substring(1, fieldName.length() - 1);
           }
           TypeDeclarationNode fieldType = isFieldTypeDeclared
-              ? convertTypeNodeAST(field.getLastChild()) : anyType();
+              ? convertTypeNodeAST(field.getLastChild()) : null;
           properties.put(fieldName, fieldType);
         }
         return recordType(properties);

@@ -101,7 +101,7 @@ public class TypeDeclarationsIRFactoryTest extends TestCase {
   public void testConvertRecordType() throws Exception {
     LinkedHashMap<String, TypeDeclarationNode> properties = new LinkedHashMap<>();
     properties.put("myNum", numberType());
-    properties.put("myObject", anyType());
+    properties.put("myObject", null);
 
     assertParseTypeAndConvert("{myNum: number, myObject}")
         .isEqualTo(recordType(properties));
@@ -110,25 +110,23 @@ public class TypeDeclarationsIRFactoryTest extends TestCase {
   public void testCreateRecordType() throws Exception {
     LinkedHashMap<String, TypeDeclarationNode> properties = new LinkedHashMap<>();
     properties.put("myNum", numberType());
-    properties.put("myObject", anyType());
+    properties.put("myObject", null);
     TypeDeclarationNode node = recordType(properties);
 
-    Node key1 = IR.stringKey("myNum");
-    key1.addChildToFront(new TypeDeclarationNode(NUMBER_TYPE));
-    Node key2 = IR.stringKey("myObject");
-    key2.addChildToFront(new TypeDeclarationNode(ANY_TYPE));
+    Node prop1 = IR.stringKey("myNum");
+    prop1.addChildToFront(new TypeDeclarationNode(NUMBER_TYPE));
+    Node prop2 = IR.string("myObject");
 
     assertNode(node)
-        .isEqualTo(new TypeDeclarationNode(RECORD_TYPE, key1, key2));
+        .isEqualTo(new TypeDeclarationNode(RECORD_TYPE, prop1, prop2));
   }
 
   public void testConvertRecordTypeWithTypeApplication() throws Exception {
-    Node key = IR.stringKey("length");
-    key.addChildToFront(anyType());
+    Node prop1 = IR.string("length");
     assertParseTypeAndConvert("Array.<{length}>")
         .isEqualTo(new TypeDeclarationNode(PARAMETERIZED_TYPE,
             namedType("Array"),
-            new TypeDeclarationNode(RECORD_TYPE, key)));
+            new TypeDeclarationNode(RECORD_TYPE, prop1)));
   }
 
   public void testConvertNullableType() throws Exception {

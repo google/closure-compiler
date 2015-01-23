@@ -199,7 +199,6 @@ public class Token {
         PARAMETERIZED_TYPE = 204,
         UNION_TYPE         = 205,
         ANY_TYPE           = 206,
-        UNKNOWN_TYPE       = 207,
         NULL_TYPE          = 208,
         VOID_TYPE          = 209,
         REST_PARAMETER_TYPE = 210,
@@ -333,7 +332,6 @@ public class Token {
           case COLON:           return "COLON";
           case STRING_TYPE:     return "STRING_TYPE";
           case ANY_TYPE:        return "ANY_TYPE";
-          case UNKNOWN_TYPE:    return "UNKNOWN_TYPE";
           case NULL_TYPE:       return "NULL_TYPE";
           case VOID_TYPE:       return "VOID_TYPE";
           case BOOLEAN_TYPE:       return "BOOLEAN_TYPE";
