@@ -186,7 +186,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
       String name = root.getString();
       Scope.Var var = t.getScope().getVar(name);
-      if (var != null && (var.isLocal() || var.isExtern())) {
+      if (var == null || var.isLocal() || var.isExtern()) {
         return;
       }
       newAndImplementsNodes.add(n);
