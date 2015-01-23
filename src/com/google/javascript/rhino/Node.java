@@ -184,6 +184,27 @@ public class Node implements Cloneable, Serializable {
       }
   }
 
+  public static class TypeDeclarationNode extends Node {
+
+    private static final long serialVersionUID = 1L;
+
+    public TypeDeclarationNode(int nodeType) {
+      super(nodeType);
+    }
+
+    public TypeDeclarationNode(int nodeType, Node child) {
+      super(nodeType, child);
+    }
+
+    public TypeDeclarationNode(int nodeType, Node left, Node right) {
+      super(nodeType, left, right);
+    }
+
+    public TypeDeclarationNode(int nodeType, Node left, Node mid, Node right) {
+      super(nodeType, left, mid, right);
+    }
+  }
+
   private static class NumberNode extends Node {
 
     private static final long serialVersionUID = 1L;
@@ -781,7 +802,7 @@ public class Node implements Cloneable, Serializable {
 
   public void replaceChildAfter(Node prevChild, Node newChild) {
     Preconditions.checkArgument(prevChild.parent == this,
-      "prev is not a child of this node.");
+        "prev is not a child of this node.");
 
     Preconditions.checkArgument(newChild.next == null,
         "The new child node has siblings.");
