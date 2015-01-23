@@ -96,8 +96,8 @@ public abstract class SourceMapTestCase extends TestCase {
   protected void checkSourceMap(String fileName, String js, String expectedMap)
       throws IOException {
     RunResult result = compile(js, fileName);
-    assertEquals(expectedMap, result.sourceMapFileContent);
-    assertEquals(result.sourceMapFileContent, getSourceMap(result));
+    assertThat(result.sourceMapFileContent).isEqualTo(expectedMap);
+    assertThat(getSourceMap(result)).isEqualTo(result.sourceMapFileContent);
   }
 
   /**
@@ -233,17 +233,16 @@ public abstract class SourceMapTestCase extends TestCase {
           token.position.getLine() + 1,
           token.position.getColumn() + 1);
 
-      assertNotNull(mapping);
+      assertThat(mapping).isNotNull();
 
       // Find the associated token in the input source.
       Token inputToken = originalTokens.get(token.tokenName);
-      assertNotNull(inputToken);
-      assertEquals(mapping.getOriginalFile(), inputToken.inputName);
+      assertThat(inputToken).isNotNull();
+      assertThat(inputToken.inputName).isEqualTo(mapping.getOriginalFile());
 
       // Ensure that the map correctly points to the token (we add 1
       // to normalize versus the Rhino line number indexing scheme).
-      assertEquals(mapping.getLineNumber(),
-                   inputToken.position.getLine() + 1);
+      assertThat(inputToken.position.getLine() + 1).isEqualTo(mapping.getLineNumber());
 
       int start = inputToken.position.getColumn() + 1;
       if (inputToken.tokenName.startsWith("STR")) {
@@ -252,7 +251,7 @@ public abstract class SourceMapTestCase extends TestCase {
       }
 
       if (validateColumns) {
-        assertEquals(start, mapping.getColumnPosition());
+        assertThat(mapping.getColumnPosition()).isEqualTo(start);
       }
 
       // Ensure that if the token name does not being with an 'STR' (meaning a
@@ -263,8 +262,7 @@ public abstract class SourceMapTestCase extends TestCase {
 
       // Ensure that if the mapping has a name, it matches the token.
       if (!mapping.getIdentifier().isEmpty()) {
-        assertEquals(mapping.getIdentifier(),
-            "__" + inputToken.tokenName + "__");
+        assertThat("__" + inputToken.tokenName + "__").isEqualTo(mapping.getIdentifier());
       }
     }
   }

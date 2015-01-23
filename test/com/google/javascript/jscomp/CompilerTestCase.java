@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -1083,7 +1085,7 @@ public abstract class CompilerTestCase extends TestCase  {
       JSError[] stErrors = symbolTableErrorManager.getErrors();
       if (expectedSymbolTableError != null) {
         assertEquals("There should be one error.", 1, stErrors.length);
-        assertEquals(expectedSymbolTableError, stErrors[0].getType());
+        assertThat(stErrors[0].getType()).isEqualTo(expectedSymbolTableError);
       } else {
         assertEquals("Unexpected symbol table error(s): " +
             Joiner.on("\n").join(stErrors),
@@ -1100,7 +1102,7 @@ public abstract class CompilerTestCase extends TestCase  {
         for (int i = 0; i < numRepetitions; ++i) {
           JSError[] warnings = errorManagers[i].getWarnings();
           JSError actual = warnings[0];
-          assertEquals(warning, actual.getType());
+          assertThat(actual.getType()).isEqualTo(warning);
 
           // Make sure that source information is always provided.
           if (!allowSourcelessWarnings) {
@@ -1113,7 +1115,7 @@ public abstract class CompilerTestCase extends TestCase  {
           }
 
           if (description != null) {
-            assertEquals(description, actual.description);
+            assertThat(actual.description).isEqualTo(description);
           }
         }
       }
@@ -1171,8 +1173,7 @@ public abstract class CompilerTestCase extends TestCase  {
               throw new RuntimeException("failed to get source code", e);
             }
           }
-          assertEquals(
-              Joiner.on("").join(expectedSources), compiler.toSource(mainRoot));
+          assertThat(compiler.toSource(mainRoot)).isEqualTo(Joiner.on("").join(expectedSources));
         }
       }
 
@@ -1282,7 +1283,7 @@ public abstract class CompilerTestCase extends TestCase  {
         ImmutableList.of(SourceFile.fromCode("input", input)),
         options);
     compiler.parseInputs();
-    assertFalse(compiler.hasErrors());
+    assertThat(compiler.hasErrors()).isFalse();
 
     Node externsAndJs = compiler.getRoot();
     Node root = externsAndJs.getLastChild();
@@ -1290,7 +1291,7 @@ public abstract class CompilerTestCase extends TestCase  {
     Node externs = externsAndJs.getFirstChild();
 
     Node expected = compiler.parseTestCode(expectedExtern);
-    assertFalse(compiler.hasErrors());
+    assertThat(compiler.hasErrors()).isFalse();
 
     (getProcessor(compiler)).process(externs, root);
 
@@ -1309,7 +1310,7 @@ public abstract class CompilerTestCase extends TestCase  {
     } else {
       String externsCode = compiler.toSource(externs);
       String expectedCode = compiler.toSource(expected);
-      assertEquals(expectedCode, externsCode);
+      assertThat(externsCode).isEqualTo(expectedCode);
     }
   }
 
