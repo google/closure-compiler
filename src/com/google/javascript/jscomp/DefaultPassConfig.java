@@ -249,17 +249,6 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(closureRewriteClass);
     }
 
-    if (options.nameAnonymousFunctionsOnly) {
-      if (options.anonymousFunctionNaming ==
-          AnonymousFunctionNamingPolicy.MAPPED) {
-        checks.add(nameMappedAnonymousFunctions);
-      } else if (options.anonymousFunctionNaming ==
-          AnonymousFunctionNamingPolicy.UNMAPPED) {
-        checks.add(nameUnmappedAnonymousFunctions);
-      }
-      return checks;
-    }
-
     if (options.jqueryPass) {
       checks.add(jqueryAliases);
     }

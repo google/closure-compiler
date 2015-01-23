@@ -754,12 +754,6 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
-    if (options.nameAnonymousFunctionsOnly) {
-      // TODO(nicksantos): Move this into an instrument() phase maybe?
-      check();
-      return;
-    }
-
     if (!options.skipAllPasses) {
       check();
       if (hasErrors()) {
@@ -850,11 +844,6 @@ public class Compiler extends AbstractCompiler {
     phaseOptimizer.consume(getPassConfig().getChecks());
     phaseOptimizer.process(externsRoot, jsRoot);
     if (hasErrors()) {
-      return;
-    }
-
-    // TODO(nicksantos): clean this up. The flow here is too hard to follow.
-    if (options.nameAnonymousFunctionsOnly) {
       return;
     }
 

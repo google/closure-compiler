@@ -143,11 +143,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   boolean skipAllPasses;
 
   /**
-   * If true, name anonymous functions only. All others passes will be skipped.
-   */
-  boolean nameAnonymousFunctionsOnly;
-
-  /**
    * Configures the compiler to run expensive sanity checks after
    * every pass. Only intended for internal development.
    */
@@ -950,7 +945,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Checks
     transpileOnly = false;
     skipAllPasses = false;
-    nameAnonymousFunctionsOnly = false;
     devMode = DevMode.OFF;
     checkDeterminism = false;
     checkSymbols = false;
@@ -1437,13 +1431,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setRemoveClosureAsserts(boolean remove) {
     this.removeClosureAsserts = remove;
-  }
-
-  /**
-   * If true, name anonymous functions only. All other passes will be skipped.
-   */
-  public void setNameAnonymousFunctionsOnly(boolean value) {
-    this.nameAnonymousFunctionsOnly = value;
   }
 
   public void setColorizeErrorOutput(boolean colorizeErrorOutput) {
