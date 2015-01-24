@@ -186,6 +186,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
   private void visitExport(NodeTraversal t, Node n, Node parent) {
     if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
       Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), n.removeFirstChild());
+      var.setJSDocInfo(n.getJSDocInfo());
+      n.setJSDocInfo(null);
       n.getParent().replaceChild(n, var);
       exportMap.put("default", DEFAULT_EXPORT_NAME);
     } else if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) {
@@ -227,7 +229,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
             break;
           }
           // Break out on "B" in "class A extends B"
-          if (n.getFirstChild().isClass() && i > 0) {
+          if (declaration.isClass() && i > 0) {
             break;
           }
           String name = maybeName.getString();
@@ -244,7 +246,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
             types.add(name);
           }
         }
-        parent.replaceChild(n, n.removeFirstChild());
+        declaration.setJSDocInfo(n.getJSDocInfo());
+        n.setJSDocInfo(null);
+        parent.replaceChild(n, declaration.detachFromParent());
       }
       compiler.reportCodeChange();
     }

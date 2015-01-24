@@ -125,6 +125,35 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
             "module$testcode.bar = b$$module$testcode;"));
   }
 
+  public void testExportWithJsDoc() {
+    test("/** @constructor */ export function F() { return '';}",
+        Joiner.on('\n').join(
+            "goog.provide('module$testcode');",
+            "goog.provide('module$testcode.F');",
+            "/** @constructor */",
+            "function F$$module$testcode() { return ''; }",
+            "var module$testcode = {};",
+            "module$testcode.F = F$$module$testcode"));
+
+    test("/** @return {string} */ export function f() { return '';}",
+        Joiner.on('\n').join(
+            "goog.provide('module$testcode');",
+            "goog.provide('module$testcode.f');",
+            "/** @return {string} */",
+            "function f$$module$testcode() { return ''; }",
+            "var module$testcode = {};",
+            "module$testcode.f = f$$module$testcode"));
+
+    test("/** @return {string} */ export var f = function() { return '';}",
+        Joiner.on('\n').join(
+            "goog.provide('module$testcode');",
+            "goog.provide('module$testcode.f');",
+            "/** @return {string} */",
+            "var f$$module$testcode = function() { return ''; }",
+            "var module$testcode = {};",
+            "module$testcode.f = f$$module$testcode"));
+  }
+
   public void testImportAndExport() {
     test(Joiner.on('\n').join(
         "import {name as n} from 'other';",

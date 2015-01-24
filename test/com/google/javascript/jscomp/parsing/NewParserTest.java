@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assert_;
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_FUNCTION_ANNOTATION;
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_TYPE_ANNOTATION;
+import static com.google.javascript.jscomp.testing.NodeSubject.NODE;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -707,6 +709,19 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
     parse("/** @param {string} x */ const f = function() {};");
     parse("/** @param {string} x */ let f = function() {};");
+  }
+
+  // Tests that JSDoc gets attached to export nodes, and there are no warnings.
+  // See https://github.com/google/closure-compiler/issues/781
+  public void testJSDocAttachment22() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    Node n = parse("/** @param {string} x */ export function f(x) {};");
+    Node export = n.getFirstChild();
+
+    assert_().about(NODE).that(export).hasType(Token.EXPORT);
+    assertThat(export.getJSDocInfo()).isNotNull();
+    assertThat(export.getJSDocInfo().hasParameter("x")).isTrue();
   }
 
   public void testInlineJSDocAttachment1() {
