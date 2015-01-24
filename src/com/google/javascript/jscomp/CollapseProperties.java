@@ -110,7 +110,7 @@ class CollapseProperties implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     GlobalNamespace namespace;
-    namespace = new GlobalNamespace(compiler, root);
+    namespace = new GlobalNamespace(compiler, externs, root);
 
     if (inlineAliases) {
       inlineAliases(namespace);
@@ -161,8 +161,8 @@ class CollapseProperties implements CompilerPass {
         continue;
       }
 
-      if (!name.inExterns && name.globalSets == 1 && name.localSets == 0 &&
-          name.aliasingGets > 0) {
+      if (!name.inExterns && name.globalSets == 1 && name.localSets == 0
+          && name.aliasingGets > 0) {
         // {@code name} meets condition (b). Find all of its local aliases
         // and try to inline them.
         List<Ref> refs = Lists.newArrayList(name.getRefs());
@@ -402,12 +402,14 @@ class CollapseProperties implements CompilerPass {
           } else if (
               ref.type == Ref.Type.SET_FROM_GLOBAL
               || ref.type == Ref.Type.SET_FROM_LOCAL) {
-            if (initialized && !isSafeNamespaceReinit(ref)) {
+            if (initialized && !isSafeNamespaceReinit(ref)
+                && !ref.name.inExterns) {
               warnAboutNamespaceRedefinition(name, ref);
             }
 
             initialized = true;
-          } else if (ref.type == Ref.Type.ALIASING_GET) {
+          } else if (ref.type == Ref.Type.ALIASING_GET
+              && (!ref.name.extendsExterns && !ref.name.inExterns)) {
             warnAboutNamespaceAliasing(name, ref);
           }
         }
@@ -675,12 +677,12 @@ class CollapseProperties implements CompilerPass {
         collapseDeclarationOfNameAndDescendants(
             p, appendPropForAlias(alias, p.getBaseName()));
 
-        if (!p.inExterns && canCollapseChildNames &&
-            p.getDeclaration() != null &&
-            p.canCollapse() &&
-            p.getDeclaration().node != null &&
-            p.getDeclaration().node.getParent() != null &&
-            p.getDeclaration().node.getParent().isAssign()) {
+        if (!p.inExterns && canCollapseChildNames
+            && p.getDeclaration() != null
+            && p.canCollapse()
+            && p.getDeclaration().node != null
+            && p.getDeclaration().node.getParent() != null
+            && p.getDeclaration().node.getParent().isAssign()) {
           updateSimpleDeclaration(
               appendPropForAlias(alias, p.getBaseName()), p, p.getDeclaration());
         }
@@ -748,8 +750,8 @@ class CollapseProperties implements CompilerPass {
 
       Node current = gramps;
       Node currentParent = gramps.getParent();
-      for (; !currentParent.isScript() &&
-             !currentParent.isBlock();
+      for (; !currentParent.isScript()
+           && !currentParent.isBlock();
            current = currentParent,
            currentParent = currentParent.getParent()) {}
 

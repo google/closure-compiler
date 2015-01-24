@@ -29,6 +29,8 @@ public class CollapsePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "var window;\n" +
+      "var externNs = {};\n" +
+      "externNs.subNs = {};\n" +
       "function alert(s) {}\n" +
       "function parseInt(s) {}\n" +
       "/** @constructor */ function String() {};\n" +
@@ -1081,6 +1083,19 @@ public class CollapsePropertiesTest extends CompilerTestCase {
          "var x$x = 10; function f() {var y=x$x; x$x++; alert(y)}");
     test("var x = {}; x.x = 10; function f() {var y=x.x; x.x+=1; alert(y)}",
          "var x$x = 10; function f() {var y=x$x; x$x+=1; alert(y)}");
+  }
+
+  public void testNoCollapseExtendExternNamespace() {
+    testSame("externNs.foo = {};\n" +
+             "externNs.subNs.foo = {};\n");
+  }
+
+  public void testExternNamespaceExtendedRedefinition() {
+    testSame("var externNs = externNs || {}; externsNs.foo = {};");
+  }
+
+  public void testExternNamespaceRedefinition() {
+    testSame("var externNs = {}; externsNs.foo = {};");
   }
 
   public void testDoNotCollapsePropertyOnExternType() {

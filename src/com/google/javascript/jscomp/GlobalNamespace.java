@@ -865,9 +865,11 @@ class GlobalNamespace
         if (i >= 0) {
           String parentName = name.substring(0, i);
           Name parent = getOrCreateName(parentName);
-          node = parent.addProperty(name.substring(i + 1), inExterns);
+          boolean extendsExterns = parent.extendsExterns || parent.inExterns;
+          node = parent.addProperty(name.substring(i + 1), inExterns,
+              extendsExterns);
         } else {
-          node = new Name(name, null, inExterns);
+          node = new Name(name, null, inExterns, false);
           globalNames.add(node);
         }
         nameMap.put(name, node);
@@ -913,21 +915,23 @@ class GlobalNamespace
     int callGets = 0;
     int deleteProps = 0;
     final boolean inExterns;
+    final boolean extendsExterns;
 
     JSDocInfo docInfo = null;
 
-    Name(String name, Name parent, boolean inExterns) {
+    Name(String name, Name parent, boolean inExterns, boolean extendsExterns) {
       this.baseName = name;
       this.parent = parent;
       this.type = Type.OTHER;
       this.inExterns = inExterns;
+      this.extendsExterns = extendsExterns;
     }
 
-    Name addProperty(String name, boolean inExterns) {
+    Name addProperty(String name, boolean inExterns, boolean extendsExterns) {
       if (props == null) {
         props = new ArrayList<>();
       }
-      Name node = new Name(name, this, inExterns);
+      Name node = new Name(name, this, inExterns, extendsExterns);
       props.add(node);
       return node;
     }
@@ -1073,10 +1077,11 @@ class GlobalNamespace
     }
 
     boolean canCollapse() {
-      return !inExterns && !isGetOrSetDefinition() && (declaredType ||
-          (parent == null || parent.canCollapseUnannotatedChildNames()) &&
-          (globalSets > 0 || localSets > 0) &&
-          deleteProps == 0);
+      return !inExterns && !extendsExterns
+          && !isGetOrSetDefinition() && (declaredType
+          || (parent == null || parent.canCollapseUnannotatedChildNames())
+          && (globalSets > 0 || localSets > 0)
+          && deleteProps == 0);
     }
 
     boolean isGetOrSetDefinition() {
