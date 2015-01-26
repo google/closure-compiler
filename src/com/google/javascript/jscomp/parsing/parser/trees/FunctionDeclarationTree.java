@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
+import com.google.javascript.jscomp.parsing.parser.Token;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 import javax.annotation.Nullable;
@@ -30,7 +30,7 @@ public class FunctionDeclarationTree extends ParseTree {
     ARROW
   }
 
-  public final IdentifierToken name;
+  public final Token name;
   public final FormalParameterListTree formalParameterList;
   @Nullable public final ParseTree returnType;
   public final ParseTree functionBody;
@@ -38,7 +38,7 @@ public class FunctionDeclarationTree extends ParseTree {
   public final boolean isGenerator;
   public final Kind kind;
 
-  public FunctionDeclarationTree(SourceRange location, IdentifierToken name,
+  public FunctionDeclarationTree(SourceRange location, Token name,
       boolean isStatic, boolean isGenerator, Kind kind,
       FormalParameterListTree formalParameterList, @Nullable ParseTree returnType,
       ParseTree functionBody) {

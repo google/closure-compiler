@@ -456,11 +456,10 @@ public class Parser {
       isStatic = true;
     }
     boolean isGenerator = eatOpt(TokenType.STAR) != null;
-    TokenType type = peekType();
-    if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
-      IdentifierToken name = eatIdOrKeywordAsId();
+    if (peekPropertyName(0)) {
+      Token propertyName = eatObjectLiteralPropertyName();
       return parseFunctionTail(
-          start, name, isStatic, isGenerator,
+          start, propertyName, isStatic, isGenerator,
           FunctionDeclarationTree.Kind.MEMBER);
     } else {
       ParseTree name = parseComputedPropertyName();
@@ -472,7 +471,7 @@ public class Parser {
   }
 
   private ParseTree parseFunctionTail(
-      SourcePosition start, IdentifierToken name,
+      SourcePosition start, Token name,
       boolean isStatic, boolean isGenerator,
       FunctionDeclarationTree.Kind kind) {
 

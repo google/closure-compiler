@@ -1302,6 +1302,20 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  f: function() { alert(1); },",
         "  x: x",
         "};"));
+
+    test(Joiner.on('\n').join(
+        "var obj = {",
+        "  if() { alert(1); },",
+        "  0() { alert(2); },",
+        "  'abc'() { alert(3); },",
+        "  \"while\"() { alert(4); },",
+        "};"), Joiner.on('\n').join(
+        "var obj = {",
+        "  if: function() { alert(1); },",
+        "  0: function() { alert(2); },",
+        "  \"abc\": function() { alert(3); },",
+        "  \"while\": function() { alert(4); },",
+        "};"));
   }
 
   public void testComputedPropertiesWithMethod() {
