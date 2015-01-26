@@ -16,16 +16,14 @@
 
 package com.google.javascript.jscomp.parsing;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.TestErrorManager;
-import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
 public class TypeSyntaxTest extends BaseJSTypeTestCase {
@@ -48,8 +46,9 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
 
   public void testVariableDeclaration() {
     Node varDecl = parse("var foo: string = 'hello';").getFirstChild();
-    assertTypeEquals(STRING_TYPE, varDecl.getFirstChild().getJSTypeExpression());
-  }
+    String treeDelta = TypeDeclarationsIRFactory.stringType()
+        .checkTreeEquals(varDecl.getFirstChild().getDeclaredTypeExpression());
+    assertNull(treeDelta);  }
 
   public void testVariableDeclaration_errorIncomplete() {
     expectErrors("Parse error. 'identifier' expected");
@@ -64,14 +63,18 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
 
   public void testFunctionParamDeclaration() {
     Node fn = parse("function foo(x: string) {\n}").getFirstChild();
-    JSTypeExpression paramType = fn.getFirstChild().getNext().getFirstChild().getJSTypeExpression();
-    assertTypeEquals(STRING_TYPE, paramType);
+    TypeDeclarationNode paramType =
+        fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
+    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(paramType);
+    assertNull(treeDelta);
   }
 
   public void testFunctionParamDeclaration_defaultValue() {
     Node fn = parse("function foo(x: string = 'hello') {\n}").getFirstChild();
-    JSTypeExpression paramType = fn.getFirstChild().getNext().getFirstChild().getJSTypeExpression();
-    assertTypeEquals(STRING_TYPE, paramType);
+    TypeDeclarationNode paramType =
+        fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
+    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(paramType);
+    assertNull(treeDelta);
   }
 
   public void testFunctionParamDeclaration_destructuringArray() {
@@ -94,21 +97,24 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
 
   public void testFunctionParamDeclaration_arrow() {
     Node fn = parse("(x: string) => 'hello' + x;").getFirstChild().getFirstChild();
-    JSTypeExpression paramType = fn.getFirstChild().getNext().getFirstChild().getJSTypeExpression();
-    assertTypeEquals(STRING_TYPE, paramType);
+    TypeDeclarationNode paramType =
+        fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
+    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(paramType);
+    assertNull(treeDelta);
   }
 
   public void testFunctionReturn() {
     Node fn = parse("function foo(): string {\n  return'hello';\n}").getFirstChild();
-    JSTypeExpression returnType = fn.getJSTypeExpression();
-    assertTypeEquals(STRING_TYPE, returnType);
+    TypeDeclarationNode returnType = fn.getDeclaredTypeExpression();
+    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(returnType);
+    assertNull(treeDelta);
   }
 
   public void testFunctionReturn_arrow() {
     Node fn = parse("(): string => 'hello';").getFirstChild().getFirstChild();
-    JSTypeExpression returnType = fn.getJSTypeExpression();
-    assertTypeEquals(STRING_TYPE, returnType);
-  }
+    TypeDeclarationNode returnType = fn.getDeclaredTypeExpression();
+    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(returnType);
+    assertNull(treeDelta);  }
 
   public void testFunctionReturn_typeInDocAndSyntax() throws Exception {
     expectErrors("Parse error. Bad type syntax - "
@@ -151,7 +157,7 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
           .setTypeRegistry(compiler.getTypeRegistry())
           .build()  // does the actual printing.
           .trim();
-      assertThat(actual).isEqualTo(expected);
+      assertEquals(expected, actual);
     }
 
     return script;

@@ -1027,6 +1027,33 @@ class CodeGenerator {
         add("`");
         break;
 
+      // Type Declaration ASTs.
+      case Token.STRING_TYPE:
+        add("string");
+        break;
+      case Token.BOOLEAN_TYPE:
+        add("boolean");
+        break;
+      case Token.NUMBER_TYPE:
+        add("number");
+        break;
+      case Token.ANY_TYPE:
+        add("any");
+        break;
+      case Token.NULL_TYPE:
+        add("string");
+        break;
+      case Token.VOID_TYPE:
+        add("void");
+        break;
+      case Token.UNDEFINED_TYPE:
+        add("undefined");
+        break;
+      case Token.NAMED_TYPE:
+        // Children are a chain of getprop nodes.
+        add(first);
+        break;
+
       default:
         throw new RuntimeException(
             "Unknown type " + Token.name(type) + "\n" + n.toStringTree());
@@ -1036,10 +1063,9 @@ class CodeGenerator {
   }
 
   private void maybeAddTypeDecl(Node n) {
-    if (languageMode == LanguageMode.ECMASCRIPT6_TYPED
-        && n.getJSTypeExpression() != null) {
+    if (n.getDeclaredTypeExpression() != null) {
       add(": ");
-      add(n.getJSTypeExpression().getRoot());
+      add(n.getDeclaredTypeExpression());
     }
   }
 

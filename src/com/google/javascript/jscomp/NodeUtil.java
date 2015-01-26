@@ -3546,6 +3546,7 @@ public final class NodeUtil {
   }
 
   /** Find the best JSDoc for the given node. */
+  @Nullable
   public static JSDocInfo getBestJSDocInfo(Node n) {
     JSDocInfo info = n.getJSDocInfo();
     if (info == null) {
@@ -3561,7 +3562,8 @@ public final class NodeUtil {
       } else if (isObjectLitKey(parent)) {
         return parent.getJSDocInfo();
       } else if (parent.isFunction()) {
-        return parent.getJSDocInfo();
+        // FUNCTION may be inside ASSIGN
+        return getBestJSDocInfo(parent);
       } else if (parent.isVar() && parent.hasOneChild()) {
         return parent.getJSDocInfo();
       } else if ((parent.isHook() && parent.getFirstChild() != n) ||

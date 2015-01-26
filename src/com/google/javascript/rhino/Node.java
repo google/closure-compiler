@@ -127,8 +127,9 @@ public class Node implements Cloneable, Serializable {
                                   // GlobalTypeInfo and NewTypeInference.
                                   // We use this to tag getprop nodes that
                                   // declare properties.
-      JS_TYPE_EXPRESSION = 77;    // Holds JsTypeExpression objects representing type syntax
-                                  // annotations on nodes.
+      DECLARED_TYPE_EXPR = 77;    // Used to attach TypeDeclarationNode ASTs to
+                                  // Nodes which represent a typed NAME or
+                                  // FUNCTION.
 
 
   public static final int   // flags for INCRDECR_PROP
@@ -178,12 +179,15 @@ public class Node implements Cloneable, Serializable {
         case COMPUTED_PROP_SETTER: return "computed_prop_setter";
         case ANALYZED_DURING_GTI:  return "analyzed_during_gti";
         case CONSTANT_PROPERTY_DEF: return "constant_property_def";
-        case JS_TYPE_EXPRESSION: return "js_type_expression";
+        case DECLARED_TYPE_EXPR: return "declared_type_expr";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
   }
 
+  /**
+   * Represents a node in the type declaration AST.
+   */
   public static class TypeDeclarationNode extends Node {
 
     private static final long serialVersionUID = 1L;
@@ -924,16 +928,20 @@ public class Node implements Cloneable, Serializable {
     }
   }
 
-  public void setJsTypeExpression(JSTypeExpression typeExpression) {
-    putProp(JS_TYPE_EXPRESSION, typeExpression);
+  /**
+   * TODO(alexeagle): this should take a TypeDeclarationNode
+   * @param typeExpression
+   */
+  public void setDeclaredTypeExpression(Node typeExpression) {
+    putProp(DECLARED_TYPE_EXPR, typeExpression);
   }
 
   /**
    * Returns the syntactical type specified on this node. Not to be confused
    * with {@link #getJSType()} which returns the compiler-inferred type.
    */
-  public JSTypeExpression getJSTypeExpression() {
-    return (JSTypeExpression) getProp(JS_TYPE_EXPRESSION);
+  public TypeDeclarationNode getDeclaredTypeExpression() {
+    return (TypeDeclarationNode) getProp(DECLARED_TYPE_EXPR);
   }
 
   PropListItem createProp(int propType, Object value, PropListItem next) {
@@ -1632,6 +1640,14 @@ public class Node implements Cloneable, Serializable {
       return false;
     }
 
+    if (this.getDeclaredTypeExpression() != null || node.getDeclaredTypeExpression() != null) {
+      if (this.getDeclaredTypeExpression() == null || node.getDeclaredTypeExpression() == null
+          || !this.getDeclaredTypeExpression()
+          .isEquivalentTo(node.getDeclaredTypeExpression(), compareType, recurse, jsDoc)) {
+        return false;
+      }
+    }
+
     if (type == Token.INC || type == Token.DEC) {
       int post1 = this.getIntProp(INCRDECR_PROP);
       int post2 = node.getIntProp(INCRDECR_PROP);
@@ -2025,7 +2041,7 @@ public class Node implements Cloneable, Serializable {
 
   /**
    * Returns the compiled inferred type on this node. Not to be confused
-   * with {@link #getJSTypeExpression()} which returns the syntactically
+   * with {@link #getDeclaredTypeExpression()} which returns the syntactically
    * specified type.
    */
   public JSType getJSType() {
@@ -2086,8 +2102,8 @@ public class Node implements Cloneable, Serializable {
    * Sets the {@link JSDocInfo} attached to this node.
    */
   public Node setJSDocInfo(JSDocInfo info) {
-      putProp(JSDOC_INFO_PROP, info);
-      return this;
+    putProp(JSDOC_INFO_PROP, info);
+    return this;
   }
 
   /** This node was last changed at {@code time} */

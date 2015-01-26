@@ -408,6 +408,10 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(printNameReferenceReport);
     }
 
+    if (options.getLanguageOut() == LanguageMode.ECMASCRIPT6_TYPED) {
+      checks.add(es6TypeDeclarations);
+    }
+
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
@@ -1143,6 +1147,13 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new Es6ToEs3ClassSideInheritance(compiler);
+    }
+  };
+
+  final PassFactory es6TypeDeclarations = new PassFactory("Es6TypeDeclarations", true) {
+    @Override
+    CompilerPass create(AbstractCompiler compiler) {
+      return new Es6TypeDeclarations(compiler);
     }
   };
 
