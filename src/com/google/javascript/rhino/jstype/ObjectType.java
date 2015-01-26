@@ -48,6 +48,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 
 import java.util.Set;
 
@@ -79,7 +80,9 @@ import java.util.Set;
  * declared or inferred.
  *
  */
-public abstract class ObjectType extends JSType implements StaticScope<JSType> {
+public abstract class ObjectType
+    extends JSType
+    implements ObjectTypeI, StaticScope<JSType> {
   private boolean visited;
   private JSDocInfo docInfo = null;
   private boolean unknown = true;

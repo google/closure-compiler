@@ -61,6 +61,9 @@ import javax.annotation.Nullable;
 class InferJSDocInfo extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
+  // NOTE(dimvar): This class is only used by the old type system.
+  // Do not convert it to use TypeI.
+
   private final AbstractCompiler compiler;
 
   InferJSDocInfo(AbstractCompiler compiler) {

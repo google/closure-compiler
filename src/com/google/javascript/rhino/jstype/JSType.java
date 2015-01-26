@@ -540,8 +540,8 @@ public abstract class JSType implements TypeI, Serializable {
   /**
    * Checks if two types are equivalent.
    */
-  public final boolean isEquivalentTo(JSType that) {
-    return checkEquivalenceHelper(that, EquivalenceMethod.IDENTITY);
+  public final boolean isEquivalentTo(TypeI that) {
+    return checkEquivalenceHelper((JSType) that, EquivalenceMethod.IDENTITY);
   }
 
   /**
@@ -1467,5 +1467,10 @@ public abstract class JSType implements TypeI, Serializable {
   @Override
   public boolean isBottom() {
     return isNoType() || isNoResolvedType() || isNoObjectType();
+  }
+
+  @Override
+  public ObjectType toMaybeObjectType() {
+    return toObjectType();
   }
 }

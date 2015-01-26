@@ -50,6 +50,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.Collections;
 import java.util.List;
@@ -1171,6 +1172,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * for constructor functions, and may be null. This allows a downward
    * traversal of the subtype graph.
    */
+  @Override
   public List<FunctionType> getSubTypes() {
     return subTypes;
   }
@@ -1304,5 +1306,27 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return getTemplateTypeMap().numUnfilledTemplateKeys() > 0
         || typeOfThis.hasAnyTemplateTypes()
         || call.hasAnyTemplateTypes();
+  }
+
+  @Override
+  public TypeI convertMethodToFunction() {
+    List<JSType> paramTypes = Lists.newArrayList();
+    paramTypes.add(getTypeOfThis());
+    for (Node param : getParameters()) {
+      paramTypes.add(param.getJSType());
+    }
+    return registry.createFunctionType(
+        registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE),
+        getReturnType(),
+        paramTypes);
+
+  }
+
+  @Override
+  public boolean hasProperties() {
+    if (prototypeSlot != null) {
+      return true;
+    }
+    return !super.getOwnPropertyNames().isEmpty();
   }
 }

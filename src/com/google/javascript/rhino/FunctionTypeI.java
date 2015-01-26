@@ -39,12 +39,32 @@
 
 package com.google.javascript.rhino;
 
+import java.util.List;
+
 /**
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public interface FunctionTypeI extends TypeI {
+  /**
+   * Creates a new function type B based on the original function type A.
+   * Takes the receiver type (this type) of A and makes it the first
+   * argument of B; B has no receiver type.
+   * Used by the DevirtualizePrototypeMethods pass.
+   */
+  TypeI convertMethodToFunction();
+
+  ObjectTypeI getInstanceType();
+
+  String getReferenceName();
+
   Node getSource();
+
+  List<? extends FunctionTypeI> getSubTypes();
+
+  TypeI getTypeOfThis();
+
+  boolean hasProperties();
 
   void setSource(Node n);
 }

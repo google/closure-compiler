@@ -43,25 +43,6 @@ package com.google.javascript.rhino;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public interface TypeI {
-
-  boolean isBottom();
-
-  boolean isConstructor();
-
-  boolean isEquivalentTo(TypeI type);
-
-  boolean isFunctionType();
-
-  boolean isInterface();
-
-  boolean isSubtypeOf(TypeI type);
-
-  boolean isUnknownType();
-
-  TypeI restrictByNotNullOrUndefined();
-
-  FunctionTypeI toMaybeFunctionType();
-
-  ObjectTypeI toMaybeObjectType();
+public interface ObjectTypeI extends TypeI {
+  FunctionTypeI getConstructor();
 }
