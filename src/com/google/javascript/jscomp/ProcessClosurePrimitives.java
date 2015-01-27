@@ -988,7 +988,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     if (!NodeUtil.isValidQualifiedName(compiler.getLanguageMode(), arg.getString())) {
       compiler.report(t.makeError(arg, INVALID_PROVIDE_ERROR,
           arg.getString(), compiler.getLanguageMode().toString()));
+      // We need to allow some invalid names through (such as foo.default, which shows
+      // up when compiling ES6 modules), but not empty strings as those may cause crashes
+      // in IDE mode (b/19147314)
+      // TODO(tbreisacher): Stop allowing this after
+      // https://github.com/google/closure-compiler/issues/795 is fixed.
+      return !arg.getString().isEmpty();
     }
+
     return true;
   }
 
