@@ -17,10 +17,9 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assert_;
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_FUNCTION_ANNOTATION;
 import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_TYPE_ANNOTATION;
-import static com.google.javascript.jscomp.testing.NodeSubject.NODE;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -719,7 +718,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
     Node n = parse("/** @param {string} x */ export function f(x) {};");
     Node export = n.getFirstChild();
 
-    assert_().about(NODE).that(export).hasType(Token.EXPORT);
+    assertNode(export).hasType(Token.EXPORT);
     assertThat(export.getJSDocInfo()).isNotNull();
     assertThat(export.getJSDocInfo().hasParameter("x")).isTrue();
   }
