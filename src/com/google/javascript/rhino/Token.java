@@ -206,6 +206,7 @@ public class Token {
         OPTIONAL_PARAMETER = 212,
         RECORD_TYPE        = 213,
         UNDEFINED_TYPE     = 214,
+        ARRAY_TYPE         = 215,
 
         // JSDoc-only tokens
         ANNOTATION     = 300,
@@ -337,6 +338,7 @@ public class Token {
           case BOOLEAN_TYPE:       return "BOOLEAN_TYPE";
           case NUMBER_TYPE:        return "NUMBER_TYPE";
           case PARAMETERIZED_TYPE: return "PARAMETERIZED_TYPE";
+          case ARRAY_TYPE:         return "ARRAY_TYPE";
           case UNION_TYPE:         return "UNION_TYPE";
           case FUNCTION_TYPE:      return "FUNCTION_TYPE";
           case REST_PARAMETER_TYPE: return "REST_PARAMETER_TYPE";

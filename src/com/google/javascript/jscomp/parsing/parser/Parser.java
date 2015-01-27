@@ -689,8 +689,45 @@ public class Parser {
   private ParseTree parseTypeAnnotation() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.COLON);
-    IdentifierToken token = eatIdOrKeywordAsId();
-    return new IdentifierExpressionTree(getTreeLocation(start), token);
+
+    if (peekId() || peek(TokenType.VOID)) {
+      // PredefinedType or TypeReference
+      ParseTree typeReference = parseTypeReference();
+
+      if (!peekImplicitSemiColon() && peek(TokenType.OPEN_SQUARE)) {
+        // ArrayType
+        eat(TokenType.OPEN_SQUARE);
+        eat(TokenType.CLOSE_SQUARE);
+        typeReference =
+            new ArrayTypeTree(getTreeLocation(typeReference.location.start), typeReference);
+      }
+      return typeReference;
+    }
+    reportError("Unexpected token '%s' in type expression", peekType());
+    return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
+  }
+
+  private ParseTree parseTypeReference() {
+    return parseTypeName();
+    // TODO(martinprobst): TypeArguments.
+  }
+
+  private ParseTree parseTypeName() {
+    SourcePosition start = getTreeStartLocation();
+    IdentifierToken token = eatIdOrKeywordAsId();  // for 'void'.
+
+    ImmutableList.Builder<String> identifiers = ImmutableList.builder();
+    identifiers.add(token != null ? token.value : "");  // null if errors while parsing
+    while (peek(TokenType.PERIOD)) {
+      // ModuleName . Identifier
+      eat(TokenType.PERIOD);
+      token = eatId();
+      if (token == null) {
+        break;
+      }
+      identifiers.add(token.value);
+    }
+    return new TypeNameTree(getTreeLocation(start), identifiers.build());
   }
 
   private BlockTree parseFunctionBody() {

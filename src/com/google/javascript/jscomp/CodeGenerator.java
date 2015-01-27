@@ -1053,6 +1053,10 @@ class CodeGenerator {
         // Children are a chain of getprop nodes.
         add(first);
         break;
+      case Token.ARRAY_TYPE:
+        add(first);
+        add("[]");
+        break;
 
       default:
         throw new RuntimeException(

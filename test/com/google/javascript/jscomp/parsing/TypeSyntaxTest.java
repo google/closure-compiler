@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -24,9 +25,10 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.TestErrorManager;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
-import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
-public class TypeSyntaxTest extends BaseJSTypeTestCase {
+import junit.framework.TestCase;
+
+public class TypeSyntaxTest extends TestCase {
 
   private TestErrorManager testErrorManager;
 
@@ -45,13 +47,29 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
   }
 
   public void testVariableDeclaration() {
-    Node varDecl = parse("var foo: string = 'hello';").getFirstChild();
-    String treeDelta = TypeDeclarationsIRFactory.stringType()
-        .checkTreeEquals(varDecl.getFirstChild().getDeclaredTypeExpression());
-    assertNull(treeDelta);  }
+    assertVarType("any", TypeDeclarationsIRFactory.anyType(),
+        "var foo: any = 'hello';");
+    assertVarType("number", TypeDeclarationsIRFactory.numberType(),
+        "var foo: number = 'hello';");
+    assertVarType("boolean", TypeDeclarationsIRFactory.booleanType(),
+        "var foo: boolean = 'hello';");
+    assertVarType("string", TypeDeclarationsIRFactory.stringType(),
+        "var foo: string = 'hello';");
+    assertVarType("void", TypeDeclarationsIRFactory.voidType(),
+        "var foo: void = 'hello';");
+    assertVarType("named type", TypeDeclarationsIRFactory.namedType("hello"),
+        "var foo: hello = 'hello';");
+  }
+
+  public void testVariableDeclaration_keyword() {
+    expectErrors("Parse error. Unexpected token 'catch' in type expression");
+    parse("var foo: catch;");
+    expectErrors("Parse error. Unexpected token 'implements' in type expression");
+    parse("var foo: implements;"); // strict mode keyword
+  }
 
   public void testVariableDeclaration_errorIncomplete() {
-    expectErrors("Parse error. 'identifier' expected");
+    expectErrors("Parse error. Unexpected token '=' in type expression");
     parse("var foo: = 'hello';");
   }
 
@@ -63,18 +81,14 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
 
   public void testFunctionParamDeclaration() {
     Node fn = parse("function foo(x: string) {\n}").getFirstChild();
-    TypeDeclarationNode paramType =
-        fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
-    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(paramType);
-    assertNull(treeDelta);
+    Node paramType = fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
+    assertTreeEquals("string type", TypeDeclarationsIRFactory.stringType(), paramType);
   }
 
   public void testFunctionParamDeclaration_defaultValue() {
     Node fn = parse("function foo(x: string = 'hello') {\n}").getFirstChild();
-    TypeDeclarationNode paramType =
-        fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
-    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(paramType);
-    assertNull(treeDelta);
+    Node paramType = fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
+    assertTreeEquals("string type", TypeDeclarationsIRFactory.stringType(), paramType);
   }
 
   public void testFunctionParamDeclaration_destructuringArray() {
@@ -97,24 +111,21 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
 
   public void testFunctionParamDeclaration_arrow() {
     Node fn = parse("(x: string) => 'hello' + x;").getFirstChild().getFirstChild();
-    TypeDeclarationNode paramType =
-        fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
-    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(paramType);
-    assertNull(treeDelta);
+    Node paramType = fn.getFirstChild().getNext().getFirstChild().getDeclaredTypeExpression();
+    assertTreeEquals("string type", TypeDeclarationsIRFactory.stringType(), paramType);
   }
 
   public void testFunctionReturn() {
     Node fn = parse("function foo(): string {\n  return'hello';\n}").getFirstChild();
-    TypeDeclarationNode returnType = fn.getDeclaredTypeExpression();
-    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(returnType);
-    assertNull(treeDelta);
+    Node fnType = fn.getDeclaredTypeExpression();
+    assertTreeEquals("string type", TypeDeclarationsIRFactory.stringType(), fnType);
   }
 
   public void testFunctionReturn_arrow() {
     Node fn = parse("(): string => 'hello';").getFirstChild().getFirstChild();
-    TypeDeclarationNode returnType = fn.getDeclaredTypeExpression();
-    String treeDelta = TypeDeclarationsIRFactory.stringType().checkTreeEquals(returnType);
-    assertNull(treeDelta);  }
+    Node fnType = fn.getDeclaredTypeExpression();
+    assertTreeEquals("string type", TypeDeclarationsIRFactory.stringType(), fnType);
+  }
 
   public void testFunctionReturn_typeInDocAndSyntax() throws Exception {
     expectErrors("Parse error. Bad type syntax - "
@@ -125,6 +136,47 @@ public class TypeSyntaxTest extends BaseJSTypeTestCase {
   public void testFunctionReturn_typeInJsdocOnly() throws Exception {
     parse("function /** string */ foo() { return 'hello'; }",
         "function/** string */foo() {\n  return'hello';\n}");
+  }
+
+  public void testCompositeType() {
+    Node varDecl = parse("var foo: mymod.ns.Type;").getFirstChild();
+    Node type = varDecl.getFirstChild().getDeclaredTypeExpression();
+    TypeDeclarationNode expected =
+        TypeDeclarationsIRFactory.namedType(ImmutableList.of("mymod", "ns", "Type"));
+    assertTreeEquals("mymod.ns.Type", expected, type);
+  }
+
+  public void testCompositeType_trailingDot() {
+    expectErrors("Parse error. 'identifier' expected");
+    parse("var foo: mymod.Type.;");
+  }
+
+  public void testArrayType() {
+    TypeDeclarationNode arrayOfString =
+        TypeDeclarationsIRFactory.arrayType(TypeDeclarationsIRFactory.stringType());
+    assertVarType("string[]", arrayOfString, "var foo: string[];");
+  }
+
+  public void testArrayType_missingClose() {
+    expectErrors("Parse error. ']' expected");
+    parse("var foo: string[;");
+  }
+
+  public void testArrayType_qualifiedType() {
+    TypeDeclarationNode arrayOfString =
+        TypeDeclarationsIRFactory.arrayType(TypeDeclarationsIRFactory.namedType("mymod.ns.Type"));
+    assertVarType("string[]", arrayOfString, "var foo: mymod.ns.Type[];");
+  }
+
+  private void assertVarType(String message, Node expectedType, String source) {
+    Node varDecl = parse(source, source).getFirstChild();
+    Node varType = varDecl.getFirstChild().getDeclaredTypeExpression();
+    assertTreeEquals(message, expectedType, varType);
+  }
+
+  private void assertTreeEquals(String message, Node expected, Node actual) {
+    String treeDiff = expected.checkTreeEquals(actual);
+    assertNull(message + ": " + treeDiff, treeDiff);
   }
 
   private Node parse(String source) {
