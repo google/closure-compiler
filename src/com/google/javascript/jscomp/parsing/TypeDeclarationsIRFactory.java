@@ -42,6 +42,8 @@ import javax.annotation.Nullable;
  *
  * This is an alternative to the AST found in the root property of JSTypeExpression, which
  * is a crufty AST that reuses language tokens.
+ *
+ * @author alexeagle@google.com (Alex Eagle)
  */
 public class TypeDeclarationsIRFactory {
 
@@ -138,7 +140,7 @@ public class TypeDeclarationsIRFactory {
     TypeDeclarationNode node = new TypeDeclarationNode(Token.RECORD_TYPE);
     for (Map.Entry<String, TypeDeclarationNode> property : properties.entrySet()) {
       if (property.getValue() == null) {
-        node.addChildrenToBack(IR.string(property.getKey()));
+        node.addChildToBack(IR.string(property.getKey()));
       } else {
         Node stringKey = IR.stringKey(property.getKey());
         stringKey.addChildToFront(property.getValue());
@@ -292,13 +294,10 @@ public class TypeDeclarationsIRFactory {
     int token = n.getType();
     switch (token) {
       case Token.STAR:
-        return unionType(
-            namedType("Object"), numberType(), stringType(),
-            booleanType(), nullType(), undefinedType());
-      case Token.VOID:
-        return undefinedType();
       case Token.EMPTY: // for function types that don't declare a return type
         return anyType();
+      case Token.VOID:
+        return undefinedType();
       case Token.BANG:
         // TODO(alexeagle): capture nullability constraints once we know how to express them
         return convertTypeNodeAST(n.getFirstChild());
@@ -358,7 +357,7 @@ public class TypeDeclarationsIRFactory {
             // TODO(alexeagle): keep the constructor signatures on the tree, and emit them following
             // the syntax in TypeScript 1.4 spec, section 3.7.8 Constructor Type Literals
           } else if (child2.isThis()) {
-            // Not expressable in TypeScript syntax, so we omit them from the tree.
+            // Not expressible in TypeScript syntax, so we omit them from the tree.
             // They could be added as properties on the result node.
           } else {
             returnType = convertTypeNodeAST(child2);
