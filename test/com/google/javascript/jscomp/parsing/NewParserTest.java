@@ -2164,6 +2164,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
     parse("try {} catch (/** @type {Error} */ e) {}");
   }
 
+  public void testValidTypeAnnotation4() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("/** @type {number} */ export var x = 3;");
+  }
+
   public void testParsingAssociativity() {
     assertNodeEquality(parse("x * y * z"), parse("(x * y) * z"));
     assertNodeEquality(parse("x + y + z"), parse("(x + y) + z"));

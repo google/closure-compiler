@@ -534,14 +534,12 @@ class NewIRFactory {
     if (info != null && info.hasType()) {
       boolean valid = false;
       switch (n.getType()) {
-        // Casts are valid
+        // Casts, variable declarations, and exports are valid.
         case Token.CAST:
-          valid = true;
-          break;
-        // Variable declarations are valid
         case Token.VAR:
         case Token.LET:
         case Token.CONST:
+        case Token.EXPORT:
           valid = true;
           break;
         // Function declarations are valid

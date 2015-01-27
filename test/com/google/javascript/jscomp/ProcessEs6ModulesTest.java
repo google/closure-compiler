@@ -152,6 +152,15 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
             "var f$$module$testcode = function() { return ''; }",
             "var module$testcode = {};",
             "module$testcode.f = f$$module$testcode"));
+
+    test("/** @type {number} */ export var x = 3",
+        Joiner.on('\n').join(
+            "goog.provide('module$testcode');",
+            "goog.provide('module$testcode.x');",
+            "/** @type {number} */",
+            "var x$$module$testcode = 3;",
+            "var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode"));
   }
 
   public void testImportAndExport() {
