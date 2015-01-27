@@ -1947,6 +1947,10 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.renamePrefix = renamePrefix;
   }
 
+  public String getRenamePrefixNamespace() {
+    return this.renamePrefixNamespace;
+  }
+
   public void setRenamePrefixNamespace(String renamePrefixNamespace) {
     this.renamePrefixNamespace = renamePrefixNamespace;
   }
@@ -2131,6 +2135,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setLineBreak(boolean lineBreak) {
     this.lineBreak = lineBreak;
+  }
+
+  public boolean getPreferLineBreakAtEndOfFile() {
+    return this.preferLineBreakAtEndOfFile;
   }
 
   public void setPreferLineBreakAtEndOfFile(boolean lineBreakAtEnd) {
