@@ -165,7 +165,8 @@ public class IR {
     } else {
       Preconditions.checkState(lhs.isArrayPattern() || lhs.isObjectPattern());
     }
-    Preconditions.checkState(mayBeExpression(value));
+    Preconditions.checkState(mayBeExpression(value),
+        "%s can't be an expression", value);
 
     lhs.addChildToBack(value);
     return new Node(type, lhs);
@@ -631,7 +632,8 @@ public class IR {
   private static boolean mayBeExpression(Node n) {
     switch (n.getType()) {
       case Token.FUNCTION:
-        // FUNCTION is used both in expression and statement
+      case Token.CLASS:
+        // FUNCTION and CLASS are used both in expression and statement
         // contexts.
         return true;
 

@@ -368,7 +368,7 @@ public class AstValidator implements CompilerPass {
       validateString(n.getChildAtIndex(1));
     } else if (n.getBooleanProp(Node.EXPORT_DEFAULT)) { // export default foo = 2
       validateChildCount(n, 1);
-      validateAssignmentTarget(n.getFirstChild());
+      validateExpression(n.getFirstChild());
     } else {
       validateMinimumChildCount(n, 1);
       validateMaximumChildCount(n, 2);

@@ -199,6 +199,24 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "module$testcode.d = module$other.d;"));
   }
 
+  public void testExportDefault() {
+    test("/** @fileoverview */ export default 'someString';", Joiner.on('\n').join(
+        "/** @fileoverview\n@suppress {invalidProvide} */",
+        "goog.provide('module$testcode');",
+        "goog.provide('module$testcode.default');",
+        "var $jscompDefaultExport$$module$testcode = 'someString';",
+        "var module$testcode={};",
+        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+
+    test("/** @fileoverview */ export default class Foo {}", Joiner.on('\n').join(
+        "/** @fileoverview\n@suppress {invalidProvide} */",
+        "goog.provide('module$testcode');",
+        "goog.provide('module$testcode.default');",
+        "var $jscompDefaultExport$$module$testcode = class Foo{};",
+        "var module$testcode = {};",
+        "module$testcode.default = $jscompDefaultExport$$module$testcode"));
+  }
+
   public void testExtendImportedClass() {
     test(Joiner.on('\n').join(
         "import {Parent} from 'parent';",

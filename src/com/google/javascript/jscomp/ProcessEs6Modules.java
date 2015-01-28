@@ -186,6 +186,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
   private void visitExport(NodeTraversal t, Node n, Node parent) {
     if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
       Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), n.removeFirstChild());
+      var.useSourceInfoIfMissingFromForTree(n);
       var.setJSDocInfo(n.getJSDocInfo());
       n.setJSDocInfo(null);
       n.getParent().replaceChild(n, var);

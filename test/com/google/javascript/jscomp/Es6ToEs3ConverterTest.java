@@ -531,9 +531,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testMultiNameClass() {
-    test("var F = class G {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("var F = class G {}",
+        "/** @constructor @struct */ var F = function() {};");
 
-    test("F = class G {}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("F = class G {}",
+        "/** @constructor @struct */ F = function() {};");
   }
 
   public void testClassNested() {
