@@ -1057,8 +1057,7 @@ public class CommandLineRunner extends
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
           .setAngularPass(flags.angularPass)
           .setTracerMode(flags.tracerMode)
-          .setNewTypeInference(flags.useNewTypeInference)
-          .setRenamePrefixNamespace(flags.renamePrefixNamespace);
+          .setNewTypeInference(flags.useNewTypeInference);
     }
     errorStream = null;
   }
