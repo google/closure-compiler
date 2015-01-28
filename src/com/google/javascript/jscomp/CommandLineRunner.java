@@ -564,6 +564,12 @@ public class CommandLineRunner extends
         usage = "A list of JS Conformance configurations in text protocol buffer format.")
     private List<String> conformanceConfigs = new ArrayList<>();
 
+    @Option(name = "--allow_es6_to_es6",
+        hidden = true,
+        usage = "Experimental: Allows ES6 to ES6 compilation. "
+        + "Enabling this flag may cause the compiler to crash.")
+    private boolean allowEs6ToEs6 = false;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
 
@@ -1103,6 +1109,8 @@ public class CommandLineRunner extends
     options.angularPass = flags.angularPass;
 
     options.renamePrefixNamespace = flags.renamePrefixNamespace;
+
+    options.allowEs6ToEs6 = flags.allowEs6ToEs6;
 
     if (!flags.translationsFile.isEmpty()) {
       try {

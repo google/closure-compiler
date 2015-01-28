@@ -69,6 +69,11 @@ public class CompilerOptions implements Serializable, Cloneable {
   private LanguageMode languageOut;
 
   /**
+   * If true, allows experimental ES6 to ES6 compilation.
+   */
+  boolean allowEs6ToEs6;
+
+  /**
    * If true, transpile ES6 to ES3 only. All others passes will be skipped.
    */
   boolean transpileOnly;
