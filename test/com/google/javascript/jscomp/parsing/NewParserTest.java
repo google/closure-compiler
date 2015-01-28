@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_FUNCTION_ANNOTATION;
-import static com.google.javascript.jscomp.parsing.NewIRFactory.MISPLACED_TYPE_ANNOTATION;
+import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_FUNCTION_ANNOTATION;
+import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_TYPE_ANNOTATION;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -37,7 +37,7 @@ import java.util.List;
 
 public class NewParserTest extends BaseJSTypeTestCase {
   private static final String SUSPICIOUS_COMMENT_WARNING =
-      NewIRFactory.SUSPICIOUS_COMMENT_WARNING;
+      IRFactory.SUSPICIOUS_COMMENT_WARNING;
 
   private static final String TRAILING_COMMA_MESSAGE =
       "Trailing comma is not legal in an ECMA-262 object initializer";
@@ -1468,7 +1468,7 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testGettersForbidden1() {
     parseError("var x = {get foo() { return 3; }};",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testGettersForbidden2() {
@@ -1488,17 +1488,17 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testGettersForbidden5() {
     parseError("var x = {a: 2, get foo() { return 3; }};",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testGettersForbidden6() {
     parseError("var x = {get 'foo'() { return 3; }};",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
   }
 
   public void testSettersForbidden() {
     parseError("var x = {set foo(a) { y = 3; }};",
-        NewIRFactory.SETTER_ERROR_MESSAGE);
+        IRFactory.SETTER_ERROR_MESSAGE);
   }
 
   public void testSettersForbidden2() {
@@ -1786,11 +1786,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testGetter() {
     mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {get 1(){}};",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 'a'(){}};",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get a(){}};",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var x = {get 1(){}};");
     parse("var x = {get 'a'(){}};");
@@ -1801,11 +1801,11 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testSetter() {
     mode = LanguageMode.ECMASCRIPT3;
     parseError("var x = {set 1(x){}};",
-        NewIRFactory.SETTER_ERROR_MESSAGE);
+        IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 'a'(x){}};",
-        NewIRFactory.SETTER_ERROR_MESSAGE);
+        IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set a(x){}};",
-        NewIRFactory.SETTER_ERROR_MESSAGE);
+        IRFactory.SETTER_ERROR_MESSAGE);
     mode = LanguageMode.ECMASCRIPT5;
     parse("var x = {set 1(x){}};");
     parse("var x = {set 'a'(x){}};");
@@ -1896,31 +1896,31 @@ public class NewParserTest extends BaseJSTypeTestCase {
   public void testKeywordsAsProperties() {
     mode = LanguageMode.ECMASCRIPT3;
 
-    parseWarning("var x = {function: 1};", NewIRFactory.INVALID_ES3_PROP_NAME);
-    parseWarning("x.function;", NewIRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x.function;", IRFactory.INVALID_ES3_PROP_NAME);
     parseError("var x = {get x(){} };",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get function(){} };", NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get function(){} };", IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 'function'(){} };",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get 1(){} };",
-        NewIRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {set function(a){} };", NewIRFactory.SETTER_ERROR_MESSAGE);
+        IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {set function(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 'function'(a){} };",
-        NewIRFactory.SETTER_ERROR_MESSAGE);
+        IRFactory.SETTER_ERROR_MESSAGE);
     parseError("var x = {set 1(a){} };",
-        NewIRFactory.SETTER_ERROR_MESSAGE);
-    parseWarning("var x = {class: 1};", NewIRFactory.INVALID_ES3_PROP_NAME);
+        IRFactory.SETTER_ERROR_MESSAGE);
+    parseWarning("var x = {class: 1};", IRFactory.INVALID_ES3_PROP_NAME);
     parse("var x = {'class': 1};");
-    parseWarning("x.class;", NewIRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x.class;", IRFactory.INVALID_ES3_PROP_NAME);
     parse("x['class'];");
     parse("var x = {let: 1};");  // 'let' is not reserved in ES3
     parse("x.let;");
     parse("var x = {yield: 1};"); // 'yield' is not reserved in ES3
     parse("x.yield;");
     parseWarning("x.prototype.catch = function() {};",
-        NewIRFactory.INVALID_ES3_PROP_NAME);
-    parseWarning("x().catch();", NewIRFactory.INVALID_ES3_PROP_NAME);
+        IRFactory.INVALID_ES3_PROP_NAME);
+    parseWarning("x().catch();", IRFactory.INVALID_ES3_PROP_NAME);
 
     mode = LanguageMode.ECMASCRIPT5;
 

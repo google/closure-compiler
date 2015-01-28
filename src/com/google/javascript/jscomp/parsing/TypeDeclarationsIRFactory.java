@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 /**
  * Produces ASTs which represent JavaScript type declarations, both those created from
  * closure-style type declarations in a JSDoc node (via a conversion from the rhino AST
- * produced in {@link com.google.javascript.jscomp.parsing.NewIRFactory}) as well as
+ * produced in {@link com.google.javascript.jscomp.parsing.IRFactory}) as well as
  * those created from TypeScript-style inline type declarations.
  *
  * This is an alternative to the AST found in the root property of JSTypeExpression, which

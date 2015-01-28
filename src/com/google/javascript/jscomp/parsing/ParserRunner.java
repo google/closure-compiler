@@ -103,7 +103,7 @@ public class ParserRunner {
     Node root = null;
     List<Comment> comments = ImmutableList.of();
     if (tree != null && (!es6ErrorReporter.hadError() || config.isIdeMode)) {
-      root = NewIRFactory.transformTree(
+      root = IRFactory.transformTree(
           tree, sourceFile, sourceString, config, errorReporter);
       root.setIsSyntheticBlock(true);
 
