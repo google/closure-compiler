@@ -111,25 +111,6 @@ public class CheckRequiresForConstructorsTest extends CompilerTestCase {
     testSame(js);
   }
 
-  public void testFailWithExtends() {
-    String[] js = new String[] {
-      "var goog = {};\n"
-      + "goog.provide('example.Foo');\n"
-      + "/** @constructor */ example.Foo = function() {};",
-
-      "/** @constructor @extends {example.Foo} */ var Ctor = function() {};"
-    };
-    String warning = "'example.Foo' used but not goog.require'd";
-    test(js, js, null, MISSING_REQUIRE_WARNING, warning);
-  }
-
-  public void testPassWithExtends() {
-    String js = "goog.require('example.Foo');"
-      + "/** @constructor @extends {example.Foo} */"
-      + "var Ctor = function() {};";
-    testSame(js);
-  }
-
   public void testPassWithLocalFunctions() {
     String js =
         "/** @constructor */ function tempCtor() {}; var foo = new tempCtor();";
