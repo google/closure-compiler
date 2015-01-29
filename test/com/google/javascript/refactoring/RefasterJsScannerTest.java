@@ -183,8 +183,7 @@ public class RefasterJsScannerTest {
         + "obj.bar();\n"
         + "obj.baz();\n"
         + postamble;
-    // TODO(mknichel): Correctly handle removing newlines in the multiline case.
-    String expectedCode = preamble + "\n\n" + postamble;
+    String expectedCode = preamble + "\n" + postamble;
     String template = ""
         + "/**\n"
         + " * @param {FooType} foo\n"

@@ -101,6 +101,19 @@ public final class SuggestedFix {
     }
 
     /**
+     * Inserts a new node as the first child of the provided node.
+     */
+    public Builder addChildToFront(Node parentNode, String content) {
+      Preconditions.checkState(parentNode.isBlock(),
+          "addChildToFront is only supported for BLOCK statements.");
+      int startPosition = parentNode.getSourceOffset() + 1;
+      replacements.put(
+          parentNode.getSourceFileName(),
+          new CodeReplacement(startPosition, 0, "\n" + content));
+      return this;
+    }
+
+    /**
      * Inserts a new node before the provided node.
      */
     public Builder insertBefore(Node nodeToInsertBefore, Node n, AbstractCompiler compiler) {
@@ -130,9 +143,24 @@ public final class SuggestedFix {
     }
 
     /**
-     * Deletes a node and its contents from the source file.
+     * Deletes a node and its contents from the source file. If the node is a child of a
+     * block or top level statement, this will also delete the whitespace before the node.
      */
     public Builder delete(Node n) {
+      return delete(n, true);
+    }
+
+    /**
+     * Deletes a node and its contents from the source file.
+     */
+    public Builder deleteWithoutRemovingSurroundWhitespace(Node n) {
+      return delete(n, false);
+    }
+
+    /**
+     * Deletes a node and its contents from the source file.
+     */
+    private Builder delete(Node n, boolean deleteSurroundingWhitespace) {
       int startPosition = n.getSourceOffset();
       int length = n.getLength();
       // TODO(mknichel): This case is not covered by NodeUtil.getBestJSDocInfo
@@ -168,6 +196,20 @@ public final class SuggestedFix {
             startPosition -= startPositionDiff;
             length += startPositionDiff;
           }
+        }
+      }
+      Node parent = n.getParent();
+      if (deleteSurroundingWhitespace
+          && parent != null
+          && (parent.isScript() || parent.isBlock())) {
+        Node previousSibling = parent.getChildBefore(n);
+        // TODO(mknichel): There appears to be a bug in goog.define rewriting that sets the
+        // length of the rewritten node to 0.
+        if (previousSibling != null && previousSibling.getLength() > 0) {
+          int previousSiblingEndPosition =
+              previousSibling.getSourceOffset() + previousSibling.getLength();
+          length += (startPosition - previousSiblingEndPosition);
+          startPosition = previousSiblingEndPosition;
         }
       }
       replacements.put(n.getSourceFileName(), new CodeReplacement(startPosition, length, ""));
@@ -444,7 +486,7 @@ public final class SuggestedFix {
     public Builder removeGoogRequire(Match m, String namespace) {
       Node googRequireNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
       if (googRequireNode != null) {
-        return delete(googRequireNode);
+        return deleteWithoutRemovingSurroundWhitespace(googRequireNode);
       }
       return this;
     }

@@ -71,6 +71,34 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testDelete_spaceBeforeNode() {
+    String before = "var foo = new Bar();";
+    String after = "\n\nvar baz = new Baz();";
+    String input = before + after;
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .delete(root.getLastChild())
+        .build();
+    CodeReplacement replacement = new CodeReplacement(before.length(), after.length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testDelete_dontDeleteSpaceBeforeNode() {
+    String before = "var foo = new Bar();\n\n";
+    String after = "var baz = new Baz();";
+    String input = before + after;
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .deleteWithoutRemovingSurroundWhitespace(root.getLastChild())
+        .build();
+    CodeReplacement replacement = new CodeReplacement(before.length(), after.length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testDelete_multipleVarDeclaration() {
     String input = "var foo = 3, bar, baz;";
     Compiler compiler = getCompiler(input);
