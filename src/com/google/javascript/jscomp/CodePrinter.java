@@ -333,14 +333,12 @@ public final class CodePrinter {
 
     @Override
     void appendOp(String op, boolean binOp) {
-      if (binOp) {
-        if (getLastChar() != ' ' && op.charAt(0) != ',') {
-          append(" ");
-        }
-        append(op);
+      if (getLastChar() != ' ' && binOp && op.charAt(0) != ',') {
         append(" ");
-      } else {
-        append(op);
+      }
+      append(op);
+      if (binOp) {
+        append(" ");
       }
     }
 

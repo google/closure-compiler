@@ -188,6 +188,7 @@ class CodeGenerator {
       case Token.THROW:
         Preconditions.checkState(childCount == 1);
         add("throw");
+        cc.maybeInsertSpace();
         add(first);
 
         // Must have a ';' after a throw statement, otherwise safari can't
@@ -198,6 +199,7 @@ class CodeGenerator {
       case Token.RETURN:
         add("return");
         if (childCount == 1) {
+          cc.maybeInsertSpace();
           add(first);
         } else {
           Preconditions.checkState(childCount == 0);
@@ -813,6 +815,7 @@ class CodeGenerator {
       case Token.YIELD:
         Preconditions.checkState(childCount == 1);
         add("yield");
+        cc.maybeInsertSpace();
         if (n.isYieldFor()) {
           add("*");
         }
