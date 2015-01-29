@@ -409,7 +409,7 @@ public class DefaultPassConfig extends PassConfig {
     }
 
     if (options.getLanguageOut() == LanguageMode.ECMASCRIPT6_TYPED) {
-      checks.add(es6TypeDeclarations);
+      checks.add(convertToTypedES6);
     }
 
     checks.add(createEmptyPass("afterStandardChecks"));
@@ -1150,10 +1150,11 @@ public class DefaultPassConfig extends PassConfig {
     }
   };
 
-  final PassFactory es6TypeDeclarations = new PassFactory("Es6TypeDeclarations", true) {
+  final PassFactory convertToTypedES6 =
+      new PassFactory("ConvertToTypedES6", true) {
     @Override
     CompilerPass create(AbstractCompiler compiler) {
-      return new Es6TypeDeclarations(compiler);
+      return new ConvertToTypedES6(compiler);
     }
   };
 

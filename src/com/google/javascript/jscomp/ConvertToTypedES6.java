@@ -25,26 +25,25 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * Copies type declarations from the JSDoc (possibly of a parent node)
- * to a property on a node which represents a typed language element.
+ * Converts JS with types in jsdocs to an extended JS syntax that includes types.
+ * (Still keeps the jsdocs intact.)
+ *
+ * @author alexeagle@google.com (Alex Eagle)
+ *
  * TODO(alexeagle): handle inline-style JSDoc annotations as well.
  */
-public class Es6TypeDeclarations extends AbstractPostOrderCallback implements HotSwapCompilerPass {
+public class ConvertToTypedES6
+    extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  public Es6TypeDeclarations(AbstractCompiler compiler) {
+  public ConvertToTypedES6(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    hotSwapScript(root, null);
-  }
-
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -69,7 +68,8 @@ public class Es6TypeDeclarations extends AbstractPostOrderCallback implements Ho
           n.setDeclaredTypeExpression(convert(parentJSDoc.getType()));
           compiler.reportCodeChange();
         } else if (parent.isParamList()) {
-          JSTypeExpression parameterType = parentJSDoc.getParameterType(n.getString());
+          JSTypeExpression parameterType =
+              parentJSDoc.getParameterType(n.getString());
           if (parameterType != null) {
             n.setDeclaredTypeExpression(convert(parameterType));
             compiler.reportCodeChange();

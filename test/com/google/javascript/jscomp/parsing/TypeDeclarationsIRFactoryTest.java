@@ -50,6 +50,12 @@ import junit.framework.TestCase;
 
 import java.util.LinkedHashMap;
 
+/**
+ * Tests the conversion of type ASTs from the awkward format inside a
+ * jstypeexpression to the better format of native type declarations.
+ *
+ * @author alexeagle@google.com (Alex Eagle)
+ */
 public class TypeDeclarationsIRFactoryTest extends TestCase {
 
   public void testConvertSimpleTypes() {

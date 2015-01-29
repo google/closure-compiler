@@ -26,7 +26,10 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-public class Es6TypeDeclarationsTest extends TestCase {
+/**
+ * @author alexeagle@google.com (Alex Eagle)
+ */
+public class ConvertToTypedES6Test extends TestCase {
 
   private Compiler compiler;
 
@@ -55,11 +58,13 @@ public class Es6TypeDeclarationsTest extends TestCase {
   public Node compile(String js) {
     SourceFile input = SourceFile.fromCode("js", js);
     CompilerOptions options = new CompilerOptions();
-    options.setRenamingPolicy(VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
-    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(input), options);
+    options.setRenamingPolicy(
+        VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    compiler.init(
+        ImmutableList.<SourceFile>of(), ImmutableList.of(input), options);
     compiler.parseInputs();
 
-    CompilerPass pass = new Es6TypeDeclarations(compiler);
+    CompilerPass pass = new ConvertToTypedES6(compiler);
     pass.process(
         compiler.getRoot().getFirstChild(),
         compiler.getRoot().getLastChild());
@@ -71,16 +76,20 @@ public class Es6TypeDeclarationsTest extends TestCase {
       TypeDeclarationNode expectedType) {
     FindNode visitor = new FindNode(identifier);
     NodeTraversal.traverse(compiler, root, visitor);
-    assertNotNull("Did not find a node named " + identifier + " in " + root.toStringTree(),
+    assertNotNull("Did not find a node named " + identifier
+        + " in " + root.toStringTree(),
         visitor.foundNode);
-    TypeDeclarationNode actualType = visitor.foundNode.getDeclaredTypeExpression();
-    assertNotNull(identifier + " missing DECLARED_TYPE_EXPR in " + root.toStringTree(),
+    TypeDeclarationNode actualType =
+        visitor.foundNode.getDeclaredTypeExpression();
+    assertNotNull(
+        identifier + " missing DECLARED_TYPE_EXPR in " + root.toStringTree(),
         actualType);
-    assertTrue(visitor.foundNode + " is of type " + actualType
-        + " not of type " + expectedType, expectedType.isEquivalentTo(actualType));
+    assertTrue(visitor.foundNode + " is of type " + actualType + " not of type "
+        + expectedType, expectedType.isEquivalentTo(actualType));
   }
 
-  private static class FindNode extends NodeTraversal.AbstractPostOrderCallback {
+  private static class FindNode
+      extends NodeTraversal.AbstractPostOrderCallback {
     final String name;
     Node foundNode;
 
@@ -90,8 +99,10 @@ public class Es6TypeDeclarationsTest extends TestCase {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      // Return type is attached to FUNCTION node, but the qualifiedName is on the child NAME node.
-      if (parent != null && parent.isFunction() && n.matchesQualifiedName(name)) {
+      // Return type is attached to FUNCTION node, but the qualifiedName is on
+      // the child NAME node.
+      if (parent != null && parent.isFunction()
+          && n.matchesQualifiedName(name)) {
         foundNode = parent;
       } else if (n.matchesQualifiedName(name)) {
         foundNode = n;
