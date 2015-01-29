@@ -25,9 +25,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -99,7 +99,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   private class CheckRequiresForConstructorsCallback implements Callback {
     private final Set<String> constructors = new HashSet<>();
     private final Set<String> requires = new HashSet<>();
-    private final List<Node> newAndImplementsNodes = new ArrayList<>();
+    private final Map<String, Node> usages = new HashMap<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -118,7 +118,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
           if (NodeUtil.isStatement(n)) {
             maybeAddConstructor(t, n);
           }
-          maybeAddImplements(t, n);
+          maybeAddJsDocUsages(t, n);
           break;
         case Token.CALL:
           visitCallNode(n, parent);
@@ -133,13 +133,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
     private void visitScriptNode(NodeTraversal t) {
       Set<String> classNames = new HashSet<>();
-      for (Node node : newAndImplementsNodes) {
-        String className;
-        if (node.isNew()) {
-          className = node.getFirstChild().getQualifiedName();
-        } else {
-          className = node.getString();
-        }
+      for (Map.Entry<String, Node> entry : usages.entrySet()) {
+        String className = entry.getKey();
+        Node node = entry.getValue();
+
         String outermostClassName = getOutermostClassName(className);
         // The parent namespace is also checked as part of the requires so that classes
         // used by goog.module are still checked properly. This may cause missing requires
@@ -168,7 +165,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
       // for the next script, if there is one, we don't want the new, ctor, and
       // require nodes to spill over.
-      this.newAndImplementsNodes.clear();
+      this.usages.clear();
       this.requires.clear();
       this.constructors.clear();
     }
@@ -202,7 +199,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       if (var != null && (var.isLocal() || var.isExtern())) {
         return;
       }
-      newAndImplementsNodes.add(n);
+      usages.put(n.getFirstChild().getQualifiedName(), n);
     }
 
     private void maybeAddConstructor(NodeTraversal t, Node n) {
@@ -223,24 +220,31 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
     }
 
-    private void maybeAddImplements(NodeTraversal t, Node n) {
+    private void maybeAddJsDocUsages(NodeTraversal t, Node n) {
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
       if (info != null) {
         for (JSTypeExpression expr : info.getImplementedInterfaces()) {
-          Node implementsNode = expr.getRoot();
-          Preconditions.checkState(implementsNode.getType() == Token.BANG);
-          Node child = implementsNode.getFirstChild();
-          Preconditions.checkState(child.isString());
-
-          String rootName = Splitter.on('.').split(child.getString()).iterator().next();
-          Scope.Var var = t.getScope().getVar(rootName);
-          if (var != null && var.isExtern()) {
-            return;
-          }
-
-          newAndImplementsNodes.add(child);
+          maybeAddJsDocUsage(t, n, expr);
+        }
+        if (info.getBaseType() != null) {
+          maybeAddJsDocUsage(t, n, info.getBaseType());
         }
       }
+    }
+
+    private void maybeAddJsDocUsage(NodeTraversal t, Node n, JSTypeExpression expr) {
+      Node typeNode = expr.getRoot();
+      Preconditions.checkState(typeNode.getType() == Token.BANG);
+      Node child = typeNode.getFirstChild();
+      Preconditions.checkState(child.isString());
+
+      String rootName = Splitter.on('.').split(child.getString()).iterator().next();
+      Scope.Var var = t.getScope().getVar(rootName);
+      if (var != null && var.isExtern()) {
+        return;
+      }
+
+      usages.put(child.getString(), n);
     }
   }
 }
