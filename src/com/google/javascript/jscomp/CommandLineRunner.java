@@ -507,6 +507,12 @@ public class CommandLineRunner extends
         + "ECMASCRIPT6_TYPED (experimental)")
     private String languageOut = "";
 
+    @Option(name = "--allow_es6_to_es6",
+        hidden = true,
+        usage = "Experimental: Allows ES6 to ES6 compilation. "
+        + "Enabling this flag may cause the compiler to crash.")
+    private boolean allowEs6ToEs6 = false;
+
     @Option(name = "--version",
         hidden = true,
         handler = BooleanOptionHandler.class,
@@ -1072,6 +1078,7 @@ public class CommandLineRunner extends
       options.setCodingConvention(new ClosureCodingConvention());
     }
 
+    options.setAllowEs6ToEs6(flags.allowEs6ToEs6);
     options.setExtraAnnotationNames(flags.extraAnnotationName);
 
     CompilationLevel level = flags.compilationLevelParsed;

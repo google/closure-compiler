@@ -69,6 +69,21 @@ public class CompilerOptions implements Serializable, Cloneable {
   private LanguageMode languageOut;
 
   /**
+   * Allows ES6 to ES6 compilation.
+   */
+  private boolean allowEs6ToEs6;
+
+  /** */
+  public void setAllowEs6ToEs6(boolean value) {
+    allowEs6ToEs6 = value;
+  }
+
+  /** */
+  public boolean getAllowEs6ToEs6() {
+    return allowEs6ToEs6;
+  }
+
+  /**
    * If true, transpile ES6 to ES3 only. All others passes will be skipped.
    */
   boolean transpileOnly;
@@ -937,6 +952,9 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT3;
     languageOut = LanguageMode.NO_TRANSPILE;
+
+    // Experimental
+    allowEs6ToEs6 = false;
 
     // Language variation
     acceptConstKeyword = false;
