@@ -141,13 +141,26 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
           className = node.getString();
         }
         String outermostClassName = getOutermostClassName(className);
+        // The parent namespace is also checked as part of the requires so that classes
+        // used by goog.module are still checked properly. This may cause missing requires
+        // to be missed but in practice that should happen rarely.
+        String nonNullClassName = outermostClassName != null ? outermostClassName : className;
+        String parentNamespace = null;
+        int separatorIndex = nonNullClassName.lastIndexOf('.');
+        if (separatorIndex > 0) {
+          parentNamespace = nonNullClassName.substring(0, separatorIndex);
+        }
         boolean notProvidedByConstructors =
-            (constructors == null || !constructors.contains(className));
+            (constructors == null
+            || (!constructors.contains(className) && !constructors.contains(outermostClassName)));
         boolean notProvidedByRequires =
             (requires == null || (!requires.contains(className)
-                                  && !requires.contains(outermostClassName)));
+                                  && !requires.contains(outermostClassName)
+                                  && !requires.contains(parentNamespace)));
         if (notProvidedByConstructors && notProvidedByRequires
             && !classNames.contains(className)) {
+          // TODO(mknichel): If the symbol is not explicitly provided, find the next best
+          // symbol from the provides in the same file.
           compiler.report(
               t.makeError(node, level, MISSING_REQUIRE_WARNING, className));
           classNames.add(className);
@@ -186,7 +199,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
       String name = root.getString();
       Scope.Var var = t.getScope().getVar(name);
-      if (var == null || var.isLocal() || var.isExtern()) {
+      if (var != null && (var.isLocal() || var.isExtern())) {
         return;
       }
       newAndImplementsNodes.add(n);

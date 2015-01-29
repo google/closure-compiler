@@ -69,6 +69,9 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Whether the closure pass is run on the expected JS. */
   private boolean closurePassEnabledForExpected = false;
 
+  /** Whether to rewrite Closure code before the test is run. */
+  private boolean rewriteClosureCode = false;
+
   /** True iff type checking pass runs before pass being tested. */
   private boolean typeCheckEnabled = false;
 
@@ -308,6 +311,13 @@ public abstract class CompilerTestCase extends TestCase  {
 
   void enableClosurePassForExpected() {
     closurePassEnabledForExpected = true;
+  }
+
+  /**
+   * Rewrite Closure code before the test is run.
+   */
+  void enableRewriteClosureCode() {
+    rewriteClosureCode = true;
   }
 
   /**
@@ -1003,6 +1013,14 @@ public abstract class CompilerTestCase extends TestCase  {
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
+              .process(null, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
+
+        if (rewriteClosureCode && i == 0) {
+          new ClosureRewriteClass(compiler).process(null, mainRoot);
+          new ClosureRewriteModule(compiler).process(null, mainRoot);
+          new ScopedAliases(compiler, null,  CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
               .process(null, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
