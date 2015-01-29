@@ -1640,12 +1640,12 @@ public class Node implements Cloneable, Serializable {
       return false;
     }
 
-    if (this.getDeclaredTypeExpression() != null || node.getDeclaredTypeExpression() != null) {
-      if (this.getDeclaredTypeExpression() == null || node.getDeclaredTypeExpression() == null
-          || !this.getDeclaredTypeExpression()
-          .isEquivalentTo(node.getDeclaredTypeExpression(), compareType, recurse, jsDoc)) {
-        return false;
-      }
+    TypeDeclarationNode thisTDN = this.getDeclaredTypeExpression();
+    TypeDeclarationNode thatTDN = node.getDeclaredTypeExpression();
+    if ((thisTDN != null || thatTDN != null) &&
+        (thisTDN == null || thatTDN == null
+            || !thisTDN.isEquivalentTo(thatTDN, compareType, recurse, jsDoc))) {
+      return false;
     }
 
     if (type == Token.INC || type == Token.DEC) {

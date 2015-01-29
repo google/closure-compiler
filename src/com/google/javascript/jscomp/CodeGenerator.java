@@ -1050,6 +1050,7 @@ class CodeGenerator {
         add("void");
         break;
       case Token.UNDEFINED_TYPE:
+        // TODO(alexeagle): undefined isn't a legal type expression in TS
         add("undefined");
         break;
       case Token.NAMED_TYPE:
