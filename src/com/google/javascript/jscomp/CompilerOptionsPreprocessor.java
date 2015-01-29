@@ -43,14 +43,15 @@ final class CompilerOptionsPreprocessor {
 
     if (options.getLanguageIn() == options.getLanguageOut()) {
       // No conversion.
-    } else if (!options.getLanguageIn().isEs6OrHigher()) {
+    } else if (!options.getLanguageIn().isEs6OrHigher()
+        && !options.getAllowEs6Out()) {
       throw new InvalidOptionsException(
           "Can only convert code from ES6 to a lower ECMAScript version."
           + " Cannot convert from %s to %s.",
           options.getLanguageIn(), options.getLanguageOut());
     }
 
-    if (options.getLanguageOut().isEs6OrHigher() && !options.getAllowEs6ToEs6()) {
+    if (options.getLanguageOut().isEs6OrHigher() && !options.getAllowEs6Out()) {
       throw new InvalidOptionsException(
           "ES6 is only supported for transpilation to a lower ECMAScript"
           + " version. Set --language_out to ES3, ES5, or ES5_strict.");
