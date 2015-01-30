@@ -1976,6 +1976,11 @@ angular.$route;
 /** @type {function()} */
 angular.$route.reload = function() {};
 
+/**
+ * @param {!Object<string,string>} object
+ */
+angular.$route.updateParams = function(object) {};
+
 /** @type {!angular.$route.Route} */
 angular.$route.current;
 
