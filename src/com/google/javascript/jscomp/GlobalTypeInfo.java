@@ -1057,7 +1057,7 @@ class GlobalTypeInfo implements CompilerPass {
 
         case Token.CAST:
           castTypes.put(n,
-              getTypeDeclarationFromJsdoc(n.getJSDocInfo(), currentScope));
+              getDeclaredTypeOfNode(n.getJSDocInfo(), currentScope));
           break;
 
         case Token.OBJECTLIT: {
@@ -1076,7 +1076,7 @@ class GlobalTypeInfo implements CompilerPass {
             for (Node prop : n.children()) {
               if (prop.getJSDocInfo() != null) {
                 declaredObjLitProps.put(prop,
-                    getTypeDeclarationFromJsdoc(
+                    getDeclaredTypeOfNode(
                         prop.getJSDocInfo(), currentScope));
               }
               if (isAnnotatedAsConst(prop)) {
@@ -1277,7 +1277,7 @@ class GlobalTypeInfo implements CompilerPass {
       RawNominalType rawNominalType = thisType.getRawNominalType();
       String pname = getProp.getLastChild().getString();
       // TODO(blickly): Support @param, @return style fun declarations here.
-      JSType declType = getTypeDeclarationFromJsdoc(
+      JSType declType = getDeclaredTypeOfNode(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
       boolean isConst = isConst(getProp);
       if (declType != null || isConst) {
@@ -1309,7 +1309,7 @@ class GlobalTypeInfo implements CompilerPass {
             currentScope.getScope(getFunInternalName(initializer))
             .getDeclaredType().toFunctionType());
       }
-      return getTypeDeclarationFromJsdoc(jsdoc, currentScope);
+      return getDeclaredTypeOfNode(jsdoc, currentScope);
     }
 
     boolean mayWarnAboutNoInit(Node constExpr) {
@@ -1611,13 +1611,13 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(nameNode.getParent().isVar());
       Node varNode = nameNode.getParent();
       JSType varType =
-          getTypeDeclarationFromJsdoc(varNode.getJSDocInfo(), currentScope);
+          getDeclaredTypeOfNode(varNode.getJSDocInfo(), currentScope);
       if (varNode.getChildCount() > 1 && varType != null) {
         warnings.add(JSError.make(varNode, TypeCheck.MULTIPLE_VAR_DEF));
       }
       String varName = nameNode.getString();
       JSType nameNodeType =
-          getTypeDeclarationFromJsdoc(nameNode.getJSDocInfo(), currentScope);
+          getDeclaredTypeOfNode(nameNode.getJSDocInfo(), currentScope);
       if (nameNodeType != null) {
         if (varType != null) {
           warnings.add(JSError.make(nameNode, DUPLICATE_JSDOC, varName));
@@ -1666,7 +1666,7 @@ class GlobalTypeInfo implements CompilerPass {
           methodScope = null;
           methodType = null;
           propDeclType =
-              typeParser.getNodeTypeDeclaration(jsdoc, rawType, currentScope);
+              typeParser.getDeclaredTypeOfNode(jsdoc, rawType, currentScope);
         } else {
           methodScope = null;
           methodType = null;
@@ -1704,8 +1704,8 @@ class GlobalTypeInfo implements CompilerPass {
     }
   }
 
-  private JSType getTypeDeclarationFromJsdoc(JSDocInfo jsdoc, Scope s) {
-    return typeParser.getNodeTypeDeclaration(jsdoc, null, s);
+  private JSType getDeclaredTypeOfNode(JSDocInfo jsdoc, Scope s) {
+    return typeParser.getDeclaredTypeOfNode(jsdoc, null, s);
   }
 
   private FunctionType getDeclaredFunctionTypeOfCalleeIfAny(

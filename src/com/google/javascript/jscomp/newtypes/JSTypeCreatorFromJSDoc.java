@@ -128,13 +128,13 @@ public class JSTypeCreatorFromJSDoc {
     return qmarkFunctionOrNull;
   }
 
-  public JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
-      RawNominalType ownerType, DeclaredTypeRegistry registry) {
-    return getNodeTypeDeclaration(jsdoc, registry, ownerType == null
+  public JSType getDeclaredTypeOfNode(JSDocInfo jsdoc, RawNominalType ownerType,
+      DeclaredTypeRegistry registry) {
+    return getDeclaredTypeOfNode(jsdoc, registry, ownerType == null
         ? ImmutableList.<String>of() : ownerType.getTypeParameters());
   }
 
-  private JSType getNodeTypeDeclaration(JSDocInfo jsdoc,
+  private JSType getDeclaredTypeOfNode(JSDocInfo jsdoc,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
     if (jsdoc == null) {
       return null;
@@ -156,31 +156,31 @@ public class JSTypeCreatorFromJSDoc {
     if (expr == null) {
       return null;
     }
-    return getTypeFromNode(expr.getRoot(), registry, typeParameters == null
+    return getTypeFromComment(expr.getRoot(), registry, typeParameters == null
         ? ImmutableList.<String>of() : typeParameters);
   }
 
   // Very similar to JSTypeRegistry#createFromTypeNodesInternal
   // n is a jsdoc node, not an AST node; the same class (Node) is used for both
-  private JSType getTypeFromNode(Node n, DeclaredTypeRegistry registry,
+  private JSType getTypeFromComment(Node n, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) {
     try {
-      return getTypeFromNodeHelper(n, registry, typeParameters);
+      return getTypeFromCommentHelper(n, registry, typeParameters);
     } catch (UnknownTypeException e) {
       return JSType.UNKNOWN;
     }
   }
 
-  private JSType getMaybeTypeFromNode(Node n, DeclaredTypeRegistry registry,
+  private JSType getMaybeTypeFromComment(Node n, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) {
     try {
-      return getTypeFromNodeHelper(n, registry, typeParameters);
+      return getTypeFromCommentHelper(n, registry, typeParameters);
     } catch (UnknownTypeException e) {
       return null;
     }
   }
 
-  private JSType getTypeFromNodeHelper(Node n, DeclaredTypeRegistry registry,
+  private JSType getTypeFromCommentHelper(Node n, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) throws UnknownTypeException {
     Preconditions.checkNotNull(n);
     Preconditions.checkNotNull(typeParameters);
@@ -207,7 +207,8 @@ public class JSTypeCreatorFromJSDoc {
           // TODO(dimvar): When the union has many things, we join and throw
           // away types, except the result of the last join. Very inefficient.
           // Consider optimizing.
-          JSType nextType = getTypeFromNodeHelper(child, registry, typeParameters);
+          JSType nextType =
+              getTypeFromCommentHelper(child, registry, typeParameters);
           if (nextType.isUnknown()) {
             warn("This union type is equivalent to '?'.", n);
             return JSType.UNKNOWN;
@@ -217,7 +218,7 @@ public class JSTypeCreatorFromJSDoc {
         return union;
       }
       case Token.BANG: {
-        JSType nullableType = getTypeFromNodeHelper(
+        JSType nullableType = getTypeFromCommentHelper(
             n.getFirstChild(), registry, typeParameters);
         if (nullableType.isTypeVariable()) {
           warn("Cannot use ! to restrict type variable type.\n"
@@ -232,7 +233,7 @@ public class JSTypeCreatorFromJSDoc {
           return JSType.UNKNOWN;
         } else {
           return JSType.join(JSType.NULL,
-              getTypeFromNodeHelper(child, registry, typeParameters));
+              getTypeFromCommentHelper(child, registry, typeParameters));
         }
       }
       case Token.STAR:
@@ -261,7 +262,7 @@ public class JSTypeCreatorFromJSDoc {
         fieldName = fieldName.substring(1, fieldName.length() - 1);
       }
       JSType fieldType = !isFieldTypeDeclared ? JSType.UNKNOWN :
-          getTypeFromNodeHelper(
+          getTypeFromCommentHelper(
               fieldTypeNode.getLastChild(), registry, typeParameters);
       // TODO(blickly): Allow optional properties
       fields.put(fieldName, fieldType);
@@ -395,7 +396,7 @@ public class JSTypeCreatorFromJSDoc {
       Preconditions.checkState(n.getFirstChild().isBlock());
       for (Node child : n.getFirstChild().children()) {
         typeList.add(
-            getTypeFromNodeHelper(child, registry, outerTypeParameters));
+            getTypeFromCommentHelper(child, registry, outerTypeParameters));
       }
     }
     ImmutableList<JSType> typeArguments = typeList.build();
@@ -470,17 +471,17 @@ public class JSTypeCreatorFromJSDoc {
         try {
           switch (arg.getType()) {
             case Token.EQUALS:
-              builder.addOptFormal(getTypeFromNodeHelper(
+              builder.addOptFormal(getTypeFromCommentHelper(
                   arg.getFirstChild(), registry, typeParameters));
               break;
             case Token.ELLIPSIS:
               Node restNode = arg.getFirstChild();
               builder.addRestFormals(restNode == null ? JSType.UNKNOWN :
-                  getTypeFromNodeHelper(restNode, registry, typeParameters));
+                  getTypeFromCommentHelper(restNode, registry, typeParameters));
               break;
             default:
               builder.addReqFormal(
-                  getTypeFromNodeHelper(arg, registry, typeParameters));
+                  getTypeFromCommentHelper(arg, registry, typeParameters));
               break;
           }
         } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
@@ -490,13 +491,14 @@ public class JSTypeCreatorFromJSDoc {
       }
       child = child.getNext();
     }
-    builder.addRetType(getTypeFromNodeHelper(child, registry, typeParameters));
+    builder.addRetType(
+        getTypeFromCommentHelper(child, registry, typeParameters));
   }
 
   // May return null;
   private NominalType getNominalType(Node n,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
-    return getTypeFromNode(n, registry, typeParameters)
+    return getTypeFromComment(n, registry, typeParameters)
         .getNominalTypeIfUnique();
   }
 
@@ -521,7 +523,7 @@ public class JSTypeCreatorFromJSDoc {
           jsdoc.getExtendedInterfaces())) {
       Node expRoot = texp.getRoot();
       JSType interfaceType =
-          getMaybeTypeFromNode(expRoot, registry, typeParameters);
+          getMaybeTypeFromComment(expRoot, registry, typeParameters);
       if (interfaceType != null) {
         NominalType nt = interfaceType.getNominalTypeIfUnique();
         if (nt != null && nt.isInterface()) {
@@ -643,7 +645,7 @@ public class JSTypeCreatorFromJSDoc {
         }
         switch (paramType.getType()) {
           case Token.EQUALS:
-            builder.addOptFormal(getTypeFromNode(
+            builder.addOptFormal(getTypeFromComment(
                 paramType.getFirstChild(), registry, typeParameters));
             break;
           case Token.ELLIPSIS:
@@ -656,7 +658,7 @@ public class JSTypeCreatorFromJSDoc {
             break;
           default:
             builder.addReqFormal(
-                getTypeFromNode(paramType, registry, typeParameters));
+                getTypeFromComment(paramType, registry, typeParameters));
             break;
         }
         paramType = paramType.getNext();
@@ -666,7 +668,7 @@ public class JSTypeCreatorFromJSDoc {
 
     if (paramType != null) {
       if (paramType.getType() == Token.ELLIPSIS) {
-        builder.addRestFormals(getTypeFromNode(
+        builder.addRestFormals(getTypeFromComment(
             paramType.getFirstChild(), registry, typeParameters));
       } else {
         warn("The function has fewer formal parameters than the types " +
@@ -688,7 +690,8 @@ public class JSTypeCreatorFromJSDoc {
       }
       builder.addRetType(JSType.UNDEFINED);
     } else {
-      builder.addRetType(getTypeFromNode(childJsdoc, registry, typeParameters));
+      builder.addRetType(
+          getTypeFromComment(childJsdoc, registry, typeParameters));
     }
 
     return builder.buildDeclaration();
@@ -798,7 +801,7 @@ public class JSTypeCreatorFromJSDoc {
     if (jsdoc.hasThisType() && ownerType == null) {
       Node thisNode = jsdoc.getThisType().getRoot();
       JSType thisType =
-          getMaybeTypeFromNode(thisNode, registry, typeParameters);
+          getMaybeTypeFromComment(thisNode, registry, typeParameters);
       // TODO(dimvar): thisType may be non-null but have a null
       // thisTypeAsNominal.
       // We currently only support nominal types for the receiver type, but
@@ -824,7 +827,7 @@ public class JSTypeCreatorFromJSDoc {
       String pname = iterator.nextString();
       Node param = iterator.getNode();
       JSType inlineParamType = (ignoreJsdoc || ignoreFunNode)
-          ? null : getNodeTypeDeclaration(
+          ? null : getDeclaredTypeOfNode(
               param.getJSDocInfo(), registry, typeParameters);
       boolean isRequired = true;
       boolean isRestFormals = false;
@@ -849,7 +852,7 @@ public class JSTypeCreatorFromJSDoc {
           isRestFormals = true;
           jsdocNode = jsdocNode.getFirstChild();
         }
-        fnParamType = getTypeFromNode(jsdocNode, registry, typeParameters);
+        fnParamType = getTypeFromComment(jsdocNode, registry, typeParameters);
       }
       if (inlineParamType != null) {
         // TODO(dimvar): The support for inline optional parameters is currently
@@ -888,7 +891,7 @@ public class JSTypeCreatorFromJSDoc {
       builder.addRetType(JSType.UNDEFINED);
     } else if (inlineRetJsdoc != null) {
       builder.addRetType(
-          getNodeTypeDeclaration(inlineRetJsdoc, registry, typeParameters));
+          getDeclaredTypeOfNode(inlineRetJsdoc, registry, typeParameters));
       if (retTypeExp != null) {
         warn("Found two JsDoc comments for the return type", funNode);
       }
@@ -911,7 +914,7 @@ public class JSTypeCreatorFromJSDoc {
     }
     Node docNode = jsdoc.getBaseType().getRoot();
     JSType extendedType =
-        getMaybeTypeFromNode(docNode, registry, typeParameters);
+        getMaybeTypeFromComment(docNode, registry, typeParameters);
     if (extendedType == null) {
       return null;
     }
