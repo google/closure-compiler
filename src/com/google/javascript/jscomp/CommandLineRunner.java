@@ -62,6 +62,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -133,7 +134,11 @@ public class CommandLineRunner extends
   // I don't really care about unchecked warnings in this class.
   @SuppressWarnings("unchecked")
   private static class Flags {
-    private static List<GuardLevel> guardLevels = new ArrayList<>();
+    // Some clients run a few copies of the compiler through CommandLineRunner
+    // on parallel threads (thankfully, with the same flags),
+    // so the access to |guardLevels| should be at least synchronized.
+    private static List<GuardLevel> guardLevels =
+        Collections.synchronizedList(new ArrayList<CommandLineRunner.GuardLevel>());
 
     @Option(name = "--help",
         hidden = true,
