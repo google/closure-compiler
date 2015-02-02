@@ -1422,6 +1422,7 @@ public final class NodeUtil {
       case Token.SUPER:
       case Token.TRUE:
       case Token.TEMPLATELIT:
+      case Token.NAMED_TYPE:
         return 15;
       case Token.CAST:
         return 16;

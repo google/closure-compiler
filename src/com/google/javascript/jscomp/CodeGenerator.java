@@ -1044,7 +1044,7 @@ class CodeGenerator {
         add("any");
         break;
       case Token.NULL_TYPE:
-        add("string");
+        add("null");
         break;
       case Token.VOID_TYPE:
         add("void");
@@ -1060,6 +1060,14 @@ class CodeGenerator {
       case Token.ARRAY_TYPE:
         add(first);
         add("[]");
+        break;
+
+      case Token.PARAMETERIZED_TYPE:
+        // First child is the type that's parameterized, later children are the arguments.
+        add(first);
+        add("<");
+        addList(first.getNext());
+        add(">");
         break;
 
       default:

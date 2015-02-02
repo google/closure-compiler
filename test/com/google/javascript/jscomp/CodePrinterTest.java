@@ -20,113 +20,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
 
 import java.util.List;
 
 
-public class CodePrinterTest extends TestCase {
-  // If this is set, ignore parse warnings and only fail the test
-  // for parse errors.
-  private boolean allowWarnings = false;
-
-  private boolean trustedStrings = true;
-  private boolean preserveTypeAnnotations = false;
-  private Compiler lastCompiler = null;
-  private LanguageMode languageMode = LanguageMode.ECMASCRIPT5;
-
-  @Override public void setUp() {
-    allowWarnings = false;
-    preserveTypeAnnotations = false;
-    trustedStrings = true;
-    lastCompiler = null;
-    languageMode = LanguageMode.ECMASCRIPT5;
-  }
-
-  Node parse(String js) {
-    return parse(js, false);
-  }
-
-  Node parse(String js, boolean checkTypes) {
-    Compiler compiler = new Compiler();
-    lastCompiler = compiler;
-    CompilerOptions options = new CompilerOptions();
-    options.setTrustedStrings(trustedStrings);
-    options.preserveTypeAnnotations = preserveTypeAnnotations;
-
-    // Allow getters and setters.
-    options.setLanguageIn(languageMode);
-    compiler.initOptions(options);
-    Node n = compiler.parseTestCode(js);
-
-    if (checkTypes) {
-      DefaultPassConfig passConfig = new DefaultPassConfig(null);
-      CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
-      Node externs = new Node(Token.SCRIPT);
-      externs.setInputId(new InputId("externs"));
-      Node externAndJsRoot = new Node(Token.BLOCK, externs, n);
-      externAndJsRoot.setIsSyntheticBlock(true);
-      typeResolver.process(externs, n);
-      CompilerPass inferTypes = passConfig.inferTypes.create(compiler);
-      inferTypes.process(externs, n);
-    }
-
-    checkUnexpectedErrorsOrWarnings(compiler, 0);
-    return n;
-  }
-
-  private void checkUnexpectedErrorsOrWarnings(
-      Compiler compiler, int expected) {
-    int actual = compiler.getErrors().length;
-    if (!allowWarnings) {
-      actual += compiler.getWarnings().length;
-    }
-
-    if (actual != expected) {
-      String msg = "";
-      for (JSError err : compiler.getErrors()) {
-        msg += "Error:" + err + "\n";
-      }
-      if (!allowWarnings) {
-        for (JSError err : compiler.getWarnings()) {
-          msg += "Warning:" + err + "\n";
-        }
-      }
-      assertEquals("Unexpected warnings or errors.\n " + msg, expected, actual);
-    }
-  }
-
-  String parsePrint(String js, CompilerOptions options) {
-    return new CodePrinter.Builder(parse(js)).setCompilerOptions(options).build();
-  }
-
-  private abstract class CompilerOptionBuilder {
-    abstract void setOptions(CompilerOptions options);
-  }
-
-  CompilerOptions newCompilerOptions(CompilerOptionBuilder builder) {
-    CompilerOptions options = new CompilerOptions();
-    options.setTrustedStrings(trustedStrings);
-    options.preserveTypeAnnotations = preserveTypeAnnotations;
-    options.setLanguageOut(languageMode);
-    builder.setOptions(options);
-    return options;
-  }
-
-  String printNode(Node n) {
-    CompilerOptions options = new CompilerOptions();
-    options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
-    options.setLanguageOut(languageMode);
-    return new CodePrinter.Builder(n).setCompilerOptions(options).build();
-  }
-
-  void assertPrintNode(String expectedJs, Node ast) {
-    assertEquals(expectedJs, printNode(ast));
-  }
+public class CodePrinterTest extends CodePrinterTestBase {
 
   public void testPrint() {
     assertPrint("10 + a + b", "10+a+b");
@@ -597,21 +497,6 @@ public class CodePrinterTest extends TestCase {
 
   public void testLiteralProperty() {
     assertPrint("(64).toString()", "(64).toString()");
-  }
-
-  private void assertPrint(String js, String expected) {
-    parse(expected); // validate the expected string is valid JS
-    assertEquals(expected,
-        parsePrint(js, newCompilerOptions(new CompilerOptionBuilder() {
-          @Override void setOptions(CompilerOptions options) {
-            options.setPrettyPrint(false);
-            options.setLineLengthThreshold(CodePrinter.DEFAULT_LINE_LENGTH_THRESHOLD);
-          }
-        })));
-  }
-
-  private void assertPrintSame(String js) {
-    assertPrint(js, js);
   }
 
   // Make sure that the code generator doesn't associate an
@@ -1214,7 +1099,7 @@ public class CodePrinterTest extends TestCase {
 
   private void assertPrettyPrint(String js, String expected) {
     assertPrettyPrint(js, expected, new CompilerOptionBuilder() {
-      @Override void setOptions(CompilerOptions options) { }
+      @Override void setOptions(CompilerOptions options) { /* no-op */ }
     });
   }
 

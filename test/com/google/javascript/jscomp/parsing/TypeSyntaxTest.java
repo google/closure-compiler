@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.jscomp.Compiler;
@@ -50,10 +52,6 @@ public class TypeSyntaxTest extends TestCase {
 
   private void expectErrors(String... errors) {
     testErrorManager.expectErrors(errors);
-  }
-
-  private void expectWarnings(String... warnings) {
-    testErrorManager.expectWarnings(warnings);
   }
 
   public void testVariableDeclaration() {
@@ -189,6 +187,38 @@ public class TypeSyntaxTest extends TestCase {
     assertNull(message + ": " + treeDiff, treeDiff);
   }
 
+  public void testParameterizedType() {
+    TypeDeclarationNode parameterizedType =
+        TypeDeclarationsIRFactory.parameterizedType(
+            TypeDeclarationsIRFactory.namedType("my.parameterized.Type"),
+            ImmutableList.of(
+                TypeDeclarationsIRFactory.namedType("ns.A"),
+                TypeDeclarationsIRFactory.namedType("ns.B")));
+    assertVarType("parameterized type 2 args", parameterizedType,
+        "var x: my.parameterized.Type<ns.A, ns.B>;");
+  }
+
+  public void testParameterizedType_empty() {
+    expectErrors("Parse error. Unexpected token '>' in type expression");
+    parse("var x: my.parameterized.Type<ns.A, >;");
+  }
+
+
+  public void testParameterizedType_noArgs() {
+    expectErrors("Parse error. Unexpected token '>' in type expression");
+    parse("var x: my.parameterized.Type<>;");
+  }
+
+  public void testParameterizedType_trailing1() {
+    expectErrors("Parse error. '>' expected");
+    parse("var x: my.parameterized.Type<ns.A;");
+  }
+
+  public void testParameterizedType_trailing2() {
+    expectErrors("Parse error. Unexpected token ';' in type expression");
+    parse("var x: my.parameterized.Type<ns.A,;");
+  }
+
   private Node parse(String source) {
     return parse(source, source);
   }
@@ -219,7 +249,7 @@ public class TypeSyntaxTest extends TestCase {
           .setTypeRegistry(compiler.getTypeRegistry())
           .build()  // does the actual printing.
           .trim();
-      assertEquals(expected, actual);
+      assertThat(expected).isEqualTo(actual);
     }
 
     return script;
