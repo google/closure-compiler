@@ -17,12 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -295,8 +295,8 @@ public class NodeTraversal {
     }
   }
 
-  public void traverseRoots(Node ... roots) {
-    traverseRoots(Lists.newArrayList(roots));
+  public void traverseRoots(Node... roots) {
+    traverseRoots(Arrays.asList(roots));
   }
 
   public void traverseRoots(List<Node> roots) {
