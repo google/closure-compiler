@@ -1422,7 +1422,17 @@ public final class NodeUtil {
       case Token.SUPER:
       case Token.TRUE:
       case Token.TEMPLATELIT:
+      // Tokens from the type declaration AST
+      case Token.STRING_TYPE:
+      case Token.NUMBER_TYPE:
+      case Token.BOOLEAN_TYPE:
+      case Token.ANY_TYPE:
+      case Token.RECORD_TYPE:
+      case Token.NULLABLE_TYPE:
       case Token.NAMED_TYPE:
+      case Token.UNDEFINED_TYPE:
+      case Token.FUNCTION_TYPE:
+      case Token.REST_PARAMETER_TYPE:
         return 15;
       case Token.CAST:
         return 16;

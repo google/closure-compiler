@@ -19,7 +19,10 @@ package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -35,13 +38,14 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Produces ASTs which represent JavaScript type declarations, both those created from
- * closure-style type declarations in a JSDoc node (via a conversion from the rhino AST
- * produced in {@link com.google.javascript.jscomp.parsing.IRFactory}) as well as
- * those created from TypeScript-style inline type declarations.
+ * Produces ASTs which represent JavaScript type declarations, both those
+ * created from closure-style type declarations in a JSDoc node (via a
+ * conversion from the rhino AST produced in
+ * {@link IRFactory}) as well as those created from TypeScript-style inline type
+ * declarations.
  *
- * This is an alternative to the AST found in the root property of JSTypeExpression, which
- * is a crufty AST that reuses language tokens.
+ * <p>This is an alternative to the AST found in the root property of
+ * JSTypeExpression, which is a crufty AST that reuses language tokens.
  *
  * @author alexeagle@google.com (Alex Eagle)
  */
@@ -69,10 +73,14 @@ public class TypeDeclarationsIRFactory {
   }
 
   /**
-   * @return a new node representing the null built-in type.
+   * We assume that types are non-nullable by default. Wrap a type in nullable
+   * to indicate that it should be allowed to take a null value.
+   * NB: this is not currently supported in TypeScript so it is not printed
+   * in the CodeGenerator for ES6_TYPED.
+   * @return a new node indicating that the nested type is nullable
    */
-  public static TypeDeclarationNode nullType() {
-    return new TypeDeclarationNode(Token.NULL_TYPE);
+  public static TypeDeclarationNode nullable(TypeDeclarationNode type) {
+    return new TypeDeclarationNode(Token.NULLABLE_TYPE, type);
   }
 
   /**
@@ -109,8 +117,8 @@ public class TypeDeclarationsIRFactory {
   }
 
   /**
-   * Produces a tree structure similar to the Rhino AST of a qualified name expression, under
-   * a top-level NAMED_TYPE node.
+   * Produces a tree structure similar to the Rhino AST of a qualified name
+   * expression, under a top-level NAMED_TYPE node.
    *
    * <p>Example:
    * <pre>
@@ -131,14 +139,15 @@ public class TypeDeclarationsIRFactory {
 
   /**
    * Represents a structural type.
-   * Closure calls this a Record Type and accepts the syntax {@code {myNum: number, myObject}}
+   * Closure calls this a Record Type and accepts the syntax
+   * {@code {myNum: number, myObject}}
    *
    * <p>Example:
    * <pre>
    * RECORD_TYPE
    *   STRING_KEY myNum
    *     NUMBER_TYPE
-   *   STRING myObject
+   *   STRING_KEY myObject
    * </pre>
    * @param properties a map from property name to property type
    * @return a new node representing the record type
@@ -146,12 +155,12 @@ public class TypeDeclarationsIRFactory {
   public static TypeDeclarationNode recordType(
       LinkedHashMap<String, TypeDeclarationNode> properties) {
     TypeDeclarationNode node = new TypeDeclarationNode(Token.RECORD_TYPE);
-    for (Map.Entry<String, TypeDeclarationNode> property : properties.entrySet()) {
-      if (property.getValue() == null) {
-        node.addChildToBack(IR.string(property.getKey()));
+    for (Map.Entry<String, TypeDeclarationNode> prop : properties.entrySet()) {
+      if (prop.getValue() == null) {
+        node.addChildToBack(IR.stringKey(prop.getKey()));
       } else {
-        Node stringKey = IR.stringKey(property.getKey());
-        stringKey.addChildToFront(property.getValue());
+        Node stringKey = IR.stringKey(prop.getKey());
+        stringKey.addChildToFront(prop.getValue());
         node.addChildToBack(stringKey);
       }
     }
@@ -177,19 +186,28 @@ public class TypeDeclarationsIRFactory {
    * @param parameters the types of the parameters.
    */
   public static TypeDeclarationNode functionType(
-      Node returnType, LinkedHashMap<String, TypeDeclarationNode> parameters) {
+      Node returnType, LinkedHashMap<String, TypeDeclarationNode> parameters,
+      String restName, TypeDeclarationNode restType) {
     TypeDeclarationNode node = new TypeDeclarationNode(Token.FUNCTION_TYPE, returnType);
     for (Map.Entry<String, TypeDeclarationNode> parameter : parameters.entrySet()) {
       Node stringKey = IR.stringKey(parameter.getKey());
       stringKey.addChildToFront(parameter.getValue());
       node.addChildToBack(stringKey);
     }
+    if (restName != null) {
+      Node rest = IR.stringKey(restName);
+      if (restType != null) {
+        rest.addChildToBack(arrayType(restType));
+      }
+      node.addChildToBack(restParams(rest));
+    }
     return node;
   }
 
   /**
    * Represents a parameterized, or generic, type.
-   * Closure calls this a Type Application and accepts syntax like {@code {Object.<string, number>}}
+   * Closure calls this a Type Application and accepts syntax like
+   * {@code {Object.<string, number>}}
    *
    * <p>Example:
    * <pre>
@@ -240,7 +258,8 @@ public class TypeDeclarationsIRFactory {
    * @return a new node representing the union type
    */
   public static TypeDeclarationNode unionType(Iterable<TypeDeclarationNode> options) {
-    Preconditions.checkArgument(!Iterables.isEmpty(options), "union must have at least one option");
+    Preconditions.checkArgument(!Iterables.isEmpty(options),
+        "union must have at least one option");
     TypeDeclarationNode node = new TypeDeclarationNode(Token.UNION_TYPE);
     for (Node option : options) {
       node.addChildToBack(option);
@@ -263,22 +282,26 @@ public class TypeDeclarationsIRFactory {
    *   NUMBER_TYPE
    *   STRING_KEY p1
    *     STRING_TYPE
-   *   STRING_KEY p2
-   *     REST_PARAMETER_TYPE
+   *   REST_PARAMETER_TYPE
+   *     STRING_KEY p2
    *       NUMBER_TYPE
    * </pre>
-   * @param type the type each of the parameters should have.
-   *             (NB: TypeScript instead gives the array type that is seen inside the function)
+   * @param type an array type that is seen inside the function body
    * @return a new node representing the function parameter type
    */
-  public static TypeDeclarationNode restParams(TypeDeclarationNode type) {
-    return new TypeDeclarationNode(Token.REST_PARAMETER_TYPE, type);
+  public static TypeDeclarationNode restParams(Node type) {
+    TypeDeclarationNode node = new TypeDeclarationNode(Token.REST_PARAMETER_TYPE);
+    if (type != null) {
+      node.addChildToBack(type);
+    }
+    return node;
   }
 
   /**
    * Represents a function parameter that is optional.
    * In closure syntax, this is {@code function(?string=, number=)}
-   * In TypeScript syntax, it is {@code (firstName: string, lastName?: string)=>string}
+   * In TypeScript syntax, it is
+   * {@code (firstName: string, lastName?: string)=>string}
    * @param parameterType the type of the parameter
    * @return a new node representing the function parameter type
    */
@@ -308,9 +331,13 @@ public class TypeDeclarationsIRFactory {
    * though we use the same Java class to represent them.
    * This function converts root nodes of JSTypeExpressions into TypeDeclaration ASTs,
    * to make them more similar to ordinary AST nodes.
+   *
+   * @return the root node of a TypeDeclaration AST, or null if no type is
+   *         available for the node.
    */
   // TODO(dimvar): Eventually, we want to just parse types to the new
   // representation directly, and delete this function.
+  @Nullable
   public static TypeDeclarationNode convertTypeNodeAST(Node n) {
     int token = n.getType();
     switch (token) {
@@ -320,33 +347,41 @@ public class TypeDeclarationsIRFactory {
       case Token.VOID:
         return undefinedType();
       case Token.BANG:
-        // TODO(alexeagle): capture nullability constraints once we know how to express them
+        // TODO(alexeagle): non-nullable is assumed to be the default
         return convertTypeNodeAST(n.getFirstChild());
       case Token.STRING:
         String typeName = n.getString();
         switch (typeName) {
           case "boolean":
             return booleanType();
-          case "null":
-            return nullType();
           case "number":
             return numberType();
           case "string":
             return stringType();
+          case "null":
           case "undefined":
           case "void":
-            return undefinedType();
+            return null;
           default:
             TypeDeclarationNode root = namedType(typeName);
             if (n.getChildCount() > 0 && n.getFirstChild().isBlock()) {
+              Node block = n.getFirstChild();
+              if ("Array".equals(typeName)) {
+                return arrayType(convertTypeNodeAST(block.getFirstChild()));
+              }
               return parameterizedType(root,
-                  Iterables.transform(n.getFirstChild().children(), CONVERT_TYPE_NODE));
+                  Iterables.transform(block.children(), CONVERT_TYPE_NODE));
             }
             return root;
         }
       case Token.QMARK:
         Node child = n.getFirstChild();
-        return child == null ? anyType() : unionType(nullType(), convertTypeNodeAST(child));
+        return child == null
+            ? anyType()
+            // For now, our ES6_TYPED language doesn't support nullable
+            // so we drop it before building the tree.
+            // : nullable(convertTypeNodeAST(child));
+            : convertTypeNodeAST(child);
       case Token.LC:
         LinkedHashMap<String, TypeDeclarationNode> properties = new LinkedHashMap<>();
         for (Node field : n.getFirstChild().children()) {
@@ -361,18 +396,38 @@ public class TypeDeclarationsIRFactory {
           properties.put(fieldName, fieldType);
         }
         return recordType(properties);
-      case Token.PIPE:
-        return unionType(Iterables.transform(n.children(), CONVERT_TYPE_NODE));
       case Token.ELLIPSIS:
-        return restParams(convertTypeNodeAST(n.getFirstChild()));
+        return arrayType(convertTypeNodeAST(n.getFirstChild()));
+      case Token.PIPE:
+        ImmutableList<TypeDeclarationNode> types = FluentIterable
+            .from(n.children()).transform(CONVERT_TYPE_NODE)
+            .filter(Predicates.notNull()).toList();
+        switch (types.size()) {
+          case 0:
+            return null;
+          case 1:
+            return types.get(0);
+          default:
+            return unionType(types);
+        }
       case Token.FUNCTION:
         Node returnType = anyType();
         LinkedHashMap<String, TypeDeclarationNode> parameters = new LinkedHashMap<>();
+        String restName = null;
+        TypeDeclarationNode restType = null;
         for (Node child2 : n.children()) {
           if (child2.isParamList()) {
             int paramIdx = 1;
             for (Node param : child2.children()) {
-              parameters.put("p" + paramIdx++, convertTypeNodeAST(param));
+              String paramName = "p" + paramIdx++;
+              if (param.getType() == Token.ELLIPSIS) {
+                restName = paramName;
+                if (param.getFirstChild() != null) {
+                  restType = convertTypeNodeAST(param.getFirstChild());
+                }
+              } else {
+                parameters.put(paramName, convertTypeNodeAST(param));
+              }
             }
           } else if (child2.isNew()) {
             // TODO(alexeagle): keep the constructor signatures on the tree, and emit them following
@@ -384,7 +439,7 @@ public class TypeDeclarationsIRFactory {
             returnType = convertTypeNodeAST(child2);
           }
         }
-        return functionType(returnType, parameters);
+        return functionType(returnType, parameters, restName, restType);
       case Token.EQUALS:
         return optionalParameter(convertTypeNodeAST(n.getFirstChild()));
       default:

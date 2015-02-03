@@ -210,18 +210,18 @@ class CodeGenerator {
       case Token.VAR:
         if (first != null) {
           add("var ");
-          addList(first, false, getContextForNoInOperator(context));
+          addList(first, false, getContextForNoInOperator(context), ",");
         }
         break;
 
       case Token.CONST:
         add("const ");
-        addList(first, false, getContextForNoInOperator(context));
+        addList(first, false, getContextForNoInOperator(context), ",");
         break;
 
       case Token.LET:
         add("let ");
-        addList(first, false, getContextForNoInOperator(context));
+        addList(first, false, getContextForNoInOperator(context), ",");
         break;
 
       case Token.LABEL_NAME:
@@ -232,6 +232,7 @@ class CodeGenerator {
       case Token.NAME:
         addIdentifier(n.getString());
         maybeAddTypeDecl(n);
+
         if (first != null && !first.isEmpty()) {
           Preconditions.checkState(childCount == 1);
           cc.addOp("=", true);
@@ -379,6 +380,7 @@ class CodeGenerator {
       case Token.REST:
         add("...");
         add(n.getString());
+        maybeAddTypeDecl(n);
         break;
 
       case Token.SPREAD:
@@ -1043,15 +1045,8 @@ class CodeGenerator {
       case Token.ANY_TYPE:
         add("any");
         break;
-      case Token.NULL_TYPE:
-        add("null");
-        break;
       case Token.VOID_TYPE:
         add("void");
-        break;
-      case Token.UNDEFINED_TYPE:
-        // TODO(alexeagle): undefined isn't a legal type expression in TS
-        add("undefined");
         break;
       case Token.NAMED_TYPE:
         // Children are a chain of getprop nodes.
@@ -1061,7 +1056,31 @@ class CodeGenerator {
         add(first);
         add("[]");
         break;
-
+      case Token.FUNCTION_TYPE:
+        Node returnType = first;
+        add("(");
+        addList(first.getNext());
+        add(")");
+        cc.addOp("=>", true);
+        add(returnType);
+        break;
+      case Token.OPTIONAL_PARAMETER:
+        // The '?' token was printed in #maybeAddTypeDecl because it
+        // must come before the colon
+        add(first);
+        break;
+      case Token.REST_PARAMETER_TYPE:
+        add("...");
+        add(first);
+        break;
+      case Token.UNION_TYPE:
+        addList(first, "|");
+        break;
+      case Token.RECORD_TYPE:
+        add("{");
+        addList(first, false, Context.STATEMENT, ";");
+        add("}");
+        break;
       case Token.PARAMETERIZED_TYPE:
         // First child is the type that's parameterized, later children are the arguments.
         add(first);
@@ -1069,7 +1088,6 @@ class CodeGenerator {
         addList(first.getNext());
         add(">");
         break;
-
       default:
         throw new RuntimeException(
             "Unknown type " + Token.name(type) + "\n" + n.toStringTree());
@@ -1080,7 +1098,11 @@ class CodeGenerator {
 
   private void maybeAddTypeDecl(Node n) {
     if (n.getDeclaredTypeExpression() != null) {
-      add(": ");
+      if (n.getDeclaredTypeExpression().getType() == Token.OPTIONAL_PARAMETER) {
+        add("?");
+      }
+      add(":");
+      cc.maybeInsertSpace();
       add(n.getDeclaredTypeExpression());
     }
   }
@@ -1258,17 +1280,21 @@ class CodeGenerator {
   }
 
   void addList(Node firstInList) {
-    addList(firstInList, true, Context.OTHER);
+    addList(firstInList, true, Context.OTHER, ",");
+  }
+
+  void addList(Node firstInList, String separator) {
+    addList(firstInList, true, Context.OTHER, separator);
   }
 
   void addList(Node firstInList, boolean isArrayOrFunctionArgument,
-               Context lhsContext) {
+      Context lhsContext, String separator) {
     for (Node n = firstInList; n != null; n = n.getNext()) {
       boolean isFirst = n == firstInList;
       if (isFirst) {
         addExpr(n, isArrayOrFunctionArgument ? 1 : 0, lhsContext);
       } else {
-        cc.listSeparator();
+        cc.addOp(separator, true);
         addExpr(n, isArrayOrFunctionArgument ? 1 : 0,
             getContextForNoInOperator(lhsContext));
       }

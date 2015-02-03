@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
 
 /**
@@ -52,8 +53,7 @@ public class ConvertToTypedES6
       case Token.FUNCTION:
         JSDocInfo bestJSDocInfo = NodeUtil.getBestJSDocInfo(n);
         if (bestJSDocInfo != null) {
-          n.setDeclaredTypeExpression(convert(bestJSDocInfo.getReturnType()));
-          compiler.reportCodeChange();
+          setTypeExpression(n, bestJSDocInfo.getReturnType());
         }
         break;
       case Token.NAME:
@@ -65,19 +65,33 @@ public class ConvertToTypedES6
           break;
         }
         if (parent.isVar()) {
-          n.setDeclaredTypeExpression(convert(parentJSDoc.getType()));
-          compiler.reportCodeChange();
+          setTypeExpression(n, parentJSDoc.getType());
         } else if (parent.isParamList()) {
           JSTypeExpression parameterType =
               parentJSDoc.getParameterType(n.getString());
           if (parameterType != null) {
-            n.setDeclaredTypeExpression(convert(parameterType));
-            compiler.reportCodeChange();
+            Node attachTypeExpr = n;
+            // Modify the primary AST to represent a function parameter as a
+            // REST node, if the type indicates it is a rest parameter.
+            if (parameterType.getRoot().getType() == Token.ELLIPSIS) {
+              attachTypeExpr = Node.newString(Token.REST, n.getString());
+              n.getParent().replaceChild(n, attachTypeExpr);
+              compiler.reportCodeChange();
+            }
+            setTypeExpression(attachTypeExpr, parameterType);
           }
         }
         break;
       default:
         break;
+    }
+  }
+
+  private void setTypeExpression(Node n, JSTypeExpression type) {
+    TypeDeclarationNode node = convert(type);
+    if (node != null) {
+      n.setDeclaredTypeExpression(node);
+      compiler.reportCodeChange();
     }
   }
 }

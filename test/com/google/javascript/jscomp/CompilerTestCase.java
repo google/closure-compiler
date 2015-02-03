@@ -50,7 +50,7 @@ import java.util.Map;
 public abstract class CompilerTestCase extends TestCase  {
 
   /** Externs for the test */
-  private final List<SourceFile> externsInputs;
+  protected final List<SourceFile> externsInputs;
 
   /** Whether to compare input and output as trees instead of strings */
   private boolean compareAsTree;

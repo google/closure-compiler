@@ -86,7 +86,9 @@ public class Es6InlineTypesTest extends CompilerTestCase {
     test("/** @type {?} */ var n;", "var n: any;");
   }
 
+  // TypeScript doesn't have a representation for the Undefined type,
+  // so our transpilation is lossy here.
   public void testUndefinedType() throws Exception {
-    test("/** @type {undefined} */ var n;", "var n: undefined;");
+    test("/** @type {undefined} */ var n;", "var n;");
   }
 }
