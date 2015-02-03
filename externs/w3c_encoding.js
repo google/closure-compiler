@@ -32,7 +32,7 @@ function TextDecoder(encoding, options) {}
 /** @type {boolean} **/ TextDecoder.prototype.ignoreBOM;
 
 /**
- * @param {!Uint8Array} bytes
+ * @param {!Uint8Array} input
  * @param {Object=} options
  * @return {string}
  */
@@ -48,10 +48,7 @@ function TextEncoder(encoding, options) {}
 /** @type {string} **/ TextEncoder.prototype.encoding;
 
 /**
- * @param {!string=}
- * @param {Object=} options
+ * @param {string} input
  * @return {!Uint8Array}
  */
-TextEncoder.prototype.encode = function(string, options) {};
-
-
+TextEncoder.prototype.encode = function(input) {};
