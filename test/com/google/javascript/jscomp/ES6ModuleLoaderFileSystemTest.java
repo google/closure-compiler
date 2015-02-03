@@ -81,7 +81,7 @@ public class ES6ModuleLoaderFileSystemTest {
         new CompilerOptions());
 
     rootPath = tempFolder.getRoot().getPath().replace(File.separatorChar, '/') + "/";
-    loader = ES6ModuleLoader.createNaiveLoader(compiler, rootPath);
+    loader = new ES6ModuleLoader(compiler, rootPath);
   }
 
   private CompilerInput getInput(String s) {

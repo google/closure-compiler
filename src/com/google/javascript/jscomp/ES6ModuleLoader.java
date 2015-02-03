@@ -29,7 +29,7 @@ import java.util.Map;
  * @see Section 26.3.3.18.2 of the ES6 spec
  * @see http://wiki.commonjs.org/wiki/Modules/1.1
  */
-abstract class ES6ModuleLoader {
+class ES6ModuleLoader {
   /**
    * According to the spec, the forward slash should be the delimiter on all
    * platforms.
@@ -53,6 +53,25 @@ abstract class ES6ModuleLoader {
       "JSC_ES6_MODULE_LOAD_ERROR",
       "Failed to load module \"{0}\"");
 
+  private final Map<String, CompilerInput> inputsByAddress = Maps.newHashMap();
+  private final String moduleRoot;
+  private final URI moduleRootURI;
+
+  ES6ModuleLoader(AbstractCompiler compiler, String moduleRoot) {
+    this.moduleRoot = moduleRoot;
+    this.moduleRootURI = createUri(moduleRoot);
+
+    // Precompute the module name of each source file.
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+      inputsByAddress.put(getLoadAddress(input), input);
+    }
+  }
+
+  /**
+   * Error thrown when a load fails.
+   */
+  static class LoadFailedException extends Exception {}
+
   /**
    * The normalize hook creates a global qualified name for a module, and then
    * the locate hook creates an address. Meant to mimic the behavior of these
@@ -61,7 +80,11 @@ abstract class ES6ModuleLoader {
    * @param referrer The file where we're calling from
    * @return A globally unique address.
    */
-  abstract String locate(String name, CompilerInput referrer);
+  String locate(String name, CompilerInput referrer) {
+    URI base = isRelativeIdentifier(name) ? createUri(referrer) : moduleRootURI;
+
+    return convertSourceUriToModuleAddress(base.resolve(createUri(name)));
+  }
 
   /**
    * Locates a compiler input by ES6 module address.
@@ -69,115 +92,59 @@ abstract class ES6ModuleLoader {
    * If the input doesn't exist, the implementation can decide whether to create
    * an input, or fail softly (by returning null), or throw an error.
    */
-  abstract CompilerInput load(String name) throws LoadFailedException;
+  CompilerInput load(String name) throws LoadFailedException {
+    return inputsByAddress.get(name);
+  }
 
   /**
    * Gets the ES6 module address for an input.
    */
-  abstract String getLoadAddress(CompilerInput input);
-
-  /**
-   * Error thrown when a load fails.
-   */
-  static class LoadFailedException extends Exception {}
-
-  /**
-   * A naive module loader treats all module references as direct file paths.
-   *
-   * require('./foo') refers to 'foo.js' in the current directory.
-   * require('foo') refers to 'foo.js' in the directory where the compiler was
-   * run.
-   *
-   * This module loader does not know how to load files. If a file doesn't
-   * exist yet, then load() will fail.
-   *
-   * @param moduleRoot The module root, relative to the compiler's
-   *     current working directory.
-   */
-  static ES6ModuleLoader createNaiveLoader(
-      AbstractCompiler compiler, String moduleRoot) {
-    return new NaiveModuleLoader(compiler, moduleRoot);
+  String getLoadAddress(CompilerInput input) {
+    return convertSourceUriToModuleAddress(createUri(input));
   }
 
-  private static class NaiveModuleLoader extends ES6ModuleLoader {
-    private final Map<String, CompilerInput> inputsByAddress =
-        Maps.newHashMap();
-    private final String moduleRoot;
-    private final URI moduleRootURI;
+  private static URI createUri(CompilerInput input) {
+    return createUri(input.getName().replace("\\", MODULE_SLASH));
+  }
 
-    private NaiveModuleLoader(AbstractCompiler compiler, String moduleRoot) {
-      this.moduleRoot = moduleRoot;
-      this.moduleRootURI = createUri(moduleRoot);
+  // TODO(nicksantos): Figure out a better way to deal with
+  // URI syntax errors.
+  private static URI createUri(String uri) {
+    try {
+      return new URI(uri);
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
-      // Precompute the module name of each source file.
-      for (CompilerInput input : compiler.getInputsInOrder()) {
-        inputsByAddress.put(getLoadAddress(input), input);
+  private String resolveInFileSystem(String filename) {
+    File f = new File(filename);
+
+    // Resolve index.js files within directories.
+    if (f.exists() && f.isDirectory()) {
+      File index = new File(f, INDEX_FILE);
+      if (index.exists()) {
+        return moduleRootURI.relativize(index.toURI()).getPath();
       }
     }
 
-    @Override
-    String locate(String name, CompilerInput referrer) {
-      URI base = isRelativeIdentifier(name) ? createUri(referrer)
-          : moduleRootURI;
+    return filename;
+  }
 
-      return convertSourceUriToModuleAddress(base.resolve(createUri(name)));
+  private String convertSourceUriToModuleAddress(URI uri) {
+    String filename = resolveInFileSystem(uri.normalize().toString());
+
+    // The DOS command shell will normalize "/" to "\", so we have to
+    // wrestle it back to conform the the module standard.
+    filename = filename.replace("\\", MODULE_SLASH);
+
+    // TODO(nicksantos): It's not totally clear to me what
+    // should happen if a file is not under the given module root.
+    // Maybe this should be an error, or resolved differently.
+    if (!moduleRoot.isEmpty() && filename.indexOf(moduleRoot) == 0) {
+      filename = filename.substring(moduleRoot.length());
     }
 
-    @Override
-    CompilerInput load(String name) {
-      return inputsByAddress.get(name);
-    }
-
-    @Override
-    String getLoadAddress(CompilerInput input) {
-      return convertSourceUriToModuleAddress(createUri(input));
-    }
-
-    private static URI createUri(CompilerInput input) {
-      return createUri(
-          input.getName().replace("\\", MODULE_SLASH));
-    }
-
-    // TODO(nicksantos): Figure out a better way to deal with
-    // URI syntax errors.
-    private static URI createUri(String uri) {
-      try {
-        return new URI(uri);
-      } catch (URISyntaxException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    private String resolveInFileSystem(String filename) {
-      File f = new File(filename);
-
-      // Resolve index.js files within directories.
-      if (f.exists() && f.isDirectory()) {
-        File index = new File(f, INDEX_FILE);
-        if (index.exists()) {
-          return moduleRootURI.relativize(index.toURI()).getPath();
-        }
-      }
-
-      return filename;
-    }
-
-    private String convertSourceUriToModuleAddress(URI uri) {
-      String filename = resolveInFileSystem(uri.normalize().toString());
-
-      // The DOS command shell will normalize "/" to "\", so we have to
-      // wrestle it back to conform the the module standard.
-      filename = filename.replace("\\", MODULE_SLASH);
-
-      // TODO(nicksantos): It's not totally clear to me what
-      // should happen if a file is not under the given module root.
-      // Maybe this should be an error, or resolved differently.
-      if (!moduleRoot.isEmpty() &&
-          filename.indexOf(moduleRoot) == 0) {
-        filename = filename.substring(moduleRoot.length());
-      }
-
-      return filename;
-    }
+    return filename;
   }
 }

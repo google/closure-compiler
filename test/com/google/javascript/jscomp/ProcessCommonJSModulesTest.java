@@ -35,7 +35,7 @@ public class ProcessCommonJSModulesTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ProcessCommonJSModules(
         compiler,
-        ES6ModuleLoader.createNaiveLoader(compiler, "foo/bar/"),
+        new ES6ModuleLoader(compiler, "foo/bar/"),
         false);
   }
 

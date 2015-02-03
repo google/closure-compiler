@@ -1512,7 +1512,7 @@ public class Compiler extends AbstractCompiler {
       }
       new ProcessEs6Modules(
           this,
-          ES6ModuleLoader.createNaiveLoader(this, options.commonJSModulePathPrefix),
+          new ES6ModuleLoader(this, options.commonJSModulePathPrefix),
           true)
       .processFile(root);
     }
@@ -1542,8 +1542,8 @@ public class Compiler extends AbstractCompiler {
       if (options.processCommonJSModules) {
         ProcessCommonJSModules cjs = new ProcessCommonJSModules(
             this,
-            ES6ModuleLoader.createNaiveLoader(
-                this, options.commonJSModulePathPrefix), true);
+            new ES6ModuleLoader(this, options.commonJSModulePathPrefix),
+            true);
         cjs.process(null, root);
 
         JSModule m = new JSModule(cjs.inputToModuleName(input));
