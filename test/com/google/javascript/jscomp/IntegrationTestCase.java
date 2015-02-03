@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -227,7 +226,6 @@ abstract class IntegrationTestCase extends TestCase {
 
   protected Compiler compile(CompilerOptions options, String[] original) {
     Compiler compiler = lastCompiler = new Compiler();
-    BlackHoleErrorManager.silence(compiler);
     List<SourceFile> inputs = Lists.newArrayList();
     for (int i = 0; i < original.length; i++) {
       inputs.add(SourceFile.fromCode("input" + i, original[i]));

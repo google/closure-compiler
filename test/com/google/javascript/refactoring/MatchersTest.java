@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 
 import org.junit.Test;
@@ -373,7 +372,6 @@ public class MatchersTest {
 
   private Compiler getCompiler(String externs, String jsInput) {
     Compiler compiler = new Compiler();
-    BlackHoleErrorManager.silence(compiler);
     compiler.disableThreads();
     CompilerOptions options = RefactoringDriver.getCompilerOptions();
     compiler.compile(
