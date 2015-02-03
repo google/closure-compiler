@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.SymbolTable.Reference;
 import com.google.javascript.jscomp.SymbolTable.Symbol;
 import com.google.javascript.jscomp.SymbolTable.SymbolScope;
+import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Token;
@@ -1116,6 +1117,7 @@ public class SymbolTableTest extends TestCase {
         SourceFile.fromCode("externs1", EXTERNS));
 
     Compiler compiler = new Compiler();
+    BlackHoleErrorManager.silence(compiler);
     compiler.compile(externs, inputs, options);
     return assertSymbolTableValid(compiler.buildKnownSymbolTable());
   }

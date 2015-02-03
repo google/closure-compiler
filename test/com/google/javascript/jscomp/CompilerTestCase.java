@@ -24,6 +24,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
@@ -1007,7 +1008,8 @@ public abstract class CompilerTestCase extends TestCase  {
 
     for (int i = 0; i < numRepetitions; ++i) {
       if (compiler.getErrorCount() == 0) {
-        errorManagers[i] = new BlackHoleErrorManager(compiler);
+        errorManagers[i] = new BlackHoleErrorManager();
+        compiler.setErrorManager(errorManagers[i]);
 
         // Only run process closure primitives once, if asked.
         if (closurePassEnabled && i == 0) {
@@ -1092,8 +1094,8 @@ public abstract class CompilerTestCase extends TestCase  {
           0, compiler.getErrorCount());
 
       // Verify the symbol table.
-      ErrorManager symbolTableErrorManager =
-          new BlackHoleErrorManager(compiler);
+      ErrorManager symbolTableErrorManager = new BlackHoleErrorManager();
+      compiler.setErrorManager(symbolTableErrorManager);
       Node expectedRoot = null;
       if (expected != null) {
         expectedRoot = parseExpectedJs(expected);
@@ -1398,18 +1400,6 @@ public abstract class CompilerTestCase extends TestCase  {
       module.add(SourceFile.fromCode("i" + i, inputs[i]));
     }
     return modules;
-  }
-
-  static class BlackHoleErrorManager extends BasicErrorManager {
-    BlackHoleErrorManager(Compiler compiler) {
-      compiler.setErrorManager(this);
-    }
-
-    @Override
-    public void println(CheckLevel level, JSError error) {}
-
-    @Override
-    public void printSummary() {}
   }
 
   Compiler createCompiler() {

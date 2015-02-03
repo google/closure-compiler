@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 
 import junit.framework.TestCase;
 
@@ -600,6 +600,7 @@ public class ExternExportsPassTest extends TestCase {
    */
   private Result compileAndExportExterns(String js, String externs) {
     Compiler compiler = new Compiler();
+    BlackHoleErrorManager.silence(compiler);
     CompilerOptions options = new CompilerOptions();
     options.externExportsPath = "externs.js";
     options.declaredGlobalExternsOnWindow = false;
