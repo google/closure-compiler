@@ -16,133 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
-import com.google.javascript.rhino.InputId;
-import com.google.javascript.rhino.Node;
-
-import java.util.Arrays;
 
 /**
- * Unit tests for {@link NewTypeInference}.
- *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 
-public class NewTypeInferenceTest extends CompilerTypeTestCase {
-  private static final String CLOSURE_BASE = "var goog;";
-  static final String DEFAULT_EXTERNS =
-      CompilerTypeTestCase.DEFAULT_EXTERNS + "/** @return {string} */\n"
-      + "String.prototype.toString = function() { return '' };\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} arg\n"
-      + " * @return {number}\n"
-      + " */\n"
-      + "function Number(arg) {}\n"
-      + "/** @return {string} */\n"
-      + "Number.prototype.toString = function() { return '' };\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} arg\n"
-      + " * @return {boolean}\n"
-      + " */\n"
-      + "function Boolean(arg) {}\n"
-      + "/** @return {string} */\n"
-      + "Boolean.prototype.toString = function() { return '' };";
-
-  private NewTypeInference parseAndTypeCheck(String externs, String js) {
-    setUp();
-    CompilerOptions options = compiler.getOptions();
-    options.setClosurePass(true);
-    options.setWarningLevel(
-        DiagnosticGroups.CHECK_VARIABLES, CheckLevel.WARNING);
-    compiler.init(Lists.newArrayList(SourceFile.fromCode("[externs]", externs)),
-        Lists.newArrayList(SourceFile.fromCode("[testcode]", js)), options);
-
-    Node externsRoot =
-        compiler.getInput(new InputId("[externs]")).getAstRoot(compiler);
-    Node astRoot =
-        compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);
-
-    assertEquals("parsing error: " + Joiner.on(", ").join(compiler.getErrors()),
-        0, compiler.getErrorCount());
-    assertEquals(
-        "parsing warning: " + Joiner.on(", ").join(compiler.getWarnings()), 0,
-        compiler.getWarningCount());
-
-    GlobalTypeInfo symbolTable = new GlobalTypeInfo(compiler);
-    symbolTable.process(externsRoot, astRoot);
-    compiler.setSymbolTable(symbolTable);
-    NewTypeInference typeInf = new NewTypeInference(compiler, true);
-    typeInf.process(externsRoot, astRoot);
-    return typeInf;
-  }
-
-  private NewTypeInference typeCheck(
-      String js, DiagnosticType... warningKinds) {
-    return typeCheck(DEFAULT_EXTERNS, js, warningKinds);
-  }
-
-  private NewTypeInference typeCheckCustomExterns(
-      String externs, String js, DiagnosticType... warningKinds) {
-    return typeCheck(externs, js, warningKinds);
-  }
-
-  private NewTypeInference typeCheck(
-      String externs, String js, DiagnosticType... warningKinds) {
-    NewTypeInference typeInf = parseAndTypeCheck(externs, js);
-    if (compiler.getErrors().length > 0) {
-      fail("Expected no errors, but found: "
-          + Arrays.toString(compiler.getErrors()));
-    }
-    JSError[] warnings = compiler.getWarnings();
-    String errorMessage =
-        "Expected warning of type:\n"
-        + "================================================================\n"
-        + Arrays.toString(warningKinds)
-        + "================================================================\n"
-        + "but found:\n"
-        + "----------------------------------------------------------------\n"
-        + Arrays.toString(warnings) + "\n"
-        + "----------------------------------------------------------------\n";
-    assertEquals(
-        errorMessage + "Warning count", warningKinds.length, warnings.length);
-    for (JSError warning : warnings) {
-      assertTrue(
-          "Wrong warning type\n" + errorMessage,
-          Arrays.asList(warningKinds).contains(warning.getType()));
-    }
-    return typeInf;
-  }
-
-  // Only for tests where there is a single top-level function in the program
-  private void inferFirstFormalType(String js, JSType expected) {
-    NewTypeInference typeInf = parseAndTypeCheck(DEFAULT_EXTERNS, js);
-    JSError[] warnings = compiler.getWarnings();
-    if (warnings.length > 0) {
-      fail("Expected no warnings, but found: " + Arrays.toString(warnings));
-    }
-    assertEquals(expected, typeInf.getFormalType(0));
-  }
-
-  // Only for tests where there is a single top-level function in the program
-  private void inferReturnType(String js, JSType expected) {
-    NewTypeInference typeInf = parseAndTypeCheck(DEFAULT_EXTERNS, js);
-    JSError[] warnings = compiler.getWarnings();
-    if (warnings.length > 0) {
-      fail("Expected no warnings, but found: " + Arrays.toString(warnings));
-    }
-    assertEquals(expected, typeInf.getReturnType());
-  }
-
-  private void checkDeclaredType(String js, String varName, JSType expected) {
-    NewTypeInference typeInf = parseAndTypeCheck(DEFAULT_EXTERNS, js);
-    assertEquals(expected, typeInf.getDeclaredType(varName));
-  }
+public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
 
   public void testExterns() {
     typeCheck(
@@ -658,14 +539,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testVarDecls() {
-    checkDeclaredType("/** @type {number} */ var x;", "x", JSType.NUMBER);
-
-    checkDeclaredType(
-        "var /** number */ x, /** string */ y;", "x", JSType.NUMBER);
-
-    checkDeclaredType(
-        "var /** number */ x, /** string */ y;", "y", JSType.STRING);
-
     typeCheck("/** @type {number} */ var x, y;", TypeCheck.MULTIPLE_VAR_DEF);
 
     typeCheck(
@@ -720,36 +593,68 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testSimpleBwdPropagation() {
-    inferFirstFormalType("function f(x) { x - 5; }", JSType.NUMBER);
+    typeCheck(
+        "function f(x) { x - 5; }\n"
+        + "f(123);\n"
+        + "f('asdf')",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    inferFirstFormalType("function f(x) { x++; }", JSType.NUMBER);
+    typeCheck(
+        "function f(x) { x++; }"
+        + "f(123);\n"
+        + "f('asdf')",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    inferFirstFormalType("function f(y) { var x = y; x - 5; }", JSType.NUMBER);
+    typeCheck(
+        "function f(y) { var x = y; x - 5; }"
+        + "f(123);\n"
+        + "f('asdf')",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    inferFirstFormalType(
-        "function f(y) { var x; x = y; x - 5; }", JSType.NUMBER);
+    typeCheck(
+        "function f(y) { var x; x = y; x - 5; }"
+        + "f(123);\n"
+        + "f('asdf')",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    inferFirstFormalType(
-        "function f(x) { x + 5; }", JSType.join(JSType.NUMBER, JSType.STRING));
+    typeCheck(
+        "function f(x) { x + 5; }"
+        + "f(123);\n"
+        + "f('asdf')");
   }
 
   public void testSimpleReturn() {
-    inferReturnType("function f(x) {}", JSType.UNDEFINED);
+    typeCheck(
+        "function f(x) {}\n"
+        + "var /** undefined */ x = f();"
+        + "var /** number */ y = f();",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    inferReturnType("function f(x) { return; }", JSType.UNDEFINED);
+    typeCheck(
+        "function f(x) { return; }"
+        + "var /** undefined */ x = f();"
+        + "var /** number */ y = f();",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    inferReturnType("function f(x) { return 123; }", JSType.NUMBER);
+    typeCheck(
+        "function f(x) { return 123; }"
+        + "var /** undefined */ x = f();"
+        + "var /** number */ y = f();",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    inferReturnType(
-        "function f(x) { if (x) {return 123;} else {return 'asdf';} }",
-        JSType.join(JSType.NUMBER, JSType.STRING));
+    typeCheck(
+        "function f(x) { if (x) {return 123;} else {return 'asdf';} }"
+        + "var /** (string|number) */ x = f();");
 
-    inferReturnType(
-        "function f(x) { if (x) {return 123;} }",
-        JSType.join(JSType.NUMBER, JSType.UNDEFINED));
+    typeCheck(
+        "function f(x) { if (x) {return 123;} }"
+        + "var /** (undefined|number) */ x = f();");
 
-    inferReturnType(
-        "function f(x) { var y = x; y - 5; return x; }", JSType.NUMBER);
+    typeCheck(
+        "function f(x) { var y = x; y - 5; return x; }"
+        + "var /** undefined */ x = f(1);"
+        + "var /** number */ y = f(2);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testComparisons() {
@@ -769,13 +674,15 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         "var x = 'str'; var y = 1; x < y;",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    inferReturnType(
+    typeCheck(
         "function f(x) {\n"
         + "  var y = 1;\n"
         + "  x < y;\n"
         + "  return x;\n"
-        + "}",
-        JSType.NUMBER);
+        + "}"
+        + "var /** undefined */ x = f(1);"
+        + "var /** number */ y = f(2);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck("function f(x) {\n"
         + "  var y = x, z = 7;\n"
@@ -784,16 +691,6 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionJsdoc() {
-    inferReturnType(
-        "/** @return {number} */\n"
-        + "function f() { return 1; }",
-        JSType.NUMBER);
-
-    inferReturnType(
-        "/** @param {number} n */\n"
-        + "function f(n) { return n; }",
-        JSType.NUMBER);
-
     typeCheck("/** @param {number} n */\n"
         + "function f(n) { n < 5; }");
 
@@ -812,10 +709,12 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
         + "function f() { return; }",
         NewTypeInference.RETURN_NONDECLARED_TYPE);
 
-    inferFirstFormalType(
+    typeCheck(
         "/** @return {string} */\n"
-        + "function f(s) { return s; }",
-        JSType.STRING);
+        + "function f(s) { return s; }"
+        + "f(123);\n"
+        + "f('asdf')",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
         "/** @return {number} */\n"
@@ -993,7 +892,11 @@ public class NewTypeInferenceTest extends CompilerTypeTestCase {
   }
 
   public void testBackwardForwardPathologicalCase() {
-    inferFirstFormalType("function f(x) { var y = 5; y < x; }", JSType.NUMBER);
+    typeCheck(
+        "function f(x) { var y = 5; y < x; }"
+        + "f(123);\n"
+        + "f('asdf')",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testTopInitialization() {

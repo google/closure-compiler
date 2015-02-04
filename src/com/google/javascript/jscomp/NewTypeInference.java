@@ -287,7 +287,6 @@ public class NewTypeInference implements CompilerPass {
     return symbolTable.getGlobalScope();
   }
 
-
   @Override
   public void process(Node externs, Node root) {
     try {
@@ -3599,24 +3598,6 @@ public class NewTypeInference implements CompilerPass {
       return envPutType(env, RETVAL_ID, JSType.BOTTOM);
     }
     return env;
-  }
-
-  @VisibleForTesting // Only used from tests
-  JSType getFormalType(int argpos) {
-    Preconditions.checkState(summaries.size() == 1);
-    return summaries.values().iterator().next()
-        .getFunType().getFormalType(argpos);
-  }
-
-  @VisibleForTesting // Only used from tests
-  JSType getReturnType() {
-    Preconditions.checkState(summaries.size() == 1);
-    return summaries.values().iterator().next().getFunType().getReturnType();
-  }
-
-  @VisibleForTesting // Only used from tests
-  JSType getDeclaredType(String varName) {
-    return currentScope.getDeclaredTypeOf(varName);
   }
 
   private static class DeferredCheck {

@@ -661,7 +661,7 @@ public class ObjectType implements TypeWithProperties {
   // TODO(dimvar): handle greatest lower bound of interface types.
   // If we do that, we need to normalize the output, otherwise it could contain
   // two object types that are in a subtype relation, eg, see
-  // NewTypeInferenceTest#testDifficultObjectSpecialization.
+  // NewTypeInferenceTestES5OrLower#testDifficultObjectSpecialization.
   static ImmutableSet<ObjectType> meetSetsHelper(
       boolean specializeObjs1,
       Set<ObjectType> objs1, Set<ObjectType> objs2) {

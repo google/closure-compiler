@@ -370,7 +370,7 @@ public class FunctionType {
       }
       // NOTE(dimvar): This is a bug. The code that triggers this should be rare
       // and the fix is not trivial, so for now we decided to not fix.
-      // See unit tests in NewTypeInferenceTest#testGenericsSubtyping
+      // See unit tests in NewTypeInferenceTestES5OrLower#testGenericsSubtyping
       return instantiateGenericsWithUnknown(this).isSubtypeOf(other);
     }
 
