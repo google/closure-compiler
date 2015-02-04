@@ -96,7 +96,7 @@ ui.router.$state.GoOptions_;
  * @param {string} to
  * @param {Object=} params
  * @param {(ui.router.$state.GoOptions_|Object)=} options
- * @returns {angular.$q.Promise}
+ * @return {angular.$q.Promise}
  */
 ui.router.$state.go = function(to, params, options) {};
 
@@ -105,7 +105,7 @@ ui.router.$state.go = function(to, params, options) {};
  * @param {?string|Object} stateOrName
  * @param {Object=} params
  * @param {Object=} options
- * @returns {string} compiled state url
+ * @return {string} compiled state url
  */
 ui.router.$state.href = function(stateOrName, params, options) {};
 
@@ -122,13 +122,13 @@ ui.router.$state.includes = function(stateOrName, params, options) {};
  * @param {?string|Object} stateOrName
  * @param {Object=} params
  * @param {Object=} options
- * @returns {boolean}
+ * @return {boolean}
  */
 ui.router.$state.is = function(stateOrName, params, options) {};
 
 
 /**
- * @returns {angular.$q.Promise}
+ * @return {angular.$q.Promise}
  */
 ui.router.$state.reload = function() {};
 
