@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ProcessCommonJSModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.Scope.Var;
@@ -168,17 +167,6 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       }
     }
 
-    for (String name : namesToRequire) {
-      Node require = IR.exprResult(IR.call(NodeUtil.newQName(
-          compiler, "goog.require"),
-          IR.string(moduleName + "." + name)));
-      require.copyInformationFromForTree(importDecl);
-      script.addChildToFront(require);
-      if (reportDependencies) {
-        t.getInput().addRequire(moduleName + "." + name);
-      }
-    }
-
     parent.removeChild(importDecl);
     compiler.reportCodeChange();
   }
@@ -305,26 +293,6 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       script.addChildToFront(googProvide.copyInformationFromForTree(script));
       if (reportDependencies) {
         t.getInput().addProvide(moduleName);
-      }
-
-      for (String name : exportMap.keySet()) {
-        String qualifiedName = moduleName + "." + name;
-        Node newGoogProvide = IR.exprResult(
-            IR.call(NodeUtil.newQName(compiler, "goog.provide"),
-                IR.string(qualifiedName)));
-        newGoogProvide.copyInformationFromForTree(script);
-        if (name.equals("default")) {
-          JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
-              ? new JSDocInfoBuilder(false)
-              : JSDocInfoBuilder.copyFrom(script.getJSDocInfo());
-          jsDocInfo.recordSuppressions(ImmutableSet.of("invalidProvide"));
-          script.setJSDocInfo(jsDocInfo.build(script));
-        }
-
-        script.addChildAfter(newGoogProvide, googProvide);
-        if (reportDependencies) {
-          t.getInput().addProvide(qualifiedName);
-        }
       }
     }
 
