@@ -178,7 +178,8 @@ md.$sidenav;
 /**
  * @typedef {{
  *   setDefaultTheme: function(string),
- *   alwaysWatchTheme: function(boolean)
+ *   alwaysWatchTheme: function(boolean),
+ *   theme: function(string)
  * }}
  */
 md.$mdThemingProvider;
@@ -196,7 +197,7 @@ md.$mdThemingProvider.alwaysWatchTheme = function(alwaysWatch) {};
 /**
  * @param {string} theme
  */
-md.$mdThemingProvider.theme = function(alwaysWatch) {};
+md.$mdThemingProvider.theme = function(theme) {};
 
 /**
  * @param {string} primaryPalette
