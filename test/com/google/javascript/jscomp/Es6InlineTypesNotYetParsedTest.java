@@ -144,7 +144,7 @@ public class Es6InlineTypesNotYetParsedTest extends CompilerTestCase {
 
     public void transpilesTo(String... lines) {
       assertThat(doCompile(getSubject()).trim())
-          .is("'use strict';" + Joiner.on("\n").join(lines));
+          .isEqualTo("'use strict';" + Joiner.on("\n").join(lines));
     }
   }
 }
