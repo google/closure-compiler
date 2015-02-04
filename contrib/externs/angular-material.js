@@ -208,3 +208,13 @@ md.$mdThemingProvider.primaryPalette = function(primaryPalette) {};
  * @param {string} accentPalette
  */
 md.$mdThemingProvider.accentPalette = function(accentPalette) {};
+
+/**
+ * @param {string} backgroundPalette
+ */
+md.$mdThemingProvider.backgroundPalette = function(backgroundPalette) {};
+
+/**
+ * @param {string} warnPalette
+ */
+md.$mdThemingProvider.warnPalette = function(warnPalette) {};
