@@ -192,3 +192,18 @@ md.$mdThemingProvider.setDefaultTheme = function(theme) {};
  * @param {boolean} alwaysWatch
  */
 md.$mdThemingProvider.alwaysWatchTheme = function(alwaysWatch) {};
+
+/**
+ * @param {string} theme
+ */
+md.$mdThemingProvider.theme = function(alwaysWatch) {};
+
+/**
+ * @param {string} primaryPalette
+ */
+md.$mdThemingProvider.primaryPalette = function(primaryPalette) {};
+
+/**
+ * @param {string} accentPalette
+ */
+md.$mdThemingProvider.accentPalette = function(accentPalette) {};
