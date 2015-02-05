@@ -32,16 +32,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Process aliases in goog.scope blocks.
+ * Process aliases in goog.modules.
  * <pre>
  * goog.module('namespace');
  * var foo = goog.require('another.namespace');
+ * ...
+ * </pre>
  *
- * should become
+ * becomes
  *
+ * <pre>
  * goog.provide('namespace');
  * goog.require('another.namespace');
- * etc
+ * goog.scope(function() {
+ *   var foo = another.namespace;
+ *   ...
+ * });
  * </pre>
  *
  * @author johnlenz@google.com (John Lenz)
@@ -49,7 +55,7 @@ import java.util.Map;
 public class ClosureRewriteModule
     implements NodeTraversal.Callback, HotSwapCompilerPass {
 
-  // TODO(johnlenz): Don't use goog.scope as an intermediary add type checker
+  // TODO(johnlenz): Don't use goog.scope as an intermediary; add type checker
   // support instead.
   // TODO(johnlenz): harden this class to warn about misuse
   // TODO(johnlenz): handle non-namespace module identifiers aka 'foo/bar'
@@ -390,7 +396,7 @@ public class ClosureRewriteModule
     // rewrite:
     //   var foo = goog.require('ns.foo')
     // to
-    //   goog.provide('foo');
+    //   goog.require('foo');
     //   var foo = ns.foo;
 
     // replace the goog.require statementment with a reference to the
