@@ -301,6 +301,12 @@ public class CommandLineRunner extends
         "(i.e. filesystem-path|webserver-path)")
     private List<String> sourceMapLocationMapping = Lists.newArrayList();
 
+    @Option(name = "--source_map_input",
+        hidden = true,
+        usage = "Source map locations for input files, separated by a '|', " +
+        "(i.e. input-file-path|input-source-map)")
+    private List<String> sourceMapInputs = Lists.newArrayList();
+
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")
     @Option(name = "--jscomp_error",
@@ -577,7 +583,8 @@ public class CommandLineRunner extends
     private List<String> conformanceConfigs = new ArrayList<>();
 
     @Argument
-    private List<String> arguments = new ArrayList<>();
+    private final List<String> arguments = new ArrayList<>();
+    private final CmdLineParser parser;
 
     private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
         ImmutableMap.of(
@@ -592,11 +599,14 @@ public class CommandLineRunner extends
             "ADVANCED_OPTIMIZATIONS",
             CompilationLevel.ADVANCED_OPTIMIZATIONS);
 
+    Flags() {
+      parser = new CmdLineParser(this);
+    }
+
     /**
      * Parse the given args list.
      */
     private void parse(List<String> args) throws CmdLineException {
-      CmdLineParser parser = new CmdLineParser(this);
       parser.parseArgument(args.toArray(new String[] {}));
 
       compilationLevelParsed =
@@ -609,14 +619,13 @@ public class CommandLineRunner extends
     }
 
     private void printUsage(PrintStream ps) {
-      CmdLineParser p = new CmdLineParser(this);
-      p.printUsage(new OutputStreamWriter(ps, UTF_8), null, OptionHandlerFilter.ALL);
+      parser.printUsage(new OutputStreamWriter(ps, UTF_8), null, OptionHandlerFilter.ALL);
       ps.flush();
     }
 
     private void printShortUsageAfterErrors(PrintStream ps) {
       ps.print("Sample usage: ");
-      ps.println((new CmdLineParser(this)).printExample(OptionHandlerFilter.PUBLIC, null));
+      ps.println(parser.printExample(OptionHandlerFilter.PUBLIC, null));
       ps.println("Run with --help for all options and details");
       ps.flush();
     }
@@ -646,27 +655,43 @@ public class CommandLineRunner extends
       patterns.addAll(arguments);
       List<String> allJsInputs = findJsFiles(patterns);
       if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
-        throw new CmdLineException(new CmdLineParser(this), "No inputs matched");
+        throw new CmdLineException(parser, "No inputs matched");
       }
       return allJsInputs;
     }
 
-    @SuppressWarnings("deprecation")
     List<SourceMap.LocationMapping> getSourceMapLocationMappings() throws CmdLineException {
       ImmutableList.Builder<LocationMapping> locationMappings = ImmutableList.builder();
 
-      Splitter splitter = Splitter.on('|').limit(2);
-      for (String locationMapping : sourceMapLocationMapping) {
-        List<String> parts = splitter.splitToList(locationMapping);
-        if (parts.size() != 2) {
-          throw new CmdLineException(
-            "Bad value for --source_map_location_mapping: " +
-            ImmutableList.of(sourceMapLocationMapping));
-        }
-        locationMappings.add(new SourceMap.LocationMapping(parts.get(0), parts.get(1)));
+      ImmutableMap<String, String> split = splitPipeParts(
+          sourceMapLocationMapping, "--source_map_location_mapping");
+      for (Map.Entry<String, String> mapping : split.entrySet()) {
+        locationMappings.add(new SourceMap.LocationMapping(mapping.getKey(),
+            mapping.getValue()));
       }
 
       return locationMappings.build();
+    }
+
+    ImmutableMap<String, String> getSourceMapInputs() throws CmdLineException {
+      return splitPipeParts(sourceMapInputs, "--source_map_input");
+    }
+
+    private ImmutableMap<String, String> splitPipeParts(Iterable<String> input,
+        String flagName) throws CmdLineException {
+      ImmutableMap.Builder<String, String> result = new ImmutableMap.Builder<>();;
+
+      Splitter splitter = Splitter.on('|').limit(2);
+      for (String inputSourceMap : input) {
+        List<String> parts = splitter.splitToList(inputSourceMap);
+        if (parts.size() != 2) {
+          throw new CmdLineException(parser, "Bad value for " + flagName +
+              " (duplicate key): " + input);
+        }
+        result.put(parts.get(0), parts.get(1));
+      }
+
+      return result.build();
     }
 
     // Our own option parser to be backwards-compatible.
@@ -959,6 +984,7 @@ public class CommandLineRunner extends
 
     List<String> jsFiles = null;
     List<LocationMapping> mappings = null;
+    ImmutableMap<String, String> sourceMapInputs = null;
     try {
       flags.parse(processedArgs);
 
@@ -969,6 +995,7 @@ public class CommandLineRunner extends
 
       jsFiles = flags.getJsFiles();
       mappings = flags.getSourceMapLocationMappings();
+      sourceMapInputs = flags.getSourceMapInputs();
     } catch (CmdLineException e) {
       reportError(e.getMessage());
     } catch (IOException ioErr) {
@@ -1044,6 +1071,7 @@ public class CommandLineRunner extends
           .setCreateSourceMap(flags.createSourceMap)
           .setSourceMapFormat(flags.sourceMapFormat)
           .setSourceMapLocationMappings(mappings)
+          .setSourceMapInputFiles(sourceMapInputs)
           .setWarningGuardSpec(Flags.getWarningGuardSpec())
           .setDefine(flags.define)
           .setCharset(flags.charset)
@@ -1182,7 +1210,7 @@ public class CommandLineRunner extends
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
 
     // Looking for BOM.
-    if ((int)textProto.charAt(0) == UTF8_BOM_CODE) {
+    if (textProto.charAt(0) == UTF8_BOM_CODE) {
       // Stripping the BOM.
       textProto = textProto.substring(1);
     }
