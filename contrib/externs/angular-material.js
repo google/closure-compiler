@@ -78,7 +78,7 @@ md.$dialog.ConfirmConfig_;
 /**
  * @param {md.$dialog.options|md.$dialog.ConfirmConfig_|
  *     md.$dialog.AlertConfig_} options
- * @return {angular.$q.Promise}
+ * @return {!angular.$q.Promise}
  */
 md.$dialog.prototype.show = function(options) {};
 
