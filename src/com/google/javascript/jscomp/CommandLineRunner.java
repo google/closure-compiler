@@ -578,6 +578,7 @@ public class CommandLineRunner extends
 
     @Argument
     private List<String> arguments = new ArrayList<>();
+    private CmdLineParser parser;
 
     private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
         ImmutableMap.of(
@@ -592,11 +593,14 @@ public class CommandLineRunner extends
             "ADVANCED_OPTIMIZATIONS",
             CompilationLevel.ADVANCED_OPTIMIZATIONS);
 
+    Flags() {
+      parser = new CmdLineParser(this);
+    }
+
     /**
      * Parse the given args list.
      */
     private void parse(List<String> args) throws CmdLineException {
-      CmdLineParser parser = new CmdLineParser(this);
       parser.parseArgument(args.toArray(new String[] {}));
 
       compilationLevelParsed =
@@ -609,14 +613,13 @@ public class CommandLineRunner extends
     }
 
     private void printUsage(PrintStream ps) {
-      CmdLineParser p = new CmdLineParser(this);
-      p.printUsage(new OutputStreamWriter(ps, UTF_8), null, OptionHandlerFilter.ALL);
+      parser.printUsage(new OutputStreamWriter(ps, UTF_8), null, OptionHandlerFilter.ALL);
       ps.flush();
     }
 
     private void printShortUsageAfterErrors(PrintStream ps) {
       ps.print("Sample usage: ");
-      ps.println((new CmdLineParser(this)).printExample(OptionHandlerFilter.PUBLIC, null));
+      ps.println(parser.printExample(OptionHandlerFilter.PUBLIC, null));
       ps.println("Run with --help for all options and details");
       ps.flush();
     }
@@ -646,12 +649,11 @@ public class CommandLineRunner extends
       patterns.addAll(arguments);
       List<String> allJsInputs = findJsFiles(patterns);
       if (!patterns.isEmpty() && allJsInputs.isEmpty()) {
-        throw new CmdLineException(new CmdLineParser(this), "No inputs matched");
+        throw new CmdLineException(parser, "No inputs matched");
       }
       return allJsInputs;
     }
 
-    @SuppressWarnings("deprecation")
     List<SourceMap.LocationMapping> getSourceMapLocationMappings() throws CmdLineException {
       ImmutableList.Builder<LocationMapping> locationMappings = ImmutableList.builder();
 
@@ -659,7 +661,7 @@ public class CommandLineRunner extends
       for (String locationMapping : sourceMapLocationMapping) {
         List<String> parts = splitter.splitToList(locationMapping);
         if (parts.size() != 2) {
-          throw new CmdLineException(
+          throw new CmdLineException(parser,
             "Bad value for --source_map_location_mapping: " +
             ImmutableList.of(sourceMapLocationMapping));
         }
