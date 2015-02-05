@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ProcessCommonJSModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.Scope.Var;
@@ -251,6 +252,8 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
         "ProcessEs6Modules supports only one invocation per "
         + "CompilerInput / script node");
 
+    rewriteRequires(script);
+
     String moduleName = toModuleName(loader.getLoadAddress(t.getInput()));
 
     if (!exportMap.isEmpty()) {
@@ -296,8 +299,50 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       }
     }
 
+    JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
+        ? new JSDocInfoBuilder(false)
+        : JSDocInfoBuilder.copyFrom(script.getJSDocInfo());
+    if (!jsDocInfo.isPopulatedWithFileOverview()) {
+      jsDocInfo.recordFileOverview("");
+    }
+    // Don't check provides and requires, since most of them are auto-generated.
+    jsDocInfo.recordSuppressions(ImmutableSet.of("missingProvide", "missingRequire"));
+    script.setJSDocInfo(jsDocInfo.build(script));
+
     exportMap.clear();
     compiler.reportCodeChange();
+  }
+
+  private void rewriteRequires(Node script) {
+    NodeTraversal.traverse(compiler, script, new NodeTraversal.AbstractShallowCallback() {
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        if (n.isCall()
+            && n.getFirstChild().matchesQualifiedName("goog.require")
+            && parent.isName()) {
+          visitRequire(n, parent);
+        }
+      }
+
+      private void visitRequire(Node requireCall, Node parent) {
+        // Rewrite
+        //
+        //   var foo = goog.require('bar.foo');
+        //
+        // to
+        //
+        //   goog.require('bar.foo');
+        //   var foo = bar.foo;
+
+        String namespace = requireCall.getLastChild().getString();
+
+        Node replacement = NodeUtil.newQName(compiler, namespace).srcrefTree(requireCall);
+        parent.replaceChild(requireCall, replacement);
+        Node varNode = parent.getParent();
+        varNode.getParent().addChildBefore(
+            IR.exprResult(requireCall).srcrefTree(requireCall),
+            varNode);
+      }
+    });
   }
 
   /**
