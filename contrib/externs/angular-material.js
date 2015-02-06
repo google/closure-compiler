@@ -189,8 +189,11 @@ md.$mdThemingProvider;
 
 /*****************************************************************************/
 
-/** @constructor */
-md.$mdThemingProvider.Theme = function() {};
+/**
+ * @param {string} name
+ * @constructor
+ */
+md.$mdThemingProvider.Theme = function(name) {};
 
 /** @type {string} */
 md.$mdThemingProvider.Theme.prototype.name;
@@ -200,24 +203,27 @@ md.$mdThemingProvider.Theme.prototype.colors;
 
 /**
  * @param {string} primaryPalette
+ * @param {Object<string,string>=} opt_colors
  * @return {md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.primaryPalette =
-    function(primaryPalette) {};
+    function(primaryPalette, opt_colors) {};
 
 /**
  * @param {string} accentPalette
+ * @param {Object<string,string>=} opt_colors
  * @return {md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.accentPalette =
-    function(accentPalette) {};
+    function(accentPalette, opt_colors) {};
 
 /**
  * @param {string} backgroundPalette
+ * @param {Object<string,string>=} opt_colors
  * @return {md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.backgroundPalette =
-    function(backgroundPalette) {};
+    function(backgroundPalette, opt_colors) {};
 
 /**
  * @param {string} warnPalette
