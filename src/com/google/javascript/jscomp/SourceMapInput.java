@@ -32,7 +32,7 @@ public class SourceMapInput {
       Logger.getLogger(SourceMapInput.class.getName());
 
   private SourceFile sourceFile;
-  private volatile SourceMapConsumerV3 parsedSourceMap = null;
+  private SourceMapConsumerV3 parsedSourceMap = null;
 
   public SourceMapInput(SourceFile sourceFile) {
     this.sourceFile = sourceFile;
