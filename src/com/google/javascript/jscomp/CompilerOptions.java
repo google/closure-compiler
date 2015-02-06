@@ -210,13 +210,15 @@ public class CompilerOptions implements Serializable, Cloneable {
     reportMissingOverride = level;
   }
 
-  /** Checks for missing goog.require() calls **/
-  @Deprecated
-  public CheckLevel checkRequires;
-
+  /**
+   * Deprecated. Use
+   * {@code setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);}
+   * or
+   * {@code setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);}
+   */
   @Deprecated
   public void setCheckRequires(CheckLevel level) {
-    checkRequires = level;
+    setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, level);
   }
 
   public CheckLevel checkProvides;
@@ -971,7 +973,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkSuspiciousCode = false;
     checkTypes = false;
     reportMissingOverride = CheckLevel.OFF;
-    checkRequires = CheckLevel.OFF;
     checkProvides = CheckLevel.OFF;
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;

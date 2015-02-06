@@ -321,13 +321,6 @@ public class IntegrationTest extends IntegrationTestCase {
     });
   }
 
-  public void testCheckRequiresOn() {
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckRequires(CheckLevel.ERROR);
-    test(options, new String[] {"/** @constructor */ function Foo() {}", "new Foo();"},
-        CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
-  }
-
   public void testCheckProvidesOn() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckProvides(CheckLevel.ERROR);
@@ -819,7 +812,6 @@ public class IntegrationTest extends IntegrationTestCase {
   public void testAllChecksOn() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSuspiciousCode(true);
-    options.setCheckRequires(CheckLevel.ERROR);
     options.setCheckProvides(CheckLevel.ERROR);
     options.setGenerateExports(true);
     options.exportTestFunctions = true;

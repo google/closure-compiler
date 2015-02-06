@@ -39,18 +39,15 @@ import java.util.Set;
 class CheckRequiresForConstructors implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   private final CodingConvention codingConvention;
-  private final CheckLevel level;
 
   // Warnings
   static final DiagnosticType MISSING_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_MISSING_REQUIRE_WARNING",
       "''{0}'' used but not goog.require''d");
 
-  CheckRequiresForConstructors(AbstractCompiler compiler,
-      CheckLevel level) {
+  CheckRequiresForConstructors(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.codingConvention = compiler.getCodingConvention();
-    this.level = level;
   }
 
   /**
@@ -158,8 +155,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
             && !classNames.contains(className)) {
           // TODO(mknichel): If the symbol is not explicitly provided, find the next best
           // symbol from the provides in the same file.
-          compiler.report(
-              t.makeError(node, level, MISSING_REQUIRE_WARNING, className));
+          compiler.report(t.makeError(node, MISSING_REQUIRE_WARNING, className));
           classNames.add(className);
         }
       }
