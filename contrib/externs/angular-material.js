@@ -178,7 +178,7 @@ md.$sidenav;
  * @typedef {{
  *   alwaysWatchTheme: function(boolean),
  *   definePalette:
- *       function(string, !Object<string,string> : md.$mdThemingProvider),
+ *       function(string, !Object<string,string>) : md.$mdThemingProvider,
  *   extendPalette:
  *       function(string, !Object<string,string>) : !Object<string,string>,
  *   setDefaultTheme: function(string),
@@ -190,7 +190,7 @@ md.$mdThemingProvider;
 /*****************************************************************************/
 
 /** @constructor */
-md.$mdThemingProvider.Theme = function();
+md.$mdThemingProvider.Theme = function() {};
 
 /** @type {string} */
 md.$mdThemingProvider.Theme.prototype.name;
