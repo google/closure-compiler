@@ -174,47 +174,65 @@ md.$sidenav;
  * $mdThemingProvider Service
  *****************************************************************************/
 
-
 /**
  * @typedef {{
- *   setDefaultTheme: function(string),
  *   alwaysWatchTheme: function(boolean),
- *   theme: function(string)
+ *   definePalette:
+ *       function(string, !Object<string,string> : md.$mdThemingProvider),
+ *   extendPalette:
+ *       function(string, !Object<string,string>) : !Object<string,string>,
+ *   setDefaultTheme: function(string),
+ *   theme: function(string,string=) : md.$mdThemingProvider.Theme
  * }}
  */
 md.$mdThemingProvider;
 
-/**
- * @param {string} theme
- */
-md.$mdThemingProvider.setDefaultTheme = function(theme) {};
+/*****************************************************************************/
 
-/**
- * @param {boolean} alwaysWatch
- */
-md.$mdThemingProvider.alwaysWatchTheme = function(alwaysWatch) {};
+/** @constructor */
+md.$mdThemingProvider.Theme = function();
 
-/**
- * @param {string} theme
- */
-md.$mdThemingProvider.theme = function(theme) {};
+/** @type {string} */
+md.$mdThemingProvider.Theme.prototype.name;
+
+/** @type {!Object<string,string>} */
+md.$mdThemingProvider.Theme.prototype.colors;
 
 /**
  * @param {string} primaryPalette
+ * @return {md.$mdThemingProvider.Theme}
  */
-md.$mdThemingProvider.primaryPalette = function(primaryPalette) {};
+md.$mdThemingProvider.Theme.prototype.primaryPalette =
+    function(primaryPalette) {};
 
 /**
  * @param {string} accentPalette
+ * @return {md.$mdThemingProvider.Theme}
  */
-md.$mdThemingProvider.accentPalette = function(accentPalette) {};
+md.$mdThemingProvider.Theme.prototype.accentPalette =
+    function(accentPalette) {};
 
 /**
  * @param {string} backgroundPalette
+ * @return {md.$mdThemingProvider.Theme}
  */
-md.$mdThemingProvider.backgroundPalette = function(backgroundPalette) {};
+md.$mdThemingProvider.Theme.prototype.backgroundPalette =
+    function(backgroundPalette) {};
 
 /**
  * @param {string} warnPalette
+ * @return {md.$mdThemingProvider.Theme}
  */
-md.$mdThemingProvider.warnPalette = function(warnPalette) {};
+md.$mdThemingProvider.Theme.prototype.warnPalette = function(warnPalette) {};
+
+/*****************************************************************************/
+
+
+/**
+ * @param {string} themeName
+ * @param {string=} opt_inheritFrom
+ * @return {md.$mdThemingProvider.Theme}
+ */
+md.$mdThemingProvider.prototype.theme = function(themeName, opt_inheritFrom) {};
+
+
