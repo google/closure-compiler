@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -2102,8 +2103,19 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.stripTypePrefixes = stripTypePrefixes;
   }
 
+  /**
+   * @deprecated Use {@link #addCustomPass}
+   */
+  @Deprecated
   public void setCustomPasses(Multimap<CustomPassExecutionTime, CompilerPass> customPasses) {
     this.customPasses = customPasses;
+  }
+
+  public void addCustomPass(CustomPassExecutionTime time, CompilerPass customPass) {
+    if (customPasses == null) {
+      customPasses = LinkedHashMultimap.<CustomPassExecutionTime, CompilerPass>create();
+    }
+    customPasses.put(time, customPass);
   }
 
   public void setMarkNoSideEffectCalls(boolean markNoSideEffectCalls) {

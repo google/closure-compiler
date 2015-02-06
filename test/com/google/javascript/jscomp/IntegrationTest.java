@@ -22,8 +22,6 @@ import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
@@ -2413,8 +2411,9 @@ public class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testAlwaysRunSafetyCheck() {
-    Multimap<CustomPassExecutionTime, CompilerPass> custom =
-        ImmutableMultimap.<CustomPassExecutionTime, CompilerPass>of(
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckSymbols(false);
+    options.addCustomPass(
             CustomPassExecutionTime.BEFORE_OPTIMIZATIONS, new CompilerPass() {
               @Override
               public void process(Node externs, Node root) {
@@ -2424,9 +2423,7 @@ public class IntegrationTest extends IntegrationTestCase {
               }
             });
 
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckSymbols(false);
-    options.setCustomPasses(custom);
+
     try {
       test(options,
            "var x = 3; function f() { return x + z; }",

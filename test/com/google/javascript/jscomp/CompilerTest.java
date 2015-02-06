@@ -20,12 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
@@ -732,26 +730,22 @@ public class CompilerTest extends TestCase {
     CompilerOptions options = createNewFlagBasedOptions();
     options.setIdeMode(true);
 
-    Multimap<CustomPassExecutionTime, CompilerPass> customPasses = HashMultimap.create();
-
     final boolean[] before = new boolean[1];
     final boolean[] after = new boolean[1];
 
-    customPasses.put(CustomPassExecutionTime.BEFORE_OPTIMIZATIONS,
+    options.addCustomPass(CustomPassExecutionTime.BEFORE_OPTIMIZATIONS,
                      new CompilerPass() {
                        @Override public void process(Node externs, Node root) {
                          before[0] = true;
                        }
                      });
 
-    customPasses.put(CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP,
+    options.addCustomPass(CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP,
                      new CompilerPass() {
                        @Override public void process(Node externs, Node root) {
                          after[0] = true;
                        }
                      });
-
-    options.setCustomPasses(customPasses);
 
     String js = "var x = 1;";
     List<SourceFile> inputs = ImmutableList.of(
