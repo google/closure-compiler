@@ -22,6 +22,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.FunctionTypeI;
+import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,7 +39,7 @@ import java.util.TreeSet;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public abstract class JSType {
+public abstract class JSType implements TypeI {
   protected static final int BOTTOM_MASK = 0x0;
   protected static final int TYPEVAR_MASK = 0x1;
   protected static final int NON_SCALAR_MASK = 0x2;
@@ -242,6 +245,7 @@ public abstract class JSType {
     return TOP_MASK == getMask();
   }
 
+  @Override
   public boolean isBottom() {
     return BOTTOM_MASK == getMask();
   }
@@ -843,8 +847,9 @@ public abstract class JSType {
     return isSubtypeOfHelper(false, other);
   }
 
-  public boolean isSubtypeOf(JSType other) {
-    return isSubtypeOfHelper(true, other);
+  @Override
+  public boolean isSubtypeOf(TypeI other) {
+    return isSubtypeOfHelper(true, (JSType) other);
   }
 
   private boolean isSubtypeOfHelper(
@@ -1134,6 +1139,64 @@ public abstract class JSType {
           return builder.append("Unrecognized type: " + tags);
         }
     }
+  }
+
+  @Override
+  public boolean isConstructor() {
+    FunctionType ft = getFunTypeIfSingletonObj();
+    return ft != null && ft.isConstructor();
+  }
+
+  @Override
+  public boolean isFunctionType() {
+    return getFunType() != null;
+  }
+
+  @Override
+  public boolean isInterface() {
+    FunctionType ft = getFunTypeIfSingletonObj();
+    return ft != null && ft.isInterfaceDefinition();
+  }
+
+  @Override
+  public boolean isEquivalentTo(TypeI type) {
+    return equals(type);
+  }
+
+  @Override
+  public boolean isUnknownType() {
+    return isUnknown();
+  }
+
+  // TODO(dimvar): must implement these to use NTI in the rest of the passes.
+  @Override
+  public TypeI restrictByNotNullOrUndefined() {
+    throw new UnsupportedOperationException(
+        "JSType#restrictByNotNullOrUndefined not implemented.");
+  }
+
+  @Override
+  public FunctionTypeI toMaybeFunctionType() {
+    throw new UnsupportedOperationException(
+        "JSType#toMaybeFunctionType not implemented.");
+  }
+
+  @Override
+  public ObjectTypeI toMaybeObjectType() {
+    throw new UnsupportedOperationException(
+        "JSType#toMaybeObjectType not implemented.");
+  }
+
+  @Override
+  public boolean hasOwnProperty(String propName) {
+    throw new UnsupportedOperationException(
+        "JSType#hasOwnProperty not implemented.");
+  }
+
+  @Override
+  public String getReferenceName() {
+    throw new UnsupportedOperationException(
+        "JSType#getReferenceName not implemented");
   }
 
   @Override

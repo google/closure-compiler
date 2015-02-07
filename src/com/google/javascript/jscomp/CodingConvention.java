@@ -16,12 +16,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
-import com.google.javascript.jscomp.newtypes.JSType;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
@@ -184,8 +184,8 @@ public interface CodingConvention extends Serializable {
    * In many JS libraries, the function that produces inheritance also
    * adds properties to the superclass and/or subclass.
    */
-  public void applySubclassRelationship(FunctionType parentCtor,
-      FunctionType childCtor, SubclassType type);
+  public void applySubclassRelationship(FunctionTypeI parentCtor,
+      FunctionTypeI childCtor, SubclassType type);
 
   /**
    * Function name for abstract methods. An abstract method can be assigned to
@@ -213,8 +213,8 @@ public interface CodingConvention extends Serializable {
    * In many JS libraries, the function that adds a singleton getter to a class
    * adds properties to the class.
    */
-  public void applySingletonGetter(FunctionType functionType,
-      FunctionType getterType, ObjectType objectType);
+  public void applySingletonGetter(FunctionTypeI functionType,
+      FunctionTypeI getterType, ObjectTypeI objectType);
 
   /**
    * @return Whether the function is inlinable by convention.
@@ -231,9 +231,9 @@ public interface CodingConvention extends Serializable {
    * also adds properties to the delegator and delegate base.
    */
   public void applyDelegateRelationship(
-      ObjectType delegateSuperclass, ObjectType delegateBase,
-      ObjectType delegator, FunctionType delegateProxy,
-      FunctionType findDelegate);
+      ObjectTypeI delegateSuperclass, ObjectTypeI delegateBase,
+      ObjectTypeI delegator, FunctionTypeI delegateProxy,
+      FunctionTypeI findDelegate);
 
   /**
    * @return the name of the delegate superclass.
@@ -254,9 +254,9 @@ public interface CodingConvention extends Serializable {
    * @param delegateProxyPrototypes List of delegate proxy prototypes.
    */
   public void defineDelegateProxyPrototypeProperties(
-      JSTypeRegistry registry,
-      StaticScope<com.google.javascript.rhino.jstype.JSType> scope,
-      List<ObjectType> delegateProxyPrototypes,
+      TypeIRegistry registry,
+      StaticScope<? extends TypeI> scope,
+      List<? extends ObjectTypeI> delegateProxyPrototypes,
       Map<String, String> delegateCallingConventions);
 
   /**
@@ -419,24 +419,15 @@ public interface CodingConvention extends Serializable {
    */
   public class AssertionFunctionSpec {
     protected final String functionName;
-    // Old type system type
     protected final JSTypeNative assertedType;
-    // New type system type
-    protected final JSType assertedNewType;
 
-    @Deprecated
     public AssertionFunctionSpec(String functionName) {
-      this(functionName, JSType.UNKNOWN, null);
+      this(functionName, null);
     }
 
-    public AssertionFunctionSpec(String functionName, JSType assertedNewType) {
-      this(functionName, assertedNewType, null);
-    }
-
-    public AssertionFunctionSpec(String functionName,
-        JSType assertedNewType, JSTypeNative assertedType) {
+    public AssertionFunctionSpec(
+        String functionName, JSTypeNative assertedType) {
       this.functionName = functionName;
-      this.assertedNewType = assertedNewType;
       this.assertedType = assertedType;
     }
 
@@ -454,22 +445,17 @@ public interface CodingConvention extends Serializable {
     }
 
     /**
-     * Returns the old type system type for a type assertion, or null if
-     * the function asserts that the node must not be null or undefined.
+     * Returns the type for a type assertion, or null if the function asserts
+     * that the node must not be null or undefined.
      * @param call The asserting call
      */
-    public com.google.javascript.rhino.jstype.JSType
-        getAssertedOldType(Node call, JSTypeRegistry registry) {
+    public TypeI getAssertedType(Node call, TypeIRegistry registry) {
+      // The old type inference accepts null from this function, but not the
+      // new one.
+      if (registry instanceof DeclaredTypeRegistry) {
+        return registry.getNativeType(assertedType);
+      }
       return assertedType != null ? registry.getNativeType(assertedType) : null;
-    }
-
-    /**
-     * Returns the new type system type for a type assertion.
-     * @param call The asserting call
-     */
-    public com.google.javascript.jscomp.newtypes.JSType
-        getAssertedNewType(Node call, DeclaredTypeRegistry scope) {
-      return assertedNewType;
     }
   }
 }

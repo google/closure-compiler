@@ -40,10 +40,16 @@
 package com.google.javascript.rhino;
 
 /**
+ * A common interface for types in the old type system and the new type system,
+ * so that the other passes need not know which type system they are using.
+ *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public interface TypeI {
+  String getReferenceName();
+
+  boolean hasOwnProperty(String propName);
 
   boolean isBottom();
 

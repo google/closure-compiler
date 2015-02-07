@@ -939,8 +939,8 @@ class TypeInference
     if (assertedNode == null) {
       return scope;
     }
-    JSType assertedType = assertionFunctionSpec.getAssertedOldType(
-        callNode, registry);
+    JSType assertedType =
+        (JSType) assertionFunctionSpec.getAssertedType(callNode, registry);
     String assertedNodeName = assertedNode.getQualifiedName();
 
     JSType narrowed;

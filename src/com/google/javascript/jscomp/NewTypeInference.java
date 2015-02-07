@@ -1791,7 +1791,7 @@ public class NewTypeInference implements CompilerPass {
       return new EnvTypePair(env, JSType.UNKNOWN);
     }
     JSType assertedType =
-        assertionFunctionSpec.getAssertedNewType(callNode, currentScope);
+        (JSType) assertionFunctionSpec.getAssertedType(callNode, currentScope);
     if (assertedType.isUnknown()) {
       warnings.add(
           JSError.make(callNode, NewTypeInference.UNKNOWN_ASSERTION_TYPE));

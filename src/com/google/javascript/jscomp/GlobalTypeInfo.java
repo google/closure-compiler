@@ -39,9 +39,13 @@ import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.Typedef;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -2069,9 +2073,18 @@ class GlobalTypeInfo implements CompilerPass {
       return rawType.getInstanceAsJSType();
     }
 
-    // Only used during symbol-table construction, not during type inference.
     @Override
     public JSType lookupTypeByName(String name) {
+      // HACK: this function is called during type inference
+      // (when localClassDefs is null) in just one case: for goog.asserts
+      // functions assertFunction, assertArray, assertElement.
+      // For that case, the implementation below works, otherwise it will crash.
+      if (localClassDefs == null) {
+        return getDeclaredTypeOf(name)
+            .getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
+      }
+
+      // This is the proper use during symbol-table construction
       if (name.contains(".")) {
         JSType type = lookupTypeByQname(QualifiedName.fromQname(name));
         return type != null ? type : getUnresolvedTypeByName(name);
@@ -2392,6 +2405,48 @@ class GlobalTypeInfo implements CompilerPass {
       localClassDefs = null;
       localTypedefs = null;
       localEnums = null;
+    }
+
+    @Override
+    public JSType getNativeType(JSTypeNative typeId) {
+      // For goog.asserts.assert. No suitable native type for true.
+      if (typeId == null) {
+        return JSType.TRUTHY;
+      }
+      // TODO(dimvar): finish it off for all native type names
+      if (typeId == JSTypeNative.NUMBER_TYPE) {
+        return JSType.NUMBER;
+      } else if (typeId == JSTypeNative.STRING_TYPE) {
+        return JSType.STRING;
+      } else if (typeId == JSTypeNative.OBJECT_TYPE) {
+        return JSType.TOP_OBJECT;
+      }
+      throw new UnsupportedOperationException("Unknown typeId: " + typeId);
+    }
+
+    @Override
+    public ObjectTypeI getNativeObjectType(JSTypeNative typeId) {
+      throw new UnsupportedOperationException(
+          "Scope#getNativeObjectType not implemented");
+    }
+
+    @Override
+    public JSType getType(String typeName) {
+      return lookupTypeByName(typeName);
+    }
+
+    @Override
+    public FunctionTypeI createFunctionTypeWithNewReturnType(
+        FunctionTypeI existingFunctionType, TypeI returnType) {
+      throw new UnsupportedOperationException(
+          "Scope#createFunctionTypeWithNewReturnType not implemented");
+    }
+
+    @Override
+    public JSType createTemplatizedType(
+        ObjectTypeI baseType, ImmutableList<? extends TypeI> templatizedTypes) {
+      throw new UnsupportedOperationException(
+          "Scope#createTemplatizedType not implemented");
     }
 
     @Override

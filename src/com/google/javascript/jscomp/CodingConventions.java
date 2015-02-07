@@ -18,11 +18,11 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.StaticScope;
 import com.google.javascript.rhino.jstype.StaticSourceFile;
 
@@ -152,8 +152,8 @@ public class CodingConventions {
     }
 
     @Override
-    public void applySubclassRelationship(FunctionType parentCtor,
-        FunctionType childCtor, SubclassType type) {
+    public void applySubclassRelationship(FunctionTypeI parentCtor,
+        FunctionTypeI childCtor, SubclassType type) {
       nextConvention.applySubclassRelationship(
           parentCtor, childCtor, type);
     }
@@ -169,8 +169,8 @@ public class CodingConventions {
     }
 
     @Override
-    public void applySingletonGetter(FunctionType functionType,
-        FunctionType getterType, ObjectType objectType) {
+    public void applySingletonGetter(FunctionTypeI functionType,
+        FunctionTypeI getterType, ObjectTypeI objectType) {
       nextConvention.applySingletonGetter(
           functionType, getterType, objectType);
     }
@@ -187,9 +187,9 @@ public class CodingConventions {
 
     @Override
     public void applyDelegateRelationship(
-        ObjectType delegateSuperclass, ObjectType delegateBase,
-        ObjectType delegator, FunctionType delegateProxy,
-        FunctionType findDelegate) {
+        ObjectTypeI delegateSuperclass, ObjectTypeI delegateBase,
+        ObjectTypeI delegator, FunctionTypeI delegateProxy,
+        FunctionTypeI findDelegate) {
       nextConvention.applyDelegateRelationship(
           delegateSuperclass, delegateBase, delegator,
           delegateProxy, findDelegate);
@@ -209,8 +209,8 @@ public class CodingConventions {
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry, StaticScope<JSType> scope,
-        List<ObjectType> delegateProxyPrototypes,
+        TypeIRegistry registry, StaticScope<? extends TypeI> scope,
+        List<? extends ObjectTypeI> delegateProxyPrototypes,
         Map<String, String> delegateCallingConventions) {
       nextConvention.defineDelegateProxyPrototypeProperties(
           registry, scope, delegateProxyPrototypes, delegateCallingConventions);
@@ -368,8 +368,8 @@ public class CodingConventions {
     }
 
     @Override
-    public void applySubclassRelationship(FunctionType parentCtor,
-        FunctionType childCtor, SubclassType type) {
+    public void applySubclassRelationship(FunctionTypeI parentCtor,
+        FunctionTypeI childCtor, SubclassType type) {
       // do nothing
     }
 
@@ -384,8 +384,8 @@ public class CodingConventions {
     }
 
     @Override
-    public void applySingletonGetter(FunctionType functionType,
-        FunctionType getterType, ObjectType objectType) {
+    public void applySingletonGetter(FunctionTypeI functionType,
+        FunctionTypeI getterType, ObjectTypeI objectType) {
       // do nothing.
     }
 
@@ -402,9 +402,9 @@ public class CodingConventions {
 
     @Override
     public void applyDelegateRelationship(
-        ObjectType delegateSuperclass, ObjectType delegateBase,
-        ObjectType delegator, FunctionType delegateProxy,
-        FunctionType findDelegate) {
+        ObjectTypeI delegateSuperclass, ObjectTypeI delegateBase,
+        ObjectTypeI delegator, FunctionTypeI delegateProxy,
+        FunctionTypeI findDelegate) {
       // do nothing.
     }
 
@@ -421,8 +421,8 @@ public class CodingConventions {
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry, StaticScope<JSType> scope,
-        List<ObjectType> delegateProxyPrototypes,
+        TypeIRegistry registry, StaticScope<? extends TypeI> scope,
+        List<? extends ObjectTypeI> delegateProxyPrototypes,
         Map<String, String> delegateCallingConventions) {
       // do nothing.
     }
@@ -481,8 +481,8 @@ public class CodingConventions {
       if (callTarget.isGetProp()
           && callTarget.getLastChild().getString().equals("bind")) {
         Node maybeFn = callTarget.getFirstChild();
-        JSType maybeFnType = maybeFn.getJSType();
-        FunctionType fnType = null;
+        TypeI maybeFnType = maybeFn.getTypeI();
+        FunctionTypeI fnType = null;
         if (iCheckTypes && maybeFnType != null) {
           fnType = maybeFnType.restrictByNotNullOrUndefined()
               .toMaybeFunctionType();

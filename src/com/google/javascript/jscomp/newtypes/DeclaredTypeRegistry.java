@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.javascript.rhino.TypeIRegistry;
+
 /** A registry capable of translating names into JSTypes. */
-public interface DeclaredTypeRegistry {
+public interface DeclaredTypeRegistry extends TypeIRegistry {
 
   /**
    * Returns the named type from a given potentially qualified type name,

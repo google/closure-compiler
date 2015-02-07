@@ -1292,7 +1292,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Create a new constructor with the parameters and return type stripped. */
-  public FunctionType cloneWithoutArrowType() {
+  public FunctionType forgetParameterAndReturnTypes() {
     FunctionType result = new FunctionType(
         registry, getReferenceName(), source,
         registry.createArrowType(null, null), getInstanceType(),

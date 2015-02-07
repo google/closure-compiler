@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
@@ -46,6 +47,14 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public interface TypeIRegistry {
+
+  FunctionTypeI createFunctionTypeWithNewReturnType(
+      FunctionTypeI existingFunctionType, TypeI returnType);
+
+  TypeI createTemplatizedType(
+      ObjectTypeI baseType, ImmutableList<? extends TypeI> templatizedTypes);
+
+  ObjectTypeI getNativeObjectType(JSTypeNative typeId);
 
   TypeI getNativeType(JSTypeNative typeId);
 

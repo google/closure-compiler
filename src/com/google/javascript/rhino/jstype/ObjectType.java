@@ -49,6 +49,7 @@ import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.Set;
 
@@ -285,8 +286,9 @@ public abstract class ObjectType
    *        which might later be accessed using {@code getPropertyNode}.
    */
   public final boolean defineDeclaredProperty(String propertyName,
-      JSType type, Node propertyNode) {
-    boolean result = defineProperty(propertyName, type, false, propertyNode);
+      TypeI type, Node propertyNode) {
+    boolean result =
+        defineProperty(propertyName, (JSType) type, false, propertyNode);
     // All property definitions go through this method
     // or defineInferredProperty. Because the properties defined an an
     // object can affect subtyping, it's slightly more efficient
@@ -420,6 +422,7 @@ public abstract class ObjectType
    * @return the property's type or {@link UnknownType}. This method never
    *         returns {@code null}.
    */
+  @Override
   public JSType getPropertyType(String propertyName) {
     StaticSlot<JSType> slot = getSlot(propertyName);
     if (slot == null) {

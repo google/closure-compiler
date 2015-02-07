@@ -44,5 +44,14 @@ package com.google.javascript.rhino;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public interface ObjectTypeI extends TypeI {
+  boolean defineDeclaredProperty(
+      String propertyName, TypeI type, Node propertyNode);
+
   FunctionTypeI getConstructor();
+
+  TypeI getPropertyType(String propName);
+
+  ObjectTypeI getImplicitPrototype();
+
+  Iterable<String> getOwnPropertyNames();
 }
