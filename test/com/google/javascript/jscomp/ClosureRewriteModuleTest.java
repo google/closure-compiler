@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_ALIAS;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_CALL_SCOPE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_IDENTIFIER;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_IDENTIFIER;
@@ -236,7 +237,6 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
     testError("goog.module('ns.a');" + "goog.require(a);", INVALID_REQUIRE_IDENTIFIER, PARSE_ERROR);
   }
 
-
   public void testGoogModuleGet1() {
     test(
         "function f() { var x = goog.module.get('a'); }",
@@ -247,6 +247,48 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
     test(
         "function f() { var x = goog.module.get('a.b.c'); }",
         "function f() { var x = a.b.c; }");
+  }
+
+  public void testAliasedGoogModuleGet1() {
+    test(
+        LINE_JOINER.join(
+          "goog.module('a');",
+          "",
+          "var x = goog.forwardDeclare('b');",
+          "function f() { x = goog.module.get('b'); }"),
+        LINE_JOINER.join(
+          "goog.provide('a'); goog.scope(function(){",
+          "  var x = b;",
+          "  function f() {}",
+          "});"));
+  }
+
+  public void testAliasedGoogModuleGet2() {
+    test(
+        LINE_JOINER.join(
+          "goog.module('a');",
+          "",
+          "var x = goog.forwardDeclare('x.y.z');",
+          "function f() { x = goog.module.get('x.y.z'); }"),
+        LINE_JOINER.join(
+          "goog.provide('a'); goog.scope(function(){",
+          "  var x = x.y.z;",
+          "  function f() {}",
+          "});"));
+  }
+
+  public void testInvalidGoogModeuleGetAlias() {
+    testError("goog.module('a'); x = goog.module.get('g');", INVALID_GET_ALIAS);
+
+    testError("goog.module('a'); var x; x = goog.module.get('g');", INVALID_GET_ALIAS);
+
+    testError(
+        "goog.module('a'); var x = goog.forwardDeclare(); x = goog.module.get('g');",
+        INVALID_GET_ALIAS);
+
+    testError(
+        "goog.module('a'); var x = goog.forwardDeclare('z'); x = goog.module.get('g');",
+        INVALID_GET_ALIAS);
   }
 
 

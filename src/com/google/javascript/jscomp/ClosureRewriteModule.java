@@ -78,6 +78,11 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
           "JSC_GOOG_MODULE_INVALID_GET_CALL_SCOPE",
           "goog.module.get can not be called in global scope.");
 
+  static final DiagnosticType INVALID_GET_ALIAS =
+      DiagnosticType.error(
+          "JSC_GOOG_MODULE_INVALID_GET_ALIAS",
+          "goog.module.get should not be aliased.");
+
   private final AbstractCompiler compiler;
 
   private class ModuleDescription {
@@ -145,6 +150,11 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
             current.moduleScope = t.getScope();
           }
           break;
+        case Token.ASSIGN:
+          if (isGetModuleCallAlias(n)) {
+            rewriteGetModuleCallAlias(t, n);
+          }
+          break;
         default:
           if (current.moduleScopeRoot == parent && parent.isBlock()) {
             current.moduleScope = t.getScope();
@@ -189,6 +199,46 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     compiler.reportCodeChange();
   }
 
+  private void rewriteGetModuleCallAlias(NodeTraversal t, Node n) {
+    // x = goog.module.get('a.namespace');
+    Preconditions.checkArgument(NodeUtil.isExprAssign(n.getParent()));
+    Preconditions.checkArgument(n.getFirstChild().isName());
+    Preconditions.checkArgument(isGetModuleCall(n.getLastChild()));
+
+    rewriteGetModuleCall(t, n.getLastChild());
+
+    String aliasName = n.getFirstChild().getQualifiedName();
+    Var alias = t.getScope().getVar(aliasName);
+    if (alias == null) {
+      t.report(n, INVALID_GET_ALIAS);
+      return;
+    }
+    // Only rewrite if original definition was of the form:
+    //   let x = goog.forwardDeclare('a.namespace');
+    Node forwardDeclareCall = NodeUtil.getRValueOfLValue(alias.getNode());
+    if (forwardDeclareCall == null
+        || !isCallTo(forwardDeclareCall, "goog.forwardDeclare")
+        || forwardDeclareCall.getChildCount() != 2) {
+      t.report(n, INVALID_GET_ALIAS);
+      return;
+    }
+    Node argument = forwardDeclareCall.getLastChild();
+    if (!argument.isString() || !n.getLastChild().matchesQualifiedName(argument.getString())) {
+      t.report(n, INVALID_GET_ALIAS);
+      return;
+    }
+
+    Node replacement = NodeUtil.newQName(compiler, argument.getString());
+    replacement.srcrefTree(forwardDeclareCall);
+
+    // Rewrite goog.forwardDeclare
+    forwardDeclareCall.getParent().replaceChild(forwardDeclareCall, replacement);
+    // and remove goog.module.get
+    n.getParent().detachFromParent();
+
+    compiler.reportCodeChange();
+  }
+
 
   private static boolean isModuleFile(Node n) {
     return n.isScript() && n.hasChildren()
@@ -209,6 +259,11 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
       return (target.matchesQualifiedName("goog.module"));
     }
     return false;
+  }
+
+  private static boolean isGetModuleCallAlias(Node n) {
+    return NodeUtil.isExprAssign(n.getParent())
+        && n.getFirstChild().isName() && isGetModuleCall(n.getLastChild());
   }
 
   /**
