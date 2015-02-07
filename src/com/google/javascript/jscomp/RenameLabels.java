@@ -76,11 +76,6 @@ final class RenameLabels implements CompilerPass {
     this(compiler, new DefaultNameSupplier(), true);
   }
 
-  RenameLabels(final AbstractCompiler compiler, final NameGenerator nameGen) {
-    this(compiler, new DefaultNameSupplier(nameGen), true);
-    nameGen.restartNaming();
-  }
-
   RenameLabels(
       AbstractCompiler compiler,
       Supplier<String> supplier,

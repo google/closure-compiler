@@ -305,8 +305,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   // Optimizations
   //--------------------------------
 
-  boolean aggressiveRenaming;
-
   /** Prefer commas over semicolons when doing statement fusion */
   boolean aggressiveFusion;
 
@@ -986,7 +984,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     checkEventfulObjectDisposalPolicy = CheckEventfulObjectDisposal.DisposalCheckingPolicy.OFF;
 
     // Optimizations
-    aggressiveRenaming = false;
     foldConstants = false;
     coalesceVariableNames = false;
     deadAssignmentElimination = false;
@@ -1798,10 +1795,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setCheckMissingGetCssNameBlacklist(String blackList) {
     this.checkMissingGetCssNameBlacklist = blackList;
-  }
-
-  public void setAggressiveRenaming(boolean aggressive) {
-    this.aggressiveRenaming = aggressive;
   }
 
   public void setFoldConstants(boolean foldConstants) {

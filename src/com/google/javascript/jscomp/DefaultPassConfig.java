@@ -716,10 +716,6 @@ public class DefaultPassConfig extends PassConfig {
       passes.add(instrumentFunctions);
     }
 
-    if (options.aggressiveRenaming) {
-      passes.add(gatherCharBias);
-    }
-
     if (options.variableRenaming != VariableRenamingPolicy.ALL) {
       // If we're leaving some (or all) variables with their old names,
       // then we need to undo any of the markers we added for distinguishing
@@ -2393,25 +2389,10 @@ public class DefaultPassConfig extends PassConfig {
   }
 
   /** Renames labels */
-  final PassFactory gatherCharBias = new PassFactory("gatherCharBias", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new GatherCharacterEncodingBias(
-          compiler,
-          getNameGenerator(),
-          options.variableRenaming != VariableRenamingPolicy.LOCAL);
-    }
-  };
-
-  /** Renames labels */
   final PassFactory renameLabels = new PassFactory("renameLabels", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      if (options.aggressiveRenaming) {
-        return new RenameLabels(compiler, getNameGenerator());
-      } else {
-        return new RenameLabels(compiler);
-      }
+      return new RenameLabels(compiler);
     }
   };
 
