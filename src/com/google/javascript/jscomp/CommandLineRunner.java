@@ -390,6 +390,12 @@ public class CommandLineRunner extends
         usage = "Generates export code for those marked with @export")
     private boolean generateExports = false;
 
+    @Option(name = "--export_local_property_definitions",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Generates export code for local properties marked with @export")
+    private boolean exportLocalPropertyDefinitions = false;
+
     @Option(name = "--formatting",
         hidden = true,
         usage = "Specifies which formatting options, if any, should be "
@@ -1127,6 +1133,10 @@ public class CommandLineRunner extends
 
     if (flags.generateExports) {
       options.setGenerateExports(flags.generateExports);
+    }
+
+    if (flags.exportLocalPropertyDefinitions) {
+      options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
     }
 
     WarningLevel wLevel = flags.warningLevel;
