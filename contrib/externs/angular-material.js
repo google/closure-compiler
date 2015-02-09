@@ -145,6 +145,23 @@ md.$toast.prototype.hide = function() {};
  */
 md.$toast.prototype.cancel = function() {};
 
+/**
+ * @typedef {{
+ *   content: function(string):md.$toast.preset,
+ *   action: function(string):md.$toast.preset,
+ *   highlightAction: function(boolean):md.$toast.preset,
+ *   capsule: function(boolean):md.$toast.preset,
+ *   position: function(string):md.$toast.preset,
+ *   hidedelay: function(number):md.$toast.preset
+ * }}
+ */
+md.$toast.preset;
+
+
+/**
+ * @return {md.$toast.preset}
+ */
+md.$toast.prototype.simple = function() {};
 
 /******************************************************************************
  * $sidenav Service
