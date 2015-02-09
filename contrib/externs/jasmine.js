@@ -424,6 +424,7 @@ function iit(description, handler) {}
 /**
  * Provided by angular-mocks.js.
  * @param {...(string|Function|Array.<(string,Function)>)} var_args
+ * @suppress {checkTypes}
  */
 function module(var_args) {}
 
