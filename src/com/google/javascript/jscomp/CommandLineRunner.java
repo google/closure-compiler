@@ -1136,7 +1136,7 @@ public class CommandLineRunner extends
     }
 
     if (flags.exportLocalPropertyDefinitions) {
-      options.setExportLocalPropertyDefinitions(flags.exportLocalPropertyDefinitions);
+      options.setExportLocalPropertyDefinitions(true);
     }
 
     WarningLevel wLevel = flags.warningLevel;
