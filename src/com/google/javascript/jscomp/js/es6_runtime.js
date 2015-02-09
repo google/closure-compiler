@@ -20,59 +20,13 @@
  * @author mattloring@google.com (Matthew Loring)
  */
 
-/**
- * @constructor
- * @template T
- */
-$jscomp.IteratorResult = function() {};
-
-
-/**
- * @type {boolean}
- */
-$jscomp.IteratorResult.prototype.done;
-
-
-/**
- * @type {T}
- */
-$jscomp.IteratorResult.prototype.value;
-
-
-
-/**
- * @interface
- * @template T
- */
-$jscomp.Iterator = function() {};
-
-
-/**
- * @param {Object=} def
- * @return {!$jscomp.IteratorResult.<T>}
- */
-$jscomp.Iterator.prototype.next;
-
-
-
-/**
- * @interface
- * @template T
- */
-$jscomp.Iterable = function() {};
-
-
-/**
- * @return {!$jscomp.Iterator.<T>}
- */
-$jscomp.Iterable.prototype.$$iterator = function() {};
 
 
 /**
  * Creates an iterator for the given iterable.
  *
- * @param {string|!Array.<T>|!$jscomp.Iterable.<T>} iterable
- * @return {!$jscomp.Iterator.<T>}
+ * @param {string|!Array<T>|!Iterable<T>} iterable
+ * @return {!Iterator<T>}
  * @template T
  */
 $jscomp.makeIterator = function(iterable) {
@@ -83,15 +37,15 @@ $jscomp.makeIterator = function(iterable) {
     throw new Error();
   }
   var index = 0;
-  return /** @type {!$jscomp.Iterator} */ ({
+  return /** @type {!Iterator} */ ({
     next: function() {
       if (index == iterable.length) {
-        return /** @type {!$jscomp.IteratorResult} */ ({ done: true });
+        return { done: true };
       } else {
-        return /** @type {!$jscomp.IteratorResult} */ ({
+        return {
           done: false,
           value: iterable[index++]
-        });
+        };
       }
     }
   });
@@ -100,8 +54,8 @@ $jscomp.makeIterator = function(iterable) {
 /**
  * Transfers properties on the from object onto the to object.
  *
- * @param {Object} to
- * @param {Object} from
+ * @param {!Object} to
+ * @param {!Object} from
  */
 $jscomp.copyProperties = function(to, from) {
   for (var p in from) {

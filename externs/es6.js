@@ -59,6 +59,7 @@ Iterable.prototype[Symbol.iterator] = function() {};
 function Iterator() {}
 
 /**
+ * @param {VALUE=} value
  * @return {{value:VALUE, done:boolean}}
  */
 Iterator.prototype.next;
