@@ -16,6 +16,7 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.javascript.refactoring.testing.SuggestedFixes.assertChanges;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertReplacement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -261,6 +262,7 @@ public class SuggestedFixTest {
   @Test
   public void testRemoveCast() {
     String input = "var x = /** @type {string} */ (y);";
+    String expectedCode = "var x = y;";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node castNode = root.getFirstChild().getFirstChild().getFirstChild();
@@ -269,9 +271,30 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .removeCast(castNode, compiler)
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        "var x = ".length(), "/** @type {string} */ (y)".length(), "y");
-    assertReplacement(fix, replacement);
+    assertChanges(fix, "", input, expectedCode);
+  }
+
+  @Test
+  public void testRemoveCast_complexStatement() {
+    String input = ""
+        + "var x = /** @type {string} */ (function() {\n"
+        + "  // Inline comment that should be preserved.\n"
+        + "  var blah = bleh;\n"
+        + "});";
+    String expectedCode = ""
+        + "var x = function() {\n"
+        + "  // Inline comment that should be preserved.\n"
+        + "  var blah = bleh;\n"
+        + "};";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Node castNode = root.getFirstChild().getFirstChild().getFirstChild();
+    assertTrue(castNode.isCast());
+
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .removeCast(castNode, compiler)
+        .build();
+    assertChanges(fix, "", input, expectedCode);
   }
 
   @Test

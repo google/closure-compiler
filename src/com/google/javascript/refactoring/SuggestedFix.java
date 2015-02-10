@@ -316,13 +316,18 @@ public final class SuggestedFix {
     public Builder removeCast(Node n, AbstractCompiler compiler) {
       Preconditions.checkArgument(n.isCast());
       JSDocInfo jsDoc = n.getJSDocInfo();
-      Node child = n.getFirstChild();
       replacements.put(
           n.getSourceFileName(),
           new CodeReplacement(
               jsDoc.getOriginalCommentPosition(),
-              n.getSourceOffset() + n.getLength() - jsDoc.getOriginalCommentPosition(),
-              generateCode(compiler, child)));
+              n.getSourceOffset() - jsDoc.getOriginalCommentPosition() + 1,
+              ""));
+      replacements.put(
+          n.getSourceFileName(),
+          new CodeReplacement(
+              n.getSourceOffset() + n.getLength() - 1,
+              1 /* length */,
+              ""));
       return this;
     }
 

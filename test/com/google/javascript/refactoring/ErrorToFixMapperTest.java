@@ -16,6 +16,7 @@
 package com.google.javascript.refactoring;
 
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
+import static com.google.javascript.refactoring.testing.SuggestedFixes.assertChanges;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertReplacement;
 import static org.junit.Assert.assertEquals;
 
@@ -52,17 +53,13 @@ public class ErrorToFixMapperTest {
 
   @Test
   public void testRemoveCast() {
-    String before = "var x = ";
-    String after = "/** @type {string} */ ('foo');";
-    Compiler compiler = getCompiler(before + after);
+    String code = "var x = /** @type {string} */ ('foo');";
+    String expectedCode = "var x = 'foo';";
+    Compiler compiler = getCompiler(code);
     JSError[] errors = compiler.getErrors();
     assertEquals(Arrays.toString(errors), 1, errors.length);
     SuggestedFix fix = ErrorToFixMapper.getFixForJsError(errors[0], compiler);
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(),
-        after.length() - 1,  // Leave the ";" alone.
-        "'foo'");
-    assertReplacement(fix, replacement);
+    assertChanges(fix, "", code, expectedCode);
   }
 
   private Compiler getCompiler(String jsInput) {
