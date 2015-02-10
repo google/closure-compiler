@@ -113,6 +113,28 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "module$testcode.f = f$$module$testcode;"
     ));
 
+    test("export function f() {}; function g() { f(); }", Joiner.on('\n').join(
+        FILEOVERVIEW,
+        "goog.provide('module$testcode');",
+        "function f$$module$testcode() {}",
+        "function g$$module$testcode() { f$$module$testcode(); }",
+        "var module$testcode = {};",
+        "module$testcode.f = f$$module$testcode;"
+    ));
+
+    test(
+        Joiner.on('\n').join(
+            "export function MyClass() {};",
+            "MyClass.prototype.foo = function() {};"),
+        Joiner.on('\n').join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "function MyClass$$module$testcode() {}",
+            "MyClass$$module$testcode.prototype.foo = function() {};",
+            "var module$testcode = {};",
+            "module$testcode.MyClass = MyClass$$module$testcode;"
+    ));
+
     test(
         "var f = 1; var b = 2; export {f as foo, b as bar};",
         Joiner.on('\n').join(
@@ -293,6 +315,24 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "}",
         "var module$testcode = {};",
         "/** @const */ module$testcode.Child = Child$$module$testcode;"
+    ));
+  }
+
+  public void testReferenceToTypeFromOtherModule() {
+    test(Joiner.on('\n').join(
+        "export class Foo {",
+        "  /** @param {./other.Baz} baz */",
+        "  useBaz(baz) {}",
+        "}"
+    ), Joiner.on('\n').join(
+        FILEOVERVIEW,
+        "goog.provide('module$testcode');",
+        "class Foo$$module$testcode {",
+        "  /** @param {module$other.Baz} baz */",
+        "  useBaz(baz) {}",
+        "}",
+        "var module$testcode = {};",
+        "/** @const */ module$testcode.Foo = Foo$$module$testcode;"
     ));
   }
 

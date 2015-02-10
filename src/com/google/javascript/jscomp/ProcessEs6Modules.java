@@ -148,6 +148,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           }
         }
       } else {
+        // import * as ns from "mod"
         Preconditions.checkState(child.getType() == Token.IMPORT_STAR,
             "Expected an IMPORT_STAR node, but was: %s", child);
         importMap.put(
@@ -174,6 +175,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private void visitExport(NodeTraversal t, Node n, Node parent) {
     if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
+      // export default var Foo;
       Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), n.removeFirstChild());
       var.useSourceInfoIfMissingFromForTree(n);
       var.setJSDocInfo(n.getJSDocInfo());
@@ -181,6 +183,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       n.getParent().replaceChild(n, var);
       exportMap.put("default", DEFAULT_EXPORT_NAME);
     } else if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) {
+      //   export * from 'moduleIdentifier';
       compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Wildcard export"));
     } else if (n.getChildCount() == 2) {
@@ -202,6 +205,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
       parent.removeChild(n);
     } else {
       if (n.getFirstChild().getType() == Token.EXPORT_SPECS) {
+        //     export {Foo};
         for (Node exportSpec : n.getFirstChild().children()) {
           Node origName = exportSpec.getFirstChild();
           exportMap.put(
@@ -212,6 +216,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
         }
         parent.removeChild(n);
       } else {
+        //    export var Foo;
+        //    export function Foo() {}
+        // etc.
         Node declaration = n.getFirstChild();
         for (int i = 0; i < declaration.getChildCount(); i++) {
           Node maybeName = declaration.getChildAtIndex(i);
