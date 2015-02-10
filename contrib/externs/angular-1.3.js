@@ -1415,6 +1415,11 @@ angular.$HttpProvider;
 angular.$HttpProvider.defaults;
 
 /**
+ * @type {!Array.<string|function(...*): !angular.$http.Interceptor>}
+ */
+angular.$HttpProvider.interceptors;
+
+/**
  * @param {boolean=} opt_value
  * @return {boolean|!angular.$HttpProvider}
  */
