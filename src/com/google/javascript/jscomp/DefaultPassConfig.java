@@ -220,6 +220,11 @@ public class DefaultPassConfig extends PassConfig {
       checks.add(checkVariableReferences);
     }
 
+    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
+        && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
+      checks.add(convertDeclaredTypesToJSDoc);
+    }
+
     if (options.lowerFromEs6()) {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
@@ -1142,6 +1147,14 @@ public class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new Es6ToEs3ClassSideInheritance(compiler);
+    }
+  };
+
+  final PassFactory convertDeclaredTypesToJSDoc =
+      new PassFactory("convertDeclaredTypesToJSDoc", true) {
+    @Override
+    CompilerPass create(AbstractCompiler compiler) {
+      return new ConvertDeclaredTypesToJSDoc(compiler);
     }
   };
 

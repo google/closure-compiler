@@ -1331,11 +1331,11 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * <p>Return an iterable object that iterates over this node's siblings.
-   * The iterator does not support the optional operation
-   * {@link Iterator#remove()}.</p>
+   * <p>Return an iterable object that iterates over this node's siblings,
+   * <b>including this Node</b>. The iterator does not support the optional
+   * operation {@link Iterator#remove()}.</p>
    *
-   * <p>To iterate over a node's siblings, one can write</p>
+   * <p>To iterate over a node's siblings including itself, one can write</p>
    * <pre>Node n = ...;
    * for (Node sibling : n.siblings()) { ...</pre>
    */
@@ -1586,11 +1586,8 @@ public class Node implements Cloneable, Serializable {
     NodeMismatch res = null;
     Node n, n2;
     for (n = first, n2 = node2.first;
-         res == null && n != null;
+         n != null;
          n = n.next, n2 = n2.next) {
-      if (node2 == null) {
-        throw new IllegalStateException();
-      }
       res = n.checkTreeEqualsImpl(n2, jsDoc);
       if (res != null) {
         return res;
