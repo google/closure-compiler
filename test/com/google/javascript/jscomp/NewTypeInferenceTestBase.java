@@ -53,7 +53,20 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
       + " */\n"
       + "function Boolean(arg) {}\n"
       + "/** @return {string} */\n"
-      + "Boolean.prototype.toString = function() { return '' };";
+      + "Boolean.prototype.toString = function() { return '' };\n"
+      + "/**\n"
+      + " * @param {?=} opt_begin\n"
+      + " * @param {?=} opt_end\n"
+      + " * @return {!Array.<T>}\n"
+      + " * @this {{length: number}|string}\n"
+      + " * @template T\n"
+      + " */\n"
+      + "Array.prototype.slice = function(opt_begin, opt_end) {};\n"
+      + "/**\n"
+      + " * @param {...?} var_args\n"
+      + " * @return {!Array.<?>}\n"
+      + " */\n"
+      + "Array.prototype.concat = function(var_args) {};\n";
 
   @Override
   protected void setUp() {

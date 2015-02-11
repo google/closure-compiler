@@ -69,4 +69,12 @@ public class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         + "(new Foo('')).x - 5;\n",
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testClassInheritance() {
+    typeCheck(
+        "class Foo {}\n"
+        + "class Bar extends Foo {}",
+        // TODO(dimvar): must know about the .base property
+        TypeCheck.INEXISTENT_PROPERTY);
+  }
 }

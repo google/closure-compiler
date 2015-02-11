@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.newtypes.TypeEnv;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -231,13 +232,24 @@ public class NewTypeInference implements CompilerPass {
       TypeValidator.INVALID_CAST,
       TypeValidator.UNKNOWN_TYPEOF_VALUE);
 
+  private static String getFileWhereWarningOccurred(JSError warning) {
+    StaticSourceFile f = warning.node.getStaticSourceFile();
+    return f == null ? "" : f.getName();
+  }
+
   public static class WarningReporter {
     AbstractCompiler compiler;
     WarningReporter(AbstractCompiler compiler) { this.compiler = compiler; }
+
     void add(JSError warning) {
-      if (!JSType.mockToString) {
-        compiler.report(warning);
+      // We check the file name to avoid some warnings in code generated
+      // by the ES6 transpilation passes.
+      // TODO(dimvar): typecheck that code properly and remove this.
+      if (getFileWhereWarningOccurred(warning).startsWith(" [synthetic")
+          || JSType.mockToString) {
+        return;
       }
+      compiler.report(warning);
     }
   }
 

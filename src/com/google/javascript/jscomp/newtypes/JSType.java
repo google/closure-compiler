@@ -122,7 +122,8 @@ public abstract class JSType implements TypeI {
     }
   };
 
-  // Used only for development
+  // Used only for development, to test performance of the code without the cost
+  // of printing the error messages.
   public static boolean mockToString = false;
 
   private static JSType makeType(int mask,

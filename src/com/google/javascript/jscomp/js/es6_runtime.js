@@ -83,8 +83,8 @@ $jscomp.copyProperties = function(to, from) {
  * child.foo(); // This works.
  * </pre>
  *
- * @param {Function} childCtor Child class.
- * @param {Function} parentCtor Parent class.
+ * @param {!Function} childCtor Child class.
+ * @param {!Function} parentCtor Parent class.
  */
 $jscomp.inherits = function(childCtor, parentCtor) {
   /** @constructor */
