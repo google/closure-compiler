@@ -259,6 +259,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
         "ProcessEs6Modules supports only one invocation per "
         + "CompilerInput / script node");
 
+    // rewriteRequires is here (rather than being part of the main visit()
+    // method, because we only want to rewrite the requires if this is an
+    // ES6 module.
     rewriteRequires(script);
 
     String moduleName = toModuleName(loader.getLoadAddress(t.getInput()));
