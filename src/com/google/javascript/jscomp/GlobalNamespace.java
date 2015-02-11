@@ -1140,7 +1140,6 @@ class GlobalNamespace
       Node declNode = declaration.node;
       Node rvalueNode = NodeUtil.getRValueOfLValue(declNode);
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
-      System.out.println("isctor: " + Token.name(declNode.getType()));
       return rvalueNode != null && rvalueNode.isFunction()
           && jsdoc != null && jsdoc.isConstructor();
     }
