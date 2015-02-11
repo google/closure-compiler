@@ -7623,6 +7623,38 @@ chrome.serial.getControlSignals = function(connectionId, callback) {};
 chrome.serial.setControlSignals = function(connectionId, signals, callback) {};
 
 
+
+/**
+ * Event raised when data has been read from the connection.
+ * @interface
+ * @see https://developer.chrome.com/apps/serial#event-onReceive
+ */
+chrome.serial.onReceive = function() {};
+
+
+/**
+ * @param {function(!Object=)} callback
+ */
+chrome.serial.onReceive.addListener = function(callback) {};
+
+
+
+/**
+ * Event raised when an error occurred while the runtime was waiting for
+ * data on the serial port. Once this event is raised, the connection may
+ * be set to paused. A "timeout" error does not pause the connection.
+ * @interface
+ * @see https://developer.chrome.com/apps/serial#event-onReceiveError
+ */
+chrome.serial.onReceiveError = function() {};
+
+
+/**
+ * @param {function(!Object=)} callback
+ */
+chrome.serial.onReceiveError.addListener = function(callback) {};
+
+
 /**
  * @const
  * @see https://developer.chrome.com/apps/webstore
