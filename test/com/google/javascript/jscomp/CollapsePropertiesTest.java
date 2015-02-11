@@ -1704,4 +1704,102 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         "  console.log(e.name)" +
         "}");
   }
+
+  public void test_b19179602() {
+    test(
+        "var a = {};\n"
+        + "/** @constructor */ a.b = function() {};\n"
+        + "a.b.staticProp = 5;\n"
+        + "function f() {\n"
+        + "  while (true) {\n"
+        // b is declared inside a loop, so it is reassigned multiple times
+        + "    var b = a.b;\n"
+        + "    alert(b.staticProp);\n"
+        + "  }\n"
+        + "}\n",
+
+        "var a$b = function() {};\n"
+        + "var a$b$staticProp = 5;\n"
+        + "\n"
+        + "function f() {\n"
+        + "  while (true) {\n"
+        + "    var b = a$b;\n"
+        + "    alert(b.staticProp);\n"
+        + "  }\n"
+        + "}",
+        null, CollapseProperties.UNSAFE_CTOR_ALIASING);
+  }
+
+  public void test_b19179602_declareOutsideLoop() {
+    test(
+        "var a = {};\n"
+        + "/** @constructor */ a.b = function() {};\n"
+        + "a.b.staticProp = 5;\n"
+        + "function f() {\n"
+        // b is declared outside the loop
+        + "  var b = a.b;\n"
+        + "  while (true) {\n"
+        + "    alert(b.staticProp);\n"
+        + "  }\n"
+        + "}",
+
+        "var a$b = function() {};\n"
+        + "var a$b$staticProp = 5;\n"
+        + "\n"
+        + "function f() {\n"
+        + "  var b = null;\n"
+        + "  while (true) {\n"
+        + "    alert(a$b$staticProp);\n"
+        + "  }\n"
+        + "}");
+  }
+
+  public void testCtorManyAssignmentsDontInlineDontWarn() {
+    test(
+        "var a = {};\n"
+        + "/** @constructor */ a.b = function() {};\n"
+        + "a.b.staticProp = 5;\n"
+        + "function f(y, z) {\n"
+        + "  var x = a.b;\n"
+        + "  if (y) {\n"
+        + "    x = z;\n"
+        + "  }\n"
+        + "  return new x();\n"
+        + "}",
+
+        "var a$b = function() {};\n"
+        + "var a$b$staticProp = 5;\n"
+        + "function f(y, z) {\n"
+        + "  var x = a$b;\n"
+        + "  if (y) {\n"
+        + "    x = z;\n"
+        + "  }\n"
+        + "  return new x();\n"
+        + "}");
+  }
+
+  public void testCtorManyAssignmentsDontInlineWarn() {
+    test(
+        "var a = {};\n"
+        + "/** @constructor */ a.b = function() {};\n"
+        + "a.b.staticProp = 5;\n"
+        + "function f(y, z) {\n"
+        + "  var x = a.b;\n"
+        + "  if (y) {\n"
+        + "    x = z;\n"
+        + "  }\n"
+        + "  return x.staticProp;\n"
+        + "}",
+
+        "var a$b = function() {};\n"
+        + "var a$b$staticProp = 5;\n"
+        + "function f(y, z) {\n"
+        + "  var x = a$b;\n"
+        + "  if (y) {\n"
+        + "    x = z;\n"
+        + "  }\n"
+        + "  return x.staticProp;\n"
+        + "}",
+        null, CollapseProperties.UNSAFE_CTOR_ALIASING);
+  }
 }

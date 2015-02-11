@@ -566,7 +566,7 @@ class GlobalNamespace
             currentPreOrderIndex++);
         nameObj.addRef(get);
         Ref.markTwins(set, get);
-      } else if (isTypeDeclaration(n, parent)) {
+      } else if (isTypeDeclaration(n)) {
         // Names with a @constructor or @enum annotation are always collapsed
         nameObj.setDeclaredType();
       }
@@ -582,7 +582,7 @@ class GlobalNamespace
      * @return Whether the set operation is either a constructor or enum
      *     declaration
      */
-    private boolean isTypeDeclaration(Node n, Node parent) {
+    private boolean isTypeDeclaration(Node n) {
       Node valueNode = NodeUtil.getRValueOfLValue(n);
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
       // Heed the annotations only if they're sensibly used.
@@ -1136,6 +1136,15 @@ class GlobalNamespace
       return declaredType;
     }
 
+    boolean isConstructor() {
+      Node declNode = declaration.node;
+      Node rvalueNode = NodeUtil.getRValueOfLValue(declNode);
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
+      System.out.println("isctor: " + Token.name(declNode.getType()));
+      return rvalueNode != null && rvalueNode.isFunction()
+          && jsdoc != null && jsdoc.isConstructor();
+    }
+
     /**
      * Determines whether this name is a prefix of at least one class or enum
      * name. Because classes and enums are always collapsed, the namespace will
@@ -1144,7 +1153,7 @@ class GlobalNamespace
      * For example, if foo.bar.DomHelper is a class, then foo and foo.bar are
      * considered namespaces.
      */
-    boolean isNamespace() {
+    boolean isNamespaceObjectLit() {
       return hasDeclaredTypeDescendant && type == Type.OBJECTLIT;
     }
 
