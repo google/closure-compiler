@@ -73,6 +73,7 @@ public class ConvertDeclaredTypesToJSDoc extends AbstractPostOrderCallback imple
   }
 
   private Node convertDeclaredTypeToJSDoc(Node type) {
+    Preconditions.checkArgument(type instanceof TypeDeclarationNode);
     switch (type.getType()) {
       // "Primitive" types.
       case Token.STRING_TYPE:
@@ -92,13 +93,15 @@ public class ConvertDeclaredTypesToJSDoc extends AbstractPostOrderCallback imple
         Node arrayType = IR.string("Array");
         Node memberType = convertWithLocation(type.getFirstChild());
         arrayType.addChildToFront(new Node(Token.BLOCK, memberType).copyInformationFrom(type));
-        return arrayType;
+        return new Node(Token.BANG, arrayType);
       }
       case Token.PARAMETERIZED_TYPE: {
         Node namedType = type.getFirstChild();
         Node result = convertWithLocation(namedType);
+        Node typeParameterTarget =
+            result.getType() == Token.BANG ? result.getFirstChild() : result;
         Node parameters = IR.block().copyInformationFrom(type);
-        result.addChildToFront(parameters);
+        typeParameterTarget.addChildToFront(parameters);
         for (Node param = namedType.getNext(); param != null; param = param.getNext()) {
           parameters.addChildToBack(convertWithLocation(param));
         }
@@ -113,13 +116,18 @@ public class ConvertDeclaredTypesToJSDoc extends AbstractPostOrderCallback imple
         // TODO(martinprobst): Implement.
         break;
     }
-    throw new IllegalArgumentException("Unexpected node type for type conversion: "
-        + type.getType());
+    throw new IllegalArgumentException(
+        "Unexpected node type for type conversion: " + type.getType());
   }
 
   private Node convertNamedType(Node type) {
     Node propTree = type.getFirstChild();
     String dotted = propTree.getQualifiedName();
-    return IR.string(dotted);
+    // In the native type syntax, nominal types are non-nullable by default.
+    // NOTE(dimvar): This adds ! in front of type variables as well.
+    // Minor issue, not worth fixing for now.
+    // To fix, we must first transpile declarations of generic types, collect
+    // the type variables in scope, and use them during transpilation.
+    return new Node(Token.BANG, IR.string(dotted));
   }
 }

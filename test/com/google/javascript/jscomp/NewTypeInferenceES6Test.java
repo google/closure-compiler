@@ -32,22 +32,7 @@ public class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
   protected void setUp() {
     super.setUp();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
-    passes.add(makePassFactory("Es6RenameVariablesInParamLists",
-            new Es6RenameVariablesInParamLists(compiler)));
-    passes.add(makePassFactory("Es6SplitVariableDeclarations",
-            new Es6SplitVariableDeclarations(compiler)));
-    passes.add(makePassFactory("es6ConvertSuper",
-            new Es6ConvertSuper(compiler)));
-    passes.add(makePassFactory("convertEs6",
-            new Es6ToEs3Converter(compiler)));
-    passes.add(makePassFactory("Es6RewriteLetConst",
-            new Es6RewriteLetConst(compiler)));
-    passes.add(makePassFactory("rewriteGenerators",
-            new Es6RewriteGenerators(compiler)));
-    passes.add(makePassFactory("Es6RuntimeLibrary",
-            new InjectEs6RuntimeLibrary(compiler)));
-    passes.add(makePassFactory("Es6StaticInheritance",
-            new Es6ToEs3ClassSideInheritance(compiler)));
+    addES6TranspilationPasses();
   }
 
   public void testSimpleClasses() {

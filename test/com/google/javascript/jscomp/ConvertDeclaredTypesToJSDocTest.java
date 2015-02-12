@@ -34,23 +34,23 @@ public class ConvertDeclaredTypesToJSDocTest extends TestCase {
   }
 
   public void testNamedType() throws Exception {
-    assertTypeConversion("foo", "foo");
-    assertTypeConversion("foo.bar.Baz", "foo.bar.Baz");
+    assertTypeConversion("!foo", "foo");
+    assertTypeConversion("!foo.bar.Baz", "foo.bar.Baz");
   }
 
   public void testArrayType() throws Exception {
-    assertTypeConversion("Array.<string>", "string[]");
-    assertTypeConversion("Array.<test.Type>", "test.Type[]");
+    assertTypeConversion("!Array.<string>", "string[]");
+    assertTypeConversion("!Array.<!test.Type>", "test.Type[]");
   }
 
   public void testParameterizedType() throws Exception {
-    assertTypeConversion("test.Type<string>", "test.Type<string>");
-    assertTypeConversion("test.Type<A, B>", "test.Type<A, B>");
-    assertTypeConversion("test.Type<A<X>, B>", "test.Type<A<X>, B>");
+    assertTypeConversion("!test.Type<string>", "test.Type<string>");
+    assertTypeConversion("!test.Type<!A, !B>", "test.Type<A, B>");
+    assertTypeConversion("!test.Type<!A<!X>, !B>", "test.Type<A<X>, B>");
   }
 
   public void testParameterizedArrayType() throws Exception {
-    assertTypeConversion("Array.<test.Type<number>>", "test.Type<number>[]");
+    assertTypeConversion("!Array.<!test.Type<number>>", "test.Type<number>[]");
   }
 
   public Node parseAndProcess(String js) {
