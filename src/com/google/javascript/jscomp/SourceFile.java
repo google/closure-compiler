@@ -109,7 +109,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return;
     }
     try {
-      String[] sourceLines = getCode().split("\n");
+      String[] sourceLines = getCode().split("\n", -1);
       lineOffsets = new int[sourceLines.length];
       for (int ii = 1; ii < sourceLines.length; ++ii) {
         lineOffsets[ii] =
