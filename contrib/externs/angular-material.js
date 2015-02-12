@@ -58,7 +58,9 @@ md.$dialog.options;
  * @typedef {{
  *   title: (function(string): md.$dialog.AlertConfig_),
  *   content: (function(string): md.$dialog.AlertConfig_),
- *   ok: (function(string): md.$dialog.AlertConfig_)
+ *   ariaLabel: (function(string): md.$dialog.AlertConfig_),
+ *   ok: (function(string): md.$dialog.AlertConfig_),
+ *   theme: (function(string): md.$dialog.AlertConfig_)
  * }}
  */
 md.$dialog.AlertConfig_;
@@ -68,8 +70,10 @@ md.$dialog.AlertConfig_;
  * @typedef {{
  *   title: (function(string): md.$dialog.ConfirmConfig_),
  *   content: (function(string): md.$dialog.ConfirmConfig_),
+ *   ariaLabel: (function(string): md.$dialog.ConfirmConfig_),
  *   ok: (function(string): md.$dialog.ConfirmConfig_),
- *   cancel: (function(string): md.$dialog.ConfirmConfig_)
+ *   cancel: (function(string): md.$dialog.ConfirmConfig_),
+ *   theme: (function(string): md.$dialog.ConfirmConfig_)
  * }}
  */
 md.$dialog.ConfirmConfig_;
