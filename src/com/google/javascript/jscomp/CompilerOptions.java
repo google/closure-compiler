@@ -60,6 +60,13 @@ public class CompilerOptions implements Serializable, Cloneable {
   private static final long serialVersionUID = 7L;
 
   /**
+   * The warning classes that are available.
+   */
+  protected DiagnosticGroups getDiagnosticGroups() {
+    return new DiagnosticGroups();
+  }
+
+  /**
    * The JavaScript language version accepted.
    */
   private LanguageMode languageIn;
@@ -1262,6 +1269,17 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setWarningLevel(DiagnosticGroup type, CheckLevel level) {
     addWarningsGuard(new DiagnosticGroupWarningsGuard(type, level));
+  }
+
+  /**
+   * Configure the given type of warning to the given level.
+   */
+  public void setWarningLevel(String groupName, CheckLevel level) {
+    DiagnosticGroup type = getDiagnosticGroups().forName(groupName);
+    if (type == null) {
+      throw new RuntimeException("Unknown DiagnosticGroup name: " + groupName);
+    }
+    setWarningLevel(type, level);
   }
 
   WarningsGuard getWarningsGuard() {
