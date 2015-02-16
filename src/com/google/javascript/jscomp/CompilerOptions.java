@@ -700,7 +700,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public Set<String> stripTypePrefixes;
 
   /** Custom passes */
-  public transient
+  protected transient
       Multimap<CustomPassExecutionTime, CompilerPass> customPasses;
 
   /** Mark no side effect calls */
@@ -2113,14 +2113,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setStripTypePrefixes(Set<String> stripTypePrefixes) {
     this.stripTypePrefixes = stripTypePrefixes;
-  }
-
-  /**
-   * @deprecated Use {@link #addCustomPass}
-   */
-  @Deprecated
-  public void setCustomPasses(Multimap<CustomPassExecutionTime, CompilerPass> customPasses) {
-    this.customPasses = customPasses;
   }
 
   public void addCustomPass(CustomPassExecutionTime time, CompilerPass customPass) {
