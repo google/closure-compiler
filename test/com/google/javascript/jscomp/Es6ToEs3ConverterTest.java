@@ -166,7 +166,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testAnonymousSuper() {
-    test("f(class extends D { f() { super.g() } })", null, Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("f(class extends D { f() { super.g() } })", Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
   public void testClassWithJsDoc() {
@@ -323,13 +323,13 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testClassExpression() {
     enableAstValidation(false);
 
-    test("var C = new (class {})();", null,
+    testError("var C = new (class {})();",
         Es6ToEs3Converter.CANNOT_CONVERT);
 
-    test("var C = new (foo || (foo = class { }))();", null,
+    testError("var C = new (foo || (foo = class { }))();",
         Es6ToEs3Converter.CANNOT_CONVERT);
 
-    test("(condition ? obj1 : obj2).prop = class C { };", null,
+    testError("(condition ? obj1 : obj2).prop = class C { };",
         Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
@@ -380,10 +380,10 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testInvalidExtends() {
-    test("class C extends foo() {}", null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
-    test("class C extends function(){} {}", null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
-    test("class A {}; class B {}; class C extends (foo ? A : B) {}",
-        null, Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
+    testError("class C extends foo() {}", Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
+    testError("class C extends function(){} {}", Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
+    testError("class A {}; class B {}; class C extends (foo ? A : B) {}",
+        Es6ToEs3Converter.DYNAMIC_EXTENDS_TYPE);
   }
 
   public void testExtendsInterface() {
@@ -488,14 +488,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "{return C.base(this, 'foo', bar);}"
     ));
 
-    test("class C { constructor() { super(); } }",
-        null, Es6ConvertSuper.NO_SUPERTYPE);
+    testError("class C { constructor() { super(); } }", Es6ConvertSuper.NO_SUPERTYPE);
 
-    test("class C { f() { super(); } }",
-        null, Es6ConvertSuper.NO_SUPERTYPE);
+    testError("class C { f() { super(); } }", Es6ConvertSuper.NO_SUPERTYPE);
 
-    test("class C { static f() { super(); } }",
-        null, Es6ConvertSuper.NO_SUPERTYPE);
+    testError("class C { static f() { super(); } }", Es6ConvertSuper.NO_SUPERTYPE);
 
     test("class C { method() { class D extends C { constructor() { super(); }}}}",
         Joiner.on('\n').join(
@@ -511,8 +508,7 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "};"
     ));
 
-    test("var i = super();",
-        null, Es6ConvertSuper.NO_SUPERTYPE);
+    testError("var i = super();", Es6ConvertSuper.NO_SUPERTYPE);
 
     test(Joiner.on('\n').join(
         "class D {}",
@@ -565,42 +561,42 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperGet() {
-    test("class D {} class C extends D { f() {var i = super.c;} }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { f() {var i = super.c;} }",
+              Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { static f() {var i = super.c;} }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { static f() {var i = super.c;} }",
+              Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f() {var i; i = super[s];} }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { f() {var i; i = super[s];} }",
+              Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f() {return super.s;} }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { f() {return super.s;} }",
+              Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f() {m(super.s);} }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { f() {m(super.s);} }",
+              Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test(Joiner.on('\n').join(
+    testError(Joiner.on('\n').join(
         "class D {}",
         "class C extends D {",
         "  foo() { return super.m.foo(); }",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test(Joiner.on('\n').join(
+    testError(Joiner.on('\n').join(
         "class D {}",
         "class C extends D {",
         "  static foo() { return super.m.foo(); }",
         "}"
-    ), null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    ), Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testSuperNew() {
-    test("class D {} class C extends D { f() {var s = new super;} }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { f() {var s = new super;} }",
+              Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("class D {} class C extends D { f(str) {var s = new super(str);} }", null,
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { f(str) {var s = new super(str);} }",
+              Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testSuperSpread() {
@@ -759,18 +755,17 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testMockingInFunction() {
     // Classes cannot be reassigned in function scope.
-    test("function f() { class C {} C = function() {};}",
-        null, Es6ToEs3Converter.CLASS_REASSIGNMENT);
+    testError("function f() { class C {} C = function() {};}",
+              Es6ToEs3Converter.CLASS_REASSIGNMENT);
   }
 
   // Make sure we don't crash on this code.
   // https://github.com/google/closure-compiler/issues/752
   public void testGithub752() {
-    test("function f() { var a = b = class {};}",
-        null, Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("function f() { var a = b = class {};}", Es6ToEs3Converter.CANNOT_CONVERT);
 
-    test("var ns = {}; function f() { var self = ns.Child = class {};}",
-        null, Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("var ns = {}; function f() { var self = ns.Child = class {};}",
+              Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
   public void testArrowInClass() {
@@ -853,19 +848,19 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testClassGetterSetter() {
     languageOut = LanguageMode.ECMASCRIPT5;
 
-    test("class C { get value() {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
-    test("class C { set value(v) {} }", null, Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("class C { get value() {} }", Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("class C { set value(v) {} }", Es6ToEs3Converter.CANNOT_CONVERT);
 
-    test("class C { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT);
-    test("class C { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("class C { get [foo]() {}}", Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("class C { set [foo](val) {}}", Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
   /**
    * ES5 getters and setters should report an error if the languageOut is ES3.
    */
   public void testEs5GettersAndSetters_es3() {
-    test("var x = { get y() {} };", null, Es6ToEs3Converter.CANNOT_CONVERT);
-    test("var x = { set y(value) {} };", null, Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("var x = { get y() {} };", Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("var x = { set y(value) {} };", Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
   /**
@@ -1466,8 +1461,8 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testComputedPropCannotConvert() {
-    test("var o = { get [foo]() {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    test("var o = { set [foo](val) {}}", null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("var o = { get [foo]() {}}", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("var o = { set [foo](val) {}}", Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testNoComputedProperties() {
@@ -1630,11 +1625,11 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testObjectDestructuringStrangeProperties() {
-    test("var {5: b} = foo();",  Joiner.on('\n').join(
+    test("var {5: b} = foo();", Joiner.on('\n').join(
         "var $jscomp$destructuring$var0 = foo();",
         "var b = $jscomp$destructuring$var0['5']"));
 
-    test("var {0.1: b} = foo();",  Joiner.on('\n').join(
+    test("var {0.1: b} = foo();", Joiner.on('\n').join(
         "var $jscomp$destructuring$var0 = foo();",
         "var b = $jscomp$destructuring$var0['0.1']"));
 

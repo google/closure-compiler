@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 /**
  * Tests {@link AngularPass}.
  */
@@ -131,25 +132,25 @@ public class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectInNonBlock() throws Exception {
-    test("function fake(){};" +
-         "var ns = {};" +
-         "fake( /** @ngInject */ ns.func = function (a, b) {} )",
-         null, AngularPass.INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR);
+    testError("function fake(){};" +
+              "var ns = {};" +
+              "fake( /** @ngInject */ ns.func = function (a, b) {} )",
+              AngularPass.INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR);
 
-    test("/** @ngInject */( function (a, b) {} )",
-         null, AngularPass.INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR);
+    testError("/** @ngInject */( function (a, b) {} )",
+              AngularPass.INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR);
   }
 
   public void testNgInjectNonFunction() throws Exception {
-    test("var ns = {}; ns.subns = {};" +
-        "ns.subns.fake = function(x, y){};" +
-        "/** @ngInject */ ns.subns.fake(1);",
-        null, AngularPass.INJECT_NON_FUNCTION_ERROR);
+    testError("var ns = {}; ns.subns = {};" +
+              "ns.subns.fake = function(x, y){};" +
+              "/** @ngInject */ ns.subns.fake(1);",
+              AngularPass.INJECT_NON_FUNCTION_ERROR);
 
-    test("/** @ngInject */ var a = 10",
-         null, AngularPass.INJECT_NON_FUNCTION_ERROR);
+    testError("/** @ngInject */ var a = 10",
+              AngularPass.INJECT_NON_FUNCTION_ERROR);
 
-    test("/** @ngInject */ var x",
-         null, AngularPass.INJECT_NON_FUNCTION_ERROR);
+    testError("/** @ngInject */ var x",
+              AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 }

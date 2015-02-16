@@ -345,37 +345,29 @@ public class NormalizeTest extends CompilerTestCase {
   }
 
   public void testIssue166a() {
-    test("try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-         "try { throw 1 } catch(e) { var e=2 }",
+    testError("try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
          Normalize.CATCH_BLOCK_VAR_ERROR);
   }
 
   public void testIssue166b() {
-    test("function a() {" +
+    testError("function a() {" +
          "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }" +
          "};",
-         "function a() {" +
-         "try { throw 1 } catch(e) { var e=2 }" +
-         "}",
          Normalize.CATCH_BLOCK_VAR_ERROR);
   }
 
   public void testIssue166c() {
-    test("var e = 0; try { throw 1 } catch(e) {" +
-             "/** @suppress {duplicate} */ var e=2 }",
-         "var e = 0; try { throw 1 } catch(e) { var e=2 }",
-         Normalize.CATCH_BLOCK_VAR_ERROR);
+    testError("var e = 0; try { throw 1 } catch(e) {" +
+        "/** @suppress {duplicate} */ var e=2 }",
+        Normalize.CATCH_BLOCK_VAR_ERROR);
   }
 
   public void testIssue166d() {
-    test("function a() {" +
-         "var e = 0; try { throw 1 } catch(e) {" +
-             "/** @suppress {duplicate} */ var e=2 }" +
-         "};",
-         "function a() {" +
-         "var e = 0; try { throw 1 } catch(e) { var e=2 }" +
-         "}",
-         Normalize.CATCH_BLOCK_VAR_ERROR);
+    testError("function a() {" +
+        "var e = 0; try { throw 1 } catch(e) {" +
+            "/** @suppress {duplicate} */ var e=2 }" +
+        "};",
+        Normalize.CATCH_BLOCK_VAR_ERROR);
   }
 
   public void testIssue166e() {

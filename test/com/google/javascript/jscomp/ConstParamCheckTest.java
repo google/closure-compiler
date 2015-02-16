@@ -54,31 +54,31 @@ public class ConstParamCheckTest extends CompilerTestCase {
   }
 
   public void testNotStringLiteralArgument1() {
-    test(CLOSURE_DEFS
+    testError(CLOSURE_DEFS
         + "goog.string.Const.from(null);",
-        null, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testNotStringLiteralArgument2() {
-    test(CLOSURE_DEFS
+    testError(CLOSURE_DEFS
         + "var myFunction = function() {};"
         + "goog.string.Const.from(myFunction());",
-        null, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testNotStringLiteralArgument3() {
-    test(CLOSURE_DEFS
+    testError(CLOSURE_DEFS
         + "var myFunction = function() {};"
         + "goog.string.Const.from('foo' + myFunction() + 'bar');",
-        null, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testNotStringLiteralArgumentAliased() {
-    test(CLOSURE_DEFS
+    testError(CLOSURE_DEFS
         + "var myFunction = function() {};"
         + "var mkConst = goog.string.Const.from;"
         + "mkConst(myFunction());",
-        null, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   // Tests for string literal constant arguments.
@@ -96,10 +96,10 @@ public class ConstParamCheckTest extends CompilerTestCase {
   }
 
   public void testNotConstantArgument() {
-    test(CLOSURE_DEFS
+    testError(CLOSURE_DEFS
         + "var foo = 'foo';"
         + "goog.string.Const.from(foo);",
-        null, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testStringLiteralConstantArgumentOrder() {
@@ -116,17 +116,17 @@ public class ConstParamCheckTest extends CompilerTestCase {
   }
 
   public void testNotStringLiteralConstantArgument1() {
-    test(CLOSURE_DEFS
+    testError(CLOSURE_DEFS
         + "var FOO = null;"
         + "goog.string.Const.from(FOO);",
-        null, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
   }
 
   public void testNotStringLiteralConstantArgument2() {
-    test(CLOSURE_DEFS
+    testError(CLOSURE_DEFS
         + "var myFunction = function() {};"
         + "var FOO = myFunction();"
         + "goog.string.Const.from(FOO);",
-        null, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
   }
 }

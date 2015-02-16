@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+
 /**
  * Generate exports unit test.
  *
@@ -98,13 +99,11 @@ public class GenerateExportsTest extends CompilerTestCase {
    */
   public void testNestedVarAssign() {
     this.allowNonGlobalExports = false;
-    test("var BAR;\n/** @export */var FOO = BAR = 5",
-         null, FindExportableNodes.NON_GLOBAL_ERROR);
+    testError("var BAR;\n/** @export */var FOO = BAR = 5", FindExportableNodes.NON_GLOBAL_ERROR);
 
     this.allowNonGlobalExports = true;
-    test("var BAR;\n/** @export */var FOO = BAR = 5",
-        null, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
-
+    testError("var BAR;\n/** @export */var FOO = BAR = 5",
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
   }
 
   /**
@@ -113,28 +112,26 @@ public class GenerateExportsTest extends CompilerTestCase {
    */
   public void testNestedAssign() {
     this.allowNonGlobalExports = false;
-    test("var BAR;var FOO = {};\n/** @export */FOO.test = BAR = 5",
-         null, FindExportableNodes.NON_GLOBAL_ERROR);
+    testError("var BAR;var FOO = {};\n/** @export */FOO.test = BAR = 5",
+        FindExportableNodes.NON_GLOBAL_ERROR);
 
     this.allowNonGlobalExports = true;
-    test("var BAR;var FOO = {};\n/** @export */FOO.test = BAR = 5",
-         null, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+    testError("var BAR;var FOO = {};\n/** @export */FOO.test = BAR = 5",
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
   }
 
   public void testNonGlobalScopeExport1() {
     this.allowNonGlobalExports = false;
-    test("(function() { /** @export */var FOO = 5 })()",
-         null, FindExportableNodes.NON_GLOBAL_ERROR);
+    testError("(function() { /** @export */var FOO = 5 })()", FindExportableNodes.NON_GLOBAL_ERROR);
 
     this.allowNonGlobalExports = true;
-    test("(function() { /** @export */var FOO = 5 })()",
-        null, FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
+    testError("(function() { /** @export */var FOO = 5 })()",
+        FindExportableNodes.EXPORT_ANNOTATION_NOT_ALLOWED);
   }
 
   public void testNonGlobalScopeExport2() {
     this.allowNonGlobalExports = false;
-    test("var x = {/** @export */ A:function() {}}",
-         null, FindExportableNodes.NON_GLOBAL_ERROR);
+    testError("var x = {/** @export */ A:function() {}}", FindExportableNodes.NON_GLOBAL_ERROR);
   }
 
   public void testExportClass() {

@@ -278,15 +278,15 @@ public class StripCodeTest extends CompilerTestCase {
   }
 
   public void testClassDefiningCallWithStripType3() {
-    test("goog.formatter=function(){};" +
+    testError("goog.formatter=function(){};" +
          "goog.inherits(goog.formatter,goog.debug.Formatter)",
-         null, StripCode.STRIP_TYPE_INHERIT_ERROR);
+         StripCode.STRIP_TYPE_INHERIT_ERROR);
   }
 
   public void testClassDefiningCallWithStripType4() {
-    test("goog.formatter=function(){};" +
+    testError("goog.formatter=function(){};" +
          "goog.formatter.inherits(goog.debug.Formatter)",
-         null, StripCode.STRIP_TYPE_INHERIT_ERROR);
+         StripCode.STRIP_TYPE_INHERIT_ERROR);
   }
 
   public void testClassDefiningCallWithStripType5() {
@@ -295,9 +295,9 @@ public class StripCodeTest extends CompilerTestCase {
   }
 
   public void testClassDefiningCallWithStripType6() {
-    test("goog.formatter=function(){};" +
+    testError("goog.formatter=function(){};" +
          "goog.formatter.inherits(goog.debug.Formatter.Foo)",
-         null, StripCode.STRIP_TYPE_INHERIT_ERROR);
+         StripCode.STRIP_TYPE_INHERIT_ERROR);
   }
 
   public void testClassDefiningCallWithStripType7() {
@@ -397,18 +397,15 @@ public class StripCodeTest extends CompilerTestCase {
 
   public void testReportErrorOnStripInNestedAssignment() {
     // Strip name
-    test("(foo.logger_ = 7) + 8",
-         "(foo.logger_ = 7) + 8",
+    testError("(foo.logger_ = 7) + 8",
          StripCode.STRIP_ASSIGNMENT_ERROR);
 
     // Strip namespaced type
-    test("(goog.debug.Logger.foo = 7) + 8",
-         "(goog.debug.Logger.foo = 7) + 8",
+    testError("(goog.debug.Logger.foo = 7) + 8",
          StripCode.STRIP_ASSIGNMENT_ERROR);
 
     // Strip non-namespaced type
-    test("(GA_GoogleDebugger.foo = 7) + 8",
-         "(GA_GoogleDebugger.foo = 7) + 8",
+    testError("(GA_GoogleDebugger.foo = 7) + 8",
          StripCode.STRIP_ASSIGNMENT_ERROR);
   }
 

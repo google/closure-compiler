@@ -51,10 +51,6 @@ public class MinimizeExitPointsTest extends CompilerTestCase {
     test(js, expected);
   }
 
-  void fold(String js, String expected, DiagnosticType warning) {
-    test(js, expected, warning);
-  }
-
   public void testBreakOptimization() throws Exception {
     fold("f:{if(true){a();break f;}else;b();}",
          "f:{if(true){a()}else{b()}}");

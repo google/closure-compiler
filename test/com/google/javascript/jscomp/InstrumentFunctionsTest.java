@@ -234,12 +234,12 @@ public class InstrumentFunctionsTest extends CompilerTestCase {
 
   public void testProtobuffParseFail() {
     this.instrumentationPb = "not an ascii pb\n";
-    test("function a(){b}", "", RhinoErrorReporter.PARSE_ERROR);
+    testError("function a(){b}", RhinoErrorReporter.PARSE_ERROR);
   }
 
   public void testInitJsParseFail() {
     this.instrumentationPb = "init: \"= assignWithNoLhs();\"";
-    test("function a(){b}", "", RhinoErrorReporter.PARSE_ERROR);
+    testError("function a(){b}", RhinoErrorReporter.PARSE_ERROR);
   }
 
   private class NameAndInstrumentFunctions implements CompilerPass {

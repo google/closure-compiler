@@ -61,7 +61,7 @@ public class CheckMissingGetCssNameTest extends CompilerTestCase {
   }
 
   private void testMissing(String js) {
-    test(js, js, CheckMissingGetCssName.MISSING_GETCSSNAME);
+    testError(js, CheckMissingGetCssName.MISSING_GETCSSNAME);
   }
 
   private void testNotMissing(String js) {

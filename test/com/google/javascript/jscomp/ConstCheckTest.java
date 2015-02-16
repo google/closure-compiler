@@ -167,7 +167,7 @@ public class ConstCheckTest extends CompilerTestCase {
   public void testConstSuppressionOnVar() {
     String before = "/** @const */ var xyz = 1;\n/** @suppress {const} */ var xyz = 3;";
     String after = "/** @const */ var xyz = 1;\n/** @suppress {const} */ xyz = 3;";
-    test(before, after, null);
+    test(before, after);
   }
 
   // If there are two 'var' statements for the same variable, one in externs and
@@ -190,6 +190,6 @@ public class ConstCheckTest extends CompilerTestCase {
   }
 
   private void testError(String js) {
-    test(js, null, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+    testError(js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 }

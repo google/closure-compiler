@@ -509,7 +509,7 @@ public class NodeUtilTest extends TestCase {
     assertMutableState(false, "a");
     assertMutableState(true, "[b, c [d, [e]]]");
     assertMutableState(true, "({a: x, b: y, c: z})");
-    // Note: RegExp objects are not immutable,  for instance, the exec
+    // Note: RegExp objects are not immutable, for instance, the exec
     // method maintains state for "global" searches.
     assertMutableState(true, "/abc/gi");
     assertMutableState(false, "'a'");

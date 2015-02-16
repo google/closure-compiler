@@ -88,7 +88,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
                        DiagnosticType errorWithMessage) {
 
     // Test without a reason.
-    test(String.format(js, ""), null, error);
+    testError(String.format(js, ""), error);
 
     // Test with a reason.
     test(String.format(js, reason), null, errorWithMessage, null, reason);
@@ -896,19 +896,19 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
-    test("/**\n" +
-          "* @fileoverview\n" +
-          "* @package\n" +
-          "*/\n" +
-          "/** @struct @constructor */\n" +
-          "Foo = function() {};\n" +
-          "/** @private */\n" +
-          "Foo.prototype.privateMethod_ = function() {};\n" +
-          "/** @struct @constructor @extends {Foo} */\n" +
-          "Bar = function() {};\n" +
-          "/** @override */\n" +
-          "Bar.prototype.privateMethod_ = function() {};\n",
-        null, BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
+    testError("/**\n" +
+        "* @fileoverview\n" +
+        "* @package\n" +
+        "*/\n" +
+        "/** @struct @constructor */\n" +
+        "Foo = function() {};\n" +
+        "/** @private */\n" +
+        "Foo.prototype.privateMethod_ = function() {};\n" +
+        "/** @struct @constructor @extends {Foo} */\n" +
+        "Bar = function() {};\n" +
+        "/** @override */\n" +
+        "Bar.prototype.privateMethod_ = function() {};\n",
+        BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
   public void testNamespacedFunctionDoesNotNeedVisibilityRedeclInFileWithFileOverviewVisibility() {
@@ -1346,7 +1346,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         "/** @constructor */ function String() {}" +
         "/** @deprecated %s */ String.prototype.length;" +
         "function f() { return 'x'.length; }",
-        "GRR",
+        (String) null,
         DEPRECATED_PROP_REASON,
         null);
   }
@@ -1356,7 +1356,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         "/** @constructor */ function String() {}" +
         "/** @private */ String.prototype.length;", // externs
         "function f() { return 'x'.length; }",
-        "", // output
+        (String) null, // no output
         BAD_PRIVATE_PROPERTY_ACCESS,
         null);
   }
@@ -1366,7 +1366,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         "/** @constructor */ function Foo() {}" +
         "/** @deprecated %s */ Foo.prototype.length;" +
         "/** @param {?Foo} x */ function f(x) { return x.length; }",
-        "GRR",
+        (String) null,
         DEPRECATED_PROP,
         DEPRECATED_PROP_REASON);
   }
@@ -1462,35 +1462,35 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty1a() {
-    test("/** @constructor */ function A() {" +
+    testError("/** @constructor */ function A() {" +
         "/** @const */ this.bar = 3;}" +
         "/** @constructor */ function B() {" +
         "/** @const */ this.bar = 3;this.bar += 4;}",
-        null, CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty1b() {
-    test("/** @constructor */ function A() {" +
+    testError("/** @constructor */ function A() {" +
         "this.BAR = 3;}" +
         "/** @constructor */ function B() {" +
         "this.BAR = 3;this.BAR += 4;}",
-        null, CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty2a() {
-    test("/** @constructor */ function Foo() {}" +
+    testError("/** @constructor */ function Foo() {}" +
         "/** @const */ Foo.prototype.prop = 2;" +
         "var foo = new Foo();" +
         "foo.prop = 3;",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty2b() {
-    test("/** @constructor */ function Foo() {}" +
+    testError("/** @constructor */ function Foo() {}" +
         "Foo.prototype.PROP = 2;" +
         "var foo = new Foo();" +
         "foo.PROP = 3;",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty3a() {
@@ -1506,19 +1506,19 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testNamespaceConstantProperty1() {
-    test("" +
+    testError("" +
         "/** @const */ var o = {};\n" +
         "/** @const */ o.x = 1;" +
         "o.x = 2;",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testNamespaceConstantProperty2() {
-    test("" +
+    testError("" +
         "var o = {};\n" +
         "/** @const */ o.x = 1;\n" +
         "o.x = 2;\n",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testNamespaceConstantProperty2a() {
@@ -1530,11 +1530,11 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testNamespaceConstantProperty3() {
-    test("" +
+    testError("" +
         "/** @const */ var o = {};\n" +
         "/** @const */ o.x = 1;" +
         "o.x = 2;",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty3a1() {
@@ -1562,30 +1562,30 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty4() {
-    test("/** @constructor */ function cat(name) {}" +
+    testError("/** @constructor */ function cat(name) {}" +
         "/** @const */ cat.test = 1;" +
         "cat.test *= 2;",
-        null, CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty4b() {
-    test("/** @constructor */ function cat(name) {}" +
+    testError("/** @constructor */ function cat(name) {}" +
         "cat.TEST = 1;" +
         "cat.TEST *= 2;",
-        null, CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty5() {
-    test("/** @constructor */ function Foo() { this.prop = 1;}" +
+    testError("/** @constructor */ function Foo() { this.prop = 1;}" +
         "/** @const */ Foo.prototype.prop;" +
         "Foo.prototype.prop = 2",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty6() {
-    test("/** @constructor */ function Foo() { this.prop = 1;}" +
+    testError("/** @constructor */ function Foo() { this.prop = 1;}" +
         "/** @const */ Foo.prototype.prop = 2;",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty7() {
@@ -1620,13 +1620,13 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty11() {
-    test("/** @constructor */ function Foo() {}" +
+    testError("/** @constructor */ function Foo() {}" +
         "/** @const */ Foo.prototype.bar;" +
         "/**\n" +
         " * @constructor\n" +
         " * @extends {Foo}\n" +
         " */ function SubFoo() { this.bar = 5; this.bar = 6; }",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty12() {
@@ -1643,7 +1643,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty13() {
-    test("/** @constructor */ function Foo() {}" +
+    testError("/** @constructor */ function Foo() {}" +
         "/** @const */ Foo.prototype.bar;" +
         "/**\n" +
         " * @constructor\n" +
@@ -1653,13 +1653,13 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         " * @constructor\n" +
         " * @extends {SubFoo}\n" +
         " */ function SubSubFoo() { this.bar = 5; }",
-        null , CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty14() {
-    test("/** @constructor */ function Foo() {" +
+    testError("/** @constructor */ function Foo() {" +
         "/** @const */ this.bar = 3; delete this.bar; }",
-        null, CONST_PROPERTY_DELETED);
+        CONST_PROPERTY_DELETED);
   }
 
   public void testConstantPropertyInExterns() {
@@ -1680,33 +1680,33 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty15a() {
-    test("/** @constructor */ function Foo() { this.CONST = 100; };\n" +
+    testError("/** @constructor */ function Foo() { this.CONST = 100; };\n" +
         "/** @type {Foo} */\n" +
         "var foo = new Foo();\n" +
         "/** @type {number} */\n" +
         "foo.CONST = 0;",
-        null, CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty15b() {
-    test("/** @constructor */ function Foo() {};\n" +
+    testError("/** @constructor */ function Foo() {};\n" +
         "Foo.prototype.CONST = 100;\n" +
         "/** @type {Foo} */\n" +
         "var foo = new Foo();\n" +
         "/** @type {number} */\n" +
         "foo.CONST = 0;",
-        null, CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty15c() {
-    test("" +
+    testError("" +
         "/** @constructor */ function Bar() {this.CONST = 100;};\n" +
         "/** @constructor \n @extends {Bar} */ function Foo() {};\n" +
         "/** @type {Foo} */\n" +
         "var foo = new Foo();\n" +
         "/** @type {number} */\n" +
         "foo.CONST = 0;",
-        null, CONST_PROPERTY_REASSIGNED_VALUE);
+        CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty16() {
@@ -1766,7 +1766,7 @@ public class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testFinalClassCannotBeSubclassed() {
-    test(
+    testError(
         "/**\n"
         + " * @constructor\n"
         + " * @const\n"
@@ -1775,8 +1775,8 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         + " * @constructor\n"
         + " * @extends {Foo}\n*"
         + " */ Bar = function() {};",
-        null, EXTEND_FINAL_CLASS);
-    test(
+        EXTEND_FINAL_CLASS);
+    testError(
         "/**\n"
         + " * @constructor\n"
         + " * @const\n"
@@ -1785,6 +1785,6 @@ public class CheckAccessControlsTest extends CompilerTestCase {
         + " * @constructor\n"
         + " * @extends {Foo}\n*"
         + " */ function Bar() {};",
-        null, EXTEND_FINAL_CLASS);
+        EXTEND_FINAL_CLASS);
   }
 }

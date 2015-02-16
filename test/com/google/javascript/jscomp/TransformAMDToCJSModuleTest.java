@@ -109,12 +109,11 @@ public class TransformAMDToCJSModuleTest extends CompilerTestCase {
   }
 
   private void testUnsupported(String js) {
-    test(js, null, TransformAMDToCJSModule.UNSUPPORTED_DEFINE_SIGNATURE_ERROR);
+    testError(js, TransformAMDToCJSModule.UNSUPPORTED_DEFINE_SIGNATURE_ERROR);
   }
 
   private void testNonTopLevelDefine(String js) {
-    test(js, null,
-        TransformAMDToCJSModule.NON_TOP_LEVEL_STATEMENT_DEFINE_ERROR);
+    testError(js, TransformAMDToCJSModule.NON_TOP_LEVEL_STATEMENT_DEFINE_ERROR);
   }
 
 }

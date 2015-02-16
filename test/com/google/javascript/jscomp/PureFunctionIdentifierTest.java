@@ -1231,30 +1231,27 @@ public class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   public void testInvalidAnnotation1() throws Exception {
-    test("/** @nosideeffects */ function foo() {}",
-         null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testError("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation2() throws Exception {
-    test("var f = /** @nosideeffects */ function() {}",
-         null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testError("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation3() throws Exception {
-    test("/** @nosideeffects */ var f = function() {}",
-         null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testError("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation4() throws Exception {
-    test("var f = function() {};" +
+    testError("var f = function() {};" +
          "/** @nosideeffects */ f.x = function() {}",
-         null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation5() throws Exception {
-    test("var f = function() {};" +
+    testError("var f = function() {};" +
          "f.x = /** @nosideeffects */ function() {}",
-         null, INVALID_NO_SIDE_EFFECT_ANNOTATION);
+         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   void checkMarkedCalls(String source, List<String> expected) {

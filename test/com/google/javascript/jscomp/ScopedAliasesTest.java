@@ -527,24 +527,18 @@ public class ScopedAliasesTest extends CompilerTestCase {
 
   // FAILURE CASES
 
-  private void testFailure(String code, DiagnosticType expectedError) {
-    test(code, null, expectedError);
-  }
-
-  private void testScopedFailure(String code, DiagnosticType expectedError) {
-    test("goog.scope(function() {" + code + "});", null, expectedError);
+  private void testScopedError(String code, DiagnosticType expectedError) {
+    testError("goog.scope(function() {" + code + "});", expectedError);
   }
 
   public void testScopedThis() {
-    testScopedFailure("this.y = 10;", ScopedAliases.GOOG_SCOPE_REFERENCES_THIS);
-    testScopedFailure("var x = this;",
-        ScopedAliases.GOOG_SCOPE_REFERENCES_THIS);
-    testScopedFailure("fn(this);", ScopedAliases.GOOG_SCOPE_REFERENCES_THIS);
+    testScopedError("this.y = 10;", ScopedAliases.GOOG_SCOPE_REFERENCES_THIS);
+    testScopedError("var x = this;", ScopedAliases.GOOG_SCOPE_REFERENCES_THIS);
+    testScopedError("fn(this);", ScopedAliases.GOOG_SCOPE_REFERENCES_THIS);
   }
 
   public void testAliasRedefinition() {
-    testScopedFailure("var x = goog.dom; x = goog.events;",
-        ScopedAliases.GOOG_SCOPE_ALIAS_REDEFINED);
+    testScopedError("var x = goog.dom; x = goog.events;", ScopedAliases.GOOG_SCOPE_ALIAS_REDEFINED);
   }
 
   public void testAliasNonRedefinition() {
@@ -566,50 +560,43 @@ public class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testAliasCycle() {
-    test("var x = {y: {}};" +
+    testError("var x = {y: {}};" +
          "goog.scope(function() {" +
          "  var y = z.x;" +
          "  var z = y.x;" +
          "  y.ClassA = function() {};" +
          "  z.ClassB = function() {};" +
-         "});", null,
+         "});",
          ScopedAliases.GOOG_SCOPE_ALIAS_CYCLE);
   }
 
   public void testScopedReturn() {
-    testScopedFailure("return;", ScopedAliases.GOOG_SCOPE_USES_RETURN);
-    testScopedFailure("var x = goog.dom; return;",
-        ScopedAliases.GOOG_SCOPE_USES_RETURN);
+    testScopedError("return;", ScopedAliases.GOOG_SCOPE_USES_RETURN);
+    testScopedError("var x = goog.dom; return;", ScopedAliases.GOOG_SCOPE_USES_RETURN);
   }
 
   public void testScopedThrow() {
-    testScopedFailure("throw 'error';", ScopedAliases.GOOG_SCOPE_USES_THROW);
+    testScopedError("throw 'error';", ScopedAliases.GOOG_SCOPE_USES_THROW);
   }
 
   public void testUsedImproperly() {
-    testFailure("var x = goog.scope(function() {});",
-        ScopedAliases.GOOG_SCOPE_MUST_BE_ALONE);
-    testFailure("var f = function() { goog.scope(function() {}); }",
+    testError("var x = goog.scope(function() {});", ScopedAliases.GOOG_SCOPE_MUST_BE_ALONE);
+    testError("var f = function() { goog.scope(function() {}); }",
         ScopedAliases.GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
   }
 
   public void testBadParameters() {
-    testFailure("goog.scope()", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
-    testFailure("goog.scope(10)", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
-    testFailure("goog.scope(function() {}, 10)",
-        ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
-    testFailure("goog.scope(function z() {})",
-        ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
-    testFailure("goog.scope(function(a, b, c) {})",
-        ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
+    testError("goog.scope()", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
+    testError("goog.scope(10)", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
+    testError("goog.scope(function() {}, 10)", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
+    testError("goog.scope(function z() {})", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
+    testError("goog.scope(function(a, b, c) {})", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
   }
 
   public void testNonAliasLocal() {
-    testScopedFailure("try { } catch (e) {}",
-        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+    testScopedError("try { } catch (e) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
 
-    testScopedFailure("for (var k in { a: 1, b: 2 }) {}",
-        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+    testScopedError("for (var k in { a: 1, b: 2 }) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
   }
 
   public void testOkAliasLocal() {
@@ -640,8 +627,7 @@ public class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testAliasReassign() {
-    testScopedFailure("var x = 3; x = 5;",
-        ScopedAliases.GOOG_SCOPE_ALIAS_REDEFINED);
+    testScopedError("var x = 3; x = 5;", ScopedAliases.GOOG_SCOPE_ALIAS_REDEFINED);
   }
 
   public void testMultipleLocals() {

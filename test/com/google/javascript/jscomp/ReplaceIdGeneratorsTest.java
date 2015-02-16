@@ -413,29 +413,27 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
   }
 
   public void testNonLiteralParam1() {
-    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
-                           "var x = 'foo';" +
-                           "id(x);"},
-        null,
+    testSame("/** @idGenerator */ var id = function() {}; "
+            + "var x = 'foo';"
+            + "id(x);",
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   public void testNonLiteralParam2() {
-    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
-                           "id('foo' + 'bar');"},
-        null,
+    testSame("/** @idGenerator */ var id = function() {}; "
+            + "id('foo' + 'bar');",
         ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
   }
 
   public void testLocalCall() {
-    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
-                           "function Foo() { id('foo'); }"},
+    testError("/** @idGenerator */ var id = function() {}; "
+            + "function Foo() { id('foo'); }",
         ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
   public void testConditionalCall() {
-    testSame(new String[] {"/** @idGenerator */ var id = function() {}; " +
-                           "if(x) id('foo');"},
+    testError("/** @idGenerator */ var id = function() {}; "
+            + "if(x) id('foo');",
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     test("/** @consistentIdGenerator */ var id = function() {};" +
@@ -456,17 +454,17 @@ public class ReplaceIdGeneratorsTest extends CompilerTestCase {
   }
 
   public void testConflictingIdGenerator() {
-    testSame(new String[] {"/** @idGenerator \n @consistentIdGenerator \n*/" +
-                           "var id = function() {}; "},
+    testError("/** @idGenerator \n @consistentIdGenerator \n*/"
+            + "var id = function() {}; ",
         ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
-    testSame(new String[] {"/** @stableIdGenerator \n @idGenerator \n*/" +
-                           "var id = function() {}; "},
+    testError("/** @stableIdGenerator \n @idGenerator \n*/"
+            + "var id = function() {}; ",
         ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
-    testSame(new String[] {"/** @stableIdGenerator \n " +
-                           "@consistentIdGenerator \n*/" +
-                           "var id = function() {}; "},
+    testError("/** @stableIdGenerator \n "
+            + "@consistentIdGenerator \n*/"
+            + "var id = function() {}; ",
         ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
     test("/** @consistentIdGenerator */ var id = function() {};" +

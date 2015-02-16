@@ -332,7 +332,7 @@ public class RenamePropertiesTest extends CompilerTestCase {
         "Bar.prototype = {_getA: function(){}, _b: 0}; bar._getA();",
         "Bar.prototype = {a: function(){}, b: 0}; bar.a();",
         "Bar.prototype = {_getA: function(){}, _c: 1, _b: 0}; bar._getA();",
-        "Bar.prototype = {a: function(){}, c: 1,  b: 0}; bar.a();");
+        "Bar.prototype = {a: function(){}, c: 1, b: 0}; bar.a();");
   }
 
   public void testPropertyAddedToObjectStable() {

@@ -413,19 +413,18 @@ public abstract class CompilerTestCase extends TestCase  {
    * @param expected Expected JS output
    */
   public void test(String js, String expected) {
-    test(js, expected, null);
+    test(js, expected, null, null);
   }
 
   /**
-   * Verifies that the compiler pass's JS output matches the expected output,
-   * or that an expected error is encountered.
+   * Verifies that the compiler generates the given error for the given input.
    *
    * @param js Input
-   * @param expected Expected output, or null if an error is expected
-   * @param error Expected error, or null if no error is expected
+   * @param error Expected error
    */
-  public void test(String js, String expected, DiagnosticType error) {
-    test(js, expected, error, null);
+  public void testError(String js, DiagnosticType error) {
+    assertNotNull("Must assert an error", error);
+    test(js, null, error, null);
   }
 
 
@@ -771,7 +770,7 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   public void testSame(String js, DiagnosticType diag, boolean error) {
     if (error) {
-      test(js, js, diag);
+      test(js, null, diag, null);
     } else {
       test(js, js, null, diag);
     }
@@ -801,7 +800,7 @@ public abstract class CompilerTestCase extends TestCase  {
   public void testSame(
       String externs, String js, DiagnosticType diag, boolean error) {
     if (error) {
-      test(externs, js, js, diag, null);
+      test(externs, js, (String) null, diag, null);
     } else {
       test(externs, js, js, null, diag);
     }
@@ -839,7 +838,7 @@ public abstract class CompilerTestCase extends TestCase  {
     List<SourceFile> externsInputs = ImmutableList.of(
         SourceFile.fromCode("externs", externs));
     if (error) {
-      test(externsInputs, js, js, type, null, description);
+      test(externsInputs, js, null, type, null, description);
     } else {
       test(externsInputs, js, js, null, type, description);
     }
@@ -865,26 +864,13 @@ public abstract class CompilerTestCase extends TestCase  {
 
   /**
    * Verifies that the compiler pass's JS output is the same as its input,
-   * and emits the given error.
+   * and emits the given warning.
    *
    * @param js Inputs and outputs
-   * @param error Expected error, or null if no error is expected
-   */
-  public void testSame(String[] js, DiagnosticType error) {
-    test(js, js, error);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input,
-   * and emits the given error and warning.
-   *
-   * @param js Inputs and outputs
-   * @param error Expected error, or null if no error is expected
    * @param warning Expected warning, or null if no warning is expected
    */
-  public void testSame(
-      String[] js, DiagnosticType error, DiagnosticType warning) {
-    test(js, js, error, warning);
+  public void testSameWarning(String[] js, DiagnosticType warning) {
+    test(js, js, null, warning);
   }
 
   /**
@@ -1022,7 +1008,7 @@ public abstract class CompilerTestCase extends TestCase  {
         if (rewriteClosureCode && i == 0) {
           new ClosureRewriteClass(compiler).process(null, mainRoot);
           new ClosureRewriteModule(compiler).process(null, mainRoot);
-          new ScopedAliases(compiler, null,  CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
+          new ScopedAliases(compiler, null, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
               .process(null, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
@@ -1228,6 +1214,7 @@ public abstract class CompilerTestCase extends TestCase  {
             "\n" + explanation, explanation);
       }
     } else {
+      assertNull("expected must be null if error != null", expected);
       String errors = "";
       for (JSError actualError : compiler.getErrors()) {
         errors += actualError.description + "\n";

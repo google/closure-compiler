@@ -1617,8 +1617,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         " var Fruit = null;\n" +
         " if (f == Enums$Fruit$APPLE) alert('apple');\n" +
         " if (f == Enums$Fruit$BANANA) alert('banana');\n" +
-        "}",
-        null);
+        "}");
   }
 
   public void testCollapsePropertiesOfClass1() {

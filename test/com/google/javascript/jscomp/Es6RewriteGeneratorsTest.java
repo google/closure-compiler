@@ -449,19 +449,19 @@ public class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   public void testUndecomposableExpression() {
-    test("function *f() { obj.bar(yield 5); }",
-      null, Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("function *f() { obj.bar(yield 5); }",
+        Es6ToEs3Converter.CANNOT_CONVERT);
   }
 
   public void testGeneratorCannotConvertYet() {
-    test("function *f() {switch (i) {default: case 1: yield 1;}}",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("function *f() {switch (i) {default: case 1: yield 1;}}",
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("function *f() { l: if (true) { var x = 5; break l; x++; yield x; }; }",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("function *f() { l: if (true) { var x = 5; break l; x++; yield x; }; }",
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
-    test("function *f(b, i) {switch (i) { case (b || (yield 1)): yield 2; }}",
-      null, Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("function *f(b, i) {switch (i) { case (b || (yield 1)): yield 2; }}",
+        Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   public void testThrowGenerator() {
