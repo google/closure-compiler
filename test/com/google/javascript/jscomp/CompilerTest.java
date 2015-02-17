@@ -777,44 +777,6 @@ public class CompilerTest extends TestCase {
     assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
   }
 
-  public void testTargetSpecificCompiles() throws Exception {
-    String testExterns = ""
-        + "var window;"
-        + "/** @param {string} str */"
-        + "function alert(str) {}";
-    String testCode = ""
-        + "/** @define {number} */"
-        + "var mydef = 0;"
-        + "if (mydef == 1) {"
-        + "  alert('1');"
-        + "} else if (mydef == 2) {"
-        + "  alert('2');"
-        + "} else if (mydef == 3) {"
-        + "  alert('3');"
-        + "} else { "
-        + "  alert('4');"
-        + "}";
-
-    CompilerOptions options = createNewFlagBasedOptions();
-    Compiler compiler = new Compiler();
-    compiler.init(
-        ImmutableList.of(SourceFile.fromCode("ext.js", testExterns)),
-        ImmutableList.of(SourceFile.fromCode("in1.js", testCode)),
-        options);
-    compiler.parse();
-    compiler.check();
-
-    byte[] savedState = serialize(compiler.getState());
-    for (int num = 1; num <= 3; ++num) {
-      compiler.setState((Compiler.IntermediateState) deserialize(savedState));
-
-      options.setDefineToNumberLiteral("mydef", num);
-      compiler.processDefines();
-      compiler.optimize();
-      assertEquals("alert(\"" + num + "\");", compiler.toSource());
-    }
-  }
-
   public void testGetEmptyResult() {
     Result result = new Compiler().getResult();
     assertThat(result.errors).isEmpty();
