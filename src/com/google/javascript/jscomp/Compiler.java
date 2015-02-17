@@ -1982,18 +1982,6 @@ public class Compiler extends AbstractCompiler {
     return options.cssRenamingMap;
   }
 
-  /**
-   * Reprocesses the current defines over the AST.  This is used by GwtCompiler
-   * to generate N outputs for different targets from the same (checked) AST.
-   * For each target, we apply the target-specific defines by calling
-   * {@code processDefines} and then {@code optimize} to optimize the AST
-   * specifically for that target.
-   */
-  public void processDefines() {
-    (new DefaultPassConfig(options)).processDefines.create(this)
-        .process(externsRoot, jsRoot);
-  }
-
   /** Control Flow Analysis. */
   ControlFlowGraph<Node> computeCFG() {
     logger.fine("Computing Control Flow Graph");

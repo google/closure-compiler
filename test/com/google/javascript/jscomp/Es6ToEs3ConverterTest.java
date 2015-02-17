@@ -62,14 +62,28 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
     return options;
   }
 
+  protected final PassFactory makePassFactory(
+      String name, final CompilerPass pass) {
+    return new PassFactory(name, true/* one-time pass */) {
+      @Override
+      protected CompilerPass create(AbstractCompiler compiler) {
+        return pass;
+      }
+    };
+  }
+
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null, null);
-    DefaultPassConfig passConfig = new DefaultPassConfig(getOptions());
-    optimizer.addOneTimePass(passConfig.es6RenameVariablesInParamLists);
-    optimizer.addOneTimePass(passConfig.es6ConvertSuper);
-    optimizer.addOneTimePass(passConfig.convertEs6ToEs3);
-    optimizer.addOneTimePass(passConfig.rewriteLetConst);
+    optimizer.addOneTimePass(
+        makePassFactory("Es6RenameVariablesInParamLists",
+            new Es6RenameVariablesInParamLists(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("convertEs6", new Es6ToEs3Converter(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("Es6RewriteLetConst", new Es6RewriteLetConst(compiler)));
     return optimizer;
   }
 
