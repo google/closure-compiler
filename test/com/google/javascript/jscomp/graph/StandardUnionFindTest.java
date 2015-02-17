@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 
 import junit.framework.TestCase;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -95,9 +94,8 @@ public class StandardUnionFindTest extends TestCase {
     union.union("F", "F");
 
     Collection<Set<String>> classes = union.allEquivalenceClasses();
-    assertThat(classes).hasSize(3);
-    assertContentsAnyOrder(
-        classes, ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F"));
+    assertThat(classes).containsExactly(
+        ImmutableSet.of("A", "B", "C"), ImmutableSet.of("D", "E"), ImmutableSet.of("F"));
   }
 
   public void testFindAll() {
@@ -157,7 +155,7 @@ public class StandardUnionFindTest extends TestCase {
     assertThat(union.findAll("D")).hasSize(5);
   }
 
-  public void testElements(){
+  public void testElements() {
     union.union("A", "B");
     union.union("B", "C");
     union.union("A", "B");
@@ -173,8 +171,8 @@ public class StandardUnionFindTest extends TestCase {
     union.union("B", "Z");
     union.union("X", "Y");
     UnionFind<String> copy = new StandardUnionFind<>(union);
-    assertContentsAnyOrder(copy.findAll("Z"), "A", "B", "Z");
-    assertContentsAnyOrder(copy.findAll("X"), "X", "Y");
+    assertThat(copy.findAll("Z")).containsExactly("A", "B", "Z");
+    assertThat(copy.findAll("X")).containsExactly("X", "Y");
   }
 
   public void testChangesToCopyDontAffectOriginal() {
@@ -183,9 +181,9 @@ public class StandardUnionFindTest extends TestCase {
     union.union("A", "C");
     UnionFind<String> copy = new StandardUnionFind<>(union);
     copy.union("A", "D");
-    assertContentsAnyOrder(copy.findAll("D"), "A", "B", "C", "D");
-    assertContentsAnyOrder(union.findAll("A"), "A", "B", "C");
-    assertContentsAnyOrder(copy.findAll("X"), "X", "Y");
+    assertThat(copy.findAll("D")).containsExactly("A", "B", "C", "D");
+    assertThat(union.findAll("A")).containsExactly("A", "B", "C");
+    assertThat(copy.findAll("X")).containsExactly("X", "Y");
     try {
       union.findAll("D");
       fail("D has been inserted to the original collection");
@@ -202,19 +200,9 @@ public class StandardUnionFindTest extends TestCase {
     assertThat(union.areEquivalent("C", "B")).isFalse();
     try {
       union.areEquivalent("A", "F");
+      fail();
     } catch (IllegalArgumentException e) {
       // Expected.
     }
-  }
-
-  /**
-   * Asserts that {@code actual} contains precisely the elements
-   * {@code expected}, in any order.  Both collections may contain
-   * duplicates, and this method will only pass if the quantities are
-   * exactly the same.
-   */
-  private static void assertContentsAnyOrder(
-      Iterable<?> actual, Object... expected) {
-    assertThat(actual).containsExactlyElementsIn(Arrays.asList(expected));
   }
 }
