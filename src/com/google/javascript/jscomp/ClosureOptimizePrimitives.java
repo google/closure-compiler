@@ -16,13 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import java.util.List;
 
 /**
  * <p>Compiler pass that converts all calls to:
@@ -39,16 +36,18 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   /**
    * Identifies all calls to goog.object.create.
    */
-  private static class FindObjectCreateCalls extends AbstractPostOrderCallback {
-    List<Node> callNodes = Lists.newArrayList();
+  private class FindObjectCreateCalls extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         Node fn = n.getFirstChild();
-        if (fn.matchesQualifiedName("goog$object$create") ||
-            fn.matchesQualifiedName("goog.object.create")) {
-          callNodes.add(n);
+        if (fn.matchesQualifiedName("goog$object$create")
+            || fn.matchesQualifiedName("goog.object.create")) {
+          processObjectCreateCall(n);
+        } else if (fn.matchesQualifiedName("goog$object$createSet")
+            || fn.matchesQualifiedName("goog.object.createSet")) {
+          processObjectCreateSetCall(n);
         }
       }
     }
@@ -65,37 +64,34 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   public void process(Node externs, Node root) {
     FindObjectCreateCalls pass = new FindObjectCreateCalls();
     NodeTraversal.traverse(compiler, root, pass);
-    processObjectCreateCalls(pass.callNodes);
   }
 
   /**
    * Converts all of the given call nodes to object literals that are safe to
    * do so.
    */
-  private void processObjectCreateCalls(List<Node> callNodes) {
-    for (Node callNode : callNodes) {
-      Node curParam = callNode.getFirstChild().getNext();
-      if (canOptimizeObjectCreate(curParam)) {
-        Node objNode = IR.objectlit().srcref(callNode);
-        while (curParam != null) {
-          Node keyNode = curParam;
-          Node valueNode = curParam.getNext();
-          curParam = valueNode.getNext();
+  private void processObjectCreateCall(Node callNode) {
+    Node curParam = callNode.getFirstChild().getNext();
+    if (canOptimizeObjectCreate(curParam)) {
+      Node objNode = IR.objectlit().srcref(callNode);
+      while (curParam != null) {
+        Node keyNode = curParam;
+        Node valueNode = curParam.getNext();
+        curParam = valueNode.getNext();
 
-          callNode.removeChild(keyNode);
-          callNode.removeChild(valueNode);
+        callNode.removeChild(keyNode);
+        callNode.removeChild(valueNode);
 
-          if (!keyNode.isString()) {
-            keyNode = IR.string(NodeUtil.getStringValue(keyNode))
-                .srcref(keyNode);
-          }
-          keyNode.setType(Token.STRING_KEY);
-          keyNode.setQuotedString();
-          objNode.addChildToBack(IR.propdef(keyNode, valueNode));
+        if (!keyNode.isString()) {
+          keyNode = IR.string(NodeUtil.getStringValue(keyNode))
+              .srcref(keyNode);
         }
-        callNode.getParent().replaceChild(callNode, objNode);
-        compiler.reportCodeChange();
+        keyNode.setType(Token.STRING_KEY);
+        keyNode.setQuotedString();
+        objNode.addChildToBack(IR.propdef(keyNode, valueNode));
       }
+      callNode.getParent().replaceChild(callNode, objNode);
+      compiler.reportCodeChange();
     }
   }
 
@@ -114,6 +110,50 @@ final class ClosureOptimizePrimitives implements CompilerPass {
 
       // Check for an odd number of parameters.
       if (curParam == null) {
+        return false;
+      }
+      curParam = curParam.getNext();
+    }
+    return true;
+  }
+
+  /**
+   * Converts all of the given call nodes to object literals that are safe to
+   * do so.
+   */
+  private void processObjectCreateSetCall(Node callNode) {
+    Node curParam = callNode.getFirstChild().getNext();
+    if (canOptimizeObjectCreateSet(curParam)) {
+      Node objNode = IR.objectlit().srcref(callNode);
+      while (curParam != null) {
+        Node keyNode = curParam;
+        Node valueNode = IR.trueNode().srcref(keyNode);
+
+        curParam = curParam.getNext();
+        callNode.removeChild(keyNode);
+
+        if (!keyNode.isString()) {
+          keyNode = IR.string(NodeUtil.getStringValue(keyNode))
+              .srcref(keyNode);
+        }
+        keyNode.setType(Token.STRING_KEY);
+        keyNode.setQuotedString();
+        objNode.addChildToBack(IR.propdef(keyNode, valueNode));
+      }
+      callNode.getParent().replaceChild(callNode, objNode);
+      compiler.reportCodeChange();
+    }
+  }
+
+  /**
+   * Returns whether the given call to goog.object.create can be converted to an
+   * object literal.
+   */
+  private static boolean canOptimizeObjectCreateSet(Node firstParam) {
+    Node curParam = firstParam;
+    while (curParam != null) {
+      // All keys must be strings or numbers.
+      if (!curParam.isString() && !curParam.isNumber()) {
         return false;
       }
       curParam = curParam.getNext();

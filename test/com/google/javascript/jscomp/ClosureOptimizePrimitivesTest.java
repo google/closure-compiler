@@ -56,4 +56,25 @@ public class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   public void testObjectCreate5() {
     test("goog.object.create('a',2).toString()", "({'a':2}).toString()");
   }
+
+  public void testObjectCreateSetNonConstKey() {
+    testSame("goog.object.createSet('a',1,2,3,foo,bar);");
+  }
+
+  public void testObjectCreateSet1() {
+    test("var a = goog.object.createSet()", "var a = {}");
+  }
+
+  public void testObjectCreateSet2() {
+    test("var a = goog.object.createSet(1,2)", "var a = {1:true,2:true}");
+  }
+
+  public void testObjectCreateSet3() {
+    test("alert(goog.object.createSet(1).toString())",
+         "alert({1:true}.toString())");
+  }
+
+  public void testObjectCreateSet4() {
+    test("goog.object.createSet('a').toString()", "({'a':true}).toString()");
+  }
 }
