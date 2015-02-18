@@ -783,9 +783,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
     // Split the string and convert the returned array into JS nodes
     String[] stringArray = jsSplit(stringValue, separator, limit);
     Node arrayOfStrings = IR.arraylit();
-    for (int i = 0; i < stringArray.length; i++) {
-      arrayOfStrings.addChildToBack(
-          IR.string(stringArray[i]).srcref(stringNode));
+    for (String element : stringArray) {
+      arrayOfStrings.addChildToBack(IR.string(element).srcref(stringNode));
     }
 
     Node parent = n.getParent();

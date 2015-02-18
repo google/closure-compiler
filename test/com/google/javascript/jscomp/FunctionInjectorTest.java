@@ -1585,8 +1585,8 @@ public class FunctionInjectorTest extends TestCase {
     Node n = compiler.parseTestCode(js);
     String message = "Unexpected errors: ";
     JSError[] errs = compiler.getErrors();
-    for (int i = 0; i < errs.length; i++){
-      message += "\n" + errs[i];
+    for (JSError element : errs) {
+      message += "\n" + element;
     }
     assertEquals(message, 0, compiler.getErrorCount());
     return n;

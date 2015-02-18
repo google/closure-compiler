@@ -159,9 +159,9 @@ public class DotFormatter {
 
       Arrays.sort(edgeList);
 
-      for (int i = 0; i < edgeList.length; i++) {
-          builder.append(INDENT);
-          builder.append(edgeList[i]);
+      for (String element : edgeList) {
+        builder.append(INDENT);
+        builder.append(element);
       }
     }
   }
