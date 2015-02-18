@@ -49,26 +49,29 @@ public class ConvertToTypedES6
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    JSDocInfo bestJSDocInfo = NodeUtil.getBestJSDocInfo(n);
     switch (n.getType()) {
       case Token.FUNCTION:
-        JSDocInfo bestJSDocInfo = NodeUtil.getBestJSDocInfo(n);
         if (bestJSDocInfo != null) {
           setTypeExpression(n, bestJSDocInfo.getReturnType());
         }
         break;
       case Token.NAME:
+      case Token.GETPROP:
         if (parent == null) {
           break;
         }
-        JSDocInfo parentJSDoc = NodeUtil.getBestJSDocInfo(parent);
-        if (parentJSDoc == null) {
-          break;
-        }
-        if (parent.isVar()) {
-          setTypeExpression(n, parentJSDoc.getType());
+        if (parent.isVar() || parent.isAssign() || parent.isExprResult()) {
+          if (bestJSDocInfo != null) {
+            setTypeExpression(n, bestJSDocInfo.getType());
+          }
         } else if (parent.isParamList()) {
+          JSDocInfo parentDocInfo = NodeUtil.getBestJSDocInfo(parent);
+          if (parentDocInfo == null) {
+            break;
+          }
           JSTypeExpression parameterType =
-              parentJSDoc.getParameterType(n.getString());
+              parentDocInfo.getParameterType(n.getString());
           if (parameterType != null) {
             Node attachTypeExpr = n;
             // Modify the primary AST to represent a function parameter as a

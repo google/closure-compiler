@@ -49,6 +49,16 @@ public class ConvertToTypedES6Test extends TestCase {
         "s", stringType());
   }
 
+  public void testPropertyDeclaration() throws Exception {
+    assertIdentifierHasType(compile("/** @type {number} */ this.prop;"),
+        "this.prop", numberType());
+  }
+
+  public void testPropertyDeclarationByAssignment() throws Exception {
+    assertIdentifierHasType(compile("/** @type {number} */ this.prop = 1;"),
+        "this.prop", numberType());
+  }
+
   public void testFunction() throws Exception {
     assertIdentifierHasType(compile("/** @return {boolean} */ function b(){}"),
         "b", booleanType());
