@@ -1515,7 +1515,8 @@ public class DefaultPassConfig extends PassConfig {
           new CheckEnums(compiler),
           new CheckInterfaces(compiler),
           new CheckNullableReturn(compiler),
-          new CheckPrototypeProperties(compiler)));
+          new CheckPrototypeProperties(compiler),
+          new ImplicitNullabilityCheck(compiler)));
     }
   };
 
