@@ -531,9 +531,9 @@ public class IR {
     return new Node(Token.SUPER);
   }
 
-  public static Node memberDef(String name, Node function) {
+  public static Node memberFunctionDef(String name, Node function) {
     Preconditions.checkState(function.isFunction());
-    Node member = Node.newString(Token.MEMBER_DEF, name);
+    Node member = Node.newString(Token.MEMBER_FUNCTION_DEF, name);
     member.addChildToBack(function);
     return member;
   }

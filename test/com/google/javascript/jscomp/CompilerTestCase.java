@@ -245,15 +245,7 @@ public abstract class CompilerTestCase extends TestCase  {
   }
 
   /**
-   * Whether to allow ECMASCRIPT5 source parsing.
-   */
-  protected void enableEcmaScript5(boolean acceptES5) {
-    this.acceptedLanguage =
-        acceptES5 ? LanguageMode.ECMASCRIPT5 : LanguageMode.ECMASCRIPT3;
-  }
-
-  /**
-   * Whether to allow ECMASCRIPT5 source parsing.
+   * What language to allow in source parsing.
    */
   protected void setAcceptedLanguage(LanguageMode acceptedLanguage) {
     this.acceptedLanguage = acceptedLanguage;

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Unit tests for {#link {@link PeepholeReplaceKnownMethods}
  *
@@ -256,7 +258,7 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   public void testFoldParseNumbers() {
     enableNormalize();
-    enableEcmaScript5(true);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
 
     fold("x = parseInt('123')", "x = 123");
     fold("x = parseInt(' 123')", "x = 123");
@@ -300,7 +302,7 @@ public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSame("x = parseInt('0xa', 10)");
     foldSame("x = parseInt('')");
 
-    enableEcmaScript5(false);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     foldSame("x = parseInt('08')");
   }
 

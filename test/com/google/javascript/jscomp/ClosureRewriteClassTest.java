@@ -25,6 +25,7 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_UNEXPECTED_PARAMS;
 
 import com.google.common.base.Joiner;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Unit tests for ClosureRewriteGoogClass
@@ -48,7 +49,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.enableEcmaScript5(false);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
     compareJsDoc = false;
@@ -283,7 +284,7 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "var x = goog.defineClass({1:1});",
         GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
 
-    this.enableEcmaScript5(true);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
 
     testSame(
         "var x = goog.defineClass({get foo() {return 1}});",

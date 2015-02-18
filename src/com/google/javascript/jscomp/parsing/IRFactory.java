@@ -44,6 +44,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionIfTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComprehensionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyDefinitionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyGetterTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMemberVariableTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertyMethodTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ComputedPropertySetterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ConditionalExpressionTree;
@@ -71,6 +72,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.MemberVariableTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
@@ -506,7 +508,7 @@ class IRFactory {
         case Token.CONST:
         case Token.GETTER_DEF:
         case Token.SETTER_DEF:
-        case Token.MEMBER_DEF:
+        case Token.MEMBER_FUNCTION_DEF:
         case Token.STRING_KEY:
         case Token.EXPORT:
           return;
@@ -1002,12 +1004,6 @@ class IRFactory {
     }
   }
 
-  private void maybeSetLength(Node node, int length) {
-    if (config.isIdeMode) {
-      node.setLength(length);
-    }
-  }
-
   private Node justTransform(ParseTree node) {
     return transformDispatcher.process(node);
   }
@@ -1301,9 +1297,7 @@ class IRFactory {
 
         // Old Rhino tagged the empty name node with the line number of the
         // declaration.
-        newName.setLineno(lineno(functionTree));
-        newName.setCharno(charno(functionTree));
-        maybeSetLength(newName, 0);
+        setSourceInfo(newName, functionTree);
       }
 
       Node node = newNode(Token.FUNCTION);
@@ -1311,9 +1305,7 @@ class IRFactory {
         node.addChildToBack(newName);
       } else {
         Node emptyName = newStringNode(Token.NAME, "");
-        emptyName.setLineno(lineno(functionTree));
-        emptyName.setCharno(charno(functionTree));
-        maybeSetLength(emptyName, 0);
+        setSourceInfo(emptyName, functionTree);
         node.addChildToBack(emptyName);
       }
       node.addChildToBack(transform(functionTree.formalParameterList));
@@ -1340,7 +1332,7 @@ class IRFactory {
 
       if (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER) {
         setSourceInfo(node, functionTree);
-        Node member = newStringNode(Token.MEMBER_DEF, name.value);
+        Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, name.value);
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
         result = member;
@@ -1512,7 +1504,9 @@ class IRFactory {
 
     Node processNumberLiteral(LiteralExpressionTree literalNode) {
       double value = normalizeNumber(literalNode.literalToken.asLiteral());
-      return newNumberNode(value);
+      Node number = newNumberNode(value);
+      setSourceInfo(number, literalNode);
+      return number;
     }
 
     Node processObjectLiteral(ObjectLiteralExpressionTree objTree) {
@@ -1554,6 +1548,17 @@ class IRFactory {
 
       return newNode(Token.COMPUTED_PROP,
           transform(tree.property), transform(tree.value));
+    }
+
+    Node processComputedPropertyMemberVariable(ComputedPropertyMemberVariableTree tree) {
+      maybeWarnEs6Feature(tree, "computed property");
+      maybeWarnTypeSyntax(tree);
+
+      Node n = newNode(Token.COMPUTED_PROP, transform(tree.property));
+      maybeProcessType(n, tree.declaredType);
+      n.putBooleanProp(Node.COMPUTED_PROP_VARIABLE, true);
+      n.setStaticMember(tree.isStatic);
+      return n;
     }
 
     Node processComputedPropertyMethod(ComputedPropertyMethodTree tree) {
@@ -2025,6 +2030,13 @@ class IRFactory {
       return newNode(Token.SUPER);
     }
 
+    Node processMemberVariable(MemberVariableTree tree) {
+      Node member = newStringNode(Token.MEMBER_VARIABLE_DEF, tree.name.value);
+      maybeProcessType(member, tree.declaredType);
+      member.setStaticMember(tree.isStatic);
+      return member;
+    }
+
     Node processYield(YieldExpressionTree tree) {
       Node yield = new Node(Token.YIELD);
       if (tree.expression != null) {
@@ -2130,8 +2142,7 @@ class IRFactory {
       } else {
         typeNode = TypeDeclarationsIRFactory.namedType(tree.segments);
       }
-      typeNode.setCharno(charno(tree));
-      typeNode.setLineno(lineno(tree));
+      setSourceInfo(typeNode, tree);
       return typeNode;
     }
 
@@ -2300,6 +2311,8 @@ class IRFactory {
           return processComputedPropertyDefinition(node.asComputedPropertyDefinition());
         case COMPUTED_PROPERTY_GETTER:
           return processComputedPropertyGetter(node.asComputedPropertyGetter());
+        case COMPUTED_PROPERTY_MEMBER_VARIABLE:
+          return processComputedPropertyMemberVariable(node.asComputedPropertyMemberVariable());
         case COMPUTED_PROPERTY_METHOD:
           return processComputedPropertyMethod(node.asComputedPropertyMethod());
         case COMPUTED_PROPERTY_SETTER:
@@ -2401,6 +2414,8 @@ class IRFactory {
           return processParameterizedType(node.asParameterizedType());
         case ARRAY_TYPE:
           return processArrayType(node.asArrayType());
+        case MEMBER_VARIABLE:
+          return processMemberVariable(node.asMemberVariable());
 
         default:
           break;

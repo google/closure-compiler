@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -128,7 +127,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
           }
         }
         break;
-      case Token.MEMBER_DEF:
+      case Token.MEMBER_FUNCTION_DEF:
         if (parent.isObjectLit()) {
           visitMemberDefInObjectLit(n, parent);
         }
@@ -663,116 +662,55 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
   private void visitClass(Node classNode, Node parent) {
     checkClassReassignment(classNode);
     // Collect Metadata
-    Node className = classNode.getFirstChild();
-    Node superClassName = className.getNext();
-    Node classMembers = classNode.getLastChild();
+    ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(classNode, parent);
 
-    // This is a statement node. We insert methods of the
-    // transpiled class after this node.
-    Node insertionPoint;
-
-    if (!superClassName.isEmpty() && !superClassName.isQualifiedName()) {
-      compiler.report(JSError.make(superClassName, DYNAMIC_EXTENDS_TYPE));
+    if (metadata == null || metadata.fullClassName == null) {
+      cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
+          + " side of a simple assignment.");
       return;
     }
-
-    // The fully qualified name of the class, which will be used in the output.
-    // May come from the class itself or the LHS of an assignment.
-    String fullClassName = null;
-
-    // Whether the constructor function in the output should be anonymous.
-    boolean anonymous;
-
-    // If this is a class statement, or a class expression in a simple
-    // assignment or var statement, convert it. In any other case, the
-    // code is too dynamic, so just call cannotConvert.
-    if (NodeUtil.isStatement(classNode)) {
-      fullClassName = className.getString();
-      anonymous = false;
-      insertionPoint = classNode;
-    } else if (parent.isAssign() && parent.getParent().isExprResult()) {
-      // Add members after the EXPR_RESULT node:
-      // example.C = class {}; example.C.prototype.foo = function() {};
-      fullClassName = parent.getFirstChild().getQualifiedName();
-      if (fullClassName == null) {
-        cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
-            + " side of a simple assignment.");
-        return;
-      }
-      anonymous = true;
-      insertionPoint = parent.getParent();
-    } else if (parent.isName()) {
-      // Add members after the 'var' statement.
-      // var C = class {}; C.prototype.foo = function() {};
-      fullClassName =  parent.getString();
-      anonymous = true;
-      insertionPoint = parent.getParent();
-    } else {
-      cannotConvert(parent, "Can only convert classes that are declarations or the right hand"
-            + " side of a simple assignment.");
+    if (metadata.hasSuperClass() && !metadata.superClassNameNode.isQualifiedName()) {
+      compiler.report(JSError.make(metadata.superClassNameNode, DYNAMIC_EXTENDS_TYPE));
       return;
     }
 
     boolean useUnique = NodeUtil.isStatement(classNode) && !NodeUtil.isInFunction(classNode);
-    String uniqueFullClassName = useUnique ? getUniqueClassName(fullClassName) : fullClassName;
-    String superClassString = superClassName.getQualifiedName();
+    String uniqueFullClassName =
+        useUnique ? getUniqueClassName(metadata.fullClassName) : metadata.fullClassName;
+    Node classNameAccess = NodeUtil.newQName(compiler, uniqueFullClassName);
+    Node prototypeAccess = NodeUtil.newPropertyAccess(compiler, classNameAccess, "prototype");
 
-    Preconditions.checkState(NodeUtil.isStatement(insertionPoint),
-        "insertion point must be a statement: %s", insertionPoint);
+    Preconditions.checkState(NodeUtil.isStatement(metadata.insertionPoint),
+        "insertion point must be a statement: %s", metadata.insertionPoint);
 
     Node constructor = null;
     JSDocInfo ctorJSDocInfo = null;
     // Process all members of the class
+    Node classMembers = classNode.getLastChild();
     for (Node member : classMembers.children()) {
       if (member.isEmpty()) {
         continue;
       }
+      Preconditions.checkState(
+          member.isMemberFunctionDef()
+              || (member.isComputedProp() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)),
+          "Member variables should have been transpiled earlier.");
 
-      if (member.isMemberDef() && member.getString().equals("constructor")) {
+      if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
-        if (!anonymous) {
+        if (!metadata.anonymous) {
+          // Turns class Foo { constructor: function() {} } into function Foo() {},
+          // i.e. attaches the name the ctor function.
           constructor.replaceChild(
-              constructor.getFirstChild(), className.cloneNode());
+              constructor.getFirstChild(), metadata.classNameNode.cloneNode());
         }
       } else {
-        Node qualifiedMemberName;
-        Node method;
-        if (member.isMemberDef()) {
-          if (member.isStaticMember()) {
-            qualifiedMemberName = NodeUtil.newQName(
-                compiler,
-                Joiner.on(".").join(
-                    uniqueFullClassName,
-                    member.getString()));
-          } else {
-            qualifiedMemberName = NodeUtil.newQName(
-                compiler,
-                Joiner.on(".").join(
-                    uniqueFullClassName,
-                    "prototype",
-                    member.getString()));
-          }
-          method = member.getFirstChild().detachFromParent();
-        } else if (member.isComputedProp()) {
-          if (member.isStaticMember()) {
-            qualifiedMemberName = IR.getelem(
-                NodeUtil.newQName(
-                    compiler,
-                    uniqueFullClassName),
-                member.removeFirstChild());
-          } else {
-            qualifiedMemberName = IR.getelem(
-                NodeUtil.newQName(
-                    compiler,
-                    Joiner.on('.').join(uniqueFullClassName, "prototype")),
-                member.removeFirstChild());
-          }
-          method = member.getLastChild().detachFromParent();
-        } else {
-          throw new IllegalStateException("Unexpected class member: " + member);
-        }
-        Node assign = IR.assign(qualifiedMemberName, method);
+        Node qualifiedMemberAccess =
+            getQualifiedMemberAccess(compiler, member, classNameAccess, prototypeAccess);
+        Node method = member.getLastChild().detachFromParent();
+
+        Node assign = IR.assign(qualifiedMemberAccess, method);
         assign.useSourceInfoIfMissingFromForTree(member);
 
         JSDocInfo info = member.getJSDocInfo();
@@ -794,28 +732,29 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         }
 
         Node newNode = NodeUtil.newExpr(assign);
-        insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
-        insertionPoint = newNode;
+        metadata.insertStaticMember(newNode);
       }
     }
 
     Preconditions.checkNotNull(constructor);
+
     JSDocInfo classJSDoc = classNode.getJSDocInfo();
     JSDocInfoBuilder newInfo = (classJSDoc != null)
         ? JSDocInfoBuilder.copyFrom(classJSDoc)
         : new JSDocInfoBuilder(true);
 
     newInfo.recordConstructor();
-    if (!superClassName.isEmpty()) {
 
+    if (metadata.hasSuperClass()) {
+      String superClassString = metadata.superClassNameNode.getQualifiedName();
       if (newInfo.isInterfaceRecorded()) {
         newInfo.recordExtendedInterface(new JSTypeExpression(new Node(Token.BANG,
             IR.string(superClassString)),
-            superClassName.getSourceFileName()));
+            metadata.superClassNameNode.getSourceFileName()));
       } else {
         Node inherits = IR.call(
             NodeUtil.newQName(compiler, INHERITS),
-            NodeUtil.newQName(compiler, fullClassName),
+            NodeUtil.newQName(compiler, metadata.fullClassName),
             NodeUtil.newQName(compiler, superClassString));
         Node inheritsCall = IR.exprResult(inherits);
         compiler.needsEs6Runtime = true;
@@ -825,11 +764,11 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
         newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG,
             IR.string(superClassString)),
-            superClassName.getSourceFileName()));
+            metadata.superClassNameNode.getSourceFileName()));
 
         Node copyProps = IR.call(
             NodeUtil.newQName(compiler, COPY_PROP),
-            NodeUtil.newQName(compiler, fullClassName),
+            NodeUtil.newQName(compiler, metadata.fullClassName),
             NodeUtil.newQName(compiler, superClassString));
         compiler.needsEs6Runtime = true;
 
@@ -851,11 +790,10 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
         newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
       }
     }
-    insertionPoint = constructor;
 
     if (NodeUtil.isStatement(classNode)) {
       constructor.getFirstChild().setString("");
-      Node ctorVar = IR.var(IR.name(fullClassName), constructor);
+      Node ctorVar = IR.var(IR.name(metadata.fullClassName), constructor);
       ctorVar.useSourceInfoIfMissingFromForTree(classNode);
       parent.replaceChild(classNode, ctorVar);
     } else {
@@ -863,7 +801,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
 
     if (NodeUtil.isStatement(constructor)) {
-      insertionPoint.setJSDocInfo(newInfo.build(insertionPoint));
+      constructor.setJSDocInfo(newInfo.build(constructor));
     } else if (parent.isName()) {
       // The constructor function is the RHS of a var statement.
       // Add the JSDoc to the VAR node.
@@ -882,6 +820,24 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
 
     compiler.reportCodeChange();
+  }
+
+  /**
+   * Constructs a Node that represents an access to the given class member, qualified by either the
+   * static or the instance access context, depending on whether the member is static.
+   *
+   * <p><b>WARNING:</b> {@code member} may be modified/destroyed by this method, do not use it
+   * afterwards.
+   */
+  static Node getQualifiedMemberAccess(AbstractCompiler compiler, Node member, Node staticAccess,
+      Node instanceAccess) {
+    Node context = member.isStaticMember() ? staticAccess : instanceAccess;
+    context = context.cloneTree();
+    if (member.isComputedProp()) {
+      return IR.getelem(context, member.removeFirstChild());
+    } else {
+      return NodeUtil.newPropertyAccess(compiler, context, member.getString());
+    }
   }
 
   /**
@@ -1010,5 +966,72 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
    */
   private void cannotConvertYet(Node n, String feature) {
     compiler.report(JSError.make(n, CANNOT_CONVERT_YET, feature));
+  }
+
+  /**
+   * Represents static metadata on a class declaration expression - i.e. the qualified name that a
+   * class declares (directly or by assignment), whether it's anonymous, and where transpiled code
+   * should be inserted (i.e. which object will hold the prototype after transpilation).
+   */
+  static class ClassDeclarationMetadata {
+    /** A statement node. Tanspiled methods etc of the class are inserted after this node. */
+    private Node insertionPoint;
+    /**
+     * The fully qualified name of the class, which will be used in the output. May come from the
+     * class itself or the LHS of an assignment.
+     */
+    final String fullClassName;
+    /** Whether the constructor function in the output should be anonymous. */
+    final boolean anonymous;
+    final Node classNameNode;
+    final Node superClassNameNode;
+
+    private ClassDeclarationMetadata(Node insertionPoint, String fullClassName,
+        boolean anonymous, Node classNameNode, Node superClassNameNode) {
+      this.insertionPoint = insertionPoint;
+      this.fullClassName = fullClassName;
+      this.anonymous = anonymous;
+      this.classNameNode = classNameNode;
+      this.superClassNameNode = superClassNameNode;
+    }
+
+    static ClassDeclarationMetadata create(Node classNode, Node parent) {
+      Node classNameNode = classNode.getFirstChild();
+      Node superClassNameNode = classNameNode.getNext();
+
+      // If this is a class statement, or a class expression in a simple
+      // assignment or var statement, convert it. In any other case, the
+      // code is too dynamic, so return null.
+      if (NodeUtil.isStatement(classNode)) {
+        return new ClassDeclarationMetadata(classNode, classNameNode.getString(), false,
+            classNameNode, superClassNameNode);
+      } else if (parent.isAssign() && parent.getParent().isExprResult()) {
+        // Add members after the EXPR_RESULT node:
+        // example.C = class {}; example.C.prototype.foo = function() {};
+        String fullClassName = parent.getFirstChild().getQualifiedName();
+        if (fullClassName == null) {
+          return null;
+        }
+        return new ClassDeclarationMetadata(parent.getParent(), fullClassName, true, classNameNode,
+            superClassNameNode);
+      } else if (parent.isName()) {
+        // Add members after the 'var' statement.
+        // var C = class {}; C.prototype.foo = function() {};
+        return new ClassDeclarationMetadata(parent.getParent(), parent.getString(), true,
+            classNameNode, superClassNameNode);
+      } else {
+        // Cannot handle this class declaration.
+        return null;
+      }
+    }
+
+    void insertStaticMember(Node newNode) {
+      insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
+      insertionPoint = newNode;
+    }
+
+    boolean hasSuperClass() {
+      return !superClassNameNode.isEmpty();
+    }
   }
 }

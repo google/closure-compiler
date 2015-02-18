@@ -65,6 +65,8 @@ public class ParseTree {
     return (ComputedPropertyGetterTree) this; }
   public ComputedPropertyMethodTree asComputedPropertyMethod() {
     return (ComputedPropertyMethodTree) this; }
+  public ComputedPropertyMemberVariableTree asComputedPropertyMemberVariable() {
+    return (ComputedPropertyMemberVariableTree) this; }
   public ComputedPropertySetterTree asComputedPropertySetter() {
     return (ComputedPropertySetterTree) this; }
   public ConditionalExpressionTree asConditionalExpression() {
@@ -95,6 +97,7 @@ public class ParseTree {
   public MemberExpressionTree asMemberExpression() { return (MemberExpressionTree) this; }
   public MemberLookupExpressionTree asMemberLookupExpression() {
     return (MemberLookupExpressionTree) this; }
+  public MemberVariableTree asMemberVariable() { return (MemberVariableTree) this; }
   public MissingPrimaryExpressionTree asMissingPrimaryExpression() {
     return (MissingPrimaryExpressionTree) this; }
   public ModuleImportTree asModuleImport() { return (ModuleImportTree) this; }

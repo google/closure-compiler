@@ -59,7 +59,7 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
               "getters or setters in class definitions"));
           return false;
         }
-        if (member.isMemberDef() && member.getString().equals("constructor")) {
+        if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
           hasConstructor = true;
         }
       }
@@ -83,7 +83,7 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
     Node classMembers = classNode.getLastChild();
     Node memberDef;
     if (superClass.isEmpty()) {
-      memberDef = IR.memberDef("constructor",
+      memberDef = IR.memberFunctionDef("constructor",
           IR.function(IR.name(""), IR.paramList(), IR.block()));
     } else {
       Node paramList = IR.paramList(IR.rest("args"));
@@ -95,7 +95,7 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
           IR.name(""),
           paramList,
           body);
-      memberDef = IR.memberDef("constructor", constructor);
+      memberDef = IR.memberFunctionDef("constructor", constructor);
     }
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
     classMembers.addChildToFront(memberDef);
@@ -127,7 +127,7 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
       return;
     }
 
-    Node enclosingMemberDef = NodeUtil.getEnclosingClassMember(node);
+    Node enclosingMemberDef = NodeUtil.getEnclosingClassMemberFunction(node);
     if (enclosingMemberDef.isStaticMember()) {
       Node superName = clazz.getFirstChild().getNext();
       if (!superName.isQualifiedName()) {

@@ -494,29 +494,25 @@ class CodeGenerator {
         cc.beginBlock();
         for (Node c = first; c != null; c = c.getNext()) {
           add(c);
-          cc.maybeLineBreak();
+          cc.endLine();
         }
         cc.endBlock(false);
         break;
 
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
-      case Token.MEMBER_DEF: {
+      case Token.MEMBER_FUNCTION_DEF:
+      case Token.MEMBER_VARIABLE_DEF: {
         n.getParent().toStringTree();
         Preconditions.checkState(n.getParent().isObjectLit()
             || n.getParent().isClassMembers());
-        Preconditions.checkState(childCount == 1);
-        Preconditions.checkState(first.isFunction());
-
-        // The function referenced by the definition should always be unnamed.
-        Preconditions.checkState(first.getFirstChild().getString().isEmpty());
 
         if (n.isStaticMember()) {
           add("static ");
         }
 
-        if (n.getFirstChild().isGeneratorFunction()) {
-          Preconditions.checkState(type == Token.MEMBER_DEF);
+        if (!n.isMemberVariableDef() && n.getFirstChild().isGeneratorFunction()) {
+          Preconditions.checkState(type == Token.MEMBER_FUNCTION_DEF);
           add("*");
         }
 
@@ -531,36 +527,49 @@ class CodeGenerator {
             Preconditions.checkState(first.getChildAtIndex(1).hasOneChild());
             add("set ");
             break;
-          case Token.MEMBER_DEF:
+          case Token.MEMBER_FUNCTION_DEF:
+          case Token.MEMBER_VARIABLE_DEF:
             // nothing to do.
             break;
         }
 
         // The name is on the GET or SET node.
         String name = n.getString();
-        Node fn = first;
-        Node parameters = fn.getChildAtIndex(1);
-        Node body = fn.getLastChild();
-
-        // Add the property name.
-        if (!n.isQuotedString() &&
-            TokenStream.isJSIdentifier(name) &&
-            // do not encode literally any non-literal characters that were
-            // Unicode escaped.
-            NodeUtil.isLatin(name)) {
-          add(name);
+        if (n.isMemberVariableDef()) {
+          add(n.getString());
+          maybeAddTypeDecl(n);
+          add(";");
         } else {
-          // Determine if the string is a simple number.
-          double d = getSimpleNumber(name);
-          if (!Double.isNaN(d)) {
-            cc.addNumber(d);
-          } else {
-            addJsString(n);
-          }
-        }
+          Preconditions.checkState(childCount == 1);
+          Preconditions.checkState(first.isFunction());
 
-        add(parameters);
-        add(body, Context.PRESERVE_BLOCK);
+          // The function referenced by the definition should always be unnamed.
+          Preconditions.checkState(first.getFirstChild().getString().isEmpty());
+
+          Node fn = first;
+          Node parameters = fn.getChildAtIndex(1);
+          Node body = fn.getLastChild();
+
+          // Add the property name.
+          if (!n.isQuotedString() &&
+              TokenStream.isJSIdentifier(name) &&
+              // do not encode literally any non-literal characters that were
+              // Unicode escaped.
+              NodeUtil.isLatin(name)) {
+            add(name);
+          } else {
+            // Determine if the string is a simple number.
+            double d = getSimpleNumber(name);
+            if (!Double.isNaN(d)) {
+              cc.addNumber(d);
+            } else {
+              addJsString(n);
+            }
+          }
+          add(parameters);
+          maybeAddTypeDecl(fn);
+          add(body, Context.PRESERVE_BLOCK);
+        }
         break;
       }
 
@@ -930,7 +939,7 @@ class CodeGenerator {
               || c.isGetterDef()
               || c.isSetterDef()
               || c.isStringKey()
-              || c.isMemberDef());
+              || c.isMemberFunctionDef());
           add(c);
         }
         add("}");
@@ -951,6 +960,10 @@ class CodeGenerator {
         add("[");
         add(first);
         add("]");
+        // TODO(martinprobst): There's currently no syntax for properties in object literals that
+        // have type declarations on them (a la `{foo: number: 12}`). This comes up for, e.g.,
+        // function parameters with default values. Support when figured out.
+        maybeAddTypeDecl(n);
         if (n.getBooleanProp(Node.COMPUTED_PROP_METHOD)
             || n.getBooleanProp(Node.COMPUTED_PROP_GETTER)
             || n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
@@ -961,8 +974,23 @@ class CodeGenerator {
           add(params);
           add(body, Context.PRESERVE_BLOCK);
         } else {
-          add(":");
-          add(first.getNext());
+          // This is a field or object literal property.
+          boolean isInClass = n.getParent().getType() == Token.CLASS_MEMBERS;
+          Node initializer = first.getNext();
+          if (initializer != null) {
+            // Object literal value.
+            Preconditions.checkState(
+                !isInClass, "initializers should only exist in object literals, not classes");
+            cc.addOp(":", false);
+            add(initializer);
+          } else {
+            // Computed properties must either have an initializer or be computed member-variable
+            // properties that exist for their type declaration.
+            Preconditions.checkState(n.getBooleanProp(Node.COMPUTED_PROP_VARIABLE));
+          }
+          if (isInClass) {
+            add(";");
+          }
         }
         break;
 

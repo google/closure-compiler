@@ -162,7 +162,7 @@ public class Token {
 
         CLASS          = 158, // classes
         CLASS_MEMBERS  = 159, // class member container
-        MEMBER_DEF     = 160,
+        MEMBER_FUNCTION_DEF     = 160,
         SUPER          = 161,
 
         LET            = 162, // block scoped vars
@@ -190,6 +190,10 @@ public class Token {
 
         DEFAULT_VALUE   = 178, // Formal parameter or destructuring element
                                // with a default value
+
+        // ECMAScript 6 Typed AST Nodes.
+
+        MEMBER_VARIABLE_DEF     = 179,
 
         // Used by type declaration ASTs
         STRING_TYPE        = 200,
@@ -351,7 +355,7 @@ public class Token {
           case OBJECT_PATTERN:  return "OBJECT_PATTERN";
           case CLASS:           return "CLASS";
           case CLASS_MEMBERS:   return "CLASS_MEMBERS";
-          case MEMBER_DEF:      return "MEMBER_DEF";
+          case MEMBER_FUNCTION_DEF:    return "MEMBER_FUNCTION_DEF";
           case SUPER:           return "SUPER";
           case LET:             return "LET";
           case FOR_OF:          return "FOR_OF";
@@ -368,6 +372,7 @@ public class Token {
           case SPREAD:          return "SPREAD";
           case COMPUTED_PROP:   return "COMPUTED_PROP";
           case DEFAULT_VALUE:   return "DEFAULT_VALUE";
+          case MEMBER_VARIABLE_DEF:    return "MEMBER_VARIABLE_DEF";
 
           case PLACEHOLDER1:        return "PLACEHOLDER1";
           case PLACEHOLDER2:        return "PLACEHOLDER2";
@@ -430,7 +435,7 @@ public class Token {
       case TEMPLATELIT_SUB: return 1;
       case TRY:             return -1;
       case CLASS:           return 3;
-      case MEMBER_DEF:      return 1;
+      case MEMBER_FUNCTION_DEF:      return 1;
       case PARAM_LIST:      return -1;
       case DEFAULT_VALUE:   return 2;
       case COMMA:           return 2;

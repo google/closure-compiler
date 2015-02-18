@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link PeepholeSubstituteAlternateSyntax} in isolation.
  * Tests for the interaction of multiple peephole passes are in
@@ -127,22 +129,22 @@ public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
     enableNormalize();
 
     // Don't fold if the flags contain 'g'
-    enableEcmaScript5(false);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     fold("x = new RegExp(\"foobar\", \"g\")",
          "x = RegExp(\"foobar\",\"g\")");
     fold("x = new RegExp(\"foobar\", \"ig\")",
          "x = RegExp(\"foobar\",\"ig\")");
     // ... unless in ECMAScript 5 mode per section 7.8.5 of ECMAScript 5.
-    enableEcmaScript5(true);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     fold("x = new RegExp(\"foobar\", \"ig\")",
          "x = /foobar/ig");
     // Don't fold things that crash older versions of Safari and that don't work
     // as regex literals on other old versions of Safari
-    enableEcmaScript5(false);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     fold("x = new RegExp(\"\\u2028\")", "x = RegExp(\"\\u2028\")");
     fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");
     // Sunset Safari exclusions for ECMAScript 5 and later.
-    enableEcmaScript5(true);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     fold("x = new RegExp(\"\\u2028\\u2029\")", "x = /\\u2028\\u2029/");
     fold("x = new RegExp(\"\\\\u2028\")", "x = /\\u2028/");
     fold("x = new RegExp(\"\\\\\\\\u2028\")", "x = /\\\\u2028/");

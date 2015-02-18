@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_IDEN
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_IDENTIFIER;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_IDENTIFIER;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Unit tests for ClosureRewriteModule
@@ -35,7 +36,7 @@ public class ClosureRewriteModuleTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    this.enableEcmaScript5(false);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
   }
 
   @Override

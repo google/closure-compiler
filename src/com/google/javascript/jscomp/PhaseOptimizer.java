@@ -308,6 +308,11 @@ class PhaseOptimizer implements CompilerPass {
         throw new RuntimeException("Sanity check failed for " + name, e);
       }
     }
+
+    @Override
+    public String toString() {
+      return "pass: " + name;
+    }
   }
 
   void setScope(Node n) {

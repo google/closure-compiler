@@ -50,6 +50,32 @@ public class Es6TypedIntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testClassMemberVariable() throws Exception {
+    test(createCompilerOptions(),
+        "class C { x: number; }\n"
+            + "var c: C = new C();\n"
+            + "c.x = 12;\n"
+            + "alert(c.x);",
+        "var a=new function(){};a.a=12;alert(a.a);");
+    test(createCompilerOptions(),
+        "class C { x: number; }\n"
+            + "var c: C = new C();\n"
+            + "c.x = '12';",
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+  public void testClassMemberVariable_static() throws Exception {
+    test(createCompilerOptions(),
+        "class C { static x: number; }\n"
+            + "C.x = 12;\n"
+            + "alert(C.x);",
+        "alert(12);");
+    test(createCompilerOptions(),
+        "class C { static x: number; }\n"
+            + "C.x = '12';",
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
   @Override
   CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();

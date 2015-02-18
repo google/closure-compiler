@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@code CheckEventfulObjectDisposal.java}.
@@ -56,7 +57,7 @@ public class CheckEventfulObjectDisposalTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableTypeCheck(CheckLevel.WARNING);
-    enableEcmaScript5(true);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
   @Override
