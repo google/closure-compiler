@@ -7823,6 +7823,198 @@ chrome.usb.resetDevice = function(handle, callback) {};
 
 
 /**
+ * @see https://developer.chrome.com/apps/serial
+ * @const
+ */
+chrome.serial = {};
+
+
+
+/**
+ * @typedef {?{
+ *   persistent: (boolean|undefined),
+ *   name: (string|undefined),
+ *   bufferSize: (number|undefined),
+ *   bitRate: (number|undefined),
+ *   dataBits: (string|undefined),
+ *   parityBits: (string|undefined),
+ *   stopBits: (string|undefined),
+ *   ctsFlowControl: (boolean|undefined),
+ *   receiveTimeout: (number|undefined),
+ *   sendTimeout: (number|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/serial#type-ConnectionOptions
+ */
+chrome.serial.ConnectionOptions;
+
+
+/**
+ * @typedef {?{
+ *   connectionId: number,
+ *   paused: boolean,
+ *   persistent: boolean,
+ *   name: string,
+ *   bufferSize: number,
+ *   receiveTimeout: number,
+ *   sendTimeout: number,
+ *   bitRate: (number|undefined),
+ *   dataBits: (string|undefined),
+ *   parityBits: (string|undefined),
+ *   stopBits: (string|undefined),
+ *   ctsFlowControl: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/serial#type-ConnectionInfo
+ */
+chrome.serial.ConnectionInfo;
+
+
+/**
+ * Returns information about available serial devices on the system. The
+ * list is regenerated each time this method is called.
+ * @param {function(!Array<!Object>)} callback Invoked with a
+ *     list of ports on complete.
+ * @see https://developer.chrome.com/apps/serial#method-getDevices
+ */
+chrome.serial.getDevices = function(callback) {};
+
+
+/**
+ * Connects to a given serial port.
+ * @param {string} path The system path of the serial port to open.
+ * @param {!chrome.serial.ConnectionOptions|
+ *         function(!chrome.serial.ConnectionInfo)} optionsOrCallback
+ *     Port configuration options, or the callback invoked with the created
+ *     ConnectionInfo on complete.
+ * @param {function(!chrome.serial.ConnectionInfo)=} opt_callback Invoked with
+ *     the created ConnectionInfo on complete.
+ * @see https://developer.chrome.com/apps/serial#method-connect
+ */
+chrome.serial.connect = function(path, optionsOrCallback, opt_callback) {};
+
+
+/**
+ * Update the option settings on an open serial port connection.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {!chrome.serial.ConnectionOptions} options Port configuration
+ *     options.
+ * @param {function(boolean)} callback Called when the configuration has
+ *     completed.
+ * @see https://developer.chrome.com/apps/serial#method-update
+ */
+chrome.serial.update = function(connectionId, options, callback) {};
+
+
+/**
+ * Disconnects from a serial port.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {function(boolean)} callback Called when the connection
+ *     has been closed.
+ * @see https://developer.chrome.com/apps/serial#method-disconnect
+ */
+chrome.serial.disconnect = function(connectionId, callback) {};
+
+
+/**
+ * Pauses or unpauses an open connection.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {boolean} paused Flag to indicate whether to pause or unpause.
+ * @param {function()} callback Called when the configuration has completed.
+ * @see https://developer.chrome.com/apps/serial#method-setPaused
+ */
+chrome.serial.setPaused = function(connectionId, paused, callback) {};
+
+
+/**
+ * Retrieves the state of a given connection.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {function(!chrome.serial.ConnectionInfo)} callback
+ *     Called with connection state information when available.
+ * @see https://developer.chrome.com/apps/serial#method-getInfo
+ */
+chrome.serial.getInfo = function(connectionId, callback) {};
+
+
+/**
+ * Retrieves the list of currently opened serial port connections owned by
+ * the application.
+ * @param {function(!Array.<!chrome.serial.ConnectionInfo>)} callback
+ *     Called with the list of |ConnectionInfo|s when available.
+ * @see https://developer.chrome.com/apps/serial#method-getConnections
+ */
+chrome.serial.getConnections = function(callback) {};
+
+
+/**
+ * Writes data to the given connection.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {!ArrayBuffer} data The data to send.
+ * @param {function(!Object)} callback Called when the operation has
+ *     completed.
+ * @see https://developer.chrome.com/apps/serial#method-send
+ */
+chrome.serial.send = function(connectionId, data, callback) {};
+
+
+/**
+ * Flushes all bytes in the given connection's input and output buffers.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {function(boolean)} callback
+ * @see https://developer.chrome.com/apps/serial#method-flush
+ */
+chrome.serial.flush = function(connectionId, callback) {};
+
+
+
+
+/**
+ * Retrieves the state of control signals on a given connection.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {function(!Object)} callback
+ * @see https://developer.chrome.com/apps/serial#method-getControlSignals
+ */
+chrome.serial.getControlSignals = function(connectionId, callback) {};
+
+
+/**
+ * @typedef {?{
+ *   dtr: (boolean|undefined),
+ *   rts: (boolean|undefined)
+ * }}
+ */
+chrome.serial.ControlSignals;
+
+
+/**
+ * Sets the state of control signals on a given connection.
+ * @param {number} connectionId The id of the opened connection.
+ * @param {!chrome.serial.ControlSignals} signals
+ *     The set of signal changes to send to the device.
+ * @param {function(boolean)} callback Called once the control signals
+ *     have been set.
+ * @see https://developer.chrome.com/apps/serial#method-setControlSignals
+ */
+chrome.serial.setControlSignals = function(connectionId, signals, callback) {};
+
+
+/**
+ * Event raised when data has been read from the connection.
+ * @type {!ChromeObjectEvent}
+ * @see https://developer.chrome.com/apps/serial#event-onReceive
+ */
+chrome.serial.onReceive;
+
+
+/**
+ * Event raised when an error occurred while the runtime was waiting for
+ * data on the serial port. Once this event is raised, the connection may
+ * be set to paused. A "timeout" error does not pause the connection.
+ * @type {!ChromeObjectEvent}
+ * @see https://developer.chrome.com/apps/serial#event-onReceiveError
+ */
+chrome.serial.onReceiveError;
+
+
+/**
  * @const
  * @see https://developer.chrome.com/apps/webstore
  */
