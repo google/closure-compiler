@@ -1273,7 +1273,7 @@ public class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testPropertyOnGlobalFunction() {
-    testSame("function Map() {} Map.foo = 3; Map;");
+    testSame("function Map() {} Map.foo = 3; alert(Map);");
   }
 
   public void testIssue389() {
@@ -1800,5 +1800,17 @@ public class CollapsePropertiesTest extends CompilerTestCase {
         + "  return x.staticProp;\n"
         + "}",
         null, CollapseProperties.UNSAFE_CTOR_ALIASING);
+  }
+
+  public void testExpressionResultReferenceWontPreventCollapse() {
+    test("var ns = {};\n"
+        + "ns.Outer = {};\n"
+        + "\n"
+        + "ns.Outer;\n"
+        + "ns.Outer.Inner = function() {}\n",
+
+        "var ns$Outer={};\n"
+        + "ns$Outer;\n"
+        + "var ns$Outer$Inner=function(){};\n");
   }
 }

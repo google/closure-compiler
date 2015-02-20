@@ -641,6 +641,8 @@ class GlobalNamespace
       Ref.Type type = Ref.Type.DIRECT_GET;
       if (parent != null) {
         switch (parent.getType()) {
+          case Token.EXPR_RESULT:
+            break;
           case Token.IF:
           case Token.INSTANCEOF:
           case Token.TYPEOF:
