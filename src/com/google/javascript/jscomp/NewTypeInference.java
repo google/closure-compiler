@@ -1301,7 +1301,7 @@ public class NewTypeInference implements CompilerPass {
       JSType stopAfterLhsType = exprKind == Token.AND ?
           JSType.FALSY : JSType.TRUTHY;
       EnvTypePair shortCircuitPair =
-          analyzeExprFwd(lhs, inEnv, requiredType, stopAfterLhsType);
+          analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, stopAfterLhsType);
       EnvTypePair lhsPair = analyzeExprFwd(
           lhs, inEnv, JSType.UNKNOWN, stopAfterLhsType.negate());
       EnvTypePair rhsPair =

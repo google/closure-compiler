@@ -4410,6 +4410,16 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + "  var /** number */ n = y || x;\n"
         + "}",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "function /** number */ f(/** ?number */ x) {\n"
+        + "  return x || 42;\n"
+        + "}");
+
+    typeCheck(
+        "function /** (number|string) */ f(/** ?number */ x) {\n"
+        + "  return x || 'str';\n"
+        + "}");
   }
 
   public void testNonStringComparisons() {
