@@ -140,7 +140,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   static final DiagnosticType ENUM_NOT_CONSTANT =
       DiagnosticType.warning("JSC_ENUM_NOT_CONSTANT",
-          "enum key {0} must be a syntactic constant");
+          "enum key {0} must be in ALL_CAPS");
 
   static final DiagnosticType INVALID_INTERFACE_MEMBER_DECLARATION =
       DiagnosticType.warning(

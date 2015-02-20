@@ -2928,7 +2928,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testEnum2() throws Exception {
     testTypes("/**@enum*/var a={b:1}",
-        "enum key b must be a syntactic constant");
+        "enum key b must be in ALL_CAPS");
   }
 
   public void testEnum3() throws Exception {
