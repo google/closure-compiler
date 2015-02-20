@@ -2308,6 +2308,7 @@ HTMLElement.prototype.dataset;
 
 /**
  * @constructor
+ * @see https://dom.spec.whatwg.org/#interface-domtokenlist
  */
 function DOMTokenList() {}
 
@@ -2332,14 +2333,14 @@ DOMTokenList.prototype.item = function(index) {};
 DOMTokenList.prototype.contains = function(token) {};
 
 /**
- * @param {string} token The CSS class to add to this element.
+ * @param {...string} var_args The CSS class(es) to add to this element.
  */
-DOMTokenList.prototype.add = function(token) {};
+DOMTokenList.prototype.add = function(var_args) {};
 
 /**
- * @param {string} token The CSS class to remove from this element.
+ * @param {...string} var_args The CSS class(es) to remove from this element.
  */
-DOMTokenList.prototype.remove = function(token) {};
+DOMTokenList.prototype.remove = function(var_args) {};
 
 /**
  * @param {string} token The CSS class to toggle from this element.
