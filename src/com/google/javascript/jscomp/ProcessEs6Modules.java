@@ -173,40 +173,69 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
     compiler.reportCodeChange();
   }
 
-  private void visitExport(NodeTraversal t, Node n, Node parent) {
-    if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
-      // export default var Foo;
-      Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), n.removeFirstChild());
-      var.useSourceInfoIfMissingFromForTree(n);
-      var.setJSDocInfo(n.getJSDocInfo());
-      n.setJSDocInfo(null);
-      n.getParent().replaceChild(n, var);
-      exportMap.put("default", DEFAULT_EXPORT_NAME);
-    } else if (n.getBooleanProp(Node.EXPORT_ALL_FROM)) {
+  private void visitExport(NodeTraversal t, Node export, Node parent) {
+    if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
+      // export default
+
+      // If the thing being exported is a class or function that has a name,
+      // extract it from the export statement, so that it can be referenced
+      // from within the module.
+      //
+      //   export default class X {} -> class X {}; ... moduleName.default = X;
+      //   export default function X() {} -> function X() {}; ... moduleName.default = X;
+      //
+      // Otherwise, create a local variable for it and export that.
+      //
+      //   export default 'someExpression'
+      //     ->
+      //   var $jscompDefaultExport = 'someExpression';
+      //   ...
+      //   moduleName.default = $jscompDefaultExport;
+      Node child = export.getFirstChild();
+      String name = null;
+
+      if (child.isFunction()) {
+        name = NodeUtil.getFunctionName(child);
+      } else if (child.isClass()) {
+        name = NodeUtil.getClassName(child);
+      }
+
+      if (name != null) {
+        Node decl = child.cloneTree();
+        decl.setJSDocInfo(export.getJSDocInfo());
+        parent.replaceChild(export, decl);
+        exportMap.put("default", name);
+      } else {
+        Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), export.removeFirstChild());
+        var.useSourceInfoIfMissingFromForTree(export);
+        parent.replaceChild(export, var);
+        exportMap.put("default", DEFAULT_EXPORT_NAME);
+      }
+    } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
       //   export * from 'moduleIdentifier';
-      compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+      compiler.report(JSError.make(export, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Wildcard export"));
-    } else if (n.getChildCount() == 2) {
+    } else if (export.getChildCount() == 2) {
       //   export {x, y as z} from 'moduleIdentifier';
-      Node moduleIdentifier = n.getLastChild();
+      Node moduleIdentifier = export.getLastChild();
       Node importNode = new Node(Token.IMPORT, moduleIdentifier.cloneNode());
-      importNode.copyInformationFrom(n);
-      parent.addChildBefore(importNode, n);
+      importNode.copyInformationFrom(export);
+      parent.addChildBefore(importNode, export);
       visit(t, importNode, parent);
 
       String loadAddress = loader.locate(moduleIdentifier.getString(), t.getInput());
       String moduleName = toModuleName(loadAddress);
 
-      for (Node exportSpec : n.getFirstChild().children()) {
+      for (Node exportSpec : export.getFirstChild().children()) {
         String nameFromOtherModule = exportSpec.getFirstChild().getString();
         String exportedName = exportSpec.getLastChild().getString();
         exportMap.put(exportedName, moduleName + "." + nameFromOtherModule);
       }
-      parent.removeChild(n);
+      parent.removeChild(export);
     } else {
-      if (n.getFirstChild().getType() == Token.EXPORT_SPECS) {
+      if (export.getFirstChild().getType() == Token.EXPORT_SPECS) {
         //     export {Foo};
-        for (Node exportSpec : n.getFirstChild().children()) {
+        for (Node exportSpec : export.getFirstChild().children()) {
           Node origName = exportSpec.getFirstChild();
           exportMap.put(
               exportSpec.getChildCount() == 2
@@ -214,12 +243,12 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
                   : origName.getString(),
               origName.getString());
         }
-        parent.removeChild(n);
+        parent.removeChild(export);
       } else {
         //    export var Foo;
         //    export function Foo() {}
         // etc.
-        Node declaration = n.getFirstChild();
+        Node declaration = export.getFirstChild();
         for (int i = 0; i < declaration.getChildCount(); i++) {
           Node maybeName = declaration.getChildAtIndex(i);
           if (!maybeName.isName()) {
@@ -243,9 +272,9 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
             types.add(name);
           }
         }
-        declaration.setJSDocInfo(n.getJSDocInfo());
-        n.setJSDocInfo(null);
-        parent.replaceChild(n, declaration.detachFromParent());
+        declaration.setJSDocInfo(export.getJSDocInfo());
+        export.setJSDocInfo(null);
+        parent.replaceChild(export, declaration.detachFromParent());
       }
       compiler.reportCodeChange();
     }

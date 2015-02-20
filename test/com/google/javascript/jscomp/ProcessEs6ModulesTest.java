@@ -226,12 +226,45 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
         "var module$testcode={};",
         "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
-    test("export default class Foo {}", Joiner.on('\n').join(
+    test("var x = 5; export default x;", Joiner.on('\n').join(
         FILEOVERVIEW,
         "goog.provide('module$testcode');",
-        "var $jscompDefaultExport$$module$testcode = class Foo{};",
+        "var x$$module$testcode = 5;",
+        "var $jscompDefaultExport$$module$testcode = x$$module$testcode;",
+        "var module$testcode={};",
+        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+
+    test("export default function f(){}; var x = f();", Joiner.on('\n').join(
+        FILEOVERVIEW,
+        "goog.provide('module$testcode');",
+        "function f$$module$testcode() {}",
+        "var x$$module$testcode = f$$module$testcode();",
         "var module$testcode = {};",
-        "module$testcode.default = $jscompDefaultExport$$module$testcode"));
+        "module$testcode.default = f$$module$testcode;"));
+
+    test("export default class Foo {}; var x = new Foo;", Joiner.on('\n').join(
+        FILEOVERVIEW,
+        "goog.provide('module$testcode');",
+        "class Foo$$module$testcode {}",
+        "var x$$module$testcode = new Foo$$module$testcode;",
+        "var module$testcode = {};",
+        "module$testcode.default = Foo$$module$testcode;"));
+  }
+
+  public void testExportDefault_anonymous() {
+    test("export default class {};", Joiner.on('\n').join(
+        FILEOVERVIEW,
+        "goog.provide('module$testcode');",
+        "var $jscompDefaultExport$$module$testcode = class {};",
+        "var module$testcode = {};",
+        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+
+    test("export default function() {}", Joiner.on('\n').join(
+        FILEOVERVIEW,
+        "goog.provide('module$testcode');",
+        "var $jscompDefaultExport$$module$testcode = function() {}",
+        "var module$testcode = {};",
+        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
   }
 
   public void testExtendImportedClass() {
