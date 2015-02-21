@@ -1287,6 +1287,7 @@ HTMLDirectoryElement.prototype.compact;
  * @constructor
  * @extends {HTMLElement}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-72509186
+ * @see http://www.w3.org/html/wg/drafts/html/master/interactive-elements.html#the-menu-element
  */
 function HTMLMenuElement() {}
 
