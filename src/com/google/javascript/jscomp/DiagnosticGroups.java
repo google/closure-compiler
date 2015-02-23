@@ -217,7 +217,6 @@ public class DiagnosticGroups {
 
   static {
       DiagnosticGroups.registerGroup("newCheckTypesWarningsOverload",
-          JSTypeCreatorFromJSDoc.INVALID_GENERICS_INSTANTIATION,
           NewTypeInference.NULLABLE_DEREFERENCE);
 
       // Warnings that are absent in closure library
