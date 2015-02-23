@@ -2491,6 +2491,38 @@ chrome.tabs.onSelectionChanged;
 
 
 /**
+ * @see https://developer.chrome.com/extensions/topSites
+ * @const
+ */
+chrome.topSites = {};
+
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/topSites#type-MostVisitedURL
+ */
+chrome.topSites.MostVisitedURL = function() {};
+
+
+/** @type {string} */
+chrome.topSites.MostVisitedURL.prototype.url;
+
+
+/** @type {string} */
+chrome.topSites.MostVisitedURL.prototype.title;
+
+
+/**
+ * Gets a list of top sites.
+ * @param {function(!Array<!chrome.topSites.MostVisitedURL>)} callback Invoked
+ *     with a list of most visited URLs.
+ * @see https://developer.chrome.com/extensions/topSites#method-get
+ */
+chrome.topSites.get = function(callback) {};
+
+
+/**
  * @const
  * @see https://developer.chrome.com/extensions/windows.html
  */
