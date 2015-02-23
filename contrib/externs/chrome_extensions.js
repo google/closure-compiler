@@ -1199,7 +1199,7 @@ chrome.bluetoothLowEnergy.Service.prototype.deviceAddress;
  * @constructor
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Characteristic
  */
-chrome.bluetoothLowEnergy.Characteristic;
+chrome.bluetoothLowEnergy.Characteristic = function() {};
 
 
 /** @type {string} */
@@ -1226,7 +1226,7 @@ chrome.bluetoothLowEnergy.Characteristic.prototype.value;
  * @constructor
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Descriptor
  */
-chrome.bluetoothLowEnergy.Descriptor;
+chrome.bluetoothLowEnergy.Descriptor = function() {};
 
 /** @type {string} */
 chrome.bluetoothLowEnergy.Descriptor.prototype.uuid;
