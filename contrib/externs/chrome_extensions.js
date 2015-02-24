@@ -1403,17 +1403,17 @@ chrome.bluetoothLowEnergy.writeDescriptorValue =
 chrome.bluetoothLowEnergy.ServiceEvent = function() {};
 
 
-/** @param {function(!chrome.bluetoothLowEnergy.ServiceEvent): void} callback */
+/** @param {function(!chrome.bluetoothLowEnergy.Service): void} callback */
 chrome.bluetoothLowEnergy.ServiceEvent.prototype.addListener =
     function(callback) {};
 
 
-/** @param {function(!chrome.bluetoothLowEnergy.ServiceEvent): void} callback */
+/** @param {function(!chrome.bluetoothLowEnergy.Service): void} callback */
 chrome.bluetoothLowEnergy.ServiceEvent.prototype.removeListener =
     function(callback) {};
 
 /**
- * @param {function(!chrome.bluetoothLowEnergy.ServiceEvent): void} callback
+ * @param {function(!chrome.bluetoothLowEnergy.Service): void} callback
  * @return {boolean}
  */
 chrome.bluetoothLowEnergy.ServiceEvent.prototype.hasListener =
@@ -1453,7 +1453,7 @@ chrome.bluetoothLowEnergy.CharacteristicEvent = function() {};
 
 
 /**
- * @param {function(!chrome.bluetoothLowEnergy.CharacteristicEvent): void}
+ * @param {function(!chrome.bluetoothLowEnergy.Characteristic): void}
  *     callback
  */
 chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.addListener =
@@ -1461,7 +1461,7 @@ chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.addListener =
 
 
 /**
- * @param {function(!chrome.bluetoothLowEnergy.CharacteristicEvent): void}
+ * @param {function(!chrome.bluetoothLowEnergy.Characteristic): void}
  *     callback
  */
 chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.removeListener =
@@ -1469,7 +1469,7 @@ chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.removeListener =
 
 
 /**
- * @param {function(!chrome.bluetoothLowEnergy.CharacteristicEvent): void}
+ * @param {function(!chrome.bluetoothLowEnergy.Characteristic): void}
  *     callback
  * @return {boolean}
  */
@@ -1497,7 +1497,7 @@ chrome.bluetoothLowEnergy.DescriptorEvent = function() {};
 
 
 /**
- * @param {function(!chrome.bluetoothLowEnergy.DescriptorEvent): void}
+ * @param {function(!chrome.bluetoothLowEnergy.Descriptor): void}
  *     callback
  */
 chrome.bluetoothLowEnergy.DescriptorEvent.prototype.addListener =
@@ -1505,7 +1505,7 @@ chrome.bluetoothLowEnergy.DescriptorEvent.prototype.addListener =
 
 
 /**
- * @param {function(!chrome.bluetoothLowEnergy.DescriptorEvent): void}
+ * @param {function(!chrome.bluetoothLowEnergy.Descriptor): void}
  *     callback
  */
 chrome.bluetoothLowEnergy.DescriptorEvent.prototype.removeListener =
@@ -1513,7 +1513,7 @@ chrome.bluetoothLowEnergy.DescriptorEvent.prototype.removeListener =
 
 
 /**
- * @param {function(!chrome.bluetoothLowEnergy.DescriptorEvent): void} callback
+ * @param {function(!chrome.bluetoothLowEnergy.Descriptor): void} callback
  * @return {boolean}
  */
 chrome.bluetoothLowEnergy.DescriptorEvent.prototype.hasListener =
