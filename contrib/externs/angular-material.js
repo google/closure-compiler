@@ -263,3 +263,38 @@ md.$mdThemingProvider.Theme.prototype.warnPalette = function(warnPalette) {};
 md.$mdThemingProvider.prototype.theme = function(themeName, opt_inheritFrom) {};
 
 
+/******************************************************************************
+ * $mdIconProvider Service
+ *****************************************************************************/
+
+/** @constructor */
+md.$mdIconProvider = function() {};
+
+/**
+ * @param {string} id
+ * @param {string} url
+ * @param {number=} iconSize
+ * @return {md.$mdIconProvider}
+ */
+md.$mdIconProvider.prototype.icon = function(id, url, iconSize) {};
+
+/**
+ * @param {string} id
+ * @param {string} url
+ * @param {number=} iconSize
+ * @return {md.$mdIconProvider}
+ */
+md.$mdIconProvider.prototype.iconSet = function(id, url, iconSize) {};
+
+/**
+ * @param {string} url
+ * @param {number=} iconSize
+ * @return {md.$mdIconProvider}
+ */
+md.$mdIconProvider.prototype.defaultIconSet = function(url, iconSize) {};
+
+/**
+ * @param {number} iconSize
+ * @return {md.$mdIconProvider}
+ */
+md.$mdIconProvider.prototype.defaultIconSize = function(iconSize) {};
