@@ -26,7 +26,7 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
       "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];";
 
   private boolean canMoveExterns = false;
-
+  private boolean noStubs = false;
   private final String STUB_DECLARATIONS =
       CrossModuleMethodMotion.STUB_DECLARATIONS;
 
@@ -37,13 +37,15 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CrossModuleMethodMotion(
-        compiler, new CrossModuleMethodMotion.IdGenerator(), canMoveExterns);
+        compiler, new CrossModuleMethodMotion.IdGenerator(), canMoveExterns,
+        noStubs);
   }
 
   @Override
   public void setUp() {
     super.enableLineNumberCheck(true);
     canMoveExterns = false;
+    noStubs = false;
   }
 
   public void testMovePrototypeMethod1() {
@@ -94,6 +96,27 @@ public class CrossModuleMethodMotionTest extends CompilerTestCase {
              "(new Foo).method()"));
   }
 
+  public void testMovePrototypeMethodWithoutStub() {
+    testSame(createModuleChain(
+        "function Foo() {}" +
+            "Foo.prototype.bar = function() {};",
+        // Module 2
+        "(new Foo).bar()"));
+
+    canMoveExterns = true;
+    noStubs = true;
+    test(createModuleChain(
+            "function Foo() {}" +
+                "Foo.prototype.bar = function() {};",
+            // Module 2
+            "(new Foo).bar()"),
+        new String[] {
+                "function Foo() {}",
+            // Module 2
+            "Foo.prototype.bar = function() {};" +
+                "(new Foo).bar()"
+        });
+  }
   public void testNoMovePrototypeMethodRedeclaration1() {
     // don't move if it can be overwritten when a sibling module is loaded.
     testSame(createModuleStar(

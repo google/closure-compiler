@@ -42,6 +42,7 @@ class CrossModuleMethodMotion implements CompilerPass {
   private final IdGenerator idGenerator;
   private final AnalyzePrototypeProperties analyzer;
   private final JSModuleGraph moduleGraph;
+  private final boolean noStubFunctions;
 
   static final String STUB_METHOD_NAME = "JSCompiler_stubMethod";
   static final String UNSTUB_METHOD_NAME = "JSCompiler_unstubMethod";
@@ -67,14 +68,17 @@ class CrossModuleMethodMotion implements CompilerPass {
    * @param idGenerator An id generator for method stubs.
    * @param canModifyExterns If true, then we can move prototype
    *     properties that are declared in the externs file.
+   * @param noStubFunctions if true, we can move methods without
+   *     stub functions in the parent module.
    */
   CrossModuleMethodMotion(AbstractCompiler compiler, IdGenerator idGenerator,
-      boolean canModifyExterns) {
+      boolean canModifyExterns, boolean noStubFunctions) {
     this.compiler = compiler;
     this.idGenerator = idGenerator;
     this.moduleGraph = compiler.getModuleGraph();
     this.analyzer = new AnalyzePrototypeProperties(compiler, moduleGraph,
         canModifyExterns, false);
+    this.noStubFunctions = noStubFunctions;
   }
 
   @Override
@@ -160,41 +164,62 @@ class CrossModuleMethodMotion implements CompilerPass {
           Node proto = prop.getPrototype();
           int stubId = idGenerator.newId();
 
-          // example: JSCompiler_stubMethod(id);
-          Node stubCall = IR.call(
-              IR.name(STUB_METHOD_NAME),
-              IR.number(stubId))
-              .copyInformationFromForTree(value);
-          stubCall.putBooleanProp(Node.FREE_CALL, true);
+          if (!noStubFunctions) {
+            // example: JSCompiler_stubMethod(id);
+            Node stubCall = IR.call(
+                IR.name(STUB_METHOD_NAME),
+                IR.number(stubId))
+                .copyInformationFromForTree(value);
+            stubCall.putBooleanProp(Node.FREE_CALL, true);
 
-          // stub out the method in the original module
-          // A.prototype.b = JSCompiler_stubMethod(id);
-          valueParent.replaceChild(value, stubCall);
+            // stub out the method in the original module
+            // A.prototype.b = JSCompiler_stubMethod(id);
+            valueParent.replaceChild(value, stubCall);
 
-          // unstub the function body in the deeper module
-          Node unstubParent = compiler.getNodeForCodeInsertion(
-              deepestCommonModuleRef);
-          Node unstubCall = IR.call(
-              IR.name(UNSTUB_METHOD_NAME),
-              IR.number(stubId),
-              value);
-          unstubCall.putBooleanProp(Node.FREE_CALL, true);
-          unstubParent.addChildToFront(
-              // A.prototype.b = JSCompiler_unstubMethod(id, body);
-              IR.exprResult(
-                  IR.assign(
-                      IR.getprop(
-                          proto.cloneTree(),
-                          IR.string(nameInfo.name)),
-                      unstubCall))
-                  .copyInformationFromForTree(value));
+            // unstub the function body in the deeper module
+            Node unstubParent = compiler.getNodeForCodeInsertion(
+                deepestCommonModuleRef);
+            Node unstubCall = IR.call(
+                IR.name(UNSTUB_METHOD_NAME),
+                IR.number(stubId),
+                value);
+            unstubCall.putBooleanProp(Node.FREE_CALL, true);
+            unstubParent.addChildToFront(
+                // A.prototype.b = JSCompiler_unstubMethod(id, body);
+                IR.exprResult(
+                    IR.assign(
+                        IR.getprop(
+                            proto.cloneTree(),
+                            IR.string(nameInfo.name)),
+                        unstubCall))
+                    .copyInformationFromForTree(value));
 
-          compiler.reportCodeChange();
+            compiler.reportCodeChange();
+          } else {
+            Node assignmentParent = valueParent.getParent();
+            valueParent.removeChild(value);
+            // remove Foo.prototype.bar = value
+            assignmentParent.getParent().removeChild(assignmentParent);
+
+            Node destParent = compiler.getNodeForCodeInsertion(
+                deepestCommonModuleRef);
+            destParent.addChildToFront(
+                // A.prototype.b = value;
+                IR.exprResult(
+                    IR.assign(
+                        IR.getprop(
+                            proto.cloneTree(),
+                            IR.string(nameInfo.name)),
+                        value))
+                    .copyInformationFromForTree(value));
+            compiler.reportCodeChange();
+          }
         }
       }
     }
 
-    if (!hasStubDeclaration && idGenerator.hasGeneratedAnyIds()) {
+    if (!noStubFunctions && !hasStubDeclaration && idGenerator
+        .hasGeneratedAnyIds()) {
       // Declare stub functions in the top-most module.
       Node declarations = compiler.parseSyntheticCode(STUB_DECLARATIONS);
       compiler.getNodeForCodeInsertion(null).addChildrenToFront(

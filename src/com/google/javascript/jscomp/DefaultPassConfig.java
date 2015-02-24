@@ -2108,7 +2108,8 @@ public class DefaultPassConfig extends PassConfig {
           compiler, crossModuleIdGenerator,
           // Only move properties in externs if we're not treating
           // them as exports.
-          options.removeUnusedPrototypePropertiesInExterns);
+          options.removeUnusedPrototypePropertiesInExterns,
+          options.crossModuleCodeMotionNoStubMethods);
     }
   };
 

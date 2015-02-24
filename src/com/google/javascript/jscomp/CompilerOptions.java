@@ -347,6 +347,16 @@ public class CompilerOptions implements Serializable, Cloneable {
   public boolean crossModuleCodeMotion;
 
   /**
+   * Don't generate stub functions when moving methods deeper.
+   *
+   * Note, switching on this option may break existing code that depends on
+   * enumerating prototype methods for mixin behavior, such as goog.mixin or
+   * goog.object.extend, since the prototype assignments will be removed from
+   * the parent module and moved to a later module.
+   **/
+  boolean crossModuleCodeMotionNoStubMethods;
+
+  /**
    * Whether when module B depends on module A and module B declares a symbol,
    * this symbol can be seen in A after B has been loaded. This is often true,
    * but may not be true when loading code using nested eval.
@@ -1837,6 +1847,11 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setCrossModuleCodeMotion(boolean crossModuleCodeMotion) {
     this.crossModuleCodeMotion = crossModuleCodeMotion;
+  }
+
+  public void setCrossModuleCodeMotionNoStubMethods(boolean
+      crossModuleCodeMotionNoStubMethods) {
+    this.crossModuleCodeMotionNoStubMethods = crossModuleCodeMotionNoStubMethods;
   }
 
   public void setParentModuleCanSeeSymbolsDeclaredInChildren(
