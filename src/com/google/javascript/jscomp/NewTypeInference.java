@@ -791,6 +791,8 @@ public class NewTypeInference implements CompilerPass {
           if (NodeUtil.isForIn(n)) {
             Node obj = n.getChildAtIndex(1);
             EnvTypePair pair = analyzeExprFwd(obj, inEnv, pickReqObjType(n));
+            pair = mayWarnAboutNullableReferenceAndTighten(
+                n, pair.type, inEnv, JSType.TOP_OBJECT);
             JSType objType = pair.type;
             if (!objType.isSubtypeOf(JSType.TOP_OBJECT)) {
               warnings.add(JSError.make(

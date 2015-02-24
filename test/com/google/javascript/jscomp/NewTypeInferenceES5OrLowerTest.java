@@ -4799,6 +4799,10 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + "}",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
+    typeCheck(
+        "function f(/** Object? */ o) { for (var x in o); }",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
     typeCheck("for (var x in 123) ;", NewTypeInference.FORIN_EXPECTS_OBJECT);
 
     typeCheck(
