@@ -611,7 +611,7 @@ class AliasExternals implements CompilerPass {
 
         if (aliasable) {
           String name = dest.getString();
-          Scope.Var var = t.getScope().getVar(name);
+          Var var = t.getScope().getVar(name);
 
           if (var != null && !var.isLocal()) {
             globals.put(name, newSymbolForGlobalVar(dest));
@@ -646,7 +646,7 @@ class AliasExternals implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName()) {
         String name = n.getString();
-        Scope.Var var = t.getScope().getVar(name);
+        Var var = t.getScope().getVar(name);
 
         // It's ok for var to be null since it won't be in any scope if it's
         // an extern

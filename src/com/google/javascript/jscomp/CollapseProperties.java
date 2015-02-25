@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.GlobalNamespace.Ref.Type;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;

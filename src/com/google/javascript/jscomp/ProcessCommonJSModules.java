@@ -20,7 +20,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -411,7 +410,7 @@ public class ProcessCommonJSModules implements CompilerPass {
           return;
         }
 
-        Scope.Var var = t.getScope().getVar(name);
+        Var var = t.getScope().getVar(name);
         if (var != null && var.isGlobal()) {
           n.setString(name + "$$" + suffix);
           n.putProp(Node.ORIGINALNAME_PROP, name);
@@ -453,7 +452,7 @@ public class ProcessCommonJSModules implements CompilerPass {
             endIndex = name.length();
           }
           String baseName = name.substring(0, endIndex);
-          Scope.Var var = t.getScope().getVar(baseName);
+          Var var = t.getScope().getVar(baseName);
           if (var != null && var.isGlobal()) {
             typeNode.setString(baseName + "$$" + suffix + name.substring(endIndex));
             typeNode.putProp(Node.ORIGINALNAME_PROP, name);

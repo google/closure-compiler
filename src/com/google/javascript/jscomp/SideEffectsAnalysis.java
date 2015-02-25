@@ -24,7 +24,6 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.VariableVisibilityAnalysis.VariableVisibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;

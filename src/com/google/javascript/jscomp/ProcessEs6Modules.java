@@ -20,7 +20,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.ProcessCommonJSModules.FindGoogProvideOrGoogModule;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -426,7 +425,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           return;
         }
 
-        Scope.Var var = t.getScope().getVar(name);
+        Var var = t.getScope().getVar(name);
         if (var != null && var.isGlobal()) {
           // Avoid polluting the global namespace.
           n.setString(name + "$$" + suffix);
@@ -486,7 +485,7 @@ public class ProcessEs6Modules extends AbstractPostOrderCallback {
           if (splitted.size() == 2) {
             rest = "." + splitted.get(1);
           }
-          Scope.Var var = t.getScope().getVar(baseName);
+          Var var = t.getScope().getVar(baseName);
           if (var != null && var.isGlobal()) {
             typeNode.setString(baseName + "$$" + suffix + rest);
           } else if (var == null && importMap.containsKey(baseName)) {

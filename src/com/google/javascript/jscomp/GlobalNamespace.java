@@ -260,7 +260,7 @@ class GlobalNamespace
    * @return Whether the name reference is a global variable reference
    */
   private boolean isGlobalVarReference(String name, Scope s) {
-    Scope.Var v = s.getVar(name);
+    Var v = s.getVar(name);
     if (v == null && externsScope != null) {
       v = externsScope.getVar(name);
     }

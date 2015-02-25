@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 
 import java.util.HashMap;

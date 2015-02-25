@@ -200,7 +200,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           return;
         }
         Scope s = t.getScope();
-        Scope.Var v = s.getVar(name);
+        Var v = s.getVar(name);
         if (v == null || !v.isGlobal()) {
           return;
         }
@@ -252,7 +252,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           return;
         }
         Scope s = t.getScope();
-        Scope.Var v = s.getVar(name);
+        Var v = s.getVar(name);
         if (v == null || !v.isGlobal()) {
           return;
         }
@@ -300,7 +300,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       if (parent.isFunction() && name.isEmpty()) {
         return;
       }
-      Scope.Var var = t.getScope().getVar(name);
+      Var var = t.getScope().getVar(name);
       if (var == null) {
         return;
       }
@@ -515,7 +515,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
           || SPECIAL_EXTERNS.contains(name)) {
         return;
       }
-      Scope.Var var = t.getScope().getVar(name);
+      Var var = t.getScope().getVar(name);
       if (name.length() > 0 && (var == null || var.isExtern())) {
         parent.replaceChild(n, IR.getprop(IR.name(WINDOW), IR.string(name))
             .srcrefTree(n));

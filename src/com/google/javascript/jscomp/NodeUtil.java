@@ -3284,7 +3284,7 @@ public final class NodeUtil {
       return false;
     }
 
-    Scope.Var var = scope.getVar(node.getString());
+    Var var = scope.getVar(node.getString());
     return var != null && (var.isInferredConst() || var.isConst());
   }
 

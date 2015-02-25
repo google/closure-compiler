@@ -559,7 +559,7 @@ class FunctionInjector {
   }
 
   private static void removeConstantVarAnnotation(Scope scope, String name) {
-    Scope.Var var = scope.getVar(name);
+    Var var = scope.getVar(name);
     Node nameNode = var == null ? null : var.getNameNode();
     if (nameNode == null) return;
 

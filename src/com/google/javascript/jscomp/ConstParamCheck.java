@@ -85,7 +85,7 @@ class ConstParamCheck extends AbstractPostOrderCallback
 
       if (name.isName()) {
         Scope scope = traversal.getScope();
-        Scope.Var var = scope.getVar(name.getString());
+        Var var = scope.getVar(name.getString());
         if (var == null) {
           return;
         }
@@ -122,7 +122,7 @@ class ConstParamCheck extends AbstractPostOrderCallback
     if (argument.isName()) {
       String name = argument.getString();
       Scope scope = traversal.getScope();
-      Scope.Var var = scope.getVar(name);
+      Var var = scope.getVar(name);
       if (var == null || !var.isInferredConst()) {
         compiler.report(traversal.makeError(
             argument, CONST_NOT_STRING_LITERAL_ERROR, name));

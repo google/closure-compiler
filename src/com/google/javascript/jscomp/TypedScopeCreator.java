@@ -59,7 +59,6 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -2047,7 +2046,7 @@ final class TypedScopeCreator implements ScopeCreator {
       Node fnNameNode = fnNode.getFirstChild();
       String fnName = fnNameNode.getString();
       if (!fnName.isEmpty()) {
-        Scope.Var fnVar = scope.getVar(fnName);
+        Var fnVar = scope.getVar(fnName);
         if (fnVar == null ||
             // Make sure we're not touching a native function. Native
             // functions aren't bleeding, but may not have a declaration

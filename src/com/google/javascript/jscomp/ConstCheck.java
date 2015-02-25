@@ -42,7 +42,7 @@ class ConstCheck extends AbstractPostOrderCallback
           "Original definition at {1}");
 
   private final AbstractCompiler compiler;
-  private final Set<Scope.Var> initializedConstants;
+  private final Set<Var> initializedConstants;
 
   /**
    * Creates an instance.
@@ -65,7 +65,7 @@ class ConstCheck extends AbstractPostOrderCallback
         if (parent != null &&
             parent.isVar()) {
           String name = n.getString();
-          Scope.Var var = t.getScope().getVar(name);
+          Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
             // If a constant is declared in externs, add it to initializedConstants to indicate
             // that it is initialized externally.
@@ -95,7 +95,7 @@ class ConstCheck extends AbstractPostOrderCallback
         Node lhs = n.getFirstChild();
         if (lhs.isName()) {
           String name = lhs.getString();
-          Scope.Var var = t.getScope().getVar(name);
+          Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
             if (!initializedConstants.add(var)) {
               reportError(t, n, var, name);
@@ -110,7 +110,7 @@ class ConstCheck extends AbstractPostOrderCallback
         Node lhs = n.getFirstChild();
         if (lhs.isName()) {
           String name = lhs.getString();
-          Scope.Var var = t.getScope().getVar(name);
+          Var var = t.getScope().getVar(name);
           if (isConstant(var)) {
             reportError(t, n, var, name);
           }
@@ -124,14 +124,14 @@ class ConstCheck extends AbstractPostOrderCallback
    * Gets whether a variable is a constant initialized to a literal value at
    * the point where it is declared.
    */
-  private static boolean isConstant(Scope.Var var) {
+  private static boolean isConstant(Var var) {
     return var != null && var.isInferredConst();
   }
 
   /**
    * Reports a reassigned constant error.
    */
-  void reportError(NodeTraversal t, Node n, Scope.Var var, String name) {
+  void reportError(NodeTraversal t, Node n, Var var, String name) {
     JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
     if (info == null || !info.getSuppressions().contains("const")) {
       Node declNode = var.getNode();

@@ -85,7 +85,7 @@ class TransformAMDToCJSModule implements CompilerPass {
       if (n.isCall() && n.getFirstChild() != null &&
           n.getFirstChild().isName() &&
           "define".equals(n.getFirstChild().getString())) {
-        Scope.Var define = t.getScope().getVar(n.getFirstChild().
+        Var define = t.getScope().getVar(n.getFirstChild().
             getString());
         if (define != null && !define.isGlobal()) {
           // Ignore non-global define.

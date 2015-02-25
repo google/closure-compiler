@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayList;
@@ -253,7 +252,7 @@ final class RenameVars implements CompilerPass {
       // Bleeding functions should be treated as part of their outer
       // scope, because IE has bugs in how it handles bleeding
       // functions.
-      Scope.Var var = t.getScope().getVar(name);
+      Var var = t.getScope().getVar(name);
       boolean local = (var != null) && var.isLocal() &&
           (!var.scope.getParent().isGlobal() ||
            !var.isBleedingFunction());

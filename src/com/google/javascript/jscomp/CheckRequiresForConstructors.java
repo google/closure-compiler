@@ -191,7 +191,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
 
       String name = root.getString();
-      Scope.Var var = t.getScope().getVar(name);
+      Var var = t.getScope().getVar(name);
       if (var != null && (var.isLocal() || var.isExtern())) {
         return;
       }
@@ -235,7 +235,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       Preconditions.checkState(child.isString());
 
       String rootName = Splitter.on('.').split(child.getString()).iterator().next();
-      Scope.Var var = t.getScope().getVar(rootName);
+      Var var = t.getScope().getVar(rootName);
       if (var != null && var.isExtern()) {
         return;
       }

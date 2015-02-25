@@ -20,7 +20,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
@@ -330,7 +329,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    Scope.Var var = t.getScope().getVar(n.getString());
+    Var var = t.getScope().getVar(n.getString());
     JSDocInfo docInfo = var == null ? null : var.getJSDocInfo();
 
     if (docInfo != null && docInfo.isDeprecated() &&

@@ -51,7 +51,7 @@ class StripCode implements CompilerPass {
   private final Set<String> stripNameSuffixes;
   private final Set<String> stripTypePrefixes;
   private final Set<String> stripNamePrefixes;
-  private final Set<Scope.Var> varsToRemove;
+  private final Set<Var> varsToRemove;
 
   static final DiagnosticType STRIP_TYPE_INHERIT_ERROR = DiagnosticType.error(
       "JSC_STRIP_TYPE_INHERIT_ERROR",
@@ -461,7 +461,7 @@ class StripCode implements CompilerPass {
     boolean isReferenceToRemovedVar(NodeTraversal t, Node n) {
       String name = n.getString();
       Scope scope = t.getScope();
-      Scope.Var var = scope.getVar(name);
+      Var var = scope.getVar(name);
       return varsToRemove.contains(var);
     }
 

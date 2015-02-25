@@ -22,7 +22,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NameReferenceGraph.Name;
 import com.google.javascript.jscomp.NameReferenceGraph.Reference;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;

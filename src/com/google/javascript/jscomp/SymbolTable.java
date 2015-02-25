@@ -27,7 +27,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -96,8 +95,7 @@ import javax.annotation.Nullable;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class SymbolTable
-    implements StaticSymbolTable<SymbolTable.Symbol, SymbolTable.Reference> {
+public final class SymbolTable {
   private static final Logger logger =
       Logger.getLogger(SymbolTable.class.getName());
 
@@ -137,7 +135,6 @@ public final class SymbolTable
     this.registry = registry;
   }
 
-  @Override
   public Iterable<Reference> getReferences(Symbol symbol) {
     return Collections.unmodifiableCollection(symbol.references.values());
   }
@@ -146,7 +143,6 @@ public final class SymbolTable
     return ImmutableList.copyOf(symbol.references.values());
   }
 
-  @Override
   public Iterable<Symbol> getAllSymbols() {
     return Collections.unmodifiableCollection(symbols.values());
   }
@@ -171,7 +167,6 @@ public final class SymbolTable
     return symbolOrdering;
   }
 
-  @Override
   public SymbolScope getScope(Symbol slot) {
     return slot.scope;
   }
@@ -1182,7 +1177,7 @@ public final class SymbolTable
   }
 
   /** Scope of a symbol */
-  public static final class SymbolScope implements StaticScope<JSType> {
+  public static final class SymbolScope {
     private final Node rootNode;
     private final SymbolScope parent;
     private final JSType typeOfThis;
@@ -1221,12 +1216,10 @@ public final class SymbolTable
           ownSymbols.values(), Predicates.equalTo(sym));
     }
 
-    @Override
-    public Node getRootNode() {
+    Node getRootNode() {
       return rootNode;
     }
 
-    @Override
     public SymbolScope getParentScope() {
       return parent;
     }
@@ -1252,7 +1245,6 @@ public final class SymbolTable
       return null;
     }
 
-    @Override
     public Symbol getSlot(String name) {
       Symbol own = getOwnSlot(name);
       if (own != null) {
@@ -1266,12 +1258,10 @@ public final class SymbolTable
       return null;
     }
 
-    @Override
-    public Symbol getOwnSlot(String name) {
+    Symbol getOwnSlot(String name) {
       return ownSymbols.get(name);
     }
 
-    @Override
     public JSType getTypeOfThis() {
       return typeOfThis;
     }

@@ -181,7 +181,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
     // Check that the var has been declared.
     Scope scope = t.getScope();
-    Scope.Var var = scope.getVar(varName);
+    Var var = scope.getVar(varName);
     if (var == null) {
       if (NodeUtil.isFunctionExpression(parent)) {
         // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
@@ -280,7 +280,7 @@ class VarCheck extends AbstractPostOrderCallback implements
           case Token.GETPROP:
             if (n == parent.getFirstChild()) {
               Scope scope = t.getScope();
-              Scope.Var var = scope.getVar(n.getString());
+              Var var = scope.getVar(n.getString());
               if (var == null) {
                 t.report(n, UNDEFINED_EXTERN_VAR_ERROR, n.getString());
                 varsToDeclareInExterns.add(n.getString());
@@ -299,7 +299,7 @@ class VarCheck extends AbstractPostOrderCallback implements
             t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
 
             Scope scope = t.getScope();
-            Scope.Var var = scope.getVar(n.getString());
+            Var var = scope.getVar(n.getString());
             if (var == null) {
               varsToDeclareInExterns.add(n.getString());
             }
@@ -316,7 +316,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    * @return Whether duplicated declarations warnings should be suppressed
    *     for the given node.
    */
-  static boolean hasDuplicateDeclarationSuppression(Node n, Scope.Var origVar) {
+  static boolean hasDuplicateDeclarationSuppression(Node n, Var origVar) {
     Preconditions.checkState(n.isName() || n.isRest() || n.isStringKey());
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
@@ -347,7 +347,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
       // Don't allow multiple variables to be declared at the top-level scope
       if (s.isGlobal()) {
-        Scope.Var origVar = s.getVar(name);
+        Var origVar = s.getVar(name);
         Node origParent = origVar.getParentNode();
         if (origParent.isCatch() &&
             parent.isCatch()) {

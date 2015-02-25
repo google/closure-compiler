@@ -21,7 +21,6 @@ import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
-import com.google.javascript.jscomp.Scope.Var;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -58,7 +57,7 @@ class CrossModuleCodeMotion implements CompilerPass {
    * NOTE - I made this a LinkedHashMap to make testing easier. With a regular
    * HashMap, the variables may not output in a consistent order
    */
-  private final Map<Scope.Var, NamedInfo> namedInfo =
+  private final Map<Var, NamedInfo> namedInfo =
       new LinkedHashMap<>();
 
   private final Map<Node, InstanceofInfo> instanceofNodes =
