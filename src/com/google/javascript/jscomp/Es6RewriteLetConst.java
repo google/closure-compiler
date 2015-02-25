@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Normalize.NormalizeStatements;
@@ -101,19 +100,16 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(
-        compiler, Lists.newArrayList(externs, root), new CollectUndeclaredNames());
-    NodeTraversal.traverseRoots(compiler, Lists.newArrayList(externs, root), this);
-    NodeTraversal.traverseRoots(
-        compiler, Lists.newArrayList(externs, root), new RenameReferences());
+    NodeTraversal.traverseRoots(compiler, new CollectUndeclaredNames(), externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal.traverseRoots(compiler, new RenameReferences(), externs, root);
 
     LoopClosureTransformer transformer = new LoopClosureTransformer();
-    NodeTraversal.traverseRoots(
-        compiler, Lists.newArrayList(externs, root), transformer);
+    NodeTraversal.traverseRoots(compiler, transformer, externs, root);
     transformer.transformLoopClosure();
     varify();
-    NodeTraversal.traverseRoots(compiler, Lists.newArrayList(externs, root),
-        new RewriteBlockScopedFunctionDeclaration());
+    NodeTraversal.traverseRoots(
+        compiler, new RewriteBlockScopedFunctionDeclaration(), externs, root);
   }
 
   @Override

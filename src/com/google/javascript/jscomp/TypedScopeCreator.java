@@ -2132,8 +2132,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (externs == null) {
         NodeTraversal.traverse(compiler, root, this);
       } else {
-        NodeTraversal.traverseRoots(
-            compiler, ImmutableList.of(externs, root), this);
+        NodeTraversal.traverseRoots(compiler, this, externs, root);
       }
     }
 

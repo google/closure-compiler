@@ -90,9 +90,8 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
         (new TypeInferencePass(
             compiler, compiler.getReverseAbstractInterpreter(),
             topScope, scopeCreator)).process(externs, root);
-        NodeTraversal t = new NodeTraversal(
-            compiler, callback, scopeCreator);
-        t.traverseRoots(Lists.newArrayList(externs, root));
+        NodeTraversal t = new NodeTraversal(compiler, callback, scopeCreator);
+        t.traverseRoots(externs, root);
       }
     };
   }

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -25,7 +24,6 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -76,12 +74,8 @@ abstract class MethodCompilerPass implements CompilerPass {
       NodeTraversal.traverse(compiler, externs, new GetExternMethods());
     }
 
-
-    List<Node> externsAndJs = Lists.newArrayList(externs, root);
-    NodeTraversal.traverseRoots(
-        compiler, Lists.newArrayList(externs, root), new GatherSignatures());
-    NodeTraversal.traverseRoots(
-        compiler, externsAndJs, getActingCallback());
+    NodeTraversal.traverseRoots(compiler, new GatherSignatures(), externs, root);
+    NodeTraversal.traverseRoots(compiler, getActingCallback(), externs, root);
   }
 
   /**

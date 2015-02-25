@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -283,9 +282,7 @@ class Normalize implements CompilerPass {
       Node externsAndJs = root.getParent();
       Preconditions.checkState(externsAndJs != null);
       Preconditions.checkState(externsAndJs.hasChild(externs));
-
-      NodeTraversal.traverseRoots(
-          compiler, Lists.newArrayList(externs, root), this);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
     private Map<String, Boolean> constantMap = Maps.newHashMap();

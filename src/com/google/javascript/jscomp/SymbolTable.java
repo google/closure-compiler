@@ -479,7 +479,6 @@ public final class SymbolTable
   void findScopes(AbstractCompiler compiler, Node externs, Node root) {
     NodeTraversal.traverseRoots(
         compiler,
-        Lists.newArrayList(externs, root),
         new NodeTraversal.AbstractScopedCallback() {
           @Override
           public void enterScope(NodeTraversal t) {
@@ -488,7 +487,8 @@ public final class SymbolTable
 
           @Override
           public void visit(NodeTraversal t, Node n, Node p) {}
-        });
+        },
+        externs, root);
   }
 
   /** Gets all the scopes in this symbol table. */
@@ -860,8 +860,7 @@ public final class SymbolTable
   void fillJSDocInfo(
       AbstractCompiler compiler, Node externs, Node root) {
     NodeTraversal.traverseRoots(
-        compiler, Lists.newArrayList(externs, root),
-        new JSDocInfoCollector(compiler.getTypeRegistry()));
+        compiler, new JSDocInfoCollector(compiler.getTypeRegistry()), externs, root);
 
     // Create references to parameters in the JSDoc.
     for (Symbol sym : getAllSymbolsSorted()) {
@@ -920,8 +919,9 @@ public final class SymbolTable
     ImmutableMap<StaticSourceFile, Visibility> visibilityMap =
         collectPass.getFileOverviewVisibilityMap();
     NodeTraversal.traverseRoots(
-        compiler, Lists.newArrayList(externs, root),
-        new VisibilityCollector(visibilityMap, compiler.getCodingConvention()));
+        compiler,
+        new VisibilityCollector(visibilityMap, compiler.getCodingConvention()),
+        externs, root);
   }
 
   /**
@@ -1323,10 +1323,7 @@ public final class SymbolTable
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRoots(
-          compiler,
-          Lists.newArrayList(externs, root),
-          this);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
     private boolean maybeDefineReference(
@@ -1455,10 +1452,7 @@ public final class SymbolTable
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRoots(
-          compiler,
-          Lists.newArrayList(externs, root),
-          this);
+      NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
     @Override

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
@@ -137,7 +136,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     }
 
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
-    t.traverseRoots(Lists.newArrayList(externs, root));
+    t.traverseRoots(externs, root);
     for (String varName : varsToDeclareInExterns) {
       createSynthesizedExternVar(varName);
     }

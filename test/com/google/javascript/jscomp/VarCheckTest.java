@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -389,17 +388,18 @@ public class VarCheckTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRoots(compiler, Lists.newArrayList(externs, root),
+      NodeTraversal.traverseRoots(compiler,
           new AbstractPostOrderCallback() {
-        @Override
-        public void visit(NodeTraversal t, Node n, Node parent) {
-          if (n.isName() && !parent.isFunction()
-              && !parent.isLabel()) {
-            assertTrue("Variable " + n.getString() + " should have be declared",
-                t.getScope().isDeclared(n.getString(), true));
-          }
-        }
-      });
+            @Override
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              if (n.isName() && !parent.isFunction()
+                  && !parent.isLabel()) {
+                assertTrue("Variable " + n.getString() + " should have be declared",
+                    t.getScope().isDeclared(n.getString(), true));
+              }
+            }
+          },
+          externs, root);
     }
   }
 

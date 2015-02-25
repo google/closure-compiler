@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
@@ -89,7 +88,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
             topScope, scopeCreator)).process(externs, root);
         NodeTraversal t = new NodeTraversal(
             compiler, callback, scopeCreator);
-        t.traverseRoots(Lists.newArrayList(externs, root));
+        t.traverseRoots(externs, root);
         (new InferJSDocInfo(compiler)).process(externs, root);
       }
     };
