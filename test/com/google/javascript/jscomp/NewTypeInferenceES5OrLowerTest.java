@@ -5190,6 +5190,13 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + "Foo.prototype.f = function(x) { this.f(x); };");
   }
 
+  public void testGenericReturnType() {
+    typeCheck(
+        "/** @return {T|string} @template T */"
+        + "function f() { return 'str'; }");
+  }
+
+
   public void testUnification() {
     typeCheck(
         "/** @constructor */ function Foo(){};\n"

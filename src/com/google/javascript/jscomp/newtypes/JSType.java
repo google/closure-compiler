@@ -865,7 +865,7 @@ public abstract class JSType implements TypeI {
     if ((mask | other.getMask()) != other.getMask()) {
       return false;
     }
-    if (!Objects.equals(getTypeVar(), other.getTypeVar())) {
+    if (getTypeVar() != null && !getTypeVar().equals(other.getTypeVar())) {
       return false;
     }
     if (getObjs() == null) {
