@@ -90,30 +90,7 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   /** @constructor */
   function tempCtor() {}
   tempCtor.prototype = parentCtor.prototype;
-  childCtor.superClass_ = parentCtor.prototype;
   childCtor.prototype = new tempCtor();
   /** @override */
   childCtor.prototype.constructor = childCtor;
-
-  /**
-   * Calls superclass constructor/method.
-   *
-   * This function is only available if you use $jscomp$inherits to
-   * express inheritance relationships between classes.
-   *
-   * NOTE: This is a replacement for goog.base and for superClass_
-   * property defined in childCtor.
-   *
-   * @param {!Object} me Should always be "this".
-   * @param {string} methodName The method name to call. Calling
-   *     superclass constructor can be done with the special string
-   *     'constructor'.
-   * @param {...*} var_args The arguments to pass to superclass
-   *     method/constructor.
-   * @return {*} The return value of the superclass method/constructor.
-   */
-  childCtor.base = function(me, methodName, var_args) {
-    var args = Array.prototype.slice.call(arguments, 2);
-    return parentCtor.prototype[methodName].apply(me, args);
-  };
 };

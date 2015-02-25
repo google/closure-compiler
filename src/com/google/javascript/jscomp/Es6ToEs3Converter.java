@@ -898,7 +898,7 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
     }
   }
 
-  static String getUniqueClassName(String qualifiedName) {
+  private static String getUniqueClassName(String qualifiedName) {
     return qualifiedName;
   }
 

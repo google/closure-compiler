@@ -17,8 +17,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.getUniqueClassName;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -102,13 +103,13 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
   }
 
   private void visitSuper(Node node, Node parent) {
-    Node enclosing = parent;
+    Node enclosingCall = parent;
     Node potentialCallee = node;
     if (!parent.isCall()) {
-      enclosing = parent.getParent();
+      enclosingCall = parent.getParent();
       potentialCallee = parent;
     }
-    if (!enclosing.isCall() || enclosing.getFirstChild() != potentialCallee) {
+    if (!enclosingCall.isCall() || enclosingCall.getFirstChild() != potentialCallee) {
       compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
           "Only calls to super or to a method of super are supported."));
       return;
@@ -121,63 +122,61 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
     if (NodeUtil.getClassNameNode(clazz) == null) {
       // Unnamed classes of the form:
       //   f(class extends D { ... });
-      // give the problem that there is no name to be used in the call to goog.base for the
-      // translation of super calls.
-      // This will throw an error when the class is processed.
+      // will be rejected when the class is processed.
+      return;
+    }
+
+    Node superName = clazz.getFirstChild().getNext();
+    if (!superName.isQualifiedName()) {
+      // This will be reported as an error in Es6ToEs3Converter.
       return;
     }
 
     Node enclosingMemberDef = NodeUtil.getEnclosingClassMemberFunction(node);
     if (enclosingMemberDef.isStaticMember()) {
-      Node superName = clazz.getFirstChild().getNext();
-      if (!superName.isQualifiedName()) {
-        // This has already been reported, just don't need to continue processing the class.
-        return;
-      }
       Node callTarget;
       potentialCallee.detachFromParent();
       if (potentialCallee == node) {
         // of the form super()
         potentialCallee =
             IR.getprop(superName.cloneTree(), IR.string(enclosingMemberDef.getString()));
-        enclosing.putBooleanProp(Node.FREE_CALL, false);
+        enclosingCall.putBooleanProp(Node.FREE_CALL, false);
       } else {
         // of the form super.method()
         potentialCallee.replaceChild(node, superName.cloneTree());
       }
       callTarget = IR.getprop(potentialCallee, IR.string("call"));
-      enclosing.addChildToFront(callTarget);
-      enclosing.addChildAfter(IR.thisNode(), callTarget);
-      enclosing.useSourceInfoIfMissingFromForTree(enclosing);
+      enclosingCall.addChildToFront(callTarget);
+      enclosingCall.addChildAfter(IR.thisNode(), callTarget);
+      enclosingCall.useSourceInfoIfMissingFromForTree(enclosingCall);
       compiler.reportCodeChange();
       return;
     }
 
     String methodName;
-    Node callName = enclosing.removeFirstChild();
+    Node callName = enclosingCall.removeFirstChild();
     if (callName.isSuper()) {
       methodName = enclosingMemberDef.getString();
     } else {
       methodName = callName.getLastChild().getString();
     }
-    Node baseCall = baseCall(clazz, methodName, enclosing.removeChildren())
-        .useSourceInfoIfMissingFromForTree(enclosing);
-    enclosing.getParent().replaceChild(enclosing, baseCall);
+    Node baseCall = baseCall(
+        superName.getQualifiedName(), methodName, enclosingCall.removeChildren());
+    baseCall.useSourceInfoIfMissingFromForTree(enclosingCall);
+    enclosingCall.getParent().replaceChild(enclosingCall, baseCall);
     compiler.reportCodeChange();
   }
 
-  private Node baseCall(Node clazz, String methodName, Node arguments) {
-    boolean useUnique = NodeUtil.isStatement(clazz) && !NodeUtil.isInFunction(clazz);
-    String uniqueClassString = useUnique ? getUniqueClassName(NodeUtil.getClassName(clazz))
-        : NodeUtil.getClassName(clazz);
-    Node uniqueClassName = NodeUtil.newQName(compiler,
-        uniqueClassString);
-    Node base = IR.getprop(uniqueClassName, IR.string("base"));
-    Node call = IR.call(base, IR.thisNode(), IR.string(methodName));
+  private Node baseCall(String baseClass, String methodName, Node arguments) {
+    Preconditions.checkNotNull(baseClass);
+    Preconditions.checkNotNull(methodName);
+    Node methodCall = NodeUtil.newQName(compiler,
+        Joiner.on('.').join(baseClass, "prototype", methodName, "call"));
+    Node callNode = IR.call(methodCall, IR.thisNode());
     if (arguments != null) {
-      call.addChildrenToBack(arguments);
+      callNode.addChildrenToBack(arguments);
     }
-    return call;
+    return callNode;
   }
 
   @Override
