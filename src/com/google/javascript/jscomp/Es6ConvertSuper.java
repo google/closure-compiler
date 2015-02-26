@@ -87,14 +87,17 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
       memberDef = IR.memberFunctionDef("constructor",
           IR.function(IR.name(""), IR.paramList(), IR.block()));
     } else {
-      Node paramList = IR.paramList(IR.rest("args"));
-      Node body = IR.block(
-          IR.exprResult(IR.call(
-              IR.superNode(),
-              IR.spread(IR.name("args")))));
+      if (!superClass.isQualifiedName()) {
+        // This will be reported as an error in Es6ToEs3Converter.
+        return;
+      }
+      Node body = IR.block(IR.exprResult(IR.call(
+              IR.getprop(superClass.cloneTree(), IR.string("apply")),
+              IR.thisNode(),
+              IR.name("arguments"))));
       Node constructor = IR.function(
           IR.name(""),
-          paramList,
+          IR.paramList(IR.name("var_args")),
           body);
       memberDef = IR.memberFunctionDef("constructor", constructor);
     }
