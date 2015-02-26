@@ -1337,7 +1337,7 @@ public class Compiler extends AbstractCompiler {
         externsRoot.addChildToBack(n);
       }
 
-      if (options.rewriteEs6Modules) {
+      if (options.lowerFromEs6()) {
         processEs6Modules();
       }
 

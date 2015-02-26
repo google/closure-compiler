@@ -788,9 +788,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Rewrite CommonJS modules so that they can be concatenated together. */
   boolean processCommonJSModules = false;
 
-  /** Rewrite ES6 modules so that they can be concatenated together. */
-  boolean rewriteEs6Modules = false;
-
   /** CommonJS module prefix. */
   String commonJSModulePathPrefix =
       ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
@@ -2269,14 +2266,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public void setProcessCommonJSModules(boolean processCommonJSModules) {
     this.processCommonJSModules = processCommonJSModules;
-  }
-
-  /**
-   * Rewrites ES6 modules so that modules can be concatenated together,
-   * by renaming all globals to avoid conflicting with other modules.
-   */
-  public void setRewriteEs6Modules(boolean rewriteEs6Modules) {
-    this.rewriteEs6Modules = rewriteEs6Modules;
   }
 
   /**

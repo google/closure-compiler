@@ -42,7 +42,6 @@ public class ProcessEs6ModulesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     return options;
   }
 

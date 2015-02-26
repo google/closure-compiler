@@ -408,11 +408,6 @@ public class CommandLineRunner extends
         usage = "Process CommonJS modules to a concatenable form.")
     private boolean processCommonJsModules = false;
 
-    @Option(name = "--rewrite_es6_modules",
-        hidden = true,
-        usage = "Rewrite ES6 modules to a concatenable form.")
-    private boolean rewriteEs6Modules = false;
-
     @Option(name = "--transpile_only",
         hidden = true,
         usage = "Run ES6 to ES3 transpilation only, skip other passes.")
@@ -1090,7 +1085,6 @@ public class CommandLineRunner extends
           .setLanguageIn(flags.languageIn)
           .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)
-          .setRewriteEs6Modules(flags.rewriteEs6Modules)
           .setTranspileOnly(flags.transpileOnly)
           .setCommonJSModulePathPrefix(flags.commonJsPathPrefix)
           .setTransformAMDToCJSModules(flags.transformAmdModules)

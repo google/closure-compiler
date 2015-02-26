@@ -213,7 +213,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       boolean manageClosureDependencies,
       boolean onlyClosureDependencies,
       boolean processCommonJSModules,
-      boolean rewriteEs6Modules,
       List<String> closureEntryPoints)
       throws FlagUsageException {
     if (onlyClosureDependencies) {
@@ -228,12 +227,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           .setMoocherDropping(true)
           .setEntryPoints(closureEntryPoints);
     } else if (processCommonJSModules) {
-      return new DependencyOptions()
-        .setDependencyPruning(false)
-        .setDependencySorting(true)
-        .setMoocherDropping(false)
-        .setEntryPoints(closureEntryPoints);
-    } else if (rewriteEs6Modules) {
       return new DependencyOptions()
         .setDependencyPruning(false)
         .setDependencySorting(true)
@@ -281,7 +274,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         config.manageClosureDependencies,
         config.onlyClosureDependencies,
         config.processCommonJSModules,
-        config.rewriteEs6Modules,
         config.closureEntryPoints);
     if (depOptions != null) {
       options.setDependencyOptions(depOptions);
@@ -387,7 +379,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.acceptConstKeyword = config.acceptConstKeyword;
     options.transformAMDToCJSModules = config.transformAMDToCJSModules;
     options.processCommonJSModules = config.processCommonJSModules;
-    options.rewriteEs6Modules = config.rewriteEs6Modules;
     options.transpileOnly = config.transpileOnly;
     options.commonJSModulePathPrefix = config.commonJSModulePathPrefix;
     options.angularPass = config.angularPass;
@@ -2078,16 +2069,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     CommandLineConfig setProcessCommonJSModules(
         boolean processCommonJSModules) {
       this.processCommonJSModules = processCommonJSModules;
-      return this;
-    }
-
-    private boolean rewriteEs6Modules = false;
-
-    /**
-     * Sets whether to process ES6 modules.
-     */
-    CommandLineConfig setRewriteEs6Modules(boolean rewriteEs6Modules) {
-      this.rewriteEs6Modules = rewriteEs6Modules;
       return this;
     }
 
