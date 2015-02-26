@@ -261,14 +261,6 @@ Window.prototype.forward = function() {};
 Window.prototype.getAttention = function() {};
 
 /**
- * @param {Element} element
- * @param {?string=} pseudoElt
- * @return {CSSStyleDeclaration}
- * @nosideeffects
- */
-Window.prototype.getComputedStyle = function(element, pseudoElt) {};
-
-/**
  * @return {Selection}
  * @see https://developer.mozilla.org/en/DOM/window.getSelection
  * @nosideeffects
@@ -1117,3 +1109,12 @@ HTMLImageElement.prototype.naturalWidth;
  * @see http://www.google.com/codesearch/p?hl=en#eksvcKKj5Ng/mozilla/dom/public/idl/html/nsIDOMNSHTMLImageElement.idl&q=naturalHeight
  */
 HTMLImageElement.prototype.naturalHeight;
+
+
+/**
+ * @param {Element} element
+ * @param {?string=} pseudoElt
+ * @return {CSSStyleDeclaration}
+ * @nosideeffects
+ */
+function getComputedStyle(element, pseudoElt) {}
