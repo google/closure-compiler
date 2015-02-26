@@ -2799,7 +2799,7 @@ Window.prototype.MozMutationObserver;
 
 /**
  * @see http://www.w3.org/TR/page-visibility/
- * @type {string}
+ * @type {VisibilityState}
  */
 Document.prototype.visibilityState;
 
