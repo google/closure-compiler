@@ -173,8 +173,13 @@ public class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCompilerP
   private Node baseCall(String baseClass, String methodName, Node arguments) {
     Preconditions.checkNotNull(baseClass);
     Preconditions.checkNotNull(methodName);
-    Node methodCall = NodeUtil.newQName(compiler,
-        Joiner.on('.').join(baseClass, "prototype", methodName, "call"));
+    String baseMethodName;
+    if (methodName.equals("constructor")) {
+      baseMethodName = baseClass + ".call";
+    } else {
+      baseMethodName = Joiner.on('.').join(baseClass, "prototype", methodName, "call");
+    }
+    Node methodCall = NodeUtil.newQName(compiler, baseMethodName);
     Node callNode = IR.call(methodCall, IR.thisNode());
     if (arguments != null) {
       callNode.addChildrenToBack(arguments);
