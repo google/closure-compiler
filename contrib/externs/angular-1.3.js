@@ -2043,7 +2043,8 @@ angular.$routeParams;
 /**
  * @typedef {{
  *   otherwise:
- *       function(angular.$routeProvider.Params): !angular.$routeProvider,
+ *       function(
+ *           (string|!angular.$routeProvider.Params)): !angular.$routeProvider,
  *   when:
  *       function(
  *           string, angular.$routeProvider.Params): !angular.$routeProvider
@@ -2052,7 +2053,7 @@ angular.$routeParams;
 angular.$routeProvider;
 
 /**
- * @param {angular.$routeProvider.Params} params
+ * @param {(string|!angular.$routeProvider.Params)} params
  * @return {!angular.$routeProvider}
  */
 angular.$routeProvider.otherwise = function(params) {};
