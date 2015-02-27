@@ -18,9 +18,9 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.CodingConvention.Bind;
@@ -42,8 +42,8 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -280,12 +280,12 @@ public class NewTypeInference implements CompilerPass {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.convention = compiler.getCodingConvention();
-    this.envs = new HashMap<>();
-    this.summaries = new HashMap<>();
-    this.deferredChecks = new HashMap<>();
+    this.envs = new LinkedHashMap<>();
+    this.summaries = new LinkedHashMap<>();
+    this.deferredChecks = new LinkedHashMap<>();
     this.isClosurePassOn = isClosurePassOn;
     this.ABSTRACT_METHOD_NAME = convention.getAbstractMethodName();
-    assertionFunctionsMap = new HashMap<>();
+    assertionFunctionsMap = new LinkedHashMap<>();
     for (AssertionFunctionSpec assertionFunction :
              convention.getAssertionFunctions()) {
       assertionFunctionsMap.put(assertionFunction.getFunctionName(),
@@ -356,7 +356,7 @@ public class NewTypeInference implements CompilerPass {
       return envs.get(inEdges.get(0));
     }
 
-    Set<TypeEnv> envSet = new HashSet<>();
+    Set<TypeEnv> envSet = new LinkedHashSet<>();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : inEdges) {
       TypeEnv env = envs.get(de);
       if (env != null) {
@@ -377,7 +377,7 @@ public class NewTypeInference implements CompilerPass {
       return envs.get(outEdges.get(0));
     }
 
-    Set<TypeEnv> envSet = new HashSet<>();
+    Set<TypeEnv> envSet = new LinkedHashSet<>();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : outEdges) {
       TypeEnv env = envs.get(de);
       if (env != null) {
@@ -409,7 +409,7 @@ public class NewTypeInference implements CompilerPass {
 
     // For function scopes, add the formal parameters and the free variables
     // from outer scopes to the environment.
-    Set<String> nonLocals = new HashSet<>();
+    Set<String> nonLocals = new LinkedHashSet<>();
     if (currentScope.isFunction()) {
       if (currentScope.getName() != null) {
         nonLocals.add(currentScope.getName());
@@ -526,7 +526,7 @@ public class NewTypeInference implements CompilerPass {
       DiGraphNode<Node, ControlFlowGraph.Branch> dn,
       List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset) {
     buildWorksetHelper(dn, workset,
-        new HashSet<DiGraphNode<Node, ControlFlowGraph.Branch>>());
+        new LinkedHashSet<DiGraphNode<Node, ControlFlowGraph.Branch>>());
   }
 
   private void buildWorksetHelper(
@@ -2075,7 +2075,7 @@ public class NewTypeInference implements CompilerPass {
   private ImmutableMap<String, JSType> calcTypeInstantiation(Node callNode,
       Node firstArg, FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
     List<String> typeParameters = funType.getTypeParameters();
-    Multimap<String, JSType> typeMultimap = HashMultimap.create();
+    Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
     Node arg = firstArg;
     int i = 0;
     while (arg != null) {

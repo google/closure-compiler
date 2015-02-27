@@ -19,10 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NewTypeInference.WarningReporter;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
@@ -51,8 +51,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -206,17 +206,17 @@ class GlobalTypeInfo implements CompilerPass {
   private JSTypeCreatorFromJSDoc typeParser;
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
-  private final Map<Node, String> anonFunNames = new HashMap<>();
+  private final Map<Node, String> anonFunNames = new LinkedHashMap<>();
   private static final String ANON_FUN_PREFIX = "%anon_fun";
   private int freshId = 1;
   // Only for original definitions, not for aliased constructors
-  private Map<Node, RawNominalType> nominaltypesByNode = new HashMap<>();
+  private Map<Node, RawNominalType> nominaltypesByNode = new LinkedHashMap<>();
   // Keyed on RawNominalTypes and property names
   private HashBasedTable<RawNominalType, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
   // TODO(dimvar): Eventually attach these to nodes, like the current types.
-  private Map<Node, JSType> castTypes = new HashMap<>();
-  private Map<Node, JSType> declaredObjLitProps = new HashMap<>();
+  private Map<Node, JSType> castTypes = new LinkedHashMap<>();
+  private Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();
 
   private JSTypes commonTypes;
 
@@ -404,8 +404,8 @@ class GlobalTypeInfo implements CompilerPass {
       }
 
       Multimap<String, DeclaredFunctionType> propMethodTypesToProcess =
-          HashMultimap.create();
-      Multimap<String, JSType> propTypesToProcess = HashMultimap.create();
+          LinkedHashMultimap.create();
+      Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
       // Collect inherited types for extended classes
       if (superClass != null) {
         Preconditions.checkState(superClass.isFinalized());
@@ -689,7 +689,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       // Last, read the object-literal properties and create the EnumType.
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-      Set<String> propNames = new HashSet<>();
+      Set<String> propNames = new LinkedHashSet<>();
       for (Node prop : init.children()) {
         String pname = NodeUtil.getObjectLitKeyName(prop);
         if (propNames.contains(pname)) {
@@ -897,11 +897,11 @@ class GlobalTypeInfo implements CompilerPass {
      * We use a multimap so we can give all warnings rather than just the first.
      */
     private final Multimap<String, Node> undeclaredVars;
-    private Set<Node> lendsObjlits = new HashSet<>();
+    private Set<Node> lendsObjlits = new LinkedHashSet<>();
 
     ProcessScope(Scope currentScope) {
       this.currentScope = currentScope;
-      this.undeclaredVars = HashMultimap.create();
+      this.undeclaredVars = LinkedHashMultimap.create();
     }
 
     void finishProcessingScope() {
@@ -1823,21 +1823,21 @@ class GlobalTypeInfo implements CompilerPass {
     private final JSTypes commonTypes;
 
     // A local w/out declared type is mapped to null, not to JSType.UNKNOWN.
-    private final Map<String, JSType> locals = new HashMap<>();
+    private final Map<String, JSType> locals = new LinkedHashMap<>();
     private final Map<String, JSType> externs;
-    private final Set<String> constVars = new HashSet<>();
+    private final Set<String> constVars = new LinkedHashSet<>();
     private final List<String> formals;
     // outerVars are the variables that appear free in this scope
     // and are defined in an enclosing scope.
-    private final Set<String> outerVars = new HashSet<>();
-    private final Map<String, Scope> localFunDefs = new HashMap<>();
-    private Set<String> unknownTypeNames = new HashSet<>();
-    private Map<String, RawNominalType> localClassDefs = new HashMap<>();
-    private Map<String, Typedef> localTypedefs = new HashMap<>();
-    private Map<String, EnumType> localEnums = new HashMap<>();
-    private Map<String, NamespaceLit> localNamespaces = new HashMap<>();
+    private final Set<String> outerVars = new LinkedHashSet<>();
+    private final Map<String, Scope> localFunDefs = new LinkedHashMap<>();
+    private Set<String> unknownTypeNames = new LinkedHashSet<>();
+    private Map<String, RawNominalType> localClassDefs = new LinkedHashMap<>();
+    private Map<String, Typedef> localTypedefs = new LinkedHashMap<>();
+    private Map<String, EnumType> localEnums = new LinkedHashMap<>();
+    private Map<String, NamespaceLit> localNamespaces = new LinkedHashMap<>();
     // The set qualifiedEnums is used for enum resolution, and then discarded.
-    private Set<EnumType> qualifiedEnums = new HashSet<>();
+    private Set<EnumType> qualifiedEnums = new LinkedHashSet<>();
 
     // declaredType is null for top level, but never null for functions,
     // even those without jsdoc.
@@ -1848,7 +1848,7 @@ class GlobalTypeInfo implements CompilerPass {
         Node root, Scope parent, List<String> formals, JSTypes commonTypes) {
       if (parent == null) {
         this.name = null;
-        this.externs = new HashMap<>();
+        this.externs = new LinkedHashMap<>();
       } else {
         String nameOnAst = root.getFirstChild().getString();
         this.name = nameOnAst.isEmpty() ? null : nameOnAst;
@@ -2028,11 +2028,11 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     Set<String> getOuterVars() {
-      return new HashSet<>(outerVars);
+      return new LinkedHashSet<>(outerVars);
     }
 
     Set<String> getLocalFunDefs() {
-      return new HashSet<>(localFunDefs.keySet());
+      return new LinkedHashSet<>(localFunDefs.keySet());
     }
 
     boolean isOuterVar(String name) {

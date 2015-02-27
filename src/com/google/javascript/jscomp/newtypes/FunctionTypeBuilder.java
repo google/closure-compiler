@@ -20,7 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public class FunctionTypeBuilder {
 
   private final List<JSType> requiredFormals = new ArrayList<>();
   private final List<JSType> optionalFormals = new ArrayList<>();
-  private final Map<String, JSType> outerVars = new HashMap<>();
+  private final Map<String, JSType> outerVars = new LinkedHashMap<>();
   private JSType restFormals = null;
   private JSType returnType = null;
   private boolean loose = false;

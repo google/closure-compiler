@@ -27,7 +27,7 @@ import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -492,7 +492,7 @@ public abstract class JSType implements TypeI {
   private static void updateTypemap(
       Multimap<String, JSType> typeMultimap,
       String typeParam, JSType type) {
-    Set<JSType> typesToRemove = new HashSet<>();
+    Set<JSType> typesToRemove = new LinkedHashSet<>();
     for (JSType other : typeMultimap.get(typeParam)) {
       JSType unified = unifyUnknowns(type, other);
       if (unified != null) {
@@ -557,8 +557,8 @@ public abstract class JSType implements TypeI {
       return null;
     }
 
-    Set<ObjectType> ununified = new HashSet<>(t2.getObjs());
-    Set<ObjectType> unifiedObjs = new HashSet<>();
+    Set<ObjectType> ununified = new LinkedHashSet<>(t2.getObjs());
+    Set<ObjectType> unifiedObjs = new LinkedHashSet<>();
     for (ObjectType objType1 : t1.getObjs()) {
       ObjectType unified = objType1;
       boolean hasUnified = false;
@@ -612,7 +612,7 @@ public abstract class JSType implements TypeI {
     } else if (other.getEnums() == null) {
       return false;
     } else {
-      ununifiedEnums = new HashSet<>();
+      ununifiedEnums = new LinkedHashSet<>();
       for (EnumType e : getEnums()) {
         if (!other.getEnums().contains(e)) {
           return false;
@@ -630,7 +630,7 @@ public abstract class JSType implements TypeI {
 
     Set<ObjectType> ununified = ImmutableSet.of();
     if (other.getObjs() != null) {
-      ununified = new HashSet<>(other.getObjs());
+      ununified = new LinkedHashSet<>(other.getObjs());
     }
     // Each obj in this must unify w/ exactly one obj in other.
     // However, we don't check that two different objects of this don't unify
@@ -772,7 +772,7 @@ public abstract class JSType implements TypeI {
           newMask &= ~enumeratedType.getMask();
         }
       } else if (objs1 != null || objs2 != null) {
-        Set<ObjectType> objsToRemove = new HashSet<>();
+        Set<ObjectType> objsToRemove = new LinkedHashSet<>();
         ObjectType enumObj = Iterables.getOnlyElement(enumeratedType.getObjs());
         if (objs1 != null) {
           for (ObjectType obj1 : objs1) {

@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -62,7 +62,7 @@ public abstract class Namespace {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.namespaces == null) {
-      ns.namespaces = new HashMap<>();
+      ns.namespaces = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
     ns.namespaces.put(name, new NamespaceLit());
@@ -72,7 +72,7 @@ public abstract class Namespace {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.nominals == null) {
-      ns.nominals = new HashMap<>();
+      ns.nominals = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
     ns.nominals.put(name, rawNominalType);
@@ -82,7 +82,7 @@ public abstract class Namespace {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.typedefs == null) {
-      ns.typedefs = new HashMap<>();
+      ns.typedefs = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
     ns.typedefs.put(name, td);
@@ -92,7 +92,7 @@ public abstract class Namespace {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.enums == null) {
-      ns.enums = new HashMap<>();
+      ns.enums = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
     ns.enums.put(name, e);
