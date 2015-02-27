@@ -81,12 +81,15 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   private boolean allowEs6Out;
 
-  /** */
+  /**
+   * Allow ES6 as the output language.
+   * WARNING: Enabling this option may cause the compiler to crash
+   *     or produce incorrect output.
+   */
   public void setAllowEs6Out(boolean value) {
     allowEs6Out = value;
   }
 
-  /** */
   public boolean getAllowEs6Out() {
     return allowEs6Out;
   }
