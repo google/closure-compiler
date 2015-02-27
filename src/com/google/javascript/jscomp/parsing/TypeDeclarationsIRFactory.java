@@ -222,6 +222,9 @@ public class TypeDeclarationsIRFactory {
    */
   public static TypeDeclarationNode parameterizedType(
       TypeDeclarationNode baseType, Iterable<TypeDeclarationNode> typeParameters) {
+    if (Iterables.isEmpty(typeParameters)) {
+      return baseType;
+    }
     TypeDeclarationNode node = new TypeDeclarationNode(Token.PARAMETERIZED_TYPE, baseType);
     for (Node typeParameter : typeParameters) {
       node.addChildToBack(typeParameter);
@@ -370,7 +373,9 @@ public class TypeDeclarationsIRFactory {
                 return arrayType(convertTypeNodeAST(block.getFirstChild()));
               }
               return parameterizedType(root,
-                  Iterables.transform(block.children(), CONVERT_TYPE_NODE));
+                  Iterables.filter(
+                      Iterables.transform(block.children(), CONVERT_TYPE_NODE),
+                      Predicates.notNull()));
             }
             return root;
         }
@@ -441,7 +446,8 @@ public class TypeDeclarationsIRFactory {
         }
         return functionType(returnType, parameters, restName, restType);
       case Token.EQUALS:
-        return optionalParameter(convertTypeNodeAST(n.getFirstChild()));
+        TypeDeclarationNode optionalParam = convertTypeNodeAST(n.getFirstChild());
+        return optionalParam == null ? null : optionalParameter(optionalParam);
       default:
         throw new IllegalArgumentException(
             "Unsupported node type: " + Token.name(n.getType())
