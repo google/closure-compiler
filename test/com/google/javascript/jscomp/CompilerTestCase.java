@@ -298,11 +298,11 @@ public abstract class CompilerTestCase extends TestCase  {
    * Process closure library primitives.
    */
   // TODO(nicksantos): Fix other passes to use this when appropriate.
-  void enableClosurePass() {
+  protected void enableClosurePass() {
     closurePassEnabled = true;
   }
 
-  void enableClosurePassForExpected() {
+  protected void enableClosurePassForExpected() {
     closurePassEnabledForExpected = true;
   }
 
