@@ -36,27 +36,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.google.javascript.rhino.jstype;
+package com.google.javascript.rhino;
 
 /**
- * Lookup references by the symbols that they refer to.
+ * The {@code StaticSourceFile} contains information about a compiler input.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public interface StaticSymbolTable
-    <S extends StaticSlot<JSType>, R extends StaticReference<JSType>> {
+public interface StaticSourceFile {
   /**
-   * Returns the references that point to the given symbol.
+   * The name of the file. Must be unique across all files in the compilation.
    */
-  Iterable<R> getReferences(S symbol);
+  String getName();
 
   /**
-   * Returns the scope for a given symbol.
+   * Returns whether this is an externs file.
    */
-  StaticScope<JSType> getScope(S symbol);
+  boolean isExtern();
 
   /**
-   * Returns all variables in this symbol table.
+   * Returns the offset of the given line number relative to the file start.
+   * Line number should be 1-based.
+   *
+   * If the source file doesn't have line information, it should return
+   * Integer.MIN_VALUE. The negative offsets will make it more obvious
+   * what happened.
+   *
+   * @param lineNumber the line of the input to get the absolute offset of.
+   * @return the absolute offset of the start of the provided line.
+   * @throws IllegalArgumentException if lineno is less than 1 or greater than
+   *         the number of lines in the source.
    */
-  Iterable<S> getAllSymbols();
+  int getLineOffset(int lineNumber);
+
+  /**
+   * Gets the 1-based line number of the given source offset.
+   *
+   * @param offset An absolute file offset.
+   * @return The 1-based line number of that offset. The behavior is
+   *     undefined if this offset does not exist in the source file.
+   */
+  int getLineOfOffset(int offset);
+
+  /**
+   * Gets the 0-based column number of the given source offset.
+   *
+   * @param offset An absolute file offset.
+   * @return The 0-based column number of that offset. The behavior is
+   *     undefined if this offset does not exist in the source file.
+   */
+  int getColumnOfOffset(int offset);
 }

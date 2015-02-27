@@ -327,7 +327,7 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
     setReferencedType(referencedType.resolve(t, scope));
     return this;
   }

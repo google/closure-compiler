@@ -40,7 +40,6 @@
 package com.google.javascript.rhino;
 
 import com.google.javascript.rhino.JSDocInfo.Visibility;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.util.List;
 import java.util.Set;

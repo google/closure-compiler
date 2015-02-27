@@ -37,7 +37,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -371,7 +371,7 @@ class DisambiguateProperties<T> implements CompilerPass {
 
   /** Tracks the current type system scope while traversing. */
   private abstract class AbstractScopingCallback implements ScopedCallback {
-    protected final Stack<StaticScope<T>> scopes =
+    protected final Stack<StaticTypedScope<T>> scopes =
         new Stack<>();
 
     @Override
@@ -394,7 +394,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
 
     /** Returns the current scope at this point in the file. */
-    protected StaticScope<T> getScope() {
+    protected StaticTypedScope<T> getScope() {
       return scopes.peek();
     }
   }
@@ -666,10 +666,10 @@ class DisambiguateProperties<T> implements CompilerPass {
     // to be unique, performant and human-readable.
 
     /** Returns the top-most scope used by the type system (if any). */
-    StaticScope<T> getRootScope();
+    StaticTypedScope<T> getRootScope();
 
     /** Returns the new scope started at the given function node. */
-    StaticScope<T> getFunctionScope(Node node);
+    StaticTypedScope<T> getFunctionScope(Node node);
 
     /**
      * Returns the type of the given node.
@@ -679,7 +679,7 @@ class DisambiguateProperties<T> implements CompilerPass {
      *     types since we don't track them, but only if they have the given
      *     property.
      */
-    T getType(StaticScope<T> scope, Node node, String prop);
+    T getType(StaticTypedScope<T> scope, Node node, String prop);
 
     /**
      * Returns true if a field reference on this type will invalidate all
@@ -764,14 +764,14 @@ class DisambiguateProperties<T> implements CompilerPass {
       invalidatingTypes.add(type);
     }
 
-    @Override public StaticScope<JSType> getRootScope() { return null; }
+    @Override public StaticTypedScope<JSType> getRootScope() { return null; }
 
-    @Override public StaticScope<JSType> getFunctionScope(Node node) {
+    @Override public StaticTypedScope<JSType> getFunctionScope(Node node) {
       return null;
     }
 
     @Override public JSType getType(
-        StaticScope<JSType> scope, Node node, String prop) {
+        StaticTypedScope<JSType> scope, Node node, String prop) {
       if (node.getJSType() == null) {
         return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
       }

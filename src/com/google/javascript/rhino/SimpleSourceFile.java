@@ -36,54 +36,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.google.javascript.rhino.jstype;
+package com.google.javascript.rhino;
 
 /**
- * The {@code StaticSourceFile} contains information about a compiler input.
+ * A simple implementation of {@code StaticSourceFile} for testing.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public interface StaticSourceFile {
-  /**
-   * The name of the file. Must be unique across all files in the compilation.
-   */
-  String getName();
+public final class SimpleSourceFile implements StaticSourceFile {
+  private final String name;
+  private final boolean extern;
 
-  /**
-   * Returns whether this is an externs file.
-   */
-  boolean isExtern();
+  public SimpleSourceFile(String name, boolean extern) {
+    this.name = name;
+    this.extern = extern;
+  }
 
-  /**
-   * Returns the offset of the given line number relative to the file start.
-   * Line number should be 1-based.
-   *
-   * If the source file doesn't have line information, it should return
-   * Integer.MIN_VALUE. The negative offsets will make it more obvious
-   * what happened.
-   *
-   * @param lineNumber the line of the input to get the absolute offset of.
-   * @return the absolute offset of the start of the provided line.
-   * @throws IllegalArgumentException if lineno is less than 1 or greater than
-   *         the number of lines in the source.
-   */
-  int getLineOffset(int lineNumber);
+  @Override
+  public String getName() {
+    return name;
+  }
 
-  /**
-   * Gets the 1-based line number of the given source offset.
-   *
-   * @param offset An absolute file offset.
-   * @return The 1-based line number of that offset. The behavior is
-   *     undefined if this offset does not exist in the source file.
-   */
-  int getLineOfOffset(int offset);
+  @Override
+  public boolean isExtern() {
+    return extern;
+  }
 
-  /**
-   * Gets the 0-based column number of the given source offset.
-   *
-   * @param offset An absolute file offset.
-   * @return The 0-based column number of that offset. The behavior is
-   *     undefined if this offset does not exist in the source file.
-   */
-  int getColumnOfOffset(int offset);
+  @Override
+  public int getColumnOfOffset(int offset) {
+    return 0;
+  }
+
+  @Override
+  public int getLineOfOffset(int offset) {
+    return 1;
+  }
+
+  @Override
+  public int getLineOffset(int line) {
+    if (line < 1) {
+      throw new IllegalStateException(
+          "Should not call getLineOffset with line number " + line);
+    }
+    return Integer.MIN_VALUE;
+  }
+
+  @Override
+  public String toString() {
+    return name;
+  }
 }

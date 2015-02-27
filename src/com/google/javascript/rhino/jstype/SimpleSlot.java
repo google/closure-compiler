@@ -44,11 +44,11 @@ import com.google.javascript.rhino.JSDocInfo;
 import java.io.Serializable;
 
 /**
- * The minimum implementation of StaticSlot<JSType>.
+ * The minimum implementation of StaticTypedSlot<JSType>.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SimpleSlot implements StaticSlot<JSType>, Serializable {
+public class SimpleSlot implements StaticTypedSlot<JSType>, Serializable {
   private static final long serialVersionUID = 1L;
 
   final String name;
@@ -77,7 +77,7 @@ public class SimpleSlot implements StaticSlot<JSType>, Serializable {
   }
 
   @Override
-  public StaticReference<JSType> getDeclaration() {
+  public StaticTypedRef<JSType> getDeclaration() {
     return null;
   }
 

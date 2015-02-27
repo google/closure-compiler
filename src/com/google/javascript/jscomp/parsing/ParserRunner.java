@@ -29,7 +29,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile;
 
 import java.util.HashSet;
 import java.util.List;

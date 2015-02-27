@@ -165,11 +165,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       LinkedHashMultimap.create();
 
   // All the unresolved named types.
-  private final Multimap<StaticScope<JSType>, NamedType> unresolvedNamedTypes =
+  private final Multimap<StaticTypedScope<JSType>, NamedType> unresolvedNamedTypes =
       ArrayListMultimap.create();
 
   // All the resolved named types.
-  private final Multimap<StaticScope<JSType>, NamedType> resolvedNamedTypes =
+  private final Multimap<StaticTypedScope<JSType>, NamedType> resolvedNamedTypes =
       ArrayListMultimap.create();
 
   // NamedType warns about unresolved types in the last generation.
@@ -919,7 +919,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @return a NamedType if the string argument is not one of the known types,
    *     otherwise the corresponding JSType object.
    */
-  public JSType getType(StaticScope<JSType> scope, String jsTypeName,
+  public JSType getType(StaticTypedScope<JSType> scope, String jsTypeName,
       String sourceName, int lineno, int charno) {
     // Resolve template type names
     JSType type = null;
@@ -959,7 +959,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   /**
    * Resolve all the unresolved types in the given scope.
    */
-  public void resolveTypesInScope(StaticScope<JSType> scope) {
+  public void resolveTypesInScope(StaticTypedScope<JSType> scope) {
     for (NamedType type : unresolvedNamedTypes.get(scope)) {
       type.resolve(reporter, scope);
     }
@@ -1576,13 +1576,13 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param scope A scope for doing type name lookups.
    */
   public JSType createFromTypeNodes(Node n, String sourceName,
-      StaticScope<JSType> scope) {
+      StaticTypedScope<JSType> scope) {
     return createFromTypeNodesInternal(n, sourceName, scope);
   }
 
-  /** @see #createFromTypeNodes(Node, String, StaticScope) */
+  /** @see #createFromTypeNodes(Node, String, StaticTypedScope) */
   private JSType createFromTypeNodesInternal(Node n, String sourceName,
-      StaticScope<JSType> scope) {
+      StaticTypedScope<JSType> scope) {
     switch (n.getType()) {
       case Token.LC: // Record type.
         return createRecordTypeFromNodes(
@@ -1768,7 +1768,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param scope A scope for doing type name lookups.
    */
   private JSType createRecordTypeFromNodes(Node n, String sourceName,
-      StaticScope<JSType> scope) {
+      StaticTypedScope<JSType> scope) {
 
     RecordTypeBuilder builder = new RecordTypeBuilder(this);
 

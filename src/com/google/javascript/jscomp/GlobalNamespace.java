@@ -27,14 +27,14 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticReference;
-import com.google.javascript.rhino.jstype.StaticScope;
-import com.google.javascript.rhino.jstype.StaticSlot;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
-import com.google.javascript.rhino.jstype.StaticSymbolTable;
+import com.google.javascript.rhino.jstype.StaticTypedRef;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace
-    implements StaticScope<JSType>,
+    implements StaticTypedScope<JSType>,
     StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private AbstractCompiler compiler;
@@ -111,7 +111,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticScope<JSType> getParentScope() {
+  public StaticTypedScope<JSType> getParentScope() {
     return null;
   }
 
@@ -138,7 +138,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticScope<JSType> getScope(Name slot) {
+  public StaticTypedScope<JSType> getScope(Name slot) {
     return this;
   }
 
@@ -886,7 +886,7 @@ class GlobalNamespace
    * correspond to JavaScript objects whose properties we should consider
    * collapsing.
    */
-  static class Name implements StaticSlot<JSType> {
+  static class Name implements StaticTypedSlot<JSType> {
     enum Type {
       OBJECTLIT,
       FUNCTION,
@@ -1203,7 +1203,7 @@ class GlobalNamespace
    * A global name reference. Contains references to the relevant parse tree
    * node and its ancestors that may be affected.
    */
-  static class Ref implements StaticReference<JSType> {
+  static class Ref implements StaticTypedRef<JSType> {
 
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
@@ -1277,7 +1277,7 @@ class GlobalNamespace
     }
 
     @Override
-    public StaticSlot<JSType> getSymbol() {
+    public StaticTypedSlot<JSType> getSymbol() {
       return name;
     }
 

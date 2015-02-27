@@ -23,7 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.StaticSymbolTable;
+import com.google.javascript.rhino.StaticSymbolTable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -42,8 +42,7 @@ import java.util.Map;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class MemoizedScopeCreator
-    implements ScopeCreator, StaticSymbolTable<Var, Var> {
+class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<Var, Var> {
 
   private final Map<Node, Scope> scopes = Maps.newLinkedHashMap();
   private final ScopeCreator delegate;

@@ -22,7 +22,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Nick Santos
+ *   Bob Jervis
+ *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -38,27 +39,26 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSlot;
 
 /**
- * The {@code StaticReference} tells us all the ways that a {@code StaticSlot}
- * is used in a program.
+ * The {@code StaticTypedSlot} interface must be implemented by variables that can
+ * appear as members of a {@code StaticTypedScope}.
  *
- * @author nicksantos@google.com (Nick Santos)
+ * @param <T> The type of information stored about the slot
  */
-public interface StaticReference<T> {
+public interface StaticTypedSlot<T> extends StaticSlot {
   /**
-   * The variable that this reference points to.
+   * Returns the type information, if any, for this slot.
+   * @return The type or {@code null} if no type is declared for it.
    */
-  StaticSlot<T> getSymbol();
+  T getType();
 
   /**
-   * The node where the reference lives.
+   * Returns whether the type has been inferred (as opposed to declared).
    */
-  Node getNode();
+  boolean isTypeInferred();
 
-  /**
-   * The source file where the reference lives.
-   */
-  StaticSourceFile getSourceFile();
+  /** Gets the declaration of this symbol. May not exist. */
+  StaticTypedRef<T> getDeclaration();
 }

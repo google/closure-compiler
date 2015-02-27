@@ -39,8 +39,8 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.SimpleErrorReporter;
-import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
+import com.google.javascript.rhino.testing.Asserts;
 
 import junit.framework.TestCase;
 
@@ -118,9 +118,9 @@ public class JSTypeRegistryTest extends TestCase {
     SimpleErrorReporter reporter = new SimpleErrorReporter();
     final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
 
-    StaticScope<JSType> scope = new AbstractStaticScope<JSType>() {
+    StaticTypedScope<JSType> scope = new AbstractStaticScope<JSType>() {
           @Override
-          public StaticSlot<JSType> getSlot(final String name) {
+          public StaticTypedSlot<JSType> getSlot(final String name) {
             return new SimpleSlot(
                 name,
                 typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
@@ -161,9 +161,9 @@ public class JSTypeRegistryTest extends TestCase {
     SimpleErrorReporter reporter = new SimpleErrorReporter();
     final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
 
-    StaticScope<JSType> scope = new AbstractStaticScope<JSType>() {
+    StaticTypedScope<JSType> scope = new AbstractStaticScope<JSType>() {
           @Override
-          public StaticSlot<JSType> getSlot(final String name) {
+          public StaticTypedSlot<JSType> getSlot(final String name) {
             return new SimpleSlot(
                 name,
                 typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE),

@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile;
 
 /**
  * Compiler pass that collects visibility annotations in {@code @fileoverview}

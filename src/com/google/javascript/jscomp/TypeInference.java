@@ -49,7 +49,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ModificationVisitor;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
@@ -729,7 +729,7 @@ class TypeInference
           getJSType(value));
       return scope;
     } else {
-      StaticSlot<JSType> var = scope.getSlot(varName);
+      StaticTypedSlot<JSType> var = scope.getSlot(varName);
       if (var != null) {
         // There are two situations where we don't want to use type information
         // from the scope, even if we have it.
@@ -1518,7 +1518,7 @@ class TypeInference
 
     // Scopes sometimes contain inferred type info about qualified names.
     String qualifiedName = n.getQualifiedName();
-    StaticSlot<JSType> var = scope.getSlot(qualifiedName);
+    StaticTypedSlot<JSType> var = scope.getSlot(qualifiedName);
     if (var != null) {
       JSType varType = var.getType();
       if (varType != null) {

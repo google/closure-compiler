@@ -1353,7 +1353,7 @@ public abstract class JSType implements TypeI, Serializable {
    * artifacts from a previous generation, so we will eventually need
    * a generational flag instead of a boolean one.
    */
-  public final JSType resolve(ErrorReporter t, StaticScope<JSType> scope) {
+  public final JSType resolve(ErrorReporter t, StaticTypedScope<JSType> scope) {
     if (resolved) {
       // TODO(nicksantos): Check to see if resolve() looped back on itself.
       // Preconditions.checkNotNull(resolveResult);
@@ -1371,7 +1371,7 @@ public abstract class JSType implements TypeI, Serializable {
   /**
    * @see #resolve
    */
-  abstract JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope);
+  abstract JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope);
 
   void setResolvedTypeInternal(JSType type) {
     resolveResult = type;
@@ -1394,7 +1394,7 @@ public abstract class JSType implements TypeI, Serializable {
    * @see #resolve
    */
   static final JSType safeResolve(
-      JSType type, ErrorReporter t, StaticScope<JSType> scope) {
+      JSType type, ErrorReporter t, StaticTypedScope<JSType> scope) {
     return type == null ? null : type.resolve(t, scope);
   }
 

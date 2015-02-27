@@ -84,7 +84,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   private EnumElementType elementsType;
   private NamedType forwardDeclaredNamedType;
 
-  private static final StaticScope<JSType> EMPTY_SCOPE =
+  private static final StaticTypedScope<JSType> EMPTY_SCOPE =
       MapBasedScope.emptyScope();
 
   /**
@@ -157,7 +157,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     namedGoogBar.resolve(null, new AbstractStaticScope<JSType>() {
           @Override
-          public StaticSlot<JSType> getSlot(String name) {
+          public StaticTypedSlot<JSType> getSlot(String name) {
             if ("goog".equals(name)) {
               return new SimpleSlot("goog", googObject, false);
             } else {

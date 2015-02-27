@@ -20,18 +20,18 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticReference;
-import com.google.javascript.rhino.jstype.StaticSlot;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.jstype.StaticTypedRef;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 import java.util.Set;
 
 /**
  * Used by {@code Scope} to store information about variables.
  */
-public class Var implements StaticSlot<JSType>, StaticReference<JSType> {
+public class Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
   final String name;
 
   /** Var node */

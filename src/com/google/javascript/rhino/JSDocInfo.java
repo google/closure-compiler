@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
 
 import java.io.Serializable;
 import java.util.ArrayList;

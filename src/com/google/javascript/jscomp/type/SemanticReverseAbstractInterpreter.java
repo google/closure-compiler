@@ -27,7 +27,7 @@ import com.google.javascript.rhino.jstype.JSType.TypePair;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
 
@@ -351,7 +351,7 @@ public class SemanticReverseAbstractInterpreter
       FlowScope blindScope, boolean outcome) {
     FlowScope leftScope = firstPreciserScopeKnowingConditionOutcome(
         left, blindScope, !outcome);
-    StaticSlot<JSType> leftVar = leftScope.findUniqueRefinedSlot(blindScope);
+    StaticTypedSlot<JSType> leftVar = leftScope.findUniqueRefinedSlot(blindScope);
     if (leftVar == null) {
       // If we did create a more precise scope, blindScope has a child and
       // it is frozen. We can't just throw it away to return it. So we
@@ -363,7 +363,7 @@ public class SemanticReverseAbstractInterpreter
         left, blindScope, outcome);
     rightScope = firstPreciserScopeKnowingConditionOutcome(
         right, rightScope, !outcome);
-    StaticSlot<JSType> rightVar = rightScope.findUniqueRefinedSlot(blindScope);
+    StaticTypedSlot<JSType> rightVar = rightScope.findUniqueRefinedSlot(blindScope);
     if (rightVar == null || !leftVar.getName().equals(rightVar.getName())) {
       return blindScope == rightScope ?
           blindScope : blindScope.createChildFlowScope();

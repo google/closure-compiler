@@ -50,7 +50,7 @@ abstract class ValueType extends JSType {
   }
 
   @Override
-  final JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+  final JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
     return this;
   }
 

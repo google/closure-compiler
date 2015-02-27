@@ -22,7 +22,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Nick Santos
+ *   Bob Jervis
+ *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -36,53 +37,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.google.javascript.rhino.jstype;
+package com.google.javascript.rhino;
 
 /**
- * A simple implementation of {@code StaticSourceFile} for testing.
+ * The {@code StaticScope} interface must be implemented by any object that
+ * defines variables for the purposes of static analysis.  It is distinguished
+ * from the {@code Scriptable} class that Rhino normally uses to represent a
+ * run-time scope.
  *
- * @author nicksantos@google.com (Nick Santos)
  */
-public final class SimpleSourceFile implements StaticSourceFile {
-  private final String name;
-  private final boolean extern;
+public interface StaticScope {
+  /**
+   * Returns the root node associated with this scope. May be null.
+   */
+  Node getRootNode();
 
-  public SimpleSourceFile(String name, boolean extern) {
-    this.name = name;
-    this.extern = extern;
-  }
+  /** Returns the scope enclosing this one or null if none. */
+  StaticScope getParentScope();
 
-  @Override
-  public String getName() {
-    return name;
-  }
+  /**
+   * Returns any defined slot within this scope for this name.  This call
+   * continues searching through parent scopes if a slot with this name is not
+   * found in the current scope.
+   * @param name The name of the variable slot to look up.
+   * @return The defined slot for the variable, or {@code null} if no
+   *         definition exists.
+   */
+  StaticSlot getSlot(String name);
 
-  @Override
-  public boolean isExtern() {
-    return extern;
-  }
-
-  @Override
-  public int getColumnOfOffset(int offset) {
-    return 0;
-  }
-
-  @Override
-  public int getLineOfOffset(int offset) {
-    return 1;
-  }
-
-  @Override
-  public int getLineOffset(int line) {
-    if (line < 1) {
-      throw new IllegalStateException(
-          "Should not call getLineOffset with line number " + line);
-    }
-    return Integer.MIN_VALUE;
-  }
-
-  @Override
-  public String toString() {
-    return name;
-  }
+  /** Like {@code getSlot} but does not recurse into parent scopes. */
+  StaticSlot getOwnSlot(String name);
 }

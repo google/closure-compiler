@@ -19,11 +19,11 @@ import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.StaticScope;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -255,7 +255,7 @@ public interface CodingConvention extends Serializable {
    */
   public void defineDelegateProxyPrototypeProperties(
       TypeIRegistry registry,
-      StaticScope<? extends TypeI> scope,
+      StaticTypedScope<? extends TypeI> scope,
       List<? extends ObjectTypeI> delegateProxyPrototypes,
       Map<String, String> delegateCallingConventions);
 

@@ -40,7 +40,7 @@ import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.ProxyObjectType;
-import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
@@ -116,7 +116,7 @@ public abstract class ChainableReverseAbstractInterpreter
   protected JSType getTypeIfRefinable(Node node, FlowScope scope) {
     switch (node.getType()) {
       case Token.NAME:
-        StaticSlot<JSType> nameVar = scope.getSlot(node.getString());
+        StaticTypedSlot<JSType> nameVar = scope.getSlot(node.getString());
         if (nameVar != null) {
           JSType nameVarType = nameVar.getType();
           if (nameVarType == null) {
@@ -131,7 +131,7 @@ public abstract class ChainableReverseAbstractInterpreter
         if (qualifiedName == null) {
           return null;
         }
-        StaticSlot<JSType> propVar = scope.getSlot(qualifiedName);
+        StaticTypedSlot<JSType> propVar = scope.getSlot(qualifiedName);
         JSType propVarType = null;
         if (propVar != null) {
           propVarType = propVar.getType();

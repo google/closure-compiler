@@ -41,6 +41,7 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSourceFile;
 
 import java.io.Serializable;
 
@@ -49,7 +50,7 @@ import java.io.Serializable;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class Property
-    implements Serializable, StaticSlot<JSType>, StaticReference<JSType> {
+    implements Serializable, StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
   private static final long serialVersionUID = 1L;
 
   /**

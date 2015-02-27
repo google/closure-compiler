@@ -554,7 +554,7 @@ public class UnionType extends JSType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
     setResolvedTypeInternal(this); // for circularly defined types.
 
     // Just resolve the alternates, but do not update as that breaks some error

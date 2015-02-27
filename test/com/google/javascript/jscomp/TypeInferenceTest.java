@@ -45,7 +45,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.testing.Asserts;
 
 import junit.framework.TestCase;
@@ -133,7 +133,7 @@ public class TypeInferenceTest extends TestCase {
 
   private JSType getType(String name) {
     assertNotNull("The return scope should not be null.", returnScope);
-    StaticSlot<JSType> var = returnScope.getSlot(name);
+    StaticTypedSlot<JSType> var = returnScope.getSlot(name);
     assertNotNull("The variable " + name + " is missing from the scope.", var);
     return var.getType();
   }

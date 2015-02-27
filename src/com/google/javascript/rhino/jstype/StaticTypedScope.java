@@ -39,34 +39,33 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.StaticScope;
 
 /**
- * The {@code StaticSlot} interface must be implemented by variables that can
- * appear as members of a {@code StaticScope}.
+ * The {@code StaticTypedScope} interface must be implemented by any object that
+ * defines variables for the purposes of static analysis.  It is distinguished
+ * from the {@code Scriptable} class that Rhino normally uses to represent a
+ * run-time scope.
  *
  * @param <T> The type of information stored about the slot
  */
-public interface StaticSlot<T> {
-  /**
-   * Gets the name of the slot.
-   */
-  String getName();
+public interface StaticTypedScope<T> extends StaticScope {
+  /** Returns the scope enclosing this one or null if none. */
+  StaticTypedScope<T> getParentScope();
 
   /**
-   * Returns the type information, if any, for this slot.
-   * @return The type or {@code null} if no type is declared for it.
+   * Returns any defined slot within this scope for this name.  This call
+   * continues searching through parent scopes if a slot with this name is not
+   * found in the current scope.
+   * @param name The name of the variable slot to look up.
+   * @return The defined slot for the variable, or {@code null} if no
+   *         definition exists.
    */
-  T getType();
+  StaticTypedSlot<T> getSlot(String name);
 
-  /**
-   * Returns whether the type has been inferred (as opposed to declared).
-   */
-  boolean isTypeInferred();
+  /** Like {@code getSlot} but does not recurse into parent scopes. */
+  StaticTypedSlot<T> getOwnSlot(String name);
 
-  /** Gets the declaration of this symbol. May not exist. */
-  StaticReference<T> getDeclaration();
-
-  /** Gets the JSDoc for this slot. */
-  JSDocInfo getJSDocInfo();
+  /** Returns the expected type of {@code this} in the current scope. */
+  T getTypeOfThis();
 }

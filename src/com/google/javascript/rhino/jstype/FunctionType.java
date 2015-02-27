@@ -1183,7 +1183,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
     setResolvedTypeInternal(this);
 
     call = (ArrowType) safeResolve(call, t, scope);
@@ -1238,7 +1238,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private ImmutableList<ObjectType> resolveTypeListHelper(
       ImmutableList<ObjectType> list,
       ErrorReporter t,
-      StaticScope<JSType> scope) {
+      StaticTypedScope<JSType> scope) {
     boolean changed = false;
     ImmutableList.Builder<ObjectType> resolvedList =
         ImmutableList.builder();

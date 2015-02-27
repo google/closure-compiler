@@ -19,8 +19,8 @@ package com.google.javascript.jscomp.type;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticScope;
-import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 /**
  * A symbol table for inferring types during data flow analysis.
@@ -30,7 +30,7 @@ import com.google.javascript.rhino.jstype.StaticSlot;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public interface FlowScope extends StaticScope<JSType>, LatticeElement {
+public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
 
   /**
    * Creates a child of this flow scope, to represent an instruction
@@ -71,12 +71,12 @@ public interface FlowScope extends StaticScope<JSType>, LatticeElement {
    *     this scope or itself.
    * @return The unique refined variable if found or null.
    */
-  StaticSlot<JSType> findUniqueRefinedSlot(FlowScope blindScope);
+  StaticTypedSlot<JSType> findUniqueRefinedSlot(FlowScope blindScope);
 
   /**
    * Look through the given scope, and try to find slots where it doesn't
    * have enough type information. Then fill in that type information
    * with stuff that we've inferred in the local flow.
    */
-  void completeScope(StaticScope<JSType> scope);
+  void completeScope(StaticTypedScope<JSType> scope);
 }

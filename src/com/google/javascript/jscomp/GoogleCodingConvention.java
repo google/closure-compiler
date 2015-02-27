@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
 
 
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.StaticSourceFile;
+import com.google.javascript.rhino.StaticSourceFile;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

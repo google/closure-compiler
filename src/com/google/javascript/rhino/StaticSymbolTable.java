@@ -23,7 +23,6 @@
  *
  * Contributor(s):
  *   Nick Santos
- *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -37,44 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.google.javascript.rhino.jstype;
-
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.StaticSourceFile;
+package com.google.javascript.rhino;
 
 /**
- * A simple immutable reference.
+ * Lookup references by the symbols that they refer to.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SimpleReference<T extends StaticTypedSlot<JSType>>
-    implements StaticTypedRef<JSType> {
-  private final T symbol;
-  private final Node node;
+public interface StaticSymbolTable<S extends StaticSlot, R extends StaticRef> {
+  /**
+   * Returns the references that point to the given symbol.
+   */
+  Iterable<R> getReferences(S symbol);
 
-  public SimpleReference(T symbol, Node node) {
-    this.symbol = symbol;
-    this.node = node;
-  }
+  /**
+   * Returns the scope for a given symbol.
+   */
+  StaticScope getScope(S symbol);
 
-  @Override
-  final public T getSymbol() {
-    return symbol;
-  }
-
-  @Override
-  final public Node getNode() {
-    return node;
-  }
-
-  @Override
-  final public StaticSourceFile getSourceFile() {
-    return node.getStaticSourceFile();
-  }
-
-  @Override
-  public String toString() {
-    String sourceName = node == null ? null : node.getSourceFileName();
-    int lineNo = node == null ? -1 : node.getLineno();
-    return node.getQualifiedName() + "@" + sourceName + ":" + lineNo;
-  }
+  /**
+   * Returns all variables in this symbol table.
+   */
+  Iterable<S> getAllSymbols();
 }

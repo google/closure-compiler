@@ -22,7 +22,7 @@ import com.google.common.collect.Iterators;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticScope;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -44,7 +44,7 @@ import java.util.Map;
  * @see DataFlowAnalysis
  *
  */
-public class Scope implements StaticScope<JSType> {
+public class Scope implements StaticTypedScope<JSType> {
   private final Map<String, Var> vars = new LinkedHashMap<>();
   private final Scope parent;
   private final int depth;
@@ -133,7 +133,7 @@ public class Scope implements StaticScope<JSType> {
   }
 
   @Override
-  public StaticScope<JSType> getParentScope() {
+  public StaticTypedScope<JSType> getParentScope() {
     return parent;
   }
 

@@ -19,9 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.SimpleSourceFile;
-
 
 /**
  * @author johnlenz@google.com (John Lenz)

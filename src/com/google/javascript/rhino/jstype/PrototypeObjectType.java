@@ -461,7 +461,7 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
-  JSType resolveInternal(ErrorReporter t, StaticScope<JSType> scope) {
+  JSType resolveInternal(ErrorReporter t, StaticTypedScope<JSType> scope) {
     setResolvedTypeInternal(this);
 
     ObjectType implicitPrototype = getImplicitPrototype();

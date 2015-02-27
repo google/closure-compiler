@@ -21,11 +21,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleReference;
 import com.google.javascript.rhino.jstype.SimpleSlot;
-import com.google.javascript.rhino.jstype.StaticScope;
-import com.google.javascript.rhino.jstype.StaticSymbolTable;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.util.Collections;
 import java.util.Map;
@@ -37,7 +37,7 @@ import java.util.Map;
  * @author nicksantos@google.com (Nick Santos)
  */
 final class PreprocessorSymbolTable
-    implements StaticScope<JSType>,
+    implements StaticTypedScope<JSType>,
                StaticSymbolTable<SimpleSlot,
                                  PreprocessorSymbolTable.Reference> {
 
@@ -62,7 +62,7 @@ final class PreprocessorSymbolTable
   public JSType getTypeOfThis() { return null; }
 
   @Override
-  public StaticScope<JSType> getParentScope() { return null; }
+  public StaticTypedScope<JSType> getParentScope() { return null; }
 
   @Override
   public SimpleSlot getSlot(String name) {
@@ -85,7 +85,7 @@ final class PreprocessorSymbolTable
   }
 
   @Override
-  public StaticScope<JSType> getScope(SimpleSlot slot) {
+  public StaticTypedScope<JSType> getScope(SimpleSlot slot) {
     return this;
   }
 

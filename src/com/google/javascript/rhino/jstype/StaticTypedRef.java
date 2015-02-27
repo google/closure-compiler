@@ -23,7 +23,6 @@
  *
  * Contributor(s):
  *   Nick Santos
- *   Google Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -39,42 +38,17 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.StaticRef;
 
 /**
- * A simple immutable reference.
+ * The {@code StaticTypedRef} tells us all the ways that a {@code StaticTypedSlot}
+ * is used in a program.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SimpleReference<T extends StaticTypedSlot<JSType>>
-    implements StaticTypedRef<JSType> {
-  private final T symbol;
-  private final Node node;
-
-  public SimpleReference(T symbol, Node node) {
-    this.symbol = symbol;
-    this.node = node;
-  }
-
-  @Override
-  final public T getSymbol() {
-    return symbol;
-  }
-
-  @Override
-  final public Node getNode() {
-    return node;
-  }
-
-  @Override
-  final public StaticSourceFile getSourceFile() {
-    return node.getStaticSourceFile();
-  }
-
-  @Override
-  public String toString() {
-    String sourceName = node == null ? null : node.getSourceFileName();
-    int lineNo = node == null ? -1 : node.getLineno();
-    return node.getQualifiedName() + "@" + sourceName + ":" + lineNo;
-  }
+public interface StaticTypedRef<T> extends StaticRef {
+  /**
+   * The variable that this reference points to.
+   */
+  StaticTypedSlot<T> getSymbol();
 }

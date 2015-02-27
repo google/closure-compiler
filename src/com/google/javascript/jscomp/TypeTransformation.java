@@ -31,8 +31,8 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
-import com.google.javascript.rhino.jstype.StaticScope;
-import com.google.javascript.rhino.jstype.StaticSlot;
+import com.google.javascript.rhino.jstype.StaticTypedScope;
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 
@@ -50,7 +50,7 @@ import java.util.Set;
 class TypeTransformation {
   private AbstractCompiler compiler;
   private JSTypeRegistry typeRegistry;
-  private StaticScope<JSType> scope;
+  private StaticTypedScope<JSType> scope;
 
   static final DiagnosticType UNKNOWN_TYPEVAR =
       DiagnosticType.warning("TYPEVAR_UNDEFINED",
@@ -112,7 +112,7 @@ class TypeTransformation {
     }
   }
 
-  TypeTransformation(AbstractCompiler compiler, StaticScope<JSType> scope) {
+  TypeTransformation(AbstractCompiler compiler, StaticTypedScope<JSType> scope) {
     this.compiler = compiler;
     this.typeRegistry = compiler.getTypeRegistry();
     this.scope = scope;
@@ -134,8 +134,8 @@ class TypeTransformation {
     return TypeTransformationParser.Keywords.valueOf(s.toUpperCase());
   }
 
-  private StaticScope<JSType> getScope(StaticScope<JSType> scope, String name) {
-    StaticSlot<JSType> slot = scope.getOwnSlot(name);
+  private StaticTypedScope<JSType> getScope(StaticTypedScope<JSType> scope, String name) {
+    StaticTypedSlot<JSType> slot = scope.getOwnSlot(name);
     if (slot != null) {
       return scope;
     }
@@ -160,7 +160,7 @@ class TypeTransformation {
     }
 
     // Resolve the name and get the corresponding type
-    StaticSlot<JSType> slot = scope.getSlot(name);
+    StaticTypedSlot<JSType> slot = scope.getSlot(name);
     if (slot != null) {
       JSType rawType = slot.getType();
       if (rawType != null) {
@@ -178,7 +178,7 @@ class TypeTransformation {
       JSDocInfo info = slot.getJSDocInfo();
       if (info != null && info.hasTypedefType()) {
         JSTypeExpression expr = info.getTypedefType();
-        StaticScope<JSType> typedefScope = getScope(scope, name);
+        StaticTypedScope<JSType> typedefScope = getScope(scope, name);
         return expr.evaluate(typedefScope, typeRegistry);
       }
     }
@@ -836,7 +836,7 @@ class TypeTransformation {
 
   private JSType evalTypeOfVar(Node ttlAst) {
     String name = getCallArgument(ttlAst, 0).getString();
-    StaticSlot<JSType> slot = scope.getSlot(name);
+    StaticTypedSlot<JSType> slot = scope.getSlot(name);
     if (slot == null) {
       reportWarning(ttlAst, VAR_UNDEFINED, name);
       return getUnknownType();
