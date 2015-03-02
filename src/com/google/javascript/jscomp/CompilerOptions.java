@@ -2231,6 +2231,10 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.lineLengthThreshold = lineLengthThreshold;
   }
 
+  public int getLineLengthThreshold() {
+    return this.lineLengthThreshold;
+  }
+
   public void setExternExports(boolean externExports) {
     this.externExports = externExports;
   }
