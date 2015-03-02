@@ -2585,12 +2585,12 @@ public class NewParserTest extends BaseJSTypeTestCase {
    */
   private Node parseWarning(String string, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
-    Node script = null;
     StaticSourceFile file = new SimpleSourceFile("input", false);
-    script = ParserRunner.parse(file,
-      string,
-      ParserRunner.createConfig(isIdeMode, mode, false, null),
-      testErrorReporter).ast;
+    Node script = ParserRunner.parse(
+        file,
+        string,
+        ParserRunner.createConfig(isIdeMode, mode, false, null),
+        testErrorReporter).ast;
 
     // verifying that all warnings were seen
     assertThat(testErrorReporter.hasEncounteredAllErrors()).isTrue();

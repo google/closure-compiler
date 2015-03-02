@@ -1203,7 +1203,7 @@ public class Parser {
     }
     eat(TokenType.SEMI_COLON);
 
-    ParseTree condition = null;
+    ParseTree condition;
     if (!peek(TokenType.SEMI_COLON)) {
       condition = parseExpression();
     } else {
@@ -1211,7 +1211,7 @@ public class Parser {
     }
     eat(TokenType.SEMI_COLON);
 
-    ParseTree increment = null;
+    ParseTree increment;
     if (!peek(TokenType.CLOSE_PAREN)) {
       increment = parseExpression();
     } else {

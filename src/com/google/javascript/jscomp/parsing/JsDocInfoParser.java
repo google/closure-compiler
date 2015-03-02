@@ -1473,7 +1473,7 @@ public final class JsDocInfoParser {
                                       int startCharno,
                                       boolean matchingLC,
                                       boolean onlyParseSimpleNames) {
-    Node typeNode = null;
+    Node typeNode;
 
     if (onlyParseSimpleNames) {
       typeNode = parseTypeNameAnnotation(token);

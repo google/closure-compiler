@@ -520,11 +520,9 @@ class InlineFunctions implements CompilerPass {
         return;
       }
 
-      boolean referenceAdded = false;
       InliningMode mode = fs.canInlineDirectly()
            ? InliningMode.DIRECT : InliningMode.BLOCK;
-      referenceAdded = maybeAddReferenceUsingMode(
-          t, fs, callNode, module, mode);
+      boolean referenceAdded = maybeAddReferenceUsingMode(t, fs, callNode, module, mode);
       if (!referenceAdded &&
           mode == InliningMode.DIRECT && blockFunctionInliningEnabled) {
         // This reference can not be directly inlined, see if
