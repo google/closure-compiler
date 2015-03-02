@@ -1486,8 +1486,9 @@ class GlobalTypeInfo implements CompilerPass {
         return true;
       }
       Node parent = getProp.getParent();
-      return parent.isAssign() && getProp == parent.getFirstChild() &&
-          currentScope.isConstructor();
+      return (parent.isAssign() && getProp == parent.getFirstChild()
+          || parent.isExprResult())
+          && currentScope.isConstructor();
     }
 
     private boolean mayWarnAboutExistingProp(RawNominalType classType,

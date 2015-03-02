@@ -58,6 +58,8 @@ public class ConvertDeclaredTypesToJSDoc extends AbstractPostOrderCallback imple
     JSTypeExpression typeExpression = new JSTypeExpression(typeRoot, n.getSourceFileName());
     if (n.isFunction()) {
       builder.recordReturnType(typeExpression);
+    } else if (n.getType() == Token.MEMBER_VARIABLE_DEF) {
+      builder.recordType(typeExpression);
     } else {
       builder.recordType(typeExpression);
       builder.recordInlineType();

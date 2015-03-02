@@ -7616,6 +7616,30 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + "  x['random' + 'propname'] = 123;\n"
         + "}",
         TypeValidator.ILLEGAL_PROPERTY_ACCESS);
+
+    typeCheck(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @struct\n"
+        + " */\n"
+        + "function Foo() {\n"
+        + "  /** @type {number} */\n"
+        + "  this.prop;\n"
+        + "  this.prop = 'asdf';\n"
+        + "}\n",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @struct\n"
+        + " */\n"
+        + "function Foo() {\n"
+        + "  /** @type {number} */\n"
+        + "  this.prop;\n"
+        + "}\n"
+        + "(new Foo).prop = 'asdf';\n",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testDictPropAccess() {

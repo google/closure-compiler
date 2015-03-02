@@ -24,33 +24,33 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public class Es6TypedIntegrationTest extends IntegrationTestCase {
 
-  public void testBasicTypeCheck() throws Exception {
+  public void testBasicTypeCheck() {
     test(createCompilerOptions(), "var x: number = 12;\nalert(x);", "alert(12);");
   }
 
-  public void testBasicTypeCheck_error() throws Exception {
+  public void testBasicTypeCheck_error() {
     test(createCompilerOptions(), "var x: number = 'hello';", TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
-  public void testFunctionType_correct() throws Exception {
+  public void testFunctionType_correct() {
     test(createCompilerOptions(), "function x(): number { return 12; }; alert(x());", "alert(12)");
   }
 
-  public void testFunctionType_error() throws Exception {
+  public void testFunctionType_error() {
     test(createCompilerOptions(), "function x(): number { return 'hello'; }",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
-  public void testFunctionParameter() throws Exception {
+  public void testFunctionParameter() {
     test(createCompilerOptions(), "function x(x: number) {}; x(12);", "");
   }
 
-  public void testFunctionParameter_error() throws Exception {
+  public void testFunctionParameter_error() {
     test(createCompilerOptions(), "function x(x: number) {}; x('hello');",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
-  public void testClassMemberVariable() throws Exception {
+  public void testClassMemberVariable() {
     test(createCompilerOptions(),
         "class C { x: number; }\n"
             + "var c: C = new C();\n"
@@ -64,7 +64,7 @@ public class Es6TypedIntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
-  public void testClassMemberVariable_static() throws Exception {
+  public void testClassMemberVariable_static() {
     test(createCompilerOptions(),
         "class C { static x: number; }\n"
             + "C.x = 12;\n"
@@ -72,7 +72,7 @@ public class Es6TypedIntegrationTest extends IntegrationTestCase {
         "alert(12);");
     test(createCompilerOptions(),
         "class C { static x: number; }\n"
-            + "C.x = '12';",
+        + "C.x = '12';",
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
