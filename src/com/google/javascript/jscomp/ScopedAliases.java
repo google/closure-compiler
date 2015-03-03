@@ -368,9 +368,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         } else if (isVar || isFunctionDecl) {
           boolean isHoisted = NodeUtil.isHoistedFunctionDeclaration(parent);
           Node grandparent = parent.getParent();
-          Node value = v.getInitialValue() != null ?
-              v.getInitialValue() :
-              null;
+          Node value = v.getInitialValue();
           Node varNode = null;
 
           // Grab the docinfo before we do any AST manipulation.
