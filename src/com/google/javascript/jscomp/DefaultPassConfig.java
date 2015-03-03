@@ -338,7 +338,7 @@ public class DefaultPassConfig extends PassConfig {
 
       // We assume that only IDE-mode clients will try to query the
       // typed scope creator after the compile job.
-      if (!options.ideMode && !options.saveDataStructures) {
+      if (!options.ideMode) {
         checks.add(clearTypedScopePass);
       }
     }

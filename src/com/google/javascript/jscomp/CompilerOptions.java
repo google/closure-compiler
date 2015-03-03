@@ -152,8 +152,6 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public boolean ideMode;
 
-  boolean saveDataStructures = false;
-
   /**
    * Even if checkTypes is disabled, clients might want to still infer types.
    * This is mostly used when ideMode is enabled.
@@ -1776,14 +1774,6 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setIdeMode(boolean ideMode) {
     this.ideMode = ideMode;
-  }
-
-  /**
-   * Whether to keep internal data structures around after we're
-   * finished compiling. We do this by default when IDE mode is on.
-   */
-  public void setSaveDataStructures(boolean save) {
-    this.saveDataStructures = save;
   }
 
   public void setSkipAllPasses(boolean skipAllPasses) {
