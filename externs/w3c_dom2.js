@@ -728,7 +728,7 @@ HTMLSelectElement.prototype.length;
 HTMLSelectElement.prototype.form;
 
 /**
- * @type {HTMLOptionsCollection}
+ * @type {!HTMLOptionsCollection}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-30606413
  */
 HTMLSelectElement.prototype.options;
