@@ -247,7 +247,6 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testTypedAdvanced() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
-    args.add("--use_types_for_optimization");
     test(
         "/** @constructor */\n" +
         "function Foo() {}\n" +
@@ -258,6 +257,26 @@ public class CommandLineRunnerTest extends TestCase {
         "new Foo().handle1(1, 2);\n" +
         "new Bar().handle1(1, 2);\n",
         "alert(2)");
+  }
+
+  public void testTypedDisabledAdvanced() {
+    args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--disable_type_optimizations");
+    test(
+        "/** @constructor */\n" +
+            "function Foo() {}\n" +
+            "Foo.prototype.handle1 = function(x, y) { alert(y); };\n" +
+            "/** @constructor */\n" +
+            "function Bar() {}\n" +
+            "Bar.prototype.handle1 = function(x, y) {};\n" +
+            "new Foo().handle1(1, 2);\n" +
+            "new Bar().handle1(1, 2);\n",
+        "function a() {}\n" +
+            "a.prototype.a = function(d, c) { alert(c); };\n" +
+            "function b() {}\n" +
+            "b.prototype.a = function() {};\n" +
+            "(new a).a(1, 2);\n" +
+            "(new b).a(1, 2);");
   }
 
   public void testTypeCheckingOnWithVerbose() {

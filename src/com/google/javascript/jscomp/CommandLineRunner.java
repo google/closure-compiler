@@ -359,12 +359,12 @@ public class CommandLineRunner extends
     private String compilationLevel = "SIMPLE";
     private CompilationLevel compilationLevelParsed = null;
 
-    @Option(name = "--use_types_for_optimization",
+    @Option(name = "--disable_type_optimizations",
         hidden = true,
-        usage = "Experimental: perform additional optimizations " +
-        "based on available information. Inaccurate type annotations " +
+        usage = "Disable the optimizations " +
+        "based on available type information. Inaccurate type annotations " +
         "may result in incorrect results.")
-    private boolean useTypesForOptimization = false;
+    private boolean disableTypeOptimizations = false;
 
     @Option(name = "--warning_level",
         aliases = {"-W"},
@@ -1122,7 +1122,7 @@ public class CommandLineRunner extends
       level.setDebugOptionsForCompilationLevel(options);
     }
 
-    if (flags.useTypesForOptimization) {
+    if (!flags.disableTypeOptimizations) {
       level.setTypeBasedOptimizationOptions(options);
     }
 
