@@ -1211,6 +1211,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
+  // Only used by jsdev
   public MemoizedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
   }
@@ -2165,12 +2166,6 @@ public class Compiler extends AbstractCompiler {
         acceptConstKeyword(),
         options.extraAnnotationNames);
   }
-
-  @Override
-  public boolean isTypeCheckingEnabled() {
-    return options.checkTypes;
-  }
-
 
   //------------------------------------------------------------------------
   // Error reporting

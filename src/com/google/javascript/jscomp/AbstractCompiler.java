@@ -109,7 +109,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   public abstract TypeIRegistry getTypeIRegistry();
 
   /**
-   * Gets a memoized scope creator with type information.
+   * Gets a memoized scope creator with type information. Only used by jsdev.
    */
   abstract ScopeCreator getTypedScopeCreator();
 
@@ -286,11 +286,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Returns the parser configuration for the specified context.
    */
   abstract Config getParserConfig(ConfigContext context);
-
-  /**
-   * Returns true if type checking is enabled.
-   */
-  abstract boolean isTypeCheckingEnabled();
 
   /**
    * Normalizes the types of AST nodes in the given tree, and
