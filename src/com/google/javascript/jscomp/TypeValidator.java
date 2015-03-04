@@ -184,6 +184,11 @@ class TypeValidator {
    *
    * For each violation, one element is the expected type and the other is
    * the type that is actually found. Order is not significant.
+   *
+   * NOTE(dimvar): Even though TypeMismatch is a pair, the passes that call this
+   * method never use it as a pair; they just add both its elements to a set
+   * of invalidating types. Consider just maintaining a set of types here
+   * instead of a set of type pairs.
    */
   Iterable<TypeMismatch> getMismatches() {
     return mismatches;
@@ -413,7 +418,7 @@ class TypeValidator {
 
       mismatch(t, n,
           "assignment to property " + propName + " of " +
-          getReadableJSTypeName(owner, true),
+          typeRegistry.getReadableJSTypeName(owner, true),
           rightType, leftType);
       return false;
     }
@@ -457,7 +462,7 @@ class TypeValidator {
       mismatch(t, n,
           String.format("actual parameter %d of %s does not match " +
               "formal parameter", ordinal,
-              getReadableJSTypeName(callNode.getFirstChild(), false)),
+              typeRegistry.getReadableJSTypeName(callNode.getFirstChild(), false)),
           argType, paramType);
     }
   }
@@ -754,71 +759,6 @@ class TypeValidator {
       requiredStr = required.toAnnotationString();
     }
     return MessageFormat.format(FOUND_REQUIRED, description, foundStr, requiredStr);
-  }
-
-  /**
-   * Given a node, get a human-readable name for the type of that node so
-   * that will be easy for the programmer to find the original declaration.
-   *
-   * For example, if SubFoo's property "bar" might have the human-readable
-   * name "Foo.prototype.bar".
-   *
-   * @param n The node.
-   * @param dereference If true, the type of the node will be dereferenced
-   *     to an Object type, if possible.
-   */
-  String getReadableJSTypeName(Node n, boolean dereference) {
-    JSType type = getJSType(n);
-    if (dereference) {
-      ObjectType dereferenced = type.dereference();
-      if (dereferenced != null) {
-        type = dereferenced;
-      }
-    }
-
-    // The best type name is the actual type name.
-    if (type.isFunctionPrototypeType() ||
-        (type.toObjectType() != null &&
-         type.toObjectType().getConstructor() != null)) {
-      return type.toString();
-    }
-
-    // If we're analyzing a GETPROP, the property may be inherited by the
-    // prototype chain. So climb the prototype chain and find out where
-    // the property was originally defined.
-    if (n.isGetProp()) {
-      ObjectType objectType = getJSType(n.getFirstChild()).dereference();
-      if (objectType != null) {
-        String propName = n.getLastChild().getString();
-        if (objectType.getConstructor() != null &&
-            objectType.getConstructor().isInterface()) {
-          objectType = FunctionType.getTopDefiningInterface(
-              objectType, propName);
-        } else {
-          // classes
-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
-            objectType = objectType.getImplicitPrototype();
-          }
-        }
-
-        // Don't show complex function names or anonymous types.
-        // Instead, try to get a human-readable type name.
-        if (objectType != null &&
-            (objectType.getConstructor() != null ||
-             objectType.isFunctionPrototypeType())) {
-          return objectType + "." + propName;
-        }
-      }
-    }
-
-    if (n.isQualifiedName()) {
-      return n.getQualifiedName();
-    } else if (type.isFunctionType()) {
-      // Don't show complex function names.
-      return "function";
-    } else {
-      return type.toString();
-    }
   }
 
   /**

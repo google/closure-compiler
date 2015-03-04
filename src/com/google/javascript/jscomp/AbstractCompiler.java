@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -170,9 +171,14 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract Node getNodeForCodeInsertion(JSModule module);
 
   /**
-   * Gets the central registry of type violations.
+   * Only used by passes in the old type checker.
    */
   abstract TypeValidator getTypeValidator();
+
+  /**
+   * Gets the central registry of type violations.
+   */
+  abstract Iterable<TypeMismatch> getTypeMismatches();
 
   /**
    * Used only by the new type inference

@@ -93,7 +93,7 @@ public class InlineProperties implements CompilerPass {
         registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
         registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
 
-    for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
+    for (TypeMismatch mis : compiler.getTypeMismatches()) {
       addInvalidatingType(mis.typeA);
       addInvalidatingType(mis.typeB);
     }

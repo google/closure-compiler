@@ -173,8 +173,7 @@ public class TypeValidatorTest extends CompilerTestCase {
   }
 
   private void assertMismatches(List<TypeMismatch> expected) {
-    List<TypeMismatch> actual = Lists.newArrayList(
-        compiler.getTypeValidator().getMismatches());
+    List<TypeMismatch> actual = Lists.newArrayList(compiler.getTypeMismatches());
     assertEquals(expected, actual);
   }
 }

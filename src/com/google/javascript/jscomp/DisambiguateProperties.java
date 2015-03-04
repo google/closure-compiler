@@ -310,7 +310,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     // expects a type B.
     // For each pair (A, B), here we mark both A and B as types whose properties
     // cannot be renamed.
-    for (TypeMismatch mis : compiler.getTypeValidator().getMismatches()) {
+    for (TypeMismatch mis : compiler.getTypeMismatches()) {
       addInvalidatingType(mis.typeA, mis.src);
       addInvalidatingType(mis.typeB, mis.src);
     }

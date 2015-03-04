@@ -33,6 +33,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.JSModuleGraph.MissingModuleException;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
+import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
@@ -1283,11 +1284,17 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
+  // Only used by passes in the old type checker.
   TypeValidator getTypeValidator() {
     if (typeValidator == null) {
       typeValidator = new TypeValidator(this);
     }
     return typeValidator;
+  }
+
+  @Override
+  Iterable<TypeMismatch> getTypeMismatches() {
+    return getTypeValidator().getMismatches();
   }
 
   @Override

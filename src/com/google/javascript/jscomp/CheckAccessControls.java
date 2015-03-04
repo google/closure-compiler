@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.ArrayDeque;
@@ -131,7 +132,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
           "Declared access conflicts with access convention.");
 
   private final AbstractCompiler compiler;
-  private final TypeValidator validator;
+  private final JSTypeRegistry typeRegistry;
   private final boolean enforceCodingConventions;
 
   // State about the current traversal.
@@ -146,7 +147,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
   CheckAccessControls(
       AbstractCompiler compiler, boolean enforceCodingConventions) {
     this.compiler = compiler;
-    this.validator = compiler.getTypeValidator();
+    this.typeRegistry = compiler.getTypeRegistry();
     this.initializedConstantProperties = HashMultimap.create();
     this.enforceCodingConventions = enforceCodingConventions;
     this.noTypeSentinel = compiler.getTypeRegistry()
@@ -370,12 +371,12 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         if (!deprecationInfo.isEmpty()) {
           compiler.report(
               t.makeError(n, DEPRECATED_PROP_REASON, propertyName,
-                  validator.getReadableJSTypeName(n.getFirstChild(), true),
+                  typeRegistry.getReadableJSTypeName(n.getFirstChild(), true),
                   deprecationInfo));
         } else {
           compiler.report(
               t.makeError(n, DEPRECATED_PROP, propertyName,
-                  validator.getReadableJSTypeName(n.getFirstChild(), true)));
+                  typeRegistry.getReadableJSTypeName(n.getFirstChild(), true)));
         }
       }
     }
@@ -850,7 +851,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       compiler.report(
           t.makeError(getprop, BAD_PACKAGE_PROPERTY_ACCESS,
               propertyName,
-              validator.getReadableJSTypeName(
+              typeRegistry.getReadableJSTypeName(
                   getprop.getFirstChild(), true)));
       }
   }
@@ -882,7 +883,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     JSType accessedType = getprop.getFirstChild().getJSType();
     String propertyName = getprop.getLastChild().getString();
     String readableTypeName = ownerType.equals(accessedType)
-        ? validator.getReadableJSTypeName(getprop.getFirstChild(), true)
+        ? typeRegistry.getReadableJSTypeName(getprop.getFirstChild(), true)
         : ownerType.toString();
     compiler.report(
         t.makeError(getprop,
@@ -906,7 +907,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       compiler.report(
           t.makeError(getprop,  BAD_PROTECTED_PROPERTY_ACCESS,
               propertyName,
-              validator.getReadableJSTypeName(
+              typeRegistry.getReadableJSTypeName(
                   getprop.getFirstChild(), true)));
     }
   }

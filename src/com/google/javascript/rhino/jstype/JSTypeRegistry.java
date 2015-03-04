@@ -877,6 +877,80 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
+   * Given a node, get a human-readable name for the type of that node so
+   * that will be easy for the programmer to find the original declaration.
+   *
+   * For example, if SubFoo's property "bar" might have the human-readable
+   * name "Foo.prototype.bar".
+   *
+   * @param n The node.
+   * @param dereference If true, the type of the node will be dereferenced
+   *     to an Object type, if possible.
+   */
+  public String getReadableJSTypeName(Node n, boolean dereference) {
+    JSType type = getJSTypeOrUnknown(n);
+    if (dereference) {
+      ObjectType dereferenced = type.dereference();
+      if (dereferenced != null) {
+        type = dereferenced;
+      }
+    }
+
+    // The best type name is the actual type name.
+    if (type.isFunctionPrototypeType()
+        || (type.toObjectType() != null
+            && type.toObjectType().getConstructor() != null)) {
+      return type.toString();
+    }
+
+    // If we're analyzing a GETPROP, the property may be inherited by the
+    // prototype chain. So climb the prototype chain and find out where
+    // the property was originally defined.
+    if (n.isGetProp()) {
+      ObjectType objectType = getJSTypeOrUnknown(n.getFirstChild()).dereference();
+      if (objectType != null) {
+        String propName = n.getLastChild().getString();
+        if (objectType.getConstructor() != null
+            && objectType.getConstructor().isInterface()) {
+          objectType = FunctionType.getTopDefiningInterface(
+              objectType, propName);
+        } else {
+          // classes
+          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+            objectType = objectType.getImplicitPrototype();
+          }
+        }
+
+        // Don't show complex function names or anonymous types.
+        // Instead, try to get a human-readable type name.
+        if (objectType != null
+            && (objectType.getConstructor() != null
+                || objectType.isFunctionPrototypeType())) {
+          return objectType + "." + propName;
+        }
+      }
+    }
+
+    if (n.isQualifiedName()) {
+      return n.getQualifiedName();
+    } else if (type.isFunctionType()) {
+      // Don't show complex function names.
+      return "function";
+    } else {
+      return type.toString();
+    }
+  }
+
+  private JSType getJSTypeOrUnknown(Node n) {
+    JSType jsType = n.getJSType();
+    if (jsType == null) {
+      return getNativeType(UNKNOWN_TYPE);
+    } else {
+      return jsType;
+    }
+  }
+
+  /**
    * Looks up a type by name.
    *
    * @param jsTypeName The name string.
