@@ -8577,6 +8577,7 @@ chrome.gcdPrivate.prefetchWifiPassword = function(ssid, callback) {};
 
 /**
  * Establish the session.
+ * TODO(user): Deprecated. Remove after app updated to use createSession.
  * @param {string} ipAddress
  * @param {number} port
  * @param {function(number, string, !Array.<string>): void}
@@ -8586,6 +8587,18 @@ chrome.gcdPrivate.prefetchWifiPassword = function(ssid, callback) {};
  *     |pairingTypes|, is a list of pairing types supported by this device.
  */
 chrome.gcdPrivate.establishSession = function(ipAddress, port, callback) {};
+
+
+/**
+ * Create new pairing session.
+ * @param {string} serviceName The mDNS service name of the device.
+ * @param {function(number, string, !Array.<string>): void}
+ *     callback Called when the session is established or on error. 1st param,
+ *     |sessionId|, is the session ID (identifies the session for future calls).
+ *     2nd param, |status|, is the status (success or type of error). 3rd param,
+ *     |pairingTypes|, is a list of pairing types supported by this device.
+ */
+chrome.gcdPrivate.createSession = function(serviceName, callback) {};
 
 
 /**
