@@ -10469,4 +10469,17 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + "  }\n"
         + "}");
   }
+
+  public void testPlusBackwardInference() {
+    typeCheck(
+        "function f(/** number */ x, w) {\n"
+        + "  var y = x + 2;\n"
+        + "  function g() { return (y + 2) - 5; }\n"
+        + "}\n");
+
+    typeCheck(
+        "function f(/** number */ x, w) {\n"
+        + "  function h() { return (w + 2) - 5; }\n"
+        + "}\n");
+  }
 }

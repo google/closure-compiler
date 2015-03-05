@@ -427,6 +427,9 @@ public class NewTypeInference implements CompilerPass {
       JSType declType = currentScope.getDeclaredTypeOf(name);
       JSType initType = declType == null
           ? envGetType(entryEnv, name) : pickInitialType(declType);
+      println("Adding non-local ", name,
+          " with decltype: ", declType,
+          " and inittype: ", initType);
       entryEnv = envPutType(entryEnv, name, initType);
     }
 
@@ -1354,8 +1357,8 @@ public class NewTypeInference implements CompilerPass {
     // First, evaluate ignoring the specialized context
     objPair = analyzeExprFwd(obj, inEnv);
     JSType objType = objPair.type;
-    if (!objType.equals(JSType.TOP) &&
-        !objType.equals(JSType.UNKNOWN) &&
+    if (!objType.isTop() &&
+        !objType.isUnknown() &&
         !objType.hasNonScalar()) {
       warnInvalidOperand(
           obj, Token.INSTANCEOF,
@@ -1475,8 +1478,7 @@ public class NewTypeInference implements CompilerPass {
       warnInvalidOperand(lhs, Token.ASSIGN_ADD, JSType.NUM_OR_STR, lhsType);
     }
     // if lhs is a string, rhs can still be a number
-    JSType rhsReqType = lhsType.equals(JSType.NUMBER) ?
-        JSType.NUMBER : JSType.NUM_OR_STR;
+    JSType rhsReqType = lhsType.isNumber() ? JSType.NUMBER : JSType.NUM_OR_STR;
     EnvTypePair pair = analyzeExprFwd(rhs, lvalue.env, rhsReqType);
     if (!pair.type.isSubtypeOf(rhsReqType)) {
       warnInvalidOperand(rhs, Token.ASSIGN_ADD, rhsReqType, pair.type);
@@ -2704,7 +2706,7 @@ public class NewTypeInference implements CompilerPass {
       case Token.URSH:
         return analyzeBinaryNumericOpBwd(expr, outEnv);
       case Token.ADD:
-        return analyzeAddBwd(expr, outEnv);
+        return analyzeAddBwd(expr, outEnv, requiredType);
       case Token.OR:
       case Token.AND:
         return analyzeLogicalOpBwd(expr, outEnv);
@@ -2840,11 +2842,12 @@ public class NewTypeInference implements CompilerPass {
     return pair;
   }
 
-  private EnvTypePair analyzeAddBwd(Node expr, TypeEnv outEnv) {
+  private EnvTypePair analyzeAddBwd(Node expr, TypeEnv outEnv, JSType requiredType) {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
-    EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv, JSType.NUM_OR_STR);
-    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env, JSType.NUM_OR_STR);
+    JSType randType = requiredType.isNumber() ? JSType.NUMBER : JSType.NUM_OR_STR;
+    EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv, randType);
+    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env, randType);
     lhsPair.type = JSType.plus(lhsPair.type, rhsPair.type);
     return lhsPair;
   }
@@ -2911,8 +2914,7 @@ public class NewTypeInference implements CompilerPass {
         requiredType, JSType.NUM_OR_STR);
     LValueResultBwd lvalue = analyzeLValueBwd(lhs, outEnv, lhsReqType, false);
     // if lhs is a string, rhs can still be a number
-    JSType rhsReqType = lvalue.type.equals(JSType.NUMBER) ?
-        JSType.NUMBER : JSType.NUM_OR_STR;
+    JSType rhsReqType = lvalue.type.isNumber() ? JSType.NUMBER : JSType.NUM_OR_STR;
     EnvTypePair pair = analyzeExprBwd(rhs, outEnv, rhsReqType);
     pair.env = analyzeLValueBwd(lhs, pair.env, lhsReqType, false).env;
     return pair;
@@ -3362,7 +3364,7 @@ public class NewTypeInference implements CompilerPass {
   private LValueResultFwd analyzeArrayElmLvalFwd(
       Node prop, LValueResultFwd lvalue) {
     EnvTypePair pair = analyzeExprFwd(prop, lvalue.env, JSType.NUMBER);
-    if (!pair.type.equals(JSType.NUMBER)) {
+    if (!pair.type.isNumber()) {
       // Some unknown computed property; don't treat as element access.
       return new LValueResultFwd(pair.env, JSType.UNKNOWN, null, null);
     }

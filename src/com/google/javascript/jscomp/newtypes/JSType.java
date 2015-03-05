@@ -271,6 +271,10 @@ public abstract class JSType implements TypeI {
     return STRING_MASK == getMask();
   }
 
+  public boolean isNumber() {
+    return NUMBER_MASK == getMask();
+  }
+
   public boolean isNullOrUndef() {
     int nullUndefMask = NULL_MASK | UNDEFINED_MASK;
     return getMask() != 0 && (getMask() | nullUndefMask) == nullUndefMask;
