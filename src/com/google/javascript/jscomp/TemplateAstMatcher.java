@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.TypeMatchingStrategy.MatchResult;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -74,12 +75,29 @@ public final class TemplateAstMatcher {
   private boolean isLooseMatch = false;
 
   /**
+   * The strategy to use when matching the {@code JSType} of nodes.
+   */
+  private TypeMatchingStrategy typeMatchingStrategy;
+
+  /**
    * Constructs this matcher with a Function node that serves as the template
    * to match all other nodes against. The body of the function will be used
    * to match against.
    */
   public TemplateAstMatcher(
       AbstractCompiler compiler, Node templateFunctionNode) {
+    this(compiler, templateFunctionNode, TypeMatchingStrategy.DEFAULT);
+  }
+
+  /**
+   * Constructs this matcher with a Function node that serves as the template
+   * to match all other nodes against. The body of the function will be used
+   * to match against.
+   */
+  public TemplateAstMatcher(
+      AbstractCompiler compiler,
+      Node templateFunctionNode,
+      TypeMatchingStrategy typeMatchingStrategy) {
     Preconditions.checkNotNull(compiler);
     Preconditions.checkState(
         templateFunctionNode.isFunction(),
@@ -88,6 +106,7 @@ public final class TemplateAstMatcher {
 
     this.compiler = compiler;
     this.templateStart = initTemplate(templateFunctionNode);
+    this.typeMatchingStrategy = typeMatchingStrategy;
   }
 
   /**
@@ -371,14 +390,9 @@ public final class TemplateAstMatcher {
         return false;
       }
 
-      boolean isMatch = false;
-      JSType astType = ast.getJSType();
-      if (astType == null || astType.isUnknownType() || astType.isAllType()) {
-        isMatch = true;
-        isLooseMatch = true;
-      } else {
-        isMatch = astType.isSubtype(templateType);
-      }
+      MatchResult matchResult = typeMatchingStrategy.match(templateType, ast.getJSType());
+      isLooseMatch = matchResult.isLooseMatch();
+      boolean isMatch = matchResult.isMatch();
       if (isMatch && previousMatch == null) {
         paramNodeMatches.set(paramIndex, ast);
       }

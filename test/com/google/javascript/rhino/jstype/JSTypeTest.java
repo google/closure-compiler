@@ -3188,6 +3188,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   /**
+   * Tests operation of {@code isVoidable}.
+   * @throws Exception
+   */
+  public void testIsVoidable() throws Exception {
+    assertTrue(VOID_TYPE.isVoidable());
+    assertFalse(NULL_TYPE.isVoidable());
+    assertFalse(createUnionType(NUMBER_TYPE, VOID_TYPE).isVoidable());
+  }
+
+  /**
    * Tests the behavior of the void type.
    */
   public void testVoidType() throws Exception {

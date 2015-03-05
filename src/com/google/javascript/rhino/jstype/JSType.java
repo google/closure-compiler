@@ -910,6 +910,13 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   /**
+   * Tests whether this type is voidable.
+   */
+  public boolean isVoidable() {
+    return isSubtype(getNativeType(JSTypeNative.VOID_TYPE));
+  }
+
+  /**
    * Gets the least supertype of this that's not a union.
    */
   public JSType collapseUnion() {

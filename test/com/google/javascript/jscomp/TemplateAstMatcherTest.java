@@ -467,8 +467,48 @@ public class TemplateAstMatcherTest extends TestCase {
     assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
   }
 
+  public void testMatches_nonDefaultStrategy() {
+    String externs = ""
+        + "/** @constructor */\n"
+        + "function AppContext() {}\n"
+        + "/** @type {string} */\n"
+        + "AppContext.prototype.location;\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {AppContext}\n"
+        + " */\n"
+        + "function SubAppContext() {}\n"
+        + "var context = new AppContext();\n"
+        + "var subContext = new SubAppContext();\n";
+    String template = ""
+        + "/**\n"
+        + " * @param {!AppContext} context\n"
+        + " * @param {string} str\n"
+        + " */\n"
+        + "function template(context, str) {\n"
+        + "  context.location = str;\n"
+        + "}\n";
+
+    TestNodePair pair = compile(externs, template, "subContext.location = '3';");
+    assertMatch(pair.templateNode, pair.testNode.getLastChild().getFirstChild());
+    assertMatch(
+        pair.templateNode,
+        pair.testNode.getLastChild().getFirstChild(),
+        false,
+        TypeMatchingStrategy.EXACT);
+  }
+
   private void assertMatch(Node templateRoot, Node testNode, boolean shouldMatch) {
-    TemplateAstMatcher matcher = new TemplateAstMatcher(lastCompiler, templateRoot.getFirstChild());
+    assertMatch(templateRoot, testNode, shouldMatch, TypeMatchingStrategy.DEFAULT);
+  }
+
+  private void assertMatch(
+      Node templateRoot,
+      Node testNode,
+      boolean shouldMatch,
+      TypeMatchingStrategy typeMatchingStrategy) {
+    TemplateAstMatcher matcher =
+        new TemplateAstMatcher(lastCompiler, templateRoot.getFirstChild(), typeMatchingStrategy);
     StringBuilder sb = new StringBuilder();
     sb.append("The nodes should").append(shouldMatch ? "" : " not").append(" have matched.\n");
     sb.append("Template node:\n").append(templateRoot.toStringTree()).append("\n");
