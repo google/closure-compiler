@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
+import com.google.javascript.jscomp.lint.CheckJSDoc;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
@@ -409,11 +410,11 @@ public class DiagnosticGroups {
           // checkTypes DiagnosticGroup
           CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
+          CheckJSDoc.MISSING_PARAM_JSDOC,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
           CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
-          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
-          JSTypeCreatorFromJSDoc.MISSING_PARAM_JSDOC);
+          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
       DiagnosticGroups.registerGroup("useOfGoogBase",

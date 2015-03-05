@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
+import com.google.javascript.jscomp.lint.CheckJSDoc;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -1514,6 +1515,7 @@ public class DefaultPassConfig extends PassConfig {
       return combineChecks(compiler, ImmutableList.<Callback>of(
           new CheckEnums(compiler),
           new CheckInterfaces(compiler),
+          new CheckJSDoc(compiler),
           new CheckNullableReturn(compiler),
           new CheckPrototypeProperties(compiler),
           new ImplicitNullabilityCheck(compiler)));

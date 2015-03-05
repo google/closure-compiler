@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.MISSING_PARAM_JSDOC;
+import static com.google.javascript.jscomp.lint.CheckJSDoc.MISSING_PARAM_JSDOC;
 
 import com.google.common.base.Joiner;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 
 /**
- * Tests for checks that are implemented as part of the new type inference,
- * but are in the lintChecks diagnostic group.
+ * Test case for {@link CheckJSDoc}.
  */
-public class NewTypeInferenceLintChecksTest extends NewTypeInferenceTestBase {
+public class CheckJSDocTest extends CompilerTestCase {
   @Override
-  public CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
-    return options;
+  public CompilerPass getProcessor(Compiler compiler) {
+    return new CheckJSDoc(compiler);
   }
 
   public void testMissingParam() {
-    typeCheck(
+    testSame(
         Joiner.on('\n').join(
             "/**",
             " * @param {string} x",

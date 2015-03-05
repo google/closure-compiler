@@ -52,12 +52,6 @@ public class JSTypeCreatorFromJSDoc {
         "JSC_BAD_JSDOC_ANNOTATION",
         "Bad JSDoc annotation. {0}");
 
-  // Lint check for missing @param annotations.
-  public static final DiagnosticType MISSING_PARAM_JSDOC =
-      DiagnosticType.disabled(
-        "JSC_MISSING_PARAM_JSDOC",
-        "Missing JSDoc for param {0}");
-
   public static final DiagnosticType EXTENDS_NON_OBJECT =
       DiagnosticType.warning(
           "JSC_EXTENDS_NON_OBJECT",
@@ -844,13 +838,7 @@ public class JSTypeCreatorFromJSDoc {
               param.getJSDocInfo(), registry, typeParameters);
       boolean isRequired = true;
       boolean isRestFormals = false;
-      JSTypeExpression texp = null;
-      if (jsdoc != null) {
-        texp = jsdoc.getParameterType(pname);
-        if (texp == null) {
-          warnings.add(JSError.make(param, MISSING_PARAM_JSDOC));
-        }
-      }
+      JSTypeExpression texp = jsdoc == null ? null : jsdoc.getParameterType(pname);
       Node jsdocNode = texp == null ? null : texp.getRoot();
       if (param != null) {
         if (convention.isOptionalParameter(param)) {
