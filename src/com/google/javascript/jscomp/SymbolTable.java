@@ -990,7 +990,7 @@ public final class SymbolTable {
       // at the same node. We bail out here to be safe.
       if (symbols.get(newProp.getDeclaration().getNode(),
               newProp.getName()) != null) {
-        logger.info("Found duplicate symbol " + newProp);
+        logger.fine("Found duplicate symbol " + newProp);
         continue;
       }
 
