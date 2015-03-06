@@ -16,6 +16,9 @@
 package com.google.javascript.jscomp.lint;
 
 import static com.google.javascript.jscomp.lint.CheckJSDoc.MISSING_PARAM_JSDOC;
+import static com.google.javascript.jscomp.lint.CheckJSDoc.MUST_BE_PRIVATE;
+import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_NAME_NOT_MARKED_OPTIONAL;
+import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.Compiler;
@@ -40,5 +43,54 @@ public class CheckJSDocTest extends CompilerTestCase {
             " */",
             "function f(x, y) {}"),
         MISSING_PARAM_JSDOC);
+
+    testSame(Joiner.on('\n').join(
+        "/**",
+        " * @param {string} x",
+        " * @param {string} y",
+        " */",
+        "function f(x, y) {}"));
+  }
+
+  public void testMissingPrivate() {
+    testSame(
+        Joiner.on('\n').join(
+            "/**",
+            " * @return {number}",
+            " */",
+            "X.prototype.foo_ = function() { return 0; }"),
+        MUST_BE_PRIVATE);
+
+    testSame(Joiner.on('\n').join(
+        "/**",
+        " * @return {number}",
+        " * @private",
+        " */",
+        "X.prototype.foo_ = function() { return 0; }"));
+  }
+
+  public void testOptionalArgs() {
+    testSame(
+        Joiner.on('\n').join(
+            "/**",
+            " * @param {number=} n",
+            " */",
+            "function f(n) {}"),
+        OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME);
+
+    testSame(
+        Joiner.on('\n').join(
+            "/**",
+            " * @param {number} opt_n",
+            " */",
+            "function f(opt_n) {}"),
+        OPTIONAL_NAME_NOT_MARKED_OPTIONAL);
+
+    testSame(
+        Joiner.on('\n').join(
+            "/**",
+            " * @param {number=} opt_n",
+            " */",
+            "function f(opt_n) {}"));
   }
 }

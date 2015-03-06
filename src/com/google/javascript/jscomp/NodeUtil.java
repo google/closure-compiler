@@ -421,7 +421,7 @@ public final class NodeUtil {
    * In two last cases with named function expressions, the second name is
    * returned (the variable or qualified name).
    *
-   * @param n A class node
+   * @param clazz A class node
    * @return the node best representing the class's name
    */
   static Node getClassNameNode(Node clazz) {
@@ -454,7 +454,7 @@ public final class NodeUtil {
     return getNameNode(n);
   }
 
-  static String getFunctionName(Node n) {
+  public static String getFunctionName(Node n) {
     Node nameNode = getFunctionNameNode(n);
     return nameNode == null ? null : nameNode.getQualifiedName();
   }
