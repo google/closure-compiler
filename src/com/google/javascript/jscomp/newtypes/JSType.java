@@ -659,10 +659,8 @@ public abstract class JSType implements TypeI {
 
     String thisTypevar = getTypeVar();
     String otherTypevar = other.getTypeVar();
-    if (thisTypevar == null) {
-      return otherTypevar == null && getMask() == other.getMask();
-    } else if (!typeParameters.contains(thisTypevar)) {
-      return thisTypevar.equals(otherTypevar) && getMask() == other.getMask();
+    if (thisTypevar == null || !typeParameters.contains(thisTypevar)) {
+      return Objects.equals(thisTypevar, otherTypevar) && getMask() == other.getMask();
     } else {
       // this is (T | ...)
       int templateMask = BOTTOM_MASK;
