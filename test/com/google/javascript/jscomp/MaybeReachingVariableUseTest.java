@@ -145,7 +145,7 @@ public class MaybeReachingVariableUseTest extends TestCase {
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node n = compiler.parseTestCode(src).getFirstChild();
     assertEquals(0, compiler.getErrorCount());
-    Scope scope = new SyntacticScopeCreator(compiler).createScope(n, null);
+    Scope scope = SyntacticScopeCreator.makeUntyped(compiler).createScope(n, null);
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();

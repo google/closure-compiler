@@ -121,7 +121,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
     UndiGraph<Var, Void> interferenceGraph =
         computeVariableNamesInterferenceGraph(
-            t, cfg, liveness.getEscapedLocals());
+            t, cfg, (Set<Var>) liveness.getEscapedLocals());
 
     GraphColoring<Var, Void> coloring =
         new GreedyGraphColoring<>(interferenceGraph,

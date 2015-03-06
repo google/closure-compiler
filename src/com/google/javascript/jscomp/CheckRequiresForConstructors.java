@@ -57,14 +57,15 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     Callback callback = new CheckRequiresForConstructorsCallback();
-    new NodeTraversal(compiler, callback).traverseRoots(externs, root);
+    NodeTraversal.traverseRootsTyped(compiler, callback, externs, root);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     Callback callback = new CheckRequiresForConstructorsCallback();
-    new NodeTraversal(compiler, callback).traverseWithScope(scriptRoot,
-        SyntacticScopeCreator.generateUntypedTopScope(compiler));
+    Scope globalScope =
+        SyntacticScopeCreator.makeTyped(compiler).createScope(scriptRoot, null);
+    new NodeTraversal(compiler, callback).traverseWithScope(scriptRoot, globalScope);
   }
 
   // Return true if the name is a class name (starts with an uppercase
@@ -191,7 +192,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
 
       String name = root.getString();
-      Var var = t.getScope().getVar(name);
+      TypedVar var = t.getTypedScope().getVar(name);
       if (var != null && (var.isLocal() || var.isExtern())) {
         return;
       }
@@ -207,7 +208,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
         } else {
           JSTypeExpression typeExpr = info.getType();
           if (typeExpr != null) {
-            JSType type = typeExpr.evaluate(t.getScope(), compiler.getTypeRegistry());
+            JSType type = typeExpr.evaluate(t.getTypedScope(), compiler.getTypeRegistry());
             if (type.isConstructor()) {
               constructors.add(ctorName);
             }
@@ -235,7 +236,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       Preconditions.checkState(child.isString());
 
       String rootName = Splitter.on('.').split(child.getString()).iterator().next();
-      Var var = t.getScope().getVar(rootName);
+      TypedVar var = t.getTypedScope().getVar(rootName);
       if (var != null && var.isExtern()) {
         return;
       }

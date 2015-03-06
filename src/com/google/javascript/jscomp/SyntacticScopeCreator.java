@@ -38,27 +38,43 @@ class SyntacticScopeCreator implements ScopeCreator {
   // scope, but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
-  /**
-   * Creates a ScopeCreator.
-   */
-  SyntacticScopeCreator(AbstractCompiler compiler) {
-    this.compiler = compiler;
-    this.redeclarationHandler = new DefaultRedeclarationHandler();
-  }
+  private final boolean isTyped;
 
-  SyntacticScopeCreator(
+  private SyntacticScopeCreator(
       AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
     this.compiler = compiler;
+    this.isTyped = false;
     this.redeclarationHandler = redeclarationHandler;
   }
 
+  private SyntacticScopeCreator(AbstractCompiler compiler, boolean isTyped) {
+    this.compiler = compiler;
+    this.isTyped = isTyped;
+    this.redeclarationHandler = new DefaultRedeclarationHandler();
+  }
+
+  static SyntacticScopeCreator makeUntyped(AbstractCompiler compiler) {
+    return new SyntacticScopeCreator(compiler, false);
+  }
+
+  static SyntacticScopeCreator makeTyped(AbstractCompiler compiler) {
+    return new SyntacticScopeCreator(compiler, true);
+  }
+
+  static SyntacticScopeCreator makeUntypedWithRedeclHandler(
+      AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
+    return new SyntacticScopeCreator(compiler, redeclarationHandler);
+  }
+
   @Override
-  public Scope createScope(Node n, Scope parent) {
+  @SuppressWarnings("unchecked")
+  // The cast to T is OK because we cannot mix typed and untyped scopes in the same chain.
+  public <T extends Scope> T createScope(Node n, T parent) {
     inputId = null;
     if (parent == null) {
-      scope = Scope.createGlobalScope(n);
+      scope = isTyped ? TypedScope.createGlobalScope(n) : Scope.createGlobalScope(n);
     } else {
-      scope = new Scope(parent, n);
+      scope = isTyped ? new TypedScope((TypedScope) parent, n) : new Scope(parent, n);
     }
 
     scanRoot(n);
@@ -66,7 +82,7 @@ class SyntacticScopeCreator implements ScopeCreator {
     inputId = null;
     Scope returnedScope = scope;
     scope = null;
-    return returnedScope;
+    return (T) returnedScope;
   }
 
   private void scanRoot(Node n) {
@@ -197,21 +213,12 @@ class SyntacticScopeCreator implements ScopeCreator {
       redeclarationHandler.onRedeclaration(
           scope, name, n, input);
     } else {
-      scope.declare(name, n, null, input);
+      if (isTyped) {
+        ((TypedScope) scope).declare(name, n, null, input);
+      } else {
+        scope.declare(name, n, input);
+      }
     }
-  }
-
-
-  /**
-   * Generates an untyped global scope from the root of AST of compiler (which
-   * includes externs).
-   *
-   * @param compiler The compiler for which the scope is generated.
-   * @return The new untyped global scope generated as a result of this call.
-   */
-  static Scope generateUntypedTopScope(AbstractCompiler compiler) {
-    return new SyntacticScopeCreator(compiler).createScope(compiler.getRoot(),
-        null);
   }
 
   @Override

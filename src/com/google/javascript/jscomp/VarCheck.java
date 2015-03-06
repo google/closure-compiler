@@ -117,9 +117,10 @@ class VarCheck extends AbstractPostOrderCallback implements
       // Redeclaration check is handled in VariableReferenceCheck for ES6
       return new Es6SyntacticScopeCreator(compiler);
     } else if (sanityCheck) {
-      return new SyntacticScopeCreator(compiler);
+      return SyntacticScopeCreator.makeUntyped(compiler);
     } else {
-      return new SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
+      return SyntacticScopeCreator.makeUntypedWithRedeclHandler(
+          compiler, new RedeclarationCheckHandler());
     }
   }
 
@@ -197,8 +198,7 @@ class VarCheck extends AbstractPostOrderCallback implements
           throw new IllegalStateException("Unexpected variable " + varName);
         } else {
           createSynthesizedExternVar(varName);
-          scope.getGlobalScope().declare(varName, n,
-              null, compiler.getSynthesizedExternsInput());
+          scope.getGlobalScope().declare(varName, n, compiler.getSynthesizedExternsInput());
         }
       }
       return;

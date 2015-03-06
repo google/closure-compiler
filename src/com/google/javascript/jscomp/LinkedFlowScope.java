@@ -83,7 +83,7 @@ class LinkedFlowScope implements FlowScope {
   }
 
   /** Gets the function scope for this flow scope. */
-  private Scope getFunctionScope() {
+  private TypedScope getFunctionScope() {
     return cache.functionScope;
   }
 
@@ -95,7 +95,7 @@ class LinkedFlowScope implements FlowScope {
   /**
    * Creates an entry lattice for the flow.
    */
-  public static LinkedFlowScope createEntryLattice(Scope scope) {
+  public static LinkedFlowScope createEntryLattice(TypedScope scope) {
     return new LinkedFlowScope(new FlatFlowScopeCache(scope));
   }
 
@@ -110,9 +110,9 @@ class LinkedFlowScope implements FlowScope {
   @Override
   public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
       JSType inferredType) {
-    Scope functionScope = getFunctionScope();
+    TypedScope functionScope = getFunctionScope();
     if (functionScope.isLocal()) {
-      Var v  = functionScope.getVar(symbol);
+      TypedVar v  = functionScope.getVar(symbol);
       if (v == null && !functionScope.isBottom()) {
         functionScope.declare(symbol, node, bottomType, null);
       }
@@ -216,9 +216,9 @@ class LinkedFlowScope implements FlowScope {
    */
   @Override
   public void completeScope(StaticTypedScope<JSType> staticScope) {
-    Scope scope = (Scope) staticScope;
-    for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
-      Var var = it.next();
+    TypedScope scope = (TypedScope) staticScope;
+    for (Iterator<TypedVar> it = scope.getVars(); it.hasNext();) {
+      TypedVar var = it.next();
       if (var.isTypeInferred()) {
         JSType type = var.getType();
         if (type == null || type.isUnknownType()) {
@@ -393,8 +393,8 @@ class LinkedFlowScope implements FlowScope {
    * as possible in a map. Optimized for fast lookup.
    */
   private static class FlatFlowScopeCache {
-    // The Scope for the entire function or for the global scope.
-    private final Scope functionScope;
+    // The TypedScope for the entire function or for the global scope.
+    private final TypedScope functionScope;
 
     // The linked flow scope that this cache represents.
     private final LinkedFlowScope linkedEquivalent;
@@ -414,7 +414,7 @@ class LinkedFlowScope implements FlowScope {
     final Set<String> dirtySymbols = Sets.newHashSet();
 
     // The cache at the bottom of the lattice.
-    FlatFlowScopeCache(Scope functionScope) {
+    FlatFlowScopeCache(TypedScope functionScope) {
       this.functionScope = functionScope;
       symbols = ImmutableMap.of();
       linkedEquivalent = null;

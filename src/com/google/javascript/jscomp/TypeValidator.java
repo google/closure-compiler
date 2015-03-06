@@ -161,7 +161,7 @@ class TypeValidator {
   /**
    * Utility function for getting a function type from a var.
    */
-  static FunctionType getFunctionType(@Nullable Var v) {
+  static FunctionType getFunctionType(@Nullable TypedVar v) {
     JSType t = v == null ? null : v.getType();
     ObjectType o = t == null ? null : t.dereference();
     return JSType.toMaybeFunctionType(o);
@@ -171,7 +171,7 @@ class TypeValidator {
    * Utility function for getting an instance type from a var pointing
    * to the constructor.
    */
-  static ObjectType getInstanceOfCtor(@Nullable Var v) {
+  static ObjectType getInstanceOfCtor(@Nullable TypedVar v) {
     FunctionType ctor = getFunctionType(v);
     if (ctor != null && ctor.isConstructor()) {
       return ctor.getInstanceType();
@@ -560,9 +560,9 @@ class TypeValidator {
    *     be {@code var}, but in some rare cases we will need to declare
    *     a new var with new source info.
    */
-  Var expectUndeclaredVariable(String sourceName, CompilerInput input,
-      Node n, Node parent, Var var, String variableName, JSType newType) {
-    Var newVar = var;
+  TypedVar expectUndeclaredVariable(String sourceName, CompilerInput input,
+      Node n, Node parent, TypedVar var, String variableName, JSType newType) {
+    TypedVar newVar = var;
     boolean allowDupe = false;
     if (n.isGetProp() ||
         NodeUtil.isObjectLitKey(n)) {
@@ -589,7 +589,7 @@ class TypeValidator {
       // was made in TypedScopeCreator#createInitialScope and is a
       // native type. We should redeclare it at the new input site.
       if (var.input == null) {
-        Scope s = var.getScope();
+        TypedScope s = var.getScope();
         s.undeclare(var);
         newVar = s.declare(variableName, n, varType, input, false);
 

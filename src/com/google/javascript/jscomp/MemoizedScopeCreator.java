@@ -36,15 +36,17 @@ import java.util.Map;
  * This allows you to make multiple passes, without worrying about
  * the expense of generating Scope objects over and over again.
  *
- * On the other hand, you also have to be more aware of what your passes
+ * <p>On the other hand, you also have to be more aware of what your passes
  * are doing. Scopes are memoized stupidly, so if the underlying tree
  * changes, the scope may be out of sync.
  *
+ * <p>Only used to memoize typed scope creators, not untyped ones.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<Var, Var> {
+class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
 
-  private final Map<Node, Scope> scopes = Maps.newLinkedHashMap();
+  private final Map<Node, TypedScope> scopes = Maps.newLinkedHashMap();
   private final ScopeCreator delegate;
 
   /**
@@ -55,40 +57,45 @@ class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<Var, Var> 
   }
 
   @Override
-  public Iterable<Var> getReferences(Var var) {
+  public Iterable<TypedVar> getReferences(TypedVar var) {
     return ImmutableList.of(var);
   }
 
   @Override
-  public Scope getScope(Var var) {
+  public TypedScope getScope(TypedVar var) {
     return var.scope;
   }
 
   @Override
-  public Iterable<Var> getAllSymbols() {
-    List<Var> vars = Lists.newArrayList();
-    for (Scope s : scopes.values()) {
+  public Iterable<TypedVar> getAllSymbols() {
+    List<TypedVar> vars = Lists.newArrayList();
+    for (TypedScope s : scopes.values()) {
       Iterables.addAll(vars, s.getAllSymbols());
     }
     return vars;
   }
 
   @Override
-  public Scope createScope(Node n, Scope parent) {
-    Scope scope = scopes.get(n);
+  @SuppressWarnings("unchecked")
+  // ScopeCreator#createScope has type: <T extends Scope> T createScope(...);
+  // TypedScope is the only subclass of Scope, so the suppression is safe.
+  public TypedScope createScope(Node n, Scope parent) {
+    Preconditions.checkArgument(parent == null || parent instanceof TypedScope);
+    TypedScope typedParent = (TypedScope) parent;
+    TypedScope scope = scopes.get(n);
     if (scope == null) {
-      scope = delegate.createScope(n, parent);
+      scope = (TypedScope) delegate.createScope(n, typedParent);
       scopes.put(n, scope);
     } else {
-      Preconditions.checkState(parent == scope.getParent());
+      Preconditions.checkState(typedParent == scope.getParent());
     }
     return scope;
   }
 
-  Collection<Scope> getAllMemoizedScopes() {
+  Collection<TypedScope> getAllMemoizedScopes() {
     // Return scopes in reverse order of creation so that IIFEs will
     // come before the global scope.
-    List<Scope> temp = Lists.newArrayList(scopes.values());
+    List<TypedScope> temp = Lists.newArrayList(scopes.values());
     Collections.reverse(temp);
     return Collections.unmodifiableCollection(temp);
   }

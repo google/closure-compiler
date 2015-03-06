@@ -160,8 +160,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         new CollectFileOverviewVisibility(compiler);
     collectPass.process(externs, root);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
-    NodeTraversal.traverse(compiler, externs, this);
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseTyped(compiler, externs, this);
+    NodeTraversal.traverseTyped(compiler, root, this);
   }
 
   @Override
@@ -170,7 +170,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
         new CollectFileOverviewVisibility(compiler);
     collectPass.hotSwapScript(scriptRoot, originalRoot);
     defaultVisibilityForFiles = collectPass.getFileOverviewVisibilityMap();
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseTyped(compiler, scriptRoot, this);
   }
 
   @Override
@@ -330,7 +330,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       return;
     }
 
-    Var var = t.getScope().getVar(n.getString());
+    TypedVar var = t.getTypedScope().getVar(n.getString());
     JSDocInfo docInfo = var == null ? null : var.getJSDocInfo();
 
     if (docInfo != null && docInfo.isDeprecated() &&
@@ -425,7 +425,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    * @param name The name node.
    */
   private void checkNameVisibility(NodeTraversal t, Node name, Node parent) {
-    Var var = t.getScope().getVar(name.getString());
+    TypedVar var = t.getTypedScope().getVar(name.getString());
     if (var == null) {
       return;
     }
@@ -473,7 +473,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     return v;
   }
 
-  private static boolean isPrivateAccessAllowed(Var var, Node name, Node parent) {
+  private static boolean isPrivateAccessAllowed(TypedVar var, Node name, Node parent) {
     StaticSourceFile varSrc = var.getSourceFile();
     StaticSourceFile refSrc = name.getStaticSourceFile();
     JSDocInfo docInfo = var.getJSDocInfo();
@@ -487,7 +487,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
     }
   }
 
-  private boolean isPackageAccessAllowed(Var var, Node name) {
+  private boolean isPackageAccessAllowed(TypedVar var, Node name) {
     StaticSourceFile varSrc = var.getSourceFile();
     StaticSourceFile refSrc = name.getStaticSourceFile();
     CodingConvention codingConvention = compiler.getCodingConvention();
@@ -982,7 +982,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       // Case #1
       (deprecatedDepth > 0) ||
       // Case #2
-      (getTypeDeprecationInfo(t.getScope().getTypeOfThis()) != null) ||
+      (getTypeDeprecationInfo(t.getTypedScope().getTypeOfThis()) != null) ||
         // Case #3
       (scopeRootParent != null && scopeRootParent.isAssign() &&
        getTypeDeprecationInfo(

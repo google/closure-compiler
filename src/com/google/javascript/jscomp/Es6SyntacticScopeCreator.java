@@ -257,7 +257,7 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
     if (s.isDeclared(name, false) || (s.isLocal() && name.equals(ARGUMENTS))) {
       redeclarationHandler.onRedeclaration(s, name, n, input);
     } else {
-      s.declare(name, n, null, input);
+      s.declare(name, n, input);
     }
   }
 

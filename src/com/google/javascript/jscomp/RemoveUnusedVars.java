@@ -171,7 +171,7 @@ class RemoveUnusedVars
    * Traverses a node recursively. Call this once per pass.
    */
   private void traverseAndRemoveUnusedReferences(Node root) {
-    Scope scope = new SyntacticScopeCreator(compiler).createScope(root, null);
+    Scope scope = SyntacticScopeCreator.makeUntyped(compiler).createScope(root, null);
     traverseNode(root, null, scope);
 
     if (removeGlobals) {
@@ -340,8 +340,7 @@ class RemoveUnusedVars
     Preconditions.checkState(body.getNext() == null &&
             body.isBlock());
 
-    Scope fnScope =
-        new SyntacticScopeCreator(compiler).createScope(n, parentScope);
+    Scope fnScope = SyntacticScopeCreator.makeUntyped(compiler).createScope(n, parentScope);
     traverseNode(body, n, fnScope);
 
     collectMaybeUnreferencedVars(fnScope);

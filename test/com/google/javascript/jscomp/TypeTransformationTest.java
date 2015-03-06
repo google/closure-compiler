@@ -947,7 +947,7 @@ public class TypeTransformationTest extends CompilerTypeTestCase {
       Node ast = ttlParser.getTypeTransformationAst();
       // Create the scope using the extra definitions
       Node extraTypeDefs = compiler.parseTestCode(EXTRA_TYPE_DEFS);
-      Scope scope = new TypedScopeCreator(compiler).createScope(
+      TypedScope scope = new TypedScopeCreator(compiler).createScope(
           extraTypeDefs, null);
       // Evaluate the type transformation
       TypeTransformation typeTransformation =

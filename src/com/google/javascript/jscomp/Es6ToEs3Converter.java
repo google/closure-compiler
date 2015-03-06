@@ -887,14 +887,14 @@ public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompile
       Node argumentsVar = IR.var(name, IR.name("arguments").srcref(parent));
       argumentsVar.srcref(parent);
       parent.addChildToFront(argumentsVar);
-      scope.declare(ARGUMENTS_VAR, name, null, input);
+      scope.declare(ARGUMENTS_VAR, name, input);
     }
     if (addThis) {
       Node name = IR.name(THIS_VAR).srcref(parent);
       Node thisVar = IR.var(name, IR.thisNode().srcref(parent));
       thisVar.srcref(parent);
       parent.addChildToFront(thisVar);
-      scope.declare(THIS_VAR, name, null, input);
+      scope.declare(THIS_VAR, name, input);
     }
   }
 

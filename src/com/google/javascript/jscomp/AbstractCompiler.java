@@ -117,7 +117,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Gets the top scope.
    */
-  public abstract Scope getTopScope();
+  public abstract TypedScope getTopScope();
 
   /**
    * Report an error or warning.

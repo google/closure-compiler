@@ -740,20 +740,23 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
     test("let /** number */ x = 5; x = 'str';",
         null, null, TypeValidator.TYPE_MISMATCH_WARNING);
 
-    test(Joiner.on('\n').join(
-        "while (true) {",
-        "  /** @type {number} */ let x = 5;",
-        "  (function() { x++; })();",
-        "  x = 'str';",
-        "}"
-    ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    // TODO(dimvar): these tests have been passing by accident.
+    // Uncomment once b/19570923 is fixed.
 
-    test(Joiner.on('\n').join(
-        "for (/** @type {number} */ let x = 5;;) {",
-        "  (function() { x++; })();",
-        "  x = 'str';",
-        "}"
-    ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    // test(Joiner.on('\n').join(
+    //     "while (true) {",
+    //     "  /** @type {number} */ let x = 5;",
+    //     "  (function() { x++; })();",
+    //     "  x = 'str';",
+    //     "}"
+    // ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+
+    // test(Joiner.on('\n').join(
+    //     "for (/** @type {number} */ let x = 5;;) {",
+    //     "  (function() { x++; })();",
+    //     "  x = 'str';",
+    //     "}"
+    // ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   public void testLetForInitializers() {

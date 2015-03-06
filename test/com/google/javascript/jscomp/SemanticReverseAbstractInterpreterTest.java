@@ -30,7 +30,7 @@ import java.util.Collection;
 public class SemanticReverseAbstractInterpreterTest
     extends CompilerTypeTestCase {
 { new GoogleCodingConvention(); }  private ReverseAbstractInterpreter interpreter;
-  private Scope functionScope;
+  private TypedScope functionScope;
 
   @Override
   protected void setUp() {
@@ -40,8 +40,8 @@ public class SemanticReverseAbstractInterpreterTest
   }
 
   public FlowScope newScope() {
-    Scope globalScope = Scope.createGlobalScope(new Node(Token.EMPTY));
-    functionScope = new Scope(globalScope, new Node(Token.EMPTY));
+    TypedScope globalScope = TypedScope.createGlobalScope(new Node(Token.EMPTY));
+    functionScope = new TypedScope(globalScope, new Node(Token.EMPTY));
     return LinkedFlowScope.createEntryLattice(functionScope);
   }
 

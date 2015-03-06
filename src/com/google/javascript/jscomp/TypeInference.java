@@ -80,7 +80,7 @@ class TypeInference
   private final AbstractCompiler compiler;
   private final JSTypeRegistry registry;
   private final ReverseAbstractInterpreter reverseInterpreter;
-  private final Scope syntacticScope;
+  private final TypedScope syntacticScope;
   private final FlowScope functionScope;
   private final FlowScope bottomScope;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
@@ -90,7 +90,7 @@ class TypeInference
 
   TypeInference(AbstractCompiler compiler, ControlFlowGraph<Node> cfg,
                 ReverseAbstractInterpreter reverseInterpreter,
-                Scope functionScope,
+                TypedScope functionScope,
                 Map<String, AssertionFunctionSpec> assertionFunctionsMap) {
     super(cfg, new LinkedFlowScope.FlowScopeJoinOp());
     this.compiler = compiler;
@@ -106,10 +106,10 @@ class TypeInference
 
     // For each local variable declared with the VAR keyword, the entry
     // type is VOID.
-    Iterator<Var> varIt =
+    Iterator<TypedVar> varIt =
         functionScope.getDeclarativelyUnboundVarsWithoutTypes();
     while (varIt.hasNext()) {
-      Var var = varIt.next();
+      TypedVar var = varIt.next();
       if (isUnflowable(var)) {
         continue;
       }
@@ -119,13 +119,13 @@ class TypeInference
     }
 
     this.bottomScope = LinkedFlowScope.createEntryLattice(
-        Scope.createLatticeBottom(functionScope.getRootNode()));
+        TypedScope.createLatticeBottom(functionScope.getRootNode()));
   }
 
   /**
    * Infers all of a function's arguments if their types aren't declared.
    */
-  private void inferArguments(Scope functionScope) {
+  private void inferArguments(TypedScope functionScope) {
     Node functionNode = functionScope.getRootNode();
     Node astParameters = functionNode.getFirstChild().getNext();
     Node iifeArgumentNode = null;
@@ -141,7 +141,7 @@ class TypeInference
       if (parameterTypes != null) {
         Node parameterTypeNode = parameterTypes.getFirstChild();
         for (Node astParameter : astParameters.children()) {
-          Var var = functionScope.getVar(astParameter.getString());
+          TypedVar var = functionScope.getVar(astParameter.getString());
           Preconditions.checkNotNull(var);
           if (var.isTypeInferred() &&
               var.getType() == unknownType) {
@@ -528,7 +528,7 @@ class TypeInference
     switch (left.getType()) {
       case Token.NAME:
         String varName = left.getString();
-        Var var = syntacticScope.getVar(varName);
+        TypedVar var = syntacticScope.getVar(varName);
         JSType varType = var == null ? null : var.getType();
         boolean isVarDeclaration = left.hasChildren()
             && varType != null && !var.isTypeInferred();
@@ -703,7 +703,7 @@ class TypeInference
     String propName = getprop.getLastChild().getString();
     String qName = getprop.getQualifiedName();
     if (qName != null) {
-      Var var = syntacticScope.getVar(qName);
+      TypedVar var = syntacticScope.getVar(qName);
       if (var != null && !var.isTypeInferred()) {
         // Handle normal declarations that could not be addressed earlier.
         if (propName.equals("prototype") ||
@@ -755,7 +755,7 @@ class TypeInference
         // type {number}, even though it's undefined.
         boolean nonLocalInferredSlot = false;
         if (isInferred && syntacticScope.isLocal()) {
-          Var maybeOuterVar = syntacticScope.getParent().getVar(varName);
+          TypedVar maybeOuterVar = syntacticScope.getParent().getVar(varName);
           if (var == maybeOuterVar &&
               !maybeOuterVar.isMarkedAssignedExactlyOnce()) {
             nonLocalInferredSlot = true;
@@ -816,7 +816,7 @@ class TypeInference
         // Do normal flow inference if this is a direct property assignment.
         if (qObjName != null && name.isStringKey()) {
           String qKeyName = qObjName + "." + memberName;
-          Var var = syntacticScope.getVar(qKeyName);
+          TypedVar var = syntacticScope.getVar(qKeyName);
           JSType oldType = var == null ? null : var.getType();
           if (var != null && var.isTypeInferred()) {
             var.setType(oldType == null ?
@@ -1744,7 +1744,7 @@ class TypeInference
     scope.inferSlotType(varName, varType);
   }
 
-  private boolean isUnflowable(Var v) {
+  private boolean isUnflowable(TypedVar v) {
     return v != null && v.isLocal() && v.isMarkedEscaped() &&
         // It's OK to flow a variable in the scope where it's escaped.
         v.getScope() == syntacticScope;

@@ -34,8 +34,7 @@ public class SyntacticScopeCreatorTest extends TestCase {
     Compiler compiler = new Compiler();
     Node root = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
-    Scope scope =
-        new SyntacticScopeCreator(compiler).createScope(root, null);
+    Scope scope = SyntacticScopeCreator.makeUntyped(compiler).createScope(root, null);
     return scope;
   }
 
@@ -65,14 +64,12 @@ public class SyntacticScopeCreatorTest extends TestCase {
     Node root = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
 
-    Scope globalScope =
-        new SyntacticScopeCreator(compiler).createScope(root, null);
+    Scope globalScope = SyntacticScopeCreator.makeUntyped(compiler).createScope(root, null);
     assertEquals(root, globalScope.getRootNode());
 
     Node fooNode = root.getFirstChild();
     assertEquals(Token.FUNCTION, fooNode.getType());
-    Scope fooScope =
-        new SyntacticScopeCreator(compiler).createScope(fooNode, null);
+    Scope fooScope = SyntacticScopeCreator.makeUntyped(compiler).createScope(fooNode, null);
     assertEquals(fooNode, fooScope.getRootNode());
     assertTrue(fooScope.isDeclared("x", false));
   }

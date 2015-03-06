@@ -31,7 +31,7 @@ interface ScopeCreator {
    *    synthetic block node whose children are all SCRIPT nodes)
    * @param parent the parent Scope object (may be null)
    */
-  Scope createScope(Node n, Scope parent);
+  <T extends Scope> T createScope(Node n, T parent);
 
   boolean hasBlockScope();
 }

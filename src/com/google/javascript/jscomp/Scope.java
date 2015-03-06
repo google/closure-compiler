@@ -17,12 +17,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterators;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticTypedScope;
+import com.google.javascript.rhino.StaticScope;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -33,37 +29,16 @@ import java.util.Map;
  * Scope contains information about a variable scope in JavaScript.
  * Scopes can be nested, a scope points back to its parent scope.
  * A Scope contains information about variables defined in that scope.
- * <p>
- * A Scope is also used as a lattice element for flow-sensitive type inference.
- * As a lattice element, a Scope is viewed as a map from names to types. A name
- * not in the map is considered to have the bottom type. The join of two maps m1
- * and m2 is the map of the union of names with {@link JSType#getLeastSupertype}
- * to meet the m1 type and m2 type.
  *
  * @see NodeTraversal
- * @see DataFlowAnalysis
  *
  */
-public class Scope implements StaticTypedScope<JSType> {
+public class Scope implements StaticScope {
   private final Map<String, Var> vars = new LinkedHashMap<>();
   private final Scope parent;
-  private final int depth;
-  private final Node rootNode;
-
-  /** Whether this is a bottom scope for the purposes of type inference. */
-  private final boolean isBottom;
-
+  protected final int depth;
+  protected final Node rootNode;
   private Var arguments;
-
-  private static final Predicate<Var> DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES =
-      new Predicate<Var>() {
-    @Override public boolean apply(Var var) {
-      return var.getParentNode() != null &&
-          var.getType() == null && // no declared type
-          var.getParentNode().isVar() &&
-          !var.isExtern();
-    }
-  };
 
   /**
    * Creates a Scope given the parent Scope and the root node of the scope.
@@ -76,39 +51,22 @@ public class Scope implements StaticTypedScope<JSType> {
 
     this.parent = parent;
     this.rootNode = rootNode;
-    this.isBottom = false;
     this.depth = parent.depth + 1;
   }
 
-  /**
-   * Creates a empty Scope (bottom of the lattice).
-   * @param rootNode Typically a FUNCTION node or the global BLOCK node.
-   * @param isBottom Whether this is the bottom of a lattice. Otherwise,
-   *     it must be a global scope.
-   */
-  private Scope(Node rootNode, boolean isBottom) {
+  protected Scope(Node rootNode) {
     this.parent = null;
     this.rootNode = rootNode;
-    this.isBottom = isBottom;
     this.depth = 0;
   }
 
   static Scope createGlobalScope(Node rootNode) {
-    return new Scope(rootNode, false);
-  }
-
-  static Scope createLatticeBottom(Node rootNode) {
-    return new Scope(rootNode, true);
+    return new Scope(rootNode);
   }
 
   /** The depth of the scope. The global scope has depth 0. */
   int getDepth() {
     return depth;
-  }
-
-  /** Whether this is the bottom of the lattice. */
-  boolean isBottom() {
-    return isBottom;
   }
 
   /**
@@ -133,38 +91,8 @@ public class Scope implements StaticTypedScope<JSType> {
   }
 
   @Override
-  public StaticTypedScope<JSType> getParentScope() {
+  public StaticScope getParentScope() {
     return parent;
-  }
-
-  /**
-   * Gets the type of {@code this} in the current scope.
-   */
-  @Override
-  public JSType getTypeOfThis() {
-    if (isGlobal()) {
-      return ObjectType.cast(rootNode.getJSType());
-    }
-
-    Preconditions.checkState(rootNode.isFunction());
-    JSType nodeType = rootNode.getJSType();
-    if (nodeType != null && nodeType.isFunctionType()) {
-      return nodeType.toMaybeFunctionType().getTypeOfThis();
-    } else {
-      return parent.getTypeOfThis();
-    }
-  }
-
-  /**
-   * Declares a variable whose type is inferred.
-   *
-   * @param name name of the variable
-   * @param nameNode the NAME node declaring the variable
-   * @param type the variable's type
-   * @param input the input in which this variable is defined.
-   */
-  Var declare(String name, Node nameNode, JSType type, CompilerInput input) {
-    return declare(name, nameNode, type, input, true);
   }
 
   /**
@@ -172,19 +100,13 @@ public class Scope implements StaticTypedScope<JSType> {
    *
    * @param name name of the variable
    * @param nameNode the NAME node declaring the variable
-   * @param type the variable's type
    * @param input the input in which this variable is defined.
-   * @param inferred Whether this variable's type is inferred (as opposed
-   *     to declared).
    */
-  Var declare(String name, Node nameNode,
-      JSType type, CompilerInput input, boolean inferred) {
+  Var declare(String name, Node nameNode, CompilerInput input) {
     Preconditions.checkState(name != null && !name.isEmpty());
-
     // Make sure that it's declared only once
     Preconditions.checkState(vars.get(name) == null);
-
-    Var var = new Var(inferred, name, nameNode, type, this, vars.size(), input);
+    Var var = new Var(name, nameNode, this, vars.size(), input);
     vars.put(name, var);
     return var;
   }
@@ -255,8 +177,11 @@ public class Scope implements StaticTypedScope<JSType> {
   /**
    * Return an iterator over all of the variables declared in this scope.
    */
-  public Iterator<Var> getVars() {
-    return vars.values().iterator();
+  @SuppressWarnings("unchecked")
+  // Untyped scopes always only contain untyped vars; getVars is polymorphic
+  // so that TypedScope#getVars can return Iterator<TypedVar>.
+  public <T extends Var> Iterator<T> getVars() {
+    return (Iterator<T>) vars.values().iterator();
   }
 
   /**
@@ -266,7 +191,7 @@ public class Scope implements StaticTypedScope<JSType> {
     return vars.values();
   }
 
-  public Iterable<Var> getAllSymbols() {
+  public Iterable<? extends Var> getAllSymbols() {
     return Collections.unmodifiableCollection(vars.values());
   }
 
@@ -289,32 +214,6 @@ public class Scope implements StaticTypedScope<JSType> {
    */
   public boolean isLocal() {
     return parent != null;
-  }
-
-  /**
-   * Gets all variables declared with "var" but without declared types attached.
-   */
-  public Iterator<Var> getDeclarativelyUnboundVarsWithoutTypes() {
-    return Iterators.filter(
-        getVars(), DECLARATIVELY_UNBOUND_VARS_WITHOUT_TYPES);
-  }
-
-  static interface TypeResolver {
-    void resolveTypes();
-  }
-
-  private TypeResolver typeResolver;
-
-  /** Resolve all type references. Only used on typed scopes. */
-  void resolveTypes() {
-    if (typeResolver != null) {
-      typeResolver.resolveTypes();
-      typeResolver = null;
-    }
-  }
-
-  void setTypeResolver(TypeResolver resolver) {
-    this.typeResolver = resolver;
   }
 
   public boolean isBlockScope() {

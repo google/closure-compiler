@@ -81,7 +81,7 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
           : oldName;
       Var oldVar = scope.getVar(oldName);
       scope.undeclare(oldVar);
-      hoistScope.declare(newName, nameNode, null, oldVar.input);
+      hoistScope.declare(newName, nameNode, oldVar.input);
       if (doRename) {
         nameNode.setString(newName);
         Node scopeRoot = scope.getRootNode();

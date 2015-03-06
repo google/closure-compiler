@@ -125,8 +125,8 @@ class LiveVariablesAnalysis extends
     computeEscaped(jsScope, escaped, compiler);
   }
 
-  public Set<Var> getEscapedLocals() {
-    return escaped;
+  public Set<? extends Var> getEscapedLocals() {
+    return (Set<? extends Var>) escaped;
   }
 
   public int getVarIndex(String var) {

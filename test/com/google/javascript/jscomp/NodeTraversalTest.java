@@ -223,7 +223,7 @@ public class NodeTraversalTest extends TestCase {
 
   public void testGetCurrentNode() {
     Compiler compiler = new Compiler();
-    ScopeCreator creator = new SyntacticScopeCreator(compiler);
+    ScopeCreator creator = SyntacticScopeCreator.makeUntyped(compiler);
     ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
     NodeTraversal t = new NodeTraversal(compiler, callback, creator);
 

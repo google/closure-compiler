@@ -363,8 +363,8 @@ public class LiveVariableAnalysisTest extends TestCase {
     Node script = new Node(Token.SCRIPT, n);
     script.setInputId(new InputId("test"));
     assertEquals(0, compiler.getErrorCount());
-    Scope scope = new SyntacticScopeCreator(compiler).createScope(
-        n, Scope.createGlobalScope(script));
+    Scope scope = SyntacticScopeCreator.makeUntyped(compiler)
+        .createScope(n, Scope.createGlobalScope(script));
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();

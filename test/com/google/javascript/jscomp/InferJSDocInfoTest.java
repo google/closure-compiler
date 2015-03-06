@@ -46,7 +46,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
         + " */\n"
         + "function Object(x) {};";
 
-  private Scope globalScope;
+  private TypedScope globalScope;
 
   @Override
   public void setUp() {
@@ -68,7 +68,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
   private final Callback callback = new AbstractPostOrderCallback() {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      Scope s = t.getScope();
+      TypedScope s = t.getTypedScope();
       if (s.isGlobal()) {
         globalScope = s;
       }
@@ -82,7 +82,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
       public void process(Node externs, Node root) {
         MemoizedScopeCreator scopeCreator =
             new MemoizedScopeCreator(new TypedScopeCreator(compiler));
-        Scope topScope = scopeCreator.createScope(root.getParent(), null);
+        TypedScope topScope = scopeCreator.createScope(root.getParent(), null);
         (new TypeInferencePass(
             compiler, compiler.getReverseAbstractInterpreter(),
             topScope, scopeCreator)).process(externs, root);
@@ -207,7 +207,7 @@ public class InferJSDocInfoTest extends CompilerTestCase {
     return findNameType(name, globalScope);
   }
 
-  private JSType findNameType(String name, Scope scope) {
+  private JSType findNameType(String name, TypedScope scope) {
     Node root = scope.getRootNode();
     Deque<Node> queue = new ArrayDeque<>();
     queue.push(root);

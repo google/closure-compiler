@@ -111,7 +111,7 @@ class CleanupPasses extends PassConfig {
       if (creator instanceof MemoizedScopeCreator) {
         MemoizedScopeCreator scopeCreator = (MemoizedScopeCreator) creator;
         String newSrc = scriptRoot.getSourceFileName();
-        for (Var var : scopeCreator.getAllSymbols()) {
+        for (TypedVar var : scopeCreator.getAllSymbols()) {
           TypeI type = var.getType();
           if (type != null) {
             FunctionTypeI fnType = type.toMaybeFunctionType();

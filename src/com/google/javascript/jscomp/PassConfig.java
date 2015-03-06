@@ -50,7 +50,7 @@ public abstract class PassConfig {
   private TypedScopeCreator internalScopeCreator;
 
   /** The global typed scope. */
-  Scope topScope = null;
+  TypedScope topScope = null;
 
   public PassConfig(CompilerOptions options) {
     this.options = options;
@@ -96,7 +96,7 @@ public abstract class PassConfig {
   /**
    * Gets the global scope, with type information.
    */
-  Scope getTopScope() {
+  TypedScope getTopScope() {
     return topScope;
   }
 
@@ -262,7 +262,7 @@ public abstract class PassConfig {
       return delegate.getTypedScopeCreator();
     }
 
-    @Override Scope getTopScope() {
+    @Override TypedScope getTopScope() {
       return delegate.getTopScope();
     }
 

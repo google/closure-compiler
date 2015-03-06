@@ -229,7 +229,7 @@ public class NodeTraversal {
   public NodeTraversal(AbstractCompiler compiler, Callback cb) {
     this(compiler, cb, compiler.getLanguageMode().isEs6OrHigher()
         ? new Es6SyntacticScopeCreator(compiler)
-        : new SyntacticScopeCreator(compiler));
+        : SyntacticScopeCreator.makeUntyped(compiler));
   }
 
   /**
@@ -523,15 +523,23 @@ public class NodeTraversal {
   /**
    * Traverses a node recursively.
    */
-  public static void traverse(
-      AbstractCompiler compiler, Node root, Callback cb) {
+  public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb);
     t.traverse(root);
   }
 
-  static void traverseRoots(
-      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
+  public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
+    t.traverse(root);
+  }
+
+  static void traverseRoots(AbstractCompiler compiler, Callback cb, Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, cb);
+    t.traverseRoots(externs, root);
+  }
+
+  static void traverseRootsTyped(AbstractCompiler compiler, Callback cb, Node externs, Node root) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverseRoots(externs, root);
   }
 
@@ -694,6 +702,13 @@ public class NodeTraversal {
     scopeRoots.clear();
     // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
+  }
+
+  public TypedScope getTypedScope() {
+    Scope s = getScope();
+    Preconditions.checkState(s instanceof TypedScope,
+        "getTypedScope called for untyped traversal");
+    return (TypedScope) s;
   }
 
   /** Gets the control flow graph for the current JS scope. */

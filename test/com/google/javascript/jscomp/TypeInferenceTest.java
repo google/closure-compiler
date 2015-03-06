@@ -110,7 +110,7 @@ public class TypeInferenceTest extends TestCase {
     Node n = root.getFirstChild().getFirstChild();
     // Create the scope with the assumptions.
     TypedScopeCreator scopeCreator = new TypedScopeCreator(compiler);
-    Scope assumedScope = scopeCreator.createScope(
+    TypedScope assumedScope = scopeCreator.createScope(
         n, scopeCreator.createScope(root, null));
     for (Map.Entry<String,JSType> entry : assumptions.entrySet()) {
       assumedScope.declare(entry.getKey(), null, entry.getValue(), null, false);

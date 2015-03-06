@@ -1265,7 +1265,7 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
-  public Scope getTopScope() {
+  public TypedScope getTopScope() {
     return getPassConfig().getTopScope();
   }
 

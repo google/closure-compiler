@@ -74,7 +74,7 @@ final class FunctionTypeBuilder {
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
   private final Node errorRoot;
-  private final Scope scope;
+  private final TypedScope scope;
 
   private FunctionContents contents = UnknownFunctionContents.get();
 
@@ -207,7 +207,7 @@ final class FunctionTypeBuilder {
    * @param scope The syntactic scope.
    */
   FunctionTypeBuilder(String fnName, AbstractCompiler compiler,
-      Node errorRoot, Scope scope) {
+      Node errorRoot, TypedScope scope) {
     Preconditions.checkNotNull(errorRoot);
 
     this.fnName = fnName == null ? "" : fnName;
@@ -819,11 +819,11 @@ final class FunctionTypeBuilder {
    * to be declared in a scope. Notice that TypedScopeCreator takes
    * care of most scope-declaring.
    */
-  private Scope getScopeDeclaredIn() {
+  private TypedScope getScopeDeclaredIn() {
     int dotIndex = fnName.indexOf('.');
     if (dotIndex != -1) {
       String rootVarName = fnName.substring(0, dotIndex);
-      Var rootVar = scope.getVar(rootVarName);
+      TypedVar rootVar = scope.getVar(rootVarName);
       if (rootVar != null) {
         return rootVar.getScope();
       }

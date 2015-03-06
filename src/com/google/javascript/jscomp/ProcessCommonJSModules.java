@@ -256,7 +256,7 @@ public class ProcessCommonJSModules implements CompilerPass {
         // it's an alias, and if it is, copy the annotation over.
         // This is a common idiom to export a set of constructors.
         if (rhsValue.isObjectLit()) {
-          Scope globalScope = new SyntacticScopeCreator(compiler)
+          Scope globalScope = SyntacticScopeCreator.makeUntyped(compiler)
               .createScope(script, null);
           for (Node key = rhsValue.getFirstChild();
                key != null; key = key.getNext()) {

@@ -703,7 +703,7 @@ class Normalize implements CompilerPass {
    */
   private void removeDuplicateDeclarations(Node externs, Node root) {
     Callback tickler = new ScopeTicklingCallback();
-    ScopeCreator scopeCreator =  new SyntacticScopeCreator(
+    ScopeCreator scopeCreator =  SyntacticScopeCreator.makeUntypedWithRedeclHandler(
         compiler, new DuplicateDeclarationHandler());
     NodeTraversal t = new NodeTraversal(compiler, tickler, scopeCreator);
     t.traverseRoots(externs, root);
@@ -763,7 +763,7 @@ class Normalize implements CompilerPass {
       } else if (v != null && parent.isFunction()) {
         if (v.getParentNode().isVar()) {
           s.undeclare(v);
-          s.declare(name, n, n.getJSType(), v.input);
+          s.declare(name, n, v.input);
           replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
               v.getParentNode().getParent());
         }

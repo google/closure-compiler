@@ -27,11 +27,10 @@ import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticTypedRef;
 
 import java.util.Iterator;
 import java.util.List;
@@ -572,7 +571,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
   /**
    * Represents a single declaration or reference to a variable.
    */
-  static final class Reference implements StaticTypedRef<JSType> {
+  static final class Reference implements StaticRef {
 
     private static final Set<Integer> DECLARATION_PARENTS =
         ImmutableSet.of(Token.VAR, Token.LET, Token.CONST, Token.PARAM_LIST,

@@ -73,12 +73,12 @@ public class GlobalVarReferenceMapTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    globalScope.declare(VAR1, new Node(Token.NAME), null, INPUT1);
+    globalScope.declare(VAR1, new Node(Token.NAME), INPUT1);
     var1Refs.references = Lists.newArrayList(var1In1Ref,
         var1In2Ref, var1In3Ref);
-    globalScope.declare(VAR2, new Node(Token.NAME), null, INPUT1);
+    globalScope.declare(VAR2, new Node(Token.NAME), INPUT1);
     var2Refs.references = Lists.newArrayList(var2In1Ref, var2In3Ref);
-    globalScope.declare(VAR3, new Node(Token.NAME), null, EXTERN1);
+    globalScope.declare(VAR3, new Node(Token.NAME), EXTERN1);
     var3Refs.references = Lists.newArrayList(var3In1Ext, var3In2Ref);
 
     // We recreate these two ReferenceCollection to keep var1Refs and
@@ -166,7 +166,7 @@ public class GlobalVarReferenceMapTest extends TestCase {
   public void testUpdateGlobalVarReferences_UpdateScriptNewVar() {
     Map<Var, ReferenceCollection> scriptMap = Maps.newHashMap();
     final String var4 = "var4";
-    globalScope.declare(var4, new Node(Token.NAME), null, INPUT2);
+    globalScope.declare(var4, new Node(Token.NAME), INPUT2);
     ReferenceCollection newVar3Refs = new ReferenceCollection();
     Reference newVar3In2Ref = createRefForTest(INPUT2);
     newVar3Refs.references = Lists.newArrayList(newVar3In2Ref);

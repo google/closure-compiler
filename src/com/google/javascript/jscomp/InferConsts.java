@@ -52,7 +52,7 @@ class InferConsts implements CompilerPass {
     }
 
     Scope globalExternsScope =
-        new SyntacticScopeCreator(compiler).createScope(externs, null);
+        SyntacticScopeCreator.makeUntyped(compiler).createScope(externs, null);
     for (Var v : globalExternsScope.getAllSymbols()) {
       considerVar(v, null);
     }

@@ -16,35 +16,25 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.StaticRef;
+import com.google.javascript.rhino.StaticSlot;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.StaticTypedRef;
-import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
 import java.util.Set;
 
 /**
  * Used by {@code Scope} to store information about variables.
  */
-public class Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
+public class Var implements StaticSlot, StaticRef {
   final String name;
 
   /** Var node */
   final Node nameNode;
-
-  private JSType type;
-
-  /**
-   * Whether the variable's type has been inferred or is declared. An inferred
-   * type may change over time (as more code is discovered), whereas a
-   * declared type is a static contract that must be matched.
-   */
-  private final boolean typeInferred;
 
   /** Input source */
   final CompilerInput input;
@@ -58,26 +48,17 @@ public class Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
   /** The enclosing scope */
   final Scope scope;
 
-  /** @see #isMarkedEscaped */
-  private boolean markedEscaped = false;
-
-  /** @see #isMarkedAssignedExactlyOnce */
-  private boolean markedAssignedExactlyOnce = false;
-
-  /**
-   * Creates a variable.
-   *
-   * @param inferred whether its type is inferred (as opposed to declared)
-   */
-  Var(boolean inferred, String name, Node nameNode, JSType type,
-      Scope scope, int index, CompilerInput input) {
+  Var(String name, Node nameNode, Scope scope, int index, CompilerInput input) {
     this.name = name;
     this.nameNode = nameNode;
-    this.type = type;
     this.scope = scope;
     this.index = index;
     this.input = input;
-    this.typeInferred = inferred;
+  }
+
+  static Var makeArgumentsVar(Scope scope) {
+    Preconditions.checkArgument(!(scope instanceof TypedScope));
+    return new Arguments(scope);
   }
 
   @Override
@@ -163,15 +144,6 @@ public class Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
     return NodeUtil.getRValueOfLValue(nameNode);
   }
 
-  /**
-   * Gets this variable's type. To know whether this type has been inferred,
-   * see {@code #isTypeInferred()}.
-   */
-  @Override
-  public JSType getType() {
-    return type;
-  }
-
   public Node getNameNode() {
     return nameNode;
   }
@@ -179,32 +151,6 @@ public class Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
   @Override
   public JSDocInfo getJSDocInfo() {
     return nameNode == null ? null : NodeUtil.getBestJSDocInfo(nameNode);
-  }
-
-  void setType(JSType type) {
-    this.type = type;
-  }
-
-  void resolveType(ErrorReporter errorReporter) {
-    if (type != null) {
-      type = type.resolve(errorReporter, scope);
-    }
-  }
-
-  /**
-   * Returns whether this variable's type is inferred. To get the variable's
-   * type, see {@link #getType()}.
-   */
-  @Override
-  public boolean isTypeInferred() {
-    return typeInferred;
-  }
-
-  public String getInputName() {
-    if (input == null) {
-      return "<non-file>";
-    }
-    return input.getName();
   }
 
   @Override
@@ -224,43 +170,7 @@ public class Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
 
   @Override
   public String toString() {
-    return "Scope.Var " + name + "{" + type + "}";
-  }
-
-  /**
-   * Record that this is escaped by an inner scope.
-   *
-   * <p>In other words, it's assigned in an inner scope so that it's much harder
-   * to make assertions about its value at a given point.
-   */
-  void markEscaped() {
-    markedEscaped = true;
-  }
-
-  /**
-   * Whether this is escaped by an inner scope.
-   * Notice that not all scope creators record this information.
-   */
-  boolean isMarkedEscaped() {
-    return markedEscaped;
-  }
-
-  /**
-   * Record that this is assigned exactly once..
-   *
-   * <p>In other words, it's assigned in an inner scope so that it's much harder
-   * to make assertions about its value at a given point.
-   */
-  void markAssignedExactlyOnce() {
-    markedAssignedExactlyOnce = true;
-  }
-
-  /**
-   * Whether this is assigned exactly once.
-   * Notice that not all scope creators record this information.
-   */
-  boolean isMarkedAssignedExactlyOnce() {
-    return markedAssignedExactlyOnce;
+    return "Var " + name;
   }
 
   boolean isVar() {
@@ -298,27 +208,21 @@ public class Var implements StaticTypedSlot<JSType>, StaticTypedRef<JSType> {
         + " of one of: " + types);
   }
 
-  static Var makeArgumentsVar(Scope s) {
-    return new Arguments(s);
-  }
 
   /**
    * A special subclass of Var used to distinguish "arguments" in the current
    * scope.
    */
   // TODO(johnlenz): Include this the list of Vars for the scope.
-  public static class Arguments extends Var {
+  private static class Arguments extends Var {
     Arguments(Scope scope) {
       super(
-          false, // no inferred
           "arguments", // always arguments
           null,  // no declaration node
-          // TODO(johnlenz): provide the type of "Arguments".
-          null,  // no type info
           scope,
           -1,    // no variable index
           null   // input
-            );
+      );
     }
 
     @Override
