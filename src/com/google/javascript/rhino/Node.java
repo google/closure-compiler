@@ -126,9 +126,12 @@ public class Node implements Cloneable, Serializable {
                                   // GlobalTypeInfo and NewTypeInference.
                                   // We use this to tag getprop nodes that
                                   // declare properties.
-      DECLARED_TYPE_EXPR = 78;    // Used to attach TypeDeclarationNode ASTs to
+      DECLARED_TYPE_EXPR = 78,    // Used to attach TypeDeclarationNode ASTs to
                                   // Nodes which represent a typed NAME or
                                   // FUNCTION.
+                                  //
+      TYPE_BEFORE_CAST = 79;      // The type of an expression before the cast.
+                                  // This will be present only if the expression is casted.
 
 
   public static final int   // flags for INCRDECR_PROP
@@ -180,6 +183,7 @@ public class Node implements Cloneable, Serializable {
         case ANALYZED_DURING_GTI:  return "analyzed_during_gti";
         case CONSTANT_PROPERTY_DEF: return "constant_property_def";
         case DECLARED_TYPE_EXPR: return "declared_type_expr";
+        case TYPE_BEFORE_CAST: return "type_before_cast";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -950,6 +954,14 @@ public class Node implements Cloneable, Serializable {
 
   PropListItem createProp(int propType, int value, PropListItem next) {
     return new IntPropListItem(propType, value, next);
+  }
+
+  /**
+   * Returns the type of this node before casting. This annotation will only exist on the first
+   * child of a CAST node after type checking.
+   */
+  public JSType getJSTypeBeforeCast() {
+    return (JSType) getProp(TYPE_BEFORE_CAST);
   }
 
   // Gets all the property types, in sorted order.

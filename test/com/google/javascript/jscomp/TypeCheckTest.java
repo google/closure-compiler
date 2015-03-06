@@ -8191,6 +8191,18 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {!derived} */(new base());\n");
   }
 
+  public void testCast4Types() throws Exception {
+    // downcast must be explicit
+    Node root = parseAndTypeCheck(
+        "/** @constructor */function base() {}\n" +
+        "/** @constructor\n * @extends {base} */function derived() {}\n" +
+        "/** @type {!derived} */ var baz = " +
+        "/** @type {!derived} */(new base());\n");
+    Node castedExprNode = root.getLastChild().getFirstChild().getFirstChild().getFirstChild();
+    assertEquals("derived", castedExprNode.getJSType().toString());
+    assertEquals("base", castedExprNode.getJSTypeBeforeCast().toString());
+  }
+
   public void testCast5() throws Exception {
     // cannot explicitly cast to an unrelated type
     testTypes("/** @constructor */function foo() {}\n" +
