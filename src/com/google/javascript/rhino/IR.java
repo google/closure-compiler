@@ -409,6 +409,13 @@ public class IR {
   }
 
   /**
+   * "!="
+   */
+  public static Node ne(Node expr1, Node expr2) {
+    return binaryOp(Token.NE, expr1, expr2);
+  }
+
+  /**
    * "==="
    */
   public static Node sheq(Node expr1, Node expr2) {
