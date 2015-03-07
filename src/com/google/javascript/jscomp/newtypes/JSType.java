@@ -130,23 +130,19 @@ public abstract class JSType implements TypeI {
       ImmutableSet<ObjectType> objs, String typeVar,
       ImmutableSet<EnumType> enums) {
     // Fix up the mask for objects and enums
-    if (enums != null) {
-      if (enums.isEmpty()) {
-        mask &= ~ENUM_MASK;
-      } else {
-        mask |= ENUM_MASK;
-      }
+    if (Preconditions.checkNotNull(enums).isEmpty()) {
+      mask &= ~ENUM_MASK;
+    } else {
+      mask |= ENUM_MASK;
     }
 
-    if (objs != null) {
-      if (objs.isEmpty()) {
-        mask &= ~NON_SCALAR_MASK;
-      } else {
-        mask |= NON_SCALAR_MASK;
-      }
+    if (Preconditions.checkNotNull(objs).isEmpty()) {
+      mask &= ~NON_SCALAR_MASK;
+    } else {
+      mask |= NON_SCALAR_MASK;
     }
 
-    if (objs == null && typeVar == null && enums == null) {
+    if (objs.isEmpty() && typeVar == null && enums.isEmpty()) {
       return MaskType.make(mask);
     }
     if (!JSType.isInhabitable(objs)) {
@@ -162,7 +158,7 @@ public abstract class JSType implements TypeI {
   }
 
   private static JSType makeType(int mask) {
-    return makeType(mask, null, null, null);
+    return makeType(mask, ImmutableSet.<ObjectType>of(), null, ImmutableSet.<EnumType>of());
   }
 
   protected abstract int getMask();
@@ -175,20 +171,27 @@ public abstract class JSType implements TypeI {
 
   // Factory method for wrapping a function in a JSType
   static JSType fromFunctionType(FunctionType fn, NominalType fnNominal) {
-    return makeType(NON_SCALAR_MASK,
-        ImmutableSet.of(ObjectType.fromFunction(fn, fnNominal)), null, null);
+    return makeType(
+        NON_SCALAR_MASK,
+        ImmutableSet.of(ObjectType.fromFunction(fn, fnNominal)),
+        null,
+        ImmutableSet.<EnumType>of());
   }
 
   public static JSType fromObjectType(ObjectType obj) {
-    return makeType(NON_SCALAR_MASK, ImmutableSet.of(obj), null, null);
+    return makeType(NON_SCALAR_MASK, ImmutableSet.of(obj), null, ImmutableSet.<EnumType>of());
   }
 
   public static JSType fromTypeVar(String template) {
-    return makeType(TYPEVAR_MASK, null, template, null);
+    return makeType(
+        TYPEVAR_MASK,
+        ImmutableSet.<ObjectType>of(),
+        template,
+        ImmutableSet.<EnumType>of());
   }
 
   static JSType fromEnum(EnumType e) {
-    return makeType(ENUM_MASK, null, null, ImmutableSet.of(e));
+    return makeType(ENUM_MASK, ImmutableSet.<ObjectType>of(), null, ImmutableSet.of(e));
   }
 
   boolean isValidType() {
@@ -203,10 +206,10 @@ public abstract class JSType implements TypeI {
       return false;
     }
     if ((getMask() & ENUM_MASK) != 0
-        && (getEnums() == null || getEnums().isEmpty())) {
+        && getEnums().isEmpty()) {
       return false;
     }
-    if ((getMask() & ENUM_MASK) == 0 && getEnums() != null) {
+    if ((getMask() & ENUM_MASK) == 0 && !getEnums().isEmpty()) {
       return false;
     }
     return ((getMask() & TYPEVAR_MASK) != 0) == (getTypeVar() != null);
@@ -240,7 +243,7 @@ public abstract class JSType implements TypeI {
   private static final JSType ALMOST_TOP = makeType(
       TRUE_MASK | FALSE_MASK | NUMBER_MASK | STRING_MASK | NULL_MASK |
       UNDEFINED_MASK | NON_SCALAR_MASK,
-      ImmutableSet.of(ObjectType.TOP_OBJECT), null, null);
+      ImmutableSet.of(ObjectType.TOP_OBJECT), null, ImmutableSet.<EnumType>of());
 
   public boolean isTop() {
     return TOP_MASK == getMask();
@@ -290,9 +293,6 @@ public abstract class JSType implements TypeI {
 
   // True iff there exists a value that can have this type
   private static boolean isInhabitable(Set<ObjectType> objs) {
-    if (objs == null) {
-      return true;
-    }
     for (ObjectType obj : objs) {
       if (!obj.isInhabitable()) {
         return false;
@@ -445,10 +445,11 @@ public abstract class JSType implements TypeI {
         lhs.getTypeVar() != null ? lhs.getTypeVar() : rhs.getTypeVar();
     ImmutableSet<EnumType> newEnums =
         EnumType.union(lhs.getEnums(), rhs.getEnums());
-    if (newEnums == null) {
-      return makeType(newMask, newObjs, newTypevar, null);
+    if (newEnums.isEmpty()) {
+      return makeType(newMask, newObjs, newTypevar, ImmutableSet.<EnumType>of());
     }
-    JSType tmpJoin = makeType(newMask & ~ENUM_MASK, newObjs, newTypevar, null);
+    JSType tmpJoin =
+        makeType(newMask & ~ENUM_MASK, newObjs, newTypevar, ImmutableSet.<EnumType>of());
     return makeType(newMask, newObjs, newTypevar,
         EnumType.normalizeForJoin(newEnums, tmpJoin));
   }
@@ -518,19 +519,10 @@ public abstract class JSType implements TypeI {
       return null;
     }
 
-    ImmutableSet<EnumType> newEnums = null;
-    if (t1.getEnums() == null) {
-      if (t2.getEnums() != null) {
-        return null;
-      }
-      newEnums = null;
-    } else if (t2.getEnums() == null) {
+    if (!t1.getEnums().equals(t2.getEnums())) {
       return null;
-    } else if (!t1.getEnums().equals(t2.getEnums())) {
-      return null;
-    } else {
-      newEnums = t1.getEnums();
     }
+    ImmutableSet<EnumType> newEnums = t1.getEnums();
 
     int t1Mask = promoteBoolean(t1.getMask());
     int t2Mask = promoteBoolean(t2.getMask());
@@ -592,10 +584,10 @@ public abstract class JSType implements TypeI {
       return true;
     }
 
-    Set<EnumType> ununifiedEnums = null;
-    if (getEnums() == null) {
+    Set<EnumType> ununifiedEnums = ImmutableSet.of();
+    if (getEnums().isEmpty()) {
       ununifiedEnums = other.getEnums();
-    } else if (other.getEnums() == null) {
+    } else if (other.getEnums().isEmpty()) {
       return false;
     } else {
       ununifiedEnums = new LinkedHashSet<>();
@@ -609,33 +601,22 @@ public abstract class JSType implements TypeI {
           ununifiedEnums.add(e);
         }
       }
-      if (ununifiedEnums.isEmpty()) {
-        ununifiedEnums = null;
-      }
     }
 
-    Set<ObjectType> ununified = ImmutableSet.of();
-    if (other.getObjs() != null) {
-      ununified = new LinkedHashSet<>(other.getObjs());
-    }
+    Set<ObjectType> ununified = new LinkedHashSet<>(other.getObjs());
     // Each obj in this must unify w/ exactly one obj in other.
     // However, we don't check that two different objects of this don't unify
     // with the same other type.
-    if (getObjs() != null) {
-      if (other.getObjs() == null) {
-        return false;
+    for (ObjectType targetObj : getObjs()) {
+      boolean hasUnified = false;
+      for (ObjectType sourceObj : other.getObjs()) {
+        if (targetObj.unifyWith(sourceObj, typeParameters, typeMultimap)) {
+          ununified.remove(sourceObj);
+          hasUnified = true;
+        }
       }
-      for (ObjectType targetObj : getObjs()) {
-        boolean hasUnified = false;
-        for (ObjectType sourceObj : other.getObjs()) {
-          if (targetObj.unifyWith(sourceObj, typeParameters, typeMultimap)) {
-            ununified.remove(sourceObj);
-            hasUnified = true;
-          }
-        }
-        if (!hasUnified) {
-          return false;
-        }
+      if (!hasUnified) {
+        return false;
       }
     }
 
@@ -656,8 +637,9 @@ public abstract class JSType implements TypeI {
       }
       JSType templateType = makeType(
           promoteBoolean(templateMask),
-          ImmutableSet.copyOf(ununified), otherTypevar,
-          ununifiedEnums == null ? null : ImmutableSet.copyOf(ununifiedEnums));
+          ImmutableSet.copyOf(ununified),
+          otherTypevar,
+          ImmutableSet.copyOf(ununifiedEnums));
       updateTypemap(typeMultimap, getTypeVar(), templateType);
       // We don't do fancy unification, eg,
       // T|number doesn't unify with TOP
@@ -755,26 +737,22 @@ public abstract class JSType implements TypeI {
           enumBuilder.add(e);
           newMask &= ~enumeratedType.getMask();
         }
-      } else if (objs1 != null || objs2 != null) {
+      } else if (!objs1.isEmpty() || !objs2.isEmpty()) {
         Set<ObjectType> objsToRemove = new LinkedHashSet<>();
         ObjectType enumObj = Iterables.getOnlyElement(enumeratedType.getObjs());
-        if (objs1 != null) {
-          for (ObjectType obj1 : objs1) {
-            if (enumObj.isSubtypeOf(obj1)) {
-              enumBuilder.add(e);
-              objsToRemove.add(obj1);
-            }
+        for (ObjectType obj1 : objs1) {
+          if (enumObj.isSubtypeOf(obj1)) {
+            enumBuilder.add(e);
+            objsToRemove.add(obj1);
           }
         }
-        if (objs2 != null) {
-          for (ObjectType obj2 : objs2) {
-            if (enumObj.isSubtypeOf(obj2)) {
-              enumBuilder.add(e);
-              objsToRemove.add(obj2);
-            }
+        for (ObjectType obj2 : objs2) {
+          if (enumObj.isSubtypeOf(obj2)) {
+            enumBuilder.add(e);
+            objsToRemove.add(obj2);
           }
         }
-        if (!objsToRemove.isEmpty() && newObjs != null) {
+        if (!objsToRemove.isEmpty()) {
           newObjs = Sets.difference(newObjs, objsToRemove).immutableCopy();
         }
       }
@@ -795,7 +773,7 @@ public abstract class JSType implements TypeI {
       return this;
     }
     return makeType(getMask() & ~TRUE_MASK & ~NON_SCALAR_MASK,
-        null, getTypeVar(), getEnums());
+        ImmutableSet.<ObjectType>of(), getTypeVar(), getEnums());
   }
 
   public static JSType plus(JSType lhs, JSType rhs) {
@@ -886,17 +864,13 @@ public abstract class JSType implements TypeI {
         objsBuilder.add(obj);
       }
     }
-    ImmutableSet<EnumType> newEnums = null;
-    if (getEnums() != null) {
-      ImmutableSet.Builder<EnumType> builder = ImmutableSet.builder();
-      for (EnumType e : getEnums()) {
-        if (!e.getEnumeratedType().isSubtypeOf(other)) {
-          builder.add(e);
-        }
+    ImmutableSet.Builder<EnumType> enumBuilder = ImmutableSet.builder();
+    for (EnumType e : getEnums()) {
+      if (!e.getEnumeratedType().isSubtypeOf(other)) {
+        enumBuilder.add(e);
       }
-      newEnums = builder.build();
     }
-    return makeType(newMask, objsBuilder.build(), getTypeVar(), newEnums);
+    return makeType(newMask, objsBuilder.build(), getTypeVar(), enumBuilder.build());
   }
 
   public FunctionType getFunTypeIfSingletonObj() {
@@ -938,7 +912,7 @@ public abstract class JSType implements TypeI {
   /** Turns the class-less object of this type (if any) into a loose object */
   public JSType withLoose() {
     if (getObjs().isEmpty()) {
-      Preconditions.checkState(getEnums() != null);
+      Preconditions.checkState(!getEnums().isEmpty());
       return this;
     }
     return makeType(getMask(), ObjectType.withLooseObjects(getObjs()),
@@ -949,7 +923,7 @@ public abstract class JSType implements TypeI {
     if (isBottom() || isUnknown()) {
       return UNKNOWN;
     }
-    Preconditions.checkState(!getObjs().isEmpty() || getEnums() != null,
+    Preconditions.checkState(!getObjs().isEmpty() || !getEnums().isEmpty(),
         "Can't getProp of type %s", this);
     return nullAcceptingJoin(
         TypeWithPropertiesStatics.getProp(getObjs(), qname),
@@ -960,7 +934,7 @@ public abstract class JSType implements TypeI {
     if (isUnknown()) {
       return UNKNOWN;
     }
-    Preconditions.checkState(!getObjs().isEmpty() || getEnums() != null);
+    Preconditions.checkState(!getObjs().isEmpty() || !getEnums().isEmpty());
     return nullAcceptingJoin(
         TypeWithPropertiesStatics.getDeclaredProp(getObjs(), qname),
         TypeWithPropertiesStatics.getDeclaredProp(getEnums(), qname));
@@ -976,11 +950,11 @@ public abstract class JSType implements TypeI {
         && !TypeWithPropertiesStatics.hasProp(getObjs(), qname)) {
       return false;
     }
-    if (getEnums() != null
+    if (!getEnums().isEmpty()
         && !TypeWithPropertiesStatics.hasProp(getEnums(), qname)) {
       return false;
     }
-    return getEnums() != null || !getObjs().isEmpty();
+    return !getEnums().isEmpty() || !getObjs().isEmpty();
   }
 
   public boolean hasConstantProp(QualifiedName pname) {
@@ -1210,21 +1184,8 @@ final class UnionType extends JSType {
 
   UnionType(int mask, ImmutableSet<ObjectType> objs,
       String typeVar, ImmutableSet<EnumType> enums) {
-    if (enums == null) {
-      this.enums = null;
-    } else if (enums.isEmpty()) {
-      this.enums = null;
-    } else {
-      this.enums = enums;
-    }
-
-    if (objs == null) {
-      this.objs = null;
-    } else if (objs.isEmpty()) {
-      this.objs = null;
-    } else {
-      this.objs = objs;
-    }
+    this.enums = Preconditions.checkNotNull(enums);
+    this.objs = Preconditions.checkNotNull(objs);
 
     if (typeVar != null) {
       mask |= TYPEVAR_MASK;
@@ -1250,10 +1211,7 @@ final class UnionType extends JSType {
   }
 
   protected ImmutableSet<ObjectType> getObjs() {
-    if (objs == null) {
-      return ImmutableSet.of();
-    }
-    return objs;
+    return Preconditions.checkNotNull(objs);
   }
 
   protected String getTypeVar() {
@@ -1261,7 +1219,7 @@ final class UnionType extends JSType {
   }
 
   protected ImmutableSet<EnumType> getEnums() {
-    return enums;
+    return Preconditions.checkNotNull(enums);
   }
 }
 
@@ -1365,7 +1323,7 @@ class MaskType extends JSType {
   }
 
   protected ImmutableSet<EnumType> getEnums() {
-    return null;
+    return ImmutableSet.of();
   }
 }
 
@@ -1373,7 +1331,7 @@ final class ObjsType extends JSType {
   private ImmutableSet<ObjectType> objs;
 
   ObjsType(ImmutableSet<ObjectType> objs) {
-    this.objs = objs;
+    this.objs = Preconditions.checkNotNull(objs);
   }
 
   protected int getMask() {
@@ -1381,9 +1339,6 @@ final class ObjsType extends JSType {
   }
 
   protected ImmutableSet<ObjectType> getObjs() {
-    if (objs == null) {
-      return ImmutableSet.of();
-    }
     return objs;
   }
 
@@ -1392,7 +1347,7 @@ final class ObjsType extends JSType {
   }
 
   protected ImmutableSet<EnumType> getEnums() {
-    return null;
+    return ImmutableSet.of();
   }
 }
 
@@ -1400,7 +1355,7 @@ final class NullableObjsType extends JSType {
   private ImmutableSet<ObjectType> objs;
 
   NullableObjsType(ImmutableSet<ObjectType> objs) {
-    this.objs = objs;
+    this.objs = Preconditions.checkNotNull(objs);
   }
 
   protected int getMask() {
@@ -1408,9 +1363,6 @@ final class NullableObjsType extends JSType {
   }
 
   protected ImmutableSet<ObjectType> getObjs() {
-    if (objs == null) {
-      return ImmutableSet.of();
-    }
     return objs;
   }
 
@@ -1419,6 +1371,6 @@ final class NullableObjsType extends JSType {
   }
 
   protected ImmutableSet<EnumType> getEnums() {
-    return null;
+    return ImmutableSet.of();
   }
 }

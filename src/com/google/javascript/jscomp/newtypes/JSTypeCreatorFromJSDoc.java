@@ -98,8 +98,7 @@ public class JSTypeCreatorFromJSDoc {
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
 
-  private static final JSType OBJECT_OR_NULL =
-      JSType.join(JSType.TOP_OBJECT, JSType.NULL);
+  private final JSType objectOrNull;
 
   /** Exception for when unrecognized type names are encountered */
   public static class UnknownTypeException extends Exception {
@@ -113,11 +112,12 @@ public class JSTypeCreatorFromJSDoc {
   private Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
 
   public JSTypeCreatorFromJSDoc(CodingConvention convention) {
+    this.objectOrNull = JSType.join(JSType.TOP_OBJECT, JSType.NULL);
+    this.qmarkFunctionDeclared = FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration();
     this.convention = convention;
   }
 
-  private static DeclaredFunctionType qmarkFunctionDeclared =
-      FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration();
+  private DeclaredFunctionType qmarkFunctionDeclared;
   private JSType qmarkFunctionOrNull = null;
 
   private JSType getQmarkFunctionOrNull(JSTypes commonTypes) {
@@ -289,7 +289,7 @@ public class JSTypeCreatorFromJSDoc {
       case "Function":
         return getQmarkFunctionOrNull(registry.getCommonTypes());
       case "Object":
-        return OBJECT_OR_NULL;
+        return objectOrNull;
       default: {
         if (outerTypeParameters.contains(typeName)) {
           return JSType.fromTypeVar(typeName);

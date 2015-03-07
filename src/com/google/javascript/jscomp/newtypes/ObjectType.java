@@ -611,9 +611,9 @@ public class ObjectType implements TypeWithProperties {
 
   static ImmutableSet<ObjectType> joinSets(
       ImmutableSet<ObjectType> objs1, ImmutableSet<ObjectType> objs2) {
-    if (objs1 == null) {
+    if (objs1.isEmpty()) {
       return objs2;
-    } else if (objs2 == null) {
+    } else if (objs2.isEmpty()) {
       return objs1;
     }
     ObjectType[] objs1Arr = objs1.toArray(new ObjectType[0]);
@@ -665,9 +665,6 @@ public class ObjectType implements TypeWithProperties {
   static ImmutableSet<ObjectType> meetSetsHelper(
       boolean specializeObjs1,
       Set<ObjectType> objs1, Set<ObjectType> objs2) {
-    if (objs1 == null || objs2 == null) {
-      return null;
-    }
     ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
     for (ObjectType obj2 : objs2) {
       for (ObjectType obj1 : objs1) {

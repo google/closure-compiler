@@ -168,9 +168,6 @@ public class EnumType extends Namespace implements TypeWithProperties {
   }
 
   static boolean hasNonScalar(ImmutableSet<EnumType> enums) {
-    if (enums == null) {
-      return false;
-    }
     for (EnumType e : enums) {
       if (e.declaredType.hasNonScalar()) {
         return true;
@@ -181,10 +178,10 @@ public class EnumType extends Namespace implements TypeWithProperties {
 
   static ImmutableSet<EnumType> union(
       ImmutableSet<EnumType> s1, ImmutableSet<EnumType> s2) {
-    if (s1 == null) {
+    if (s1.isEmpty()) {
       return s2;
     }
-    if (s2 == null || s1.equals(s2)) {
+    if (s2.isEmpty() || s1.equals(s2)) {
       return s1;
     }
     return Sets.union(s1, s2).immutableCopy();
