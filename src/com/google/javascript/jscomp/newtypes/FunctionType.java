@@ -450,6 +450,20 @@ public final class FunctionType {
       return FunctionType.looseJoin(f1, f2);
     }
 
+    if (f1.isGeneric() && f2.isSubtypeOf(f1)) {
+      return f1;
+    } else if (f2.isGeneric() && f1.isSubtypeOf(f2)) {
+      return f2;
+    }
+
+    // We lose precision for generic funs that are not in a subtype relation.
+    if (f1.isGeneric()) {
+      f1 = instantiateGenericsWithUnknown(f1);
+    }
+    if (f2.isGeneric()) {
+      f2 = instantiateGenericsWithUnknown(f2);
+    }
+
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int maxRequiredArity = Math.max(
         f1.requiredFormals.size(), f2.requiredFormals.size());

@@ -1178,12 +1178,14 @@ public abstract class JSType implements TypeI {
     }
     Preconditions.checkArgument(o instanceof JSType);
     JSType t2 = (JSType) o;
-    return getMask() == t2.getMask() && Objects.equals(getObjs(), t2.getObjs());
+    return getMask() == t2.getMask() && Objects.equals(getObjs(), t2.getObjs())
+        && Objects.equals(getEnums(), t2.getEnums())
+        && Objects.equals(getTypeVar(), t2.getTypeVar());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getMask(), getObjs());
+    return Objects.hash(getMask(), getObjs(), getEnums(), getTypeVar());
   }
 }
 

@@ -234,6 +234,25 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testAlhpaRenamingDoesntChangeType() {
+    typeCheck(
+        "/**\n"
+        + " * @param {U} x\n"
+        + " * @param {U} y\n"
+        + " * @template U\n"
+        + " */\n"
+        + "function f(x, y){}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {function(T, T): boolean} comp\n"
+        + " * @param {!Array<T>} arr\n"
+        + " */\n"
+        + "function g(comp, arr) {\n"
+        + "  var compare = comp || f;\n"
+        + "  compare(arr[0], arr[1]);\n"
+        + "}");
+  }
+
   public void testInvalidThisReference() {
     typeCheck("this.x = 5;", CheckGlobalThis.GLOBAL_THIS);
     typeCheck("function f(x){}; f(this);", CheckGlobalThis.GLOBAL_THIS);
