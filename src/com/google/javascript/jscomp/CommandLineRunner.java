@@ -361,10 +361,11 @@ public class CommandLineRunner extends
 
     @Option(name = "--use_types_for_optimization",
         hidden = true,
-        usage = "Experimental: perform additional optimizations " +
-        "based on available information. Inaccurate type annotations " +
+        handler = BooleanOptionHandler.class,
+        usage = "Enable or disable the optimizations " +
+        "based on available type information. Inaccurate type annotations " +
         "may result in incorrect results.")
-    private boolean useTypesForOptimization = false;
+    private boolean useTypesForOptimization = true;
 
     @Option(name = "--warning_level",
         aliases = {"-W"},
