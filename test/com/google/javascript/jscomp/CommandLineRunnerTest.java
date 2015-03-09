@@ -261,7 +261,7 @@ public class CommandLineRunnerTest extends TestCase {
 
   public void testTypedDisabledAdvanced() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
-    args.add("--disable_type_optimizations");
+    args.add("--use_types_for_optimization=false");
     test(
         "/** @constructor */\n"
         + "function Foo() {}\n"
