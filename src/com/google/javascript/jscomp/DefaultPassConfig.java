@@ -107,8 +107,6 @@ public class DefaultPassConfig extends PassConfig {
   /** Names exported by goog.exportSymbol. */
   private Set<String> exportedNames = null;
 
-  /** Shared name generator that remembers character encoding bias */
-  private NameGenerator nameGenerator = null;
   /**
    * Ids for cross-module method stubbing, so that each method has
    * a unique id.
@@ -460,9 +458,8 @@ public class DefaultPassConfig extends PassConfig {
 
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
-    if (options.closurePass &&
-        (options.removeAbstractMethods || options.removeClosureAsserts)) {
-      passes.add(closureCodeRemoval);
+    if (options.closurePass) {
+      passes.add(closureEarlyOptimize);
     }
 
     // Property disambiguation should only run once and needs to be done
@@ -1735,11 +1732,13 @@ public class DefaultPassConfig extends PassConfig {
   };
 
   /** Remove variables set to goog.abstractMethod. */
-  private final PassFactory closureCodeRemoval =
-      new PassFactory("closureCodeRemoval", true) {
+  private final PassFactory closureEarlyOptimize =
+      new PassFactory("closureEarlyOptimize", true) {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
-      return new ClosureCodeRemoval(compiler, options.removeAbstractMethods,
+      return new ClosureEarlyOptimize(
+          compiler,
+          options.removeAbstractMethods,
           options.removeClosureAsserts);
     }
   };
