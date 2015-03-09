@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.List;
 import java.util.Set;
@@ -46,7 +45,7 @@ import java.util.Set;
  *
  * @author robbyw@google.com (Robby Walker)
  */
-final class ClosureEarlyOptimize implements CompilerPass {
+final class ClosureCodeRemoval implements CompilerPass {
 
   /** Reference to the JS compiler */
   private final AbstractCompiler compiler;
@@ -56,7 +55,6 @@ final class ClosureEarlyOptimize implements CompilerPass {
 
   private final boolean removeAbstractMethods;
   private final boolean removeAssertionCalls;
-  private JSType promiseInstanceType;
 
   /**
    * List of names referenced in successive generations of finding referenced
@@ -111,8 +109,8 @@ final class ClosureEarlyOptimize implements CompilerPass {
       do {
         ancestor = ancestor.getParent();
         assignAncestors.add(ancestor);
-      } while (ancestor.isAssign()
-          && ancestor.getFirstChild().isQualifiedName());
+      } while (ancestor.isAssign() &&
+               ancestor.getFirstChild().isQualifiedName());
       lastAncestor = ancestor.getParent();
     }
 
@@ -145,9 +143,9 @@ final class ClosureEarlyOptimize implements CompilerPass {
         Node nameNode = n.getFirstChild();
         Node valueNode = n.getLastChild();
 
-        if (nameNode.isQualifiedName()
-            && valueNode.isQualifiedName()
-            && valueNode.matchesQualifiedName(ABSTRACT_METHOD_NAME)) {
+        if (nameNode.isQualifiedName() &&
+            valueNode.isQualifiedName() &&
+            valueNode.matchesQualifiedName(ABSTRACT_METHOD_NAME)) {
           abstractMethodAssignmentNodes.add(new RemovableAssignment(
               n.getFirstChild(), n, t));
         }
@@ -185,46 +183,13 @@ final class ClosureEarlyOptimize implements CompilerPass {
 
 
   /**
-   * Replaces calls to goog.Promise "then" with "thenVoid" when
-   * the return value is not used.
-   */
-  private class ReplaceThenCalls extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isCall()) {
-        Node target = n.getFirstChild();
-        if (target.isGetProp()
-            && target.getLastChild().getString().equals("then")
-            && !NodeUtil.isExpressionResultUsed(n)
-            && isGoogPromiseMethodCall(target)) {
-          target.getLastChild().setString("thenVoid");
-          compiler.reportCodeChange();
-        }
-      }
-    }
-
-    private boolean isGoogPromiseMethodCall(Node n) {
-      JSType type = n.getFirstChild().getJSType();
-      if (type != null) {
-        type = type.restrictByNotNullOrUndefined();
-        if (!type.isEmptyType() && !type.isUnknownType()) {
-          compiler.getTypeRegistry().getType("goog.Promise");
-          return type.isSubtypeOf(promiseInstanceType);
-        }
-      }
-      return false;
-    }
-  }
-
-
-  /**
    * Creates a Closure code remover.
    *
    * @param compiler The AbstractCompiler
    * @param removeAbstractMethods Remove declarations of abstract methods.
    * @param removeAssertionCalls Remove calls to goog.assert functions.
    */
-  ClosureEarlyOptimize(AbstractCompiler compiler, boolean removeAbstractMethods,
+  ClosureCodeRemoval(AbstractCompiler compiler, boolean removeAbstractMethods,
                      boolean removeAssertionCalls) {
     this.compiler = compiler;
     this.removeAbstractMethods = removeAbstractMethods;
@@ -234,23 +199,12 @@ final class ClosureEarlyOptimize implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     List<Callback> passes = Lists.newArrayList();
-    this.promiseInstanceType = compiler.getTypeRegistry().getType(
-        "goog.Promise");
-    if (promiseInstanceType != null) {
-      passes.add(new ReplaceThenCalls());
-    }
-
     if (removeAbstractMethods) {
       passes.add(new FindAbstractMethods());
     }
     if (removeAssertionCalls) {
       passes.add(new FindAssertionCalls());
     }
-
-    if (passes.isEmpty()) {
-      return;
-    }
-
     CombinedCompilerPass.traverse(compiler, root, passes);
 
     for (RemovableAssignment assignment : abstractMethodAssignmentNodes) {
