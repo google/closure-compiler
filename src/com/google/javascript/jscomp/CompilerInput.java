@@ -176,12 +176,19 @@ public class CompilerInput
 
   // TODO(nicksantos): Remove addProvide/addRequire/removeRequire once
   // there is better support for discovering non-closure dependencies.
-  void addProvide(String provide) {
+
+  /**
+   * Registers a type that this input defines.
+   */
+  public void addProvide(String provide) {
     getProvides();
     provides.add(provide);
   }
 
-  void addRequire(String require) {
+  /**
+   * Registers a type that this input depends on.
+   */
+  public void addRequire(String require) {
     getRequires();
     requires.add(require);
   }
