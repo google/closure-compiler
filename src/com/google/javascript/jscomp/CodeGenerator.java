@@ -113,10 +113,8 @@ class CodeGenerator {
       return;
     }
 
-    if (preserveTypeAnnotations) {
-      if (n.getJSDocInfo() != null) {
-        add(JSDocInfoPrinter.print(n.getJSDocInfo()));
-      }
+    if (preserveTypeAnnotations && n.getJSDocInfo() != null) {
+      add(JSDocInfoPrinter.print(n.getJSDocInfo()));
     }
 
     int type = n.getType();

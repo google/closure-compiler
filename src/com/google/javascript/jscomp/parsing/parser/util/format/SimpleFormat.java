@@ -488,10 +488,8 @@ public final class SimpleFormat {
             throw token.unknownFormatConversionException();
         }
 
-        if (Character.isUpperCase(token.getConversionType())) {
-            if (result != null) {
-                result = result.toString().toUpperCase();
-            }
+        if (Character.isUpperCase(token.getConversionType()) && result != null) {
+          result = result.toString().toUpperCase();
         }
         return result;
     }

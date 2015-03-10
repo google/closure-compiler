@@ -242,12 +242,10 @@ public class ClosureCodingConvention extends CodingConventions.Proxy {
     String className = null;
     if (NodeUtil.isExprCall(parent)) {
       Node callee = node.getFirstChild();
-      if (callee != null && callee.isGetProp()) {
-        if (callee.matchesQualifiedName(functionName)) {
-          Node target = callee.getNext();
-          if (target != null && target.isString()) {
-            className = target.getString();
-          }
+      if (callee != null && callee.isGetProp() && callee.matchesQualifiedName(functionName)) {
+        Node target = callee.getNext();
+        if (target != null && target.isString()) {
+          className = target.getString();
         }
       }
     }

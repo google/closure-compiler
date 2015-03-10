@@ -1502,28 +1502,23 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private void checkPropertyAccessHelper(JSType objectType, String propName,
       NodeTraversal t, Node n) {
-    if (!objectType.isEmptyType() &&
-        reportMissingProperties &&
-        (!NodeUtil.isPropertyTest(compiler, n) || objectType.isStruct())) {
-      if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
-        boolean lowConfidence = objectType.isUnknownType()
-            || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
-        SuggestionPair pair = null;
-        if (!lowConfidence) {
-          pair = getClosestPropertySuggestion(objectType, propName);
-        }
-        if (pair != null && pair.distance * 4 < propName.length()) {
-          report(t, n.getLastChild(), INEXISTENT_PROPERTY_WITH_SUGGESTION,
-              propName,
-              typeRegistry.getReadableJSTypeName(n.getFirstChild(), true),
-              pair.suggestion);
-        } else {
-          DiagnosticType reportType = lowConfidence ?
-              POSSIBLE_INEXISTENT_PROPERTY :
-              INEXISTENT_PROPERTY;
-          report(t, n.getLastChild(), reportType, propName,
-              typeRegistry.getReadableJSTypeName(n.getFirstChild(), true));
-        }
+    if (!objectType.isEmptyType() && reportMissingProperties
+        && (!NodeUtil.isPropertyTest(compiler, n) || objectType.isStruct())
+        && !typeRegistry.canPropertyBeDefined(objectType, propName)) {
+      boolean lowConfidence =
+          objectType.isUnknownType() || objectType.isEquivalentTo(getNativeType(OBJECT_TYPE));
+      SuggestionPair pair = null;
+      if (!lowConfidence) {
+        pair = getClosestPropertySuggestion(objectType, propName);
+      }
+      if (pair != null && pair.distance * 4 < propName.length()) {
+        report(t, n.getLastChild(), INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
+            typeRegistry.getReadableJSTypeName(n.getFirstChild(), true), pair.suggestion);
+      } else {
+        DiagnosticType reportType =
+            lowConfidence ? POSSIBLE_INEXISTENT_PROPERTY : INEXISTENT_PROPERTY;
+        report(t, n.getLastChild(), reportType, propName,
+            typeRegistry.getReadableJSTypeName(n.getFirstChild(), true));
       }
     }
   }
@@ -2093,13 +2088,9 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
             type.isUnknownType());
     // TODO(johnlenz): this seems like a strange place to check "@implicitCast"
     JSDocInfo info = n.getJSDocInfo();
-    if (info != null) {
-      if (info.isImplicitCast() && !inExterns) {
-        String propName = n.isGetProp() ?
-            n.getLastChild().getString() : "(missing)";
-        compiler.report(
-            t.makeError(n, ILLEGAL_IMPLICIT_CAST, propName));
-      }
+    if (info != null && (info.isImplicitCast() && !inExterns)) {
+      String propName = n.isGetProp() ? n.getLastChild().getString() : "(missing)";
+      compiler.report(t.makeError(n, ILLEGAL_IMPLICIT_CAST, propName));
     }
 
     if (n.getJSType() == null) {

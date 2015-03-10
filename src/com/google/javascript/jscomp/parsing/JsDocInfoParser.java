@@ -951,13 +951,11 @@ public final class JsDocInfoParser {
                   new TypeTransformationParser(typeTransformationExpr,
                       sourceFile, errorReporter, templateLineno, templateCharno);
               // If the parsing was successful store the type transformation
-              if (ttlParser.parseTypeTransformation()) {
-                if (!jsdocBuilder.recordTypeTransformation(names.get(0),
-                    ttlParser.getTypeTransformationAst())) {
-                  parser.addTypeWarning(
-                      "msg.jsdoc.template.name.declared.twice",
-                      templateLineno, templateCharno);
-                }
+              if (ttlParser.parseTypeTransformation()
+                  && !jsdocBuilder.recordTypeTransformation(
+                      names.get(0), ttlParser.getTypeTransformationAst())) {
+                parser.addTypeWarning(
+                    "msg.jsdoc.template.name.declared.twice", templateLineno, templateCharno);
               }
             }
           }
@@ -1060,12 +1058,9 @@ public final class JsDocInfoParser {
             // This will have some weird behavior in some cases
             // (for example, @private can now be used as a type-cast),
             // but should be mostly OK.
-            if ((type != null && isAlternateTypeAnnotation)
-                || annotation == Annotation.TYPE) {
-              if (!jsdocBuilder.recordType(type)) {
-                parser.addTypeWarning(
-                    "msg.jsdoc.incompat.type", lineno, charno);
-              }
+            if (((type != null && isAlternateTypeAnnotation) || annotation == Annotation.TYPE)
+                && !jsdocBuilder.recordType(type)) {
+              parser.addTypeWarning("msg.jsdoc.incompat.type", lineno, charno);
             }
 
             boolean isAnnotationNext = lookAheadForAnnotation();

@@ -196,10 +196,8 @@ class FunctionArgumentInjector {
       boolean inInnerFunction) {
     Preconditions.checkArgument(unsafe != null);
     if (n.isName()) {
-      if (names.contains(n.getString())) {
-        if (inInnerFunction || canNameValueChange(n, parent)) {
-          unsafe.add(n.getString());
-        }
+      if (names.contains(n.getString()) && (inInnerFunction || canNameValueChange(n, parent))) {
+        unsafe.add(n.getString());
       }
     } else if (n.isFunction()) {
       // A function parameter can not be replaced with a direct inlined value

@@ -446,34 +446,30 @@ class DisambiguateProperties<T> implements CompilerPass {
       T type = typeSystem.getType(getScope(), n.getFirstChild(), name);
 
       Property prop = getProperty(name);
-      if (!prop.scheduleRenaming(n.getLastChild(),
-                                 processProperty(t, prop, type, null))) {
-        if (propertiesToErrorFor.containsKey(name)) {
-          String suggestion = "";
-          if (type instanceof JSType) {
-            JSType jsType = (JSType) type;
-            if (jsType.isAllType() || jsType.isUnknownType()) {
-              if (n.getFirstChild().isThis()) {
-                suggestion = "The \"this\" object is unknown in the function," +
+      if (!prop.scheduleRenaming(n.getLastChild(), processProperty(t, prop, type, null))
+          && propertiesToErrorFor.containsKey(name)) {
+        String suggestion = "";
+        if (type instanceof JSType) {
+          JSType jsType = (JSType) type;
+          if (jsType.isAllType() || jsType.isUnknownType()) {
+            if (n.getFirstChild().isThis()) {
+              suggestion = "The \"this\" object is unknown in the function," +
                     "consider using @this";
-              } else {
-                String qName = n.getFirstChild().getQualifiedName();
-                suggestion = "Consider casting " + qName +
-                    " if you know it's type.";
-              }
             } else {
-              List<String> errors = Lists.newArrayList();
-              printErrorLocations(errors, jsType);
-              if (!errors.isEmpty()) {
-                suggestion =
-                    "Consider fixing errors for the following types:\n";
-                suggestion += Joiner.on("\n").join(errors);
-              }
+              String qName = n.getFirstChild().getQualifiedName();
+              suggestion = "Consider casting " + qName + " if you know it's type.";
+            }
+          } else {
+            List<String> errors = Lists.newArrayList();
+            printErrorLocations(errors, jsType);
+            if (!errors.isEmpty()) {
+              suggestion = "Consider fixing errors for the following types:\n";
+              suggestion += Joiner.on("\n").join(errors);
             }
           }
-          compiler.report(JSError.make(n, propertiesToErrorFor.get(name), Warnings.INVALIDATION,
-              name, (String.valueOf(type)), n.toString(), suggestion));
         }
+        compiler.report(JSError.make(n, propertiesToErrorFor.get(name), Warnings.INVALIDATION, name,
+            (String.valueOf(type)), n.toString(), suggestion));
       }
     }
 

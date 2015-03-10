@@ -95,10 +95,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isCall() && isGoogDefineClass(n)) {
-      if (!validateUsage(n)) {
-        compiler.report(JSError.make(n, GOOG_CLASS_TARGET_INVALID));
-      }
+    if (n.isCall() && isGoogDefineClass(n) && !validateUsage(n)) {
+      compiler.report(JSError.make(n, GOOG_CLASS_TARGET_INVALID));
     }
     maybeRewriteClassDefinition(n);
   }

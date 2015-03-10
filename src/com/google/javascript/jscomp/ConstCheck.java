@@ -96,10 +96,8 @@ class ConstCheck extends AbstractPostOrderCallback
         if (lhs.isName()) {
           String name = lhs.getString();
           Var var = t.getScope().getVar(name);
-          if (isConstant(var)) {
-            if (!initializedConstants.add(var)) {
-              reportError(t, n, var, name);
-            }
+          if (isConstant(var) && !initializedConstants.add(var)) {
+            reportError(t, n, var, name);
           }
         }
         break;

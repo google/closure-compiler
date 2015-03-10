@@ -251,15 +251,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           }
         }
 
-        if (!shadowDetected && isDeclaration
-            && (letConstShadowsVar || shadowCatchVar)) {
-          if (v.getScope() == reference.getScope()) {
-            compiler.report(
-                JSError.make(
-                    referenceNode,
-                    checkLevel,
-                    REDECLARED_VARIABLE_ERROR, v.name));
-          }
+        if (!shadowDetected && isDeclaration && (letConstShadowsVar || shadowCatchVar)
+            && v.getScope() == reference.getScope()) {
+          compiler.report(
+              JSError.make(referenceNode, checkLevel, REDECLARED_VARIABLE_ERROR, v.name));
         }
 
         if (isUnhoistedNamedFunction && !isDeclaration && isDeclaredInScope) {

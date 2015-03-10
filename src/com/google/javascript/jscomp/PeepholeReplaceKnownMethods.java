@@ -149,14 +149,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
 
       String functionNameString = callTarget.getString();
       Node firstArgument = callTarget.getNext();
-      if ((firstArgument != null) &&
-          (firstArgument.isString() ||
-           firstArgument.isNumber())) {
-        if (functionNameString.equals("parseInt") ||
-            functionNameString.equals("parseFloat")) {
-          subtree = tryFoldParseNumber(subtree, functionNameString,
-              firstArgument);
-        }
+      if ((firstArgument != null) && (firstArgument.isString() || firstArgument.isNumber())
+          && (functionNameString.equals("parseInt") || functionNameString.equals("parseFloat"))) {
+        subtree = tryFoldParseNumber(subtree, functionNameString, firstArgument);
       }
     }
     return subtree;

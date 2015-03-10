@@ -331,10 +331,8 @@ class InlineFunctions implements CompilerPass {
       }
 
       // Check if block inlining is allowed.
-      if (fs.canInline() && !fs.canInlineDirectly()) {
-        if (!blockFunctionInliningEnabled) {
-          fs.setInline(false);
-        }
+      if (fs.canInline() && !fs.canInlineDirectly() && !blockFunctionInliningEnabled) {
+        fs.setInline(false);
       }
     }
   }
@@ -802,10 +800,8 @@ class InlineFunctions implements CompilerPass {
       Node node, Set<String> changed) {
     Preconditions.checkArgument(changed != null);
     // For each referenced function, add a new reference
-    if (node.isName()) {
-      if (isCandidateUsage(node)) {
-        changed.add(node.getString());
-      }
+    if (node.isName() && isCandidateUsage(node)) {
+      changed.add(node.getString());
     }
 
     for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {

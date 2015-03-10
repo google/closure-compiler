@@ -147,10 +147,8 @@ public class Es6RewriteLetConst extends AbstractPostOrderCallback
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isFunction()) {
-        if (NormalizeStatements.maybeNormalizeFunctionDeclaration(n)) {
-          compiler.reportCodeChange();
-        }
+      if (n.isFunction() && NormalizeStatements.maybeNormalizeFunctionDeclaration(n)) {
+        compiler.reportCodeChange();
       }
     }
   }

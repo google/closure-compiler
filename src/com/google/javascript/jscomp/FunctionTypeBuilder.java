@@ -344,15 +344,13 @@ final class FunctionTypeBuilder {
       // Class template types, which can be used in the scope of a constructor
       // definition.
       ImmutableList<String> typeParameters = info.getTemplateTypeNames();
-      if (!typeParameters.isEmpty()) {
-        if (isConstructor || isInterface) {
-          ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
-          for (String typeParameter : typeParameters) {
-            builder.add(typeRegistry.createTemplateType(typeParameter));
-          }
-          classTemplateTypeNames = builder.build();
-          typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+      if (!typeParameters.isEmpty() && (isConstructor || isInterface)) {
+        ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+        for (String typeParameter : typeParameters) {
+          builder.add(typeRegistry.createTemplateType(typeParameter));
         }
+        classTemplateTypeNames = builder.build();
+        typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
       }
 
       // base type

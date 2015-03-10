@@ -249,13 +249,11 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
           //    externs definition if no other definition is provided.
 
           boolean dropStub = false;
-          if (!jsdocContainsDeclarations(node)) {
-            if (node.isQualifiedName()) {
-              for (Definition prevDef : nameDefinitionMultimap.get(name)) {
-                if (node.matchesQualifiedName(prevDef.getLValue())) {
-                  dropStub = true;
-                  break;
-                }
+          if (!jsdocContainsDeclarations(node) && node.isQualifiedName()) {
+            for (Definition prevDef : nameDefinitionMultimap.get(name)) {
+              if (node.matchesQualifiedName(prevDef.getLValue())) {
+                dropStub = true;
+                break;
               }
             }
           }

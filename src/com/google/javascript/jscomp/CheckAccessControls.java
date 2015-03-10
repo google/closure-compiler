@@ -613,11 +613,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
       // Add the prototype when we're looking at an instance object
       if (objectType.isInstanceType()) {
         ObjectType prototype = objectType.getImplicitPrototype();
-        if (prototype != null) {
-          if (prototype.hasProperty(propertyName)) {
-            initializedConstantProperties.put(prototype,
-                propertyName);
-          }
+        if (prototype != null && prototype.hasProperty(propertyName)) {
+          initializedConstantProperties.put(prototype, propertyName);
         }
       }
     }

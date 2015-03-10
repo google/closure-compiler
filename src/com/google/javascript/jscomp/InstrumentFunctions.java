@@ -171,12 +171,10 @@ class InstrumentFunctions implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isVarDeclaration(n)) {
-        if (removable.contains(n.getString())) {
-          parent.removeChild(n);
-          if (!parent.hasChildren()) {
-            parent.getParent().removeChild(parent);
-          }
+      if (NodeUtil.isVarDeclaration(n) && removable.contains(n.getString())) {
+        parent.removeChild(n);
+        if (!parent.hasChildren()) {
+          parent.getParent().removeChild(parent);
         }
       }
     }
