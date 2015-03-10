@@ -88,6 +88,7 @@ public class CheckConformanceTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableTypeCheck(CheckLevel.OFF);
+    super.enableClosurePass();
     configuration = DEFAULT_CONFORMANCE;
   }
 
@@ -1073,6 +1074,22 @@ public class CheckConformanceTest extends CompilerTestCase {
         "foo.Bar.prototype = {\n" +
         "  baz: function(){}\n" +
         "};");
+  }
+
+  public void testCustomBanUnresolvedType() {
+    configuration =
+        "requirement: {\n"
+        + "  type: CUSTOM\n"
+        + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanUnresolvedType'\n"
+        + "  error_message: 'BanUnresolvedType Message'\n"
+        + "}";
+
+    testSame(
+        EXTERNS,
+        "goog.forwardDeclare('Foo');"
+        + "/** @param {Foo} a */ function f(a) {a.foo()};",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanUnresolvedType Message");
   }
 
   public void testMergeRequirements() {

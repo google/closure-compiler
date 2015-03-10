@@ -966,6 +966,50 @@ public final class ConformanceRules {
   }
 
   /**
+   * Banned accessing properties from objects that are unresolved
+   * forward-declared type names. For legacy reasons this is allowed but
+   * causes unexpected weaknesses in the type inference.
+   */
+  public static final class BanUnresolvedType extends AbstractRule {
+    public BanUnresolvedType(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isGetProp()) {
+        Node target = n.getFirstChild();
+        JSType type = target.getJSType();
+        if (type != null && !conforms(type) && !isWhiteListed(n)) {
+          return ConformanceResult.VIOLATION;
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean conforms(JSType type) {
+      if (type.isUnionType()) {
+        // unwrap union types which might contain unresolved type name
+        // references for example {Foo|undefined}
+        for (JSType part : type.toMaybeUnionType().getAlternates()) {
+          if (!conforms(part)) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return !type.isNoResolvedType();
+      }
+    }
+
+    private boolean isWhiteListed(Node n) {
+      return n.getParent().isCast();
+    }
+  }
+
+
+  /**
    * Banned global var declarations.
    */
   public static final class BanGlobalVars extends AbstractRule {
