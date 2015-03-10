@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDoc.MISSING_PARAM_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDoc.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_NAME_NOT_MARKED_OPTIONAL;
@@ -22,6 +23,7 @@ import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_TYPE_NOT_USI
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 
@@ -32,6 +34,49 @@ public class CheckJSDocTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckJSDoc(compiler);
+  }
+
+  public void testInvalidClassJsdoc() {
+    this.setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+
+    testSame(
+        Joiner.on('\n').join(
+            "class Foo {",
+            "  /** @param {number} x */",
+            "  constructor(x) {}",
+            "}"));
+
+    testSame(
+        Joiner.on('\n').join(
+            "class Foo {",
+            "  /** @constructor */",
+            "  constructor() {}",
+            "}"),
+        DISALLOWED_MEMBER_JSDOC);
+
+    testSame(
+        Joiner.on('\n').join(
+            "class Foo {",
+            "  /** @interface */",
+            "  constructor() {}",
+            "}"),
+        DISALLOWED_MEMBER_JSDOC);
+
+    testSame(
+        Joiner.on('\n').join(
+            "class Foo {",
+            "  /** @extends {Foo} */",
+            "  constructor() {}",
+            "}"),
+        DISALLOWED_MEMBER_JSDOC);
+
+    testSame(
+        Joiner.on('\n').join(
+            "class Foo {",
+            "  /** @implements {Foo} */",
+            "  constructor() {}",
+            "}"),
+        DISALLOWED_MEMBER_JSDOC);
   }
 
   public void testMissingParam() {

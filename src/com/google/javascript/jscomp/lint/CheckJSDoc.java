@@ -44,6 +44,10 @@ public final class CheckJSDoc extends AbstractPostOrderCallback implements Compi
       DiagnosticType.warning("JSC_OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME",
           "Optional parameter name {0} must be prefixed with opt_");
 
+  public static final DiagnosticType DISALLOWED_MEMBER_JSDOC =
+      DiagnosticType.warning("JSC_DISALLOWED_MEMBER_JSDOC",
+          "Class level JSDocs (@interface, @extends, etc.) are not allowed on class members");
+
   private final AbstractCompiler compiler;
 
   public CheckJSDoc(AbstractCompiler compiler) {
@@ -58,7 +62,6 @@ public final class CheckJSDoc extends AbstractPostOrderCallback implements Compi
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isFunction()) {
-      String name = NodeUtil.getFunctionName(n);
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
       if (jsDoc != null) {
         for (Node param : n.getFirstChild().getNext().children()) {
@@ -75,10 +78,19 @@ public final class CheckJSDoc extends AbstractPostOrderCallback implements Compi
           }
         }
 
+        String name = NodeUtil.getFunctionName(n);
         if (name != null && compiler.getCodingConvention().isPrivate(name)
             && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
           t.report(n, MUST_BE_PRIVATE, name);
         }
+      }
+    } else if (n.isMemberFunctionDef()) {
+      JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+      if (jsDoc != null
+          && (jsDoc.isConstructor() || jsDoc.isInterface() || jsDoc.hasBaseType()
+              || jsDoc.getImplementedInterfaceCount() != 0
+              || jsDoc.getExtendedInterfacesCount() != 0)) {
+        t.report(n, DISALLOWED_MEMBER_JSDOC);
       }
     }
   }
