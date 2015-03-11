@@ -47,9 +47,6 @@ package com.google.javascript.rhino;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public interface TypeI {
-  String getReferenceName();
-
-  boolean hasOwnProperty(String propName);
 
   boolean isBottom();
 

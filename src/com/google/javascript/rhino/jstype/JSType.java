@@ -1480,18 +1480,4 @@ public abstract class JSType implements TypeI, Serializable {
   public ObjectType toMaybeObjectType() {
     return toObjectType();
   }
-
-  @Override
-  public boolean hasOwnProperty(String propName) {
-    throw new UnsupportedOperationException(
-        "Method hasOwnProperty is only supported by some sub-classes."
-        + "If it is called on any other type, error.");
-  }
-
-  @Override
-  public String getReferenceName() {
-    throw new UnsupportedOperationException(
-        "Method hasOwnProperty is only supported by some sub-classes."
-        + "If it is called on any other type, error.");
-  }
 }

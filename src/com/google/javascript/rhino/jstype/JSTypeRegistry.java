@@ -54,13 +54,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
@@ -956,7 +953,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param jsTypeName The name string.
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
-  @Override
   public JSType getType(String jsTypeName) {
     // TODO(user): Push every local type name out of namesToTypes so that
     // NamedType#resolve is correct.
@@ -967,12 +963,10 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     return namesToTypes.get(jsTypeName);
   }
 
-  @Override
   public JSType getNativeType(JSTypeNative typeId) {
     return nativeTypes[typeId.ordinal()];
   }
 
-  @Override
   public ObjectType getNativeObjectType(JSTypeNative typeId) {
     return (ObjectType) getNativeType(typeId);
   }
@@ -1377,12 +1371,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param existingFunctionType the existing function type.
    * @param returnType the new return type.
    */
-  @Override
   public FunctionType createFunctionTypeWithNewReturnType(
-      FunctionTypeI existingFunctionType, TypeI returnType) {
+      FunctionType existingFunctionType, JSType returnType) {
     return new FunctionBuilder(this)
-        .copyFromOtherFunction((FunctionType) existingFunctionType)
-        .withReturnType((JSType) returnType)
+        .copyFromOtherFunction(existingFunctionType)
+        .withReturnType(returnType)
         .build();
   }
 
@@ -1578,13 +1571,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param templatizedTypes a list of the template JSTypes. Will be matched by
    *     list order to the template keys on the base type.
    */
-  @Override
   public TemplatizedType createTemplatizedType(
-      ObjectTypeI baseType, ImmutableList<? extends TypeI> templatizedTypes) {
+      ObjectType baseType, ImmutableList<JSType> templatizedTypes) {
     // Only ObjectTypes can currently be templatized; extend this logic when
     // more types can be templatized.
-    return new TemplatizedType(
-        this, (ObjectType) baseType, (ImmutableList<JSType>) templatizedTypes);
+    return new TemplatizedType(this, baseType, templatizedTypes);
   }
 
   /**

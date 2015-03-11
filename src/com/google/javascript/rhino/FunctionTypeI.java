@@ -54,20 +54,11 @@ public interface FunctionTypeI extends TypeI {
    */
   TypeI convertMethodToFunction();
 
-  boolean defineDeclaredProperty(
-      String propertyName, TypeI type, Node propertyNode);
-
   ObjectTypeI getInstanceType();
 
-  FunctionTypeI forgetParameterAndReturnTypes();
-
-  ObjectTypeI getPrototype();
-
-  TypeI getReturnType();
+  String getReferenceName();
 
   Node getSource();
-
-  FunctionTypeI getSuperClassConstructor();
 
   List<? extends FunctionTypeI> getSubTypes();
 
