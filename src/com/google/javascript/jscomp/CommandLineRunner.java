@@ -516,7 +516,7 @@ public class CommandLineRunner extends
         hidden = true,
         usage = "Sets what language spec the output should conform to. "
         + " If omitted, defaults to the value of language_in. "
-        + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT"
+        + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
         + "ECMASCRIPT6_TYPED (experimental)")
     private String languageOut = "";
 
