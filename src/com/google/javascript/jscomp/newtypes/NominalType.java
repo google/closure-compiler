@@ -335,7 +335,7 @@ public class NominalType {
     return c2.isSubclassOf(c1) ? c2 : null;
   }
 
-  boolean unifyWith(NominalType other, List<String> typeParameters,
+  boolean unifyWithSubtype(NominalType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     if (this.rawType != other.rawType) {
       return false;
@@ -354,7 +354,7 @@ public class NominalType {
     }
     boolean hasUnified = true;
     for (String typeParam : rawType.typeParameters) {
-      hasUnified = hasUnified && typeMap.get(typeParam).unifyWith(
+      hasUnified = hasUnified && typeMap.get(typeParam).unifyWithSubtype(
           other.typeMap.get(typeParam), typeParameters, typeMultimap);
     }
     return hasUnified;

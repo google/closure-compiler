@@ -571,7 +571,7 @@ public class FunctionType {
     return typeParameters;
   }
 
-  boolean unifyWith(FunctionType other, List<String> typeParameters,
+  boolean unifyWithSubtype(FunctionType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     Preconditions.checkState(this.typeParameters == null);
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
@@ -592,7 +592,7 @@ public class FunctionType {
     while (thisReqFormals.hasNext()) {
       JSType reqFormal = thisReqFormals.next();
       JSType otherReqFormal = otherReqFormals.next();
-      if (!reqFormal.unifyWith(otherReqFormal, typeParameters, typeMultimap)) {
+      if (!reqFormal.unifyWithSubtype(otherReqFormal, typeParameters, typeMultimap)) {
         return false;
       }
     }
@@ -605,7 +605,7 @@ public class FunctionType {
     while (thisOptFormals.hasNext()) {
       JSType optFormal = thisOptFormals.next();
       JSType otherOptFormal = otherOptFormals.next();
-      if (!optFormal.unifyWith(otherOptFormal, typeParameters, typeMultimap)) {
+      if (!optFormal.unifyWithSubtype(otherOptFormal, typeParameters, typeMultimap)) {
         return false;
       }
     }
@@ -614,7 +614,7 @@ public class FunctionType {
         restFormals != null && other.restFormals == null) {
       return false;
     }
-    if (restFormals != null && !restFormals.unifyWith(
+    if (restFormals != null && !restFormals.unifyWithSubtype(
         other.restFormals, typeParameters, typeMultimap)) {
       return false;
     }
@@ -623,7 +623,7 @@ public class FunctionType {
         || nominalType != null && other.nominalType == null) {
       return false;
     }
-    if (nominalType != null && !nominalType.unifyWith(
+    if (nominalType != null && !nominalType.unifyWithSubtype(
         other.nominalType, typeParameters, typeMultimap)) {
       return false;
     }
@@ -631,12 +631,12 @@ public class FunctionType {
     // If one of the two functions doesn't use THIS in the body, we can still
     // unify.
     if (this.receiverType != null && other.receiverType != null
-        && !this.receiverType.unifyWith(
+        && !this.receiverType.unifyWithSubtype(
             other.receiverType, typeParameters, typeMultimap)) {
       return false;
     }
 
-    return returnType.unifyWith(other.returnType, typeParameters, typeMultimap);
+    return returnType.unifyWithSubtype(other.returnType, typeParameters, typeMultimap);
   }
 
   private static FunctionType instantiateGenericsWithUnknown(FunctionType f) {
@@ -858,7 +858,7 @@ public class FunctionType {
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
     for (int i = 0, size = argTypes.size(); i < size; i++) {
       if (!this.getFormalType(i)
-          .unifyWith(argTypes.get(i), typeParameters, typeMultimap)) {
+          .unifyWithSubtype(argTypes.get(i), typeParameters, typeMultimap)) {
         return null;
       }
     }

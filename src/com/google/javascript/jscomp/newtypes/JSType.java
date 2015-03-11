@@ -560,38 +560,32 @@ public abstract class JSType {
 
   /**
    * Unify {@code this}, which may contain free type variables,
-   * with {@code other}, a concrete type, modifying the supplied
+   * with {@code other}, a concrete subtype, modifying the supplied
    * {@code typeMultimap} to add any new template variable type bindings.
+   * Note that if {@code this} is a union type, some of the union members may
+   * be ignored if they are not present in {@code other}.
    * @return Whether unification succeeded
    */
-  public boolean unifyWith(JSType other, List<String> typeParameters,
+  public boolean unifyWithSubtype(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
-    if (this.isUnknown()) {
+    if (this.isUnknown() || this.isTop()) {
       return true;
-    } else if (this.isTop()) {
-      return other.isTop();
     } else if (getMask() == TYPEVAR_MASK
         && typeParameters.contains(getTypeVar())) {
       updateTypemap(typeMultimap, getTypeVar(), other);
       return true;
-    } else if (other.isTop()) {
-      return false;
     } else if (other.isUnknown()) {
       return true;
+    } else if (other.isTop()) {
+      // T|number doesn't unify with TOP
+      return false;
     }
 
     Set<EnumType> ununifiedEnums = ImmutableSet.of();
     if (getEnums().isEmpty()) {
       ununifiedEnums = other.getEnums();
     } else if (other.getEnums().isEmpty()) {
-      return false;
-    } else {
       ununifiedEnums = new LinkedHashSet<>();
-      for (EnumType e : getEnums()) {
-        if (!other.getEnums().contains(e)) {
-          return false;
-        }
-      }
       for (EnumType e : other.getEnums()) {
         if (!getEnums().contains(e)) {
           ununifiedEnums.add(e);
@@ -599,27 +593,26 @@ public abstract class JSType {
       }
     }
 
-    Set<ObjectType> ununified = new LinkedHashSet<>(other.getObjs());
+    Set<ObjectType> ununifiedObjs = new LinkedHashSet<>(other.getObjs());
     // Each obj in this must unify w/ exactly one obj in other.
     // However, we don't check that two different objects of this don't unify
     // with the same other type.
+    // Fancy cases are unfortunately iteration-order dependent, eg,
+    // Foo<number>|Foo<string> may or may not unify with Foo<T>|Foo<string>
     for (ObjectType targetObj : getObjs()) {
-      boolean hasUnified = false;
       for (ObjectType sourceObj : other.getObjs()) {
-        if (targetObj.unifyWith(sourceObj, typeParameters, typeMultimap)) {
-          ununified.remove(sourceObj);
-          hasUnified = true;
+        if (targetObj.unifyWithSubtype(sourceObj, typeParameters, typeMultimap)) {
+          ununifiedObjs.remove(sourceObj);
         }
-      }
-      if (!hasUnified) {
-        return false;
       }
     }
 
     String thisTypevar = getTypeVar();
     String otherTypevar = other.getTypeVar();
     if (thisTypevar == null || !typeParameters.contains(thisTypevar)) {
-      return Objects.equals(thisTypevar, otherTypevar) && getMask() == other.getMask();
+      return ununifiedObjs.isEmpty() && ununifiedEnums.isEmpty()
+          && (otherTypevar == null || otherTypevar.equals(thisTypevar))
+          && getMask() == (getMask() | other.getMask());
     } else {
       // this is (T | ...)
       int templateMask = BOTTOM_MASK;
@@ -628,18 +621,15 @@ public abstract class JSType {
       templateMask |= otherScalarBits & ~thisScalarBits;
 
       if (templateMask == BOTTOM_MASK) {
-        // nothing left in other to assign to thisTypevar
-        return false;
+        // nothing left in other to assign to thisTypevar, so don't update typemap
+        return ununifiedObjs.isEmpty() && ununifiedEnums.isEmpty();
       }
       JSType templateType = makeType(
           promoteBoolean(templateMask),
-          ImmutableSet.copyOf(ununified),
+          ImmutableSet.copyOf(ununifiedObjs),
           otherTypevar,
           ImmutableSet.copyOf(ununifiedEnums));
       updateTypemap(typeMultimap, getTypeVar(), templateType);
-      // We don't do fancy unification, eg,
-      // T|number doesn't unify with TOP
-      // Foo<number>|Foo<string> doesn't unify with Foo<T>|Foo<string>
       return true;
     }
   }

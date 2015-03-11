@@ -797,16 +797,16 @@ public class ObjectType implements TypeWithProperties {
    * {@code typeMultimap} to add any new template varaible type bindings.
    * @return Whether unification succeeded
    */
-  boolean unifyWith(ObjectType other, List<String> typeParameters,
+  boolean unifyWithSubtype(ObjectType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     if (fn != null) {
       if (other.fn == null ||
-          !fn.unifyWith(other.fn, typeParameters, typeMultimap)) {
+          !fn.unifyWithSubtype(other.fn, typeParameters, typeMultimap)) {
         return false;
       }
     }
     if (nominalType != null && other.nominalType != null) {
-      return nominalType.unifyWith(
+      return nominalType.unifyWithSubtype(
           other.nominalType, typeParameters, typeMultimap);
     }
     if (nominalType != null || other.nominalType != null) {
@@ -816,7 +816,7 @@ public class ObjectType implements TypeWithProperties {
       Property thisProp = props.get(propName);
       Property otherProp = other.props.get(propName);
       if (otherProp == null ||
-          !thisProp.unifyWith(otherProp, typeParameters, typeMultimap)) {
+          !thisProp.unifyWithSubtype(otherProp, typeParameters, typeMultimap)) {
         return false;
       }
     }

@@ -161,15 +161,15 @@ class Property {
   }
 
   /** Returns whether unification succeeded */
-  boolean unifyWith(
+  boolean unifyWithSubtype(
       Property other,
       List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
-    if (!inferredType.unifyWith(
+    if (!inferredType.unifyWithSubtype(
         other.inferredType, typeParameters, typeMultimap)) {
       return false;
     } else if (declaredType != null && other.declaredType != null &&
-        !declaredType.unifyWith(
+        !declaredType.unifyWithSubtype(
         other.declaredType, typeParameters, typeMultimap)) {
       return false;
     }

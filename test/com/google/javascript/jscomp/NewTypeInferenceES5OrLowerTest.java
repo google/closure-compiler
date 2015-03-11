@@ -5106,8 +5106,7 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + " * @param {(T|number)} x\n"
         + " */\n"
         + "function f(x) {}\n"
-        + "f(123);",
-        NewTypeInference.FAILED_TO_UNIFY);
+        + "f(123);");
 
     typeCheck(
         "/**\n"
@@ -5116,8 +5115,7 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + " * @param {(T|number)} y\n"
         + " */\n"
         + "function f(x, y) {}\n"
-        + "f(null, 'str');",
-        NewTypeInference.FAILED_TO_UNIFY);
+        + "f(null, 'str');");
 
     typeCheck(
         "/** @constructor */ function Foo(){};\n"
@@ -5127,8 +5125,7 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + " * @param {(T|number)} y\n"
         + " */\n"
         + "function f(x, y) {}\n"
-        + "f(new Foo(), 'str');",
-        NewTypeInference.FAILED_TO_UNIFY);
+        + "f(new Foo(), 'str');");
 
     typeCheck(
         "/**\n"
@@ -5194,6 +5191,107 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
     typeCheck(
         "/** @return {T|string} @template T */"
         + "function f() { return 'str'; }");
+  }
+
+  public void testUnifyWithGenericUnion() {
+    typeCheck(
+        "/** @constructor @template T */ function Foo(){}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {!Array.<T>|!Foo.<T>} arr\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "function get(arr) {\n"
+        + "  return arr[0];\n"
+        + "}\n"
+        + "var /** null */ x = get([5]);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n"
+        + " * @template T\n"
+        + " * @param {Array.<T>} arr\n"
+        + " * @return {T|undefined}\n"
+        + " */\n"
+        + "function get(arr) {\n"
+        + "  if (arr === null || arr.length === 0) {\n"
+        + "    return undefined;\n"
+        + "  }\n"
+        + "  return arr[0];\n"
+        + "}\n"
+        + "var /** (number|undefined) */ x = get([5]);");
+
+    typeCheck(
+        "/**\n"
+        + " * @template T\n"
+        + " * @param {Array.<T>} arr\n"
+        + " * @return {T|undefined}\n"
+        + " */\n"
+        + "function get(arr) {\n"
+        + "  if (arr === null || arr.length === 0) {\n"
+        + "    return undefined;\n"
+        + "  }\n"
+        + "  return arr[0];\n"
+        + "}\n"
+        + "var /** null */ x = get([5]);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor @template U */ function Foo(/** U */ x){}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {U|!Array.<T>} arr\n"
+        + " * @return {U}\n"
+        + " */\n"
+        + "Foo.prototype.get = function(arr, /** ? */ opt_arg) {\n"
+        + "  return opt_arg;\n"
+        + "}\n"
+        + "var /** null */ x = (new Foo('str')).get([5], 1);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @constructor @template U */ function Foo(/** U */ x){}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {U|!Array.<T>} arr\n"
+        + " * @return {U}\n"
+        + " */\n"
+        + "Foo.prototype.get = function(arr, /** ? */ opt_arg) {\n"
+        + "  return opt_arg;\n"
+        + "}\n"
+        + "Foo.prototype.f = function() {\n"
+        + "  var /** null */ x = this.get([5], 1);\n"
+        + "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testBoxedUnification() {
+    typeCheck(
+        "/**\n"
+        + " * @param {V} value\n"
+        + " * @constructor\n"
+        + " * @template V\n"
+        + " */\n"
+        + "function Box(value) {};\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @param {K} key\n"
+        + " * @param {V} val\n"
+        + " * @template K, V\n"
+        + " */\n"
+        + "function Map(key, val) {};\n"
+        + "/**\n"
+        + " * @param {!Map.<K, (V | !Box.<V>)>} inMap\n"
+        + " * @constructor\n"
+        + " * @template K, V\n"
+        + " */\n"
+        + "function WrappedMap(inMap){};\n"
+        + "/** @return {(boolean |!Box.<boolean>)} */\n"
+        + "function getUnion(/** ? */ u) { return u; }\n"
+        + "var inMap = new Map('asdf', getUnion(123));\n"
+        + "/** @param {!WrappedMap.<string, boolean>} x */\n"
+        + "function getWrappedMap(x) {}\n"
+        + "getWrappedMap(new WrappedMap(inMap));");
   }
 
 
@@ -9018,13 +9116,14 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
 
   public void testEnumsWithGenerics() {
     typeCheck("/** @enum */ var E1 = { A: 1};\n"
-        + "/** @enum */ var E2 = { A: 2};\n"
         + "/**\n"
         + " * @template T\n"
         + " * @param {(T|E1)} x\n"
+        + " * @return {(T|E1)}\n"
         + " */\n"
-        + "function f(x) {}\n"
-        + "f(/** @type {(string|E1)} */ ('str'));");
+        + "function f(x) { return x; }\n"
+        + "var /** string */ n = f('str');",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
         "/** @enum */ var E1 = { A: 1};\n"
@@ -9032,10 +9131,11 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + "/**\n"
         + " * @template T\n"
         + " * @param {(T|E1)} x\n"
+        + " * @return {(T|E1)}\n"
         + " */\n"
-        + "function f(x) {}\n"
-        + "f(/** @type {(string|E2)} */ ('str'));",
-        NewTypeInference.FAILED_TO_UNIFY);
+        + "function f(x) { return x; }\n"
+        + "var /** (E2|string) */ x = f('str');",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testEnumJoinSpecializeMeet() {
