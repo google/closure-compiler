@@ -16,6 +16,7 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -79,7 +80,7 @@ public class ApplySuggestedFixesTest {
   public void testApplyCodeReplacements_deletion() throws Exception {
     List<CodeReplacement> replacements = ImmutableList.of(new CodeReplacement(0, 6, ""));
     String newCode = ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
-    assertEquals("", newCode);
+    assertThat(newCode).isEmpty();
   }
 
   @Test
@@ -108,8 +109,8 @@ public class ApplySuggestedFixesTest {
     Map<String, String> codeMap = ImmutableMap.of("test", code);
     Map<String, String> newCodeMap = ApplySuggestedFixes.applySuggestedFixesToCode(
         fixes, codeMap);
-    assertEquals(1, newCodeMap.size());
-    assertEquals("", newCodeMap.get("test"));
+    assertThat(newCodeMap).hasSize(1);
+    assertThat(newCodeMap).containsEntry("test", "");
   }
 
   @Test
@@ -127,8 +128,8 @@ public class ApplySuggestedFixesTest {
     Map<String, String> codeMap = ImmutableMap.of("test", code);
     Map<String, String> newCodeMap = ApplySuggestedFixes.applySuggestedFixesToCode(
         fixes, codeMap);
-    assertEquals(1, newCodeMap.size());
-    assertEquals("/** @type {!Foo} */\nvar foo = new Foo()", newCodeMap.get("test"));
+    assertThat(newCodeMap).hasSize(1);
+    assertThat(newCodeMap).containsEntry("test", "/** @type {!Foo} */\nvar foo = new Foo()");
   }
 
   @Test
@@ -150,9 +151,9 @@ public class ApplySuggestedFixesTest {
     Map<String, String> codeMap = ImmutableMap.of("test", code);
     Map<String, String> newCodeMap = ApplySuggestedFixes.applySuggestedFixesToCode(
         fixes, codeMap);
-    assertEquals(1, newCodeMap.size());
-    assertEquals("/** @type {!Array<!Foo>} */\nvar arr = [new Foo()];",
-        newCodeMap.get("test"));
+    assertThat(newCodeMap).hasSize(1);
+    assertThat(newCodeMap)
+        .containsEntry("test", "/** @type {!Array<!Foo>} */\nvar arr = [new Foo()];");
   }
 
   @Test
@@ -175,8 +176,7 @@ public class ApplySuggestedFixesTest {
     Node root = compileToScriptRoot(compiler);
     List<SuggestedFix> fixes = ImmutableList.of(new SuggestedFix.Builder().delete(root).build());
     try {
-      Map<String, String> newCodeMap = ApplySuggestedFixes.applySuggestedFixesToCode(
-          fixes, codeMap);
+      ApplySuggestedFixes.applySuggestedFixesToCode(fixes, codeMap);
       fail("applySuggestedFixesToCode should have failed since file is missing from code map.");
     } catch (IllegalArgumentException expected) {}
   }

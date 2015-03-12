@@ -47,7 +47,7 @@ public class SourceMapConsumerV3Test extends TestCase {
     String[] sources = (String[]) consumer.getOriginalSources().toArray();
 
     assertThat(sources).hasLength(1);
-    assertThat(consumer.getSourceRoot()).isEqualTo(null);
+    assertThat(consumer.getSourceRoot()).isNull();
     assertThat(sources[0]).isEqualTo("testcode");
   }
 

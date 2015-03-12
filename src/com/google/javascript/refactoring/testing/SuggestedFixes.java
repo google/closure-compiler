@@ -17,7 +17,6 @@ package com.google.javascript.refactoring.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +45,7 @@ public final class SuggestedFixes {
     SetMultimap<String, CodeReplacement> replacementMap = fix.getReplacements();
     assertEquals(1, replacementMap.size());
     Set<CodeReplacement> replacements = replacementMap.get("test");
-    assertEquals(expectedReplacements.size(), replacements.size());
+    assertThat(replacements).hasSize(expectedReplacements.size());
     assertEquals(expectedReplacements, replacements);
   }
 

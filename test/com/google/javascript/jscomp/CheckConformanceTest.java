@@ -283,7 +283,7 @@ public class CheckConformanceTest extends CompilerTestCase {
       testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
       fail("expected IllegalArgumentException");
     } catch (Exception e) {
-      assertTrue(e instanceof IllegalArgumentException);
+      assertThat(e).isInstanceOf(IllegalArgumentException.class);
     }
   }
 

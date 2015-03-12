@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypedScopeCreator.CTOR_INITIALIZER;
 import static com.google.javascript.jscomp.TypedScopeCreator.IFACE_INITIALIZER;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -263,7 +264,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType f = (ObjectType) findNameType("f", globalScope);
     assertTrue(f.hasProperty("BAR"));
     assertEquals("Foo<number>", f.getPropertyType("BAR").toString());
-    assertTrue(f instanceof EnumType);
+    assertThat(f).isInstanceOf(EnumType.class);
   }
 
   public void testEnumElement() {
@@ -303,7 +304,7 @@ public class TypedScopeCreatorTest extends CompilerTestCase {
     ObjectType f = (ObjectType) findNameType("f", globalScope);
     assertTrue(f.hasProperty("BAR"));
     assertEquals("Foo<number>", f.getPropertyType("BAR").toString());
-    assertTrue(f instanceof EnumType);
+    assertThat(f).isInstanceOf(EnumType.class);
   }
 
   public void testNamespacesEnumAlias() {

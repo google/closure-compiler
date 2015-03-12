@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -7687,7 +7689,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
       "var a = new A();");
 
     JSType aType = p.scope.getVar("a").getType();
-    assertTrue(aType instanceof ObjectType);
+    assertThat(aType).isInstanceOf(ObjectType.class);
     ObjectType aObjectType = (ObjectType) aType;
     assertEquals("A", aObjectType.getConstructor().getReferenceName());
   }
@@ -7742,7 +7744,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var a = new FooBar();");
     TypedVar a = p.scope.getVar("a");
 
-    assertTrue(a.getType() instanceof ObjectType);
+    assertThat(a.getType()).isInstanceOf(ObjectType.class);
     assertEquals("FooBar", a.getType().toString());
   }
 
@@ -7752,7 +7754,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var a = new FooBar();");
     TypedVar a = p.scope.getVar("a");
 
-    assertTrue(a.getType() instanceof ObjectType);
+    assertThat(a.getType()).isInstanceOf(ObjectType.class);
     assertEquals("FooBar", a.getType().toString());
   }
 
@@ -7763,7 +7765,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "var a = new goog.A();");
     TypedVar a = p.scope.getVar("a");
 
-    assertTrue(a.getType() instanceof ObjectType);
+    assertThat(a.getType()).isInstanceOf(ObjectType.class);
     assertEquals("goog.A", a.getType().toString());
   }
 
@@ -8812,7 +8814,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         parseAndTypeCheckWithScope("/** @constructor */function A(){};");
 
     JSType type = p.scope.getVar("A").getType();
-    assertTrue(type instanceof FunctionType);
+    assertThat(type).isInstanceOf(FunctionType.class);
     FunctionType fType = (FunctionType) type;
     assertEquals("A", fType.getReferenceName());
   }
@@ -9051,7 +9053,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
     // goog type in the scope
     JSType googScopeType = p.scope.getVar("goog").getType();
-    assertTrue(googScopeType instanceof ObjectType);
+    assertThat(googScopeType).isInstanceOf(ObjectType.class);
     assertTrue("foo property not present on goog type",
         googScopeType.hasProperty("foo"));
     assertFalse("bar property present on goog type",
@@ -9061,7 +9063,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     Node varNode = p.root.getFirstChild();
     assertEquals(Token.VAR, varNode.getType());
     JSType googNodeType = varNode.getFirstChild().getJSType();
-    assertTrue(googNodeType instanceof ObjectType);
+    assertThat(googNodeType).isInstanceOf(ObjectType.class);
 
     // goog scope type and goog type on VAR node must be the same
     assertSame(googNodeType, googScopeType);
@@ -9071,14 +9073,14 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(Token.GETPROP, getpropFoo1.getType());
     assertEquals("goog", getpropFoo1.getFirstChild().getString());
     JSType googGetpropFoo1Type = getpropFoo1.getFirstChild().getJSType();
-    assertTrue(googGetpropFoo1Type instanceof ObjectType);
+    assertThat(googGetpropFoo1Type).isInstanceOf(ObjectType.class);
 
     // still the same type as the one on the variable
     assertSame(googScopeType, googGetpropFoo1Type);
 
     // the foo property should be defined on goog
     JSType googFooType = ((ObjectType) googScopeType).getPropertyType("foo");
-    assertTrue(googFooType instanceof ObjectType);
+    assertThat(googFooType).isInstanceOf(ObjectType.class);
 
     // goog type on the left of the GETPROP lower level node
     // (under second ASSIGN)
@@ -9087,7 +9089,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(Token.GETPROP, getpropFoo2.getType());
     assertEquals("goog", getpropFoo2.getFirstChild().getString());
     JSType googGetpropFoo2Type = getpropFoo2.getFirstChild().getJSType();
-    assertTrue(googGetpropFoo2Type instanceof ObjectType);
+    assertThat(googGetpropFoo2Type).isInstanceOf(ObjectType.class);
 
     // still the same type as the one on the variable
     assertSame(googScopeType, googGetpropFoo2Type);
@@ -9144,7 +9146,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(NATIVE_PROPERTIES_COUNT + 1, goog.getPropertiesCount());
     JSType googA = goog.getPropertyType("A");
     assertNotNull(googA);
-    assertTrue(googA instanceof FunctionType);
+    assertThat(googA).isInstanceOf(FunctionType.class);
     FunctionType googAFunction = (FunctionType) googA;
     ObjectType classA = googAFunction.getInstanceType();
     assertEquals(NATIVE_PROPERTIES_COUNT + 1, classA.getPropertiesCount());
@@ -10242,7 +10244,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     Node n = parseAndTypeCheck("/** @constructor */ u.T = function() {}; u.T");
     JSType type = n.getLastChild().getLastChild().getJSType();
     assertFalse(type.isUnknownType());
-    assertTrue(type instanceof FunctionType);
+    assertThat(type).isInstanceOf(FunctionType.class);
     assertEquals("u.T",
         ((FunctionType) type).getInstanceType().getReferenceName());
   }
@@ -10252,7 +10254,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {!T} */var t; t.x; t;");
     JSType type = n.getLastChild().getLastChild().getJSType();
     assertFalse(type.isUnknownType());
-    assertTrue(type instanceof ObjectType);
+    assertThat(type).isInstanceOf(ObjectType.class);
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
     Asserts.assertTypeCollectionEquals(
@@ -10267,7 +10269,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     JSType type = n.getLastChild().getLastChild().getJSType();
     assertFalse(type.isUnknownType());
     assertTypeEquals(type, OBJECT_TYPE);
-    assertTrue(type instanceof ObjectType);
+    assertThat(type).isInstanceOf(ObjectType.class);
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
     Asserts.assertTypeCollectionEquals(
@@ -10768,7 +10770,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   private static ObjectType getInstanceType(Node js1Node) {
     JSType type = js1Node.getFirstChild().getJSType();
     assertNotNull(type);
-    assertTrue(type instanceof FunctionType);
+    assertThat(type).isInstanceOf(FunctionType.class);
     FunctionType functionType = (FunctionType) type;
     assertTrue(functionType.isConstructor());
     return functionType.getInstanceType();
@@ -10787,7 +10789,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertEquals(0, compiler.getErrorCount());
     assertEquals(0, compiler.getWarningCount());
 
-    assertTrue(p.scope.getVar("Foo").getType() instanceof FunctionType);
+    assertThat(p.scope.getVar("Foo").getType()).isInstanceOf(FunctionType.class);
     FunctionType fooType = (FunctionType) p.scope.getVar("Foo").getType();
     assertEquals("function (this:Foo, number): undefined",
                  fooType.getPrototype().getPropertyType("bar").toString());

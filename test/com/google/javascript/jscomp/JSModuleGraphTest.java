@@ -199,9 +199,7 @@ public class JSModuleGraphTest extends TestCase {
     assertInputs(C, "a1", "c1", "c2");
     assertInputs(E);
 
-    assertEquals(
-        Lists.newArrayList("a1", "c1", "c2"),
-        sourceNames(results));
+    assertThat(sourceNames(results)).containsExactly("a1", "c1", "c2").inOrder();
   }
 
   public void testManageDependencies4() throws Exception {
@@ -256,9 +254,7 @@ public class JSModuleGraphTest extends TestCase {
 
     assertInputs(A, "base.js", "a1", "a2");
 
-    assertEquals(
-        Lists.newArrayList("base.js", "a1", "a2"),
-        sourceNames(results));
+    assertThat(sourceNames(results)).containsExactly("base.js", "a1", "a2").inOrder();
   }
 
   public void testNoFiles() throws Exception {

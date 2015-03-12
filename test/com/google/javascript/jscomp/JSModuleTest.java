@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSet;
 
 import junit.framework.TestCase;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -141,24 +140,29 @@ public class JSModuleTest extends TestCase {
 
   public void testSortJsModules() throws Exception {
     // already in order:
-    assertEquals(ImmutableList.of(mod1, mod2, mod3, mod4),
-        Arrays.asList(JSModule.sortJsModules(
-            ImmutableList.of(mod1, mod2, mod3, mod4))));
-    assertEquals(ImmutableList.of(mod1, mod3, mod2, mod4),
-        Arrays.asList(JSModule.sortJsModules(
-            ImmutableList.of(mod1, mod3, mod2, mod4))));
+    assertThat(JSModule.sortJsModules(ImmutableList.of(mod1, mod2, mod3, mod4)))
+        .asList()
+        .containsExactly(mod1, mod2, mod3, mod4)
+        .inOrder();
+    assertThat(JSModule.sortJsModules(ImmutableList.of(mod1, mod3, mod2, mod4)))
+        .asList()
+        .containsExactly(mod1, mod3, mod2, mod4)
+        .inOrder();
 
     // one out of order:
-    assertEquals(ImmutableList.of(mod1, mod3, mod2, mod4),
-        Arrays.asList(JSModule.sortJsModules(
-            ImmutableList.of(mod4, mod3, mod2, mod1))));
-    assertEquals(ImmutableList.of(mod1, mod3, mod2, mod4),
-        Arrays.asList(JSModule.sortJsModules(
-            ImmutableList.of(mod3, mod1, mod2, mod4))));
+    assertThat(JSModule.sortJsModules(ImmutableList.of(mod4, mod3, mod2, mod1)))
+        .asList()
+        .containsExactly(mod1, mod3, mod2, mod4)
+        .inOrder();
+    assertThat(JSModule.sortJsModules(ImmutableList.of(mod3, mod1, mod2, mod4)))
+        .asList()
+        .containsExactly(mod1, mod3, mod2, mod4)
+        .inOrder();
 
     // more out of order:
-    assertEquals(ImmutableList.of(mod1, mod3, mod2, mod4),
-        Arrays.asList(JSModule.sortJsModules(
-            ImmutableList.of(mod4, mod3, mod1, mod2))));
+    assertThat(JSModule.sortJsModules(ImmutableList.of(mod4, mod3, mod1, mod2)))
+        .asList()
+        .containsExactly(mod1, mod3, mod2, mod4)
+        .inOrder();
   }
 }
