@@ -162,37 +162,7 @@ public final class JSDocInfoPrinter {
     } else if (typeNode.getType() == Token.QMARK) {
       sb.append("?");
     } else if (typeNode.isFunction()) {
-      sb.append("function(");
-      Node first = typeNode.getFirstChild();
-      if (first.isNew()) {
-        sb.append("new:");
-        appendTypeNode(sb, typeNode.getFirstChild().getFirstChild());
-        sb.append(",");
-      } else if (first.isThis()) {
-        sb.append("this:");
-        appendTypeNode(sb, typeNode.getFirstChild().getFirstChild());
-        sb.append(",");
-      } else if (first.isEmpty()) {
-        sb.append(")");
-        return;
-      } else if (first.isVoid()) {
-        sb.append("):void");
-        return;
-      }
-      Node paramList = typeNode.getFirstChild().isParamList()
-          ? typeNode.getFirstChild()
-          : typeNode.getChildAtIndex(1);
-      for (int i = 0; i < paramList.getChildCount() - 1; i++) {
-        appendTypeNode(sb, paramList.getChildAtIndex(i));
-        sb.append(",");
-      }
-      appendTypeNode(sb, paramList.getLastChild());
-      sb.append(")");
-      Node returnType = typeNode.getLastChild();
-      if (!returnType.isEmpty()) {
-        sb.append(":");
-        appendTypeNode(sb, returnType);
-      }
+      appendFunctionNode(sb, typeNode);
     } else if (typeNode.getType() == Token.LC) {
       sb.append("{");
       Node lb = typeNode.getFirstChild();
@@ -220,6 +190,39 @@ public final class JSDocInfoPrinter {
       } else {
         sb.append(typeNode.getString());
       }
+    }
+  }
+
+  private static void appendFunctionNode(StringBuilder sb, Node function) {
+    sb.append("function(");
+    Node first = function.getFirstChild();
+    if (first.isNew()) {
+      sb.append("new:");
+      appendTypeNode(sb, first.getFirstChild());
+      sb.append(",");
+    } else if (first.isThis()) {
+      sb.append("this:");
+      appendTypeNode(sb, first.getFirstChild());
+      sb.append(",");
+    } else if (first.isEmpty()) {
+      sb.append(")");
+      return;
+    } else if (!first.isParamList()) {
+      sb.append("):");
+      appendTypeNode(sb, first);
+      return;
+    }
+    Node paramList = first.isParamList() ? first : first.getNext();
+    for (int i = 0; i < paramList.getChildCount() - 1; i++) {
+      appendTypeNode(sb, paramList.getChildAtIndex(i));
+      sb.append(",");
+    }
+    appendTypeNode(sb, paramList.getLastChild());
+    sb.append(")");
+    Node returnType = function.getLastChild();
+    if (!returnType.isEmpty()) {
+      sb.append(":");
+      appendTypeNode(sb, returnType);
     }
   }
 }

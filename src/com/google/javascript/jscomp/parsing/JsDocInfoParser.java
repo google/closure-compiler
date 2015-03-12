@@ -2131,6 +2131,13 @@ public final class JsDocInfoParser {
    * FunctionType := 'function' FunctionSignatureType
    * FunctionSignatureType :=
    *    TypeParameters '(' 'this' ':' TypeName, ParametersType ')' ResultType
+   *
+   * <p>The Node that is produced has type Token.FUNCTION but does not look like a typical
+   * function node. If there is a 'this:' or 'new:' type, that type is added as a child.
+   * Then, if there are parameters, a PARAM_LIST node is added as a child. Finally, if
+   * there is a return type, it is added as a child. This means that the parameters
+   * could be the first or second child, and the return type could be
+   * the first, second, or third child.
    */
   private Node parseFunctionType(JsDocToken token) {
     // NOTE(nicksantos): We're not implementing generics at the moment, so

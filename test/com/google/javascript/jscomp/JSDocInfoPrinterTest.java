@@ -154,5 +154,15 @@ public class JSDocInfoPrinterTest extends TestCase {
         JsDocInfoParser.parseTypeString("function():void"), ""));
     info = builder.build(null);
     assertEquals("/**@type {function():void} */", JSDocInfoPrinter.print(info));
+
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("function():number"), ""));
+    info = builder.build(null);
+    assertEquals("/**@type {function():number} */", JSDocInfoPrinter.print(info));
+
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("function(string):number"), ""));
+    info = builder.build(null);
+    assertEquals("/**@type {function(string):number} */", JSDocInfoPrinter.print(info));
   }
 }
