@@ -226,7 +226,7 @@ Window.prototype.alert = function(message) {};
  * @see https://developer.mozilla.org/en/DOM/window.atob
  * @nosideeffects
  */
-Window.prototype.atob = function(encodedData) {};
+function atob(encodedData) {}
 
 /** @see https://developer.mozilla.org/en/DOM/window.back */
 Window.prototype.back = function() {};
@@ -240,7 +240,7 @@ Window.prototype.blur = function() {};
  * @see https://developer.mozilla.org/en/DOM/window.btoa
  * @nosideeffects
  */
-Window.prototype.btoa = function(stringToEncode) {};
+function btoa(stringToEncode) {}
 
 /** @deprecated */
 Window.prototype.captureEvents;
