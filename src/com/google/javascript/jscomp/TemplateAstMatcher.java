@@ -206,16 +206,16 @@ public final class TemplateAstMatcher {
     Node templateParametersNode = fn.getFirstChild().getNext();
     JSDocInfo info = NodeUtil.getBestJSDocInfo(fn);
     if (templateParametersNode.hasChildren()) {
-      Preconditions.checkNotNull(info, 
+      Preconditions.checkNotNull(info,
           "Missing JSDoc declaration for template function %s", fnName);
     }
     for (Node paramNode : templateParametersNode.children()) {
       String name = paramNode.getString();
       JSTypeExpression expression = info.getParameterType(name);
-      Preconditions.checkNotNull(expression, 
-          "Missing JSDoc for parameter %s of template function %s", 
+      Preconditions.checkNotNull(expression,
+          "Missing JSDoc for parameter %s of template function %s",
           name, fnName);
-      JSType type = expression.evaluate(null, compiler.getTypeRegistry());
+      JSType type = expression.evaluate(null, compiler.getTypeIRegistry());
       Preconditions.checkNotNull(type);
       params.add(name);
       paramTypes.put(name, type);

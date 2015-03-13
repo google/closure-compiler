@@ -33,11 +33,11 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.lang.reflect.Constructor;
@@ -308,7 +308,7 @@ public final class ConformanceRules {
 
     private ConformanceResult checkConformance(NodeTraversal t, Node n, Property prop) {
       if (isCandidatePropUse(n, prop)) {
-        JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
+        TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
         JSType methodClassType = registry.getType(prop.type);
         Node lhs = n.getFirstChild();
         if (methodClassType != null && lhs.getJSType() != null) {
@@ -393,7 +393,7 @@ public final class ConformanceRules {
       }
       JSTypeExpression typeExpr = new JSTypeExpression(
           typeNodes, "conformance");
-      return typeExpr.evaluate(null, compiler.getTypeRegistry());
+      return typeExpr.evaluate(null, compiler.getTypeIRegistry());
     }
 
     /**
@@ -497,7 +497,7 @@ public final class ConformanceRules {
     }
 
     static JSType getNativeType(AbstractCompiler compiler, JSTypeNative typeId) {
-      return compiler.getTypeRegistry().getNativeType(typeId);
+      return compiler.getTypeIRegistry().getNativeType(typeId);
     }
 
   }
@@ -661,7 +661,7 @@ public final class ConformanceRules {
 
     private ConformanceResult checkConformance(
         NodeTraversal t, Node n, Restriction r, boolean isCallInvocation) {
-      JSTypeRegistry registry = t.getCompiler().getTypeRegistry();
+      TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
       JSType methodClassType = registry.getType(r.type);
       Node lhs = isCallInvocation
           ? n.getFirstChild().getFirstChild()
@@ -898,7 +898,7 @@ public final class ConformanceRules {
     public BanThrowOfNonErrorTypes(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
       super(compiler, requirement);
-      errorObjType = compiler.getTypeRegistry().getType("Error");
+      errorObjType = compiler.getTypeIRegistry().getType("Error");
     }
 
     @Override

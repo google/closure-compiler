@@ -208,7 +208,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
         } else {
           JSTypeExpression typeExpr = info.getType();
           if (typeExpr != null) {
-            JSType type = typeExpr.evaluate(t.getTypedScope(), compiler.getTypeRegistry());
+            JSType type = typeExpr.evaluate(t.getTypedScope(), compiler.getTypeIRegistry());
             if (type.isConstructor()) {
               constructors.add(ctorName);
             }

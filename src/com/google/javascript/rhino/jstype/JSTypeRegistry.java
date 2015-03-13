@@ -58,6 +58,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
@@ -1660,9 +1661,10 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
    */
-  public JSType createFromTypeNodes(Node n, String sourceName,
-      StaticTypedScope<JSType> scope) {
-    return createFromTypeNodesInternal(n, sourceName, scope);
+  @Override
+  public JSType createTypeFromCommentNode(
+      Node n, String sourceName, StaticTypedScope<? extends TypeI> scope) {
+    return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope);
   }
 
   /** @see #createFromTypeNodes(Node, String, StaticTypedScope) */
