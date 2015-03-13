@@ -281,7 +281,7 @@ public class TypeSyntaxTest extends TestCase {
       // if it can be parsed, it should round trip.
       String actual = new CodePrinter.Builder(script)
           .setCompilerOptions(options)
-          .setTypeRegistry(compiler.getTypeRegistry())
+          .setTypeRegistry(compiler.getTypeIRegistry())
           .build()  // does the actual printing.
           .trim();
       assertThat(actual).isEqualTo(expected);

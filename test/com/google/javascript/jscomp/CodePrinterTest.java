@@ -1129,7 +1129,7 @@ public class CodePrinterTest extends CodePrinterTestBase {
               }
             }))
             .setOutputTypes(true)
-            .setTypeRegistry(lastCompiler.getTypeRegistry())
+            .setTypeRegistry(lastCompiler.getTypeIRegistry())
             .build());
   }
 
@@ -1570,7 +1570,7 @@ public class CodePrinterTest extends CodePrinterTestBase {
           }
         }))
         .setOutputTypes(false)
-        .setTypeRegistry(lastCompiler.getTypeRegistry())
+        .setTypeRegistry(lastCompiler.getTypeIRegistry())
         .setTagAsStrict(true)
         .build();
     assertEquals("'use strict';var x", result);
