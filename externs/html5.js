@@ -1156,6 +1156,12 @@ HTMLElement.prototype.webkitCreateShadowRoot;
 HTMLElement.prototype.shadowRoot;
 
 /**
+ * @see http://www.w3.org/TR/shadow-dom/
+ * @return {!NodeList}
+ */
+HTMLElement.prototype.getDestinationInsertionPoints = function() {};
+
+/**
  * @see http://www.w3.org/TR/components-intro/
  * @type {function()}
  */
@@ -1427,6 +1433,12 @@ HTMLMediaElement.prototype.addTextTrack =
 /** @type {TextTrackList} */
 HTMLMediaElement.prototype.textTracks;
 
+
+/**
+ * @see http://www.w3.org/TR/shadow-dom/
+ * @return {!NodeList}
+ */
+Text.prototype.getDestinationInsertionPoints = function() {};
 
 
 /**
@@ -2950,6 +2962,12 @@ ShadowRoot.prototype.activeElement;
 
 
 /**
+ * @type {?ShadowRoot}
+ */
+ShadowRoot.prototype.olderShadowRoot;
+
+
+/**
  * @type {string}
  */
 ShadowRoot.prototype.innerHTML;
@@ -2960,6 +2978,37 @@ ShadowRoot.prototype.innerHTML;
  */
 ShadowRoot.prototype.styleSheets;
 
+
+
+/**
+ * @see http://www.w3.org/TR/shadow-dom/#the-content-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLContentElement() {}
+
+/**
+ * @type {!string}
+ */
+HTMLContentElement.prototype.select;
+
+/**
+ * @return {!NodeList}
+ */
+HTMLContentElement.prototype.getDistributedNodes = function() {};
+
+
+/**
+ * @see http://www.w3.org/TR/shadow-dom/#the-shadow-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLShadowElement() {}
+
+/**
+ * @return {!NodeList}
+ */
+HTMLShadowElement.prototype.getDistributedNodes = function() {};
 
 
 /**
