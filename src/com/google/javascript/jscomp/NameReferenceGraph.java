@@ -90,8 +90,7 @@ class NameReferenceGraph extends
     // Initialize builtins.
     unknown = new Name("{UNKNOWN}", true);
     unknown.isAliased = true;
-    unknown.type = compiler.getTypeRegistry().getNativeType(
-        JSTypeNative.NO_TYPE);
+    unknown.type = compiler.getTypeIRegistry().getNativeType(JSTypeNative.NO_TYPE);
     this.createNode(unknown);
 
     main = new Name("{Global Main}", true);
@@ -197,8 +196,7 @@ class NameReferenceGraph extends
       int lastDot = qName.lastIndexOf('.');
       String name = (lastDot == -1) ? qName : qName.substring(lastDot + 1);
       this.isExported = compiler.getCodingConvention().isExported(name);
-      this.type = compiler.getTypeRegistry().getNativeType(
-          JSTypeNative.UNKNOWN_TYPE);
+      this.type = compiler.getTypeIRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
 
     public JSType getType() {

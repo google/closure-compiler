@@ -89,8 +89,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
       if (jsDoc != null && jsDoc.hasTypedefType()) {
         // Get the corresponding type by looking at the type registry.
-        JSType typedefType =
-            compiler.getTypeRegistry().getType(n.getQualifiedName());
+        JSType typedefType = compiler.getTypeIRegistry().getType(n.getQualifiedName());
         if (typedefType != null) {
           typeVisitor.visitOnce(typedefType);
         }
@@ -265,4 +264,3 @@ class GatherExternProperties extends AbstractPostOrderCallback
     }
   }
 }
-

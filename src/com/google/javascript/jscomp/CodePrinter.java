@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CodePrinter.Builder.CodeGeneratorFactory;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.TypeIRegistry;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -555,7 +555,7 @@ public final class CodePrinter {
     private boolean outputTypes = false;
     private SourceMap sourceMap = null;
     private boolean tagAsStrict;
-    private JSTypeRegistry registry;
+    private TypeIRegistry registry;
     private CodeGeneratorFactory codeGeneratorFactory = new CodeGeneratorFactory() {
       @Override
       public CodeGenerator getCodeGenerator(Format outputFormat, CodeConsumer cc) {
@@ -585,7 +585,7 @@ public final class CodePrinter {
       return this;
     }
 
-    public Builder setTypeRegistry(JSTypeRegistry registry) {
+    public Builder setTypeRegistry(TypeIRegistry registry) {
       this.registry = registry;
       return this;
     }

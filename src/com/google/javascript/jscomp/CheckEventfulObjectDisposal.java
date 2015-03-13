@@ -26,9 +26,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 
@@ -139,7 +139,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
   public static final int DISPOSE_SELF = -2;
 
   private final AbstractCompiler compiler;
-  private final JSTypeRegistry typeRegistry;
+  private final TypeIRegistry typeRegistry;
 
   // At the moment only ALLOCATED and POSSIBLY_DISPOSED are used
   private enum SeenType {
@@ -172,8 +172,8 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
       DisposalCheckingPolicy checkingPolicy) {
     this.compiler = compiler;
     this.checkingPolicy = checkingPolicy;
+    this.typeRegistry = compiler.getTypeIRegistry();
     this.initializeDisposeMethodsMap();
-    this.typeRegistry = compiler.getTypeRegistry();
   }
 
 
@@ -195,7 +195,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
       potentiallyTypeName = functionOrMethodName.substring(0, lastPeriod).
         replaceFirst(".prototype$", "");
       propertyName = functionOrMethodName.substring(lastPeriod);
-      objectType = compiler.getTypeRegistry().getType(potentiallyTypeName);
+      objectType = this.typeRegistry.getType(potentiallyTypeName);
     } else {
       propertyName = functionOrMethodName;
     }
@@ -432,10 +432,8 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
     Preconditions.checkArgument(checkingPolicy != DisposalCheckingPolicy.OFF);
 
     // Initialize types
-    googDisposableInterfaceType =
-        compiler.getTypeRegistry().getType(DISPOSABLE_INTERFACE_TYPE_NAME);
-    googEventsEventHandlerType = compiler.getTypeRegistry()
-        .getType(EVENT_HANDLER_TYPE_NAME);
+    googDisposableInterfaceType = this.typeRegistry.getType(DISPOSABLE_INTERFACE_TYPE_NAME);
+    googEventsEventHandlerType = this.typeRegistry.getType(EVENT_HANDLER_TYPE_NAME);
 
     /*
      * Required types not found therefore the kind of pattern considered
@@ -540,7 +538,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
     for (String s : order) {
       if (eventfulTypes.contains(typeRegistry.getType(s))) {
         for (String v : eventizes.get(s)) {
-          eventfulTypes.add(typeRegistry.getType(v));
+          eventfulTypes.add((JSType) typeRegistry.getType(v));
         }
       }
     }
@@ -724,7 +722,7 @@ public class CheckEventfulObjectDisposal implements CompilerPass {
                     continue;
                   }
 
-                  addEventize(compiler.getTypeRegistry().getType(functionName),
+                  addEventize((JSType) compiler.getTypeIRegistry().getType(functionName),
                       objectType);
 
                   /*

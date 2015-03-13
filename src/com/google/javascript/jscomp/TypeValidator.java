@@ -418,7 +418,7 @@ class TypeValidator {
 
       mismatch(t, n,
           "assignment to property " + propName + " of " +
-          typeRegistry.getReadableJSTypeName(owner, true),
+          typeRegistry.getReadableTypeName(owner),
           rightType, leftType);
       return false;
     }
@@ -462,7 +462,7 @@ class TypeValidator {
       mismatch(t, n,
           String.format("actual parameter %d of %s does not match " +
               "formal parameter", ordinal,
-              typeRegistry.getReadableJSTypeName(callNode.getFirstChild(), false)),
+              typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
           argType, paramType);
     }
   }

@@ -874,6 +874,22 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
+   * The nice API for this method is a single argument; dereference is a detail. In the old type
+   * checker, most calls to getReadableJSTypeName are with true (do dereferencing).
+   * When we implement this method in the new type checker, we won't do dereferencing, but that's
+   * fine because we are stricter about null/undefined checking.
+   * (So, null and undefined wouldn't be in the type in the first place.)
+   */
+  @Override
+  public String getReadableTypeName(Node n) {
+    return getReadableJSTypeName(n, true);
+  }
+
+  public String getReadableTypeNameNoDeref(Node n) {
+    return getReadableJSTypeName(n, false);
+  }
+
+  /**
    * Given a node, get a human-readable name for the type of that node so
    * that will be easy for the programmer to find the original declaration.
    *
@@ -884,7 +900,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param dereference If true, the type of the node will be dereferenced
    *     to an Object type, if possible.
    */
-  public String getReadableJSTypeName(Node n, boolean dereference) {
+  private String getReadableJSTypeName(Node n, boolean dereference) {
     JSType type = getJSTypeOrUnknown(n);
     if (dereference) {
       ObjectType dereferenced = type.dereference();
@@ -953,6 +969,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param jsTypeName The name string.
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
+  @Override
   public JSType getType(String jsTypeName) {
     // TODO(user): Push every local type name out of namesToTypes so that
     // NamedType#resolve is correct.
@@ -963,14 +980,17 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     return namesToTypes.get(jsTypeName);
   }
 
+  @Override
   public JSType getNativeType(JSTypeNative typeId) {
     return nativeTypes[typeId.ordinal()];
   }
 
+  @Override
   public ObjectType getNativeObjectType(JSTypeNative typeId) {
     return (ObjectType) getNativeType(typeId);
   }
 
+  @Override
   public FunctionType getNativeFunctionType(JSTypeNative typeId) {
     return (FunctionType) getNativeType(typeId);
   }

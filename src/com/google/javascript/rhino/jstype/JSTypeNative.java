@@ -137,7 +137,9 @@ public enum JSTypeNative {
   NO_OBJECT_TYPE,
   NO_RESOLVED_TYPE,
   GLOBAL_THIS,
+  // TODO(dimvar): merge these two if possible.
   U2U_CONSTRUCTOR_TYPE,
+  // unknown function type, i.e. (?...) -> ?
   U2U_FUNCTION_TYPE,
 
   LEAST_FUNCTION_TYPE,

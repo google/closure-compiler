@@ -200,8 +200,7 @@ class CheckMissingReturn implements ScopedCallback {
    *     containing void or unknown
    */
   private boolean isVoidOrUnknown(JSType returnType) {
-    final JSType voidType =
-        compiler.getTypeRegistry().getNativeType(JSTypeNative.VOID_TYPE);
+    final JSType voidType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.VOID_TYPE);
     return voidType.isSubtype(returnType);
   }
 }

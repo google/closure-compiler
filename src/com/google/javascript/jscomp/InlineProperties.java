@@ -23,10 +23,10 @@ import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Map;
@@ -76,22 +76,22 @@ public class InlineProperties implements CompilerPass {
   // from AmbiguateProperties, if in the end we don't need to modify it
   // we should move it to a common location.
   private void buildInvalidatingTypeSet() {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
+    TypeIRegistry registry = compiler.getTypeIRegistry();
     invalidatingTypes = Sets.newHashSet(
-        registry.getNativeType(JSTypeNative.ALL_TYPE),
-        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
-        registry.getNativeType(JSTypeNative.NO_TYPE),
-        registry.getNativeType(JSTypeNative.NULL_TYPE),
-        registry.getNativeType(JSTypeNative.VOID_TYPE),
-        registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
-        registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.GLOBAL_THIS),
-        registry.getNativeType(JSTypeNative.OBJECT_TYPE),
-        registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
-        registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+        (JSType) registry.getNativeType(JSTypeNative.ALL_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.NO_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.NULL_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.VOID_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
+        (JSType) registry.getNativeType(JSTypeNative.GLOBAL_THIS),
+        (JSType) registry.getNativeType(JSTypeNative.OBJECT_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
+        (JSType) registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
+        (JSType) registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
+        (JSType) registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
 
     for (TypeMismatch mis : compiler.getTypeMismatches()) {
       addInvalidatingType(mis.typeA);
@@ -154,8 +154,7 @@ public class InlineProperties implements CompilerPass {
   private JSType getJSType(Node n) {
     JSType jsType = n.getJSType();
     if (jsType == null) {
-      return compiler.getTypeRegistry().getNativeType(
-          JSTypeNative.UNKNOWN_TYPE);
+      return compiler.getTypeIRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
     } else {
       return jsType;
     }

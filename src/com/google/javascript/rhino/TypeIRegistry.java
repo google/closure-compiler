@@ -46,8 +46,18 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public interface TypeIRegistry {
+  // TODO(dimvar): The methods in this interface are polymorphic because they are used
+  // in compiler passes mixed with the old type system.
+  // Polymorphism avoids the need for casting.
+  // After all non-type-checking passes use TypeI, we should make these methods not polymorphic.
 
-  TypeI getNativeType(JSTypeNative typeId);
+  <T extends FunctionTypeI> T getNativeFunctionType(JSTypeNative typeId);
 
-  TypeI getType(String typeName);
+  <T extends ObjectTypeI> T getNativeObjectType(JSTypeNative typeId);
+
+  <T extends TypeI> T getNativeType(JSTypeNative typeId);
+
+  String getReadableTypeName(Node n);
+
+  <T extends TypeI> T getType(String typeName);
 }

@@ -31,7 +31,7 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.StaticSymbolTable;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
@@ -51,7 +51,7 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 class GlobalNamespace
-    implements StaticTypedScope<JSType>,
+    implements StaticTypedScope<TypeI>,
     StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
   private AbstractCompiler compiler;
@@ -111,7 +111,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticTypedScope<JSType> getParentScope() {
+  public StaticTypedScope<TypeI> getParentScope() {
     return null;
   }
 
@@ -127,8 +127,8 @@ class GlobalNamespace
   }
 
   @Override
-  public JSType getTypeOfThis() {
-    return compiler.getTypeRegistry().getNativeObjectType(GLOBAL_THIS);
+  public TypeI getTypeOfThis() {
+    return compiler.getTypeIRegistry().getNativeObjectType(GLOBAL_THIS);
   }
 
   @Override
@@ -138,7 +138,7 @@ class GlobalNamespace
   }
 
   @Override
-  public StaticTypedScope<JSType> getScope(Name slot) {
+  public StaticTypedScope<TypeI> getScope(Name slot) {
     return this;
   }
 
@@ -886,7 +886,7 @@ class GlobalNamespace
    * correspond to JavaScript objects whose properties we should consider
    * collapsing.
    */
-  static class Name implements StaticTypedSlot<JSType> {
+  static class Name implements StaticTypedSlot<TypeI> {
     enum Type {
       OBJECTLIT,
       FUNCTION,
@@ -958,7 +958,7 @@ class GlobalNamespace
     }
 
     @Override
-    public JSType getType() {
+    public TypeI getType() {
       return null;
     }
 
@@ -1203,7 +1203,7 @@ class GlobalNamespace
    * A global name reference. Contains references to the relevant parse tree
    * node and its ancestors that may be affected.
    */
-  static class Ref implements StaticTypedRef<JSType> {
+  static class Ref implements StaticTypedRef<TypeI> {
 
     // Note: we are more aggressive about collapsing @enum and @constructor
     // declarations than implied here, see Name#canCollapse
@@ -1277,7 +1277,7 @@ class GlobalNamespace
     }
 
     @Override
-    public StaticTypedSlot<JSType> getSymbol() {
+    public StaticTypedSlot<TypeI> getSymbol() {
       return name;
     }
 

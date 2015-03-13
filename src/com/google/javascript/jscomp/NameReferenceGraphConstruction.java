@@ -398,8 +398,8 @@ class NameReferenceGraphConstruction implements CompilerPass {
         className = classType.getReferenceName();
       } else {
         // We'll guess it is a constructor even if it didn't have @constructor
-        classType = compiler.getTypeRegistry().getNativeFunctionType(
-            JSTypeNative.U2U_CONSTRUCTOR_TYPE);
+        classType = compiler.getTypeIRegistry()
+            .getNativeFunctionType(JSTypeNative.U2U_CONSTRUCTOR_TYPE);
         className = NodeUtil.getPrototypeClassName(qName).getQualifiedName();
       }
       // In case we haven't seen the function yet.
@@ -561,8 +561,7 @@ class NameReferenceGraphConstruction implements CompilerPass {
       if (CONSERVATIVE) {
         throw new RuntimeException("Type system failed us :(");
       } else {
-        return compiler.getTypeRegistry().getNativeType(
-            JSTypeNative.UNKNOWN_TYPE);
+        return compiler.getTypeIRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE);
       }
     }
     // Null-ability does not affect the name graph's result.

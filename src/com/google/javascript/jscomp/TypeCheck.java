@@ -1513,12 +1513,12 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
       if (pair != null && pair.distance * 4 < propName.length()) {
         report(t, n.getLastChild(), INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
-            typeRegistry.getReadableJSTypeName(n.getFirstChild(), true), pair.suggestion);
+            typeRegistry.getReadableTypeName(n.getFirstChild()), pair.suggestion);
       } else {
         DiagnosticType reportType =
             lowConfidence ? POSSIBLE_INEXISTENT_PROPERTY : INEXISTENT_PROPERTY;
         report(t, n.getLastChild(), reportType, propName,
-            typeRegistry.getReadableJSTypeName(n.getFirstChild(), true));
+            typeRegistry.getReadableTypeName(n.getFirstChild()));
       }
     }
   }
@@ -1884,7 +1884,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     int maxArgs = functionType.getMaxArguments();
     if (minArgs > numArgs || maxArgs < numArgs) {
       report(t, call, WRONG_ARGUMENT_COUNT,
-              typeRegistry.getReadableJSTypeName(call.getFirstChild(), false),
+              typeRegistry.getReadableTypeNameNoDeref(call.getFirstChild()),
               String.valueOf(numArgs), String.valueOf(minArgs),
               maxArgs != Integer.MAX_VALUE ?
               " and no more than " + maxArgs + " argument(s)" : "");

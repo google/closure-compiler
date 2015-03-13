@@ -690,7 +690,7 @@ class PureFunctionIdentifier implements CompilerPass {
     private boolean isLocalValueType(JSType jstype) {
       Preconditions.checkNotNull(jstype);
       JSType subtype =  jstype.getGreatestSubtype(
-          compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE));
+          (JSType) compiler.getTypeIRegistry().getNativeType(JSTypeNative.OBJECT_TYPE));
       // If the type includes anything related to a object type, don't assume
       // anything about the locality of the value.
       return subtype.isNoType();
