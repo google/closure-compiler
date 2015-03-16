@@ -1189,30 +1189,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param parameterTypes the parameters' types
    */
   public FunctionType createFunctionTypeWithVarArgs(
-      JSType returnType, List<JSType> parameterTypes) {
-    return createFunctionType(
-        returnType, createParametersWithVarArgs(parameterTypes));
-  }
-
-  /**
-   * Creates a function type.
-   *
-   * @param returnType the function's return type
-   * @param parameterTypes the parameters' types
-   */
-  public FunctionType createFunctionType(
-      JSType returnType, List<JSType> parameterTypes) {
-    return createFunctionType(returnType, createParameters(parameterTypes));
-  }
-
-  /**
-   * Creates a function type. The last parameter type of the function is
-   * considered a variable length argument.
-   *
-   * @param returnType the function's return type
-   * @param parameterTypes the parameters' types
-   */
-  public FunctionType createFunctionTypeWithVarArgs(
       JSType returnType, JSType... parameterTypes) {
     return createFunctionType(
         returnType, createParametersWithVarArgs(parameterTypes));
@@ -1268,24 +1244,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       JSType returnType, List<JSType> parameterTypes) {
     return new FunctionBuilder(this)
         .withParamsNode(createParameters(parameterTypes))
-        .withReturnType(returnType)
-        .withTypeOfThis(instanceType)
-        .build();
-  }
-
-  /**
-   * Creates a function type in which {@code this} refers to an object instance.
-   * The last parameter type of the function is considered a variable length
-   * argument.
-   *
-   * @param instanceType the type of {@code this}
-   * @param returnType the function's return type
-   * @param parameterTypes the parameters' types
-   */
-  public JSType createFunctionTypeWithVarArgs(ObjectType instanceType,
-      JSType returnType, List<JSType> parameterTypes) {
-    return new FunctionBuilder(this)
-        .withParamsNode(createParametersWithVarArgs(parameterTypes))
         .withReturnType(returnType)
         .withTypeOfThis(instanceType)
         .build();
@@ -1401,20 +1359,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Creates a new function type based on an existing function type but
-   * with a new {@code this} type.
-   * @param existingFunctionType the existing function type.
-   * @param thisType the new this type.
-   */
-  public FunctionType createFunctionTypeWithNewThisType(
-      FunctionType existingFunctionType, ObjectType thisType) {
-    return new FunctionBuilder(this)
-        .copyFromOtherFunction(existingFunctionType)
-        .withTypeOfThis(thisType)
-        .build();
-  }
-
-  /**
    * @param parameters the function's parameters or {@code null}
    *        to indicate that the parameter types are unknown.
    * @param returnType the function's return type or {@code null} to indicate
@@ -1435,22 +1379,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         .withReturnType(returnType)
         .forNativeType()
         .build();
-  }
-
-  /**
-   * Creates a function type which can act as a constructor.
-   * @param returnType the function's return type
-   * @param lastVarArgs whether the last parameter type should be considered as
-   * an extensible var_args parameter
-   * @param parameterTypes the parameters' types
-   */
-  public FunctionType createConstructorType(JSType returnType,
-      boolean lastVarArgs, JSType... parameterTypes) {
-    if (lastVarArgs) {
-      return createConstructorTypeWithVarArgs(returnType, parameterTypes);
-    } else {
-      return createConstructorType(returnType, parameterTypes);
-    }
   }
 
   /**
@@ -1507,16 +1435,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Create an anonymous object type for a native type.
-   */
-  ObjectType createNativeAnonymousObjectType() {
-    PrototypeObjectType type =
-        new PrototypeObjectType(this, null, null, true, null);
-    type.setPrettyPrint(true);
-    return type;
-  }
-
-  /**
    * Creates a constructor function type.
    * @param name the function's name or {@code null} to indicate that the
    *     function is anonymous.
@@ -1533,16 +1451,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     return new FunctionType(this, name, source,
         createArrowType(parameters, returnType), null,
         createTemplateTypeMap(templateKeys, null), true, false);
-  }
-
-  ImmutableList<TemplateType> createTemplateMapKeys(ImmutableList<String> keys) {
-    ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
-    if (keys != null) {
-      for (String key : keys) {
-        builder.add(new TemplateType(this, key));
-      }
-    }
-    return builder.build();
   }
 
   /**
