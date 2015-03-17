@@ -740,23 +740,37 @@ public class Es6RewriteLetConstTest extends CompilerTestCase {
     test("let /** number */ x = 5; x = 'str';",
         null, null, TypeValidator.TYPE_MISMATCH_WARNING);
 
-    // TODO(dimvar): these tests have been passing by accident.
-    // Uncomment once b/19570923 is fixed.
+    test(Joiner.on('\n').join(
+        "while (true) {",
+        "  /** @type {number} */ let x = 5;",
+        "  (function() { x++; })();",
+        "  x = 7;",
+        "}"
+    ), null);
 
-    // test(Joiner.on('\n').join(
-    //     "while (true) {",
-    //     "  /** @type {number} */ let x = 5;",
-    //     "  (function() { x++; })();",
-    //     "  x = 'str';",
-    //     "}"
-    // ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    test(Joiner.on('\n').join(
+        "for (/** @type {number} */ let x = 5;;) {",
+        "  (function() { x++; })();",
+        "  x = 7;",
+        "}"
+    ), null);
 
-    // test(Joiner.on('\n').join(
-    //     "for (/** @type {number} */ let x = 5;;) {",
-    //     "  (function() { x++; })();",
-    //     "  x = 'str';",
-    //     "}"
-    // ), null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    // Ideally, these final two would give TYPE_MISMATCH_WARNINGS, but since transpilation
+    // changes these identifiers to properties, we lose the type annotations and warnings.
+    test(Joiner.on('\n').join(
+        "while (true) {",
+        "  /** @type {number} */ let x = 5;",
+        "  (function() { x++; })();",
+        "  x = 5;",
+        "}"
+    ), null);
+
+    test(Joiner.on('\n').join(
+        "for (/** @type {number} */ let x = 5;;) {",
+        "  (function() { x++; })();",
+        "  x = 'str';",
+        "}"
+    ), null);
   }
 
   public void testLetForInitializers() {
