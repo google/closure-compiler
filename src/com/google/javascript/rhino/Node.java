@@ -1641,7 +1641,7 @@ public class Node implements Cloneable, Serializable {
       return false;
     }
 
-    if (compareType && !JSType.isEquivalent((JSType) typei, node.getJSType())) {
+    if (compareType && !JSType.isEquivalent(getJSType(), node.getJSType())) {
       return false;
     }
 
@@ -2054,7 +2054,7 @@ public class Node implements Cloneable, Serializable {
    * specified type.
    */
   public JSType getJSType() {
-    return (JSType) typei;
+    return typei instanceof JSType ? (JSType) typei : null;
   }
 
   public void setJSType(JSType jsType) {
@@ -2062,7 +2062,8 @@ public class Node implements Cloneable, Serializable {
   }
 
   public TypeI getTypeI() {
-    return typei;
+    // For the time being, we only want to return the type iff it's an old type.
+    return getJSType();
   }
 
   public void setTypeI(TypeI type) {

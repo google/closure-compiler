@@ -63,7 +63,6 @@ import java.util.Set;
  * - @protected (maybe)
  * - arguments array
  * - separate scope for catch variables
- * - closure-specific constructs
  * - bounded quantification for generics
  */
 public class NewTypeInference implements CompilerPass {
@@ -1069,58 +1068,71 @@ public class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     Preconditions.checkArgument(
         requiredType != null && !requiredType.isBottom());
+    EnvTypePair resultPair = null;
     switch (expr.getType()) {
       case Token.EMPTY: // can be created by a FOR with empty condition
-        return new EnvTypePair(inEnv, JSType.UNKNOWN);
+        resultPair = new EnvTypePair(inEnv, JSType.UNKNOWN);
+        break;
       case Token.FUNCTION: {
         String fnName = symbolTable.getFunInternalName(expr);
         JSType fnType = envGetType(inEnv, fnName);
         Preconditions.checkState(fnType != null,
             "Could not find type for %s", fnName);
-        return new EnvTypePair(inEnv, fnType);
+        resultPair = new EnvTypePair(inEnv, fnType);
+        break;
       }
       case Token.FALSE:
       case Token.NULL:
       case Token.NUMBER:
       case Token.STRING:
       case Token.TRUE:
-        return new EnvTypePair(inEnv, scalarValueToType(expr.getType()));
+        resultPair = new EnvTypePair(inEnv, scalarValueToType(expr.getType()));
+        break;
       case Token.OBJECTLIT:
-        return analyzeObjLitFwd(expr, inEnv, requiredType, specializedType);
+        resultPair = analyzeObjLitFwd(expr, inEnv, requiredType, specializedType);
+        break;
       case Token.THIS: {
         if (!currentScope.hasThis()) {
           warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
-          return new EnvTypePair(inEnv, JSType.UNKNOWN);
+          resultPair = new EnvTypePair(inEnv, JSType.UNKNOWN);
+        } else {
+          JSType thisType = currentScope.getDeclaredTypeOf("this");
+          resultPair = new EnvTypePair(inEnv, thisType);
         }
-        JSType thisType = currentScope.getDeclaredTypeOf("this");
-        return new EnvTypePair(inEnv, thisType);
+        break;
       }
       case Token.NAME:
-        return analyzeNameFwd(expr, inEnv, requiredType, specializedType);
+        resultPair = analyzeNameFwd(expr, inEnv, requiredType, specializedType);
+        break;
       case Token.AND:
       case Token.OR:
-        return analyzeLogicalOpFwd(expr, inEnv, requiredType, specializedType);
+        resultPair = analyzeLogicalOpFwd(expr, inEnv, requiredType, specializedType);
+        break;
       case Token.INC:
       case Token.DEC:
-        return analyzeIncDecFwd(expr, inEnv, requiredType);
+        resultPair = analyzeIncDecFwd(expr, inEnv, requiredType);
+        break;
       case Token.BITNOT:
       case Token.NEG:
-        return analyzeUnaryNumFwd(expr, inEnv);
+        resultPair = analyzeUnaryNumFwd(expr, inEnv);
+        break;
       case Token.POS: {
         // We are more permissive with +, because it is used to coerce to number
-        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
-        pair.type = JSType.NUMBER;
-        return pair;
+        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+        resultPair.type = JSType.NUMBER;
+        break;
       }
       case Token.TYPEOF: {
-        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
-        pair.type = JSType.STRING;
-        return pair;
+        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+        resultPair.type = JSType.STRING;
+        break;
       }
       case Token.INSTANCEOF:
-        return analyzeInstanceofFwd(expr, inEnv, specializedType);
+        resultPair = analyzeInstanceofFwd(expr, inEnv, specializedType);
+        break;
       case Token.ADD:
-        return analyzeAddFwd(expr, inEnv);
+        resultPair = analyzeAddFwd(expr, inEnv);
+        break;
       case Token.BITOR:
       case Token.BITAND:
       case Token.BITXOR:
@@ -1131,11 +1143,14 @@ public class NewTypeInference implements CompilerPass {
       case Token.RSH:
       case Token.SUB:
       case Token.URSH:
-        return analyzeBinaryNumericOpFwd(expr, inEnv);
+        resultPair = analyzeBinaryNumericOpFwd(expr, inEnv);
+        break;
       case Token.ASSIGN:
-        return analyzeAssignFwd(expr, inEnv, requiredType, specializedType);
+        resultPair = analyzeAssignFwd(expr, inEnv, requiredType, specializedType);
+        break;
       case Token.ASSIGN_ADD:
-        return analyzeAssignAddFwd(expr, inEnv, requiredType);
+        resultPair = analyzeAssignAddFwd(expr, inEnv, requiredType);
+        break;
       case Token.ASSIGN_BITOR:
       case Token.ASSIGN_BITXOR:
       case Token.ASSIGN_BITAND:
@@ -1146,81 +1161,103 @@ public class NewTypeInference implements CompilerPass {
       case Token.ASSIGN_MUL:
       case Token.ASSIGN_DIV:
       case Token.ASSIGN_MOD:
-        return analyzeAssignNumericOpFwd(expr, inEnv);
+        resultPair = analyzeAssignNumericOpFwd(expr, inEnv);
+        break;
       case Token.SHEQ:
       case Token.SHNE:
-        return analyzeStrictComparisonFwd(expr.getType(),
+        resultPair = analyzeStrictComparisonFwd(expr.getType(),
             expr.getFirstChild(), expr.getLastChild(), inEnv, specializedType);
+        break;
       case Token.EQ:
       case Token.NE:
-        return analyzeNonStrictComparisonFwd(expr, inEnv, specializedType);
+        resultPair = analyzeNonStrictComparisonFwd(expr, inEnv, specializedType);
+        break;
       case Token.LT:
       case Token.GT:
       case Token.LE:
       case Token.GE:
-        return analyzeLtGtFwd(expr, inEnv);
+        resultPair = analyzeLtGtFwd(expr, inEnv);
+        break;
       case Token.GETPROP:
         Preconditions.checkState(
             !NodeUtil.isAssignmentOp(expr.getParent()) ||
             !NodeUtil.isLValue(expr));
         if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
           expr.removeProp(Node.ANALYZED_DURING_GTI);
-          return new EnvTypePair(inEnv, requiredType);
+          resultPair = new EnvTypePair(inEnv, requiredType);
+        } else {
+          resultPair = analyzePropAccessFwd(
+              expr.getFirstChild(), expr.getLastChild().getString(),
+              inEnv, requiredType, specializedType);
         }
-        return analyzePropAccessFwd(
-            expr.getFirstChild(), expr.getLastChild().getString(),
-            inEnv, requiredType, specializedType);
+        break;
       case Token.HOOK:
-        return analyzeHookFwd(expr, inEnv, requiredType, specializedType);
+        resultPair = analyzeHookFwd(expr, inEnv, requiredType, specializedType);
+        break;
       case Token.CALL:
       case Token.NEW:
-        return analyzeCallNewFwd(expr, inEnv, requiredType, specializedType);
+        resultPair = analyzeCallNewFwd(expr, inEnv, requiredType, specializedType);
+        break;
       case Token.COMMA:
-        return analyzeExprFwd(
+        resultPair = analyzeExprFwd(
             expr.getLastChild(),
             analyzeExprFwd(expr.getFirstChild(), inEnv).env,
             requiredType,
             specializedType);
+        break;
       case Token.NOT: {
-        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(),
+        resultPair = analyzeExprFwd(expr.getFirstChild(),
             inEnv, JSType.UNKNOWN, specializedType.negate());
-        pair.type = pair.type.negate().toBoolean();
-        return pair;
+        resultPair.type = resultPair.type.negate().toBoolean();
+        break;
       }
       case Token.GETELEM:
-        return analyzeGetElemFwd(expr, inEnv, requiredType, specializedType);
+        resultPair = analyzeGetElemFwd(expr, inEnv, requiredType, specializedType);
+        break;
       case Token.VOID: {
-        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
-        pair.type = JSType.UNDEFINED;
-        return pair;
+        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+        resultPair.type = JSType.UNDEFINED;
+        break;
       }
       case Token.IN:
-        return analyzeInFwd(expr, inEnv, specializedType);
+        resultPair = analyzeInFwd(expr, inEnv, specializedType);
+        break;
       case Token.DELPROP: {
         // IRFactory checks that the operand is a name, getprop or getelem.
         // No further warnings here.
-        EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
-        pair.type = JSType.BOOLEAN;
-        return pair;
+        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv);
+        resultPair.type = JSType.BOOLEAN;
+        break;
       }
       case Token.REGEXP:
-        return new EnvTypePair(inEnv, commonTypes.getRegexpType());
+        resultPair = new EnvTypePair(inEnv, commonTypes.getRegexpType());
+        break;
       case Token.ARRAYLIT:
-        return analyzeArrayLitFwd(expr, inEnv);
+        resultPair = analyzeArrayLitFwd(expr, inEnv);
+        break;
       case Token.CAST:
-        return analyzeCastFwd(expr, inEnv);
+        resultPair = analyzeCastFwd(expr, inEnv);
+        break;
       case Token.CASE:
         // For a statement of the form: switch (exp1) { ... case exp2: ... }
         // we analyze the case as if it were (exp1 === exp2).
         // We analyze the body of the case when the test is true and the stm
         // following the body when the test is false.
-        return analyzeStrictComparisonFwd(Token.SHEQ,
+        resultPair = analyzeStrictComparisonFwd(Token.SHEQ,
             expr.getParent().getFirstChild(), expr.getFirstChild(),
             inEnv, specializedType);
+        break;
       default:
         throw new RuntimeException("Unhandled expression type: " +
               Token.name(expr.getType()));
     }
+    // TODO(dimvar): We attach the type to every expression because that's also
+    // what the old type inference does.
+    // But maybe most of these types are never looked at.
+    // See if the passes that use types only need types on a small subset of the
+    // nodes, and only store these types to save mem.
+    expr.setTypeI(resultPair.type);
+    return resultPair;
   }
 
   private EnvTypePair analyzeNameFwd(

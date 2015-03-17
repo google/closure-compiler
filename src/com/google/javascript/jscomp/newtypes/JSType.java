@@ -22,6 +22,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.rhino.FunctionTypeI;
+import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -36,7 +39,7 @@ import java.util.TreeSet;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public abstract class JSType {
+public abstract class JSType implements TypeI {
   protected static final int BOTTOM_MASK = 0x0;
   protected static final int TYPEVAR_MASK = 0x1;
   protected static final int NON_SCALAR_MASK = 0x2;
@@ -246,6 +249,7 @@ public abstract class JSType {
     return TOP_MASK == getMask();
   }
 
+  @Override
   public boolean isBottom() {
     return BOTTOM_MASK == getMask();
   }
@@ -796,8 +800,9 @@ public abstract class JSType {
     return isSubtypeOfHelper(false, other);
   }
 
-  public boolean isSubtypeOf(JSType other) {
-    return isSubtypeOfHelper(true, other);
+  @Override
+  public boolean isSubtypeOf(TypeI other) {
+    return isSubtypeOfHelper(true, (JSType) other);
   }
 
   private boolean isSubtypeOfHelper(
@@ -1079,6 +1084,48 @@ public abstract class JSType {
           return builder.append("Unrecognized type: " + tags);
         }
     }
+  }
+
+  @Override
+  public boolean isConstructor() {
+    FunctionType ft = getFunTypeIfSingletonObj();
+    return ft != null && ft.isConstructor();
+  }
+
+  @Override
+  public boolean isEquivalentTo(TypeI type) {
+    return equals(type);
+  }
+
+  @Override
+  public boolean isFunctionType() {
+    return getFunType() != null;
+  }
+
+  @Override
+  public boolean isInterface() {
+    NominalType nt = getNominalTypeIfUnique();
+    return nt != null && nt.isInterface();
+  }
+
+  @Override
+  public boolean isUnknownType() {
+    return isUnknown();
+  }
+
+  @Override
+  public TypeI restrictByNotNullOrUndefined() {
+    throw new UnsupportedOperationException("restrictByNotNullOrUndefined not implemented yet.");
+  }
+
+  @Override
+  public FunctionTypeI toMaybeFunctionType() {
+    throw new UnsupportedOperationException("toMaybeFunctionType not implemented yet.");
+  }
+
+  @Override
+  public ObjectTypeI toMaybeObjectType() {
+    throw new UnsupportedOperationException("toMaybeObjectType not implemented yet.");
   }
 
   @Override
