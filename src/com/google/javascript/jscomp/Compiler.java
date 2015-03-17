@@ -1864,7 +1864,7 @@ public class Compiler extends AbstractCompiler {
    * map info.
    */
   @Override
-  String toSource(Node n) {
+  public String toSource(Node n) {
     initCompilerOptionsIfTesting();
     return toSource(n, null, true);
   }

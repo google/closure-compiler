@@ -205,7 +205,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Prints a node to source code.
    */
-  abstract String toSource(Node root);
+  public abstract String toSource(Node root);
 
   /**
    * Gets a default error reporter for injecting into Rhino.
