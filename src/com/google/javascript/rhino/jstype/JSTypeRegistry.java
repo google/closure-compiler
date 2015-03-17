@@ -118,9 +118,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
   private final Map<String, JSType> namesToTypes;
 
-  // Set of namespaces in which types (or other namespaces) exist.
-  private final Set<String> namespaces = new HashSet<>();
-
   // NOTE(nicksantos): This is a terrible terrible hack. When type expressions
   // are evaluated, we need to be able to decide whether that type name
   // resolves to a nullable type or a non-nullable type. Object types are
@@ -222,7 +219,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     eachRefTypeIndexedByProperty.clear();
     initializeBuiltInTypes();
     namesToTypes.clear();
-    namespaces.clear();
     initializeRegistry();
   }
 
@@ -591,14 +587,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private void register(JSType type, String name) {
     Preconditions.checkArgument(
         !name.contains("<"), "Type names cannot contain template annotations.");
-
     namesToTypes.put(name, type);
-
-    // Add all the namespaces in which this name lives.
-    while (name.indexOf('.') > 0) {
-      name = name.substring(0, name.lastIndexOf('.'));
-      namespaces.add(name);
-    }
   }
 
   private void registerNativeType(JSTypeNative typeId, JSType type) {
@@ -718,22 +707,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Returns each type that has a property {@code propertyName} defined on it.
-   *
-   * Like most types in our type system, the collection of types returned
-   * will be collapsed. This means that if a type is defined on
-   * {@code Object} and on {@code Array}, it would be reasonable for this
-   * method to return either {@code [Object, Array]} or just {@code [Object]}.
-   */
-  public Iterable<JSType> getTypesWithProperty(String propertyName) {
-    if (typesIndexedByProperty.containsKey(propertyName)) {
-      return typesIndexedByProperty.get(propertyName).getAlternates();
-    } else {
-      return ImmutableList.of();
-    }
-  }
-
-  /**
    * Returns each reference type that has a property {@code propertyName}
    * defined on it.
    *
@@ -780,19 +753,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       stack.add(current);
     }
     return stack;
-  }
-
-  /**
-   * Increments the current generation. Clients must call this in order to
-   * move to the next generation of type resolution, allowing types to attempt
-   * resolution again.
-   */
-  public void incrementGeneration() {
-    for (NamedType type : resolvedNamedTypes.values()) {
-      type.clearResolved();
-    }
-    unresolvedNamedTypes.putAll(resolvedNamedTypes);
-    resolvedNamedTypes.clear();
   }
 
   boolean isLastGeneration() {
@@ -867,11 +827,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public boolean isForwardDeclaredType(String name) {
     return forwardDeclaredTypes.contains(name);
-  }
-
-  /** Determines whether the given JS package exists. */
-  public boolean hasNamespace(String name) {
-    return namespaces.contains(name);
   }
 
   /**

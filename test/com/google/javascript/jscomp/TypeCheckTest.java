@@ -30,7 +30,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.testing.Asserts;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10257,9 +10256,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertThat(type).isInstanceOf(ObjectType.class);
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
-    Asserts.assertTypeCollectionEquals(
-        Lists.newArrayList(objectType),
-        registry.getTypesWithProperty("x"));
   }
 
   public void testGatherProperyWithoutAnnotation2() throws Exception {
@@ -10272,9 +10268,6 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     assertThat(type).isInstanceOf(ObjectType.class);
     ObjectType objectType = (ObjectType) type;
     assertFalse(objectType.hasProperty("x"));
-    Asserts.assertTypeCollectionEquals(
-        Lists.newArrayList(OBJECT_TYPE),
-        registry.getTypesWithProperty("x"));
   }
 
   public void testFunctionMasksVariableBug() throws Exception {

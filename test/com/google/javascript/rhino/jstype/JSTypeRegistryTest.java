@@ -38,8 +38,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.javascript.rhino.SimpleErrorReporter;
-import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.Asserts;
 
 import junit.framework.TestCase;
@@ -70,16 +68,6 @@ public class JSTypeRegistryTest extends TestCase {
     assertTypeEquals(type, typeRegistry.getType(name));
   }
 
-  public void testGetDeclaredTypeInNamespace() {
-    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-    JSType type = typeRegistry.createAnonymousObjectType(null);
-    String name = "a.b.Foo";
-    typeRegistry.declareType(name, type);
-    assertTypeEquals(type, typeRegistry.getType(name));
-    assertTrue(typeRegistry.hasNamespace("a"));
-    assertTrue(typeRegistry.hasNamespace("a.b"));
-  }
-
   public void testPropertyOnManyTypes() {
     JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
 
@@ -94,111 +82,6 @@ public class JSTypeRegistryTest extends TestCase {
     }
 
     assertFalse(typeRegistry.getGreatestSubtypeWithProperty(type, "foo").isUnknownType());
-  }
-
-  public void testTypeAsNamespace() {
-    JSTypeRegistry typeRegistry = new JSTypeRegistry(null);
-
-    JSType type = typeRegistry.createAnonymousObjectType(null);
-    String name = "a.b.Foo";
-    typeRegistry.declareType(name, type);
-    assertTypeEquals(type, typeRegistry.getType(name));
-
-    type = typeRegistry.createAnonymousObjectType(null);
-    name = "a.b.Foo.Bar";
-    typeRegistry.declareType(name, type);
-    assertTypeEquals(type, typeRegistry.getType(name));
-
-    assertTrue(typeRegistry.hasNamespace("a"));
-    assertTrue(typeRegistry.hasNamespace("a.b"));
-    assertTrue(typeRegistry.hasNamespace("a.b.Foo"));
-  }
-
-  public void testGenerationIncrementing1() {
-    SimpleErrorReporter reporter = new SimpleErrorReporter();
-    final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
-
-    StaticTypedScope<JSType> scope = new AbstractStaticScope<JSType>() {
-          @Override
-          public StaticTypedSlot<JSType> getSlot(final String name) {
-            return new SimpleSlot(
-                name,
-                typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
-                false);
-          }
-        };
-
-    ObjectType namedType =
-        (ObjectType) typeRegistry.getType(scope, "Foo", null, 0, 0);
-    ObjectType subNamed =
-        typeRegistry.createObjectType(typeRegistry.createObjectType(namedType));
-
-    // Subclass of named type is initially unresolved.
-    typeRegistry.setLastGeneration(false);
-    typeRegistry.resolveTypesInScope(scope);
-    assertTrue(subNamed.isUnknownType());
-
-    // Subclass of named type is still unresolved, even though the named type is
-    // now present in the registry.
-    typeRegistry.declareType("Foo",
-                             typeRegistry.createAnonymousObjectType(null));
-    typeRegistry.resolveTypesInScope(scope);
-    assertTrue(subNamed.isUnknownType());
-
-    assertNull("Unexpected errors: " + reporter.errors(),
-        reporter.errors());
-    assertNull("Unexpected warnings: " + reporter.warnings(),
-        reporter.warnings());
-
-    // After incrementing the generation, resolve works again.
-    typeRegistry.incrementGeneration();
-    typeRegistry.setLastGeneration(true);
-    typeRegistry.resolveTypesInScope(scope);
-    assertFalse(subNamed.isUnknownType());
-  }
-
-  public void testGenerationIncrementing2() {
-    SimpleErrorReporter reporter = new SimpleErrorReporter();
-    final JSTypeRegistry typeRegistry = new JSTypeRegistry(reporter);
-
-    StaticTypedScope<JSType> scope = new AbstractStaticScope<JSType>() {
-          @Override
-          public StaticTypedSlot<JSType> getSlot(final String name) {
-            return new SimpleSlot(
-                name,
-                typeRegistry.getNativeType(JSTypeNative.UNKNOWN_TYPE),
-                false);
-          }
-        };
-
-    ObjectType namedType =
-        (ObjectType) typeRegistry.getType(scope, "Foo", null, 0, 0);
-    FunctionType functionType = typeRegistry.createFunctionType(namedType);
-
-    // Subclass of named type is initially unresolved.
-    typeRegistry.setLastGeneration(false);
-    typeRegistry.resolveTypesInScope(scope);
-    assertTrue(functionType.getReturnType().isUnknownType());
-    functionType.resolve(reporter, scope);
-    assertTrue(functionType.getReturnType().isUnknownType());
-
-    // Subclass of named type is still unresolved, even though the named type is
-    // now present in the registry.
-    typeRegistry.declareType("Foo",
-                             typeRegistry.createAnonymousObjectType(null));
-    typeRegistry.resolveTypesInScope(scope);
-    assertTrue(functionType.getReturnType().isUnknownType());
-
-    assertNull("Unexpected errors: " + reporter.errors(),
-        reporter.errors());
-    assertNull("Unexpected warnings: " + reporter.warnings(),
-        reporter.warnings());
-
-    // After incrementing the generation, resolve works again.
-    typeRegistry.incrementGeneration();
-    typeRegistry.setLastGeneration(true);
-    typeRegistry.resolveTypesInScope(scope);
-    assertFalse(functionType.getReturnType().isUnknownType());
   }
 
   private void assertTypeEquals(JSType a, JSType b) {

@@ -5609,21 +5609,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         assertTypeEquals(type,
             registry.getGreatestSubtypeWithProperty(type, propName));
 
-        List<JSType> typesWithProp =
-            Lists.newArrayList(registry.getTypesWithProperty(propName));
-        String message = type.toString();
-        assertEquals(message, 1, typesWithProp.size());
-        assertTypeEquals(type, typesWithProp.get(0));
-
         assertTypeEquals(NO_TYPE,
             registry.getGreatestSubtypeWithProperty(type, "GRRR"));
         allObjects.add(type);
       }
     }
-    assertTypeListEquals(registry.getTypesWithProperty("GRRR"),
-        Lists.newArrayList(NO_TYPE));
-    assertTypeListEquals(allObjects,
-        registry.getTypesWithProperty("allHaz"));
   }
 
   public void testRegisterPropertyMemoization() {
