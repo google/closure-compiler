@@ -101,6 +101,11 @@ public class NoObjectType extends FunctionType {
   }
 
   @Override
+  public boolean hasReferenceName() {
+    return false;
+  }
+
+  @Override
   public boolean matchesNumberContext() {
     return true;
   }
