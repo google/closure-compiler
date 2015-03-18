@@ -825,6 +825,39 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
+  public void testUnknownsDontOverrideDeclaredTypesInLocalScope1() throws Exception {
+    testTypes(
+        "/** @constructor */ var C = function() {\n"
+        + "  /** @type {string} */ this.a = 'str'};\n"
+        + "/** @param {?} a\n @return {number} */\n"
+        + "C.prototype.f = function(a) {\n"
+        + "  this.a = a;\n"
+        + "  return this.a;\n"
+        + "}\n",
+
+        "inconsistent return type\n"
+        + "found   : string\n"
+        + "required: number");
+  }
+
+  public void testUnknownsDontOverrideDeclaredTypesInLocalScope2() throws Exception {
+    testTypes(
+        "/** @constructor */ var C = function() {\n"
+        + "  /** @type {string} */ this.a = 'str';\n"
+        + "};\n"
+        + "/** @type {C} */ var x = new C();"
+        + "/** @param {?} a\n @return {number} */\n"
+        + "C.prototype.f = function(a) {\n"
+        + "  x.a = a;\n"
+        + "  return x.a;\n"
+        + "}\n",
+
+        "inconsistent return type\n"
+        + "found   : string\n"
+        + "required: number");
+  }
+
+
   public void testObjLitDef1a() throws Exception {
     testTypes(
         "var x = {/** @type {number} */ a:12 };\n" +
@@ -6340,12 +6373,28 @@ public class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testImplicitCast() throws Exception {
+  public void testImplicitCast1() throws Exception {
     testTypesWithExterns("/** @constructor */ function Element() {};\n" +
              "/** @type {string}\n" +
              "  * @implicitCast */" +
              "Element.prototype.innerHTML;",
              "(new Element).innerHTML = new Array();");
+  }
+
+  public void testImplicitCast2() throws Exception {
+    testTypesWithExterns(
+        "/** @constructor */ function Element() {};\n" +
+        "/**\n" +
+        " * @type {string}\n" +
+        " * @implicitCast\n" +
+        " */\n" +
+        "Element.prototype.innerHTML;\n",
+        "/** @constructor */ function C(e) {\n" +
+        "  /** @type {Element} */ this.el = e;\n" +
+        "}\n" +
+        "C.prototype.method = function() {\n" +
+        "  this.el.innerHTML = new Array();\n" +
+        "};\n");
   }
 
   public void testImplicitCastSubclassAccess() throws Exception {

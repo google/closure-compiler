@@ -944,15 +944,16 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           objectJsType.restrictByNotNullOrUndefined());
       if (type != null) {
         if (type.hasProperty(pname) &&
-            !type.isPropertyTypeInferred(pname) &&
-            !propertyIsImplicitCast(type, pname)) {
+            !type.isPropertyTypeInferred(pname)) {
           JSType expectedType = type.getPropertyType(pname);
           if (!expectedType.isUnknownType()) {
-            validator.expectCanAssignToPropertyOf(
-                t, assign, getJSType(rvalue),
-                expectedType, object, pname);
-            checkPropertyInheritanceOnGetpropAssign(
-                t, assign, object, pname, info, expectedType);
+            if (!propertyIsImplicitCast(type, pname)) {
+              validator.expectCanAssignToPropertyOf(
+                  t, assign, getJSType(rvalue),
+                  expectedType, object, pname);
+              checkPropertyInheritanceOnGetpropAssign(
+                  t, assign, object, pname, info, expectedType);
+            }
             return;
           }
         }

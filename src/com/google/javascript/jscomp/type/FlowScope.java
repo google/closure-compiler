@@ -57,7 +57,7 @@ public interface FlowScope extends StaticTypedScope<JSType>, LatticeElement {
    * inferred.
    */
   void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
-      JSType inferredType);
+      JSType inferredType, boolean declare);
 
   /**
    * Optimize this scope and return a new FlowScope with faster lookup.

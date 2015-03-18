@@ -109,12 +109,12 @@ class LinkedFlowScope implements FlowScope {
 
   @Override
   public void inferQualifiedSlot(Node node, String symbol, JSType bottomType,
-      JSType inferredType) {
+      JSType inferredType, boolean declared) {
     TypedScope functionScope = getFunctionScope();
     if (functionScope.isLocal()) {
       TypedVar v  = functionScope.getVar(symbol);
       if (v == null && !functionScope.isBottom()) {
-        functionScope.declare(symbol, node, bottomType, null);
+        v = functionScope.declare(symbol, node, bottomType, null, !declared);
       }
 
       if (v != null && !v.isTypeInferred()) {
@@ -122,7 +122,8 @@ class LinkedFlowScope implements FlowScope {
         // Use the inferred type over the declared type only if the
         // inferred type is a strict subtype of the declared type.
         if (declaredType != null && inferredType.isSubtype(declaredType)
-            && !declaredType.isSubtype(inferredType)) {
+            && !declaredType.isSubtype(inferredType)
+            && !inferredType.isEquivalentTo(declaredType)) {
           inferSlotType(symbol, inferredType);
         }
       } else {

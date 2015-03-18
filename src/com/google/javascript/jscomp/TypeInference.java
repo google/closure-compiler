@@ -595,9 +595,18 @@ class TypeInference
       case Token.GETPROP:
         String qualifiedName = left.getQualifiedName();
         if (qualifiedName != null) {
-          scope.inferQualifiedSlot(left, qualifiedName,
-              leftType == null ? unknownType : leftType,
-              resultType);
+          boolean declaredSlotType = false;
+          JSType rawObjType = left.getFirstChild().getJSType();
+          if (rawObjType != null) {
+            ObjectType objType = ObjectType.cast(
+                rawObjType.restrictByNotNullOrUndefined());
+            if (objType != null) {
+              String propName = left.getLastChild().getString();
+              declaredSlotType = objType.isPropertyTypeDeclared(propName);
+            }
+          }
+          JSType safeLeftType = leftType == null ? unknownType : leftType;
+          scope.inferQualifiedSlot(left, qualifiedName, safeLeftType, resultType, declaredSlotType);
         }
 
         left.setJSType(resultType);
@@ -825,7 +834,7 @@ class TypeInference
 
           scope.inferQualifiedSlot(name, qKeyName,
               oldType == null ? unknownType : oldType,
-              valueType);
+              valueType, false);
         }
       } else {
         n.setJSType(unknownType);
@@ -976,7 +985,7 @@ class TypeInference
     scope = scope.createChildFlowScope();
     if (node.isGetProp()) {
       scope.inferQualifiedSlot(
-          node, node.getQualifiedName(), getJSType(node), narrowed);
+          node, node.getQualifiedName(), getJSType(node), narrowed, false);
     } else {
       redeclareSimpleVar(scope, node, narrowed);
     }
