@@ -95,6 +95,7 @@
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
       <version>0.24</version>
+      <scope>test</scope>
     </dependency>
 
     <!-- Ant is a provided scope as it is only needed to compile; ant will provide itself when using the jar -->
