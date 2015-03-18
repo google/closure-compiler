@@ -8328,7 +8328,7 @@ chrome.networkingPrivate.getState = function(guid, callback) {};
 /**
  * @param {string} guid
  * @param {!Object} properties
- * @param {function()} callback
+ * @param {function()=} callback
  */
 chrome.networkingPrivate.setProperties = function(guid, properties, callback) {
 };
