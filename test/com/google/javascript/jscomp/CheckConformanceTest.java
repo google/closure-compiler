@@ -917,6 +917,39 @@ public class CheckConformanceTest extends CompilerTestCase {
         "function f() {goog.asserts.assertInstanceof(this, Error);}");
   }
 
+  private String config(String rule, String message) {
+    return "requirement: {\n"
+        + "  type: CUSTOM\n"
+        + "  java_class: '" + rule + "'\n"
+        + "  error_message: '" + message + "'\n"
+        + "}";
+  }
+
+  private String rule(String rule) {
+    return "com.google.javascript.jscomp.ConformanceRules$" + rule;
+  }
+
+  public void testCustomBanUnknownThisProp1() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @constructor */ function f() {};"
+        + "f.prototype.method = function() { alert(this.prop); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+  }
+
+    public void testCustomBanUnknownThisProp2() {
+    configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @constructor */ function f() {}"
+        + "f.prototype.method = function() { this.prop = foo; };",
+        null);
+  }
+
   public void testCustomBanGlobalVars1() {
     configuration =
         "requirement: {\n" +

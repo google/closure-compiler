@@ -34,11 +34,11 @@ import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -949,6 +949,78 @@ public final class ConformanceRules {
 
     private boolean isWhiteListed(Node n) {
       return n.getParent().isCast() || isAssertionCall(n.getParent());
+    }
+
+    private boolean isAssertionCall(Node n) {
+      if (n.isCall() && n.getFirstChild().isQualifiedName()) {
+        Node target = n.getFirstChild();
+        for (int i = 0; i < assertions.size(); i++) {
+          if (target.matchesQualifiedName(
+              assertions.get(i).getFunctionName())) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Banned unknown type references of the form "this.prop" unless
+   *  - it is immediately cast,
+   *  - it is a @template type (until template type
+   * restricts are enabled) or
+   *  - the value is unused.
+   *  - the "this" type is unknown (as this is expected to be used with
+   * BanUnknownThis which would have already reported the root cause).
+   */
+  public static final class BanUnknownDirectThisPropsReferences extends AbstractRule {
+    private final ImmutableList<AssertionFunctionSpec> assertions;
+    public BanUnknownDirectThisPropsReferences(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      assertions = ImmutableList.copyOf(
+          compiler.getCodingConvention().getAssertionFunctions());
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isGetProp()
+          && isKnownThis(n.getFirstChild()) // not a cascading unknown
+          && isUnknown(n)
+          && !isTemplateType(n)
+          && isUsed(n)  // skip most assignements, etc
+          && !isWhiteListed(n)) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isKnownThis(Node n) {
+      return n.isThis() && !isUnknown(n);
+    }
+
+    private boolean isUnknown(Node n) {
+      JSType type = n.getJSType();
+      return (type != null && type.isUnknownType());
+    }
+
+    private boolean isTemplateType(Node n) {
+      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      return (type != null && type.isTemplateType());
+    }
+
+    private boolean isUsed(Node n) {
+      return (NodeUtil.isAssignmentOp(n.getParent()))
+           ? NodeUtil.isExpressionResultUsed(n.getParent())
+           : NodeUtil.isExpressionResultUsed(n);
+    }
+
+    private boolean isWhiteListed(Node n) {
+      Node parent = n.getParent();
+      return n.getParent().isCast()
+          || isAssertionCall(n.getParent())
+          || (n.getParent().isAssign() && n.getFirstChild() == n);
     }
 
     private boolean isAssertionCall(Node n) {
