@@ -758,6 +758,23 @@ final public class JSDocInfoBuilder {
 
   /**
    * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isNoCollapse()} flag set to {@code true}.
+   *
+   * @return {@code true} if the no collapse flag was recorded and {@code false}
+   *     if it was already recorded
+   */
+  public boolean recordNoCollapse() {
+    if (!currentInfo.isNoCollapse()) {
+      currentInfo.setNoCollapse(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isConstructor()} flag set to {@code true}.
    *
    * @return {@code true} if the constructor was recorded and {@code false}

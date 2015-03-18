@@ -92,6 +92,10 @@ class CollapseProperties implements CompilerPass {
       "Variable {0} aliases a constructor, "
       + "so it cannot be assigned multiple times");
 
+  static final DiagnosticType INVALID_NOCOLLAPSE = DiagnosticType.warning(
+      "JSC_INVALID_NOCOLLAPSE",
+      "@nocollapse is not permitted here");
+
   private AbstractCompiler compiler;
 
   /** Global namespace tree */
@@ -506,7 +510,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void flattenReferencesToCollapsibleDescendantNames(
       Name n, String alias) {
-    if (n.props == null) {
+    if (n.props == null || n.isCollapsingExplicitlyDenied()) {
       return;
     }
 
@@ -696,6 +700,14 @@ class CollapseProperties implements CompilerPass {
 
     // Handle this name first so that nested object literals get unrolled.
     if (n.canCollapse()) {
+      // Enum properties are always collapsed. Warn when @nocollapse
+      // is used on an enum property
+      if (n.docInfo != null && n.docInfo.isNoCollapse() &&
+          n.isDescendantOfEnum()) {
+        compiler.report(
+            JSError.make(n.docInfo.getAssociatedNode(), INVALID_NOCOLLAPSE));
+      }
+
       updateObjLitOrFunctionDeclaration(n, alias, canCollapseChildNames);
     }
 
@@ -997,7 +1009,7 @@ class CollapseProperties implements CompilerPass {
    */
   private void updateFunctionDeclarationAtFunctionNode(
       Name n, boolean canCollapseChildNames) {
-    if (!canCollapseChildNames) {
+    if (!canCollapseChildNames || !n.canCollapse()) {
       return;
     }
 
@@ -1118,7 +1130,7 @@ class CollapseProperties implements CompilerPass {
    * @param parent The node to which new global variables should be added
    *     as children
    * @param addAfter The child of after which new
-   *     variables should be added (may be null)
+   *     variables should be added
    * @return The number of variables added
    */
   private int addStubsForUndeclaredProperties(
