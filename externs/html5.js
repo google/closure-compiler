@@ -1000,9 +1000,16 @@ SharedWorker.prototype.onerror;
 
 /**
  * @see http://dev.w3.org/html5/workers/
+ * @see http://www.w3.org/TR/url-1/#dom-urlutilsreadonly
  * @interface
  */
 function WorkerLocation() {}
+
+/** @type {string} */
+WorkerLocation.prototype.href;
+
+/** @type {string} */
+WorkerLocation.prototype.origin;
 
 /** @type {string} */
 WorkerLocation.prototype.protocol;
