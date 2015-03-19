@@ -400,6 +400,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_DICT          = 0x00800000; // @dict
   private static final int MASK_STALBEIDGEN   = 0x01000000; // @stableIdGenerator
   private static final int MASK_MAPPEDIDGEN   = 0x02000000; // @idGenerator {mapped}
+  private static final int MASK_NOCOLLAPSE    = 0x04000000; // @nocollapse
 
   // 3 bit type field stored in the top 3 bits of the most significant
   // nibble.
@@ -570,6 +571,10 @@ public class JSDocInfo implements Serializable {
 
   void setNoCompile(boolean value) {
     setFlag(value, MASK_NOCOMPILE);
+  }
+
+  void setNoCollapse(boolean value) {
+    setFlag(value, MASK_NOCOLLAPSE);
   }
 
   private void setFlag(boolean value, int mask) {
@@ -753,6 +758,14 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isNoCompile() {
     return getFlag(MASK_NOCOMPILE);
+  }
+
+  /**
+   * Returns whether the {@code @nocompile} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean isNoCollapse() {
+    return getFlag(MASK_NOCOLLAPSE);
   }
 
   /**

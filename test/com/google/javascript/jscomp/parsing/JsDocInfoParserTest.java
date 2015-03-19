@@ -4066,6 +4066,11 @@ public class JsDocInfoParserTest extends BaseJSTypeTestCase {
         true, "Bad type annotation. type not recognized due to syntax error");
   }
 
+  public void testParseDuplicateNoCollapse() throws Exception {
+    parse("@nocollapse \n * @nocollapse \n * @type {Object}*/",
+        "extra @nocollapse tag");
+  }
+
   /**
    * Asserts that a documentation field exists on the given marker.
    *

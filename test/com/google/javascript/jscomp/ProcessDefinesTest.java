@@ -281,21 +281,17 @@ public class ProcessDefinesTest extends CompilerTestCase {
   }
 
   public void testNamespacedDefine2b() {
-    // TODO(johnlenz): We should either reject the define as invalid
-    // or replace its value.
     overrides.put("a.B", new Node(Token.TRUE));
     test("var a = { /** @define {boolean} */ B : false };",
-         "var a = {B : false};",
-         null, ProcessDefines.UNKNOWN_DEFINE_WARNING);
+         null,
+         ProcessDefines.INVALID_DEFINE_INIT_ERROR, null);
   }
 
   public void testNamespacedDefine2c() {
-    // TODO(johnlenz): We should either reject the define as invalid
-    // or replace its value.
     overrides.put("a.B", new Node(Token.TRUE));
     test("var a = { /** @define {boolean} */ get B() { return false } };",
-      "var a = {get B() { return false } };",
-      null, ProcessDefines.UNKNOWN_DEFINE_WARNING);
+      null,
+      ProcessDefines.INVALID_DEFINE_INIT_ERROR, null);
   }
 
   public void testNamespacedDefine3() {

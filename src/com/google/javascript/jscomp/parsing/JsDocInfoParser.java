@@ -658,6 +658,13 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case NO_COLLAPSE:
+          if (!jsdocBuilder.recordNoCollapse()) {
+            parser.addParserWarning("msg.jsdoc.nocollapse",
+                stream.getLineno(), stream.getCharno());
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case NOT_IMPLEMENTED:
           return eatUntilEOLIfNotAnnotation();
 

@@ -56,6 +56,7 @@ enum Annotation {
   MEANING,
   MODIFIES,
   NO_ALIAS,
+  NO_COLLAPSE,
   NO_COMPILE,
   NO_SIDE_EFFECTS,
   NOT_IMPLEMENTED,
@@ -118,6 +119,7 @@ enum Annotation {
       put("meaning", Annotation.MEANING).
       put("modifies", Annotation.MODIFIES).
       put("noalias", Annotation.NO_ALIAS).
+      put("nocollapse", Annotation.NO_COLLAPSE).
       put("nocompile", Annotation.NO_COMPILE).
       put("nosideeffects", Annotation.NO_SIDE_EFFECTS).
       put("override", Annotation.OVERRIDE).
