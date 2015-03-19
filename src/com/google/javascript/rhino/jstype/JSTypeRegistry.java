@@ -498,7 +498,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     // unknown function type, i.e. (?...) -> ?
     FunctionType U2U_FUNCTION_TYPE =
-        createFunctionType(UNKNOWN_TYPE, true, UNKNOWN_TYPE);
+        createFunctionTypeWithVarArgs(UNKNOWN_TYPE, UNKNOWN_TYPE);
     registerNativeType(JSTypeNative.U2U_FUNCTION_TYPE, U2U_FUNCTION_TYPE);
 
     // unknown constructor type, i.e. (?...) -> ? with the Unknown type
@@ -1195,7 +1195,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param returnType the function's return type
    * @param parameterTypes the parameters' types
    */
-  public JSType createFunctionType(ObjectType instanceType,
+  public JSType createFunctionTypeWithInstanceType(ObjectType instanceType,
       JSType returnType, List<JSType> parameterTypes) {
     return new FunctionBuilder(this)
         .withParamsNode(createParameters(parameterTypes))
@@ -1281,22 +1281,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
       }
     }
     return builder.build();
-  }
-
-  /**
-   * Creates a function type.
-   * @param returnType the function's return type
-   * @param lastVarArgs whether the last parameter type should be considered as
-   * an extensible var_args parameter
-   * @param parameterTypes the parameters' types
-   */
-  public FunctionType createFunctionType(JSType returnType,
-      boolean lastVarArgs, JSType... parameterTypes) {
-    if (lastVarArgs) {
-      return createFunctionTypeWithVarArgs(returnType, parameterTypes);
-    } else {
-      return createFunctionType(returnType, parameterTypes);
-    }
   }
 
   /**

@@ -2996,8 +2996,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    */
   public void testFunctionTypeRepresentation() {
     assertEquals("function (number, string): boolean",
-        registry.createFunctionType(BOOLEAN_TYPE, false, NUMBER_TYPE,
-            STRING_TYPE).toString());
+        registry.createFunctionType(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE).toString());
 
     assertEquals("function (new:Array, ...*): Array",
         ARRAY_FUNCTION_TYPE.toString());
@@ -3012,12 +3011,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         STRING_OBJECT_FUNCTION_TYPE.toString());
 
     assertEquals("function (...number): boolean",
-        registry.createFunctionType(BOOLEAN_TYPE, true, NUMBER_TYPE)
-        .toString());
+        registry.createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE).toString());
 
     assertEquals("function (number, ...string): boolean",
-        registry.createFunctionType(BOOLEAN_TYPE, true, NUMBER_TYPE,
-            STRING_TYPE).toString());
+        registry.createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE).toString());
 
     assertEquals("function (this:Date, number): (boolean|number|string)",
         new FunctionBuilder(registry)
@@ -4419,10 +4416,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionFixedArgs() throws Exception {
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE,
-        false, BOOLEAN_TYPE);
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE,
-        false, BOOLEAN_TYPE);
+    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, BOOLEAN_TYPE);
+    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, BOOLEAN_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4436,10 +4431,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionMultipleFixedArgs() throws Exception {
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE,
-        false, EVAL_ERROR_TYPE, STRING_TYPE);
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE,
-        false, ERROR_TYPE, ALL_TYPE);
+    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, EVAL_ERROR_TYPE, STRING_TYPE);
+    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, ALL_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4453,10 +4446,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testSubtypingFunctionFixedArgsNotMatching() throws Exception {
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE,
-        false, EVAL_ERROR_TYPE, UNKNOWN_TYPE);
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE,
-        false, ERROR_TYPE, ALL_TYPE);
+    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, EVAL_ERROR_TYPE, UNKNOWN_TYPE);
+    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, ALL_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4471,11 +4462,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testSubtypingFunctionVariableArgsOneOnly() throws Exception {
     // f1 = (EvalError...) -> Object
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE,
-        true, EVAL_ERROR_TYPE);
+    FunctionType f1 = registry.createFunctionTypeWithVarArgs(OBJECT_TYPE, EVAL_ERROR_TYPE);
     // f2 = (Error, Object) -> String
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE,
-        false, ERROR_TYPE, OBJECT_TYPE);
+    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4490,11 +4479,11 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testSubtypingFunctionVariableArgsBoth() throws Exception {
     // f1 = (UriError, EvalError, EvalError...) -> Object
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE,
-        true,  URI_ERROR_TYPE, EVAL_ERROR_TYPE, EVAL_ERROR_TYPE);
+    FunctionType f1 = registry.createFunctionTypeWithVarArgs(
+        OBJECT_TYPE, URI_ERROR_TYPE, EVAL_ERROR_TYPE, EVAL_ERROR_TYPE);
     // f2 = (Error, Object, EvalError...) -> String
-    FunctionType f2 = registry.createFunctionType(STRING_OBJECT_TYPE,
-        true, ERROR_TYPE, OBJECT_TYPE, EVAL_ERROR_TYPE);
+    FunctionType f2 = registry.createFunctionTypeWithVarArgs(
+        STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE, EVAL_ERROR_TYPE);
 
     assertTrue(f1.isSubtype(f1));
     assertFalse(f1.isSubtype(f2));
@@ -4509,29 +4498,24 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testSubtypingMostGeneralFunction() throws Exception {
     // (EvalError, String) -> Object
-    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE,
-        false, EVAL_ERROR_TYPE, STRING_TYPE);
+    FunctionType f1 = registry.createFunctionType(OBJECT_TYPE, EVAL_ERROR_TYPE, STRING_TYPE);
     // (string, void) -> number
-    FunctionType f2 = registry.createFunctionType(NUMBER_TYPE,
-        false, STRING_TYPE, VOID_TYPE);
+    FunctionType f2 = registry.createFunctionType(NUMBER_TYPE, STRING_TYPE, VOID_TYPE);
     // (Date, string, number) -> AnyObject
-    FunctionType f3 = registry.createFunctionType(NO_OBJECT_TYPE,
-        false, DATE_TYPE, STRING_TYPE, NUMBER_TYPE);
+    FunctionType f3 = registry.createFunctionType(
+        NO_OBJECT_TYPE, DATE_TYPE, STRING_TYPE, NUMBER_TYPE);
     // (Number) -> Any
-    FunctionType f4 = registry.createFunctionType(NO_TYPE,
-        false, NUMBER_OBJECT_TYPE);
+    FunctionType f4 = registry.createFunctionType(NO_TYPE, NUMBER_OBJECT_TYPE);
     // f1 = (EvalError...) -> Object
-    FunctionType f5 = registry.createFunctionType(OBJECT_TYPE,
-        true, EVAL_ERROR_TYPE);
+    FunctionType f5 = registry.createFunctionTypeWithVarArgs(OBJECT_TYPE, EVAL_ERROR_TYPE);
     // f2 = (Error, Object) -> String
-    FunctionType f6 = registry.createFunctionType(STRING_OBJECT_TYPE,
-        false, ERROR_TYPE, OBJECT_TYPE);
+    FunctionType f6 = registry.createFunctionType(STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE);
     // f1 = (UriError, EvalError...) -> Object
-    FunctionType f7 = registry.createFunctionType(OBJECT_TYPE,
-        true,  URI_ERROR_TYPE, EVAL_ERROR_TYPE);
+    FunctionType f7 = registry.createFunctionTypeWithVarArgs(
+        OBJECT_TYPE, URI_ERROR_TYPE, EVAL_ERROR_TYPE);
     // f2 = (Error, Object, EvalError...) -> String
-    FunctionType f8 = registry.createFunctionType(STRING_OBJECT_TYPE,
-        true, ERROR_TYPE, OBJECT_TYPE, EVAL_ERROR_TYPE);
+    FunctionType f8 = registry.createFunctionTypeWithVarArgs(
+        STRING_OBJECT_TYPE, ERROR_TYPE, OBJECT_TYPE, EVAL_ERROR_TYPE);
 
     assertTrue(LEAST_FUNCTION_TYPE.isSubtype(GREATEST_FUNCTION_TYPE));
     assertTrue(LEAST_FUNCTION_TYPE.isSubtype(U2U_CONSTRUCTOR_TYPE));

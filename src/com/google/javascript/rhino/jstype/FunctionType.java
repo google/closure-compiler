@@ -1315,7 +1315,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     for (Node param : getParameters()) {
       paramTypes.add(param.getJSType());
     }
-    return registry.createFunctionType(
+    return registry.createFunctionTypeWithInstanceType(
         registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE),
         getReturnType(),
         paramTypes);

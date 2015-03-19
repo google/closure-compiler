@@ -1095,7 +1095,7 @@ public class TypeInferenceTest extends TestCase {
         "var x = /** @type {Object} */ (this).method;");
     verify(
         "x",
-        registry.createFunctionType(
+        registry.createFunctionTypeWithInstanceType(
             registry.getNativeObjectType(OBJECT_TYPE),
             registry.getNativeType(BOOLEAN_TYPE),
             ImmutableList.<JSType>of() /* params */));
