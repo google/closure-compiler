@@ -137,7 +137,9 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
     // verify goog.defineClass is a @struct by default
     enableTypeCheck(CheckLevel.WARNING);
     test(
-        "/** @constructor */ var y = function () {};\n" +
+        "var y = goog.defineClass(null, {\n" +
+        "  constructor: function(){}\n" +
+        "});\n" +
         "var x = goog.defineClass(y, {\n" +
         "  constructor: function(){this.a = 1}\n" +
         "});\n" +
@@ -148,15 +150,17 @@ public class ClosureRewriteClassTest extends CompilerTestCase {
         "goog.inherits(x,y);\n" +
         "use(new y().a);\n",
         null,
-        TypeCheck.CONFLICTING_SHAPE_TYPE);
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testAnnotations3b() {
     // verify goog.defineClass is a @struct by default, but can be overridden
     enableTypeCheck(CheckLevel.WARNING);
     test(
-        "/** @constructor */ var y = function () {};\n" +
         "/** @unrestricted */" +
+        "var y = goog.defineClass(null, {\n" +
+        "  constructor: function(){}\n" +
+        "});\n" +
         "var x = goog.defineClass(y, {\n" +
         "  constructor: function(){this.a = 1}\n" +
         "});\n" +

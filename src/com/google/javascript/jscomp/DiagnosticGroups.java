@@ -225,7 +225,7 @@ public class DiagnosticGroups {
 //           JSTypeCreatorFromJSDoc.BAD_JSDOC_ANNOTATION,
           JSTypeCreatorFromJSDoc.CONFLICTING_EXTENDED_TYPE,
           JSTypeCreatorFromJSDoc.CONFLICTING_IMPLEMENTED_TYPE,
-          JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE,
+//          JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE,
           JSTypeCreatorFromJSDoc.DICT_IMPLEMENTS_INTERF,
           JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT,
           JSTypeCreatorFromJSDoc.EXTENDS_NOT_ON_CTOR_OR_INTERF,
@@ -304,8 +304,7 @@ public class DiagnosticGroups {
           TypeCheck.UNKNOWN_EXPR_TYPE);
 
   public static final DiagnosticGroup CHECK_STRUCT_DICT_INHERITANCE =
-      DiagnosticGroups.registerGroup("checkStructDictInheritance",
-          TypeCheck.CONFLICTING_SHAPE_TYPE);
+      DiagnosticGroups.registerDeprecatedGroup("checkStructDictInheritance");
 
   public static final DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",

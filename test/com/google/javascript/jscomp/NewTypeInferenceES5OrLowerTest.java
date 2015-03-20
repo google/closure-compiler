@@ -7864,19 +7864,20 @@ public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
         + "/** @constructor @dict @extends {Foo} */\n"
         + "function Bar() {}");
 
+    // TODO(dimvar): remove conflicting shape type warning
     typeCheck(
         "/** @constructor @unrestricted */\n"
         + "function Foo() {}\n"
         + "/** @constructor @struct @extends {Foo} */\n"
         + "function Bar() {}",
-        TypeCheck.CONFLICTING_SHAPE_TYPE);
+        JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE);
 
     typeCheck(
         "/** @constructor @unrestricted */\n"
         + "function Foo() {}\n"
         + "/** @constructor @dict @extends {Foo} */\n"
         + "function Bar() {}",
-        TypeCheck.CONFLICTING_SHAPE_TYPE);
+        JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE);
 
     typeCheck(
         "/** @interface */\n"

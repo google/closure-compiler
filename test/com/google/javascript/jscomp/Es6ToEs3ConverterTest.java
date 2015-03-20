@@ -837,8 +837,12 @@ public class Es6ToEs3ConverterTest extends CompilerTestCase {
         "/** @constructor */",
         "function Foo() {}",
         "Foo.f = function() {};",
-        "class Sub extends Foo {}"
-    ), null, null, TypeCheck.CONFLICTING_SHAPE_TYPE);
+        "class Sub extends Foo {}"), Joiner.on('\n').join(
+        "function Foo(){}Foo.f=function(){};",
+        "var Sub=function(var_args){Foo.apply(this,arguments)};",
+        "$jscomp.copyProperties(Sub,Foo);",
+        "$jscomp.inherits(Sub,Foo)"
+     ), null, null);
   }
 
   /**

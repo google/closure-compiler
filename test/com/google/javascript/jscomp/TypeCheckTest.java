@@ -8909,9 +8909,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " * @struct\n" +
               " * @extends{NonStr}\n" +
               " */" +
-              "function NonStrKid() {}",
-              "NonStrKid cannot extend this type; " +
-              "structs can only extend structs");
+              "function NonStrKid() {}");
   }
 
   public void testConstructorType11() throws Exception {
@@ -8922,9 +8920,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " * @dict\n" +
               " * @extends{NonDict}\n" +
               " */" +
-              "function NonDictKid() {}",
-              "NonDictKid cannot extend this type; " +
-              "dicts can only extend dicts");
+              "function NonDictKid() {}");
   }
 
   public void testConstructorType12() throws Exception {
@@ -8933,9 +8929,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
               " * @struct\n" +
               " */\n" +
               "function Bar() {}\n" +
-              "Bar.prototype = {};\n",
-              "Bar cannot extend this type; " +
-              "structs can only extend structs");
+              "Bar.prototype = {};\n");
   }
 
   public void testBadStruct() throws Exception {
