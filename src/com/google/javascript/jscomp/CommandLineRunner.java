@@ -584,6 +584,16 @@ public class CommandLineRunner extends
         hidden = true,
         usage = "A list of JS Conformance configurations in text protocol buffer format.")
     private List<String> conformanceConfigs = new ArrayList<>();
+    
+    @Option(name = "--force_property_renaming_policy",
+            hidden = true,
+            usage = "Forces specified property renaming policy. Options: " +
+                "OFF, " +
+                "HEURISTIC, " +
+                "AGGRESSIVE_HEURISTIC, " +
+                "ALL_UNQUOTED")
+    private String propertyRenamingPolicy = null;
+    private PropertyRenamingPolicy propertyRenamingPolicyParsed = null;
 
     @Argument
     private final List<String> arguments = new ArrayList<>();
@@ -601,6 +611,17 @@ public class CommandLineRunner extends
             CompilationLevel.ADVANCED_OPTIMIZATIONS,
             "ADVANCED_OPTIMIZATIONS",
             CompilationLevel.ADVANCED_OPTIMIZATIONS);
+    
+    private static final Map<String, PropertyRenamingPolicy> PROPERTY_RENAMING_POLICY_MAP =
+        ImmutableMap.of(
+            "OFF",
+            PropertyRenamingPolicy.OFF,
+            "HEURISTIC",
+            PropertyRenamingPolicy.HEURISTIC,
+            "AGGRESSIVE_HEURISTIC",
+            PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC,
+            "ALL_UNQUOTED",
+            PropertyRenamingPolicy.ALL_UNQUOTED);
 
     Flags() {
       parser = new CmdLineParser(this);
@@ -617,6 +638,15 @@ public class CommandLineRunner extends
       if (compilationLevelParsed == null) {
         throw new CmdLineException(
             parser, "Bad value for --compilation_level: " + compilationLevel);
+      }
+      
+      if (propertyRenamingPolicy != null) {
+          propertyRenamingPolicyParsed =
+              PROPERTY_RENAMING_POLICY_MAP.get(propertyRenamingPolicy.toUpperCase());
+          if (propertyRenamingPolicyParsed == null) {
+              throw new CmdLineException(
+                  parser, "Bad value for --force_property_renaming_policy: " + propertyRenamingPolicy);
+          }
       }
 
     }
@@ -1125,6 +1155,10 @@ public class CommandLineRunner extends
 
     if (flags.useTypesForOptimization) {
       level.setTypeBasedOptimizationOptions(options);
+    }
+    
+    if (flags.propertyRenamingPolicyParsed != null) {
+      options.propertyRenaming = flags.propertyRenamingPolicyParsed;
     }
 
     if (flags.generateExports) {
