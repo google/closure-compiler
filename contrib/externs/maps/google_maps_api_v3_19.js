@@ -6308,7 +6308,8 @@ google.maps.places.PlacesService.prototype.radarSearch = function(request, callb
 
 /**
  * @param {google.maps.places.TextSearchRequest|Object.<string>} request
- * @param {function(Array<google.maps.places.PlaceResult>, google.maps.places.PlacesServiceStatus)} callback
+ * @param {function(Array<google.maps.places.PlaceResult>, google.maps.places.PlacesServiceStatus,
+   google.maps.places.PlaceSearchPagination)} callback
  * @return {undefined}
  */
 google.maps.places.PlacesService.prototype.textSearch = function(request, callback) {};
