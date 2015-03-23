@@ -1768,6 +1768,11 @@ angular.NgModelController.prototype.$setPristine = function() {};
 /**
  * @type {function()}
  */
+angular.NgModelController.prototype.$setDirty = function() {};
+
+/**
+ * @type {function()}
+ */
 angular.NgModelController.prototype.$setUntouched = function() {};
 
 /**
