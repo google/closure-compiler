@@ -6968,6 +6968,16 @@ chrome.fileSystem.ChooseEntryOptions;
 
 
 /**
+ * @typedef {?{
+ *   volumeId: string,
+ *   writable: (boolean|undefined)
+ * }}
+ * @see http://developer.chrome.com/apps/fileSystem.html#method-requestFileSystem
+ */
+chrome.fileSystem.RequestFileSystemOptions;
+
+
+/**
  * @param {!chrome.fileSystem.ChooseEntryOptions|
  *     function(Entry=, !Array.<!FileEntry>=)} optionsOrCallback The
  *     options for the file prompt or the callback.
@@ -7001,6 +7011,15 @@ chrome.fileSystem.isRestorable = function(id, callback) {};
  * @see http://developer.chrome.com/apps/fileSystem.html#method-retainEntry
  */
 chrome.fileSystem.retainEntry = function(entry) {};
+
+
+/**
+ * @param {!chrome.fileSystem.RequestFileSystemOptions} options Options for the
+ *     request.
+ * @param {function(!FileSystem=)} callback A completion callback.
+ * @see http://developer.chrome.com/apps/fileSystem.html#method-requestFileSystem
+ */
+chrome.fileSystem.requestFileSystem = function(options, callback) {};
 
 
 /**
