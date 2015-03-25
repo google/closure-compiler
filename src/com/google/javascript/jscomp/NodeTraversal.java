@@ -384,7 +384,7 @@ public class NodeTraversal {
    * @param scope The scope the function is contained in. Does not fire enter/exit
    *     callback events for this scope.
    */
-  void traverseFunctionOutOfBand(Node node, Scope scope) {
+  public void traverseFunctionOutOfBand(Node node, Scope scope) {
     Preconditions.checkNotNull(scope);
     Preconditions.checkState(node.isFunction());
     Preconditions.checkState(scope.getRootNode() != null);
@@ -533,7 +533,8 @@ public class NodeTraversal {
     t.traverse(root);
   }
 
-  static void traverseRoots(AbstractCompiler compiler, Callback cb, Node externs, Node root) {
+  public static void traverseRoots(
+      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, cb);
     t.traverseRoots(externs, root);
   }

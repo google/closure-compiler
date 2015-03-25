@@ -102,7 +102,7 @@ public class Var implements StaticSlot, StaticRef {
     return NodeUtil.isFunctionExpression(getParentNode());
   }
 
-  Scope getScope() {
+  public Scope getScope() {
     return scope;
   }
 

@@ -97,7 +97,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
   }
 
   @Override
-  int getDepth() {
+  public int getDepth() {
     return depth;
   }
 

@@ -65,7 +65,7 @@ public class Scope implements StaticScope {
   }
 
   /** The depth of the scope. The global scope has depth 0. */
-  int getDepth() {
+  public int getDepth() {
     return depth;
   }
 

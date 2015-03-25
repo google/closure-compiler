@@ -94,7 +94,7 @@ public class TypedVar extends Var implements StaticTypedSlot<JSType>, StaticType
   }
 
   @Override
-  TypedScope getScope() {
+  public TypedScope getScope() {
     return scope;
   }
 
