@@ -1767,7 +1767,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private boolean isNonNullable(JSType type) {
     // TODO(lpino): Verify that nonNullableTypeNames is correct
     for (String s : nonNullableTypeNames) {
-      if (type.isEquivalentTo(getType(s))) {
+      JSType that = getType(s);
+      if (that != null && type.isEquivalentTo(that)) {
         return true;
       }
     }
