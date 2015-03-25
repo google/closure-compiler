@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_FUNCTION_ANNOTATION;
+import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_MSG_ANNOTATION;
 import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_TYPE_ANNOTATION;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
@@ -654,10 +655,10 @@ public class NewParserTest extends BaseJSTypeTestCase {
 
   public void testJSDocAttachment17() {
     Node fn =
-        parse(
+        parseWarning(
             "function f() { " +
             "  return /** @type {string} */ (g(1 /** @desc x */));" +
-            "};").getFirstChild();
+            "};", MISPLACED_MSG_ANNOTATION).getFirstChild();
     assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstChild().getFirstChild();
     assertThat(cast.getType()).isEqualTo(Token.CAST);
@@ -846,6 +847,21 @@ public class NewParserTest extends BaseJSTypeTestCase {
               "C.prototype.say=function(nums) {alert(nums.join(','));};",
               "illegal use of unknown JSDoc tag \"someillegaltag\";"
               + " ignoring it"));
+  }
+
+  public void testMisplacedDescAnnotation_noWarning() {
+    parse("/** @desc Foo. */ var MSG_BAR = goog.getMsg('hello');");
+    parse("/** @desc Foo. */ x.y.z.MSG_BAR = goog.getMsg('hello');");
+    parse("var msgs = {/** @desc x */ MSG_X: goog.getMsg('x')}");
+  }
+
+  public void testMisplacedDescAnnotation() {
+    parseWarning("/** @desc Foo. */ var bar = goog.getMsg('hello');",
+        MISPLACED_MSG_ANNOTATION);
+    parseWarning("/** @desc Foo. */ x.y.z.bar = goog.getMsg('hello');",
+        MISPLACED_MSG_ANNOTATION);
+    parseWarning("var msgs = {/** @desc x */ x: goog.getMsg('x')}",
+        MISPLACED_MSG_ANNOTATION);
   }
 
   public void testUnescapedSlashInRegexpCharClass() {
