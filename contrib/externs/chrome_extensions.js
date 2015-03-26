@@ -8473,6 +8473,13 @@ chrome.networkingPrivate.createNetwork =
 
 
 /**
+ * @param {string} guid
+ * @param {function()=} opt_callback
+ */
+chrome.networkingPrivate.forgetNetwork = function(guid, opt_callback) {};
+
+
+/**
  * @param {!chrome.networkingPrivate.NetworkFilter} filter
  * @param {function(!Array.<!Object>)=} opt_callback
  */
@@ -8517,6 +8524,15 @@ chrome.networkingPrivate.startConnect = function(guid, opt_callback) {};
  * @param {function()=} opt_callback
  */
 chrome.networkingPrivate.startDisconnect = function(guid, opt_callback) {};
+
+
+/**
+ * @param {string} guid
+ * @param {(string|function())=} opt_carrierOrCallback
+ * @param {function()=} opt_callback
+ */
+chrome.networkingPrivate.startActivate =
+    function(guid, opt_carrierOrCallback, opt_callback) {};
 
 
 /**
