@@ -147,6 +147,9 @@ class IRFactory {
   static final String MISPLACED_FUNCTION_ANNOTATION =
       "This JSDoc is not attached to a function node. Are you missing parentheses?";
 
+  static final String MISPLACED_MSG_ANNOTATION =
+      "@desc, @hidden, and @meaning annotations should only be on message nodes.";
+
   static final String INVALID_ES3_PROP_NAME =
       "Keywords and reserved words are not allowed as unquoted property " +
       "names in older versions of JavaScript. " +
@@ -466,6 +469,45 @@ class IRFactory {
   private void validateJsDoc(Node n) {
     validateTypeAnnotations(n);
     validateFunctionJsDoc(n);
+    validateMsgJsDoc(n);
+  }
+
+  /**
+   * Checks that annotations for messages ({@code @desc}, {@code @hidden}, and {@code @meaning})
+   * are in the proper place, namely on names starting with MSG_ which indicates they should be
+   * extracted for translation. A later pass checks that the right side is a call to goog.getMsg.
+   */
+  private void validateMsgJsDoc(Node n) {
+    JSDocInfo info = n.getJSDocInfo();
+    if (info == null) {
+      return;
+    }
+    if (info.getDescription() != null || info.isHidden() || info.getMeaning() != null) {
+      boolean descOkay = false;
+      switch (n.getType()) {
+        case Token.ASSIGN: {
+          Node lhs = n.getFirstChild();
+          if (lhs.isName()) {
+            descOkay = lhs.getString().startsWith("MSG_");
+          } else if (lhs.isQualifiedName()) {
+            descOkay = lhs.getLastChild().getString().startsWith("MSG_");
+          }
+          break;
+        }
+        case Token.VAR:
+        case Token.LET:
+        case Token.CONST:
+          descOkay = n.getFirstChild().getString().startsWith("MSG_");
+          break;
+        case Token.STRING_KEY:
+          descOkay = n.getString().startsWith("MSG_");
+          break;
+      }
+      if (!descOkay) {
+        errorReporter.warning(MISPLACED_MSG_ANNOTATION,
+            sourceName, n.getLineno(), n.getCharno());
+      }
+    }
   }
 
   private JSDocInfo recordJsDoc(SourceRange location, JSDocInfo info) {
