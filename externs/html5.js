@@ -277,9 +277,10 @@ CanvasRenderingContext2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, opt_anticlockwise) {};
 
 /**
+ * @param {string=} opt_fillRule
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.fill = function() {};
+CanvasRenderingContext2D.prototype.fill = function(opt_fillRule) {};
 
 /**
  * @return {undefined}
@@ -287,17 +288,20 @@ CanvasRenderingContext2D.prototype.fill = function() {};
 CanvasRenderingContext2D.prototype.stroke = function() {};
 
 /**
+ * @param {string=} opt_fillRule
  * @return {undefined}
  */
-CanvasRenderingContext2D.prototype.clip = function() {};
+CanvasRenderingContext2D.prototype.clip = function(opt_fillRule) {};
 
 /**
  * @param {number} x
  * @param {number} y
+ * @param {string=} opt_fillRule
  * @return {boolean}
  * @nosideeffects
  */
-CanvasRenderingContext2D.prototype.isPointInPath = function(x, y) {};
+CanvasRenderingContext2D.prototype.isPointInPath = function(
+    x, y, opt_fillRule) {};
 
 /**
  * @param {string} text
