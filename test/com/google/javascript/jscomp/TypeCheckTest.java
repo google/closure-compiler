@@ -9546,24 +9546,24 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfacePropertyOverride1() throws Exception {
     testTypes(
         "/** @interface */function Super() {};" +
-        "Super.prototype.foo = function() {};" +
+        "/** @desc description */Super.prototype.foo = function() {};" +
         "/** @interface\n @extends {Super} */function Sub() {};" +
-        "Sub.prototype.foo = function() {};");
+        "/** @desc description */Sub.prototype.foo = function() {};");
   }
 
   public void testInterfacePropertyOverride2() throws Exception {
     testTypes(
         "/** @interface */function Root() {};" +
-        "Root.prototype.foo = function() {};" +
+        "/** @desc description */Root.prototype.foo = function() {};" +
         "/** @interface\n @extends {Root} */function Super() {};" +
         "/** @interface\n @extends {Super} */function Sub() {};" +
-        "Sub.prototype.foo = function() {};");
+        "/** @desc description */Sub.prototype.foo = function() {};");
   }
 
   public void testInterfaceInheritanceCheck1() throws Exception {
     testTypes(
         "/** @interface */function Super() {};" +
-        "Super.prototype.foo = function() {};" +
+        "/** @desc description */Super.prototype.foo = function() {};" +
         "/** @constructor\n @implements {Super} */function Sub() {};" +
         "Sub.prototype.foo = function() {};",
         "property foo already defined on interface Super; use @override to " +
@@ -9573,7 +9573,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfaceInheritanceCheck2() throws Exception {
     testTypes(
         "/** @interface */function Super() {};" +
-        "Super.prototype.foo = function() {};" +
+        "/** @desc description */Super.prototype.foo = function() {};" +
         "/** @constructor\n @implements {Super} */function Sub() {};" +
         "/** @override */Sub.prototype.foo = function() {};");
   }
@@ -9712,9 +9712,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfaceInheritanceCheck14() throws Exception {
     testTypes(
         "/** @interface\n @template T */function A() {};" +
-        "/** @return {T} */A.prototype.foo = function() {};" +
+        "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
         "/** @interface\n @template U\n @extends {A<U>} */function B() {};" +
-        "/** @return {U} */B.prototype.bar = function() {};" +
+        "/** @desc description\n @return {U} */B.prototype.bar = function() {};" +
         "/** @constructor\n @implements {B<string>} */function C() {};" +
         "/** @return {string}\n @override */C.prototype.foo = function() {};" +
         "/** @return {string}\n @override */C.prototype.bar = function() {};");
@@ -9727,9 +9727,9 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfaceInheritanceCheck15() throws Exception {
     testTypes(
         "/** @interface\n @template T */function A() {};" +
-        "/** @return {T} */A.prototype.foo = function() {};" +
+        "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
         "/** @interface\n @template U\n @extends {A<U>} */function B() {};" +
-        "/** @return {U} */B.prototype.bar = function() {};" +
+        "/** @desc description\n @return {U} */B.prototype.bar = function() {};" +
         "/** @constructor\n @template V\n @implements {B<V>}\n */function C() {};" +
         "/** @return {V}\n @override */C.prototype.foo = function() {};" +
         "/** @return {V}\n @override */C.prototype.bar = function() {};");
@@ -9742,8 +9742,8 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfaceInheritanceCheck16() throws Exception {
     testTypes(
         "/** @interface\n @template T */function A() {};" +
-        "/** @return {T} */A.prototype.foo = function() {};" +
-        "/** @return {T} */A.prototype.bar = function() {};" +
+        "/** @desc description\n @return {T} */A.prototype.foo = function() {};" +
+        "/** @desc description\n @return {T} */A.prototype.bar = function() {};" +
         "/** @constructor\n @implements {A<string>} */function B() {};" +
         "/** @override */B.prototype.foo = function() { return 'string'};" +
         "/** @override */B.prototype.bar = function() { return 3 };",
@@ -9755,7 +9755,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfacePropertyNotImplemented() throws Exception {
     testTypes(
         "/** @interface */function Int() {};" +
-        "Int.prototype.foo = function() {};" +
+        "/** @desc description */Int.prototype.foo = function() {};" +
         "/** @constructor\n @implements {Int} */function Foo() {};",
         "property foo on interface Int is not implemented by type Foo");
   }
@@ -9763,7 +9763,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfacePropertyNotImplemented2() throws Exception {
     testTypes(
         "/** @interface */function Int() {};" +
-        "Int.prototype.foo = function() {};" +
+        "/** @desc description */Int.prototype.foo = function() {};" +
         "/** @interface \n @extends {Int} */function Int2() {};" +
         "/** @constructor\n @implements {Int2} */function Foo() {};",
         "property foo on interface Int is not implemented by type Foo");
@@ -9775,7 +9775,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
   public void testInterfacePropertyNotImplemented3() throws Exception {
     testTypes(
         "/** @interface\n @template T */function Int() {};" +
-        "/** @return {T} */Int.prototype.foo = function() {};" +
+        "/** @desc description\n @return {T} */Int.prototype.foo = function() {};" +
         "/** @constructor\n @implements {Int<string>} */function Foo() {};" +
         "/** @return {number}\n @override */Foo.prototype.foo = function() {};",
         "mismatch of the foo property type and the type of the property it " +
@@ -9790,7 +9790,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypesWithExterns(
         // externs
         "/** @interface */ function Int() {}\n" +
-        "Int.prototype.foo = function() {};" +
+        "/** @desc description */Int.prototype.foo = function() {};" +
         "/** @constructor \n @implements {Int} */ var Foo;\n",
         "");
   }
@@ -10004,12 +10004,12 @@ public class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testWarnUnannotatedPropertyOnInterface5() throws Exception {
     testTypes("/** @interface */ u.T = function () {};\n" +
-        "u.T.prototype.x = function() {};");
+        "/** @desc x does something */u.T.prototype.x = function() {};");
   }
 
   public void testWarnUnannotatedPropertyOnInterface6() throws Exception {
     testTypes("/** @interface */ function T() {};\n" +
-        "T.prototype.x = function() {};");
+        "/** @desc x does something */T.prototype.x = function() {};");
   }
 
   // TODO(user): If we want to support this syntax we have to warn about
@@ -12313,7 +12313,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @interface */function Int0() {};" +
         "/** @interface */function Int1() {};" +
-        "Int0.prototype.foo = function() {};" +
+        "/** @desc description */Int0.prototype.foo = function() {};" +
         "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
         "function Int2() {};" +
         "/** @constructor\n @implements {Int2} */function Foo() {};",
@@ -12324,7 +12324,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @interface */function Int0() {};" +
         "/** @interface */function Int1() {};" +
-        "Int1.prototype.foo = function() {};" +
+        "/** @desc description */Int1.prototype.foo = function() {};" +
         "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
         "function Int2() {};" +
         "/** @constructor\n @implements {Int2} */function Foo() {};",
@@ -12346,7 +12346,7 @@ public class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @interface */function Int0() {};" +
         "/** @constructor */function Int1() {};" +
-        "/** @return {string} x */" +
+        "/** @desc description @ return {string} x */" +
         "/** @interface \n @extends {Int0} \n @extends {Int1} */" +
         "function Int2() {};",
         "Int2 cannot extend this type; interfaces can only extend interfaces");

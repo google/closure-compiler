@@ -390,8 +390,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
           RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION,
-          RhinoErrorReporter.MISPLACED_FUNCTION_ANNOTATION,
-          RhinoErrorReporter.MISPLACED_MSG_ANNOTATION);
+          RhinoErrorReporter.MISPLACED_FUNCTION_ANNOTATION);
 
   public static final DiagnosticGroup SUSPICIOUS_CODE =
       DiagnosticGroups.registerGroup("suspiciousCode",
