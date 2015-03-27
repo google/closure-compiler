@@ -32,7 +32,7 @@ import java.util.Map;
  * Tests for {@link VariableMap}.
  *
  */
-public class VariableMapTest extends TestCase {
+public final class VariableMapTest extends TestCase {
 
   public void testCycle1() throws ParseException {
     cycleTest(ImmutableMap.of("AAA", "a", "BBB", "b"));

@@ -45,7 +45,7 @@ import com.google.javascript.rhino.Node;
  *
  */
 
-public class ProcessClosurePrimitivesTest extends CompilerTestCase {
+public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalCode;
   private String additionalEndCode;
   private boolean addAdditionalNamespace;

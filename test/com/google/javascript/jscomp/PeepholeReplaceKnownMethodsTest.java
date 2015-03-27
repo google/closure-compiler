@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Unit tests for {#link {@link PeepholeReplaceKnownMethods}
  *
  */
-public class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
+public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
 
   private boolean late = true;
 

@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Generate exports unit test.
  *
  */
-public class GenerateExportsTest extends CompilerTestCase {
+public final class GenerateExportsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "function google_exportSymbol(a, b) {}; " +

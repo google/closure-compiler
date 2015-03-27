@@ -30,7 +30,7 @@ import java.util.List;
  * Tests for {@link GatherSideEffectSubexpressionsCallback}
  *
  */
-public class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
+public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
   public void testAndOr() throws Exception {
     Node andNode = getSideEffectsAndNode();
     checkKeepSimplifiedShortCircuitExpr(andNode,

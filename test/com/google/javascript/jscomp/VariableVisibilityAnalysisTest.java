@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author dcc@google.com (Devin Coughlin)
  */
-public class VariableVisibilityAnalysisTest extends CompilerTestCase {
+public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
 
   private Compiler lastCompiler;
   private VariableVisibilityAnalysis lastAnalysis;

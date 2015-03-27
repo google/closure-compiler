@@ -45,7 +45,7 @@ import javax.xml.parsers.SAXParserFactory;
  *
  */
 @SuppressWarnings("sunapi")
-public class XtbMessageBundle implements MessageBundle {
+public final class XtbMessageBundle implements MessageBundle {
   private static final SecureEntityResolver NOOP_RESOLVER
       = new SecureEntityResolver();
 

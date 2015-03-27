@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  *
  */
 
-public class CollapsePropertiesTest extends CompilerTestCase {
+public final class CollapsePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "var window;\n"

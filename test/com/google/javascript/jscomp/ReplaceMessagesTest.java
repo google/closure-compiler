@@ -28,7 +28,7 @@ import java.util.Map;
  * Test which checks that replacer works correctly.
  *
  */
-public class ReplaceMessagesTest extends CompilerTestCase {
+public final class ReplaceMessagesTest extends CompilerTestCase {
 
   private Map<String, JsMessage> messages;
   private Style style;

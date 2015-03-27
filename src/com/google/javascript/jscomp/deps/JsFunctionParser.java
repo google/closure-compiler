@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class JsFunctionParser extends JsFileLineParser {
+public final class JsFunctionParser extends JsFileLineParser {
 
   public static class SymbolInfo {
     public final String functionName;

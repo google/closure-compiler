@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class ProcessEs6Modules extends AbstractPostOrderCallback {
+public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   private static final String MODULE_SLASH = ES6ModuleLoader.MODULE_SLASH;
 
   private static final String MODULE_NAME_SEPARATOR = "\\$";

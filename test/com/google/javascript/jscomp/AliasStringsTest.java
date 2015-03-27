@@ -24,7 +24,7 @@ import java.util.*;
  * Tests for {@link AliasStrings}.
  *
  */
-public class AliasStringsTest extends CompilerTestCase {
+public final class AliasStringsTest extends CompilerTestCase {
 
   private static final String EXTERNS = "alert";
   private static final Set<String> ALL_STRINGS = null;

@@ -36,7 +36,7 @@ import java.util.Map;
  *
  * @author robbyw@google.com (Robby Walker)
  */
-public class ScopedAliasesTest extends CompilerTestCase {
+public final class ScopedAliasesTest extends CompilerTestCase {
 
   private static final String GOOG_SCOPE_START_BLOCK =
       "goog.scope(function() {";

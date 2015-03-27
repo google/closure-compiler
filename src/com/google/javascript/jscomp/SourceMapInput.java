@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 /**
  * A lazy-loaded SourceMapConsumerV3 instance.
  */
-public class SourceMapInput {
+public final class SourceMapInput {
 
   private static final Logger logger =
       Logger.getLogger(SourceMapInput.class.getName());

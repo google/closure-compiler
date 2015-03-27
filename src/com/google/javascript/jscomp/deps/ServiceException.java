@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.deps;
 /**
  * An exception thrown by the compilation service.
  */
-public class ServiceException extends Exception {
+public final class ServiceException extends Exception {
   public ServiceException(String message) {
     super(message);
   }

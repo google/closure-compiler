@@ -27,7 +27,7 @@ import java.util.Set;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class Config {
+public final class Config {
 
   /** JavaScript mode */
   public enum LanguageMode {

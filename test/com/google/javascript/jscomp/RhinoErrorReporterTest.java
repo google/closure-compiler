@@ -27,7 +27,7 @@ import java.util.List;
  * Tests for error message filtering.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class RhinoErrorReporterTest extends TestCase {
+public final class RhinoErrorReporterTest extends TestCase {
 
   private boolean reportMisplacedTypeAnnotations;
   private boolean reportEs3Props;

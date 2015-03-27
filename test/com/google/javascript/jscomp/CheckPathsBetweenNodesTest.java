@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Tests for {@link CheckPathsBetweenNodes}.
  *
  */
-public class CheckPathsBetweenNodesTest extends TestCase {
+public final class CheckPathsBetweenNodesTest extends TestCase {
 
   /**
    * Predicate satisfied by strings with a given prefix.

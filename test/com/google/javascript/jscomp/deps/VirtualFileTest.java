@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 /**
  * Test for equals and hashCode.
  */
-public class VirtualFileTest extends TestCase {
+public final class VirtualFileTest extends TestCase {
   public void testEquals() throws Exception {
     VirtualFile vf = new VirtualFile("name", "code");
     VirtualFile same = new VirtualFile("name", "code");

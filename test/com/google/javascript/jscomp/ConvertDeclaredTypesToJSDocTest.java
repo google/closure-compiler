@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-public class ConvertDeclaredTypesToJSDocTest extends TestCase {
+public final class ConvertDeclaredTypesToJSDocTest extends TestCase {
 
   public void testBuiltins() throws Exception {
     assertTypeConversion("?", "any");

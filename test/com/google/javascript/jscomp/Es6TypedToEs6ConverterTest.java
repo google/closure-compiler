@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public class Es6TypedToEs6ConverterTest extends CompilerTestCase {
+public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {

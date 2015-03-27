@@ -51,8 +51,7 @@ import java.util.Map;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class ClosureRewriteModule
-    implements NodeTraversal.Callback, HotSwapCompilerPass {
+final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompilerPass {
 
   // TODO(johnlenz): Don't use goog.scope as an intermediary; add type checker
   // support instead.

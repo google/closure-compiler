@@ -33,7 +33,7 @@ import java.util.Collection;
  * - We represent the object literal that defined the enum as an ObjectType.
  * - We represent an element of the enum by using this class in JSType.
  */
-public class EnumType extends Namespace implements TypeWithProperties {
+public final class EnumType extends Namespace implements TypeWithProperties {
 
   private enum State {
     NOT_RESOLVED,

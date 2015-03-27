@@ -18,7 +18,7 @@ package com.google.debugging.sourcemap;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapGeneratorFactory {
+public final class SourceMapGeneratorFactory {
 
   /**
    * @return The appropriate source map object for the given source map format.

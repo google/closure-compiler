@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link ChainCalls}
  *
  */
-public class ChainCallsTest extends CompilerTestCase {
+public final class ChainCallsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new ChainCalls(compiler);

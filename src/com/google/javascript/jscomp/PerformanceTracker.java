@@ -47,7 +47,7 @@ import java.util.zip.GZIPOutputStream;
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class PerformanceTracker {
+public final class PerformanceTracker {
 
   private static final int DEFAULT_WHEN_SIZE_UNTRACKED = -1;
 

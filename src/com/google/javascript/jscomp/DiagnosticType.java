@@ -22,7 +22,7 @@ import java.text.MessageFormat;
  * The type of a compile or analysis error.
  *
  */
-public class DiagnosticType
+public final class DiagnosticType
     implements Comparable<DiagnosticType>, Serializable {
   private static final long serialVersionUID = 1;
 

@@ -29,7 +29,7 @@ import java.io.IOException;
  * Test case for {@link CheckNullableReturn}.
  *
  */
-public class CheckNullableReturnTest extends CompilerTestCase {
+public final class CheckNullableReturnTest extends CompilerTestCase {
   private static String externs = "/** @constructor */ function SomeType() {}";
 
   @Override

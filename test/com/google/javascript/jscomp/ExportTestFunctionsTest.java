@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
  * Tests for ExportTestFunctions.
  *
  */
-public class ExportTestFunctionsTest extends CompilerTestCase {
+public final class ExportTestFunctionsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "function google_exportSymbol(a, b) {}; "

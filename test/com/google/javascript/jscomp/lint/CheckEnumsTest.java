@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 /**
  * Test case for {@link CheckEnums}.
  */
-public class CheckEnumsTest extends CompilerTestCase {
+public final class CheckEnumsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckEnums(compiler);

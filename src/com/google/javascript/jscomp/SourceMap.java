@@ -40,7 +40,7 @@ import java.util.Map;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMap {
+public final class SourceMap {
 
   public static enum Format {
      DEFAULT {

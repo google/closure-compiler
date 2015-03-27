@@ -33,7 +33,7 @@ import java.util.List;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   static final DiagnosticType CANNOT_CONVERT = DiagnosticType.error(

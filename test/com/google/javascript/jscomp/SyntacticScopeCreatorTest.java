@@ -25,7 +25,7 @@ import junit.framework.TestCase;
  * Tests for {@link SyntacticScopeCreator}.
  *
  */
-public class SyntacticScopeCreatorTest extends TestCase {
+public final class SyntacticScopeCreatorTest extends TestCase {
 
   /**
    * Helper to create a top-level scope from a JavaScript string

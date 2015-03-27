@@ -35,7 +35,7 @@ import java.util.Map;
  *
  * @author bashir@google.com (Bashir Sadjad)
  */
-public class GlobalVarReferenceMapTest extends TestCase {
+public final class GlobalVarReferenceMapTest extends TestCase {
 
   private final CompilerInput INPUT1 =
       new CompilerInput(SourceFile.fromCode("input1", ""), false);

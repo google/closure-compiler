@@ -25,7 +25,7 @@ import java.util.Set;
 /**
  * This describes the jQuery specific JavaScript coding conventions.
  */
-public class JqueryCodingConvention extends CodingConventions.Proxy {
+public final class JqueryCodingConvention extends CodingConventions.Proxy {
   private static final long serialVersionUID = 1L;
 
   public JqueryCodingConvention() {

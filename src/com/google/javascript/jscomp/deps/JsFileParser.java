@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class JsFileParser extends JsFileLineParser {
+public final class JsFileParser extends JsFileLineParser {
 
   private static Logger logger = Logger.getLogger(JsFileParser.class.getName());
 

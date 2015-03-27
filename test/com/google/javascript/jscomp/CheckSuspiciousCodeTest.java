@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for CheckSuspiciousCode
  */
-public class CheckSuspiciousCodeTest extends CompilerTestCase {
+public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   public CheckSuspiciousCodeTest() {
     this.parseTypeInfo = true;
   }

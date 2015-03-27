@@ -40,7 +40,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class JSTypeCreatorFromJSDoc {
+public final class JSTypeCreatorFromJSDoc {
   public static final DiagnosticType INVALID_GENERICS_INSTANTIATION =
       DiagnosticType.warning(
         "JSC_INVALID_GENERICS_INSTANTIATION",

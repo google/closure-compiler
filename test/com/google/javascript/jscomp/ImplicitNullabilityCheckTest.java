@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 /** Unit tests for {@link ImplicitNullabilityCheck}. */
-public class ImplicitNullabilityCheckTest extends CompilerTestCase {
+public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {

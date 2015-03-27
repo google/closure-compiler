@@ -42,7 +42,7 @@ import java.util.Map;
  * http://code.google.com/p/closure-compiler/wiki/SourceMaps
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapConsumerV3 implements SourceMapConsumer,
+public final class SourceMapConsumerV3 implements SourceMapConsumer,
     SourceMappingReversable {
   static final int UNMAPPED = -1;
 

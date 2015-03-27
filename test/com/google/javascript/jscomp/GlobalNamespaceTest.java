@@ -28,7 +28,7 @@ import junit.framework.TestCase;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class GlobalNamespaceTest extends TestCase {
+public final class GlobalNamespaceTest extends TestCase {
 
   public void testRemoveDeclaration1() {
     Name n = new Name("a", null, false);

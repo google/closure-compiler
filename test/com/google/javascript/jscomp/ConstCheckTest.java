@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Tests {@link ConstCheck}.
  *
  */
-public class ConstCheckTest extends CompilerTestCase {
+public final class ConstCheckTest extends CompilerTestCase {
 
   public ConstCheckTest() {
     enableNormalize();

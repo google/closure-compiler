@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class NominalType {
+public final class NominalType {
   // In the case of a generic type (rawType.typeParameters non-empty) either:
   // a) typeMap is empty, this is an uninstantiated generic type (Foo<T>), or
   // b) typeMap's keys exactly correspond to the type parameters of rawType;

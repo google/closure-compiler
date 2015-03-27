@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link ObjectPropertyStringPostprocess}.
  *
  */
-public class ObjectPropertyStringPostprocessTest extends CompilerTestCase {
+public final class ObjectPropertyStringPostprocessTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new ObjectPropertyStringPostprocess(compiler);

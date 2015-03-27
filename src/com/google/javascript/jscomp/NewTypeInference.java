@@ -65,7 +65,7 @@ import java.util.Set;
  * - separate scope for catch variables
  * - bounded quantification for generics
  */
-public class NewTypeInference implements CompilerPass {
+final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType MISTYPED_ASSIGN_RHS = DiagnosticType.warning(
       "JSC_MISTYPED_ASSIGN_RHS",

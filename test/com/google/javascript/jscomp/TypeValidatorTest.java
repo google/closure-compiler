@@ -36,7 +36,7 @@ import java.util.List;
  * Tests for TypeValidator.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class TypeValidatorTest extends CompilerTestCase {
+public final class TypeValidatorTest extends CompilerTestCase {
 
   private Compiler compiler = null;
 

@@ -40,7 +40,7 @@ import java.util.Map;
  * {@code goog.isDef}.
  *
  */
-public class ClosureReverseAbstractInterpreter
+public final class ClosureReverseAbstractInterpreter
     extends ChainableReverseAbstractInterpreter {
 
   /**

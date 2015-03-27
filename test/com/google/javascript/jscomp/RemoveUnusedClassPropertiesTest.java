@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
+public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "var window;\n" +

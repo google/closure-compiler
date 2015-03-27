@@ -41,7 +41,7 @@ import java.util.List;
  *
  * @see <a href="http://cldr.unicode.org/development/development-process/design-proposals/xmb">xmb</a>
  */
-public class GoogleJsMessageIdGenerator implements IdGenerator {
+public final class GoogleJsMessageIdGenerator implements IdGenerator {
 
   private final String projectId;
 

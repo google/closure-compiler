@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class CheckRegExpTest extends CompilerTestCase {
+public final class CheckRegExpTest extends CompilerTestCase {
   CheckRegExp last = null;
 
   public CheckRegExpTest() {

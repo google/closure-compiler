@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 
 /**
  */
-public class JSCompilerSourceExcerptProviderTest extends TestCase {
+public final class JSCompilerSourceExcerptProviderTest extends TestCase {
   private SourceExcerptProvider provider;
 
   @Override

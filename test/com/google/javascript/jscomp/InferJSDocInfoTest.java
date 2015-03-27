@@ -35,7 +35,7 @@ import java.util.Deque;
 // TODO(nicksantos): A lot of this code is duplicated from
 // TypedScopeCreatorTest. We should create a common test harness for
 // assertions about type information.
-public class InferJSDocInfoTest extends CompilerTestCase {
+public final class InferJSDocInfoTest extends CompilerTestCase {
 
   private static final String OBJECT_EXTERNS = ""
         + "/**\n"

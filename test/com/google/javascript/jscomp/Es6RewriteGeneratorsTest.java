@@ -19,7 +19,7 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Unit tests for {@link Es6RewriteGenerators}. */
-public class Es6RewriteGeneratorsTest extends CompilerTestCase {
+public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Override
   public void setUp() {

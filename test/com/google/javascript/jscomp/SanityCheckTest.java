@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SanityCheckTest extends CompilerTestCase {
+public final class SanityCheckTest extends CompilerTestCase {
 
   private CompilerPass otherPass = null;
 

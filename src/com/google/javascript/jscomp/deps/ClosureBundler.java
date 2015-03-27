@@ -26,7 +26,7 @@ import java.nio.charset.Charset;
 /**
  * A utility class to assist in creating JS bundle files.
  */
-public class ClosureBundler {
+public final class ClosureBundler {
   private boolean useEval = false;
   private String sourceUrl = null;
   private boolean useStrict = false;

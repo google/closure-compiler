@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.SourceFile;
  * A simple source excerpt provider for testing.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SimpleSourceExcerptProvider implements SourceExcerptProvider {
+public final class SimpleSourceExcerptProvider implements SourceExcerptProvider {
 
   private final SourceFile sourceFile;
 

@@ -38,7 +38,7 @@ import java.util.Set;
  * @author nicksantos@google.com (Nick Santos)
  */
 
-public class SymbolTableTest extends TestCase {
+public final class SymbolTableTest extends TestCase {
 
   private static final String EXTERNS = CompilerTypeTestCase.DEFAULT_EXTERNS +
       "var Number;" +

@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class MultiPassTest extends CompilerTestCase {
+public final class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
 
   public MultiPassTest() {

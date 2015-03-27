@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.JSError;
 /**
  * An ErrorManager that compares errors with a list of expected errors.
  */
-public class TestErrorManager extends BasicErrorManager {
+public final class TestErrorManager extends BasicErrorManager {
 
   private int errorIndex = 0;
   private String[] errors = new String[0];

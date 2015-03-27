@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.testing.Asserts;
 
-public class ClosureReverseAbstractInterpreterTest extends
+public final class ClosureReverseAbstractInterpreterTest extends
     CompilerTypeTestCase {
 
   public void testGoogIsDef1() throws Exception {

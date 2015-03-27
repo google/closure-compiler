@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * @author johnlenz@google.com (John Lenz)
  *
  */
-public class DenormalizeTest extends CompilerTestCase {
+public final class DenormalizeTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new NormalizeAndDenormalizePass(compiler);
@@ -107,7 +107,7 @@ public class DenormalizeTest extends CompilerTestCase {
    * causes normalization of the result *and* the expected string, and
    * we really don't want the compiler twisting the expected code around.
    */
-  public class NormalizeAndDenormalizePass implements CompilerPass {
+  public final class NormalizeAndDenormalizePass implements CompilerPass {
     Denormalize denormalizePass;
     NormalizeStatements normalizePass;
     AbstractCompiler compiler;

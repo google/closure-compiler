@@ -37,7 +37,7 @@ import java.util.List;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapGeneratorV3Test extends SourceMapTestCase {
+public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
 
   public SourceMapGeneratorV3Test() {
   }

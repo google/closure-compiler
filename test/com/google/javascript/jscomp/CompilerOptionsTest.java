@@ -27,7 +27,7 @@ import java.util.Map;
  * Tests for {@link CompilerOptions}.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class CompilerOptionsTest extends TestCase {
+public final class CompilerOptionsTest extends TestCase {
 
   public void testDefines() throws Exception {
     CompilerOptions options = new CompilerOptions();

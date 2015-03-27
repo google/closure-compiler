@@ -58,7 +58,7 @@ import java.util.Set;
  *
  * @author mattloring@google.com (Matthew Loring)
  */
-public class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallback
+public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallback
     implements CompilerPass {
 
   final AbstractCompiler compiler;

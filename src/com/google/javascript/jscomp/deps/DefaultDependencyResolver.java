@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * {@link #getDependencies(Collection)}.
  *
  */
-public class DefaultDependencyResolver implements DependencyResolver  {
+public final class DefaultDependencyResolver implements DependencyResolver  {
 
   /** Filename for Closure's base.js file which is always added. */
   static final String CLOSURE_BASE = "base.js";

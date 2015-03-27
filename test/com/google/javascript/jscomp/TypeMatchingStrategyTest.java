@@ -28,7 +28,7 @@ import com.google.javascript.rhino.jstype.JSType;
 
 import junit.framework.TestCase;
 
-public class TypeMatchingStrategyTest extends TestCase {
+public final class TypeMatchingStrategyTest extends TestCase {
 
   private static final String EXTERNS = Joiner.on("\n").join(
       "/** @constructor */",

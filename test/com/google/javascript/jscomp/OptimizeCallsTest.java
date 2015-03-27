@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * Unit tests for {#link {@link OptimizeCalls}
  *
  */
-public class OptimizeCallsTest extends CompilerTestCase {
+public final class OptimizeCallsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {

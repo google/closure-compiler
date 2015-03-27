@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
  *
  * @param <E> element type
  */
-public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
+public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
   private static final long serialVersionUID = -1L;
 

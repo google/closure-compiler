@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
  *
  */
 
-public class RenamePropertiesTest extends CompilerTestCase {
+public final class RenamePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "var window;" +

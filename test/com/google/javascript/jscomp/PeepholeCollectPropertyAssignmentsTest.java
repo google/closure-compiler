@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-public class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCase {
+public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {

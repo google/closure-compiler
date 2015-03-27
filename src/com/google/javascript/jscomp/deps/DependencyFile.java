@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  * another SourceFile such that a VirtualFile, LocalFile or RemoteFile can be
  * used.
  */
-public class DependencyFile implements SourceFile {
+public final class DependencyFile implements SourceFile {
 
   /** Map of name spaces to their dependency info. */
   private final Map<String, DependencyInfo> dependencies = Maps.newHashMap();

@@ -34,7 +34,7 @@ import junit.framework.TestCase;
  * styles is in
  * {@link com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactoryTest}
  */
-public class ConvertToTypedES6Test extends TestCase {
+public final class ConvertToTypedES6Test extends TestCase {
 
   private Compiler compiler;
 

@@ -29,7 +29,7 @@ import java.util.Map;
  * Tests for {@link SourceMapConsumerV3}
  *
  */
-public class SourceMapConsumerV3Test extends TestCase {
+public final class SourceMapConsumerV3Test extends TestCase {
 
   public void testSources() throws Exception{
     String sourceMap =  "{\n" +

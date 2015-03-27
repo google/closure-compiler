@@ -30,7 +30,7 @@ import java.util.List;
  * @author johnlenz@google.com (John Lenz)
  */
 
-public class SourceMapTest extends SourceMapTestCase {
+public final class SourceMapTest extends SourceMapTestCase {
 
   public SourceMapTest() {
   }

@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * expected, and invalid candidates are not touched.
  *
  */
-public class InlineObjectLiteralsTest extends CompilerTestCase {
+public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public InlineObjectLiteralsTest() {
     enableNormalize();

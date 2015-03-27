@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class MemoizedScopeCreatorTest extends TestCase {
+public final class MemoizedScopeCreatorTest extends TestCase {
 
   public void testMemoization() throws Exception {
     Node trueNode = new Node(Token.TRUE);

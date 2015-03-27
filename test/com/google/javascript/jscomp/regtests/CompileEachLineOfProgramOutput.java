@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.WarningLevel;
 
-public class CompileEachLineOfProgramOutput {
+public final class CompileEachLineOfProgramOutput {
   private static final SourceFile extern =
       SourceFile.fromCode("externs.js", "");
   private static final CompilerOptions options =

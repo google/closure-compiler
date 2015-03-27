@@ -31,7 +31,7 @@ import java.util.Set;
  * Unit tests for PeepholeOptimizationsPass.
  *
  */
-public class PeepholeOptimizationsPassTest extends CompilerTestCase {
+public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
 
   private ImmutableList<AbstractPeepholeOptimization> currentPeepholePasses;
 

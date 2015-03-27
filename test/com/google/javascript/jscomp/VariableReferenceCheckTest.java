@@ -23,7 +23,7 @@ package com.google.javascript.jscomp;
  * cases only by VariableReferenceCheck
  *
  */
-public class VariableReferenceCheckTest extends CompilerTestCase {
+public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   private static final String VARIABLE_RUN =
       "var a = 1; var b = 2; var c = a + b, d = c;";

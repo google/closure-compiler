@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link AliasExternals}.
  *
  */
-public class AliasExternalsTest extends CompilerTestCase {
+public final class AliasExternalsTest extends CompilerTestCase {
 
   private static String EXTERNS =
     // Globals

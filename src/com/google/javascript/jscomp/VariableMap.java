@@ -37,7 +37,7 @@ import java.util.Map;
  * Stores the mapping from original variable name to new variable names.
  * @see RenameVars
  */
-public class VariableMap {
+public final class VariableMap {
 
   /** Maps original source name to new name */
   private final ImmutableSortedMap<String, String> map;

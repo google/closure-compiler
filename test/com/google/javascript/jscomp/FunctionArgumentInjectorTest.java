@@ -32,7 +32,7 @@ import java.util.Set;
  * Inline function tests.
  * @author johnlenz@google.com (John Lenz)
  */
-public class FunctionArgumentInjectorTest extends TestCase {
+public final class FunctionArgumentInjectorTest extends TestCase {
 
   // TODO(johnlenz): Add unit tests for:
   //    inject

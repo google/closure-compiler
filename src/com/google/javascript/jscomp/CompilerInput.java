@@ -37,8 +37,7 @@ import java.util.Set;
  * whether the input is an extern. Also calculates provided and required types.
  *
  */
-public class CompilerInput
-    implements SourceAst, DependencyInfo {
+public class CompilerInput implements SourceAst, DependencyInfo {
 
   private static final long serialVersionUID = 1L;
 

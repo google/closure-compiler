@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class AstValidatorTest extends CompilerTestCase {
+public final class AstValidatorTest extends CompilerTestCase {
 
   private boolean lastCheckWasValid = true;
 

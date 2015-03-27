@@ -35,7 +35,7 @@ import com.google.javascript.rhino.jstype.JSType;
  * but actually always returns {!SomeType}, i.e. never returns null.
  *
  */
-public class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.Callback {
+public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTraversal.Callback {
   final AbstractCompiler compiler;
 
   public static final DiagnosticType NULLABLE_RETURN =

@@ -40,7 +40,7 @@ import java.util.Set;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class Es6RewriteLetConst extends AbstractPostOrderCallback
+public final class Es6RewriteLetConst extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;

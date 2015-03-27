@@ -24,7 +24,7 @@ import java.util.Map;
  * Tests for {@link FunctionNames}
  *
  */
-public class FunctionNamesTest extends CompilerTestCase {
+public final class FunctionNamesTest extends CompilerTestCase {
   private FunctionNames functionNames;
 
   public FunctionNamesTest() {

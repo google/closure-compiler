@@ -26,7 +26,7 @@ import junit.framework.TestCase;
  * Tests {@link BasicErrorManager}.
  *
  */
-public class BasicErrorManagerTest extends TestCase {
+public final class BasicErrorManagerTest extends TestCase {
   private static final String NULL_SOURCE = null;
 
   private LeveledJSErrorComparator comparator = new LeveledJSErrorComparator();

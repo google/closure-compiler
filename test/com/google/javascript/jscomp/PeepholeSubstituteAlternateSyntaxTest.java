@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Tests for the interaction of multiple peephole passes are in
  * PeepholeIntegrationTest.
  */
-public class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
+public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCase {
 
   // Externs for built-in constructors
   // Needed for testFoldLiteralObjectConstructors(),

@@ -32,7 +32,7 @@ import java.util.Set;
  * Tests for {@link SimpleDefinitionFinder}
  *
  */
-public class SimpleDefinitionFinderTest extends CompilerTestCase {
+public final class SimpleDefinitionFinderTest extends CompilerTestCase {
   Set<String> found = Sets.newTreeSet();
 
   @Override

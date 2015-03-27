@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 /** A naive persistent set that does too many copies */
-public class NaivePersistentSet<K> extends PersistentSet<K> {
+public final class NaivePersistentSet<K> extends PersistentSet<K> {
   private final Set<K> set;
 
   private NaivePersistentSet(Set<K> s) {

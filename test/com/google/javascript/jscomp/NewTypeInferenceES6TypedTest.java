@@ -28,7 +28,7 @@ import static com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 
-public class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase {
+public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase {
 
   @Override
   protected void setUp() {

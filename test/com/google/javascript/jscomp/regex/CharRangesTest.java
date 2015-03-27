@@ -24,7 +24,7 @@ import java.util.BitSet;
 import java.util.Random;
 
 
-public class CharRangesTest extends TestCase {
+public final class CharRangesTest extends TestCase {
 
   static final long SEED = Long.parseLong(System.getProperty(
       "junit.random.seed", "" + System.currentTimeMillis()));

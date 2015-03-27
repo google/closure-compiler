@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
+public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   private boolean useDefaultRenamer = false;
   private boolean invert = false;

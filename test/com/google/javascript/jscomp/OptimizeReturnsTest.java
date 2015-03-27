@@ -22,7 +22,7 @@ import com.google.common.base.Joiner;
  * Tests OptimizeReturns
  * @author johnlenz@google.com (John Lenz)
  */
-public class OptimizeReturnsTest extends CompilerTestCase {
+public final class OptimizeReturnsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

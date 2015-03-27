@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
+public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
 
   private boolean useGoogleCodingConvention = true;
 

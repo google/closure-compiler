@@ -28,7 +28,7 @@ import java.io.InputStream;
  * Tests {@link XtbMessageBundle}.
  *
  */
-public class XtbMessageBundleTest extends TestCase {
+public final class XtbMessageBundleTest extends TestCase {
 
   private final static String PROJECT_ID = "TestProject";
 

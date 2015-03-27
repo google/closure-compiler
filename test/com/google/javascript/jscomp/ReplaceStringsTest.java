@@ -34,7 +34,7 @@ import java.util.Set;
  * Tests for {@link ReplaceStrings}.
  *
  */
-public class ReplaceStringsTest extends CompilerTestCase {
+public final class ReplaceStringsTest extends CompilerTestCase {
   private ReplaceStrings pass;
   private Set<String> reserved;
   private VariableMap previous;

@@ -29,7 +29,7 @@ import java.util.Set;
  * @author johnlenz@google.com (John Lenz)
  *
  */
-public class NormalizeTest extends CompilerTestCase {
+public final class NormalizeTest extends CompilerTestCase {
 
   private static final String EXTERNS = "var window;";
 

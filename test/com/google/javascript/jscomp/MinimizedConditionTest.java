@@ -32,7 +32,7 @@ import java.util.List;
  *
  * @author blickly@google.com (Ben Lickly)
  */
-public class MinimizedConditionTest extends TestCase {
+public final class MinimizedConditionTest extends TestCase {
 
   private static Node parseExpr(String code) {
     Compiler compiler = new Compiler();

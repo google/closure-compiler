@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class Base64Test extends TestCase {
+public final class Base64Test extends TestCase {
   public void testBase64() {
     for (int i = 0; i < 64; i++) {
       testValue(i);

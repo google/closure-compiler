@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Test for FixedPointGraphTraversal.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class FixedPointGraphTraversalTest extends TestCase {
+public final class FixedPointGraphTraversalTest extends TestCase {
 
   // The maximum value of a counter that counts as a "change"
   // to the state of the graph, for the purposes of fixed-point

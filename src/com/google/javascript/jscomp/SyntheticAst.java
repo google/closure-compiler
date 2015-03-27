@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SyntheticAst implements SourceAst {
+public final class SyntheticAst implements SourceAst {
   private static final long serialVersionUID = 1L;
 
   private final InputId inputId;

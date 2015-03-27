@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link FunctionRewriter}
  *
  */
-public class FunctionRewriterTest extends CompilerTestCase {
+public final class FunctionRewriterTest extends CompilerTestCase {
 
   private static final String RETURNARG_HELPER =
       "function JSCompiler_returnArg(JSCompiler_returnArg_value){" +

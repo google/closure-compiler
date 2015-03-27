@@ -60,7 +60,7 @@ import java.util.Set;
 // is to satisfy the existing API. Some of it is because passes really do
 // need to share state in non-trivial ways. This should be audited and
 // cleaned up.
-public class DefaultPassConfig extends PassConfig {
+public final class DefaultPassConfig extends PassConfig {
 
   /* For the --mark-as-compiled pass */
   private static final String COMPILED_CONSTANT_NAME = "COMPILED";

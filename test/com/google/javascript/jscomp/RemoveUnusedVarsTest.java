@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 
-public class RemoveUnusedVarsTest extends CompilerTestCase {
+public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   private boolean removeGlobal;
   private boolean preserveFunctionExpressionNames;

@@ -24,7 +24,7 @@ import java.util.Set;
  * Tests for {@link StripCode}.
  *
  */
-public class StripCodeTest extends CompilerTestCase {
+public final class StripCodeTest extends CompilerTestCase {
 
   private static final String EXTERNS = "";
 

@@ -29,7 +29,7 @@ import java.util.List;
  * Tests for {@link JSModule}
  *
  */
-public class JSModuleTest extends TestCase {
+public final class JSModuleTest extends TestCase {
   private JSModule mod1;
   private JSModule mod2;  // depends on mod1
   private JSModule mod3;  // depends on mod1

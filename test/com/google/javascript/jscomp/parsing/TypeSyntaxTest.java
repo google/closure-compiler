@@ -49,7 +49,7 @@ import junit.framework.TestCase;
  *
  * @author martinprobst@google.com (Martin Probst)
  */
-public class TypeSyntaxTest extends TestCase {
+public final class TypeSyntaxTest extends TestCase {
 
   private TestErrorManager testErrorManager;
 

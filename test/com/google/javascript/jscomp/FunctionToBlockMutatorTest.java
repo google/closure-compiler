@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class FunctionToBlockMutatorTest extends TestCase {
+public final class FunctionToBlockMutatorTest extends TestCase {
 
   public void testMutateNoReturnWithoutResultAssignment() {
     helperMutate(

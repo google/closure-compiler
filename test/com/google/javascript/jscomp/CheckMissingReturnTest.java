@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CheckLevel;
  * Tests for {@link CheckMissingReturn}.
  *
  */
-public class CheckMissingReturnTest extends CompilerTestCase {
+public final class CheckMissingReturnTest extends CompilerTestCase {
 
   public CheckMissingReturnTest() {
     enableTypeCheck(CheckLevel.OFF);

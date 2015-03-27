@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
+public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   @Override
   public void setUp() {

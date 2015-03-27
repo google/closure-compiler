@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Unit tests for {@link OptimizeArgumentsArray}.
  *
  */
-public class OptimizeArgumentsArrayTest extends CompilerTestCase {
+public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
 
   public OptimizeArgumentsArrayTest() {
     /*

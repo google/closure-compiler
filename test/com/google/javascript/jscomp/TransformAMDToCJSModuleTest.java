@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Unit tests for {@link TransformAMDToCJSModule}
  */
-public class TransformAMDToCJSModuleTest extends CompilerTestCase {
+public final class TransformAMDToCJSModuleTest extends CompilerTestCase {
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new TransformAMDToCJSModule(compiler);

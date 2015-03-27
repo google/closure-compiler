@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * <p>See {@link Es6InlineTypesTest} for tests which start from closure-style JSDoc type declaration
  * syntax.
  */
-public class CodePrinterEs6TypedTest extends CodePrinterTestBase {
+public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Override
   public void setUp() {

@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableList;
  *
  */
 
-public class CheckRequiresForConstructorsTest extends CompilerTestCase {
+public final class CheckRequiresForConstructorsTest extends CompilerTestCase {
   public CheckRequiresForConstructorsTest() {
     super();
     enableRewriteClosureCode();

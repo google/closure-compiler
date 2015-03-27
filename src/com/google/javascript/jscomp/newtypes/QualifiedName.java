@@ -29,7 +29,7 @@ import com.google.javascript.rhino.Node;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class QualifiedName {
+public final class QualifiedName {
   ImmutableList<String> parts;
 
   private QualifiedName(ImmutableList<String> parts) {

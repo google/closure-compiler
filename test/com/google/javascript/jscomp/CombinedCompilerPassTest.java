@@ -33,7 +33,7 @@ import java.util.Set;
 
 /**
  */
-public class CombinedCompilerPassTest extends TestCase  {
+public final class CombinedCompilerPassTest extends TestCase  {
 
   private Compiler compiler;
 

@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * to inline type declarations, by running both syntaxes through the parser
  * and verifying the resulting AST is the same.
  */
-public class Es6InlineTypesTest extends CompilerTestCase {
+public final class Es6InlineTypesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {

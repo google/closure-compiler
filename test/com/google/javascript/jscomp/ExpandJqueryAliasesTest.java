@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ExpandJqueryAliases}
  */
-public class ExpandJqueryAliasesTest extends CompilerTestCase {
+public final class ExpandJqueryAliasesTest extends CompilerTestCase {
   private JqueryCodingConvention conv = new JqueryCodingConvention();
 
   static final DiagnosticType NAME_ERROR =

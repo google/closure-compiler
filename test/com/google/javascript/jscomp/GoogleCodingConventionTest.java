@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 /**
  * Test class for {@link GoogleCodingConvention}.
  */
-public class GoogleCodingConventionTest extends TestCase {
+public final class GoogleCodingConventionTest extends TestCase {
   private GoogleCodingConvention conv = new GoogleCodingConvention();
 
   public void testVarAndOptionalParams() {

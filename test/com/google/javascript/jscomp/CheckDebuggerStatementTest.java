@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.DiagnosticGroups;
  *
  * @author bolinfest@google.com (Michael Bolin)
  */
-public class CheckDebuggerStatementTest extends CompilerTestCase {
+public final class CheckDebuggerStatementTest extends CompilerTestCase {
 
   private CheckLevel checkLevel;
 

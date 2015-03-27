@@ -36,7 +36,7 @@ import com.google.javascript.rhino.Node;
  * @author alexeagle@google.com (Alex Eagle)
  */
 
-public class Es6InlineTypesNotYetParsedTest extends CompilerTestCase {
+public final class Es6InlineTypesNotYetParsedTest extends CompilerTestCase {
 
   private Compiler compiler;
 

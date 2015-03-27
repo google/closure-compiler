@@ -23,7 +23,7 @@ package com.google.javascript.jscomp;
  * @author nicholas.j.santos@gmail.com (Nick Santos)
  */
 
-public class CommonJSIntegrationTest extends IntegrationTestCase {
+public final class CommonJSIntegrationTest extends IntegrationTestCase {
   public void testCrossModuleCtorCall() {
     test(createCompilerOptions(),
          new String[] {

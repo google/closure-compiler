@@ -24,7 +24,7 @@ import java.io.IOException;
 /**
  * Tests for ClosureBundler
  */
-public class ClosureBundlerTest extends TestCase {
+public final class ClosureBundlerTest extends TestCase {
 
   private static final DependencyInfo MODULE = new SimpleDependencyInfo(
       null, null, null, null, true);

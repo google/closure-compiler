@@ -35,7 +35,7 @@ import java.util.Map;
  * @param <N> Value type that the graph node stores.
  * @param <E> Value type that the graph edge stores.
  */
-public class LinkedUndirectedGraph<N, E>
+public final class LinkedUndirectedGraph<N, E>
     extends UndiGraph<N, E> implements GraphvizGraph {
   protected final Map<N, LinkedUndirectedGraphNode<N, E>> nodes =
       Maps.newHashMap();

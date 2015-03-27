@@ -41,7 +41,7 @@ import java.util.List;
  * external synchronization.</p>
  *
  */
-public class DotFormatter {
+public final class DotFormatter {
   private static final String INDENT = "  ";
   private static final String ARROW = " -> ";
   private static final String LINE = " -- ";

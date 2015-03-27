@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  *
  * @author robbyw@google.com (Robby Walker)
  */
-public class ClosureCodeRemovalTest extends CompilerTestCase {
+public final class ClosureCodeRemovalTest extends CompilerTestCase {
 
   private static String EXTERNS = "var window;";
 

@@ -48,7 +48,7 @@ import java.util.List;
 /**
  * Tests for {@link JsDocTokenStream}.
  */
-public class JsDocTokenStreamTest extends TestCase {
+public final class JsDocTokenStreamTest extends TestCase {
 
   public void testJsDocTokenization1() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(

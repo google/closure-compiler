@@ -27,7 +27,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class SemanticReverseAbstractInterpreterTest
+public final class SemanticReverseAbstractInterpreterTest
     extends CompilerTypeTestCase {
 { new GoogleCodingConvention(); }  private ReverseAbstractInterpreter interpreter;
   private TypedScope functionScope;

@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-public class ShowByPathWarningsGuard extends WarningsGuard {
+public final class ShowByPathWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
   /**

@@ -31,7 +31,7 @@ import java.util.Set;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class Es6RenameVariablesInParamLists extends AbstractPostOrderCallback
+public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;

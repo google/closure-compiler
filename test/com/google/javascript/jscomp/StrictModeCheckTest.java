@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-public class StrictModeCheckTest extends CompilerTestCase {
+public final class StrictModeCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var arguments; function eval(str) {}";
 
   private boolean noVarCheck;

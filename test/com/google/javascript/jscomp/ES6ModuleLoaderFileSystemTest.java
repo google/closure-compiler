@@ -40,7 +40,7 @@ import java.nio.file.Files;
  */
 @RunWith(JUnit4.class)
 
-public class ES6ModuleLoaderFileSystemTest {
+public final class ES6ModuleLoaderFileSystemTest {
   private ES6ModuleLoader loader;
   private Compiler compiler;
   private String rootPath;

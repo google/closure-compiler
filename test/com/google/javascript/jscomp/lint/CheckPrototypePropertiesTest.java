@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
 
-public class CheckPrototypePropertiesTest extends CompilerTestCase {
+public final class CheckPrototypePropertiesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckPrototypeProperties(compiler);

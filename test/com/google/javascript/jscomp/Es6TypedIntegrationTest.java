@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * checking by {@link TypeValidator}.
  */
 
-public class Es6TypedIntegrationTest extends IntegrationTestCase {
+public final class Es6TypedIntegrationTest extends IntegrationTestCase {
 
   public void testBasicTypeCheck() {
     test(createCompilerOptions(), "var x: number = 12;\nalert(x);", "alert(12);");

@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class Base64VLQTest extends TestCase {
+public final class Base64VLQTest extends TestCase {
   public void testBase64VLQSelectedValues1() {
     for (int i = 0; i < 63; i++) {
       testValue(i);

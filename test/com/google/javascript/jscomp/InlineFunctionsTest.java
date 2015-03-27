@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * @author johnlenz@google.com (john lenz)
  */
 
-public class InlineFunctionsTest extends CompilerTestCase {
+public final class InlineFunctionsTest extends CompilerTestCase {
   boolean allowGlobalFunctionInlining = true;
   boolean allowBlockInlining = true;
   final boolean allowExpressionDecomposition = true;

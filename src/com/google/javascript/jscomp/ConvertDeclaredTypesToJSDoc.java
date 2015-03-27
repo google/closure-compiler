@@ -29,7 +29,8 @@ import com.google.javascript.rhino.Token;
  * Converts {@link Node#getDeclaredTypeExpression()} to {@link JSDocInfo#getType()} type
  * annotations. Types are marked as inline types.
  */
-public class ConvertDeclaredTypesToJSDoc extends AbstractPostOrderCallback implements CompilerPass {
+public final class ConvertDeclaredTypesToJSDoc
+    extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 

@@ -26,7 +26,7 @@ import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.util.Map.Entry;
 
-public class TypeTransformationTest extends CompilerTypeTestCase {
+public final class TypeTransformationTest extends CompilerTypeTestCase {
 
   private ImmutableMap<String, JSType> typeVars;
   private ImmutableMap<String, String> nameVars;

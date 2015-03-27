@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Tests for {@link ConvertToDottedProperties}.
  *
  */
-public class ConvertToDottedPropertiesTest extends CompilerTestCase {
+public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
   @Override public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
   }

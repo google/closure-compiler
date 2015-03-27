@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 /** A persistent set that simply wraps Clojure's implementation */
-public class ClojurePersistentHashSet<K> extends PersistentSet<K> {
+public final class ClojurePersistentHashSet<K> extends PersistentSet<K> {
   private static Method cons;
   private static Method disjoin;
   private final Set set;

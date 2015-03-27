@@ -24,7 +24,7 @@ package com.google.javascript.jscomp;
  * @author kushal@google.com (Kushal Dave)
  */
 
-public class InlineVariablesTest extends CompilerTestCase {
+public final class InlineVariablesTest extends CompilerTestCase {
 
   private boolean inlineAllStrings = false;
   private boolean inlineLocalsOnly = false;

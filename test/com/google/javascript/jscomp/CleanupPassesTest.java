@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * @author tylerg@google.com (Tyler Goodwin)
  */
-public class CleanupPassesTest extends TestCase {
+public final class CleanupPassesTest extends TestCase {
 
   private final AbstractCompiler compiler = new Compiler();
   private final CompilerOptions options = new CompilerOptions();

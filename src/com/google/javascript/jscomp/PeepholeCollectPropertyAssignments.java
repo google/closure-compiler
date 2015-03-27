@@ -29,8 +29,7 @@ import com.google.javascript.rhino.Token;
  * similarly for the object constructor.
  *
  */
-public class PeepholeCollectPropertyAssignments
-    extends AbstractPeepholeOptimization {
+final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimization {
 
   @Override
   Node optimizeSubtree(Node subtree) {

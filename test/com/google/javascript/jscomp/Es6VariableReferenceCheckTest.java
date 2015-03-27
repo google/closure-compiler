@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * appropriate cases only by VariableReferenceCheck when checking ES6 input
  *
  */
-public class Es6VariableReferenceCheckTest extends CompilerTestCase {
+public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
 
   private static final String VARIABLE_RUN =
       "var a = 1; var b = 2; var c = a + b, d = c;";

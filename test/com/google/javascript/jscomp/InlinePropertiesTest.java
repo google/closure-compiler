@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class InlinePropertiesTest extends CompilerTestCase {
+public final class InlinePropertiesTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "Function.prototype.call=function(){};" +

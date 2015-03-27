@@ -25,7 +25,7 @@ import junit.framework.TestCase;
  * Unit test for {@link InlineCostEstimator}.
  * @author johnlenz@google.com (John Lenz)
  */
-public class InlineCostEstimatorTest extends TestCase {
+public final class InlineCostEstimatorTest extends TestCase {
 
   static Node parse(String js) {
     Compiler compiler = new Compiler();

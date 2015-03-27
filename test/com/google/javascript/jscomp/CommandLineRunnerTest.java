@@ -46,7 +46,7 @@ import java.util.Map;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class CommandLineRunnerTest extends TestCase {
+public final class CommandLineRunnerTest extends TestCase {
 
   private Compiler lastCompiler = null;
   private CommandLineRunner lastCommandLineRunner = null;

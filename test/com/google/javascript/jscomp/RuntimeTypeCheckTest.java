@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * Tests for {@link RuntimeTypeCheck}.
  *
  */
-public class RuntimeTypeCheckTest extends CompilerTestCase {
+public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public RuntimeTypeCheckTest() {
     super("/** @const */ var undefined;");

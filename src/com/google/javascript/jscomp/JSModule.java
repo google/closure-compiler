@@ -39,7 +39,7 @@ import java.util.Set;
  * and can depend on other modules.
  *
  */
-public class JSModule implements DependencyInfo, Serializable {
+public final class JSModule implements DependencyInfo, Serializable {
   private static final long serialVersionUID = 1;
 
   static final DiagnosticType CIRCULAR_DEPENDENCY_ERROR =

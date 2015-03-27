@@ -49,7 +49,7 @@ import java.util.Set;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class SortedDependencies<INPUT extends DependencyInfo> {
+public final class SortedDependencies<INPUT extends DependencyInfo> {
 
   private final List<INPUT> inputs;
 

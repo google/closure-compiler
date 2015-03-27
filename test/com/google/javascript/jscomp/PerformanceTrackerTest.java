@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class PerformanceTrackerTest extends TestCase {
+public final class PerformanceTrackerTest extends TestCase {
   private Node emptyScript = new Node(Token.SCRIPT);
 
   public void testStatsCalculation() {

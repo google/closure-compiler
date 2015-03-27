@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Token;
 import java.util.List;
 
 
-public class CodePrinterTest extends CodePrinterTestBase {
+public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testPrint() {
     assertPrint("10 + a + b", "10+a+b");

@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
  * Tests for {@link DeadAssignmentsElimination}.
  *
  */
-public class DeadAssignmentsEliminationTest extends CompilerTestCase {
+public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
 
   public DeadAssignmentsEliminationTest() {
     super("var extern;");

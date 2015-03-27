@@ -31,7 +31,7 @@ import java.util.List;
  *
  */
 
-public class ExternExportsPassTest extends TestCase {
+public final class ExternExportsPassTest extends TestCase {
 
   private boolean runCheckTypes = true;
 

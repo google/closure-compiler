@@ -28,7 +28,7 @@ import java.util.List;
  * Tests for {@link MarkNoSideEffectCalls}
  *
  */
-public class MarkNoSideEffectCallsTest extends CompilerTestCase {
+public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
   List<String> noSideEffectCalls = Lists.newArrayList();
 
   private static String kExterns =

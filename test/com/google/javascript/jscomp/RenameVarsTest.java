@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * Tests for {@link RenameVars}.
  */
-public class RenameVarsTest extends CompilerTestCase {
+public final class RenameVarsTest extends CompilerTestCase {
   private static final String DEFAULT_PREFIX = "";
   private String prefix = DEFAULT_PREFIX;
 

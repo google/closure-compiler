@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Tests for variable declaration collapsing.
  *
  */
-public class CollapseVariableDeclarationsTest extends CompilerTestCase {
+public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
   @Override
   public void setUp() {
     compareJsDoc = false;

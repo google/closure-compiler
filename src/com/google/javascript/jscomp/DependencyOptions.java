@@ -36,7 +36,7 @@ import java.util.Set;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class DependencyOptions implements Serializable {
+public final class DependencyOptions implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private boolean sortDependencies = false;

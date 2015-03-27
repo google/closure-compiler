@@ -24,7 +24,7 @@ import com.google.javascript.rhino.JSTypeExpression;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class Typedef {
+public final class Typedef {
 
   private enum State {
     NOT_RESOLVED,

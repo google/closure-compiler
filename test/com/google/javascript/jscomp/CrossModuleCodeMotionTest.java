@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link CrossModuleCodeMotion}.
  *
  */
-public class CrossModuleCodeMotionTest extends CompilerTestCase {
+public final class CrossModuleCodeMotionTest extends CompilerTestCase {
 
   private static final String EXTERNS = "alert";
   private boolean parentModuleCanSeeSymbolsDeclaredInChildren = false;

@@ -40,7 +40,7 @@ import java.util.List;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-public class JsMessageVisitorTest extends TestCase {
+public final class JsMessageVisitorTest extends TestCase {
 
   private CompilerOptions compilerOptions;
   private Compiler compiler;

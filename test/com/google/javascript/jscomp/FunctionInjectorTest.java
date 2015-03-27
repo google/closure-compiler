@@ -34,7 +34,7 @@ import java.util.Set;
  * @author johnlenz@google.com (John Lenz)
  */
 
-public class FunctionInjectorTest extends TestCase {
+public final class FunctionInjectorTest extends TestCase {
   static final InliningMode INLINE_DIRECT = InliningMode.DIRECT;
   static final InliningMode INLINE_BLOCK = InliningMode.BLOCK;
   private boolean assumeStrictThis = false;

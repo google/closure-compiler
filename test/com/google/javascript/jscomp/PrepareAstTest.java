@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
  * Tests for PrepareAst.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class PrepareAstTest extends CompilerTestCase {
+public final class PrepareAstTest extends CompilerTestCase {
 
   public PrepareAstTest() {
     super.enableLineNumberCheck(true);

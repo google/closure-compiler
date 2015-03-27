@@ -27,7 +27,7 @@ import java.util.Set;
 /**
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class ProcessTweaksTest extends CompilerTestCase {
+public final class ProcessTweaksTest extends CompilerTestCase {
 
   Map<String, Node> defaultValueOverrides;
   boolean stripTweaks;

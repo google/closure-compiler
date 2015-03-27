@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class AstValidator implements CompilerPass {
+public final class AstValidator implements CompilerPass {
 
   // Possible enhancements:
   // * verify NAME, LABEL_NAME, GETPROP property name and unquoted

@@ -36,7 +36,7 @@ import java.util.List;
  * Tests {@link ControlFlowAnalysis}.
  *
  */
-public class ControlFlowAnalysisTest extends TestCase {
+public final class ControlFlowAnalysisTest extends TestCase {
 
   /**
    * Given an input in JavaScript, test if the control flow analysis

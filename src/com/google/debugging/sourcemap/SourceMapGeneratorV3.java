@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapGeneratorV3 implements SourceMapGenerator {
+public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   /**
    * This interface provides the merging strategy when an extension conflict

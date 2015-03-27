@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link TemplateAstMatcher}.
  */
-public class TemplateAstMatcherTest extends TestCase {
+public final class TemplateAstMatcherTest extends TestCase {
 
   private Compiler lastCompiler;
 

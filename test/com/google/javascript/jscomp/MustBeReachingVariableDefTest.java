@@ -24,7 +24,7 @@ import junit.framework.TestCase;
  * Tests for {@link MustBeReachingVariableDef}.
  *
  */
-public class MustBeReachingVariableDefTest extends TestCase {
+public final class MustBeReachingVariableDefTest extends TestCase {
 
   private MustBeReachingVariableDef defUse = null;
   private Node def = null;

@@ -19,7 +19,7 @@ package com.google.javascript.jscomp.ant;
 import com.google.javascript.jscomp.CheckLevel;
 
 /** Simple representation of a warning flag in Ant */
-public class Warning {
+public final class Warning {
   private String group;
   private CheckLevel level;
 

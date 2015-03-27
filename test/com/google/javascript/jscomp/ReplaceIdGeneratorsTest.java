@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
  * Tests for {@link ReplaceIdGenerators}.
  *
  */
-public class ReplaceIdGeneratorsTest extends CompilerTestCase {
+public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private boolean generatePseudoNames = false;
   private ReplaceIdGenerators lastPass = null;

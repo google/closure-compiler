@@ -31,7 +31,7 @@ import java.util.Set;
  * Tests for ReplaceCssNames.java.
  *
  */
-public class ReplaceCssNamesTest extends CompilerTestCase {
+public final class ReplaceCssNamesTest extends CompilerTestCase {
   /** Whether to pass the map of replacements as opposed to null */
   boolean useReplacementMap;
 

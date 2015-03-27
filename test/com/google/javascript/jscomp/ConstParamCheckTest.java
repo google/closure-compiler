@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ConstParamCheck}.
  */
-public class ConstParamCheckTest extends CompilerTestCase {
+public final class ConstParamCheckTest extends CompilerTestCase {
 
   static final String CLOSURE_DEFS = ""
       + "var goog = {};"

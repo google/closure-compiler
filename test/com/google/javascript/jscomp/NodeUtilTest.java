@@ -37,7 +37,7 @@ import java.util.Set;
 /**
  * Tests for NodeUtil
  */
-public class NodeUtilTest extends TestCase {
+public final class NodeUtilTest extends TestCase {
 
   private static Node parse(String js) {
     Compiler compiler = new Compiler();

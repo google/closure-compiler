@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link CollapseAnonymousFunctions}
  *
  */
-public class CollapseAnonymousFunctionsTest extends CompilerTestCase {
+public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   public CollapseAnonymousFunctionsTest() {
     this.enableNormalize();
   }

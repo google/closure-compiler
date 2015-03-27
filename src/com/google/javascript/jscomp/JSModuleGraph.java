@@ -52,7 +52,7 @@ import java.util.TreeSet;
  * the module to a module with no dependencies.
  *
  */
-public class JSModuleGraph {
+public final class JSModuleGraph {
 
   private List<JSModule> modules;
 

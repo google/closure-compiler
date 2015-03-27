@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableList;
  * @author nicksantos@google.com (Nick Santos)
  */
 
-public class CheckAccessControlsTest extends CompilerTestCase {
+public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);

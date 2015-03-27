@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link OptimizeParameters}
  *
  */
-public class OptimizeParametersTest extends CompilerTestCase {
+public final class OptimizeParametersTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new OptimizeParameters(compiler);

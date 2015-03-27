@@ -24,7 +24,7 @@ import com.google.gson.JsonParseException;
  * Detect and parse the provided source map.
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapConsumerFactory {
+public final class SourceMapConsumerFactory {
 
   /** not constructible */
   private SourceMapConsumerFactory() {}

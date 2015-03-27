@@ -56,7 +56,7 @@ import java.util.Map;
  * Tests {@link TypeInference}.
  *
  */
-public class TypeInferenceTest extends TestCase {
+public final class TypeInferenceTest extends TestCase {
 
   private Compiler compiler;
   private JSTypeRegistry registry;

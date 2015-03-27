@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public class Es6SyntacticScopeCreatorTest extends TestCase {
+public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
   private Compiler compiler;
   private Es6SyntacticScopeCreator scopeCreator;

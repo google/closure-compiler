@@ -40,7 +40,7 @@ import java.util.Set;
  *
  */
 
-public class TypeCheckTest extends CompilerTypeTestCase {
+public final class TypeCheckTest extends CompilerTypeTestCase {
 
   private CheckLevel reportMissingOverrides = CheckLevel.WARNING;
 

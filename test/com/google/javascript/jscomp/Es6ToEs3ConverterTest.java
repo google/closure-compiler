@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class Es6ToEs3ConverterTest extends CompilerTestCase {
+public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   private static final String EXTERNS_BASE = Joiner.on('\n').join(
       "/**",
       " * @param {...*} var_args",

@@ -27,7 +27,7 @@ import java.util.Map;
  * Tests for {@link InferConsts}.
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class InferConstsTest extends TestCase {
+public final class InferConstsTest extends TestCase {
   public void testSimple() {
     testInferConsts("var x = 3;", "x");
     testInferConsts("var x = 3, y = 4;", "x", "y");

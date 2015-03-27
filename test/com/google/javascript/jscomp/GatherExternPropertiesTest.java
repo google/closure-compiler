@@ -23,7 +23,7 @@ import com.google.common.collect.Sets;
 /**
  * Test case for {@link GatherExternProperties}.
  */
-public class GatherExternPropertiesTest extends CompilerTestCase {
+public final class GatherExternPropertiesTest extends CompilerTestCase {
   public GatherExternPropertiesTest() {
     super();
     enableTypeCheck(CheckLevel.WARNING);

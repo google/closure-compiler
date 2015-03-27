@@ -35,7 +35,7 @@ import java.util.List;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class DeclaredFunctionType {
+public final class DeclaredFunctionType {
   private final List<JSType> requiredFormals;
   private final List<JSType> optionalFormals;
   private final JSType restFormals;

@@ -30,7 +30,7 @@ import java.util.List;
  * Tests for NodeIterators.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class NodeIteratorsTest extends TestCase {
+public final class NodeIteratorsTest extends TestCase {
 
   // In each test, we find the declaration of "X" in the local scope,
   // construct a list of all nodes where X is guaranteed to retain its

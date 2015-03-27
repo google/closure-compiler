@@ -33,7 +33,7 @@ import java.util.List;
  * Tests for {@link CheckConformance}.
  *
  */
-public class CheckConformanceTest extends CompilerTestCase {
+public final class CheckConformanceTest extends CompilerTestCase {
   private String configuration;
 
   private static final String EXTERNS =

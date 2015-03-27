@@ -31,7 +31,7 @@ import java.util.List;
  * @author johnlenz@google.com (John Lenz)
  */
 
-public class PureFunctionIdentifierTest extends CompilerTestCase {
+public final class PureFunctionIdentifierTest extends CompilerTestCase {
   List<String> noSideEffectCalls = Lists.newArrayList();
   List<String> localResultCalls = Lists.newArrayList();
 

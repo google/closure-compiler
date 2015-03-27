@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests {@link AngularPass}.
  */
-public class AngularPassTest extends CompilerTestCase {
+public final class AngularPassTest extends CompilerTestCase {
 
   public AngularPassTest() {
     super();

@@ -37,7 +37,7 @@ import com.google.javascript.rhino.Node;
  * console.log(y.prop) // [1]
  * </pre>
  */
-public class CheckPrototypeProperties implements HotSwapCompilerPass, NodeTraversal.Callback {
+public final class CheckPrototypeProperties implements HotSwapCompilerPass, NodeTraversal.Callback {
   public static final DiagnosticType ILLEGAL_PROTOTYPE_MEMBER =
       DiagnosticType.disabled(
           "JSC_ILLEGAL_PROTOTYPE_MEMBER",

@@ -31,7 +31,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Unit tests for ClosureRewriteGoogClass
  * @author johnlenz@google.com (John Lenz)
  */
-public class ClosureRewriteClassTest extends CompilerTestCase {
+public final class ClosureRewriteClassTest extends CompilerTestCase {
   private static final String EXTERNS =
       "var goog = {};\n" +
       "goog.inherits = function(a,b) {};\n" +

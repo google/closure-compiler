@@ -25,7 +25,7 @@ import java.util.Set;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class GatherRawExportsTest extends CompilerTestCase {
+public final class GatherRawExportsTest extends CompilerTestCase {
 
   private static final String EXTERNS = "var window;";
   private GatherRawExports last;

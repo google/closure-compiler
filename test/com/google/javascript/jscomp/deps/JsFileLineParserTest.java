@@ -30,7 +30,7 @@ import java.io.StringReader;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class JsFileLineParserTest extends TestCase {
+public final class JsFileLineParserTest extends TestCase {
 
   TestParser parser;
   private ErrorManager errorManager;

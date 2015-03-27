@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
  * produces is very compact and to the point.
  *
  */
-public class LightweightMessageFormatter extends AbstractMessageFormatter {
+public final class LightweightMessageFormatter extends AbstractMessageFormatter {
   private SourceExcerpt excerpt;
   private static final ExcerptFormatter excerptFormatter =
       new LineNumberingFormatter();

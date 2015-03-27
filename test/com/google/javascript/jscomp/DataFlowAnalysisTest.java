@@ -42,7 +42,7 @@ import java.util.Map;
  * manually put each instruction in a {@code ControlFlowGraph}.
  *
  */
-public class DataFlowAnalysisTest extends TestCase {
+public final class DataFlowAnalysisTest extends TestCase {
 
   /**
    * Operations supported by ArithmeticInstruction.

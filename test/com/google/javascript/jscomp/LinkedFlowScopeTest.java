@@ -27,7 +27,7 @@ import com.google.javascript.rhino.jstype.JSType;
  * @author nicksantos@google.com (Nick Santos)
  */
 
-public class LinkedFlowScopeTest extends CompilerTypeTestCase {
+public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
   private final Node blockNode = new Node(Token.BLOCK);
   private final Node functionNode = new Node(Token.FUNCTION);

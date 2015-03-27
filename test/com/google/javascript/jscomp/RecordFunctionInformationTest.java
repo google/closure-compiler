@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  *
  */
 
-public class RecordFunctionInformationTest extends TestCase {
+public final class RecordFunctionInformationTest extends TestCase {
 
   public void testFunction() {
     String g = "function g(){}";

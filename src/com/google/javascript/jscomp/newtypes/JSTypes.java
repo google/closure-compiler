@@ -35,7 +35,7 @@ import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class JSTypes {
+public final class JSTypes {
   // Instances of Boolean, Number and String; used for auto-boxing scalars.
   // Set when they are crawled in GlobalTypeInfo.
   private JSType numberInstance;

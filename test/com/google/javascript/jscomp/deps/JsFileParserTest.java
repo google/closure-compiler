@@ -31,7 +31,7 @@ import java.util.Collections;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class JsFileParserTest extends TestCase {
+public final class JsFileParserTest extends TestCase {
 
   JsFileParser parser;
   private ErrorManager errorManager;

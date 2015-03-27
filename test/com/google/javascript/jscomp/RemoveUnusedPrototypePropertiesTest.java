@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
+public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase {
   private static final String EXTERNS =
       "IFoo.prototype.bar; var mExtern; mExtern.bExtern; mExtern['cExtern'];";
 

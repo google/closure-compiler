@@ -49,7 +49,7 @@ import javax.annotation.Nullable;
  *
  * @author alexeagle@google.com (Alex Eagle)
  */
-public class TypeDeclarationsIRFactory {
+public final class TypeDeclarationsIRFactory {
 
   /**
    * @return a new node representing the string built-in type.

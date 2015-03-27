@@ -45,7 +45,7 @@ import java.util.List;
  * across all JS files.
  *
  */
-public class JsMessageExtractor {
+public final class JsMessageExtractor {
 
   private final JsMessage.Style style;
   private final JsMessage.IdGenerator idGenerator;

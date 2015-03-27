@@ -32,7 +32,7 @@ import java.util.List;
  * Unit test for {@link JsMessageExtractor}.
  *
  */
-public class JsMessageExtractorTest extends TestCase {
+public final class JsMessageExtractorTest extends TestCase {
 
   private JsMessage.Style mode;
 

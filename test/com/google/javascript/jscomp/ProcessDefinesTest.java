@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
-public class ProcessDefinesTest extends CompilerTestCase {
+public final class ProcessDefinesTest extends CompilerTestCase {
 
   public ProcessDefinesTest() {
     super("var externMethod;");

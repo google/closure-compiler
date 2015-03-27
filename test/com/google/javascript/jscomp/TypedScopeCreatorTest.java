@@ -46,7 +46,7 @@ import java.util.Deque;
  * the name is a bit of a misnomer.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class TypedScopeCreatorTest extends CompilerTestCase {
+public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   private JSTypeRegistry registry;
   private TypedScope globalScope;

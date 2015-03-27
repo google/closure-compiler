@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Token;
 /**
  * A Truth Subject for the Node class.
  */
-public class NodeSubject extends Subject<NodeSubject, Node> {
+public final class NodeSubject extends Subject<NodeSubject, Node> {
   public static NodeSubject assertNode(Node node) {
     return new NodeSubject(THROW_ASSERTION_ERROR, node);
   }

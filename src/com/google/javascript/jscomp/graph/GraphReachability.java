@@ -30,7 +30,7 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
  *
  * @see GraphNode#getAnnotation()
  */
-public class GraphReachability<N, E> implements EdgeCallback<N, E> {
+public final class GraphReachability<N, E> implements EdgeCallback<N, E> {
 
   // TODO(user): This should work for undirected graphs when
   // FixedPointGraphTraversal accepts them.

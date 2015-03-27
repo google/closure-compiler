@@ -38,7 +38,7 @@ import java.util.Set;
  * This describes the Closure-specific JavaScript coding conventions.
  *
  */
-public class ClosureCodingConvention extends CodingConventions.Proxy {
+public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   private static final long serialVersionUID = 1L;
 

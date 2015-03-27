@@ -33,7 +33,7 @@ import java.util.Iterator;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class JsFunctionParserTest extends TestCase {
+public final class JsFunctionParserTest extends TestCase {
   private static final String SRC_PATH = "a";
   private JsFunctionParser parser;
   private ErrorManager errorManager;

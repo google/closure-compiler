@@ -20,7 +20,7 @@ package com.google.debugging.sourcemap;
  * Represents a position in a source file.
  *
  */
-public class FilePosition {
+public final class FilePosition {
   private final int line;
   private final int column;
 

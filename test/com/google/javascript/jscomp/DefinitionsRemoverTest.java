@@ -29,7 +29,7 @@ import java.util.List;
  * {@link DefinitionsRemover}.
  *
  */
-public class DefinitionsRemoverTest extends CompilerTestCase {
+public final class DefinitionsRemoverTest extends CompilerTestCase {
   public void testRemoveFunction() {
     testSame("{(function (){bar()})}");
     test("{function a(){bar()}}", "{}");

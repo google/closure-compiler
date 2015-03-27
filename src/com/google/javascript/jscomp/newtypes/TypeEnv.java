@@ -30,7 +30,7 @@ import java.util.Map;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class TypeEnv {
+public final class TypeEnv {
   private final PersistentMap<String, JSType> typeMap;
 
   // Above this threshold, the type env keeps track of which variables have

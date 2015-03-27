@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class CheckGlobalNamesTest extends CompilerTestCase {
+public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   private boolean injectNamespace = false;
 

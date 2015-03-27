@@ -27,7 +27,7 @@ import java.util.Objects;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class SimpleDependencyInfo implements DependencyInfo {
+public final class SimpleDependencyInfo implements DependencyInfo {
 
   /** A list of provided symbols. */
   private final List<String> provides;

@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CheckLevel;
  * Tests for {@link CheckProvides}.
  *
  */
-public class CheckProvidesTest extends CompilerTestCase {
+public final class CheckProvidesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckProvides(compiler, CheckLevel.WARNING);

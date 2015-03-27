@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
  * Test cases for {@link NameAnonymousFunctionsMapped}.
  *
  */
-public class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
+public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   private static final String EXTERNS = "var document;";
 
   private NameAnonymousFunctionsMapped pass;

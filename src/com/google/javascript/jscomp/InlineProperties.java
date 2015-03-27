@@ -46,7 +46,7 @@ import java.util.Set;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public class InlineProperties implements CompilerPass {
+final class InlineProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
 

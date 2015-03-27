@@ -25,7 +25,7 @@ import java.util.List;
  * Unit tests for {@link ProcessCommonJSModules}
  */
 
-public class ProcessCommonJSModulesTest extends CompilerTestCase {
+public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   public ProcessCommonJSModulesTest() {
     compareJsDoc = false;

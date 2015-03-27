@@ -27,7 +27,7 @@ import java.util.Map;
  *
  */
 
-public class AmbiguatePropertiesTest extends CompilerTestCase {
+public final class AmbiguatePropertiesTest extends CompilerTestCase {
   private AmbiguateProperties lastPass;
 
   private static final String EXTERNS =

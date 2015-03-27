@@ -33,7 +33,7 @@ import java.util.Random;
  * Tests for {@link PhaseOptimizer}.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class PhaseOptimizerTest extends TestCase {
+public final class PhaseOptimizerTest extends TestCase {
   private final List<String> passesRun = Lists.newArrayList();
   private final Node dummyRoot = new Node(Token.BLOCK);
   private PhaseOptimizer optimizer;

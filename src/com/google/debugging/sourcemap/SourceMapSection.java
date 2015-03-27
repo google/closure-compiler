@@ -20,7 +20,7 @@ package com.google.debugging.sourcemap;
  * A class representing a partial source map.
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceMapSection {
+public final class SourceMapSection {
 
   /**
    * A URL for a valid source map file that represents a section of a generate

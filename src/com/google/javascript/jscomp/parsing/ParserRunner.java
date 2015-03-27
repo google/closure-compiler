@@ -37,7 +37,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 /** parser runner */
-public class ParserRunner {
+public final class ParserRunner {
 
   private static final String CONFIG_RESOURCE =
       "com.google.javascript.jscomp.parsing.ParserConfig";

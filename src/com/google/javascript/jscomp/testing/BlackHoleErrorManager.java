@@ -21,7 +21,7 @@ import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.JSError;
 
 /** An ErrorManager that silently swallows all messages. */
-public class BlackHoleErrorManager extends BasicErrorManager {
+public final class BlackHoleErrorManager extends BasicErrorManager {
 
   /**
    * {@link Compiler} prints to the console by default. This method silences

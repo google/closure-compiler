@@ -30,7 +30,7 @@ import com.google.javascript.jscomp.CompilerTestCase;
 /**
  * Test case for {@link CheckJSDoc}.
  */
-public class CheckJSDocTest extends CompilerTestCase {
+public final class CheckJSDocTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckJSDoc(compiler);

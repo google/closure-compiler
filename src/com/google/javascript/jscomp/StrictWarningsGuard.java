@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-public class StrictWarningsGuard extends WarningsGuard {
+public final class StrictWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
   static final DiagnosticType UNRAISABLE_WARNING =

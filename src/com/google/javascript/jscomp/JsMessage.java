@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-public class JsMessage {
+public final class JsMessage {
 
   /**
    * Message style that could be used for JS code parsing.

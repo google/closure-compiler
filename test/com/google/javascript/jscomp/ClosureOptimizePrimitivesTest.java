@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class ClosureOptimizePrimitivesTest extends CompilerTestCase {
+public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
   @Override public CompilerPass getProcessor(final Compiler compiler) {
     return new ClosureOptimizePrimitives(compiler);

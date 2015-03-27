@@ -33,7 +33,7 @@ import com.google.javascript.rhino.Token;
  * @author nicksantos@google.com (Nick Santos)
  */
 
-public class IntegrationTest extends IntegrationTestCase {
+public final class IntegrationTest extends IntegrationTestCase {
 
   @Override public void setUp() {
     super.setUp();

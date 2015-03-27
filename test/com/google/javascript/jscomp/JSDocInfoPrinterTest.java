@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 /**
  * @author moz@google.com (Michael Zhou)
  */
-public class JSDocInfoPrinterTest extends TestCase {
+public final class JSDocInfoPrinterTest extends TestCase {
 
   private JSDocInfoBuilder builder;
 

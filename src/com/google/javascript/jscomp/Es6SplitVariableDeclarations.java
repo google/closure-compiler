@@ -37,7 +37,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class Es6SplitVariableDeclarations extends
+public final class Es6SplitVariableDeclarations extends
     NodeTraversal.AbstractPostOrderCallback implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
   public Es6SplitVariableDeclarations(AbstractCompiler compiler) {

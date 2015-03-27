@@ -33,7 +33,7 @@ import java.util.Comparator;
  * Tests for {@link GraphColoring}.
  *
  */
-public class GraphColoringTest extends TestCase {
+public final class GraphColoringTest extends TestCase {
 
   public void testNoEdge() {
     Graph<String, String> graph = LinkedUndirectedGraph.create();

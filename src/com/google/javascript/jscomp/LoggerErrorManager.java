@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  * are logged at the WARNING level.
  *
  */
-public class LoggerErrorManager extends BasicErrorManager {
+public final class LoggerErrorManager extends BasicErrorManager {
   private final MessageFormatter formatter;
   private final Logger logger;
 

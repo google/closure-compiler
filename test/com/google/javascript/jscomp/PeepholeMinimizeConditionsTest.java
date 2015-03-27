@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Tests for the interaction of multiple peephole passes are in
  * PeepholeIntegrationTest.
  */
-public class PeepholeMinimizeConditionsTest extends CompilerTestCase {
+public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
 
   private boolean late = true;
 

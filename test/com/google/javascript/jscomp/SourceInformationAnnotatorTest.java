@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Token;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public class SourceInformationAnnotatorTest extends CompilerTestCase {
+public final class SourceInformationAnnotatorTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {

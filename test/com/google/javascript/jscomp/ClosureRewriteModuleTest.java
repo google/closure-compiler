@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Unit tests for ClosureRewriteModule
  * @author johnlenz@google.com (John Lenz)
  */
-public class ClosureRewriteModuleTest extends CompilerTestCase {
+public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

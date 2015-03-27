@@ -36,7 +36,7 @@ import java.util.Set;
  *
  * @author mattloring@google.com (Matthew Loring)
  */
-public class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallback
+public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderCallback
     implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 

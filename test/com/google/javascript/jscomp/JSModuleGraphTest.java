@@ -34,7 +34,7 @@ import java.util.*;
  * Tests for {@link JSModuleGraph}
  *
  */
-public class JSModuleGraphTest extends TestCase {
+public final class JSModuleGraphTest extends TestCase {
 
   private final JSModule A = new JSModule("A");
   private final JSModule B = new JSModule("B");

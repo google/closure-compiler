@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Unit tests for {@link RescopeGlobalSymbols}
  *
  */
-public class RescopeGlobalSymbolsTest extends CompilerTestCase {
+public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   private static final String NAMESPACE = "_";
 

@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Unit test for {@link NameAnonymousFunctionsTest}.
  *
  */
-public class NameAnonymousFunctionsTest extends CompilerTestCase {
+public final class NameAnonymousFunctionsTest extends CompilerTestCase {
 
   private static final String EXTERNS = "var document;";
 

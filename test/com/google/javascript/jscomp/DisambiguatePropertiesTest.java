@@ -37,7 +37,7 @@ import java.util.TreeSet;
  *
  */
 
-public class DisambiguatePropertiesTest extends CompilerTestCase {
+public final class DisambiguatePropertiesTest extends CompilerTestCase {
   private DisambiguateProperties<?> lastPass;
 
   public DisambiguatePropertiesTest() {

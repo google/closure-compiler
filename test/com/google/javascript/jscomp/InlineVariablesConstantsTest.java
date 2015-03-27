@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Ensures that the InlineVariables pass in constants-only mode
  * is functionally equivalent to the old InlineVariablesConstants pass.
  */
-public class InlineVariablesConstantsTest extends CompilerTestCase {
+public final class InlineVariablesConstantsTest extends CompilerTestCase {
 
   private boolean inlineAllStrings = false;
 

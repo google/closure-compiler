@@ -21,7 +21,7 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
-public class DotFormatterTest extends TestCase {
+public final class DotFormatterTest extends TestCase {
   /**
    * Tests that keys are assigned sequentially.
    */

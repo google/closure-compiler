@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * Tests for DependencyResolver.
  */
-public class DependencyResolverTest extends TestCase {
+public final class DependencyResolverTest extends TestCase {
 
   DependencyFile fakeDeps1 = new DependencyFile(new VirtualFile("deps1",
       "goog.addDependency('a.js', ['a'], []);\n"

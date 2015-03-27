@@ -30,7 +30,7 @@ import java.util.List;
  * Tests for {@link MaybeReachingVariableUse}.
  *
  */
-public class MaybeReachingVariableUseTest extends TestCase {
+public final class MaybeReachingVariableUseTest extends TestCase {
 
   private MaybeReachingVariableUse useDef = null;
   private Node def = null;

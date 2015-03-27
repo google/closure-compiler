@@ -33,7 +33,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
  *
  * @author tylerg@google.com (Tyler Goodwin)
  */
-public class FieldCleanupPass implements HotSwapCompilerPass {
+public final class FieldCleanupPass implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
 

@@ -33,7 +33,7 @@ import java.util.List;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class DepsFileParserTest extends TestCase {
+public final class DepsFileParserTest extends TestCase {
 
   private DepsFileParser parser;
   private ErrorManager errorManager;

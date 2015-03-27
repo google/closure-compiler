@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * goog.provide and goog.require are emitted for closure compiler automatic
  * ordering.
  */
-public class ProcessCommonJSModules implements CompilerPass {
+public final class ProcessCommonJSModules implements CompilerPass {
   public static final String DEFAULT_FILENAME_PREFIX =
       "." + ES6ModuleLoader.MODULE_SLASH;
 

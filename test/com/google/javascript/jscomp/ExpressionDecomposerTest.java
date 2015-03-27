@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
  * Unit tests for ExpressionDecomposer
  * @author johnlenz@google.com (John Lenz)
  */
-public class ExpressionDecomposerTest extends TestCase {
+public final class ExpressionDecomposerTest extends TestCase {
   // Note: functions "foo" and "goo" are external functions
   // in the helper.
 

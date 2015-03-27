@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 /**
  * Simple region.
  */
-public class SimpleRegion implements Region {
+public final class SimpleRegion implements Region {
   private final int beginningLineNumber;
   private final int endingLineNumber;
   private final String source;

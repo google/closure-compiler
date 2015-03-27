@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-public class LightweightMessageFormatterTest extends TestCase {
+public final class LightweightMessageFormatterTest extends TestCase {
   private static final DiagnosticType FOO_TYPE =
       DiagnosticType.error("TEST_FOO", "error description here");
   private static final String ORIGINAL_SOURCE_FILE = "original/source.html";

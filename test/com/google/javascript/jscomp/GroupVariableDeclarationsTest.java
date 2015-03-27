@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-public class GroupVariableDeclarationsTest extends CompilerTestCase {
+public final class GroupVariableDeclarationsTest extends CompilerTestCase {
 
   @Override
   protected void setUp() {

@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  *
  */
 
-public class NameAnalyzerTest extends CompilerTestCase {
+public final class NameAnalyzerTest extends CompilerTestCase {
 
   private static String kExterns =
       "var window, top;" +

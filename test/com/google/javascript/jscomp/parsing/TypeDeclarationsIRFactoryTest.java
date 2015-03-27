@@ -58,7 +58,7 @@ import java.util.LinkedHashMap;
  *
  * @author alexeagle@google.com (Alex Eagle)
  */
-public class TypeDeclarationsIRFactoryTest extends TestCase {
+public final class TypeDeclarationsIRFactoryTest extends TestCase {
 
   public void testConvertSimpleTypes() {
     assertParseTypeAndConvert("?").hasType(ANY_TYPE);

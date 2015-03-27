@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   //
   // Internal errors

@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.JsMessage.IdGenerator;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class EmptyMessageBundle implements MessageBundle {
+public final class EmptyMessageBundle implements MessageBundle {
 
   /**
    * Gets a dummy message ID generator.

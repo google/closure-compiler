@@ -35,7 +35,7 @@ import java.util.Set;
  *
  * @author dcc@google.com (Devin Coughlin)
  */
-public class CallGraphTest extends CompilerTestCase {
+public final class CallGraphTest extends CompilerTestCase {
 
   private CallGraph currentProcessor;
 

@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
  * Tests for function and method arity checking in TypeCheck.
  * @author nicksantos@google.com (Nick Santos)
  */
-public class TypeCheckFunctionCheckTest extends CompilerTestCase {
+public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
   private CodingConvention convention = null;
 

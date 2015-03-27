@@ -40,7 +40,7 @@ import java.util.Set;
  * Tests for the graph data structure.
  *
  */
-public class GraphTest extends TestCase {
+public final class GraphTest extends TestCase {
 
   public void testDirectedSimple() {
     DiGraph<String, String> graph =

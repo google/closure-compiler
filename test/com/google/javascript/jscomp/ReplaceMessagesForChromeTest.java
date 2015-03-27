@@ -25,7 +25,7 @@ import com.google.javascript.jscomp.JsMessage.Style;
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public class ReplaceMessagesForChromeTest extends CompilerTestCase {
+public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
 
   private Style style = RELAX;
 

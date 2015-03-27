@@ -29,7 +29,7 @@ import java.util.List;
  * Unit tests for {@link FunctionTypeBuilder}.
  *
  */
-public class FunctionTypeBuilderTest extends CompilerTestCase {
+public final class FunctionTypeBuilderTest extends CompilerTestCase {
 
   public FunctionTypeBuilderTest() {
     parseTypeInfo = true;

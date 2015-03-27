@@ -22,7 +22,7 @@ import java.util.HashSet;
  * Tests for {@link RenameVars}.
  * @see RenameVarsTest
  */
-public class RenameLocalVarsTest extends CompilerTestCase {
+public final class RenameLocalVarsTest extends CompilerTestCase {
   private static final String DEFAULT_PREFIX = "";
 
   private String prefix = DEFAULT_PREFIX;

@@ -21,7 +21,7 @@ package com.google.javascript.jscomp.newtypes;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class NamespaceLit extends Namespace {
+public final class NamespaceLit extends Namespace {
   // collect namespaces during CNT
   // careful w/ inferred vs declared props on namespaces (for otherprops)
 

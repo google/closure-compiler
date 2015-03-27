@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  *
  *
  */
-public class ShadowVariablesTest extends CompilerTestCase{
+public final class ShadowVariablesTest extends CompilerTestCase{
   // Use pseudo names to make test easier to read.
   private boolean generatePseudoNames = false;
   private RenameVars pass = null;

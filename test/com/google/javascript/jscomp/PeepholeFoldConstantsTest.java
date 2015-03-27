@@ -32,7 +32,7 @@ import java.util.Set;
  * {@link PeepholeIntegrationTest}.
  */
 
-public class PeepholeFoldConstantsTest extends CompilerTestCase {
+public final class PeepholeFoldConstantsTest extends CompilerTestCase {
 
   private boolean late;
 

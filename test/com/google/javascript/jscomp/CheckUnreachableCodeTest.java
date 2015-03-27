@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link CheckUnreachableCode}.
  *
  */
-public class CheckUnreachableCodeTest extends CompilerTestCase {
+public final class CheckUnreachableCodeTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CombinedCompilerPass(compiler,

@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public class DepsFileParser extends JsFileLineParser {
+public final class DepsFileParser extends JsFileLineParser {
 
   private static Logger logger = Logger.getLogger(DepsFileParser.class.getName());
 

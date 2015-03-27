@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  *
  */
 
-public class CheckEventfulObjectDisposalTest extends CompilerTestCase {
+public final class CheckEventfulObjectDisposalTest extends CompilerTestCase {
 
   private CheckEventfulObjectDisposal.DisposalCheckingPolicy policy =
       CheckEventfulObjectDisposal.DisposalCheckingPolicy.ON;

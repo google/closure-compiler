@@ -57,7 +57,7 @@ import java.util.Map;
  *
  * @author dcc@google.com (Devin Coughlin)
  */
-public class CallGraph implements CompilerPass {
+public final class CallGraph implements CompilerPass {
   private final AbstractCompiler compiler;
 
   /**
@@ -540,7 +540,7 @@ public class CallGraph implements CompilerPass {
    * A Function knows how to get its AST node and what Callsites
    * it contains.
    */
-  public class Function {
+  public final class Function {
 
     private final Node astNode;
 
@@ -668,7 +668,7 @@ public class CallGraph implements CompilerPass {
    * A Callsite knows how to get its AST node, what its containing
    * Function is, and what its target Functions are.
    */
-  public class Callsite {
+  public final class Callsite {
     private final Node astNode;
 
     private boolean hasUnknownTarget = false;

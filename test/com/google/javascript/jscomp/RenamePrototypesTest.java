@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-public class RenamePrototypesTest extends CompilerTestCase {
+public final class RenamePrototypesTest extends CompilerTestCase {
 
   private static final String EXTERNS = "var js_version;js_version.toString;";
   private VariableMap prevUsedRenameMap;

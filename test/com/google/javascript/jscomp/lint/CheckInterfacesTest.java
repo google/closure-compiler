@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerTestCase;
 /**
  * Test case for {@link CheckInterfaces}.
  */
-public class CheckInterfacesTest extends CompilerTestCase {
+public final class CheckInterfacesTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckInterfaces(compiler);

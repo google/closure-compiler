@@ -61,7 +61,7 @@ import java.util.Stack;
  *
  */
  // TODO(user): Pass needs to be updated for listenable interfaces.
-public class CheckEventfulObjectDisposal implements CompilerPass {
+public final class CheckEventfulObjectDisposal implements CompilerPass {
 
   static final DiagnosticType EVENTFUL_OBJECT_NOT_DISPOSED =
       DiagnosticType.error(

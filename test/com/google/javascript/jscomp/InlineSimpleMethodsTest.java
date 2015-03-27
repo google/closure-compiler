@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-public class InlineSimpleMethodsTest extends CompilerTestCase {
+public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   public InlineSimpleMethodsTest() {
     super("", false);

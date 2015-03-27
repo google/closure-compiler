@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
  * @author dcc@google.com (Devin Coughlin)
  *
  */
-public class SideEffectsAnalysisTest extends CompilerTestCase {
+public final class SideEffectsAnalysisTest extends CompilerTestCase {
 
   private static final String SHARED_EXTERNS = "var arguments = [];";
 

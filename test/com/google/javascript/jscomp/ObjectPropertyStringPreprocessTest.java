@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Tests for {@link ObjectPropertyStringPreprocess}
  *
  */
-public class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
+public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new ObjectPropertyStringPreprocess(compiler);

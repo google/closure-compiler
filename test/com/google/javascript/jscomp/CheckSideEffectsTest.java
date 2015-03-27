@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CheckLevel;
 
-public class CheckSideEffectsTest extends CompilerTestCase {
+public final class CheckSideEffectsTest extends CompilerTestCase {
   public CheckSideEffectsTest() {
     this.parseTypeInfo = true;
     allowExternsChanges(true);

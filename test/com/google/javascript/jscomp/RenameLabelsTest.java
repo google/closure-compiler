@@ -20,7 +20,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link RenameLabels}.
  */
-public class RenameLabelsTest extends CompilerTestCase {
+public final class RenameLabelsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

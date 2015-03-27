@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 
-public class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
+public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBase {
 
   public void testExterns() {
     typeCheck(

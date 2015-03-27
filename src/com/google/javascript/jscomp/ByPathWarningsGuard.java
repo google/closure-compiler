@@ -38,7 +38,7 @@ import java.util.List;
  * in its path to an error.
  *
  */
-public class ByPathWarningsGuard extends WarningsGuard {
+public final class ByPathWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
   private final List<String> paths;
