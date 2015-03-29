@@ -142,10 +142,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         for (Node member = n.getLastChild().getFirstChild();
             member != null;
             member = member.getNext()) {
-          if (member.isGetterDef() || member.isSetterDef()
-              || member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+          if (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
               || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
-            cannotConvert(member, "getters or setters in class definitions");
+            cannotConvert(member, "computed getter or setter in class definition");
             return;
           }
         }
@@ -692,11 +691,13 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         continue;
       }
       Preconditions.checkState(
-          member.isMemberFunctionDef()
+          member.isMemberFunctionDef() || member.isGetterDef() || member.isSetterDef()
               || (member.isComputedProp() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)),
-          "Member variables should have been transpiled earlier.");
+          "Member variables should have been transpiled earlier: ", member);
 
-      if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
+      if (member.isGetterDef() || member.isSetterDef()) {
+        cannotConvertYet(member, "getter/setter in a class definition");
+      } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
         if (!metadata.anonymous) {

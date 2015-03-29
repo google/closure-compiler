@@ -846,14 +846,21 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   /**
-   * If languageOut is ES5, getters/setters in object literals are supported,
-   * but getters/setters in classes are not.
+   * If languageOut is ES5, getters/setters in object literals are supported.
+   * Getters/setters in classes will be supported (b/19735276) but are not yet.
    */
   public void testClassGetterSetter() {
     languageOut = LanguageMode.ECMASCRIPT5;
 
-    testError("class C { get value() {} }", Es6ToEs3Converter.CANNOT_CONVERT);
-    testError("class C { set value(v) {} }", Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("class C { get value() {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class C { set value(v) {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  /**
+   * Computed property getters and setters in classes are not supported.
+   */
+  public void testClassComputedPropGetterSetter() {
+    languageOut = LanguageMode.ECMASCRIPT5;
 
     testError("class C { get [foo]() {}}", Es6ToEs3Converter.CANNOT_CONVERT);
     testError("class C { set [foo](val) {}}", Es6ToEs3Converter.CANNOT_CONVERT);

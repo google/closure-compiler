@@ -53,11 +53,10 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       for (Node member = n.getLastChild().getFirstChild();
           member != null;
           member = member.getNext()) {
-        if (member.isGetterDef() || member.isSetterDef()
-            || member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+        if (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
             || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
           compiler.report(JSError.make(member, CANNOT_CONVERT,
-              "getters or setters in class definitions"));
+              "computed getter or setter in class definition"));
           return false;
         }
         if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
