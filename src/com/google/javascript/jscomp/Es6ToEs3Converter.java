@@ -716,12 +716,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
         JSDocInfo info = member.getJSDocInfo();
         if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
-          JSDocInfoBuilder memberDoc;
-          if (info == null) {
-            memberDoc = new JSDocInfoBuilder(true);
-          } else {
-            memberDoc = JSDocInfoBuilder.copyFrom(info);
-          }
+          JSDocInfoBuilder memberDoc = JSDocInfoBuilder.maybeCopyFrom(info);
           memberDoc.recordThisType(
               new JSTypeExpression(new Node(Token.BANG, new Node(Token.QMARK)),
               member.getSourceFileName()));
@@ -740,9 +735,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Preconditions.checkNotNull(constructor);
 
     JSDocInfo classJSDoc = classNode.getJSDocInfo();
-    JSDocInfoBuilder newInfo = (classJSDoc != null)
-        ? JSDocInfoBuilder.copyFrom(classJSDoc)
-        : new JSDocInfoBuilder(true);
+    JSDocInfoBuilder newInfo = JSDocInfoBuilder.maybeCopyFrom(classJSDoc);
 
     newInfo.recordConstructor();
 

@@ -259,12 +259,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
 
     //TODO(mattloring): remove this suppression once we can optimize the switch statement to
     // remove unused cases.
-    JSDocInfoBuilder builder;
-    if (n.getJSDocInfo() == null) {
-      builder = new JSDocInfoBuilder(true);
-    } else {
-      builder = JSDocInfoBuilder.copyFrom(n.getJSDocInfo());
-    }
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
     //TODO(mattloring): copy existing suppressions.
     builder.recordSuppressions(ImmutableSet.of("uselessCode"));
     JSDocInfo info = builder.build(n);
