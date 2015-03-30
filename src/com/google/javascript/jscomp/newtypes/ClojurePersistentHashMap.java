@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 /** A persistent map that simply wraps Clojure's implementation */
-public final class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
+final class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
   private static Method assoc;
   private static Method without;
   private final Map map;
