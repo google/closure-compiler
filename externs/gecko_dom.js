@@ -92,6 +92,12 @@ Window.prototype.frames;
 Window.prototype.fullScreen;
 
 /**
+ * @return {!Promise<!BatteryManager>}
+ * @see http://www.w3.org/TR/battery-status/
+ */
+Navigator.prototype.getBattery = function() {};
+
+/**
  * @see https://developer.mozilla.org/en/DOM/Storage#globalStorage
  */
 Window.prototype.globalStorage;
