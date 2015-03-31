@@ -483,6 +483,12 @@ public class CommandLineRunner extends
         + "annotated with @ngInject")
     private boolean angularPass = false;
 
+    @Option(name = "--polymer_pass",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Rewrite Polymer classes to be compiler-friendly.")
+    private boolean polymerPass = false;
+
     @Option(name = "--output_manifest",
         hidden = true,
         usage = "Prints out a list of all the files in the compilation. "
@@ -1147,6 +1153,8 @@ public class CommandLineRunner extends
         flags.processJqueryPrimitives;
 
     options.angularPass = flags.angularPass;
+
+    options.polymerPass = flags.polymerPass;
 
     options.renamePrefixNamespace = flags.renamePrefixNamespace;
 

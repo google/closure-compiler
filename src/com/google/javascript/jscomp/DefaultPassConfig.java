@@ -266,6 +266,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
+    if (options.polymerPass) {
+      checks.add(polymerPass);
+    }
+
     checks.add(checkSideEffects);
 
     if (options.checkSuspiciousCode ||
@@ -2611,6 +2615,15 @@ public final class DefaultPassConfig extends PassConfig {
           }
         }
       };
+    }
+  };
+
+  /** Rewrites Polymer({}) */
+  private final HotSwapPassFactory polymerPass =
+      new HotSwapPassFactory("polymerPass", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new PolymerPass(compiler);
     }
   };
 
