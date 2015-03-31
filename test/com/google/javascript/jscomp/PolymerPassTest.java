@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Unit tests for PolymerPass
+ * @author jlklein@google.com (Jeremy Klein)
  */
 public class PolymerPassTest extends CompilerTestCase {
   private static final String EXTERNS = Joiner.on("\n").join(

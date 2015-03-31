@@ -31,6 +31,7 @@ import java.util.List;
  * Rewrites "Polymer({})" calls into a form that is suitable for type checking and dead code
  * elimination. Also ensures proper format and types.
  *
+ * @author jlklein@google.com (Jeremy Klein)
  */
 final class PolymerPass extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 
@@ -219,12 +220,12 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       block.addChildToBack(var);
     }
 
-    // TODO(user): Extract all the props in "properties" and copy them to the prototype.
+    // TODO(jlklein): Extract all the props in "properties" and copy them to the prototype.
 
     block.useSourceInfoFromForTree(exprRoot);
     Node parent = exprRoot.getParent();
     Node stmts = block.removeChildren();
-    // TODO(user): Create an addChildrenBefore and use that instead.
+    // TODO(jlklein): Create an addChildrenBefore and use that instead.
     parent.addChildBefore(stmts, exprRoot);
 
     if (exprRoot.isVar()) {
