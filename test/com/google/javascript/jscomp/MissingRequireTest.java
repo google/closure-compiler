@@ -23,12 +23,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Tests for {@link CheckRequiresForConstructors}.
+ * Tests for the "missing requires" check in {@link CheckRequiresForConstructors}.
  *
  */
 
-public final class CheckRequiresForConstructorsTest extends CompilerTestCase {
-  public CheckRequiresForConstructorsTest() {
+public final class MissingRequireTest extends CompilerTestCase {
+  public MissingRequireTest() {
     super();
     enableRewriteClosureCode();
   }
@@ -139,6 +139,12 @@ public final class CheckRequiresForConstructorsTest extends CompilerTestCase {
     String js = "goog.require('example.Foo');"
       + "/** @constructor @extends {example.Foo} */"
       + "var Ctor = function() {};";
+    testSame(js);
+
+    // When @extends is on a non-function (typically an alias) don't warn.
+    js = "goog.require('some.other.Class');"
+      + "/** @constructor @extends {example.Foo} */"
+      + "var LocalAlias = some.other.Class;";
     testSame(js);
   }
 

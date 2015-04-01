@@ -381,6 +381,10 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("missingRequire",
           CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
 
+  public static final DiagnosticGroup EXTRA_REQUIRE =
+      DiagnosticGroups.registerGroup("extraRequire",
+          CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
+
   public static final DiagnosticGroup MISSING_GETCSSNAME =
       DiagnosticGroups.registerGroup("missingGetCssName",
           CheckMissingGetCssName.MISSING_GETCSSNAME);
