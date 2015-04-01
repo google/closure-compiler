@@ -2961,6 +2961,16 @@ public final class NodeUtil {
     return isPrototypePropertyDeclaration(assignNode.getParent());
   }
 
+  static boolean isPrototypeAssignment(Node getProp) {
+    if (!getProp.isGetProp()) {
+      return false;
+    }
+    Node parent = getProp.getParent();
+    return parent.isAssign() && parent.getFirstChild() == getProp
+        && parent.getFirstChild().getLastChild().getString().equals("prototype")
+        && parent.getLastChild().isObjectLit();
+  }
+
   /**
    * Determines whether this node is testing for the existence of a property.
    * If true, we will not emit warnings about a missing property.

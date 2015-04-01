@@ -1065,14 +1065,14 @@ class GlobalTypeInfo implements CompilerPass {
           if (jsdoc != null && jsdoc.getLendsName() != null) {
             lendsObjlits.add(n);
           }
-          Node receiver = parent.isAssign() ? parent.getFirstChild() : parent;
-          if (NodeUtil.isNamespaceDecl(receiver)
-              && currentScope.isNamespace(receiver)) {
+          Node maybeLvalue = parent.isAssign() ? parent.getFirstChild() : parent;
+          if (NodeUtil.isNamespaceDecl(maybeLvalue)
+              && currentScope.isNamespace(maybeLvalue)) {
             for (Node prop : n.children()) {
               visitNamespacePropertyDeclaration(
-                  prop, receiver, prop.getString());
+                  prop, maybeLvalue, prop.getString());
             }
-          } else {
+          } else if (!NodeUtil.isPrototypeAssignment(maybeLvalue)) {
             for (Node prop : n.children()) {
               if (prop.getJSDocInfo() != null) {
                 declaredObjLitProps.put(prop,
@@ -1096,27 +1096,27 @@ class GlobalTypeInfo implements CompilerPass {
           warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
         }
         visitClassPropertyDeclaration(getProp);
-        return;
       }
       // Prototype property
-      if (isPropertyDeclaration(getProp) && isPrototypeProperty(getProp)) {
+      else if (isPropertyDeclaration(getProp) && isPrototypeProperty(getProp)) {
         visitPrototypePropertyDeclaration(getProp);
-        return;
+      }
+      // Direct assignment to the prototype
+      else if (isPropertyDeclaration(getProp) && NodeUtil.isPrototypeAssignment(getProp)) {
+        visitPrototypeAssignment(getProp);
       }
       // "Static" property on constructor
-      if (isPropertyDeclaration(getProp) &&
+      else if (isPropertyDeclaration(getProp) &&
           isStaticCtorProp(getProp, currentScope)) {
         visitConstructorPropertyDeclaration(getProp);
-        return;
       }
       // Namespace property
-      if (isPropertyDeclaration(getProp) &&
+      else if (isPropertyDeclaration(getProp) &&
           currentScope.isNamespace(getProp.getFirstChild())) {
         visitNamespacePropertyDeclaration(getProp);
-        return;
       }
       // Other property
-      if (isAnnotatedAsConst(getProp)) {
+      else if (isAnnotatedAsConst(getProp)) {
         warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
     }
@@ -1174,6 +1174,18 @@ class GlobalTypeInfo implements CompilerPass {
       }
       String pname = NodeUtil.getPrototypePropertyName(getProp);
       mayAddPropToPrototype(rawType, pname, getProp, initializer);
+    }
+
+    private void visitPrototypeAssignment(Node getProp) {
+      Preconditions.checkArgument(getProp.isGetProp());
+      getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+      Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
+      QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
+      RawNominalType rawType = currentScope.getNominalType(ctorQname);
+      for (Node objLitChild : getProp.getParent().getLastChild().children()) {
+        mayAddPropToPrototype(rawType, objLitChild.getString(), objLitChild,
+            objLitChild.getLastChild());
+      }
     }
 
     private void visitConstructorPropertyDeclaration(Node getProp) {
@@ -1632,7 +1644,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     /**
      * Called for the usual style of prototype-property definitions,
-     * but also for @lends.
+     * but also for @lends and for direct assignments of object literals to prototypes.
      */
     private void mayAddPropToPrototype(
         RawNominalType rawType, String pname, Node defSite, Node initializer) {
@@ -1652,8 +1664,7 @@ class GlobalTypeInfo implements CompilerPass {
         // prototype property.
         methodScope = visitFunctionLate(initializer, rawType);
         methodType = methodScope.getDeclaredType();
-        propDeclType =
-            commonTypes.fromFunctionType(methodType.toFunctionType());
+        propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
       } else {
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
         if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
@@ -1661,22 +1672,19 @@ class GlobalTypeInfo implements CompilerPass {
           methodScope = null;
           methodType = computeFnDeclaredType(
               jsdoc, pname, defSite, rawType, currentScope);
-          propDeclType =
-              commonTypes.fromFunctionType(methodType.toFunctionType());
+          propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
         } else if (jsdoc != null && jsdoc.hasType()) {
           // We are parsing a non-function prototype property
           methodScope = null;
           methodType = null;
-          propDeclType =
-              typeParser.getDeclaredTypeOfNode(jsdoc, rawType, currentScope);
+          propDeclType = typeParser.getDeclaredTypeOfNode(jsdoc, rawType, currentScope);
         } else {
           methodScope = null;
           methodType = null;
           propDeclType = null;
         }
       }
-      propertyDefs.put(
-          rawType, pname, new PropertyDef(defSite, methodType, methodScope));
+      propertyDefs.put(rawType, pname, new PropertyDef(defSite, methodType, methodScope));
 
       // Add the property to the class with the appropriate type.
       boolean isConst = isConst(defSite);

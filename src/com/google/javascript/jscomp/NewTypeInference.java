@@ -1490,7 +1490,8 @@ final class NewTypeInference implements CompilerPass {
       }
       JSType declType = getDeclaredTypeOfQname(lhs, inEnv);
       EnvTypePair rhsPair = analyzeExprFwd(rhs, inEnv, declType);
-      if (!rhsPair.type.isSubtypeOf(declType)) {
+      if (!rhsPair.type.isSubtypeOf(declType)
+          && !NodeUtil.isPrototypeAssignment(lhs)) {
         warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
                 declType.toString(), rhsPair.type.toString()));
       }
