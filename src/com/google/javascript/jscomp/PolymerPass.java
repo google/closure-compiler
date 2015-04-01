@@ -126,7 +126,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       return null;
     }
 
-    Node elName = extractProperty(description, "is");
+    Node elName = NodeUtil.getFirstPropMatchingKey(description, "is");
     if (elName == null) {
       compiler.report(JSError.make(callNode, POLYMER_MISSING_IS));
       return null;
@@ -148,7 +148,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(target);
 
 
-    Node constructor = extractProperty(description, "constructor");
+    Node constructor = NodeUtil.getFirstPropMatchingKey(description, "constructor");
     if (constructor == null) {
       constructor = IR.function(IR.name(""), IR.paramList(), IR.block());
       constructor.useSourceInfoFromForTree(callNode);
@@ -159,18 +159,6 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     ClassDefinition def = new ClassDefinition(target, classInfo,
         new MemberDefinition(info, null, constructor), objectLitToList(description));
     return def;
-  }
-
-  /**
-   * @return The first property in the objlit that matches the key.
-   */
-  private static Node extractProperty(Node objlit, String keyName) {
-    for (Node keyNode : objlit.children()) {
-      if (keyNode.isStringKey() && keyNode.getString().equals(keyName)) {
-        return keyNode.getFirstChild();
-      }
-    }
-    return null;
   }
 
   private static List<MemberDefinition> objectLitToList(Node objlit) {

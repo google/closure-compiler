@@ -852,8 +852,94 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testClassGetterSetter() {
     languageOut = LanguageMode.ECMASCRIPT5;
 
-    testError("class C { get value() {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    testError("class C { set value(v) {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class C { get value() { return 0; } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "/** @type {?} */",
+        "C.prototype.value;",
+        "Object.defineProperties(C.prototype, {",
+        "  value: {",
+        "    /** @this {C} */",
+        "    get: function() {",
+        "      return 0;",
+        "    }",
+        "  }",
+        "});"));
+
+    test("class C { set value(val) { this.internalVal = val; } }", Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "/** @type {?} */",
+        "C.prototype.value;",
+        "Object.defineProperties(C.prototype, {",
+        "  value: {",
+        "    /** @this {C} */",
+        "    set: function(val) {",
+        "      this.internalVal = val;",
+        "    }",
+        "  }",
+        "});"));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  set value(val) {",
+        "    this.internalVal = val;",
+        "  }",
+        "  get value() {",
+        "    return this.internalVal;",
+        "  }",
+        "}"),
+
+        Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "/** @type {?} */",
+        "C.prototype.value;",
+        "Object.defineProperties(C.prototype, {",
+        "  value: {",
+        "    /** @this {C} */",
+        "    set: function(val) {",
+        "      this.internalVal = val;",
+        "    },",
+        "    /** @this {C} */",
+        "    get: function() {",
+        "      return this.internalVal;",
+        "    }",
+        "  }",
+        "});"));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  get alwaysTwo() {",
+        "    return 2;",
+        "  }",
+        "",
+        "  get alwaysThree() {",
+        "    return 3;",
+        "  }",
+        "}"),
+
+        Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "/** @type {?} */",
+        "C.prototype.alwaysTwo;",
+        "/** @type {?} */",
+        "C.prototype.alwaysThree;",
+        "Object.defineProperties(C.prototype, {",
+        "  alwaysTwo: {",
+        "    /** @this {C} */",
+        "    get: function() {",
+        "      return 2;",
+        "    }",
+        "  },",
+        "  alwaysThree: {",
+        "    /** @this {C} */",
+        "    get: function() {",
+        "      return 3;",
+        "    }",
+        "  },",
+        "});"));
   }
 
   /**

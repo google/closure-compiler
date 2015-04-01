@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
@@ -686,6 +687,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     JSDocInfo ctorJSDocInfo = null;
     // Process all members of the class
     Node classMembers = classNode.getLastChild();
+    ImmutableSet.Builder<String> membersToDeclare = ImmutableSet.builder();
     for (Node member : classMembers.children()) {
       if (member.isEmpty()) {
         continue;
@@ -696,7 +698,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           "Member variables should have been transpiled earlier: ", member);
 
       if (member.isGetterDef() || member.isSetterDef()) {
-        cannotConvertYet(member, "getter/setter in a class definition");
+        addToDefinePropertiesObject(metadata, member);
+        membersToDeclare.add(member.getString());
       } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
@@ -730,6 +733,34 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         Node newNode = NodeUtil.newExpr(assign);
         metadata.insertStaticMember(newNode);
       }
+    }
+
+    // Add declarations for properties that were defined with a getter and/or setter,
+    // so that the typechecker knows those properties exist on the class.
+    // This is a temporary solution. Eventually, the type checker should understand
+    // Object.defineProperties calls directly.
+    for (String declaredMember : membersToDeclare.build()) {
+      Node declaration = IR.getprop(
+          prototypeAccess.cloneTree(),
+          IR.string(declaredMember));
+      JSDocInfoBuilder declInfo = new JSDocInfoBuilder(true);
+
+      // TODO(tbreisacher): Use the type information from the getter/setter instead of just "?"
+      // and warn if the getter and a setter disagree on the type.
+      declInfo.recordType(new JSTypeExpression(
+          new Node(Token.QMARK), classNode.getSourceFileName()));
+      declaration.setJSDocInfo(declInfo.build(declaration));
+      metadata.insertStaticMember(
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
+    }
+
+    if (metadata.defineProperties.hasChildren()) {
+      Node definePropsCall = IR.exprResult(IR.call(
+          NodeUtil.newQName(compiler, "Object.defineProperties"),
+          prototypeAccess.cloneTree(),
+          metadata.defineProperties));
+      definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
+      metadata.insertStaticMember(definePropsCall);
     }
 
     Preconditions.checkNotNull(constructor);
@@ -814,6 +845,32 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     compiler.reportCodeChange();
+  }
+
+  private void addToDefinePropertiesObject(ClassDeclarationMetadata metadata, Node member) {
+    Node prop = NodeUtil.getFirstPropMatchingKey(metadata.defineProperties, member.getString());
+    if (prop == null) {
+      prop = IR.objectlit();
+      metadata.defineProperties.addChildToBack(IR.stringKey(member.getString(), prop));
+    }
+
+    Node function = member.getLastChild().detachFromParent();
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(
+        NodeUtil.getBestJSDocInfo(function));
+
+    builder.recordThisType(new JSTypeExpression(new Node(
+        Token.BANG, IR.string(metadata.fullClassName)), member.getSourceFileName()));
+    Node stringKey = IR.stringKey(member.isGetterDef() ? "get" : "set", function);
+    JSDocInfo info = builder.build(stringKey);
+
+    // Attach the info to both the STRING_KEY and the FUNCTION because that's what happens
+    // when we parse the "expected" code for unit tests.
+    // TODO(tbreisacher): Make the parser attach the info to one or the other, not both.
+    stringKey.setJSDocInfo(info);
+    function.setJSDocInfo(info);
+
+    prop.addChildToBack(stringKey);
+    prop.useSourceInfoIfMissingFromForTree(member);
   }
 
   /**
@@ -968,8 +1025,15 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * should be inserted (i.e. which object will hold the prototype after transpilation).
    */
   static class ClassDeclarationMetadata {
-    /** A statement node. Tanspiled methods etc of the class are inserted after this node. */
+    /** A statement node. Transpiled methods etc of the class are inserted after this node. */
     private Node insertionPoint;
+
+    /**
+     * An object literal node that will be used in a call to Object.defineProperties. Used for
+     * transpilation of getters and setters.
+     */
+    private final Node defineProperties;
+
     /**
      * The fully qualified name of the class, which will be used in the output. May come from the
      * class itself or the LHS of an assignment.
@@ -983,6 +1047,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     private ClassDeclarationMetadata(Node insertionPoint, String fullClassName,
         boolean anonymous, Node classNameNode, Node superClassNameNode) {
       this.insertionPoint = insertionPoint;
+      this.defineProperties = IR.objectlit();
       this.fullClassName = fullClassName;
       this.anonymous = anonymous;
       this.classNameNode = classNameNode;

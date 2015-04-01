@@ -1804,6 +1804,19 @@ public final class NodeUtil {
   }
 
   /**
+   * @return The first property in the objlit that matches the key.
+   */
+  @Nullable static Node getFirstPropMatchingKey(Node objlit, String keyName) {
+    Preconditions.checkState(objlit.isObjectLit());
+    for (Node keyNode : objlit.children()) {
+      if (keyNode.isStringKey() && keyNode.getString().equals(keyName)) {
+        return keyNode.getFirstChild();
+      }
+    }
+    return null;
+  }
+
+  /**
    * Returns true if the shallow scope contains references to 'this' keyword
    */
   static boolean referencesThis(Node n) {
