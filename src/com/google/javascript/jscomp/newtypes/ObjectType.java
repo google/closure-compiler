@@ -661,7 +661,7 @@ public final class ObjectType implements TypeWithProperties {
   // TODO(dimvar): handle greatest lower bound of interface types.
   // If we do that, we need to normalize the output, otherwise it could contain
   // two object types that are in a subtype relation, eg, see
-  // NewTypeInferenceTestES5OrLower#testDifficultObjectSpecialization.
+  // NewTypeInferenceES5OrLowerTest#testDifficultObjectSpecialization.
   static ImmutableSet<ObjectType> meetSetsHelper(
       boolean specializeObjs1,
       Set<ObjectType> objs1, Set<ObjectType> objs2) {
@@ -699,7 +699,7 @@ public final class ObjectType implements TypeWithProperties {
     return fn;
   }
 
-  NominalType getNominalType() {
+  public NominalType getNominalType() {
     return nominalType;
   }
 
@@ -848,7 +848,7 @@ public final class ObjectType implements TypeWithProperties {
     return appendTo(new StringBuilder()).toString();
   }
 
-  public StringBuilder appendTo(StringBuilder builder) {
+  StringBuilder appendTo(StringBuilder builder) {
     if (props.isEmpty()
         || (props.size() == 1 && props.containsKey("prototype"))) {
       if (fn != null) {

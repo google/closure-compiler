@@ -385,7 +385,7 @@ public final class JSTypeCreatorFromJSDoc {
   private JSType getNominalTypeHelper(JSType namedType, Node n,
       DeclaredTypeRegistry registry, ImmutableList<String> outerTypeParameters)
       throws UnknownTypeException {
-    NominalType uninstantiated = namedType.getNominalTypeIfUnique();
+    NominalType uninstantiated = namedType.getNominalTypeIfSingletonObj();
     RawNominalType rawType = uninstantiated.getRawNominalType();
     if (!rawType.isGeneric() && !n.hasChildren()) {
       return rawType.getInstanceAsNullableJSType();
@@ -499,7 +499,7 @@ public final class JSTypeCreatorFromJSDoc {
   private NominalType getNominalType(Node n,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
     return getTypeFromComment(n, registry, typeParameters)
-        .getNominalTypeIfUnique();
+        .removeType(JSType.NULL).getNominalTypeIfSingletonObj();
   }
 
   private ImmutableSet<NominalType> getImplementedInterfaces(
@@ -525,7 +525,7 @@ public final class JSTypeCreatorFromJSDoc {
       JSType interfaceType =
           getMaybeTypeFromComment(expRoot, registry, typeParameters);
       if (interfaceType != null) {
-        NominalType nt = interfaceType.getNominalTypeIfUnique();
+        NominalType nt = interfaceType.getNominalTypeIfSingletonObj();
         if (nt != null && nt.isInterface()) {
           builder.add(nt);
         } else {
@@ -815,7 +815,7 @@ public final class JSTypeCreatorFromJSDoc {
       // people use other types as well: unions, records, etc.
       // Decide what to do about those.
       NominalType thisTypeAsNominal = thisType == null
-          ? null : thisType.getNominalTypeIfUnique();
+          ? null : thisType.getNominalTypeIfSingletonObj();
       builder.addReceiverType(thisTypeAsNominal);
     }
 
@@ -924,7 +924,7 @@ public final class JSTypeCreatorFromJSDoc {
     if (extendedType == null) {
       return null;
     }
-    NominalType parentClass = extendedType.getNominalTypeIfUnique();
+    NominalType parentClass = extendedType.getNominalTypeIfSingletonObj();
     if (parentClass != null && parentClass.isClass()) {
       return parentClass;
     }

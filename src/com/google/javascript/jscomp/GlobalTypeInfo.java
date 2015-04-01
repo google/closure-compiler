@@ -274,9 +274,9 @@ class GlobalTypeInfo implements CompilerPass {
     //   defined in the global scope.
     CollectNamedTypes rootCnt = new CollectNamedTypes(globalScope);
     if (externs != null) {
-      new NodeTraversal(compiler, rootCnt).traverse(externs);
+      NodeTraversal.traverse(compiler, externs, rootCnt);
     }
-    new NodeTraversal(compiler, rootCnt).traverse(root);
+    NodeTraversal.traverse(compiler, root, rootCnt);
     // (2) Determine the type represented by each typedef and each enum
     globalScope.resolveTypedefs(typeParser);
     globalScope.resolveEnums(typeParser);
@@ -284,7 +284,7 @@ class GlobalTypeInfo implements CompilerPass {
     for (int i = 1; i < scopes.size(); i++) {
       Scope s = scopes.get(i);
       CollectNamedTypes cnt = new CollectNamedTypes(s);
-      new NodeTraversal(compiler, cnt).traverse(s.getBody());
+      NodeTraversal.traverse(compiler, s.getBody(), cnt);
       s.resolveTypedefs(typeParser);
       s.resolveEnums(typeParser);
       if (NewTypeInference.measureMem) {
@@ -297,9 +297,9 @@ class GlobalTypeInfo implements CompilerPass {
     //     - Declare properties on types
     ProcessScope rootPs = new ProcessScope(globalScope);
     if (externs != null) {
-      new NodeTraversal(compiler, rootPs).traverse(externs);
+      NodeTraversal.traverse(compiler, externs, rootPs);
     }
-    new NodeTraversal(compiler, rootPs).traverse(root);
+    NodeTraversal.traverse(compiler, root, rootPs);
     // (5) Things that must happen after the traversal of the scope
     rootPs.finishProcessingScope();
 
@@ -307,7 +307,7 @@ class GlobalTypeInfo implements CompilerPass {
     for (int i = 1; i < scopes.size(); i++) {
       Scope s = scopes.get(i);
       ProcessScope ps = new ProcessScope(s);
-      new NodeTraversal(compiler, ps).traverse(s.getBody());
+      NodeTraversal.traverse(compiler, s.getBody(), ps);
       ps.finishProcessingScope();
       if (NewTypeInference.measureMem) {
         NewTypeInference.updatePeakMem();
@@ -1511,6 +1511,7 @@ class GlobalTypeInfo implements CompilerPass {
     // 1) Why is it just specific to "duplicate" and to properties?
     // 2) The docs say that it's only allowed in the top level, but the code
     //    allows it in all scopes.
+    //    https://github.com/google/closure-compiler/wiki/Warnings#suppress-tags
     // For now, we implement it b/c it exists in the current type inference.
     // But I wouldn't mind if we stopped supporting it.
     private boolean suppressDupPropWarning(
@@ -1972,6 +1973,11 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void setDeclaredType(DeclaredFunctionType declaredType) {
       this.declaredType = declaredType;
+      // In NTI, we set the type of a function node after we create the summary.
+      // NTI doesn't analyze externs, so we set the type for extern functions here.
+      if (this.root.isFromExterns()) {
+        this.root.setTypeI(getCommonTypes().fromFunctionType(declaredType.toFunctionType()));
+      }
     }
 
     DeclaredFunctionType getDeclaredType() {

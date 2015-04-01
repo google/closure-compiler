@@ -2058,12 +2058,11 @@ public class Node implements Cloneable, Serializable {
   }
 
   public void setJSType(JSType jsType) {
-      this.typei = jsType;
+    this.typei = jsType;
   }
 
   public TypeI getTypeI() {
-    // For the time being, we only want to return the type iff it's an old type.
-    return getJSType();
+    return this.typei;
   }
 
   public void setTypeI(TypeI type) {

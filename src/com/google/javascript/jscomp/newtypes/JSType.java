@@ -884,8 +884,8 @@ public abstract class JSType implements TypeI {
     return result;
   }
 
-  NominalType getNominalTypeIfUnique() {
-    if (getObjs().isEmpty() || getObjs().size() > 1) {
+  public NominalType getNominalTypeIfSingletonObj() {
+    if (getMask() != NON_SCALAR_MASK || getObjs().size() > 1) {
       return null;
     }
     return Iterables.getOnlyElement(getObjs()).getNominalType();
@@ -1104,7 +1104,7 @@ public abstract class JSType implements TypeI {
 
   @Override
   public boolean isInterface() {
-    NominalType nt = getNominalTypeIfUnique();
+    NominalType nt = getNominalTypeIfSingletonObj();
     return nt != null && nt.isInterface();
   }
 
@@ -1149,11 +1149,11 @@ public abstract class JSType implements TypeI {
 
 final class UnionType extends JSType {
   private final int mask;
-  // objs is null for scalar types
+  // objs is empty for scalar types
   private final ImmutableSet<ObjectType> objs;
   // typeVar is null for non-generic types
   private final String typeVar;
-  // enums is null for types that don't have enums
+  // enums is empty for types that don't have enums
   private final ImmutableSet<EnumType> enums;
 
   UnionType(int mask, ImmutableSet<ObjectType> objs,

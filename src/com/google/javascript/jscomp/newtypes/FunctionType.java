@@ -209,6 +209,11 @@ public final class FunctionType {
     return restFormals != null;
   }
 
+  public JSType getRestFormalsType() {
+    Preconditions.checkNotNull(restFormals);
+    return restFormals;
+  }
+
   // 0-indexed
   // Returns null if argpos indexes past the arguments
   public JSType getFormalType(int argpos) {
@@ -248,6 +253,10 @@ public final class FunctionType {
     } else {
       return requiredFormals.size() + optionalFormals.size();
     }
+  }
+
+  public int getMaxArityWithoutRestFormals() {
+    return requiredFormals.size() + optionalFormals.size();
   }
 
   public boolean isRequiredArg(int i) {
@@ -370,7 +379,7 @@ public final class FunctionType {
       }
       // NOTE(dimvar): This is a bug. The code that triggers this should be rare
       // and the fix is not trivial, so for now we decided to not fix.
-      // See unit tests in NewTypeInferenceTestES5OrLower#testGenericsSubtyping
+      // See unit tests in NewTypeInferenceES5OrLowerTest#testGenericsSubtyping
       return instantiateGenericsWithUnknown(this).isSubtypeOf(other);
     }
 

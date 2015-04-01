@@ -887,6 +887,7 @@ final class NewTypeInference implements CompilerPass {
     TypeEnv entryEnv = getEntryTypeEnv();
     TypeEnv exitEnv = getFinalTypeEnv();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    Node fnRoot = fn.getRoot();
 
     DeclaredFunctionType declType = fn.getDeclaredType();
     int reqArity = declType.getRequiredArity();
@@ -946,7 +947,7 @@ final class NewTypeInference implements CompilerPass {
       if (!isAllowedToNotReturn(fn) &&
           !JSType.UNDEFINED.isSubtypeOf(declRetType) &&
           hasPathWithNoReturn(cfg)) {
-        warnings.add(JSError.make(fn.getRoot(),
+        warnings.add(JSError.make(fnRoot,
                 CheckMissingReturn.MISSING_RETURN_STATEMENT,
                 declRetType.toString()));
       }
@@ -960,6 +961,11 @@ final class NewTypeInference implements CompilerPass {
     println("Function summary for ", fn.getReadableName());
     println("\t", summary);
     summaries.put(fn, summary);
+    fnRoot.setTypeI(summary);
+    Node fnNameNode = NodeUtil.getFunctionNameNode(fnRoot);
+    if (fnNameNode != null) {
+      fnNameNode.setTypeI(summary);
+    }
   }
 
   // TODO(dimvar): To get the adjusted end-of-fwd type for objs, we must be
@@ -1018,6 +1024,7 @@ final class NewTypeInference implements CompilerPass {
       return inEnv;
     }
     if (NodeUtil.isNamespaceDecl(nameNode)) {
+      nameNode.setTypeI(declType);
       return envPutType(inEnv, varName, declType);
     }
 
@@ -1045,6 +1052,7 @@ final class NewTypeInference implements CompilerPass {
         rhsType = declType.specialize(rhsType);
       }
     }
+    nameNode.setTypeI(rhsType);
     return envPutType(outEnv, varName, rhsType);
   }
 
@@ -1784,16 +1792,16 @@ final class NewTypeInference implements CompilerPass {
     env = analyzeCallNodeArgumentsFwd(call, bindComponents.parameters,
         boundFunType, new ArrayList<JSType>(), env);
     // For any formal not bound here, add it to the resulting function type.
-    for (int j = numArgs; j < boundFunType.getMaxArity(); j++) {
+    for (int j = numArgs; j < boundFunType.getMaxArityWithoutRestFormals(); j++) {
       JSType formalType = boundFunType.getFormalType(j);
       if (boundFunType.isRequiredArg(j)) {
         builder.addReqFormal(formalType);
-      } else if (boundFunType.isOptionalArg(j)) {
-        builder.addOptFormal(formalType);
       } else {
-        builder.addRestFormals(formalType);
-        break; // To avoid iterating to Integer.MAX_VALUE
+        builder.addOptFormal(formalType);
       }
+    }
+    if (boundFunType.hasRestFormals()) {
+      builder.addRestFormals(boundFunType.getRestFormalsType());
     }
     return new EnvTypePair(env, commonTypes.fromFunctionType(
         builder.addRetType(boundFunType.getReturnType()).buildFunction()));
@@ -3335,29 +3343,33 @@ final class NewTypeInference implements CompilerPass {
 
   private LValueResultFwd analyzeLValueFwd(
       Node expr, TypeEnv inEnv, JSType type, boolean insideQualifiedName) {
+    LValueResultFwd lvalResult = null;
     switch (expr.getType()) {
       case Token.THIS: {
         if (currentScope.hasThis()) {
-          return new LValueResultFwd(inEnv, envGetType(inEnv, "this"),
+          lvalResult = new LValueResultFwd(inEnv, envGetType(inEnv, "this"),
               currentScope.getDeclaredTypeOf("this"),
               new QualifiedName("this"));
         } else {
           warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
-          return new LValueResultFwd(inEnv, JSType.UNKNOWN, null, null);
+          lvalResult = new LValueResultFwd(inEnv, JSType.UNKNOWN, null, null);
         }
+        break;
       }
       case Token.NAME: {
         String varName = expr.getString();
         JSType varType = analyzeExprFwd(expr, inEnv).type;
-        return new LValueResultFwd(inEnv, varType,
+        lvalResult = new LValueResultFwd(inEnv, varType,
             currentScope.getDeclaredTypeOf(varName),
             varType.hasNonScalar() ? new QualifiedName(varName) : null);
+        break;
       }
       case Token.GETPROP: {
         Node obj = expr.getFirstChild();
         QualifiedName pname =
             new QualifiedName(expr.getLastChild().getString());
-        return analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
+        lvalResult = analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
+        break;
       }
       case Token.GETELEM: {
         Node obj = expr.getFirstChild();
@@ -3365,18 +3377,20 @@ final class NewTypeInference implements CompilerPass {
         // (1) A getelem where the prop is a string literal is like a getprop
         if (prop.isString()) {
           QualifiedName pname = new QualifiedName(prop.getString());
-          return analyzePropLValFwd(
-              obj, pname, inEnv, type, insideQualifiedName);
+          lvalResult = analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
+          break;
         }
         // (2) A getelem where the receiver is an array
         LValueResultFwd lvalue =
             analyzeLValueFwd(obj, inEnv, JSType.UNKNOWN, true);
         if (isArrayType(lvalue.type)) {
-          return analyzeArrayElmLvalFwd(prop, lvalue);
+          lvalResult = analyzeArrayElmLvalFwd(prop, lvalue);
+          break;
         }
         // (3) All other getelems
         EnvTypePair pair = analyzeExprFwd(expr, inEnv, type);
-        return new LValueResultFwd(pair.env, pair.type, null, null);
+        lvalResult = new LValueResultFwd(pair.env, pair.type, null, null);
+        break;
       }
       case Token.VAR: { // Can happen iff its parent is a for/in.
         Preconditions.checkState(NodeUtil.isForIn(expr.getParent()));
@@ -3396,6 +3410,8 @@ final class NewTypeInference implements CompilerPass {
         return new LValueResultFwd(pair.env, pair.type, null, null);
       }
     }
+    expr.setTypeI(lvalResult.type);
+    return lvalResult;
   }
 
   private LValueResultFwd analyzeArrayElmLvalFwd(

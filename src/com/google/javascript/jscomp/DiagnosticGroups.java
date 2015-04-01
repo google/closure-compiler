@@ -278,7 +278,7 @@ public class DiagnosticGroups {
 //           NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT,
 //           NewTypeInference.RETURN_NONDECLARED_TYPE,
           NewTypeInference.UNKNOWN_ASSERTION_TYPE,
-          CheckGlobalThis.GLOBAL_THIS,
+//           CheckGlobalThis.GLOBAL_THIS,
 //           CheckMissingReturn.MISSING_RETURN_STATEMENT,
           TypeCheck.CONSTRUCTOR_NOT_CALLABLE,
           TypeCheck.ILLEGAL_OBJLIT_KEY,
@@ -322,7 +322,8 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("const",
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
-          ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+          ConstCheck.CONST_REASSIGNED_VALUE_ERROR,
+          NewTypeInference.CONST_REASSIGNED);
 
   public static final DiagnosticGroup CONSTANT_PROPERTY =
       DiagnosticGroups.registerGroup("constantProperty",
@@ -339,7 +340,8 @@ public class DiagnosticGroups {
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
-          VariableReferenceCheck.REDECLARED_VARIABLE);
+          VariableReferenceCheck.REDECLARED_VARIABLE,
+          GlobalTypeInfo.REDECLARED_PROPERTY);
 
   public static final DiagnosticGroup ES3 =
       DiagnosticGroups.registerGroup("es3",
