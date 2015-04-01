@@ -95,6 +95,10 @@ public final class CheckJSDocTest extends CompilerTestCase {
         " * @param {string} y",
         " */",
         "function f(x, y) {}"));
+
+    testSame(Joiner.on('\n').join(
+        "/** @override */",
+        "Foo.bar = function(x, y) {}"));
   }
 
   public void testMissingPrivate() {

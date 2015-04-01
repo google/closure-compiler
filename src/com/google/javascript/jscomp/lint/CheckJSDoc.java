@@ -64,16 +64,18 @@ public final class CheckJSDoc extends AbstractPostOrderCallback implements Compi
     if (n.isFunction()) {
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
       if (jsDoc != null) {
-        for (Node param : n.getFirstChild().getNext().children()) {
-          if (!jsDoc.hasParameterType(param.getString())) {
-            t.report(param, MISSING_PARAM_JSDOC, param.getString());
-          } else {
-            boolean jsDocOptional = jsDoc.getParameterType(param.getString()).isOptionalArg();
-            boolean nameOptional = compiler.getCodingConvention().isOptionalParameter(param);
-            if (nameOptional && !jsDocOptional) {
-              t.report(param, OPTIONAL_NAME_NOT_MARKED_OPTIONAL, param.getString());
-            } else if (!nameOptional && jsDocOptional) {
-              t.report(param, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, param.getString());
+        if (!jsDoc.isOverride()) {
+          for (Node param : n.getFirstChild().getNext().children()) {
+            if (!jsDoc.hasParameterType(param.getString())) {
+              t.report(param, MISSING_PARAM_JSDOC, param.getString());
+            } else {
+              boolean jsDocOptional = jsDoc.getParameterType(param.getString()).isOptionalArg();
+              boolean nameOptional = compiler.getCodingConvention().isOptionalParameter(param);
+              if (nameOptional && !jsDocOptional) {
+                t.report(param, OPTIONAL_NAME_NOT_MARKED_OPTIONAL, param.getString());
+              } else if (!nameOptional && jsDocOptional) {
+                t.report(param, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, param.getString());
+              }
             }
           }
         }
