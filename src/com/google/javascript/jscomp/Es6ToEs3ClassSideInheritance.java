@@ -109,8 +109,8 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
           staticMembers.put(subClassName.getQualifiedName(),
               staticMember);
         }
-        parent.detachFromParent();
       }
+      parent.detachFromParent();
     }
   }
 

@@ -2867,6 +2867,60 @@ public final class IntegrationTest extends IntegrationTestCase {
     compile(options, code);
   }
 
+  // Tests that unused classes are removed, even if they are passed to $jscomp.inherits.
+  public void testES6UnusedClassesAreRemoved() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    Compiler compiler = compile(options, Joiner.on('\n').join(
+        "class Base {}",
+        "class Sub extends Base {}",
+        "alert(1);"));
+    String result = compiler.toSource(compiler.getJsRoot());
+    assertThat(result).isEqualTo("alert(1)");
+  }
+
+  /**
+   * @param js A snippet of JavaScript in which alert('No one ever calls me'); is called
+   *     in a method which is never called. Verifies that the method is stripped out by
+   *     asserting that the result does not contain the string 'No one ever calls me'.
+   */
+  private void testES6StaticsAreRemoved(String js) {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    Compiler compiler = compile(options, js);
+    String result = compiler.toSource(compiler.getJsRoot());
+    assertThat(result).isNotEmpty();
+    assertThat(result).doesNotContain("No one ever calls me");
+  }
+
+  public void testES6StaticsAreRemoved1() {
+    testES6StaticsAreRemoved(Joiner.on('\n').join(
+        "class Base {",
+        "  static called() { alert('I am called'); }",
+        "  static notCalled() { alert('No one ever calls me'); }",
+        "}",
+        "class Sub extends Base {",
+        "  static called() { super.called(); alert('I am called too'); }",
+        "  static notCalled() { alert('No one ever calls me'); }",
+        "}",
+        "Sub.called();"));
+  }
+
+  public void failing_testES6StaticsAreRemoved2() {
+    testES6StaticsAreRemoved(Joiner.on('\n').join(
+        "class Base {",
+        "  static calledInSubclassOnly() { alert('No one ever calls me'); }",
+        "}",
+        "class Sub extends Base {",
+        "  static calledInSubclassOnly() { alert('I am called'); }",
+        "}",
+        "Sub.calledInSubclassOnly();"));
+  }
+
   public void testIssue787() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
