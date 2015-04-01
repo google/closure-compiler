@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-class ReplaceMessages extends JsMessageVisitor {
+final class ReplaceMessages extends JsMessageVisitor {
   private final MessageBundle bundle;
   private final boolean strictReplacement;
 
@@ -63,7 +63,7 @@ class ReplaceMessages extends JsMessageVisitor {
   }
 
   @Override
-  void processJsMessage(JsMessage message,
+  protected void processJsMessage(JsMessage message,
       JsMessageDefinition definition) {
 
     // Get the replacement.

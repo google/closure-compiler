@@ -38,7 +38,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-class JsMessageDefinition {
+public final class JsMessageDefinition {
 
   private final Node messageNode;
 
@@ -52,7 +52,7 @@ class JsMessageDefinition {
     this.messageNode = messageNode;
   }
 
-  Node getMessageNode() {
+  public Node getMessageNode() {
     return messageNode;
   }
 }

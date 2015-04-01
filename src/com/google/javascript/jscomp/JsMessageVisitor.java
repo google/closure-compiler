@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
-abstract class JsMessageVisitor extends AbstractPostOrderCallback
+public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     implements CompilerPass {
 
   private static final String MSG_FUNCTION_NAME = "goog.getMsg";
@@ -166,7 +166,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * @param idGenerator generator that used for creating unique ID for the
    *        message
    */
-  JsMessageVisitor(AbstractCompiler compiler,
+  protected JsMessageVisitor(AbstractCompiler compiler,
       boolean needToCheckDuplications,
       JsMessage.Style style, JsMessage.IdGenerator idGenerator) {
 
@@ -856,7 +856,7 @@ abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * @param definition the definition of the object and usually contains all
    *        additional message information like message node/parent's node
    */
-  abstract void processJsMessage(JsMessage message,
+  protected abstract void processJsMessage(JsMessage message,
       JsMessageDefinition definition);
 
   /**
