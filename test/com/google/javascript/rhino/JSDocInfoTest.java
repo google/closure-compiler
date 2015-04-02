@@ -395,6 +395,43 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.shouldPreserveTry());
   }
 
+  public void testClone() {
+    JSDocInfo info = new JSDocInfo();
+    info.setDescription("The source info");
+    info.setConstant(true);
+    info.setConstructor(true);
+    info.setHidden(true);
+    info.setBaseType(
+        new JSTypeExpression(
+            new Node(Token.BANG, Node.newString("Number")), ""));
+    info.setReturnType(fromString("string"));
+
+    JSDocInfo cloned = info.clone();
+
+    assertTypeEquals(NUMBER_OBJECT_TYPE, resolve(cloned.getBaseType()));
+    assertEquals("The source info", cloned.getDescription());
+    assertTypeEquals(STRING_TYPE, resolve(cloned.getReturnType()));
+    assertTrue(cloned.isConstant());
+    assertTrue(cloned.isConstructor());
+    assertTrue(cloned.isHidden());
+
+    cloned.setDescription("The cloned info");
+    cloned.setHidden(false);
+    cloned.setBaseType(fromString("string"));
+
+    assertTypeEquals(STRING_TYPE, resolve(cloned.getBaseType()));
+    assertEquals("The cloned info", cloned.getDescription());
+    assertFalse(cloned.isHidden());
+
+    // Original info should be unchanged.
+    assertTypeEquals(NUMBER_OBJECT_TYPE, resolve(info.getBaseType()));
+    assertEquals("The source info", info.getDescription());
+    assertTypeEquals(STRING_TYPE, resolve(info.getReturnType()));
+    assertTrue(info.isConstant());
+    assertTrue(info.isConstructor());
+    assertTrue(info.isHidden());
+  }
+
   public void testSetFileOverviewWithDocumentationOff() {
     JSDocInfo info = new JSDocInfo();
     info.documentFileOverview("hi bob");

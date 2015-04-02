@@ -52,6 +52,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +152,35 @@ public class JSDocInfo implements Serializable {
           .toString();
     }
 
+    @Override
+    public LazilyInitializedInfo clone() {
+      LazilyInitializedInfo other = new LazilyInitializedInfo();
+      other.baseType = baseType;
+      other.extendedInterfaces = extendedInterfaces == null ? null
+          : new ArrayList<>(extendedInterfaces);
+      other.implementedInterfaces = implementedInterfaces == null ? null
+          : new ArrayList<>(implementedInterfaces);
+      other.parameters = parameters == null ? null : new LinkedHashMap<>(parameters);
+      other.thrownTypes = thrownTypes == null ? null : new ArrayList<>(thrownTypes);
+      other.templateTypeNames = templateTypeNames == null ? null
+          : new ArrayList<>(templateTypeNames);
+      other.disposedParameters = disposedParameters == null ? null
+          : new HashSet<>(disposedParameters);
+      other.typeTransformations = typeTransformations == null ? null
+          : new LinkedHashMap<>(typeTransformations);
+
+      other.description = description;
+      other.meaning = meaning;
+      other.deprecated = deprecated;
+      other.license = license;
+      other.suppressions = suppressions == null ? null : new HashSet<>(suppressions);
+      other.modifies = modifies == null ? null : new HashSet<>(modifies);
+      other.lendsName = lendsName;
+
+      other.propertyBitField = propertyBitField;
+      return other;
+    }
+
     // TODO(nnaze): Consider putting bit-fiddling logic in a reusable
     // location.
     void setBit(int bitIndex, boolean value) {
@@ -203,8 +233,7 @@ public class JSDocInfo implements Serializable {
   static class TrimmedStringPosition extends StringPosition {
     @Override public void setItem(String item) {
       Preconditions.checkArgument(
-          item.charAt(0) != ' ' &&
-          item.charAt(item.length() - 1) != ' ',
+          item.charAt(0) != ' ' && item.charAt(item.length() - 1) != ' ',
           "String has leading or trailing whitespace");
       super.setItem(item);
     }
@@ -424,7 +453,7 @@ public class JSDocInfo implements Serializable {
   @Override
   public JSDocInfo clone() {
     JSDocInfo other = new JSDocInfo();
-    other.info = this.info;  // this should be cloned as it isn't immutable
+    other.info = this.info == null ? null : this.info.clone();
     other.documentation = this.documentation;
     other.visibility = this.visibility;
     other.bitset = this.bitset;
@@ -453,31 +482,31 @@ public class JSDocInfo implements Serializable {
       }
     }
 
-    return Objects.equals(jsDoc1.getAuthors(), jsDoc2.getAuthors()) &&
-        Objects.equals(jsDoc1.getBaseType(), jsDoc2.getBaseType()) &&
-        Objects.equals(jsDoc1.getBlockDescription(), jsDoc2.getBlockDescription()) &&
-        Objects.equals(jsDoc1.getFileOverview(), jsDoc2.getFileOverview()) &&
-        Objects.equals(jsDoc1.getImplementedInterfaces(), jsDoc2.getImplementedInterfaces()) &&
-        Objects.equals(jsDoc1.getEnumParameterType(), jsDoc2.getEnumParameterType()) &&
-        Objects.equals(jsDoc1.getExtendedInterfaces(), jsDoc2.getExtendedInterfaces()) &&
-        Objects.equals(jsDoc1.getLendsName(), jsDoc2.getLendsName()) &&
-        Objects.equals(jsDoc1.getLicense(), jsDoc2.getLicense()) &&
-        Objects.equals(jsDoc1.getMarkers(), jsDoc2.getMarkers()) &&
-        Objects.equals(jsDoc1.getMeaning(), jsDoc2.getMeaning()) &&
-        Objects.equals(jsDoc1.getModifies(), jsDoc2.getModifies()) &&
-        Objects.equals(jsDoc1.getOriginalCommentString(), jsDoc2.getOriginalCommentString()) &&
-        Objects.equals(jsDoc1.getReferences(), jsDoc2.getReferences()) &&
-        Objects.equals(jsDoc1.getReturnDescription(), jsDoc2.getReturnDescription()) &&
-        Objects.equals(jsDoc1.getReturnType(), jsDoc2.getReturnType()) &&
-        Objects.equals(jsDoc1.getSuppressions(), jsDoc2.getSuppressions()) &&
-        Objects.equals(jsDoc1.getTemplateTypeNames(), jsDoc2.getTemplateTypeNames()) &&
-        Objects.equals(jsDoc1.getThisType(), jsDoc2.getThisType()) &&
-        Objects.equals(jsDoc1.getThrownTypes(), jsDoc2.getThrownTypes()) &&
-        Objects.equals(jsDoc1.getTypedefType(), jsDoc2.getTypedefType()) &&
-        Objects.equals(jsDoc1.getType(), jsDoc2.getType()) &&
-        Objects.equals(jsDoc1.getVersion(), jsDoc2.getVersion()) &&
-        Objects.equals(jsDoc1.getVisibility(), jsDoc2.getVisibility()) &&
-        jsDoc1.bitset == jsDoc2.bitset;
+    return Objects.equals(jsDoc1.getAuthors(), jsDoc2.getAuthors())
+        && Objects.equals(jsDoc1.getBaseType(), jsDoc2.getBaseType())
+        && Objects.equals(jsDoc1.getBlockDescription(), jsDoc2.getBlockDescription())
+        && Objects.equals(jsDoc1.getFileOverview(), jsDoc2.getFileOverview())
+        && Objects.equals(jsDoc1.getImplementedInterfaces(), jsDoc2.getImplementedInterfaces())
+        && Objects.equals(jsDoc1.getEnumParameterType(), jsDoc2.getEnumParameterType())
+        && Objects.equals(jsDoc1.getExtendedInterfaces(), jsDoc2.getExtendedInterfaces())
+        && Objects.equals(jsDoc1.getLendsName(), jsDoc2.getLendsName())
+        && Objects.equals(jsDoc1.getLicense(), jsDoc2.getLicense())
+        && Objects.equals(jsDoc1.getMarkers(), jsDoc2.getMarkers())
+        && Objects.equals(jsDoc1.getMeaning(), jsDoc2.getMeaning())
+        && Objects.equals(jsDoc1.getModifies(), jsDoc2.getModifies())
+        && Objects.equals(jsDoc1.getOriginalCommentString(), jsDoc2.getOriginalCommentString())
+        && Objects.equals(jsDoc1.getReferences(), jsDoc2.getReferences())
+        && Objects.equals(jsDoc1.getReturnDescription(), jsDoc2.getReturnDescription())
+        && Objects.equals(jsDoc1.getReturnType(), jsDoc2.getReturnType())
+        && Objects.equals(jsDoc1.getSuppressions(), jsDoc2.getSuppressions())
+        && Objects.equals(jsDoc1.getTemplateTypeNames(), jsDoc2.getTemplateTypeNames())
+        && Objects.equals(jsDoc1.getThisType(), jsDoc2.getThisType())
+        && Objects.equals(jsDoc1.getThrownTypes(), jsDoc2.getThrownTypes())
+        && Objects.equals(jsDoc1.getTypedefType(), jsDoc2.getTypedefType())
+        && Objects.equals(jsDoc1.getType(), jsDoc2.getType())
+        && Objects.equals(jsDoc1.getVersion(), jsDoc2.getVersion())
+        && Objects.equals(jsDoc1.getVisibility(), jsDoc2.getVisibility())
+        && jsDoc1.bitset == jsDoc2.bitset;
   }
 
   boolean isDocumentationIncluded() {
@@ -1258,8 +1287,8 @@ public class JSDocInfo implements Serializable {
   private void setType(JSTypeExpression type, int mask) {
     if ((bitset & MASK_TYPEFIELD) != 0) {
       throw new IllegalStateException(
-          "API tried to add two incompatible type tags. " +
-          "This should have been blocked and emitted a warning.");
+          "API tried to add two incompatible type tags. "
+          + "This should have been blocked and emitted a warning.");
     }
     this.bitset = (bitset & MASK_FLAGS) | mask;
     this.type = type;
