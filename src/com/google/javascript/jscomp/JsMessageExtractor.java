@@ -50,20 +50,23 @@ public final class JsMessageExtractor {
   private final JsMessage.Style style;
   private final JsMessage.IdGenerator idGenerator;
   private final CompilerOptions options;
+  private final boolean extractExternalMessages;
 
   public JsMessageExtractor(
       JsMessage.IdGenerator idGenerator,
       JsMessage.Style style) {
-    this(idGenerator, style, new CompilerOptions());
+    this(idGenerator, style, new CompilerOptions(), false /* extractExternalMessages */);
   }
 
   public JsMessageExtractor(
       JsMessage.IdGenerator idGenerator,
       JsMessage.Style style,
-      CompilerOptions options) {
+      CompilerOptions options,
+      boolean extractExternalMessages) {
     this.idGenerator = idGenerator;
     this.style = style;
     this.options = options;
+    this.extractExternalMessages = extractExternalMessages;
   }
 
   /**
@@ -84,7 +87,7 @@ public final class JsMessageExtractor {
     @Override
     protected void processJsMessage(JsMessage message,
         JsMessageDefinition definition) {
-      if (!message.isExternal()) {
+      if (extractExternalMessages || !message.isExternal()) {
         messages.add(message);
       }
     }
