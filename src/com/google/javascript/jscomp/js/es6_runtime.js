@@ -22,16 +22,36 @@
 
 
 
+/** The global object. */
+$jscomp.global = this;
+
+
+/**
+ * Initializes Symbol.iterator, if it's not already defined.
+ */
+$jscomp.initSymbolIterator = function() {
+  Symbol = $jscomp.global.Symbol || {};
+  if (!Symbol.iterator) {
+    Symbol.iterator = '$jscomp$iterator';
+  }
+
+  // Only need to do this once. All future calls are no-ops.
+  $jscomp.initSymbolIterator = function() {};
+};
+
+
 /**
  * Creates an iterator for the given iterable.
  *
- * @param {string|!Array<T>|!Iterable<T>} iterable
+ * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>} iterable
  * @return {!Iterator<T>}
  * @template T
  */
 $jscomp.makeIterator = function(iterable) {
-  if (iterable.$$iterator) {
-    return iterable.$$iterator();
+  $jscomp.initSymbolIterator();
+
+  if (iterable[Symbol.iterator]) {
+    return iterable[Symbol.iterator]();
   }
   if (!(iterable instanceof Array) && typeof iterable != 'string') {
     throw new Error();

@@ -59,15 +59,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
           afterBody,
           "    }",
           "  }",
-          "  return {",
-          "    $$iterator: function() { return this; },",
-          "    next: function(arg){",
-          "        return $jscomp$generator$impl(arg, undefined);",
-          "    },",
-          "    throw: function(arg){",
-          "        return $jscomp$generator$impl(undefined, arg);",
-          "    },",
+          "  var iterator = {",
+          "    next: function(arg) { return $jscomp$generator$impl(arg, undefined); },",
+          "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
           "  };",
+          "  $jscomp.initSymbolIterator();",
+          "  iterator[Symbol.iterator] = function() { return this; };",
+          "  return iterator;",
           "}"
     ));
   }
@@ -109,11 +107,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  };",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -192,11 +192,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "          return {value: undefined, done: true}",
         "      }",
         "    }",
-        "    return {",
-        "      $$iterator: function() { return this; },",
+        "    var iterator = {",
         "      next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "      throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "    };",
+        "    $jscomp.initSymbolIterator();",
+        "    iterator[Symbol.iterator] = function() { return this; };",
+        "    return iterator;",
         "  }",
         "}"
     ));
@@ -229,11 +231,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "          return {value: undefined, done: true}",
         "      }",
         "    }",
-        "    return {",
-        "      $$iterator: function() { return this; },",
+        "    var iterator = {",
         "      next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "      throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "    }",
+        "    $jscomp.initSymbolIterator();",
+        "    iterator[Symbol.iterator] = function() { return this; };",
+        "    return iterator;",
         "  }",
         "  function $jscomp$generator$impl($jscomp$generator$next$arg,",
         "      $jscomp$generator$throw$arg) {",
@@ -253,11 +257,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -266,8 +272,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   public void testForLoopsGenerator() {
     test("function *f() {var i = 0; for (var j = 0; j < 10; j++) { i += j; } yield i;}",
       Joiner.on('\n').join(
-        "/** @suppress {uselessCode} */",
-        "function f() {",
+        "/** @suppress {uselessCode} */ function f() {",
         "  var $jscomp$generator$state = 0;",
         "  var i;",
         "  function $jscomp$generator$impl($jscomp$generator$next$arg,",
@@ -290,11 +295,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -330,11 +337,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -400,11 +409,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -439,11 +450,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "      }",
         "    }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -480,11 +493,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -504,11 +519,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -541,11 +558,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -578,11 +597,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -623,11 +644,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -649,11 +672,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -691,11 +716,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -731,11 +758,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -773,11 +802,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -815,11 +846,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -858,11 +891,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -891,11 +926,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -917,11 +954,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -954,11 +993,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -979,11 +1020,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -1023,11 +1066,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
 
@@ -1087,11 +1132,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -1120,11 +1167,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -1310,11 +1359,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -1341,11 +1392,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -1402,11 +1455,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -1459,11 +1514,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }
@@ -1523,11 +1580,13 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
         "        return {value: undefined, done: true}",
         "    }",
         "  }",
-        "  return {",
-        "    $$iterator: function() { return this; },",
+        "  var iterator = {",
         "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
         "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
         "  }",
+        "  $jscomp.initSymbolIterator();",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
         "}"
     ));
   }

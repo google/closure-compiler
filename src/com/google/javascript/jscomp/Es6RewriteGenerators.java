@@ -53,8 +53,6 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
   // The current statement being translated.
   private Node currentStatement;
 
-  private static final String ITER_KEY = "$$iterator";
-
   // The name of the variable that holds the state at which the generator
   // should resume execution after a call to yield or return.
   // The beginning state is 0 and the end state is -1.
@@ -191,7 +189,6 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
             NodeUtil.newQName(compiler, Es6ToEs3Converter.MAKE_ITER),
             n.removeFirstChild()));
     Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
-    compiler.needsEs6Runtime = true;
 
     Node assignIterResult = IR.assign(
         IR.name(GENERATOR_YIELD_ALL_ENTRY),
@@ -232,6 +229,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
   }
 
   private void visitGenerator(Node n, Node parent) {
+    compiler.needsEs6Runtime = true;
     hasTranslatedTry = false;
     Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
       "function generatorBody() {",
@@ -244,11 +242,13 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
       "        return {value: undefined, done: true};",
       "    }",
       "  }",
-      "  return {",
-      "    " + ITER_KEY + ": function() { return this; },",
+      "  var iterator = {",
       "    next: function(arg){ return $jscomp$generator$impl(arg, undefined); },",
       "    throw: function(arg){ return $jscomp$generator$impl(undefined, arg); },",
-      "  }",
+      "  };",
+      "  $jscomp.initSymbolIterator();",
+      "  iterator[Symbol.iterator] = function() {return this;};",
+      "  return iterator;",
       "}"
     )).getFirstChild().getLastChild().detachFromParent();
     generatorCaseCount++;
@@ -265,13 +265,12 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
     JSDocInfo info = builder.build(n);
     n.setJSDocInfo(info);
 
-
     // Set state to the default after the body of the function has completed.
     originalGeneratorBody.addChildToBack(
         IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), IR.number(-1))));
 
     enclosingBlock = getUnique(genBlock, Token.CASE).getLastChild();
-    hoistRoot = getUnique(genBlock, Token.VAR);
+    hoistRoot = genBlock.getFirstChild();
 
     if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_ARGUMENTS)) {
       hoistRoot.getParent().addChildAfter(
@@ -916,7 +915,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
   private Node getUnique(Node node, int type) {
     List<Node> matches = new ArrayList<>();
     insertAll(node, type, matches);
-    Preconditions.checkState(matches.size() == 1);
+    Preconditions.checkState(matches.size() == 1, matches);
     return matches.get(0);
   }
 
