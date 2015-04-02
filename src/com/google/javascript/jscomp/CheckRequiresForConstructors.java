@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.JSDocInfo;
@@ -61,6 +62,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING",
       "''{0}'' goog.require''d but not used");
+
+  private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
+    "goog.testing.asserts", "goog.testing.jsunit");
 
   CheckRequiresForConstructors(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -142,6 +146,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
             maybeAddConstructor(t, n);
           }
           break;
+        case Token.GETPROP:
+          visitGetProp(n);
+          break;
         case Token.CALL:
           visitCallNode(n, parent);
           break;
@@ -199,7 +206,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
           continue;
         }
         if (!usages.containsKey(require) && !weakUsages.containsKey(require)) {
-          compiler.report(t.makeError(call, EXTRA_REQUIRE_WARNING, require));
+          reportExtraRequireWarning(call, require);
         }
       }
 
@@ -211,19 +218,33 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       this.constructors.clear();
     }
 
+    private void reportExtraRequireWarning(Node call, String require) {
+      if (DEFAULT_EXTRA_NAMESPACES.contains(require)) {
+        return;
+      }
+      JSDocInfo jsDoc = call.getJSDocInfo();
+      if (jsDoc != null && jsDoc.getSuppressions().contains("extraRequire")) {
+        // There is a @suppress {extraRequire} on the call node. Even though the compiler generally
+        // doesn't understand @suppress in that position, respect it in this case,
+        // since lots of people put it there to suppress the closure-linter's extraRequire check.
+        return;
+      }
+      compiler.report(JSError.make(call, EXTRA_REQUIRE_WARNING, require));
+    }
+
     private void visitCallNode(Node call, Node parent) {
       String required = codingConvention.extractClassNameIfRequire(call, parent);
       if (required != null) {
         requires.put(required, call);
       }
+    }
 
-      // For "foo.bar.baz.qux()" add weak usages for "foo.bar.baz", "foo.bar", and "foo"
-      // because those might be goog.provide'd from a different file than foo.bar.baz.qux,
+    private void visitGetProp(Node getprop) {
+      // For "foo.bar.baz.qux" add weak usages for "foo.bar.baz.qux", foo.bar.baz",
+      // "foo.bar", and "foo" because those might all be goog.provide'd in different files,
       // so it doesn't make sense to require the user to goog.require all of them.
-      for (Node qNameNode = call.getFirstChild();
-          qNameNode != null;
-          qNameNode = qNameNode.getFirstChild()) {
-        weakUsages.put(qNameNode.getQualifiedName(), qNameNode);
+      for (; getprop != null; getprop = getprop.getFirstChild()) {
+        weakUsages.put(getprop.getQualifiedName(), getprop);
       }
     }
 

@@ -278,7 +278,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(suspiciousCode);
     }
 
-    if (options.enables(DiagnosticGroups.MISSING_REQUIRE)) {
+    if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
+        || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
       checks.add(checkRequires);
     }
 

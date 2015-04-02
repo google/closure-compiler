@@ -29,7 +29,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
-    options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
     return super.getOptions(options);
   }
 
@@ -46,10 +46,17 @@ public final class ExtraRequireTest extends CompilerTestCase {
     testSame("goog.require('foo.bar'); var x = foo.bar();");
     testSame("goog.require('foo.bar'); var x = /** @type foo.bar */ (null);");
     testSame("goog.require('foo.bar'); function f(/** foo.bar */ x) {}");
+    testSame("goog.require('foo.bar'); alert(foo.bar.baz);");
+    testSame("/** @suppress {extraRequire} */ goog.require('foo.bar');");
+    test("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; alert(bar); });",
+        "goog.require('foo.bar'); alert(foo.bar);");
   }
 
   public void testWarning() {
-    testSame("goog.require('foo.bar');", EXTRA_REQUIRE_WARNING);
+    testError("goog.require('foo.bar');", EXTRA_REQUIRE_WARNING);
+    // The local var "bar" is unused so after goog.scope rewriting, foo.bar is unused.
+    testError("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; });",
+        EXTRA_REQUIRE_WARNING);
   }
 
   public void testNoWarningMultipleFiles() {
