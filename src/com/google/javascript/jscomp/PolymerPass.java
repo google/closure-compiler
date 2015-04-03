@@ -25,7 +25,9 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Rewrites "Polymer({})" calls into a form that is suitable for type checking and dead code
@@ -45,17 +47,80 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   static final DiagnosticType POLYMER_UNEXPECTED_PARAMS = DiagnosticType.error(
       "JSC_POLYMER_UNEXPECTED_PARAMS", "The class definition has too many arguments.");
 
+  static final DiagnosticType POLYMER_MISSING_EXTERNS = DiagnosticType.error(
+      "JSC_POLYMER_MISSING_EXTERNS", "Missing Polymer externs.");
+
   static final String VIRTUAL_FILE = "<PolymerPass.java>";
 
   private final AbstractCompiler compiler;
+  private Node polymerElementExterns;
+  private final Map<String, String> tagNameMap;
+  private List<Node> polymerElementProps;
 
   public PolymerPass(AbstractCompiler compiler) {
     this.compiler = compiler;
+    tagNameMap = TagNameToType.getMap();
+    polymerElementProps = new ArrayList<>();
   }
 
   @Override
   public void process(Node externs, Node root) {
+    FindPolymerExterns externsCallback = new FindPolymerExterns();
+    NodeTraversal.traverse(compiler, externs, externsCallback);
+    polymerElementExterns = externsCallback.polymerElementExterns;
+    polymerElementProps = externsCallback.getpolymerElementProps();
+
+    if (polymerElementExterns == null) {
+      compiler.report(JSError.make(externs, POLYMER_MISSING_EXTERNS));
+      return;
+    }
+
     hotSwapScript(root, null);
+  }
+
+  /**
+   * Finds the externs for the PolymerElement base class and all of its properties.
+   */
+  private static class FindPolymerExterns extends AbstractPostOrderCallback {
+    private Node polymerElementExterns;
+    private ImmutableList.Builder<Node> polymerElementProps;
+    private static final String POLYMER_ELEMENT_NAME = "PolymerElement";
+
+    public FindPolymerExterns() {
+      polymerElementProps = ImmutableList.builder();
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (ispolymerElementExterns(n)) {
+        polymerElementExterns = n;
+      } else if (isPolymerElementPropExpr(n)) {
+        polymerElementProps.add(n);
+      }
+    }
+
+    /**
+     * @return Whether the node is the declaration of PolymerElement.
+     */
+    private boolean ispolymerElementExterns(Node value) {
+      return value != null && value.isVar()
+          && value.getFirstChild().matchesQualifiedName(POLYMER_ELEMENT_NAME);
+    }
+
+    /**
+     * @return Whether the node is an expression result of an assignment to a property of
+     * PolymerElement.
+     */
+    private boolean isPolymerElementPropExpr(Node value) {
+      return value != null && value.isExprResult() && value.getFirstChild().isAssign()
+          && value.getFirstChild().getFirstChild().isGetProp()
+          && NodeUtil.getRootOfQualifiedName(
+              value.getFirstChild().getFirstChild()).matchesQualifiedName(POLYMER_ELEMENT_NAME);
+    }
+
+    public List<Node> getpolymerElementProps() {
+      return polymerElementProps.build();
+    }
   }
 
   @Override
@@ -97,13 +162,15 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     final Node target;
     final JSDocInfo classInfo;
     final MemberDefinition constructor;
+    final String nativeBaseElement;
     final List<MemberDefinition> props;
 
     ClassDefinition(Node target, JSDocInfo classInfo, MemberDefinition constructor,
-        List<MemberDefinition> props) {
+        String nativeBaseElement, List<MemberDefinition> props) {
       this.target = target;
       this.classInfo = classInfo;
       this.constructor = constructor;
+      this.nativeBaseElement = nativeBaseElement;
       this.props = props;
     }
   }
@@ -147,17 +214,20 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     target.useSourceInfoIfMissingFrom(callNode);
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(target);
 
-
     Node constructor = NodeUtil.getFirstPropMatchingKey(description, "constructor");
     if (constructor == null) {
       constructor = IR.function(IR.name(""), IR.paramList(), IR.block());
       constructor.useSourceInfoFromForTree(callNode);
     }
 
+    Node baseClass = NodeUtil.getFirstPropMatchingKey(description, "extends");
+    String nativeBaseElement = baseClass == null ? null : baseClass.getString();
+
     JSDocInfo info = NodeUtil.getBestJSDocInfo(constructor);
 
     ClassDefinition def = new ClassDefinition(target, classInfo,
-        new MemberDefinition(info, null, constructor), objectLitToList(description));
+        new MemberDefinition(info, null, constructor), nativeBaseElement,
+        objectLitToList(description));
     return def;
   }
 
@@ -187,11 +257,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
 
-    JSDocInfoBuilder constructorDoc = new JSDocInfoBuilder(true);
-    constructorDoc.recordConstructor();
-    JSTypeExpression baseType = new JSTypeExpression(
-        new Node(Token.BANG, IR.string("PolymerBase")), VIRTUAL_FILE);
-    constructorDoc.recordBaseType(baseType);
+    this.appendPolymerElementExterns(cls);
+    JSDocInfoBuilder constructorDoc = this.getConstructorDoc(cls);
 
     if (cls.target.isGetProp()) {
       // foo.bar = Polymer({...});
@@ -225,6 +292,59 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   /**
+   * Duplicates the PolymerElement externs with a different element base class if needed.
+   * For example, if the base class is HTMLInputElement, then a class PolymerInputElement will be
+   * added. If the element does not extend a native HTML element, this method is a no-op.
+   */
+  private void appendPolymerElementExterns(final ClassDefinition cls) {
+    if (cls.nativeBaseElement == null) {
+      return;
+    }
+
+    Node block = IR.block();
+
+    Node baseExterns = polymerElementExterns.cloneTree();
+    String polymerElementType = this.getPolymerElementType(cls);
+    baseExterns.getFirstChild().setString(polymerElementType);
+
+    String elementType = tagNameMap.get(cls.nativeBaseElement);
+    JSTypeExpression elementBaseType = new JSTypeExpression(
+        new Node(Token.BANG, IR.string(elementType)), VIRTUAL_FILE);
+    JSDocInfoBuilder baseDocs = JSDocInfoBuilder.copyFrom(baseExterns.getJSDocInfo());
+    baseDocs.changeBaseType(elementBaseType);
+    baseExterns.setJSDocInfo(baseDocs.build(baseExterns));
+    block.addChildToBack(baseExterns);
+
+    for (Node baseProp : polymerElementProps) {
+      Node newProp = baseProp.cloneTree();
+      Node newPropRootName = NodeUtil.getRootOfQualifiedName(
+           newProp.getFirstChild().getFirstChild());
+      newPropRootName.setString(polymerElementType);
+      block.addChildToBack(newProp);
+    }
+
+    Node parent = polymerElementExterns.getParent();
+    Node stmts = block.removeChildren();
+    parent.addChildrenAfter(stmts, polymerElementExterns);
+
+    compiler.reportCodeChange();
+  }
+
+  /**
+   * @return The proper constructor doc for the Polymer call.
+   */
+  private JSDocInfoBuilder getConstructorDoc(final ClassDefinition cls) {
+    JSDocInfoBuilder constructorDoc = new JSDocInfoBuilder(true);
+    constructorDoc.recordConstructor();
+
+    JSTypeExpression baseType = new JSTypeExpression(
+        new Node(Token.BANG, IR.string(this.getPolymerElementType(cls))), VIRTUAL_FILE);
+
+    constructorDoc.recordBaseType(baseType);
+    return constructorDoc;
+  }
+
+  /**
    * @return An assign replacing the equivalent var declaration.
    */
   private static Node varToAssign(Node var) {
@@ -232,6 +352,14 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         IR.name(var.getFirstChild().getString()),
         var.getFirstChild().removeFirstChild());
     return IR.exprResult(assign).useSourceInfoFromForTree(var);
+  }
+
+  /**
+   * @return The PolymerElement type string for a class definition.
+   */
+  private static String getPolymerElementType(final ClassDefinition cls) {
+    return String.format("Polymer%sElement", cls.nativeBaseElement == null ? ""
+        : CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, cls.nativeBaseElement));
   }
 
   /**

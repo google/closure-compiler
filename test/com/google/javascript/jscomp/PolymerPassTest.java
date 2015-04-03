@@ -29,13 +29,88 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public class PolymerPassTest extends CompilerTestCase {
   private static final String EXTERNS = Joiner.on("\n").join(
       "/** @constructor */",
-      "var PolymerBase = function() {};",
+      "var HTMLElement = function() {};",
+      "/** @constructor @extends {HTMLElement} */",
+      "var HTMLInputElement = function() {};",
+      "/** @constructor @extends {HTMLElement} */",
+      "var PolymerElement = function() {",
+      "  /** @type {Object.<string, !HTMLElement>} */",
+      "  this.$;",
+      "};",
+      "PolymerElement.prototype.created = function() {};",
+      "PolymerElement.prototype.ready = function() {};",
+      "PolymerElement.prototype.attached = function() {};",
+      "PolymerElement.prototype.domReady = function() {};",
+      "PolymerElement.prototype.detached = function() {};",
+      "/**",
+      " * Call the callback after a timeout. Calling job again with the same name",
+      " * resets the timer but will not result in additional calls to callback.",
+      " *",
+      " * @param {string} name",
+      " * @param {Function} callback",
+      " * @param {number} timeoutMillis The minimum delay in milliseconds before",
+      " *     calling the callback.",
+      " */",
+      "PolymerElement.prototype.job = function(name, callback, timeoutMillis) {};",
       "/**",
       " * @param a {!Object}",
       " * @return {!function()}",
       " */",
       "var Polymer = function(a) {};",
       "var alert = function(msg) {};");
+
+  private static final String INPUT_EXTERNS = Joiner.on("\n").join(
+      "/** @constructor */",
+      "var HTMLElement = function() {};",
+      "/** @constructor @extends {HTMLElement} */",
+      "var HTMLInputElement = function() {};",
+      "/** @constructor @extends {HTMLElement} */",
+      "var PolymerElement = function() {",
+      "  /** @type {Object.<string, !HTMLElement>} */",
+      "  this.$;",
+      "};",
+      "/** @constructor @extends {HTMLInputElement} */",
+      "var PolymerInputElement = function() {",
+      "  /** @type {Object.<string, !HTMLElement>} */",
+      "  this.$;",
+      "};",
+      "PolymerInputElement.prototype.created = function() {};",
+      "PolymerInputElement.prototype.ready = function() {};",
+      "PolymerInputElement.prototype.attached = function() {};",
+      "PolymerInputElement.prototype.domReady = function() {};",
+      "PolymerInputElement.prototype.detached = function() {};",
+      "/**",
+      " * Call the callback after a timeout. Calling job again with the same name",
+      " * resets the timer but will not result in additional calls to callback.",
+      " *",
+      " * @param {string} name",
+      " * @param {Function} callback",
+      " * @param {number} timeoutMillis The minimum delay in milliseconds before",
+      " *     calling the callback.",
+      " */",
+      "PolymerInputElement.prototype.job = function(name, callback, timeoutMillis) {};",
+      "PolymerElement.prototype.created = function() {};",
+      "PolymerElement.prototype.ready = function() {};",
+      "PolymerElement.prototype.attached = function() {};",
+      "PolymerElement.prototype.domReady = function() {};",
+      "PolymerElement.prototype.detached = function() {};",
+      "/**",
+      " * Call the callback after a timeout. Calling job again with the same name",
+      " * resets the timer but will not result in additional calls to callback.",
+      " *",
+      " * @param {string} name",
+      " * @param {Function} callback",
+      " * @param {number} timeoutMillis The minimum delay in milliseconds before",
+      " *     calling the callback.",
+      " */",
+      "PolymerElement.prototype.job = function(name, callback, timeoutMillis) {};",
+      "/**",
+      " * @param a {!Object}",
+      " * @return {!function()}",
+      " */",
+      "var Polymer = function(a) {};",
+      "var alert = function(msg) {};");
+
   public PolymerPassTest() {
     super(EXTERNS);
   }
@@ -49,6 +124,7 @@ public class PolymerPassTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    allowExternsChanges(true);
     enableTypeCheck(CheckLevel.ERROR);
     runTypeCheckAfterProcessing = true;
   }
@@ -65,7 +141,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "});"),
 
         Joiner.on("\n").join(
-        "/** @constructor @extends {PolymerBase} */",
+        "/** @constructor @extends {PolymerElement} */",
         "var X = function() {};",
         "X = Polymer(/** @lends {X.prototype} */ {",
         "  is: 'x-element',",
@@ -79,7 +155,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "});"),
 
         Joiner.on("\n").join(
-        "/** @constructor @extends {PolymerBase} */",
+        "/** @constructor @extends {PolymerElement} */",
         "var XElement = function() {};",
         "Polymer(/** @lends {XElement.prototype} */ {",
         "  is: 'x',",
@@ -95,7 +171,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
         Joiner.on("\n").join(
         "var x = {};",
-        "/** @constructor @extends {PolymerBase} */",
+        "/** @constructor @extends {PolymerElement} */",
         "x.Z = function() {};",
         "x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
         "  is: 'x-element',",
@@ -110,7 +186,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "});"),
 
         Joiner.on("\n").join(
-        "/** @constructor @extends {PolymerBase} */",
+        "/** @constructor @extends {PolymerElement} */",
         "var X = function() { alert('hi'); };",
         "X = Polymer(/** @lends {X.prototype} */ {",
         "  is: 'x-element',",
@@ -132,7 +208,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "});"),
 
         Joiner.on("\n").join(
-        "/** @constructor @extends {PolymerBase} */",
+        "/** @constructor @extends {PolymerElement} */",
         "var X = function() {};",
         "X = Polymer(/** @lends {X.prototype} */ {",
         "  is: 'x-element',",
@@ -144,6 +220,25 @@ public class PolymerPassTest extends CompilerTestCase {
         "    alert('Thank you for clicking');",
         "  },",
         "});"));
+  }
+
+  public void testNativeElementExtension() {
+    String js = Joiner.on("\n").join(
+        "Polymer({",
+        "  is: 'x-input',",
+        "  extends: 'input',",
+        "});");
+
+    test(js,
+        Joiner.on("\n").join(
+        "/** @constructor @extends {PolymerInputElement} */",
+        "var XInputElement = function() {};",
+        "Polymer(/** @lends {XInputElement.prototype} */ {",
+        "  is: 'x-input',",
+        "  extends: 'input',",
+        "});"));
+
+    testExternChanges(EXTERNS, js, INPUT_EXTERNS);
   }
 
   public void testInvalid1() {

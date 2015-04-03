@@ -659,6 +659,21 @@ final public class JSDocInfoBuilder {
   }
 
   /**
+   * Changes a base type, even if one has already been set on currentInfo.
+   *
+   * @return {@code true} if the base type was changed successfully.
+   */
+  public boolean changeBaseType(JSTypeExpression jsType) {
+    if (jsType != null && !hasAnySingletonTypeTags()) {
+      currentInfo.setBaseType(jsType);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Records that the {@link JSDocInfo} being built should have its
    * {@link JSDocInfo#isConstant()} flag set to {@code true}.
    *
