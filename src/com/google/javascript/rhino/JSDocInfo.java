@@ -153,7 +153,7 @@ public class JSDocInfo implements Serializable {
     }
 
     @Override
-    public LazilyInitializedInfo clone() {
+    protected LazilyInitializedInfo clone() {
       LazilyInitializedInfo other = new LazilyInitializedInfo();
       other.baseType = baseType;
       other.extendedInterfaces = extendedInterfaces == null ? null
