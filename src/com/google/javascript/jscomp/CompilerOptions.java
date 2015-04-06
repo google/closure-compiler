@@ -758,6 +758,8 @@ public class CompilerOptions implements Serializable, Cloneable {
   /** Record function information */
   public boolean recordFunctionInformation;
 
+  public boolean checksOnly;
+
   public boolean generateExports;
 
   boolean exportLocalPropertyDefinitions;
@@ -1095,6 +1097,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     moveFunctionDeclarations = false;
     appNameStr = "";
     recordFunctionInformation = false;
+    checksOnly = false;
     generateExports = false;
     exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
@@ -1525,6 +1528,10 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void disableRuntimeTypeCheck() {
     this.runtimeTypeCheck = false;
+  }
+
+  public void setChecksOnly(boolean checksOnly) {
+    this.checksOnly = checksOnly;
   }
 
   public void setGenerateExports(boolean generateExports) {

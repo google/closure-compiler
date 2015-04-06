@@ -1174,6 +1174,26 @@ public final class CommandLineRunnerTest extends TestCase {
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
+  public void testChecksOnlySkipsOptimizations() {
+    args.add("--checks-only");
+    test("var foo = 1 + 1;",
+      "var foo = 1 + 1;");
+  }
+
+  public void testChecksOnlyWithParseError() {
+    args.add("--compilation_level=WHITESPACE_ONLY");
+    args.add("--checks-only");
+    test("val foo = 1;",
+      RhinoErrorReporter.PARSE_ERROR);
+  }
+
+  public void testChecksOnlyWithWarning() {
+    args.add("--checks-only");
+    args.add("--warning_level=VERBOSE");
+    test("/** @deprecated */function foo() {}; foo();",
+      CheckAccessControls.DEPRECATED_NAME);
+  }
+
   public void testGenerateExports() {
     args.add("--generate_exports=true");
     test("/** @export */ foo.prototype.x = function() {};",
