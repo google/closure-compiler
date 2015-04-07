@@ -532,7 +532,7 @@ public final class JSTypeCreatorFromJSDoc {
           String errorMsg = implementedIntfs ?
               "Cannot implement non-interface" :
               "Cannot extend non-interface";
-          warn(errorMsg, jsdoc.getAssociatedNode());
+          warn(errorMsg, expRoot);
         }
       }
     }
