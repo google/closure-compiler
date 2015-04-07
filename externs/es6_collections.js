@@ -48,7 +48,7 @@ Map.prototype.entries;
 
 /**
  * @param {function(this:THIS, VALUE, KEY, MAP):void} callback
- * @param {THIS} thisArg
+ * @param {THIS=} opt_thisArg
  * @this {MAP}
  * @template MAP,THIS
  */
@@ -179,7 +179,7 @@ Set.prototype.entries;
 
 /**
  * @param {function(VALUE, VALUE, SET)} callback
- * @param {THIS} thisArg
+ * @param {THIS=} opt_thisArg
  * @this {SET}
  * @template SET,THIS
  */
