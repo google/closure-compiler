@@ -66,4 +66,13 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   public void testWarning_requiresFirst() {
     testWarning("goog.require('a');\ngoog.provide('b')", PROVIDES_AFTER_REQUIRES);
   }
+
+  public void testB3473189() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.provide('abc');",
+            "if (typeof goog != 'undefined' && typeof goog.provide == 'function') {",
+            "  goog.provide('MyLib.Base');",
+            "}"));
+  }
 }

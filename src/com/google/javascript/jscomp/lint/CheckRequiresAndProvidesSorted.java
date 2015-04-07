@@ -76,16 +76,18 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
         providedNamespaces.clear();
         break;
       case Token.CALL:
-        String req = compiler.getCodingConvention().extractClassNameIfRequire(n, parent);
-        if (req != null) {
-          requiredNamespaces.add(req);
-        }
-        String prov = compiler.getCodingConvention().extractClassNameIfProvide(n, parent);
-        if (prov != null) {
-          if (!requiredNamespaces.isEmpty()) {
-            t.report(n, PROVIDES_AFTER_REQUIRES);
+        if (parent.isExprResult() && parent.getParent().isScript()) {
+          String req = compiler.getCodingConvention().extractClassNameIfRequire(n, parent);
+          if (req != null) {
+            requiredNamespaces.add(req);
           }
-          providedNamespaces.add(prov);
+          String prov = compiler.getCodingConvention().extractClassNameIfProvide(n, parent);
+          if (prov != null) {
+            if (!requiredNamespaces.isEmpty()) {
+              t.report(n, PROVIDES_AFTER_REQUIRES);
+            }
+            providedNamespaces.add(prov);
+          }
         }
         break;
     }
