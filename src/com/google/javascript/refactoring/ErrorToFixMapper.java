@@ -31,6 +31,8 @@ public final class ErrorToFixMapper {
   private static final Pattern DID_YOU_MEAN = Pattern.compile(".*Did you mean (.*)\\?");
   private static final Pattern MISSING_REQUIRE =
       Pattern.compile("'([^']+)' used but not goog\\.require'd");
+  private static final Pattern EXTRA_REQUIRE =
+      Pattern.compile("'([^']+)' goog\\.require'd but not used");
 
   public static SuggestedFix getFixForJsError(JSError error, AbstractCompiler compiler) {
     switch (error.getType().key) {
@@ -40,6 +42,8 @@ public final class ErrorToFixMapper {
         return getFixForInexistentProperty(error);
       case "JSC_MISSING_REQUIRE_WARNING":
         return getFixForMissingRequire(error, compiler);
+      case "JSC_EXTRA_REQUIRE_WARNING":
+        return getFixForExtraRequire(error, compiler);
       case "JSC_UNNECESSARY_CAST":
         return getFixForUnnecessaryCast(error, compiler);
       default:
@@ -74,6 +78,19 @@ public final class ErrorToFixMapper {
     return new SuggestedFix.Builder()
         .setOriginalMatchedNode(error.node)
         .addGoogRequire(match, namespaceToRequire)
+        .build();
+  }
+
+  private static SuggestedFix getFixForExtraRequire(JSError error, AbstractCompiler compiler) {
+    Matcher regexMatcher = EXTRA_REQUIRE.matcher(error.description);
+    Preconditions.checkState(regexMatcher.matches(),
+        "Unexpected error description: %s", error.description);
+    String namespace = regexMatcher.group(1);
+    NodeMetadata metadata = new NodeMetadata(compiler);
+    Match match = new Match(error.node, metadata);
+    return new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
+        .removeGoogRequire(match, namespace)
         .build();
   }
 
