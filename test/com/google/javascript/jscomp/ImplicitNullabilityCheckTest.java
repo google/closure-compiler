@@ -45,6 +45,13 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
     noWarning("/** @typedef {!Object} */ var Obj; var /** Obj */ x;");
   }
 
+  public void testExplicitlyNullableUnion() {
+    noWarning("/** @type {(Object|null)} */ var x;");
+    noWarning("/** @type {(Object|number)?} */ var x;");
+    noWarning("/** @type {?(Object|number)} */ var x;");
+    warnImplicitlyNullable("/** @type {(Object|number)} */ var x;");
+  }
+
   public void testJsdocPositions() {
     warnImplicitlyNullable("/** @type {Object} */ var x;");
     warnImplicitlyNullable("var /** Object */ x;");
