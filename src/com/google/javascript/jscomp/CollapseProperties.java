@@ -705,7 +705,7 @@ class CollapseProperties implements CompilerPass {
       if (n.docInfo != null && n.docInfo.isNoCollapse() &&
           n.isDescendantOfEnum()) {
         compiler.report(
-            JSError.make(n.docInfo.getAssociatedNode(), INVALID_NOCOLLAPSE));
+            JSError.make(n.getDeclaration().getNode(), INVALID_NOCOLLAPSE));
       }
 
       updateObjLitOrFunctionDeclaration(n, alias, canCollapseChildNames);
