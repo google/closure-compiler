@@ -630,7 +630,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
         defineDeclaredProperty(name,
             new FunctionBuilder(registry)
-            .withParams(builder)
+            .withParamsNode(builder.build())
             .withReturnType(getReturnType())
             .withTemplateKeys(getTemplateTypeMap().getTemplateKeys())
             .build(),

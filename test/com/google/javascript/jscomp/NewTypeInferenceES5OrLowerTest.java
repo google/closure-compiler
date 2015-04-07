@@ -219,6 +219,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  var /** !Foo */ y = new x();\n"
         + "  var /** function(new:Foo, number) */ z = x;\n"
         + "}");
+
+    // TODO(dimvar): this is a bogus warning, x can be arbitrary and does not
+    // need to have the num property; see NominalType#getConstructorObject
+    // for what needs to change.
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/** @type {number} */\n"
+        + "Foo.num = 123;\n"
+        + "function f(/** function(new:Foo, string) */ x) {\n"
+        + "  var /** string */ s = x.num;\n"
+        + "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testInvalidThisReference() {
@@ -2705,7 +2718,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function Foo() {}\n"
         + "Foo.prototype = { a: 1, /** @const */ b: 2 };\n"
         + "(new Foo).b = 3;\n",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */\n"
@@ -8257,7 +8270,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}\n"
         + "var obj = new Foo;\n"
         + "obj.prop = 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */\n"
@@ -8267,7 +8280,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}\n"
         + "var obj = new Foo;\n"
         + "obj.prop = 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */\n"
@@ -8276,7 +8289,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}\n"
         + "var obj = new Foo;\n"
         + "obj.prop += 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */\n"
@@ -8285,7 +8298,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}\n"
         + "var obj = new Foo;\n"
         + "obj.prop++;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @const */\n"
@@ -8293,7 +8306,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @const */\n"
         + "ns.prop = 1;\n"
         + "ns.prop = 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @const */\n"
@@ -8301,7 +8314,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @const */\n"
         + "ns.prop = 1;\n"
         + "function f() { ns.prop = 2; }",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @const */\n"
@@ -8309,7 +8322,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @const {number} */\n"
         + "ns.prop = 1;\n"
         + "ns.prop = 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @const */\n"
@@ -8317,32 +8330,32 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @const */\n"
         + "ns.prop = 1;\n"
         + "ns.prop++;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */ function Foo() {}\n"
         + "/** @const */ Foo.prop = 1;\n"
         + "Foo.prop = 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */ function Foo() {}\n"
         + "/** @const {number} */ Foo.prop = 1;\n"
         + "Foo.prop++;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */ function Foo() {}\n"
         + "/** @const */ Foo.prototype.prop = 1;\n"
         + "Foo.prototype.prop = 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */ function Foo() {}\n"
         + "/** @const */ Foo.prototype.prop = 1;\n"
         + "var protoAlias = Foo.prototype;\n"
         + "protoAlias.prop = 2;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @constructor */\n"
@@ -8351,7 +8364,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function Bar() { /** @const */ this.X = 5; }\n"
         + "var fb = true ? new Foo : new Bar;\n"
         + "fb.X++;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
   }
 
   public void testConstantByConvention() {
@@ -8366,7 +8379,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  this.ABC = 123;\n"
         + "}\n"
         + "(new Foo).ABC = 321;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
   }
 
   public void testDontOverrideFinalMethods() {
@@ -8682,6 +8695,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "   */\n"
         + "  ns.prop = 2;\n"
         + "}");
+
+    typeCheck(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @suppress {constantProperty}\n"
+        + " */\n"
+        + "function Foo() {\n"
+        + "  /** @const */ this.bar = 3; this.bar += 4;\n"
+        + "}");
   }
 
   public void testTypedefs() {
@@ -8990,7 +9012,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @enum {!Foo} */\n"
         + "var E = { ONE: new Foo() };\n"
         + "function f(/** E */ x) { x.prop = 2; }",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck("/** @constructor */\n"
         + "function Foo() {}\n"
@@ -9049,7 +9071,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  TWO: 2\n"
         + "};\n"
         + "E.ONE = E.TWO;",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
     typeCheck(
         "/** @enum {number} */\n"
@@ -9058,7 +9080,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  TWO: 2\n"
         + "};\n"
         + "function f(/** E */) { E.ONE = E.TWO; }",
-        NewTypeInference.CONST_REASSIGNED);
+        NewTypeInference.CONST_PROPERTY_REASSIGNED);
   }
 
   public void testEnumIllegalRecursion() {

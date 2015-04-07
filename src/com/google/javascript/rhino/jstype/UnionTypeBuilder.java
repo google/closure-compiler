@@ -59,7 +59,7 @@ import java.util.List;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class UnionTypeBuilder implements Serializable {
+public class UnionTypeBuilder implements Serializable {
   private static final long serialVersionUID = 1L;
 
   // If the best we can do is say "this object is one of thirty things",
@@ -96,7 +96,7 @@ class UnionTypeBuilder implements Serializable {
   // Memoize the result, in case build() is called multiple times.
   private JSType result = null;
 
-  UnionTypeBuilder(JSTypeRegistry registry) {
+  public UnionTypeBuilder(JSTypeRegistry registry) {
     this(registry, DEFAULT_MAX_UNION_SIZE);
   }
 
@@ -117,7 +117,7 @@ class UnionTypeBuilder implements Serializable {
    * Adds an alternate to the union type under construction. Returns this
    * for easy chaining.
    */
-  UnionTypeBuilder addAlternate(JSType alternate) {
+  public UnionTypeBuilder addAlternate(JSType alternate) {
     // build() returns the bottom type by default, so we can
     // just bail out early here.
     if (alternate.isNoType()) {
@@ -313,7 +313,7 @@ class UnionTypeBuilder implements Serializable {
    * @return A UnionType if it has two or more alternates, the
    *    only alternate if it has one and otherwise {@code NO_TYPE}.
    */
-  JSType build() {
+  public JSType build() {
     if (result == null) {
       result = reduceAlternatesWithoutUnion();
       if (result == null) {

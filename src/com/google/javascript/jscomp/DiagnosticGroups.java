@@ -323,12 +323,14 @@ public class DiagnosticGroups {
           CheckAccessControls.CONST_PROPERTY_DELETED,
           CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
           ConstCheck.CONST_REASSIGNED_VALUE_ERROR,
-          NewTypeInference.CONST_REASSIGNED);
+          NewTypeInference.CONST_REASSIGNED,
+          NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
   public static final DiagnosticGroup CONSTANT_PROPERTY =
       DiagnosticGroups.registerGroup("constantProperty",
           CheckAccessControls.CONST_PROPERTY_DELETED,
-          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE);
+          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
+          NewTypeInference.CONST_PROPERTY_REASSIGNED);
 
   public static final DiagnosticGroup TYPE_INVALIDATION =
       DiagnosticGroups.registerGroup("typeInvalidation",

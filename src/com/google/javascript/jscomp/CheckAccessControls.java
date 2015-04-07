@@ -334,7 +334,6 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     if (docInfo != null && docInfo.isDeprecated() &&
         shouldEmitDeprecationWarning(t, n, parent)) {
-
       if (docInfo.getDeprecationReason() != null) {
         compiler.report(
             t.makeError(n, DEPRECATED_NAME_REASON, n.getString(),
@@ -669,8 +668,6 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
             overriding, visibility, fileOverviewVisibility, t, getprop);
       }
     }
-
-
 
     if (objectType != null) {
       JSDocInfo docInfo = objectType.getOwnPropertyJSDocInfo(propertyName);

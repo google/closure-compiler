@@ -413,7 +413,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   }
 
 
-  public void check(Node node, boolean externs) {
+  void check(Node node, boolean externs) {
     Preconditions.checkNotNull(node);
 
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);

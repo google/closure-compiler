@@ -107,8 +107,6 @@ public final class DefaultPassConfig extends PassConfig {
   /** Names exported by goog.exportSymbol. */
   private Set<String> exportedNames = null;
 
-  /** Shared name generator that remembers character encoding bias */
-  private NameGenerator nameGenerator = null;
   /**
    * Ids for cross-module method stubbing, so that each method has
    * a unique id.

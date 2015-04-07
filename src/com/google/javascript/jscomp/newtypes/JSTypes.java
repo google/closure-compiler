@@ -81,7 +81,7 @@ public final class JSTypes {
   }
 
   // Corresponds to Function, which is a subtype and supertype of all functions.
-  JSType qmarkFunction() {
+  public JSType qmarkFunction() {
     return fromFunctionType(FunctionType.QMARK_FUNCTION);
   }
 

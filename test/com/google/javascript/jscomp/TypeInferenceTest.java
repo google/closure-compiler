@@ -431,8 +431,8 @@ public final class TypeInferenceTest extends TestCase {
   }
 
   public void testAssertElement() {
-    JSType elementType = registry.createObjectType("Element", null,
-        registry.getNativeObjectType(OBJECT_TYPE));
+    JSType elementType =
+        registry.createObjectType("Element", registry.getNativeObjectType(OBJECT_TYPE));
     assuming("x", elementType);
     inFunction("out1 = x; goog.asserts.assertElement(x); out2 = x;");
     verify("out1", elementType);

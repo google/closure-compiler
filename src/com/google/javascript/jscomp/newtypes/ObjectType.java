@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.javascript.rhino.Node;
 
 import java.util.List;
 import java.util.Map;
@@ -175,7 +176,7 @@ public final class ObjectType implements TypeWithProperties {
       // It's wrong to warn about a possibly absent property on loose objects.
       newProps = newProps.with(pname, prop.withRequired());
     }
-    // No need to call makeObjectType because we know new object is inhabitable
+    // No need to call makeObjectType; we know new object is not inhabitable.
     return new ObjectType(
         nominalType, newProps, fn, true, this.objectKind);
   }
@@ -224,7 +225,7 @@ public final class ObjectType implements TypeWithProperties {
       } else {
         newProps = newProps.with(pname,
             isConstant ?
-            Property.makeConstant(type, declType) :
+            Property.makeConstant(null, type, declType) :
             Property.make(type, isDeclared ? declType : null));
       }
     } else { // This has a nested object
@@ -241,7 +242,7 @@ public final class ObjectType implements TypeWithProperties {
           objProp.getType().withProperty(innerProps, type);
       JSType declared = objProp.getDeclaredType();
       newProps = newProps.with(objName, objProp.isOptional() ?
-          Property.makeOptional(inferred, declared) :
+          Property.makeOptional(null, inferred, declared) :
           Property.make(inferred, declared));
     }
     return ObjectType.makeObjectType(
@@ -703,6 +704,13 @@ public final class ObjectType implements TypeWithProperties {
     return nominalType;
   }
 
+  public ImmutableSet<String> getAllOwnProps() {
+    // Used by the type conversion pass.
+    // The implementation works only for object literals.
+    Preconditions.checkState(this.nominalType == null);
+    return ImmutableSet.copyOf(props.keySet());
+  }
+
   @Override
   public JSType getProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
@@ -723,6 +731,11 @@ public final class ObjectType implements TypeWithProperties {
       return p.isDeclared() ? p.getDeclaredType() : null;
     }
     return p.getType().getDeclaredProp(qname.getAllButLeftmost());
+  }
+
+  public Node getPropDefsite(QualifiedName qname) {
+    Preconditions.checkArgument(qname.isIdentifier());
+    return getLeftmostProp(qname).getDefsite();
   }
 
   private Property getLeftmostProp(QualifiedName qname) {

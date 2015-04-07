@@ -216,6 +216,14 @@ public class PrototypeObjectType extends ObjectType {
   }
 
   @Override
+  public void setPropertyNode(String propertyName, Node defSite) {
+    Property property = properties.getOwnProperty(propertyName);
+    if (property != null) {
+      property.setNode(defSite);
+    }
+  }
+
+  @Override
   public boolean matchesNumberContext() {
     return isNumberObjectType() || isDateType() || isBooleanObjectType() ||
         isStringObjectType() || hasOverridenNativeProperty("valueOf");

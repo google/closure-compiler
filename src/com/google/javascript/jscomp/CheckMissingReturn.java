@@ -31,6 +31,10 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  * expected for functions with return type information. Functions with empty
  * bodies are ignored.
  *
+ *
+ * NOTE(dimvar):
+ * Do not convert this pass to use TypeI. The pass is only used with the old type checker.
+ * The new type inference checks missing returns on its own.
  */
 class CheckMissingReturn implements ScopedCallback {
 

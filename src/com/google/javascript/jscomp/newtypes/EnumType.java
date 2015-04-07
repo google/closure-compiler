@@ -129,7 +129,7 @@ public final class EnumType extends Namespace implements TypeWithProperties {
     PersistentMap<String, Property> propMap = otherProps;
     for (String s : props) {
       propMap = propMap.with(s,
-          Property.makeConstant(enumPropType, enumPropType));
+          Property.makeConstant(null, enumPropType, enumPropType));
     }
     return withNamedTypes(
         ObjectType.makeObjectType(

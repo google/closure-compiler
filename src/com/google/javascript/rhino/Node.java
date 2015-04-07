@@ -2062,7 +2062,8 @@ public class Node implements Cloneable, Serializable {
   }
 
   public TypeI getTypeI() {
-    return this.typei;
+    // For the time being, we only want to return the type iff it's an old type.
+    return getJSType();
   }
 
   public void setTypeI(TypeI type) {

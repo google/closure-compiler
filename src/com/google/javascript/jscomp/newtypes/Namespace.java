@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
+import com.google.javascript.rhino.Node;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -171,23 +172,25 @@ public abstract class Namespace {
   }
 
   /** Add a new non-optional declared property to this namespace */
-  public void addProperty(String pname, JSType type, boolean isConstant) {
+  public void addProperty(String pname, Node defSite, JSType type, boolean isConstant) {
     if (type == null && isConstant) {
       type = JSType.UNKNOWN;
     }
-    otherProps = otherProps.with(pname, isConstant ?
-        Property.makeConstant(type, type) : Property.make(type, type));
+    otherProps = otherProps.with(pname, isConstant
+        ? Property.makeConstant(defSite, type, type)
+        : Property.makeWithDefsite(defSite, type, type));
   }
 
   /** Add a new undeclared property to this namespace */
   public void addUndeclaredProperty(
-      String pname, JSType t, boolean isConstant) {
+      String pname, Node defSite, JSType t, boolean isConstant) {
     if (otherProps.containsKey(pname)
         && !otherProps.get(pname).getType().isUnknown()) {
       return;
     }
-    otherProps = otherProps.with(pname, isConstant ?
-        Property.makeConstant(t, null) : Property.make(t, null));
+    otherProps = otherProps.with(pname, isConstant
+        ? Property.makeConstant(defSite, t, null)
+        : Property.makeWithDefsite(defSite, t, null));
   }
 
   public JSType getPropDeclaredType(String pname) {

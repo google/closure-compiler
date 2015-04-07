@@ -78,12 +78,6 @@ public final class FunctionBuilder {
     return this;
   }
 
-  /** Set the parameters of the function type from a FunctionParamBuilder. */
-  public FunctionBuilder withParams(FunctionParamBuilder params) {
-    this.parametersNode = params.build();
-    return this;
-  }
-
   /**
    * Set the parameters of the function type with a specially-formatted node.
    */

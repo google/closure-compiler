@@ -77,7 +77,7 @@ public class JSTypeRegistryTest extends TestCase {
     // types as an unknown type. We don't want that for property checking
     // so test that the limit is higher.
     for (int i = 0; i < 100; i++) {
-      type = typeRegistry.createObjectType("type: " + i, null, null);
+      type = typeRegistry.createObjectType("type: " + i, null);
       typeRegistry.registerPropertyOnType("foo", type);
     }
 

@@ -132,7 +132,7 @@ public class ModificationVisitor implements Visitor<JSType> {
     if (changed) {
       FunctionBuilder builder = new FunctionBuilder(registry)
           .setIsConstructor(type.isConstructor())
-          .withParams(paramBuilder)
+          .withParamsNode(paramBuilder.build())
           .withReturnType(afterReturn)
           .withTypeOfThis(afterThis)
           .withTemplateKeys(

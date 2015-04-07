@@ -82,7 +82,7 @@ import java.util.Set;
  */
 public abstract class ObjectType
     extends JSType
-    implements ObjectTypeI, StaticTypedScope<JSType> {
+    implements ObjectTypeI {
   private boolean visited;
   private JSDocInfo docInfo = null;
   private boolean unknown = true;
@@ -95,10 +95,8 @@ public abstract class ObjectType
     super(registry, templateTypeMap);
   }
 
-  @Override
   public Node getRootNode() { return null; }
 
-  @Override
   public ObjectType getParentScope() {
     return getImplicitPrototype();
   }
@@ -114,17 +112,14 @@ public abstract class ObjectType
    * Default getSlot implementation. This gets overridden by FunctionType
    * for lazily-resolved prototypes.
    */
-  @Override
   public Property getSlot(String name) {
     return getPropertyMap().getSlot(name);
   }
 
-  @Override
   public Property getOwnSlot(String name) {
     return getPropertyMap().getOwnProperty(name);
   }
 
-  @Override
   public JSType getTypeOfThis() {
     return null;
   }
@@ -400,6 +395,11 @@ public abstract class ObjectType
    *        {@code null}.
    */
   public void setPropertyJSDocInfo(String propertyName, JSDocInfo info) {
+    // by default, do nothing
+  }
+
+  /** Sets the node where the property was defined. */
+  public void setPropertyNode(String propertyName, Node defSite) {
     // by default, do nothing
   }
 

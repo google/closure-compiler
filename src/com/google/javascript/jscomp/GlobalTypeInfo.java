@@ -457,7 +457,7 @@ class GlobalTypeInfo implements CompilerPass {
           }
         }
         // TODO(dimvar): check if we can have @const props here
-        rawNominalType.addProtoProperty(pname, resultType, false);
+        rawNominalType.addProtoProperty(pname, null, resultType, false);
       }
 
       // Warn for a prop declared with @override that isn't overriding anything.
@@ -568,7 +568,7 @@ class GlobalTypeInfo implements CompilerPass {
         // Adding the non-namespace property here as undeclared prevents us
         // from mistakenly using the second definition later. We use ? for now,
         // but may find a better type in ProcessScope.
-        ns.addUndeclaredProperty(pname, JSType.UNKNOWN, /* isConst */ false);
+        ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
       }
     }
 
@@ -799,15 +799,13 @@ class GlobalTypeInfo implements CompilerPass {
         ImmutableList<String> typeParameters = fnDoc.getTemplateTypeNames();
         RawNominalType rawNominalType;
         if (fnDoc.isInterface()) {
-          rawNominalType = RawNominalType.makeInterface(qname, typeParameters);
+          rawNominalType = RawNominalType.makeInterface(fn, qname, typeParameters);
         } else if (fnDoc.makesStructs()) {
-          rawNominalType =
-              RawNominalType.makeStructClass(qname, typeParameters);
+          rawNominalType = RawNominalType.makeStructClass(fn, qname, typeParameters);
         } else if (fnDoc.makesDicts()) {
-          rawNominalType = RawNominalType.makeDictClass(qname, typeParameters);
+          rawNominalType = RawNominalType.makeDictClass(fn, qname, typeParameters);
         } else {
-          rawNominalType =
-              RawNominalType.makeUnrestrictedClass(qname, typeParameters);
+          rawNominalType = RawNominalType.makeUnrestrictedClass(fn, qname, typeParameters);
         }
         nominaltypesByNode.put(fn, rawNominalType);
         if (isRedeclaration) {
@@ -951,13 +949,13 @@ class GlobalTypeInfo implements CompilerPass {
         String pname = NodeUtil.getObjectLitKeyName(prop);
         JSType propDeclType = declaredObjLitProps.get(prop);
         if (propDeclType != null) {
-          borrowerNamespace.addProperty(pname, propDeclType, false);
+          borrowerNamespace.addProperty(pname, prop, propDeclType, false);
         } else {
           JSType t = simpleInferExprType(prop.getFirstChild());
           if (t == null) {
             t = JSType.UNKNOWN;
           }
-          borrowerNamespace.addProperty(pname, t, false);
+          borrowerNamespace.addProperty(pname, prop, t, false);
         }
       }
     }
@@ -1214,13 +1212,13 @@ class GlobalTypeInfo implements CompilerPass {
         if (isConst && !mayWarnAboutNoInit(getProp) && propDeclType == null) {
           propDeclType = inferConstTypeFromRhs(getProp);
         }
-        classType.addCtorProperty(pname, propDeclType, isConst);
+        classType.addCtorProperty(pname, getProp, propDeclType, isConst);
         getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         if (isConst) {
           getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
       } else {
-        classType.addUndeclaredCtorProperty(pname);
+        classType.addUndeclaredCtorProperty(pname, getProp);
       }
     }
 
@@ -1262,7 +1260,7 @@ class GlobalTypeInfo implements CompilerPass {
         if (isConst && !mayWarnAboutNoInit(declNode) && propDeclType == null) {
           propDeclType = inferConstTypeFromRhs(declNode);
         }
-        ns.addProperty(pname, propDeclType, isConst);
+        ns.addProperty(pname, declNode, propDeclType, isConst);
         declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         if (declNode.isGetProp() && isConst) {
           declNode.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
@@ -1275,7 +1273,7 @@ class GlobalTypeInfo implements CompilerPass {
         if (t == null) {
           t = JSType.UNKNOWN;
         }
-        ns.addUndeclaredProperty(pname, t, false);
+        ns.addUndeclaredProperty(pname, declNode, t, false);
       }
     }
 
@@ -1301,13 +1299,13 @@ class GlobalTypeInfo implements CompilerPass {
           declType = inferConstTypeFromRhs(getProp);
         }
         if (mayAddPropToType(getProp, rawNominalType)) {
-          rawNominalType.addClassProperty(pname, declType, isConst);
+          rawNominalType.addClassProperty(pname, getProp, declType, isConst);
         }
         if (isConst) {
           getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
       } else if (mayAddPropToType(getProp, rawNominalType)) {
-        rawNominalType.addUndeclaredClassProperty(pname);
+        rawNominalType.addUndeclaredClassProperty(pname, getProp);
       }
       propertyDefs.put(rawNominalType, pname,
           new PropertyDef(getProp, null, null));
@@ -1696,7 +1694,7 @@ class GlobalTypeInfo implements CompilerPass {
             && isConst && !mayWarnAboutNoInit(defSite)) {
           propDeclType = inferConstTypeFromRhs(defSite);
         }
-        rawType.addProtoProperty(pname, propDeclType, isConst);
+        rawType.addProtoProperty(pname, defSite, propDeclType, isConst);
         if (defSite.isGetProp()) { // Don't bother saving for @lends
           defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
           if (isConst) {
@@ -1704,7 +1702,7 @@ class GlobalTypeInfo implements CompilerPass {
           }
         }
       } else {
-        rawType.addUndeclaredProtoProperty(pname);
+        rawType.addUndeclaredProtoProperty(pname, defSite);
       }
     }
 
@@ -1786,7 +1784,7 @@ class GlobalTypeInfo implements CompilerPass {
     if (defSite.isGetProp()) {
       return defSite.getLastChild();
     }
-    if (defSite.isStringKey()) {
+    if (defSite.isStringKey() || defSite.isGetterDef() || defSite.isSetterDef()) {
       return defSite;
     }
     throw new RuntimeException("Unknown defsite: "

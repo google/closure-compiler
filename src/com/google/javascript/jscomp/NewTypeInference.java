@@ -38,6 +38,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -163,6 +164,11 @@ final class NewTypeInference implements CompilerPass {
           "JSC_CONST_REASSIGNED",
           "Cannot change the value of a constant.");
 
+  static final DiagnosticType CONST_PROPERTY_REASSIGNED =
+      DiagnosticType.warning(
+          "JSC_CONST_PROPERTY_REASSIGNED",
+          "Cannot change the value of a constant property.");
+
   static final DiagnosticType NOT_A_CONSTRUCTOR =
       DiagnosticType.warning(
           "JSC_NOT_A_CONSTRUCTOR",
@@ -198,6 +204,7 @@ final class NewTypeInference implements CompilerPass {
       ASSERT_FALSE,
       CALL_FUNCTION_WITH_BOTTOM_FORMAL,
       CANNOT_BIND_CTOR,
+      CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
       CROSS_SCOPE_GOTCHA,
       FAILED_TO_UNIFY,
@@ -441,7 +448,7 @@ final class NewTypeInference implements CompilerPass {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
-        summaryType = fnType.createConstructorObject(commonTypes.getFunctionType());
+        summaryType = fnType.getConstructorObject();
       } else {
         summaryType = summaryType.withProperty(
             new QualifiedName("prototype"), JSType.TOP_OBJECT);
@@ -475,7 +482,7 @@ final class NewTypeInference implements CompilerPass {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
-        summaryType = fnType.createConstructorObject(commonTypes.getFunctionType());
+        summaryType = fnType.getConstructorObject();
       } else {
         summaryType = summaryType.withProperty(
             new QualifiedName("prototype"), JSType.TOP_OBJECT);
@@ -517,7 +524,7 @@ final class NewTypeInference implements CompilerPass {
     } else if (funType.isConstructor() || funType.isInterfaceDefinition()) {
       // TODO(dimvar): when declType is a union, consider also creating
       // appropriate ctor objs. (This is going to be rare.)
-      return funType.createConstructorObject(commonTypes.getFunctionType());
+      return funType.getConstructorObject();
     } else {
       return declType.withProperty(
           new QualifiedName("prototype"), JSType.TOP_OBJECT);
@@ -961,10 +968,10 @@ final class NewTypeInference implements CompilerPass {
     println("Function summary for ", fn.getReadableName());
     println("\t", summary);
     summaries.put(fn, summary);
-    fnRoot.setTypeI(summary);
+    maybeSetTypeI(fnRoot, summary);
     Node fnNameNode = NodeUtil.getFunctionNameNode(fnRoot);
     if (fnNameNode != null) {
-      fnNameNode.setTypeI(summary);
+      maybeSetTypeI(fnNameNode, summary);
     }
   }
 
@@ -1024,7 +1031,7 @@ final class NewTypeInference implements CompilerPass {
       return inEnv;
     }
     if (NodeUtil.isNamespaceDecl(nameNode)) {
-      nameNode.setTypeI(declType);
+      maybeSetTypeI(nameNode, declType);
       return envPutType(inEnv, varName, declType);
     }
 
@@ -1052,7 +1059,7 @@ final class NewTypeInference implements CompilerPass {
         rhsType = declType.specialize(rhsType);
       }
     }
-    nameNode.setTypeI(rhsType);
+    maybeSetTypeI(nameNode, rhsType);
     return envPutType(outEnv, varName, rhsType);
   }
 
@@ -1264,7 +1271,7 @@ final class NewTypeInference implements CompilerPass {
     // But maybe most of these types are never looked at.
     // See if the passes that use types only need types on a small subset of the
     // nodes, and only store these types to save mem.
-    expr.setTypeI(resultPair.type);
+    maybeSetTypeI(expr, resultPair.type);
     return resultPair;
   }
 
@@ -1478,6 +1485,7 @@ final class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       expr.removeProp(Node.ANALYZED_DURING_GTI);
+      // No need to set a type on the assignment expression
       return new EnvTypePair(inEnv, requiredType);
     }
     mayWarnAboutConst(expr);
@@ -1485,10 +1493,11 @@ final class NewTypeInference implements CompilerPass {
     Node rhs = expr.getLastChild();
     if (lhs.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       lhs.removeProp(Node.ANALYZED_DURING_GTI);
+      JSType declType = markAndGetTypeOfPreanalyzedNode(lhs, inEnv, true);
+      maybeSetTypeI(lhs, declType);
       if (rhs.matchesQualifiedName(ABSTRACT_METHOD_NAME)) {
         return new EnvTypePair(inEnv, requiredType);
       }
-      JSType declType = getDeclaredTypeOfQname(lhs, inEnv);
       EnvTypePair rhsPair = analyzeExprFwd(rhs, inEnv, declType);
       if (!rhsPair.type.isSubtypeOf(declType)
           && !NodeUtil.isPrototypeAssignment(lhs)) {
@@ -2500,7 +2509,7 @@ final class NewTypeInference implements CompilerPass {
       Node propAccess, JSType recvType, QualifiedName pname) {
     if (recvType.hasConstantProp(pname) &&
         !propAccess.getBooleanProp(Node.CONSTANT_PROPERTY_DEF)) {
-      warnings.add(JSError.make(propAccess, CONST_REASSIGNED));
+      warnings.add(JSError.make(propAccess, CONST_PROPERTY_REASSIGNED));
       return true;
     }
     return false;
@@ -2939,7 +2948,8 @@ final class NewTypeInference implements CompilerPass {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
     if (lhs.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
-      return analyzeExprBwd(rhs, outEnv, getDeclaredTypeOfQname(lhs, outEnv));
+      return analyzeExprBwd(rhs, outEnv,
+          markAndGetTypeOfPreanalyzedNode(lhs, outEnv, false));
     }
     // Here we analyze the LHS twice:
     // Once to find out what should be removed for the slicedEnv,
@@ -3315,25 +3325,58 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private JSType getDeclaredTypeOfQname(Node qnameNode, TypeEnv env) {
+  // Some expressions are analyzed during GTI, so they're skipped here.
+  // But we must annotate them with a type anyway.
+  private JSType markAndGetTypeOfPreanalyzedNode(Node qnameNode, TypeEnv env, boolean isFwd) {
     switch (qnameNode.getType()) {
       case Token.NAME: {
         JSType result = envGetType(env, qnameNode.getString());
         Preconditions.checkNotNull(result, "Null declared type@%s", qnameNode);
+        if (isFwd) {
+          maybeSetTypeI(qnameNode, result);
+        }
         return result;
       }
       case Token.GETPROP: {
-        Preconditions.checkState(qnameNode.isQualifiedName());
-        JSType recvType =
-            getDeclaredTypeOfQname(qnameNode.getFirstChild(), env);
-        JSType result = recvType.getProp(
-            new QualifiedName(qnameNode.getLastChild().getString()));
+        JSType recvType = markAndGetTypeOfPreanalyzedNode(qnameNode.getFirstChild(), env, isFwd);
+        String pname = qnameNode.getLastChild().getString();
+        JSType result = recvType.getProp(new QualifiedName(pname));
+
+        // TODO(dimvar): revisit this decision?
+        // The old type system has a special type for Foo.prototype, even though
+        // it is Object with extra properties.
+        // We don't have a special type, so, for simplicity when converting to
+        // the old types, we cheat here and annotate the Foo.prototype node as
+        // a Foo instance.
+        if (pname.equals("prototype")
+            && (recvType.isConstructor() || recvType.isInterfaceDefinition())) {
+          FunctionType ft = recvType.getFunTypeIfSingletonObj();
+          result = ft.getInstanceTypeOfCtor();
+        }
+
         Preconditions.checkNotNull(result, "Null declared type@%s", qnameNode);
+        if (isFwd) {
+          maybeSetTypeI(qnameNode, result);
+        }
         return result;
       }
       default:
-        throw new RuntimeException("getDeclaredTypeOfQname: unexpected node "
+        throw new RuntimeException("markAndGetTypeOfPreanalyzedNode: unexpected node "
             + Token.name(qnameNode.getType()));
+    }
+  }
+
+  private void maybeSetTypeI(Node n, JSType t) {
+    TypeI ti = n.getTypeI();
+    JSType oldType = (ti != null && ti instanceof JSType) ? (JSType) ti : null;
+    // When creating a function summary, we set a precise type on the function's
+    // name node. Since we're visiting inner scopes first, the name node is
+    // revisited after the function's scope is analyzed, and its type then can
+    // be less precise. So, we keep the summary type.
+    // TODO(dimvar): Look into why the name node has a less precise type in the
+    // outer scope; we've already computed a good type for it, don't lose it.
+    if (oldType == null) {
+      n.setTypeI(t);
     }
   }
 
@@ -3411,7 +3454,7 @@ final class NewTypeInference implements CompilerPass {
         return new LValueResultFwd(pair.env, pair.type, null, null);
       }
     }
-    expr.setTypeI(lvalResult.type);
+    maybeSetTypeI(expr, lvalResult.type);
     return lvalResult;
   }
 

@@ -1163,18 +1163,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Creates a function type which can act as a constructor.
-   *
-   * @param returnType the function's return type
-   * @param parameterTypes the parameters' types
-   */
-  public FunctionType createConstructorType(
-      JSType returnType, JSType... parameterTypes) {
-    return createConstructorType(
-        null, null, createParameters(parameterTypes), returnType, null);
-  }
-
-  /**
    * Creates a function type which can act as a constructor. The last
    * parameter type of the constructor is considered a variable length argument.
    *
@@ -1197,22 +1185,12 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public JSType createFunctionTypeWithInstanceType(ObjectType instanceType,
       JSType returnType, List<JSType> parameterTypes) {
+    Node paramsNode = createParameters(parameterTypes.toArray(new JSType[parameterTypes.size()]));
     return new FunctionBuilder(this)
-        .withParamsNode(createParameters(parameterTypes))
+        .withParamsNode(paramsNode)
         .withReturnType(returnType)
         .withTypeOfThis(instanceType)
         .build();
-  }
-
-  /**
-   * Creates a tree hierarchy representing a typed argument list.
-   *
-   * @param parameterTypes the parameter types.
-   * @return a tree hierarchy representing a typed argument list.
-   */
-  public Node createParameters(List<JSType> parameterTypes) {
-    return createParameters(
-        parameterTypes.toArray(new JSType[parameterTypes.size()]));
   }
 
   /**
@@ -1321,13 +1299,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Create an object type.
-   */
-  public ObjectType createObjectType(ObjectType implicitPrototype) {
-    return createObjectType(null, null, implicitPrototype);
-  }
-
-  /**
    * Creates a record type.
    */
   public RecordType createRecordType(Map<String, RecordProperty> properties) {
@@ -1337,8 +1308,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   /**
    * Create an object type.
    */
-  public ObjectType createObjectType(String name, Node n,
-      ObjectType implicitPrototype) {
+  public ObjectType createObjectType(String name, ObjectType implicitPrototype) {
     return new PrototypeObjectType(this, name, implicitPrototype);
   }
 
@@ -1387,6 +1357,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public FunctionType createConstructorType(String name, Node source,
       Node parameters, JSType returnType, ImmutableList<TemplateType> templateKeys) {
+    Preconditions.checkArgument(source == null || source.isFunction());
     return new FunctionType(this, name, source,
         createArrowType(parameters, returnType), null,
         createTemplateTypeMap(templateKeys, null), true, false);
@@ -1685,7 +1656,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             createFromTypeNodesInternal(current, sourceName, scope);
 
         return new FunctionBuilder(this)
-            .withParams(paramBuilder)
+            .withParamsNode(paramBuilder.build())
             .withReturnType(returnType)
             .withTypeOfThis(thisType)
             .setIsConstructor(isConstructor)

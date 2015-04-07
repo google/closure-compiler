@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
+import com.google.javascript.rhino.Node;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,14 @@ import java.util.Objects;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 class Property {
+  // AST node where the property is defined; most commonly null.
+  // TODO(dimvar): if having this field on every property wastes memory,
+  // consider alternatives:
+  // 1) Subclass Property for the few ones that have jsdoc.
+  // 2) Store the jsdocs scattered in NominalType and Namespace.
+  //    This is hard b/c for objlit namespaces, we don't keep around the
+  //    Namespace class in NTI; they're plain-old object literals.
+  private final Node defSite;
   private final JSType inferredType;
   private final JSType declaredType;
   // Attributes are ordered: constant <= required <= optional
@@ -39,24 +48,28 @@ class Property {
   }
   private Attribute attribute;
 
-  private Property(
-      JSType inferredType, JSType declaredType, Attribute attribute) {
+  private Property(Node defSite, JSType inferredType, JSType declaredType, Attribute attribute) {
     Preconditions.checkArgument(inferredType != null);
+    this.defSite = defSite;
     this.inferredType = inferredType;
     this.declaredType = declaredType;
     this.attribute = attribute;
   }
 
   static Property make(JSType inferredType, JSType declaredType) {
-    return new Property(inferredType, declaredType, Attribute.REQUIRED);
+    return new Property(null, inferredType, declaredType, Attribute.REQUIRED);
   }
 
-  static Property makeConstant(JSType inferredType, JSType declaredType) {
-    return new Property(inferredType, declaredType, Attribute.CONSTANT);
+  static Property makeWithDefsite(Node defSite, JSType inferredType, JSType declaredType) {
+    return new Property(defSite, inferredType, declaredType, Attribute.REQUIRED);
   }
 
-  static Property makeOptional(JSType inferredType, JSType declaredType) {
-    return new Property(inferredType, declaredType, Attribute.OPTIONAL);
+  static Property makeConstant(Node defSite, JSType inferredType, JSType declaredType) {
+    return new Property(defSite, inferredType, declaredType, Attribute.CONSTANT);
+  }
+
+  static Property makeOptional(Node defSite, JSType inferredType, JSType declaredType) {
+    return new Property(defSite, inferredType, declaredType, Attribute.OPTIONAL);
   }
 
   boolean isOptional() {
@@ -71,6 +84,10 @@ class Property {
     return declaredType != null;
   }
 
+  Node getDefsite() {
+    return defSite;
+  }
+
   JSType getType() {
     return inferredType;
   }
@@ -80,11 +97,11 @@ class Property {
   }
 
   Property withOptional() {
-    return new Property(inferredType, declaredType, Attribute.OPTIONAL);
+    return new Property(defSite, inferredType, declaredType, Attribute.OPTIONAL);
   }
 
   Property withRequired() {
-    return new Property(inferredType, declaredType, Attribute.REQUIRED);
+    return new Property(defSite, inferredType, declaredType, Attribute.REQUIRED);
   }
 
   private static Attribute meetAttributes(Attribute a1, Attribute a2) {
@@ -108,7 +125,10 @@ class Property {
   }
 
   Property specialize(Property other) {
+    // TODO(dimvar): consider not always creating a new property here; only
+    // when you can actually specialize.
     return new Property(
+        this.defSite,
         this.inferredType.specialize(other.inferredType),
         this.declaredType,
         meetAttributes(this.attribute, other.attribute));
@@ -116,6 +136,7 @@ class Property {
 
   static Property meet(Property p1, Property p2) {
     return new Property(
+        p1.defSite == p2.defSite ? p1.defSite : null,
         JSType.meet(p1.inferredType, p2.inferredType),
         null,
         meetAttributes(p1.attribute, p2.attribute));
@@ -131,6 +152,7 @@ class Property {
       declType = null;
     }
     return new Property(
+        p1.defSite == p2.defSite ? p1.defSite : null,
         JSType.join(p1.inferredType, p2.inferredType),
         declType,
         joinAttributes(p1.attribute, p2.attribute));
@@ -156,6 +178,7 @@ class Property {
       return null;
     }
     return new Property(
+        p1.defSite == p2.defSite ? p1.defSite : null,
         unifiedInferredType, unifiedDeclaredType,
         meetAttributes(p1.attribute, p2.attribute));
   }
@@ -181,6 +204,7 @@ class Property {
       return this;
     }
     return new Property(
+        this.defSite,
         inferredType.substituteGenerics(concreteTypes),
         declaredType == null ?
         null : declaredType.substituteGenerics(concreteTypes),

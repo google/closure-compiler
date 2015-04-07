@@ -60,10 +60,6 @@ import javax.annotation.Nullable;
  */
 class InferJSDocInfo extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
-
-  // NOTE(dimvar): This class is only used by the old type system.
-  // Do not convert it to use TypeI.
-
   private final AbstractCompiler compiler;
 
   InferJSDocInfo(AbstractCompiler compiler) {
@@ -223,14 +219,12 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         objType.setJSDocInfo(docInfo);
 
         if (objType.isConstructor() || objType.isInterface()) {
-          JSType.toMaybeFunctionType(objType).getInstanceType().setJSDocInfo(
-              docInfo);
+          JSType.toMaybeFunctionType(objType).getInstanceType().setJSDocInfo(docInfo);
         } else if (objType instanceof EnumType) {
           ((EnumType) objType).getElementsType().setJSDocInfo(docInfo);
         }
       }
-    } else if (!objType.isNativeObjectType() &&
-        objType.isFunctionType()) {
+    } else if (!objType.isNativeObjectType() && objType.isFunctionType()) {
       // Structural functions.
       objType.setJSDocInfo(docInfo);
     }
