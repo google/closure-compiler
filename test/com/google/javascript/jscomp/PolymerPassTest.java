@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.PolymerPass.POLYMER_DESCRIPTOR_NOT_VALID;
+import static com.google.javascript.jscomp.PolymerPass.POLYMER_INVALID_PROPERTY;
 import static com.google.javascript.jscomp.PolymerPass.POLYMER_MISSING_IS;
 import static com.google.javascript.jscomp.PolymerPass.POLYMER_UNEXPECTED_PARAMS;
 
@@ -182,15 +183,21 @@ public class PolymerPassTest extends CompilerTestCase {
     test(Joiner.on("\n").join(
         "var X = Polymer({",
         "  is: 'x-element',",
-        "  constructor: function() { alert('hi'); },",
+        "  /**",
+        "   * @param {string} name",
+        "   */",
+        "  constructor: function(name) { alert('hi, ' + name); },",
         "});"),
 
         Joiner.on("\n").join(
-        "/** @constructor @extends {PolymerElement} */",
-        "var X = function() { alert('hi'); };",
+        "/**",
+        " * @param {string} name",
+        " * @constructor @extends {PolymerElement}",
+        " */",
+        "var X = function(name) { alert('hi, ' + name); };",
         "X = Polymer(/** @lends {X.prototype} */ {",
         "  is: 'x-element',",
-        "  constructor: function() { alert('hi'); },",
+        "  constructor: function(name) { alert('hi, ' + name); },",
         "});"));
   }
 
@@ -241,6 +248,49 @@ public class PolymerPassTest extends CompilerTestCase {
     testExternChanges(EXTERNS, js, INPUT_EXTERNS);
   }
 
+  public void testPropertiesAddedToPrototype() {
+    test(Joiner.on("\n").join(
+        "/** @constructor */",
+        "var User = function() {};",
+        "var a = {};",
+        "a.B = Polymer({",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    /** @type {!User} */",
+        "    user: Object,",
+        "    pets: {",
+        "      type: Array,",
+        "      readOnly: true,",
+        "    },",
+        "    name: String,",
+        "  },",
+        "});"),
+
+        Joiner.on("\n").join(
+        "/** @constructor */",
+        "var User = function() {};",
+        "var a = {};",
+        "/** @constructor @extends {PolymerElement} */",
+        "a.B = function() {};",
+        "/** @type {!User} */",
+        "a.B.prototype.user;",
+        "/** @type {!Array} */",
+        "a.B.prototype.pets;",
+        "/** @type {string} */",
+        "a.B.prototype.name;",
+        "a.B = Polymer(/** @lends {a.B.prototype} */ {",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    user: Object,",
+        "    pets: {",
+        "      type: Array,",
+        "      readOnly: true,",
+        "    },",
+        "    name: String,",
+        "  },",
+        "});"));
+  }
+
   public void testInvalid1() {
     testSame(
         "var x = Polymer();",
@@ -251,5 +301,29 @@ public class PolymerPassTest extends CompilerTestCase {
     testSame(
         "var x = Polymer({});",
         POLYMER_MISSING_IS, true);
+  }
+
+  public void testInvalidProperties() {
+    testSame(
+        Joiner.on("\n").join(
+        "Polymer({",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    isHappy: true,",
+        "  },",
+        "});"),
+        POLYMER_INVALID_PROPERTY, true);
+
+    testSame(
+        Joiner.on("\n").join(
+        "Polymer({",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    isHappy: {",
+        "      value: true,",
+        "    },",
+        "  },",
+        "});"),
+        POLYMER_INVALID_PROPERTY, true);
   }
 }

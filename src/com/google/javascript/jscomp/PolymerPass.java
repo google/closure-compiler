@@ -50,6 +50,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   static final DiagnosticType POLYMER_MISSING_EXTERNS = DiagnosticType.error(
       "JSC_POLYMER_MISSING_EXTERNS", "Missing Polymer externs.");
 
+  static final DiagnosticType POLYMER_INVALID_PROPERTY = DiagnosticType.error(
+      "JSC_POLYMER_INVALID_PROPERTY", "Polymer property has an invalid or missing type.");
+
   static final String VIRTUAL_FILE = "<PolymerPass.java>";
 
   private final AbstractCompiler compiler;
@@ -180,8 +183,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    * the AST.
    */
   private ClassDefinition extractClassDefinition(Node callNode) {
-    Node description = NodeUtil.getArgumentForCallOrNew(callNode, 0);
-    if (description == null || !description.isObjectLit()) {
+    Node descriptor = NodeUtil.getArgumentForCallOrNew(callNode, 0);
+    if (descriptor == null || !descriptor.isObjectLit()) {
       // report bad class definition
       compiler.report(JSError.make(callNode, POLYMER_DESCRIPTOR_NOT_VALID));
       return null;
@@ -193,7 +196,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       return null;
     }
 
-    Node elName = NodeUtil.getFirstPropMatchingKey(description, "is");
+    Node elName = NodeUtil.getFirstPropMatchingKey(descriptor, "is");
     if (elName == null) {
       compiler.report(JSError.make(callNode, POLYMER_MISSING_IS));
       return null;
@@ -214,26 +217,33 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     target.useSourceInfoIfMissingFrom(callNode);
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(target);
 
-    Node constructor = NodeUtil.getFirstPropMatchingKey(description, "constructor");
+    JSDocInfo ctorInfo = null;
+    Node constructor = NodeUtil.getFirstPropMatchingKey(descriptor, "constructor");
     if (constructor == null) {
       constructor = IR.function(IR.name(""), IR.paramList(), IR.block());
       constructor.useSourceInfoFromForTree(callNode);
+    } else {
+      ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
+      constructor.removeProp(Node.JSDOC_INFO_PROP);
     }
 
-    Node baseClass = NodeUtil.getFirstPropMatchingKey(description, "extends");
+    Node baseClass = NodeUtil.getFirstPropMatchingKey(descriptor, "extends");
     String nativeBaseElement = baseClass == null ? null : baseClass.getString();
 
-    JSDocInfo info = NodeUtil.getBestJSDocInfo(constructor);
-
     ClassDefinition def = new ClassDefinition(target, classInfo,
-        new MemberDefinition(info, null, constructor), nativeBaseElement,
-        objectLitToList(description));
+        new MemberDefinition(ctorInfo, null, constructor), nativeBaseElement,
+        extractProperties(descriptor));
     return def;
   }
 
-  private static List<MemberDefinition> objectLitToList(Node objlit) {
+  private static List<MemberDefinition> extractProperties(Node descriptor) {
+    Node properties = NodeUtil.getFirstPropMatchingKey(descriptor, "properties");
+    if (properties == null) {
+      return ImmutableList.of();
+    }
+
     ImmutableList.Builder<MemberDefinition> members = ImmutableList.builder();
-    for (Node keyNode : objlit.children()) {
+    for (Node keyNode : properties.children()) {
       members.add(new MemberDefinition(NodeUtil.getBestJSDocInfo(keyNode), keyNode,
           keyNode.getFirstChild()));
     }
@@ -260,6 +270,12 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     this.appendPolymerElementExterns(cls);
     JSDocInfoBuilder constructorDoc = this.getConstructorDoc(cls);
 
+    // Remove the original constructor JS docs from the objlit.
+    Node ctorKey = cls.constructor.value.getParent();
+    if (ctorKey != null) {
+      ctorKey.removeProp(Node.JSDOC_INFO_PROP);
+    }
+
     if (cls.target.isGetProp()) {
       // foo.bar = Polymer({...});
       Node assign = IR.assign(
@@ -275,13 +291,17 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       block.addChildToBack(var);
     }
 
-    // TODO(jlklein): Extract all the props in "properties" and copy them to the prototype.
+    appendPropertiesToBlock(cls, block);
 
     block.useSourceInfoFromForTree(exprRoot);
     Node parent = exprRoot.getParent();
     Node stmts = block.removeChildren();
-    // TODO(jlklein): Create an addChildrenBefore and use that instead.
-    parent.addChildBefore(stmts, exprRoot);
+    Node beforeRoot = parent.getChildBefore(exprRoot);
+    if (beforeRoot == null) {
+      parent.addChildrenToFront(stmts);
+    } else {
+      parent.addChildrenAfter(stmts, beforeRoot);
+    }
 
     if (exprRoot.isVar()) {
       Node assignExpr = varToAssign(exprRoot);
@@ -289,6 +309,66 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
 
     compiler.reportCodeChange();
+  }
+
+  /**
+   * Appends all properties in the ClassDefinition to the prototype of the custom element.
+   */
+  private void appendPropertiesToBlock(final ClassDefinition cls, Node block) {
+    String path = cls.target.getQualifiedName() + ".prototype.";
+    for (MemberDefinition prop : cls.props) {
+      Node propertyNode = IR.exprResult(NodeUtil.newQName(compiler, path + prop.name.getString()));
+      JSDocInfoBuilder docs = JSDocInfoBuilder.maybeCopyFrom(prop.info);
+      prop.name.removeProp(Node.JSDOC_INFO_PROP);
+
+      // Note that if the JSDoc already has a type, the type inferred from the Polymer syntax is
+      // ignored.
+      JSTypeExpression propType = getTypeFromProperty(prop);
+      if (propType == null) {
+        return;
+      }
+      docs.recordType(propType);
+
+      propertyNode.getFirstChild().setJSDocInfo(docs.build(propertyNode.getFirstChild()));
+      block.addChildToBack(propertyNode);
+    }
+  }
+
+  /**
+   * Gets the JSTypeExpression for a given property using its "type" key.
+   * @see https://github.com/Polymer/polymer/blob/0.8-preview/PRIMER.md#configuring-properties
+   */
+  private JSTypeExpression getTypeFromProperty(MemberDefinition property) {
+    String typeString = "";
+    if (property.value.isObjectLit()) {
+      Node typeValue = NodeUtil.getFirstPropMatchingKey(property.value, "type");
+      if (typeValue == null) {
+        compiler.report(JSError.make(property.name, POLYMER_INVALID_PROPERTY));
+        return null;
+      }
+      typeString = typeValue.getString();
+    } else if (property.value.isName()) {
+      typeString = property.value.getString();
+    }
+
+    Node typeNode = null;
+    switch (typeString) {
+      case "Boolean":
+      case "String":
+      case "Number":
+        typeNode = IR.string(typeString.toLowerCase());
+        break;
+      case "Array":
+      case "Object":
+      case "Date":
+        typeNode = new Node(Token.BANG, IR.string(typeString));
+        break;
+      default:
+        compiler.report(JSError.make(property.name, POLYMER_INVALID_PROPERTY));
+        return null;
+    }
+
+    return new JSTypeExpression(typeNode, VIRTUAL_FILE);
   }
 
   /**
@@ -304,7 +384,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     Node block = IR.block();
 
     Node baseExterns = polymerElementExterns.cloneTree();
-    String polymerElementType = this.getPolymerElementType(cls);
+    String polymerElementType = getPolymerElementType(cls);
     baseExterns.getFirstChild().setString(polymerElementType);
 
     String elementType = tagNameMap.get(cls.nativeBaseElement);
@@ -334,11 +414,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    * @return The proper constructor doc for the Polymer call.
    */
   private JSDocInfoBuilder getConstructorDoc(final ClassDefinition cls) {
-    JSDocInfoBuilder constructorDoc = new JSDocInfoBuilder(true);
+    JSDocInfoBuilder constructorDoc = JSDocInfoBuilder.maybeCopyFrom(cls.constructor.info);
     constructorDoc.recordConstructor();
 
     JSTypeExpression baseType = new JSTypeExpression(
-        new Node(Token.BANG, IR.string(this.getPolymerElementType(cls))), VIRTUAL_FILE);
+        new Node(Token.BANG, IR.string(getPolymerElementType(cls))), VIRTUAL_FILE);
 
     constructorDoc.recordBaseType(baseType);
     return constructorDoc;
