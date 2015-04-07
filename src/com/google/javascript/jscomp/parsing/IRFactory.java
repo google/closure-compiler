@@ -662,8 +662,7 @@ class IRFactory {
     // to that node.
     JSDocInfo rootNodeJsDoc = rootNodeJsDocHolder.getJSDocInfo();
     if (rootNodeJsDoc != null) {
-      irNode.setJSDocInfo(rootNodeJsDoc);
-      rootNodeJsDoc.setAssociatedNode(irNode);
+      attachJSDoc(rootNodeJsDoc, irNode);
     }
 
     if (fileOverviewInfo != null) {
@@ -671,8 +670,7 @@ class IRFactory {
           (irNode.getJSDocInfo().getLicense() != null)) {
         fileOverviewInfo.setLicense(irNode.getJSDocInfo().getLicense());
       }
-      irNode.setJSDocInfo(fileOverviewInfo);
-      fileOverviewInfo.setAssociatedNode(irNode);
+      attachJSDoc(fileOverviewInfo, irNode);
     }
   }
 
@@ -875,7 +873,7 @@ class IRFactory {
     JSDocInfo info = handleInlineJsDoc(node, optionalInline);
     Node irNode = justTransform(node);
     if (info != null) {
-      irNode.setJSDocInfo(info);
+      attachJSDoc(info, irNode);
     }
     setSourceInfo(irNode, node);
     return irNode;
@@ -907,7 +905,7 @@ class IRFactory {
     Node irNode = newStringNode(getStringValue(value));
     JSDocInfo jsDocInfo = handleJsDoc(token);
     if (jsDocInfo != null) {
-      irNode.setJSDocInfo(jsDocInfo);
+      attachJSDoc(jsDocInfo, irNode);
     }
     setSourceInfo(irNode, token);
     return irNode;
