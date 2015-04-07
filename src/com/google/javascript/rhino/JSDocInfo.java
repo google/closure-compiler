@@ -1793,6 +1793,8 @@ public class JSDocInfo implements Serializable {
     return documentation == null ? null : documentation.fileOverview;
   }
 
+  /** @deprecated This method will be removed */
+  @Deprecated
   public Node getAssociatedNode() {
     return this.associatedNode;
   }
