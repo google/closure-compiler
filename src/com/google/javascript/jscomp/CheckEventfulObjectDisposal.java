@@ -1113,7 +1113,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
      */
     public void visitFunction(NodeTraversal t, Node n) {
       Preconditions.checkArgument(n.isFunction());
-      JSDocInfo jsDocInfo = NodeUtil.getFunctionJSDocInfo(n);
+      JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(n);
 
       // Function annotated to dispose of
       if (jsDocInfo != null && jsDocInfo.isDisposes()) {
