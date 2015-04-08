@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.base.Preconditions;
+
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 
 import java.util.List;
@@ -54,7 +56,7 @@ import javax.annotation.Nullable;
  * object being created.
  *
  */
-final public class JSDocInfoBuilder {
+public final class JSDocInfoBuilder {
   // the current JSDoc which is being populated
   private JSDocInfo currentInfo;
 
@@ -139,6 +141,42 @@ final public class JSDocInfoBuilder {
     return currentInfo.getDescription() != null;
   }
 
+
+  /**
+   * Builds a {@link JSDocInfo} object based on the populated information and
+   * returns it.
+   *
+   * @return a {@link JSDocInfo} object populated with the values given to this
+   *     builder. If no value was populated, this method simply returns
+   *     {@code null}
+   */
+  public JSDocInfo build() {
+    return build(false);
+  }
+
+
+  /**
+   * Builds a {@link JSDocInfo} object based on the populated information and
+   * returns it.
+   *
+   * @param always Return an default JSDoc object.
+   * @return a {@link JSDocInfo} object populated with the values given to this
+   *     builder. If no value was populated and {@code always} is false, returns
+   *     {@code null}. If {@code always} is true, returns a default JSDocInfo.
+   */
+  public JSDocInfo build(boolean always) {
+    if (populated || always) {
+      Preconditions.checkState(currentInfo != null);
+      JSDocInfo built = currentInfo;
+      currentInfo = null;
+      populateDefaults(built);
+      populated = false;
+      return built;
+    } else {
+      return null;
+    }
+  }
+
   /**
    * Builds a {@link JSDocInfo} object based on the populated information and
    * returns it. Once this method is called, the builder can be reused to build
@@ -150,16 +188,16 @@ final public class JSDocInfoBuilder {
    *     {@code null}
    */
   public JSDocInfo build(Node associatedNode) {
-    if (populated) {
-      JSDocInfo built = currentInfo;
-      built.setAssociatedNode(associatedNode);
-      populateDefaults(built);
-      populated = false;
-      currentInfo = new JSDocInfo(this.parseDocumentation);
-      return built;
-    } else {
-      return null;
+    JSDocInfo info = build(false);
+    if (info != null) {
+      info.setAssociatedNode(associatedNode);
     }
+
+    // TODO(johnlenz): let this be null.
+    currentInfo = new JSDocInfo(this.parseDocumentation);
+    populated = false;
+
+    return info;
   }
 
   /** Generate defaults when certain parameters are not specified. */
@@ -485,6 +523,11 @@ final public class JSDocInfoBuilder {
     } else {
       return false;
     }
+  }
+
+  public void addSuppression(String suppression) {
+    currentInfo.addSuppression(suppression);
+    populated = true;
   }
 
   /**

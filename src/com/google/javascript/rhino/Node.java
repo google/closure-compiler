@@ -2197,11 +2197,16 @@ public class Node implements Cloneable, Serializable {
    * Adds a warning to be suppressed. This is indistinguishable
    * from having a {@code @suppress} tag in the code.
    */
+  @Deprecated
   public void addSuppression(String warning) {
+    JSDocInfoBuilder builder;
     if (getJSDocInfo() == null) {
-      setJSDocInfo(new JSDocInfo(false));
+      builder = new JSDocInfoBuilder(false);
+    } else {
+      builder = JSDocInfoBuilder.copyFrom(getJSDocInfo());
     }
-    getJSDocInfo().addSuppression(warning);
+    builder.addSuppression(warning);
+    setJSDocInfo(builder.build());
   }
 
   /**

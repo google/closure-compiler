@@ -47,6 +47,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
@@ -3180,7 +3181,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   /** Tests assigning JsDoc on a prototype property. */
   public void testJSDocOnPrototypeProperty() throws Exception {
-    subclassCtor.setPropertyJSDocInfo("prototype", new JSDocInfo());
+    subclassCtor.setPropertyJSDocInfo("prototype",
+        new JSDocInfoBuilder(false).build());
     assertNull(subclassCtor.getOwnPropertyJSDocInfo("prototype"));
   }
 
@@ -5977,8 +5979,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testGetAndSetJSDocInfoWithNamedType() throws Exception {
-    JSDocInfo info = new JSDocInfo();
-    info.setDeprecated(true);
+    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    builder.recordDeprecated();
+    JSDocInfo info = builder.build(null);
 
     assertNull(namedGoogBar.getOwnPropertyJSDocInfo("X"));
     namedGoogBar.setPropertyJSDocInfo("X", info);
@@ -5992,11 +5995,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         registry.createObjectType(null, registry.createAnonymousObjectType(null));
     ObjectType sub = registry.createObjectType(null, sup);
 
-    JSDocInfo deprecated = new JSDocInfo();
-    deprecated.setDeprecated(true);
+    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    builder.recordDeprecated();
+    JSDocInfo deprecated = builder.build(null);
 
-    JSDocInfo privateInfo = new JSDocInfo();
-    privateInfo.setVisibility(Visibility.PRIVATE);
+    builder = new JSDocInfoBuilder(false);
+    builder.recordVisibility(Visibility.PRIVATE);
+    JSDocInfo privateInfo = builder.build(null);
 
     sup.defineProperty("X", NUMBER_TYPE, true, null);
     sup.setPropertyJSDocInfo("X", privateInfo);
@@ -6009,13 +6014,15 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         sup.getOwnPropertyJSDocInfo("X").getVisibility());
     assertTypeEquals(NUMBER_TYPE, sup.getPropertyType("X"));
     assertTrue(sub.getOwnPropertyJSDocInfo("X").isDeprecated());
-    assertNull(sub.getOwnPropertyJSDocInfo("X").getVisibility());
+    assertEquals(Visibility.INHERITED,
+        sub.getOwnPropertyJSDocInfo("X").getVisibility());
     assertTypeEquals(NUMBER_TYPE, sub.getPropertyType("X"));
   }
 
   public void testGetAndSetJSDocInfoWithNoType() throws Exception {
-    JSDocInfo deprecated = new JSDocInfo();
-    deprecated.setDeprecated(true);
+    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    builder.recordDeprecated();
+    JSDocInfo deprecated = builder.build(null);
 
     NO_TYPE.setPropertyJSDocInfo("X", deprecated);
     assertNull(NO_TYPE.getOwnPropertyJSDocInfo("X"));

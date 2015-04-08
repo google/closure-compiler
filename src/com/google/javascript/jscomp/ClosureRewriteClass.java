@@ -475,11 +475,11 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     // avoid null checks
     JSDocInfo classInfo = (cls.classInfo != null)
         ? cls.classInfo
-        : new JSDocInfo(true);
+        : new JSDocInfoBuilder(true).build(true);
 
     JSDocInfo ctorInfo = (cls.constructor.info != null)
         ? cls.constructor.info
-        : new JSDocInfo(true);
+        : new JSDocInfoBuilder(true).build(true);
 
     Node superNode = cls.superClass;
 

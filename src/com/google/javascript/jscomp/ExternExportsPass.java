@@ -25,6 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -219,6 +220,12 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       return externFunction;
     }
 
+    private JSDocInfo buildEmptyJSDoc() {
+      // TODO(johnlenz): share the JSDocInfo here rather than building
+      // a new one each time.
+      return new JSDocInfoBuilder(false).build(true);
+    }
+
     /**
      * Given an object literal to export, create an object lit with all its
      * string properties. We don't care what the values of those properties
@@ -230,7 +237,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
       // This is an indirect way of telling the typed code generator
       // "print the type of this"
-      lit.setJSDocInfo(new JSDocInfo());
+      lit.setJSDocInfo(buildEmptyJSDoc());
 
       int index = 1;
       for (Node child = exportedObjectLit.getFirstChild();

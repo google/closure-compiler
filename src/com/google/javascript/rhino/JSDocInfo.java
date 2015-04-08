@@ -122,8 +122,8 @@ public class JSDocInfo implements Serializable {
     String meaning = null;
     String deprecated = null;
     String license = null;
-    Set<String> suppressions = null;
-    Set<String> modifies = null;
+    ImmutableSet<String> suppressions = null;
+    ImmutableSet<String> modifies = null;
     String lendsName = null;
 
     // Bit flags for properties.
@@ -173,8 +173,8 @@ public class JSDocInfo implements Serializable {
       other.meaning = meaning;
       other.deprecated = deprecated;
       other.license = license;
-      other.suppressions = suppressions == null ? null : new HashSet<>(suppressions);
-      other.modifies = modifies == null ? null : new HashSet<>(modifies);
+      other.suppressions = suppressions == null ? null : ImmutableSet.copyOf(suppressions);
+      other.modifies = modifies == null ? null :  ImmutableSet.copyOf(modifies);
       other.lendsName = lendsName;
 
       other.propertyBitField = propertyBitField;
@@ -443,12 +443,12 @@ public class JSDocInfo implements Serializable {
    * Creates a {@link JSDocInfo} object. This object should be created using
    * a {@link JSDocInfoBuilder}.
    */
-  public JSDocInfo(boolean includeDocumentation) {
+  JSDocInfo(boolean includeDocumentation) {
     this.includeDocumentation = includeDocumentation;
   }
 
   // Visible for testing.
-  public JSDocInfo() {}
+  JSDocInfo() {}
 
   @Override
   public JSDocInfo clone() {
@@ -565,8 +565,7 @@ public class JSDocInfo implements Serializable {
     setFlag(value, MASK_NOALIAS);
   }
 
-  // Visible for testing.
-  public void setDeprecated(boolean value) {
+  void setDeprecated(boolean value) {
     setFlag(value, MASK_DEPRECATED);
   }
 
@@ -835,8 +834,7 @@ public class JSDocInfo implements Serializable {
     return (bitset & mask) != 0x00;
   }
 
-  // Visible for testing.
-  public void setVisibility(Visibility visibility) {
+  void setVisibility(Visibility visibility) {
     this.visibility = visibility;
   }
 
@@ -899,13 +897,17 @@ public class JSDocInfo implements Serializable {
   /**
    * Add a suppressed warning.
    */
-  public void addSuppression(String suppression) {
+  void addSuppression(String suppression) {
     lazyInitInfo();
 
     if (info.suppressions == null) {
-      info.suppressions = Sets.newHashSet();
+      info.suppressions = ImmutableSet.of(suppression);
+    } else {
+      info.suppressions = new ImmutableSet.Builder<String>()
+          .addAll(info.suppressions)
+          .add(suppression)
+          .build();
     }
-    info.suppressions.add(suppression);
   }
 
   /**
@@ -919,20 +921,8 @@ public class JSDocInfo implements Serializable {
       return false;
     }
 
-    info.suppressions = suppressions;
+    info.suppressions = ImmutableSet.copyOf(suppressions);
     return true;
-  }
-
-  /**
-   * Add modifies values.
-   */
-  void addModifies(String modifies) {
-    lazyInitInfo();
-
-    if (info.modifies == null) {
-      info.modifies = Sets.newHashSet();
-    }
-    info.modifies.add(modifies);
   }
 
   /**
@@ -946,7 +936,7 @@ public class JSDocInfo implements Serializable {
       return false;
     }
 
-    info.modifies = modifies;
+    info.modifies = ImmutableSet.copyOf(modifies);
     return true;
   }
 
@@ -1578,13 +1568,13 @@ public class JSDocInfo implements Serializable {
     return (info == null) ? null : info.license;
   }
 
+  // TODO(johnlenz): This should not be public
   /** License directives can appear in multiple comments, and always
    * apply to the entire file.  Break protection and allow outsiders to
    * update the license string so that we can attach the license text even
    * when the JSDocInfo has been created and tagged with other information.
    * @param license String containing new license text.
    */
-
   public void setLicense(String license) {
     lazyInitInfo();
     info.license = license;

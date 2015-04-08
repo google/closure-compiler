@@ -17,10 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -164,8 +166,7 @@ class CollapseVariableDeclarations implements CompilerPass {
 
       boolean hasNodesToCollapse = false;
 
-      while (n != null &&
-          (n.isVar() || canBeRedeclared(n, t.getScope()))) {
+      while (n != null && (n.isVar() || canBeRedeclared(n, t.getScope()))) {
 
         if (n.isVar()) {
           blacklistStubVars(t, n);
@@ -247,8 +248,11 @@ class CollapseVariableDeclarations implements CompilerPass {
       }
 
       if (redeclaration) {
-        JSDocInfo info = new JSDocInfo();
-        info.addSuppression("duplicate");
+        // TODO(johnlenz): share the JSDocInfo here rather than building
+        // a new one each time.
+        JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+        builder.recordSuppressions(ImmutableSet.of("duplicate"));
+        JSDocInfo info = builder.build();
         var.setJSDocInfo(info);
       }
     }
