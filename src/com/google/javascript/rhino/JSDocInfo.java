@@ -1568,14 +1568,10 @@ public class JSDocInfo implements Serializable {
     return (info == null) ? null : info.license;
   }
 
-  // TODO(johnlenz): This should not be public
-  /** License directives can appear in multiple comments, and always
-   * apply to the entire file.  Break protection and allow outsiders to
-   * update the license string so that we can attach the license text even
-   * when the JSDocInfo has been created and tagged with other information.
+  /**
    * @param license String containing new license text.
    */
-  public void setLicense(String license) {
+  void setLicense(String license) {
     lazyInitInfo();
     info.license = license;
   }

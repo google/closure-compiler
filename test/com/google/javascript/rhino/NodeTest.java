@@ -187,14 +187,6 @@ public class NodeTest extends TestCase {
     assertEquals(charno, Node.extractCharno(linecharno));
   }
 
-  public void testFileLevelJSDocAppender() {
-    Node n = new Node(1);
-    Node.FileLevelJsDocBuilder builder = n.getJsDocBuilderForNode();
-    builder.append("foo");
-    builder.append("bar");
-    assertEquals("foobar", n.getJSDocInfo().getLicense());
-  }
-
   public void testIsQualifiedName() {
     assertTrue(IR.name("a").isQualifiedName());
     assertTrue(IR.name("$").isQualifiedName());

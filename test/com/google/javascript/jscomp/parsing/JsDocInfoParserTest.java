@@ -28,6 +28,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
@@ -49,11 +50,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private Set<String> extraAnnotations;
   private Set<String> extraSuppressions;
-  private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder = null;
+  private JSDocInfoBuilder fileLevelJsDocBuilder = null;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    fileLevelJsDocBuilder = null;
     extraAnnotations = new HashSet<>(ParserRunner.createConfig(
         true, LanguageMode.ECMASCRIPT3, false, null)
             .annotationNames.keySet());
@@ -1467,35 +1469,35 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParsePreserve() throws Exception {
-    Node node = new Node(1);
-    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@preserve Foo\nBar\n\nBaz*/";
     parse(comment);
-    assertThat(node.getJSDocInfo().getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
+    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
   public void testParseLicense() throws Exception {
-    Node node = new Node(1);
-    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@license Foo\nBar\n\nBaz*/";
     parse(comment);
-    assertThat(node.getJSDocInfo().getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
+    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    assertThat(info.getLicense()).isEqualTo(" Foo\nBar\n\nBaz");
   }
 
   public void testParseLicenseAscii() throws Exception {
-    Node node = new Node(1);
-    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@license Foo\n *   Bar\n\n  Baz*/";
     parse(comment);
-    assertThat(node.getJSDocInfo().getLicense()).isEqualTo(" Foo\n   Bar\n\n  Baz");
+    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    assertThat(info.getLicense()).isEqualTo(" Foo\n   Bar\n\n  Baz");
   }
 
   public void testParseLicenseWithAnnotation() throws Exception {
-    Node node = new Node(1);
-    this.fileLevelJsDocBuilder = node.getJsDocBuilderForNode();
+    this.fileLevelJsDocBuilder = new JSDocInfoBuilder(false);
     String comment = "@license Foo \n * @author Charlie Brown */";
     parse(comment);
-    assertThat(node.getJSDocInfo().getLicense()).isEqualTo(" Foo \n @author Charlie Brown ");
+    JSDocInfo info = this.fileLevelJsDocBuilder.build(true);
+    assertThat(info.getLicense()).isEqualTo(" Foo \n @author Charlie Brown ");
   }
 
   public void testParseDefine1() throws Exception {

@@ -99,7 +99,7 @@ public final class JsDocInfoParser {
   private static final Set<String> idGeneratorAnnotationKeywords =
       ImmutableSet.of("unique", "consistent", "stable", "mapped");
 
-  private Node.FileLevelJsDocBuilder fileLevelJsDocBuilder;
+  private JSDocInfoBuilder fileLevelJsDocBuilder;
 
   /**
    * Sets the JsDocBuilder for the file-level (root) node of this parse. The
@@ -109,7 +109,7 @@ public final class JsDocInfoParser {
    * @param fileLevelJsDocBuilder
    */
   void setFileLevelJsDocBuilder(
-      Node.FileLevelJsDocBuilder fileLevelJsDocBuilder) {
+      JSDocInfoBuilder fileLevelJsDocBuilder) {
     this.fileLevelJsDocBuilder = fileLevelJsDocBuilder;
   }
 
@@ -504,7 +504,7 @@ public final class JsDocInfoParser {
 
           if (preserve.length() > 0) {
             if (fileLevelJsDocBuilder != null) {
-              fileLevelJsDocBuilder.append(preserve);
+              fileLevelJsDocBuilder.addLicense(preserve);
             }
           }
 

@@ -258,15 +258,6 @@ public final class JSDocInfoBuilder {
 
   /**
    * Adds a name declaration to the current marker.
-   * @deprecated Use #markName(String, StaticSourceFile, int, int)
-   */
-  @Deprecated
-  public void markName(String name,  int lineno, int charno) {
-    markName(name, null, lineno, charno);
-  }
-
-  /**
-   * Adds a name declaration to the current marker.
    */
   public void markName(String name, StaticSourceFile file,
       int lineno, int charno) {
@@ -778,6 +769,22 @@ public final class JSDocInfoBuilder {
     } else {
       return false;
     }
+  }
+
+  public boolean recordLicense(String license) {
+    currentInfo.setLicense(license);
+    populated = true;
+    return true;
+  }
+
+  public boolean addLicense(String license) {
+    String txt = currentInfo.getLicense();
+    if (txt == null) {
+      txt = "";
+    }
+    currentInfo.setLicense(txt + license);
+    populated = true;
+    return true;
   }
 
   /**
