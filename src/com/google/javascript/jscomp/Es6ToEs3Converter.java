@@ -488,17 +488,39 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       if (param.isDefaultValue()) {
         Node nameOrPattern = param.removeFirstChild();
         Node defaultValue = param.removeFirstChild();
-        Node newParam = nameOrPattern.isName() ? nameOrPattern
-            : IR.name(DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++));
+        Node newParam;
 
-        Node lhs = nameOrPattern.cloneTree();
-        Node rhs = defaultValueHook(newParam.cloneTree(), defaultValue);
-        Node newStatement = nameOrPattern.isName()
-            ? IR.exprResult(IR.assign(lhs, rhs))
-            : IR.var(lhs, rhs);
-        newStatement.useSourceInfoIfMissingFromForTree(param);
-        block.addChildAfter(newStatement, insertSpot);
-        insertSpot = newStatement;
+        // Treat name=undefined (and equivalent) as if it was just name.  There
+        // is no need to generate a (name===void 0?void 0:name) statement for
+        // such arguments.
+        boolean isNoop = false;
+        if (!nameOrPattern.isName()) {
+          // Do not try to optimise unless nameOrPattern is a simple name.
+        } else if (defaultValue.isName()) {
+          isNoop = "undefined".equals(defaultValue.getString());
+        } else if (defaultValue.isVoid()) {
+          // Any kind of ‘void literal’ is fine, but ‘void fun()’ or anything
+          // else with side effects isn’t.  We’re not trying to be particularly
+          // smart here and treat ‘void {}’ for example as if it could cause
+          // side effects.  Any sane person will type ‘name=undefined’ or
+          // ‘name=void 0’ so this should not be an issue.
+          isNoop = NodeUtil.isImmutableValue(defaultValue.getFirstChild());
+        }
+
+        if (isNoop) {
+          newParam = nameOrPattern.cloneTree();
+        } else {
+          newParam = nameOrPattern.isName() ? nameOrPattern
+              : IR.name(DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++));
+          Node lhs = nameOrPattern.cloneTree();
+          Node rhs = defaultValueHook(newParam.cloneTree(), defaultValue);
+          Node newStatement = nameOrPattern.isName()
+              ? IR.exprResult(IR.assign(lhs, rhs))
+              : IR.var(lhs, rhs);
+          newStatement.useSourceInfoIfMissingFromForTree(param);
+          block.addChildAfter(newStatement, insertSpot);
+          insertSpot = newStatement;
+        }
 
         paramList.replaceChild(param, newParam);
         newParam.setOptionalArg(true);
