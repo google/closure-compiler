@@ -2194,22 +2194,6 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * Adds a warning to be suppressed. This is indistinguishable
-   * from having a {@code @suppress} tag in the code.
-   */
-  @Deprecated
-  public void addSuppression(String warning) {
-    JSDocInfoBuilder builder;
-    if (getJSDocInfo() == null) {
-      builder = new JSDocInfoBuilder(false);
-    } else {
-      builder = JSDocInfoBuilder.copyFrom(getJSDocInfo());
-    }
-    builder.addSuppression(warning);
-    setJSDocInfo(builder.build());
-  }
-
-  /**
    * Sets whether this is an added block that should not be considered
    * a real source block. Eg: In "if (true) x;", the "x;" is put under an added
    * block in the AST.

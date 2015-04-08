@@ -22,6 +22,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -177,7 +178,9 @@ class VarCheck extends AbstractPostOrderCallback implements
         varsToDeclareInExterns.contains(varName)) {
       createSynthesizedExternVar(varName);
 
-      n.addSuppression("duplicate");
+      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+      builder.addSuppression("duplicate");
+      n.setJSDocInfo(builder.build());
     }
 
     // Check that the var has been declared.
