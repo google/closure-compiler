@@ -6,7 +6,9 @@ The [Closure Compiler](https://developers.google.com/closure/compiler/) is a too
 
 ## Getting Started
  * [Download the latest version](http://dl.google.com/closure-compiler/compiler-latest.zip) ([Release details here](https://github.com/google/closure-compiler/wiki/Releases))
- * [Download a specific version](https://github.com/google/closure-compiler/wiki/Binary-Downloads)
+ * [Download a specific version](https://github.com/google/closure-compiler/wiki/Binary-Downloads). Also available via:
+   - [Maven](https://github.com/google/closure-compiler/wiki/Maven)
+   - [NPM](https://www.npmjs.com/package/google-closure-compiler)
  * See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
 ## Options for Getting Help
