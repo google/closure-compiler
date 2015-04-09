@@ -25,6 +25,12 @@ import java.util.Map;
 
 /**
  * Filters warnings based on in-code {@code @suppress} annotations.
+ *
+ * <p> Works by looking at the AST node associated with the warning, and looking
+ * at parents of the node until it finds a function or a script.
+ * For this reason, it doesn't work for warnings without an associated AST node,
+ * eg, the ones in parsing/IRFactory. They can be turned off with jscomp_off.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
 class SuppressDocWarningsGuard extends WarningsGuard {
