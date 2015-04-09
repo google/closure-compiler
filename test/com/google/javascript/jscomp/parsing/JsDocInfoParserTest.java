@@ -2417,11 +2417,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           "@see tag missing description");
   }
 
-  public void testSourceName() throws Exception {
-    JSDocInfo jsdoc = parse("@deprecated */", true);
-    assertThat(jsdoc.getAssociatedNode().getSourceFileName()).isEqualTo("testcode");
-  }
-
   public void testParseBlockComment() throws Exception {
     JSDocInfo jsdoc = parse("this is a nice comment\n "
                             + "* that is multiline \n"
@@ -4271,7 +4266,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         stream(comment),
         comment,
         0,
-        associatedNode,
         file,
         config,
         errorReporter);

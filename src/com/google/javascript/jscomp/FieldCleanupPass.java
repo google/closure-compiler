@@ -100,9 +100,6 @@ public final class FieldCleanupPass implements HotSwapCompilerPass {
         }
         removeProperty(type.toObjectType(), propName);
       }
-      if (n.getJSDocInfo() != null) {
-        n.getJSDocInfo().setAssociatedNode(null);
-      }
     }
 
     /**

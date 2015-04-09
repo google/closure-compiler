@@ -262,7 +262,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
     //TODO(mattloring): copy existing suppressions.
     builder.recordSuppressions(ImmutableSet.of("uselessCode"));
-    JSDocInfo info = builder.build(n);
+    JSDocInfo info = builder.build();
     n.setJSDocInfo(info);
 
     // Set state to the default after the body of the function has completed.

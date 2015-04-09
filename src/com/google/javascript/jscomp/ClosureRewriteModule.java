@@ -312,7 +312,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
           JSDocInfo info = v.getJSDocInfo();
           if (info != null && info.hasTypedefType()) {
             JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(info);
-            target.setJSDocInfo(builder.build(target));
+            target.setJSDocInfo(builder.build());
             return;
           }
         }
@@ -321,16 +321,9 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
     // Not a known typedef export, simple declare the props to be @const,
     // this is valid because we freeze module export objects.
-    JSDocInfo info = target.getJSDocInfo();
-    if (info == null) {
-      JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-      builder.recordConstancy();
-      target.setJSDocInfo(builder.build(target));
-    } else if (!info.isConstant() && !info.hasTypedefType()) {
-      JSDocInfoBuilder builder = JSDocInfoBuilder.copyFrom(info);
-      builder.recordConstancy();
-      target.setJSDocInfo(builder.build(target));
-    }
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(target.getJSDocInfo());
+    builder.recordConstancy();
+    target.setJSDocInfo(builder.build());
   }
 
 

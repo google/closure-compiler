@@ -317,7 +317,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       if (types.contains(exportedName)) {
         JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
         builder.recordConstancy();
-        JSDocInfo info = builder.build(assign);
+        JSDocInfo info = builder.build();
         assign.setJSDocInfo(info);
       }
       script.addChildToBack(exprResult);
@@ -345,7 +345,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
     // Don't check provides and requires, since most of them are auto-generated.
     jsDocInfo.recordSuppressions(ImmutableSet.of("missingProvide", "missingRequire"));
-    script.setJSDocInfo(jsDocInfo.build(script));
+    script.setJSDocInfo(jsDocInfo.build());
 
     exportMap.clear();
     compiler.reportCodeChange();
@@ -353,6 +353,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private void rewriteRequires(Node script) {
     NodeTraversal.traverse(compiler, script, new NodeTraversal.AbstractShallowCallback() {
+      @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
         if (n.isCall()
             && n.getFirstChild().matchesQualifiedName("goog.require")

@@ -191,7 +191,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     // Add "@noalias" so we can strip the method when AliasExternals is enabled.
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
     builder.recordNoAlias();
-    var.setJSDocInfo(builder.build(var));
+    var.setJSDocInfo(builder.build());
     CompilerInput input = compiler.getSynthesizedExternsInput();
     input.getAstRoot(compiler).addChildrenToBack(var);
     compiler.reportCodeChange();

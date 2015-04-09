@@ -66,7 +66,7 @@ public final class ConvertDeclaredTypesToJSDoc
       builder.recordInlineType();
     }
 
-    info = builder.build(n);
+    info = builder.build();
     n.setJSDocInfo(info);
     n.setDeclaredTypeExpression(null); // clear out declared type
   }

@@ -499,11 +499,11 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         } else if (defaultValue.isName()) {
           isNoop = "undefined".equals(defaultValue.getString());
         } else if (defaultValue.isVoid()) {
-          // Any kind of ‘void literal’ is fine, but ‘void fun()’ or anything
-          // else with side effects isn’t.  We’re not trying to be particularly
-          // smart here and treat ‘void {}’ for example as if it could cause
-          // side effects.  Any sane person will type ‘name=undefined’ or
-          // ‘name=void 0’ so this should not be an issue.
+          // Any kind of 'void literal' is fine, but 'void fun()' or anything
+          // else with side effects isn't.  We're not trying to be particularly
+          // smart here and treat 'void {}' for example as if it could cause
+          // side effects.  Any sane person will type 'name=undefined' or
+          // 'name=void 0' so this should not be an issue.
           isNoop = NodeUtil.isImmutableValue(defaultValue.getFirstChild());
         }
 
@@ -745,10 +745,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           memberDoc.recordThisType(
               new JSTypeExpression(new Node(Token.BANG, new Node(Token.QMARK)),
               member.getSourceFileName()));
-          info = memberDoc.build(assign);
+          info = memberDoc.build();
         }
         if (info != null) {
-          info.setAssociatedNode(assign);
           assign.setJSDocInfo(info);
         }
 
@@ -771,7 +770,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       // and warn if the getter and a setter disagree on the type.
       declInfo.recordType(new JSTypeExpression(
           new Node(Token.QMARK), classNode.getSourceFileName()));
-      declaration.setJSDocInfo(declInfo.build(declaration));
+      declaration.setJSDocInfo(declInfo.build());
       metadata.insertStaticMember(
           IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
     }
@@ -848,20 +847,20 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     if (NodeUtil.isStatement(constructor)) {
-      constructor.setJSDocInfo(newInfo.build(constructor));
+      constructor.setJSDocInfo(newInfo.build());
     } else if (parent.isName()) {
       // The constructor function is the RHS of a var statement.
       // Add the JSDoc to the VAR node.
       Node var = parent.getParent();
-      var.setJSDocInfo(newInfo.build(var));
+      var.setJSDocInfo(newInfo.build());
     } else if (constructor.getParent().isName()) {
       // Is a newly created VAR node.
       Node var = constructor.getParent().getParent();
-      var.setJSDocInfo(newInfo.build(var));
+      var.setJSDocInfo(newInfo.build());
     } else if (parent.isAssign()) {
       // The constructor function is the RHS of an assignment.
       // Add the JSDoc to the ASSIGN node.
-      parent.setJSDocInfo(newInfo.build(parent));
+      parent.setJSDocInfo(newInfo.build());
     } else {
       throw new IllegalStateException("Unexpected parent node " + parent);
     }
@@ -883,7 +882,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     builder.recordThisType(new JSTypeExpression(new Node(
         Token.BANG, IR.string(metadata.fullClassName)), member.getSourceFileName()));
     Node stringKey = IR.stringKey(member.isGetterDef() ? "get" : "set", function);
-    JSDocInfo info = builder.build(stringKey);
+    JSDocInfo info = builder.build();
 
     // Attach the info to both the STRING_KEY and the FUNCTION because that's what happens
     // when we parse the "expected" code for unit tests.

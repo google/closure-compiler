@@ -592,6 +592,6 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     for (String typeName : templateNames) {
       mergedInfo.recordTemplateTypeName(typeName);
     }
-    return mergedInfo.build(associatedNode);
+    return mergedInfo.build();
   }
 }

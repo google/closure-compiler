@@ -3939,7 +3939,7 @@ public final class NodeUtil {
   static JSDocInfo createConstantJsDoc() {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
     builder.recordConstancy();
-    return builder.build(null);
+    return builder.build();
   }
 
   static int toInt32(double d) {

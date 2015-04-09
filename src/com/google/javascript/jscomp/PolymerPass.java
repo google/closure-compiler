@@ -262,7 +262,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     Node objLit = NodeUtil.getArgumentForCallOrNew(call, 0);
     JSDocInfoBuilder objLitDoc = new JSDocInfoBuilder(true);
     objLitDoc.recordLends(cls.target.getQualifiedName() + ".prototype");
-    objLit.setJSDocInfo(objLitDoc.build(objLit));
+    objLit.setJSDocInfo(objLitDoc.build());
 
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
@@ -281,13 +281,13 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       Node assign = IR.assign(
           cls.target.cloneTree(),
           cls.constructor.value.cloneTree());
-      assign.setJSDocInfo(constructorDoc.build(assign));
+      assign.setJSDocInfo(constructorDoc.build());
       Node exprResult = IR.exprResult(assign);
       block.addChildToBack(exprResult);
     } else {
       // var foo = Polymer({...}); OR Polymer({...});
       Node var = IR.var(cls.target.cloneTree(), cls.constructor.value.cloneTree());
-      var.setJSDocInfo(constructorDoc.build(var));
+      var.setJSDocInfo(constructorDoc.build());
       block.addChildToBack(var);
     }
 
@@ -329,7 +329,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
       docs.recordType(propType);
 
-      propertyNode.getFirstChild().setJSDocInfo(docs.build(propertyNode.getFirstChild()));
+      propertyNode.getFirstChild().setJSDocInfo(docs.build());
       block.addChildToBack(propertyNode);
     }
   }
@@ -392,7 +392,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         new Node(Token.BANG, IR.string(elementType)), VIRTUAL_FILE);
     JSDocInfoBuilder baseDocs = JSDocInfoBuilder.copyFrom(baseExterns.getJSDocInfo());
     baseDocs.changeBaseType(elementBaseType);
-    baseExterns.setJSDocInfo(baseDocs.build(baseExterns));
+    baseExterns.setJSDocInfo(baseDocs.build());
     block.addChildToBack(baseExterns);
 
     for (Node baseProp : polymerElementProps) {

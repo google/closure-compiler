@@ -154,6 +154,23 @@ public final class JSDocInfoBuilder {
     return build(false);
   }
 
+  /**
+   * Builds a {@link JSDocInfo} object based on the populated information and
+   * returns it. Once this method is called, the builder can be reused to build
+   * another {@link JSDocInfo} object.
+   *
+   * @return a {@link JSDocInfo} object populated with the values given to this
+   *     builder. If no value was populated, this method simply returns
+   *     {@code null}
+   */
+  public JSDocInfo buildAndReset() {
+    JSDocInfo info = build(false);
+    if (currentInfo == null) {
+      currentInfo = new JSDocInfo(parseDocumentation);
+      populated = false;
+    }
+    return info;
+  }
 
   /**
    * Builds a {@link JSDocInfo} object based on the populated information and
@@ -175,29 +192,6 @@ public final class JSDocInfoBuilder {
     } else {
       return null;
     }
-  }
-
-  /**
-   * Builds a {@link JSDocInfo} object based on the populated information and
-   * returns it. Once this method is called, the builder can be reused to build
-   * another {@link JSDocInfo} object.
-   *
-   * @param associatedNode The source node containing the JSDoc.
-   * @return a {@link JSDocInfo} object populated with the values given to this
-   *     builder. If no value was populated, this method simply returns
-   *     {@code null}
-   */
-  public JSDocInfo build(Node associatedNode) {
-    JSDocInfo info = build(false);
-    if (info != null) {
-      info.setAssociatedNode(associatedNode);
-    }
-
-    // TODO(johnlenz): let this be null.
-    currentInfo = new JSDocInfo(this.parseDocumentation);
-    populated = false;
-
-    return info;
   }
 
   /** Generate defaults when certain parameters are not specified. */

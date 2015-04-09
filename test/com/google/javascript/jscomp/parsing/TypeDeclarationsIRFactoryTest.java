@@ -211,7 +211,6 @@ public final class TypeDeclarationsIRFactoryTest extends TestCase {
         jsDoc,
         0,
         null,
-        null,
         config,
         NullErrorReporter.forOldRhino());
     assertTrue(parser.parse());

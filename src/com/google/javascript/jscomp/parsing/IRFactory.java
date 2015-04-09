@@ -684,7 +684,7 @@ class IRFactory {
     // to that node.
     JSDocInfo rootNodeJsDoc = fileLevelJsDocBuilder.build();
     if (rootNodeJsDoc != null) {
-      attachJSDoc(rootNodeJsDoc, irNode);
+      irNode.setJSDocInfo(rootNodeJsDoc);
     }
 
     if (fileOverviewInfo != null) {
@@ -694,7 +694,7 @@ class IRFactory {
         builder.recordLicense(irNode.getJSDocInfo().getLicense());
         fileOverviewInfo = builder.build();
       }
-      attachJSDoc(fileOverviewInfo, irNode);
+      irNode.setJSDocInfo(fileOverviewInfo);
     }
   }
 
@@ -863,15 +863,10 @@ class IRFactory {
     Node node = justTransform(tree);
     if (info != null) {
       node = maybeInjectCastNode(tree, info, node);
-      attachJSDoc(info, node);
+      node.setJSDocInfo(info);
     }
     setSourceInfo(node, tree);
     return node;
-  }
-
-  private static void attachJSDoc(JSDocInfo info, Node n) {
-    info.setAssociatedNode(n);
-    n.setJSDocInfo(info);
   }
 
   private Node maybeInjectCastNode(ParseTree node, JSDocInfo info, Node irNode) {
@@ -897,7 +892,7 @@ class IRFactory {
     JSDocInfo info = handleInlineJsDoc(node, optionalInline);
     Node irNode = justTransform(node);
     if (info != null) {
-      attachJSDoc(info, irNode);
+      irNode.setJSDocInfo(info);
     }
     setSourceInfo(irNode, node);
     return irNode;
@@ -929,7 +924,7 @@ class IRFactory {
     Node irNode = newStringNode(getStringValue(value));
     JSDocInfo jsDocInfo = handleJsDoc(token);
     if (jsDocInfo != null) {
-      attachJSDoc(jsDocInfo, irNode);
+      irNode.setJSDocInfo(jsDocInfo);
     }
     setSourceInfo(irNode, token);
     return irNode;
@@ -1020,7 +1015,6 @@ class IRFactory {
                                charno + numOpeningChars),
           comment,
           position,
-          null,
           sourceFile,
           config,
           errorReporter);
@@ -1047,7 +1041,6 @@ class IRFactory {
               charno + numOpeningChars),
           comment,
           node.location.start.offset,
-          null,
           sourceFile,
           config,
           errorReporter);
@@ -1497,7 +1490,7 @@ class IRFactory {
         }
         node = newStringNode(Token.NAME, identifierToken.value);
         if (info != null) {
-          attachJSDoc(info, node);
+          node.setJSDocInfo(info);
         }
       }
       setSourceInfo(node, identifierToken);
@@ -1534,7 +1527,7 @@ class IRFactory {
       }
       Node node = newStringNode(Token.NAME, identifierToken.toString());
       if (info != null) {
-        attachJSDoc(info, node);
+        node.setJSDocInfo(info);
       }
       setSourceInfo(node, identifierToken);
       return node;

@@ -130,8 +130,7 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
         if (n.isConst()) {
           JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
           builder.recordConstancy();
-          JSDocInfo info = builder.build(n);
-          info.setAssociatedNode(n);
+          JSDocInfo info = builder.build();
           n.setJSDocInfo(info);
         }
         n.setType(Token.VAR);

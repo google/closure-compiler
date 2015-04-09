@@ -345,9 +345,6 @@ public class JSDocInfo implements Serializable {
 
   private LazilyInitializedDocumentation documentation = null;
 
-  // The Node this JSDoc is associated with.
-  private Node associatedNode = null;
-
   private Visibility visibility = null;
 
   /**
@@ -1777,35 +1774,6 @@ public class JSDocInfo implements Serializable {
    */
   public String getFileOverview() {
     return documentation == null ? null : documentation.fileOverview;
-  }
-
-  /** @deprecated This method will be removed */
-  @Deprecated
-  public Node getAssociatedNode() {
-    return this.associatedNode;
-  }
-
-  /**
-   * Sets the node associated with this JSDoc.
-   * Notice that many nodes may have pointer to the same JSDocInfo
-   * object (because we propagate it across the type graph). But there
-   * is only one canonical "owner" node of the JSDocInfo, which corresponds
-   * to its original place in the syntax tree.
-   */
-  public void setAssociatedNode(Node node) {
-    this.associatedNode = node;
-  }
-
-  /** Gets the name of the source file that contains this JSDoc. */
-  public StaticSourceFile getStaticSourceFile() {
-    return this.associatedNode != null
-        ? this.associatedNode.getStaticSourceFile() : null;
-  }
-
-  /** Gets the name of the source file that contains this JSDoc. */
-  public String getSourceName() {
-    return this.associatedNode != null
-        ? this.associatedNode.getSourceFileName() : null;
   }
 
   /** Gets the list of all markers for the documentation in this JSDoc. */

@@ -91,8 +91,7 @@ class DeclaredGlobalExternsOnWindow
       }
 
       builder.recordSuppressions(ImmutableSet.of("duplicate"));
-      JSDocInfo jsDocInfo = builder.build(newNode);
-      jsDocInfo.setAssociatedNode(newNode);
+      JSDocInfo jsDocInfo = builder.build();
       newNode.setJSDocInfo(jsDocInfo);
     }
 
