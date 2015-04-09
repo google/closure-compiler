@@ -100,6 +100,19 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertEquals(10, error.getCharno());
   }
 
+  public void testAnnotationDeprecated() throws Exception {
+    String message =
+        "The @expose annotation is deprecated. Use @nocollapse or @export "
+        + "instead.";
+    JSError error = assertWarning(
+        "/** @expose */ var x = 1;",
+        RhinoErrorReporter.ANNOTATION_DEPRECATED,
+        message);
+
+    assertEquals(1, error.getLineNumber());
+    assertEquals(15, error.getCharno());
+  }
+
   /**
    * Verifies that the compiler emits an error for the given code.
    */

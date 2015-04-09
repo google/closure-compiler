@@ -376,22 +376,26 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
     test(options,
-         "var x = {eeny: 1, /** @expose */ meeny: 2};" +
-         "/** @constructor */ var Foo = function() {};" +
-         "/** @expose */  Foo.prototype.miny = 3;" +
-         "Foo.prototype.moe = 4;" +
-         "/** @expose */  Foo.prototype.tiger;" +
-         "function moe(a, b) { return a.meeny + b.miny + a.tiger; }" +
-         "window['x'] = x;" +
-         "window['Foo'] = Foo;" +
-         "window['moe'] = moe;",
-         "function a(){}" +
-         "a.prototype.miny=3;" +
-         "window.x={a:1,meeny:2};" +
-         "window.Foo=a;" +
-         "window.moe=function(b,c){" +
-         "  return b.meeny+c.miny+b.tiger" +
-         "}");
+        new String[] {"var x = {eeny: 1, /** @expose */ meeny: 2};" +
+            "/** @constructor */ var Foo = function() {};" +
+            "/** @expose */  Foo.prototype.miny = 3;" +
+            "Foo.prototype.moe = 4;" +
+            "/** @expose */  Foo.prototype.tiger;" +
+            "function moe(a, b) { return a.meeny + b.miny + a.tiger; }" +
+            "window['x'] = x;" +
+            "window['Foo'] = Foo;" +
+            "window['moe'] = moe;"},
+        new String[] {"function a(){}" +
+            "a.prototype.miny=3;" +
+            "window.x={a:1,meeny:2};" +
+            "window.Foo=a;" +
+            "window.moe=function(b,c){" +
+            "  return b.meeny+c.miny+b.tiger" +
+            "}"},
+        new DiagnosticType[]{
+            RhinoErrorReporter.PARSE_ERROR,
+            RhinoErrorReporter.PARSE_ERROR,
+            RhinoErrorReporter.PARSE_ERROR});
   }
 
   public void testCheckSymbolsOff() {

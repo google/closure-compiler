@@ -65,6 +65,9 @@ public final class NewParserTest extends BaseJSTypeTestCase {
       "for legacy reasons. Removing this from your code is " +
       "safe for all browsers currently in use.";
 
+  private static final String ANNOTATION_DEPRECATED_WARNING =
+      "The %s annotation is deprecated.%s";
+
   private Config.LanguageMode mode;
   private boolean isIdeMode = false;
 
@@ -2561,6 +2564,12 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     long stop = System.currentTimeMillis();
 
     assertThat(stop - start).named("runtime").isLessThan(5000L);
+  }
+
+  public void testExposeDeprecated() {
+    parseWarning("/** @expose */ var x = 0;",
+        String.format(ANNOTATION_DEPRECATED_WARNING, "@expose",
+            " Use @nocollapse or @export instead."));
   }
 
   private Node script(Node stmt) {
