@@ -28,6 +28,7 @@ $jscomp.global = this;
 
 /**
  * Initializes Symbol.iterator, if it's not already defined.
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.initSymbolIterator = function() {
   Symbol = $jscomp.global.Symbol || {};
@@ -46,6 +47,7 @@ $jscomp.initSymbolIterator = function() {
  * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>} iterable
  * @return {!Iterator<T>}
  * @template T
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.makeIterator = function(iterable) {
   $jscomp.initSymbolIterator();
