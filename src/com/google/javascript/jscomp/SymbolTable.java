@@ -121,9 +121,9 @@ public final class SymbolTable {
   private final Map<Node, SymbolScope> scopes = Maps.newLinkedHashMap();
 
   /**
-   * All JSDocInfo in the program.
+   * All Nodes with JSDocInfo in the program.
    */
-  private final List<JSDocInfo> docInfos = Lists.newArrayList();
+  private final List<Node> docInfos = Lists.newArrayList();
 
   private SymbolScope globalScope = null;
 
@@ -173,7 +173,7 @@ public final class SymbolTable {
     return slot.scope;
   }
 
-  public Collection<JSDocInfo> getAllJSDocInfo() {
+  public Collection<Node> getAllJSDocInfoNodes() {
     return Collections.unmodifiableList(docInfos);
   }
 
@@ -1532,7 +1532,7 @@ public final class SymbolTable {
 
         // Find references in the JSDocInfo.
         JSDocInfo info = n.getJSDocInfo();
-        docInfos.add(info);
+        docInfos.add(n);
 
         for (Node typeAst : info.getTypeNodes()) {
           SymbolScope scope = scopes.get(t.getScopeRoot());
