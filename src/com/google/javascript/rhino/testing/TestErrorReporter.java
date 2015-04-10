@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino.testing;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.rhino.ErrorReporter;
 
 import org.junit.Assert;
@@ -56,7 +58,7 @@ import org.junit.Assert;
  * </pre>
  *
  */
-public final class TestErrorReporter extends Assert implements ErrorReporter {
+public final class TestErrorReporter implements ErrorReporter {
   private String[] errors;
   private String[] warnings;
   private int errorsIndex = 0;
@@ -85,9 +87,9 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
   public void error(String message, String sourceName, int line,
       int lineOffset) {
     if (errors != null && errorsIndex < errors.length) {
-      assertEquals(errors[errorsIndex++], message);
+      assertThat(message).isEqualTo(errors[errorsIndex++]);
     } else {
-      fail("extra error: " + message);
+      Assert.fail("extra error: " + message);
     }
   }
 
@@ -95,27 +97,26 @@ public final class TestErrorReporter extends Assert implements ErrorReporter {
   public void warning(String message, String sourceName, int line,
       int lineOffset) {
     if (warnings != null && warningsIndex < warnings.length) {
-      assertEquals(warnings[warningsIndex++], message);
+      assertThat(message).isEqualTo(warnings[warningsIndex++]);
     } else {
-      fail("extra warning: " + message);
+      Assert.fail("extra warning: " + message);
     }
   }
 
-  /**
-   * Returns whether all warnings were reported to this reporter.
-   */
-  public boolean hasEncounteredAllWarnings() {
-    return (warnings == null) ?
-        warningsIndex == 0 :
-        warnings.length == warningsIndex;
+  public void assertHasEncounteredAllWarnings() {
+    if (warnings == null) {
+      assertThat(warningsIndex).isEqualTo(0);
+    } else {
+      assertThat(warnings).hasLength(warningsIndex);
+    }
   }
 
-  /**
-   * Returns whether all errors were reported to this reporter.
-   */
-  public boolean hasEncounteredAllErrors() {
-    return (errors == null) ?
-        errorsIndex == 0 :
-        errors.length == errorsIndex;
+  public void assertHasEncounteredAllErrors() {
+    if (errors == null) {
+      assertThat(errorsIndex).isEqualTo(0);
+    } else {
+      assertThat(errors).hasLength(errorsIndex);
+    }
   }
+
 }

@@ -4237,8 +4237,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("source", false), code, config, testErrorReporter);
 
-    assertTrue("some expected warnings were not reported",
-        testErrorReporter.hasEncounteredAllWarnings());
+    testErrorReporter.assertHasEncounteredAllWarnings();
     return result.ast;
   }
 
@@ -4286,8 +4285,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
     jsdocParser.parse();
 
-    assertTrue("expected warnings were not reported",
-        errorReporter.hasEncounteredAllWarnings());
+    errorReporter.assertHasEncounteredAllWarnings();
 
     if (parseFileOverview) {
       return jsdocParser.getFileOverviewJSDocInfo();

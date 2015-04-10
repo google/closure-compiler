@@ -2609,8 +2609,8 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     Node script = result.ast;
 
     // verifying that all errors were seen
-    assertThat(testErrorReporter.hasEncounteredAllErrors()).isTrue();
-    assertThat(testErrorReporter.hasEncounteredAllWarnings()).isTrue();
+    testErrorReporter.assertHasEncounteredAllErrors();
+    testErrorReporter.assertHasEncounteredAllWarnings();
 
     return script;
   }
@@ -2630,8 +2630,8 @@ public final class NewParserTest extends BaseJSTypeTestCase {
         testErrorReporter).ast;
 
     // verifying that all warnings were seen
-    assertThat(testErrorReporter.hasEncounteredAllErrors()).isTrue();
-    assertThat(testErrorReporter.hasEncounteredAllWarnings()).isTrue();
+    testErrorReporter.assertHasEncounteredAllErrors();
+    testErrorReporter.assertHasEncounteredAllWarnings();
 
     return script;
   }

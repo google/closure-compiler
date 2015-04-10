@@ -789,8 +789,8 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
         testErrorReporter).ast;
 
     // verifying that all warnings were seen
-    assertThat(testErrorReporter.hasEncounteredAllErrors()).isTrue();
-    assertThat(testErrorReporter.hasEncounteredAllWarnings()).isTrue();
+    testErrorReporter.assertHasEncounteredAllErrors();
+    testErrorReporter.assertHasEncounteredAllWarnings();
 
     return script;
   }
