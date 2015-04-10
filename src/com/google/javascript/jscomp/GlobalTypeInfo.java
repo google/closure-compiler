@@ -59,7 +59,8 @@ import java.util.Set;
  * whether it is local, a formal parameter, etc.; and computes information about
  * the class hierarchy.
  *
- * Under development. DO NOT USE!
+ * <p>Used by the new type inference. See go/jscompiler-new-type-checker for the
+ * latest updates.
  *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
