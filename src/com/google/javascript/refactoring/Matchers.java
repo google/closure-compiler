@@ -320,7 +320,7 @@ public final class Matchers {
           node = node.getParent();
         }
         if (node != null && node.isFunction()) {
-          JSDocInfo jsDoc = NodeUtil.getFunctionJSDocInfo(node);
+          JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(node);
           if (jsDoc != null) {
             return jsDoc.isConstructor();
           }

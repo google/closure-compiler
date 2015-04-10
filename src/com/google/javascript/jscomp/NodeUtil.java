@@ -3368,7 +3368,9 @@ public final class NodeUtil {
 
   /**
    * Get the JSDocInfo for a function.
+   * @deprecated Prefer #getBestJSDocInfo instead.
    */
+  @Deprecated
   public static JSDocInfo getFunctionJSDocInfo(Node n) {
     Preconditions.checkState(n.isFunction());
     JSDocInfo fnInfo = n.getJSDocInfo();
@@ -3610,13 +3612,6 @@ public final class NodeUtil {
         // FUNCTION may be inside ASSIGN
         return getBestJSDocInfo(parent);
       } else if (parent.isVar() && parent.hasOneChild()) {
-        return parent.getJSDocInfo();
-      } else if ((parent.isHook() && parent.getFirstChild() != n) ||
-                 parent.isOr() ||
-                 parent.isAnd() ||
-                 (parent.isComma() && parent.getFirstChild() != n)) {
-        return getBestJSDocInfo(parent);
-      } else if (parent.isCast()) {
         return parent.getJSDocInfo();
       }
     }

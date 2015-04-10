@@ -1741,17 +1741,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("Object", findNameType("f", lastLocalScope).toString());
   }
 
-  public void testClosureParameterTypesWithJSDoc() {
-    testSame(
-        "/**\n" +
-        " * @param {function(!Object)} bar\n" +
-        " */\n" +
-        "function foo(bar) {}\n" +
-        "foo(/** @type {function(string)} */" +
-        "  (function(baz) { var f = baz; }))\n");
-    assertEquals("string", findNameType("f", lastLocalScope).toString());
-  }
-
   public void testDuplicateExternProperty1() {
     testSame(
         "/** @constructor */ function Foo() {}" +
@@ -2079,30 +2068,6 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testBadIfaceInit2() throws Exception {
     testSame("var x = {}; /** @interface */ x.f;", IFACE_INITIALIZER);
-  }
-
-  public void testFunctionInHook() throws Exception {
-    testSame("/** @param {number} x */ var f = Math.random() ? " +
-        "function(x) {} : function(x) {};");
-    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
-  }
-
-  public void testFunctionInAnd() throws Exception {
-    testSame("/** @param {number} x */ var f = Math.random() && " +
-        "function(x) {};");
-    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
-  }
-
-  public void testFunctionInOr() throws Exception {
-    testSame("/** @param {number} x */ var f = Math.random() || " +
-        "function(x) {};");
-    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
-  }
-
-  public void testFunctionInComma() throws Exception {
-    testSame("/** @param {number} x */ var f = (Math.random(), " +
-        "function(x) {});");
-    assertEquals("number", lastLocalScope.getVar("x").getType().toString());
   }
 
   public void testDeclaredCatchExpression1() {

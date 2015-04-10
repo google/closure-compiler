@@ -706,7 +706,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void visitFunctionEarly(Node fn) {
-      JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
+      JSDocInfo fnDoc = NodeUtil.getBestJSDocInfo(fn);
       Node nameNode = NodeUtil.getFunctionNameNode(fn);
       String internalName = createFunctionInternalName(fn, nameNode);
       boolean isRedeclaration;
@@ -1613,7 +1613,7 @@ class GlobalTypeInfo implements CompilerPass {
     private void updateFnScope(Scope fnScope, RawNominalType ownerType) {
       Node fn = fnScope.getRoot();
       Preconditions.checkState(fn.isFunction());
-      JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(fn);
+      JSDocInfo fnDoc = NodeUtil.getBestJSDocInfo(fn);
       String functionName = getFunInternalName(fn);
       DeclaredFunctionType declFunType = computeFnDeclaredType(
         fnDoc, functionName, fn, ownerType, currentScope);
@@ -2003,7 +2003,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (!root.isFunction()) {
         return false;
       }
-      JSDocInfo fnDoc = NodeUtil.getFunctionJSDocInfo(root);
+      JSDocInfo fnDoc = NodeUtil.getBestJSDocInfo(root);
       return fnDoc != null && fnDoc.isConstructor();
     }
 

@@ -5636,8 +5636,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testInferredParam7() throws Exception {
     testTypes(
         "/** @param {string} x */ function f(x) {}" +
-        "var bar = /** @type {function(number=,number=)} */ (" +
-        "    function(x, y) { f(y); });",
+        "/** @type {function(number=,number=)} */" +
+        "var bar = function(x, y) { f(y); };",
         "actual parameter 1 of f does not match formal parameter\n" +
         "found   : (number|undefined)\n" +
         "required: string");
