@@ -2566,10 +2566,19 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     assertThat(stop - start).named("runtime").isLessThan(5000L);
   }
 
-  public void testExposeDeprecated() {
-    parseWarning("/** @expose */ var x = 0;",
-        String.format(ANNOTATION_DEPRECATED_WARNING, "@expose",
-            " Use @nocollapse or @export instead."));
+  public void testInvalidHandling1() {
+    parse(""
+        + "/**\n"
+        + " * @fileoverview Definition.\n"
+        + " * @mods {ns.bar}\n"
+        + " * @modName mod\n"
+        + " *\n"
+        + " * @extends {ns.bar}\n"
+        + " * @author someone\n"
+        + " */\n"
+        + "\n"
+        + "goog.provide('ns.foo');\n"
+        + "");
   }
 
   private Node script(Node stmt) {

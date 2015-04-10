@@ -254,6 +254,9 @@ public final class JsDocInfoParser {
 
         case EOC:
           boolean success = true;
+          // TODO(johnlenz): It should be a parse error to have an @extends
+          // or similiar annotations in a file overview block.
+          checkExtendedTypes(extendedTypes);
           if (hasParsedFileOverviewDocInfo()) {
             fileOverviewJSDocInfo = retrieveAndResetParsedJSDocInfo();
             Visibility visibility = fileOverviewJSDocInfo.getVisibility();
@@ -271,7 +274,6 @@ public final class JsDocInfoParser {
                 break;
             }
           }
-          checkExtendedTypes(extendedTypes);
           return success;
 
         case EOF:
