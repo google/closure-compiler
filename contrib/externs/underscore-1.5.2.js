@@ -245,7 +245,7 @@ _.pluck = function(obj, key) {};
 
 /**
  * @param {Object.<?, VALUE>|Array.<VALUE>} obj
- * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} opt_iterator
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?=} opt_iterator
  * @param {CONTEXT=} opt_context
  * @return {VALUE}
  * @template CONTEXT, VALUE
@@ -254,7 +254,7 @@ _.max = function(obj, opt_iterator, opt_context) {};
 
 /**
  * @param {Object.<?, VALUE>|Array.<VALUE>} obj
- * @param {function(this:CONTEXT, VALUE, ?, ?) : ?} opt_iterator
+ * @param {function(this:CONTEXT, VALUE, ?, ?) : ?=} opt_iterator
  * @param {CONTEXT=} opt_context
  * @return {VALUE}
  * @template CONTEXT, VALUE
@@ -352,7 +352,7 @@ _.take = function(array, opt_n) {};
 
 /**
  * @param {Array.<VALUE>} array
- * @param {number} opt_n
+ * @param {number=} opt_n
  * @return {!Array.<VALUE>}
  * @template VALUE
  */

@@ -43,13 +43,15 @@ YouTubePlayer.prototype.pauseVideo = function() {};
 
 
 /**
- * Stops the current video. This function also closes the NetStream object and cancels the loading of the video.
+ * Stops the current video. This function also closes the NetStream object and
+ * cancels the loading of the video.
  */
 YouTubePlayer.prototype.stopVideo = function() {};
 
 
 /**
- * Clears the video display. This function is useful if you want to clear the video remnant after calling stopVideo().
+ * Clears the video display. This function is useful if you want to clear the
+ * video remnant after calling stopVideo().
  */
 YouTubePlayer.prototype.clearVideo = function() {};
 
@@ -198,13 +200,15 @@ YouTubePlayer.prototype.setPlaybackQuality = function(quality) {};
 
 
 /**
- * @return {Array} Array of available quality levels in order of decreasing quality.
+ * @return {Array} Array of available quality levels in order of decreasing
+ * quality.
  */
 YouTubePlayer.prototype.getAvailableQualityLevels = function() {};
 
 
 /**
- * @return {number}  The elapsed time in seconds since the video started playing.
+ * @return {number}  The elapsed time in seconds since the video started
+ * playing.
  */
 YouTubePlayer.prototype.getCurrentTime = function() {};
 
@@ -239,7 +243,7 @@ YouTubePlayer.prototype.getVideoEmbedCode = function() {};
  * Loads the specified video's thumbnail and prepares the player to play the
  *     video.
  * @param {Object|string} videoIdOrObject YouTube Video ID or object.
- * @param {number} opt_startSeconds The video will start from the keyframe
+ * @param {number=} opt_startSeconds The video will start from the keyframe
  *     nearest this time.
  */
 YouTubePlayer.prototype.cueVideoById =
@@ -249,7 +253,7 @@ YouTubePlayer.prototype.cueVideoById =
 /**
  * Loads and plays the specified video.
  * @param {Object|string} videoIdOrObject YouTube Video ID or object.
- * @param {number} opt_startSeconds The video will start from the keyframe
+ * @param {number=} opt_startSeconds The video will start from the keyframe
  *     nearest this time.
  */
 YouTubePlayer.prototype.loadVideoById =
@@ -257,21 +261,26 @@ YouTubePlayer.prototype.loadVideoById =
 
 
 /**
- * Loads the specified video's thumbnail and prepares the player to play the video.
+ * Loads the specified video's thumbnail and prepares the player to play the
+ * video.
  * @param {string} mediaContentUrl YouTube player URL in the format
  *     http://www.youtube.com/v/VIDEO_ID.
- * @param {number} opt_startSeconds The video will start from the keyframe nearest this time.
+ * @param {number=} opt_startSeconds The video will start from the keyframe
+ *     nearest this time.
  */
-YouTubePlayer.prototype.cueVideoByUrl = function(mediaContentUrl, opt_startSeconds) {};
+YouTubePlayer.prototype.cueVideoByUrl = function(mediaContentUrl,
+                                                 opt_startSeconds) {};
 
 
 /**
  * Loads and plays the specified video.
  * @param {string} mediaContentUrl YouTube player URL in the format
  *     http://www.youtube.com/v/VIDEO_ID.
- * @param {number} opt_startSeconds The video will start from the keyframe nearest this time.
+ * @param {number=} opt_startSeconds The video will start from the keyframe
+ *     nearest this time.
  */
-YouTubePlayer.prototype.loadVideoByUrl = function(mediaContentUrl, opt_startSeconds) {};
+YouTubePlayer.prototype.loadVideoByUrl = function(mediaContentUrl,
+                                                  opt_startSeconds) {};
 
 
 /**

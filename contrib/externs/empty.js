@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 The Closure Compiler Authors.
+ * Copyright 2015 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Externs used by Google Tag Manager which
- * the Closure compiler needs to be aware of during minification.
- * @externs
- */
-
-// Google Tag Manager
-var google_tag_manager;
+// This file intentionally left blank. It's only used for testing externs
+// compilation.
+// This is not an @externs file but the annotation_test requires this line.

@@ -210,7 +210,7 @@ _.pluck = function(obj, key) {};
 
 /**
  * @param {Object|Array} obj
- * @param {Function} opt_iterator
+ * @param {Function=} opt_iterator
  * @param {Object=} opt_context
  * @return {!*}
  */
@@ -218,7 +218,7 @@ _.max = function(obj, opt_iterator, opt_context) {};
 
 /**
  * @param {Object|Array} obj
- * @param {Function} opt_iterator
+ * @param {Function=} opt_iterator
  * @param {Object=} opt_context
  * @return {!*}
  */
@@ -248,7 +248,7 @@ _.groupBy = function(obj, iterator) {};
 /**
  * @param {Array} list
  * @param {*} obj
- * @param {Function} opt_iterator
+ * @param {Function=} opt_iterator
  * @return {!number}
  */
 _.sortedIndex = function(list, obj, opt_iterator) {};

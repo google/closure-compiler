@@ -17,6 +17,7 @@
 /**
  * Universal Analytics externs.
  * @see https://developers.google.com/analytics/devguides/collection/analyticsjs/method-reference
+ * @externs
  */
 
 /**
