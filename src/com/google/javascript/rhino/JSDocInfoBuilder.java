@@ -553,8 +553,7 @@ public final class JSDocInfoBuilder {
    * with a {@code typedef}'d type.
    */
   public boolean recordTypedef(JSTypeExpression type) {
-    if (type != null && !hasAnyTypeRelatedTags()) {
-      currentInfo.setTypedefType(type);
+    if (type != null && !hasAnyTypeRelatedTags() && currentInfo.declareTypedefType(type)) {
       populated = true;
       return true;
     }

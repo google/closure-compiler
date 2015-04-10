@@ -1991,6 +1991,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "type annotation incompatible with other annotations");
   }
 
+  public void testInvalidTemplatedTypedef1() throws Exception {
+    parse("@template T \n * @typedef {Object<T,T>} */",
+          "Bad type annotation. type annotation incompatible with other annotations");
+  }
+
+  public void testInvalidTemplatedTypedef2() throws Exception {
+    parse("@typedef {Array<T>} \n * @template T */",
+          "Bad type annotation. Type name(s) for @template annotation declared twice");
+  }
+
   public void testParseImplements() throws Exception {
     List<JSTypeExpression> interfaces = parse("@implements {SomeInterface}*/")
         .getImplementedInterfaces();

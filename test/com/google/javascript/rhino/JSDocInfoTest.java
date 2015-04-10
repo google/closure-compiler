@@ -187,7 +187,7 @@ public class JSDocInfoTest extends TestCase {
     } catch (IllegalStateException e) {}
 
     try {
-      info.setTypedefType(fromString("string"));
+      info.declareTypedefType(fromString("string"));
       fail("Expected exception");
     } catch (IllegalStateException e) {}
 
@@ -214,7 +214,7 @@ public class JSDocInfoTest extends TestCase {
     } catch (IllegalStateException e) {}
 
     try {
-      info.setTypedefType(fromString("string"));
+      info.declareTypedefType(fromString("string"));
       fail("Expected exception");
     } catch (IllegalStateException e) {}
 
@@ -241,7 +241,7 @@ public class JSDocInfoTest extends TestCase {
     } catch (IllegalStateException e) {}
 
     try {
-      info.setTypedefType(fromString("string"));
+      info.declareTypedefType(fromString("string"));
       fail("Expected exception");
     } catch (IllegalStateException e) {}
 
@@ -254,7 +254,7 @@ public class JSDocInfoTest extends TestCase {
 
   public void testSetTypedefType() {
     JSDocInfo info = new JSDocInfo();
-    info.setTypedefType(fromString("boolean"));
+    info.declareTypedefType(fromString("boolean"));
 
     assertTypeEquals(BOOLEAN_TYPE,
         resolve(info.getTypedefType()));

@@ -1116,7 +1116,7 @@ public class JSDocInfo implements Serializable {
   boolean declareTemplateTypeName(String newTemplateTypeName) {
     lazyInitInfo();
 
-    if (isTypeTransformationName(newTemplateTypeName)) {
+    if (isTypeTransformationName(newTemplateTypeName) || hasTypedefType()) {
       return false;
     }
     if (info.templateTypeNames == null){
@@ -1267,8 +1267,12 @@ public class JSDocInfo implements Serializable {
     setType(type, TYPEFIELD_ENUM);
   }
 
-  void setTypedefType(JSTypeExpression type) {
-    setType(type, TYPEFIELD_TYPEDEF);
+  boolean declareTypedefType(JSTypeExpression type) {
+    if (getTemplateTypeNames().isEmpty()) {
+      setType(type, TYPEFIELD_TYPEDEF);
+      return true;
+    }
+    return false;
   }
 
   private void setType(JSTypeExpression type, int mask) {
