@@ -613,7 +613,7 @@ public final class CompileTask
     List<SourceFile> files = Lists.newLinkedList();
     Iterator<Resource> iter = rc.iterator();
     while (iter.hasNext()) {
-      FileResource fr = (FileResource) iter.next().as(FileResource.class);
+      FileResource fr = (FileResource) iter.next();
       // Construct path to file, relative to current working directory.
       File file = Paths.get("")
           .toAbsolutePath()
