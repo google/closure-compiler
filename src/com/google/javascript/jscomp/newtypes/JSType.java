@@ -63,6 +63,12 @@ public abstract class JSType implements TypeI {
   protected static final int TOP_SCALAR_MASK =
       NUMBER_MASK | STRING_MASK | BOOLEAN_MASK | NULL_MASK | UNDEFINED_MASK;
 
+  // The corresponding type in the old type system. It's mutable because we
+  // don't set it at construction; only when we attach a type on an AST node.
+  // It doesn't participate in equals and hashCode. Its type is Object because
+  // we don't want to depend on rhino/jstype in this package.
+  protected Object oldType = null;
+
   static final Map<String, JSType> MAP_TO_UNKNOWN =
       new Map<String, JSType>() {
     public void clear() {
@@ -168,6 +174,15 @@ public abstract class JSType implements TypeI {
   protected abstract String getTypeVar();
 
   protected abstract ImmutableSet<EnumType> getEnums();
+
+  public Object getOldType() {
+    return this.oldType;
+  }
+
+  public void setOldType(Object t) {
+    // Preconditions.checkState(this.oldType == null);
+    this.oldType = t;
+  }
 
   // DO NOT USE THIS METHOD IN THIS FILE!
   // It represents unions very inefficiently and is only used by client code to avoid exposing the
@@ -1178,6 +1193,10 @@ public abstract class JSType implements TypeI {
     }
     Preconditions.checkArgument(o instanceof JSType);
     JSType t2 = (JSType) o;
+    // TODO(blickly): We had forgotten to compare the typevar and enums here and
+    // in hashCode. When adding them, the unit tests pass, but there is a new
+    // call-function-with-bottom-formals warning that breaks head Closure.
+    // Fix bug in NTI and do correct equality and hashCode here.
     return getMask() == t2.getMask() && Objects.equals(getObjs(), t2.getObjs());
   }
 

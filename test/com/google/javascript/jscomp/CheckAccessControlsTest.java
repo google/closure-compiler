@@ -52,6 +52,11 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    enableNewTypeInference();
+  }
+
+  @Override
   protected int getNumRepetitions() {
     return 1;
   }
@@ -384,10 +389,21 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testPrivateAccessForProperties4() {
+    // NTI doesn't allow registering methods on a type using computed access.
+    disableNewTypeInference();
     testSame(new String[] {
       "/** @constructor */ function Foo() {}" +
       "/** @private */ Foo.prototype.bar_ = function() {};",
       "Foo.prototype['baz'] = function() { (new Foo()).bar_(); };"
+    });
+  }
+
+  public void testPrivateAccessForProperties4a() {
+    // Identical to 4 except the computed access
+    testSame(new String[] {
+      "/** @constructor */ function Foo() {}" +
+      "/** @private */ Foo.prototype.bar_ = function() {};",
+      "Foo.prototype.baz = function() { (new Foo()).bar_(); };"
     });
   }
 
@@ -585,7 +601,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testProtectedAccessForProperties6() {
     testSame(new String[] {
-      "var goog = {};" +
+      "/** @const */ var goog = {};" +
       "/** @constructor */ goog.Foo = function() {};" +
       "/** @protected */ goog.Foo.prototype.bar = function() {};",
       "/** @constructor \n * @extends {goog.Foo} */" +
@@ -624,6 +640,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testProtectedAccessForProperties10() {
+    // NTI doesn't allow modifying the prototype in a different scope.
+    disableNewTypeInference();
     testSame(ImmutableList.of(
         SourceFile.fromCode("foo.js",
             "/** @constructor */ var Foo = function() {};" +
@@ -674,7 +692,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testNoProtectedAccessForProperties5() {
     test(new String[] {
-      "var goog = {};" +
+      "/** @const */ var goog = {};" +
       "/** @constructor */ goog.Foo = function() {};" +
       "/** @protected */ goog.Foo.prototype.bar = function() {};",
       "/** @constructor */" +
@@ -839,7 +857,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(ImmutableList.of(
         SourceFile.fromCode(
             "foo/bar.js",
-            "var foo = {};\n" +
+            "/** @const */ var foo = {};\n" +
             "/** @package */ foo.bar = function() {};"),
         SourceFile.fromCode(
             "baz/quux.js",
@@ -918,7 +936,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         " * @package\n" +
         " */\n" +
         "/** @return {string} */\n" +
-        "foo.bar = function() {};");
+        "foo.bar = function() { return 'asdf'; };");
   }
 
   public void testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
@@ -1306,7 +1324,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testAccessOfStaticMethodOnPrivateQualifiedConstructor() {
     testSame(new String[] {
-      "var goog = {};" +
+      "/** @const */ var goog = {};" +
       "/** @constructor \n * @private */ goog.Foo = function() { }; " +
       "goog.Foo.create = function() { return new goog.Foo(); };",
       "goog.Foo.create()",
@@ -1315,7 +1333,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testInstanceofOfPrivateConstructor() {
     testSame(new String[] {
-      "var goog = {};" +
+      "/** @const */ var goog = {};" +
       "/** @constructor \n * @private */ goog.Foo = function() { }; " +
       "goog.Foo.create = function() { return new goog.Foo(); };",
       "goog instanceof goog.Foo",
@@ -1429,7 +1447,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testDeclarationAndConventionConflict4b() {
     testSame(
-        "var NS = {}; /** @constructor */ NS.Foo = function() {};" +
+        "/** @const */ var NS = {}; /** @constructor */ NS.Foo = function() {};" +
         "NS.Foo.prototype = { /** @protected */ length_: 1 };\n" +
         "(new NS.Foo()).length_;",
         CONVENTION_MISMATCH, true);
@@ -1494,12 +1512,17 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty3a() {
+    // https://github.com/google/closure-compiler/wiki/Warnings#suppress-tags
+    // According to the docs, the only suppression allowed on a property declaration
+    // is "duplicate", so we don't handle any others in NTI.
+    disableNewTypeInference();
     testSame("/** @constructor */ function Foo() {}\n" +
         "/** @type {number} */ Foo.prototype.PROP = 2;\n" +
         "/** @suppress {duplicate|const} */ Foo.prototype.PROP = 3;\n");
   }
 
   public void testConstantProperty3b() {
+    disableNewTypeInference();
     testSame("/** @constructor */ function Foo() {}\n" +
         "/** @const */ Foo.prototype.prop = 2;\n" +
         "/** @suppress {const} */ Foo.prototype.prop = 3;\n");
@@ -1514,23 +1537,23 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testNamespaceConstantProperty2() {
-    testError("" +
-        "var o = {};\n" +
+    testError(
+        "/** @const */ var o = {};\n" +
         "/** @const */ o.x = 1;\n" +
         "o.x = 2;\n",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testNamespaceConstantProperty2a() {
-    testSame("" +
-        "var o = {};\n" +
+    testSame(
+        "/** @const */ var o = {};\n" +
         "/** @const */ o.x = 1;\n" +
-        "var o2 = {};\n" +
+        "/** @const */ var o2 = {};\n" +
         "/** @const */ o2.x = 1;\n");
   }
 
   public void testNamespaceConstantProperty3() {
-    testError("" +
+    testError(
         "/** @const */ var o = {};\n" +
         "/** @const */ o.x = 1;" +
         "o.x = 2;",
@@ -1538,13 +1561,16 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty3a1() {
-    // We don't currently check constants defined in object literals.
+    // NTI warns that @const isn't allowed there. The old type checker silently
+    // ignores @const and doesn't warn about reassignment.
+    disableNewTypeInference();
     testSame("var o = { /** @const */ x: 1 };" +
         "o.x = 2;");
   }
 
   public void testConstantProperty3a2() {
-    // We should report this but we don't.
+    disableNewTypeInference();
+    // The old type checker should report this but it doesn't.
     testSame("/** @const */ var o = { /** @const */ x: 1 };" +
         "o.x = 2;");
   }
@@ -1556,7 +1582,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty3b2() {
-    // We should report this but we don't.
+    disableNewTypeInference();
+    // The old type checker should report this but it doesn't.
     testSame("/** @const */ var o = { XYZ: 1 };" +
         "o.XYZ = 2;");
   }
@@ -1598,7 +1625,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty8() {
-    testSame("var o = { /** @const */ x: 1 };" +
+    testSame("/** @const */ var o = { /** @const */ x: 1 };" +
         "var y = o.x;");
   }
 
@@ -1610,11 +1637,14 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty10a() {
+    disableNewTypeInference();
     testSame("/** @constructor */ function Foo() { this.prop = 1;}" +
         "/** @const */ Foo.prototype.prop;");
   }
 
   public void testConstantProperty10b() {
+    // NTI warns about property redeclaration and uninitialized constant.
+    disableNewTypeInference();
     testSame("/** @constructor */ function Foo() { this.PROP = 1;}" +
         "Foo.prototype.PROP;");
   }
@@ -1630,6 +1660,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty12() {
+    disableNewTypeInference();
     testSame("/** @constructor */ function Foo() {}" +
         "/** @const */ Foo.prototype.bar;" +
         "/**\n" +
@@ -1751,8 +1782,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         "/**\n" +
         " * @suppress {constantProperty}\n" +
         " * @constructor\n" +
-        " */ function B() {" +
-        "/** @const */ this.bar = 3;this.bar += 4;}");
+        " */ function B() { /** @const */ this.bar = 3; this.bar += 4; }");
   }
 
   public void testSuppressConstantProperty2() {
@@ -1787,4 +1817,15 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         + " */ function Bar() {};",
         EXTEND_FINAL_CLASS);
   }
+
+  // Currently, the conversion stack overflows in this example. When it tries to
+  // convert the constructor, it looks at the properties of the instance, and
+  // the type of prop contains the type of the constructor, ...
+  // public void test123() {
+  //   testSame("/** @constructor */\n"
+  //       + "function Foo() {\n"
+  //       + "  /** @type {function(new:Foo)} */\n"
+  //       + "  this.prop;\n"
+  //       + "}");
+  // }
 }

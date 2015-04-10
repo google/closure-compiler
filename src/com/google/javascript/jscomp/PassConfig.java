@@ -74,6 +74,11 @@ public abstract class PassConfig {
     topScope = null;
   }
 
+  void regenerateGlobalTypedScopeAfterNTI(AbstractCompiler compiler, Node root) {
+    typedScopeCreator = new MemoizedScopeCreator(SyntacticScopeCreator.makeTyped(compiler));
+    topScope = TypedScope.createGlobalScope(root.getParent());
+  }
+
   /**
    * Regenerates the top scope potentially only for a sub-tree of AST and then
    * copies information for the old global scope.
