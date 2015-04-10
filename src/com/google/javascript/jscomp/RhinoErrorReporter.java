@@ -90,9 +90,6 @@ class RhinoErrorReporter {
           "{0}. Use --language_in=ECMASCRIPT6 or ECMASCRIPT6_STRICT " +
           "to enable ES6 features.");
 
-  static final DiagnosticType ANNOTATION_DEPRECATED =
-      DiagnosticType.warning("JSC_ANNOTATION_DEPRECATED", "{0}");
-
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
 
@@ -164,10 +161,6 @@ class RhinoErrorReporter {
 
         .put(Pattern.compile("^this language feature is only supported in es6 mode.*"),
             ES6_FEATURE)
-
-        // Deprecated annotations
-        .put(Pattern.compile("^The @[a-z]+ annotation is deprecated\\..*"),
-            ANNOTATION_DEPRECATED)
 
         .build();
   }

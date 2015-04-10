@@ -197,9 +197,6 @@ class IRFactory {
 
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
-  static final String ANNOTATION_DEPRECATED =
-      "The %s annotation is deprecated.%s";
-
   private final String sourceString;
   private final List<Integer> newlines;
   private final StaticSourceFile sourceFile;
@@ -474,24 +471,6 @@ class IRFactory {
     validateTypeAnnotations(n);
     validateFunctionJsDoc(n);
     validateMsgJsDoc(n);
-    validateDeprecatedJsDoc(n);
-  }
-
-  /**
-   * Checks that deprecated annotations such as @expose are not present
-   */
-  private void validateDeprecatedJsDoc(Node n) {
-    JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      return;
-    }
-    if (info.isExpose()) {
-      errorReporter.warning(
-          String.format(ANNOTATION_DEPRECATED, "@expose",
-              " Use @nocollapse or @export instead."),
-          sourceName,
-          n.getLineno(), n.getCharno());
-    }
   }
 
   /**

@@ -65,9 +65,6 @@ public final class NewParserTest extends BaseJSTypeTestCase {
       "for legacy reasons. Removing this from your code is " +
       "safe for all browsers currently in use.";
 
-  private static final String ANNOTATION_DEPRECATED_WARNING =
-      "The %s annotation is deprecated.%s";
-
   private Config.LanguageMode mode;
   private boolean isIdeMode = false;
 
