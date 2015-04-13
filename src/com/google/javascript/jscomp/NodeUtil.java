@@ -3613,6 +3613,11 @@ public final class NodeUtil {
         return getBestJSDocInfo(parent);
       } else if (parent.isVar() && parent.hasOneChild()) {
         return parent.getJSDocInfo();
+      } else if ((parent.isHook() && parent.getFirstChild() != n)
+                 || parent.isOr()
+                 || parent.isAnd()
+                 || (parent.isComma() && parent.getFirstChild() != n)) {
+        return getBestJSDocInfo(parent);
       }
     }
     return info;
