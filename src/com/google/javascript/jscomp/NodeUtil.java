@@ -1875,7 +1875,7 @@ public final class NodeUtil {
    *     destructuring pattern.
    */
   static boolean isDestructuringDeclaration(Node n) {
-    if (n.isVar() || n.isLet() || n.isConst()) {
+    if (isNameDeclaration(n)) {
       for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
         if (c.isArrayPattern() || c.isObjectPattern()) {
           return true;

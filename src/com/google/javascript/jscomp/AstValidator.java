@@ -786,7 +786,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateVarOrAssignmentTarget(Node n) {
-    if (n.isVar() || n.isLet() || n.isConst()) {
+    if (NodeUtil.isNameDeclaration(n)) {
       // Only one NAME can be declared for FOR-IN expressions.
       validateChildCount(n, 1);
       validateNameDeclarationHelper(n.getType(), n);

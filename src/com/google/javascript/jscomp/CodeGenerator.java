@@ -591,7 +591,7 @@ class CodeGenerator {
           add(c, Context.STATEMENT);
 
           // VAR doesn't include ';' since it gets used in expressions
-          if (c.isVar() || c.isLet() || c.isConst()) {
+          if (NodeUtil.isNameDeclaration(c)) {
             cc.endStatement();
           }
 
@@ -616,7 +616,7 @@ class CodeGenerator {
           add("for");
           cc.maybeInsertSpace();
           add("(");
-          if (first.isVar() || first.isLet() || first.isConst()) {
+          if (NodeUtil.isNameDeclaration(first)) {
             add(first, Context.IN_FOR_INIT_CLAUSE);
           } else {
             addExpr(first, 0, Context.IN_FOR_INIT_CLAUSE);
@@ -1357,8 +1357,7 @@ class CodeGenerator {
   void addArrayPattern(Node n) {
     add("[");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child == n.getLastChild()
-          && (n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
+      if (child == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
         add("]");
         add("=");
       } else if (child != n.getFirstChild()) {
@@ -1367,7 +1366,7 @@ class CodeGenerator {
 
       add(child);
     }
-    if (!(n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
+    if (!NodeUtil.isNameDeclaration(n.getParent())) {
       add("]");
     }
   }
@@ -1380,8 +1379,7 @@ class CodeGenerator {
 
     add("{");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child == n.getLastChild()
-          && (n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
+      if (child == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
         add("}");
         add("=");
       } else if (child != n.getFirstChild()) {
@@ -1390,7 +1388,7 @@ class CodeGenerator {
 
       add(child);
     }
-    if (!(n.getParent().isVar() || n.getParent().isLet() || n.getParent().isConst())) {
+    if (!NodeUtil.isNameDeclaration(n.getParent())) {
       add("}");
     }
 
