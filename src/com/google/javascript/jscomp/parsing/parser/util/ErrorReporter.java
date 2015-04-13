@@ -24,23 +24,17 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 public abstract class ErrorReporter {
   public final void reportError(SourcePosition location, String format, Object... arguments) {
     hadError = true;
-    reportMessage(location, "Error", format, arguments);
+    String message = SimpleFormat.format(format, arguments);
+    reportError(location, message);
   }
 
   public final void reportWarning(SourcePosition location, String format, Object... arguments) {
-    reportMessage(location, "Warning", format, arguments);
+    String message = SimpleFormat.format(format, arguments);
+    reportWarning(location, message);
   }
 
-  protected void reportMessage(
-      SourcePosition location, String kind, String format, Object... arguments) {
-    String message = SimpleFormat.format("%s: %s", kind, SimpleFormat.format(format, arguments));
-    if (location != null) {
-      message = SimpleFormat.format("%s: %s", location, message);
-    }
-    reportMessage(location, message);
-  }
-
-  protected abstract void reportMessage(SourcePosition location, String message);
+  protected abstract void reportError(SourcePosition location, String message);
+  protected abstract void reportWarning(SourcePosition location, String message);
 
   public final boolean hadError() {
     return hadError;

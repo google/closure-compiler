@@ -26,7 +26,6 @@ import com.google.javascript.jscomp.parsing.parser.SourceFile;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
-import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -129,33 +128,20 @@ public final class ParserRunner {
     }
 
     @Override
-    protected void reportMessage(
-        SourcePosition location, String kind, String format,
-        Object... arguments) {
-      String message = SimpleFormat.format("%s",
-          SimpleFormat.format(format, arguments));
-      switch (kind) {
-        case "Error":
-          if (isIdeMode || !errorSeen) {
-            errorSeen = true;
-            this.reporter.error(
-                message, location.source.name,
-                location.line + 1, location.column);
-          }
-          break;
-        case "Warning":
-          this.reporter.warning(
-              message, location.source.name,
-              location.line + 1, location.column);
-          break;
-        default:
-          throw new IllegalStateException("Unexpected:" + kind);
+    protected void reportError(SourcePosition location, String message) {
+      if (isIdeMode || !errorSeen) {
+        errorSeen = true;
+        this.reporter.error(
+            message, location.source.name,
+            location.line + 1, location.column);
       }
     }
 
     @Override
-    protected void reportMessage(SourcePosition location, String message) {
-      throw new IllegalStateException("Not called directly");
+    protected void reportWarning(SourcePosition location, String message) {
+      this.reporter.warning(
+          message, location.source.name,
+          location.line + 1, location.column);
     }
   }
 
