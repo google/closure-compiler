@@ -3366,21 +3366,7 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  // We want to attach as few types as possible, to save memory. The list of
-  // allowed nodes depends on what we see in the tests of the type-aware passes.
-  private boolean needsAttachedType(Node n) {
-    Node parent = n.getParent();
-    return n.isGetProp()
-        || n.isName()
-        || n.isFunction()
-        || n.isThis()
-        || n.isNew();
-  }
-
   private void maybeSetTypeI(Node n, JSType t) {
-    if (!needsAttachedType(n)) {
-      return;
-    }
     TypeI ti = n.getTypeI();
     JSType oldType = (ti != null && ti instanceof JSType) ? (JSType) ti : null;
     // When creating a function summary, we set a precise type on the function's

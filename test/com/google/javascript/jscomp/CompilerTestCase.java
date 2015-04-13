@@ -79,13 +79,8 @@ public abstract class CompilerTestCase extends TestCase  {
   /** Error level reported by type checker. */
   private CheckLevel typeCheckLevel;
 
-  /**
-   * If true, the compiler pass under test will run before type checking,
-   * e.g., passes that do transpiling set this to true.
-   */
+  /** Whether to the test compiler pass before the type check. */
   protected boolean runTypeCheckAfterProcessing = false;
-
-  private boolean newTypeInferenceEnabled = false;
 
   /** Whether to scan externs for property names. */
   private boolean gatherExternPropertiesEnabled = false;
@@ -279,29 +274,8 @@ public abstract class CompilerTestCase extends TestCase  {
    * @see TypeCheck
    */
   public void enableTypeCheck(CheckLevel level) {
-    this.typeCheckEnabled = true;
-    this.typeCheckLevel = level;
-  }
-
-  /**
-   * Run the new type inference, and then convert new types to old types.
-   * Then run the pass under test to verify that it can use the types without
-   * issues.
-   */
-  void enableNewTypeInference() {
-    // Only for passes that are also tested with the old type system.
-    Preconditions.checkState(typeCheckEnabled);
-    // Only for passes that run after type checking.
-    Preconditions.checkState(!runTypeCheckAfterProcessing);
-    this.newTypeInferenceEnabled = true;
-  }
-
-  /**
-   * Used when we want to run NTI on the unit tests of a pass, but want to
-   * disable NTI on individual tests.
-   */
-  void disableNewTypeInference() {
-    this.newTypeInferenceEnabled = false;
+    typeCheckEnabled  = true;
+    typeCheckLevel = level;
   }
 
   /**
@@ -686,17 +660,12 @@ public abstract class CompilerTestCase extends TestCase  {
    *     should not be examined
    */
   public void test(List<SourceFile> js, List<SourceFile> expected,
-      DiagnosticType error, DiagnosticType warning, String description) {
-    if (newTypeInferenceEnabled) {
-      Compiler compiler = createCompiler();
-      lastCompiler = compiler;
-      compiler.init(externsInputs, js, getOptions());
-      test(compiler, expected, error, warning, description, true);
-    }
+                  DiagnosticType error, DiagnosticType warning, String description) {
     Compiler compiler = createCompiler();
     lastCompiler = compiler;
+
     compiler.init(externsInputs, js, getOptions());
-    test(compiler, expected, error, warning, description, false);
+    test(compiler, expected, error, warning, description);
   }
 
   /**
@@ -957,20 +926,13 @@ public abstract class CompilerTestCase extends TestCase  {
                     DiagnosticType error, DiagnosticType warning,
                     String description) {
     if (expected == null) {
-      test(compiler, (List<SourceFile>) null, error, warning, description, false);
+      test(compiler, (List<SourceFile>) null, error, warning, description);
     } else {
-      if (newTypeInferenceEnabled) {
-        List<SourceFile> inputs = Lists.newArrayList();
-        for (int i = 0; i < expected.length; i++) {
-          inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
-        }
-        test(compiler, inputs, error, warning, description, true);
-      }
       List<SourceFile> inputs = Lists.newArrayList();
       for (int i = 0; i < expected.length; i++) {
         inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
       }
-      test(compiler, inputs, error, warning, description, false);
+      test(compiler, inputs, error, warning, description);
     }
   }
 
@@ -990,7 +952,7 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   private void test(Compiler compiler, List<SourceFile> expected,
                     DiagnosticType error, DiagnosticType warning,
-                    String description, boolean runNewTypeInference) {
+                    String description) {
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 
@@ -1048,17 +1010,8 @@ public abstract class CompilerTestCase extends TestCase  {
         // objects for the same type are created, and the type system
         // uses reference equality to compare many types.
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
-          if (runNewTypeInference) {
-            GlobalTypeInfo symbolTable = new GlobalTypeInfo(compiler);
-            compiler.setSymbolTable(symbolTable);
-            symbolTable.process(externsRoot, mainRoot);
-            (new NewTypeInference(compiler, rewriteClosureCode)).process(externsRoot, mainRoot);
-            (new ConvertNewTypesToOld(compiler)).process(externsRoot, mainRoot);
-            (new InferJSDocInfo(compiler)).process(externsRoot, mainRoot);
-          } else {
-            TypeCheck check = createTypeCheck(compiler, typeCheckLevel);
-            check.processForTesting(externsRoot, mainRoot);
-          }
+          TypeCheck check = createTypeCheck(compiler, typeCheckLevel);
+          check.processForTesting(externsRoot, mainRoot);
         }
 
         // Only run the normalize pass once, if asked.

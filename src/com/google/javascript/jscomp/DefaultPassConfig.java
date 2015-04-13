@@ -329,13 +329,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.useNewTypeInference) {
       checks.add(symbolTableForNewTypeInference);
       checks.add(newTypeInference);
-
-      // TODO(blickly): uncomment these once the conversion completes
-      // successfully on all the regression tests. Currently, stack overflow
-
-      // Turn new types into old types so that the next passes that use type info can stay unchanged
-      // checks.add(convertNewTypesToOld);
-      // checks.add(inferJsDocInfo);
     }
 
     if (options.checkTypes || options.inferTypes) {
@@ -1445,14 +1438,6 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private final PassFactory convertNewTypesToOld =
-      new PassFactory("ConvertNewTypesToOld", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new TypeConverter(compiler);
-        }
-      };
-
   private final HotSwapPassFactory inferJsDocInfo =
       new HotSwapPassFactory("inferJsDocInfo", true) {
   @Override
@@ -1566,21 +1551,6 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     public void hotSwapScript(Node scriptRoot, Node originalRoot) {
       patchGlobalTypedScope(compiler, scriptRoot);
-    }
-  }
-
-  private class TypeConverter implements CompilerPass {
-    private final AbstractCompiler compiler;
-
-    TypeConverter(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-    @Override
-    public void process(Node externs, Node root) {
-      Preconditions.checkState(topScope == null);
-      (new ConvertNewTypesToOld(this.compiler)).process(externs, root);
-      // Needed by inferJsDocInfo, which runs next.
-      regenerateGlobalTypedScopeAfterNTI(compiler, root);
     }
   }
 

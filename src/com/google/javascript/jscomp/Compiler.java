@@ -212,7 +212,7 @@ public class Compiler extends AbstractCompiler {
 
   public PerformanceTracker tracker;
 
-  // For use by the new type inference. Set to null after ConvertNewTypesToOld.
+  // For use by the new type inference
   private GlobalTypeInfo symbolTable;
 
   // The oldErrorReporter exists so we can get errors from the JSTypeRegistry.
@@ -1299,7 +1299,9 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   GlobalTypeInfo getSymbolTable() {
-    return this.symbolTable;
+    GlobalTypeInfo gti = symbolTable;
+    symbolTable = null; // GC this after type inference
+    return gti;
   }
 
   @Override
