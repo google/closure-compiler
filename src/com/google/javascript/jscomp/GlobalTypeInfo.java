@@ -262,6 +262,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    Preconditions.checkNotNull(warnings, "Cannot rerun GlobalTypeInfo.process");
     Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
     globalScope =
