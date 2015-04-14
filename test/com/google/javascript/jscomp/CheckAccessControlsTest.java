@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableList;
  */
 
 public final class CheckAccessControlsTest extends CompilerTestCase {
-
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
     parseTypeInfo = true;
@@ -65,8 +64,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.ERROR);
-    options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY,
-        CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY, CheckLevel.ERROR);
     return options;
   }
 
@@ -83,10 +81,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
    * @param errorWithMessage The deprecation error expected when a reason
    *    message is given.
    */
-  private void testDep(String js, String reason,
-                       DiagnosticType error,
-                       DiagnosticType errorWithMessage) {
-
+  private void testDep(
+      String js, String reason, DiagnosticType error, DiagnosticType errorWithMessage) {
     // Test without a reason.
     testError(String.format(js, ""), error);
 
@@ -95,967 +91,939 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testDeprecatedFunction() {
-    testDep("/** @deprecated %s */ function f() {} function g() { f(); }",
-            "Some Reason",
-            DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDep("/** @deprecated %s */ function f() {} function g() { f(); }", "Some Reason",
+        DEPRECATED_NAME, DEPRECATED_NAME_REASON);
   }
 
   public void testWarningOnDeprecatedConstVariable() {
-    testDep("/** @deprecated %s */ var f = 4; function g() { alert(f); }",
-            "Another reason",
-            DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDep("/** @deprecated %s */ var f = 4; function g() { alert(f); }", "Another reason",
+        DEPRECATED_NAME, DEPRECATED_NAME_REASON);
   }
 
   public void testThatNumbersArentDeprecated() {
-    testSame("/** @deprecated */ var f = 4; var h = 3; " +
-             "function g() { alert(h); }");
+    testSame("/** @deprecated */ var f = 4; var h = 3; function g() { alert(h); }");
   }
 
   public void testDeprecatedFunctionVariable() {
-    testDep("/** @deprecated %s */ var f = function() {}; " +
-            "function g() { f(); }", "I like g...",
-            DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDep(
+        "/** @deprecated %s */ var f = function() {}; function g() { f(); }",
+        "I like g...", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
   }
 
   public void testNoWarningInGlobalScope() {
-    testSame("var goog = {}; goog.makeSingleton = function(x) {};" +
-        "/** @deprecated */ function f() {} goog.makeSingleton(f);");
+    testSame("var goog = {}; goog.makeSingleton = function(x) {};"
+        + "/** @deprecated */ function f() {} goog.makeSingleton(f);");
   }
 
   public void testNoWarningInGlobalScopeForCall() {
-    testDep("/** @deprecated %s */ function f() {} f();",
-            "Some global scope", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDep("/** @deprecated %s */ function f() {} f();", "Some global scope", DEPRECATED_NAME,
+        DEPRECATED_NAME_REASON);
   }
 
   public void testNoWarningInDeprecatedFunction() {
-    testSame("/** @deprecated */ function f() {} " +
-             "/** @deprecated */ function g() { f(); }");
+    testSame("/** @deprecated */ function f() {} /** @deprecated */ function g() { f(); }");
   }
 
   public void testWarningInNormalClass() {
-    testDep("/** @deprecated %s */ function f() {}" +
-            "/** @constructor */  var Foo = function() {}; " +
-            "Foo.prototype.bar = function() { f(); }",
-            "FooBar", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDep(
+        "/** @deprecated %s */ function f() {}"
+        + "/** @constructor */  var Foo = function() {}; "
+        + "Foo.prototype.bar = function() { f(); }",
+        "FooBar", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
   }
 
   public void testWarningForProperty1() {
-    testDep("/** @constructor */ function Foo() {}" +
-            "/** @deprecated %s */ Foo.prototype.bar = 3;" +
-            "Foo.prototype.baz = function() { alert((new Foo()).bar); };",
-            "A property is bad",
-            DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated %s */ Foo.prototype.bar = 3;"
+        + "Foo.prototype.baz = function() { alert((new Foo()).bar); };",
+        "A property is bad", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForProperty2() {
-    testDep("/** @constructor */ function Foo() {}" +
-            "/** @deprecated %s */ Foo.prototype.bar = 3;" +
-            "Foo.prototype.baz = function() { alert(this.bar); };",
-            "Zee prop, it is deprecated!",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated %s */ Foo.prototype.bar = 3;"
+        + "Foo.prototype.baz = function() { alert(this.bar); };",
+        "Zee prop, it is deprecated!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForDeprecatedClass() {
-    testDep("/** @constructor \n* @deprecated %s */ function Foo() {} " +
-            "function f() { new Foo(); }",
-            "Use the class 'Bar'",
-            DEPRECATED_CLASS,
-            DEPRECATED_CLASS_REASON);
+    testDep(
+        "/** @constructor \n* @deprecated %s */ function Foo() {} "
+        + "function f() { new Foo(); }",
+        "Use the class 'Bar'", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
   }
 
   public void testNoWarningForDeprecatedClassInstance() {
-    testSame("/** @constructor \n * @deprecated */ function Foo() {} " +
-             "/** @param {Foo} x */ function f(x) { return x; }");
+    testSame("/** @constructor \n * @deprecated */ function Foo() {} "
+        + "/** @param {Foo} x */ function f(x) { return x; }");
   }
 
   public void testWarningForDeprecatedSuperClass() {
-    testDep("/** @constructor \n * @deprecated %s */ function Foo() {} " +
-            "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-            "function f() { new SubFoo(); }",
-            "Superclass to the rescue!",
-            DEPRECATED_CLASS,
-            DEPRECATED_CLASS_REASON);
+    testDep(
+        "/** @constructor \n * @deprecated %s */ function Foo() {} "
+        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+        + "function f() { new SubFoo(); }",
+        "Superclass to the rescue!", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
   }
 
   public void testWarningForDeprecatedSuperClass2() {
-    testDep("/** @constructor \n * @deprecated %s */ function Foo() {} " +
-            "var namespace = {}; " +
-            "/** @constructor \n * @extends {Foo} */ " +
-            "namespace.SubFoo = function() {}; " +
-            "function f() { new namespace.SubFoo(); }",
-            "Its only weakness is Kryptoclass",
-            DEPRECATED_CLASS,
-            DEPRECATED_CLASS_REASON);
+    testDep(
+        "/** @constructor \n * @deprecated %s */ function Foo() {} "
+        + "var namespace = {}; "
+        + "/** @constructor \n * @extends {Foo} */ "
+        + "namespace.SubFoo = function() {}; "
+        + "function f() { new namespace.SubFoo(); }",
+        "Its only weakness is Kryptoclass", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
   }
 
   public void testWarningForPrototypeProperty() {
-    testDep("/** @constructor */ function Foo() {}" +
-            "/** @deprecated %s */ Foo.prototype.bar = 3;" +
-            "Foo.prototype.baz = function() { alert(Foo.prototype.bar); };",
-            "It is now in production, use that model...",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated %s */ Foo.prototype.bar = 3;"
+        + "Foo.prototype.baz = function() { alert(Foo.prototype.bar); };",
+        "It is now in production, use that model...", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testNoWarningForNumbers() {
-    testSame("/** @constructor */ function Foo() {}" +
-             "/** @deprecated */ Foo.prototype.bar = 3;" +
-             "Foo.prototype.baz = function() { alert(3); };");
+    testSame("/** @constructor */ function Foo() {}"
+        + "/** @deprecated */ Foo.prototype.bar = 3;"
+        + "Foo.prototype.baz = function() { alert(3); };");
   }
 
   public void testWarningForMethod1() {
-    testDep("/** @constructor */ function Foo() {}" +
-            "/** @deprecated %s */ Foo.prototype.bar = function() {};" +
-            "Foo.prototype.baz = function() { this.bar(); };",
-            "There is a madness to this method",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated %s */ Foo.prototype.bar = function() {};"
+        + "Foo.prototype.baz = function() { this.bar(); };",
+        "There is a madness to this method", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForMethod2() {
-    testDep("/** @constructor */ function Foo() {} " +
-            "/** @deprecated %s */ Foo.prototype.bar; " +
-            "Foo.prototype.baz = function() { this.bar(); };",
-            "Stop the ringing!",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {} "
+        + "/** @deprecated %s */ Foo.prototype.bar; "
+        + "Foo.prototype.baz = function() { this.bar(); };",
+        "Stop the ringing!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testNoWarningInDeprecatedClass() {
-    testSame("/** @deprecated */ function f() {} " +
-             "/** @constructor \n * @deprecated */ " +
-             "var Foo = function() {}; " +
-             "Foo.prototype.bar = function() { f(); }");
+    testSame("/** @deprecated */ function f() {} "
+        + "/** @constructor \n * @deprecated */ "
+        + "var Foo = function() {}; "
+        + "Foo.prototype.bar = function() { f(); }");
   }
 
   public void testNoWarningOnDeclaration() {
-    testSame("/** @constructor */ function F() {\n" +
-             "  /**\n" +
-             "   * @type {number}\n" +
-             "   * @deprecated Use something else.\n" +
-             "   */\n" +
-             "  this.code;\n" +
-             "}");
+    testSame("/** @constructor */ function F() {\n"
+        + "  /**\n"
+        + "   * @type {number}\n"
+        + "   * @deprecated Use something else.\n"
+        + "   */\n"
+        + "  this.code;\n"
+        + "}");
   }
 
   public void testNoWarningInDeprecatedClass2() {
-    testSame("/** @deprecated */ function f() {} " +
-             "/** @constructor \n * @deprecated */ " +
-             "var Foo = function() {}; " +
-             "Foo.bar = function() { f(); }");
+    testSame("/** @deprecated */ function f() {} "
+        + "/** @constructor \n * @deprecated */ "
+        + "var Foo = function() {}; "
+        + "Foo.bar = function() { f(); }");
   }
 
   public void testNoWarningInDeprecatedStaticMethod() {
-    testSame("/** @deprecated */ function f() {} " +
-             "/** @constructor */ " +
-             "var Foo = function() {}; " +
-             "/** @deprecated */ Foo.bar = function() { f(); }");
+    testSame("/** @deprecated */ function f() {} "
+        + "/** @constructor */ "
+        + "var Foo = function() {}; "
+        + "/** @deprecated */ Foo.bar = function() { f(); }");
   }
 
   public void testWarningInStaticMethod() {
-    testDep("/** @deprecated %s */ function f() {} " +
-            "/** @constructor */ " +
-            "var Foo = function() {}; " +
-            "Foo.bar = function() { f(); }",
-            "crazy!",
-            DEPRECATED_NAME,
-            DEPRECATED_NAME_REASON);
+    testDep(
+        "/** @deprecated %s */ function f() {} "
+        + "/** @constructor */ "
+        + "var Foo = function() {}; "
+        + "Foo.bar = function() { f(); }",
+        "crazy!", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
   }
 
   public void testDeprecatedObjLitKey() {
-    testDep("var f = {}; /** @deprecated %s */ f.foo = 3; " +
-            "function g() { return f.foo; }",
-            "It is literally not used anymore",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "var f = {}; /** @deprecated %s */ f.foo = 3; function g() { return f.foo; }",
+        "It is literally not used anymore", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForSubclassMethod() {
-    testDep("/** @constructor */ function Foo() {}" +
-            "Foo.prototype.bar = function() {};" +
-            "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-            "/** @deprecated %s */ SubFoo.prototype.bar = function() {};" +
-            "function f() { (new SubFoo()).bar(); };",
-            "I have a parent class!",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype.bar = function() {};"
+        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+        + "/** @deprecated %s */ SubFoo.prototype.bar = function() {};"
+        + "function f() { (new SubFoo()).bar(); };",
+        "I have a parent class!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForSuperClassWithDeprecatedSubclassMethod() {
-    testSame("/** @constructor */ function Foo() {}" +
-             "Foo.prototype.bar = function() {};" +
-             "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-             "/** @deprecated \n * @override */ SubFoo.prototype.bar = " +
-             "function() {};" +
-             "function f() { (new Foo()).bar(); };");
+    testSame("/** @constructor */ function Foo() {}"
+        + "Foo.prototype.bar = function() {};"
+        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+        + "/** @deprecated \n * @override */ SubFoo.prototype.bar = "
+        + "function() {};"
+        + "function f() { (new Foo()).bar(); };");
   }
 
   public void testWarningForSuperclassMethod() {
-    testDep("/** @constructor */ function Foo() {}" +
-            "/** @deprecated %s */ Foo.prototype.bar = function() {};" +
-            "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-            "SubFoo.prototype.bar = function() {};" +
-            "function f() { (new SubFoo()).bar(); };",
-            "I have a child class!",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated %s */ Foo.prototype.bar = function() {};"
+        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+        + "SubFoo.prototype.bar = function() {};"
+        + "function f() { (new SubFoo()).bar(); };",
+        "I have a child class!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForSuperclassMethod2() {
-    testDep("/** @constructor */ function Foo() {}" +
-            "/** @deprecated %s \n* @protected */" +
-            "Foo.prototype.bar = function() {};" +
-            "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-            "/** @protected */SubFoo.prototype.bar = function() {};" +
-            "function f() { (new SubFoo()).bar(); };",
-            "I have another child class...",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated %s \n* @protected */"
+        + "Foo.prototype.bar = function() {};"
+        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+        + "/** @protected */SubFoo.prototype.bar = function() {};"
+        + "function f() { (new SubFoo()).bar(); };",
+        "I have another child class...", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForBind() {
-    testDep("/** @deprecated %s */ Function.prototype.bind = function() {};" +
-            "(function() {}).bind();",
-            "I'm bound to this method...",
-            DEPRECATED_PROP,
-            DEPRECATED_PROP_REASON);
+    testDep(
+        "/** @deprecated %s */ Function.prototype.bind = function() {};"
+        + "(function() {}).bind();",
+        "I'm bound to this method...", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testWarningForDeprecatedClassInGlobalScope() {
-    testDep("/** @constructor \n * @deprecated %s */ var Foo = function() {};" +
-            "new Foo();",
-            "I'm a very worldly object!",
-            DEPRECATED_CLASS,
-            DEPRECATED_CLASS_REASON);
+    testDep(
+        "/** @constructor \n * @deprecated %s */ var Foo = function() {};"
+        + "new Foo();",
+        "I'm a very worldly object!", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
   }
 
   public void testNoWarningForPrototypeCopying() {
-    testSame("/** @constructor */ var Foo = function() {};" +
-             "Foo.prototype.bar = function() {};" +
-             "/** @deprecated */ Foo.prototype.baz = Foo.prototype.bar;" +
-             "(new Foo()).bar();");
+    testSame("/** @constructor */ var Foo = function() {};"
+        + "Foo.prototype.bar = function() {};"
+        + "/** @deprecated */ Foo.prototype.baz = Foo.prototype.bar;"
+        + "(new Foo()).bar();");
   }
 
   public void testNoWarningOnDeprecatedPrototype() {
     // This used to cause an NPE.
-    testSame("/** @constructor */ var Foo = function() {};" +
-        "/** @deprecated */ Foo.prototype = {};" +
-        "Foo.prototype.bar = function() {};");
+    testSame("/** @constructor */ var Foo = function() {};"
+        + "/** @deprecated */ Foo.prototype = {};"
+        + "Foo.prototype.bar = function() {};");
   }
 
   public void testPrivateAccessForNames() {
     testSame("/** @private */ function foo_() {}; foo_();");
-    test(new String[] {
-      "/** @private */ function foo_() {};",
-      "foo_();"
-    }, null, BAD_PRIVATE_GLOBAL_ACCESS);
+    test(new String[] {"/** @private */ function foo_() {};", "foo_();"}, null,
+        BAD_PRIVATE_GLOBAL_ACCESS);
   }
 
   public void testPrivateAccessForNames2() {
     // Private by convention
     testSame("function foo_() {}; foo_();");
-    test(new String[] {
-      "function foo_() {};",
-      "foo_();"
-    }, null, BAD_PRIVATE_GLOBAL_ACCESS);
+    test(new String[] {"function foo_() {};", "foo_();"}, null, BAD_PRIVATE_GLOBAL_ACCESS);
   }
 
   public void testPrivateAccessForProperties1() {
-    testSame("/** @constructor */ function Foo() {}" +
-        "/** @private */ Foo.prototype.bar_ = function() {};" +
-        "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();");
+    testSame("/** @constructor */ function Foo() {}"
+        + "/** @private */ Foo.prototype.bar_ = function() {};"
+        + "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();");
   }
 
   public void testPrivateAccessForProperties2() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}",
-      "/** @private */ Foo.prototype.bar_ = function() {};" +
-      "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();"
-    });
+        "/** @constructor */ function Foo() {}",
+        "/** @private */ Foo.prototype.bar_ = function() {};"
+        + "Foo.prototype.baz = function() { this.bar_(); }; (new Foo).bar_();"});
   }
 
   public void testPrivateAccessForProperties3() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "/** @private */ Foo.prototype.bar_ = function() {}; (new Foo).bar_();",
-      "Foo.prototype.baz = function() { this.bar_(); };"
-    });
+        "/** @constructor */ function Foo() {}"
+        + "/** @private */ Foo.prototype.bar_ = function() {}; (new Foo).bar_();",
+        "Foo.prototype.baz = function() { this.bar_(); };"});
   }
 
   public void testPrivateAccessForProperties4() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "/** @private */ Foo.prototype.bar_ = function() {};",
-      "Foo.prototype['baz'] = function() { (new Foo()).bar_(); };"
-    });
+        "/** @constructor */ function Foo() {}"
+        + "/** @private */ Foo.prototype.bar_ = function() {};",
+        "Foo.prototype['baz'] = function() { (new Foo()).bar_(); };"});
+  }
+
+  public void testPrivateAccessForProperties4a() {
+    // Identical to 4 except the computed access
+    testSame(new String[] {
+        "/** @constructor */ function Foo() {}"
+        + "/** @private */ Foo.prototype.bar_ = function() {};",
+        "Foo.prototype.baz = function() { (new Foo()).bar_(); };"});
   }
 
   public void testPrivateAccessForProperties5() {
     test(new String[] {
-          "/** @constructor */\n" +
-          "function Parent () {\n" +
-          "  /** @private */\n" +
-          "  this.prop = 'foo';\n" +
-          "};",
-          "/**\n" +
-          " * @constructor\n" +
-          " * @extends {Parent}\n" +
-          " */\n" +
-          "function Child() {\n" +
-          "  this.prop = 'asdf';\n" +
-          "}\n" +
-          "Child.prototype = new Parent();"
-        }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */\n"
+        + "function Parent () {\n"
+        + "  /** @private */\n"
+        + "  this.prop = 'foo';\n"
+        + "};",
+        "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Parent}\n"
+        + " */\n"
+        + "function Child() {\n"
+        + "  this.prop = 'asdf';\n"
+        + "}\n"
+        + "Child.prototype = new Parent();"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties1() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} (new Foo).bar_();",
-      "/** @private */ Foo.prototype.bar_ = function() {};" +
-      "Foo.prototype.baz = function() { this.bar_(); };"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} (new Foo).bar_();",
+        "/** @private */ Foo.prototype.bar_ = function() {};"
+        + "Foo.prototype.baz = function() { this.bar_(); };"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties2() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @private */ Foo.prototype.bar_ = function() {};" +
-      "Foo.prototype.baz = function() { this.bar_(); };",
-      "(new Foo).bar_();"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @private */ Foo.prototype.bar_ = function() {};"
+        + "Foo.prototype.baz = function() { this.bar_(); };",
+        "(new Foo).bar_();"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties3() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @private */ Foo.prototype.bar_ = function() {};",
-      "/** @constructor */ function OtherFoo() { (new Foo).bar_(); }"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @private */ Foo.prototype.bar_ = function() {};",
+        "/** @constructor */ function OtherFoo() { (new Foo).bar_(); }"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties4() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @private */ Foo.prototype.bar_ = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() { this.bar_(); }"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @private */ Foo.prototype.bar_ = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() { this.bar_(); }"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties5() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @private */ Foo.prototype.bar_ = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {};" +
-      "SubFoo.prototype.baz = function() { this.bar_(); }"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @private */ Foo.prototype.bar_ = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {};"
+        + "SubFoo.prototype.baz = function() { this.bar_(); }"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties6() {
     // Overriding a private property with a non-private property
     // in a different file causes problems.
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @private */ Foo.prototype.bar_ = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {};" +
-      "SubFoo.prototype.bar_ = function() {};"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @private */ Foo.prototype.bar_ = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {};"
+        + "SubFoo.prototype.bar_ = function() {};"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties7() {
     // It's OK to override a private property with a non-private property
     // in the same file, but you'll get yelled at when you try to use it.
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @private */ Foo.prototype.bar_ = function() {};" +
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {};" +
-      "SubFoo.prototype.bar_ = function() {};",
-      "SubFoo.prototype.baz = function() { this.bar_(); }"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @private */ Foo.prototype.bar_ = function() {};"
+        + "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {};"
+        + "SubFoo.prototype.bar_ = function() {};",
+        "SubFoo.prototype.baz = function() { this.bar_(); }"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties8() {
     test(new String[] {
-      "/** @constructor */ function Foo() { /** @private */ this.bar_ = 3; }",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() { /** @private */ this.bar_ = 3; };"
-    }, null, PRIVATE_OVERRIDE);
+        "/** @constructor */ function Foo() { /** @private */ this.bar_ = 3; }",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() { /** @private */ this.bar_ = 3; };"},
+        null, PRIVATE_OVERRIDE);
   }
 
   public void testNoPrivateAccessForProperties9() {
     test(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "Foo.prototype = {" +
-      "/** @private */ bar_: 3" +
-      "}",
-      "new Foo().bar_;"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype = {"
+        + "/** @private */ bar_: 3"
+        + "}",
+        "new Foo().bar_;"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties10() {
     test(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "Foo.prototype = {" +
-      "/** @private */ bar_: function() {}" +
-      "}",
-      "new Foo().bar_();"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype = {"
+        + "/** @private */ bar_: function() {}"
+        + "}",
+        "new Foo().bar_();"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties11() {
     test(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "Foo.prototype = {" +
-      "/** @private */ get bar_() { return 1; }" +
-      "}",
-      "var a = new Foo().bar_;"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype = {"
+        + "/** @private */ get bar_() { return 1; }"
+        + "}",
+        "var a = new Foo().bar_;"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForProperties12() {
     test(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "Foo.prototype = {" +
-      "/** @private */ set bar_(x) { this.barValue = x; }" +
-      "}",
-      "new Foo().bar_ = 1;"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype = {"
+        + "/** @private */ set bar_(x) { this.barValue = x; }"
+        + "}",
+        "new Foo().bar_ = 1;"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testNoPrivateAccessForNamespaces() {
-    test(new String[]{
-      "var foo = {};\n" +
-          "/** @private */ foo.bar_ = function() {};",
-      "foo.bar_();"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+    test(new String[] {
+        "var foo = {};\n"
+        + "/** @private */ foo.bar_ = function() {};",
+        "foo.bar_();"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testProtectedAccessForProperties1() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "/** @protected */ Foo.prototype.bar = function() {};" +
-      "(new Foo).bar();",
-      "Foo.prototype.baz = function() { this.bar(); };"
-    });
+        "/** @constructor */ function Foo() {}"
+        + "/** @protected */ Foo.prototype.bar = function() {};"
+        + "(new Foo).bar();",
+        "Foo.prototype.baz = function() { this.bar(); };"});
   }
 
   public void testProtectedAccessForProperties2() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "/** @protected */ Foo.prototype.bar = function() {};" +
-      "(new Foo).bar();",
-      "/** @constructor \n * @extends {Foo} */" +
-      "function SubFoo() { this.bar(); }"
-    });
+        "/** @constructor */ function Foo() {}"
+        + "/** @protected */ Foo.prototype.bar = function() {};"
+        + "(new Foo).bar();",
+        "/** @constructor \n * @extends {Foo} */"
+        + "function SubFoo() { this.bar(); }"});
   }
 
   public void testProtectedAccessForProperties3() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "/** @protected */ Foo.prototype.bar = function() {};" +
-      "(new Foo).bar();",
-      "/** @constructor \n * @extends {Foo} */" +
-      "function SubFoo() { }" +
-      "SubFoo.baz = function() { (new Foo).bar(); }"
-    });
+        "/** @constructor */ function Foo() {}"
+        + "/** @protected */ Foo.prototype.bar = function() {};"
+        + "(new Foo).bar();",
+        "/** @constructor \n * @extends {Foo} */"
+        + "function SubFoo() { }"
+        + "SubFoo.baz = function() { (new Foo).bar(); }"});
   }
 
   public void testProtectedAccessForProperties4() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "/** @protected */ Foo.bar = function() {};",
-      "/** @constructor \n * @extends {Foo} */" +
-      "function SubFoo() { Foo.bar(); }"
-    });
+        "/** @constructor */ function Foo() {}"
+        + "/** @protected */ Foo.bar = function() {};",
+        "/** @constructor \n * @extends {Foo} */"
+        + "function SubFoo() { Foo.bar(); }"});
   }
 
   public void testProtectedAccessForProperties5() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() {}" +
-      "/** @protected */ Foo.prototype.bar = function() {};" +
-      "(new Foo).bar();",
-      "/** @constructor \n * @extends {Foo} */" +
-      "var SubFoo = function() { this.bar(); }"
-    });
+        "/** @constructor */ function Foo() {}"
+        + "/** @protected */ Foo.prototype.bar = function() {};"
+        + "(new Foo).bar();",
+        "/** @constructor \n * @extends {Foo} */"
+        + "var SubFoo = function() { this.bar(); }"});
   }
 
   public void testProtectedAccessForProperties6() {
     testSame(new String[] {
-      "var goog = {};" +
-      "/** @constructor */ goog.Foo = function() {};" +
-      "/** @protected */ goog.Foo.prototype.bar = function() {};",
-      "/** @constructor \n * @extends {goog.Foo} */" +
-      "goog.SubFoo = function() { this.bar(); };"
-    });
+        "/** @const */ var goog = {};"
+        + "/** @constructor */ goog.Foo = function() {};"
+        + "/** @protected */ goog.Foo.prototype.bar = function() {};",
+        "/** @constructor \n * @extends {goog.Foo} */"
+        + "goog.SubFoo = function() { this.bar(); };"});
   }
 
   public void testProtectedAccessForProperties7() {
     testSame(new String[] {
-      "/** @constructor */ var Foo = function() {};" +
-      "Foo.prototype = { /** @protected */ bar: function() {} }",
-      "/** @constructor \n * @extends {Foo} */" +
-      "var SubFoo = function() { this.bar(); };" +
-      "SubFoo.prototype = { moo: function() { this.bar(); }};"
-    });
+        "/** @constructor */ var Foo = function() {};"
+        + "Foo.prototype = { /** @protected */ bar: function() {} }",
+        "/** @constructor \n * @extends {Foo} */"
+        + "var SubFoo = function() { this.bar(); };"
+        + "SubFoo.prototype = { moo: function() { this.bar(); }};"});
   }
 
   public void testProtectedAccessForProperties8() {
     testSame(new String[] {
-      "/** @constructor */ var Foo = function() {};" +
-      "Foo.prototype = { /** @protected */ bar: function() {} }",
-      "/** @constructor \n * @extends {Foo} */" +
-      "var SubFoo = function() {};" +
-      "SubFoo.prototype = { get moo() { this.bar(); }};"
-    });
+        "/** @constructor */ var Foo = function() {};"
+        + "Foo.prototype = { /** @protected */ bar: function() {} }",
+        "/** @constructor \n * @extends {Foo} */"
+        + "var SubFoo = function() {};"
+        + "SubFoo.prototype = { get moo() { this.bar(); }};"});
   }
 
   public void testProtectedAccessForProperties9() {
     testSame(new String[] {
-      "/** @constructor */ var Foo = function() {};" +
-      "Foo.prototype = { /** @protected */ bar: function() {} }",
-      "/** @constructor \n * @extends {Foo} */" +
-      "var SubFoo = function() {};" +
-      "SubFoo.prototype = { set moo(val) { this.x = this.bar(); }};"
-    });
+        "/** @constructor */ var Foo = function() {};"
+        + "Foo.prototype = { /** @protected */ bar: function() {} }",
+        "/** @constructor \n * @extends {Foo} */"
+        + "var SubFoo = function() {};"
+        + "SubFoo.prototype = { set moo(val) { this.x = this.bar(); }};"});
   }
 
   public void testProtectedAccessForProperties10() {
     testSame(ImmutableList.of(
-        SourceFile.fromCode("foo.js",
-            "/** @constructor */ var Foo = function() {};" +
-            "/** @protected */ Foo.prototype.bar = function() {};"),
-        SourceFile.fromCode("sub_foo.js",
-            "/** @constructor @extends {Foo} */" +
-            "var SubFoo = function() {};" +
-            "(function() {" +
-              "SubFoo.prototype.baz = function() { this.bar(); }" +
-            "})();")));
+        SourceFile.fromCode(
+            "foo.js",
+            "/** @constructor */ var Foo = function() {};"
+            + "/** @protected */ Foo.prototype.bar = function() {};"),
+        SourceFile.fromCode(
+            "sub_foo.js",
+            "/** @constructor @extends {Foo} */"
+            + "var SubFoo = function() {};"
+            + "(function() {"
+            + "SubFoo.prototype.baz = function() { this.bar(); }"
+            + "})();")));
   }
 
   public void testNoProtectedAccessForProperties1() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @protected */ Foo.prototype.bar = function() {};",
-      "(new Foo).bar();"
-    }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @protected */ Foo.prototype.bar = function() {};",
+        "(new Foo).bar();"},
+        null, BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
   public void testNoProtectedAccessForProperties2() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @protected */ Foo.prototype.bar = function() {};",
-      "/** @constructor */ function OtherFoo() { (new Foo).bar(); }"
-    }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @protected */ Foo.prototype.bar = function() {};",
+        "/** @constructor */ function OtherFoo() { (new Foo).bar(); }"},
+        null, BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
   public void testNoProtectedAccessForProperties3() {
     test(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {}" +
-      "/** @protected */ SubFoo.prototype.bar = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubberFoo() { (new SubFoo).bar(); }"
-    }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {} "
+        + "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {}"
+        + "/** @protected */ SubFoo.prototype.bar = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubberFoo() { (new SubFoo).bar(); }"},
+        null, BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
   public void testNoProtectedAccessForProperties4() {
     test(new String[] {
-      "/** @constructor */ function Foo() { (new SubFoo).bar(); } ",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {}" +
-      "/** @protected */ SubFoo.prototype.bar = function() {};",
-    }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() { (new SubFoo).bar(); } ",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {}"
+        + "/** @protected */ SubFoo.prototype.bar = function() {};",
+         },
+        null, BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
   public void testNoProtectedAccessForProperties5() {
     test(new String[] {
-      "var goog = {};" +
-      "/** @constructor */ goog.Foo = function() {};" +
-      "/** @protected */ goog.Foo.prototype.bar = function() {};",
-      "/** @constructor */" +
-      "goog.NotASubFoo = function() { (new goog.Foo).bar(); };"
-    }, null, BAD_PROTECTED_PROPERTY_ACCESS);
+        "/** @const */ var goog = {};"
+        + "/** @constructor */ goog.Foo = function() {};"
+        + "/** @protected */ goog.Foo.prototype.bar = function() {};",
+        "/** @constructor */"
+        + "goog.NotASubFoo = function() { (new goog.Foo).bar(); };"},
+        null, BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
   public void testNoProtectedAccessForProperties6() {
-      test(new String[] {
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype = {" +
-        "/** @protected */ bar: 3" +
-        "}",
-        "new Foo().bar;"
-      }, null, BAD_PROTECTED_PROPERTY_ACCESS);
-    }
+    test(new String[] {
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype = {"
+        + "/** @protected */ bar: 3"
+        + "}",
+        "new Foo().bar;"},
+        null, BAD_PROTECTED_PROPERTY_ACCESS);
+  }
 
-    public void testNoProtectedAccessForProperties7() {
-      test(new String[] {
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype = {" +
-        "/** @protected */ bar: function() {}" +
-        "}",
-        "new Foo().bar();"
-      }, null, BAD_PROTECTED_PROPERTY_ACCESS);
-    }
+  public void testNoProtectedAccessForProperties7() {
+    test(new String[] {
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype = {"
+        + "/** @protected */ bar: function() {}"
+        + "}",
+        "new Foo().bar();"},
+        null, BAD_PROTECTED_PROPERTY_ACCESS);
+  }
 
   public void testPackagePrivateAccessForNames() {
-    test(ImmutableList.of(
-      SourceFile.fromCode(
-        "foo/bar.js",
-        "/** @constructor */\n" +
-          "function Parent() {\n" +
-          "/** @package */\n" +
-          "this.prop = 'foo';\n" +
-          "}\n;"),
-      SourceFile.fromCode(
-        "baz/quux.js",
-          "/**" +
-          " * @constructor\n" +
-          " * @extends {Parent}\n" +
-          " */\n" +
-          "function Child() {\n" +
-          "  this.prop = 'asdf';\n" +
-          "}\n" +
-          "Child.prototype = new Parent();"
-      )), null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */\n"
+                + "function Parent() {\n"
+                + "/** @package */\n"
+                + "this.prop = 'foo';\n"
+                + "}\n;"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "/**"
+                + " * @constructor\n"
+                + " * @extends {Parent}\n"
+                + " */\n"
+                + "function Child() {\n"
+                + "  this.prop = 'asdf';\n"
+                + "}\n"
+                + "Child.prototype = new Parent();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testPackagePrivateAccessForProperties1() {
-    testSame("/** @constructor */ function Foo() {}" +
-        "/** @package */ Foo.prototype.bar = function() {};" +
-        "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();");
+    testSame("/** @constructor */ function Foo() {}"
+        + "/** @package */ Foo.prototype.bar = function() {};"
+        + "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();");
   }
 
   public void testPackagePrivateAccessForProperties2() {
     testSame(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/** @constructor */ function Foo() {}"),
+        SourceFile.fromCode("foo/bar.js", "/** @constructor */ function Foo() {}"),
         SourceFile.fromCode(
             "baz/quux.js",
-            "/** @package */ Foo.prototype.bar = function() {};" +
-      "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();")));
+            "/** @package */ Foo.prototype.bar = function() {};"
+            + "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();")));
   }
 
   public void testPackagePrivateAccessForProperties3() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo/bar.js",
-            "/** @constructor */ function Foo() {}" +
-            "/** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();"),
-        SourceFile.fromCode(
-            "foo/baz.js",
-            "Foo.prototype.baz = function() { this.bar(); };")));
+            "/** @constructor */ function Foo() {}"
+            + "/** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();"),
+        SourceFile.fromCode("foo/baz.js", "Foo.prototype.baz = function() { this.bar(); };")));
   }
 
   public void testPackagePrivateAccessForProperties4() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo/bar.js",
-            "/** @constructor */ function Foo() {}" +
-            "/** @package */ Foo.prototype.bar = function() {};"),
-         SourceFile.fromCode(
-            "foo/baz.js",
-            "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
+            "/** @constructor */ function Foo() {}"
+            + "/** @package */ Foo.prototype.bar = function() {};"),
+        SourceFile.fromCode(
+            "foo/baz.js", "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
   }
 
   public void testPackagePrivateAccessForProperties5() {
-    test(ImmutableList.of(
-          SourceFile.fromCode(
-              "foo/bar.js",
-              "/** @constructor */\n" +
-                  "function Parent () {\n" +
-                  "  /** @package */\n" +
-                  "  this.prop = 'foo';\n" +
-                  "};"),
-           SourceFile.fromCode(
-               "baz/quux.js",
-               "/**\n" +
-                   " * @constructor\n" +
-                   " * @extends {Parent}\n" +
-                   " */\n" +
-                   "function Child() {\n" +
-                   "  this.prop = 'asdf';\n" +
-                   "}\n" +
-                   "Child.prototype = new Parent();")),
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */\n"
+                + "function Parent () {\n"
+                + "  /** @package */\n"
+                + "  this.prop = 'foo';\n"
+                + "};"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "/**\n"
+                + " * @constructor\n"
+                + " * @extends {Parent}\n"
+                + " */\n"
+                + "function Child() {\n"
+                + "  this.prop = 'asdf';\n"
+                + "}\n"
+                + "Child.prototype = new Parent();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForProperties1() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/** @constructor */ function Foo() {} (new Foo).bar();"),
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js", "/** @constructor */ function Foo() {} (new Foo).bar();"),
             SourceFile.fromCode(
                 "baz/quux.js",
-                "/** @package */ Foo.prototype.bar = function() {};" +
-                    "Foo.prototype.baz = function() { this.bar(); };")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+                "/** @package */ Foo.prototype.bar = function() {};"
+                + "Foo.prototype.baz = function() { this.bar(); };")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForProperties2() {
-    test(ImmutableList.of(
-      SourceFile.fromCode(
-          "foo/bar.js",
-          "/** @constructor */ function Foo() {} " +
-              "/** @package */ Foo.prototype.bar = function() {};" +
-              "Foo.prototype.baz = function() { this.bar(); };"),
-      SourceFile.fromCode(
-          "baz/quux.js",
-          "(new Foo).bar();")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */ function Foo() {} "
+                + "/** @package */ Foo.prototype.bar = function() {};"
+                + "Foo.prototype.baz = function() { this.bar(); };"),
+            SourceFile.fromCode("baz/quux.js", "(new Foo).bar();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForProperties3() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/** @constructor */ function Foo() {} " +
-                "/** @package */ Foo.prototype.bar = function() {};"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "/** @constructor */ function OtherFoo() { (new Foo).bar(); }")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */ function Foo() {} "
+                + "/** @package */ Foo.prototype.bar = function() {};"),
+            SourceFile.fromCode(
+                "baz/quux.js", "/** @constructor */ function OtherFoo() { (new Foo).bar(); }")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForProperties4() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/** @constructor */ function Foo() {} " +
-            "/** @package */ Foo.prototype.bar = function() {};"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "/** @constructor \n * @extends {Foo} */ " +
-                "function SubFoo() { this.bar(); }")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */ function Foo() {} "
+                + "/** @package */ Foo.prototype.bar = function() {};"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "/** @constructor \n * @extends {Foo} */ "
+                + "function SubFoo() { this.bar(); }")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForNamespaces() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "var foo = {};\n" +
-            "/** @package */ foo.bar = function() {};"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "foo.bar();")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @const */ var foo = {};\n"
+                + "/** @package */ foo.bar = function() {};"),
+            SourceFile.fromCode("baz/quux.js", "foo.bar();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForProperties5() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/** @constructor */ function Foo() {} " +
-            "/** @package */ Foo.prototype.bar = function() {};"),
-      SourceFile.fromCode(
-          "baz/quux.js",
-          "/** @constructor \n * @extends {Foo} */ " +
-              "function SubFoo() {};" +
-              "SubFoo.prototype.baz = function() { this.bar(); }")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */ function Foo() {} "
+                + "/** @package */ Foo.prototype.bar = function() {};"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "/** @constructor \n * @extends {Foo} */ "
+                + "function SubFoo() {};"
+                + "SubFoo.prototype.baz = function() { this.bar(); }")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForProperties6() {
     // Overriding a private property with a non-package-private property
     // in a different file causes problems.
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/** @constructor */ function Foo() {} " +
-                "/** @package */ Foo.prototype.bar = function() {};"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "/** @constructor \n * @extends {Foo} */ " +
-                "function SubFoo() {};" +
-                "SubFoo.prototype.bar = function() {};")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */ function Foo() {} "
+                + "/** @package */ Foo.prototype.bar = function() {};"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "/** @constructor \n * @extends {Foo} */ "
+                + "function SubFoo() {};"
+                + "SubFoo.prototype.bar = function() {};")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoPackagePrivateAccessForProperties7() {
     // It's OK to override a package-private property with a
     // non-package-private property in the same file, but you'll get
     // yelled at when you try to use it.
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/** @constructor */ function Foo() {} " +
-                "/** @package */ Foo.prototype.bar = function() {};" +
-                "/** @constructor \n * @extends {Foo} */ " +
-                "function SubFoo() {};" +
-                "SubFoo.prototype.bar = function() {};"),
-                SourceFile.fromCode(
-                    "baz/quux.js",
-                    "SubFoo.prototype.baz = function() { this.bar(); }")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/** @constructor */ function Foo() {} "
+                + "/** @package */ Foo.prototype.bar = function() {};"
+                + "/** @constructor \n * @extends {Foo} */ "
+                + "function SubFoo() {};"
+                + "SubFoo.prototype.bar = function() {};"),
+            SourceFile.fromCode(
+                "baz/quux.js", "SubFoo.prototype.baz = function() { this.bar(); }")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
-  public void testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
-    testError("/**\n" +
-        "* @fileoverview\n" +
-        "* @package\n" +
-        "*/\n" +
-        "/** @struct @constructor */\n" +
-        "Foo = function() {};\n" +
-        "/** @private */\n" +
-        "Foo.prototype.privateMethod_ = function() {};\n" +
-        "/** @struct @constructor @extends {Foo} */\n" +
-        "Bar = function() {};\n" +
-        "/** @override */\n" +
-        "Bar.prototype.privateMethod_ = function() {};\n",
+  public void
+      testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_OneFile() {
+    testError(
+        "/**\n"
+        + "* @fileoverview\n"
+        + "* @package\n"
+        + "*/\n"
+        + "/** @struct @constructor */\n"
+        + "Foo = function() {};\n"
+        + "/** @private */\n"
+        + "Foo.prototype.privateMethod_ = function() {};\n"
+        + "/** @struct @constructor @extends {Foo} */\n"
+        + "Bar = function() {};\n"
+        + "/** @override */\n"
+        + "Bar.prototype.privateMethod_ = function() {};\n",
         BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
   public void testNamespacedFunctionDoesNotNeedVisibilityRedeclInFileWithFileOverviewVisibility() {
-    testSame(
-        "/**\n" +
-        " * @fileoverview\n" +
-        " * @package\n" +
-        " */\n" +
-        "/** @return {string} */\n" +
-        "foo.bar = function() {};");
+    testSame("/**\n"
+        + " * @fileoverview\n"
+        + " * @package\n"
+        + " */\n"
+        + "/** @return {string} */\n"
+        + "foo.bar = function() { return 'asdf'; };");
   }
 
-  public void testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
-    test(new String[]{
-      "/** @struct @constructor */\n" +
-          "Foo = function() {};\n" +
-          "/** @protected */\n" +
-          "Foo.prototype.protectedMethod = function() {};\n",
-      "  /**\n" +
-          "* @fileoverview \n" +
-          "* @package\n" +
-          "*/\n" +
-          "/** @struct @constructor @extends {Foo} */\n" +
-          "Bar = function() {};\n" +
-          "/** @override */\n" +
-          "Bar.prototype.protectedMethod = function() {};\n"
-    }, null, BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
+  public void
+      testOverrideWithoutVisibilityRedeclInFileWithFileOverviewVisibilityNotAllowed_TwoFiles() {
+    test(new String[] {
+        "/** @struct @constructor */\n"
+        + "Foo = function() {};\n"
+        + "/** @protected */\n"
+        + "Foo.prototype.protectedMethod = function() {};\n",
+        "  /**\n"
+        + "* @fileoverview \n"
+        + "* @package\n"
+        + "*/\n"
+        + "/** @struct @constructor @extends {Foo} */\n"
+        + "Bar = function() {};\n"
+        + "/** @override */\n"
+        + "Bar.prototype.protectedMethod = function() {};\n"},
+        null, BAD_PROPERTY_OVERRIDE_IN_FILE_WITH_FILEOVERVIEW_VISIBILITY);
   }
 
   public void testOverrideWithoutVisibilityRedeclInFileWithNoFileOverviewOk() {
-    testSame("/** @struct @constructor */\n" +
-        "Foo = function() {};\n" +
-        "/** @private */\n" +
-        "Foo.prototype.privateMethod_ = function() {};\n" +
-        "/** @struct @constructor @extends {Foo} */\n" +
-        "Bar = function() {};\n" +
-        "/** @override */\n" +
-        "Bar.prototype.privateMethod_ = function() {};\n");
+    testSame("/** @struct @constructor */\n"
+        + "Foo = function() {};\n"
+        + "/** @private */\n"
+        + "Foo.prototype.privateMethod_ = function() {};\n"
+        + "/** @struct @constructor @extends {Foo} */\n"
+        + "Bar = function() {};\n"
+        + "/** @override */\n"
+        + "Bar.prototype.privateMethod_ = function() {};\n");
   }
 
   public void testOverrideWithoutVisibilityRedeclInFileWithNoFileOverviewVisibilityOk() {
-    testSame("/**\n" +
-        "  * @fileoverview\n" +
-        "  */\n" +
-        "/** @struct @constructor */\n" +
-          "Foo = function() {};\n" +
-          "/** @private */\n" +
-          "Foo.prototype.privateMethod_ = function() {};\n" +
-          "/** @struct @constructor @extends {Foo} */\n" +
-          "Bar = function() {};\n" +
-          "/** @override */\n" +
-          "Bar.prototype.privateMethod_ = function() {};\n");
+    testSame("/**\n"
+        + "  * @fileoverview\n"
+        + "  */\n"
+        + "/** @struct @constructor */\n"
+        + "Foo = function() {};\n"
+        + "/** @private */\n"
+        + "Foo.prototype.privateMethod_ = function() {};\n"
+        + "/** @struct @constructor @extends {Foo} */\n"
+        + "Bar = function() {};\n"
+        + "/** @override */\n"
+        + "Bar.prototype.privateMethod_ = function() {};\n");
   }
 
   public void testOverrideWithVisibilityRedeclInFileWithFileOverviewVisibilityOk_OneFile() {
-    testSame("/**\n" +
-        "  * @fileoverview\n" +
-        "  * @package\n" +
-        "  */\n" +
-        "/** @struct @constructor */\n" +
-          "Foo = function() {};\n" +
-          "/** @private */\n" +
-          "Foo.prototype.privateMethod_ = function() {};\n" +
-          "/** @struct @constructor @extends {Foo} */\n" +
-          "Bar = function() {};\n" +
-          "/** @override @private */\n" +
-          "Bar.prototype.privateMethod_ = function() {};\n");
+    testSame("/**\n"
+        + "  * @fileoverview\n"
+        + "  * @package\n"
+        + "  */\n"
+        + "/** @struct @constructor */\n"
+        + "Foo = function() {};\n"
+        + "/** @private */\n"
+        + "Foo.prototype.privateMethod_ = function() {};\n"
+        + "/** @struct @constructor @extends {Foo} */\n"
+        + "Bar = function() {};\n"
+        + "/** @override @private */\n"
+        + "Bar.prototype.privateMethod_ = function() {};\n");
   }
 
   public void testOverrideWithVisibilityRedeclInFileWithFileOverviewVisibilityOk_TwoFiles() {
-    testSame(new String[]{
-      "/** @struct @constructor */\n" +
-          "Foo = function() {};\n" +
-          "/** @protected */\n" +
-          "Foo.prototype.protectedMethod = function() {};\n",
-      "  /**\n" +
-          "* @fileoverview\n" +
-          "* @package\n" +
-          "*/\n" +
-          "/** @struct @constructor @extends {Foo} */\n" +
-          "Bar = function() {};\n" +
-          "/** @override @protected */\n" +
-          "Bar.prototype.protectedMethod = function() {};\n"
-    });
+    testSame(new String[] {
+        "/** @struct @constructor */\n"
+        + "Foo = function() {};\n"
+        + "/** @protected */\n"
+        + "Foo.prototype.protectedMethod = function() {};\n",
+        "  /**\n"
+        + "* @fileoverview\n"
+        + "* @package\n"
+        + "*/\n"
+        + "/** @struct @constructor @extends {Foo} */\n"
+        + "Bar = function() {};\n"
+        + "/** @override @protected */\n"
+        + "Bar.prototype.protectedMethod = function() {};\n"});
   }
 
   public void testPublicFileOverviewVisibilityDoesNotApplyToNameWithExplicitPackageVisibility() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @public\n" +
-            " */\n" +
-            "/** @constructor @package */ function Foo() {};"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "new Foo();")),
-    null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @public\n"
+                + " */\n"
+                + "/** @constructor @package */ function Foo() {};"),
+            SourceFile.fromCode("baz/quux.js", "new Foo();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testPackageFileOverviewVisibilityDoesNotApplyToNameWithExplicitPublicVisibility() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @package\n" +
-            " */\n" +
-            "/** @constructor @public */ function Foo() {};"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "new Foo();")));
+            "/**\n"
+            + " * @fileoverview\n"
+            + " * @package\n"
+            + " */\n"
+            + "/** @constructor @public */ function Foo() {};"),
+        SourceFile.fromCode("baz/quux.js", "new Foo();")));
   }
 
   public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @package\n" +
-            " */\n" +
-            "/** @constructor */\n" +
-            "var Foo = function() {};\n"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "new Foo();")),
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @package\n"
+                + " */\n"
+                + "/** @constructor */\n"
+                + "var Foo = function() {};\n"),
+            SourceFile.fromCode("baz/quux.js", "new Foo();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
-  public void testPackageFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPublicVisibility() {
+  public void
+      testPackageFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPublicVisibility() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @package\n" +
-            " */\n" +
-            "/** @constructor */\n" +
-            "Foo = function() {};\n" +
-            "/** @public */\n" +
-            "Foo.prototype.bar = function() {};\n"),
+            "/**\n"
+            + " * @fileoverview\n"
+            + " * @package\n"
+            + " */\n"
+            + "/** @constructor */\n"
+            + "Foo = function() {};\n"
+            + "/** @public */\n"
+            + "Foo.prototype.bar = function() {};\n"),
         SourceFile.fromCode(
             "baz/quux.js",
-            "var foo = new Foo();\n" +
-            "foo.bar();")));
+            "var foo = new Foo();\n"
+            + "foo.bar();")));
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace1() {
@@ -1063,24 +1031,19 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     // like @inherited.
     compareJsDoc = false;
 
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.js",
-            "goog.provide('foo');"),
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            "  * @fileoverview\n" +
-            "  * @package\n" +
-            "  */\n" +
-            "goog.provide('foo.bar');"),
-        SourceFile.fromCode(
-            "bar.js",
-            "goog.require('foo')")),
+    test(
         ImmutableList.of(
-            SourceFile.fromCode("foo.js", "var foo={};"),
-            SourceFile.fromCode("foo/bar.js", "foo.bar={};"),
-            SourceFile.fromCode("bar.js", "")),
+            SourceFile.fromCode("foo.js", "goog.provide('foo');"),
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + "  * @fileoverview\n"
+                + "  * @package\n"
+                + "  */\n"
+                + "goog.provide('foo.bar');"),
+            SourceFile.fromCode("bar.js", "goog.require('foo')")),
+        ImmutableList.of(SourceFile.fromCode("foo.js", "var foo={};"),
+            SourceFile.fromCode("foo/bar.js", "foo.bar={};"), SourceFile.fromCode("bar.js", "")),
         null, null);
 
     compareJsDoc = true;
@@ -1091,25 +1054,22 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     // like @inherited.
     compareJsDoc = false;
 
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            "  * @fileoverview\n" +
-            "  * @package\n" +
-            "  */\n" +
-            "goog.provide('foo.bar');"),
-        SourceFile.fromCode(
-            "foo.js",
-            "goog.provide('foo');"),
-        SourceFile.fromCode(
-            "bar.js",
-            "goog.require('foo');\n" +
-            "var x = foo;")),
+    test(
         ImmutableList.of(
-            SourceFile.fromCode("foo/bar.js", "var foo={};foo.bar={};"),
-            SourceFile.fromCode("foo.js", ""),
-            SourceFile.fromCode("bar.js", "var x=foo")),
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + "  * @fileoverview\n"
+                + "  * @package\n"
+                + "  */\n"
+                + "goog.provide('foo.bar');"),
+            SourceFile.fromCode("foo.js", "goog.provide('foo');"),
+            SourceFile.fromCode(
+                "bar.js",
+                "goog.require('foo');\n"
+                + "var x = foo;")),
+        ImmutableList.of(SourceFile.fromCode("foo/bar.js", "var foo={};foo.bar={};"),
+            SourceFile.fromCode("foo.js", ""), SourceFile.fromCode("bar.js", "var x=foo")),
         null, null);
 
     compareJsDoc = true;
@@ -1120,64 +1080,64 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     // like @inherited.
     compareJsDoc = false;
 
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @package\n" +
-            " */\n" +
-            "goog.provide('one.two');\n" +
-            "one.two.three = function(){};"),
-        SourceFile.fromCode(
-            "baz.js",
-            "goog.require('one.two');\n" +
-            "var x = one.two;")),
+    test(
         ImmutableList.of(
             SourceFile.fromCode(
                 "foo/bar.js",
-                "var one={};one.two={};one.two.three=function(){};"),
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @package\n"
+                + " */\n"
+                + "goog.provide('one.two');\n"
+                + "one.two.three = function(){};"),
             SourceFile.fromCode(
                 "baz.js",
-                "var x=one.two")),
+                "goog.require('one.two');\n"
+                + "var x = one.two;")),
+        ImmutableList.of(
+            SourceFile.fromCode("foo/bar.js", "var one={};one.two={};one.two.three=function(){};"),
+            SourceFile.fromCode("baz.js", "var x=one.two")),
         null, null);
 
     compareJsDoc = true;
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @package\n" +
-            " */\n" +
-            "goog.provide('one.two');\n" +
-            "one.two.three = function(){};"),
-        SourceFile.fromCode(
-            "baz.js",
-            "goog.require('one.two');\n" +
-            "var x = one.two.three();")),
-      null, BAD_PACKAGE_PROPERTY_ACCESS);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @package\n"
+                + " */\n"
+                + "goog.provide('one.two');\n"
+                + "one.two.three = function(){};"),
+            SourceFile.fromCode(
+                "baz.js",
+                "goog.require('one.two');\n"
+                + "var x = one.two.three();")),
+        null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
-  public void testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @public\n" +
-            " */\n" +
-            "/** @constructor */\n" +
-            "Foo = function() {};\n" +
-            "/** @package */\n" +
-            "Foo.prototype.bar = function() {};\n"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "var foo = new Foo();\n" +
-            "foo.bar();")),
+  public void
+      testPublicFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPackageVisibility() {
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @public\n"
+                + " */\n"
+                + "/** @constructor */\n"
+                + "Foo = function() {};\n"
+                + "/** @package */\n"
+                + "Foo.prototype.bar = function() {};\n"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "var foo = new Foo();\n"
+                + "foo.bar();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -1185,267 +1145,259 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
             "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @public\n" +
-            " */\n" +
-            "/** @constructor */\n" +
-            "Foo = function() {};\n" +
-            "Foo.prototype.bar = function() {};\n"),
+            "/**\n"
+            + " * @fileoverview\n"
+            + " * @public\n"
+            + " */\n"
+            + "/** @constructor */\n"
+            + "Foo = function() {};\n"
+            + "Foo.prototype.bar = function() {};\n"),
         SourceFile.fromCode(
             "baz/quux.js",
-            "var foo = new Foo();\n" +
-            "foo.bar();")));
+            "var foo = new Foo();\n"
+            + "foo.bar();")));
   }
 
   public void testPackageFileOverviewVisibilityAppliesToPropertyWithoutExplicitVisibility() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @package\n" +
-            " */\n" +
-            "/** @constructor */\n" +
-            "Foo = function() {};\n" +
-            "Foo.prototype.bar = function() {};\n"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "var foo = new Foo();\n" +
-            "foo.bar();")),
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @package\n"
+                + " */\n"
+                + "/** @constructor */\n"
+                + "Foo = function() {};\n"
+                + "Foo.prototype.bar = function() {};\n"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "var foo = new Foo();\n"
+                + "foo.bar();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testFileOverviewVisibilityComesFromDeclarationFileNotUseFile() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo/bar.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @package\n" +
-            " */\n" +
-            "/** @constructor */\n" +
-            "Foo = function() {};\n" +
-            "Foo.prototype.bar = function() {};\n"),
-        SourceFile.fromCode(
-            "baz/quux.js",
-            "/**\n" +
-            " * @fileoverview\n" +
-            " * @public\n" +
-            " */\n" +
-            "var foo = new Foo();\n" +
-            "foo.bar();")),
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo/bar.js",
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @package\n"
+                + " */\n"
+                + "/** @constructor */\n"
+                + "Foo = function() {};\n"
+                + "Foo.prototype.bar = function() {};\n"),
+            SourceFile.fromCode(
+                "baz/quux.js",
+                "/**\n"
+                + " * @fileoverview\n"
+                + " * @public\n"
+                + " */\n"
+                + "var foo = new Foo();\n"
+                + "foo.bar();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testNoExceptionsWithBadConstructors1() {
-    testSame(new String[] {
-      "function Foo() { (new SubFoo).bar(); } " +
-      "/** @constructor */ function SubFoo() {}" +
-      "/** @protected */ SubFoo.prototype.bar = function() {};"
-    });
+    testSame(new String[] {"function Foo() { (new SubFoo).bar(); } "
+        + "/** @constructor */ function SubFoo() {}"
+        + "/** @protected */ SubFoo.prototype.bar = function() {};"});
   }
 
   public void testNoExceptionsWithBadConstructors2() {
-    testSame(new String[] {
-      "/** @constructor */ function Foo() {} " +
-      "Foo.prototype.bar = function() {};" +
-      "/** @constructor */" +
-      "function SubFoo() {}" +
-      "/** @protected */ " +
-      "SubFoo.prototype.bar = function() { (new Foo).bar(); };"
-    });
+    testSame(new String[] {"/** @constructor */ function Foo() {} "
+        + "Foo.prototype.bar = function() {};"
+        + "/** @constructor */"
+        + "function SubFoo() {}"
+        + "/** @protected */ "
+        + "SubFoo.prototype.bar = function() { (new Foo).bar(); };"});
   }
 
   public void testGoodOverrideOfProtectedProperty() {
     testSame(new String[] {
-      "/** @constructor */ function Foo() { } " +
-      "/** @protected */ Foo.prototype.bar = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {}" +
-      "/** @inheritDoc */ SubFoo.prototype.bar = function() {};",
+        "/** @constructor */ function Foo() { } "
+        + "/** @protected */ Foo.prototype.bar = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {}"
+        + "/** @inheritDoc */ SubFoo.prototype.bar = function() {};",
     });
   }
 
   public void testBadOverrideOfProtectedProperty() {
     test(new String[] {
-      "/** @constructor */ function Foo() { } " +
-      "/** @protected */ Foo.prototype.bar = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {}" +
-      "/** @private */ SubFoo.prototype.bar = function() {};",
-    }, null, VISIBILITY_MISMATCH);
+        "/** @constructor */ function Foo() { } "
+        + "/** @protected */ Foo.prototype.bar = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {}"
+        + "/** @private */ SubFoo.prototype.bar = function() {};",
+         },
+        null, VISIBILITY_MISMATCH);
   }
 
   public void testBadOverrideOfPrivateProperty() {
     test(new String[] {
-      "/** @constructor */ function Foo() { } " +
-      "/** @private */ Foo.prototype.bar = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {}" +
-      "/** @protected */ SubFoo.prototype.bar = function() {};",
-    }, null, PRIVATE_OVERRIDE);
+        "/** @constructor */ function Foo() { } "
+        + "/** @private */ Foo.prototype.bar = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {}"
+        + "/** @protected */ SubFoo.prototype.bar = function() {};",
+         },
+        null, PRIVATE_OVERRIDE);
 
     testSame(new String[] {
-      "/** @constructor */ function Foo() { } " +
-      "/** @private */ Foo.prototype.bar = function() {};",
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {}" +
-      "/** @override \n *@suppress{visibility} */\n" +
-      " SubFoo.prototype.bar = function() {};",
+        "/** @constructor */ function Foo() { } "
+        + "/** @private */ Foo.prototype.bar = function() {};",
+        "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {}"
+        + "/** @override \n *@suppress{visibility} */\n"
+        + " SubFoo.prototype.bar = function() {};",
     });
   }
 
   public void testAccessOfStaticMethodOnPrivateConstructor() {
     testSame(new String[] {
-      "/** @constructor \n * @private */ function Foo() { } " +
-      "Foo.create = function() { return new Foo(); };",
-      "Foo.create()",
+        "/** @constructor \n * @private */ function Foo() { } "
+        + "Foo.create = function() { return new Foo(); };",
+        "Foo.create()",
     });
   }
 
   public void testAccessOfStaticMethodOnPrivateQualifiedConstructor() {
     testSame(new String[] {
-      "var goog = {};" +
-      "/** @constructor \n * @private */ goog.Foo = function() { }; " +
-      "goog.Foo.create = function() { return new goog.Foo(); };",
-      "goog.Foo.create()",
+        "/** @const */ var goog = {};"
+        + "/** @constructor \n * @private */ goog.Foo = function() { }; "
+        + "goog.Foo.create = function() { return new goog.Foo(); };",
+        "goog.Foo.create()",
     });
   }
 
   public void testInstanceofOfPrivateConstructor() {
     testSame(new String[] {
-      "var goog = {};" +
-      "/** @constructor \n * @private */ goog.Foo = function() { }; " +
-      "goog.Foo.create = function() { return new goog.Foo(); };",
-      "goog instanceof goog.Foo",
+        "/** @const */ var goog = {};"
+        + "/** @constructor \n * @private */ goog.Foo = function() { }; "
+        + "goog.Foo.create = function() { return new goog.Foo(); };",
+        "goog instanceof goog.Foo",
     });
   }
 
   public void testOkAssignmentOfDeprecatedProperty() {
-    testSame(
-        "/** @constructor */ function Foo() {" +
-        " /** @deprecated */ this.bar = 3;" +
-        "}");
+    testSame("/** @constructor */ function Foo() {"
+        + " /** @deprecated */ this.bar = 3;"
+        + "}");
   }
 
   public void testBadReadOfDeprecatedProperty() {
     testDep(
-        "/** @constructor */ function Foo() {" +
-        " /** @deprecated %s */ this.bar = 3;" +
-        "  this.baz = this.bar;" +
-        "}",
-        "GRR",
-        DEPRECATED_PROP,
-        DEPRECATED_PROP_REASON);
+        "/** @constructor */ function Foo() {"
+        + " /** @deprecated %s */ this.bar = 3;"
+        + "  this.baz = this.bar;"
+        + "}",
+        "GRR", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testAutoboxedDeprecatedProperty() {
-    test(
-        "", // no externs
-        "/** @constructor */ function String() {}" +
-        "/** @deprecated %s */ String.prototype.length;" +
-        "function f() { return 'x'.length; }",
-        (String) null,
-        DEPRECATED_PROP_REASON,
-        null);
+    test("", // no externs
+        "/** @constructor */ function String() {}"
+        + "/** @deprecated %s */ String.prototype.length;"
+        + "function f() { return 'x'.length; }",
+        (String) null, DEPRECATED_PROP_REASON, null);
   }
 
   public void testAutoboxedPrivateProperty() {
     test(
-        "/** @constructor */ function String() {}" +
-        "/** @private */ String.prototype.length;", // externs
+        "/** @constructor */ function String() {}"
+        + "/** @private */ String.prototype.length;",
+        // externs
         "function f() { return 'x'.length; }",
         (String) null, // no output
-        BAD_PRIVATE_PROPERTY_ACCESS,
-        null);
+        BAD_PRIVATE_PROPERTY_ACCESS, null);
   }
 
   public void testNullableDeprecatedProperty() {
     testDep(
-        "/** @constructor */ function Foo() {}" +
-        "/** @deprecated %s */ Foo.prototype.length;" +
-        "/** @param {?Foo} x */ function f(x) { return x.length; }",
-        (String) null,
-        DEPRECATED_PROP,
-        DEPRECATED_PROP_REASON);
+        "/** @constructor */ function Foo() {}"
+        + "/** @deprecated %s */ Foo.prototype.length;"
+        + "/** @param {?Foo} x */ function f(x) { return x.length; }",
+        (String) null, DEPRECATED_PROP, DEPRECATED_PROP_REASON);
   }
 
   public void testNullablePrivateProperty() {
     test(new String[] {
-        "/** @constructor */ function Foo() {}" +
-        "/** @private */ Foo.prototype.length;",
-        "/** @param {?Foo} x */ function f(x) { return x.length; }"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {}"
+        + "/** @private */ Foo.prototype.length;",
+        "/** @param {?Foo} x */ function f(x) { return x.length; }"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testPrivatePropertyByConvention1() {
     test(new String[] {
-        "/** @constructor */ function Foo() {}\n" +
-        "/** @type {number} */ Foo.prototype.length_;\n",
-        "/** @param {?Foo} x */ function f(x) { return x.length_; }\n"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {}\n"
+        + "/** @type {number} */ Foo.prototype.length_;\n",
+        "/** @param {?Foo} x */ function f(x) { return x.length_; }\n"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testPrivatePropertyByConvention2() {
     test(new String[] {
-        "/** @constructor */ function Foo() {\n" +
-        "  /** @type {number} */ this.length_ = 1;\n" +
-        "}\n" +
-        "/** @type {number} */ Foo.prototype.length_;\n",
-        "/** @param {Foo} x */ function f(x) { return x.length_; }\n"
-    }, null, BAD_PRIVATE_PROPERTY_ACCESS);
+        "/** @constructor */ function Foo() {\n"
+        + "  /** @type {number} */ this.length_ = 1;\n"
+        + "}\n"
+        + "/** @type {number} */ Foo.prototype.length_;\n",
+        "/** @param {Foo} x */ function f(x) { return x.length_; }\n"},
+        null, BAD_PRIVATE_PROPERTY_ACCESS);
   }
 
   public void testDeclarationAndConventionConflict1() {
     testSame(
-        "/** @constructor */ function Foo() {}" +
-        "/** @protected */ Foo.prototype.length_;",
+        "/** @constructor */ function Foo() {}"
+        + "/** @protected */ Foo.prototype.length_;",
         CONVENTION_MISMATCH, true);
   }
 
   public void testDeclarationAndConventionConflict2() {
     testSame(
-        "/** @constructor */ function Foo() {}\n" +
-        "/** @public {number} */ Foo.prototype.length_;\n",
+        "/** @constructor */ function Foo() {}\n"
+        + "/** @public {number} */ Foo.prototype.length_;\n",
         CONVENTION_MISMATCH, true);
   }
 
   public void testDeclarationAndConventionConflict3() {
     testSame(
-        "/** @constructor */ function Foo() {" +
-        "  /** @protected */ this.length_ = 1;\n" +
-        "}\n",
+        "/** @constructor */ function Foo() {"
+        + "  /** @protected */ this.length_ = 1;\n"
+        + "}\n",
         CONVENTION_MISMATCH, true);
   }
 
   public void testDeclarationAndConventionConflict4a() {
     testSame(
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype = { /** @protected */ length_: 1 }\n" +
-        "new Foo().length_",
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype = { /** @protected */ length_: 1 }\n"
+        + "new Foo().length_",
         CONVENTION_MISMATCH, true);
   }
 
   public void testDeclarationAndConventionConflict4b() {
     testSame(
-        "var NS = {}; /** @constructor */ NS.Foo = function() {};" +
-        "NS.Foo.prototype = { /** @protected */ length_: 1 };\n" +
-        "(new NS.Foo()).length_;",
+        "/** @const */ var NS = {}; /** @constructor */ NS.Foo = function() {};"
+        + "NS.Foo.prototype = { /** @protected */ length_: 1 };\n"
+        + "(new NS.Foo()).length_;",
         CONVENTION_MISMATCH, true);
   }
 
   public void testDeclarationAndConventionConflict5() {
     testSame(
-        "/** @constructor */ function Foo() {}\n" +
-        "Foo.prototype = { /** @protected */ get length_() { return 1; } }\n",
+        "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = { /** @protected */ get length_() { return 1; } }\n",
         CONVENTION_MISMATCH, true);
   }
 
   public void testDeclarationAndConventionConflict6() {
     testSame(
-        "/** @constructor */ function Foo() {}\n" +
-        "Foo.prototype = { /** @protected */ set length_(x) { } }\n",
+        "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype = { /** @protected */ set length_(x) { } }\n",
         CONVENTION_MISMATCH, true);
   }
 
@@ -1462,307 +1414,316 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testConstantProperty1a() {
-    testError("/** @constructor */ function A() {" +
-        "/** @const */ this.bar = 3;}" +
-        "/** @constructor */ function B() {" +
-        "/** @const */ this.bar = 3;this.bar += 4;}",
+    testError(
+        "/** @constructor */ function A() {"
+        + "/** @const */ this.bar = 3;}"
+        + "/** @constructor */ function B() {"
+        + "/** @const */ this.bar = 3;this.bar += 4;}",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty1b() {
-    testError("/** @constructor */ function A() {" +
-        "this.BAR = 3;}" +
-        "/** @constructor */ function B() {" +
-        "this.BAR = 3;this.BAR += 4;}",
+    testError(
+        "/** @constructor */ function A() {"
+        + "this.BAR = 3;}"
+        + "/** @constructor */ function B() {"
+        + "this.BAR = 3;this.BAR += 4;}",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty2a() {
-    testError("/** @constructor */ function Foo() {}" +
-        "/** @const */ Foo.prototype.prop = 2;" +
-        "var foo = new Foo();" +
-        "foo.prop = 3;",
+    testError(
+        "/** @constructor */ function Foo() {}"
+        + "/** @const */ Foo.prototype.prop = 2;"
+        + "var foo = new Foo();"
+        + "foo.prop = 3;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty2b() {
-    testError("/** @constructor */ function Foo() {}" +
-        "Foo.prototype.PROP = 2;" +
-        "var foo = new Foo();" +
-        "foo.PROP = 3;",
+    testError(
+        "/** @constructor */ function Foo() {}"
+        + "Foo.prototype.PROP = 2;"
+        + "var foo = new Foo();"
+        + "foo.PROP = 3;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty3a() {
-    testSame("/** @constructor */ function Foo() {}\n" +
-        "/** @type {number} */ Foo.prototype.PROP = 2;\n" +
-        "/** @suppress {duplicate|const} */ Foo.prototype.PROP = 3;\n");
+    testSame("/** @constructor */ function Foo() {}\n"
+        + "/** @type {number} */ Foo.prototype.PROP = 2;\n"
+        + "/** @suppress {duplicate|const} */ Foo.prototype.PROP = 3;\n");
   }
 
   public void testConstantProperty3b() {
-    testSame("/** @constructor */ function Foo() {}\n" +
-        "/** @const */ Foo.prototype.prop = 2;\n" +
-        "/** @suppress {const} */ Foo.prototype.prop = 3;\n");
+    testSame("/** @constructor */ function Foo() {}\n"
+        + "/** @const */ Foo.prototype.prop = 2;\n"
+        + "/** @suppress {const} */ Foo.prototype.prop = 3;\n");
   }
 
   public void testNamespaceConstantProperty1() {
-    testError("" +
-        "/** @const */ var o = {};\n" +
-        "/** @const */ o.x = 1;" +
-        "o.x = 2;",
+    testError(
+        ""
+        + "/** @const */ var o = {};\n"
+        + "/** @const */ o.x = 1;"
+        + "o.x = 2;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testNamespaceConstantProperty2() {
-    testError("" +
-        "var o = {};\n" +
-        "/** @const */ o.x = 1;\n" +
-        "o.x = 2;\n",
+    testError(
+        "/** @const */ var o = {};\n"
+        + "/** @const */ o.x = 1;\n"
+        + "o.x = 2;\n",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testNamespaceConstantProperty2a() {
-    testSame("" +
-        "var o = {};\n" +
-        "/** @const */ o.x = 1;\n" +
-        "var o2 = {};\n" +
-        "/** @const */ o2.x = 1;\n");
+    testSame("/** @const */ var o = {};\n"
+        + "/** @const */ o.x = 1;\n"
+        + "/** @const */ var o2 = {};\n"
+        + "/** @const */ o2.x = 1;\n");
   }
 
   public void testNamespaceConstantProperty3() {
-    testError("" +
-        "/** @const */ var o = {};\n" +
-        "/** @const */ o.x = 1;" +
-        "o.x = 2;",
+    testError(
+        "/** @const */ var o = {};\n"
+        + "/** @const */ o.x = 1;"
+        + "o.x = 2;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty3a1() {
-    // We don't currently check constants defined in object literals.
-    testSame("var o = { /** @const */ x: 1 };" +
-        "o.x = 2;");
+    testSame("var o = { /** @const */ x: 1 };"
+        + "o.x = 2;");
   }
 
   public void testConstantProperty3a2() {
-    // We should report this but we don't.
-    testSame("/** @const */ var o = { /** @const */ x: 1 };" +
-        "o.x = 2;");
+    // The old type checker should report this but it doesn't.
+    testSame("/** @const */ var o = { /** @const */ x: 1 };"
+        + "o.x = 2;");
   }
 
   public void testConstantProperty3b1() {
     // We should report this but we don't.
-    testSame("var o = { XYZ: 1 };" +
-        "o.XYZ = 2;");
+    testSame("var o = { XYZ: 1 };"
+        + "o.XYZ = 2;");
   }
 
   public void testConstantProperty3b2() {
-    // We should report this but we don't.
-    testSame("/** @const */ var o = { XYZ: 1 };" +
-        "o.XYZ = 2;");
+    // The old type checker should report this but it doesn't.
+    testSame("/** @const */ var o = { XYZ: 1 };"
+        + "o.XYZ = 2;");
   }
 
   public void testConstantProperty4() {
-    testError("/** @constructor */ function cat(name) {}" +
-        "/** @const */ cat.test = 1;" +
-        "cat.test *= 2;",
+    testError(
+        "/** @constructor */ function cat(name) {}"
+        + "/** @const */ cat.test = 1;"
+        + "cat.test *= 2;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty4b() {
-    testError("/** @constructor */ function cat(name) {}" +
-        "cat.TEST = 1;" +
-        "cat.TEST *= 2;",
+    testError(
+        "/** @constructor */ function cat(name) {}"
+        + "cat.TEST = 1;"
+        + "cat.TEST *= 2;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty5() {
-    testError("/** @constructor */ function Foo() { this.prop = 1;}" +
-        "/** @const */ Foo.prototype.prop;" +
-        "Foo.prototype.prop = 2",
+    testError(
+        "/** @constructor */ function Foo() { this.prop = 1;}"
+        + "/** @const */ Foo.prototype.prop;"
+        + "Foo.prototype.prop = 2",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty6() {
-    testError("/** @constructor */ function Foo() { this.prop = 1;}" +
-        "/** @const */ Foo.prototype.prop = 2;",
+    testError(
+        "/** @constructor */ function Foo() { this.prop = 1;}"
+        + "/** @const */ Foo.prototype.prop = 2;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty7() {
-    testSame("/** @constructor */ function Foo() {} " +
-      "Foo.prototype.bar_ = function() {};" +
-      "/** @constructor \n * @extends {Foo} */ " +
-      "function SubFoo() {};" +
-      "/** @const */ /** @override */ SubFoo.prototype.bar_ = function() {};" +
-      "SubFoo.prototype.baz = function() { this.bar_(); }");
+    testSame("/** @constructor */ function Foo() {} "
+        + "Foo.prototype.bar_ = function() {};"
+        + "/** @constructor \n * @extends {Foo} */ "
+        + "function SubFoo() {};"
+        + "/** @const */ /** @override */ SubFoo.prototype.bar_ = function() {};"
+        + "SubFoo.prototype.baz = function() { this.bar_(); }");
   }
 
   public void testConstantProperty8() {
-    testSame("var o = { /** @const */ x: 1 };" +
-        "var y = o.x;");
+    testSame("/** @const */ var o = { /** @const */ x: 1 };"
+        + "var y = o.x;");
   }
 
   public void testConstantProperty9() {
-    testSame("/** @constructor */ function A() {" +
-        "/** @const */ this.bar = 3;}" +
-        "/** @constructor */ function B() {" +
-        "this.bar = 4;}");
+    testSame("/** @constructor */ function A() {"
+        + "/** @const */ this.bar = 3;}"
+        + "/** @constructor */ function B() {"
+        + "this.bar = 4;}");
   }
 
   public void testConstantProperty10a() {
-    testSame("/** @constructor */ function Foo() { this.prop = 1;}" +
-        "/** @const */ Foo.prototype.prop;");
+    testSame("/** @constructor */ function Foo() { this.prop = 1;}"
+        + "/** @const */ Foo.prototype.prop;");
   }
 
   public void testConstantProperty10b() {
-    testSame("/** @constructor */ function Foo() { this.PROP = 1;}" +
-        "Foo.prototype.PROP;");
+    testSame("/** @constructor */ function Foo() { this.PROP = 1;}"
+        + "Foo.prototype.PROP;");
   }
 
   public void testConstantProperty11() {
-    testError("/** @constructor */ function Foo() {}" +
-        "/** @const */ Foo.prototype.bar;" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo}\n" +
-        " */ function SubFoo() { this.bar = 5; this.bar = 6; }",
+    testError(
+        "/** @constructor */ function Foo() {}"
+        + "/** @const */ Foo.prototype.bar;"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Foo}\n"
+        + " */ function SubFoo() { this.bar = 5; this.bar = 6; }",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty12() {
-    testSame("/** @constructor */ function Foo() {}" +
-        "/** @const */ Foo.prototype.bar;" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo}\n" +
-        " */ function SubFoo() { this.bar = 5; }" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo}\n" +
-        " */ function SubFoo2() { this.bar = 5; }");
+    testSame("/** @constructor */ function Foo() {}"
+        + "/** @const */ Foo.prototype.bar;"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Foo}\n"
+        + " */ function SubFoo() { this.bar = 5; }"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Foo}\n"
+        + " */ function SubFoo2() { this.bar = 5; }");
   }
 
   public void testConstantProperty13() {
-    testError("/** @constructor */ function Foo() {}" +
-        "/** @const */ Foo.prototype.bar;" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo}\n" +
-        " */ function SubFoo() { this.bar = 5; }" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {SubFoo}\n" +
-        " */ function SubSubFoo() { this.bar = 5; }",
+    testError(
+        "/** @constructor */ function Foo() {}"
+        + "/** @const */ Foo.prototype.bar;"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Foo}\n"
+        + " */ function SubFoo() { this.bar = 5; }"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {SubFoo}\n"
+        + " */ function SubSubFoo() { this.bar = 5; }",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty14() {
-    testError("/** @constructor */ function Foo() {" +
-        "/** @const */ this.bar = 3; delete this.bar; }",
+    testError(
+        "/** @constructor */ function Foo() {"
+        + "/** @const */ this.bar = 3; delete this.bar; }",
         CONST_PROPERTY_DELETED);
   }
 
   public void testConstantPropertyInExterns() {
-    String externs = "" +
-        "/** @constructor */ function Foo() {};\n" +
-        "/** @const */ Foo.prototype.PROP;";
+    String externs =
+        ""
+        + "/** @constructor */ function Foo() {};\n"
+        + "/** @const */ Foo.prototype.PROP;";
     String js = "var f = new Foo(); f.PROP = 1; f.PROP = 2;";
     test(externs, js, (String) null, CONST_PROPERTY_REASSIGNED_VALUE, null);
   }
 
   public void testConstantProperty15() {
-    testSame("/** @constructor */ function Foo() {};\n" +
-        "Foo.CONST = 100;\n" +
-        "/** @type {Foo} */\n" +
-        "var foo = new Foo();\n" +
-        "/** @type {number} */\n" +
-        "foo.CONST = Foo.CONST;");
+    testSame("/** @constructor */ function Foo() {};\n"
+        + "Foo.CONST = 100;\n"
+        + "/** @type {Foo} */\n"
+        + "var foo = new Foo();\n"
+        + "/** @type {number} */\n"
+        + "foo.CONST = Foo.CONST;");
   }
 
   public void testConstantProperty15a() {
-    testError("/** @constructor */ function Foo() { this.CONST = 100; };\n" +
-        "/** @type {Foo} */\n" +
-        "var foo = new Foo();\n" +
-        "/** @type {number} */\n" +
-        "foo.CONST = 0;",
+    testError(
+        "/** @constructor */ function Foo() { this.CONST = 100; };\n"
+        + "/** @type {Foo} */\n"
+        + "var foo = new Foo();\n"
+        + "/** @type {number} */\n"
+        + "foo.CONST = 0;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty15b() {
-    testError("/** @constructor */ function Foo() {};\n" +
-        "Foo.prototype.CONST = 100;\n" +
-        "/** @type {Foo} */\n" +
-        "var foo = new Foo();\n" +
-        "/** @type {number} */\n" +
-        "foo.CONST = 0;",
+    testError(
+        "/** @constructor */ function Foo() {};\n"
+        + "Foo.prototype.CONST = 100;\n"
+        + "/** @type {Foo} */\n"
+        + "var foo = new Foo();\n"
+        + "/** @type {number} */\n"
+        + "foo.CONST = 0;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty15c() {
-    testError("" +
-        "/** @constructor */ function Bar() {this.CONST = 100;};\n" +
-        "/** @constructor \n @extends {Bar} */ function Foo() {};\n" +
-        "/** @type {Foo} */\n" +
-        "var foo = new Foo();\n" +
-        "/** @type {number} */\n" +
-        "foo.CONST = 0;",
+    testError(
+        ""
+        + "/** @constructor */ function Bar() {this.CONST = 100;};\n"
+        + "/** @constructor \n @extends {Bar} */ function Foo() {};\n"
+        + "/** @type {Foo} */\n"
+        + "var foo = new Foo();\n"
+        + "/** @type {number} */\n"
+        + "foo.CONST = 0;",
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 
   public void testConstantProperty16() {
-    testSame(
-        "/** @constructor */ function Foo() {};\n" +
-        "Foo.CONST = 100;\n" +
-        "/** @constructor */ function Bar() {};\n" +
-        "Bar.CONST = 100;\n");
+    testSame("/** @constructor */ function Foo() {};\n"
+        + "Foo.CONST = 100;\n"
+        + "/** @constructor */ function Bar() {};\n"
+        + "Bar.CONST = 100;\n");
   }
 
   public void testConstantProperty17() {
-    testSame(
-        "function Foo() {};\n" +
-        "Foo.CONST = 100;\n" +
-        "function Bar() {};\n" +
-        "Bar.CONST = 100;\n");
+    testSame("function Foo() {};\n"
+        + "Foo.CONST = 100;\n"
+        + "function Bar() {};\n"
+        + "Bar.CONST = 100;\n");
   }
 
   public void testConstantProperty18() {
-    testSame(
-        "/** @param {string} a */\n" +
-        "function Foo(a) {};\n" +
-        "Foo.CONST = 100;\n" +
-        "/** @param {string} a */\n" +
-        "function Bar(a) {};\n" +
-        "Bar.CONST = 100;\n");
+    testSame("/** @param {string} a */\n"
+        + "function Foo(a) {};\n"
+        + "Foo.CONST = 100;\n"
+        + "/** @param {string} a */\n"
+        + "function Bar(a) {};\n"
+        + "Bar.CONST = 100;\n");
   }
 
   public void testConstantProperty19() {
-    testSame(
-        "/** @param {string} a */\n" +
-        "function Foo(a) {};\n" +
-        "Foo.CONST = 100;\n" +
-        "/** @param {number} a */\n" +
-        "function Bar(a) {};\n" +
-        "Bar.CONST = 100;\n");
+    testSame("/** @param {string} a */\n"
+        + "function Foo(a) {};\n"
+        + "Foo.CONST = 100;\n"
+        + "/** @param {number} a */\n"
+        + "function Bar(a) {};\n"
+        + "Bar.CONST = 100;\n");
   }
 
   public void testSuppressConstantProperty() {
-    testSame("/** @constructor */ function A() {" +
-        "/** @const */ this.bar = 3;}" +
-        "/**\n" +
-        " * @suppress {constantProperty}\n" +
-        " * @constructor\n" +
-        " */ function B() {" +
-        "/** @const */ this.bar = 3;this.bar += 4;}");
+    testSame("/** @constructor */ function A() {"
+        + "/** @const */ this.bar = 3;}"
+        + "/**\n"
+        + " * @suppress {constantProperty}\n"
+        + " * @constructor\n"
+        + " */ function B() { /** @const */ this.bar = 3; this.bar += 4; }");
   }
 
   public void testSuppressConstantProperty2() {
-    testSame("/** @constructor */ function A() {" +
-        "/** @const */ this.bar = 3;}" +
-        "/**\n" +
-        " * @suppress {const}\n" +
-        " * @constructor\n" +
-        " */ function B() {" +
-        "/** @const */ this.bar = 3;this.bar += 4;}");
+    testSame("/** @constructor */ function A() {"
+        + "/** @const */ this.bar = 3;}"
+        + "/**\n"
+        + " * @suppress {const}\n"
+        + " * @constructor\n"
+        + " */ function B() {"
+        + "/** @const */ this.bar = 3;this.bar += 4;}");
   }
 
   public void testFinalClassCannotBeSubclassed() {
