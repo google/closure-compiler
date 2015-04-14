@@ -883,13 +883,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         Token.BANG, IR.string(metadata.fullClassName)), member.getSourceFileName()));
     Node stringKey = IR.stringKey(member.isGetterDef() ? "get" : "set", function);
     JSDocInfo info = builder.build();
-
-    // Attach the info to both the STRING_KEY and the FUNCTION because that's what happens
-    // when we parse the "expected" code for unit tests.
-    // TODO(tbreisacher): Make the parser attach the info to one or the other, not both.
     stringKey.setJSDocInfo(info);
-    function.setJSDocInfo(info);
-
     prop.addChildToBack(stringKey);
     prop.useSourceInfoIfMissingFromForTree(member);
   }

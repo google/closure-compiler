@@ -894,7 +894,7 @@ class CollapseProperties implements CompilerPass {
       Node nameNode = NodeUtil.newName(compiler,
           alias, ref.node.getAncestor(2), n.getFullName());
 
-      JSDocInfo info = ref.node.getParent().getJSDocInfo();
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(ref.node.getParent());
       if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME) ||
           (info != null && info.isConstant())) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
@@ -1087,8 +1087,7 @@ class CollapseProperties implements CompilerPass {
       if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      Node newVar = IR.var(nameNode)
-          .copyInformationFromForTree(key);
+      Node newVar = IR.var(nameNode).copyInformationFromForTree(key);
       if (nameToAddAfter != null) {
         varParent.addChildAfter(newVar, nameToAddAfter);
       } else {
@@ -1111,7 +1110,7 @@ class CollapseProperties implements CompilerPass {
         p.getDeclaration().node = nameNode;
 
         if (value.isFunction()) {
-          checkForHosedThisReferences(value, value.getJSDocInfo(), p);
+          checkForHosedThisReferences(value, key.getJSDocInfo(), p);
         }
       }
 

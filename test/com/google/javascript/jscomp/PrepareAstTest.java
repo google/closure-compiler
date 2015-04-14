@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 
 /**
@@ -34,25 +33,6 @@ public final class PrepareAstTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return null; // unused
-  }
-
-  public void testJsDocNormalization() throws Exception {
-    Node root = parseExpectedJs(
-        "var x = {/** @return {number} */ a: function() {}," +
-        "         c: /** @type {string} */ ('d')};");
-    Node objlit = root.getFirstChild().getFirstChild().getFirstChild()
-        .getFirstChild();
-    assertEquals(Token.OBJECTLIT, objlit.getType());
-
-    Node firstKey = objlit.getFirstChild();
-    Node firstVal = firstKey.getFirstChild();
-
-    Node secondKey = firstKey.getNext();
-    Node secondVal = secondKey.getFirstChild();
-    assertNotNull(firstKey.getJSDocInfo());
-    assertNotNull(firstVal.getJSDocInfo());
-    assertNull(secondKey.getJSDocInfo());
-    assertNotNull(secondVal.getJSDocInfo());
   }
 
   public void testFreeCall1() throws Exception {
