@@ -82,19 +82,18 @@ public class DiagnosticGroups {
   // If a group is suppressible on a per-file basis, it should be added
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
-      "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, " +
-      "checkRegExp, checkStructDictInheritance, checkTypes, checkVars, " +
-      "conformanceViolations, " +
-      "const, constantProperty, deprecated, duplicateMessage, es3, " +
-      "es5Strict, externsValidation, fileoverviewTags, globalThis, " +
-      "inferredConstCheck, " +
-      "internetExplorerChecks, invalidCasts, misplacedTypeAnnotation, " +
-      "missingGetCssName, missingProperties, " +
-      "missingProvide, missingRequire, missingReturn," +
-      "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, " +
-      "strictModuleDepCheck, typeInvalidation, " +
-      "undefinedNames, undefinedVars, unknownDefines, uselessCode, " +
-      "useOfGoogBase, visibility";
+      "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, "
+      + "checkRegExp, checkStructDictInheritance, checkTypes, checkVars, "
+      + "conformanceViolations, const, constantProperty, deprecated, "
+      + "deprecatedAnnotations, duplicateMessage, es3, "
+      + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
+      + "inferredConstCheck, internetExplorerChecks, invalidCasts, "
+      + "misplacedTypeAnnotation, missingGetCssName, missingProperties, "
+      + "missingProvide, missingRequire, missingReturn,"
+      + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, "
+      + "strictModuleDepCheck, typeInvalidation, "
+      + "undefinedNames, undefinedVars, unknownDefines, uselessCode, "
+      + "useOfGoogBase, visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -407,6 +406,10 @@ public class DiagnosticGroups {
           CheckSuspiciousCode.SUSPICIOUS_COMPARISON_WITH_NAN,
           CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR,
           CheckSuspiciousCode.SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
+
+  public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
+      DiagnosticGroups.registerGroup("deprecatedAnnotations",
+          RhinoErrorReporter.ANNOTATION_DEPRECATED);
 
   // These checks are not intended to be enabled as errors. It is
   // recommended that you think of them as "linter" warnings that
