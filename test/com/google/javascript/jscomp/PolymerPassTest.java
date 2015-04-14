@@ -19,6 +19,7 @@ import static com.google.javascript.jscomp.PolymerPass.POLYMER_DESCRIPTOR_NOT_VA
 import static com.google.javascript.jscomp.PolymerPass.POLYMER_INVALID_PROPERTY;
 import static com.google.javascript.jscomp.PolymerPass.POLYMER_MISSING_IS;
 import static com.google.javascript.jscomp.PolymerPass.POLYMER_UNEXPECTED_PARAMS;
+import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -126,8 +127,9 @@ public class PolymerPassTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     allowExternsChanges(true);
-    enableTypeCheck(CheckLevel.ERROR);
+    enableTypeCheck(CheckLevel.WARNING);
     runTypeCheckAfterProcessing = true;
+    parseTypeInfo = true;
   }
 
   @Override
@@ -223,6 +225,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "    'click': 'handleClick',",
         "  },",
         "",
+        "  /** @this {X} */",
         "  handleClick: function(e) {",
         "    alert('Thank you for clicking');",
         "  },",
@@ -291,6 +294,52 @@ public class PolymerPassTest extends CompilerTestCase {
         "});"));
   }
 
+  public void testThisTypeAddedToFunctions() {
+    test(Joiner.on("\n").join(
+        "var X = Polymer({",
+        "  is: 'x-element',",
+        "  sayHi: function() {",
+        "    alert('hi');",
+        "  },",
+        "  /** @override */",
+        "  created: function() {",
+        "    this.sayHi();",
+        "    this.sayHelloTo_('Tester');",
+        "  },",
+        "  /**",
+        "   * @param {string} name",
+        "   * @private",
+        "   */",
+        "  sayHelloTo_: function(name) {",
+        "    alert('Hello, ' + name);",
+        "  },",
+        "});"),
+
+        Joiner.on("\n").join(
+        "/** @constructor @extends {PolymerElement} */",
+        "var X = function() {};",
+        "X = Polymer(/** @lends {X.prototype} */ {",
+        "  is: 'x-element',",
+        "  /** @this {X} */",
+        "  sayHi: function() {",
+        "    alert('hi');",
+        "  },",
+        "  /** @override @this {X} */",
+        "  created: function() {",
+        "    this.sayHi();",
+        "    this.sayHelloTo_('Tester');",
+        "  },",
+        "  /**",
+        "   * @param {string} name",
+        "   * @private",
+        "   * @this {X}",
+        "   */",
+        "  sayHelloTo_: function(name) {",
+        "    alert('Hello, ' + name);",
+        "  },",
+        "});"));
+  }
+
   public void testInvalid1() {
     testSame(
         "var x = Polymer();",
@@ -325,5 +374,37 @@ public class PolymerPassTest extends CompilerTestCase {
         "  },",
         "});"),
         POLYMER_INVALID_PROPERTY, true);
+  }
+
+  public void testInvalidTypeAssignment() {
+    test(
+        Joiner.on("\n").join(
+        "var X = Polymer({",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    isHappy: Boolean,",
+        "  },",
+        "  /** @override */",
+        "  created: function() {",
+        "    this.isHappy = 7;",
+        "  },",
+        "});"),
+        Joiner.on("\n").join(
+        "/** @constructor @extends {PolymerElement} */",
+        "var X = function() {};",
+        "/** @type {boolean} */",
+        "X.prototype.isHappy;",
+        "X = Polymer(/** @lends {X.prototype} */ {",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    isHappy: Boolean,",
+        "  },",
+        "  /** @override @this {X} */",
+        "  created: function() {",
+        "    this.isHappy = 7;",
+        "  },",
+        "});"),
+        null,
+        TYPE_MISMATCH_WARNING);
   }
 }
