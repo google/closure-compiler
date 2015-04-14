@@ -1354,10 +1354,53 @@ class CodeGenerator {
     }
   }
 
+  /**
+   * Determines whether the given child of a destructuring pattern is the initializer for
+   * that pattern. If the pattern is in a var/let/const statement, then the last child of the
+   * pattern is the initializer, e.g. the tree for
+   * {@code var {x:y} = z} looks like:
+   * <pre>
+   * VAR
+   *   OBJECT_PATTERN
+   *     STRING_KEY x
+   *       NAME y
+   *     NAME z
+   * </pre>
+   * The exception is when the var/let/const is the first child of a for-in or for-of loop, in
+   * which case all the children belong to the pattern itself, e.g. the VAR node in
+   * {@code for (var {x: y, z} of []);} looks like
+   * <pre>
+   * VAR
+   *   OBJECT_PATTERN
+   *     STRING_KEY x
+   *       NAME y
+   *     STRING_KEY z
+   * </pre>
+   * and the "z" node is *not* an initializer.
+   */
+  private boolean isPatternInitializer(Node n) {
+    Node parent = n.getParent();
+    Preconditions.checkState(parent.isDestructuringPattern());
+    if (n != parent.getLastChild()) {
+      return false;
+    }
+    Node decl = parent.getParent();
+
+    if (!NodeUtil.isNameDeclaration(decl)) {
+      return false;
+    }
+    if (NodeUtil.isEnhancedFor(decl.getParent()) && decl == decl.getParent().getFirstChild()) {
+      return false;
+    }
+    return true;
+  }
+
   void addArrayPattern(Node n) {
+    boolean hasInitializer = false;
     add("[");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
+      if (isPatternInitializer(child)) {
+        hasInitializer = true;
         add("]");
         add("=");
       } else if (child != n.getFirstChild()) {
@@ -1366,12 +1409,13 @@ class CodeGenerator {
 
       add(child);
     }
-    if (!NodeUtil.isNameDeclaration(n.getParent())) {
+    if (!hasInitializer) {
       add("]");
     }
   }
 
   void addObjectPattern(Node n, Context context) {
+    boolean hasInitializer = false;
     boolean needsParens = (context == Context.START_OF_EXPR);
     if (needsParens) {
       add("(");
@@ -1379,7 +1423,8 @@ class CodeGenerator {
 
     add("{");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      if (child == n.getLastChild() && NodeUtil.isNameDeclaration(n.getParent())) {
+      if (isPatternInitializer(child)) {
+        hasInitializer = true;
         add("}");
         add("=");
       } else if (child != n.getFirstChild()) {
@@ -1388,7 +1433,7 @@ class CodeGenerator {
 
       add(child);
     }
-    if (!NodeUtil.isNameDeclaration(n.getParent())) {
+    if (!hasInitializer) {
       add("}");
     }
 

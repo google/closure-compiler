@@ -363,6 +363,52 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("function f({a,b:[c,d]}){}");
   }
 
+  public void testDestructuringForInLoops() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrintSame("for({a}in b)c");
+    assertPrintSame("for(var {a}in b)c");
+    assertPrintSame("for(let {a}in b)c");
+    assertPrintSame("for(const {a}in b)c");
+
+    assertPrintSame("for({a:b}in c)d");
+    assertPrintSame("for(var {a:b}in c)d");
+    assertPrintSame("for(let {a:b}in c)d");
+    assertPrintSame("for(const {a:b}in c)d");
+
+    assertPrintSame("for([a]in b)c");
+    assertPrintSame("for(var [a]in b)c");
+    assertPrintSame("for(let [a]in b)c");
+    assertPrintSame("for(const [a]in b)c");
+  }
+
+  public void testDestructuringForOfLoops1() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrintSame("for({a}of b)c");
+    assertPrintSame("for(var {a}of b)c");
+    assertPrintSame("for(let {a}of b)c");
+    assertPrintSame("for(const {a}of b)c");
+
+    assertPrintSame("for({a:b}of c)d");
+    assertPrintSame("for(var {a:b}of c)d");
+    assertPrintSame("for(let {a:b}of c)d");
+    assertPrintSame("for(const {a:b}of c)d");
+
+    assertPrintSame("for([a]of b)c");
+    assertPrintSame("for(var [a]of b)c");
+    assertPrintSame("for(let [a]of b)c");
+    assertPrintSame("for(const [a]of b)c");
+  }
+
+  public void testDestructuringForOfLoops2() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    // The destructuring 'var' statement is a child of the for-of loop, but
+    // not the first child.
+    assertPrintSame("for(a of b)var {x}=y");
+  }
+
   public void testBreakTrustedStrings() {
     // Break scripts
     assertPrint("'<script>'", "\"<script>\"");
