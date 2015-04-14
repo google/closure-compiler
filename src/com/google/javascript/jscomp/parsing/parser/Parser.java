@@ -34,37 +34,41 @@ import java.util.List;
 /**
  * Parses a javascript file.
  *
- * The various parseX() methods never return null - even when parse errors are encountered.
+ * <p>The various parseX() methods never return null - even when parse errors are encountered.
  * Typically parseX() will return a XTree ParseTree. Each ParseTree that is created includes its
  * source location. The typical pattern for a parseX() method is:
  *
+ * <pre>
  * XTree parseX() {
  *   SourcePosition start = getTreeStartLocation();
  *   parse X grammar element and its children
  *   return new XTree(getTreeLocation(start), children);
  * }
+ * </pre>
  *
- * parseX() methods must consume at least 1 token - even in error cases. This prevents infinite
+ * <p>parseX() methods must consume at least 1 token - even in error cases. This prevents infinite
  * loops in the parser.
  *
- * Many parseX() methods are matched by a 'boolean peekX()' method which will return true if
+ * <p>Many parseX() methods are matched by a 'boolean peekX()' method which will return true if
  * the beginning of an X appears at the current location. There are also peek() methods which
  * examine the next token. peek() methods must not consume any tokens.
  *
- * The eat() method consumes a token and reports an error if the consumed token is not of the
+ * <p>The eat() method consumes a token and reports an error if the consumed token is not of the
  * expected type. The eatOpt() methods consume the next token iff the next token is of the expected
  * type and return the consumed token or null if no token was consumed.
  *
- * When parse errors are encountered, an error should be reported and the parse should return a
+ * <p>When parse errors are encountered, an error should be reported and the parse should return a
  * best guess at the current parse tree.
  *
- * When parsing lists, the preferred pattern is:
+ * <p>When parsing lists, the preferred pattern is:
+ * <pre>
  *   eat(LIST_START);
- *   ImmutableList.Builder<ParseTree> elements = ImmutableList.<ParseTree>builder();
+ *   ImmutableList.Builder&lt;ParseTree> elements = ImmutableList.builder();
  *   while (peekListElement()) {
  *     elements.add(parseListElement());
  *   }
  *   eat(LIST_END);
+ * </pre>
  */
 public class Parser {
   private final Scanner scanner;
@@ -1468,7 +1472,7 @@ public class Parser {
    * calls the function foo() with the template literal as the argument (with extra
    * handling). In this case, operand would be "foo", which is the callsite.
    *
-   * We store this operand in the TemplateLiteralExpressionTree and
+   * <p>We store this operand in the TemplateLiteralExpressionTree and
    * generate a CALL node if it's not null later when transpiling.
    *
    * @param operand A non-null value would represent the callsite
@@ -2377,7 +2381,7 @@ public class Parser {
   /**
    * Whether we have a spread expression or an assignment next.
    *
-   * This does not peek the operand for the spread expression. This means that
+   * <p>This does not peek the operand for the spread expression. This means that
    * {@link #parseAssignmentOrSpread} might still fail when this returns true.
    */
   private boolean peekAssignmentOrSpread() {
@@ -2811,7 +2815,7 @@ public class Parser {
    * TokenType.END_OF_FILE at the end of the file so callers don't have to check for EOF
    * explicitly.
    *
-   * Tokenizing is contextual. nextToken() will never return a regular expression literal.
+   * <p>Tokenizing is contextual. nextToken() will never return a regular expression literal.
    */
   private Token nextToken() {
     lastToken = scanner.nextToken();
