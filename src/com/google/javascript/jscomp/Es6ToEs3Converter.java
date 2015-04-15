@@ -786,7 +786,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
     Preconditions.checkNotNull(constructor);
 
-    JSDocInfo classJSDoc = classNode.getJSDocInfo();
+    JSDocInfo classJSDoc = NodeUtil.getBestJSDocInfo(classNode);
     JSDocInfoBuilder newInfo = JSDocInfoBuilder.maybeCopyFrom(classJSDoc);
 
     newInfo.recordConstructor();
