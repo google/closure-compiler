@@ -1012,13 +1012,10 @@ public class Parser {
     if (peek(TokenType.EQUAL)) {
       initializer = parseInitializer(expressionIn);
     } else if (expressionIn != Expression.NO_IN) {
-      // TODO(johnlenz): this is a bit of a hack, for-in and for-of
-      // disallow "in" and by chance, must not allow initializers
-      if (binding == TokenType.CONST) {  //?
-        reportError("const variables must have an initializer");
-      } else if (lvalue.isPattern()) {
-        reportError("destructuring must have an initializer");
-      }
+      // NOTE(blickly): this is a bit of a hack, declarations outside of for statements allow "in",
+      // and by chance, also must have initializers for const/destructuring. Vanilla for loops
+      // also require intializers, but are handled separately in checkVanillaForInitializers
+      maybeReportNoInitializer(binding, lvalue);
     }
     return new VariableDeclarationTree(getTreeLocation(start), lvalue, typeAnnotation, initializer);
   }
@@ -1129,8 +1126,8 @@ public class Parser {
 
         return parseForOfStatement(start, variables);
       } else {
-        // for statement: let and const must have initializers
-        checkInitializers(variables);
+        // "Vanilla" for statement: const/destructuring must have initializer
+        checkVanillaForInitializers(variables);
         return parseForStatement(start, variables);
       }
     }
@@ -1152,7 +1149,8 @@ public class Parser {
         : parseExpressionNoIn();
 
     if (peek(TokenType.IN) || peekPredefinedString(PredefinedName.OF)) {
-      if (initializer.type != ParseTreeType.BINARY_OPERATOR) {
+      if (initializer.type != ParseTreeType.BINARY_OPERATOR
+          && initializer.type != ParseTreeType.COMMA_EXPRESSION) {
         if (peek(TokenType.IN)) {
           return parseForInStatement(start, initializer);
         } else {
@@ -1176,16 +1174,21 @@ public class Parser {
         getTreeLocation(start), initializer, collection, body);
   }
 
-  /** Checks variable declaration in variable and for statements. */
-  private void checkInitializers(VariableDeclarationListTree variables) {
-    if (variables.declarationType == TokenType.LET
-        || variables.declarationType == TokenType.CONST) {
-      for (VariableDeclarationTree declaration : variables.declarations) {
-        if (declaration.initializer == null) {
-          reportError("let/const in for statement must have an initializer");
-          break;
-        }
+  /** Checks variable declarations in for statements. */
+  private void checkVanillaForInitializers(VariableDeclarationListTree variables) {
+    for (VariableDeclarationTree declaration : variables.declarations) {
+      if (declaration.initializer == null) {
+        maybeReportNoInitializer(variables.declarationType, declaration.lvalue);
       }
+    }
+  }
+
+  /** Reports if declaration requires an initializer, assuming initializer is absent. */
+  private void maybeReportNoInitializer(TokenType token, ParseTree lvalue) {
+    if (token == TokenType.CONST) {
+      reportError("const variables must have an initializer");
+    } else if (lvalue.isPattern()) {
+      reportError("destructuring must have an initializer");
     }
   }
 

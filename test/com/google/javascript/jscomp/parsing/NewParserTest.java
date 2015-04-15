@@ -1578,7 +1578,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parseWarning("function foo(x, x) {}", "Duplicate parameter name \"x\"");
   }
 
-  public void testLet() {
+  public void testLetAsIdentifier() {
     mode = LanguageMode.ECMASCRIPT3;
     parse("var let");
 
@@ -1593,6 +1593,24 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT6_STRICT;
     parseError("var let", "'identifier' expected");
+  }
+
+  public void testLet() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("let x;");
+    parse("let x = 1;");
+    parse("let x, y = 2;");
+    parse("let x = 1, y = 2;");
+  }
+
+  public void testConst() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parseError("const x;", "const variables must have an initializer");
+    parse("const x = 1;");
+    parseError("const x, y = 2;", "const variables must have an initializer");
+    parse("const x = 1, y = 2;");
   }
 
   public void testYield1() {
@@ -2390,6 +2408,32 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parseError("f( (x,y)\n=>2)", "No newline allowed before '=>'");
   }
 
+  public void testFor_ES5() {
+    parse("for (var x; x != 10; x = next()) {}");
+    parse("for (var x; x != 10; x = next());");
+    parse("for (var x = 0; x != 10; x++) {}");
+    parse("for (var x = 0; x != 10; x++);");
+
+    parse("var x; for (x; x != 10; x = next()) {}");
+    parse("var x; for (x; x != 10; x = next());");
+
+    parseError("for (x in {};;) {}", "')' expected");
+  }
+
+  public void testFor_ES6() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("for (let x; x != 10; x = next()) {}");
+    parse("for (let x; x != 10; x = next());");
+    parse("for (let x = 0; x != 10; x++) {}");
+    parse("for (let x = 0; x != 10; x++);");
+
+    parseError("for (const x; x != 10; x = next()) {}", "const variables must have an initializer");
+    parseError("for (const x; x != 10; x = next());", "const variables must have an initializer");
+    parse("for (const x = 0; x != 10; x++) {}");
+    parse("for (const x = 0; x != 10; x++);");
+  }
+
   public void testForIn_ES6() {
     mode = LanguageMode.ECMASCRIPT6;
 
@@ -2397,6 +2441,14 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("for (var a in b) c;");
     parse("for (let a in b) c;");
     parse("for (const a in b) c;");
+
+    parseError("for (a,b in c) d;", "';' expected");
+    parseError("for (var a,b in c) d;",
+        "for-in statement may not have more than one variable declaration");
+    parseError("for (let a,b in c) d;",
+        "for-in statement may not have more than one variable declaration");
+    parseError("for (const a,b in c) d;",
+        "for-in statement may not have more than one variable declaration");
 
     parseError("for (a=1 in b) c;", "';' expected");
     parseError("for (let a=1 in b) c;",
@@ -2458,6 +2510,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
 
     parse("for(a of b) c;");
+    parse("for(var a of b) c;");
     parse("for(let a of b) c;");
     parse("for(const a of b) c;");
   }
@@ -2466,10 +2519,53 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
 
     parseError("for(a=1 of b) c;", "';' expected");
+    parseError("for(var a=1 of b) c;",
+        "for-of statement may not have initializer");
     parseError("for(let a=1 of b) c;",
         "for-of statement may not have initializer");
     parseError("for(const a=1 of b) c;",
         "for-of statement may not have initializer");
+  }
+
+  public void testForOf3() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parseError("for(var a, b of c) d;",
+        "for-of statement may not have more than one variable declaration");
+    parseError("for(let a, b of c) d;",
+        "for-of statement may not have more than one variable declaration");
+    parseError("for(const a, b of c) d;",
+        "for-of statement may not have more than one variable declaration");
+  }
+
+  public void testForOf4() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parseError("for(a, b of c) d;", "';' expected");
+  }
+
+  public void testDestructuringInForLoops() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    // Destructuring forbids an initializer in for-in/for-of
+    parseError("for (var {x: y} = foo() in bar()) {}",
+        "for-in statement may not have initializer");
+    parseError("for (let {x: y} = foo() in bar()) {}",
+        "for-in statement may not have initializer");
+    parseError("for (const {x: y} = foo() in bar()) {}",
+        "for-in statement may not have initializer");
+
+    parseError("for (var {x: y} = foo() of bar()) {}",
+        "for-of statement may not have initializer");
+    parseError("for (let {x: y} = foo() of bar()) {}",
+        "for-of statement may not have initializer");
+    parseError("for (const {x: y} = foo() of bar()) {}",
+        "for-of statement may not have initializer");
+
+    // but requires it in a vanilla for loop
+    parseError("for (var {x: y};;) {}", "destructuring must have an initializer");
+    parseError("for (let {x: y};;) {}", "destructuring must have an initializer");
+    parseError("for (const {x: y};;) {}", "const variables must have an initializer");
   }
 
   public void testInvalidDestructuring() {
