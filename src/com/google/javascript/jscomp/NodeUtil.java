@@ -3366,28 +3366,6 @@ public final class NodeUtil {
     return false;
   }
 
-  /**
-   * Get the JSDocInfo for a function.
-   * @deprecated Prefer #getBestJSDocInfo instead.
-   */
-  @Deprecated
-  public static JSDocInfo getFunctionJSDocInfo(Node n) {
-    Preconditions.checkState(n.isFunction());
-    JSDocInfo fnInfo = n.getJSDocInfo();
-    if (fnInfo == null && NodeUtil.isFunctionExpression(n)) {
-      // Look for the info on other nodes.
-      Node parent = n.getParent();
-      if (parent.isAssign()) {
-        // on ASSIGNs
-        fnInfo = parent.getJSDocInfo();
-      } else if (parent.isName()) {
-        // on var NAME = function() { ... };
-        fnInfo = parent.getParent().getJSDocInfo();
-      }
-    }
-    return fnInfo;
-  }
-
   static boolean functionHasInlineJsdocs(Node fn) {
     if (!fn.isFunction()) {
       return false;
