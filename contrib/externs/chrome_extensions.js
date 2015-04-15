@@ -6978,6 +6978,21 @@ chrome.fileSystem.RequestFileSystemOptions;
 
 
 /**
+ * @see http://developer.chrome.com/apps/fileSystem.html#method-getVolumeList
+ * @constructor
+ */
+chrome.fileSystem.Volume = function() {};
+
+
+/** @type {string} */
+chrome.fileSystem.Volume.prototype.volumeId;
+
+
+/** @type {boolean} */
+chrome.fileSystem.Volume.prototype.writable;
+
+
+/**
  * @param {!chrome.fileSystem.ChooseEntryOptions|
  *     function(Entry=, !Array.<!FileEntry>=)} optionsOrCallback The
  *     options for the file prompt or the callback.
@@ -7016,10 +7031,21 @@ chrome.fileSystem.retainEntry = function(entry) {};
 /**
  * @param {!chrome.fileSystem.RequestFileSystemOptions} options Options for the
  *     request.
- * @param {function(!FileSystem=)} callback A completion callback.
+ * @param {function(!FileSystem=)} callback A completion callback with the file
+ *     system in case of a success. Otherwise the error is passed as
+ *     chrome.runtime.lastError.
  * @see http://developer.chrome.com/apps/fileSystem.html#method-requestFileSystem
  */
 chrome.fileSystem.requestFileSystem = function(options, callback) {};
+
+
+/**
+ * @param {function(!Array<!chrome.fileSystem.Volume>=)} callback A completion
+ *     callback with the file system list in case of a success. Otherwise the
+ *     error is passed as chrome.runtime.lastError.
+ * @see http://developer.chrome.com/apps/fileSystem.html#method-getVolumeList
+ */
+chrome.fileSystem.getVolumeList = function(callback) {};
 
 
 /**
