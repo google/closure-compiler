@@ -50,6 +50,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
     testSame("/** @suppress {extraRequire} */ goog.require('foo.bar');");
     test("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; alert(bar); });",
         "goog.require('foo.bar'); alert(foo.bar);");
+    testSame("goog.require('foo'); foo();");
   }
 
   public void testWarning() {

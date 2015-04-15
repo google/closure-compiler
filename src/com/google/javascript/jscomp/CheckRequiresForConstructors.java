@@ -237,6 +237,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       if (required != null) {
         requires.put(required, call);
       }
+
+      Node callee = call.getFirstChild();
+      if (callee.isName()) {
+        weakUsages.put(callee.getString(), callee);
+      }
     }
 
     private void visitGetProp(Node getprop) {
