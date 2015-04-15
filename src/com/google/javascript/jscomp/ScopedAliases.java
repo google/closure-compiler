@@ -581,13 +581,8 @@ class ScopedAliases implements HotSwapCompilerPass {
         // we only process that jsdoc once.
         JSDocInfo info = n.getJSDocInfo();
         if (info != null && !injectedDecls.contains(n)) {
-          if (parent.isStringKey() && info == parent.getJSDocInfo()) {
-            // Also skip this one, to avoid processing the same JSDocInfo twice:
-            // https://github.com/google/closure-compiler/issues/400
-          } else {
-            for (Node node : info.getTypeNodes()) {
-              fixTypeNode(node);
-            }
+          for (Node node : info.getTypeNodes()) {
+            fixTypeNode(node);
           }
         }
 
