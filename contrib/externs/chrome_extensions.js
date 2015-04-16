@@ -8406,27 +8406,26 @@ chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListeners =
 
 
 /**
- * WARNING(2014/08/04): This API is still under active initial development and
- * unstable and has a number of issues:
+ * Externs for networking_private.idl:
+ * https://code.google.com/p/chromium/codesearch#chromium/src/extensions/common/api/networking_private.idl
+ * WARNING(2015/04/09): This API is still under active development and has a few
+ * issues with typing:
  *
- * 1. The types NetworkProperties and ManagedNetworkProperties are not defined
- *    in the docs; that is, there is no list of fields and their types.
- *    Therefore, these types are treated as bags-of-objects, rather than types.
- * 2. According to Steven Bennetts, NetworkProperties *should* be a
- *    bag-of-properties as it's a map containing ONC properties and the ONC
- *    properties do not follow the JS field naming conventions; specifically,
- *    the properties start with an uppercase letter, and at least one property
- *    is in all uppercase.
- * 3. The deviceSsid and deviceBssid fields of VerticationProperties are listed
- *    as being required while their description mentions "Only set if" which
- *    sound optional. The dev team was unclear whether they are required or
- *    optional.
- * 4. Some parameters to some functions are marked as being in the Beta channel
- *    only (for example, the networkGuid parameter to getCaptivePortalStatus).
+ * 1. This API uses the ONC specification:
+ *    http://www.chromium.org/chromium-os/chromiumos-design-docs/open-network-configuration
+ * 2. The types for getProperties and getManagedProperties are not currently
+ *    defined. They correspond to ONC Property dictionaries. They are treated as
+ *    Objects rather than types.
+ * 3. NetworkStateProperties defines a subset of NetworkProperties used by
+ *    getState and getNetworks. Since these match ONC property names they
+ *    use ONC PascalCase naming conventions instead of traditional JS
+ *    camelCase naming.
+ * 4. The types for setProperties and createNetwork are not currently defined.
+ *    These use a subset of ONC properties and the complete set (and their
+ *    relationship to the type for getProperties) is still being determined.
  *
  * Because of the above issues, this API should not be used as an example for
- * other APIs added to this file. Please contact mednik@ for questions on and
- * maintenance for this API.
+ * other APIs. Please contact stevenjb@ for questions on and maintenance.
  * @const
  * @see https://developer.chrome.com/extensions/networkingPrivate
  */
@@ -8434,8 +8433,163 @@ chrome.networkingPrivate = {};
 
 
 /**
+ * @constructor
+ * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-CellularStateProperties
+ */
+chrome.networkingPrivate.CellularStateProperties = function() {};
+
+
+/**
+ * @type {string|undefined}
+ */
+chrome.networkingPrivate.CellularStateProperties.prototype.ActivationState;
+
+
+/**
+ * @type {string|undefined}
+ */
+chrome.networkingPrivate.CellularStateProperties.prototype.NetworkTechnology;
+
+
+/**
+ * @type {string|undefined}
+ */
+chrome.networkingPrivate.CellularStateProperties.prototype.RoamingState;
+
+
+/**
+ * @type {number|undefined}
+ */
+chrome.networkingPrivate.CellularStateProperties.prototype.SignalStrength;
+
+
+/**
+ * @constructor
+ * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-EthernetStateProperties
+ */
+chrome.networkingPrivate.EthernetStateProperties = function() {};
+
+
+/**
+ * @type {string}
+ */
+chrome.networkingPrivate.EthernetStateProperties.prototype.Authentication;
+
+
+/**
+ * @constructor
+ * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-IPSecProperties
+ */
+chrome.networkingPrivate.IPSecProperties = function() {};
+
+
+/**
+ * @type {string}
+ */
+chrome.networkingPrivate.IPSecProperties.prototype.AuthenticationType;
+
+
+/**
+ * @constructor
+ * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-ThirdPartyVPNProperties
+ */
+chrome.networkingPrivate.ThirdPartyVPNProperties = function() {};
+
+
+/**
+ * @type {string}
+ */
+chrome.networkingPrivate.ThirdPartyVPNProperties.prototype.ExtensionID;
+
+
+/**
+ * @constructor
+ * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-VPNStateProperties
+ */
+chrome.networkingPrivate.VPNStateProperties = function() {};
+
+
+/**
+ * @type {!chrome.networkingPrivate.IPSecProperties|undefined}
+ */
+chrome.networkingPrivate.VPNStateProperties.prototype.IPSec;
+
+
+/**
+ * @type {!chrome.networkingPrivate.ThirdPartyVPNProperties|undefined}
+ */
+chrome.networkingPrivate.VPNStateProperties.prototype.ThirdPartyVPN;
+
+
+/**
+ * @type {string}
+ */
+chrome.networkingPrivate.VPNStateProperties.prototype.Type;
+
+
+/**
+ * @constructor
+ * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-WiFiStateProperties
+ */
+chrome.networkingPrivate.WiFiStateProperties = function() {};
+
+
+/**
+ * @type {string}
+ */
+chrome.networkingPrivate.WiFiStateProperties.prototype.Security;
+
+
+/**
+ * @type {number|undefined}
+ */
+chrome.networkingPrivate.WiFiStateProperties.prototype.SignalStrength;
+
+
+/**
+ * @constructor
+ * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-WiFiStateProperties
+ */
+chrome.networkingPrivate.WiMAXStateProperties = function() {};
+
+
+/**
+ * @type {number|undefined}
+ */
+chrome.networkingPrivate.WiFiStateProperties.prototype.SignalStrength;
+
+
+/**
+ * @typedef {?{
+ *   Cellular: (!chrome.networkingPrivate.CellularStateProperties|undefined),
+ *   Connectable: (boolean|undefined),
+ *   ConnectionState: (string|undefined),
+ *   ErrorState: (string|undefined),
+ *   Ethernet: (!chrome.networkingPrivate.EthernetStateProperties|undefined),
+ *   GUID: string,
+ *   Name: (string|undefined),
+ *   Priority: (number|undefined),
+ *   Source: (string|undefined),
+ *   Type: string,
+ *   VPN: (!chrome.networkingPrivate.VPNStateProperties|undefined),
+ *   WiFi: (!chrome.networkingPrivate.WiFiStateProperties|undefined),
+ *   WiMAX: (!chrome.networkingPrivate.WiMAXStateProperties|undefined)
+ * }}
+ */
+chrome.networkingPrivate.NetworkStateProperties;
+
+
+/**
  * @typedef {?{
  *   certificate: string,
+ *   intermediateCertificates: (!Array<string>|undefined),
  *   publicKey: string,
  *   nonce: string,
  *   signedData: string,
@@ -8474,47 +8628,54 @@ chrome.networkingPrivate.getManagedProperties = function(guid, callback) {};
 
 /**
  * @param {string} guid
- * @param {function(!Object)} callback
+ * @param {function(!chrome.networkingPrivate.NetworkStateProperties)} callback
  */
 chrome.networkingPrivate.getState = function(guid, callback) {};
 
 
 /**
+ * TODO: Use NetworkConfigProperties for |properties| once fully
+ * defined.
  * @param {string} guid
  * @param {!Object} properties
- * @param {function()=} callback
+ * @param {function()=} opt_callback
  */
-chrome.networkingPrivate.setProperties = function(guid, properties, callback) {
-};
+chrome.networkingPrivate.setProperties =
+    function(guid, properties, opt_callback) {};
 
 
 /**
+ * TODO: Use NetworkConfigProperties for |properties| once fully
+ * defined.
  * @param {boolean} shared
  * @param {!Object} properties
- * @param {function(string)} callback Returns guid of the configured
+ * @param {function(string)=} opt_callback Returns guid of the configured
  *     configuration.
  */
 chrome.networkingPrivate.createNetwork =
-    function(shared, properties, callback) {};
+    function(shared, properties, opt_callback) {};
 
 
 /**
  * @param {string} guid
- * @param {function()=} opt_callback
+ * @param {function()=} opt_callback Called when the operation has completed.
  */
 chrome.networkingPrivate.forgetNetwork = function(guid, opt_callback) {};
 
 
 /**
  * @param {!chrome.networkingPrivate.NetworkFilter} filter
- * @param {function(!Array.<!Object>)=} opt_callback
+ * @param {function(!Array.<!chrome.networkingPrivate.NetworkStateProperties>)=}
+ *     opt_callback
  */
 chrome.networkingPrivate.getNetworks = function(filter, opt_callback) {};
 
 
 /**
  * @param {string} type
- * @param {function(!Array.<!Object>)=} opt_callback
+ * @param {function(!Array.<!chrome.networkingPrivate.NetworkStateProperties>)=}
+ *      opt_callback
+ * @deprecated Use chrome.networkingPrivate.getNetworks with filter.visible=true
  */
 chrome.networkingPrivate.getVisibleNetworks = function(type, opt_callback) {};
 
@@ -8590,10 +8751,10 @@ chrome.networkingPrivate.verifyAndEncryptData =
 /**
  * @param {string} ipOrMacAddress
  * @param {boolean} enabled
- * @param {function(string)} callback
+ * @param {function(string)=} opt_callback
  */
 chrome.networkingPrivate.setWifiTDLSEnabledState =
-    function(ipOrMacAddress, enabled, callback) {};
+    function(ipOrMacAddress, enabled, opt_callback) {};
 
 
 /**
