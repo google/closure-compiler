@@ -1105,6 +1105,48 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}");
   }
 
+  public void testShadowing() {
+    typeCheck(
+        "var /** number */ x = 5;\n"
+        + "function f() {\n"
+        + "  var /** string */ x = 'str';\n"
+        + "  return x - 5;\n"
+        + "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var /** number */ x = 5;\n"
+        + "function f() {\n"
+        + "  /** @typedef {string} */ var x;\n"
+        + "  return x - 5;\n"
+        + "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var /** number */ x = 5;\n"
+        + "function f() {\n"
+        + "  /** @enum {string} */ var x = { FOO : 'str' };\n"
+        + "  return x - 5;\n"
+        + "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // Types that are only present in types, and not in code do not cause shadowing in code
+    typeCheck(
+        "var /** number */ X = 5;\n"
+        + "/** @template X */\n"
+        + "function f() {\n"
+        + "  return X - 5;\n"
+        + "}");
+
+    typeCheck(
+        "var /** string */ X = 'str';\n"
+        + "/** @template X */\n"
+        + "function f() {\n"
+        + "  return X - 5;\n"
+        + "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
   public void testFunctionsInsideFunctions() {
     typeCheck(
         "(function() {\n"

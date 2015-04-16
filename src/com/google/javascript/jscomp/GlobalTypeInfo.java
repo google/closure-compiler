@@ -2493,6 +2493,9 @@ class GlobalTypeInfo implements CompilerPass {
       for (Map.Entry<String, EnumType> entry : localEnums.entrySet()) {
         locals.put(entry.getKey(), entry.getValue().toJSType());
       }
+      for (String typedefName : localTypedefs.keySet()) {
+        locals.put(typedefName, JSType.TOP);
+      }
       localNamespaces = ImmutableMap.of();
       localClassDefs = ImmutableMap.of();
       localTypedefs = ImmutableMap.of();
