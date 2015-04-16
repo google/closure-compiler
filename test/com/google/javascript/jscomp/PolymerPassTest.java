@@ -251,6 +251,20 @@ public class PolymerPassTest extends CompilerTestCase {
     testExternChanges(EXTERNS, js, INPUT_EXTERNS);
   }
 
+  public void testNativeElementExtensionExternsNotDuplicated() {
+    String js = Joiner.on("\n").join(
+        "Polymer({",
+        "  is: 'x-input',",
+        "  extends: 'input',",
+        "});",
+        "Polymer({",
+        "  is: 'y-input',",
+        "  extends: 'input',",
+        "});");
+
+    testExternChanges(EXTERNS, js, INPUT_EXTERNS);
+  }
+
   public void testPropertiesAddedToPrototype() {
     test(Joiner.on("\n").join(
         "/** @constructor */",

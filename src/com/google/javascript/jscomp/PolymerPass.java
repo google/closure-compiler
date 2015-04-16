@@ -27,8 +27,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Rewrites "Polymer({})" calls into a form that is suitable for type checking and dead code
@@ -58,6 +60,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
   private final AbstractCompiler compiler;
   private Node polymerElementExterns;
+  private Set<String> nativeExternsAdded;
   private final Map<String, String> tagNameMap;
   private List<Node> polymerElementProps;
 
@@ -65,6 +68,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     this.compiler = compiler;
     tagNameMap = TagNameToType.getMap();
     polymerElementProps = new ArrayList<>();
+    nativeExternsAdded = new HashSet<>();
   }
 
   @Override
@@ -269,7 +273,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
 
-    this.appendPolymerElementExterns(cls);
+    if (cls.nativeBaseElement != null) {
+      this.appendPolymerElementExterns(cls);
+    }
     JSDocInfoBuilder constructorDoc = this.getConstructorDoc(cls);
 
     // Remove the original constructor JS docs from the objlit.
@@ -396,7 +402,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    * added. If the element does not extend a native HTML element, this method is a no-op.
    */
   private void appendPolymerElementExterns(final ClassDefinition cls) {
-    if (cls.nativeBaseElement == null) {
+    if (!nativeExternsAdded.add(cls.nativeBaseElement)) {
       return;
     }
 
