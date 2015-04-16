@@ -38,7 +38,7 @@ public final class CheckJSDoc extends AbstractPostOrderCallback implements Compi
 
   public static final DiagnosticType OPTIONAL_NAME_NOT_MARKED_OPTIONAL =
       DiagnosticType.warning("JSC_OPTIONAL_NAME_NOT_MARKED_OPTIONAL",
-          "Optional parameter {0} type must end with =");
+          "Parameter {0} is optional so its type must end with =");
 
   public static final DiagnosticType OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME =
       DiagnosticType.warning("JSC_OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME",
