@@ -3250,3 +3250,17 @@ HTMLDialogElement.prototype.showModal = function(opt_anchor) {};
  * @param {string=} opt_returnValue
  */
 HTMLDialogElement.prototype.close = function(opt_returnValue) {};
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#the-template-element
+ * @constructor
+ * @extends {HTMLElement}
+ */
+function HTMLTemplateElement() {}
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#the-template-element
+ * @type {!DocumentFragment}
+ */
+HTMLTemplateElement.prototype.content;
