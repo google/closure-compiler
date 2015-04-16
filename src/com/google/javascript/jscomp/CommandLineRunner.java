@@ -1301,7 +1301,6 @@ public class CommandLineRunner extends
     "w3c_range.js",
     "w3c_rtc.js",
     "w3c_selectors.js",
-    "w3c_webcrypto.js",
     "w3c_xml.js",
     "window.js",
     "webkit_notifications.js",
