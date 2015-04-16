@@ -53,7 +53,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
-    compareJsDoc = false;
+    compareJsDoc = true;
   }
 
   @Override
@@ -67,7 +67,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "  constructor: function(){}\n"
         + "});",
 
-        "var x = function() {};");
+        "/** @constructor @struct */"
+        + "var x = function() {};");
   }
 
   public void testBasic2() {
@@ -78,6 +79,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});",
 
         "var x = {};"
+        + "/** @constructor @struct */"
         + "x.y = function() {};");
   }
 
@@ -88,7 +90,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "  constructor: function(){}\n"
         + "});",
 
-        "var x = function() {};");
+        "/** @constructor @struct */"
+        + "var x = function() {};");
   }
 
   public void testAnnotations1() {
@@ -100,7 +103,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});"
         + "new x();",
 
-        "var x = function() {};"
+        "/** @constructor @struct */"
+        + "var x = function() {};"
         + "new x();");
   }
 
@@ -114,9 +118,11 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});"
         + "new x();",
 
-        "var x = function() {};"
+        "/** @interface */\n"
+        + "var x = function() {};"
         + "new x();",
-        null, TypeCheck.NOT_A_CONSTRUCTOR);
+        null,
+        TypeCheck.NOT_A_CONSTRUCTOR);
   }
 
   public void testAnnotations2b() {
@@ -127,9 +133,11 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "var x = goog.defineClass(null, {});"
         + "new x();",
 
-        "var x = function() {};"
+        "/** @interface */\n"
+        + "var x = function() {};"
         + "new x();",
-        null, TypeCheck.NOT_A_CONSTRUCTOR);
+        null,
+        TypeCheck.NOT_A_CONSTRUCTOR);
   }
 
   public void testAnnotations3a() {
@@ -144,11 +152,14 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});\n"
         + "use(new y().a);\n",
 
-        "var y = function () {};\n"
+        "/** @constructor @struct */"
+        + "var y = function () {};\n"
+        + "/** @constructor @struct @extends {y} */"
         + "var x = function() {this.a = 1};\n"
         + "goog.inherits(x,y);\n"
         + "use(new y().a);\n",
-        null, TypeCheck.INEXISTENT_PROPERTY);
+        null,
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testAnnotations3b() {
@@ -164,7 +175,9 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});\n"
         + "use(new y().a);\n",
 
-        "var y = function () {};\n"
+        "/** @constructor @unrestricted */"
+        + "var y = function () {};\n"
+        + "/** @constructor @struct @extends {y} */"
         + "var x = function() {this.a = 1};\n"
         + "goog.inherits(x,y);\n"
         + "use(new y().a);\n");
@@ -185,10 +198,12 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "  }\n"
         + "});",
 
-        "var x=function(){this.foo=1};"
-        + "goog.inherits(x,some.Super);"
-        + "x.inner=function(){this.bar=1};"
-        + "goog.inherits(x.inner,x);");
+        "/** @constructor @struct @extends {some.Super} */\n"
+        + "var x = function() { this.foo = 1; };\n"
+        + "goog.inherits(x, some.Super);\n"
+        + "/** @constructor @struct @extends {x} */\n"
+        + "x.inner = function() { this.bar = 1; };\n"
+        + "goog.inherits(x.inner, x);");
   }
 
   public void testComplete1() {
@@ -206,13 +221,14 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "  aMethod: function() {}\n"
         + "});",
 
-        "var x=function(){this.foo=1};"
-        + "goog.inherits(x,some.Super);"
-        + "x.prop1=1;"
-        + "x.PROP2=2;"
-        + "x.prototype.anotherProp=1;"
-        + "x.prototype.aMethod=function(){};"
-        + "");
+        "/** @constructor @struct @extends {some.Super} */\n"
+        + "var x=function(){this.foo=1};\n"
+        + "goog.inherits(x, some.Super);\n"
+        + "x.prop1=1;\n"
+        + "/** @const */\n"
+        + "x.PROP2=2;\n"
+        + "x.prototype.anotherProp = 1;\n"
+        + "x.prototype.aMethod = function(){};");
   }
 
   public void testComplete2() {
@@ -230,15 +246,14 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "  aMethod: function() {}\n"
         + "});",
 
-        "/** @constructor */\n"
+        "/** @constructor @struct @extends {some.Super} */\n"
         + "x.y=function(){this.foo=1};\n"
-        + "goog.inherits(x.y,some.Super);"
-        + "x.y.prop1=1;\n"
+        + "goog.inherits(x.y,some.Super);\n"
+        + "x.y.prop1 = 1;\n"
         + "/** @const */\n"
-        + "x.y.PROP2=2;\n"
-        + "x.y.prototype.anotherProp=1;"
-        + "x.y.prototype.aMethod=function(){};"
-        + "");
+        + "x.y.PROP2 = 2;\n"
+        + "x.y.prototype.anotherProp = 1;\n"
+        + "x.y.prototype.aMethod=function(){};");
   }
 
   public void testClassWithStaticInitFn() {
@@ -257,7 +272,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});",
 
         Joiner.on('\n').join(
-            "/** @constructor */",
+            "/** @constructor @struct @extends {some.Super} */",
             "x.y = function() { this.foo = 1; };",
             "goog.inherits(x.y, some.Super);",
             "x.y.prototype.anotherProp = 1;",
@@ -346,7 +361,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         "var x = goog.defineClass(Object, {\n"
         + "  /** @ngInject */ constructor: function(x, y) {}\n"
         + "});",
-        "/** @ngInject */\n"
+        "/** @ngInject @constructor @struct */\n"
         + "var x = function(x, y) {};");
   }
 
@@ -356,7 +371,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "var x = goog.defineClass(Object, {\n"
         + "  constructor: function(x, y) {}\n"
         + "});",
-        "/** @ngInject */\n"
+        "/** @ngInject @constructor @struct */\n"
         + "var x = function(x, y) {};",
         null, GOOG_CLASS_NG_INJECT_ON_CLASS);
   }
