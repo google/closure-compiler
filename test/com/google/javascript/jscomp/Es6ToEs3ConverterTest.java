@@ -846,10 +846,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   /**
-   * If languageOut is ES5, getters/setters in object literals are supported.
-   * Getters/setters in classes will be supported (b/19735276) but are not yet.
+   * Getters and setters are supported, both in object literals and in classes, but only
+   * if the output language is ES5.
    */
-  public void testClassGetterSetter() {
+  public void testEs5GettersAndSettersClasses() {
     languageOut = LanguageMode.ECMASCRIPT5;
 
     test("class C { get value() { return 0; } }", Joiner.on('\n').join(
@@ -943,6 +943,66 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   /**
+   * Check that the types from the getter/setter are copied to the declaration on the prototype.
+   */
+  public void testEs5GettersAndSettersClassesWithTypes() {
+    languageOut = LanguageMode.ECMASCRIPT5;
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  /** @return {number} */",
+        "  get value() { return 0; }",
+        "}"),
+
+        Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "/** @type {number} */",
+        "C.prototype.value;",
+        "Object.defineProperties(C.prototype, {",
+        "  value: {",
+        "    /**",
+        "     * @return {number}",
+        "     * @this {C}",
+        "     */",
+        "    get: function() {",
+        "      return 0;",
+        "    }",
+        "  }",
+        "});"));
+
+    test(Joiner.on('\n').join(
+        "class C {",
+        "  /** @param {string} v */",
+        "  set value(v) { }",
+        "}"),
+
+        Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "var C = function() {};",
+        "/** @type {string} */",
+        "C.prototype.value;",
+        "Object.defineProperties(C.prototype, {",
+        "  value: {",
+        "    /**",
+        "     * @this {C}",
+        "     * @param {string} v",
+        "     */",
+        "    set: function(v) {}",
+        "  }",
+        "});"));
+
+    testError(Joiner.on('\n').join(
+        "class C {",
+        "  /** @return {string} */",
+        "  get value() { }",
+        "",
+        "  /** @param {number} v */",
+        "  set value(v) { }",
+        "}"), Es6ToEs3Converter.CONFLICTING_GETTER_SETTER_TYPE);
+  }
+
+  /**
    * Computed property getters and setters in classes are not supported.
    */
   public void testClassComputedPropGetterSetter() {
@@ -961,9 +1021,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   /**
-   * ES5 getters and setters should be left alone if the languageOut is ES5.
+   * ES5 getters and setters on object literals should be left alone if the languageOut is ES5.
    */
-  public void testEs5GettersAndSetters_es5() {
+  public void testEs5GettersAndSettersObjLit_es5() {
     languageOut = LanguageMode.ECMASCRIPT5;
     testSame("var x = { get y() {} };");
     testSame("var x = { set y(value) {} };");
