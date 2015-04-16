@@ -2872,10 +2872,11 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   // Tests that unused classes are removed, even if they are passed to $jscomp.inherits.
-  public void testES6UnusedClassesAreRemoved() {
+  private void testES6UnusedClassesAreRemoved(CodingConvention convention) {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setCodingConvention(convention);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = compile(options, Joiner.on('\n').join(
         "class Base {}",
@@ -2883,6 +2884,12 @@ public final class IntegrationTest extends IntegrationTestCase {
         "alert(1);"));
     String result = compiler.toSource(compiler.getJsRoot());
     assertThat(result).isEqualTo("alert(1)");
+  }
+
+  public void testES6UnusedClassesAreRemoved() {
+    testES6UnusedClassesAreRemoved(CodingConventions.getDefault());
+    testES6UnusedClassesAreRemoved(new ClosureCodingConvention());
+    testES6UnusedClassesAreRemoved(new GoogleCodingConvention());
   }
 
   /**

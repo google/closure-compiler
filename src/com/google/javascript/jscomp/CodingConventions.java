@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -326,7 +327,18 @@ public final class CodingConventions {
 
     @Override
     public SubclassRelationship getClassesDefinedByCall(Node callNode) {
-      return null;
+      Node callName = callNode.getFirstChild();
+      if ((callName.matchesQualifiedName("$jscomp.inherits")
+          || callName.matchesQualifiedName("$jscomp$inherits"))
+          && callNode.getChildCount() == 3) {
+        Node subclass = callName.getNext();
+        Node superclass = subclass.getNext();
+
+        return new SubclassRelationship(
+            SubclassType.INHERITS, subclass, superclass);
+      } else {
+        return null;
+      }
     }
 
     @Override
