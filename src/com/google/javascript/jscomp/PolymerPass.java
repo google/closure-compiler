@@ -139,17 +139,17 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (isPolymerCall(n)) {
-      rewriteClassDefinition(n, parent);
+      rewriteClassDefinition(n, parent, t);
     }
   }
 
-  private void rewriteClassDefinition(Node n, Node parent) {
+  private void rewriteClassDefinition(Node n, Node parent, NodeTraversal t) {
     ClassDefinition def = extractClassDefinition(n);
     if (def != null) {
       if (NodeUtil.isNameDeclaration(parent.getParent()) || parent.isAssign()) {
-        rewritePolymerClass(parent.getParent(), def);
+        rewritePolymerClass(parent.getParent(), def, t);
       } else {
-        rewritePolymerClass(parent, def);
+        rewritePolymerClass(parent, def, t);
       }
     }
   }
@@ -254,7 +254,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     return members.build();
   }
 
-  private void rewritePolymerClass(Node exprRoot, final ClassDefinition cls) {
+  private void rewritePolymerClass(Node exprRoot, final ClassDefinition cls, NodeTraversal t) {
     // Add {@code @lends} to the object literal.
     Node call = exprRoot.getFirstChild();
     if (call.isAssign()) {
@@ -302,13 +302,26 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     appendPropertiesToBlock(cls, block);
 
     block.useSourceInfoFromForTree(exprRoot);
-    Node parent = exprRoot.getParent();
     Node stmts = block.removeChildren();
-    Node beforeRoot = parent.getChildBefore(exprRoot);
-    if (beforeRoot == null) {
-      parent.addChildrenToFront(stmts);
+    Node parent = exprRoot.getParent();
+
+    // If the call to Polymer() is not in the global scope and the assignment target is not
+    // namespaced (which likely means it's exported to the global scope), put the type declaration
+    // into the global scope at the start of the current script.
+    //
+    // This avoids unknown type warnings which are a result of the compiler's poor understanding of
+    // types declared inside IIFEs or any non-global scope. We should revisit this decision after
+    // moving to the new type inference system which should be able to infer these types better.
+    if (!t.getScope().isGlobal() && !cls.target.isGetProp()) {
+      Node scriptNode = NodeUtil.getEnclosingScript(exprRoot);
+      scriptNode.addChildrenToFront(stmts);
     } else {
-      parent.addChildrenAfter(stmts, beforeRoot);
+      Node beforeRoot = parent.getChildBefore(exprRoot);
+      if (beforeRoot == null) {
+        parent.addChildrenToFront(stmts);
+      } else {
+        parent.addChildrenAfter(stmts, beforeRoot);
+      }
     }
 
     if (exprRoot.isVar()) {

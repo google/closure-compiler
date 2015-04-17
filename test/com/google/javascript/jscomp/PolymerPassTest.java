@@ -181,6 +181,86 @@ public class PolymerPassTest extends CompilerTestCase {
         "});"));
   }
 
+  /**
+   * Since 'x' is a global name, the type system understands
+   * 'x.Z' as a type name, so there is no need to extract the
+   * type to the global namespace.
+   */
+  public void testIIFEExtractionInGlobalNamespace() {
+    test(Joiner.on("\n").join(
+        "var x = {};",
+        "(function() {",
+        "  x.Z = Polymer({",
+        "    is: 'x-element',",
+        "    sayHi: function() { alert('hi'); },",
+        "  });",
+        "})()"),
+
+        Joiner.on("\n").join(
+        "var x = {};",
+        "(function() {",
+        "  /** @constructor @extends {PolymerElement} */",
+        "  x.Z = function() {};",
+        "  x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
+        "    is: 'x-element',",
+        "    /** @this {x.Z} */",
+        "    sayHi: function() { alert('hi'); },",
+        "  });",
+        "})()"));
+  }
+
+  /**
+   * The definition of XElement is placed in the global namespace,
+   * outside the IIFE so that the type system will understand that
+   * XElement is a type.
+   */
+  public void testIIFEExtractionNoAssignmentTarget() {
+    test(Joiner.on("\n").join(
+        "(function() {",
+        "  Polymer({",
+        "    is: 'x',",
+        "    sayHi: function() { alert('hi'); },",
+        "  });",
+        "})()"),
+
+        Joiner.on("\n").join(
+        "/** @constructor @extends {PolymerElement} */",
+        "var XElement = function() {};",
+        "(function() {",
+        "  Polymer(/** @lends {XElement.prototype} */ {",
+        "    is: 'x',",
+        "    /** @this {XElement} */",
+        "    sayHi: function() { alert('hi'); },",
+        "  });",
+        "})()"));
+  }
+
+  /**
+   * The definition of FooThing is placed in the global namespace,
+   * outside the IIFE so that the type system will understand that
+   * FooThing is a type.
+   */
+  public void testIIFEExtractionVarTarget() {
+    test(Joiner.on("\n").join(
+        "(function() {",
+        "  var FooThing = Polymer({",
+        "    is: 'x',",
+        "    sayHi: function() { alert('hi'); },",
+        "  });",
+        "})()"),
+
+        Joiner.on("\n").join(
+        "/** @constructor @extends {PolymerElement} */",
+        "var FooThing = function() {};",
+        "(function() {",
+        "  FooThing = Polymer(/** @lends {FooThing.prototype} */ {",
+        "    is: 'x',",
+        "    /** @this {FooThing} */",
+        "    sayHi: function() { alert('hi'); },",
+        "  });",
+        "})()"));
+  }
+
   public void testConstructorExtraction() {
     test(Joiner.on("\n").join(
         "var X = Polymer({",

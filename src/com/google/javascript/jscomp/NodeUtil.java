@@ -1791,6 +1791,13 @@ public final class NodeUtil {
     return getEnclosingType(n, Token.FUNCTION);
   }
 
+  /**
+   * Finds the script containing the given node.
+   */
+  static Node getEnclosingScript(Node n) {
+    return getEnclosingType(n, Token.SCRIPT);
+  }
+
   static boolean isInFunction(Node n) {
     return getEnclosingFunction(n) != null;
   }
@@ -2089,7 +2096,7 @@ public final class NodeUtil {
    * A block scope is created by a non-synthetic block node, a for loop node,
    * or a for-of loop node.
    *
-   * Note: for functions, we use two separate scopes for parameters and
+   * <p>Note: for functions, we use two separate scopes for parameters and
    * declarations in the body. We need to make sure default parameters cannot
    * reference var / function declarations in the body.
    *

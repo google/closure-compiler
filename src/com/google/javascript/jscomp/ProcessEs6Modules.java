@@ -156,7 +156,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       }
     }
 
-    Node script = NodeUtil.getEnclosingType(parent, Token.SCRIPT);
+    Node script = NodeUtil.getEnclosingScript(parent);
     // Emit goog.require call for the module.
     if (alreadyRequired.add(moduleName)) {
       Node require = IR.exprResult(
