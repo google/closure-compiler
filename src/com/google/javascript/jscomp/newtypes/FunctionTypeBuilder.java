@@ -50,8 +50,8 @@ public final class FunctionTypeBuilder {
   private NominalType nominalType;
   // Only used to build DeclaredFunctionType for prototype methods
   private NominalType receiverType;
-  // Non-null iff this function has an @template annotation
-  private ImmutableList<String> typeParameters;
+  // Non-empty iff this function has an @template annotation
+  private ImmutableList<String> typeParameters = ImmutableList.of();
 
   static FunctionTypeBuilder qmarkFunctionBuilder() {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
@@ -117,7 +117,8 @@ public final class FunctionTypeBuilder {
 
   public FunctionTypeBuilder addTypeParameters(
       ImmutableList<String> typeParameters) {
-    Preconditions.checkState(this.typeParameters == null);
+    Preconditions.checkNotNull(typeParameters);
+    Preconditions.checkState(this.typeParameters.isEmpty());
     this.typeParameters = typeParameters;
     return this;
   }

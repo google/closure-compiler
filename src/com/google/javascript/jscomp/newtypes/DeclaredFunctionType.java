@@ -44,7 +44,7 @@ public final class DeclaredFunctionType {
   private final NominalType nominalType;
   // Non-null iff this is a prototype method
   private final NominalType receiverType;
-  // Non-null iff this function has an @template annotation
+  // Non-empty iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
 
   private DeclaredFunctionType(
@@ -93,6 +93,9 @@ public final class DeclaredFunctionType {
     }
     if (optionalFormals == null) {
       optionalFormals = new ArrayList<>();
+    }
+    if (typeParameters == null) {
+      typeParameters = ImmutableList.of();
     }
     return new DeclaredFunctionType(
         requiredFormals, optionalFormals, restFormals, retType,
@@ -145,7 +148,7 @@ public final class DeclaredFunctionType {
   }
 
   public boolean isGeneric() {
-    return typeParameters != null;
+    return !typeParameters.isEmpty();
   }
 
   public ImmutableList<String> getTypeParameters() {
@@ -153,7 +156,7 @@ public final class DeclaredFunctionType {
   }
 
   public boolean isTypeVariableInScope(String tvar) {
-    if (typeParameters != null && typeParameters.contains(tvar)) {
+    if (typeParameters.contains(tvar)) {
       return true;
     }
     // We don't look at this.nominalType, b/c if this function is a generic

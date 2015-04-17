@@ -45,7 +45,7 @@ public final class FunctionType {
   final NominalType nominalType;
   // non-null iff this is a prototype method
   private final NominalType receiverType;
-  // non-null iff this function has an @template annotation
+  // non-empty iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
   private static final boolean DEBUGGING = false;
 
@@ -80,7 +80,7 @@ public final class FunctionType {
     this.nominalType = null;
     this.receiverType = null;
     this.outerVarPreconditions = null;
-    this.typeParameters = null;
+    this.typeParameters = ImmutableList.of();
     this.isLoose = isLoose;
   }
 
@@ -135,6 +135,9 @@ public final class FunctionType {
     }
     if (outerVars == null) {
       outerVars = ImmutableMap.of();
+    }
+    if (typeParameters == null) {
+      typeParameters = ImmutableList.of();
     }
     if (restFormals != null) {
       // Remove trailing optional params w/ type equal to restFormals
@@ -304,7 +307,7 @@ public final class FunctionType {
     }
     Preconditions.checkState(!isLoose());
     // Don't do it for generic types.
-    if (typeParameters != null) {
+    if (isGeneric()) {
       return null;
     }
     // Don't do it for anonymous constructors
@@ -587,7 +590,7 @@ public final class FunctionType {
   }
 
   public boolean isGeneric() {
-    return typeParameters != null;
+    return !typeParameters.isEmpty();
   }
 
   public List<String> getTypeParameters() {
@@ -596,7 +599,7 @@ public final class FunctionType {
 
   boolean unifyWithSubtype(FunctionType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
-    Preconditions.checkState(this.typeParameters == null);
+    Preconditions.checkState(this.typeParameters.isEmpty());
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
 
     if (this == LOOSE_TOP_FUNCTION || other == LOOSE_TOP_FUNCTION) {
@@ -680,8 +683,8 @@ public final class FunctionType {
     if (f1 == null || f2 == null) {
       return null;
     }
-    Preconditions.checkArgument(f1.typeParameters == null);
-    Preconditions.checkArgument(f2.typeParameters == null);
+    Preconditions.checkArgument(f1.typeParameters.isEmpty());
+    Preconditions.checkArgument(f2.typeParameters.isEmpty());
     Preconditions.checkArgument(f1.outerVarPreconditions.isEmpty());
     Preconditions.checkArgument(f2.outerVarPreconditions.isEmpty());
     if (f1.equals(f2)) {
@@ -754,23 +757,21 @@ public final class FunctionType {
       return this;
     }
     Map<String, JSType> reducedMap = typeMap;
-    if (typeParameters != null) {
-      boolean foundShadowedTypeParam = false;
-      for (String typeParam : typeParameters) {
-        if (typeMap.containsKey(typeParam)) {
-          foundShadowedTypeParam = true;
-          break;
+    boolean foundShadowedTypeParam = false;
+    for (String typeParam : typeParameters) {
+      if (typeMap.containsKey(typeParam)) {
+        foundShadowedTypeParam = true;
+        break;
+      }
+    }
+    if (foundShadowedTypeParam) {
+      ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+      for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
+        if (!typeParameters.contains(entry.getKey())) {
+          builder.put(entry);
         }
       }
-      if (foundShadowedTypeParam) {
-        ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-        for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
-          if (!typeParameters.contains(entry.getKey())) {
-            builder.put(entry);
-          }
-        }
-        reducedMap = builder.build();
-      }
+      reducedMap = builder.build();
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType reqFormal : requiredFormals) {
@@ -853,28 +854,27 @@ public final class FunctionType {
    */
   FunctionType substituteGenerics(Map<String, JSType> concreteTypes) {
     Preconditions.checkState(outerVarPreconditions.isEmpty());
-    Map<String, JSType> typeMap = concreteTypes;
-    if (typeParameters != null) {
-      ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-      for (Map.Entry<String, JSType> concreteTypeEntry
-               : concreteTypes.entrySet()) {
-        if (!typeParameters.contains(concreteTypeEntry.getKey())) {
-          builder.put(concreteTypeEntry);
-        }
-      }
-      typeMap = builder.build();
+    if (!isGeneric()) {
+      return substituteNominalGenerics(concreteTypes);
     }
-    return substituteNominalGenerics(typeMap);
+    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+    for (Map.Entry<String, JSType> concreteTypeEntry
+             : concreteTypes.entrySet()) {
+      if (!typeParameters.contains(concreteTypeEntry.getKey())) {
+        builder.put(concreteTypeEntry);
+      }
+    }
+    return substituteNominalGenerics(builder.build());
   }
 
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
-    Preconditions.checkNotNull(typeParameters);
+    Preconditions.checkState(isGeneric());
     return substituteParametricGenerics(typeMap);
   }
 
   public FunctionType instantiateGenericsFromArgumentTypes(
       List<JSType> argTypes) {
-    Preconditions.checkNotNull(typeParameters);
+    Preconditions.checkState(isGeneric());
     if (argTypes.size() < getMinArity() || argTypes.size() > getMaxArity()) {
       return null;
     }
