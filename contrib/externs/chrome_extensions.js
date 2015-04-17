@@ -8467,6 +8467,32 @@ chrome.networkingPrivate.CellularStateProperties.prototype.SignalStrength;
 /**
  * @constructor
  * @struct
+ * @see https://developer.chrome.com/extensions/networkingPrivate#type-DeviceStateProperties
+ */
+chrome.networkingPrivate.DeviceStateProperties = function() {};
+
+
+/**
+ * @type {boolean|undefined}
+ */
+chrome.networkingPrivate.DeviceStateProperties.prototype.Scanning;
+
+
+/**
+ * @type {string}
+ */
+chrome.networkingPrivate.DeviceStateProperties.prototype.State;
+
+
+/**
+ * @type {string}
+ */
+chrome.networkingPrivate.DeviceStateProperties.prototype.Type;
+
+
+/**
+ * @constructor
+ * @struct
  * @see https://developer.chrome.com/extensions/networkingPrivate#type-EthernetStateProperties
  */
 chrome.networkingPrivate.EthernetStateProperties = function() {};
@@ -8665,23 +8691,33 @@ chrome.networkingPrivate.forgetNetwork = function(guid, opt_callback) {};
 
 /**
  * @param {!chrome.networkingPrivate.NetworkFilter} filter
- * @param {function(!Array.<!chrome.networkingPrivate.NetworkStateProperties>)=}
- *     opt_callback
+ * @param {function(!Array.<!chrome.networkingPrivate.NetworkStateProperties>)}
+ *     callback
  */
-chrome.networkingPrivate.getNetworks = function(filter, opt_callback) {};
+chrome.networkingPrivate.getNetworks = function(filter, callback) {};
 
 
 /**
  * @param {string} type
- * @param {function(!Array.<!chrome.networkingPrivate.NetworkStateProperties>)=}
- *      opt_callback
+ * @param {function(!Array.<!chrome.networkingPrivate.NetworkStateProperties>)}
+ *      callback
  * @deprecated Use chrome.networkingPrivate.getNetworks with filter.visible=true
  */
-chrome.networkingPrivate.getVisibleNetworks = function(type, opt_callback) {};
+chrome.networkingPrivate.getVisibleNetworks = function(type, callback) {};
 
 
-/** @param {function(!Array.<string>)=} opt_callback */
-chrome.networkingPrivate.getEnabledNetworkTypes = function(opt_callback) {};
+/**
+ * @param {function(!Array.<string>)} callback
+ * @deprecated Use chrome.networkingPrivate.getDeviceStates.
+ */
+chrome.networkingPrivate.getEnabledNetworkTypes = function(callback) {};
+
+
+/**
+ * @param {function(!Array.<!chrome.networkingPrivate.DeviceStateProperties>)}
+ *     callback
+ */
+chrome.networkingPrivate.getDeviceStates = function(callback) {};
 
 
 /** @param {string} networkType */
