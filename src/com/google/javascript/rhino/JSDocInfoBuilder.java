@@ -81,8 +81,11 @@ public final class JSDocInfoBuilder {
   }
 
   public static JSDocInfoBuilder copyFrom(JSDocInfo info) {
-    populateDefaults(info);
-    return new JSDocInfoBuilder(info.clone(), info.isDocumentationIncluded(), true);
+    JSDocInfo clone = info.clone();
+    if (clone.getVisibility() == Visibility.INHERITED) {
+      clone.setVisibility(null);
+    }
+    return new JSDocInfoBuilder(clone, info.isDocumentationIncluded(), true);
   }
 
   public static JSDocInfoBuilder maybeCopyFrom(@Nullable JSDocInfo info) {

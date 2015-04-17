@@ -284,6 +284,32 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "})(x.y);"));
   }
 
+  public void testPrivate1() {
+    test(Joiner.on('\n').join(
+        "/** @private */",
+        "x.y_ = goog.defineClass(null, {",
+        "  constructor: function() {}",
+        "});"),
+        "/** @private @constructor @struct */ x.y_ = function() {};");
+  }
+
+  public void testPrivate2() {
+    test(Joiner.on('\n').join(
+        "/** @private */",
+        "x.y_ = goog.defineClass(null, {",
+        "  /** @param {string} s */",
+        "  constructor: function(s) {}",
+        "});"),
+        Joiner.on('\n').join(
+            "/**",
+            " * @private",
+            " * @constructor",
+            " * @struct",
+            " * @param {string} s",
+            " */",
+            "x.y_ = function(s) {};"));
+  }
+
   public void testInvalid1() {
     testSame("var x = goog.defineClass();", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
     testSame("var x = goog.defineClass('foo');", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
