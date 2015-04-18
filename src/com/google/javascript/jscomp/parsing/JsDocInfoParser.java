@@ -162,7 +162,7 @@ public final class JsDocInfoParser {
     JsDocToken token = next();
     int lineno = stream.getLineno();
     int startCharno = stream.getCharno();
-    Node typeAst = parseTypeExpression(token);
+    Node typeAst = parseParamTypeExpression(token);
     recordTypeNode(lineno, startCharno, typeAst, token == JsDocToken.LEFT_CURLY);
 
     JSTypeExpression expr = createJSTypeExpression(typeAst);
@@ -1878,24 +1878,21 @@ public final class JsDocInfoParser {
   }
 
   /**
-   * ParamTypeExpressionAnnotation :=
-   *     '{' OptionalParameterType '}' |
-   *     '{' TopLevelTypeExpression '}' |
-   *     '{' '...' TopLevelTypeExpression '}'
+   * ParamTypeExpression :=
+   *     OptionalParameterType |
+   *     TopLevelTypeExpression |
+   *     '...' TopLevelTypeExpression
    *
    * OptionalParameterType :=
    *     TopLevelTypeExpression '='
+   *
    */
-  private Node parseParamTypeExpressionAnnotation(JsDocToken token) {
-    Preconditions.checkArgument(token == JsDocToken.LEFT_CURLY);
-
-    skipEOLs();
-
+  private Node parseParamTypeExpression(JsDocToken token) {
     boolean restArg = false;
-    token = next();
     if (token == JsDocToken.ELLIPSIS) {
       token = next();
       if (token == JsDocToken.RIGHT_CURLY) {
+        restoreLookAhead(token);
         // EMPTY represents the UNKNOWN type in the Type AST.
         return wrapNode(Token.ELLIPSIS, IR.empty());
       }
@@ -1912,7 +1909,22 @@ public final class JsDocInfoParser {
         skipEOLs();
         typeNode = wrapNode(Token.EQUALS, typeNode);
       }
+    }
 
+    return typeNode;
+  }
+
+
+  /**
+   * ParamTypeExpressionAnnotation := '{' ParamTypeExpression '}'
+   */
+  private Node parseParamTypeExpressionAnnotation(JsDocToken token) {
+    Preconditions.checkArgument(token == JsDocToken.LEFT_CURLY);
+
+    skipEOLs();
+
+    Node typeNode = parseParamTypeExpression(next());
+    if (typeNode != null) {
       if (!match(JsDocToken.RIGHT_CURLY)) {
         reportTypeSyntaxWarning("msg.jsdoc.missing.rc");
       } else {

@@ -778,6 +778,22 @@ public final class NewParserTest extends BaseJSTypeTestCase {
         createRecordTypeBuilder().addProperty("attr", NUMBER_TYPE, null).build(), info.getType());
   }
 
+  public void testInlineJSDocWithOptionalType() {
+    Node fn = parse("function f(/** string= */ x) {}").getFirstChild();
+    assertThat(fn.isFunction()).isTrue();
+
+    JSDocInfo info = fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertThat(info.getType().isOptionalArg()).isTrue();
+  }
+
+  public void testInlineJSDocWithVarArgs() {
+    Node fn = parse("function f(/** ...string */ x) {}").getFirstChild();
+    assertThat(fn.isFunction()).isTrue();
+
+    JSDocInfo info = fn.getFirstChild().getNext().getFirstChild().getJSDocInfo();
+    assertThat(info.getType().isVarArgs()).isTrue();
+  }
+
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
