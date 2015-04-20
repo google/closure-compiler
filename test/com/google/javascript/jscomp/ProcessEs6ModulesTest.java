@@ -85,6 +85,12 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         FILEOVERVIEW + "goog.require('module$test'); use(module$test.foo)");
   }
 
+  public void testTypeNodeRewriting() {
+    test("import * as name from 'other'; /** @type {name.foo} */ var x;",
+        FILEOVERVIEW + "goog.require('module$other');"
+        + "/** @type {name$$module$other.foo} */ var x$$module$testcode;");
+  }
+
   public void testExport() {
     test("export var a = 1, b = 2;", Joiner.on('\n').join(
         FILEOVERVIEW,
