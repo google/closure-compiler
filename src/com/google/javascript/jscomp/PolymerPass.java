@@ -101,7 +101,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (ispolymerElementExterns(n)) {
+      if (isPolymerElementExterns(n)) {
         polymerElementExterns = n;
       } else if (isPolymerElementPropExpr(n)) {
         polymerElementProps.add(n);
@@ -111,7 +111,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     /**
      * @return Whether the node is the declaration of PolymerElement.
      */
-    private boolean ispolymerElementExterns(Node value) {
+    private boolean isPolymerElementExterns(Node value) {
       return value != null && value.isVar()
           && value.getFirstChild().matchesQualifiedName(POLYMER_ELEMENT_NAME);
     }
@@ -353,9 +353,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    * Appends all properties in the ClassDefinition to the prototype of the custom element.
    */
   private void appendPropertiesToBlock(final ClassDefinition cls, Node block) {
-    String path = cls.target.getQualifiedName() + ".prototype.";
+    String qualifiedPath = cls.target.getQualifiedName() + ".prototype.";
     for (MemberDefinition prop : cls.props) {
-      Node propertyNode = IR.exprResult(NodeUtil.newQName(compiler, path + prop.name.getString()));
+      Node propertyNode = IR.exprResult(
+          NodeUtil.newQName(compiler, qualifiedPath + prop.name.getString()));
       JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(prop.info);
       prop.name.removeProp(Node.JSDOC_INFO_PROP);
 
@@ -374,6 +375,14 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
       propertyNode.getFirstChild().setJSDocInfo(info.build());
       block.addChildToBack(propertyNode);
+
+      // Generate the setter for readOnly properties.
+      if (prop.value.isObjectLit()) {
+        Node readOnlyValue = NodeUtil.getFirstPropMatchingKey(prop.value, "readOnly");
+        if (readOnlyValue != null && readOnlyValue.isTrue()) {
+          block.addChildToBack(makeReadOnlySetter(prop.name.getString(), propType, qualifiedPath));
+        }
+      }
     }
   }
 
@@ -413,6 +422,26 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
 
     return new JSTypeExpression(typeNode, VIRTUAL_FILE);
+  }
+
+  /**
+   * Adds the generated setter for a readonly property.
+   * @see https://www.polymer-project.org/0.8/docs/devguide/properties.html#read-only
+   */
+  private Node makeReadOnlySetter(String propName, JSTypeExpression propType,
+      String qualifiedPath) {
+    String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+    Node fnNode = IR.function(IR.name(""), IR.paramList(IR.name(propName)), IR.block());
+    Node exprResNode = IR.exprResult(
+        IR.assign(NodeUtil.newQName(compiler, qualifiedPath + setterName), fnNode));
+
+    JSDocInfoBuilder info = new JSDocInfoBuilder(true);
+    info.recordVisibility(Visibility.PRIVATE);
+    info.recordExport();
+    info.recordParameter(propName, propType);
+    exprResNode.getFirstChild().setJSDocInfo(info.build());
+
+    return exprResNode;
   }
 
   /**
