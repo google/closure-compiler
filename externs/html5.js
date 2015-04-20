@@ -2887,6 +2887,11 @@ Document.prototype.fonts;
 
 
 /**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript
+ */
+Document.prototype.currentScript;
+
+/**
  * Definition of ShadowRoot interface,
  * @see http://www.w3.org/TR/shadow-dom/#api-shadow-root
  * @constructor
