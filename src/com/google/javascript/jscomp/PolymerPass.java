@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -355,7 +356,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     String path = cls.target.getQualifiedName() + ".prototype.";
     for (MemberDefinition prop : cls.props) {
       Node propertyNode = IR.exprResult(NodeUtil.newQName(compiler, path + prop.name.getString()));
-      JSDocInfoBuilder docs = JSDocInfoBuilder.maybeCopyFrom(prop.info);
+      JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(prop.info);
       prop.name.removeProp(Node.JSDOC_INFO_PROP);
 
       // Note that if the JSDoc already has a type, the type inferred from the Polymer syntax is
@@ -364,9 +365,14 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       if (propType == null) {
         return;
       }
-      docs.recordType(propType);
+      info.recordType(propType);
 
-      propertyNode.getFirstChild().setJSDocInfo(docs.build());
+      // TODO(jlklein): Remove this when the renamer is fully feature complete, catching all
+      // rename issues listed in http://goo.gl/L4mdQA.
+      Preconditions.checkState(info.recordExport());
+      info.recordVisibility(Visibility.PUBLIC);
+
+      propertyNode.getFirstChild().setJSDocInfo(info.build());
       block.addChildToBack(propertyNode);
     }
   }
@@ -459,6 +465,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         new Node(Token.BANG, IR.string(getPolymerElementType(cls))), VIRTUAL_FILE);
 
     constructorDoc.recordBaseType(baseType);
+
+    // TODO(jlklein): Remove this when the renamer is fully feature complete, catching all
+    // rename issues listed in http://goo.gl/L4mdQA.
+    Preconditions.checkState(constructorDoc.recordExport());
+    constructorDoc.recordVisibility(Visibility.PUBLIC);
     return constructorDoc;
   }
 
