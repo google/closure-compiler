@@ -7534,29 +7534,33 @@ chrome.notifications.ButtonCallback;
 
 
 /**
- * @param {string} notificationId
- * @param {!chrome.notifications.NotificationOptions} options
- * @param {function(string): void} callback
+ * @param {string|!chrome.notifications.NotificationOptions}
+ *     notificationIdOrOptions
+ * @param {(!chrome.notifications.NotificationOptions|function(string): void)=}
+ *     opt_optionsOrCallback
+ * @param {(function(string): void)=} opt_callback
  * @see http://developer.chrome.com/extensions/notifications.html#method-create
  */
-chrome.notifications.create = function(notificationId, options, callback) {};
+chrome.notifications.create = function(notificationIdOrOptions,
+    opt_optionsOrCallback, opt_callback) {};
 
 
 /**
  * @param {string} notificationId
  * @param {!chrome.notifications.NotificationOptions} options
- * @param {!chrome.notifications.BooleanCallback} callback
+ * @param {chrome.notifications.BooleanCallback=} opt_callback
  * @see http://developer.chrome.com/extensions/notifications.html#method-update
  */
-chrome.notifications.update = function(notificationId, options, callback) {};
+chrome.notifications.update =
+    function(notificationId, options, opt_callback) {};
 
 
 /**
  * @param {string} notificationId
- * @param {!chrome.notifications.BooleanCallback} callback
+ * @param {!chrome.notifications.BooleanCallback=} opt_callback
  * @see http://developer.chrome.com/extensions/notifications.html#method-clear
  */
-chrome.notifications.clear = function(notificationId, callback) {};
+chrome.notifications.clear = function(notificationId, opt_callback) {};
 
 
 /**
