@@ -56,6 +56,14 @@ var document;
 var location;
 
 /**
+ * @type {!History}
+ * @see https://developer.mozilla.org/en/DOM/window.history
+ * @const
+ * @suppress {duplicate}
+ */
+var history;
+
+/**
  * @type {!Screen}
  * @see https://developer.mozilla.org/En/DOM/window.screen
  * @const
