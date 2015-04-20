@@ -88,7 +88,7 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   public void testTypeNodeRewriting() {
     test("import * as name from 'other'; /** @type {name.foo} */ var x;",
         FILEOVERVIEW + "goog.require('module$other');"
-        + "/** @type {name$$module$other.foo} */ var x$$module$testcode;");
+        + "/** @type {module$other.foo} */ var x$$module$testcode;");
   }
 
   public void testExport() {
@@ -371,6 +371,23 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         "}",
         "var module$testcode = {};",
         "/** @const */ module$testcode.Foo = Foo$$module$testcode;"
+    ));
+  }
+
+  public void testRenameTypedef() {
+    test(Joiner.on('\n').join(
+        "import 'other';",
+        "/** @typedef {string|!Object} */",
+        "export var UnionType;"
+    ), Joiner.on('\n').join(
+        FILEOVERVIEW,
+        "goog.provide('module$testcode');",
+        "goog.require('module$other');",
+        "/** @typedef {string|!Object} */",
+        "var UnionType$$module$testcode;",
+        "var module$testcode = {};",
+        "/** @typedef {UnionType$$module$testcode} */",
+        "module$testcode.UnionType;"
     ));
   }
 
