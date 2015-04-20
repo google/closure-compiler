@@ -194,16 +194,17 @@ public final class JSDocInfoPrinter {
   }
 
   private static void appendFunctionNode(StringBuilder sb, Node function) {
+    boolean hasNewOrThis = false;
     sb.append("function(");
     Node first = function.getFirstChild();
     if (first.isNew()) {
       sb.append("new:");
       appendTypeNode(sb, first.getFirstChild());
-      sb.append(",");
+      hasNewOrThis = true;
     } else if (first.isThis()) {
       sb.append("this:");
       appendTypeNode(sb, first.getFirstChild());
-      sb.append(",");
+      hasNewOrThis = true;
     } else if (first.isEmpty()) {
       sb.append(")");
       return;
@@ -212,13 +213,24 @@ public final class JSDocInfoPrinter {
       appendTypeNode(sb, first);
       return;
     }
-    Node paramList = first.isParamList() ? first : first.getNext();
-    for (int i = 0; i < paramList.getChildCount() - 1; i++) {
-      appendTypeNode(sb, paramList.getChildAtIndex(i));
-      sb.append(",");
+    Node paramList = null;
+    if (first.isParamList()) {
+      paramList = first;
+    } else if (first.getNext().isParamList()) {
+      paramList = first.getNext();
     }
-    appendTypeNode(sb, paramList.getLastChild());
+    if (paramList != null) {
+      boolean firstParam = true;
+      for (Node param : paramList.children()) {
+        if (!firstParam || hasNewOrThis) {
+          sb.append(",");
+        }
+        appendTypeNode(sb, param);
+        firstParam = false;
+      }
+    }
     sb.append(")");
+
     Node returnType = function.getLastChild();
     if (!returnType.isEmpty()) {
       sb.append(":");

@@ -115,11 +115,12 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordInlineType();
     info = builder.buildAndReset();
     assertEquals("/** Array */", JSDocInfoPrinter.print(info));
+  }
 
-    // Function types
+  public void testFunctions() {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function()"), ""));
-    info = builder.buildAndReset();
+    JSDocInfo info = builder.buildAndReset();
     assertEquals("/**@type {function()} */", JSDocInfoPrinter.print(info));
 
     builder.recordType(new JSTypeExpression(
@@ -164,6 +165,11 @@ public final class JSDocInfoPrinterTest extends TestCase {
         JsDocInfoParser.parseTypeString("function(string):number"), ""));
     info = builder.buildAndReset();
     assertEquals("/**@type {function(string):number} */", JSDocInfoPrinter.print(info));
+
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("function(this:foo):?"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@type {function(this:foo):?} */", JSDocInfoPrinter.print(info));
   }
 }
 
