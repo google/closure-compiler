@@ -103,12 +103,6 @@ Navigator.prototype.getBattery = function() {};
 Window.prototype.globalStorage;
 
 /**
- * @type {!History}
- * @see https://developer.mozilla.org/en/DOM/window.history
- */
-Window.prototype.history;
-
-/**
  * Returns the number of frames (either frame or iframe elements) in the
  * window.
  *
@@ -116,13 +110,6 @@ Window.prototype.history;
  * @see https://developer.mozilla.org/en/DOM/window.length
  */
 Window.prototype.length;
-
-/**
- * @type {!Location}
- * @implicitCast
- * @see https://developer.mozilla.org/en/DOM/window.location
- */
-Window.prototype.location;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.locationbar
@@ -139,12 +126,6 @@ Window.prototype.menubar;
  * @see https://developer.mozilla.org/en/DOM/window.name
  */
 Window.prototype.name;
-
-/**
- * @type {Navigator}
- * @see https://developer.mozilla.org/en/DOM/window.navigator
- */
-Window.prototype.navigator;
 
 /**
  * @type {?Window}
@@ -182,12 +163,6 @@ Window.prototype.scrollMaxX;
  */
 Window.prototype.scrollMaxY;
 
-/**
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window.self
- */
-Window.prototype.self;
-
 /** @see https://developer.mozilla.org/en/DOM/Storage#sessionStorage */
 Window.prototype.sessionStorage;
 
@@ -205,12 +180,6 @@ Window.prototype.statusbar;
 
 /** @see https://developer.mozilla.org/en/DOM/window.toolbar */
 Window.prototype.toolbar;
-
-/**
- * @type {!Window}
- * @see https://developer.mozilla.org/en/DOM/window.self
- */
-Window.prototype.top;
 
 /**
  * @type {!Window}
