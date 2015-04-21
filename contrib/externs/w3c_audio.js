@@ -41,27 +41,21 @@ AudioContext.prototype.currentTime;
 AudioContext.prototype.listener;
 
 /**
- * AudioContext.prototype.createBuffer() has 2 syntax:
- *   * Regular method:
- *     createBuffer = function(numberOfChannels, length, sampleRate) {};
- *
- *   * ArrayBuffer method:
- *     createBuffer = function(buffer, mixToMono) {};
- *
- * @param {number|ArrayBuffer} a
- * @param {number|boolean} b
- * @param {number=} sampleRate
+ * @param {number} numberOfChannels
+ * @param {number} length
+ * @param {number} sampleRate
  * @return {!AudioBuffer}
  */
-AudioContext.prototype.createBuffer = function(a, b, sampleRate) {};
+AudioContext.prototype.createBuffer =
+    function(numberOfChannels, length, sampleRate) {};
 
 /**
  * @param {ArrayBuffer} audioData
- * @param {Function} successCallback
- * @param {Function=} errorCallback
+ * @param {function(AudioBuffer)} successCallback
+ * @param {function(?)=} errorCallback
  */
-AudioContext.prototype.decodeAudioData = function(audioData, successCallback,
-    errorCallback) {};
+AudioContext.prototype.decodeAudioData =
+    function(audioData, successCallback, errorCallback) {};
 
 /**
  * @return {!AudioBufferSourceNode}
@@ -797,62 +791,11 @@ DynamicsCompressorNode.prototype.release;
 var BiquadFilterNode = function() {};
 
 /**
- * To be deprecated. Use 'lowpass' instead.
- * @const
- * @type {number}
+ * A read-able and write-able string that specifies the type of the filter.
+ * See http://webaudio.github.io/web-audio-api/#the-biquadfilternode-interface
+ * for valid values.
+ * @type {string}
  */
-BiquadFilterNode.prototype.LOWPASS = 0;
-
-/**
- * To be deprecated. Use 'highpass' instead.
- * @const
- * @type {number}
- */
-BiquadFilterNode.prototype.HIGHPASS = 1;
-
-/**
- * To be deprecated. Use 'bandpass' instead.
- * @const
- * @type {number}
- */
-BiquadFilterNode.prototype.BANDPASS = 2;
-
-/**
- * To be deprecated. Use 'lowshelf' instead.
- * @const
- * @type {number}
- */
-BiquadFilterNode.prototype.LOWSHELF = 3;
-
-/**
- * To be deprecated. Use 'highshelf' instead.
- * @const
- * @type {number}
- */
-BiquadFilterNode.prototype.HIGHSHELF = 4;
-
-/**
- * To be deprecated. Use 'peaking' instead.
- * @const
- * @type {number}
- */
-BiquadFilterNode.prototype.PEAKING = 5;
-
-/**
- * To be deprecated. Use 'notch' instead.
- * @const
- * @type {number}
- */
-BiquadFilterNode.prototype.NOTCH = 6;
-
-/**
- * To be deprecated. Use 'allpass' instead.
- * @const
- * @type {number}
- */
-BiquadFilterNode.prototype.ALLPASS = 7;
-
-/** @type {number} */
 BiquadFilterNode.prototype.type;
 
 /** @type {!AudioParam} */
