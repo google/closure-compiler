@@ -155,7 +155,7 @@ public final class DeclaredFunctionType {
     return typeParameters;
   }
 
-  public boolean isTypeVariableInScope(String tvar) {
+  public boolean isTypeVariableDefinedLocally(String tvar) {
     if (typeParameters.contains(tvar)) {
       return true;
     }

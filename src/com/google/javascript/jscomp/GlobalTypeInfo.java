@@ -1957,7 +1957,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       if (includeTypes) {
         return unknownTypeNames.contains(name)
-            || declaredType != null && declaredType.isTypeVariableInScope(name);
+            || declaredType != null && declaredType.isTypeVariableDefinedLocally(name);
       }
       return false;
     }
@@ -2270,7 +2270,7 @@ class GlobalTypeInfo implements CompilerPass {
           || localEnums.containsKey(name) || localFunDefs.containsKey(name)
           || localClassDefs.containsKey(name)) {
         // Any further declarations are shadowed
-      } else if (declaredType != null && declaredType.isTypeVariableInScope(name)) {
+      } else if (declaredType != null && declaredType.isTypeVariableDefinedLocally(name)) {
         isTypeVar = true;
         type = JSType.fromTypeVar(name);
       } else if (externs.containsKey(name)) {
