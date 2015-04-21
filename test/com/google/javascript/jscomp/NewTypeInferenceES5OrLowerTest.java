@@ -4335,6 +4335,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testDontInferNamespaces() {
+    typeCheck(
+        "/** @const */ var ns = {};\n"
+        + "/** @const */ var x = ns;\n",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/** @enum {number} */ var e = { FOO : 5 };\n"
+        + "/** @const */ var x = e;\n",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n"
+        + "/** @type {number} */ ns.n = 5;\n"
+        + "/** @const */ var x = ns.n;\n",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
+
   // public void testUndeclaredNamespaces() {
   //   typeCheck(
   //         "/** @constructor */ ns.Foo = function(){};\n"
@@ -10156,8 +10174,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + " */\n"
         + "var Foo = Bar;\n"
         + "var /** !Foo */ x;",
-        GlobalTypeInfo.EXPECTED_CONSTRUCTOR,
-        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+        GlobalTypeInfo.EXPECTED_CONSTRUCTOR);
   }
 
   public void testTypeVariablesVisibleInPrototypeMethods() {
@@ -10259,13 +10276,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function f(/** !ns.Foo */ x) {}\n"
         + "function g(/** !ns.Bar */ y) {}");
 
+    typeCheck(DEFINITIONS
+        + "goog.addDependency('', ['Foo'], []);\n"
+        + "goog.forwardDeclare('Bar');\n"
+        + "var f = new Foo;\n"
+        + "var b = new Bar;");
+
     // TODO(blickly): Allow forward declared names that are used in code.
-    //     typeCheck(DEFINITIONS +
-    //         "goog.addDependency('', ['Foo'], []);\n" +
-    //         "goog.forwardDeclare('Bar');\n" +
-    //         "var f = new Foo;\n" +
-    //         "var b = new Bar;");
-    //
     //     typeCheck(DEFINITIONS +
     //         "/** @const */ var ns = {};\n" +
     //         "goog.addDependency('', ['ns.Foo'], []);\n" +

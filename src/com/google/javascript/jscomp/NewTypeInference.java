@@ -1281,54 +1281,52 @@ final class NewTypeInference implements CompilerPass {
     if (varName.equals("undefined")) {
       return new EnvTypePair(inEnv, JSType.UNDEFINED);
     }
-    if (currentScope.isLocalVar(varName) ||
-        currentScope.isLocalExtern(varName) ||
-        currentScope.isFormalParam(varName) ||
-        currentScope.isLocalFunDef(varName) ||
-        currentScope.isOuterVar(varName) ||
-        varName.equals(currentScope.getName())) {
-      JSType inferredType = envGetType(inEnv, varName);
-      println(varName, "'s inferredType: ", inferredType,
-          " requiredType:  ", requiredType,
-          " specializedType:  ", specializedType);
-      if (!inferredType.isSubtypeOf(requiredType)) {
-        // The inferred type of a variable is always an upper bound, but
-        // sometimes it's also a lower bound, eg, if x was the lhs of an =
-        // where we know the type of the rhs.
-        // We don't track whether the inferred type is a lower bound, so we
-        // conservatively assume that it always is.
-        // This is why we warn when !inferredType.isSubtypeOf(requiredType).
-        // In some rare cases, the inferred type is only an upper bound,
-        // and we would falsely warn.
-        // (These usually include the polymorphic operators += and <.)
-        // We have a heuristic check to avoid the spurious warnings,
-        // but we also miss some true warnings.
-        JSType declType = currentScope.getDeclaredTypeOf(varName);
-        if (tightenTypeAndDontWarn(
-            varName, declType, inferredType, requiredType)) {
-          inferredType = inferredType.specialize(requiredType);
-        } else {
-          // Propagate incorrect type so that the context catches
-          // the mismatch
-          return new EnvTypePair(inEnv, inferredType);
-        }
-      }
-      // If preciseType is bottom, there is a condition that can't be true,
-      // but that's not necessarily a type error.
-      JSType preciseType = inferredType.specialize(specializedType);
-      println(varName, "'s preciseType: ", preciseType);
-      if (!preciseType.isBottom() &&
-          currentScope.isUndeclaredFormal(varName) &&
-          preciseType.hasNonScalar()) {
-        // In the bwd direction, we may infer a loose type and then join w/
-        // top and forget it. That's why we also loosen types going fwd.
-        preciseType = preciseType.withLoose();
-      }
-      return EnvTypePair.addBinding(inEnv, varName, preciseType);
+    if (!currentScope.isDefinedLocally(varName, false)
+        && !varName.equals(currentScope.getName())
+        && !currentScope.isOuterVar(varName)) {
+      println("Found global variable ", varName);
+      // For now, we don't warn for global variables
+      return new EnvTypePair(inEnv, JSType.UNKNOWN);
+
     }
-    println("Found global variable ", varName);
-    // For now, we don't warn for global variables
-    return new EnvTypePair(inEnv, JSType.UNKNOWN);
+    JSType inferredType = envGetType(inEnv, varName);
+    println(varName, "'s inferredType: ", inferredType,
+        " requiredType:  ", requiredType,
+        " specializedType:  ", specializedType);
+    if (!inferredType.isSubtypeOf(requiredType)) {
+      // The inferred type of a variable is always an upper bound, but
+      // sometimes it's also a lower bound, eg, if x was the lhs of an =
+      // where we know the type of the rhs.
+      // We don't track whether the inferred type is a lower bound, so we
+      // conservatively assume that it always is.
+      // This is why we warn when !inferredType.isSubtypeOf(requiredType).
+      // In some rare cases, the inferred type is only an upper bound,
+      // and we would falsely warn.
+      // (These usually include the polymorphic operators += and <.)
+      // We have a heuristic check to avoid the spurious warnings,
+      // but we also miss some true warnings.
+      JSType declType = currentScope.getDeclaredTypeOf(varName);
+      if (tightenTypeAndDontWarn(
+          varName, declType, inferredType, requiredType)) {
+        inferredType = inferredType.specialize(requiredType);
+      } else {
+        // Propagate incorrect type so that the context catches
+        // the mismatch
+        return new EnvTypePair(inEnv, inferredType);
+      }
+    }
+    // If preciseType is bottom, there is a condition that can't be true,
+    // but that's not necessarily a type error.
+    JSType preciseType = inferredType.specialize(specializedType);
+    println(varName, "'s preciseType: ", preciseType);
+    if (!preciseType.isBottom()
+        && currentScope.isUndeclaredFormal(varName)
+        && preciseType.hasNonScalar()) {
+      // In the bwd direction, we may infer a loose type and then join w/
+      // top and forget it. That's why we also loosen types going fwd.
+      preciseType = preciseType.withLoose();
+    }
+    return EnvTypePair.addBinding(inEnv, varName, preciseType);
   }
 
   private EnvTypePair analyzeLogicalOpFwd(
@@ -2634,7 +2632,7 @@ final class NewTypeInference implements CompilerPass {
   private TypeEnv collectTypesForFreeVarsBwd(Node callee, TypeEnv env) {
     Scope calleeScope = currentScope.getScope(callee.getQualifiedName());
     for (String freeVar : calleeScope.getOuterVars()) {
-      if (!currentScope.isDefinedLocally(freeVar) &&
+      if (!currentScope.isDefinedLocally(freeVar, false) &&
           !currentScope.isOuterVar(freeVar)) {
         continue;
       }
