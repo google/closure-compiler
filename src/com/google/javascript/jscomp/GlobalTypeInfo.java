@@ -984,7 +984,16 @@ class GlobalTypeInfo implements CompilerPass {
           Node grandparent = parent.getParent();
           if (grandparent == null ||
               !isPrototypePropertyDeclaration(grandparent)) {
-            visitFunctionLate(n, null);
+            Scope s = visitFunctionLate(n, null);
+            Node name = NodeUtil.getFunctionNameNode(n);
+            if (name != null && name.isGetProp() && name.isQualifiedName()) {
+              QualifiedName recv = QualifiedName.fromNode(name.getFirstChild());
+              String pname = name.getLastChild().getString();
+              if (currentScope.isNamespace(recv)) {
+                Namespace ns = currentScope.getNamespace(recv);
+                ns.addScope(new QualifiedName(pname), s);
+              }
+            }
           }
           break;
 
@@ -1357,6 +1366,19 @@ class GlobalTypeInfo implements CompilerPass {
       return rhsType;
     }
 
+    private FunctionType simpleInferFunctionType(Node n) {
+      if (n.isQualifiedName()) {
+        Declaration decl = currentScope.getDeclaration(QualifiedName.fromNode(n), false);
+        if (decl != null && decl.getFunctionScope() != null) {
+          DeclaredFunctionType funType = ((Scope) decl.getFunctionScope()).getDeclaredType();
+          if (funType != null) {
+            return funType.toFunctionType();
+          }
+        }
+      }
+      return null;
+    }
+
     private JSType simpleInferExprType(Node n) {
       switch (n.getType()) {
         case Token.REGEXP:
@@ -1442,11 +1464,7 @@ class GlobalTypeInfo implements CompilerPass {
           if (callee.matchesQualifiedName("goog.getMsg")) {
             return JSType.STRING;
           }
-          JSType calleeType = simpleInferExprType(callee);
-          if (calleeType == null) {
-            return null;
-          }
-          FunctionType funType = calleeType.getFunType();
+          FunctionType funType = simpleInferFunctionType(callee);
           if (funType == null) {
             return null;
           }
@@ -2305,8 +2323,9 @@ class GlobalTypeInfo implements CompilerPass {
       Typedef typedef = ns.getTypedef(props);
       EnumType enumType = ns.getEnumType(props);
       RawNominalType rawType = ns.getNominalType(props);
+      Scope scope = (Scope) ns.getScope(props);
       return new Declaration(
-          null, typedef, null, enumType, null, rawType, false, false, false, false, false);
+          null, typedef, null, enumType, scope, rawType, false, false, false, false, false);
     }
 
     public Declaration getDeclaration(String name, boolean includeTypes) {

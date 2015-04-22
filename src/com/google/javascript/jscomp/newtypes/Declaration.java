@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 
@@ -130,5 +131,16 @@ public class Declaration {
     if (enumType != null) { return enumType; }
     if (nominal != null) { return nominal; }
     return null;
+  }
+
+  public String toString() {
+    return MoreObjects.toStringHelper(this).omitNullValues()
+        .add("simpleType", simpleType)
+        .add("typedef", typedef)
+        .add("namespace", namespaceLit)
+        .add("enum", enumType)
+        .add("scope", functionScope)
+        .add("nominal", nominal)
+        .toString();
   }
 }

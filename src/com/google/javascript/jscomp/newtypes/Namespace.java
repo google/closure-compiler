@@ -37,6 +37,7 @@ public abstract class Namespace {
   protected Map<String, NamespaceLit> namespaces = null;
   // Non-namespace properties
   protected Map<String, Typedef> typedefs = null;
+  protected Map<String, DeclaredTypeRegistry> scopes = null;
   protected PersistentMap<String, Property> otherProps = PersistentMap.create();
 
   public boolean isDefined(QualifiedName qname) {
@@ -56,6 +57,7 @@ public abstract class Namespace {
         || ns.enums != null && ns.enums.containsKey(name)
         || ns.namespaces != null && ns.namespaces.containsKey(name)
         || ns.typedefs != null && ns.typedefs.containsKey(name)
+        || ns.scopes != null && ns.scopes.containsKey(name)
         || ns.otherProps.containsKey(name);
   }
 
@@ -68,6 +70,26 @@ public abstract class Namespace {
     String name = qname.getRightmostName();
     ns.namespaces.put(name, new NamespaceLit());
   }
+
+  public void addScope(QualifiedName qname, DeclaredTypeRegistry scope) {
+//     Preconditions.checkState(!isDefined(qname));  // Scopes+nominals can overlap
+    Namespace ns = getReceiverNamespace(qname);
+    if (ns.scopes == null) {
+      ns.scopes = new LinkedHashMap<>();
+    }
+    String name = qname.getRightmostName();
+    ns.scopes.put(name, scope);
+  }
+
+  public DeclaredTypeRegistry getScope(QualifiedName qname) {
+    Namespace ns = getReceiverNamespace(qname);
+    if (ns == null || ns.scopes == null) {
+      return null;
+    }
+    String name = qname.getRightmostName();
+    return ns.scopes.get(name);
+  }
+
 
   public void addNominalType(QualifiedName qname, RawNominalType rawNominalType) {
     Preconditions.checkState(!isDefined(qname));

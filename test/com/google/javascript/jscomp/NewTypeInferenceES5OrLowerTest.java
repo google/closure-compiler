@@ -6787,6 +6787,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
+  public void testInferConstTypeFromQualfiedName() {
+    typeCheck(
+        "/** @const */ var ns = {}\n"
+        + "/** @return {string} */ ns.f = function() { return 'str'; };\n"
+        + "/** @const */ var s = ns.f();\n"
+        + "function f() {\n"
+        + "  s - 1;\n"
+        + "}",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
   public void testInferConstTypeFromGenerics() {
     typeCheck(
         "/**\n"
