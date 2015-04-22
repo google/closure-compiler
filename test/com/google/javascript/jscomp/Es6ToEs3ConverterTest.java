@@ -37,6 +37,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
       " */",
       "Function.prototype.call = function(var_args) {};",
       "",
+      "function Object() {}",
+      "Object.defineProperties;",
+      "",
       // Stub out just enough of es6_runtime.js to satisfy the typechecker.
       // In a real compilation, the entire library will be loaded by
       // the InjectEs6RuntimeLibrary pass.
@@ -51,6 +54,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     languageOut = LanguageMode.ECMASCRIPT3;
     enableAstValidation(true);
+    disableTypeCheck();
     runTypeCheckAfterProcessing = true;
     compareJsDoc = true;
   }
@@ -1000,6 +1004,49 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  /** @param {number} v */",
         "  set value(v) { }",
         "}"), Es6ToEs3Converter.CONFLICTING_GETTER_SETTER_TYPE);
+  }
+
+  public void testClassEs5GetterSetterIncorrectTypes() {
+    enableTypeCheck(CheckLevel.WARNING);
+    languageOut = LanguageMode.ECMASCRIPT5;
+
+    // Using @type instead of @return on a getter.
+    test(EXTERNS_BASE, Joiner.on('\n').join(
+        "class C {",
+        "  /** @type {string} */",
+        "  get value() { }",
+        "}"),
+
+        Joiner.on('\n').join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.prototype.value;",
+            "Object.defineProperties(C.prototype, {",
+            "  value: {",
+            "    /** @type {string} */",
+            "    get: function() {}",
+            "  }",
+            "});"), null, TypeValidator.TYPE_MISMATCH_WARNING);
+
+    // Using @type instead of @param on a setter.
+    test(EXTERNS_BASE, Joiner.on('\n').join(
+        "class C {",
+        "  /** @type {string} */",
+        "  set value(v) { }",
+        "}"),
+
+        Joiner.on('\n').join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.prototype.value;",
+            "Object.defineProperties(C.prototype, {",
+            "  value: {",
+            "    /** @type {string} */",
+            "    set: function(v) {}",
+            "  }",
+            "});"), null, TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   /**

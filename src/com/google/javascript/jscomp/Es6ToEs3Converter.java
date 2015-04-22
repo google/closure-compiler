@@ -889,7 +889,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     JSDocInfo info = node.getJSDocInfo();
 
     if (info != null) {
-      if (node.isGetterDef()) {
+      if (node.isGetterDef() && info.getReturnType() != null) {
         return info.getReturnType();
       } else {
         Set<String> paramNames = info.getParameterNames();
