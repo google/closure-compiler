@@ -81,8 +81,9 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
                   return; // Inside an explicitly nullable union
                 }
                 for (Node child : parent.children()) {
-                  if (child.isString() && child.getString().equals("null")) {
-                    return; // Inside a union that explicitly contains null
+                  if (child.isString() && child.getString().equals("null")
+                      || child.getType() == Token.QMARK) {
+                    return; // Inside a union that contains null or nullable type
                   }
                 }
                 break;

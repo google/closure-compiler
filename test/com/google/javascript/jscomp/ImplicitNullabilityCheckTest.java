@@ -49,6 +49,7 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
     noWarning("/** @type {(Object|null)} */ var x;");
     noWarning("/** @type {(Object|number)?} */ var x;");
     noWarning("/** @type {?(Object|number)} */ var x;");
+    noWarning("/** @type {(Object|?number)} */ var x;");
     warnImplicitlyNullable("/** @type {(Object|number)} */ var x;");
   }
 
