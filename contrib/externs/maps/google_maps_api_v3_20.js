@@ -870,6 +870,16 @@ google.maps.Data.StyleOptions.prototype.clickable;
 google.maps.Data.StyleOptions.prototype.cursor;
 
 /**
+ * @type {boolean}
+ */
+google.maps.Data.StyleOptions.prototype.draggable;
+
+/**
+ * @type {boolean}
+ */
+google.maps.Data.StyleOptions.prototype.editable;
+
+/**
  * @type {string}
  */
 google.maps.Data.StyleOptions.prototype.fillColor;
@@ -5603,7 +5613,7 @@ google.maps.event.addDomListener = function(instance, eventName, handler, opt_ca
 /**
  * @param {Object} instance
  * @param {string} eventName
- * @param {function(?)|null} handler
+ * @param {function(?)} handler
  * @param {boolean=} opt_capture
  * @return {google.maps.MapsEventListener}
  */
@@ -6829,6 +6839,12 @@ google.maps.visualization.HeatmapLayer.prototype.setData = function(data) {};
  * @return {undefined}
  */
 google.maps.visualization.HeatmapLayer.prototype.setMap = function(map) {};
+
+/**
+ * @param {google.maps.visualization.HeatmapLayerOptions|Object.<string>} options
+ * @return {undefined}
+ */
+google.maps.visualization.HeatmapLayer.prototype.setOptions = function(options) {};
 
 /**
  * @interface
