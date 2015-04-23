@@ -28,6 +28,51 @@ var md = {};
 
 
 /******************************************************************************
+ * $bottonSheet Service
+ *****************************************************************************/
+
+
+/** @constructor */
+md.$bottomSheet = function() {};
+
+/**
+ * @typedef {{
+ *   templateUrl: (string|undefined),
+ *   template: (string|undefined),
+ *   scope: (!Object|undefined),
+ *   preserveScope: (boolean|undefined),
+ *   controller: (!Function|string|undefined),
+ *   locals: (!Object|undefined),
+ *   targetEvent: (!Object|undefined),
+ *   resolve: (!Object|undefined),
+ *   controllerAs: (string|undefined),
+ *   parent: (!Element|undefined),
+ *   disableParentScroll: (boolean|undefined)
+ * }}
+ */
+md.$bottomSheet.options;
+
+
+/**
+ * @param {!md.$bottomSheet.options} options
+ * @return {!angular.$q.Promise}
+ */
+md.$bottomSheet.prototype.show = function(options) {};
+
+
+/**
+ * @type {function(*=)}
+ */
+md.$bottomSheet.prototype.hide = function() {};
+
+
+/**
+ * @type {function(*=)}
+ */
+md.$bottomSheet.prototype.cancel = function() {};
+
+
+/******************************************************************************
  * $dialog Service
  *****************************************************************************/
 
