@@ -1051,7 +1051,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
     JSType propertyType = type.getPropertyType(propertyName);
     checkDeclaredPropertyInheritance(
-        t, key, ctorType, propertyName,
+        t, key.getFirstChild(), ctorType, propertyName,
         key.getJSDocInfo(), propertyType);
   }
 

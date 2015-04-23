@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -36,6 +37,8 @@ import java.util.Set;
 /**
  * Rewrites "Polymer({})" calls into a form that is suitable for type checking and dead code
  * elimination. Also ensures proper format and types.
+ *
+ * Only works with Polymer version: 0.8
  *
  * @author jlklein@google.com (Jeremy Klein)
  */
@@ -283,6 +286,13 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     Node ctorKey = cls.constructor.value.getParent();
     if (ctorKey != null) {
       ctorKey.removeProp(Node.JSDOC_INFO_PROP);
+
+      // TODO(jlklein): Remove this suppression and the DiagnosticGroup when the "constructor"
+      // property in Polymer is renamed to avoid collisions with the JS Object "constructor"
+      // property.
+      JSDocInfoBuilder suppressInfo = new JSDocInfoBuilder(true);
+      suppressInfo.recordSuppressions(ImmutableSet.of("hiddenProperty"));
+      ctorKey.setJSDocInfo(suppressInfo.build());
     }
 
     if (cls.target.isGetProp()) {
@@ -301,6 +311,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
 
     appendPropertiesToBlock(cls, block);
+    List<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
+    addInterfaceExterns(cls, readOnlyProps);
 
     block.useSourceInfoFromForTree(exprRoot);
     Node stmts = block.removeChildren();
@@ -375,15 +387,29 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
       propertyNode.getFirstChild().setJSDocInfo(info.build());
       block.addChildToBack(propertyNode);
+    }
+  }
 
+  /**
+   * Generates the _set* setters for readonly properties and appends them to the given block.
+   * @return A List of all readonly properties.
+   */
+  private List<MemberDefinition> parseReadOnlyProperties(final ClassDefinition cls, Node block) {
+    String qualifiedPath = cls.target.getQualifiedName() + ".prototype.";
+    ImmutableList.Builder<MemberDefinition> readOnlyProps = ImmutableList.builder();
+
+    for (MemberDefinition prop : cls.props) {
       // Generate the setter for readOnly properties.
       if (prop.value.isObjectLit()) {
         Node readOnlyValue = NodeUtil.getFirstPropMatchingKey(prop.value, "readOnly");
         if (readOnlyValue != null && readOnlyValue.isTrue()) {
-          block.addChildToBack(makeReadOnlySetter(prop.name.getString(), propType, qualifiedPath));
+          block.addChildToBack(makeReadOnlySetter(prop.name.getString(), qualifiedPath));
+          readOnlyProps.add(prop);
         }
       }
     }
+
+    return readOnlyProps.build();
   }
 
   /**
@@ -428,17 +454,16 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    * Adds the generated setter for a readonly property.
    * @see https://www.polymer-project.org/0.8/docs/devguide/properties.html#read-only
    */
-  private Node makeReadOnlySetter(String propName, JSTypeExpression propType,
-      String qualifiedPath) {
+  private Node makeReadOnlySetter(String propName, String qualifiedPath) {
     String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
     Node fnNode = IR.function(IR.name(""), IR.paramList(IR.name(propName)), IR.block());
     Node exprResNode = IR.exprResult(
         IR.assign(NodeUtil.newQName(compiler, qualifiedPath + setterName), fnNode));
 
     JSDocInfoBuilder info = new JSDocInfoBuilder(true);
-    info.recordVisibility(Visibility.PRIVATE);
-    info.recordExport();
-    info.recordParameter(propName, propType);
+    // This is overriding a generated function which was added to the interface in
+    // {@code addInterfaceExterns}.
+    info.recordOverride();
     exprResNode.getFirstChild().setJSDocInfo(info.build());
 
     return exprResNode;
@@ -484,6 +509,53 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   /**
+   * Adds an interface for the given ClassDefinition to externs. This allows generated setter
+   * functions for read-only properties to avoid renaming altogether.
+   * @see https://www.polymer-project.org/0.8/docs/devguide/properties.html#read-only
+   */
+  private void addInterfaceExterns(final ClassDefinition cls,
+      List<MemberDefinition> readOnlyProps) {
+    Node block = IR.block();
+
+    String interfaceName = getInterfaceName(cls);
+    Node fnNode = IR.function(IR.name(""), IR.paramList(), IR.block());
+    Node varNode = IR.var(NodeUtil.newQName(compiler, interfaceName), fnNode);
+
+    JSDocInfoBuilder info = new JSDocInfoBuilder(true);
+    info.recordInterface();
+    varNode.setJSDocInfo(info.build());
+    block.addChildToBack(varNode);
+
+    for (MemberDefinition prop : readOnlyProps) {
+      // Add all _set* functions to avoid renaming.
+      String propName = prop.name.getString();
+      String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+      Node setterExprNode = IR.exprResult(
+          NodeUtil.newQName(compiler, interfaceName + ".prototype." + setterName));
+
+      JSDocInfoBuilder setterInfo = new JSDocInfoBuilder(true);
+      JSTypeExpression propType = getTypeFromProperty(prop);
+      setterInfo.recordParameter(propName, propType);
+      setterExprNode.getFirstChild().setJSDocInfo(setterInfo.build());
+
+      block.addChildToBack(setterExprNode);
+    }
+
+    Node parent = polymerElementExterns.getParent();
+    Node stmts = block.removeChildren();
+    parent.addChildrenToBack(stmts);
+
+    compiler.reportCodeChange();
+  }
+
+  /**
+   * @return The name of the generated extern interface which the element implements.
+   */
+  private String getInterfaceName(final ClassDefinition cls) {
+    return "Polymer" + cls.target.getQualifiedName().replaceAll("\\.", "_") + "Interface";
+  }
+
+  /**
    * @return The proper constructor doc for the Polymer call.
    */
   private JSDocInfoBuilder getConstructorDoc(final ClassDefinition cls) {
@@ -492,8 +564,12 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
     JSTypeExpression baseType = new JSTypeExpression(
         new Node(Token.BANG, IR.string(getPolymerElementType(cls))), VIRTUAL_FILE);
-
     constructorDoc.recordBaseType(baseType);
+
+    String interfaceName = getInterfaceName(cls);
+    JSTypeExpression interfaceType = new JSTypeExpression(
+        new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
+    constructorDoc.recordImplementedInterface(interfaceType);
 
     // TODO(jlklein): Remove this when the renamer is fully feature complete, catching all
     // rename issues listed in http://goo.gl/L4mdQA.
