@@ -1188,10 +1188,13 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitPrototypeAssignment(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
-      getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
       QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
       RawNominalType rawType = currentScope.getNominalType(ctorQname);
+      if (rawType == null) {
+        return;
+      }
+      getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       for (Node objLitChild : getProp.getParent().getLastChild().children()) {
         mayAddPropToPrototype(rawType, objLitChild.getString(), objLitChild,
             objLitChild.getLastChild());

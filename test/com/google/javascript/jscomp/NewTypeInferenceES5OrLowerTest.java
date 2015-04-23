@@ -7642,6 +7642,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @constructor @extends {Parent} */ function Child(){}");
   }
 
+  public void testDirectPrototypeAssignmentDoesntCrash() {
+    typeCheck("function UndeclaredCtor(parent) {}\n"
+            + "UndeclaredCtor.prototype = {__proto__: Object.prototype};");
+  }
+
   public void testDebuggerStatementDoesntCrash() {
     typeCheck("debugger;");
   }
