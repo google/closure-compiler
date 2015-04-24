@@ -1371,6 +1371,12 @@ XDomainRequest.prototype.contentType;
 Navigator.prototype.browserLanguage;
 
 /**
+ * @type {number}
+ * @see https://msdn.microsoft.com/en-us/library/ie/hh772144(v=vs.85).aspx
+ */
+Navigator.prototype.msMaxTouchPoints;
+
+/**
  * @type {boolean}
  * @see http://blogs.msdn.com/b/ie/archive/2011/09/20/touch-input-for-ie10-and-metro-style-apps.aspx
  */
