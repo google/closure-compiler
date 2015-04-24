@@ -2772,7 +2772,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @param {boolean} x */ function f(x) {}" +
         "/** @constructor */ var E = function(){};" +
-        "/** @type {Object<E, number>} */ var obj = {};" +
+        "/** @override */ E.prototype.toString = function() { return ''; };" +
+        "/** @type {Object<!E, number>} */ var obj = {};" +
         "for (var k in obj) {" +
         "  f(k);" +
         "}",
@@ -13199,6 +13200,183 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes(
         "/** @param {./Foo} z */ function f(z) {}",
         "Bad type annotation. Unknown type ./Foo");
+  }
+
+  public void testCheckObjectKeysBadKey1() throws Exception {
+    testTypes("/** @type {!Object<!Object, number>} */ var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysBadKey2() throws Exception {
+  testTypes("/** @type {!Object<function(), number>} */ var k;",
+      TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysBadKey3() throws Exception {
+    testTypes("/** @type {!Object<!Array<!Object>, number>} */ var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysBadKey4() throws Exception {
+    testTypes("/** @type {!Object<*, number>} */ var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysBadKey5() throws Exception {
+    testTypes("/** @type {(string|Object<Object, number>)} */ var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysBadKey6() throws Exception {
+    testTypes("/** @type {!Object<number, !Object<Object, number>>} */ var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysBadKey7() throws Exception {
+    testTypes(
+        "/** @constructor */\n" +
+        "var MyClass = function() {};\n" +
+        "/** @type {!Object<MyClass, number>} */\n" +
+        "var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysBadKey8() throws Exception {
+    testTypes(
+        "/** @enum{!Object} */\n" +
+        "var Enum = {};\n" +
+        "/** @type {!Object<Enum, number>} */\n" +
+        "var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysVariousTags1() throws Exception {
+    testTypes("/** @type {!Object<!Object, number>} */ var k;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysVariousTags2() throws Exception {
+    testTypes("/** @param {!Object<!Object, number>} a */ var f = function(a) {};",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysVariousTags3() throws Exception {
+    testTypes("/** @return {!Object<!Object, number>} */ var f = function() {return {}};",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysVariousTags4() throws Exception {
+    testTypes("/** @typedef {!Object<!Object, number>} */ var MyType;",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
+  public void testCheckObjectKeysGoodKey1() throws Exception {
+    testTypes("/** @type {!Object<number, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey2() throws Exception {
+    testTypes("/** @type {!Object<string, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey3() throws Exception {
+    testTypes("/** @type {!Object<boolean, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey4() throws Exception {
+    testTypes("/** @type {!Object<null, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey5() throws Exception {
+    testTypes("/** @type {!Object<undefined, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey6() throws Exception {
+    testTypes("/** @type {!Object<!Date, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey7() throws Exception {
+    testTypes("/** @type {!Object<!RegExp, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey8() throws Exception {
+    testTypes("/** @type {!Object<!Array, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey9() throws Exception {
+    testTypes("/** @type {!Object<!Array<number>, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey10() throws Exception {
+    testTypes("/** @type {!Object<?, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey11() throws Exception {
+    testTypes("/** @type {!Object<(string|number), number>} */ var k");
+  }
+
+  public void testCheckObjectKeysGoodKey12() throws Exception {
+    testTypes("/** @type {!Object<Object>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey13() throws Exception {
+    testTypes(
+        "/** @interface */\n" +
+        "var MyInterface = function() {};\n" +
+        "/** @type {!Object<!MyInterface, number>} */\n" +
+        "var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey14() throws Exception {
+    testTypes(
+        "/** @typedef {{a: number}} */ var MyRecord;\n" +
+        "/** @type {!Object<MyRecord, number>} */ var k;");
+  }
+
+  public void testCheckObjectKeysGoodKey15() throws Exception {
+    testTypes(
+        "/** @enum{number} */\n" +
+        "var Enum = {};\n" +
+        "/** @type {!Object<Enum, number>} */\n" +
+        "var k;");
+  }
+
+  public void testCheckObjectKeysClassWithToString() throws Exception {
+    testTypes(
+        "/** @constructor */\n" +
+        "var MyClass = function() {};\n" +
+        "/** @override*/\n" +
+        "MyClass.prototype.toString = function() { return ''; };\n" +
+
+        "/** @type {!Object<!MyClass, number>} */\n" +
+        "var k;");
+  }
+
+  public void testCheckObjectKeysClassInheritsToString() throws Exception {
+    testTypes(
+        "/** @constructor */\n" +
+        "var Parent = function() {};\n" +
+        "/** @override */\n" +
+        "Parent.prototype.toString = function() { return ''; };\n" +
+
+        "/** @constructor @extends {Parent} */\n" +
+        "var Child = function() {};\n" +
+
+        "/** @type {!Object<!Child, number>} */\n" +
+        "var k;");
+  }
+
+  public void testCheckObjectKeysForEnumUsingClassWithToString() throws Exception {
+    testTypes(
+        "/** @constructor */\n" +
+        "var MyClass = function() {};\n" +
+        "/** @override*/\n" +
+        "MyClass.prototype.toString = function() { return ''; };\n" +
+
+        "/** @enum{!MyClass} */\n" +
+        "var Enum = {};\n" +
+
+        "/** @type {!Object<Enum, number>} */\n" +
+        "var k;");
   }
 
   private void testTypes(String js) throws Exception {

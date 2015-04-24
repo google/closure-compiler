@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassType;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
@@ -41,8 +42,10 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import com.google.javascript.rhino.jstype.UnionType;
 
@@ -241,6 +244,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "ILLEGAL_OBJLIT_KEY",
           "Illegal key, the object literal is a {0}");
+
+  static final DiagnosticType NON_STRINGIFIABLE_OBJECT_KEY =
+      DiagnosticType.disabled(
+          "JSC_NON_STRINGIFIABLE_OBJECT_KEY",
+          "Object type \"{0}\" contains non-stringifiable key and it may lead to an "
+          + "error. Please use ES6 Map instead or implement your own Map structure.");
 
   // If a diagnostic is disabled by default, do not add it in this list
   // TODO(dimvar): Either INEXISTENT_PROPERTY shouldn't be here, or we should
@@ -848,6 +857,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (typeable) {
       doPercentTypedAccounting(t, n);
     }
+
+    checkJsdocInfoContainsObjectWithBadKey(t, n);
   }
 
   private void checkTypeofString(NodeTraversal t, Node n, String s) {
@@ -2088,5 +2099,153 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private JSType getNativeType(JSTypeNative typeId) {
     return typeRegistry.getNativeType(typeId);
+  }
+
+  /**
+   * Checks if current node contains js docs and checks all types specified in the js doc whether
+   * they have Objects with potentially invalid keys. For example: {@code
+   * Object<!Object, number>}. If such type is found, a warning is reported for the current node.
+   */
+  private void checkJsdocInfoContainsObjectWithBadKey(NodeTraversal t, Node n) {
+    if (n.getJSDocInfo() != null) {
+      JSDocInfo info = n.getJSDocInfo();
+      checkTypeContainsObjectWithBadKey(t, n, info.getType());
+      checkTypeContainsObjectWithBadKey(t, n, info.getReturnType());
+      checkTypeContainsObjectWithBadKey(t, n, info.getTypedefType());
+      for (String param : info.getParameterNames()) {
+        checkTypeContainsObjectWithBadKey(t, n, info.getParameterType(param));
+      }
+    }
+  }
+
+  private void checkTypeContainsObjectWithBadKey(NodeTraversal t, Node n, JSTypeExpression type) {
+    if (type != null && type.getRoot().getJSType() != null) {
+      JSType realType = type.getRoot().getJSType();
+      JSType objectWithBadKey = findObjectWithNonStringifiableKey(realType);
+      if (objectWithBadKey != null){
+        compiler.report(t.makeError(n, NON_STRINGIFIABLE_OBJECT_KEY, objectWithBadKey.toString()));
+      }
+    }
+  }
+
+  /**
+   * Checks whether type is stringifiable. Stringifiable is a type that can be converted to string
+   * and give unique results for different objects. For example objects have native toString()
+   * method that on chrome returns "[object Object]" for all objects making it useless when used
+   * as keys. At the same time native types like numbers can be safely converted to strings and
+   * used as keys. Also user might have provided custom toString() methods for a class making it
+   * suitable for using as key.
+   */
+  private boolean isStringifiable(JSType type) {
+    // Check built-in types
+    if (type.isUnknownType() || type.isNumber() || type.isString() || type.isBooleanObjectType()
+        || type.isBooleanValueType() || type.isDateType() || type.isRegexpType()
+        || type.isInterface() || type.isRecordType() || type.isNullType() || type.isVoidType()) {
+      return true;
+    }
+
+    // For enums check that underlying type is stringifiable.
+    if (type.toMaybeEnumElementType() != null) {
+      return isStringifiable(type.toMaybeEnumElementType().getPrimitiveType());
+    }
+
+    // Array is stringifiable if it doesn't have template type or if it does have it, the template
+    // type must be also stringifiable.
+    // Good: Array, Array.<number>
+    // Bad: Array.<!Object>
+    if (type.isArrayType()) {
+      return true;
+    }
+    if (type.isTemplatizedType()) {
+      TemplatizedType templatizedType = type.toMaybeTemplatizedType();
+      if (templatizedType.getReferencedType().isArrayType()) {
+        return isStringifiable(templatizedType.getTemplateTypes().get(0));
+      }
+    }
+
+    // Handle interfaces and classes.
+    if (type.isObject()) {
+      ObjectType objectType = type.toMaybeObjectType();
+      JSType constructor = objectType.getConstructor();
+      // Interfaces considered stringifiable as user might implement toString() method in
+      // classes-implementations.
+      if (constructor != null && constructor.isInterface()) {
+        return true;
+      }
+      // This is user-defined class so check if it has custom toString() method.
+      return classHasToString(objectType);
+    }
+
+    // For union type every alternate must be stringifiable.
+    if (type.isUnionType()) {
+      for (JSType alternateType : type.toMaybeUnionType().getAlternates()) {
+        if (!isStringifiable(alternateType)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Checks whether current type is Object type with non-stringifable key.
+   */
+  private boolean isObjectTypeWithNonStringifiableKey(JSType type) {
+    if (!type.isTemplatizedType()) {
+      return false;
+    }
+    TemplatizedType templatizedType = type.toMaybeTemplatizedType();
+    if (templatizedType.getReferencedType().isNativeObjectType()
+        && templatizedType.getTemplateTypes().size() > 1) {
+      return !isStringifiable(templatizedType.getTemplateTypes().get(0));
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Checks whether type (or one of its component if is composed type like union or templatized
+   * type) has Object with non-stringifiable key. For example {@code Object.<!Object, number>}.
+   *
+   * @return non-stringifiable type which is used as key or null if all there are no such types.
+   */
+  private JSType findObjectWithNonStringifiableKey(JSType type) {
+    if (isObjectTypeWithNonStringifiableKey(type)) {
+      return type;
+    }
+    if (type.isUnionType()) {
+      for (JSType alternateType : type.toMaybeUnionType().getAlternates()) {
+        JSType result = findObjectWithNonStringifiableKey(alternateType);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    if (type.isTemplatizedType()) {
+      for (JSType templateType : type.toMaybeTemplatizedType().getTemplateTypes()) {
+        JSType result = findObjectWithNonStringifiableKey(templateType);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Checks whether class has overridden toString() method. All objects has native toString()
+   * method but we ignore it as it is not useful so we need user-provided toString() method.
+   */
+  private boolean classHasToString(ObjectType type) {
+    Property toStringProperty = type.getOwnSlot("toString");
+    if (toStringProperty != null) {
+      return toStringProperty.getType().isFunctionType();
+    }
+    ObjectType parent = type.getParentScope();
+    if (!parent.isNativeObjectType()) {
+      return classHasToString(parent);
+    }
+    return false;
   }
 }

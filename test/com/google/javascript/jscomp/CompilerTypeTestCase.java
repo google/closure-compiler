@@ -119,6 +119,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
         DiagnosticGroups.MISPLACED_TYPE_ANNOTATION, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());
     return options;
   }
