@@ -21,8 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.rhino.Node;
 
@@ -35,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,13 +79,13 @@ public final class PerformanceTracker {
   private final Deque<Stats> currentPass = new ArrayDeque<>();
 
   /** Summary stats by pass name. */
-  private final Map<String, Stats> summary = Maps.newHashMap();
+  private final Map<String, Stats> summary = new HashMap<>();
 
   // To share with the rest of the program
   private ImmutableMap<String, Stats> summaryCopy;
 
   /** Stats for each run of a compiler pass. */
-  private final List<Stats> log = Lists.newArrayList();
+  private final List<Stats> log = new ArrayList<>();
 
   PerformanceTracker(Node jsRoot, TracerMode mode) {
     this.jsRoot = jsRoot;
@@ -266,7 +265,7 @@ public final class PerformanceTracker {
     try {
       calcTotalStats();
 
-      ArrayList<Entry<String, Stats>> statEntries = Lists.newArrayList();
+      ArrayList<Entry<String, Stats>> statEntries = new ArrayList<>();
       statEntries.addAll(summary.entrySet());
       Collections.sort(statEntries, new Comparator<Entry<String, Stats>>() {
         @Override

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.deps;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
@@ -25,6 +24,7 @@ import com.google.javascript.jscomp.JSError;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -227,7 +227,7 @@ public abstract class JsFileLineParser {
    */
   List<String> parseJsStringArray(String input)
       throws ParseException {
-    List<String> results = Lists.newArrayList();
+    List<String> results = new ArrayList<>();
     int indexStart = input.indexOf('[');
     int indexEnd = input.lastIndexOf(']');
     if ((indexStart == -1) || (indexEnd == -1)) {

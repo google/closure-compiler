@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp.webservice.common;
 
-import com.google.common.collect.Sets;
-
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -78,7 +77,7 @@ public class Protocol {
     private static final Set<String> permittedKeys = getPermittedKeys();
 
     private static Set<String> getPermittedKeys() {
-      Set<String> keys = Sets.newHashSet();
+      Set<String> keys = new HashSet<>();
 
       for (RequestKey key : RequestKey.values()) {
         keys.add(key.asGetParameter());

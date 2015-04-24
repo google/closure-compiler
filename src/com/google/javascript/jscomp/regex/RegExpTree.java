@@ -19,10 +19,10 @@ package com.google.javascript.jscomp.regex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1008,7 +1008,7 @@ public abstract class RegExpTree {
 
     @Override
     public RegExpTree simplify(String flags) {
-      List<RegExpTree> alternatives = Lists.newArrayList();
+      List<RegExpTree> alternatives = new ArrayList<>();
       for (RegExpTree alternative : this.alternatives) {
         alternative = alternative.simplify(flags);
         if (alternative instanceof Alternation) {
@@ -1370,7 +1370,7 @@ public abstract class RegExpTree {
       }
       CharRanges best = ranges;
       if (flags.indexOf('i') >= 0) {
-        Set<CharRanges> options = Sets.newLinkedHashSet();
+        Set<CharRanges> options = new LinkedHashSet<>();
         options.add(CaseCanonicalize.expandToAllMatched(ranges));
         options.add(CaseCanonicalize.reduceToMinimum(ranges));
 
@@ -1635,7 +1635,7 @@ public abstract class RegExpTree {
     @Override
     public RegExpTree simplify(final String flags) {
       class Simplifier {
-        final List<RegExpTree> simplified = Lists.newArrayList();
+        final List<RegExpTree> simplified = new ArrayList<>();
 
         void simplify(RegExpTree t) {
           if (t instanceof Concatenation) {

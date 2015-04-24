@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -26,6 +25,7 @@ import com.google.javascript.rhino.Token;
 import com.google.protobuf.TextFormat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -99,7 +99,7 @@ class InstrumentFunctions implements CompilerPass {
       this.reportFunctionName = "";
       this.reportFunctionExitName = "";
       this.appNameSetter = "";
-      this.declarationsToRemove = Lists.newArrayList();
+      this.declarationsToRemove = new ArrayList<>();
       return;
     }
 

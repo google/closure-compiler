@@ -23,7 +23,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
@@ -39,6 +38,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -176,8 +177,8 @@ public final class CompilerTest extends TestCase {
     options.inputSourceMaps = inputSourceMaps;
     Compiler compiler = new Compiler();
     compiler.setOriginalSourcesLoader(createFileLoader(originalSources));
-    compiler.init(Lists.<SourceFile>newArrayList(),
-        Lists.<SourceFile>newArrayList(), options);
+    compiler.init(new ArrayList<SourceFile>(),
+         new ArrayList<SourceFile>(), options);
 
     assertEquals(
         OriginalMapping.newBuilder()
@@ -226,7 +227,7 @@ public final class CompilerTest extends TestCase {
     options.setClosurePass(true);
     options.setProcessCommonJSModules(true);
     Compiler compiler = new Compiler();
-    compiler.init(Lists.<SourceFile>newArrayList(), inputs, options);
+    compiler.init(new ArrayList<SourceFile>(), inputs, options);
     compiler.parseInputs();
     return compiler;
   }
@@ -497,8 +498,8 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testDefineNoOverriding() throws Exception {
-    Map<String, Node> emptyMap = Maps.newHashMap();
-    List<String> defines = Lists.newArrayList();
+    Map<String, Node> emptyMap = new HashMap<>();
+    List<String> defines = new ArrayList<>();
     assertDefineOverrides(emptyMap, defines);
   }
 

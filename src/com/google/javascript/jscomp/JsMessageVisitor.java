@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.CaseFormat;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Builder;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -26,6 +24,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -139,10 +138,10 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
    * use it for tracking duplicated message ids in the source code.
    */
   private final Map<String, MessageLocation> messageNames =
-      Maps.newHashMap();
+       new HashMap<>();
 
   private final Map<Var, JsMessage> unnamedMessages =
-      Maps.newHashMap();
+       new HashMap<>();
 
   /**
    * List of found goog.getMsg call nodes.
@@ -583,7 +582,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
    */
   private void extractFromFunctionNode(Builder builder, Node node)
       throws MalformedException {
-    Set<String> phNames = Sets.newHashSet();
+    Set<String> phNames = new HashSet<>();
 
     for (Node fnChild : node.children()) {
       switch (fnChild.getType()) {
@@ -713,7 +712,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     parseMessageTextNode(builder, stringLiteralNode);
 
     Node objLitNode = stringLiteralNode.getNext();
-    Set<String> phNames = Sets.newHashSet();
+    Set<String> phNames = new HashSet<>();
     if (objLitNode != null) {
       // Register the placeholder names
       if (!objLitNode.isObjectLit()) {

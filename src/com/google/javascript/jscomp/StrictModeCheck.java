@@ -15,13 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -202,8 +202,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   /** Checks that object literal keys are valid. */
   private static void checkObjectLiteral(NodeTraversal t, Node n) {
-    Set<String> getters = Sets.newHashSet();
-    Set<String> setters = Sets.newHashSet();
+    Set<String> getters = new HashSet<>();
+    Set<String> setters = new HashSet<>();
     for (Node key = n.getFirstChild();
          key != null;
          key = key.getNext()) {

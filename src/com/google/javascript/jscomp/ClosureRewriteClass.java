@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -30,6 +28,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -325,7 +324,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
   private static List<MemberDefinition> objectLitToList(
       Node objlit) {
-    List<MemberDefinition> result = Lists.newArrayList();
+    List<MemberDefinition> result = new ArrayList<>();
     for (Node keyNode : objlit.children()) {
       result.add(
           new MemberDefinition(
@@ -497,7 +496,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     // merge suppressions
-    Set<String> suppressions = Sets.newHashSet();
+    Set<String> suppressions = new HashSet<>();
     suppressions.addAll(classInfo.getSuppressions());
     suppressions.addAll(ctorInfo.getSuppressions());
     if (!suppressions.isEmpty()) {

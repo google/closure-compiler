@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.BasicBlock;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
@@ -25,6 +24,7 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollect
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.Node;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -77,7 +77,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
   // NOTE(nicksantos): It's a lot faster to use a shared Set that
   // we clear after each method call, because the Set never gets too big.
-  private final Set<BasicBlock> blocksWithDeclarations = Sets.newHashSet();
+  private final Set<BasicBlock> blocksWithDeclarations = new HashSet<>();
 
   public VariableReferenceCheck(AbstractCompiler compiler,
       CheckLevel checkLevel) {

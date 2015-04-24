@@ -19,11 +19,11 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -213,7 +213,7 @@ public final class JsMessageExtractorTest extends TestCase {
   }
 
   public void testMeaningAnnotation() {
-    List<JsMessage> msgs = Lists.newArrayList(
+    List<JsMessage> msgs = new ArrayList<>(
         extractMessages(
             "var MSG_UNNAMED_1 = goog.getMsg('foo');",
             "var MSG_UNNAMED_2 = goog.getMsg('foo');"));
@@ -221,7 +221,7 @@ public final class JsMessageExtractorTest extends TestCase {
     assertEquals(msgs.get(1).getId(), msgs.get(0).getId());
     assertEquals(msgs.get(0), msgs.get(1));
 
-    msgs = Lists.newArrayList(
+    msgs = new ArrayList<>(
         extractMessages(
             "var MSG_UNNAMED_1 = goog.getMsg('foo');",
             "/** @meaning bar */ var MSG_UNNAMED_2 = goog.getMsg('foo');"));

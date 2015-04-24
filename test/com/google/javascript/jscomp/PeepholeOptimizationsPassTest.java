@@ -19,11 +19,11 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -83,7 +83,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
      * AST for the first optimization and then a second time for the second).
      */
 
-    final List<String> visitationLog = Lists.newArrayList();
+    final List<String> visitationLog = new ArrayList<>();
 
     AbstractPeepholeOptimization note1Applied =
         new AbstractPeepholeOptimization() {
@@ -132,7 +132,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
     @Override
     public Node optimizeSubtree(Node node) {
       if (node.isVar()) {
-        Set<Node> nodesToRemove = Sets.newHashSet();
+        Set<Node> nodesToRemove = new HashSet<>();
 
         for (Node child : node.children()) {
           if ("x".equals(child.getString())) {

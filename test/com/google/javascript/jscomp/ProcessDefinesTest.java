@@ -18,11 +18,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -38,7 +38,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     allowSourcelessWarnings();
   }
 
-  private Map<String, Node> overrides = Maps.newHashMap();
+  private Map<String, Node> overrides = new HashMap<>();
   private GlobalNamespace namespace;
 
   @Override

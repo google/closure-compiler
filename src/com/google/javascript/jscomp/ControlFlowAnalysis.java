@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -29,6 +28,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -148,8 +148,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   public void process(Node externs, Node root) {
     this.root = root;
     astPositionCounter = 0;
-    astPosition = Maps.newHashMap();
-    nodePriorities = Maps.newHashMap();
+    astPosition = new HashMap<>();
+    nodePriorities = new HashMap<>();
     cfg = new AstControlFlowGraph(computeFallThrough(root), nodePriorities,
                                   edgeAnnotations);
     NodeTraversal.traverse(compiler, root, this);

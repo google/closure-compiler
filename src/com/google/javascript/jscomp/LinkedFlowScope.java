@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.type.FlowScope;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -27,6 +25,8 @@ import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -355,7 +355,7 @@ class LinkedFlowScope implements FlowScope {
    * a slot for x or z.
    */
   private Map<String, StaticTypedSlot<JSType>> allFlowSlots() {
-    Map<String, StaticTypedSlot<JSType>> slots = Maps.newHashMap();
+    Map<String, StaticTypedSlot<JSType>> slots = new HashMap<>();
     for (LinkedFlowSlot slot = lastSlot;
          slot != null; slot = slot.parent) {
       if (!slots.containsKey(slot.getName())) {
@@ -402,7 +402,7 @@ class LinkedFlowScope implements FlowScope {
 
     // All the symbols defined before this point in the local flow.
     // May not include lazily declared qualified names.
-    private Map<String, StaticTypedSlot<JSType>> symbols = Maps.newHashMap();
+    private Map<String, StaticTypedSlot<JSType>> symbols = new HashMap<>();
 
     // Used to help make lookup faster for LinkedFlowScopes by recording
     // symbols that may be redefined "soon", for an arbitrary definition
@@ -412,7 +412,7 @@ class LinkedFlowScope implements FlowScope {
     // and this is the closest FlatFlowScopeCache, then that symbol is marked
     // "dirty". In this way, we don't waste time looking in the LinkedFlowScope
     // list for symbols that aren't defined anywhere nearby.
-    final Set<String> dirtySymbols = Sets.newHashSet();
+    final Set<String> dirtySymbols = new HashSet<>();
 
     // The cache at the bottom of the lattice.
     FlatFlowScopeCache(TypedScope functionScope) {
@@ -456,7 +456,7 @@ class LinkedFlowScope implements FlowScope {
       //    not in joinedScopeA. Join the two types.
       // 5) The type is declared in joinedScopeA and joinedScopeB. Join
       //    the two types.
-      Set<String> symbolNames = Sets.newHashSet(symbols.keySet());
+      Set<String> symbolNames = new HashSet<>(symbols.keySet());
       symbolNames.addAll(slotsB.keySet());
 
       for (String name : symbolNames) {

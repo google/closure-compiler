@@ -16,8 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
@@ -25,6 +23,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -64,8 +63,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final String globalSymbolNamespace;
   private final boolean addExtern;
   private final boolean assumeCrossModuleNames;
-  private final Set<String> crossModuleNames = Sets.newHashSet();
-  private final Set<String> maybeReferencesThis = Sets.newHashSet();
+  private final Set<String> crossModuleNames = new HashSet<>();
+  private final Set<String> maybeReferencesThis = new HashSet<>();
 
   /**
    * Constructor for the RescopeGlobalSymbols compiler pass.
@@ -288,7 +287,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
    */
   private class RewriteScopeCallback extends AbstractPostOrderCallback {
 
-    List<ModuleGlobal> preDeclarations = Lists.newArrayList();
+    List<ModuleGlobal> preDeclarations = new ArrayList<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {

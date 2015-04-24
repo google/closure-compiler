@@ -33,6 +33,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -640,7 +641,7 @@ public abstract class CompilerTestCase extends TestCase  {
    */
   public void test(String[] js, String[] expected, DiagnosticType error,
                    DiagnosticType warning, String description) {
-    List<SourceFile> inputs = Lists.newArrayList();
+    List<SourceFile> inputs = new ArrayList<>();
     for (int i = 0; i < js.length; i++) {
       inputs.add(SourceFile.fromCode("input" + i, js[i]));
     }
@@ -928,7 +929,7 @@ public abstract class CompilerTestCase extends TestCase  {
     if (expected == null) {
       test(compiler, (List<SourceFile>) null, error, warning, description);
     } else {
-      List<SourceFile> inputs = Lists.newArrayList();
+      List<SourceFile> inputs = new ArrayList<>();
       for (int i = 0; i < expected.length; i++) {
         inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
       }
@@ -978,7 +979,7 @@ public abstract class CompilerTestCase extends TestCase  {
     int numRepetitions = getNumRepetitions();
     ErrorManager[] errorManagers = new ErrorManager[numRepetitions];
     int aggregateWarningCount = 0;
-    List<JSError> aggregateWarnings = Lists.newArrayList();
+    List<JSError> aggregateWarnings = new ArrayList<>();
     boolean hasCodeChanged = false;
 
     assertFalse("Code should not change before processing",
@@ -1237,7 +1238,7 @@ public abstract class CompilerTestCase extends TestCase  {
    * Parses expected JS inputs and returns the root of the parse tree.
    */
   protected Node parseExpectedJs(String[] expected) {
-    List<SourceFile> inputs = Lists.newArrayList();
+    List<SourceFile> inputs = new ArrayList<>();
     for (int i = 0; i < expected.length; i++) {
       inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
     }
@@ -1392,7 +1393,7 @@ public abstract class CompilerTestCase extends TestCase  {
 
   /** Finds the first matching qualified name node in post-traversal order. */
   protected final Node findQualifiedNameNode(final String name, Node root) {
-    final List<Node> matches = Lists.newArrayList();
+    final List<Node> matches = new ArrayList<>();
     NodeUtil.visitPostOrder(root,
         new NodeUtil.Visitor() {
           @Override public void visit(Node n) {

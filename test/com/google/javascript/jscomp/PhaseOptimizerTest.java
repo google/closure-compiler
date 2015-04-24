@@ -26,6 +26,7 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -34,7 +35,7 @@ import java.util.Random;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class PhaseOptimizerTest extends TestCase {
-  private final List<String> passesRun = Lists.newArrayList();
+  private final List<String> passesRun = new ArrayList<>();
   private final Node dummyRoot = new Node(Token.BLOCK);
   private PhaseOptimizer optimizer;
   private Compiler compiler;
@@ -147,7 +148,7 @@ public final class PhaseOptimizerTest extends TestCase {
 
   public void testPassOrdering() {
     Loop loop = optimizer.addFixedPointLoop();
-    List<String> optimalOrder = Lists.newArrayList(
+    List<String> optimalOrder = new ArrayList<>(
         PhaseOptimizer.OPTIMAL_ORDER);
     Random random = new Random();
     while (!optimalOrder.isEmpty()) {
@@ -159,7 +160,7 @@ public final class PhaseOptimizerTest extends TestCase {
   }
 
   public void testProgress() {
-    final List<Double> progressList = Lists.newArrayList();
+    final List<Double> progressList = new ArrayList<>();
     compiler = new Compiler() {
       @Override void setProgress(double p, String name) {
         progressList.add(p);

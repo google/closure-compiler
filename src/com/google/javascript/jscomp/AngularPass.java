@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -161,7 +160,7 @@ class AngularPass extends AbstractPostOrderCallback
     if (params != null) {
       return createStringsFromParamList(params);
     }
-    return Lists.newArrayList();
+    return new ArrayList<>();
   }
 
   /**
@@ -171,7 +170,7 @@ class AngularPass extends AbstractPostOrderCallback
    */
   private static List<Node> createStringsFromParamList(Node params) {
     Node param = params.getFirstChild();
-    ArrayList<Node> names = Lists.newArrayList();
+    ArrayList<Node> names = new ArrayList<>();
     while (param != null && param.isName()) {
       names.add(IR.string(param.getString()).srcref(param));
       param = param.getNext();

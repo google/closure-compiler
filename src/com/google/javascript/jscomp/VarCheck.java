@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
@@ -26,6 +25,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -87,7 +87,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   // Vars that still need to be declared in externs. These will be declared
   // at the end of the pass, or when we see the equivalent var declared
   // in the normal code.
-  private final Set<String> varsToDeclareInExterns = Sets.newHashSet();
+  private final Set<String> varsToDeclareInExterns = new HashSet<>();
 
   private final AbstractCompiler compiler;
 

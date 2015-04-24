@@ -28,7 +28,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -42,6 +41,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.UnknownType;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -69,7 +69,7 @@ class TypeValidator {
   // TODO(nicksantos): Provide accessors to better filter the list of type
   // mismatches. For example, if we pass (Cake|null) where only Cake is
   // allowed, that doesn't mean we should invalidate all Cakes.
-  private final List<TypeMismatch> mismatches = Lists.newArrayList();
+  private final List<TypeMismatch> mismatches = new ArrayList<>();
 
   // User warnings
   private static final String FOUND_REQUIRED =

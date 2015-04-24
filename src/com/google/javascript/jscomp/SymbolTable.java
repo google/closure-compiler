@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
@@ -49,8 +48,10 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.UnionType;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,12 +119,12 @@ public final class SymbolTable {
    * All syntactic scopes in the program, uniquely identified by the node where
    * they're declared.
    */
-  private final Map<Node, SymbolScope> scopes = Maps.newLinkedHashMap();
+  private final Map<Node, SymbolScope> scopes = new LinkedHashMap<>();
 
   /**
    * All Nodes with JSDocInfo in the program.
    */
-  private final List<Node> docInfos = Lists.newArrayList();
+  private final List<Node> docInfos = new ArrayList<>();
 
   private SymbolScope globalScope = null;
 
@@ -729,7 +730,7 @@ public final class SymbolTable {
 
   void fillPropertyScopes() {
     // Collect all object symbols.
-    List<Symbol> types = Lists.newArrayList();
+    List<Symbol> types = new ArrayList<>();
 
     // Create a property scope for each named type and each anonymous object,
     // and populate it with that object's properties.
@@ -1055,7 +1056,7 @@ public final class SymbolTable {
   public static final class Symbol extends SimpleSlot {
     // Use a linked hash map, so that the results are deterministic
     // (and so the declaration always comes first).
-    private final Map<Node, Reference> references = Maps.newLinkedHashMap();
+    private final Map<Node, Reference> references = new LinkedHashMap<>();
 
     private final SymbolScope scope;
 
@@ -1180,7 +1181,7 @@ public final class SymbolTable {
     private final Node rootNode;
     private final SymbolScope parent;
     private final JSType typeOfThis;
-    private final Map<String, Symbol> ownSymbols = Maps.newLinkedHashMap();
+    private final Map<String, Symbol> ownSymbols = new LinkedHashMap<>();
     private final int scopeDepth;
 
     // The number of inner anonymous functions that we've given names to.
@@ -1433,7 +1434,7 @@ public final class SymbolTable {
     // then null should be on the stack. But this should be a rare
     // occurrence. We should strive to always be able to come up
     // with some symbol for 'this'.
-    private final List<Symbol> thisStack = Lists.newArrayList();
+    private final List<Symbol> thisStack = new ArrayList<>();
 
     ThisRefCollector(AbstractCompiler compiler) {
       this.compiler = compiler;

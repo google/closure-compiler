@@ -18,11 +18,11 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -57,7 +57,7 @@ class OptimizeReturns
   public void process(
       Node externs, Node root, SimpleDefinitionFinder definitions) {
     // Find all function nodes whose callers ignore the return values.
-    List<Node> toOptimize = Lists.newArrayList();
+    List<Node> toOptimize = new ArrayList<>();
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {
       if (!defSite.inExterns && !callResultsMaybeUsed(definitions, defSite)) {
         toOptimize.add(defSite.definition.getRValue());

@@ -17,11 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -164,7 +164,7 @@ final class NameGenerator {
       }
       return result;
     }
-    Set<Character> charSet = Sets.newLinkedHashSet(Chars.asList(chars));
+    Set<Character> charSet = new LinkedHashSet<>(Chars.asList(chars));
     for (char reservedCharacter : reservedCharacters) {
       charSet.remove(reservedCharacter);
     }

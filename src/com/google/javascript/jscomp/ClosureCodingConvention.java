@@ -30,6 +30,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -275,7 +276,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
         n.getChildCount() >= 3) {
       Node typeArray = callName.getNext().getNext();
       if (typeArray.isArrayLit()) {
-        List<String> typeNames = Lists.newArrayList();
+        List<String> typeNames = new ArrayList<>();
         for (Node name = typeArray.getFirstChild(); name != null;
              name = name.getNext()) {
           if (name.isString()) {

@@ -299,13 +299,13 @@ public class CommandLineRunner extends
         hidden = true,
         usage = "Source map location mapping separated by a '|' " +
         "(i.e. filesystem-path|webserver-path)")
-    private List<String> sourceMapLocationMapping = Lists.newArrayList();
+    private List<String> sourceMapLocationMapping = new ArrayList<>();
 
     @Option(name = "--source_map_input",
         hidden = true,
         usage = "Source map locations for input files, separated by a '|', " +
         "(i.e. input-file-path|input-source-map)")
-    private List<String> sourceMapInputs = Lists.newArrayList();
+    private List<String> sourceMapInputs = new ArrayList<>();
 
     // Used to define the flag, values are stored by the handler.
     @SuppressWarnings("unused")

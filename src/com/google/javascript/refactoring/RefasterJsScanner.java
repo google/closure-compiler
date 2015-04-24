@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.javascript.jscomp.AbstractCompiler;
@@ -34,6 +33,7 @@ import com.google.javascript.rhino.Node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -168,8 +168,8 @@ public final class RefasterJsScanner extends Scanner {
     Node scriptRoot = new JsAst(SourceFile.fromCode(
         "template", templateJs)).getAstRoot(compiler);
 
-    Map<String, Node> beforeTemplates = Maps.newHashMap();
-    Map<String, Node> afterTemplates = Maps.newHashMap();
+    Map<String, Node> beforeTemplates = new HashMap<>();
+    Map<String, Node> afterTemplates = new HashMap<>();
     for (Node templateNode : scriptRoot.children()) {
       if (templateNode.isFunction()) {
         String fnName = templateNode.getFirstChild().getQualifiedName();

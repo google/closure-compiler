@@ -17,10 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -124,7 +124,7 @@ class NodeIterators {
      * Only exposed for testing purposes.
      */
     List<Node> currentAncestors() {
-      List<Node> list = Lists.newArrayList(ancestors);
+      List<Node> list = new ArrayList<>(ancestors);
       Collections.reverse(list);
       return list;
     }

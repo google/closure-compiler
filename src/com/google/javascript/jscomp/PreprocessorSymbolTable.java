@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSymbolTable;
@@ -28,6 +27,7 @@ import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -44,7 +44,7 @@ final class PreprocessorSymbolTable
   /**
    * All preprocessor symbols are globals.
    */
-  private final Map<String, SimpleSlot> symbols = Maps.newHashMap();
+  private final Map<String, SimpleSlot> symbols = new HashMap<>();
 
   private final Multimap<String, Reference> refs =
       ArrayListMultimap.create();

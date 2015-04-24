@@ -17,13 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -40,8 +40,8 @@ import java.util.Set;
 class RemoveUnusedClassProperties
     implements CompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
-  private Set<String> used = Sets.newHashSet();
-  private List<Node> candidates = Lists.newArrayList();
+  private Set<String> used = new HashSet<>();
+  private List<Node> candidates = new ArrayList<>();
 
   private final boolean removeUnusedConstructorProperties;
 

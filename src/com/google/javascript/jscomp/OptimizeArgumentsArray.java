@@ -17,13 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -108,7 +108,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     if (currentArgumentsAccess != null) {
       argumentsAccessStack.push(currentArgumentsAccess);
     }
-    currentArgumentsAccess = Lists.newLinkedList();
+    currentArgumentsAccess = new LinkedList<>();
   }
 
   @Override

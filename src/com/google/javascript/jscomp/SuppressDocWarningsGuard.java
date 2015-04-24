@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Maps;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -38,7 +38,7 @@ class SuppressDocWarningsGuard extends WarningsGuard {
 
   /** Warnings guards for each suppressible warnings group, indexed by name. */
   private final Map<String, DiagnosticGroupWarningsGuard> suppressors =
-      Maps.newHashMap();
+       new HashMap<>();
 
   /**
    * The suppressible groups, indexed by name.

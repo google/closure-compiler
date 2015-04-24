@@ -16,14 +16,15 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.google.javascript.jscomp.NodeIterators.FunctionlessLocalScope;
 import com.google.javascript.jscomp.NodeIterators.LocalVarMotion;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 /**
@@ -137,7 +138,7 @@ public final class NodeIteratorsTest extends TestCase {
    */
   private void testVarMotionWithCode(String code,
       List<Integer> expectedTokens) {
-    List<Node> ancestors = Lists.newArrayList();
+    List<Node> ancestors = new ArrayList<>();
 
     // Add an empty node to the beginning of the code and start there.
     Node root = (new Compiler()).parseTestCode(";" + code);
@@ -167,7 +168,7 @@ public final class NodeIteratorsTest extends TestCase {
         currentAncestors.get(0),
         currentAncestors.get(1),
         currentAncestors.get(2));
-    List<Integer> actualTokens = Lists.newArrayList();
+    List<Integer> actualTokens = new ArrayList<>();
     while (moveIt.hasNext()) {
       actualTokens.add(moveIt.next().getType());
     }

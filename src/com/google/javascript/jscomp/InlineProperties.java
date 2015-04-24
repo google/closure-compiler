@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
@@ -29,6 +28,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,7 +62,7 @@ final class InlineProperties implements CompilerPass {
   private static final PropertyInfo INVALIDATED = new PropertyInfo(
       null, null);
 
-  private final Map<String, PropertyInfo> props = Maps.newHashMap();
+  private final Map<String, PropertyInfo> props = new HashMap<>();
 
   private Set<JSType> invalidatingTypes;
 

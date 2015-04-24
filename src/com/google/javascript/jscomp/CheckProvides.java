@@ -15,13 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -56,8 +56,8 @@ class CheckProvides implements HotSwapCompilerPass {
   }
 
   private class CheckProvidesCallback extends AbstractShallowCallback {
-    private final Map<String, Node> provides = Maps.newHashMap();
-    private final Map<String, Node> ctors = Maps.newHashMap();
+    private final Map<String, Node> provides = new HashMap<>();
+    private final Map<String, Node> ctors = new HashMap<>();
     private final CodingConvention convention;
 
     CheckProvidesCallback(CodingConvention convention){

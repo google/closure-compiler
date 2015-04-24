@@ -17,8 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CallGraph.Callsite;
 import com.google.javascript.jscomp.CallGraph.Function;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
@@ -26,7 +24,9 @@ import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -389,7 +389,7 @@ public final class CallGraphTest extends CompilerTestCase {
 
     CallGraph callgraph = compileAndRunBackward(source);
 
-    final Set<Function> poisonedFunctions = Sets.newHashSet();
+    final Set<Function> poisonedFunctions = new HashSet<>();
 
     // Set up initial poisoned functions
     for (Callsite callsite : callgraph.getAllCallsites()) {
@@ -446,7 +446,7 @@ public final class CallGraphTest extends CompilerTestCase {
 
     CallGraph callgraph = compileAndRunForward(source);
 
-    final Set<Function> poisonedFunctions = Sets.newHashSet();
+    final Set<Function> poisonedFunctions = new HashSet<>();
 
     // Set up initial poisoned functions
     for (Callsite callsite : callgraph.getAllCallsites()) {
@@ -505,7 +505,7 @@ public final class CallGraphTest extends CompilerTestCase {
 
     CallGraph callgraph = compileAndRunForward(source);
 
-    final Set<Function> reachableFunctions = Sets.newHashSet();
+    final Set<Function> reachableFunctions = new HashSet<>();
 
     // We assume the main function and X are our roots
     reachableFunctions.add(callgraph.getMainFunction());
@@ -571,7 +571,7 @@ public final class CallGraphTest extends CompilerTestCase {
 
     CallGraph callgraph = compileAndRunBackward(source);
 
-    final Set<Function> reachableFunctions = Sets.newHashSet();
+    final Set<Function> reachableFunctions = new HashSet<>();
 
     // We assume the main function and X are our roots
     reachableFunctions.add(callgraph.getMainFunction());
@@ -767,7 +767,7 @@ public final class CallGraphTest extends CompilerTestCase {
     assertThat(callsitesTargetingC).hasSize(3);
 
     Collection<Callsite> expectedFunctionsCallingC =
-        Sets.newHashSet(functionB.getCallsitesInFunction());
+        new HashSet<>(functionB.getCallsitesInFunction());
     expectedFunctionsCallingC.addAll(functionC.getCallsitesInFunction());
 
     assertTrue(callsitesTargetingC.containsAll(expectedFunctionsCallingC));
@@ -1065,7 +1065,7 @@ public final class CallGraphTest extends CompilerTestCase {
    */
   private List<String> getCallsiteTargetNames(Collection<Callsite>
       callsites) {
-    List<String> result = Lists.newArrayList();
+    List<String> result = new ArrayList<>();
 
     for (Callsite callsite : callsites) {
       Node targetExpressionNode = callsite.getAstNode().getFirstChild();

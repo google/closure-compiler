@@ -23,6 +23,7 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public final class MinimizedConditionTest extends TestCase {
     Compiler compiler = new Compiler();
     List<SourceFile> input =
         Lists.newArrayList(SourceFile.fromCode("code", code));
-    List<SourceFile> externs = Lists.newArrayList();
+    List<SourceFile> externs = new ArrayList<>();
     compiler.init(externs, input, new CompilerOptions());
     Node root = compiler.parseInputs();
     assertNotNull("Unexpected parse error(s): " + Joiner.on("\n").join(compiler.getErrors()), root);

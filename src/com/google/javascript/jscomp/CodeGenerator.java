@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -28,6 +27,7 @@ import com.google.javascript.rhino.TokenStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -40,7 +40,7 @@ class CodeGenerator {
   private static final String GT_ESCAPED = "\\x3e";
 
   // A memoizer for formatting strings as JS strings.
-  private final Map<String, String> escapedJsStrings = Maps.newHashMap();
+  private final Map<String, String> escapedJsStrings = new HashMap<>();
 
   private static final char[] HEX_CHARS
       = { '0', '1', '2', '3', '4', '5', '6', '7',

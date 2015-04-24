@@ -24,9 +24,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -39,7 +37,10 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +75,7 @@ public final class JSModuleGraph {
    * dependencyMap should be filled from leaf to root so that
    * getTransitiveDepsDeepestFirst can use its results directly.
    */
-  private Map<JSModule, Set<JSModule>> dependencyMap = Maps.newHashMap();
+  private Map<JSModule, Set<JSModule>> dependencyMap = new HashMap<>();
 
   /**
    * Creates a module graph from a list of modules in dependency order.
@@ -88,10 +89,10 @@ public final class JSModuleGraph {
    */
   public JSModuleGraph(List<JSModule> modulesInDepOrder) {
     Preconditions.checkState(
-        modulesInDepOrder.size() == Sets.newHashSet(modulesInDepOrder).size(),
+        modulesInDepOrder.size() == new HashSet<>(modulesInDepOrder).size(),
         "Found duplicate modules");
     modules = ImmutableList.copyOf(modulesInDepOrder);
-    modulesByDepth = Lists.newArrayList();
+    modulesByDepth = new ArrayList<>();
 
     for (JSModule module : modulesInDepOrder) {
       int depth = 0;
@@ -125,7 +126,7 @@ public final class JSModuleGraph {
    * Gets all modules indexed by name.
    */
   Map<String, JSModule> getModulesByName() {
-    Map<String, JSModule> result = Maps.newHashMap();
+    Map<String, JSModule> result = new HashMap<>();
     for (JSModule m : modules) {
       result.put(m.getName(), m);
     }
@@ -437,7 +438,7 @@ public final class JSModuleGraph {
       List<CompilerInput> inputs,
       SortedDependencies<CompilerInput> sorter)
       throws MissingModuleException, MissingProvideException {
-    Set<CompilerInput> entryPointInputs = Sets.newLinkedHashSet();
+    Set<CompilerInput> entryPointInputs = new LinkedHashSet<>();
     Map<String, JSModule> modulesByName = getModulesByName();
 
     if (depOptions.shouldPruneDependencies()) {

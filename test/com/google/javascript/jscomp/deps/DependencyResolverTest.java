@@ -20,11 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 import junit.framework.TestCase;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -81,7 +81,7 @@ public final class DependencyResolverTest extends TestCase {
   }
 
   public void testSharedSeenSetNoBaseFile() throws Exception {
-    Set<String> seen = Sets.newHashSet();
+    Set<String> seen = new HashSet<>();
 
     Collection<String> deps = resolver.getDependencies(
     "goog.require('g');goog.require('f');goog.require('c');", seen, false);
@@ -94,7 +94,7 @@ public final class DependencyResolverTest extends TestCase {
   }
 
   public void testSharedSeenSetNoBaseFileNewRequires() throws Exception {
-    Set<String> seen = Sets.newHashSet();
+    Set<String> seen = new HashSet<>();
 
     Collection<String> deps = resolver.getDependencies(
         "goog.require('f');goog.require('c');", seen, false);
@@ -107,7 +107,7 @@ public final class DependencyResolverTest extends TestCase {
   }
 
   public void testSharedSeenSetNoBaseFileMultipleProvides() throws Exception {
-    Set<String> seen = Sets.newHashSet();
+    Set<String> seen = new HashSet<>();
 
     Collection<String> deps = resolver.getDependencies(
         "goog.require('h');goog.require('i');", seen, false);
@@ -117,7 +117,7 @@ public final class DependencyResolverTest extends TestCase {
   }
 
   public void testNonExistentProvideLoose() throws Exception {
-    Set<String> seen = Sets.newHashSet();
+    Set<String> seen = new HashSet<>();
     resolver = new DefaultDependencyResolver(ImmutableList.of(fakeDeps1), false);
     Collection<String> deps = resolver.getDependencies(
         "goog.require('foo');goog.require('d');", seen, false);
@@ -126,7 +126,7 @@ public final class DependencyResolverTest extends TestCase {
   }
 
   public void testNonExistentProvideStrict() throws Exception {
-    Set<String> seen = Sets.newHashSet();
+    Set<String> seen = new HashSet<>();
     resolver = new DefaultDependencyResolver(ImmutableList.of(fakeDeps1), true);
     try {
       Collection<String> deps = resolver.getDependencies(

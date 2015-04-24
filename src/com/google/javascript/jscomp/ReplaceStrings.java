@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -34,6 +33,8 @@ import com.google.javascript.rhino.TypeIRegistry;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,10 +64,10 @@ class ReplaceStrings extends AbstractPostOrderCallback
   private final TypeIRegistry registry;
 
   //
-  private final Map<String, Config> functions = Maps.newHashMap();
+  private final Map<String, Config> functions = new HashMap<>();
   private final Multimap<String, String> methods = HashMultimap.create();
   private final NameGenerator nameGenerator;
-  private final Map<String, Result> results = Maps.newLinkedHashMap();
+  private final Map<String, Result> results = new LinkedHashMap<>();
 
   /**
    * Describes a function to look for a which parameters to replace.

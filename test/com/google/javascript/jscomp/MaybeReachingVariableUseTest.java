@@ -18,11 +18,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -152,7 +153,7 @@ public final class MaybeReachingVariableUseTest extends TestCase {
     useDef = new MaybeReachingVariableUse(cfg, scope, compiler);
     useDef.analyze();
     def = null;
-    uses = Lists.newArrayList();
+    uses = new ArrayList<>();
     new NodeTraversal(compiler,new LabelFinder()).traverse(n);
     assertNotNull("Code should have an instruction labeled D", def);
     assertFalse("Code should have an instruction labeled starting withing U",

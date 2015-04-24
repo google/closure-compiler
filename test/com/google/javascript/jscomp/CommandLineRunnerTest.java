@@ -27,7 +27,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
@@ -38,6 +37,8 @@ import junit.framework.TestCase;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +71,7 @@ public final class CommandLineRunnerTest extends TestCase {
     STAR
   }
 
-  private List<String> args = Lists.newArrayList();
+  private List<String> args = new ArrayList<>();
 
   /** Externs for the test */
   private static final List<SourceFile> DEFAULT_EXTERNS = ImmutableList.of(
@@ -116,7 +117,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void setUp() throws Exception {
     super.setUp();
     externs = DEFAULT_EXTERNS;
-    filenames = Maps.newHashMap();
+    filenames = new HashMap<>();
     lastCompiler = null;
     lastArg = null;
     outReader = new ByteArrayOutputStream();
@@ -124,7 +125,7 @@ public final class CommandLineRunnerTest extends TestCase {
     useStringComparison = false;
     useModules = ModulePattern.NONE;
     args.clear();
-    exitCodes = Lists.newArrayList();
+    exitCodes = new ArrayList<>();
   }
 
   @Override
@@ -1539,7 +1540,7 @@ public final class CommandLineRunnerTest extends TestCase {
     Supplier<List<JSModule>> modulesSupplier = null;
 
     if (useModules == ModulePattern.NONE) {
-      List<SourceFile> inputs = Lists.newArrayList();
+      List<SourceFile> inputs = new ArrayList<>();
       for (int i = 0; i < original.length; i++) {
         inputs.add(SourceFile.fromCode(getFilename(i), original[i]));
       }
@@ -1576,7 +1577,7 @@ public final class CommandLineRunnerTest extends TestCase {
     String[] argStrings = args.toArray(new String[] {});
     CommandLineRunner runner = new CommandLineRunner(argStrings);
     Compiler compiler = runner.createCompiler();
-    List<SourceFile> inputs = Lists.newArrayList();
+    List<SourceFile> inputs = new ArrayList<>();
     for (int i = 0; i < original.length; i++) {
       inputs.add(SourceFile.fromCode(getFilename(i), original[i]));
     }

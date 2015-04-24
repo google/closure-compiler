@@ -18,14 +18,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -93,14 +93,14 @@ class CollapseVariableDeclarations implements CompilerPass {
   /**
    * Collapses to do in this pass.
    */
-  private final List<Collapse> collapses = Lists.newArrayList();
+  private final List<Collapse> collapses = new ArrayList<>();
 
   /**
    * Nodes we've already looked at for collapsing, so that we don't look at them
    * again (we look ahead when examining what nodes can be collapsed, and the
    * node traversal may give them to us again)
    */
-  private final Set<Node> nodesToCollapse = Sets.newHashSet();
+  private final Set<Node> nodesToCollapse = new HashSet<>();
 
   CollapseVariableDeclarations(AbstractCompiler compiler) {
     Preconditions.checkState(!compiler.getLifeCycleStage().isNormalized());
@@ -133,7 +133,7 @@ class CollapseVariableDeclarations implements CompilerPass {
     // var x;
     // then we should not create new VAR nodes for it later in the tree.
     // This is a workaround for a bug in Firefox.
-    private final Set<Var> blacklistedVars = Sets.newHashSet();
+    private final Set<Var> blacklistedVars = new HashSet<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {

@@ -20,11 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
@@ -35,8 +32,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,7 +148,7 @@ public class DepsGenerator {
    */
   protected void cleanUpDuplicatedFiles(Map<String, DependencyInfo> depsFiles,
       Map<String, DependencyInfo> jsFiles) {
-    Set<String> depsPathsCopy = Sets.newHashSet(depsFiles.keySet());
+    Set<String> depsPathsCopy = new HashSet<>(depsFiles.keySet());
     for (String path : depsPathsCopy) {
       if (mergeStrategy != InclusionStrategy.WHEN_IN_SRCS) {
         jsFiles.remove(path);
@@ -178,12 +178,12 @@ public class DepsGenerator {
       Iterable<DependencyInfo> parsedFileDependencies) {
     // Create a map of namespace -> file providing it.
     // Also report any duplicate provides.
-    Map<String, DependencyInfo> providesMap = Maps.newHashMap();
+    Map<String, DependencyInfo> providesMap = new HashMap<>();
     addToProvideMap(preparsedFileDepedencies, providesMap);
     addToProvideMap(parsedFileDependencies, providesMap);
     // For each require in the parsed sources:
     for (DependencyInfo depInfo : parsedFileDependencies) {
-      List<String> requires = Lists.newArrayList(depInfo.getRequires());
+      List<String> requires = new ArrayList<>(depInfo.getRequires());
       for (int i = 0, l = requires.size(); i < l; ++i) {
         String namespace = requires.get(i);
         // Check for multiple requires.
@@ -275,7 +275,7 @@ public class DepsGenerator {
    */
   private Map<String, DependencyInfo> parseDepsFiles() throws IOException {
     DepsFileParser depsParser = createDepsFileParser();
-    Map<String, DependencyInfo> depsFiles = Maps.newHashMap();
+    Map<String, DependencyInfo> depsFiles = new HashMap<>();
     for (SourceFile file : deps) {
       if (!shouldSkipDepsFile(file)) {
         List<DependencyInfo>
@@ -318,7 +318,7 @@ public class DepsGenerator {
    */
   private Map<String, DependencyInfo> parseSources(
       Set<String> preparsedFiles) throws IOException {
-    Map<String, DependencyInfo> parsedFiles = Maps.newHashMap();
+    Map<String, DependencyInfo> parsedFiles = new HashMap<>();
     JsFileParser jsParser = new JsFileParser(errorManager);
 
     for (SourceFile file : srcs) {
@@ -429,7 +429,7 @@ public class DepsGenerator {
 
   static List<SourceFile> createSourceFilesFromPaths(
       Collection<String> paths) {
-    List<SourceFile> files = Lists.newArrayList();
+    List<SourceFile> files = new ArrayList<>();
     for (String path : paths) {
       files.add(SourceFile.fromFile(path));
     }

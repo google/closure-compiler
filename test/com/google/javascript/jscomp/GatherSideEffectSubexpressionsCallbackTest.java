@@ -17,13 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -160,12 +160,12 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
   private void checkKeepSimplifiedShortCircuitExpr(Node root,
                                                    List<String> expected) {
     Compiler compiler = new Compiler();
-    List<Node> replacements = Lists.newArrayList();
+    List<Node> replacements = new ArrayList<>();
     GetReplacementSideEffectSubexpressions accumulator =
         new GetReplacementSideEffectSubexpressions(compiler, replacements);
     accumulator.keepSimplifiedShortCircuitExpression(root);
 
-    List<String> actual = Lists.newArrayList();
+    List<String> actual = new ArrayList<>();
     for (Node replacement : replacements) {
       actual.add(compiler.toSource(replacement));
     }
@@ -177,13 +177,13 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                            boolean elseHasSideEffects,
                                            List<String> expected) {
     Compiler compiler = new Compiler();
-    List<Node> replacements = Lists.newArrayList();
+    List<Node> replacements = new ArrayList<>();
     GetReplacementSideEffectSubexpressions accumulator =
         new GetReplacementSideEffectSubexpressions(compiler, replacements);
     accumulator.keepSimplifiedHookExpression(root,
                                              thenHasSideEffects,
                                              elseHasSideEffects);
-    List<String> actual = Lists.newArrayList();
+    List<String> actual = new ArrayList<>();
     for (Node replacement : replacements) {
       actual.add(compiler.toSource(replacement));
     }

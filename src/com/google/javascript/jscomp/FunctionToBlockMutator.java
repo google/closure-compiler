@@ -19,14 +19,14 @@ import static com.google.javascript.jscomp.FunctionArgumentInjector.THIS_MARKER;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -243,11 +243,11 @@ class FunctionToBlockMutator {
 
       // An arg map that will be updated to contain the
       // safe aliases.
-      Map<String, Node> newArgMap = Maps.newHashMap(argMap);
+      Map<String, Node> newArgMap = new HashMap<>(argMap);
 
       // Declare the alias in the same order as they
       // are declared.
-      List<Node> newVars = Lists.newLinkedList();
+      List<Node> newVars = new LinkedList<>();
       // NOTE: argMap is a linked map so we get the parameters in the
       // order that they were declared.
       for (Entry<String, Node> entry : argMap.entrySet()) {

@@ -21,8 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -42,6 +40,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -93,8 +92,8 @@ class PureFunctionIdentifier implements CompilerPass {
                                 DefinitionProvider definitionProvider) {
     this.compiler = compiler;
     this.definitionProvider = definitionProvider;
-    this.functionSideEffectMap = Maps.newHashMap();
-    this.allFunctionCalls = Lists.newArrayList();
+    this.functionSideEffectMap = new HashMap<>();
+    this.allFunctionCalls = new ArrayList<>();
     this.externs = null;
     this.root = null;
   }
@@ -153,7 +152,7 @@ class PureFunctionIdentifier implements CompilerPass {
       Node function = entry.getKey();
       FunctionInformation functionInfo = entry.getValue();
 
-      Set<String> depFunctionNames = Sets.newHashSet();
+      Set<String> depFunctionNames = new HashSet<>();
       for (Node callSite : functionInfo.getCallsInFunctionBody()) {
         Collection<Definition> defs =
             getCallableDefinitions(definitionProvider,
@@ -191,7 +190,7 @@ class PureFunctionIdentifier implements CompilerPass {
   private static Collection<Definition> getCallableDefinitions(
       DefinitionProvider definitionProvider, Node name) {
     if (name.isGetProp() || name.isName()) {
-      List<Definition> result = Lists.newArrayList();
+      List<Definition> result = new ArrayList<>();
 
       Collection<Definition> decls =
           definitionProvider.getDefinitionsReferencedAt(name);
@@ -1128,7 +1127,7 @@ class PureFunctionIdentifier implements CompilerPass {
 
     @Override
     public String toString() {
-      List<String> status = Lists.newArrayList();
+      List<String> status = new ArrayList<>();
       if (extern()) {
         status.add("extern");
       }

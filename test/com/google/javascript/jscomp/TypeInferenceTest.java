@@ -33,7 +33,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
@@ -50,6 +49,7 @@ import com.google.javascript.rhino.testing.Asserts;
 
 import junit.framework.TestCase;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -64,7 +64,7 @@ public final class TypeInferenceTest extends TestCase {
   private JSType assumedThisType;
   private FlowScope returnScope;
   private static final Map<String, AssertionFunctionSpec>
-      ASSERTION_FUNCTION_MAP = Maps.newHashMap();
+      ASSERTION_FUNCTION_MAP = new HashMap<>();
   static {
     for (AssertionFunctionSpec func :
         new ClosureCodingConvention().getAssertionFunctions()) {
@@ -80,7 +80,7 @@ public final class TypeInferenceTest extends TestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.initOptions(options);
     registry = compiler.getTypeRegistry();
-    assumptions = Maps.newHashMap();
+    assumptions = new HashMap<>();
     returnScope = null;
   }
 

@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1056,7 +1055,7 @@ class GlobalNamespace
 
     void addRefInternal(Ref ref) {
       if (refs == null) {
-        refs = Lists.newArrayList();
+        refs = new ArrayList<>();
       }
       refs.add(ref);
     }

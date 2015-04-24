@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.Base64;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -31,6 +30,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -93,9 +94,9 @@ class ReplaceIdGenerators implements CompilerPass {
       String previousMapSerialized) {
     this.compiler = compiler;
     this.generatePseudoNames = generatePseudoNames;
-    nameGenerators = Maps.newLinkedHashMap();
-    idGeneratorMaps = Maps.newLinkedHashMap();
-    consistNameMap = Maps.newLinkedHashMap();
+    nameGenerators = new LinkedHashMap<>();
+    idGeneratorMaps = new LinkedHashMap<>();
+    consistNameMap = new LinkedHashMap<>();
 
     Map<String, BiMap<String, String>> previousMap;
     previousMap = parsePreviousResults(previousMapSerialized);
@@ -114,7 +115,7 @@ class ReplaceIdGenerators implements CompilerPass {
               createNameSupplier(
                   RenameStrategy.MAPPED, map));
         }
-        idGeneratorMaps.put(name, Maps.<String, String>newLinkedHashMap());
+        idGeneratorMaps.put(name, new LinkedHashMap<String, String>());
       }
     }
   }
@@ -263,7 +264,7 @@ class ReplaceIdGenerators implements CompilerPass {
       }
 
       if (doc.isConsistentIdGenerator()) {
-        consistNameMap.put(name, Maps.<String, String>newLinkedHashMap());
+        consistNameMap.put(name, new LinkedHashMap<String, String>());
         nameGenerators.put(
             name, createNameSupplier(
                 RenameStrategy.CONSISTENT, previousMap.get(name)));
@@ -287,7 +288,7 @@ class ReplaceIdGenerators implements CompilerPass {
       } else {
         throw new IllegalStateException("unexpected");
       }
-      idGeneratorMaps.put(name, Maps.<String, String>newLinkedHashMap());
+      idGeneratorMaps.put(name, new LinkedHashMap<String, String>());
     }
   }
 
@@ -415,7 +416,7 @@ class ReplaceIdGenerators implements CompilerPass {
       return Collections.emptyMap();
     }
 
-    Map<String, BiMap<String, String>> resultMap = Maps.newHashMap();
+    Map<String, BiMap<String, String>> resultMap = new HashMap<>();
     BufferedReader reader = new BufferedReader(new StringReader(serializedMap));
     BiMap<String, String> currentSectionMap = null;
 

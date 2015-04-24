@@ -17,11 +17,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,7 +64,7 @@ public class DiagnosticGroup implements Serializable {
 
   // DiagnosticGroups with only a single DiagnosticType.
   private static final Map<DiagnosticType, DiagnosticGroup> singletons =
-      Maps.newHashMap();
+       new HashMap<>();
 
   /** Create a diagnostic group that matches only the given type. */
   public static synchronized DiagnosticGroup forType(DiagnosticType type) {
@@ -85,7 +85,7 @@ public class DiagnosticGroup implements Serializable {
    * Create a composite group.
    */
   public DiagnosticGroup(String name, DiagnosticGroup ...groups) {
-    Set<DiagnosticType> set = Sets.newHashSet();
+    Set<DiagnosticType> set = new HashSet<>();
 
     for (DiagnosticGroup group : groups) {
       set.addAll(group.types);

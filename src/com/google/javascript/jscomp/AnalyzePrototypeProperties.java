@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
@@ -28,8 +26,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,11 +94,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
   // All the real NameInfo for prototype properties, hashed by the name
   // of the property that they represent.
-  private final Map<String, NameInfo> propertyNameInfo = Maps.newLinkedHashMap();
+  private final Map<String, NameInfo> propertyNameInfo = new LinkedHashMap<>();
 
   // All the NameInfo for global functions, hashed by the name of the
   // global variable that it's assigned to.
-  private final Map<String, NameInfo> varNameInfo = Maps.newLinkedHashMap();
+  private final Map<String, NameInfo> varNameInfo = new LinkedHashMap<>();
 
   /**
    * Creates a new pass for analyzing prototype properties.
@@ -160,7 +160,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * Returns information on all prototype properties.
    */
   public Collection<NameInfo> getAllNameInfo() {
-    List<NameInfo> result = Lists.newArrayList(propertyNameInfo.values());
+    List<NameInfo> result = new ArrayList<>(propertyNameInfo.values());
     result.addAll(varNameInfo.values());
     return result;
   }

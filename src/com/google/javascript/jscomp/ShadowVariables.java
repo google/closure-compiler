@@ -26,6 +26,7 @@ import com.google.javascript.rhino.Node;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -100,7 +101,7 @@ class ShadowVariables implements CompilerPass {
     this.assignments = assignments;
     this.varsByFrequency = varsByFrequency;
     this.oldPseudoNameMap = pseudoNameMap;
-    this.deltaPseudoNameMap = Maps.newLinkedHashMap();
+    this.deltaPseudoNameMap = new LinkedHashMap<>();
   }
 
   @Override

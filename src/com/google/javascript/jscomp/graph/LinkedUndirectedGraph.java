@@ -18,11 +18,11 @@ package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Maps;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +38,7 @@ import java.util.Map;
 public final class LinkedUndirectedGraph<N, E>
     extends UndiGraph<N, E> implements GraphvizGraph {
   protected final Map<N, LinkedUndirectedGraphNode<N, E>> nodes =
-      Maps.newHashMap();
+       new HashMap<>();
 
   @Override
   public SubGraph<N, E> newSubGraph() {

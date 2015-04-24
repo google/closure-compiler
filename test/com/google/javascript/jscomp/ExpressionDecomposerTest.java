@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
@@ -25,7 +24,9 @@ import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
+
 import javax.annotation.Nullable;
 
 /**
@@ -528,7 +529,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   private void helperCanExposeFunctionExpression(
       DecompositionType expectedResult, String code, int call) {
     Compiler compiler = getCompiler();
-    Set<String> knownConstants = Sets.newHashSet();
+    Set<String> knownConstants = new HashSet<>();
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
         knownConstants, newScope());
@@ -557,7 +558,7 @@ public final class ExpressionDecomposerTest extends TestCase {
       ) {
     Compiler compiler = getCompiler();
     if (knownConstants == null) {
-      knownConstants = Sets.newHashSet();
+      knownConstants = new HashSet<>();
     }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
@@ -608,7 +609,7 @@ public final class ExpressionDecomposerTest extends TestCase {
       ) {
     Compiler compiler = getCompiler();
     if (knownConstants == null) {
-      knownConstants = Sets.newHashSet();
+      knownConstants = new HashSet<>();
     }
     ExpressionDecomposer decomposer = new ExpressionDecomposer(
         compiler, compiler.getUniqueNameIdSupplier(),
@@ -651,7 +652,7 @@ public final class ExpressionDecomposerTest extends TestCase {
       ) {
     Compiler compiler = getCompiler();
     if (knownConstants == null) {
-      knownConstants = Sets.newHashSet();
+      knownConstants = new HashSet<>();
     }
 
     ExpressionDecomposer decomposer = new ExpressionDecomposer(

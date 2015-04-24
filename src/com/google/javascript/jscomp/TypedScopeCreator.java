@@ -50,8 +50,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
@@ -76,6 +74,8 @@ import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -148,13 +148,13 @@ final class TypedScopeCreator implements ScopeCreator {
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
-  private final List<ObjectType> delegateProxyPrototypes = Lists.newArrayList();
+  private final List<ObjectType> delegateProxyPrototypes = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions =
-      Maps.newHashMap();
+       new HashMap<>();
 
   // Simple properties inferred about functions.
   private final Map<Node, AstFunctionContents> functionAnalysisResults =
-      Maps.newHashMap();
+       new HashMap<>();
 
   // For convenience
   private final ObjectType unknownType;
@@ -280,7 +280,7 @@ final class TypedScopeCreator implements ScopeCreator {
     // Remove all variables that were previously declared in this scripts.
     // First find all vars to remove then remove them because of iterator!
     Iterator<TypedVar> varIter = globalScope.getVars();
-    List<TypedVar> varsToRemove = Lists.newArrayList();
+    List<TypedVar> varsToRemove = new ArrayList<>();
     while (varIter.hasNext()) {
       TypedVar oldVar = varIter.next();
       if (scriptName.equals(oldVar.getInputName())) {
@@ -405,12 +405,12 @@ final class TypedScopeCreator implements ScopeCreator {
     final TypedScope scope;
 
     private final List<DeferredSetType> deferredSetTypes =
-        Lists.newArrayList();
+         new ArrayList<>();
 
     /**
      * Functions that we found in the global scope and not in externs.
      */
-    private final List<Node> nonExternFunctions = Lists.newArrayList();
+    private final List<Node> nonExternFunctions = new ArrayList<>();
 
     /**
      * Object literals with a @lends annotation aren't analyzed until we
@@ -431,7 +431,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * stubs, then we should declare UNKNOWN types.
      */
     private final List<StubDeclaration> stubDeclarations =
-        Lists.newArrayList();
+         new ArrayList<>();
 
     /**
      * The current source file that we're in.
@@ -591,7 +591,7 @@ final class TypedScopeCreator implements ScopeCreator {
           if (info != null &&
               info.getLendsName() != null) {
             if (lentObjectLiterals == null) {
-              lentObjectLiterals = Lists.newArrayList();
+              lentObjectLiterals = new ArrayList<>();
             }
             lentObjectLiterals.add(n);
           } else {

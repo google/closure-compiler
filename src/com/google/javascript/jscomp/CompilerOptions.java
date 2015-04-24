@@ -21,8 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -30,7 +28,9 @@ import com.google.javascript.rhino.SourcePosition;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1091,9 +1091,9 @@ public class CompilerOptions implements Serializable, Cloneable {
     stripTypePrefixes = Collections.emptySet();
     customPasses = null;
     markNoSideEffectCalls = false;
-    defineReplacements = Maps.newHashMap();
+    defineReplacements = new HashMap<>();
     tweakProcessing = TweakProcessing.OFF;
-    tweakReplacements = Maps.newHashMap();
+    tweakReplacements = new HashMap<>();
     moveFunctionDeclarations = false;
     appNameStr = "";
     recordFunctionInformation = false;
@@ -1107,7 +1107,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     replaceStringsFunctionDescriptions = Collections.emptyList();
     replaceStringsPlaceholderToken = "";
     replaceStringsReservedStrings = Collections.emptySet();
-    propertyInvalidationErrors = Maps.newHashMap();
+    propertyInvalidationErrors = new HashMap<>();
     inputSourceMaps = ImmutableMap.of();
 
     // Instrumentation
@@ -1184,7 +1184,7 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   private static Map<String, Node> getReplacementsHelper(
       Map<String, Object> source) {
-    Map<String, Node> map = Maps.newHashMap();
+    Map<String, Node> map = new HashMap<>();
     for (Map.Entry<String, Object> entry : source.entrySet()) {
       String name = entry.getKey();
       Object value = entry.getValue();
@@ -1482,7 +1482,7 @@ public class CompilerOptions implements Serializable, Cloneable {
       String placeholderToken, List<String> functionDescriptors) {
     this.replaceStringsPlaceholderToken = placeholderToken;
     this.replaceStringsFunctionDescriptions =
-        Lists.newArrayList(functionDescriptors);
+         new ArrayList<>(functionDescriptors);
   }
 
   public void setRemoveAbstractMethods(boolean remove) {
@@ -1794,7 +1794,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public void setPropertyInvalidationErrors(
       Map<String, CheckLevel> propertyInvalidationErrors) {
     this.propertyInvalidationErrors =
-        Maps.newHashMap(propertyInvalidationErrors);
+         new HashMap<>(propertyInvalidationErrors);
   }
 
   public void setIdeMode(boolean ideMode) {

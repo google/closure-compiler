@@ -19,7 +19,6 @@ package com.google.debugging.sourcemap;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
@@ -105,7 +104,7 @@ public abstract class SourceMapTestCase extends TestCase {
    * string.
    */
   private Map<String, Token> findTokens(Map<String, String> inputs) {
-    Map<String, Token> tokens = Maps.newLinkedHashMap();
+    Map<String, Token> tokens = new LinkedHashMap<>();
 
     for (Entry<String, String> entry : inputs.entrySet()) {
       findTokens(tokens, entry.getKey(), entry.getValue());
@@ -119,7 +118,7 @@ public abstract class SourceMapTestCase extends TestCase {
    * string.
    */
   private Map<String, Token> findTokens(String src) {
-    Map<String, Token> tokens = Maps.newLinkedHashMap();
+    Map<String, Token> tokens = new LinkedHashMap<>();
 
     findTokens(tokens, "", src);
 

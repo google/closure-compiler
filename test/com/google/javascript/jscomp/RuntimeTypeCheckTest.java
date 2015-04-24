@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
+
+import java.util.ArrayList;
 
 /**
  * Tests for {@link RuntimeTypeCheck}.
@@ -241,8 +242,8 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   private void testChecks(String js, String expected) {
     Compiler compiler = new Compiler();
-    compiler.init(Lists.<SourceFile>newArrayList(),
-                  Lists.<SourceFile>newArrayList(),
+    compiler.init(new ArrayList<SourceFile>(),
+                   new ArrayList<SourceFile>(),
                   new CompilerOptions());
     Node base = compiler.loadLibraryCode("base", true);
     Node typeCheck = compiler.loadLibraryCode("runtime_type_check", true);

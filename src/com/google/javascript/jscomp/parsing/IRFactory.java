@@ -119,6 +119,8 @@ import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -223,7 +225,7 @@ class IRFactory {
           "public", "static", "yield");
 
   private final Set<String> reservedKeywords;
-  private final Set<Comment> parsedComments = Sets.newHashSet();
+  private final Set<Comment> parsedComments = new HashSet<>();
 
   // @license text gets appended onto the fileLevelJsDocBuilder as found,
   // and stored in JSDocInfo for placeholder node.
@@ -250,7 +252,7 @@ class IRFactory {
     this.sourceString = sourceString;
     this.nextCommentIter = comments.iterator();
     this.currentComment = nextCommentIter.hasNext() ? nextCommentIter.next() : null;
-    this.newlines = Lists.newArrayList();
+    this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
     this.fileLevelJsDocBuilder = new JSDocInfoBuilder(
         config.parseJsDocDocumentation);

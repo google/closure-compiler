@@ -24,6 +24,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -61,7 +62,7 @@ public final class PathUtil {
       return path;
     }
 
-    List<String> dstFragments = Lists.newArrayList();
+    List<String> dstFragments = new ArrayList<>();
     for (String fragment : Splitter.on('/').split(path)) {
       if (fragment.equals("..")) {
         if (!dstFragments.isEmpty()) {

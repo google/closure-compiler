@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +32,7 @@ import java.util.List;
  * @author johnlenz@google.com (John Lenz)
  */
 class OptimizeCalls implements CompilerPass {
-  List<CallGraphCompilerPass> passes = Lists.newArrayList();
+  List<CallGraphCompilerPass> passes = new ArrayList<>();
   private AbstractCompiler compiler;
 
   OptimizeCalls(AbstractCompiler compiler) {

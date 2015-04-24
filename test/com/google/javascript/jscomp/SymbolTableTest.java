@@ -31,6 +31,7 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -1100,7 +1101,7 @@ public final class SymbolTableTest extends TestCase {
 
   /** Returns all non-extern vars. */
   private List<Symbol> getVars(SymbolTable table) {
-    List<Symbol> result = Lists.newArrayList();
+    List<Symbol> result = new ArrayList<>();
     for (Symbol symbol : table.getAllSymbols()) {
       if (symbol.getDeclaration() != null &&
           !symbol.getDeclaration().getNode().isFromExterns()) {

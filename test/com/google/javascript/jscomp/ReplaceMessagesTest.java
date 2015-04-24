@@ -19,9 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.JsMessage.Style;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -48,7 +48,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   @Override
   protected void setUp()  {
-    messages = Maps.newHashMap();
+    messages = new HashMap<>();
     strictReplacement = false;
     style = RELAX;
     compareJsDoc = false;

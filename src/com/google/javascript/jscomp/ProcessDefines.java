@@ -20,8 +20,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOL
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
@@ -35,7 +33,9 @@ import com.google.javascript.rhino.TypeIRegistry;
 
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -174,7 +174,7 @@ class ProcessDefines implements CompilerPass {
   private Map<String, DefineInfo> collectDefines(Node root,
       GlobalNamespace namespace) {
     // Find all the global names with a @define annotation
-    List<Name> allDefines = Lists.newArrayList();
+    List<Name> allDefines = new ArrayList<>();
     for (Name name : namespace.getNameIndex().values()) {
       Ref decl = name.getDeclaration();
       if (name.docInfo != null && name.docInfo.isDefine()) {
@@ -237,14 +237,14 @@ class ProcessDefines implements CompilerPass {
 
     CollectDefines(AbstractCompiler compiler, List<Name> listOfDefines) {
       this.compiler = compiler;
-      this.allDefines = Maps.newHashMap();
+      this.allDefines = new HashMap<>();
 
-      assignableDefines = Maps.newHashMap();
+      assignableDefines = new HashMap<>();
       assignAllowed = new ArrayDeque<>();
       assignAllowed.push(1);
 
       // Create a map of references to defines keyed by node for easy lookup
-      allRefInfo = Maps.newHashMap();
+      allRefInfo = new HashMap<>();
       for (Name name : listOfDefines) {
         Ref decl = name.getDeclaration();
         if (decl != null) {

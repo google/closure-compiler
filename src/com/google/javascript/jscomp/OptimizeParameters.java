@@ -18,13 +18,13 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -45,7 +45,7 @@ class OptimizeParameters
     implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
 
   private final AbstractCompiler compiler;
-  private final List<Node> removedNodes = Lists.newArrayList();
+  private final List<Node> removedNodes = new ArrayList<>();
 
   OptimizeParameters(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -184,7 +184,7 @@ class OptimizeParameters
   private void tryEliminateConstantArgs(
       DefinitionSite defSite, SimpleDefinitionFinder defFinder) {
 
-    List<Parameter> parameters = Lists.newArrayList();
+    List<Parameter> parameters = new ArrayList<>();
     boolean firstCall = true;
 
     // Build a list of parameters to remove

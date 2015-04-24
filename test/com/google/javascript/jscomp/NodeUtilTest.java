@@ -32,6 +32,7 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 import junit.framework.TestCase;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -684,10 +685,10 @@ public final class NodeUtilTest extends TestCase {
     assertNodeNames(Sets.newHashSet("foo", "goo"),
         NodeUtil.getVarsDeclaredInBranch(
             parse("var foo,goo;")));
-    assertNodeNames(Sets.<String>newHashSet(),
+    assertNodeNames(new HashSet<String>(),
         NodeUtil.getVarsDeclaredInBranch(
             parse("foo();")));
-    assertNodeNames(Sets.<String>newHashSet(),
+    assertNodeNames(new HashSet<String>(),
         NodeUtil.getVarsDeclaredInBranch(
             parse("function f(){var foo;}")));
     assertNodeNames(Sets.newHashSet("goo"),
@@ -696,7 +697,7 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private void assertNodeNames(Set<String> nodeNames, Collection<Node> nodes) {
-    Set<String> actualNames = Sets.newHashSet();
+    Set<String> actualNames = new HashSet<>();
     for (Node node : nodes) {
       actualNames.add(node.getString());
     }

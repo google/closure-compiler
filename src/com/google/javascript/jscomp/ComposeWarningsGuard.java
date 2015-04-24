@@ -18,11 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -43,7 +44,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
   // The order that the guards were added in.
-  private final Map<WarningsGuard, Integer> orderOfAddition = Maps.newHashMap();
+  private final Map<WarningsGuard, Integer> orderOfAddition = new HashMap<>();
   private int numberOfAdds = 0;
 
   private final Comparator<WarningsGuard> guardComparator =
@@ -93,7 +94,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
       }
 
       // Reverse the guards, so that they have the same order in the result.
-      addGuards(Lists.newArrayList(composeGuard.guards.descendingSet()));
+      addGuards(new ArrayList<>(composeGuard.guards.descendingSet()));
     } else {
       numberOfAdds++;
       orderOfAddition.put(guard, numberOfAdds);
@@ -160,7 +161,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
   }
 
   List<WarningsGuard> getGuards() {
-    return Collections.unmodifiableList(Lists.newArrayList(guards));
+    return Collections.unmodifiableList(new ArrayList<>(guards));
   }
 
   /**

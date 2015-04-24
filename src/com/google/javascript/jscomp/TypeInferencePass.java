@@ -17,12 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -49,7 +49,7 @@ class TypeInferencePass implements CompilerPass {
     this.topScope = topScope;
     this.scopeCreator = scopeCreator;
 
-    assertionFunctionsMap = Maps.newHashMap();
+    assertionFunctionsMap = new HashMap<>();
     for (AssertionFunctionSpec assertionFunction :
         compiler.getCodingConvention().getAssertionFunctions()) {
       assertionFunctionsMap.put(assertionFunction.getFunctionName(),

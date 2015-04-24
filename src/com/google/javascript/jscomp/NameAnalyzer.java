@@ -24,7 +24,6 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.SideEffectAccumulator;
@@ -38,8 +37,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -126,16 +127,16 @@ final class NameAnalyzer implements CompilerPass {
   private final AstChangeProxy changeProxy;
 
   /** Names that are externally defined */
-  private final Set<String> externalNames = Sets.newHashSet();
+  private final Set<String> externalNames = new HashSet<>();
 
   /** Name declarations or assignments, in post-order traversal order */
-  private final List<RefNode> refNodes = Lists.newArrayList();
+  private final List<RefNode> refNodes = new ArrayList<>();
 
   /**
    * When multiple names in the global scope point to the same object, we
    * call them aliases. Store a map from each alias name to the alias set.
    */
-  private final Map<String, AliasSet> aliases = Maps.newHashMap();
+  private final Map<String, AliasSet> aliases = new HashMap<>();
 
   /**
    * All the aliases in a program form a graph, where each global name is
@@ -146,7 +147,7 @@ final class NameAnalyzer implements CompilerPass {
    * not explicitly track the graph--we just track the connected components.
    */
   private static class AliasSet {
-    Set<String> names = Sets.newHashSet();
+    Set<String> names = new HashSet<>();
 
     // Every alias set starts with exactly 2 names.
     AliasSet(String name1, String name2) {
@@ -200,7 +201,7 @@ final class NameAnalyzer implements CompilerPass {
     String name;
 
     /** Name of prototype functions attached to this name */
-    List<String> prototypeNames = Lists.newArrayList();
+    List<String> prototypeNames = new ArrayList<>();
 
     /** Whether this is an externally defined name */
     boolean externallyDefined = false;
@@ -739,7 +740,7 @@ final class NameAnalyzer implements CompilerPass {
   private class FindReferences implements Callback {
     Set<Node> nodesToKeep;
     FindReferences() {
-      nodesToKeep = Sets.newHashSet();
+      nodesToKeep = new HashSet<>();
     }
 
     private void addAllChildren(Node n) {
@@ -1403,7 +1404,7 @@ final class NameAnalyzer implements CompilerPass {
   private void referenceParentNames() {
     // Duplicate set of nodes to process so we don't modify set we are
     // currently iterating over
-    Set<JsName> allNamesCopy = Sets.newHashSet(allNames.values());
+    Set<JsName> allNamesCopy = new HashSet<>(allNames.values());
 
     for (JsName name : allNamesCopy) {
       String curName = name.name;
@@ -1727,7 +1728,7 @@ final class NameAnalyzer implements CompilerPass {
    * Extract a list of replacement nodes to use.
    */
   private List<Node> getSideEffectNodes(Node n) {
-    List<Node> subexpressions = Lists.newArrayList();
+    List<Node> subexpressions = new ArrayList<>();
     NodeTraversal.traverse(
         compiler, n,
         new GatherSideEffectSubexpressionsCallback(
@@ -1755,7 +1756,7 @@ final class NameAnalyzer implements CompilerPass {
       // parent reads from n directly; replace it with n's rhs + lhs
       // subexpressions with side effects.
       List<Node> replacements = getRhsSubexpressions(n);
-      List<Node> newReplacements = Lists.newArrayList();
+      List<Node> newReplacements = new ArrayList<>();
       for (int i = 0; i < replacements.size() - 1; i++) {
         newReplacements.addAll(getSideEffectNodes(replacements.get(i)));
       }
@@ -1813,7 +1814,7 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     // gather replacements
-    List<Node> replacements = Lists.newArrayList();
+    List<Node> replacements = new ArrayList<>();
     for (Node rhs : getRhsSubexpressions(n)) {
       replacements.addAll(getSideEffectNodes(rhs));
     }
@@ -1925,7 +1926,7 @@ final class NameAnalyzer implements CompilerPass {
       case Token.VAR:
         {
           // recurse on all children
-          List<Node> nodes = Lists.newArrayList();
+          List<Node> nodes = new ArrayList<>();
           for (Node child : n.children()) {
             nodes.addAll(getRhsSubexpressions(child));
           }

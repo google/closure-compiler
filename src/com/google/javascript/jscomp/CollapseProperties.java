@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
@@ -34,6 +33,7 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TypeI;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -174,7 +174,7 @@ class CollapseProperties implements CompilerPass {
           name.aliasingGets > 0) {
         // {@code name} meets condition (b). Find all of its local aliases
         // and try to inline them.
-        List<Ref> refs = Lists.newArrayList(name.getRefs());
+        List<Ref> refs = new ArrayList<>(name.getRefs());
         for (Ref ref : refs) {
           if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
             // {@code name} meets condition (c). Try to inline it.
@@ -225,9 +225,9 @@ class CollapseProperties implements CompilerPass {
       if (aliasParent.getFirstChild().isQualifiedName()) {
         Name name = namespace.getSlot(aliasParent.getFirstChild().getQualifiedName());
         if (name != null && isInlinableGlobalAlias(name)) {
-          List<AstChange> newNodes = Lists.newArrayList();
+          List<AstChange> newNodes = new ArrayList<>();
 
-          List<Ref> refs = Lists.newArrayList(name.getRefs());
+          List<Ref> refs = new ArrayList<>(name.getRefs());
           for (Ref ref : refs) {
             switch (ref.type) {
               case SET_FROM_GLOBAL:
@@ -278,7 +278,7 @@ class CollapseProperties implements CompilerPass {
       for (Name prop : name.props) {
         rewriteAliasProps(prop, value, depth + 1, newNodes);
 
-        List<Ref> refs = Lists.newArrayList(prop.getRefs());
+        List<Ref> refs = new ArrayList<>(prop.getRefs());
         for (Ref ref : refs) {
           Node target = ref.node;
           for (int i = 0; i <= depth; i++) {
@@ -357,7 +357,7 @@ class CollapseProperties implements CompilerPass {
       collector.processScope(scope);
 
       ReferenceCollection aliasRefs = collector.getReferences(aliasVar);
-      List<AstChange> newNodes = Lists.newArrayList();
+      List<AstChange> newNodes = new ArrayList<>();
 
       if (aliasRefs.isWellDefined()
           && aliasRefs.firstReferenceIsAssigningDeclaration()) {

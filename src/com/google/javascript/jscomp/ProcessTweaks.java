@@ -18,13 +18,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -186,7 +187,7 @@ class ProcessTweaks implements CompilerPass {
   // A map of function name -> TweakFunction.
   private static final Map<String, TweakFunction> TWEAK_FUNCTIONS_MAP;
   static {
-    TWEAK_FUNCTIONS_MAP = Maps.newHashMap();
+    TWEAK_FUNCTIONS_MAP = new HashMap<>();
     for (TweakFunction func : TweakFunction.values()) {
       TWEAK_FUNCTIONS_MAP.put(func.getName(), func);
     }
@@ -335,8 +336,8 @@ class ProcessTweaks implements CompilerPass {
    * Processes all calls to goog.tweak functions.
    */
   private final class CollectTweaks extends AbstractPostOrderCallback {
-    final Map<String, TweakInfo> allTweaks = Maps.newHashMap();
-    final List<TweakFunctionCall> getOverridesCalls = Lists.newArrayList();
+    final Map<String, TweakInfo> allTweaks = new HashMap<>();
+    final List<TweakFunctionCall> getOverridesCalls = new ArrayList<>();
 
     @SuppressWarnings("incomplete-switch")
     @Override
@@ -459,7 +460,7 @@ class ProcessTweaks implements CompilerPass {
 
     TweakInfo(String tweakId) {
       this.tweakId = tweakId;
-      functionCalls = Lists.newArrayList();
+      functionCalls = new ArrayList<>();
     }
 
     /**

@@ -18,9 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
@@ -30,6 +27,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -163,7 +161,7 @@ public final class JSModule implements DependencyInfo, Serializable {
    * sorted alphabetically.
    */
   List<String> getSortedDependencyNames() {
-    List<String> names = Lists.newArrayList();
+    List<String> names = new ArrayList<>();
     for (JSModule module : getDependencies()) {
       names.add(module.getName());
     }
@@ -176,8 +174,8 @@ public final class JSModule implements DependencyInfo, Serializable {
    * dependencies of this module.
    */
   public Set<JSModule> getAllDependencies() {
-    Set<JSModule> allDeps = Sets.newHashSet(deps);
-    ArrayDeque<JSModule> stack = Queues.newArrayDeque(deps);
+    Set<JSModule> allDeps = new HashSet<>(deps);
+    ArrayDeque<JSModule> stack = new ArrayDeque<>(deps);
 
     while (!stack.isEmpty()) {
       JSModule module = stack.pop();
@@ -285,7 +283,7 @@ public final class JSModule implements DependencyInfo, Serializable {
       throws CircularDependencyException {
     // Sort the JSModule in this order.
     List<JSModule> sortedList = (new SortedDependencies<>(
-            Lists.newArrayList(modules))).getSortedList();
+            new ArrayList<>(modules))).getSortedList();
     return sortedList.toArray(new JSModule[sortedList.size()]);
   }
 

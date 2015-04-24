@@ -24,7 +24,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
@@ -34,6 +33,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -82,7 +83,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
    * @return known legacy warnings without line numbers.
    */
   protected Set<String> normalizeWhitelist(Set<String> whitelist) {
-    Set<String> result = Sets.newHashSet();
+    Set<String> result = new HashSet<>();
     for (String line : whitelist) {
       String trimmed = line.trim();
       if (trimmed.isEmpty() || trimmed.charAt(0) == '#') {
@@ -157,7 +158,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   static Set<String> loadWhitelistedJsWarnings(Reader reader)
       throws IOException {
     Preconditions.checkNotNull(reader);
-    Set<String> result = Sets.newHashSet();
+    Set<String> result = new HashSet<>();
 
     result.addAll(CharStreams.readLines(reader));
 
@@ -206,7 +207,7 @@ public class WhitelistWarningsGuard extends WarningsGuard {
 
   /** Whitelist builder */
   public class WhitelistBuilder implements ErrorHandler {
-    private final Set<JSError> warnings = Sets.newLinkedHashSet();
+    private final Set<JSError> warnings = new LinkedHashSet<>();
     private String productName = null;
     private String generatorTarget = null;
     private String headerNote = null;

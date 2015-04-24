@@ -15,9 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -59,7 +59,7 @@ public final class FunctionNamesTest extends CompilerTestCase {
 
     testSame(jsSource);
 
-    final Map<Integer, String> idNameMap = Maps.newLinkedHashMap();
+    final Map<Integer, String> idNameMap = new LinkedHashMap<>();
     int count = 0;
     for (Node f : functionNames.getFunctionNodeList()) {
       int id = functionNames.getFunctionId(f);
@@ -70,7 +70,7 @@ public final class FunctionNamesTest extends CompilerTestCase {
 
     assertEquals("Unexpected number of functions", 16, count);
 
-    final Map<Integer, String> expectedMap = Maps.newLinkedHashMap();
+    final Map<Integer, String> expectedMap = new LinkedHashMap<>();
 
     expectedMap.put(0, "goog.widget.member_fn");
     expectedMap.put(1, "goog.widget::local_fn");

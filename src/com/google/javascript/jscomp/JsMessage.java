@@ -19,10 +19,11 @@ package com.google.javascript.jscomp;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -315,8 +316,8 @@ public final class JsMessage {
     private String desc;
     private boolean hidden;
 
-    private List<CharSequence> parts = Lists.newLinkedList();
-    private Set<String> placeholders = Sets.newHashSet();
+    private List<CharSequence> parts = new LinkedList<>();
+    private Set<String> placeholders = new HashSet<>();
 
     private String sourceName;
 

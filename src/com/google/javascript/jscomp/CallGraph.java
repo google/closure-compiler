@@ -29,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -118,8 +119,8 @@ public final class CallGraph implements CompilerPass {
     this.computeForwardGraph = computeForwardGraph;
     this.computeBackwardGraph = computeBackwardGraph;
 
-    callsitesByNode = Maps.newLinkedHashMap();
-    functionsByNode = Maps.newLinkedHashMap();
+    callsitesByNode = new LinkedHashMap<>();
+    functionsByNode = new LinkedHashMap<>();
   }
 
   /**

@@ -26,13 +26,13 @@ import static com.google.javascript.jscomp.JsMessageVisitor.toLowerCamelCaseWith
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -49,7 +49,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    messages = Lists.newLinkedList();
+    messages = new LinkedList<>();
     mode = JsMessage.Style.LEGACY;
     compilerOptions = null;
   }

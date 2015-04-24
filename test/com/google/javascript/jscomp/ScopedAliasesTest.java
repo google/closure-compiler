@@ -19,15 +19,15 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -825,17 +825,18 @@ public final class ScopedAliasesTest extends CompilerTestCase {
       implements AliasTransformationHandler {
 
     private final Map<String, List<SourcePosition<AliasTransformation>>>
-        observedPositions = Maps.newHashMap();
+        observedPositions = 
+        new HashMap<>();
 
     public final List<AliasTransformation> constructedAliases =
-        Lists.newArrayList();
+         new ArrayList<>();
 
     @Override
     public AliasTransformation logAliasTransformation(
         String sourceFile, SourcePosition<AliasTransformation> position) {
       if (!observedPositions.containsKey(sourceFile)) {
         observedPositions.put(sourceFile,
-            Lists.<SourcePosition<AliasTransformation>> newArrayList());
+             new ArrayList<SourcePosition<AliasTransformation>>());
       }
       observedPositions.get(sourceFile).add(position);
       AliasTransformation spy = new AliasSpy();
@@ -845,7 +846,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   private static class AliasSpy implements AliasTransformation {
-    public final Map<String, String> observedDefinitions = Maps.newHashMap();
+    public final Map<String, String> observedDefinitions = new HashMap<>();
 
     @Override
     public void addAlias(String alias, String definition) {
@@ -880,7 +881,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         Collection<Node> typeNodes = info.getTypeNodes();
         if (!typeNodes.isEmpty()) {
           if (actualTypes != null) {
-            List<Node> expectedTypes = Lists.newArrayList();
+            List<Node> expectedTypes = new ArrayList<>();
             expectedTypes.addAll(info.getTypeNodes());
             assertEquals("Wrong number of JsDoc types",
                 expectedTypes.size(), actualTypes.size());
@@ -889,7 +890,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
                   expectedTypes.get(i).checkTreeEquals(actualTypes.get(i)));
             }
           } else {
-            actualTypes = Lists.newArrayList();
+            actualTypes = new ArrayList<>();
             actualTypes.addAll(info.getTypeNodes());
           }
         }

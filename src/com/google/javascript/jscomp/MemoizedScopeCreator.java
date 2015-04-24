@@ -20,13 +20,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSymbolTable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +46,7 @@ import java.util.Map;
  */
 class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
 
-  private final Map<Node, TypedScope> scopes = Maps.newLinkedHashMap();
+  private final Map<Node, TypedScope> scopes = new LinkedHashMap<>();
   private final ScopeCreator delegate;
 
   /**
@@ -68,7 +68,7 @@ class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, 
 
   @Override
   public Iterable<TypedVar> getAllSymbols() {
-    List<TypedVar> vars = Lists.newArrayList();
+    List<TypedVar> vars = new ArrayList<>();
     for (TypedScope s : scopes.values()) {
       Iterables.addAll(vars, s.getAllSymbols());
     }
@@ -95,7 +95,7 @@ class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, 
   Collection<TypedScope> getAllMemoizedScopes() {
     // Return scopes in reverse order of creation so that IIFEs will
     // come before the global scope.
-    List<TypedScope> temp = Lists.newArrayList(scopes.values());
+    List<TypedScope> temp = new ArrayList<>(scopes.values());
     Collections.reverse(temp);
     return Collections.unmodifiableCollection(temp);
   }

@@ -17,15 +17,16 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
+
 import junit.framework.TestCase;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -1484,7 +1485,7 @@ public final class FunctionInjectorTest extends TestCase {
           assertSame("canInlineReferenceToFunction " + "should be CAN_INLINE_AFTER_DECOMPOSITION",
               canInline, CanInlineResult.AFTER_PREPARATION);
 
-          Set<String> knownConstants = Sets.newHashSet();
+          Set<String> knownConstants = new HashSet<>();
           injector.setKnownConstants(knownConstants);
           injector.maybePrepareCall(ref);
 

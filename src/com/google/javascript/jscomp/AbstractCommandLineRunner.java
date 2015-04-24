@@ -52,6 +52,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -357,7 +359,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (!config.outputManifests.isEmpty()) {
-      Set<String> uniqueNames = Sets.newHashSet();
+      Set<String> uniqueNames = new HashSet<>();
       for (String filename : config.outputManifests) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException("output_manifest flags specify " +
@@ -367,7 +369,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     if (!config.outputBundles.isEmpty()) {
-      Set<String> uniqueNames = Sets.newHashSet();
+      Set<String> uniqueNames = new HashSet<>();
       for (String filename : config.outputBundles) {
         if (!uniqueNames.add(filename)) {
           throw new FlagUsageException("output_bundle flags specify " +
@@ -531,8 +533,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     Preconditions.checkState(jsFiles != null);
 
     List<String> moduleNames = new ArrayList<>(specs.size());
-    Map<String, JSModule> modulesByName = Maps.newLinkedHashMap();
-    Map<String, Integer> modulesFileCountMap = Maps.newLinkedHashMap();
+    Map<String, JSModule> modulesByName = new LinkedHashMap<>();
+    Map<String, Integer> modulesFileCountMap = new LinkedHashMap<>();
     int numJsFilesExpected = 0, minJsFilesRequired = 0;
     boolean isFirstModule = true;
     for (String spec : specs) {
@@ -645,7 +647,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       moduleIndex++;
     }
 
-    return Lists.newArrayList(modulesByName.values());
+    return new ArrayList<>(modulesByName.values());
   }
 
   /**
@@ -818,7 +820,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     setRunOptions(options);
 
     boolean writeOutputToFile = !config.jsOutputFile.isEmpty();
-    List<String> outputFileNames = Lists.newArrayList();
+    List<String> outputFileNames = new ArrayList<>();
     if (writeOutputToFile) {
       outputFileNames.add(config.jsOutputFile);
     }
@@ -1577,7 +1579,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    * each input file, and the value is the corresponding root relative path.
    */
   private Map<String, String> constructRootRelativePathsMap() {
-    Map<String, String> rootRelativePathsMap = Maps.newLinkedHashMap();
+    Map<String, String> rootRelativePathsMap = new LinkedHashMap<>();
     for (String mapString : config.manifestMaps) {
       int colonIndex = mapString.indexOf(':');
       Preconditions.checkState(colonIndex > 0);
@@ -1645,7 +1647,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private final List<String> externs = Lists.newArrayList();
+    private final List<String> externs = new ArrayList<>();
 
     /**
      * The file containing JavaScript externs. You may specify multiple.
@@ -1656,7 +1658,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private final List<String> js = Lists.newArrayList();
+    private final List<String> js = new ArrayList<>();
 
     /**
      * The JavaScript filename. You may specify multiple.
@@ -1677,7 +1679,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private final List<String> module = Lists.newArrayList();
+    private final List<String> module = new ArrayList<>();
 
     /**
      * A JavaScript module specification. The format is
@@ -1794,7 +1796,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private final List<String> moduleWrapper = Lists.newArrayList();
+    private final List<String> moduleWrapper = new ArrayList<>();
 
     /**
      * An output wrapper for a JavaScript module (optional). See the flag
@@ -1877,7 +1879,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private final List<String> define = Lists.newArrayList();
+    private final List<String> define = new ArrayList<>();
 
     /**
      * Override the value of a variable annotated @define.
@@ -1892,7 +1894,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private final List<String> tweak = Lists.newArrayList();
+    private final List<String> tweak = new ArrayList<>();
 
     /**
      * Override the default value of a registered tweak. The format is
@@ -1968,7 +1970,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      * Filter out empty file names.
      */
     CommandLineConfig setOutputManifest(List<String> outputManifests) {
-      this.outputManifests = Lists.newArrayList();
+      this.outputManifests = new ArrayList<>();
       for (String manifestName : outputManifests) {
         if (!manifestName.isEmpty()) {
           this.outputManifests.add(manifestName);
@@ -2140,7 +2142,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     // The entries, in the order that they were added.
-    private final List<Entry> entries = Lists.newArrayList();
+    private final List<Entry> entries = new ArrayList<>();
 
     protected void add(CheckLevel level, String groupName) {
       entries.add(new Entry(level, groupName));

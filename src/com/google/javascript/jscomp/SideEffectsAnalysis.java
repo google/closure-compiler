@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
@@ -29,6 +28,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -773,7 +774,7 @@ import java.util.Set;
      * and the heap) under {@code root}.
      */
     private Set<Node> findStorageLocationReferences(Node root) {
-      final Set<Node> references = Sets.newHashSet();
+      final Set<Node> references = new HashSet<>();
 
       NodeTraversal.traverse(compiler, root, new AbstractShallowCallback() {
         @Override
@@ -953,7 +954,7 @@ import java.util.Set;
      * not be added to the map.
      */
     public void mapUses(Node root) {
-      referencesByNameNode = Maps.newHashMap();
+      referencesByNameNode = new HashMap<>();
 
       ReferenceCollectingCallback callback =
         new ReferenceCollectingCallback(compiler,

@@ -29,6 +29,7 @@ import com.google.gson.JsonParseException;
 import junit.framework.*;
 
 import java.util.*;
+import java.util.ArrayList;
 
 /**
  * Tests for {@link JSModuleGraph}
@@ -207,7 +208,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
 
-    List<CompilerInput> inputs = Lists.newArrayList();
+    List<CompilerInput> inputs = new ArrayList<>();
 
     // Add the inputs in a random order.
     inputs.addAll(E.getInputs());
@@ -247,7 +248,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
 
-    List<CompilerInput> inputs = Lists.newArrayList();
+    List<CompilerInput> inputs = new ArrayList<>();
     inputs.addAll(A.getInputs());
     List<CompilerInput> results = graph.manageDependencies(
         depOptions, inputs);
@@ -261,7 +262,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
 
-    List<CompilerInput> inputs = Lists.newArrayList();
+    List<CompilerInput> inputs = new ArrayList<>();
     List<CompilerInput> results = graph.manageDependencies(
         depOptions, inputs);
     assertThat(results).isEmpty();
@@ -286,7 +287,7 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   private List<CompilerInput> setUpManageDependenciesTest() {
-    List<CompilerInput> inputs = Lists.newArrayList();
+    List<CompilerInput> inputs = new ArrayList<>();
 
     A.add(code("a1", provides("a1"), requires()));
     A.add(code("a2", provides("a2"), requires("a1")));
@@ -319,7 +320,7 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   private List<String> sourceNames(List<CompilerInput> inputs) {
-    List<String> inputNames = Lists.newArrayList();
+    List<String> inputNames = new ArrayList<>();
     for (CompilerInput input : inputs) {
       inputNames.add(input.getName());
     }

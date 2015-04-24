@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -32,6 +31,7 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -203,7 +203,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     // Find or create property map for object type
     Map<String, List<Integer>> map = this.disposeCalls.get(objectType);
     if (map == null) {
-      map = Maps.newHashMap();
+      map = new HashMap<>();
       this.disposeCalls.put(objectType, map);
     }
 
@@ -223,7 +223,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
    * Initialize disposeMethods map with calls to dispose calls.
    */
   private void initializeDisposeMethodsMap() {
-    this.disposeCalls = Maps.newHashMap();
+    this.disposeCalls = new HashMap<>();
 
     /*
      * Initialize dispose calls map. Checks for:
@@ -1040,7 +1040,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     }
 
     private List<Node> maybeGetValueNodesFromCall(Node n) {
-      List<Node> ret = Lists.newArrayList();
+      List<Node> ret = new ArrayList<>();
       Node first = n.getFirstChild();
 
       if (first == null || !first.isQualifiedName()) {
@@ -1124,7 +1124,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
 
         FunctionType funType = type.toMaybeFunctionType();
         Node paramNode = NodeUtil.getFunctionParameters(n).getFirstChild();
-        List<Integer> positionalDisposedParameters = Lists.newArrayList();
+        List<Integer> positionalDisposedParameters = new ArrayList<>();
 
         if (jsDocInfo.disposesOf("*")) {
           positionalDisposedParameters.add(DISPOSE_ALL);

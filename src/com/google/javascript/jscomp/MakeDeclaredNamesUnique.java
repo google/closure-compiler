@@ -19,10 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -30,7 +27,10 @@ import com.google.javascript.rhino.TokenStream;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -268,7 +268,7 @@ class MakeDeclaredNamesUnique
     private Deque<Set<String>> referenceStack = new ArrayDeque<>();
 
     // Name are globally unique initially, so we don't need a per-scope map.
-    private Map<String, List<Node>> nameMap = Maps.newHashMap();
+    private Map<String, List<Node>> nameMap = new HashMap<>();
 
     private ContextualRenameInverter(AbstractCompiler compiler) {
       this.compiler = compiler;
@@ -302,7 +302,7 @@ class MakeDeclaredNamesUnique
       }
 
       referenceStack.push(referencedNames);
-      referencedNames = Sets.newHashSet();
+      referencedNames = new HashSet<>();
     }
 
     /**
@@ -403,7 +403,7 @@ class MakeDeclaredNamesUnique
     private void addCandidateNameReference(String name, Node n) {
       List<Node> nodes = nameMap.get(name);
       if (null == nodes) {
-        nodes = Lists.newLinkedList();
+        nodes = new LinkedList<>();
         nameMap.put(name, nodes);
       }
       nodes.add(n);
@@ -423,7 +423,7 @@ class MakeDeclaredNamesUnique
    */
   static class ContextualRenamer implements Renamer {
     private final Multiset<String> nameUsage;
-    private final Map<String, String> declarations = Maps.newHashMap();
+    private final Map<String, String> declarations = new HashMap<>();
     private final boolean global;
 
     static final String UNIQUE_ID_SEPARATOR = "$$";
@@ -507,7 +507,7 @@ class MakeDeclaredNamesUnique
    * @see FunctionInjector
    */
   static class InlineRenamer implements Renamer {
-    private final Map<String, String> declarations = Maps.newHashMap();
+    private final Map<String, String> declarations = new HashMap<>();
     private final Supplier<String> uniqueIdSupplier;
     private final String idPrefix;
     private final boolean removeConstness;

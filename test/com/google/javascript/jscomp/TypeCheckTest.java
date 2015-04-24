@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.InputId;
@@ -31,7 +30,9 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -10200,7 +10201,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @interface \n * @extends {G} */var F = function() {};" +
             "/** @constructor \n * @implements {F} */var H = function() {};" +
         "alert((new H).foo);",
-        Lists.<String>newArrayList());
+        new ArrayList<String>());
   }
 
   public void testConversionFromInterfaceToRecursiveConstructor()
@@ -13256,12 +13257,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
           "unexpected warning(s) : " +
           Joiner.on(", ").join(compiler.getWarnings()),
           descriptions.size(), compiler.getWarningCount());
-      Set<String> actualWarningDescriptions = Sets.newHashSet();
+      Set<String> actualWarningDescriptions = new HashSet<>();
       for (int i = 0; i < descriptions.size(); i++) {
         actualWarningDescriptions.add(compiler.getWarnings()[i].description);
       }
       assertEquals(
-          Sets.newHashSet(descriptions), actualWarningDescriptions);
+          new HashSet<>(descriptions), actualWarningDescriptions);
     }
   }
 

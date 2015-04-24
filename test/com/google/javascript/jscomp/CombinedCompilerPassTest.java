@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
@@ -27,7 +25,9 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -96,7 +96,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
   private static class ConcatTraversal implements Callback {
     private StringBuilder visited = new StringBuilder();
     private StringBuilder shouldTraversed = new StringBuilder();
-    private Set<String> ignoring = Sets.newHashSet();
+    private Set<String> ignoring = new HashSet<>();
 
     ConcatTraversal ignore(String s) {
       ignoring.add(s);
@@ -165,7 +165,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
   }
 
   private static List<TestHelper> createStringTests() {
-    List<TestHelper> tests = Lists.newArrayList();
+    List<TestHelper> tests = new ArrayList<>();
 
     tests.add(new TestHelper(
         new ConcatTraversal(), "abcdefghijklm", "mdabchefglijk"));
@@ -211,8 +211,8 @@ public final class CombinedCompilerPassTest extends TestCase  {
    */
   private static class ScopeRecordingCallback implements ScopedCallback {
 
-    Set<Node> visitedScopes = Sets.newHashSet();
-    Set<String> ignoring = Sets.newHashSet();
+    Set<Node> visitedScopes = new HashSet<>();
+    Set<String> ignoring = new HashSet<>();
 
     void ignore(String name) {
       ignoring.add(name);

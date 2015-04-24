@@ -22,8 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -39,8 +37,10 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -126,7 +126,7 @@ class DisambiguateProperties<T> implements CompilerPass {
      * A set of types for which renaming this field should be skipped. This
      * list is first filled by fields defined in the externs file.
      */
-    Set<T> typesToSkip = Sets.newHashSet();
+    Set<T> typesToSkip = new HashSet<>();
 
     /**
      * If true, do not rename any instance of this field, as it has been
@@ -135,14 +135,14 @@ class DisambiguateProperties<T> implements CompilerPass {
     boolean skipRenaming;
 
     /** Set of nodes for this field that need renaming. */
-    Set<Node> renameNodes = Sets.newHashSet();
+    Set<Node> renameNodes = new HashSet<>();
 
     /**
      * Map from node to the highest type in the prototype chain containing the
      * field for that node. In the case of a union, the type is the highest type
      * of one of the types in the union.
      */
-    final Map<Node, T> rootTypes = Maps.newHashMap();
+    final Map<Node, T> rootTypes = new HashMap<>();
 
     Property(String name) {
       this.name = name;
@@ -201,13 +201,13 @@ class DisambiguateProperties<T> implements CompilerPass {
 
           // Make sure that the representative type for each type to skip is
           // marked as being skipped.
-          Set<T> rootTypesToSkip = Sets.newHashSet();
+          Set<T> rootTypesToSkip = new HashSet<>();
           for (T subType : typesToSkip) {
             rootTypesToSkip.add(types.find(subType));
           }
           typesToSkip.addAll(rootTypesToSkip);
 
-          Set<T> newTypesToSkip = Sets.newHashSet();
+          Set<T> newTypesToSkip = new HashSet<>();
           Set<T> allTypes = types.elements();
           int originalTypesSize = allTypes.size();
           for (T subType : allTypes) {
@@ -277,7 +277,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
   }
 
-  private Map<String, Property> properties = Maps.newHashMap();
+  private Map<String, Property> properties = new HashMap<>();
 
   static DisambiguateProperties<JSType> forJSTypeSystem(
       AbstractCompiler compiler,
@@ -460,7 +460,7 @@ class DisambiguateProperties<T> implements CompilerPass {
               suggestion = "Consider casting " + qName + " if you know it's type.";
             }
           } else {
-            List<String> errors = Lists.newArrayList();
+            List<String> errors = new ArrayList<>();
             printErrorLocations(errors, jsType);
             if (!errors.isEmpty()) {
               suggestion = "Consider fixing errors for the following types:\n";
@@ -560,7 +560,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     int propsRenamed = 0, propsSkipped = 0, instancesRenamed = 0,
         instancesSkipped = 0, singleTypeProps = 0;
 
-    Set<String> reported = Sets.newHashSet();
+    Set<String> reported = new HashSet<>();
     for (Property prop : properties.values()) {
       if (prop.shouldRename()) {
         Map<T, String> propNames = buildPropNames(prop.getTypes(), prop.name);
@@ -614,7 +614,7 @@ class DisambiguateProperties<T> implements CompilerPass {
    * each type in that class to it.
    */
   private Map<T, String> buildPropNames(UnionFind<T> types, String name) {
-    Map<T, String> names = Maps.newHashMap();
+    Map<T, String> names = new HashMap<>();
     for (Set<T> set : types.allEquivalenceClasses()) {
       checkState(!set.isEmpty());
 
@@ -800,7 +800,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
 
     private static Set<JSType> getTypesToSkipForTypeNonUnion(JSType type) {
-      Set<JSType> types = Sets.newHashSet();
+      Set<JSType> types = new HashSet<>();
       JSType skipType = type;
       while (skipType != null) {
         types.add(skipType);
@@ -831,7 +831,7 @@ class DisambiguateProperties<T> implements CompilerPass {
         if (objType != null &&
             objType.getConstructor() != null &&
             objType.getConstructor().isInterface()) {
-          List<JSType> list = Lists.newArrayList();
+          List<JSType> list = new ArrayList<>();
           for (FunctionType impl
                    : registry.getDirectImplementors(objType)) {
             list.add(impl.getInstanceType());

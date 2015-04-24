@@ -20,8 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -29,6 +27,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,13 +98,13 @@ class AliasExternals implements CompilerPass {
       getArrayNotationNameFor("prototype");
 
   /** Map of all properties that we may be renaming */
-  private final Map<String, Symbol> props = Maps.newHashMap();
+  private final Map<String, Symbol> props = new HashMap<>();
 
   /** Holds the properties that can be renamed to GETPROP_ */
-  private final List<Node> accessors = Lists.newArrayList();
+  private final List<Node> accessors = new ArrayList<>();
 
   /** Holds the properties that can be renamed to SETPROP_ */
-  private final List<Node> mutators = Lists.newArrayList();
+  private final List<Node> mutators = new ArrayList<>();
 
   /**
    * Map of node replacements -
@@ -113,7 +114,7 @@ class AliasExternals implements CompilerPass {
     new IdentityHashMap<>();
 
   /** Map of all globals that we may alias */
-  private final Map<String, Symbol> globals = Maps.newHashMap();
+  private final Map<String, Symbol> globals = new HashMap<>();
 
   /** Reference to JS Compiler */
   private final AbstractCompiler compiler;
@@ -146,7 +147,7 @@ class AliasExternals implements CompilerPass {
       "JSCompiler_renameProperty");
 
   /** Whitelist of aliasable externs. */
-  private final Set<String> aliasableGlobals = Sets.newHashSet();
+  private final Set<String> aliasableGlobals = new HashSet<>();
 
   /**
    * Creates an instance.
@@ -193,7 +194,7 @@ class AliasExternals implements CompilerPass {
     }
 
     if (moduleGraph != null) {
-      moduleRoots = Maps.newHashMap();
+      moduleRoots = new HashMap<>();
     }
   }
 
@@ -751,7 +752,7 @@ class AliasExternals implements CompilerPass {
     JSModule deepestModuleAccess = null;
     JSModule deepestModuleMutate = null;
 
-    List<Node> uses = Lists.newArrayList();
+    List<Node> uses = new ArrayList<>();
 
     private Symbol(String name, boolean isConstant) {
       this.name = name;

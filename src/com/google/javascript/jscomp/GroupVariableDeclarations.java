@@ -16,12 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -74,7 +74,7 @@ class GroupVariableDeclarations implements CompilerPass, ScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal t) {
-    Set<Node> varNodes = Sets.newLinkedHashSet();
+    Set<Node> varNodes = new LinkedHashSet<>();
     Iterator<Var> scopeVarIter = t.getScope().getVars();
     while (scopeVarIter.hasNext()) {
       Node parentNode = scopeVarIter.next().getParentNode();

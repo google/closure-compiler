@@ -19,9 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -29,7 +26,10 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -151,16 +151,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   // The goog.provides must be processed in a deterministic order.
   private final Map<String, ProvidedName> providedNames =
-      Maps.newLinkedHashMap();
+       new LinkedHashMap<>();
 
-  private final Set<String> knownClosureSubclasses = Sets.newHashSet();
+  private final Set<String> knownClosureSubclasses = new HashSet<>();
 
   private final List<UnrecognizedRequire> unrecognizedRequires =
-      Lists.newArrayList();
-  private final Set<String> exportedVariables = Sets.newHashSet();
+       new ArrayList<>();
+  private final Set<String> exportedVariables = new HashSet<>();
   private final CheckLevel requiresLevel;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
-  private final List<Node> defineCalls = Lists.newArrayList();
+  private final List<Node> defineCalls = new ArrayList<>();
   private final boolean preserveGoogRequires;
 
   ProcessClosurePrimitives(AbstractCompiler compiler,
@@ -885,7 +885,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     if (verifySetCssNameMapping(t, left, arg)) {
       // Translate OBJECTLIT into SubstitutionMap. All keys and
       // values must be strings, or an error will be thrown.
-      final Map<String, String> cssNames = Maps.newHashMap();
+      final Map<String, String> cssNames = new HashMap<>();
 
       for (Node key = arg.getFirstChild(); key != null;
           key = key.getNext()) {
@@ -917,7 +917,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
       if (style == CssRenamingMap.Style.BY_PART) {
         // Make sure that no keys contain -'s
-        List<String> errors = Lists.newArrayList();
+        List<String> errors = new ArrayList<>();
         for (String key : cssNames.keySet()) {
           if (key.contains("-")) {
             errors.add(key);
@@ -932,7 +932,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         // n^2 check over the map which makes sure that if "a-b" in
         // the map, then map(a-b) = map(a)-map(b).
         // To speed things up, only consider cases where len(b) <= 10
-        List<String> errors = Lists.newArrayList();
+        List<String> errors = new ArrayList<>();
         for (Map.Entry<String, String> b : cssNames.entrySet()) {
           if (b.getKey().length() > 10) {
             continue;

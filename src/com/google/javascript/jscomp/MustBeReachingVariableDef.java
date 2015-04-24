@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
@@ -26,6 +24,8 @@ import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -54,7 +54,7 @@ final class MustBeReachingVariableDef extends
     super(cfg, new MustDefJoin());
     this.jsScope = jsScope;
     this.compiler = compiler;
-    this.escaped = Sets.newHashSet();
+    this.escaped = new HashSet<>();
     computeEscaped(jsScope, escaped, compiler);
   }
 
@@ -66,7 +66,7 @@ final class MustBeReachingVariableDef extends
    */
   static class Definition {
     final Node node;
-    final Set<Var> depends = Sets.newHashSet();
+    final Set<Var> depends = new HashSet<>();
     private boolean unknownDependencies = false;
 
     Definition(Node node) {
@@ -123,7 +123,7 @@ final class MustBeReachingVariableDef extends
     final Map<Var, Definition> reachingDef;
 
     public MustDef() {
-      reachingDef = Maps.newHashMap();
+      reachingDef = new HashMap<>();
     }
 
     public MustDef(Iterator<Var> vars) {
@@ -143,7 +143,7 @@ final class MustBeReachingVariableDef extends
      * @param other The constructed object is a replicated copy of this element.
      */
     public MustDef(MustDef other) {
-      reachingDef = Maps.newHashMap(other.reachingDef);
+      reachingDef = new HashMap<>(other.reachingDef);
     }
 
     @Override

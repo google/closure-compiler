@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -228,7 +229,7 @@ abstract class IntegrationTestCase extends TestCase {
   protected Compiler compile(CompilerOptions options, String[] original) {
     Compiler compiler = lastCompiler = new Compiler();
     BlackHoleErrorManager.silence(compiler);
-    List<SourceFile> inputs = Lists.newArrayList();
+    List<SourceFile> inputs = new ArrayList<>();
     for (int i = 0; i < original.length; i++) {
       inputs.add(SourceFile.fromCode("input" + i, original[i]));
     }
@@ -256,7 +257,7 @@ abstract class IntegrationTestCase extends TestCase {
   protected Node parse(
       String[] original, CompilerOptions options, boolean normalize) {
     Compiler compiler = new Compiler();
-    List<SourceFile> inputs = Lists.newArrayList();
+    List<SourceFile> inputs = new ArrayList<>();
     for (int i = 0; i < original.length; i++) {
       inputs.add(SourceFile.fromCode("input" + i, original[i]));
     }

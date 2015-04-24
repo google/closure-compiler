@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -25,6 +23,7 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -50,10 +49,10 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   private final CheckLevel level;
 
-  private final List<Node> problemNodes = Lists.newArrayList();
+  private final List<Node> problemNodes = new ArrayList<>();
 
   private final LinkedHashMap<String, String> noSideEffectExterns =
-    Maps.newLinkedHashMap();
+     new LinkedHashMap<>();
 
   private final AbstractCompiler compiler;
 

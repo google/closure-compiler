@@ -29,6 +29,7 @@ import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -124,7 +125,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     if (nodeComparator != null) {
       this.orderedWorkSet = Sets.newTreeSet(nodeComparator);
     } else {
-      this.orderedWorkSet = Sets.newLinkedHashSet();
+      this.orderedWorkSet = new LinkedHashSet<>();
     }
   }
 
@@ -393,7 +394,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       orderedWorkSet.clear();
       for (DiGraphNode<N, Branch> node : getCfg().getDirectedGraphNodes()) {
         int outEdgeCount = getCfg().getOutEdges(node.getValue()).size();
-        List<L> outLattices = Lists.newArrayList();
+        List<L> outLattices = new ArrayList<>();
         for (int i = 0; i < outEdgeCount; i++) {
           outLattices.add(createInitialEstimateLattice());
         }

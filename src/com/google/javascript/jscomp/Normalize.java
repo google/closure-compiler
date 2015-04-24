@@ -16,8 +16,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -27,6 +25,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -156,7 +156,7 @@ class Normalize implements CompilerPass {
    * Find all the @expose annotations.
    */
   private static class FindExposeAnnotations extends AbstractPostOrderCallback {
-    private final Set<String> exposedProperties = Sets.newHashSet();
+    private final Set<String> exposedProperties = new HashSet<>();
 
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isExprAssign(n)) {
@@ -284,7 +284,7 @@ class Normalize implements CompilerPass {
       NodeTraversal.traverseRoots(compiler, this, externs, root);
     }
 
-    private Map<String, Boolean> constantMap = Maps.newHashMap();
+    private Map<String, Boolean> constantMap = new HashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -715,7 +715,7 @@ class Normalize implements CompilerPass {
   private final class DuplicateDeclarationHandler implements
       SyntacticScopeCreator.RedeclarationHandler {
 
-    private Set<Var> hasOkDuplicateDeclaration = Sets.newHashSet();
+    private Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
 
     /**
      * Remove duplicate VAR declarations encountered discovered during

@@ -23,8 +23,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -44,9 +42,11 @@ import com.google.javascript.rhino.Node;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -157,7 +157,7 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected State getIntermediateState() {
     return new State(
-        cssNames == null ? null : Maps.newHashMap(cssNames),
+        cssNames == null ? null : new HashMap<>(cssNames),
         exportedNames == null ? null :
             Collections.unmodifiableSet(exportedNames),
         crossModuleIdGenerator, variableMap, propertyMap,
@@ -167,9 +167,9 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected void setIntermediateState(State state) {
     this.cssNames = state.cssNames == null ? null :
-        Maps.newHashMap(state.cssNames);
+         new HashMap<>(state.cssNames);
     this.exportedNames = state.exportedNames == null ? null :
-        Sets.newHashSet(state.exportedNames);
+         new HashSet<>(state.exportedNames);
     this.crossModuleIdGenerator = state.crossModuleIdGenerator;
     this.variableMap = state.variableMap;
     this.propertyMap = state.propertyMap;
@@ -199,7 +199,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   @Override
   protected List<PassFactory> getChecks() {
-    List<PassFactory> checks = Lists.newArrayList();
+    List<PassFactory> checks = new ArrayList<>();
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
@@ -427,7 +427,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   @Override
   protected List<PassFactory> getOptimizations() {
-    List<PassFactory> passes = Lists.newArrayList();
+    List<PassFactory> passes = new ArrayList<>();
 
     if (options.transpileOnly) {
       return passes;
@@ -780,7 +780,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Creates the passes for the main optimization loop. */
   private List<PassFactory> getMainOptimizationLoop() {
-    List<PassFactory> passes = Lists.newArrayList();
+    List<PassFactory> passes = new ArrayList<>();
     if (options.inlineGetters) {
       passes.add(inlineSimpleMethods);
     }
@@ -816,7 +816,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Creates several passes aimed at removing code. */
   private List<PassFactory> getCodeRemovingPasses() {
-    List<PassFactory> passes = Lists.newArrayList();
+    List<PassFactory> passes = new ArrayList<>();
     if (options.collapseObjectLiterals && !isInliningForbidden()) {
       passes.add(collapseObjectLiterals);
     }
@@ -880,7 +880,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("suspiciousCode", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      List<Callback> sharedCallbacks = Lists.newArrayList();
+      List<Callback> sharedCallbacks = new ArrayList<>();
       if (options.checkSuspiciousCode) {
         sharedCallbacks.add(new CheckSuspiciousCode());
       }
@@ -988,7 +988,7 @@ public final class DefaultPassConfig extends PassConfig {
         public void process(Node externs, Node root) {
           pass.process(externs, root);
           if (exportedNames == null) {
-            exportedNames = Sets.newHashSet();
+            exportedNames = new HashSet<>();
           }
           exportedNames.addAll(pass.getExportedVariableNames());
         }
@@ -1244,7 +1244,7 @@ public final class DefaultPassConfig extends PassConfig {
         public void process(Node externs, Node jsRoot) {
           Map<String, Integer> newCssNames = null;
           if (options.gatherCssNames) {
-            newCssNames = Maps.newHashMap();
+            newCssNames = new HashMap<>();
           }
           ReplaceCssNames pass = new ReplaceCssNames(
               compiler,
@@ -1489,7 +1489,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkControlFlow", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      List<Callback> callbacks = Lists.newArrayList();
+      List<Callback> callbacks = new ArrayList<>();
       if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)) {
         callbacks.add(new CheckUnreachableCode(compiler));
       }
@@ -2394,7 +2394,7 @@ public final class DefaultPassConfig extends PassConfig {
         options.anonymousFunctionNaming.getReservedCharacters();
     boolean preserveAnonymousFunctionNames =
         options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
-    Set<String> reservedNames = Sets.newHashSet();
+    Set<String> reservedNames = new HashSet<>();
     if (options.renamePrefixNamespace != null) {
       // don't use the prefix name as a global symbol.
       reservedNames.add(options.renamePrefixNamespace);
@@ -2550,7 +2550,7 @@ public final class DefaultPassConfig extends PassConfig {
   @VisibleForTesting
   static Map<String, Node> getAdditionalReplacements(
       CompilerOptions options) {
-    Map<String, Node> additionalReplacements = Maps.newHashMap();
+    Map<String, Node> additionalReplacements = new HashMap<>();
 
     if (options.markAsCompiled || options.closurePass) {
       additionalReplacements.put(COMPILED_CONSTANT_NAME, IR.trueNode());

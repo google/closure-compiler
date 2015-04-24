@@ -18,11 +18,11 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -392,8 +392,8 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testNormalizeSyntheticCode() {
     Compiler compiler = new Compiler();
     compiler.init(
-        Lists.<SourceFile>newArrayList(),
-        Lists.<SourceFile>newArrayList(), new CompilerOptions());
+        new ArrayList<SourceFile>(),
+         new ArrayList<SourceFile>(), new CompilerOptions());
     String code = "function f(x) {} function g(x) {}";
     Node ast = compiler.parseSyntheticCode(code);
     Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");
@@ -476,7 +476,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   private Set<Node> findNodesWithProperty(Node root, final int prop) {
-    final Set<Node> set = Sets.newHashSet();
+    final Set<Node> set = new HashSet<>();
     NodeTraversal.traverse(
         getLastCompiler(), root, new AbstractPostOrderCallback() {
         @Override

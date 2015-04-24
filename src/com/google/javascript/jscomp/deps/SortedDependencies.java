@@ -22,18 +22,18 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -59,12 +59,12 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
   // A list of all the inputs that do not have provides.
   private final List<INPUT> noProvides;
 
-  private final Map<String, INPUT> provideMap = Maps.newHashMap();
+  private final Map<String, INPUT> provideMap = new HashMap<>();
 
   public SortedDependencies(List<INPUT> inputs)
       throws CircularDependencyException {
-    this.inputs = Lists.newArrayList(inputs);
-    noProvides = Lists.newArrayList();
+    this.inputs = new ArrayList<>(inputs);
+    noProvides = new ArrayList<>();
 
     // Collect all symbols provided in these files.
     for (INPUT input : inputs) {
@@ -99,7 +99,7 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
     // no nodes have out-degree 0. I'll leave the proof of this as an exercise
     // to the reader.
     if (sortedList.size() < inputs.size()) {
-      List<INPUT> subGraph = Lists.newArrayList(inputs);
+      List<INPUT> subGraph = new ArrayList<>(inputs);
       subGraph.removeAll(sortedList);
 
       throw new CircularDependencyException(
@@ -134,8 +134,8 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
    */
   private List<INPUT> findCycle(
       List<INPUT> subGraph, Multimap<INPUT, INPUT> deps) {
-    return findCycle(subGraph.get(0), Sets.newHashSet(subGraph),
-        deps, Sets.<INPUT>newHashSet());
+    return findCycle(subGraph.get(0), new HashSet<>(subGraph),
+        deps, new HashSet<INPUT>());
   }
 
   private List<INPUT> findCycle(
@@ -156,7 +156,7 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
       // Explicitly use the add() method, to prevent a generics constructor
       // warning that is dumb. The condition it's protecting is
       // obscure, and I think people have proposed that it be removed.
-      List<INPUT> cycle = Lists.newArrayList();
+      List<INPUT> cycle = new ArrayList<>();
       cycle.add(current);
       return cycle;
     }
@@ -176,7 +176,7 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
    * @param cycle A cycle in reverse-dependency order.
    */
   private String cycleToString(List<INPUT> cycle) {
-    List<String> symbols = Lists.newArrayList();
+    List<String> symbols = new ArrayList<>();
     for (int i = cycle.size() - 1; i >= 0; i--) {
       symbols.add(cycle.get(i).getProvides().iterator().next());
     }
@@ -209,7 +209,7 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
    */
   public List<INPUT> getDependenciesOf(List<INPUT> roots, boolean sorted) {
     Preconditions.checkArgument(inputs.containsAll(roots));
-    Set<INPUT> included = Sets.newHashSet();
+    Set<INPUT> included = new HashSet<>();
     Deque<INPUT> worklist = new ArrayDeque<>(roots);
     while (!worklist.isEmpty()) {
       INPUT current = worklist.pop();
@@ -241,10 +241,10 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
     if (items.isEmpty()) {
       // Priority queue blows up if we give it a size of 0. Since we need
       // to special case this either way, just bail out.
-      return Lists.newArrayList();
+      return new ArrayList<>();
     }
 
-    final Map<T, Integer> originalIndex = Maps.newHashMap();
+    final Map<T, Integer> originalIndex = new HashMap<>();
     for (int i = 0; i < items.size(); i++) {
       originalIndex.put(items.get(i), i);
     }
@@ -257,7 +257,7 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
             originalIndex.get(b).intValue();
       }
     });
-    List<T> result = Lists.newArrayList();
+    List<T> result = new ArrayList<>();
 
     Multiset<T> inDegree = HashMultiset.create();
     Multimap<T, T> reverseDeps = ArrayListMultimap.create();

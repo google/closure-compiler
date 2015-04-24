@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
@@ -88,7 +87,7 @@ final class RenameVars implements CompilerPass {
 
   // Logic for bleeding functions, where the name leaks into the outer
   // scope on IE but not on other browsers.
-  private final Set<Var> localBleedingFunctions = Sets.newHashSet();
+  private final Set<Var> localBleedingFunctions = new HashSet<>();
   private final ArrayListMultimap<Scope, Var> localBleedingFunctionsPerScope =
       ArrayListMultimap.create();
 
@@ -168,7 +167,7 @@ final class RenameVars implements CompilerPass {
     this.localRenamingOnly = localRenamingOnly;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     if (generatePseudoNames) {
-      this.pseudoNameMap = Maps.newHashMap();
+      this.pseudoNameMap = new HashMap<>();
     } else {
       this.pseudoNameMap = null;
     }
@@ -177,9 +176,9 @@ final class RenameVars implements CompilerPass {
     this.shouldShadow = shouldShadow;
     this.preferStableNames = preferStableNames;
     if (reservedNames == null) {
-      this.reservedNames = Sets.newHashSet();
+      this.reservedNames = new HashSet<>();
     } else {
-      this.reservedNames = Sets.newHashSet(reservedNames);
+      this.reservedNames = new HashSet<>(reservedNames);
     }
     this.nameGeneratorGiven = nameGenerator;
   }

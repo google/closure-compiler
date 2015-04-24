@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
@@ -30,8 +28,10 @@ import com.google.javascript.jscomp.graph.LatticeElement;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -342,7 +342,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      */
     ConstPropLatticeElement(boolean isTop) {
       this.isTop = isTop;
-      this.constMap = Maps.newHashMap();
+      this.constMap = new HashMap<>();
     }
 
     /**
@@ -354,7 +354,7 @@ public final class DataFlowAnalysisTest extends TestCase {
 
     ConstPropLatticeElement(ConstPropLatticeElement other) {
       this.isTop = other.isTop;
-      this.constMap = Maps.newHashMap(other.constMap);
+      this.constMap = new HashMap<>(other.constMap);
     }
 
     @Override
@@ -659,7 +659,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     @Override
     List<ConstPropLatticeElement> branchedFlowThrough(Instruction node,
         ConstPropLatticeElement input) {
-      List<ConstPropLatticeElement> result = Lists.newArrayList();
+      List<ConstPropLatticeElement> result = new ArrayList<>();
       List<DiGraphEdge<Instruction, Branch>> outEdges =
         getCfg().getOutEdges(node);
       if (node.isArithmetic()) {

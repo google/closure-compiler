@@ -20,16 +20,16 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -159,7 +159,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      */
     private List<String> computePathPrefixes(String path) {
       List<String> pieces = Splitter.on('.').splitToList(path);
-      List<String> pathPrefixes = Lists.newArrayList();
+      List<String> pathPrefixes = new ArrayList<>();
 
       for (int i = 0; i < pieces.size(); i++) {
         pathPrefixes.add(Joiner.on(".").join(Iterables.limit(pieces, i + 1)));
@@ -363,20 +363,20 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
    * Creates an instance.
    */
   ExternExportsPass(AbstractCompiler compiler) {
-    this.exports = Lists.newArrayList();
+    this.exports = new ArrayList<>();
     this.compiler = compiler;
-    this.definitionMap = Maps.newHashMap();
+    this.definitionMap = new HashMap<>();
     this.externsRoot = IR.block();
     this.externsRoot.setIsSyntheticBlock(true);
-    this.alreadyExportedPaths = Sets.newHashSet();
-    this.mappedPaths = Maps.newHashMap();
+    this.alreadyExportedPaths = new HashSet<>();
+    this.mappedPaths = new HashMap<>();
 
     initExportMethods();
   }
 
   private void initExportMethods() {
-    exportSymbolFunctionNames = Lists.newArrayList();
-    exportPropertyFunctionNames = Lists.newArrayList();
+    exportSymbolFunctionNames = new ArrayList<>();
+    exportPropertyFunctionNames = new ArrayList<>();
 
     // From Closure:
     // goog.exportSymbol = function(publicName, symbol)

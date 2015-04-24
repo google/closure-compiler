@@ -17,13 +17,12 @@
 package com.google.debugging.sourcemap;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
 import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,19 +68,19 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
   /**
    * A pre-order traversal ordered list of mappings stored in this map.
    */
-  private List<Mapping> mappings = Lists.newArrayList();
+  private List<Mapping> mappings = new ArrayList<>();
 
   /**
    * A map of source names to source name index
    */
   private LinkedHashMap<String, Integer> sourceFileMap =
-      Maps.newLinkedHashMap();
+       new LinkedHashMap<>();
 
   /**
    * A map of source names to source name index
    */
   private LinkedHashMap<String, Integer> originalNameMap =
-      Maps.newLinkedHashMap();
+       new LinkedHashMap<>();
 
   /**
    * Cache of the last mappings source name.
@@ -116,7 +115,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    * to permit single values, like strings or numbers, and JsonObject or
    * JsonArray objects.
    */
-  private LinkedHashMap<String, Object> extensions = Maps.newLinkedHashMap();
+  private LinkedHashMap<String, Object> extensions = new LinkedHashMap<>();
 
   /**
    * The source root path for relocating source fails or avoid duplicate values

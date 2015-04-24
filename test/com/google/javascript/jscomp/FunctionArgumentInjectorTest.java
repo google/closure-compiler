@@ -22,9 +22,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
+
 import junit.framework.TestCase;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -419,7 +421,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
       FunctionArgumentInjector.getFunctionCallParameterMap(
           fn, call, getNameSupplier());
 
-    Set<String> actualTemps = Sets.newHashSet();
+    Set<String> actualTemps = new HashSet<>();
     FunctionArgumentInjector.maybeAddTempsForCallArguments(
         fn, args, actualTemps, new ClosureCodingConvention());
 

@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
@@ -30,7 +28,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -140,9 +141,9 @@ class ScopedAliases implements HotSwapCompilerPass {
 
       // Apply the aliases.
       List<AliasUsage> aliasWorkQueue =
-          Lists.newArrayList(traversal.getAliasUsages());
+           new ArrayList<>(traversal.getAliasUsages());
       while (!aliasWorkQueue.isEmpty()) {
-        List<AliasUsage> newQueue = Lists.newArrayList();
+        List<AliasUsage> newQueue = new ArrayList<>();
         for (AliasUsage aliasUsage : aliasWorkQueue) {
           if (aliasUsage.referencesOtherAlias()) {
             newQueue.add(aliasUsage);
@@ -250,17 +251,17 @@ class ScopedAliases implements HotSwapCompilerPass {
     // The job of this class is to collect these three data sets.
 
     // The order of this list determines the order that aliases are applied.
-    private final List<Node> aliasDefinitionsInOrder = Lists.newArrayList();
+    private final List<Node> aliasDefinitionsInOrder = new ArrayList<>();
 
-    private final List<Node> scopeCalls = Lists.newArrayList();
+    private final List<Node> scopeCalls = new ArrayList<>();
 
-    private final List<AliasUsage> aliasUsages = Lists.newArrayList();
+    private final List<AliasUsage> aliasUsages = new ArrayList<>();
 
     // This map is temporary and cleared for each scope.
-    private final Map<String, Var> aliases = Maps.newHashMap();
+    private final Map<String, Var> aliases = new HashMap<>();
 
     // Also temporary and cleared for each scope.
-    private final Set<Node> injectedDecls = Sets.newHashSet();
+    private final Set<Node> injectedDecls = new HashSet<>();
 
     // Suppose you create an alias.
     // var x = goog.x;

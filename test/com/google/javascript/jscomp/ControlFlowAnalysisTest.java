@@ -28,6 +28,7 @@ import com.google.javascript.rhino.Token;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,7 +56,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
    */
   private static List<DiGraphEdge<Node, Branch>> getAllEdges(
       ControlFlowGraph<Node> cfg) {
-    List<DiGraphEdge<Node, Branch>> edges = Lists.newArrayList();
+    List<DiGraphEdge<Node, Branch>> edges = new ArrayList<>();
     for (DiGraphNode<Node, Branch> n : cfg.getDirectedGraphNodes()) {
       edges.addAll(cfg.getOutEdges(n.getValue()));
     }

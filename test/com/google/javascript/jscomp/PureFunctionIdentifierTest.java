@@ -20,9 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,8 +33,8 @@ import java.util.List;
  */
 
 public final class PureFunctionIdentifierTest extends CompilerTestCase {
-  List<String> noSideEffectCalls = Lists.newArrayList();
-  List<String> localResultCalls = Lists.newArrayList();
+  List<String> noSideEffectCalls = new ArrayList<>();
+  List<String> localResultCalls = new ArrayList<>();
 
   boolean regExpHaveSideEffects = true;
 

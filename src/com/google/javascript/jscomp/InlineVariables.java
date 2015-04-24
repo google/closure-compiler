@@ -19,8 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
@@ -28,6 +26,8 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollect
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.Node;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -144,14 +144,14 @@ class InlineVariables implements CompilerPass {
      * A list of variables that should not be inlined, because their
      * reference information is out of sync with the state of the AST.
      */
-    private final Set<Var> staleVars = Sets.newHashSet();
+    private final Set<Var> staleVars = new HashSet<>();
 
     /**
      * Stored possible aliases of variables that never change, with
      * all the reference info about those variables. Hashed by the NAME
      * node of the variable being aliased.
      */
-    final Map<Node, AliasCandidate> aliasCandidates = Maps.newHashMap();
+    final Map<Node, AliasCandidate> aliasCandidates = new HashMap<>();
 
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {

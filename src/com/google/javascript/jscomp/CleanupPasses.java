@@ -17,13 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.DefaultPassConfig.HotSwapPassFactory;
 import com.google.javascript.jscomp.GlobalVarReferenceMap.GlobalVarRefCleanupPass;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,7 +41,7 @@ class CleanupPasses extends PassConfig {
 
   @Override
   protected List<PassFactory> getChecks() {
-    List<PassFactory> checks = Lists.newArrayList();
+    List<PassFactory> checks = new ArrayList<>();
     checks.add(fieldCleanupPassFactory);
     checks.add(scopeCleanupPassFactory);
     checks.add(globalVarRefCleanupPassFactory);

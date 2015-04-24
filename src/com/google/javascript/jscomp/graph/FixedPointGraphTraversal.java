@@ -17,10 +17,10 @@
 package com.google.javascript.jscomp.graph;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,7 +66,7 @@ public final class FixedPointGraphTraversal<N, E> {
    * @param graph The graph to traverse.
    */
   public void computeFixedPoint(DiGraph<N, E> graph) {
-    Set<N> nodes = Sets.newHashSet();
+    Set<N> nodes = new HashSet<>();
     for (DiGraphNode<N, E> node : graph.getDirectedGraphNodes()) {
       nodes.add(node.getValue());
     }
@@ -79,7 +79,7 @@ public final class FixedPointGraphTraversal<N, E> {
    * @param entry The node to begin traversing from.
    */
   public void computeFixedPoint(DiGraph<N, E> graph, N entry) {
-    Set<N> entrySet = Sets.newHashSet();
+    Set<N> entrySet = new HashSet<>();
     entrySet.add(entry);
     computeFixedPoint(graph, entrySet);
   }
@@ -99,7 +99,7 @@ public final class FixedPointGraphTraversal<N, E> {
 
     // Use a LinkedHashSet, so that the traversal is deterministic.
     LinkedHashSet<DiGraphNode<N, E>> workSet =
-        Sets.newLinkedHashSet();
+         new LinkedHashSet<>();
     for (N n : entrySet) {
       workSet.add(graph.getDirectedGraphNode(n));
     }

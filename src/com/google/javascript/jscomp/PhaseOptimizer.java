@@ -19,11 +19,12 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,7 +119,7 @@ class PhaseOptimizer implements CompilerPass {
     this.compiler = comp;
     this.jsRoot = comp.getJsRoot();
     this.tracker = tracker;
-    this.passes = Lists.newArrayList();
+    this.passes = new ArrayList<>();
     this.progressRange = range;
     this.inLoop = false;
     this.crossScopeReporting = false;
@@ -406,8 +407,8 @@ class PhaseOptimizer implements CompilerPass {
    */
   @VisibleForTesting
   class Loop implements CompilerPass {
-    private final List<NamedPass> myPasses = Lists.newArrayList();
-    private final Set<String> myNames = Sets.newHashSet();
+    private final List<NamedPass> myPasses = new ArrayList<>();
+    private final Set<String> myNames = new HashSet<>();
     private ScopedChangeHandler scopeHandler;
 
     void addLoopedPass(PassFactory factory) {
@@ -435,9 +436,9 @@ class PhaseOptimizer implements CompilerPass {
         lastRuns.put(pass, START_TIME);
       }
       // Contains a pass iff it made changes the last time it was run.
-      Set<NamedPass> madeChanges = Sets.newHashSet();
+      Set<NamedPass> madeChanges = new HashSet<>();
       // Contains a pass iff it was run during the last inner loop.
-      Set<NamedPass> runInPrevIter = Sets.newHashSet();
+      Set<NamedPass> runInPrevIter = new HashSet<>();
       State state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
       boolean lastIterMadeChanges;
       int count = 0;
@@ -497,7 +498,7 @@ class PhaseOptimizer implements CompilerPass {
       //
       // To do this, grab any passes we recognize, and move them to the end
       // in an "optimal" order.
-      List<NamedPass> optimalPasses = Lists.newArrayList();
+      List<NamedPass> optimalPasses = new ArrayList<>();
       for (String passInOptimalOrder : OPTIMAL_ORDER) {
         for (NamedPass loopablePass : myPasses) {
           if (loopablePass.name.equals(passInOptimalOrder)) {

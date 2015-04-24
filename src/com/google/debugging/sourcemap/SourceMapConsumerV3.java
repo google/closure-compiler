@@ -18,7 +18,6 @@ package com.google.debugging.sourcemap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
@@ -34,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -55,7 +55,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
   private Map<String, Map<Integer, Collection<OriginalMapping>>>
       reverseSourceMapping;
   private String sourceRoot;
-  private Map<String, Object> extensions = Maps.newLinkedHashMap();
+  private Map<String, Object> extensions = new LinkedHashMap<>();
 
 
   public SourceMapConsumerV3() {
@@ -130,7 +130,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
       if (lineCount >= 0) {
         lines = Lists.newArrayListWithCapacity(lineCount);
       } else {
-        lines = Lists.newArrayList();
+        lines = new ArrayList<>();
       }
 
       if (sourceMapRoot.has("sourceRoot")) {

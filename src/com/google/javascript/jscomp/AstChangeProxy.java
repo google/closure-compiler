@@ -22,6 +22,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ class AstChangeProxy {
   private final List<ChangeListener> listeners;
 
   AstChangeProxy() {
-    listeners = Lists.newArrayList();
+    listeners = new ArrayList<>();
   }
 
   /**

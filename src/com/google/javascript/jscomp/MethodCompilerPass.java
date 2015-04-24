@@ -18,12 +18,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -33,13 +33,13 @@ import java.util.Set;
  */
 abstract class MethodCompilerPass implements CompilerPass {
   /** List of methods defined in externs */
-  final Set<String> externMethods = Sets.newHashSet();
+  final Set<String> externMethods = new HashSet<>();
 
   /** List of extern methods without signatures that we can't warn about */
-  final Set<String> externMethodsWithoutSignatures = Sets.newHashSet();
+  final Set<String> externMethodsWithoutSignatures = new HashSet<>();
 
   /** List of property names that may not be methods */
-  final Set<String> nonMethodProperties = Sets.newHashSet();
+  final Set<String> nonMethodProperties = new HashSet<>();
 
   // Use a linked map here to keep the output deterministic.  Otherwise,
   // the choice of method bodies is random when multiple identical definitions

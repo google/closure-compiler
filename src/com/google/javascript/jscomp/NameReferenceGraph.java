@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.DefinitionsRemover.AssignmentDefinition;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -32,6 +30,8 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -67,7 +67,7 @@ class NameReferenceGraph extends
       referenceMap = HashMultimap.create();
 
   // Given a qualified name, provides the Name object.
-  private Map<String, Name> nameMap = Maps.newHashMap();
+  private Map<String, Name> nameMap = new HashMap<>();
 
   // The following are some implicit nodes of the graph.
 
@@ -131,7 +131,7 @@ class NameReferenceGraph extends
       return null;
     }
 
-    List<Definition> result = Lists.newArrayList();
+    List<Definition> result = new ArrayList<>();
     for (Name nameRef : nameRefs) {
       List<Definition> decls = nameRef.getDeclarations();
       if (!decls.isEmpty()) {
@@ -172,7 +172,7 @@ class NameReferenceGraph extends
     private JSType type;
 
     // A list (re)declarations
-    private List<Definition> declarations = Lists.newLinkedList();
+    private List<Definition> declarations = new LinkedList<>();
 
     final boolean isExtern;
 

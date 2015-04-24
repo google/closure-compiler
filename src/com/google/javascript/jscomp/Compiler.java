@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -60,6 +59,7 @@ import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -142,7 +142,7 @@ public class Compiler extends AbstractCompiler {
 
   // Compile-time injected libraries. The node points to the last node of
   // the library, so code can be inserted after.
-  private final Map<String, Node> injectedLibraries = Maps.newLinkedHashMap();
+  private final Map<String, Node> injectedLibraries = new LinkedHashMap<>();
 
   // Parse tree root nodes
   Node externsRoot;
@@ -169,7 +169,7 @@ public class Compiler extends AbstractCompiler {
       = new ConcurrentHashMap<>();
 
   // Map from filenames to lists of all the comments in each file.
-  private Map<String, List<Comment>> commentsPerFile = Maps.newHashMap();
+  private Map<String, List<Comment>> commentsPerFile = new HashMap<>();
 
   /** The source code map */
   private SourceMap sourceMap;
@@ -533,7 +533,7 @@ public class Compiler extends AbstractCompiler {
   private static List<CompilerInput> getAllInputsFromModules(
       List<JSModule> modules) {
     List<CompilerInput> inputs = new ArrayList<>();
-    Map<String, JSModule> inputMap = Maps.newHashMap();
+    Map<String, JSModule> inputMap = new HashMap<>();
     for (JSModule module : modules) {
       for (CompilerInput input : module.getInputs()) {
         String inputName = input.getName();
@@ -1100,7 +1100,7 @@ public class Compiler extends AbstractCompiler {
 
   CompilerInput putCompilerInput(InputId id, CompilerInput input) {
     if (inputsById == null) {
-      inputsById = Maps.newHashMap();
+      inputsById = new HashMap<>();
     }
     input.setCompiler(this);
     return inputsById.put(id, input);
@@ -1530,8 +1530,8 @@ public class Compiler extends AbstractCompiler {
    * on the way.
    */
   void processAMDAndCommonJSModules() {
-    Map<String, JSModule> modulesByProvide = Maps.newLinkedHashMap();
-    Map<CompilerInput, JSModule> modulesByInput = Maps.newLinkedHashMap();
+    Map<String, JSModule> modulesByProvide = new LinkedHashMap<>();
+    Map<CompilerInput, JSModule> modulesByInput = new LinkedHashMap<>();
     // TODO(nicksantos): Refactor module dependency resolution to work nicely
     // with multiple ways to express dependencies. Directly support JSModules
     // that are equivalent to a single file and which express their deps
@@ -1663,7 +1663,7 @@ public class Compiler extends AbstractCompiler {
     CompilerInput input = new CompilerInput(
         SourceFile.fromCode("[testcode]", js));
     if (inputsById == null) {
-      inputsById = Maps.newHashMap();
+      inputsById = new HashMap<>();
     }
     putCompilerInput(input.getInputId(), input);
     return input.getAstRoot(this);

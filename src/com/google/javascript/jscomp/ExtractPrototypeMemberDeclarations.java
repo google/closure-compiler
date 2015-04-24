@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -249,7 +248,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    */
   private class GatherExtractionInfo extends AbstractShallowCallback {
 
-    private List<ExtractionInstance> instances = Lists.newLinkedList();
+    private List<ExtractionInstance> instances = new LinkedList<>();
     private int totalDelta = pattern.globalOverhead;
 
     @Override
@@ -291,7 +290,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
   }
 
   private class ExtractionInstance {
-    LinkedList<PrototypeMemberDeclaration> declarations = Lists.newLinkedList();
+    LinkedList<PrototypeMemberDeclaration> declarations = new LinkedList<>();
     private int delta = 0;
     private final Node parent;
 

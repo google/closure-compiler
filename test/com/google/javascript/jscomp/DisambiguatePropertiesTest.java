@@ -27,6 +27,7 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.TestErrorReporter;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -58,7 +59,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        Map<String, CheckLevel> propertiesToErrorFor = Maps.newHashMap();
+        Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
         propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
         // This must be created after type checking is run as it depends on
@@ -1262,7 +1263,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   public void runFindHighestTypeInChain() {
     // Check that this doesn't go into an infinite loop.
     DisambiguateProperties.forJSTypeSystem(new Compiler(),
-        Maps.<String, CheckLevel>newHashMap())
+         new HashMap<String, CheckLevel>())
         .getTypeWithProperty("no",
             new JSTypeRegistry(new TestErrorReporter(null, null))
             .getNativeType(JSTypeNative.OBJECT_PROTOTYPE));

@@ -17,15 +17,15 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -51,7 +51,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
   MarkNoSideEffectCalls(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.noSideEffectFunctionNames = Sets.newHashSet();
+    this.noSideEffectFunctionNames = new HashSet<>();
   }
 
   @Override
@@ -132,7 +132,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
         // The annotation may attached to the function node, the
         // variable declaration or assignment expression.
         boolean hasAnnotation = hasNoSideEffectsAnnotation(node);
-        List<Node> nameNodes = Lists.newArrayList();
+        List<Node> nameNodes = new ArrayList<>();
         nameNodes.add(node.getFirstChild());
 
         if (parent.isName()) {

@@ -19,12 +19,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +39,7 @@ class FunctionInjector {
 
   private final AbstractCompiler compiler;
   private final boolean allowDecomposition;
-  private Set<String> knownConstants = Sets.newHashSet();
+  private Set<String> knownConstants = new HashSet<>();
   private final boolean assumeStrictThis;
   private final boolean assumeMinimumCapture;
   private final Supplier<String> safeNameIdSupplier;
@@ -695,7 +695,7 @@ class FunctionInjector {
       boolean hasArgs = !args.isEmpty();
       if (hasArgs) {
         // Limit the inlining
-        Set<String> allNamesToAlias = Sets.newHashSet(namesToAlias);
+        Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
         FunctionArgumentInjector.maybeAddTempsForCallArguments(
             fnNode, args, allNamesToAlias, compiler.getCodingConvention());
         if (!allNamesToAlias.isEmpty()) {
@@ -751,7 +751,7 @@ class FunctionInjector {
     boolean hasArgs = !args.isEmpty();
     if (hasArgs) {
       // Limit the inlining
-      Set<String> allNamesToAlias = Sets.newHashSet(namesToAlias);
+      Set<String> allNamesToAlias = new HashSet<>(namesToAlias);
       FunctionArgumentInjector.maybeAddTempsForCallArguments(
           fnNode, args, allNamesToAlias, compiler.getCodingConvention());
       if (!allNamesToAlias.isEmpty()) {

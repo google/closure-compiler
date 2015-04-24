@@ -17,10 +17,10 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -42,7 +42,7 @@ class GatherRawExports extends AbstractPostOrderCallback
   private static final String GLOBAL_THIS_NAMES[] = {
     "window", "top", "goog$global", "goog.global" };
 
-  private final Set<String> exportedVariables = Sets.newHashSet();
+  private final Set<String> exportedVariables = new HashSet<>();
 
   GatherRawExports(AbstractCompiler compiler) {
     this.compiler = compiler;

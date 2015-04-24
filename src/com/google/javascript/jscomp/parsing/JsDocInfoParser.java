@@ -20,7 +20,6 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.rhino.ErrorReporter;
@@ -34,6 +33,7 @@ import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -190,8 +190,8 @@ public final class JsDocInfoParser {
    */
   public static Node parseTypeString(String typeString) {
     Config config = new Config(
-        Sets.<String>newHashSet(),
-        Sets.<String>newHashSet(),
+        new HashSet<String>(),
+         new HashSet<String>(),
         false,
         LanguageMode.ECMASCRIPT3,
         false);
@@ -236,7 +236,7 @@ public final class JsDocInfoParser {
       }
     }
 
-    return parseHelperLoop(token, Lists.<ExtendedTypeInfo>newArrayList());
+    return parseHelperLoop(token, new ArrayList<ExtendedTypeInfo>());
   }
 
   private boolean parseHelperLoop(JsDocToken token,

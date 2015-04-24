@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDoc;
@@ -26,6 +25,7 @@ import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,7 +39,7 @@ public class DiagnosticGroups {
   public DiagnosticGroups() {}
 
   private static final Map<String, DiagnosticGroup> groupsByName =
-      Maps.newHashMap();
+       new HashMap<>();
 
   static DiagnosticGroup registerDeprecatedGroup(String name) {
     return registerGroup(name, new DiagnosticGroup(name, UNUSED));
