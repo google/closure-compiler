@@ -1050,6 +1050,16 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   /**
+   * @bug 20536614
+   */
+  public void testStaticGetterSetter() {
+    languageOut = LanguageMode.ECMASCRIPT5;
+
+    testError("class C { static get foo() {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class C { static set foo(x) {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+  }
+
+  /**
    * Computed property getters and setters in classes are not supported.
    */
   public void testClassComputedPropGetterSetter() {

@@ -729,6 +729,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           "Member variables should have been transpiled earlier: ", member);
 
       if (member.isGetterDef() || member.isSetterDef()) {
+        if (member.isStaticMember()) {
+          compiler.report(JSError.make(member, CANNOT_CONVERT_YET, "static getters/setters"));
+        }
         JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).clone();
         addToDefinePropertiesObject(metadata, member);
 
