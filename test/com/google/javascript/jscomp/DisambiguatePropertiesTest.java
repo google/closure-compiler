@@ -17,9 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -1313,11 +1311,11 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   /** Sorts the map and converts to a string for comparison purposes. */
   private <T> String mapToString(Multimap<String, Collection<T>> map) {
-    TreeMap<String, String> retMap = Maps.newTreeMap();
+    TreeMap<String, String> retMap = new TreeMap<>();
     for (String key : map.keySet()) {
-      TreeSet<String> treeSet = Sets.newTreeSet();
+      TreeSet<String> treeSet = new TreeSet<>();
       for (Collection<T> collection : map.get(key)) {
-        Set<String> subSet = Sets.newTreeSet();
+        Set<String> subSet = new TreeSet<>();
         for (T type : collection) {
           subSet.add(type.toString());
         }

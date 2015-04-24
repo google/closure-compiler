@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.Node;
 
@@ -38,7 +38,7 @@ public final class MinimizedConditionTest extends TestCase {
   private static Node parseExpr(String code) {
     Compiler compiler = new Compiler();
     List<SourceFile> input =
-        Lists.newArrayList(SourceFile.fromCode("code", code));
+        ImmutableList.of(SourceFile.fromCode("code", code));
     List<SourceFile> externs = new ArrayList<>();
     compiler.init(externs, input, new CompilerOptions());
     Node root = compiler.parseInputs();

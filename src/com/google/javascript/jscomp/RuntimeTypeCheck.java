@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -123,7 +122,7 @@ class RuntimeTypeCheck implements CompilerPass {
 
       nodeToInsertAfter = addMarker(funType, nodeToInsertAfter, null);
 
-      TreeSet<ObjectType> stuff = Sets.newTreeSet(ALPHA);
+      TreeSet<ObjectType> stuff = new TreeSet<>(ALPHA);
       Iterables.addAll(stuff, funType.getAllImplementedInterfaces());
       for (ObjectType interfaceType : stuff) {
         nodeToInsertAfter =
@@ -303,7 +302,7 @@ class RuntimeTypeCheck implements CompilerPass {
       Node arrayNode = IR.arraylit();
       Collection<JSType> alternates;
       if (type.isUnionType()) {
-        alternates = Sets.newTreeSet(ALPHA);
+        alternates = new TreeSet<>(ALPHA);
         alternates.addAll(type.toMaybeUnionType().getAlternates());
       } else {
         alternates = ImmutableList.of(type);

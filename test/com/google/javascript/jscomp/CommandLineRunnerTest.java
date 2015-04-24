@@ -26,7 +26,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.AbstractCommandLineRunner.FlagUsageException;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
@@ -1547,11 +1546,11 @@ public final class CommandLineRunnerTest extends TestCase {
       inputsSupplier = Suppliers.ofInstance(inputs);
     } else if (useModules == ModulePattern.STAR) {
       modulesSupplier = Suppliers.<List<JSModule>>ofInstance(
-          Lists.newArrayList(
+          ImmutableList.copyOf(
               CompilerTestCase.createModuleStar(original)));
     } else if (useModules == ModulePattern.CHAIN) {
       modulesSupplier = Suppliers.<List<JSModule>>ofInstance(
-          Lists.newArrayList(
+          ImmutableList.copyOf(
               CompilerTestCase.createModuleChain(original)));
     } else {
       throw new IllegalArgumentException("Unknown module type: " + useModules);

@@ -22,7 +22,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
@@ -84,7 +83,7 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testCyclicalDependencyInInputs() {
-    List<SourceFile> inputs = Lists.newArrayList(
+    List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode(
             "gin", "goog.provide('gin'); goog.require('tonic'); var gin = {};"),
         SourceFile.fromCode("tonic",
@@ -125,11 +124,11 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testCommonJSProvidesAndRequire() throws Exception {
-    List<SourceFile> inputs = Lists.newArrayList(
+    List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("gin.js", "require('tonic')"),
         SourceFile.fromCode("tonic.js", ""),
         SourceFile.fromCode("mix.js", "require('gin'); require('tonic');"));
-    List<String> entryPoints = Lists.newArrayList("module$mix");
+    List<String> entryPoints = ImmutableList.of("module$mix");
 
     Compiler compiler = initCompilerForCommonJS(inputs, entryPoints);
     JSModuleGraph graph = compiler.getModuleGraph();
@@ -144,7 +143,7 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testCommonJSMissingRequire() throws Exception {
-    List<SourceFile> inputs = Lists.newArrayList(
+    List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("gin.js", "require('missing')"));
     Compiler compiler = initCompilerForCommonJS(
         inputs, ImmutableList.of("module$gin"));
@@ -170,7 +169,7 @@ public final class CompilerTest extends TestCase {
             normalize("../original/source.html"),
             originalSourcePosition));
     String origSourceName = normalize("original/source.html");
-    List<SourceFile> originalSources = Lists.newArrayList(
+    List<SourceFile> originalSources = ImmutableList.of(
         SourceFile.fromCode(origSourceName, "<div ng-show='foo()'>"));
 
     CompilerOptions options = new CompilerOptions();
@@ -505,7 +504,7 @@ public final class CompilerTest extends TestCase {
 
   public void testDefineOverriding1() throws Exception {
     List<String> defines =
-        Lists.newArrayList(
+        ImmutableList.of(
             "COMPILED",
             "DEF_TRUE=true",
             "DEF_FALSE=false",
@@ -521,46 +520,46 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testDefineOverriding2() throws Exception {
-    List<String> defines = Lists.newArrayList("DEF_STRING='='");
+    List<String> defines = ImmutableList.of("DEF_STRING='='");
     Map<String, Node> expected = ImmutableMap.of(
         "DEF_STRING", Node.newString("="));
     assertDefineOverrides(expected, defines);
   }
 
   public void testDefineOverriding3() throws Exception {
-    List<String> defines = Lists.newArrayList("a.DEBUG");
+    List<String> defines = ImmutableList.of("a.DEBUG");
     Map<String, Node> expected = ImmutableMap.of(
         "a.DEBUG", new Node(Token.TRUE));
     assertDefineOverrides(expected, defines);
   }
 
   public void testBadDefineOverriding1() throws Exception {
-    List<String> defines = Lists.newArrayList("DEF_STRING=");
+    List<String> defines = ImmutableList.of("DEF_STRING=");
     assertCreateDefinesThrowsException(defines);
   }
 
   public void testBadDefineOverriding2() throws Exception {
-    List<String> defines = Lists.newArrayList("DEF_STRING='xyz");
+    List<String> defines = ImmutableList.of("DEF_STRING='xyz");
     assertCreateDefinesThrowsException(defines);
   }
 
   public void testBadDefineOverriding3() throws Exception {
-    List<String> defines = Lists.newArrayList("=true");
+    List<String> defines = ImmutableList.of("=true");
     assertCreateDefinesThrowsException(defines);
   }
 
   public void testBadDefineOverriding4() throws Exception {
-    List<String> defines = Lists.newArrayList("DEF_STRING==");
+    List<String> defines = ImmutableList.of("DEF_STRING==");
     assertCreateDefinesThrowsException(defines);
   }
 
   public void testBadDefineOverriding5() throws Exception {
-    List<String> defines = Lists.newArrayList("DEF_STRING='");
+    List<String> defines = ImmutableList.of("DEF_STRING='");
     assertCreateDefinesThrowsException(defines);
   }
 
   public void testBadDefineOverriding6() throws Exception {
-    List<String> defines = Lists.newArrayList("DEF_STRING='''");
+    List<String> defines = ImmutableList.of("DEF_STRING='''");
     assertCreateDefinesThrowsException(defines);
   }
 

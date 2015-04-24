@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
@@ -2191,17 +2191,17 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testSuppress1() throws Exception {
     JSDocInfo info = parse("@suppress {x} */");
-    assertThat(info.getSuppressions()).isEqualTo(Sets.newHashSet("x"));
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
   }
 
   public void testSuppress2() throws Exception {
     JSDocInfo info = parse("@suppress {x|y|x|z} */");
-    assertThat(info.getSuppressions()).isEqualTo(Sets.newHashSet("x", "y", "z"));
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y", "z"));
   }
 
   public void testSuppress3() throws Exception {
     JSDocInfo info = parse("@suppress {x,y} */");
-    assertThat(info.getSuppressions()).isEqualTo(Sets.newHashSet("x", "y"));
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y"));
   }
 
   public void testBadSuppress1() throws Exception {
@@ -2235,22 +2235,22 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testModifies1() throws Exception {
     JSDocInfo info = parse("@modifies {this} */");
-    assertThat(info.getModifies()).isEqualTo(Sets.newHashSet("this"));
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this"));
   }
 
   public void testModifies2() throws Exception {
     JSDocInfo info = parse("@modifies {arguments} */");
-    assertThat(info.getModifies()).isEqualTo(Sets.newHashSet("arguments"));
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("arguments"));
   }
 
   public void testModifies3() throws Exception {
     JSDocInfo info = parse("@modifies {this|arguments} */");
-    assertThat(info.getModifies()).isEqualTo(Sets.newHashSet("this", "arguments"));
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("this", "arguments"));
   }
 
   public void testModifies4() throws Exception {
     JSDocInfo info = parse("@param {*} x\n * @modifies {x} */");
-    assertThat(info.getModifies()).isEqualTo(Sets.newHashSet("x"));
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("x"));
   }
 
   public void testModifies5() throws Exception {
@@ -2258,7 +2258,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "@param {*} x\n"
         + " * @param {*} y\n"
         + " * @modifies {x} */");
-    assertThat(info.getModifies()).isEqualTo(Sets.newHashSet("x"));
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("x"));
   }
 
   public void testModifies6() throws Exception {
@@ -2266,7 +2266,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "@param {*} x\n"
         + " * @param {*} y\n"
         + " * @modifies {x|y} */");
-    assertThat(info.getModifies()).isEqualTo(Sets.newHashSet("x", "y"));
+    assertThat(info.getModifies()).isEqualTo(ImmutableSet.of("x", "y"));
   }
 
 

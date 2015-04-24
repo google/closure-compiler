@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
 import com.google.javascript.rhino.Node;
@@ -105,7 +105,7 @@ public final class PhaseOptimizerTest extends TestCase {
 
   public void testSchedulingOfAnyKindOfPasses2() {
     optimizer.consume(
-        Lists.newArrayList(
+        ImmutableList.of(
             createPassFactory("a", 0, true),
             createPassFactory("b", 1, false),
             createPassFactory("c", 2, false),
@@ -119,7 +119,7 @@ public final class PhaseOptimizerTest extends TestCase {
 
   public void testSchedulingOfAnyKindOfPasses3() {
     optimizer.consume(
-        Lists.newArrayList(
+        ImmutableList.of(
             createPassFactory("a", 2, false),
             createPassFactory("b", 1, true),
             createPassFactory("c", 1, false)));
@@ -128,7 +128,7 @@ public final class PhaseOptimizerTest extends TestCase {
 
   public void testSchedulingOfAnyKindOfPasses4() {
     optimizer.consume(
-        Lists.newArrayList(
+        ImmutableList.of(
             createPassFactory("a", 2, true),
             createPassFactory("b", 0, false),
             createPassFactory("c", 0, false)));
@@ -183,7 +183,7 @@ public final class PhaseOptimizerTest extends TestCase {
 
   public void assertPasses(String ... names) {
     optimizer.process(null, dummyRoot);
-    assertEquals(Lists.newArrayList(names), passesRun);
+    assertEquals(ImmutableList.copyOf(names), passesRun);
   }
 
   private void addOneTimePass(String name) {

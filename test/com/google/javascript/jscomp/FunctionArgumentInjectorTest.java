@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -55,37 +55,37 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   }
 
   public void testFindModifiedParameters3() {
-    assertEquals(Sets.newHashSet("a"),
+    assertEquals(ImmutableSet.of("a"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction("function f(a){ a=0 }")));
   }
 
   public void testFindModifiedParameters4() {
-    assertEquals(Sets.newHashSet("a", "b"),
+    assertEquals(ImmutableSet.of("a", "b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction("function f(a,b){ a=0;b=0 }")));
   }
 
   public void testFindModifiedParameters5() {
-    assertEquals(Sets.newHashSet("b"),
+    assertEquals(ImmutableSet.of("b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction("function f(a,b){ a; if (a) b=0 }")));
   }
 
   public void testFindModifiedParameters6() {
-    assertEquals(Sets.newHashSet("a", "b"),
+    assertEquals(ImmutableSet.of("a", "b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction("function f(a,b){ function f(){ a;b; } }")));
   }
 
   public void testFindModifiedParameters7() {
-    assertEquals(Sets.newHashSet("b"),
+    assertEquals(ImmutableSet.of("b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction("function f(a,b){ a; function f(){ b; } }")));
   }
 
   public void testFindModifiedParameters8() {
-    assertEquals(Sets.newHashSet("b"),
+    assertEquals(ImmutableSet.of("b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction(
                 "function f(a,b){ " +
@@ -93,19 +93,19 @@ public final class FunctionArgumentInjectorTest extends TestCase {
   }
 
   public void testFindModifiedParameters9() {
-    assertEquals(Sets.newHashSet("a", "b"),
+    assertEquals(ImmutableSet.of("a", "b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction("function f(a,b){ (function(){ a;b; }) }")));
   }
 
   public void testFindModifiedParameters10() {
-    assertEquals(Sets.newHashSet("b"),
+    assertEquals(ImmutableSet.of("b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction("function f(a,b){ a; (function (){ b; }) }")));
   }
 
   public void testFindModifiedParameters11() {
-    assertEquals(Sets.newHashSet("b"),
+    assertEquals(ImmutableSet.of("b"),
         FunctionArgumentInjector.findModifiedParameters(
             parseFunction(
                 "function f(a,b){ " +
@@ -118,7 +118,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){}; foo(goo(),goo());",
         "foo",
-        Sets.newHashSet("a", "b"));
+        ImmutableSet.of("a", "b"));
   }
 
   public void testMaybeAddTempsForCallArguments2() {
@@ -145,7 +145,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){a;goo();b;}; foo(x,y);",
         "foo",
-        Sets.newHashSet("b"));
+        ImmutableSet.of("b"));
   }
 
   public void testMaybeAddTempsForCallArguments5() {
@@ -154,7 +154,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){x = b; y = a;}; foo(x,y);",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments6() {
@@ -163,7 +163,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){x++;a;}; foo(x);",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments7() {
@@ -179,7 +179,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){var c = {}; c.goo=0; a;}; foo(x);",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments9() {
@@ -188,7 +188,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){while(true){a;goo();b;}}; foo(x,y);",
         "foo",
-        Sets.newHashSet("a", "b"));
+        ImmutableSet.of("a", "b"));
   }
 
   public void testMaybeAddTempsForCallArguments10() {
@@ -205,7 +205,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){do{a;b;}while(goo());}; foo(x,y);",
         "foo",
-        Sets.newHashSet("a", "b"));
+        ImmutableSet.of("a", "b"));
   }
 
   public void testMaybeAddTempsForCallArguments12() {
@@ -214,7 +214,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){for(;;){a;b;goo();}}; foo(x,y);",
         "foo",
-        Sets.newHashSet("a", "b"));
+        ImmutableSet.of("a", "b"));
   }
 
   public void testMaybeAddTempsForCallArguments13() {
@@ -223,7 +223,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){for(;;){for(;;){a;b;}goo();}}; foo(x,y);",
         "foo",
-        Sets.newHashSet("a", "b"));
+        ImmutableSet.of("a", "b"));
   }
 
   public void testMaybeAddTempsForCallArguments14() {
@@ -232,7 +232,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b){goo();for(;;){a;b;}}; foo(x,y);",
         "foo",
-        Sets.newHashSet("a", "b"));
+        ImmutableSet.of("a", "b"));
   }
 
   public void testMaybeAddTempsForCallArguments20() {
@@ -240,7 +240,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){a;a;}; foo(\"blah blah\");",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments21() {
@@ -261,12 +261,12 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){a;}; foo({x:1});",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
     // A object literal, referenced more than once, should have a temp.
     testNeededTemps(
         "function foo(a){a;a;}; foo({x:1});",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments23() {
@@ -279,12 +279,12 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){a;}; foo([1,2]);",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
     // A array literal, referenced more than once, should have a temp.
     testNeededTemps(
         "function foo(a){a;a;}; foo([1,2]);",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments24() {
@@ -297,12 +297,12 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){a;}; foo(/mac/);",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
     // A regex literal, referenced more than once, should have a temp.
     testNeededTemps(
         "function foo(a){a;a;}; foo(/mac/);",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments25() {
@@ -315,13 +315,13 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){a;}; foo(new Date());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
     // A side-effect-less constructor, referenced more than once, should have
     // a temp.
     testNeededTemps(
         "function foo(a){a;a;}; foo(new Date());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments26() {
@@ -329,17 +329,17 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){}; foo(new Bar());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
     // A constructor, referenced once, should have a temp.
     testNeededTemps(
         "function foo(a){a;}; foo(new Bar());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
     // A constructor, referenced more than once, should have a temp.
     testNeededTemps(
         "function foo(a){a;a;}; foo(new Bar());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   public void testMaybeAddTempsForCallArguments27() {
@@ -348,7 +348,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a,b,c){}; foo.call(this,1,goo(),2);",
         "foo",
-        Sets.newHashSet("b"));
+        ImmutableSet.of("b"));
   }
 
   public void testMaybeAddTempsForCallArguments28() {
@@ -397,17 +397,17 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     testNeededTemps(
         "function foo(a){for(;;)a;}; foo(new Bar());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
 
     testNeededTemps(
         "function foo(a){while(true)a;}; foo(new Bar());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
 
     testNeededTemps(
         "function foo(a){do{a;}while(true)}; foo(new Bar());",
         "foo",
-        Sets.newHashSet("a"));
+        ImmutableSet.of("a"));
   }
 
   private void testNeededTemps(

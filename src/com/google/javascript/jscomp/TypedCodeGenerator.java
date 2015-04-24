@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeIRegistry;
@@ -28,6 +27,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A code generator that outputs type annotations for functions and
@@ -170,7 +170,7 @@ class TypedCodeGenerator extends CodeGenerator {
       }
 
       // Avoid duplicates, add implemented type to a set first
-      Set<String> interfaces = Sets.newTreeSet();
+      Set<String> interfaces = new TreeSet<>();
       for (ObjectType interfaze : funType.getImplementedInterfaces()) {
         interfaces.add(interfaze.toAnnotationString());
       }

@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -110,8 +110,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     final CompilerOptions options = compiler.getOptions();
     options.setClosurePass(true);
     compiler.init(
-        Lists.newArrayList(SourceFile.fromCode("[externs]", externs)),
-        Lists.newArrayList(SourceFile.fromCode("[testcode]", js)),
+        ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
+        ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         options);
 
     Node externsRoot = IR.block();

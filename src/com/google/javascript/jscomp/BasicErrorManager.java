@@ -16,12 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Sets;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * <p>A basic error manager that sorts all errors and warnings reported to it to
@@ -35,7 +34,7 @@ import java.util.SortedSet;
  */
 public abstract class BasicErrorManager implements ErrorManager {
   private final SortedSet<ErrorWithLevel> messages =
-      Sets.newTreeSet(new LeveledJSErrorComparator());
+      new TreeSet<>(new LeveledJSErrorComparator());
   private int errorCount = 0;
   private int warningCount = 0;
   private double typedPercent = 0.0;

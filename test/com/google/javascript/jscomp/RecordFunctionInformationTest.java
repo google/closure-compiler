@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -135,7 +134,7 @@ public final class RecordFunctionInformationTest extends TestCase {
       Compiler compiler = new Compiler();
       compiler.initModules(
           ImmutableList.of(SourceFile.fromCode("externs", "")),
-          Lists.newArrayList(modules),
+          ImmutableList.copyOf(modules),
           new CompilerOptions());
       return compiler;
   }

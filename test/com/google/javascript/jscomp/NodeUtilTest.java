@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -679,19 +678,19 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testGetVarsDeclaredInBranch() {
-    assertNodeNames(Sets.newHashSet("foo"),
+    assertNodeNames(ImmutableSet.of("foo"),
         NodeUtil.getVarsDeclaredInBranch(
             parse("var foo;")));
-    assertNodeNames(Sets.newHashSet("foo", "goo"),
+    assertNodeNames(ImmutableSet.of("foo", "goo"),
         NodeUtil.getVarsDeclaredInBranch(
             parse("var foo,goo;")));
-    assertNodeNames(new HashSet<String>(),
+    assertNodeNames(ImmutableSet.<String>of(),
         NodeUtil.getVarsDeclaredInBranch(
             parse("foo();")));
-    assertNodeNames(new HashSet<String>(),
+    assertNodeNames(ImmutableSet.<String>of(),
         NodeUtil.getVarsDeclaredInBranch(
             parse("function f(){var foo;}")));
-    assertNodeNames(Sets.newHashSet("goo"),
+    assertNodeNames(ImmutableSet.of("goo"),
         NodeUtil.getVarsDeclaredInBranch(
             parse("var goo;function f(){var foo;}")));
   }

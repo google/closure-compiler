@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.rhino.Node;
 
@@ -234,7 +233,7 @@ abstract class IntegrationTestCase extends TestCase {
       inputs.add(SourceFile.fromCode("input" + i, original[i]));
     }
     compiler.compileModules(
-        externs, Lists.newArrayList(CompilerTestCase.createModuleChain(original)),
+        externs, ImmutableList.copyOf(CompilerTestCase.createModuleChain(original)),
         options);
     return compiler;
   }

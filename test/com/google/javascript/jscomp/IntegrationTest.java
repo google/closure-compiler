@@ -22,7 +22,7 @@ import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -607,7 +607,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.setIdGenerators(Sets.newHashSet("f"));
+    options.setIdGenerators(ImmutableSet.of("f"));
     test(options, code, "function f() {} 'a';");
   }
 
@@ -786,7 +786,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testExtraAnnotationNames() {
     CompilerOptions options = createCompilerOptions();
-    options.setExtraAnnotationNames(Sets.newHashSet("TagA", "TagB"));
+    options.setExtraAnnotationNames(ImmutableSet.of("TagA", "TagB"));
     test(
         options,
         "/** @TagA */ var f = new Foo(); /** @TagB */ f.bar();",

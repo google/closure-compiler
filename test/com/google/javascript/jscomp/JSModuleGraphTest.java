@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -164,7 +163,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(E, "c1", "e1", "e2");
 
     assertEquals(
-        Lists.newArrayList("a1", "a3", "a2", "b2", "c1", "e1", "e2"),
+        ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"),
         sourceNames(results));
   }
 
@@ -179,7 +178,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(E, "e1", "e2");
 
     assertEquals(
-        Lists.newArrayList("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"),
+        ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"),
         sourceNames(results));
   }
 
@@ -225,7 +224,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(E, "e1", "e2");
 
     assertEquals(
-        Lists.newArrayList(
+        ImmutableList.of(
             "a1", "a2", "a3", "b1", "b2", "c1", "c2", "e1", "e2"),
         sourceNames(results));
   }
@@ -315,7 +314,7 @@ public final class JSModuleGraphTest extends TestCase {
 
   private void assertInputs(JSModule module, String ... sourceNames) {
     assertEquals(
-        Lists.newArrayList(sourceNames),
+        ImmutableList.copyOf(sourceNames),
         sourceNames(module.getInputs()));
   }
 
@@ -346,11 +345,11 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   private List<String> provides(String ... strings) {
-    return Lists.newArrayList(strings);
+    return ImmutableList.copyOf(strings);
   }
 
   private List<String> requires(String ... strings) {
-    return Lists.newArrayList(strings);
+    return ImmutableList.copyOf(strings);
   }
 
   private void assertDeepestCommonDepInclusive(

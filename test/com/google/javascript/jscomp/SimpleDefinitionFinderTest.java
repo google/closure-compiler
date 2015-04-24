@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultiset;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -27,13 +26,14 @@ import com.google.javascript.rhino.Token;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Tests for {@link SimpleDefinitionFinder}
  *
  */
 public final class SimpleDefinitionFinderTest extends CompilerTestCase {
-  Set<String> found = Sets.newTreeSet();
+  Set<String> found = new TreeSet<>();
 
   @Override
   protected int getNumRepetitions() {

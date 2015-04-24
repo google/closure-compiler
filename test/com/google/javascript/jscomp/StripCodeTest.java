@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Sets;
-
+import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 /**
@@ -39,7 +38,7 @@ public final class StripCodeTest extends CompilerTestCase {
    * @return A new {@link StripCode} instance
    */
   private static StripCode createLoggerInstance(Compiler compiler) {
-    Set<String> stripTypes = Sets.newHashSet(
+    Set<String> stripTypes = ImmutableSet.of(
         "goog.debug.DebugWindow",
         "goog.debug.FancyWindow",
         "goog.debug.Formatter",
@@ -51,7 +50,7 @@ public final class StripCodeTest extends CompilerTestCase {
         "goog.net.BrowserChannel.LogSaver",
         "GA_GoogleDebugger");
 
-    Set<String> stripNames = Sets.newHashSet(
+    Set<String> stripNames = ImmutableSet.of(
         "logger",
         "logger_",
         "debugWindow",
@@ -59,8 +58,8 @@ public final class StripCodeTest extends CompilerTestCase {
         "logFormatter_",
         "logBuffer_");
 
-    Set<String> stripNamePrefixes = Sets.newHashSet("trace");
-    Set<String> stripTypePrefixes = Sets.newHashSet("e.f.Trace");
+    Set<String> stripNamePrefixes = ImmutableSet.of("trace");
+    Set<String> stripTypePrefixes = ImmutableSet.of("e.f.Trace");
 
     return new StripCode(compiler, stripTypes, stripNames, stripTypePrefixes,
         stripNamePrefixes);
