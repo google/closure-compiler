@@ -209,14 +209,6 @@ public class DiagnosticGroups {
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
 
-  // TODO(jlklein): Remove this when the "constructor" property in Polymer is renamed to avoid
-  // collisions with the JS Object "constructor" property.
-  public static final DiagnosticGroup HIDDEN_INTERFACE_PROPERTY =
-      DiagnosticGroups.registerGroup("hiddenProperty",
-          TypeCheck.HIDDEN_INTERFACE_PROPERTY,
-          TypeCheck.HIDDEN_SUPERCLASS_PROPERTY,
-          TypeCheck.HIDDEN_SUPERCLASS_PROPERTY_MISMATCH);
-
   // Part of the new type inference (under development)
   public static final DiagnosticGroup NEW_CHECK_TYPES =
       DiagnosticGroups.registerGroup("newCheckTypes",

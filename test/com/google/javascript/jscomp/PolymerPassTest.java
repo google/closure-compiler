@@ -318,7 +318,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "  /**",
         "   * @param {string} name",
         "   */",
-        "  constructor: function(name) { alert('hi, ' + name); },",
+        "  factoryImpl: function(name) { alert('hi, ' + name); },",
         "});"),
 
         Joiner.on("\n").join(
@@ -331,8 +331,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "var X = function(name) { alert('hi, ' + name); };",
         "X = Polymer(/** @lends {X.prototype} */ {",
         "  is: 'x-element',",
-        "  /** @suppress {hiddenProperty} */",
-        "  constructor: function(name) { alert('hi, ' + name); },",
+        "  factoryImpl: function(name) { alert('hi, ' + name); },",
         "});"));
   }
 

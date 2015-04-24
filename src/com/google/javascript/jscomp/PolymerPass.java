@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -227,7 +226,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(target);
 
     JSDocInfo ctorInfo = null;
-    Node constructor = NodeUtil.getFirstPropMatchingKey(descriptor, "constructor");
+    Node constructor = NodeUtil.getFirstPropMatchingKey(descriptor, "factoryImpl");
     if (constructor == null) {
       constructor = IR.function(IR.name(""), IR.paramList(), IR.block());
       constructor.useSourceInfoFromForTree(callNode);
@@ -286,13 +285,6 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     Node ctorKey = cls.constructor.value.getParent();
     if (ctorKey != null) {
       ctorKey.removeProp(Node.JSDOC_INFO_PROP);
-
-      // TODO(jlklein): Remove this suppression and the DiagnosticGroup when the "constructor"
-      // property in Polymer is renamed to avoid collisions with the JS Object "constructor"
-      // property.
-      JSDocInfoBuilder suppressInfo = new JSDocInfoBuilder(true);
-      suppressInfo.recordSuppressions(ImmutableSet.of("hiddenProperty"));
-      ctorKey.setJSDocInfo(suppressInfo.build());
     }
 
     if (cls.target.isGetProp()) {
