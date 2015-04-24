@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayList;
