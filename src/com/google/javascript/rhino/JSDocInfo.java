@@ -45,8 +45,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1610,7 +1608,7 @@ public class JSDocInfo implements Serializable {
   boolean addImplementedInterface(JSTypeExpression interfaceName) {
     lazyInitInfo();
     if (info.implementedInterfaces == null) {
-      info.implementedInterfaces = Lists.newArrayListWithCapacity(2);
+      info.implementedInterfaces = new ArrayList<>(2);
     }
     if (info.implementedInterfaces.contains(interfaceName)) {
       return false;
@@ -1651,7 +1649,7 @@ public class JSDocInfo implements Serializable {
   boolean addExtendedInterface(JSTypeExpression type) {
     lazyInitInfo();
     if (info.extendedInterfaces == null) {
-      info.extendedInterfaces = Lists.newArrayListWithCapacity(2);
+      info.extendedInterfaces = new ArrayList<>(2);
     }
     if (info.extendedInterfaces.contains(type)) {
       return false;

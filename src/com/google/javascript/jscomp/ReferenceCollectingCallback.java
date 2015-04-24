@@ -21,8 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -208,7 +206,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
     // CollapseProperties.
     List<BasicBlock> newBlockStack = null;
     if (containingScope.isGlobal()) {
-      newBlockStack = Lists.newArrayList(blockStack.get(0));
+      newBlockStack = new ArrayList<>();
+      newBlockStack.add(blockStack.get(0));
     } else {
       for (int i = 0; i < blockStack.size(); i++) {
         if (blockStack.get(i).root == containingScope.getRootNode()) {

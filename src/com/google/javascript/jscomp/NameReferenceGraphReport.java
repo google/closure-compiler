@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NameReferenceGraph.Name;
 import com.google.javascript.jscomp.NameReferenceGraph.Reference;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
@@ -25,6 +25,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -70,8 +71,8 @@ final class NameReferenceGraphReport {
    */
   public String getHtmlReport() {
     StringBuilder builder = new StringBuilder();
-    List<DiGraphNode<Name, Reference>> nodes = Lists.newArrayList(
-        graph.getDirectedGraphNodes());
+    List<DiGraphNode<Name, Reference>> nodes = new ArrayList<>();
+    Iterables.addAll(nodes, graph.getDirectedGraphNodes());
 
     generateHtmlReportHeader(builder);
 

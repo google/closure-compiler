@@ -44,7 +44,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TY
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
@@ -53,6 +52,7 @@ import com.google.javascript.rhino.TypeI;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -355,7 +355,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     if (prototypeSlot == null) {
       return super.getOwnPropertyNames();
     } else {
-      Set<String> names = Sets.newHashSet("prototype");
+      Set<String> names = new HashSet<>();
+      names.add("prototype");
       names.addAll(super.getOwnPropertyNames());
       return names;
     }
@@ -1085,6 +1086,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * @throws IllegalStateException if this function is not a constructor
    *         (see {@link #isConstructor()}).
    */
+  @Override
   public ObjectType getInstanceType() {
     Preconditions.checkState(hasInstanceType());
     return typeOfThis.toObjectType();
@@ -1117,6 +1119,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   /**
    * Gets the source node or null if this is an unknown function.
    */
+  @Override
   public Node getSource() {
     return source;
   }
@@ -1124,6 +1127,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   /**
    * Sets the source node.
    */
+  @Override
   public void setSource(Node source) {
     if (prototypeSlot != null) {
       // NOTE(bashir): On one hand when source is null we want to drop any

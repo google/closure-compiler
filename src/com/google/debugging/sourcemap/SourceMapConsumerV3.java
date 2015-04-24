@@ -17,7 +17,6 @@
 package com.google.debugging.sourcemap;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder;
@@ -128,7 +127,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
       names = getJavaStringArray(sourceMapRoot.get("names").getAsJsonArray());
 
       if (lineCount >= 0) {
-        lines = Lists.newArrayListWithCapacity(lineCount);
+        lines = new ArrayList<>(lineCount);
       } else {
         lines = new ArrayList<>();
       }

@@ -30,7 +30,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
@@ -55,6 +54,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.UnionType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -207,7 +207,7 @@ class TypeInference
     BooleanOutcomePair conditionOutcomes = null;
 
     List<DiGraphEdge<Node, Branch>> branchEdges = getCfg().getOutEdges(source);
-    List<FlowScope> result = Lists.newArrayListWithCapacity(branchEdges.size());
+    List<FlowScope> result = new ArrayList<>(branchEdges.size());
     for (DiGraphEdge<Node, Branch> branchEdge : branchEdges) {
       Branch branch = branchEdge.getValue();
       FlowScope newScope = output;

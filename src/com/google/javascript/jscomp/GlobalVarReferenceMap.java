@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
@@ -217,8 +216,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
    */
   public void updateReferencesWithGlobalScope(Scope globalScope) {
     for (ReferenceCollection collection : refMap.values()) {
-      List<Reference> newRefs =
-          Lists.newArrayListWithCapacity(collection.references.size());
+      List<Reference> newRefs = new ArrayList<>(collection.references.size());
       for (Reference ref : collection.references) {
         if (ref.getScope() != globalScope) {
           newRefs.add(ref.cloneWithNewScope(globalScope));

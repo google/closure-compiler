@@ -43,12 +43,12 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * The object type represents instances of JavaScript objects such as
@@ -286,7 +286,7 @@ public class PrototypeObjectType extends ObjectType {
       prettyPrint = false;
 
       // Use a tree set so that the properties are sorted.
-      Set<String> propertyNames = Sets.newTreeSet();
+      Set<String> propertyNames = new TreeSet<>();
       for (ObjectType current = this;
            current != null && !current.isNativeObjectType() &&
                propertyNames.size() <= MAX_PRETTY_PRINTED_PROPERTIES;

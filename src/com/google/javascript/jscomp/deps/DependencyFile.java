@@ -19,10 +19,10 @@ package com.google.javascript.jscomp.deps;
 import static com.google.javascript.jscomp.deps.DefaultDependencyResolver.CLOSURE_BASE;
 import static com.google.javascript.jscomp.deps.DefaultDependencyResolver.CLOSURE_BASE_PROVIDE;
 
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.LoggerErrorManager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -114,10 +114,14 @@ public final class DependencyFile implements SourceFile {
         dependencies.put(provide, depInfo);
       }
     }
+
+    List<String> provides = new ArrayList<>();
+    provides.add(CLOSURE_BASE_PROVIDE);
+
     // Add implicit base.js entry.
     dependencies.put(CLOSURE_BASE_PROVIDE,
         new SimpleDependencyInfo(CLOSURE_BASE, CLOSURE_BASE,
-            Lists.newArrayList(CLOSURE_BASE_PROVIDE),
+            provides,
             Collections.<String>emptyList(), false));
     errorManager.generateReport();
 

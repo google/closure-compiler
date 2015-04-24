@@ -21,7 +21,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.rhino.Node;
@@ -60,7 +60,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
   public void testBasicMismatch() throws Exception {
     testSame("/** @param {number} x */ function f(x) {} f('a');",
         TYPE_MISMATCH_WARNING);
-    assertMismatches(Lists.newArrayList(fromNatives(STRING_TYPE, NUMBER_TYPE)));
+    assertMismatches(ImmutableList.of(fromNatives(STRING_TYPE, NUMBER_TYPE)));
   }
 
   public void testFunctionMismatch() throws Exception {
@@ -79,7 +79,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     JSType secondFunction = registry.createFunctionType(string, bool);
 
     assertMismatches(
-        Lists.newArrayList(
+        ImmutableList.of(
             new TypeMismatch(firstFunction, secondFunction, null),
             fromNatives(STRING_TYPE, BOOLEAN_TYPE),
             fromNatives(NUMBER_TYPE, STRING_TYPE)));
@@ -101,7 +101,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
     JSType secondFunction = registry.createFunctionType(number, bool);
 
     assertMismatches(
-        Lists.newArrayList(
+        ImmutableList.of(
             new TypeMismatch(firstFunction, secondFunction, null),
             fromNatives(STRING_TYPE, BOOLEAN_TYPE)));
   }
@@ -173,7 +173,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   private void assertMismatches(List<TypeMismatch> expected) {
-    List<TypeMismatch> actual = Lists.newArrayList(compiler.getTypeMismatches());
+    List<TypeMismatch> actual = ImmutableList.copyOf(compiler.getTypeMismatches());
     assertEquals(expected, actual);
   }
 }

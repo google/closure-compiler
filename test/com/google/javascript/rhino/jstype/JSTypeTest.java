@@ -43,8 +43,8 @@ import static com.google.javascript.rhino.jstype.TernaryValue.TRUE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -3054,7 +3054,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(stringMethodEmpty.isSubtype(dateMethodEmpty));
 
     // Systemic tests.
-    List<FunctionType> allFunctions = Lists.newArrayList(
+    List<FunctionType> allFunctions = ImmutableList.of(
         dateMethodEmpty, dateMethodWithParam, dateMethodWithReturn,
         stringMethodEmpty, stringMethodWithParam, stringMethodWithReturn);
     for (int i = 0; i < allFunctions.size(); i++) {
@@ -3122,7 +3122,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(googBarMethod.isSubtype(googSubBarMethod));
     assertTrue(googBarReturnFn.isSubtype(googSubBarReturnFn));
 
-    List<FunctionType> allFunctions = Lists.newArrayList(
+    List<FunctionType> allFunctions = ImmutableList.of(
         googBarMethod, googBarParamFn, googBarReturnFn,
         googSubBarMethod, googSubBarParamFn, googSubBarReturnFn);
     for (int i = 0; i < allFunctions.size(); i++) {
@@ -4572,7 +4572,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Types to test for symmetrical relationships.
    */
   private List<JSType> getTypesToTestForSymmetry() {
-    return Lists.newArrayList(
+    return ImmutableList.of(
         UNKNOWN_TYPE,
         NULL_TYPE,
         VOID_TYPE,
@@ -4931,7 +4931,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testNamedSubtypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
@@ -4968,7 +4968,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("c", NUMBER_TYPE, null);
     JSType abcType = builder.build();
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
@@ -4986,7 +4986,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("date", DATE_TYPE, null);
     JSType hasDateProperty = builder.build();
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         hasDateProperty,
         googBar.getInstanceType(),
@@ -5000,7 +5000,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     builder.addProperty("date", UNKNOWN_TYPE, null);
     JSType hasUnknownDateProperty = builder.build();
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         hasUnknownDateProperty,
         googBar.getInstanceType(),
@@ -5010,7 +5010,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testNullableNamedTypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.createOptionalNullableType(
             registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE)),
@@ -5028,7 +5028,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testEnumTypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
@@ -5039,7 +5039,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testFunctionSubtypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
@@ -5053,7 +5053,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testFunctionUnionSubtypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         createUnionType(
             OBJECT_TYPE,
             STRING_TYPE),
@@ -5076,7 +5076,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testConstructorSubtypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
@@ -5088,7 +5088,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testGoogBarSubtypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         googBar,
         googSubBar,
@@ -5103,7 +5103,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     FunctionType googSubBarArgConstructor = registry.createConstructorType(
         "subBarArg", null, registry.createParameters(googSubBar), null, null);
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
         googBarArgConstructor,
         googSubBarArgConstructor,
@@ -5112,7 +5112,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testInterfaceInstanceSubtypeChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         ALL_TYPE,
         OBJECT_TYPE,
         interfaceInstType,
@@ -5130,7 +5130,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
       registry.createConstructorType("goog.TempType", null, null, null, null);
     tempType.setImplementedInterfaces(
         Lists.<ObjectType>newArrayList(subInterfaceInstType));
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         ALL_TYPE,
         OBJECT_TYPE,
         interfaceInstType,
@@ -5143,7 +5143,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   }
 
   public void testAnonymousObjectChain() throws Exception {
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         ALL_TYPE,
         createNullableType(OBJECT_TYPE),
         OBJECT_TYPE,
@@ -5157,7 +5157,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     ObjectType enumElemType = registry.createEnumType(
         "typeB", null,
         registry.createAnonymousObjectType(null)).getElementsType();
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         ALL_TYPE,
         createNullableType(OBJECT_TYPE),
         OBJECT_TYPE,
@@ -5177,7 +5177,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType arrayOfAllType = createTemplatizedType(
         ARRAY_TYPE, ALL_TYPE);
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         arrayOfAllType,
@@ -5201,7 +5201,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType arrayOfAllType = createTemplatizedType(
         ARRAY_TYPE, ALL_TYPE);
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         arrayOfAllType,
@@ -5224,7 +5224,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType objectOfAllType = createTemplatizedType(
         OBJECT_TYPE, ALL_TYPE);
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         objectOfAllType,
@@ -5248,7 +5248,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     JSType objectOfAllType = createTemplatizedType(
         OBJECT_TYPE, ALL_TYPE);
 
-    List<JSType> typeChain = Lists.newArrayList(
+    List<JSType> typeChain = ImmutableList.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.OBJECT_TYPE),
         objectOfAllType,
@@ -5970,10 +5970,10 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     sup.defineProperty("base", null, false, null);
     sub.defineProperty("sub", null, false, null);
 
-    assertEquals(Sets.newHashSet("isPrototypeOf", "toLocaleString",
+    assertEquals(ImmutableSet.of("isPrototypeOf", "toLocaleString",
           "propertyIsEnumerable", "toString", "valueOf", "hasOwnProperty",
           "constructor", "base", "sub"), sub.getPropertyNames());
-    assertEquals(Sets.newHashSet("isPrototypeOf", "toLocaleString",
+    assertEquals(ImmutableSet.of("isPrototypeOf", "toLocaleString",
           "propertyIsEnumerable", "toString", "valueOf", "hasOwnProperty",
           "constructor", "base"), sup.getPropertyNames());
 

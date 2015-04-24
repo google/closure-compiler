@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 /**
  * {@link RenameProperties} tests.
@@ -379,7 +378,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
 
     Compiler compiler = new Compiler();
     compiler.compileModules(
-        ImmutableList.of(externsInput), Lists.newArrayList(modules), options);
+        ImmutableList.of(externsInput), ImmutableList.copyOf(modules), options);
     return compiler;
   }
 

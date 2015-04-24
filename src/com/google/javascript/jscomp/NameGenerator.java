@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Maps;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -108,8 +108,7 @@ final class NameGenerator {
     this.reservedNames = reservedNames;
     this.prefix = prefix;
 
-    this.priorityLookupMap = Maps.newHashMapWithExpectedSize(
-        NONFIRST_CHAR.length);
+    this.priorityLookupMap = new HashMap<>(NONFIRST_CHAR.length);
 
     int order = 0;
     for (char c : NONFIRST_CHAR) {

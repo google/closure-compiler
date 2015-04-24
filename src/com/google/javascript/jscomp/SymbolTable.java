@@ -22,9 +22,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
@@ -51,6 +49,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -361,7 +360,7 @@ public final class SymbolTable {
 
     UnionType unionType = type.toMaybeUnionType();
     if (unionType != null) {
-      List<Symbol> result = Lists.newArrayListWithExpectedSize(2);
+      List<Symbol> result = new ArrayList<>(2);
       for (JSType alt : unionType.getAlternates()) {
         // Our type system never has nested unions.
         Symbol altSym = getSymbolForTypeHelper(alt, true);
@@ -499,7 +498,7 @@ public final class SymbolTable {
    * "function%0", "function%1", etc.
    */
   public void addAnonymousFunctions() {
-    TreeSet<SymbolScope> scopes = Sets.newTreeSet(lexicalScopeOrdering);
+    TreeSet<SymbolScope> scopes = new TreeSet<>(lexicalScopeOrdering);
     for (SymbolScope scope : getAllScopes()) {
       if (scope.isLexicalScope()) {
         scopes.add(scope);
@@ -960,7 +959,8 @@ public final class SymbolTable {
       if (instanceType.getOwnerFunction().hasInstanceType()) {
         // Merge the properties of "Foo.prototype" and "new Foo()" together.
         instanceType = instanceType.getOwnerFunction().getInstanceType();
-        Set<String> set = Sets.newHashSet(propNames);
+        Set<String> set = new HashSet<>();
+        Iterables.addAll(set, propNames);
         set.addAll(instanceType.getOwnPropertyNames());
         propNames = set;
       }

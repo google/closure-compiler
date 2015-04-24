@@ -49,7 +49,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -61,6 +60,7 @@ import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -744,7 +744,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   private static List<ObjectType> getSuperStack(ObjectType a) {
-    List<ObjectType> stack = Lists.newArrayListWithExpectedSize(5);
+    List<ObjectType> stack = new ArrayList<>(5);
     for (ObjectType current = a;
          current != null;
          current = current.getImplicitPrototype()) {

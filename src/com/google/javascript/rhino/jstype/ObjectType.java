@@ -45,12 +45,12 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Object type.
@@ -265,6 +265,7 @@ public abstract class ObjectType
    * @return this object's constructor or {@code null} if it is a native
    * object (constructed natively v.s. by instantiation of a function)
    */
+  @Override
   public abstract FunctionType getConstructor();
 
   /**
@@ -497,7 +498,7 @@ public abstract class ObjectType
    * its supertypes.
    */
   public Set<String> getPropertyNames() {
-    Set<String> props = Sets.newTreeSet();
+    Set<String> props = new TreeSet<>();
     collectPropertyNames(props);
     return props;
   }

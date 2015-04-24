@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.InputId;
@@ -1751,7 +1751,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function f(x) { g(x) }" +
         "/** @param {number} x */" +
         "function g(x) {}",
-        Lists.newArrayList(
+        ImmutableList.of(
             "Bad type annotation. Unknown type booool",
             "actual parameter 1 of g does not match formal parameter\n" +
             "found   : (booool|null|string)\n" +
@@ -2390,7 +2390,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {!Foo} */ goog.foo;" +
         "/** @type {string} */ goog.foo = 'x';" +
         "/** @constructor */ function Foo() {}",
-        Lists.newArrayList(
+        ImmutableList.of(
             "assignment to property foo of goog\n" +
             "found   : string\n" +
             "required: Foo",
@@ -2404,7 +2404,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {!Foo} */ goog.foo;" +
         "/** @type {string}\n * @suppress {duplicate} */ goog.foo = 'x';" +
         "/** @constructor */ function Foo() {}",
-        Lists.newArrayList(
+        ImmutableList.of(
             "assignment to property foo of goog\n" +
             "found   : string\n" +
             "required: Foo",
@@ -2457,7 +2457,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testClosureTypesMultipleWarnings(
         "/** @param {number} x */\n" +
         "function f(x) { /** @type {string} */ var x = ''; }",
-        Lists.newArrayList(
+        ImmutableList.of(
             "variable x redefined with type string, original definition" +
             " at [testcode]:2 with type number",
             "initializing variable\n" +
@@ -2656,7 +2656,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testTypeRedefinition() throws Exception {
     testClosureTypesMultipleWarnings("a={};/**@enum {string}*/ a.A = {ZOR:'b'};"
         + "/** @constructor */ a.A = function() {}",
-        Lists.newArrayList(
+        ImmutableList.of(
             "variable a.A redefined with type function (new:a.A): undefined, " +
             "original definition at [testcode]:1 with type enum{a.A}",
             "assignment to property A of a\n" +
@@ -2999,7 +2999,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testEnum8() throws Exception {
     testClosureTypesMultipleWarnings("/** @enum */var a=8;",
-        Lists.newArrayList(
+        ImmutableList.of(
             "enum initializer must be an object literal or an enum",
             "initializing variable\n" +
             "found   : number\n" +
@@ -3010,7 +3010,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testClosureTypesMultipleWarnings(
         "var goog = {};" +
         "/** @enum */goog.a=8;",
-        Lists.newArrayList(
+        ImmutableList.of(
             "assignment to property a of goog\n" +
             "found   : number\n" +
             "required: enum{goog.a}",
@@ -3979,7 +3979,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testClosureTypesMultipleWarnings(
         "/** @interface */function Disposable() {}\n" +
         "/** @type {function()} */ Disposable.prototype.bar = 3;",
-        Lists.newArrayList(
+        ImmutableList.of(
             "assignment to property bar of Disposable.prototype\n" +
             "found   : number\n" +
             "required: function (): ?",
@@ -7600,7 +7600,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "})();" +
         "/** @param {ns.Foo} x */ function f(x) {}" +
         "f(new ns.Foo(true));",
-        Lists.newArrayList(
+        ImmutableList.of(
             "actual parameter 1 of ns.Foo does not match formal parameter\n" +
             "found   : boolean\n" +
             "required: number"));
@@ -10131,7 +10131,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testClosureTypesMultipleWarnings(
         "/** @interface */ function T() {};\n" +
         "/** @return {number} */T.prototype.x = 1",
-        Lists.newArrayList(
+        ImmutableList.of(
             "assignment to property x of T.prototype\n" +
             "found   : number\n" +
             "required: function (this:T): number",
@@ -10168,7 +10168,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         suppressMissingProperty("foo") +
         "/** @constructor \n * @extends {T} */var T = function() {};" +
         "alert((new T).foo);",
-        Lists.newArrayList(
+        ImmutableList.of(
             "Parse error. Cycle detected in inheritance chain of type T",
             "Could not resolve type in @extends tag of T"));
   }
@@ -10178,7 +10178,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         suppressMissingProperty("foo") +
         "/** @constructor \n * @implements {T} */var T = function() {};" +
         "alert((new T).foo);",
-        Lists.newArrayList(
+        ImmutableList.of(
             "Parse error. Cycle detected in inheritance chain of type T"));
   }
 
@@ -10188,7 +10188,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @constructor \n * @implements {F} */var G = function() {};" +
             "/** @constructor \n * @extends {G} */var F = function() {};" +
         "alert((new F).foo);",
-        Lists.newArrayList(
+        ImmutableList.of(
             "Parse error. Cycle detected in inheritance chain of type F"));
   }
 
@@ -10213,7 +10213,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "var MyType = function() {}\n" +
             "/** @type {MyType} */\n" +
             "var x = /** @type {!OtherType} */ (new Object());",
-        Lists.newArrayList(
+        ImmutableList.of(
             "Parse error. Cycle detected in inheritance chain of type MyType",
             "initializing variable\n" +
             "found   : OtherType\n" +
@@ -10621,7 +10621,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         " * @implements {MyType}\n" +
         " */ var YourType = function() {};" +
         "/** @override */ YourType.prototype.method = function() {};",
-        Lists.newArrayList(
+        ImmutableList.of(
             "Could not resolve type in @implements tag of YourType",
             "property method not defined on any superclass of YourType"));
   }
@@ -11284,7 +11284,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function extend(x, y) {}" +
         "/** @constructor */ function Foo() {}" +
         "extend(Foo, /** @lends {!Foo} */ ({bar: 1}));",
-        Lists.newArrayList(
+        ImmutableList.of(
             "Bad type annotation. expected closing }",
             "Bad type annotation. missing object name in @lends tag"));
   }
@@ -12237,7 +12237,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @param {{prop: (string|undefined)}} x */" +
         "function g(x) {}" +
         "var x = {}; f(x); g(x);",
-        Lists.newArrayList(
+        ImmutableList.of(
             "actual parameter 1 of f does not match formal parameter\n" +
             "found   : {prop: (number|string|undefined)}\n" +
             "required: {prop: (number|undefined)}",
@@ -13216,7 +13216,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   private void testClosureTypes(String js, String description)
       throws Exception {
     testClosureTypesMultipleWarnings(js,
-        description == null ? null : Lists.newArrayList(description));
+        description == null ? null : ImmutableList.of(description));
   }
 
   private void testClosureTypesMultipleWarnings(
@@ -13357,8 +13357,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   private TypeCheckResult parseAndTypeCheckWithScope(
       String externs, String js) {
     compiler.init(
-        Lists.newArrayList(SourceFile.fromCode("[externs]", externs)),
-        Lists.newArrayList(SourceFile.fromCode("[testcode]", js)),
+        ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
+        ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
 
     Node n = compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);

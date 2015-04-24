@@ -1736,8 +1736,7 @@ final class NameAnalyzer implements CompilerPass {
             new GetReplacementSideEffectSubexpressions(
                 compiler, subexpressions)));
 
-    List<Node> replacements =
-        Lists.newArrayListWithExpectedSize(subexpressions.size());
+    List<Node> replacements = new ArrayList<>(subexpressions.size());
     for (Node subexpression : subexpressions) {
       replacements.add(NodeUtil.newExpr(subexpression));
     }

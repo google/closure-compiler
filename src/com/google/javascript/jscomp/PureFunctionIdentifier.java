@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
@@ -236,7 +236,7 @@ class PureFunctionIdentifier implements CompilerPass {
       // getCallableDefinitions() will only be called on the first
       // child of a call and thus the function expression
       // definition will never be an extern.
-      return Lists.newArrayList(
+      return ImmutableList.of(
           (Definition)
               new DefinitionsRemover.FunctionExpressionDefinition(name, false));
     } else {

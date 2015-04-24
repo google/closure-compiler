@@ -82,6 +82,7 @@ public final class EnumType extends Namespace implements TypeWithProperties {
     return enumPropType;
   }
 
+  @Override
   public JSType toJSType() {
     Preconditions.checkState(state == State.RESOLVED);
     if (enumObjType == null) {

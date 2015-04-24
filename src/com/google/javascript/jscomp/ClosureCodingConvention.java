@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
@@ -292,7 +291,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
         n.getChildCount() == 2) {
       Node typeDeclaration = n.getChildAtIndex(1);
       if (typeDeclaration.isString()) {
-        return Lists.newArrayList(typeDeclaration.getString());
+        return ImmutableList.of(typeDeclaration.getString());
       }
     }
 

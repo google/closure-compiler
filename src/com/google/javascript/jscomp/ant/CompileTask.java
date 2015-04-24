@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.ant;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CommandLineRunner;
@@ -56,6 +55,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -110,12 +110,12 @@ public final class CompileTask
     this.replaceProperties = false;
     this.forceRecompile = false;
     this.replacePropertiesPrefix = "closure.define.";
-    this.defineParams = Lists.newLinkedList();
-    this.entryPointParams = Lists.newLinkedList();
-    this.externFileLists = Lists.newLinkedList();
-    this.sourceFileLists = Lists.newLinkedList();
-    this.sourcePaths = Lists.newLinkedList();
-    this.warnings = Lists.newLinkedList();
+    this.defineParams = new LinkedList();
+    this.entryPointParams = new LinkedList();
+    this.externFileLists = new LinkedList();
+    this.sourceFileLists = new LinkedList();
+    this.sourcePaths = new LinkedList();
+    this.warnings = new LinkedList();
   }
 
   /**
@@ -494,7 +494,7 @@ public final class CompileTask
    * replacements.
    */
   private void convertEntryPointParameters(CompilerOptions options) {
-    List<String> entryPoints = Lists.newLinkedList();
+    List<String> entryPoints = new LinkedList();
     for (Parameter p : entryPointParams) {
       String key = p.getName();
       entryPoints.add(key);
@@ -579,7 +579,7 @@ public final class CompileTask
   }
 
   private List<SourceFile> findExternFiles() {
-    List<SourceFile> files = Lists.newLinkedList();
+    List<SourceFile> files = new LinkedList();
     if (!this.customExternsOnly) {
       files.addAll(getDefaultExterns());
     }
@@ -592,7 +592,7 @@ public final class CompileTask
   }
 
   private List<SourceFile> findSourceFiles() {
-    List<SourceFile> files = Lists.newLinkedList();
+    List<SourceFile> files = new LinkedList();
 
     for (FileList list : this.sourceFileLists) {
       files.addAll(findJavaScriptFiles(list));
@@ -610,7 +610,7 @@ public final class CompileTask
    * the compiler expects.
    */
   private List<SourceFile> findJavaScriptFiles(ResourceCollection rc) {
-    List<SourceFile> files = Lists.newLinkedList();
+    List<SourceFile> files = new LinkedList();
     Iterator<Resource> iter = rc.iterator();
     while (iter.hasNext()) {
       FileResource fr = (FileResource) iter.next();

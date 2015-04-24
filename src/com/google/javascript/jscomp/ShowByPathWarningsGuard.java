@@ -17,8 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 /**
@@ -56,7 +55,7 @@ public final class ShowByPathWarningsGuard extends WarningsGuard {
   public ShowByPathWarningsGuard(String[] paths, ShowType showType) {
     Preconditions.checkArgument(paths != null);
     Preconditions.checkArgument(showType != null);
-    List<String> pathList = Lists.newArrayList(paths);
+    List<String> pathList = ImmutableList.copyOf(paths);
     if (showType == ShowType.INCLUDE) {
       warningsGuard = ByPathWarningsGuard.exceptPath(pathList, CheckLevel.OFF);
     } else {
