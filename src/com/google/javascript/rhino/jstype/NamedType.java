@@ -41,10 +41,10 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -118,7 +118,7 @@ public class NamedType extends ProxyObjectType {
       // If this is an unresolved object type, we need to save all its
       // properties and define them when it is resolved.
       if (propertyContinuations == null) {
-        propertyContinuations = Lists.newArrayList();
+        propertyContinuations = new ArrayList<>();
       }
       propertyContinuations.add(
           new PropertyContinuation(

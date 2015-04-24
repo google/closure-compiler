@@ -46,9 +46,9 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -67,7 +67,7 @@ public class UnionTypeBuilder implements Serializable {
   private static final int DEFAULT_MAX_UNION_SIZE = 30;
 
   private final JSTypeRegistry registry;
-  private final List<JSType> alternates = Lists.newArrayList();
+  private final List<JSType> alternates = new ArrayList<>();
   private boolean isAllType = false;
   private boolean isNativeUnknownType = false;
   private boolean areAllUnknownsChecked = true;

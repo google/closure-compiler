@@ -58,7 +58,9 @@ import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -5585,7 +5587,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
   public void testRegisterProperty() {
     int i = 0;
-    List<JSType> allObjects = Lists.newArrayList();
+    List<JSType> allObjects = new ArrayList<>();
     for (JSType type : types) {
       String propName = "ALF" + i++;
       if (type instanceof ObjectType) {
@@ -5975,7 +5977,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           "propertyIsEnumerable", "toString", "valueOf", "hasOwnProperty",
           "constructor", "base"), sup.getPropertyNames());
 
-    assertEquals(Sets.newHashSet(), NO_OBJECT_TYPE.getPropertyNames());
+    assertEquals(new HashSet<>(), NO_OBJECT_TYPE.getPropertyNames());
   }
 
   public void testGetAndSetJSDocInfoWithNamedType() throws Exception {

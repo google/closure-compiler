@@ -41,10 +41,10 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -235,7 +235,7 @@ public class ModificationVisitor implements Visitor<JSType> {
   @Override
   public JSType caseUnionType(UnionType type) {
     boolean changed = false;
-    List<JSType> results = Lists.newArrayList();
+    List<JSType> results = new ArrayList<>();
     for (JSType alternative : type.getAlternates()) {
       JSType replacement = alternative.visit(this);
       if (replacement != alternative) {

@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -867,7 +866,7 @@ public class JSDocInfo implements Serializable {
     }
 
     if (documentation.markers == null) {
-      documentation.markers = Lists.newArrayList();
+      documentation.markers = new ArrayList<>();
     }
 
     Marker marker = new Marker();
@@ -962,7 +961,7 @@ public class JSDocInfo implements Serializable {
     }
 
     if (documentation.sees == null) {
-      documentation.sees = Lists.newArrayList();
+      documentation.sees = new ArrayList<>();
     }
 
     documentation.sees.add(reference);
@@ -978,7 +977,7 @@ public class JSDocInfo implements Serializable {
     }
 
     if (documentation.authors == null) {
-      documentation.authors = Lists.newArrayList();
+      documentation.authors = new ArrayList<>();
     }
 
     documentation.authors.add(author);
@@ -1177,7 +1176,7 @@ public class JSDocInfo implements Serializable {
     lazyInitInfo();
 
     if (info.thrownTypes == null) {
-      info.thrownTypes = Lists.newArrayList();
+      info.thrownTypes = new ArrayList<>();
     }
 
     info.thrownTypes.add(jsType);
@@ -1544,7 +1543,7 @@ public class JSDocInfo implements Serializable {
     lazyInitInfo();
     // Lazily initialize disposedParameters
     if (info.disposedParameters == null) {
-      info.disposedParameters = Sets.newHashSet();
+      info.disposedParameters = new HashSet<>();
     }
 
     if (info.disposedParameters.contains(parameterName)) {
@@ -1810,7 +1809,7 @@ public class JSDocInfo implements Serializable {
    * @return collection of all type nodes
    */
   public Collection<Node> getTypeNodes() {
-    List<Node> nodes = Lists.newArrayList();
+    List<Node> nodes = new ArrayList<>();
 
     if (type != null) {
       nodes.add(type.getRoot());

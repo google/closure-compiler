@@ -44,7 +44,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TY
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.FunctionTypeI;
@@ -52,7 +51,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -495,7 +496,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   public Iterable<ObjectType> getAllImplementedInterfaces() {
     // Store them in a linked hash set, so that the compile job is
     // deterministic.
-    Set<ObjectType> interfaces = Sets.newLinkedHashSet();
+    Set<ObjectType> interfaces = new LinkedHashSet<>();
 
     for (ObjectType type : getImplementedInterfaces()) {
       addRelatedInterfaces(type, interfaces);
@@ -562,7 +563,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   public Iterable<ObjectType> getAllExtendedInterfaces() {
     // Store them in a linked hash set, so that the compile job is
     // deterministic.
-    Set<ObjectType> extendedInterfaces = Sets.newLinkedHashSet();
+    Set<ObjectType> extendedInterfaces = new LinkedHashSet<>();
 
     for (ObjectType interfaceType : getExtendedInterfaces()) {
       addRelatedExtendedInterfaces(interfaceType, extendedInterfaces);
@@ -1141,7 +1142,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   /** Adds a type to the list of subtypes for this type. */
   private void addSubType(FunctionType subType) {
     if (subTypes == null) {
-      subTypes = Lists.newArrayList();
+      subTypes = new ArrayList<>();
     }
     subTypes.add(subType);
   }
@@ -1310,7 +1311,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
   @Override
   public TypeI convertMethodToFunction() {
-    List<JSType> paramTypes = Lists.newArrayList();
+    List<JSType> paramTypes = new ArrayList<>();
     paramTypes.add(getTypeOfThis());
     for (Node param : getParameters()) {
       paramTypes.add(param.getJSType());

@@ -43,9 +43,9 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
 import com.google.javascript.rhino.ErrorReporter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
@@ -569,7 +569,7 @@ public class UnionType extends JSType {
 
   @Override
   public String toDebugHashCodeString() {
-    List<String> hashCodes = Lists.newArrayList();
+    List<String> hashCodes = new ArrayList<>();
     for (JSType a : alternates) {
       hashCodes.add(a.toDebugHashCodeString());
     }
