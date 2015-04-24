@@ -2392,6 +2392,11 @@ DOMTokenList.prototype.toString = function() {};
 HTMLElement.prototype.classList;
 
 /**
+ * Web Cryptography API Window.prototype.crypto.* is deprecated. Please use the
+ * new w3c_webcrypto.js for this functionality moving forward.
+ */
+
+/**
  * Web Cryptography API
  * @see http://www.w3.org/TR/WebCryptoAPI/
  */

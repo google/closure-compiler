@@ -277,6 +277,12 @@ ArrayBufferView.prototype.byteLength;
 
 
 /**
+ * @typedef {!ArrayBuffer|!ArrayBufferView}
+ */
+var BufferSource;
+
+
+/**
  * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
