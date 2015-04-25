@@ -171,7 +171,6 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
   private static final class ClassDefinition {
     final Node target;
-    final JSDocInfo classInfo;
     final MemberDefinition constructor;
     final String nativeBaseElement;
     final List<MemberDefinition> props;
@@ -179,7 +178,6 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     ClassDefinition(Node target, JSDocInfo classInfo, MemberDefinition constructor,
         String nativeBaseElement, List<MemberDefinition> props) {
       this.target = target;
-      this.classInfo = classInfo;
       this.constructor = constructor;
       this.nativeBaseElement = nativeBaseElement;
       this.props = props;

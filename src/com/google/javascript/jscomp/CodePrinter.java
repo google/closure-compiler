@@ -641,15 +641,6 @@ public final class CodePrinter {
     }
 
     /**
-     * Customize the CodeGenerator.
-     * @param cgf A factory which creates CodeGenerator instances.
-     */
-    public Builder setCodeGeneratorFactory(CodeGeneratorFactory cgf) {
-      this.codeGeneratorFactory = cgf;
-      return this;
-    }
-
-    /**
      * Generates the source code and returns it.
      */
     public String build() {

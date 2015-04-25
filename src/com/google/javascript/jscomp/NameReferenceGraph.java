@@ -219,23 +219,12 @@ class NameReferenceGraph extends
       declarations.add(new NamedFunctionDefinition(node, isExtern));
     }
 
-    public boolean isExtern() {
-      return isExtern;
-    }
-
     public void markExported() {
       this.isExported = true;
     }
 
     public boolean isExported() {
       return isExported;
-    }
-
-    /** Removes all of the declarations of this name. */
-    public final void remove() {
-      for (Definition declaration : getDeclarations()) {
-        declaration.remove();
-      }
     }
 
     /**
@@ -299,10 +288,6 @@ class NameReferenceGraph extends
 
     public Reference(Node site) {
       this.site = site;
-    }
-
-    public JSModule getModule() {
-      return module;
     }
 
     /**

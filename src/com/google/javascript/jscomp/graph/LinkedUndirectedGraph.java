@@ -45,10 +45,6 @@ public final class LinkedUndirectedGraph<N, E>
     return new SimpleSubGraph<>(this);
   }
 
-  public static <N, E> LinkedUndirectedGraph<N, E> createWithoutAnnotations() {
-    return new LinkedUndirectedGraph<>(false, false);
-  }
-
   public static <N, E> LinkedUndirectedGraph<N, E> create() {
     return new LinkedUndirectedGraph<>(true, true);
   }
