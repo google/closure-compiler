@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Sets;
-
+import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 /**
@@ -132,7 +131,7 @@ public final class GatherRawExportsTest extends CompilerTestCase {
   }
 
   private void assertExported(String js, String ... names) {
-    Set<String> setNames = Sets.newHashSet(names);
+    Set<String> setNames = ImmutableSet.copyOf(names);
     testSame(js);
     assertEquals(setNames, last.getExportedVariableNames());
   }

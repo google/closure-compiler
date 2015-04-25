@@ -18,8 +18,8 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.rhino.IR;
@@ -273,7 +273,9 @@ class ScopedAliases implements HotSwapCompilerPass {
     // normalization (before optimizations). We run it here on a limited
     // set of variables, but only as a last resort (because this will screw
     // up warning messages downstream).
-    private final Set<String> forbiddenLocals = Sets.newHashSet("$jscomp");
+    private final Set<String> forbiddenLocals = new HashSet<>(
+        ImmutableSet.of("$jscomp"));
+
     private boolean hasNamespaceShadows = false;
 
     private boolean hasErrors = false;

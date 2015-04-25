@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReferenceCollectingCallback.Reference.createRefForTest;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.rhino.Node;
@@ -48,7 +48,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
       new CompilerInput(SourceFile.fromCode("extern1", ""), true);
 
   private final GlobalVarReferenceMap map = new GlobalVarReferenceMap(
-      Lists.newArrayList(INPUT1, INPUT2, INPUT3), Lists.newArrayList(EXTERN1));
+      ImmutableList.of(INPUT1, INPUT2, INPUT3), ImmutableList.of(EXTERN1));
   private final Map<Var, ReferenceCollection> globalMap = new HashMap<>();
   private final Node root = new Node(Token.BLOCK);
   private final Scope globalScope = Scope.createGlobalScope(root);
@@ -75,12 +75,12 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   protected void setUp() throws Exception {
     super.setUp();
     globalScope.declare(VAR1, new Node(Token.NAME), INPUT1);
-    var1Refs.references = Lists.newArrayList(var1In1Ref,
+    var1Refs.references = ImmutableList.of(var1In1Ref,
         var1In2Ref, var1In3Ref);
     globalScope.declare(VAR2, new Node(Token.NAME), INPUT1);
-    var2Refs.references = Lists.newArrayList(var2In1Ref, var2In3Ref);
+    var2Refs.references = ImmutableList.of(var2In1Ref, var2In3Ref);
     globalScope.declare(VAR3, new Node(Token.NAME), EXTERN1);
-    var3Refs.references = Lists.newArrayList(var3In1Ext, var3In2Ref);
+    var3Refs.references = ImmutableList.of(var3In1Ext, var3In2Ref);
 
     // We recreate these two ReferenceCollection to keep var1Refs and
     // var2Refs intact in update operations for comparison in the tests.
@@ -133,15 +133,15 @@ public final class GlobalVarReferenceMapTest extends TestCase {
 
     ReferenceCollection newVar1Refs = new ReferenceCollection();
     Reference newVar1In2Ref = createRefForTest(INPUT2);
-    newVar1Refs.references = Lists.newArrayList(newVar1In2Ref);
+    newVar1Refs.references = ImmutableList.of(newVar1In2Ref);
 
     ReferenceCollection newVar2Refs = new ReferenceCollection();
     Reference newVar2In2Ref = createRefForTest(INPUT2);
-    newVar2Refs.references = Lists.newArrayList(newVar2In2Ref);
+    newVar2Refs.references = ImmutableList.of(newVar2In2Ref);
 
     ReferenceCollection newVar3Refs = new ReferenceCollection();
     Reference newVar3In2Ref = createRefForTest(INPUT2);
-    newVar3Refs.references = Lists.newArrayList(newVar3In2Ref);
+    newVar3Refs.references = ImmutableList.of(newVar3In2Ref);
 
     scriptMap.put(globalScope.getVar(VAR1), newVar1Refs);
     scriptMap.put(globalScope.getVar(VAR2), newVar2Refs);
@@ -170,7 +170,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
     globalScope.declare(var4, new Node(Token.NAME), INPUT2);
     ReferenceCollection newVar3Refs = new ReferenceCollection();
     Reference newVar3In2Ref = createRefForTest(INPUT2);
-    newVar3Refs.references = Lists.newArrayList(newVar3In2Ref);
+    newVar3Refs.references = ImmutableList.of(newVar3In2Ref);
     scriptMap.put(globalScope.getVar(var4), newVar3Refs);
     map.updateGlobalVarReferences(scriptMap, scriptRoot);
     ReferenceCollection refs = map.getReferences(globalScope.getVar(var4));

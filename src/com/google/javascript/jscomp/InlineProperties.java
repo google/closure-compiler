@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.rhino.IR;
@@ -29,6 +29,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -77,7 +78,7 @@ final class InlineProperties implements CompilerPass {
   // we should move it to a common location.
   private void buildInvalidatingTypeSet() {
     TypeIRegistry registry = compiler.getTypeIRegistry();
-    invalidatingTypes = Sets.newHashSet(
+    invalidatingTypes = new HashSet<>(ImmutableSet.of(
         (JSType) registry.getNativeType(JSTypeNative.ALL_TYPE),
         (JSType) registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
         (JSType) registry.getNativeType(JSTypeNative.NO_TYPE),
@@ -91,7 +92,7 @@ final class InlineProperties implements CompilerPass {
         (JSType) registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         (JSType) registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
         (JSType) registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
-        (JSType) registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
+        (JSType) registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
 
     for (TypeMismatch mis : compiler.getTypeMismatches()) {
       addInvalidatingType(mis.typeA);

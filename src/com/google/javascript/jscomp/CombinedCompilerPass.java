@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
@@ -58,7 +58,7 @@ final class CombinedCompilerPass implements HotSwapCompilerPass,
    */
   CombinedCompilerPass(
       AbstractCompiler compiler, Callback... callbacks) {
-    this(compiler, Lists.newArrayList(callbacks));
+    this(compiler, ImmutableList.copyOf(callbacks));
   }
 
   CombinedCompilerPass(

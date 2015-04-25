@@ -19,8 +19,8 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -132,7 +132,7 @@ class AliasExternals implements CompilerPass {
    * A set of globals that can not be aliased since they may be undefined or
    * can cause errors
    */
-  private final Set<String> unaliasableGlobals = Sets.newHashSet(
+  private final Set<String> unaliasableGlobals = new HashSet<>(ImmutableSet.of(
       // While "arguments" is declared as a global extern, it really only has
       // meaning inside function bodies and should not be aliased at a global
       // level.
@@ -144,7 +144,7 @@ class AliasExternals implements CompilerPass {
       "NodeFilter",
       // Calls to this special function are eliminated by the RenameProperties
       // compiler pass.
-      "JSCompiler_renameProperty");
+      "JSCompiler_renameProperty"));
 
   /** Whitelist of aliasable externs. */
   private final Set<String> aliasableGlobals = new HashSet<>();

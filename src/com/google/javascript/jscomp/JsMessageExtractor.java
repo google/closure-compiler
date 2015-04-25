@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -125,7 +123,7 @@ public final class JsMessageExtractor {
     Compiler compiler = new Compiler();
     compiler.init(
         ImmutableList.<SourceFile>of(),
-        Lists.newArrayList(inputs),
+        ImmutableList.copyOf(inputs),
         options);
     compiler.parseInputs();
 

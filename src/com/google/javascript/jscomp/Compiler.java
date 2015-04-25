@@ -26,7 +26,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -412,7 +411,9 @@ public class Compiler extends AbstractCompiler {
       module.add(input);
     }
 
-    initModules(externs, Lists.newArrayList(module), options);
+    List<JSModule> modules = new ArrayList<>(1);
+    modules.add(module);
+    initModules(externs, modules, options);
   }
 
   /**
@@ -604,7 +605,7 @@ public class Compiler extends AbstractCompiler {
 
   public Result compile(
       SourceFile extern, SourceFile input, CompilerOptions options) {
-    return compile(Lists.newArrayList(extern), Lists.newArrayList(input), options);
+    return compile(ImmutableList.of(extern), ImmutableList.of(input), options);
   }
 
   /**

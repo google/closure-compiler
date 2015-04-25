@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -32,6 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,7 +68,7 @@ class AliasStrings extends AbstractPostOrderCallback
 
   private final boolean outputStringUsage;
 
-  private final SortedMap<String, StringInfo> stringInfoMap = Maps.newTreeMap();
+  private final SortedMap<String, StringInfo> stringInfoMap = new TreeMap<>();
 
   private final Set<String> usedHashedAliases = new LinkedHashSet<>();
 

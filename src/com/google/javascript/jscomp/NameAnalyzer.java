@@ -19,11 +19,10 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.SideEffectAccumulator;
@@ -46,6 +45,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * This pass identifies all global names, simple (e.g. <code>a</code>) or
@@ -83,7 +83,7 @@ final class NameAnalyzer implements CompilerPass {
   private final AbstractCompiler compiler;
 
   /** Map of all JS names found */
-  private final Map<String, JsName> allNames = Maps.newTreeMap();
+  private final Map<String, JsName> allNames = new TreeMap<>();
 
   /** Reference dependency graph */
   private LinkedDirectedGraph<JsName, RefType> referenceGraph =
@@ -1904,15 +1904,15 @@ final class NameAnalyzer implements CompilerPass {
         return getRhsSubexpressions(n.getFirstChild());
       case Token.FUNCTION:
         // function nodes have no RHS
-        return Collections.emptyList();
+        return ImmutableList.of();
       case Token.NAME:
         {
           // parent is a var node.  RHS is the first child
           Node rhs = n.getFirstChild();
           if (rhs != null) {
-            return Lists.newArrayList(rhs);
+            return ImmutableList.of(rhs);
           } else {
-            return Collections.emptyList();
+            return ImmutableList.of();
           }
         }
       case Token.ASSIGN:
@@ -1920,16 +1920,16 @@ final class NameAnalyzer implements CompilerPass {
           // add LHS and RHS expressions - LHS may be a complex expression
           Node lhs = n.getFirstChild();
           Node rhs = lhs.getNext();
-          return Lists.newArrayList(lhs, rhs);
+          return ImmutableList.of(lhs, rhs);
         }
       case Token.VAR:
         {
           // recurse on all children
-          List<Node> nodes = new ArrayList<>();
+          ImmutableList.Builder<Node> nodes = ImmutableList.builder();
           for (Node child : n.children()) {
             nodes.addAll(getRhsSubexpressions(child));
           }
-          return nodes;
+          return nodes.build();
         }
       default:
         throw new IllegalArgumentException("AstChangeProxy::getRhs " + n);

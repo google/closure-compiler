@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.deps;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
 import junit.framework.TestCase;
@@ -117,7 +116,7 @@ public final class SortedDependenciesTest extends TestCase {
 
     try {
       new SortedDependencies<>(
-          Lists.newArrayList(a, b, c));
+          ImmutableList.of(a, b, c));
       fail("expected exception");
     } catch (CircularDependencyException e) {
       assertThat(e.getMessage()).isEqualTo("a -> a");
@@ -168,10 +167,10 @@ public final class SortedDependenciesTest extends TestCase {
   }
 
   private List<String> requires(String ... strings) {
-    return Lists.newArrayList(strings);
+    return ImmutableList.copyOf(strings);
   }
 
   private List<String> provides(String ... strings) {
-    return Lists.newArrayList(strings);
+    return ImmutableList.copyOf(strings);
   }
 }

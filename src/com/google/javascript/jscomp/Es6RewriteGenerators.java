@@ -950,7 +950,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
    *  return temp$$0
    * </pre>
    *
-   * This uses the {@link #ExpressionDecomposer} class
+   * This uses the {@link ExpressionDecomposer} class
    */
   class DecomposeYields extends NodeTraversal.AbstractPreOrderCallback {
 

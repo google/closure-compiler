@@ -27,7 +27,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
@@ -714,7 +713,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     if (parsedModuleWrappers == null) {
       parsedModuleWrappers = parseModuleWrappers(
           config.moduleWrapper,
-          Lists.newArrayList(
+          ImmutableList.copyOf(
               compiler.getDegenerateModuleGraph().getAllModules()));
     }
 
@@ -853,7 +852,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     }
     if (createCommonJsModules) {
       // For CommonJS modules construct modules from actual inputs.
-      modules = Lists.newArrayList(compiler.getDegenerateModuleGraph()
+      modules = ImmutableList.copyOf(compiler.getDegenerateModuleGraph()
           .getAllModules());
       for (JSModule m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));

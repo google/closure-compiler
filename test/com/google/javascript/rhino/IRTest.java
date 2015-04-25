@@ -38,8 +38,7 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.collect.Lists;
-
+import com.google.common.collect.ImmutableList;
 import junit.framework.TestCase;
 
 /**
@@ -68,7 +67,7 @@ public class IRTest extends TestCase {
         "    NAME a\n" +
         "    NAME b\n");
 
-    testIR(IR.paramList(Lists.newArrayList(IR.name("a"), IR.name("b"))),
+    testIR(IR.paramList(ImmutableList.of(IR.name("a"), IR.name("b"))),
         "PARAM_LIST\n" +
         "    NAME a\n" +
         "    NAME b\n");
@@ -83,7 +82,7 @@ public class IRTest extends TestCase {
         "    EMPTY\n" +
         "    EMPTY\n");
 
-    testIR(IR.block(Lists.newArrayList(IR.empty(), IR.empty())),
+    testIR(IR.block(ImmutableList.of(IR.empty(), IR.empty())),
         "BLOCK\n" +
         "    EMPTY\n" +
         "    EMPTY\n");
@@ -98,7 +97,7 @@ public class IRTest extends TestCase {
         "    EMPTY\n" +
         "    EMPTY\n");
 
-    testIR(IR.script(Lists.newArrayList(IR.empty(), IR.empty())),
+    testIR(IR.script(ImmutableList.of(IR.empty(), IR.empty())),
         "SCRIPT\n" +
         "    EMPTY\n" +
         "    EMPTY\n");

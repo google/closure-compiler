@@ -48,7 +48,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -446,18 +446,18 @@ public class JSDocInfoTest extends TestCase {
 
   public void testSetSuppressions() {
     JSDocInfo info = new JSDocInfo(true);
-    info.setSuppressions(Sets.newHashSet("sam", "bob"));
-    assertEquals(Sets.newHashSet("bob", "sam"), info.getSuppressions());
+    info.setSuppressions(ImmutableSet.of("sam", "bob"));
+    assertEquals(ImmutableSet.of("bob", "sam"), info.getSuppressions());
   }
 
   public void testSetModifies() {
     JSDocInfo info = new JSDocInfo(true);
-    info.setModifies(Sets.newHashSet("this"));
-    assertEquals(Sets.newHashSet("this"), info.getModifies());
+    info.setModifies(ImmutableSet.of("this"));
+    assertEquals(ImmutableSet.of("this"), info.getModifies());
 
     info = new JSDocInfo(true);
-    info.setModifies(Sets.newHashSet("arguments"));
-    assertEquals(Sets.newHashSet("arguments"), info.getModifies());
+    info.setModifies(ImmutableSet.of("arguments"));
+    assertEquals(ImmutableSet.of("arguments"), info.getModifies());
   }
 
   public void testAddSingleTemplateTypeName(){

@@ -18,7 +18,7 @@ package com.google.javascript.jscomp.deps;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.PrintStreamErrorManager;
 import com.google.javascript.jscomp.deps.JsFunctionParser.SymbolInfo;
@@ -37,7 +37,7 @@ public final class JsFunctionParserTest extends TestCase {
   private static final String SRC_PATH = "a";
   private JsFunctionParser parser;
   private ErrorManager errorManager;
-  private Collection<String> functions = Lists.newArrayList(
+  private Collection<String> functions = ImmutableList.of(
       "goog.require", "goog.provide");
 
   @Override

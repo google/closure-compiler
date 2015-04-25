@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
@@ -134,7 +133,7 @@ class AmbiguateProperties implements CompilerPass {
     this.reservedCharacters = reservedCharacters;
 
     JSTypeRegistry r = compiler.getTypeRegistry();
-    invalidatingTypes = Sets.newHashSet(
+    invalidatingTypes = new HashSet<>(ImmutableSet.of(
         r.getNativeType(JSTypeNative.ALL_TYPE),
         r.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
         r.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
@@ -143,7 +142,7 @@ class AmbiguateProperties implements CompilerPass {
         r.getNativeType(JSTypeNative.OBJECT_TYPE),
         r.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
         r.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
-        r.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE));
+        r.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE)));
 
     for (TypeMismatch mis : compiler.getTypeMismatches()) {
       addInvalidatingType(mis.typeA);

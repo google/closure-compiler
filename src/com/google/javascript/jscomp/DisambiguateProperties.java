@@ -23,7 +23,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
@@ -743,7 +742,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     public JSTypeSystem(AbstractCompiler compiler) {
       registry = compiler.getTypeRegistry();
       implementedInterfaces = new HashMap<>();
-      invalidatingTypes = Sets.newHashSet(
+      invalidatingTypes = new HashSet<>(ImmutableSet.of(
           registry.getNativeType(JSTypeNative.ALL_TYPE),
           registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
           registry.getNativeType(JSTypeNative.NO_TYPE),
@@ -751,8 +750,7 @@ class DisambiguateProperties<T> implements CompilerPass {
           registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
           registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
           registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
-          registry.getNativeType(JSTypeNative.UNKNOWN_TYPE));
-
+          registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
     }
 
     @Override public void addInvalidatingType(JSType type) {
@@ -787,11 +785,12 @@ class DisambiguateProperties<T> implements CompilerPass {
     @Override public ImmutableSet<JSType> getTypesToSkipForType(JSType type) {
       type = type.restrictByNotNullOrUndefined();
       if (type.isUnionType()) {
-        Set<JSType> types = Sets.newHashSet(type);
+        ImmutableSet.Builder<JSType> types = ImmutableSet.builder();
+        types.add(type);
         for (JSType alt : type.toMaybeUnionType().getAlternates()) {
           types.addAll(getTypesToSkipForTypeNonUnion(alt));
         }
-        return ImmutableSet.copyOf(types);
+        return types.build();
       } else if (type.isEnumElementType()) {
         return getTypesToSkipForType(
             type.toMaybeEnumElementType().getPrimitiveType());

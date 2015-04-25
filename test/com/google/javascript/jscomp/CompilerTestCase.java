@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -729,7 +728,7 @@ public abstract class CompilerTestCase extends TestCase  {
     lastCompiler = compiler;
 
     compiler.initModules(
-        externsInputs, Lists.newArrayList(modules), getOptions());
+        externsInputs, ImmutableList.copyOf(modules), getOptions());
     test(compiler, expected, error, warning);
   }
 

@@ -17,12 +17,12 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -1751,7 +1751,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testManyCommas() {
     int numCommas = 10000;
-    List<String> numbers = Lists.newArrayList("0", "1");
+    List<String> numbers = new ArrayList<>();
+    numbers.add("0");
+    numbers.add("1");
     Node current = new Node(Token.COMMA, Node.newNumber(0), Node.newNumber(1));
     for (int i = 2; i < numCommas; i++) {
       current = new Node(Token.COMMA, current);
@@ -1769,7 +1771,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testManyAdds() {
     int numAdds = 10000;
-    List<String> numbers = Lists.newArrayList("0", "1");
+    List<String> numbers = new ArrayList<>();
+    numbers.add("0");
+    numbers.add("1");
     Node current = new Node(Token.ADD, Node.newNumber(0), Node.newNumber(1));
     for (int i = 2; i < numAdds; i++) {
       current = new Node(Token.ADD, current);

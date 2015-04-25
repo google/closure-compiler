@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Process goog.tweak primitives. Checks that:
@@ -198,7 +198,7 @@ class ProcessTweaks implements CompilerPass {
     this.compiler = compiler;
     this.stripTweaks = stripTweaks;
     // Having the map sorted is required for the unit tests to be deterministic.
-    this.compilerDefaultValueOverrides = Maps.newTreeMap();
+    this.compilerDefaultValueOverrides = new TreeMap<>();
     this.compilerDefaultValueOverrides.putAll(compilerDefaultValueOverrides);
   }
 

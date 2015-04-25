@@ -18,7 +18,7 @@ package com.google.debugging.sourcemap;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3.ExtensionMergeAction;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -345,7 +345,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   public void testWriteMetaMap() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
-    List<SourceMapSection> appSections = Lists.newArrayList(
+    List<SourceMapSection> appSections = ImmutableList.of(
         SourceMapSection.forURL("src1", 0, 0),
         SourceMapSection.forURL("src2", 100, 10),
         SourceMapSection.forURL("src3", 150, 5));
@@ -393,7 +393,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
   public void testWriteMetaMap2() throws IOException {
     StringWriter out = new StringWriter();
     String name = "./app.js";
-    List<SourceMapSection> appSections = Lists.newArrayList(
+    List<SourceMapSection> appSections = ImmutableList.of(
         // Map and URLs can be mixed.
         SourceMapSection.forMap(getEmptyMapFor("./part.js"), 0, 0),
         SourceMapSection.forURL("src2", 100, 10));

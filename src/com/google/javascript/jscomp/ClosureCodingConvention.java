@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
@@ -31,6 +30,7 @@ import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -55,10 +55,10 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   public ClosureCodingConvention(CodingConvention wrapped) {
     super(wrapped);
 
-    Set<String> props = Sets.newHashSet(
+    Set<String> props = new HashSet<>(ImmutableSet.of(
         "superClass_",
         "instance_",
-        "getInstance");
+        "getInstance"));
     props.addAll(wrapped.getIndirectlyDeclaredProperties());
     indirectlyDeclaredProperties = ImmutableSet.copyOf(props);
   }

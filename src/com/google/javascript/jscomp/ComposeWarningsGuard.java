@@ -17,8 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-
+import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,7 +82,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
   }
 
   public ComposeWarningsGuard(WarningsGuard... guards) {
-    this(Lists.newArrayList(guards));
+    this(ImmutableList.copyOf(guards));
   }
 
   void addGuard(WarningsGuard guard) {

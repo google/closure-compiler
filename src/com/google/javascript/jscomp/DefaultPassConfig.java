@@ -22,7 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
@@ -2532,7 +2532,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Create a compiler pass that runs the given passes in serial. */
   private static CompilerPass runInSerial(final CompilerPass ... passes) {
-    return runInSerial(Lists.newArrayList(passes));
+    return runInSerial(ImmutableSet.copyOf(passes));
   }
 
   /** Create a compiler pass that runs the given passes in serial. */
