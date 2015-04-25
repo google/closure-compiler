@@ -174,6 +174,45 @@
 
 
 /**
+ * @see https://developer.chrome.com/extensions/accessibilityFeatures
+ * @const
+ */
+chrome.accessibilityFeatures = {};
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.spokenFeedback;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.largeCursor;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.stickyKeys;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.highContrast;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.screenMagnifier;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.autoclick;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.virtualKeyboard;
+
+
+/** @type {!ChromeSetting} */
+chrome.accessibilityFeatures.animationPolicy;
+
+
+/**
  * TODO(tbreisacher): Move all chrome.app.* externs into their own file.
  * @const
  */
@@ -6863,6 +6902,10 @@ ChromeSetting.prototype.get = function(details, callback) {};
  * @param {function(): void=} opt_callback Callback function.
  */
 ChromeSetting.prototype.set = function(details, opt_callback) {};
+
+
+/** @type {!ChromeObjectEvent} */
+ChromeSetting.prototype.onChange;
 
 
 
