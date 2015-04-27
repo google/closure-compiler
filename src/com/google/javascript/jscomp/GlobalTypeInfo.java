@@ -1362,7 +1362,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       Node rhs = NodeUtil.getInitializer(constExpr);
       JSType rhsType = simpleInferExprType(rhs);
-      if (rhsType == null) {
+      if (rhsType == null || rhsType.isUnknown()) {
         warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
         return null;
       }

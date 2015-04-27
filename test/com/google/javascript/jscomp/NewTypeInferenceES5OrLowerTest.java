@@ -4353,6 +4353,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
 
+  public void testDontInferUndeclaredFunctionReturn() {
+    typeCheck(
+        "function f() {}\n"
+        + "/** @const */ var x = f();",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(
+        "/** @const */ var ns = {};\n"
+        + "ns.f = function() {}\n"
+        + "/** @const */ var x = f();",
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
+
   // public void testUndeclaredNamespaces() {
   //   typeCheck(
   //         "/** @constructor */ ns.Foo = function(){};\n"
@@ -8528,7 +8541,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}",
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    typeCheck("/** @const */\n"
+    typeCheck(
+        "/** @constructor */ function RegExp(){}\n"
+        + "/** @const */\n"
         + "var r = /find/;");
 
     typeCheck(
