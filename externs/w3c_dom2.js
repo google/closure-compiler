@@ -47,6 +47,14 @@ HTMLCollection.prototype.length;
 HTMLCollection.prototype.item = function(index) {};
 
 /**
+ * @param {string} name
+ * @return {?Node}
+ * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-21069976
+ * @nosideeffects
+ */
+HTMLCollection.prototype.namedItem = function(name) {};
+
+/**
  * @constructor
  * @see http://www.w3.org/TR/DOM-Level-2-HTML/html.html#HTMLOptionsCollection
  */
