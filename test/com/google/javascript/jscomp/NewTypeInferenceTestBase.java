@@ -155,11 +155,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   protected final void typeCheck(
       String externs, String js, DiagnosticType... warningKinds) {
     parseAndTypeCheck(externs, js);
-    if (compiler.getErrors().length > 0) {
-      fail("Expected no errors, but found: "
-          + Arrays.toString(compiler.getErrors()));
-    }
     JSError[] warnings = compiler.getWarnings();
+    JSError[] errors = compiler.getErrors();
     String errorMessage =
         "Expected warning of type:\n"
         + "================================================================\n"
@@ -170,11 +167,16 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         + Arrays.toString(warnings) + "\n"
         + "----------------------------------------------------------------\n";
     assertEquals(
-        errorMessage + "Warning count", warningKinds.length, warnings.length);
+        errorMessage + "Warning count", warningKinds.length, warnings.length + errors.length);
     for (JSError warning : warnings) {
       assertTrue(
           "Wrong warning type\n" + errorMessage,
           Arrays.asList(warningKinds).contains(warning.getType()));
+    }
+    for (JSError error : errors) {
+      assertTrue(
+          "Wrong warning type\n" + errorMessage,
+          Arrays.asList(warningKinds).contains(error.getType()));
     }
   }
 }

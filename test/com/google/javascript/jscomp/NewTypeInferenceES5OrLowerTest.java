@@ -8276,7 +8276,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck("/** @final */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
 
-    typeCheckCustomExterns("/** @const {number} */ var x;", "");
+    typeCheckCustomExterns(DEFAULT_EXTERNS + "/** @const {number} */ var x;", "");
 
     // TODO(dimvar): must fix externs initialization
     // typeCheck("/** @const {number} */ var x;", "x - 5;");
@@ -8359,7 +8359,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function f() { x = 2; }",
         NewTypeInference.CONST_REASSIGNED);
 
-    typeCheckCustomExterns("/** @const {number} */ var x;", "x = 2;",
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "/** @const {number} */ var x;", "x = 2;",
         NewTypeInference.CONST_REASSIGNED);
 
     typeCheck(
@@ -10198,7 +10199,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     // types, then we can also fix this.
     // Currently, the type checker doesn't know what !Foo is.
     typeCheckCustomExterns(
-        "var Bar;",
+        DEFAULT_EXTERNS + "var Bar;",
         "/**\n"
         + " * @constructor\n"
         + " * @final\n"
@@ -10758,5 +10759,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** number */ x, w) {\n"
         + "  function h() { return (w + 2) - 5; }\n"
         + "}\n");
+  }
+
+  public void testUndefinedFunctionCtorNoCrash() {
+    typeCheckCustomExterns("", "function f(x) {}",
+        GlobalTypeInfo.FUNCTION_CONSTRUCTOR_NOT_DEFINED);
+
+    // Test that NTI is not run
+    typeCheckCustomExterns("", "function f(x) { 1 - 'asdf'; }",
+        GlobalTypeInfo.FUNCTION_CONSTRUCTOR_NOT_DEFINED);
   }
 }

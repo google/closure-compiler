@@ -164,6 +164,11 @@ class GlobalTypeInfo implements CompilerPass {
           "May only lend properties to namespaces, constructors and their"
           + " prototypes. Found {0}.");
 
+  static final DiagnosticType FUNCTION_CONSTRUCTOR_NOT_DEFINED =
+      DiagnosticType.error(
+          "JSC_FUNCTION_CONSTRUCTOR_NOT_DEFINED",
+          "You must provide externs that define the built-in Function constructor.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_INIT_TYPEDEF,
@@ -175,12 +180,13 @@ class GlobalTypeInfo implements CompilerPass {
       DUPLICATE_PROP_IN_ENUM,
       EXPECTED_CONSTRUCTOR,
       EXPECTED_INTERFACE,
-      REDECLARED_PROPERTY,
+      FUNCTION_CONSTRUCTOR_NOT_DEFINED,
       INEXISTENT_PARAM,
       INVALID_PROP_OVERRIDE,
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
+      REDECLARED_PROPERTY,
       STRUCTDICT_WITHOUT_CTOR,
       UNDECLARED_NAMESPACE,
       UNRECOGNIZED_TYPE_NAME,
@@ -293,6 +299,13 @@ class GlobalTypeInfo implements CompilerPass {
       if (NewTypeInference.measureMem) {
         NewTypeInference.updatePeakMem();
       }
+    }
+
+    // If the Function constructor isn't defined, we cannot create function
+    // types. Exit early.
+    if (this.commonTypes.getFunctionType() == null) {
+      warnings.add(JSError.make(root, FUNCTION_CONSTRUCTOR_NOT_DEFINED));
+      return;
     }
 
     // (4) The bulk of the global-scope processing happens here:
