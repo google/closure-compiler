@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 
 /**
  * Object representing the fixes to apply to the source code to create the
@@ -50,11 +52,17 @@ public final class SuggestedFix {
   // Multimap of filename to a modification to that file.
   private final SetMultimap<String, CodeReplacement> replacements;
 
+  // An optional description of the fix, to distinguish between the various possible fixes
+  // for errors that have multiple fixes.
+  @Nullable private final String description;
+
   private SuggestedFix(
       Node originalMatchedNode,
-      SetMultimap<String, CodeReplacement> replacements) {
+      SetMultimap<String, CodeReplacement> replacements,
+      @Nullable String description) {
     this.originalMatchedNode = originalMatchedNode;
     this.replacements = replacements;
+    this.description = description;
   }
 
   /**
@@ -71,6 +79,10 @@ public final class SuggestedFix {
    */
   public SetMultimap<String, CodeReplacement> getReplacements() {
     return replacements;
+  }
+
+  @Nullable public String getDescription() {
+    return description;
   }
 
   @Override public String toString() {
@@ -90,6 +102,7 @@ public final class SuggestedFix {
     private Node originalMatchedNode = null;
     private final ImmutableSetMultimap.Builder<String, CodeReplacement> replacements =
         ImmutableSetMultimap.builder();
+    private String description = null;
 
     /**
      * Sets the node on this SuggestedFix that caused this SuggestedFix to be built
@@ -536,8 +549,13 @@ public final class SuggestedFix {
           .build();
     }
 
+    public Builder setDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
     public SuggestedFix build() {
-      return new SuggestedFix(originalMatchedNode, replacements.build());
+      return new SuggestedFix(originalMatchedNode, replacements.build(), description);
     }
   }
 }

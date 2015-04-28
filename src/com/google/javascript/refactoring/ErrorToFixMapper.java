@@ -16,9 +16,11 @@
 package com.google.javascript.refactoring;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.JSError;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +35,19 @@ public final class ErrorToFixMapper {
       Pattern.compile("'([^']+)' used but not goog\\.require'd");
   private static final Pattern EXTRA_REQUIRE =
       Pattern.compile("'([^']+)' goog\\.require'd but not used");
+
+  public static List<SuggestedFix> getFixesForJsError(JSError error, AbstractCompiler compiler) {
+    SuggestedFix fix = getFixForJsError(error, compiler);
+    if (fix != null) {
+      return ImmutableList.of(fix);
+    }
+    switch (error.getType().key) {
+      case "JSC_IMPLICITLY_NULLABLE_JSDOC":
+        return getFixesForImplicitlyNullableJsDoc(error);
+      default:
+        return ImmutableList.of();
+    }
+  }
 
   public static SuggestedFix getFixForJsError(JSError error, AbstractCompiler compiler) {
     switch (error.getType().key) {
@@ -49,6 +64,20 @@ public final class ErrorToFixMapper {
       default:
         return null;
     }
+  }
+
+  private static List<SuggestedFix> getFixesForImplicitlyNullableJsDoc(JSError error) {
+    SuggestedFix qmark = new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
+        .insertBefore(error.node, "?")
+        .setDescription("Make nullability explicit")
+        .build();
+    SuggestedFix bang = new SuggestedFix.Builder()
+        .setOriginalMatchedNode(error.node)
+        .insertBefore(error.node, "!")
+        .setDescription("Make type non-nullable")
+        .build();
+    return ImmutableList.of(qmark, bang);
   }
 
   private static SuggestedFix getFixForDebuggerStatement(JSError error) {
