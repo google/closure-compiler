@@ -2392,7 +2392,7 @@ class GlobalTypeInfo implements CompilerPass {
         locals.put(entry.getKey(), entry.getValue().toJSType());
       }
       for (String typedefName : localTypedefs.keySet()) {
-        locals.put(typedefName, JSType.TOP);
+        locals.put(typedefName, JSType.UNDEFINED);
       }
       localNamespaces = ImmutableMap.of();
       localClassDefs = ImmutableMap.of();

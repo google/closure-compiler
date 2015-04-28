@@ -1147,6 +1147,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
+  public void testTypedefIsUndefined() {
+    typeCheck(
+        "function f() {\n"
+        + "  /** @typedef {string} */ var x;\n"
+        + "  /** @type {undefined} */ var y = x;\n"
+        + "}");
+  }
+
   public void testFunctionsInsideFunctions() {
     typeCheck(
         "(function() {\n"
