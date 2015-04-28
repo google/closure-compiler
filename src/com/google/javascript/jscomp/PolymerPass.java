@@ -545,10 +545,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       case "Boolean":
       case "String":
       case "Number":
-      case "Function":
         typeNode = IR.string(typeString.toLowerCase());
         break;
       case "Array":
+      case "Function":
       case "Object":
       case "Date":
         typeNode = new Node(Token.BANG, IR.string(typeString));

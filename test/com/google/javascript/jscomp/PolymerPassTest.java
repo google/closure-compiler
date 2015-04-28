@@ -396,6 +396,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "      notify: true,",
         "    },",
         "    name: String,",
+        "    thingToDo: Function,",
         "  },",
         "});"),
 
@@ -411,6 +412,8 @@ public class PolymerPassTest extends CompilerTestCase {
         "a.B.prototype.pets;",
         "/** @type {string} @export */",
         "a.B.prototype.name;",
+        "/** @type {!Function} @export */",
+        "a.B.prototype.thingToDo;",
         "a.B = Polymer(/** @lends {a.B.prototype} */ {",
         "  is: 'x-element',",
         "  properties: {",
@@ -420,6 +423,7 @@ public class PolymerPassTest extends CompilerTestCase {
         "      notify: true,",
         "    },",
         "    name: String,",
+        "    thingToDo: Function,",
         "  },",
         "});"));
   }
