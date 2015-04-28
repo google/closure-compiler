@@ -9062,6 +9062,18 @@ chrome.gcdPrivate.prefetchWifiPassword = function(ssid, callback) {};
 
 
 /**
+ * Returns local device information.
+ * @param {string} serviceName The mDNS service name of the device.
+ * @param {function(string, !Object): void}
+ *     callback Called when when the device info is available or on error.
+ *     |status|: The status of the operation (success or type of error).
+ *     |deviceInfo|: Content of /privet/info response.
+ *     https://developers.google.com/cloud-devices/v1/reference/local-api/info
+ */
+chrome.gcdPrivate.getDeviceInfo = function(serviceName, callback) {};
+
+
+/**
  * Create new pairing session.
  * @param {string} serviceName The mDNS service name of the device.
  * @param {function(number, string, !Array.<string>): void}
