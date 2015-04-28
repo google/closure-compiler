@@ -254,6 +254,10 @@ jasmine.CallTracker.prototype.mostRecent = function() {};
 jasmine.CallTracker.prototype.first = function() {};
 
 
+/** @return {void} */
+jasmine.CallTracker.prototype.reset = function() {};
+
+
 
 /**
  * @constructor
