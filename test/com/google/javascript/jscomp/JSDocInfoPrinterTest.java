@@ -81,7 +81,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordReturnType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("number|string"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**@return {number|string} */", JSDocInfoPrinter.print(info));
+    assertEquals("/**@return {(number|string)} */", JSDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), ""));
@@ -104,12 +104,18 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals(
         "/**@enum {{foo:number,bar:string}} */", JSDocInfoPrinter.print(info));
 
-    // Array types
-    builder.recordType(new JSTypeExpression(
-        JsDocInfoParser.parseTypeString("!Array.<number|string>"), ""));
+    builder.recordEnumParameterType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("{foo:(number|string)}"), ""));
     info = builder.buildAndReset();
     assertEquals(
-        "/**@type {!Array.<number|string>} */", JSDocInfoPrinter.print(info));
+        "/**@enum {{foo:(number|string)}} */", JSDocInfoPrinter.print(info));
+
+    // Array types
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("!Array.<(number|string)>"), ""));
+    info = builder.buildAndReset();
+    assertEquals(
+        "/**@type {!Array.<(number|string)>} */", JSDocInfoPrinter.print(info));
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("Array"), ""));
     builder.recordInlineType();

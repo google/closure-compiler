@@ -158,11 +158,13 @@ public final class JSDocInfoPrinter {
       appendTypeNode(sb, typeNode.getFirstChild());
       sb.append("=");
     } else if (typeNode.getType() == Token.PIPE) {
+      sb.append("(");
       for (int i = 0; i < typeNode.getChildCount() - 1; i++) {
         appendTypeNode(sb, typeNode.getChildAtIndex(i));
         sb.append("|");
       }
       appendTypeNode(sb, typeNode.getLastChild());
+      sb.append(")");
     } else if (typeNode.getType() == Token.ELLIPSIS) {
       sb.append("...");
       if (typeNode.hasChildren()) {
