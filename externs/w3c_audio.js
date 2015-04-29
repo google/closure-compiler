@@ -499,7 +499,7 @@ var MediaElementAudioSourceNode = function() {};
 var JavaScriptAudioNode = function() {};
 
 /**
- * @type {EventListener|(function(AudioProcessingEvent=) : boolean|undefined)}
+ * @type {EventListener|(function(!AudioProcessingEvent):(boolean|undefined))}
  */
 JavaScriptAudioNode.prototype.onaudioprocess;
 
@@ -516,7 +516,7 @@ JavaScriptAudioNode.prototype.bufferSize;
 var ScriptProcessorNode = function() {};
 
 /**
- * @type {EventListener|(function(AudioProcessingEvent=) : boolean|undefined)}
+ * @type {EventListener|(function(!AudioProcessingEvent):(boolean|undefined))}
  */
 ScriptProcessorNode.prototype.onaudioprocess;
 
