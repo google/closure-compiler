@@ -10785,4 +10785,65 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheckCustomExterns("", "function f(x) { 1 - 'asdf'; }",
         GlobalTypeInfo.FUNCTION_CONSTRUCTOR_NOT_DEFINED);
   }
+
+  public void testTrickyPropertyJoins() {
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/** @type {number} */\n"
+        + "Foo.prototype.length;\n"
+        + "/** @param {{length:number}|!Foo} x */\n"
+        + "function f(x) {\n"
+        + "  return x.length - 123;\n"
+        + "}");
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/** @type {number} */\n"
+        + "Foo.prototype.length;\n"
+        + "/** @param {null|{length:number}|!Foo} x */\n"
+        + "function f(x) {\n"
+        + "  return x.length - 123;\n"
+        + "}",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/** @type {number} */\n"
+        + "Foo.prototype.length;\n"
+        + "/** @param {null|!Foo|{length:number}} x */\n"
+        + "function f(x) {\n"
+        + "  return x.length - 123;\n"
+        + "}",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+  }
+
+  public void testJoinOfClassyAndLooseObject() {
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo(){}\n"
+        + "/** @type {number} */\n"
+        + "Foo.prototype.p = 5;\n"
+        + "function f(o) {\n"
+        + "  if (o.p == 5) {\n"
+        + "    (function(/** !Foo */ x){})(o);\n"
+        + "  }\n"
+        + "}");
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo() { this.p = 123; }\n"
+        + "function f(x) {\n"
+        + "  var y;\n"
+        + "  if (x.p) {\n"
+        + "    y = x;\n"
+        + "  } else {\n"
+        + "    y = new Foo;\n"
+        + "    y.prop = 'asdf';\n"
+        + "  }\n"
+        + "  y.p -123;\n"
+        + "}");
+  }
 }

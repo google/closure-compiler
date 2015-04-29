@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.Node;
 
 import java.util.List;
@@ -358,24 +359,35 @@ public final class ObjectType implements TypeWithProperties {
     return props.without(pname);
   }
 
-  private static PersistentMap<String, Property> joinProps(
-      Map<String, Property> props1, Map<String, Property> props2) {
-    PersistentMap<String, Property> newProps = PersistentMap.create();
-    for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
-      String pname = propsEntry.getKey();
-      if (!props2.containsKey(pname)) {
-        newProps = newProps.with(pname, propsEntry.getValue().withOptional());
-      }
+  private static Property getProp(Map<String, Property> props, NominalType nom, String pname) {
+    if (props.containsKey(pname)) {
+      return props.get(pname);
+    } else if (nom != null) {
+      return nom.getProp(pname);
     }
-    for (Map.Entry<String, Property> propsEntry : props2.entrySet()) {
-      String pname = propsEntry.getKey();
-      Property prop2 = propsEntry.getValue();
-      if (props1.containsKey(pname)) {
-        newProps = newProps.with(
-            pname, Property.join(props1.get(pname), prop2));
+    return null;
+  }
+
+  // This method needs the nominal types because otherwise a property may become
+  // optional by mistake after the join.
+  // joinPropsLoosely doesn't need that, because we don't create optional props
+  // on loose types.
+  private static PersistentMap<String, Property> joinProps(
+      Map<String, Property> props1, Map<String, Property> props2,
+      NominalType nom1, NominalType nom2) {
+    PersistentMap<String, Property> newProps = PersistentMap.create();
+    for (String pname : Sets.union(props1.keySet(), props2.keySet())) {
+      Property prop1 = getProp(props1, nom1, pname);
+      Property prop2 = getProp(props2, nom2, pname);
+      Property newProp = null;
+      if (prop1 == null) {
+        newProp = prop2.withOptional();
+      } else if (prop2 == null) {
+        newProp = prop1.withOptional();
       } else {
-        newProps = newProps.with(pname, prop2.withOptional());
+        newProp = Property.join(prop1, prop2);
       }
+      newProps = newProps.with(pname, newProp);
     }
     return newProps;
   }
@@ -582,8 +594,10 @@ public final class ObjectType implements TypeWithProperties {
   }
 
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
-    Preconditions.checkState(
-        areRelatedClasses(obj1.nominalType, obj2.nominalType));
+    NominalType nom1 = obj1.nominalType;
+    NominalType nom2 = obj2.nominalType;
+    Preconditions.checkState(areRelatedClasses(nom1, nom2));
+
     if (obj1.equals(obj2)) {
       return obj1;
     }
@@ -594,10 +608,9 @@ public final class ObjectType implements TypeWithProperties {
       fn = fn == null ? null : fn.withLoose();
       props = joinPropsLoosely(obj1.props, obj2.props);
     } else {
-      props = joinProps(obj1.props, obj2.props);
+      props = joinProps(obj1.props, obj2.props, nom1, nom2);
     }
-    NominalType nominal =
-        NominalType.pickSuperclass(obj1.nominalType, obj2.nominalType);
+    NominalType nominal = NominalType.pickSuperclass(nom1, nom2);
     // TODO(blickly): Split TOP_OBJECT from empty object and remove this case
     if (nominal == null || !nominal.isFunction()) {
       fn = null;
@@ -627,16 +640,18 @@ public final class ObjectType implements TypeWithProperties {
         NominalType nominalType1 = obj1.nominalType;
         NominalType nominalType2 = obj2.nominalType;
         if (areRelatedClasses(nominalType1, nominalType2)) {
-          if (nominalType2 == null && nominalType1 != null &&
-              !obj1.isSubtypeOf(obj2) ||
-              nominalType1 == null && nominalType2 != null &&
-              !obj2.isSubtypeOf(obj1)) {
+          if (nominalType2 == null && nominalType1 != null && !obj1.isSubtypeOf(obj2)
+              || nominalType1 == null && nominalType2 != null && !obj2.isSubtypeOf(obj1)) {
             // Don't merge other classes with record types
             break;
           }
           keptFrom1[i] = null;
-          newObjs.add(join(obj1, obj2));
           addedObj2 = true;
+          // obj1 and obj2 may be in a subtype relation.
+          // Even then, we want to join them because we don't want to forget
+          // any extra properties in the subtype object.
+          newObjs.add(join(obj1, obj2));
+
           break;
         }
       }

@@ -72,6 +72,10 @@ class Property {
     return new Property(defSite, inferredType, declaredType, Attribute.OPTIONAL);
   }
 
+  boolean isRequired() {
+    return attribute == Attribute.REQUIRED;
+  }
+
   boolean isOptional() {
     return attribute == Attribute.OPTIONAL;
   }
@@ -97,11 +101,13 @@ class Property {
   }
 
   Property withOptional() {
-    return new Property(defSite, inferredType, declaredType, Attribute.OPTIONAL);
+    return isOptional() ? this
+        : new Property(defSite, inferredType, declaredType, Attribute.OPTIONAL);
   }
 
   Property withRequired() {
-    return new Property(defSite, inferredType, declaredType, Attribute.REQUIRED);
+    return isRequired() ? this
+        : new Property(defSite, inferredType, declaredType, Attribute.REQUIRED);
   }
 
   private static Attribute meetAttributes(Attribute a1, Attribute a2) {
