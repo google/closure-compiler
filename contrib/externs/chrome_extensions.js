@@ -4110,8 +4110,6 @@ chrome.history.onVisited;
 /**
  * @const
  * @see http://developer.chrome.com/apps/identity.html
- * TODO: replace TokenDetails, InvalidTokenDetails and
- *     WebAuthFlowDetails with Object.
  */
 chrome.identity = {};
 
@@ -4152,7 +4150,7 @@ chrome.identity.launchWebAuthFlow = function(details, callback) {};
 chrome.identity.WebAuthFlowDetails;
 
 
-/** @param {!function(!Object=):void} callback */
+/** @param {function(!Object):void} callback */
 chrome.identity.getProfileUserInfo = function(callback) {};
 
 
