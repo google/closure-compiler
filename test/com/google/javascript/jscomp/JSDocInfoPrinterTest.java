@@ -112,15 +112,32 @@ public final class JSDocInfoPrinterTest extends TestCase {
 
     // Array types
     builder.recordType(new JSTypeExpression(
-        JsDocInfoParser.parseTypeString("!Array.<(number|string)>"), ""));
+        JsDocInfoParser.parseTypeString("!Array<(number|string)>"), ""));
     info = builder.buildAndReset();
     assertEquals(
-        "/**@type {!Array.<(number|string)>} */", JSDocInfoPrinter.print(info));
+        "/**@type {!Array<(number|string)>} */", JSDocInfoPrinter.print(info));
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("Array"), ""));
     builder.recordInlineType();
     info = builder.buildAndReset();
     assertEquals("/** Array */", JSDocInfoPrinter.print(info));
+
+    // Other template types
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("!Set<number|string>"), ""));
+    info = builder.buildAndReset();
+    assertEquals(
+        "/**@type {!Set<(number|string)>} */", JSDocInfoPrinter.print(info));
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("!Map<!Foo, !Bar<!Baz|string>>"), ""));
+    info = builder.buildAndReset();
+    assertEquals(
+        "/**@type {!Map<!Foo,!Bar<(!Baz|string)>>} */", JSDocInfoPrinter.print(info));
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("Map"), ""));
+    builder.recordInlineType();
+    info = builder.buildAndReset();
+    assertEquals("/** Map */", JSDocInfoPrinter.print(info));
   }
 
   public void testInheritance() {
