@@ -153,4 +153,11 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
          + "google_exportProperty(Foo.baz.prototype, 'testBar', "
          + "Foo.baz.prototype.testBar);");
   }
+
+  public void testExportTestSuite() {
+    testSame("goog.testing.testSuite({'a': function() {}, 'b': function() {}});");
+    test(
+        "goog.testing.testSuite({a: function() {}, b: function() {}});",
+        "goog.testing.testSuite({'a': function() {}, 'b': function() {}});");
+  }
 }

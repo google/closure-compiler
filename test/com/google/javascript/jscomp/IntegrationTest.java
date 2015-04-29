@@ -332,11 +332,36 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(createCompilerOptions(), "/** @export */ function f() {}");
   }
 
-  public void testGenerateExportsOn() {
+  public void testExportTestFunctionsOn1() {
     CompilerOptions options = createCompilerOptions();
-    options.setGenerateExports(true);
-    test(options, "/** @export */ function f() {}",
-        "/** @export */ function f() {} goog.exportSymbol('f', f);");
+    options.exportTestFunctions = true;
+    test(options, "function testFoo() {}",
+        "/** @export */ function testFoo() {}"
+        + "goog.exportSymbol('testFoo', testFoo);");
+  }
+
+  public void testExportTestFunctionsOn2() {
+    CompilerOptions options = createCompilerOptions();
+    options.setExportTestFunctions(true);
+    options.setClosurePass(true);
+    options.setRenamingPolicy(
+        VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setGeneratePseudoNames(true);
+    options.setCollapseProperties(true);
+    test(options,
+        new String[] {
+          "var goog = {};",
+          "goog.provide('goog.testing.testSuite');\n"
+          + "goog.testing.testSuite = function(a) {};\n",
+          " goog.module('testing');\n"
+          + "var testSuite = goog.require('goog.testing.testSuite');\n"
+          + "testSuite({testMethod:function(){}});\n"
+        },
+        new String[] {
+          "",
+          "var $goog$testing$testSuite$$=function($a$$){};",
+          "$goog$testing$testSuite$$({\"testMethod\":function(){}})"
+        });
   }
 
   public void testAngularPassOff() {

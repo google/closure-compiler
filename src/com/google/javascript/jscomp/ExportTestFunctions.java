@@ -88,7 +88,21 @@ class ExportTestFunctions implements CompilerPass {
             exportTestFunctionAsProperty(functionName, parent, n, grandparent);
           }
         }
+      } else if (n.isObjectLit()
+          && isCallTargetQName(n.getParent(), "goog.testing.testSuite")) {
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          if (c.isStringKey() && !c.isQuotedString()) {
+            c.setQuotedString();
+            compiler.reportCodeChange();
+          }
+        }
       }
+    }
+
+    // TODO(johnlenz): move test suite declaration into the
+    // coding convention class.
+    private boolean isCallTargetQName(Node n, String qname) {
+      return (n.isCall() && n.getFirstChild().matchesQualifiedName(qname));
     }
 
     /**
