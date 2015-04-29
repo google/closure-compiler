@@ -655,6 +655,9 @@ $.error = function(message) {};
  */
 jQuery.event = function(eventType) {};
 
+/** @type {Object.<string, Object>} */
+jQuery.event.special;
+
 /**
  * @constructor
  * @extends {jQuery.event}
@@ -670,6 +673,9 @@ jQuery.Event = function(eventType, properties) {};
  * @param {string} eventType
  */
 $.event = function(eventType) {};
+
+/** @type {Object.<string, Object>} */
+$.event.special;
 
 /**
  * @constructor
