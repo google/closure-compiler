@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -102,6 +103,16 @@ public final class JSDocInfoPrinter {
     if (info.hasBaseType()) {
       sb.append("@extends {");
       Node typeNode = info.getBaseType().getRoot();
+      if (typeNode.getType() == Token.BANG) {
+        appendTypeNode(sb, typeNode.getFirstChild());
+      } else {
+        appendTypeNode(sb, typeNode);
+      }
+      sb.append("} ");
+    }
+    for (JSTypeExpression type : info.getImplementedInterfaces()) {
+      sb.append("@implements {");
+      Node typeNode = type.getRoot();
       if (typeNode.getType() == Token.BANG) {
         appendTypeNode(sb, typeNode.getFirstChild());
       } else {

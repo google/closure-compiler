@@ -117,6 +117,33 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/** Array */", JSDocInfoPrinter.print(info));
   }
 
+  public void testInheritance() {
+    builder.recordImplementedInterface(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), ""));
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/**@implements {Foo} */", JSDocInfoPrinter.print(info));
+
+    builder.recordImplementedInterface(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("!Foo"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@implements {Foo} */", JSDocInfoPrinter.print(info));
+
+    builder.recordBaseType(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@extends {Foo} */", JSDocInfoPrinter.print(info));
+
+    builder.recordBaseType(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("!Foo"), ""));
+    builder.recordImplementedInterface(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("Bar"), ""));
+    builder.recordImplementedInterface(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("Bar.Baz"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@extends {Foo} @implements {Bar} @implements {Bar.Baz} */",
+        JSDocInfoPrinter.print(info));
+  }
+
   public void testFunctions() {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function()"), ""));
@@ -172,5 +199,3 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/**@type {function(this:foo):?} */", JSDocInfoPrinter.print(info));
   }
 }
-
-
