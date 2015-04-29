@@ -319,13 +319,22 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
       }
     }
 
+    // Don't add @const on class declarations, @const on classes has a
+    // different meaning (it means "not subclassable").
+    // "goog.defineClass" hasn't been rewritten yet, so check for that
+    // explicitly.
+    JSDocInfo info = target.getJSDocInfo();
+    if ((info != null && (info.isConstructor() || info.isInterface())
+        || isCallTo(value, "goog.defineClass"))) {
+      return;
+    }
+
     // Not a known typedef export, simple declare the props to be @const,
     // this is valid because we freeze module export objects.
-    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(target.getJSDocInfo());
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
     builder.recordConstancy();
     target.setJSDocInfo(builder.build());
   }
-
 
   /**
    * @return Whether the getprop is used as an assignment target, and that

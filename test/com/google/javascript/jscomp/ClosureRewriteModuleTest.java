@@ -326,6 +326,29 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         + "});");
   }
 
+  public void testExport7() {
+    test(
+        "goog.module('ns.a');"
+        + "/** @constructor */"
+        + "exports = function() {};",
+
+        "goog.provide('ns.a');"
+        + "goog.scope(function(){"
+        + "  /** @constructor */ ns.a = function() {};"
+        + "});");
+  }
+
+  public void testExport8() {
+    test(
+        "goog.module('ns.a');"
+        + "exports = goog.defineClass({});",
+
+        "goog.provide('ns.a');"
+        + "goog.scope(function(){"
+        + "  ns.a = goog.defineClass({});"
+        + "});");
+  }
+
   public void testRequiresRetainOrder() {
     test(
         "goog.module('ns.a');" +
