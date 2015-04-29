@@ -7072,6 +7072,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck("(/** @type {(number|string)} */ (1));");
 
     typeCheck("(/** @type {number} */ (/** @type {?} */ ('asdf')))");
+
+    // Ignore null when checking whether we are casting to a subtype
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Parent() {}\n"
+        + "/** @constructor @extends {Parent} */\n"
+        + "function Child() {}\n"
+        + "/** @type {Child|null} */ (new Parent);\n");
   }
 
   public void testOverride() {

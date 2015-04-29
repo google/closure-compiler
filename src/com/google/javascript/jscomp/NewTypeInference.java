@@ -1980,7 +1980,8 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
     JSType fromType = pair.type;
     JSType toType = symbolTable.getCastType(expr);
-    if (!toType.isSubtypeOf(fromType) && !fromType.isSubtypeOf(toType)) {
+    if (!toType.removeType(JSType.NULL).isSubtypeOf(fromType)
+        && !fromType.isSubtypeOf(toType)) {
       warnings.add(JSError.make(expr, TypeValidator.INVALID_CAST,
               fromType.toString(), toType.toString()));
     }
