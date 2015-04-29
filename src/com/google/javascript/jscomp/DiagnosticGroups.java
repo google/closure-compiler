@@ -442,13 +442,14 @@ public class DiagnosticGroups {
   // This group exists so that generated code can suppress these
   // warnings. Not for general use. These diagnostics will most likely
   // be moved to the suspiciousCode group.
-  public static final DiagnosticGroup TRANSITIONAL_SUSPICOUS_CODE_WARNINGS =
-      DiagnosticGroups.registerGroup("transitionalSuspiciousCodeWarnings",
-          PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR,
-          PeepholeFoldConstants.NEGATING_A_NON_NUMBER_ERROR,
-          PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE,
-          PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS,
-          PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+  static {
+    DiagnosticGroups.registerGroup("transitionalSuspiciousCodeWarnings",
+        PeepholeFoldConstants.INDEX_OUT_OF_BOUNDS_ERROR,
+        PeepholeFoldConstants.NEGATING_A_NON_NUMBER_ERROR,
+        PeepholeFoldConstants.BITWISE_OPERAND_OUT_OF_RANGE,
+        PeepholeFoldConstants.SHIFT_AMOUNT_OUT_OF_BOUNDS,
+        PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
+  }
 
   public static final DiagnosticGroup CONFORMANCE_VIOLATIONS =
       DiagnosticGroups.registerGroup("conformanceViolations",
