@@ -3595,6 +3595,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + " */\n"
         + "function f(x, y) { x = y; }",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // When getting a method signature from the parent, the receiver type is
+    // still the child's type.
+    typeCheck(
+        "/** @interface */\n"
+        + "function High() {}\n"
+        + "/** @param {number} x */\n"
+        + "High.prototype.method = function (x) {};\n"
+        + "/** @constructor @implements {High} */\n"
+        + "function Low() {}\n"
+        + "Low.prototype.method = function (x) {\n"
+        + "  var /** !Low */ y = this;\n"
+        + "};");
   }
 
   public void testInheritanceImplicitObjectSubtyping() {
@@ -6173,6 +6186,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @constructor @implements {I<number>} */\n"
         + "function Foo() {}\n"
         + "Foo.prototype.bar = function(x) {};\n"
+        + "(new Foo).bar(123);");
+
+    typeCheck(
+        "/**\n"
+        + " * @template T\n"
+        + " * @interface\n"
+        + " */\n"
+        + "function I() {}\n"
+        + "/** @param {T} x */\n"
+        + "I.prototype.bar = function(x) {};\n"
+        + "/** @constructor @implements {I<number>} */\n"
+        + "function Foo() {}\n"
+        + "Foo.prototype.bar = function(x) {};\n"
         + "(new Foo).bar('str');",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
@@ -6347,6 +6373,53 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @constructor @implements {Foo<number>} */\n"
         + "function A() {}\n"
         + "var /** Foo<number> */ x = new A();");
+
+    typeCheck(
+        "/** @interface */\n"
+        + "function High() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {T} x\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "High.prototype.method = function (x) {};\n"
+        + "/** @constructor @implements {High} */\n"
+        + "function Low() {}\n"
+        + "Low.prototype.method = function (x) {\n"
+        + "  return x;\n"
+        + "};\n"
+        + "(new Low).method(123) - 123;");
+
+    typeCheck(
+        "/** @interface */\n"
+        + "function High() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {T} x\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "High.prototype.method = function (x) {};\n"
+        + "/** @constructor @implements {High} */\n"
+        + "function Low() {}\n"
+        + "Low.prototype.method = function (x) {\n"
+        + "  return x;\n"
+        + "};\n"
+        + "(new Low).method('str') - 123;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/**\n"
+        + " * @template T\n"
+        + " * @interface\n"
+        + " */\n"
+        + "function High() {}\n"
+        + "/** @return {T} */\n"
+        + "High.prototype.method = function () {};\n"
+        + "/** @constructor @implements {High} */\n"
+        + "function Low() {}\n"
+        + "Low.prototype.method = function () { return /** @type {?} */ (null); };\n"
+        + "(new Low).method() - 123;\n"
+        + "(new Low).method() < 'asdf';");
   }
 
   public void testGenericsSubtyping() {

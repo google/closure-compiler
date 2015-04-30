@@ -542,7 +542,8 @@ class GlobalTypeInfo implements CompilerPass {
       // If we are looking at a method definition, munging may be needed
       for (PropertyDef inheritedPropDef : inheritedPropDefs) {
         if (inheritedPropDef.methodType != null) {
-          propMethodTypesToProcess.put(pname, inheritedPropDef.methodType);
+          propMethodTypesToProcess.put(pname,
+              inheritedPropDef.methodType.substituteNominalGenerics(superType));
         }
       }
     }
@@ -1574,8 +1575,7 @@ class GlobalTypeInfo implements CompilerPass {
     private DeclaredFunctionType computeFnDeclaredType(
         JSDocInfo fnDoc, String functionName, Node declNode,
         RawNominalType ownerType, Scope parentScope) {
-      Preconditions.checkArgument(
-          declNode.isFunction() || declNode.isGetProp());
+      Preconditions.checkArgument(declNode.isFunction() || declNode.isGetProp());
 
       Node parent = declNode.getParent();
       // An unannotated function may appear in argument position.

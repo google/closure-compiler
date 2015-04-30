@@ -71,6 +71,10 @@ public final class NominalType {
     return rawType.objectKind;
   }
 
+  Map<String, JSType> getTypeMap() {
+    return typeMap;
+  }
+
   boolean isClassy() {
     return !isFunction() && !isObject();
   }
@@ -89,6 +93,10 @@ public final class NominalType {
 
   public boolean isDict() {
     return rawType.isDict();
+  }
+
+  public boolean isGeneric() {
+    return rawType.isGeneric();
   }
 
   public boolean isUninstantiatedGenericType() {
