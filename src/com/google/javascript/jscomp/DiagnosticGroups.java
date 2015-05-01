@@ -415,7 +415,7 @@ public class DiagnosticGroups {
   // recommended that you think of them as "linter" warnings that
   // provide optional suggestions.
   public static final DiagnosticGroup LINT_CHECKS =
-      DiagnosticGroups.registerGroup("lintChecks",
+      DiagnosticGroups.registerGroup("lintChecks", // undocumented
           CheckEnums.DUPLICATE_ENUM_VALUE,
           // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the
           // checkTypes DiagnosticGroup
