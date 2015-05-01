@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.debugging.sourcemap.FilePosition;
@@ -254,6 +255,12 @@ public final class CodePrinter {
       }
       code.append(str);
       lineLength += str.length();
+      // Correct lineIndex and lineLength if there were newlines in the string.
+      int newlines = CharMatcher.is('\n').countIn(str);
+      if (newlines > 0) {
+        lineIndex += newlines;
+        lineLength = str.length() - str.lastIndexOf('\n');
+      }
     }
 
     /**
@@ -450,6 +457,12 @@ public final class CodePrinter {
     void append(String str) {
       code.append(str);
       lineLength += str.length();
+      // Correct lineIndex and lineLength if there were newlines in the string.
+      int newlines = CharMatcher.is('\n').countIn(str);
+      if (newlines > 0) {
+        lineIndex += newlines;
+        lineLength = str.length() - str.lastIndexOf("\n");
+      }
     }
 
     /**
