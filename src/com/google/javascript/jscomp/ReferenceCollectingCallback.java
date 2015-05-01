@@ -647,6 +647,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
         return false;
       }
 
+      // This condition can be true during InlineVariables.
+      if (parent.getParent() == null) {
+        return false;
+      }
+
       if (NodeUtil.isNameDeclaration(parent.getParent())
           && node == parent.getLastChild()) {
         // This is the RHS of a var/let/const, so not a declaration.
