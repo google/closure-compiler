@@ -10850,6 +10850,68 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}\n");
   }
 
+  public void testPlus() {
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/** @param {!Foo} x */\n"
+        + "function f(x, i) {\n"
+        + "  var /** string */ s = x[i];\n"
+        + "  var /** number */ y = x[i] + 123;\n"
+        + "}");
+
+    typeCheck(
+        "function f(/** ? */ x) {\n"
+        + "  var /** string */ s = '' + x;\n"
+        + "}");
+
+    typeCheck(
+        "function f(/** ? */ x) {\n"
+        + "  var /** number */ s = '' + x;\n"
+        + "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "function f(/** ? */ x, /** ? */ y) {\n"
+        + "  var /** number */ s = x + y;\n"
+        + "}");
+
+    typeCheck(
+        "function f(/** * */ x) {\n"
+        + "  var /** number */ n = x + 1;\n"
+        + "  var /** string */ s = 1 + x;\n"
+        + "}",
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "var /** number */ n = 1 + null;\n"
+        + "var /** string */ s = 1 + null;",
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "var /** number */ n = undefined + 2;\n"
+        + "var /** string */ s = undefined + 2;",
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "var /** number */ n = 3 + true;\n"
+        + "var /** string */ s = 3 + true;",
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "/** @type {number} */ var NaN;",
+        "var /** number */ n = NaN + 1;\n"
+        + "var /** string */ s = NaN + 1;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testUndefinedFunctionCtorNoCrash() {
     typeCheckCustomExterns("", "function f(x) {}",
         GlobalTypeInfo.FUNCTION_CONSTRUCTOR_NOT_DEFINED);

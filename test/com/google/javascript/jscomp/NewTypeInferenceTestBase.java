@@ -152,7 +152,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     typeCheck(externs, js, warningKinds);
   }
 
-  protected final void typeCheck(
+  private final void typeCheck(
       String externs, String js, DiagnosticType... warningKinds) {
     parseAndTypeCheck(externs, js);
     JSError[] warnings = compiler.getWarnings();

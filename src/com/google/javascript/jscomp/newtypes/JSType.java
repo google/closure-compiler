@@ -804,7 +804,16 @@ public abstract class JSType implements TypeI {
   }
 
   public static JSType plus(JSType lhs, JSType rhs) {
+    if (lhs.equals(STRING) || rhs.equals(STRING)) {
+      return STRING;
+    }
+    if (lhs.isUnknown() || lhs.isTop() || rhs.isUnknown() || rhs.isTop()) {
+      return UNKNOWN;
+    }
+    // If either has string, string in the result.
     int newtype = (lhs.getMask() | rhs.getMask()) & STRING_MASK;
+    // If both have non-string (including boolean, null, undefined),
+    // number in the result.
     if ((lhs.getMask() & ~STRING_MASK) != 0
         && (rhs.getMask() & ~STRING_MASK) != 0) {
       newtype |= NUMBER_MASK;

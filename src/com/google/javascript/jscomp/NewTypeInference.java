@@ -1146,7 +1146,7 @@ final class NewTypeInference implements CompilerPass {
         resultPair = analyzeInstanceofFwd(expr, inEnv, specializedType);
         break;
       case Token.ADD:
-        resultPair = analyzeAddFwd(expr, inEnv);
+        resultPair = analyzeAddFwd(expr, inEnv, requiredType);
         break;
       case Token.BITOR:
       case Token.BITAND:
@@ -1443,15 +1443,16 @@ final class NewTypeInference implements CompilerPass {
     return ctorPair;
   }
 
-  private EnvTypePair analyzeAddFwd(Node expr, TypeEnv inEnv) {
+  private EnvTypePair analyzeAddFwd(Node expr, TypeEnv inEnv, JSType requiredType) {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
-    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, JSType.NUM_OR_STR);
-    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.NUM_OR_STR);
+    JSType operandType = requiredType.isNumber() ? JSType.NUMBER : JSType.UNKNOWN;
+    EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv, operandType);
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env, operandType);
     JSType lhsType = lhsPair.type;
     JSType rhsType = rhsPair.type;
     if (lhsType.isString() || rhsType.isString()) {
-      // Don't warn, since '' + expr is used for type coercions
+      // Return early and don't warn, since '' + expr is used for type coercions
       rhsPair.type = JSType.STRING;
       return rhsPair;
     }
@@ -2899,9 +2900,9 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeAddBwd(Node expr, TypeEnv outEnv, JSType requiredType) {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
-    JSType randType = requiredType.isNumber() ? JSType.NUMBER : JSType.NUM_OR_STR;
-    EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv, randType);
-    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env, randType);
+    JSType operandType = requiredType.isNumber() ? JSType.NUMBER : JSType.UNKNOWN;
+    EnvTypePair rhsPair = analyzeExprBwd(rhs, outEnv, operandType);
+    EnvTypePair lhsPair = analyzeExprBwd(lhs, rhsPair.env, operandType);
     lhsPair.type = JSType.plus(lhsPair.type, rhsPair.type);
     return lhsPair;
   }
