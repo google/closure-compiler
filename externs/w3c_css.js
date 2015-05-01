@@ -2363,7 +2363,7 @@ var FontFaceDescriptors;
 /**
  * @constructor
  * @param {string} fontFamily
- * @param {string} source
+ * @param {(string|ArrayBuffer|ArrayBufferView)} source
  * @param {!FontFaceDescriptors} descriptors
  * @see http://dev.w3.org/csswg/css-font-loading/#font-face-constructor
  */
