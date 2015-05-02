@@ -2392,27 +2392,6 @@ DOMTokenList.prototype.toString = function() {};
 HTMLElement.prototype.classList;
 
 /**
- * Web Cryptography API Window.prototype.crypto.* is deprecated. Please use the
- * new w3c_webcrypto.js for this functionality moving forward.
- */
-
-/**
- * Web Cryptography API
- * @see http://www.w3.org/TR/WebCryptoAPI/
- */
-
-/** @see https://developer.mozilla.org/en/DOM/window.crypto */
-Window.prototype.crypto;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.crypto.getRandomValues
- * @param {!ArrayBufferView} typedArray
- * @return {!ArrayBufferView}
- * @throws {Error}
- */
-Window.prototype.crypto.getRandomValues = function(typedArray) {};
-
-/**
  * Constraint Validation API properties and methods
  * @see http://www.w3.org/TR/2009/WD-html5-20090423/forms.html#the-constraint-validation-api
  */
