@@ -1369,6 +1369,11 @@ class GlobalNamespace
     static Ref createRefForTesting(Type type) {
       return new Ref(type, -1);
     }
+
+    @Override
+    public String toString() {
+      return node.toString();
+    }
   }
 
 

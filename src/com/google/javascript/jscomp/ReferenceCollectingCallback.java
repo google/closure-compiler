@@ -589,6 +589,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
       this(nameNode, basicBlock, t.getScope(), t.getInput().getInputId());
     }
 
+    @Override
+    public String toString() {
+      return nameNode.toString();
+    }
+
     /**
      * Creates a variable reference in a given script file name, used in tests.
      *
