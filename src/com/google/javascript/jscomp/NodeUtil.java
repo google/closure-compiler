@@ -1701,7 +1701,7 @@ public final class NodeUtil {
     }
   }
 
-  static boolean isAssignmentOp(Node n) {
+  public static boolean isAssignmentOp(Node n) {
     switch (n.getType()){
       case Token.ASSIGN:
       case Token.ASSIGN_BITOR:
@@ -1787,22 +1787,22 @@ public final class NodeUtil {
   /**
    * Finds the function containing the given node.
    */
-  static Node getEnclosingFunction(Node n) {
+  public static Node getEnclosingFunction(Node n) {
     return getEnclosingType(n, Token.FUNCTION);
   }
 
   /**
    * Finds the script containing the given node.
    */
-  static Node getEnclosingScript(Node n) {
+  public static Node getEnclosingScript(Node n) {
     return getEnclosingType(n, Token.SCRIPT);
   }
 
-  static boolean isInFunction(Node n) {
+  public static boolean isInFunction(Node n) {
     return getEnclosingFunction(n) != null;
   }
 
-  static Node getEnclosingStatement(Node n) {
+  public static Node getEnclosingStatement(Node n) {
     Node curr = n;
     while (curr != null && !isStatement(curr)) {
       curr = curr.getParent();
@@ -1904,7 +1904,7 @@ public final class NodeUtil {
    * For an assignment or variable declaration get the assigned value.
    * @return The value node representing the new value.
    */
-  static Node getAssignedValue(Node n) {
+  public static Node getAssignedValue(Node n) {
     Preconditions.checkState(n.isName());
     Node parent = n.getParent();
     if (parent.isVar()) {
@@ -1951,7 +1951,7 @@ public final class NodeUtil {
   /**
    * @return Whether the node represents a FOR-IN loop.
    */
-  static boolean isForIn(Node n) {
+  public static boolean isForIn(Node n) {
     return n.isFor() && n.getChildCount() == 3;
   }
 
@@ -2291,7 +2291,7 @@ public final class NodeUtil {
    * scope root is hoisted to the top of the scope.
    * See {@link #isFunctionDeclaration}).
    */
-  static boolean isHoistedFunctionDeclaration(Node n) {
+  public static boolean isHoistedFunctionDeclaration(Node n) {
     return isFunctionDeclaration(n)
         && (n.getParent().isScript()
             || n.getParent().getParent().isFunction());
@@ -2520,7 +2520,7 @@ public final class NodeUtil {
    * @return the string representation or {@code null} if the token value is
    * not an operator
    */
-  static String opToStr(int operator) {
+  public static String opToStr(int operator) {
     switch (operator) {
       case Token.BITOR: return "|";
       case Token.OR: return "||";
