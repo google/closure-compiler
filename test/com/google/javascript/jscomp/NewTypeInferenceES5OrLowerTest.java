@@ -1820,7 +1820,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(
         CLOSURE_BASE + "/** @constructor */ function Foo() {}\n"
-        + "function f(/** (Array.<string>|Foo) */ o) {\n"
+        + "function f(/** (Array<string>|Foo) */ o) {\n"
         + "  goog.asserts.assert(o instanceof Array);\n"
         + "  var /** string */ s = o.length;\n"
         + "}",
@@ -5362,7 +5362,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @template T */ function Foo(){}\n"
         + "/**\n"
         + " * @template T\n"
-        + " * @param {!Array.<T>|!Foo.<T>} arr\n"
+        + " * @param {!Array<T>|!Foo<T>} arr\n"
         + " * @return {T}\n"
         + " */\n"
         + "function get(arr) {\n"
@@ -5374,7 +5374,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(
         "/**\n"
         + " * @template T\n"
-        + " * @param {Array.<T>} arr\n"
+        + " * @param {Array<T>} arr\n"
         + " * @return {T|undefined}\n"
         + " */\n"
         + "function get(arr) {\n"
@@ -5388,7 +5388,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(
         "/**\n"
         + " * @template T\n"
-        + " * @param {Array.<T>} arr\n"
+        + " * @param {Array<T>} arr\n"
         + " * @return {T|undefined}\n"
         + " */\n"
         + "function get(arr) {\n"
@@ -5404,7 +5404,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @template U */ function Foo(/** U */ x){}\n"
         + "/**\n"
         + " * @template T\n"
-        + " * @param {U|!Array.<T>} arr\n"
+        + " * @param {U|!Array<T>} arr\n"
         + " * @return {U}\n"
         + " */\n"
         + "Foo.prototype.get = function(arr, /** ? */ opt_arg) {\n"
@@ -5417,7 +5417,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @template U */ function Foo(/** U */ x){}\n"
         + "/**\n"
         + " * @template T\n"
-        + " * @param {U|!Array.<T>} arr\n"
+        + " * @param {U|!Array<T>} arr\n"
         + " * @return {U}\n"
         + " */\n"
         + "Foo.prototype.get = function(arr, /** ? */ opt_arg) {\n"
@@ -5427,6 +5427,22 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  var /** null */ x = this.get([5], 1);\n"
         + "}",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n"
+        + " * @template T\n"
+        + " * @constructor\n"
+        + " */\n"
+        + "function Bar() {}\n"
+        + "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {!Bar<(!Bar<T>|!Foo)>} x\n"
+        + " */\n"
+        + "function f(x) {}\n"
+        + "f(/** @type {!Bar<!Bar<number>>} */ (new Bar));",
+        NewTypeInference.FAILED_TO_UNIFY);
   }
 
   public void testBoxedUnification() {
@@ -5445,15 +5461,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + " */\n"
         + "function Map(key, val) {};\n"
         + "/**\n"
-        + " * @param {!Map.<K, (V | !Box.<V>)>} inMap\n"
+        + " * @param {!Map<K, (V | !Box<V>)>} inMap\n"
         + " * @constructor\n"
         + " * @template K, V\n"
         + " */\n"
         + "function WrappedMap(inMap){};\n"
-        + "/** @return {(boolean |!Box.<boolean>)} */\n"
+        + "/** @return {(boolean |!Box<boolean>)} */\n"
         + "function getUnion(/** ? */ u) { return u; }\n"
         + "var inMap = new Map('asdf', getUnion(123));\n"
-        + "/** @param {!WrappedMap.<string, boolean>} x */\n"
+        + "/** @param {!WrappedMap<string, boolean>} x */\n"
         + "function getWrappedMap(x) {}\n"
         + "getWrappedMap(new WrappedMap(inMap));");
   }

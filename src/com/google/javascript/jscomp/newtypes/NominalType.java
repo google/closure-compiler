@@ -24,6 +24,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -362,7 +363,7 @@ public final class NominalType {
     if (this.rawType != other.rawType) {
       return false;
     }
-    if (this.rawType.typeParameters.isEmpty()) {
+    if (!isGeneric()) {
       // Non-generic nominal types don't contribute to the unification.
       return true;
     }
@@ -376,10 +377,25 @@ public final class NominalType {
     }
     boolean hasUnified = true;
     for (String typeParam : rawType.typeParameters) {
-      hasUnified = hasUnified && typeMap.get(typeParam).unifyWithSubtype(
-          other.typeMap.get(typeParam), typeParameters, typeMultimap);
+      hasUnified = hasUnified
+          && typeMap.get(typeParam).unifyWithSubtype(
+              other.typeMap.get(typeParam), typeParameters, typeMultimap);
     }
-    return hasUnified;
+    return hasUnified && isInvariantWith(typeMultimap, other);
+  }
+
+  private boolean isInvariantWith(Multimap<String, JSType> typeMultimap, NominalType other) {
+    Preconditions.checkState(isGeneric());
+    Map<String, JSType> newTypeMap = new LinkedHashMap<>();
+    for (String typeVar : typeMultimap.keySet()) {
+      Collection<JSType> c = typeMultimap.get(typeVar);
+      if (c.size() != 1) {
+        return false;
+      }
+      newTypeMap.put(typeVar, Iterables.getOnlyElement(c));
+    }
+    NominalType instantiated = instantiateGenerics(newTypeMap);
+    return Objects.equals(instantiated.typeMap, other.typeMap);
   }
 
   @Override
@@ -805,7 +821,9 @@ public final class NominalType {
       boolean firstIteration = true;
       builder.append("<");
       for (String typeParam : typeParameters) {
-        if (!firstIteration) {
+        if (firstIteration) {
+          firstIteration = false;
+        } else {
           builder.append(',');
         }
         JSType concrete = typeMap.get(typeParam);
