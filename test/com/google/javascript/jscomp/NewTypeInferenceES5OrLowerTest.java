@@ -5357,7 +5357,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function f() { return 'str'; }");
   }
 
-  public void testUnifyWithGenericUnion() {
+  public void testUnificationWithGenericUnion() {
     typeCheck(
         "/** @constructor @template T */ function Foo(){}\n"
         + "/**\n"
@@ -9420,6 +9420,32 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "function f(x) { return x; }\n"
         + "var /** (E2|string) */ x = f('str');",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/** @enum */\n"
+        + "var E = { A: 1 };\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {number|!Array<T>} x\n"
+        + " */\n"
+        + "function f(x) {}\n"
+        + "f(E.A);\n"
+        + "f(123);\n");
+
+    typeCheck(
+        "/** @enum {string} */\n"
+        + "var e1 = { A: '' };\n"
+        + "/** @enum {string} */\n"
+        + "var e2 = { B: '' };\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {T|e1} x\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "function f(x) { return /** @type {T} */ (x); }\n"
+        + "/** @param {number|e2} x */\n"
+        + "function g(x) { f(x) - 5; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testEnumJoinSpecializeMeet() {
@@ -10996,5 +11022,126 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  }\n"
         + "  y.p -123;\n"
         + "}");
+  }
+
+  public void testUnificationWithSubtyping() {
+    typeCheck(
+        "/** @constructor */ function Foo() {}\n"
+        + "/** @constructor @extends {Foo} */ function Bar() {}\n"
+        + "/** @constructor @extends {Foo} */ function Baz() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {T|!Foo} x\n"
+        + " * @param {T} y\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "function f(x, y) { return y; }\n"
+        + "/** @param {!Bar|!Baz} x */\n"
+        + "function g(x) {\n"
+        + "  f(x, 123) - 123;\n"
+        + "}");
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Parent() {}\n"
+        + "/** @constructor @extends {Parent} */\n"
+        + "function Child() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {T|!Parent} x\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "function f(x) { return /** @type {?} */ (x); }\n"
+        + "function g(/** (number|!Child) */ x) {\n"
+        + "  f(x) - 5;\n"
+        + "}");
+
+    typeCheck(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function Parent() {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {Parent<number>}\n"
+        + " */\n"
+        + "function Child() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {!Parent<T>} x\n"
+        + " */\n"
+        + "function f(x) {}\n"
+        + "/**\n"
+        + " * @param {!Child} x\n"
+        + " */\n"
+        + "function g(x) { f(x); }");
+
+    typeCheck(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function Parent() {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @template U\n"
+        + " * @extends {Parent<U>}\n"
+        + " */\n"
+        + "function Child() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {!Child<T>} x\n"
+        + " */\n"
+        + "function f(x) {}\n"
+        + "/**\n"
+        + " * @param {!Parent<number>} x\n"
+        + " */\n"
+        + "function g(x) { f(x); }",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/**\n"
+        + " * @template T\n"
+        + " * @constructor\n"
+        + " */\n"
+        + "function High() {}\n"
+        + "/** @constructor @extends {High<number>} */\n"
+        + "function Low() {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {!High<T>} x\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "function f(x) { return /** @type {?} */ (null); }\n"
+        + "var /** string */ s = f(new Low);",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n"
+        + " * @constructor\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function High() {}\n"
+        + "/** @return {T} */\n"
+        + "High.prototype.get = function() { return /** @type {?} */ (null); };\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @template U\n"
+        + " * @extends {High<U>}\n"
+        + " */\n"
+        + "function Low() {}\n"
+        + "/**\n"
+        + " * @template V\n"
+        + " * @param {!High<V>} x\n"
+        + " * @return {V}\n"
+        + " */\n"
+        + "function f(x) { return x.get(); }\n"
+        + "/** @param {!Low<number>} x */\n"
+        + "function g(x) {\n"
+        + "  var /** number */ n = f(x);\n"
+        + "  var /** string */ s = f(x);\n"
+        + "}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }

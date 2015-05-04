@@ -460,6 +460,8 @@ public abstract class JSType implements TypeI {
 
   // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, eg, obj.
   public static JSType join(JSType lhs, JSType rhs) {
+    Preconditions.checkNotNull(lhs);
+    Preconditions.checkNotNull(rhs);
     if (lhs.isTop() || rhs.isTop()) {
       return TOP;
     } else if (lhs.isUnknown() || rhs.isUnknown()) {
@@ -518,6 +520,7 @@ public abstract class JSType implements TypeI {
   private static void updateTypemap(
       Multimap<String, JSType> typeMultimap,
       String typeParam, JSType type) {
+    Preconditions.checkNotNull(type);
     Set<JSType> typesToRemove = new LinkedHashSet<>();
     for (JSType other : typeMultimap.get(typeParam)) {
       JSType unified = unifyUnknowns(type, other);
@@ -546,6 +549,8 @@ public abstract class JSType implements TypeI {
    * JSType.UNKNOWN as a "hole" to be filled.
    * @return The unified type, or null if unification fails */
   static JSType unifyUnknowns(JSType t1, JSType t2) {
+    Preconditions.checkNotNull(t1);
+    Preconditions.checkNotNull(t2);
     if (t1.isUnknown()) {
       return t2;
     } else if (t2.isUnknown()) {
@@ -609,6 +614,7 @@ public abstract class JSType implements TypeI {
    */
   public boolean unifyWithSubtype(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
+    Preconditions.checkNotNull(other);
     if (this.isUnknown() || this.isTop()) {
       return true;
     } else if (getMask() == TYPEVAR_MASK
@@ -623,20 +629,17 @@ public abstract class JSType implements TypeI {
     }
 
     Set<EnumType> ununifiedEnums = ImmutableSet.of();
-    if (getEnums().isEmpty()) {
-      ununifiedEnums = other.getEnums();
-    } else if (other.getEnums().isEmpty()) {
+    if (!other.getEnums().isEmpty()) {
       ununifiedEnums = new LinkedHashSet<>();
       for (EnumType e : other.getEnums()) {
-        if (!getEnums().contains(e)) {
+        if (!fromEnum(e).isSubtypeOf(this)) {
           ununifiedEnums.add(e);
         }
       }
     }
 
     Set<ObjectType> ununifiedObjs = new LinkedHashSet<>(other.getObjs());
-    // Each obj in this must unify w/ exactly one obj in other.
-    // However, we don't check that two different objects of this don't unify
+    // We don't check that two different objects of this don't unify
     // with the same other type.
     // Fancy cases are unfortunately iteration-order dependent, eg,
     // Foo<number>|Foo<string> may or may not unify with Foo<T>|Foo<string>
@@ -653,7 +656,7 @@ public abstract class JSType implements TypeI {
     if (thisTypevar == null || !typeParameters.contains(thisTypevar)) {
       return ununifiedObjs.isEmpty() && ununifiedEnums.isEmpty()
           && (otherTypevar == null || otherTypevar.equals(thisTypevar))
-          && getMask() == (getMask() | other.getMask());
+          && getMask() == (getMask() | (other.getMask() & ~ENUM_MASK));
     } else {
       // this is (T | ...)
       int templateMask = BOTTOM_MASK;

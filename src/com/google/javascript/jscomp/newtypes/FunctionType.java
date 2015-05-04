@@ -424,14 +424,14 @@ public final class FunctionType {
     if (nominalType == null && other.nominalType != null
         || nominalType != null && other.nominalType == null
         || nominalType != null && other.nominalType != null
-           && !nominalType.isSubclassOf(other.nominalType)) {
+           && !nominalType.isSubtypeOf(other.nominalType)) {
       return false;
     }
 
     // covariance for the this: type
     if (receiverType != null && other.receiverType == null
         || receiverType != null && other.receiverType != null
-           && !receiverType.isSubclassOf(other.receiverType)) {
+           && !receiverType.isSubtypeOf(other.receiverType)) {
       return false;
     }
 

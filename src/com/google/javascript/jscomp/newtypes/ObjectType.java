@@ -458,7 +458,7 @@ public final class ObjectType implements TypeWithProperties {
 
     if ((this.nominalType == null && obj2.nominalType != null)
         || this.nominalType != null && obj2.nominalType != null &&
-        !this.nominalType.isSubclassOf(obj2.nominalType)) {
+        !this.nominalType.isSubtypeOf(obj2.nominalType)) {
       return false;
     }
 
@@ -671,7 +671,7 @@ public final class ObjectType implements TypeWithProperties {
     if (c1 == null || c2 == null) {
       return true;
     }
-    return c1.isSubclassOf(c2) || c2.isSubclassOf(c1);
+    return c1.isSubtypeOf(c2) || c2.isSubtypeOf(c1);
   }
 
   // TODO(dimvar): handle greatest lower bound of interface types.
