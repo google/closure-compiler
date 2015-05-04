@@ -760,7 +760,7 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public boolean checksOnly;
 
-  public boolean generateExports;
+  public ExportsMode exportsMode;
 
   boolean exportLocalPropertyDefinitions;
 
@@ -1098,7 +1098,7 @@ public class CompilerOptions implements Serializable, Cloneable {
     appNameStr = "";
     recordFunctionInformation = false;
     checksOnly = false;
-    generateExports = false;
+    exportsMode = ExportsMode.OFF;
     exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
     cssRenamingWhitelist = null;
@@ -1534,8 +1534,8 @@ public class CompilerOptions implements Serializable, Cloneable {
     this.checksOnly = checksOnly;
   }
 
-  public void setGenerateExports(boolean generateExports) {
-    this.generateExports = generateExports;
+  public void setExportsMode(ExportsMode exportsMode) {
+    this.exportsMode = exportsMode;
   }
 
   public void setExportLocalPropertyDefinitions(boolean export) {
@@ -2467,6 +2467,22 @@ public class CompilerOptions implements Serializable, Cloneable {
 
     public boolean shouldStrip() {
       return this == STRIP;
+    }
+  }
+
+  public static enum ExportsMode {
+    // Do not generate exports
+    OFF,
+
+    // Generate exports by shadowing properties and variables
+    SHADOW,
+
+    // Export by blocking renaming and creating sink values to prevent
+    // dead code elimination
+    NO_RENAME;
+
+    public boolean isOn() {
+      return this != OFF;
     }
   }
 

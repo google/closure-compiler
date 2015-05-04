@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  * Generate exports unit test.
  *
  */
-public final class GenerateExportsTest extends CompilerTestCase {
+public final class ShadowExportsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "function google_exportSymbol(a, b) {}; " +
@@ -29,14 +29,14 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   private boolean allowNonGlobalExports = true;
 
-  public GenerateExportsTest() {
+  public ShadowExportsTest() {
     super(EXTERNS);
     compareJsDoc = false;
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new GenerateExports(compiler, allowNonGlobalExports,
+    return new ShadowExports(compiler, allowNonGlobalExports,
         "google_exportSymbol", "goog.exportProperty");
   }
 

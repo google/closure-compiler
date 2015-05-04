@@ -388,11 +388,12 @@ public class CommandLineRunner extends
         usage = "Enable debugging options")
     private boolean debug = false;
 
-    @Option(name = "--generate_exports",
+    @Option(name = "--exports_mode",
         hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Generates export code for those marked with @export")
-    private boolean generateExports = false;
+        usage = "Specifies the method to generates export code for those "
+            + "marked with @export. Options: OFF, SHADOW, NO_RENAME")
+    private CompilerOptions.ExportsMode exportsMode =
+        CompilerOptions.ExportsMode.OFF;
 
     @Option(name = "--export_local_property_definitions",
         hidden = true,
@@ -1138,9 +1139,7 @@ public class CommandLineRunner extends
       level.setTypeBasedOptimizationOptions(options);
     }
 
-    if (flags.generateExports) {
-      options.setGenerateExports(flags.generateExports);
-    }
+    options.setExportsMode(flags.exportsMode);
 
     if (flags.exportLocalPropertyDefinitions) {
       options.setExportLocalPropertyDefinitions(true);

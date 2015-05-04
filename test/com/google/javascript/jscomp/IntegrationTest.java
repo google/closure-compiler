@@ -104,7 +104,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
     options.setInlineVariables(true);
-    options.setGenerateExports(true);
+    options.setExportsMode(CompilerOptions.ExportsMode.SHADOW);
     test(
         options,
         CLOSURE_BOILERPLATE + "/** @export */ goog.CONSTANT = 1;"
@@ -114,7 +114,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testBug2410122() {
     CompilerOptions options = createCompilerOptions();
-    options.setGenerateExports(true);
+    options.setExportsMode(CompilerOptions.ExportsMode.SHADOW);
     options.setClosurePass(true);
     test(
         options,
@@ -842,7 +842,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSuspiciousCode(true);
     options.setCheckProvides(CheckLevel.ERROR);
-    options.setGenerateExports(true);
+    options.setExportsMode(CompilerOptions.ExportsMode.SHADOW);
     options.exportTestFunctions = true;
     options.setClosurePass(true);
     options.setCheckMissingGetCssNameLevel(CheckLevel.ERROR);
@@ -3084,7 +3084,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "alert((new function(){this.a = 1}).a + " +
             "(new function(){this.a = 1}).a);");
 
-    options.setGenerateExports(true);
+    options.setExportsMode(CompilerOptions.ExportsMode.SHADOW);
 
     // exports enabled, but not local exports
     test(options,

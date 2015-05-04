@@ -288,8 +288,8 @@ public final class DefaultPassConfig extends PassConfig {
     // The following passes are more like "preprocessor" passes.
     // It's important that they run before most checking passes.
     // Perhaps this method should be renamed?
-    if (options.generateExports) {
-      checks.add(generateExports);
+    if (options.exportsMode == CompilerOptions.ExportsMode.SHADOW) {
+      checks.add(shadowExports);
     }
 
     if (options.exportTestFunctions) {
@@ -930,14 +930,14 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private static final DiagnosticType GENERATE_EXPORTS_ERROR =
+  private static final DiagnosticType SHADOW_EXPORTS_ERROR =
       DiagnosticType.error(
-          "JSC_GENERATE_EXPORTS_ERROR",
-          "Exports can only be generated if export symbol/property " +
+          "JSC_SHADOW_EXPORTS_ERROR",
+          "Shadowed exports can only be generated if export symbol/property " +
           "functions are set.");
 
   /** Generates exports for @export annotations. */
-  private final PassFactory generateExports = new PassFactory("generateExports", true) {
+  private final PassFactory shadowExports = new PassFactory("shadowExports", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       if (options.removeUnusedPrototypePropertiesInExterns
@@ -949,12 +949,12 @@ public final class DefaultPassConfig extends PassConfig {
       CodingConvention convention = compiler.getCodingConvention();
       if (convention.getExportSymbolFunction() != null &&
           convention.getExportPropertyFunction() != null) {
-        return new GenerateExports(compiler,
+        return new ShadowExports(compiler,
             options.exportLocalPropertyDefinitions,
             convention.getExportSymbolFunction(),
             convention.getExportPropertyFunction());
       } else {
-        return new ErrorPass(compiler, GENERATE_EXPORTS_ERROR);
+        return new ErrorPass(compiler, SHADOW_EXPORTS_ERROR);
       }
     }
   };
@@ -970,7 +970,7 @@ public final class DefaultPassConfig extends PassConfig {
             convention.getExportSymbolFunction(),
             convention.getExportPropertyFunction());
       } else {
-        return new ErrorPass(compiler, GENERATE_EXPORTS_ERROR);
+        return new ErrorPass(compiler, SHADOW_EXPORTS_ERROR);
       }
     }
   };

@@ -671,7 +671,7 @@ public final class CompilerTest extends TestCase {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
-    options.setGenerateExports(true);
+    options.setExportsMode(CompilerOptions.ExportsMode.SHADOW);
 
     String js = "var goog; /** @export */ var a={};";
     List<SourceFile> inputs = ImmutableList.of(

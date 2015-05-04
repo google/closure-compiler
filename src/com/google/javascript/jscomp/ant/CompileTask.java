@@ -80,7 +80,7 @@ public final class CompileTask
   private boolean manageDependencies;
   private boolean prettyPrint;
   private boolean printInputDelimiter;
-  private boolean generateExports;
+  private CompilerOptions.ExportsMode exportsMode;
   private boolean replaceProperties;
   private boolean forceRecompile;
   private String replacePropertiesPrefix;
@@ -106,7 +106,7 @@ public final class CompileTask
     this.manageDependencies = false;
     this.prettyPrint = false;
     this.printInputDelimiter = false;
-    this.generateExports = false;
+    this.exportsMode = CompilerOptions.ExportsMode.OFF;
     this.replaceProperties = false;
     this.forceRecompile = false;
     this.replacePropertiesPrefix = "closure.define.";
@@ -278,8 +278,8 @@ public final class CompileTask
   /**
    * Set generateExports option
    */
-  public void setGenerateExports(boolean generateExports) {
-   this.generateExports = generateExports;
+  public void setExportsMode(CompilerOptions.ExportsMode exportsMode) {
+   this.exportsMode = exportsMode;
   }
 
   /**
@@ -406,7 +406,7 @@ public final class CompileTask
 
     options.setPrettyPrint(this.prettyPrint);
     options.setPrintInputDelimiter(this.printInputDelimiter);
-    options.setGenerateExports(this.generateExports);
+    options.setExportsMode(this.exportsMode);
 
     options.setLanguageIn(this.languageIn);
     options.setOutputCharset(this.outputEncoding);

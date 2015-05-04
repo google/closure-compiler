@@ -28,7 +28,7 @@ import java.util.Map;
  * Generates goog.exportSymbol/goog.exportProperty for the @export annotation.
  *
  */
-class GenerateExports implements CompilerPass {
+class ShadowExports implements CompilerPass {
 
   private static final String PROTOTYPE_PROPERTY = "prototype";
 
@@ -46,7 +46,7 @@ class GenerateExports implements CompilerPass {
    * @param exportSymbolFunction function used for exporting symbols.
    * @param exportPropertyFunction function used for exporting property names.
    */
-  GenerateExports(
+  ShadowExports(
       AbstractCompiler compiler,
       boolean allowNonGlobalExports,
       String exportSymbolFunction,
