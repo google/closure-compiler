@@ -7228,6 +7228,44 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "(new Low).f();\n"
         + "(new Low).f('asdf');",
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function F() {}\n"
+        + "/**\n"
+        + " * @param {string} x\n"
+        + " * @param {...*} var_args\n"
+        + " * @return {*}\n"
+        + " */\n"
+        + "F.prototype.method;\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {F}\n"
+        + " */\n"
+        + "function G() {}\n"
+        + "/** @override */\n"
+        + "G.prototype.method = function (x, opt_index) {};"
+        + "(new G).method('asdf');");
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function F() {}\n"
+        + "/**\n"
+        + " * @param {string} x\n"
+        + " * @param {...number} var_args\n"
+        + " * @return {number}\n"
+        + " */\n"
+        + "F.prototype.method;\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @extends {F}\n"
+        + " */\n"
+        + "function G() {}\n"
+        + "/** @override */\n"
+        + "G.prototype.method = function (x, opt_index) {};\n"
+        + "(new G).method('asdf', 'asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   public void testOverrideNoInitializer() {
