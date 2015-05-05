@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.debugging.sourcemap.Base64;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -26,11 +25,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -99,7 +93,7 @@ class ReplaceIdGenerators implements CompilerPass {
     consistNameMap = new LinkedHashMap<>();
 
     Map<String, BiMap<String, String>> previousMap;
-    previousMap = parsePreviousResults(previousMapSerialized);
+    previousMap = IdMappingUtil.parseSerializedIdMappings(previousMapSerialized);
     this.previousMap = previousMap;
 
     if (idGens != null) {
@@ -381,84 +375,7 @@ class ReplaceIdGenerators implements CompilerPass {
    *     replacements.
    */
   public String getSerializedIdMappings() {
-    StringBuilder sb = new StringBuilder();
-    for (Map.Entry<String, Map<String, String>> replacements :
-        idGeneratorMaps.entrySet()) {
-      if (!replacements.getValue().isEmpty()) {
-        sb.append("[");
-        sb.append(replacements.getKey());
-        sb.append("]\n\n");
-        for (Map.Entry<String, String> replacement :
-            replacements.getValue().entrySet()) {
-          sb.append(replacement.getKey());
-          sb.append(':');
-          sb.append(replacement.getValue());
-          sb.append("\n");
-        }
-        sb.append("\n");
-      }
-    }
-    return sb.toString();
-  }
-
-  private Map<String, BiMap<String, String>> parsePreviousResults(
-      String serializedMap) {
-
-    //
-    // The expected format looks like this:
-    //
-    // [generatorName]
-    // someId:someFile:theLine:theColumn
-    //
-    //
-
-    if (serializedMap == null || serializedMap.isEmpty()) {
-      return Collections.emptyMap();
-    }
-
-    Map<String, BiMap<String, String>> resultMap = new HashMap<>();
-    BufferedReader reader = new BufferedReader(new StringReader(serializedMap));
-    BiMap<String, String> currentSectionMap = null;
-
-    String line;
-    int lineIndex = 0;
-    try {
-      while ((line = reader.readLine()) != null) {
-        lineIndex++;
-        if (line.isEmpty()) {
-          continue;
-        }
-        if (line.charAt(0) == '[') {
-          String currentSection = line.substring(1, line.length() - 1);
-          currentSectionMap = resultMap.get(currentSection);
-          if (currentSectionMap == null) {
-            currentSectionMap = HashBiMap.create();
-            resultMap.put(currentSection, currentSectionMap);
-          } else {
-            reportInvalidLine(line, lineIndex);
-            return Collections.emptyMap();
-          }
-        } else {
-          int split = line.indexOf(':');
-          if (split != -1) {
-            String name = line.substring(0, split);
-            String location = line.substring(split + 1, line.length());
-            currentSectionMap.put(name, location);
-          } else {
-            reportInvalidLine(line, lineIndex);
-            return Collections.emptyMap();
-          }
-        }
-      }
-    } catch (IOException e) {
-      JSError.make(INVALID_GENERATOR_ID_MAPPING, e.getMessage());
-    }
-    return resultMap;
-  }
-
-  private static void reportInvalidLine(String line, int lineIndex) {
-    JSError.make(INVALID_GENERATOR_ID_MAPPING,
-        "line(" + line + "): " + lineIndex);
+    return IdMappingUtil.generateSerializedIdMappings(idGeneratorMaps);
   }
 
   static String getIdForGeneratorNode(boolean consistent, Node n) {
