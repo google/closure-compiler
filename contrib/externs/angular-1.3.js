@@ -1537,7 +1537,7 @@ angular.$interval_.cancel = function(promise) {};
  *   protocol: function():string,
  *   replace: function(),
  *   search: function((string|Object.<string, string>)=,
- *       ?(string|Array.<string>|boolean)=): (!Object|angular.$location),
+ *       ?(string|Array.<string>|boolean|number)=): (!Object|angular.$location),
  *   url: function(string=):string
  *   }}
  */
@@ -1582,7 +1582,7 @@ angular.$location.replace = function() {};
 
 /**
  * @param {(string|Object.<string, string>)=} opt_search
- * @param {?(string|Array.<string>|boolean)=} opt_paramValue
+ * @param {?(string|Array.<string>|boolean|number)=} opt_paramValue
  * @return {(!Object|angular.$location)}
  */
 angular.$location.search = function(opt_search, opt_paramValue) {};
