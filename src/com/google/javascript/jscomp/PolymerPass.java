@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -298,6 +299,12 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
     ImmutableList.Builder<BehaviorDefinition> behaviors = ImmutableList.builder();
     for (Node behaviorName : behaviorArray.children()) {
+      if (behaviorName.isObjectLit()) {
+        behaviors.add(new BehaviorDefinition(
+            extractProperties(behaviorName), getBehaviorFunctionsToCopy(behaviorName)));
+        continue;
+      }
+
       Name behaviorGlobalName = globalNames.getSlot(behaviorName.getQualifiedName());
       if (behaviorGlobalName == null) {
         compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
@@ -488,15 +495,23 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    */
   private void appendBehaviorFunctionsToBlock(final ClassDefinition cls, Node block) {
     String qualifiedPath = cls.target.getQualifiedName() + ".prototype.";
+    Map<String, Node> nameToExprResult = new HashMap<>();
     for (BehaviorDefinition behavior : cls.behaviors) {
       for (MemberDefinition behaviorFunction : behavior.functionsToCopy) {
+        String fnName = behaviorFunction.name.getString();
+        // Avoid copying over the same function twice. The last definition always wins.
+        if (nameToExprResult.containsKey(fnName)) {
+          block.removeChild(nameToExprResult.get(fnName));
+        }
+
         Node exprResult = IR.exprResult(IR.assign(
-            NodeUtil.newQName(compiler, qualifiedPath + behaviorFunction.name.getString()),
+            NodeUtil.newQName(compiler, qualifiedPath + fnName),
             behaviorFunction.value.cloneTree()));
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorFunction.info);
 
         exprResult.getFirstChild().setJSDocInfo(info.build());
         block.addChildToBack(exprResult);
+        nameToExprResult.put(fnName, exprResult);
       }
     }
   }

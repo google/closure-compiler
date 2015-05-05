@@ -675,6 +675,148 @@ public class PolymerPassTest extends CompilerTestCase {
         "});"));
   }
 
+  public void testInlineLiteralBehavior() {
+    String behaviors = Joiner.on("\n").join(
+        "var FunBehavior = {",
+        "  properties: {",
+        "    isFun: Boolean",
+        "  },",
+        "  /** @param {string} funAmount */",
+        "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
+        "  /** @override */",
+        "  created: function() {}",
+        "};",
+        "var SuperCoolBehaviors = [FunBehavior, {",
+        "  properties: {",
+        "    howRad: Number",
+        "  },",
+        "  /** @param {number} radAmount */",
+        "  doSomethingRad: function(radAmount) { alert('Something ' + radAmount + ' rad!'); },",
+        "  /** @override */",
+        "  ready: function() {}",
+        "}];");
+
+    test(behaviors + Joiner.on("\n").join(
+        "var A = Polymer({",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    pets: {",
+        "      type: Array,",
+        "      notify: true,",
+        "    },",
+        "    name: String,",
+        "  },",
+        "  behaviors: [ SuperCoolBehaviors ],",
+        "});"),
+
+        behaviors + Joiner.on("\n").join(
+        "/** @constructor @extends {PolymerElement} @export @implements {PolymerAInterface}*/",
+        "var A = function() {};",
+        "/** @type {!Array} @export */",
+        "A.prototype.pets;",
+        "/** @type {string} @export */",
+        "A.prototype.name;",
+        "/** @type {boolean} @export */",
+        "A.prototype.isFun;",
+        "/** @type {number} @export */",
+        "A.prototype.howRad;",
+        "/** @param {string} funAmount */",
+        "A.prototype.doSomethingFun = function(funAmount) {",
+        "  alert('Something ' + funAmount + ' fun!');",
+        "};",
+        "/** @param {number} radAmount */",
+        "A.prototype.doSomethingRad = function(radAmount) {",
+        "  alert('Something ' + radAmount + ' rad!');",
+        "};",
+        "A = Polymer(/** @lends {A.prototype} */ {",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    pets: {",
+        "      type: Array,",
+        "      notify: true,",
+        "    },",
+        "    name: String,",
+        "  },",
+        "  behaviors: [ SuperCoolBehaviors ],",
+        "});"));
+  }
+
+  /**
+   * If an element has two or more behaviors which define the same function, only the last
+   * behavior's function should be copied over to the element's prototype.
+   */
+  public void testBehaviorFunctionOverriding() {
+    String behaviors = Joiner.on("\n").join(
+        "var FunBehavior = {",
+        "  properties: {",
+        "    isFun: Boolean",
+        "  },",
+        "  /** @param {boolean} boredYet */",
+        "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.isFun); },",
+        "  /** @override */",
+        "  created: function() {}",
+        "};",
+        "var RadBehavior = {",
+        "  properties: {",
+        "    howRad: Number",
+        "  },",
+        "  /** @param {boolean} boredYet */",
+        "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.howRad); },",
+        "  /** @override */",
+        "  ready: function() {}",
+        "};",
+        "var SuperCoolBehaviors = [FunBehavior, RadBehavior];",
+        "var BoringBehavior = {",
+        "  properties: {",
+        "    boringString: String",
+        "  },",
+        "  /** @param {boolean} boredYet */",
+        "  doSomething: function(boredYet) { alert(boredYet + ' ' + this.boringString); },",
+        "};");
+
+    test(behaviors + Joiner.on("\n").join(
+        "var A = Polymer({",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    pets: {",
+        "      type: Array,",
+        "      notify: true,",
+        "    },",
+        "    name: String,",
+        "  },",
+        "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
+        "});"),
+
+        behaviors + Joiner.on("\n").join(
+        "/** @constructor @extends {PolymerElement} @export @implements {PolymerAInterface}*/",
+        "var A = function() {};",
+        "/** @type {!Array} @export */",
+        "A.prototype.pets;",
+        "/** @type {string} @export */",
+        "A.prototype.name;",
+        "/** @type {boolean} @export */",
+        "A.prototype.isFun;",
+        "/** @type {number} @export */",
+        "A.prototype.howRad;",
+        "/** @type {string} @export */",
+        "A.prototype.boringString;",
+        "/** @param {boolean} boredYet */",
+        "A.prototype.doSomething = function(boredYet) {",
+        "  alert(boredYet + ' ' + this.boringString);",
+        "};",
+        "A = Polymer(/** @lends {A.prototype} */ {",
+        "  is: 'x-element',",
+        "  properties: {",
+        "    pets: {",
+        "      type: Array,",
+        "      notify: true,",
+        "    },",
+        "    name: String,",
+        "  },",
+        "  behaviors: [ SuperCoolBehaviors, BoringBehavior ],",
+        "});"));
+  }
+
   public void testBehaviorReadOnlyProp() {
     String js = Joiner.on("\n").join(
         "var FunBehavior = {",
