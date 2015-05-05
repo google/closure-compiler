@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
@@ -672,6 +673,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     if (objectType != null) {
       Property p = objectType.getOwnSlot(propertyName);
+      Preconditions.checkNotNull(p, "getOwnSlot returned null");
+      Preconditions.checkNotNull(p.getNode(), "getOwnSlot returned a property with no node."
+          + " objectType=%s, property=%s", objectType, p);
       definingSource = p.getNode().getStaticSourceFile();
       isClassType = p.getJSDocInfo().isConstructor();
     } else if (isPrivateByConvention) {
