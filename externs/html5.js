@@ -2722,29 +2722,18 @@ Element.ALLOW_KEYBOARD_INPUT = 1;
 Element.prototype.ALLOW_KEYBOARD_INPUT = 1;
 
 
-/** @constructor */
-function MutationObserverInit() {}
-
-/** @type {boolean} */
-MutationObserverInit.prototype.childList;
-
-/** @type {boolean} */
-MutationObserverInit.prototype.attributes;
-
-/** @type {boolean} */
-MutationObserverInit.prototype.characterData;
-
-/** @type {boolean} */
-MutationObserverInit.prototype.subtree;
-
-/** @type {boolean} */
-MutationObserverInit.prototype.attributeOldValue;
-
-/** @type {boolean} */
-MutationObserverInit.prototype.characterDataOldValue;
-
-/** @type {Array.<string>} */
-MutationObserverInit.prototype.attributeFilter;
+/**
+ * @typedef {{
+ *   childList: (boolean|undefined),
+ *   attributes: (boolean|undefined),
+ *   characterData: (boolean|undefined),
+ *   subtree: (boolean|undefined),
+ *   attributeOldValue: (boolean|undefined),
+ *   characterDataOldValue: (boolean|undefined),
+ *   attributeFilter: (!Array<string>|undefined)
+ * }}
+ */
+var MutationObserverInit;
 
 
 /** @constructor */
