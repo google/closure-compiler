@@ -449,7 +449,8 @@ class GlobalTypeInfo implements CompilerPass {
         DeclaredFunctionType superMethodType =
             DeclaredFunctionType.meet(methodTypes);
         DeclaredFunctionType updatedMethodType =
-            localPropDef.methodType.withTypeInfoFromSuper(superMethodType);
+            localPropDef.methodType.withTypeInfoFromSuper(
+                superMethodType, getsTypeInfoFromParentMethod(localPropDef));
         localPropDef.updateMethodType(updatedMethodType);
         propTypesToProcess.put(pname,
             commonTypes.fromFunctionType(updatedMethodType.toFunctionType()));
@@ -534,7 +535,8 @@ class GlobalTypeInfo implements CompilerPass {
     if (localPropType == null) {
       // Add property from interface to class
       propTypesToProcess.put(pname, inheritedPropType);
-    } else if (!localPropType.isSubtypeOf(inheritedPropType)) {
+    } else if (!getsTypeInfoFromParentMethod(localPropDef)
+        && !localPropType.isSubtypeOf(inheritedPropType)) {
       warnings.add(JSError.make(
           localPropDef.defSite, INVALID_PROP_OVERRIDE, pname,
           inheritedPropType.toString(), localPropType.toString()));
@@ -547,6 +549,14 @@ class GlobalTypeInfo implements CompilerPass {
         }
       }
     }
+  }
+
+  private static boolean getsTypeInfoFromParentMethod(PropertyDef pd) {
+    if (pd == null || pd.methodType == null) {
+      return false;
+    }
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(pd.defSite);
+    return jsdoc == null || jsdoc.isOverride();
   }
 
   /**
@@ -1841,6 +1851,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     PropertyDef(
         Node defSite, DeclaredFunctionType methodType, Scope methodScope) {
+      Preconditions.checkNotNull(defSite);
       Preconditions.checkArgument(
           defSite.isGetProp() || NodeUtil.isObjectLitKey(defSite));
       this.defSite = defSite;

@@ -174,7 +174,18 @@ public final class DeclaredFunctionType {
   }
 
   public DeclaredFunctionType withTypeInfoFromSuper(
-      DeclaredFunctionType superType) {
+      DeclaredFunctionType superType, boolean getsTypeInfoFromParentMethod) {
+    // getsTypeInfoFromParentMethod is true when a method without jsdoc overrides
+    // a parent method. In this case, the parent may be declaring some formals
+    // as optional and we want to preserve that type information here.
+    if (getsTypeInfoFromParentMethod) {
+      return new DeclaredFunctionType(
+          superType.requiredFormals, superType.optionalFormals,
+          superType.restFormals, superType.returnType, superType.nominalType,
+          this.receiverType, // only keep this from the current type
+          superType.typeParameters);
+    }
+
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int i = 0;
     for (JSType formal : requiredFormals) {

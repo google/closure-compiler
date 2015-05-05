@@ -7215,6 +7215,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "/** @inheritDoc */\n"
         + "Foo.prototype.method = function() {};",
         TypeCheck.UNKNOWN_OVERRIDE);
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function High() {}\n"
+        + "/** @param {number=} x */\n"
+        + "High.prototype.f = function(x) {};\n"
+        + "/** @constructor @extends {High} */\n"
+        + "function Low() {}\n"
+        + "/** @override */\n"
+        + "Low.prototype.f = function(x) {};"
+        + "(new Low).f();\n"
+        + "(new Low).f('asdf');",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testOverrideNoInitializer() {
@@ -7715,7 +7728,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testAbstractMethodOverrides() {
     typeCheck("/** @type {!Function} */ function abstractMethod(){}\n"
         + "/** @interface */ function I() {}\n"
-        + "/** @param {string} opt_str */\n"
+        + "/** @param {string=} opt_str */\n"
         + "I.prototype.done = abstractMethod;\n"
         + "/** @implements {I} @constructor */ function Foo() {}\n"
         + "/** @override */ Foo.prototype.done = function(opt_str) {}\n"
