@@ -798,7 +798,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var C = function() { this.counter = 0; };",
         "",
         "C.prototype.init = function() {",
-        "  var $jscomp$this = this;",
+        "  /** @const */ var $jscomp$this = this;",
         "  document.onclick = function() { return $jscomp$this.logClick(); }",
         "};",
         "",
@@ -1098,12 +1098,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     test("var f = () => this;",
         Joiner.on('\n').join(
-            "var $jscomp$this = this;",
+            "/** @const */ var $jscomp$this = this;",
             "var f = function() { return $jscomp$this; };"));
 
     test("var f = x => { this.needsBinding(); return 0; };",
         Joiner.on('\n').join(
-            "var $jscomp$this = this;",
+            "/** @const */ var $jscomp$this = this;",
             "var f = function(x) {",
             "  $jscomp$this.needsBinding();",
             "  return 0;",
@@ -1116,7 +1116,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  this.done();",
         "};"
     ), Joiner.on('\n').join(
-        "var $jscomp$this = this;",
+        "/** @const */ var $jscomp$this = this;",
         "var f = function(x) {",
         "  $jscomp$this.init();",
         "  $jscomp$this.doThings();",
@@ -1126,7 +1126,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("switch(a) { case b: (() => { this; })(); }", Joiner.on('\n').join(
         "switch(a) {",
         "  case b:",
-        "    var $jscomp$this = this;",
+        "    /** @const */ var $jscomp$this = this;",
         "    (function() { $jscomp$this; })();",
         "}"
      ));
@@ -1160,7 +1160,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ), Joiner.on('\n').join(
         "function f() {",
-        "  var $jscomp$this = this;",
+        "  /** @const */ var $jscomp$this = this;",
         "  var a1 = function() { return $jscomp$this.x; };",
         "  var a2 = function() { return $jscomp$this.y; };",
         "}"
@@ -1202,11 +1202,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     ), Joiner.on('\n').join(
         "var outer = {",
         "  f: function() {",
-        "     var $jscomp$this = this;",
+        "     /** @const */ var $jscomp$this = this;",
         "     var a1 = function() { return $jscomp$this.x; }",
         "     var inner = {",
         "       f: function() {",
-        "         var $jscomp$this = this;",
+        "         /** @const */ var $jscomp$this = this;",
         "         var a2 = function() { return $jscomp$this.y; }",
         "       }",
         "     };",
@@ -1223,7 +1223,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "}"
     ), Joiner.on('\n').join(
         "function f() {",
-        "  var $jscomp$this = this;",
+        "  /** @const */ var $jscomp$this = this;",
         "  var setup = function() {",
         "    function Foo() { this.x = 5; }",
         "    $jscomp$this.f = new Foo;",
@@ -1245,7 +1245,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  }",
         "}"
     ), Joiner.on('\n').join(
-        "var $jscomp$this = this;",
+        "/** @const */ var $jscomp$this = this;",
         "var f = function(x) {",
         "  var g = function(y) {",
         "    $jscomp$this.foo();",
