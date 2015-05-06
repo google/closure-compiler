@@ -1989,6 +1989,7 @@ public class Node implements Cloneable, Serializable {
     putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
     sourcePosition = other.sourcePosition;
+    setLength(other.getLength());
     return this;
   }
 
@@ -2026,6 +2027,7 @@ public class Node implements Cloneable, Serializable {
     if (getProp(STATIC_SOURCE_FILE) == null) {
       putProp(STATIC_SOURCE_FILE, other.getProp(STATIC_SOURCE_FILE));
       sourcePosition = other.sourcePosition;
+      setLength(other.getLength());
     }
 
     return this;
