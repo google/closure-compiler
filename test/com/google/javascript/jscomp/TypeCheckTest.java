@@ -13379,6 +13379,25 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "var k;");
   }
 
+  public void testDontOverrideNativeScalarTypes() throws Exception {
+    testTypes(
+        "string = 123;\n"
+        + "var /** string */ s = 123;",
+        "initializing variable\n"
+        + "found   : number\n"
+        + "required: string");
+
+    testTypes(
+        "var string = goog.require('goog.string');\n"
+        + "var /** string */ s = 123;",
+        new String[] {
+          "Property require never defined on goog",
+          "initializing variable\n"
+          + "found   : number\n"
+          + "required: string"
+        });
+  }
+
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);
   }

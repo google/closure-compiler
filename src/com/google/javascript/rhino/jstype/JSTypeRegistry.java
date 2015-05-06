@@ -963,6 +963,17 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public JSType getType(StaticTypedScope<JSType> scope, String jsTypeName,
       String sourceName, int lineno, int charno) {
+    switch (jsTypeName) {
+      case "boolean":
+        return getNativeType(JSTypeNative.BOOLEAN_TYPE);
+      case "number":
+        return getNativeType(JSTypeNative.NUMBER_TYPE);
+      case "string":
+        return getNativeType(JSTypeNative.STRING_TYPE);
+      case "undefined":
+      case "void":
+        return getNativeType(JSTypeNative.VOID_TYPE);
+    }
     // Resolve template type names
     JSType type = null;
     JSType thisType = null;
