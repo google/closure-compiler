@@ -266,16 +266,6 @@ class GlobalNamespace
     return v != null && !v.isLocal();
   }
 
-  /**
-   * Gets whether a scope is the global scope.
-   *
-   * @param s A scope
-   * @return Whether the scope is the global scope
-   */
-  private static boolean isGlobalScope(Scope s) {
-    return s.getParent() == null;
-  }
-
   // -------------------------------------------------------------------------
 
   /**
@@ -420,7 +410,7 @@ class GlobalNamespace
       }
 
       if (isSet) {
-        if (isGlobalScope(scope)) {
+        if (scope.isGlobal()) {
           handleSetFromGlobal(module, scope, n, parent, name, isPropAssign, type);
         } else {
           handleSetFromLocal(module, scope, n, parent, name);
