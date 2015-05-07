@@ -659,7 +659,7 @@ class GlobalTypeInfo implements CompilerPass {
         Preconditions.checkState(qnameNode.getParent().isAssign());
         qnameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       }
-      currentScope.addNamespace(qnameNode);
+      currentScope.addNamespace(qnameNode, qnameNode.isFromExterns());
     }
 
     private void visitTypedef(Node qnameNode) {
@@ -1063,8 +1063,7 @@ class GlobalTypeInfo implements CompilerPass {
                 if (isConst && !mayWarnAboutNoInit(n) && declType == null) {
                   declType = inferConstTypeFromRhs(n);
                 }
-                currentScope.addLocal(
-                    name, declType, isConst, n.isFromExterns());
+                currentScope.addLocal(name, declType, isConst, n.isFromExterns());
               }
             }
           } else if (currentScope.isOuterVarEarly(name)) {
@@ -2210,10 +2209,16 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    private void addNamespace(Node qnameNode) {
+    private void addNamespace(Node qnameNode, boolean isFromExterns) {
       Preconditions.checkArgument(!isNamespace(qnameNode));
       if (qnameNode.isName()) {
         localNamespaces.put(qnameNode.getString(), new NamespaceLit());
+        if (isFromExterns) {
+          // We don't know the full type of a namespace until after we see all
+          // its properties. But we want to add it to the externs, otherwise it
+          // is treated as a local and initialized to the wrong thing in NTI.
+          externs.put(qnameNode.getString(), null);
+        }
       } else {
         QualifiedName qname = QualifiedName.fromNode(qnameNode);
         Namespace ns = getNamespace(qname.getLeftmostName());
@@ -2400,7 +2405,13 @@ class GlobalTypeInfo implements CompilerPass {
       // For now, we put types of namespaces directly into the locals.
       // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
       for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {
-        locals.put(entry.getKey(), entry.getValue().toJSType());
+        String name = entry.getKey();
+        JSType t = entry.getValue().toJSType();
+        if (externs.containsKey(name)) {
+          externs.put(name, t);
+        } else {
+          locals.put(name, t);
+        }
       }
       for (Map.Entry<String, EnumType> entry : localEnums.entrySet()) {
         locals.put(entry.getKey(), entry.getValue().toJSType());

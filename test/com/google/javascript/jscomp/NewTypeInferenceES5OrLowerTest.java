@@ -4363,6 +4363,21 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testNamespacesInExterns() {
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS
+        + "/** @const */ var ns = {};\n"
+        + "/** @type {number} */ ns.num;",
+        "var /** number */ n = ns.num;");
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS
+        + "/** @const */ var ns = {};\n"
+        + "/** @type {number} */ ns.num;",
+        "var /** string */ s = ns.num;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testDontInferNamespaces() {
     typeCheck(
         "/** @const */ var ns = {};\n"
