@@ -269,7 +269,10 @@ final class NewTypeInference implements CompilerPass {
   private Scope currentScope;
   private GlobalTypeInfo symbolTable;
   private JSTypes commonTypes;
+  // RETVAL_ID is used when we calculate the summary type of a function
   private static final String RETVAL_ID = "%return";
+  // Used for typing the elements of the arguments array
+  private static final String ARGSARRAYELM_ID = "%arguments_elm";
   private static final String GETTER_PREFIX = "%getter_fun";
   private static final String SETTER_PREFIX = "%setter_fun";
   private final String ABSTRACT_METHOD_NAME;
@@ -472,6 +475,14 @@ final class NewTypeInference implements CompilerPass {
       if (currentScope.hasThis()) {
         varNames.add("this");
       }
+      // In the rare case when there is a local variable named "arguments",
+      // this entry will be overwritten in the foreach loop below.
+      env = envPutType(env, "arguments", commonTypes.getArgumentsArrayType());
+      JSType argsArrayElmType = JSType.UNKNOWN;
+      if (currentScope.getDeclaredType().hasRestFormals()) {
+        argsArrayElmType = currentScope.getDeclaredType().getRestFormalsType();
+      }
+      env = envPutType(env, ARGSARRAYELM_ID, argsArrayElmType);
     }
     for (String varName : varNames) {
       JSType declType = currentScope.getDeclaredTypeOf(varName);
@@ -507,10 +518,6 @@ final class NewTypeInference implements CompilerPass {
     // Ideally, we would like to only set the in edges of the implicit return
     // rather than all edges. However, throws can have out edges not connected
     // to the implicit return, so we simply initialize all edges.
-    initEdgeEnvs(env);
-  }
-
-  private void initEdgeEnvs(TypeEnv env) {
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> e : cfg.getEdges()) {
       envs.put(e, env);
     }
@@ -947,7 +954,7 @@ final class NewTypeInference implements CompilerPass {
     builder.addNominalType(declType.getNominalType());
     builder.addReceiverType(declType.getReceiverType());
     JSType declRetType = declType.getReturnType();
-    JSType actualRetType = envGetType(exitEnv, RETVAL_ID);
+    JSType actualRetType = Preconditions.checkNotNull(envGetType(exitEnv, RETVAL_ID));
 
     if (declRetType != null) {
       builder.addRetType(declRetType);
@@ -1895,16 +1902,20 @@ final class NewTypeInference implements CompilerPass {
     // empty string. Consider improving the error msg.
     if (!mayWarnAboutNonObject(receiver, "", recvType, specializedType) &&
         !mayWarnAboutStructPropAccess(receiver, recvType)) {
-      if (isArrayType(recvType)) {
+      if (isArrayType(recvType) || recvType.equals(commonTypes.getArgumentsArrayType())) {
         pair = analyzeExprFwd(index, pair.env, JSType.NUMBER);
         if (!commonTypes.isNumberScalarOrObj(pair.type)) {
           warnings.add(JSError.make(
               index, NewTypeInference.NON_NUMERIC_ARRAY_INDEX,
               pair.type.toString()));
         }
-        pair.type = getArrayElementType(recvType);
-        Preconditions.checkState(pair.type != null,
-            "Array type %s has no element type at node: %s", recvType, expr);
+        if (isArrayType(recvType)) {
+          pair.type = getArrayElementType(recvType);
+          Preconditions.checkState(pair.type != null,
+              "Array type %s has no element type at node: %s", recvType, expr);
+        } else {
+          pair.type = envGetType(pair.env, ARGSARRAYELM_ID);
+        }
         return pair;
       } else if (index.isString()) {
         return analyzePropAccessFwd(receiver, index.getString(), inEnv,
@@ -3058,9 +3069,13 @@ final class NewTypeInference implements CompilerPass {
     JSType reqObjType = pickReqObjType(expr);
     EnvTypePair pair = analyzeExprBwd(receiver, outEnv, reqObjType);
     JSType recvType = pair.type;
-    if (isArrayType(recvType)) {
+    if (isArrayType(recvType) || recvType.equals(commonTypes.getArgumentsArrayType())) {
       pair = analyzeExprBwd(index, pair.env, JSType.NUMBER);
-      pair.type = getArrayElementType(recvType);
+      if (isArrayType(recvType)) {
+        pair.type = getArrayElementType(recvType);
+      } else {
+        pair.type = envGetType(pair.env, ARGSARRAYELM_ID);
+      }
       return pair;
     }
     if (index.isString()) {
@@ -3707,8 +3722,7 @@ final class NewTypeInference implements CompilerPass {
     TypeEnv env = getInEnv(cfg.getImplicitReturn());
     if (env == null) {
       // This function only exits with THROWs
-      env = new TypeEnv();
-      return envPutType(env, RETVAL_ID, JSType.BOTTOM);
+      return envPutType(new TypeEnv(), RETVAL_ID, JSType.BOTTOM);
     }
     return env;
   }

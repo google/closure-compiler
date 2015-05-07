@@ -7538,7 +7538,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testUnparameterizedArrayDefinitionDoesntCrash() {
     typeCheckCustomExterns(
-        "/** @constructor */ function Function(){}\n"
+        DEFAULT_EXTERNS
+        + "/** @constructor */ function Function(){}\n"
         + "/** @constructor */ function Array(){}",
         "function f(/** !Array */ arr) {\n"
         + "  var newarr = [];\n"
@@ -11194,5 +11195,57 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  var /** string */ s = f(x);\n"
         + "}",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testArgumentsArray() {
+    typeCheck("arguments = 123;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "function f(x, i) { return arguments[i]; }");
+
+    typeCheck(
+        "function f(x) { return arguments['asdf']; }",
+        NewTypeInference.NON_NUMERIC_ARRAY_INDEX);
+
+    typeCheck( // Arguments is array-like, but not Array
+        "function f() { return arguments.splice(); }",
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(
+        "function f(x, i) { return arguments[i]; }\n"
+        + "f(123, 'asdf')",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f() {\n"
+        + "  var arguments = 1;\n"
+        + "  return arguments - 1;\n"
+        + "}");
+
+    typeCheck(
+        "/** @param {string} var_args */\n"
+        + "function f(var_args) {\n"
+        + "  return arguments[0];\n"
+        + "}\n"
+        + "f('asdf') - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @param {string} var_args */\n"
+        + "function f(var_args) {\n"
+        + "  var x = arguments;\n"
+        + "  return x[0];\n"
+        + "}\n"
+        + "f('asdf') - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "function f(x, i) {\n"
+        + "  x < i;\n"
+        + "  arguments[i];\n"
+        + "}\n"
+        + "f('asdf', 0);",
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 }

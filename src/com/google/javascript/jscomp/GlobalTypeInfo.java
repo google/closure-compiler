@@ -860,6 +860,9 @@ class GlobalTypeInfo implements CompilerPass {
    private void maybeRecordBuiltinType(
        String name, RawNominalType rawNominalType) {
      switch (name) {
+       case "Arguments":
+         commonTypes.setArgumentsType(rawNominalType);
+         break;
        case "Function":
          commonTypes.setFunctionType(rawNominalType);
          break;

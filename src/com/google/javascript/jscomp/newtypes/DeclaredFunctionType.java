@@ -130,6 +130,11 @@ public final class DeclaredFunctionType {
     return restFormals != null;
   }
 
+  public JSType getRestFormalsType() {
+    Preconditions.checkState(restFormals != null);
+    return restFormals;
+  }
+
   public JSType getReturnType() {
     return returnType;
   }

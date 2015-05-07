@@ -54,6 +54,7 @@ public final class JSTypes {
   private RawNominalType arrayType;
   private RawNominalType builtinObject;
   private RawNominalType builtinFunction;
+  private RawNominalType arguments;
 
   private JSTypes() {}
 
@@ -138,6 +139,14 @@ public final class JSTypes {
   ObjectType getStringInstanceObjType() {
     return stringInstanceObjtype != null
         ? stringInstanceObjtype : ObjectType.TOP_OBJECT;
+  }
+
+  public JSType getArgumentsArrayType() {
+    return this.arguments.getInstanceAsJSType();
+  }
+
+  public void setArgumentsType(RawNominalType arguments) {
+    this.arguments = arguments;
   }
 
   public void setFunctionType(RawNominalType builtinFunction) {
