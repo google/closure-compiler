@@ -177,9 +177,9 @@ public final class FunctionType {
   private static final FunctionType LOOSE_TOP_FUNCTION = new FunctionType(true);
 
   // Corresponds to Function, which is a subtype and supertype of all functions.
-  static final FunctionType QMARK_FUNCTION = FunctionType.normalized(null,
+  static final FunctionType QMARK_FUNCTION = normalized(null,
       null, JSType.UNKNOWN, JSType.UNKNOWN, null, null, null, null, true);
-  private static final FunctionType BOTTOM_FUNCTION = FunctionType.normalized(
+  private static final FunctionType BOTTOM_FUNCTION = normalized(
       null, null, null, JSType.BOTTOM, null, null, null, null, false);
 
   public boolean isTopFunction() {
@@ -305,7 +305,7 @@ public final class FunctionType {
     if (isQmarkFunction()) {
       return FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration();
     }
-    Preconditions.checkState(!isLoose());
+    Preconditions.checkState(!isLoose(), "Loose function: %s", this);
     // Don't do it for generic types.
     if (isGeneric()) {
       return null;
@@ -445,12 +445,14 @@ public final class FunctionType {
       return f2;
     } else if (f2 == null || f1.equals(f2)) {
       return f1;
+    } else if (f1.isQmarkFunction() || f2.isQmarkFunction()) {
+      return QMARK_FUNCTION;
     } else if (f1.isTopFunction() || f2.isTopFunction()) {
       return TOP_FUNCTION;
     }
 
     if (f1.isLoose() || f2.isLoose()) {
-      return FunctionType.looseJoin(f1, f2);
+      return looseJoin(f1, f2);
     }
 
     if (f1.isGeneric() && f2.isSubtypeOf(f1)) {
@@ -501,7 +503,7 @@ public final class FunctionType {
         || !this.isLoose() && other.isLoose()) {
       return this;
     }
-    FunctionType result = FunctionType.meet(this, other);
+    FunctionType result = meet(this, other);
     if (this.isLoose() && !result.isLoose()) {
       result = result.withLoose();
     }
@@ -519,7 +521,7 @@ public final class FunctionType {
 
     // War is peace, freedom is slavery, meet is join
     if (f1.isLoose() || f2.isLoose()) {
-      return FunctionType.looseJoin(f1, f2);
+      return looseJoin(f1, f2);
     }
 
     if (f1.isGeneric() && f1.isSubtypeOf(f2)) {

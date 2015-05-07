@@ -1565,6 +1565,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "    g(5, cond);\n"
         + "  }\n"
         + "}");
+
+    typeCheck(
+        "/**\n"
+        + " * @param {function (number)|Function} x\n"
+        + " */\n"
+        + "function f(x) {};\n"
+        + "f(function () {});");
   }
 
   public void testBackwardForwardPathologicalCase2() {
@@ -9817,6 +9824,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + " */\n"
         + "function f(x) {\n"
         + "  return goog.isString(x) && (1 < 2) ? x : 'a';\n"
+        + "}");
+
+    typeCheck(CLOSURE_BASE + "/**\n"
+        + " * @param {*} o1\n"
+        + " * @param {*} o2\n"
+        + " * @return {boolean}\n"
+        + " */\n"
+        + "function deepEquals(o1, o2) {\n"
+        + "  if (goog.isObject(o1) && goog.isObject(o2)) {\n"
+        + "    if (o1.length != o2.length) {\n"
+        + "      return true;\n"
+        + "    }\n"
+        + "  }\n"
+        + "  return false;\n"
         + "}");
   }
 
