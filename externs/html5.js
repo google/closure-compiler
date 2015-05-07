@@ -3242,3 +3242,104 @@ function HTMLTemplateElement() {}
  * @type {!DocumentFragment}
  */
 HTMLTemplateElement.prototype.content;
+
+
+/**
+ * @constructor
+ * @extends {Worker}
+ * @see http://www.w3.org/TR/service-workers/#service-worker-obj
+ */
+function ServiceWorker() {}
+
+/** @type {string} */
+ServiceWorker.prototype.scriptURL;
+
+/** @type {string} */
+ServiceWorker.prototype.state;
+
+/** @type {?function(!Event)} */
+ServiceWorker.prototype.onstatechange;
+
+
+
+/**
+ * @constructor
+ * @implements {EventTarget}
+ * @see http://www.w3.org/TR/service-workers/#service-worker-registration-obj
+ */
+function ServiceWorkerRegistration() {}
+
+/** @override */
+ServiceWorkerRegistration.prototype.addEventListener;
+
+/** @override */
+ServiceWorkerRegistration.prototype.removeEventListener;
+
+/** @override */
+ServiceWorkerRegistration.prototype.dispatchEvent;
+
+/** @type {string} */
+ServiceWorkerRegistration.prototype.scope;
+
+/** @type {function(): void} */
+ServiceWorkerRegistration.prototype.update;
+
+/** @return {!Promise<boolean>} */
+ServiceWorkerRegistration.prototype.unregister;
+
+/** @type {?function(!Event)} */
+ServiceWorkerRegistration.prototype.onupdatefound;
+
+
+/**
+ * @constructor
+ * @implements {EventTarget}
+ * @see http://www.w3.org/TR/service-workers/#service-worker-container
+ */
+function ServiceWorkerContainer() {}
+
+/** @override */
+ServiceWorkerContainer.prototype.addEventListener;
+
+/** @override */
+ServiceWorkerContainer.prototype.removeEventListener;
+
+/** @override */
+ServiceWorkerContainer.prototype.dispatchEvent;
+
+/** @type {!ServiceWorker} */
+ServiceWorkerContainer.prototype.controller;
+
+/** @type {!Promise<ServiceWorkerRegistration>} */
+ServiceWorkerContainer.prototype.ready;
+
+/**
+ * @param {string} scriptURL
+ * @param {{scope: string}=} options
+ * @return {!Promise<ServiceWorkerRegistration>}
+ */
+ServiceWorkerContainer.prototype.register = function (scriptURL, options) {};
+
+/**
+ * @param {string} clientURL
+ * @return {!Promise<ServiceWorkerRegistration>}
+ */
+ServiceWorkerContainer.prototype.getRegistration = function (clientURL) {};
+
+/**
+ * @return {!Promise<Array<ServiceWorkerRegistration>>}
+ */
+ServiceWorkerContainer.prototype.getRegistrations = function () {};
+
+/** @type {?function(!Event)} */
+ServiceWorkerContainer.prototype.oncontrollerchange;
+
+/** @type {?function(!Event)} */
+ServiceWorkerContainer.prototype.onerror;
+
+
+/**
+ * @type {ServiceWorkerContainer}
+ * @see http://www.w3.org/TR/service-workers/#navigator-service-worker
+ */
+Navigator.prototype.serviceWorker;
