@@ -28,7 +28,6 @@ import java.util.Map;
 
 /**
  * A utility class for generating and parsing id mappings held by {@link ReplaceIdGenerators}.
- *
  */
 public final class IdMappingUtil {
 
@@ -36,6 +35,9 @@ public final class IdMappingUtil {
   static final char NEW_LINE = '\n';
 
   private static final Splitter LINE_SPLITTER = Splitter.on(NEW_LINE).omitEmptyStrings();
+
+  // Prevent instantiation.
+  private IdMappingUtil() {}
 
   /**
    * @return The serialize map of generators and their ids and their
