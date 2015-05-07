@@ -2068,6 +2068,11 @@ chrome.runtime.id;
 chrome.runtime.getBackgroundPage = function(callback) {};
 
 
+/**
+ * @param {function(): void=} opt_callback Callback function.
+ */
+chrome.runtime.openOptionsPage = function(opt_callback) {};
+
 
 /**
  * Manifest information returned from chrome.runtime.getManifest. See
