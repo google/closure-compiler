@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 
@@ -215,18 +214,6 @@ public class Scope implements StaticScope {
    */
   Iterable<Var> getVarIterable() {
     return vars.values();
-  }
-
-  /**
-   * Return an iterator over all the variables declared in a function block scope,
-   * including the parameters of a function
-   */
-  public Iterator<Var> getFunctionVars() {
-    if (isFunctionBlockScope()) {
-      return Iterators.concat(getParent().getVars(), getVars());
-    } else {
-      return getVars();
-    }
   }
 
   public Iterable<? extends Var> getAllSymbols() {

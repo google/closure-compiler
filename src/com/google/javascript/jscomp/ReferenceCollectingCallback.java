@@ -112,8 +112,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, this, new Es6SyntacticScopeCreator(compiler));
-    t.traverseRoots(externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
   /**
@@ -121,8 +120,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   void processScope(Scope scope) {
     this.narrowScope = scope;
-    (new NodeTraversal(compiler, this, new Es6SyntacticScopeCreator(compiler)))
-        .traverseAtScope(scope);
+    (new NodeTraversal(compiler, this)).traverseAtScope(scope);
     this.narrowScope = null;
   }
 
@@ -207,13 +205,12 @@ class ReferenceCollectingCallback implements ScopedCallback,
     // This is tricky to compute because of the weird traverseAtScope call for
     // CollapseProperties.
     List<BasicBlock> newBlockStack = null;
-    if (containingScope.getClosestHoistScope().isGlobal()) {
+    if (containingScope.isGlobal()) {
       newBlockStack = new ArrayList<>();
       newBlockStack.add(blockStack.get(0));
     } else {
-      Node function = NodeUtil.getEnclosingFunction(containingScope.getRootNode());
       for (int i = 0; i < blockStack.size(); i++) {
-        if (blockStack.get(i).root == function) {
+        if (blockStack.get(i).root == containingScope.getRootNode()) {
           newBlockStack = new ArrayList<>(blockStack.subList(0, i + 1));
         }
       }
@@ -223,8 +220,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     List<BasicBlock> oldBlockStack = blockStack;
     blockStack = newBlockStack;
 
-    NodeTraversal outOfBandTraversal = new NodeTraversal(compiler, this,
-        new Es6SyntacticScopeCreator(compiler));
+    NodeTraversal outOfBandTraversal = new NodeTraversal(compiler, this);
     outOfBandTraversal.traverseFunctionOutOfBand(fnNode, containingScope);
 
     blockStack = oldBlockStack;
@@ -236,11 +232,9 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void enterScope(NodeTraversal t) {
-    if (t.inGlobalScope() || t.getScopeRoot().isFunction()) {
-      Node n = t.getScope().getRootNode();
-      BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
-      blockStack.add(new BasicBlock(parent, n));
-    }
+    Node n = t.getScope().getRootNode();
+    BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
+    blockStack.add(new BasicBlock(parent, n));
   }
 
   /**
@@ -248,11 +242,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void exitScope(NodeTraversal t) {
-    if (t.inGlobalScope() || t.getScopeRoot().isFunction()) {
-      pop(blockStack);
-    }
-
-    // TODO(user): figure out why t.inGlobalScope() does not work here
+    pop(blockStack);
     if (t.getScope().isGlobal()) {
       // Update global scope reference lists when we are done with it.
       compiler.updateGlobalVarReferences(referenceMap, t.getScopeRoot());
@@ -439,7 +429,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       for (Reference ref : references) {
         if (scope == null) {
           scope = ref.scope;
-        } else if (scope != ref.scope.getClosestHoistScope()) {
+        } else if (scope != ref.scope) {
           return true;
         }
       }
@@ -527,12 +517,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
       for (BasicBlock block = ref.getBasicBlock();
            block != null; block = block.getParent()) {
         if (block.isFunction) {
-          Scope declScope = ref.getSymbol().getScope();
-          Scope refScope = ref.scope;
-          if ((declScope.getRootNode().isFunction() && declScope == refScope)) {
-            // reference is a function parameter
-            return true;
-          } else if (declScope != refScope.getClosestHoistScope()) {
+          if (ref.getSymbol().getScope() != ref.scope) {
             return false;
           }
           break;
@@ -545,7 +530,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     }
 
     /**
-     * @return The one and only assignment. Returns null if there are 0 or 2+
+     * @return The one and only assignment. Returns if there are 0 or 2+
      *    assignments.
      */
     private Reference getOneAndOnlyAssignment() {
@@ -599,7 +584,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
     private final InputId inputId;
     private final StaticSourceFile sourceFile;
 
-    Reference(Node nameNode, NodeTraversal t, BasicBlock basicBlock) {
+    Reference(Node nameNode, NodeTraversal t,
+        BasicBlock basicBlock) {
       this(nameNode, basicBlock, t.getScope(), t.getInput().getInputId());
     }
 
@@ -818,9 +804,9 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
       if (root.getParent() != null) {
         int pType = root.getParent().getType();
-        this.isLoop = pType == Token.DO
-                   || pType == Token.WHILE
-                   || pType == Token.FOR;
+        this.isLoop = pType == Token.DO ||
+            pType == Token.WHILE ||
+            pType == Token.FOR;
       } else {
         this.isLoop = false;
       }

@@ -321,9 +321,6 @@ class CollapseProperties implements CompilerPass {
       Scope scope = alias.scope;
       String aliasVarName = aliasParent.getString();
       Var aliasVar = scope.getVar(aliasVarName);
-      if (scope.isFunctionBlockScope()) {
-        scope = scope.getParent();
-      }
 
       ReferenceCollectingCallback collector =
           new ReferenceCollectingCallback(compiler,

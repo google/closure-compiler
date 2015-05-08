@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -140,12 +142,12 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testNonHoistedFunction4() {
     enableAmbiguousFunctionCheck = true;
-    testSameEs6("if (false) { function f() {} }  f();");
+    assertAmbiguous("if (false) { function f() {} }  f();");
   }
 
   public void testNonHoistedFunction5() {
     enableAmbiguousFunctionCheck = true;
-    testSameEs6("function g() { if (false) { function f() {} }  f(); }");
+    assertAmbiguous("function g() { if (false) { function f() {} }  f(); }");
   }
 
   public void testNonHoistedFunction6() {
@@ -265,6 +267,15 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    */
   private void assertUndeclared(String js) {
     testWarning(js, VariableReferenceCheck.EARLY_REFERENCE);
+  }
+
+  /**
+   * Expects the JS to generate one bad-write warning.
+   */
+  private void assertAmbiguous(String js) {
+    testWarning(js, VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL,
+        LanguageMode.ECMASCRIPT5);
+    testSameEs6(js); // In ES6, these are block scoped functions, so no ambiguity.
   }
 
   /**

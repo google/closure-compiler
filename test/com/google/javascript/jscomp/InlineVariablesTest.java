@@ -60,15 +60,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
     test("var x = 1; var z = x;", "var z = 1;");
   }
 
-  public void testInlineInBlock() {
-    test("if (true) {var x = 1; var z = x;}", "if (true) {var z = 1;}");
-    test("if (true) {if (true) {var x = 1; var z = x;}}", "if (true) {if (true) {var z = 1;}}");
-  }
-
-  public void testInlineParameterAliasInBlock() {
-    test("function f(p) {if (true) {var x = p; x; x;}}", "function f(p) {if (true) { p; p;}}");
-  }
-
   public void testNoInlineExportedName() {
     testSame("var _x = 1; var z = _x;");
   }
@@ -92,40 +83,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
   public void testInlineIntoRhsOfAssign() {
     test("var x = 1; var y = x;", "var y = 1;");
-  }
-
-  public void testInlineInFunctionInBlock() {
-    test("if (true) {function baz() { var x = 1; var z = x; }}",
-        "if (true) {function baz() { var z = 1; }}");
-  }
-
-
-  public void testInlineBetweenBlocks() {
-    test(LINE_JOINER.join(
-        "function foo() {",
-        "  var a = this;",
-        "  if (a && a.bar) {",
-        "    var b = a.bar;",
-        "    b.baz;",
-        "    b;",
-        "    a;",
-        "  }",
-        "}"),
-
-        LINE_JOINER.join(
-        "function foo() {\n",
-        "  if (this && this.bar) {",
-        "    var b = this.bar;",
-        "    b.baz;",
-        "    b;",
-        "    this;",
-        "  }",
-        "}"));
-  }
-
-  public void testInlineInFunctionIfBlock() {
-    test("function baz() { if (true) {var x = 1; var z = x; }}",
-        "function baz() { if (true) { var z = 1; }}");
   }
 
   public void testInlineInFunction() {
@@ -532,11 +489,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
   public void testInlineStringWhenWorthwhile() {
     test("var x = 'a'; foo(x, x, x);", "foo('a', 'a', 'a');");
-  }
-
-  public void testInlineConstantAliasInBlock() {
-    test("if (true) {var XXX = new Foo(); q(XXX); var YYY = XXX; bar(YYY)}",
-         "if (true) {var XXX = new Foo(); q(XXX); bar(XXX)}");
   }
 
   public void testInlineConstantAlias() {
