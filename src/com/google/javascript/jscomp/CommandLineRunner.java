@@ -1279,6 +1279,7 @@ public class CommandLineRunner extends
     "chrome.js",
 
     "deprecated.js",
+    "fetchapi.js",
     "fileapi.js",
     "flash.js",
     "gecko_xml.js",
@@ -1301,6 +1302,7 @@ public class CommandLineRunner extends
     "w3c_range.js",
     "w3c_rtc.js",
     "w3c_selectors.js",
+    "w3c_serviceworker.js",
     "w3c_webcrypto.js",
     "w3c_xml.js",
     "window.js",
