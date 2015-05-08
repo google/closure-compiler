@@ -2833,6 +2833,15 @@ WebGLContextAttributes.prototype.premultipliedAlpha;
  */
 WebGLContextAttributes.prototype.preserveDrawingBuffer;
 
+/**
+ * @type {boolean}
+ */
+WebGLContextAttributes.prototype.preferLowPowerToHighPerformance;
+
+/**
+ * @type {boolean}
+ */
+WebGLContextAttributes.prototype.failIfMajorPerformanceCaveat;
 
 /**
  * @param {string} eventType
