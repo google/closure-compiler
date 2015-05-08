@@ -784,7 +784,7 @@ DataView.prototype.setFloat64 = function(
 
 /**
  * @see https://github.com/promises-aplus/promises-spec
- * @typedef {{then: !Function}}
+ * @typedef {{then: ?}}
  */
 var Thenable;
 
