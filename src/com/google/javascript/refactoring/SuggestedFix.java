@@ -331,7 +331,7 @@ public final class SuggestedFix {
           n.getSourceFileName(),
           new CodeReplacement(
               jsDoc.getOriginalCommentPosition(),
-              n.getSourceOffset() - jsDoc.getOriginalCommentPosition() + 1,
+              n.getFirstChild().getSourceOffset() - jsDoc.getOriginalCommentPosition(),
               ""));
       replacements.put(
           n.getSourceFileName(),

@@ -21,6 +21,7 @@ import static com.google.javascript.refactoring.testing.SuggestedFixes.assertRep
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
@@ -289,6 +290,28 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node castNode = root.getFirstChild().getFirstChild().getFirstChild();
+    assertTrue(castNode.isCast());
+
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .removeCast(castNode, compiler)
+        .build();
+    assertChanges(fix, "", input, expectedCode);
+  }
+
+  @Test
+  public void testRemoveCast_return() {
+    String input = Joiner.on('\n').join(
+        "function f() {",
+        "  return /** @type {string} */ (",
+        "      'I am obviously a string. Why are you casting me?');",
+        "}");
+    String expectedCode = Joiner.on('\n').join(
+        "function f() {",
+        "  return 'I am obviously a string. Why are you casting me?';",
+        "}");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Node castNode = root.getFirstChild().getLastChild().getFirstChild().getLastChild();
     assertTrue(castNode.isCast());
 
     SuggestedFix fix = new SuggestedFix.Builder()
