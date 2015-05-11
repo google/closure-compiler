@@ -222,7 +222,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     Node replacement = NodeUtil.newQNameDeclaration(
         compiler, name, value, n.getJSDocInfo());
-    replacement.useSourceInfoIfMissingFromForTree(n);
+    replacement.useSourceInfoIfMissingFromForTree(parent);
     parent.getParent().replaceChild(parent, replacement);
     compiler.reportCodeChange();
   }

@@ -216,9 +216,7 @@ public final class SuggestedFix {
           && parent != null
           && (parent.isScript() || parent.isBlock())) {
         Node previousSibling = parent.getChildBefore(n);
-        // TODO(mknichel): There appears to be a bug in goog.define rewriting that sets the
-        // length of the rewritten node to 0.
-        if (previousSibling != null && previousSibling.getLength() > 0) {
+        if (previousSibling != null) {
           int previousSiblingEndPosition =
               previousSibling.getSourceOffset() + previousSibling.getLength();
           length += (startPosition - previousSiblingEndPosition);

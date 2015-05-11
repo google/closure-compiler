@@ -2710,7 +2710,7 @@ public final class NodeUtil {
    * Creates a node representing a qualified name.
    *
    * @param name A qualified name (e.g. "foo" or "foo.bar.baz")
-   * @return A NAME or GETPROP node
+   * @return A VAR node, or an EXPR_RESULT node containing an ASSIGN or NAME node.
    */
   public static Node newQNameDeclaration(
       AbstractCompiler compiler, String name, Node value, JSDocInfo info) {
