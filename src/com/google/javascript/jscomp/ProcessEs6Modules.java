@@ -58,7 +58,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   /**
    * Maps exported names to their names in current module.
    */
-  private Map<String, String> exportMap = new LinkedHashMap<>();
+  private Map<String, NameNodePair> exportMap = new LinkedHashMap<>();
 
   /**
    * Maps symbol names to a pair of (moduleName, originalName). The original
@@ -206,12 +206,12 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         Node decl = child.cloneTree();
         decl.setJSDocInfo(export.getJSDocInfo());
         parent.replaceChild(export, decl);
-        exportMap.put("default", name);
+        exportMap.put("default", new NameNodePair(name, child));
       } else {
         Node var = IR.var(IR.name(DEFAULT_EXPORT_NAME), export.removeFirstChild());
         var.useSourceInfoIfMissingFromForTree(export);
         parent.replaceChild(export, var);
-        exportMap.put("default", DEFAULT_EXPORT_NAME);
+        exportMap.put("default", new NameNodePair(DEFAULT_EXPORT_NAME, child));
       }
     } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
       //   export * from 'moduleIdentifier';
@@ -231,7 +231,8 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       for (Node exportSpec : export.getFirstChild().children()) {
         String nameFromOtherModule = exportSpec.getFirstChild().getString();
         String exportedName = exportSpec.getLastChild().getString();
-        exportMap.put(exportedName, moduleName + "." + nameFromOtherModule);
+        exportMap.put(exportedName,
+            new NameNodePair(moduleName + "." + nameFromOtherModule, exportSpec));
       }
       parent.removeChild(export);
     } else {
@@ -243,7 +244,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
               exportSpec.getChildCount() == 2
                   ? exportSpec.getLastChild().getString()
                   : origName.getString(),
-              origName.getString());
+              new NameNodePair(origName.getString(), exportSpec));
         }
         parent.removeChild(export);
       } else {
@@ -263,7 +264,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           String name = maybeName.getString();
           Var v = t.getScope().getVar(name);
           if (v == null || v.isGlobal()) {
-            exportMap.put(name, name);
+            exportMap.put(name, new NameNodePair(name, maybeName));
           }
 
           // If the declaration declares a new type, create annotations for
@@ -309,9 +310,10 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       script.addChildToBack(varNode);
     }
 
-    for (Map.Entry<String, String> entry : exportMap.entrySet()) {
+    for (Map.Entry<String, NameNodePair> entry : exportMap.entrySet()) {
       String exportedName = entry.getKey();
-      String withSuffix = entry.getValue();
+      String withSuffix = entry.getValue().name;
+      Node nodeForSourceInfo = entry.getValue().nodeForSourceInfo;
       Node getProp = IR.getprop(IR.name(moduleName), IR.string(exportedName));
 
       if (typedefs.contains(exportedName)) {
@@ -324,7 +326,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         JSDocInfo info = builder.build();
         getProp.setJSDocInfo(info);
         Node exprResult = IR.exprResult(getProp)
-            .useSourceInfoIfMissingFromForTree(script);
+            .useSourceInfoIfMissingFromForTree(nodeForSourceInfo);
         script.addChildToBack(exprResult);
       } else {
         //   moduleName.foo = foo;
@@ -333,7 +335,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
             getProp,
             NodeUtil.newQName(compiler, withSuffix));
         Node exprResult = IR.exprResult(assign)
-            .useSourceInfoIfMissingFromForTree(script);
+            .useSourceInfoIfMissingFromForTree(nodeForSourceInfo);
         if (classes.contains(exportedName)) {
           JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
           builder.recordConstancy();
@@ -532,7 +534,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
   }
 
-  private class ModuleOriginalNamePair {
+  private static class ModuleOriginalNamePair {
     private String module;
     private String originalName;
 
@@ -544,6 +546,21 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     @Override
     public String toString() {
       return "(" + module + ", " + originalName + ")";
+    }
+  }
+
+  private static class NameNodePair {
+    final String name;
+    final Node nodeForSourceInfo;
+
+    private NameNodePair(String name, Node nodeForSourceInfo) {
+      this.name = name;
+      this.nodeForSourceInfo = nodeForSourceInfo;
+    }
+
+    @Override
+    public String toString() {
+      return "(" + name + ", " + nodeForSourceInfo + ")";
     }
   }
 }
