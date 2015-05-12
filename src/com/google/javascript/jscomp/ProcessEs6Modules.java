@@ -79,13 +79,18 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   private boolean reportDependencies;
 
   /**
+   * Creates a new ProcessEs6Modules instance which can be used to rewrite
+   * ES6 modules to a concatenable form.
+   *
+   * @param compiler The compiler
+   * @param loader The module loader which is used to locate ES6 modules
    * @param reportDependencies Whether the rewriter should report dependency
    *     information to the Closure dependency manager. This needs to be true
    *     if we want to sort ES6 module inputs correctly. Note that goog.provide
    *     and goog.require calls will still be generated if this argument is
    *     false.
    */
-  ProcessEs6Modules(Compiler compiler, ES6ModuleLoader loader,
+  public ProcessEs6Modules(Compiler compiler, ES6ModuleLoader loader,
       boolean reportDependencies) {
     this.compiler = compiler;
     this.loader = loader;

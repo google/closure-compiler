@@ -28,7 +28,7 @@ import java.util.Map;
  * @see Section 26.3.3.18.2 of the ES6 spec
  * @see http://wiki.commonjs.org/wiki/Modules/1.1
  */
-class ES6ModuleLoader {
+public final class ES6ModuleLoader {
   /**
    * According to the spec, the forward slash should be the delimiter on all
    * platforms.
@@ -57,7 +57,14 @@ class ES6ModuleLoader {
   private final URI moduleRootURI;
   private final AbstractCompiler compiler;
 
-  ES6ModuleLoader(AbstractCompiler compiler, String moduleRoot) {
+  /**
+   * Creates an instance of the module loader which can be used to locate
+   * ES6 and CommonJS modules.
+   *
+   * @param compiler The compiler
+   * @param moduleRoot Path to a directory which can be used to locate modules
+   */
+  public ES6ModuleLoader(AbstractCompiler compiler, String moduleRoot) {
     this.moduleRoot = moduleRoot;
     this.moduleRootURI = createUri(moduleRoot);
     this.compiler = compiler;
