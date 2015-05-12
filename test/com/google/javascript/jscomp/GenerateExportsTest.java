@@ -74,6 +74,15 @@ public final class GenerateExportsTest extends CompilerTestCase {
          "goog.exportProperty(foo.prototype,\"bar\",foo.prototype.bar)");
   }
 
+  public void testExportPrototypeProperty() {
+    test("function Foo() {}\n" +
+         "/** @export */ Foo.prototype.bar = function() {};",
+
+         "function Foo() {}\n" +
+         "Foo.prototype.bar = function(){};\n" +
+         "goog.exportProperty(Foo.prototype, 'bar', Foo.prototype.bar);");
+  }
+
   public void testExportSymbolAndConstantProperties() {
     test("/** @export */function foo() {}" +
          "/** @export */foo.BAR = 5;",

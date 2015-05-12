@@ -110,7 +110,7 @@ class GenerateExports implements CompilerPass {
     }
 
     boolean useExportSymbol = true;
-    if (grandparent != null && exports.containsKey(grandparent)) {
+    if (grandparent != null) {
       // grandparent is only set for properties exported off a prototype obj.
       useExportSymbol = false;
     } else if (parent != null && exports.containsKey(parent)) {
