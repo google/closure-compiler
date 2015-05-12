@@ -379,10 +379,23 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       Visitor visitor = new Visitor() {
         public void visit(Node typeNode) {
           if (typeNode.isString()) {
-            String rootName = Splitter.on('.').split(typeNode.getString()).iterator().next();
+            String typeString = typeNode.getString();
+            String rootName = Splitter.on('.').split(typeString).iterator().next();
             TypedVar var = t.getTypedScope().getVar(rootName);
             if (var == null || !var.isExtern()) {
-              usagesMap.put(typeNode.getString(), n);
+              usagesMap.put(typeString, n);
+
+              // Regardless of whether we're adding a weak or strong usage here, add weak usages for
+              // the prefixes of the namespace, like we do for GETPROP nodes. Otherwise we get an
+              // extra require warning for cases like:
+              //
+              //     goog.require('foo.bar.SomeService');
+              //
+              //     /** @constructor @extends {foo.bar.SomeService.Handler} */
+              //     var MyHandler = function() {};
+              Node getprop = NodeUtil.newQName(compiler, typeString);
+              getprop.useSourceInfoIfMissingFromForTree(typeNode);
+              visitGetProp(getprop);
             }
           }
         }

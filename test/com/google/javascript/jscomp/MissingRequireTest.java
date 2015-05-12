@@ -97,6 +97,16 @@ public final class MissingRequireTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testPassWithInnerClassInExtends() {
+    String js = Joiner.on('\n').join(
+        "var goog = {};",
+        "goog.require('goog.foo.Bar');",
+        "",
+        "/** @constructor @extends {goog.foo.Bar.Inner} */",
+        "function SubClass() {}");
+    testSame(js);
+  }
+
   public void testFailWithNestedNewNodes() {
     String[] js =
         new String[] {"var goog = {}; goog.require('goog.foo.Bar'); "

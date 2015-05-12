@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
 
+import com.google.common.base.Joiner;
+
 /**
  * Tests for the "extra requires" check in {@link CheckRequiresForConstructors}.
  */
@@ -51,6 +53,16 @@ public final class ExtraRequireTest extends CompilerTestCase {
     test("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; alert(bar); });",
         "goog.require('foo.bar'); alert(foo.bar);");
     testSame("goog.require('foo'); foo();");
+  }
+
+  public void testNoWarning_InnerClassInExtends() {
+    String js = Joiner.on('\n').join(
+        "var goog = {};",
+        "goog.require('goog.foo.Bar');",
+        "",
+        "/** @constructor @extends {goog.foo.Bar.Inner} */",
+        "function SubClass() {}");
+    testSame(js);
   }
 
   public void testWarning() {
