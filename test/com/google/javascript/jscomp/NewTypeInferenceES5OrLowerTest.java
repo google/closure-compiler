@@ -3477,6 +3477,46 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
   }
 
+  public void testInheritingTheParentClassInterfaces() {
+    typeCheck(
+        "/** @interface */\n"
+        + "function High() {}\n"
+        + "/** @type {number} */\n"
+        + "High.prototype.p = 123;\n"
+        + "/** @constructor @implements {High} */\n"
+        + "function Mid() {}\n"
+        + "Mid.prototype.p = 123;\n"
+        // Low has p from Mid, no warning here
+        + "/** @constructor @extends {Mid} */\n"
+        + "function Low() {}");
+
+    typeCheck(
+        "/** @interface */\n"
+        + "function High() {}\n"
+        + "/** @constructor @implements {High} */\n"
+        + "function Mid() {}\n"
+        + "/** @constructor @extends {Mid} */\n"
+        + "function Low() {}"
+        + "var /** !High */ x = new Low();");
+
+    typeCheck(
+        "/**\n"
+        + " * @interface\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function High() {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @template T\n"
+        + " * @implements {High<T>}\n"
+        + " */\n"
+        + "function Mid() {}\n"
+        + "/** @constructor @extends {Mid<number>} */\n"
+        + "function Low() {}\n"
+        + "var /** !High<string> */ x = new Low;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testInheritanceSubtyping() {
     typeCheck("/** @constructor */ function Parent() {}\n"
         + "/** @constructor @extends{Parent} */ function Child() {}\n"
@@ -11231,6 +11271,36 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "  var /** string */ s = f(x);\n"
         + "}",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "/**\n"
+        + " * @interface\n"
+        + " * @template T\n"
+        + " */\n"
+        + "function High() {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @template T\n"
+        + " * @implements {High<T>}\n"
+        + " */\n"
+        + "function Mid() {}\n"
+        + "/**\n"
+        + " * @constructor\n"
+        + " * @template T\n"
+        + " * @extends {Mid<T>}\n"
+        + " * @param {T} x\n"
+        + " */\n"
+        + "function Low(x) {}\n"
+        + "/**\n"
+        + " * @template T\n"
+        + " * @param {!High<T>} x\n"
+        + " * @return {T}\n"
+        + " */\n"
+        + "function f(x) {\n"
+        + "  return /** @type {?} */ (null);\n"
+        + "}\n"
+        + "f(new Low('asdf')) - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testArgumentsArray() {

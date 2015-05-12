@@ -249,51 +249,21 @@ public final class NominalType {
   }
 
   boolean isSubtypeOf(NominalType other) {
-    RawNominalType otherRawType = other.rawType;
-
-    // interface <: class
-    if (rawType.isInterface && !otherRawType.isInterface) {
-      return false;
+    RawNominalType thisRaw = this.rawType;
+    if (thisRaw == other.rawType) {
+      return areTypeParametersSubtypes(other);
     }
-
-    // class <: interface
-    if (!rawType.isInterface && otherRawType.isInterface) {
-      if (rawType.interfaces == null) {
-        return false;
-      }
-      for (NominalType i : rawType.interfaces) {
-        if (i.instantiateGenerics(typeMap).isSubtypeOf(other)) {
+    if (other.isInterface()) {
+      // If thisRaw is not finalized, thisRaw.interfaces may be null.
+      for (NominalType i : thisRaw.getInterfaces()) {
+        if (i.instantiateGenerics(this.typeMap).isSubtypeOf(other)) {
           return true;
         }
       }
-      return false;
     }
-
-    // interface <: interface
-    if (rawType.isInterface && otherRawType.isInterface) {
-      if (rawType.equals(otherRawType)) {
-        return areTypeParametersSubtypes(other);
-      } else if (rawType.interfaces == null) {
-        return false;
-      } else {
-        for (NominalType i : rawType.interfaces) {
-          if (i.instantiateGenerics(typeMap).isSubtypeOf(other)) {
-            return true;
-          }
-        }
-        return false;
-      }
-    }
-
-    // class <: class
-    if (rawType.equals(otherRawType)) {
-      return areTypeParametersSubtypes(other);
-    } else if (rawType.superClass == null) {
-      return false;
-    } else {
-      return rawType.superClass.instantiateGenerics(typeMap)
-          .isSubtypeOf(other);
-    }
+    // Note that other can still be an interface here (implemented by a superclass)
+    return isClass() && thisRaw.superClass != null
+        && thisRaw.superClass.instantiateGenerics(this.typeMap).isSubtypeOf(other);
   }
 
   private boolean areTypeParametersSubtypes(NominalType other) {
@@ -393,20 +363,18 @@ public final class NominalType {
     if (thisRaw == other.rawType) {
       return this;
     }
-    if (isInterface() && other.isClass()) {
-      return null;
-    }
-    if (other.isClass()) {
-      if (thisRaw.superClass == null) {
-        return null;
+    if (other.isInterface()) {
+      for (NominalType i : thisRaw.interfaces) {
+        NominalType nt = i.instantiateGenerics(this.typeMap).findMatchingAncestorWith(other);
+        if (nt != null) {
+          return nt;
+        }
       }
-      return getInstantiatedSuperclass().findMatchingAncestorWith(other);
     }
-    for (NominalType interf : getInstantiatedInterfaces()) {
-      NominalType nt = interf.findMatchingAncestorWith(other);
-      if (nt != null) {
-        return nt;
-      }
+    // Note that other can still be an interface here (implemented by a superclass)
+    if (isClass() && thisRaw.superClass != null) {
+      return thisRaw.superClass.instantiateGenerics(this.typeMap)
+        .findMatchingAncestorWith(other);
     }
     return null;
   }
@@ -562,11 +530,6 @@ public final class NominalType {
       return objectKind.isDict();
     }
 
-    private boolean isRawSubtypeOf(RawNominalType other) {
-      return other.isClass() ? isClass() && hasAncestorClass(other)
-          : hasAncestorInterface(other);
-    }
-
     ImmutableList<String> getTypeParameters() {
       return typeParameters;
     }
@@ -638,7 +601,7 @@ public final class NominalType {
     }
 
     public ImmutableSet<NominalType> getInterfaces() {
-      return this.interfaces;
+      return this.interfaces == null ? ImmutableSet.<NominalType>of() : this.interfaces;
     }
 
     private Property getOwnProp(String pname) {
