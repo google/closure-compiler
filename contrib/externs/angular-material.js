@@ -201,7 +201,7 @@ md.$toast.prototype.cancel = function() {};
  *   highlightAction: function(boolean):md.$toast.preset,
  *   capsule: function(boolean):md.$toast.preset,
  *   position: function(string):md.$toast.preset,
- *   hidedelay: function(number):md.$toast.preset
+ *   hideDelay: function(number):md.$toast.preset
  * }}
  */
 md.$toast.preset;
