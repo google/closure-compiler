@@ -90,6 +90,39 @@ PushManager.prototype.getSubscription = function() {};
 // Uncomment once it is available.
 // PushManager.prototype.hasPermission = function() {};
 
+
+/**
+ * @see http://www.w3.org/TR/push-api/#idl-def-PushMessageData
+ * @constructor
+ */
+function PushMessageData() {}
+
+/** @return {!ArrayBuffer} */
+PushMessageData.prototype.arrayBuffer = function() {};
+
+/** @return {!Blob} */
+PushMessageData.prototype.blob = function() {};
+
+/** @return {*} */
+PushMessageData.prototype.json = function() {};
+
+/** @return {string} */
+PushMessageData.prototype.text = function() {};
+
+
+/**
+ * @see http://www.w3.org/TR/push-api/#idl-def-PushEvent
+ * @constructor
+ * @param {string} type
+ * @param {!ExtendableEventInit=} opt_eventInitDict
+ * @extends {ExtendableEvent}
+ */
+function PushEvent(type, opt_eventInitDict) {}
+
+/** @type {?PushMessageData} */
+PushEvent.prototype.data;
+
+
 /**
  * @see http://www.w3.org/TR/service-workers/#service-worker-registration-interface
  * @interface

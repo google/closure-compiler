@@ -199,3 +199,16 @@ NotificationCenter.prototype.requestPermission = function(opt_callback) {};
  * @type {NotificationCenter}
  */
 Window.prototype.webkitNotifications;
+
+
+/**
+ * @see https://notifications.spec.whatwg.org/#notificationevent
+ * @constructor
+ * @param {string} type
+ * @param {!ExtendableEventInit=} opt_eventInitDict
+ * @extends {ExtendableEvent}
+ */
+function NotificationEvent(type, opt_eventInitDict) {}
+
+/** @type {?Notification} */
+NotificationEvent.prototype.notification;
