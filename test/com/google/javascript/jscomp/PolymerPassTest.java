@@ -938,6 +938,19 @@ public class PolymerPassTest extends CompilerTestCase {
 
     testSame(
         Joiner.on("\n").join(
+        "var foo = {};",
+        "(function() {",
+        "  Polymer({",
+        "    is: 'x-element',",
+        "    behaviors: [",
+        "      foo.IsNotDefined",
+        "    ],",
+        "  });",
+        "})();"),
+        POLYMER_UNQUALIFIED_BEHAVIOR, true);
+
+    testSame(
+        Joiner.on("\n").join(
         "Polymer({",
         "  is: 'x-element',",
         "  behaviors: [",

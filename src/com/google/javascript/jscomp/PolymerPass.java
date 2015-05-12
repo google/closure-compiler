@@ -306,7 +306,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
 
       Name behaviorGlobalName = globalNames.getSlot(behaviorName.getQualifiedName());
-      if (behaviorGlobalName == null) {
+      if (behaviorGlobalName == null || behaviorGlobalName.getDeclaration() == null) {
         compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
         continue;
       }
