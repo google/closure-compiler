@@ -1194,8 +1194,8 @@ public final class CommandLineRunnerTest extends TestCase {
       CheckAccessControls.DEPRECATED_NAME);
   }
 
-  public void testGenerateExports() {
-    args.add("--generate_exports=true");
+  public void testExportsModeShadow() {
+    args.add("--exports_mode=SHADOW");
     test("/** @export */ foo.prototype.x = function() {};",
         "foo.prototype.x=function(){};" +
         "goog.exportSymbol(\"foo.prototype.x\",foo.prototype.x);");
