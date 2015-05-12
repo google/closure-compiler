@@ -595,7 +595,7 @@ public class CommandLineRunner extends
     private List<String> conformanceConfigs = new ArrayList<>();
 
     @Argument
-    private final List<String> arguments = new ArrayList<>();
+    private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
     private static final Map<String, CompilationLevel> COMPILATION_LEVEL_MAP =
