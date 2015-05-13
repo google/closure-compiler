@@ -207,6 +207,16 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureRewriteModule);
     }
 
+    // ES6 compatible passes.
+
+    if (!options.transpileOnly) {
+      if (options.declaredGlobalExternsOnWindow) {
+        checks.add(declaredGlobalExternsOnWindow);
+      }
+    }
+
+    // ES6 transpilation passes.
+
     if (options.lowerFromEs6() || options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
     }
@@ -247,9 +257,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(convertStaticInheritance);
 
-    if (options.declaredGlobalExternsOnWindow) {
-      checks.add(declaredGlobalExternsOnWindow);
-    }
+    // End of ES6 transpilation passes.
 
     if (options.closurePass) {
       checks.add(closureGoogScopeAliases);
