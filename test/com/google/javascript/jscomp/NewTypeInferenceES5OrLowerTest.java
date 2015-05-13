@@ -7704,12 +7704,27 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "};");
 
     typeCheck(
-        "/** @constructor */ function Obj(){}\n"
-        + "/** @constructor */ var Foo = function() {\n"
-        + "    /** @private {Obj} */ this.obj;\n"
+        "/** @constructor */\n"
+        + "function Obj(){}\n"
+        + "/** @constructor */\n"
+        + "var Foo = function() {\n"
+        + "  /** @private {Obj} */ this.obj;\n"
         + "};\n"
         + "Foo.prototype.update = function() {\n"
         + "    if (!this.obj.size) {}\n"
+        + "};",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Obj(){}\n"
+        + "/** @constructor */\n"
+        + "var Foo = function() {\n"
+        + "  /** @private {Obj} */ this.obj;\n"
+        + "};\n"
+        + "/** @param {!Foo} x */\n"
+        + "function f(x) {\n"
+        + "  if (!x.obj.size) {}\n"
         + "};",
         NewTypeInference.NULLABLE_DEREFERENCE);
   }
@@ -10649,6 +10664,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         + "}\n"
         + "obj.n - 123;",
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(
+        "/** @constructor */\n"
+        + "function Foo() {\n"
+        + "  this.a = 123;\n"
+        + "}\n"
+        + "/** @constructor */\n"
+        + "function Bar(x) {\n"
+        + "  /** @type {Foo} */\n"
+        + "  this.b = x;\n"
+        + "  if (this.b != null) {\n"
+        + "    return this.b.a;\n"
+        + "  }\n"
+        + "}");
   }
 
   public void testAutoconvertBoxedNumberToNumber() {

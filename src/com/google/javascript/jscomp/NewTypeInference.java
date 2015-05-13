@@ -273,6 +273,7 @@ final class NewTypeInference implements CompilerPass {
   private static final String RETVAL_ID = "%return";
   // Used for typing the elements of the arguments array
   private static final String ARGSARRAYELM_ID = "%arguments_elm";
+  private static final String THIS_ID = "this";
   private static final String GETTER_PREFIX = "%getter_fun";
   private static final String SETTER_PREFIX = "%setter_fun";
   private final String ABSTRACT_METHOD_NAME;
@@ -426,7 +427,7 @@ final class NewTypeInference implements CompilerPass {
       nonLocals.addAll(currentScope.getOuterVars());
       nonLocals.addAll(currentScope.getFormals());
       if (currentScope.hasThis()) {
-        nonLocals.add("this");
+        nonLocals.add(THIS_ID);
       }
       entryEnv = envPutType(entryEnv, RETVAL_ID, JSType.UNDEFINED);
     } else {
@@ -473,7 +474,7 @@ final class NewTypeInference implements CompilerPass {
       }
       varNames.addAll(currentScope.getFormals());
       if (currentScope.hasThis()) {
-        varNames.add("this");
+        varNames.add(THIS_ID);
       }
       // In the rare case when there is a local variable named "arguments",
       // this entry will be overwritten in the foreach loop below.
@@ -830,8 +831,7 @@ final class NewTypeInference implements CompilerPass {
             break;
           }
           conditional = true;
-          analyzeConditionalStmFwd(
-              dn, NodeUtil.getConditionExpression(n), inEnv);
+          analyzeConditionalStmFwd(dn, NodeUtil.getConditionExpression(n), inEnv);
           break;
         case Token.CASE: {
           conditional = true;
@@ -870,11 +870,8 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  // TODO(dimvar): differentiate for/in to not treat its cond as boolean, but
-  // as an assignment to a string.
   private void analyzeConditionalStmFwd(
-      DiGraphNode<Node, ControlFlowGraph.Branch> stm,
-      Node cond, TypeEnv inEnv) {
+      DiGraphNode<Node, ControlFlowGraph.Branch> stm, Node cond, TypeEnv inEnv) {
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge :
         stm.getOutEdges()) {
       JSType specializedType;
@@ -1118,8 +1115,13 @@ final class NewTypeInference implements CompilerPass {
           warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
           resultPair = new EnvTypePair(inEnv, JSType.UNKNOWN);
         } else {
-          JSType thisType = currentScope.getDeclaredTypeOf("this");
-          resultPair = new EnvTypePair(inEnv, thisType);
+          // A trimmed-down version of analyzeNameFwd.
+          JSType inferredType = envGetType(inEnv, THIS_ID);
+          if (!inferredType.isSubtypeOf(requiredType)) {
+            return new EnvTypePair(inEnv, inferredType);
+          }
+          JSType preciseType = inferredType.specialize(specializedType);
+          resultPair = EnvTypePair.addBinding(inEnv, THIS_ID, preciseType);
         }
         break;
       }
@@ -1313,8 +1315,7 @@ final class NewTypeInference implements CompilerPass {
       // We have a heuristic check to avoid the spurious warnings,
       // but we also miss some true warnings.
       JSType declType = currentScope.getDeclaredTypeOf(varName);
-      if (tightenTypeAndDontWarn(
-          varName, declType, inferredType, requiredType)) {
+      if (tightenTypeAndDontWarn(varName, expr, declType, inferredType, requiredType)) {
         inferredType = inferredType.specialize(requiredType);
       } else {
         // Propagate incorrect type so that the context catches
@@ -2432,9 +2433,11 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private boolean tightenTypeAndDontWarn(
-      String varName, JSType declared, JSType inferred, JSType required) {
-    boolean fuzzyDeclaration = declared == null || declared.isUnknown() ||
-        (declared.isTop() && !inferred.isTop());
+      String varName, Node n, JSType declared, JSType inferred, JSType required) {
+    boolean isSpecializableTop = declared != null && declared.isTop()
+        && (!inferred.isTop() || NodeUtil.isPropertyTest(compiler, n.getParent()));
+    boolean fuzzyDeclaration = declared == null || declared.isUnknown() || isSpecializableTop;
+
     return fuzzyDeclaration
         // The intent is to be looser about warnings in the case when a value
         // is passed to a function (as opposed to being created locally),
@@ -2538,7 +2541,7 @@ final class NewTypeInference implements CompilerPass {
 
     // First, analyze the receiver object.
     if (specializedType.isTruthy() || specializedType.isFalsy()) {
-      recvReqType = JSType.UNKNOWN;
+      recvReqType = reqObjType;
       recvSpecType = reqObjType.withProperty(propQname, requiredType);
     } else {
       recvReqType = reqObjType.withProperty(propQname, requiredType);
@@ -2588,6 +2591,7 @@ final class NewTypeInference implements CompilerPass {
           !resultType.isSubtypeOf(requiredType) &&
           tightenTypeAndDontWarn(
               receiver.isName() ? receiver.getString() : null,
+              receiver,
               recvType.getDeclaredProp(propQname),
               resultType, requiredType)) {
         // Tighten the inferred type and don't warn.
@@ -2733,7 +2737,7 @@ final class NewTypeInference implements CompilerPass {
         if (!currentScope.hasThis()) {
           return new EnvTypePair(outEnv, JSType.UNKNOWN);
         }
-        JSType thisType = currentScope.getDeclaredTypeOf("this");
+        JSType thisType = currentScope.getDeclaredTypeOf(THIS_ID);
         return new EnvTypePair(outEnv, thisType);
       }
       case Token.NAME:
@@ -3406,9 +3410,9 @@ final class NewTypeInference implements CompilerPass {
     switch (expr.getType()) {
       case Token.THIS: {
         if (currentScope.hasThis()) {
-          lvalResult = new LValueResultFwd(inEnv, envGetType(inEnv, "this"),
-              currentScope.getDeclaredTypeOf("this"),
-              new QualifiedName("this"));
+          lvalResult = new LValueResultFwd(inEnv, envGetType(inEnv, THIS_ID),
+              currentScope.getDeclaredTypeOf(THIS_ID),
+              new QualifiedName(THIS_ID));
         } else {
           warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
           lvalResult = new LValueResultFwd(inEnv, JSType.UNKNOWN, null, null);
