@@ -8950,6 +8950,10 @@ chrome.networkingPrivate.onNetworksChanged;
 chrome.networkingPrivate.onNetworkListChanged;
 
 
+/** @type {!ChromeEvent} */
+chrome.networkingPrivate.onDeviceStateListChanged;
+
+
 /** @type {!ChromeStringStringEvent} */
 chrome.networkingPrivate.onPortalDetectionCompleted;
 
