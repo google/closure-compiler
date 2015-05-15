@@ -261,6 +261,19 @@ public class UnionType extends JSType {
     return false;
   }
 
+  /**
+   * Tests whether this type is voidable.
+   */
+  @Override
+  public boolean isVoidable() {
+    for (JSType t : alternates) {
+      if (t.isVoidable()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean isUnknownType() {
     for (JSType t : alternates) {

@@ -370,6 +370,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(U2U_CONSTRUCTOR_TYPE.isNullable());
+    assertFalse(U2U_CONSTRUCTOR_TYPE.isVoidable());
 
     // isObject
     assertTrue(U2U_CONSTRUCTOR_TYPE.isObject());
@@ -515,6 +516,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(NO_OBJECT_TYPE.isNullable());
+    assertFalse(NO_OBJECT_TYPE.isVoidable());
 
     // isObject
     assertTrue(NO_OBJECT_TYPE.isObject());
@@ -650,6 +652,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertTrue(NO_TYPE.isNullable());
+    assertTrue(NO_TYPE.isVoidable());
 
     // isObject
     assertTrue(NO_TYPE.isObject());
@@ -792,6 +795,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertTrue(NO_RESOLVED_TYPE.isNullable());
+    assertTrue(NO_RESOLVED_TYPE.isVoidable());
 
     // isObject
     assertTrue(NO_RESOLVED_TYPE.isObject());
@@ -913,7 +917,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(ARRAY_TYPE.isNullable());
+    assertFalse(ARRAY_TYPE.isVoidable());
     assertTrue(createUnionType(ARRAY_TYPE, NULL_TYPE).isNullable());
+    assertTrue(createUnionType(ARRAY_TYPE, VOID_TYPE).isVoidable());
 
     // isObject
     assertTrue(ARRAY_TYPE.isObject());
@@ -1051,6 +1057,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // canHaveNullValue
     assertTrue(UNKNOWN_TYPE.isNullable());
+    assertTrue(UNKNOWN_TYPE.isVoidable());
 
     // getGreatestCommonType
     assertTypeEquals(UNKNOWN_TYPE,
@@ -1196,6 +1203,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(ALL_TYPE.isNullable());
+    assertFalse(ALL_TYPE.isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
@@ -1333,6 +1341,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(OBJECT_TYPE.isNullable());
+    assertFalse(OBJECT_TYPE.isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
@@ -1496,6 +1505,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(NUMBER_OBJECT_TYPE.isNullable());
+    assertFalse(NUMBER_OBJECT_TYPE.isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
@@ -1622,6 +1632,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(NUMBER_TYPE.isNullable());
+    assertFalse(NUMBER_TYPE.isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
@@ -1912,7 +1923,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(DATE_TYPE.isNullable());
+    assertFalse(DATE_TYPE.isVoidable());
     assertTrue(createNullableType(DATE_TYPE).isNullable());
+    assertTrue(createUnionType(DATE_TYPE, VOID_TYPE).isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
@@ -2123,7 +2136,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(REGEXP_TYPE.isNullable());
+    assertFalse(REGEXP_TYPE.isVoidable());
     assertTrue(createNullableType(REGEXP_TYPE).isNullable());
+    assertTrue(createUnionType(REGEXP_TYPE, VOID_TYPE).isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
@@ -2329,7 +2344,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(STRING_OBJECT_TYPE.isNullable());
+    assertFalse(STRING_OBJECT_TYPE.isVoidable());
     assertTrue(createNullableType(STRING_OBJECT_TYPE).isNullable());
+    assertTrue(createUnionType(STRING_OBJECT_TYPE, VOID_TYPE).isVoidable());
 
     assertTrue(STRING_OBJECT_TYPE.isNativeObjectType());
 
@@ -2440,7 +2457,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(STRING_TYPE.isNullable());
+    assertFalse(STRING_TYPE.isVoidable());
     assertTrue(createNullableType(STRING_TYPE).isNullable());
+    assertTrue(createUnionType(STRING_TYPE, VOID_TYPE).isVoidable());
 
     // toString
     assertEquals("string", STRING_TYPE.toString());
@@ -3195,7 +3214,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testIsVoidable() throws Exception {
     assertTrue(VOID_TYPE.isVoidable());
     assertFalse(NULL_TYPE.isVoidable());
-    assertFalse(createUnionType(NUMBER_TYPE, VOID_TYPE).isVoidable());
+    assertTrue(createUnionType(NUMBER_TYPE, VOID_TYPE).isVoidable());
   }
 
   /**
@@ -3340,6 +3359,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(BOOLEAN_TYPE.isNullable());
+    assertFalse(BOOLEAN_TYPE.isVoidable());
 
     // matchesXxx
     assertTrue(BOOLEAN_TYPE.matchesInt32Context());
@@ -3448,6 +3468,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(BOOLEAN_OBJECT_TYPE.isNullable());
+    assertFalse(BOOLEAN_OBJECT_TYPE.isVoidable());
 
     // matchesXxx
     assertTrue(BOOLEAN_OBJECT_TYPE.matchesInt32Context());
@@ -3559,6 +3580,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(enumType.isNullable());
+    assertFalse(enumType.isVoidable());
 
     // matchesXxx
     assertFalse(enumType.matchesInt32Context());
@@ -3673,6 +3695,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(elementsType.isNullable());
+    assertFalse(elementsType.isVoidable());
 
     // matchesXxx
     assertTrue(elementsType.matchesInt32Context());
@@ -3755,7 +3778,9 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     // isNullable
     assertFalse(objectType.isNullable());
+    assertFalse(objectType.isVoidable());
     assertTrue(createNullableType(objectType).isNullable());
+    assertTrue(createUnionType(objectType, VOID_TYPE).isVoidable());
 
     // toString
     assertEquals("{...}", objectType.toString());
