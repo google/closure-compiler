@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -379,6 +380,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     objLit.setJSDocInfo(objLitDoc.build());
 
     this.addThisTypeToFunctions(objLit, cls.target.getQualifiedName());
+    this.switchDollarSignPropsToBrackets(objLit);
 
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
@@ -457,6 +459,32 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         fnDoc.recordThisType(new JSTypeExpression(
             new Node(Token.BANG, IR.string(thisType)), VIRTUAL_FILE));
         keyNode.setJSDocInfo(fnDoc.build());
+      }
+    }
+  }
+
+  /**
+   * Switches all "this.$.foo" to "this.$['foo']".
+   */
+  private void switchDollarSignPropsToBrackets(Node objLit) {
+    Preconditions.checkState(objLit.isObjectLit());
+    for (Node keyNode : objLit.children()) {
+      Node value = keyNode.getFirstChild();
+      if (value != null && value.isFunction()) {
+        NodeUtil.visitPostOrder(
+            value.getLastChild(),
+            new NodeUtil.Visitor() {
+              @Override
+              public void visit(Node n) {
+                if (n.isString() && n.getString().equals("$") && n.getParent().isGetProp()
+                    && n.getParent().getParent().isGetProp()) {
+                  Node dollarChildProp = n.getParent().getParent();
+                  dollarChildProp.setType(Token.GETELEM);
+                  compiler.reportCodeChange();
+                }
+              }
+            },
+            Predicates.<Node>alwaysTrue());
       }
     }
   }
