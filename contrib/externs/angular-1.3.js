@@ -1298,6 +1298,8 @@ angular.$filterProvider.register = function(name, fn) {};
  *   get: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
  *   head: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
  *   jsonp: function(string, angular.$http.Config=):!angular.$http.HttpPromise,
+ *   patch: function(string, *, angular.$http.Config=):
+ *       !angular.$http.HttpPromise,
  *   post: function(string, *, angular.$http.Config=):
  *       !angular.$http.HttpPromise,
  *   put: function(string, *, angular.$http.Config=):!angular.$http.HttpPromise,
@@ -1364,6 +1366,14 @@ angular.$http.head = function(url, opt_config) {};
  * @return {!angular.$http.HttpPromise}
  */
 angular.$http.jsonp = function(url, opt_config) {};
+
+/**
+ * @param {string} url
+ * @param {*} data
+ * @param {angular.$http.Config=} opt_config
+ * @return {!angular.$http.HttpPromise}
+ */
+angular.$http.patch = function(url, data, opt_config) {};
 
 /**
  * @param {string} url
