@@ -673,6 +673,15 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case POLYMER_BEHAVIOR:
+          if (jsdocBuilder.isPolymerBehaviorRecorded()) {
+            parser.addParserWarning("msg.jsdoc.polymerBehavior.extra",
+              stream.getLineno(), stream.getCharno());
+          } else {
+            jsdocBuilder.recordPolymerBehavior();
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case THROWS: {
           skipEOLs();
           token = next();

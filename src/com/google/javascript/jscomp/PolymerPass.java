@@ -71,6 +71,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       "Behaviors must be global, fully qualified names which are declared as object literals or "
       + "array literals of other valid Behaviors.");
 
+  static final DiagnosticType POLYMER_UNANNOTATED_BEHAVIOR = DiagnosticType.error(
+      "JSC_POLYMER_UNANNOTATED_BEHAVIOR",
+      "Behavior declarations must be annotated with @polymerBehavior.");
+
   static final String VIRTUAL_FILE = "<PolymerPass.java>";
 
   private final AbstractCompiler compiler;
@@ -152,9 +156,83 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
   }
 
+  /**
+   * For every Polymer Behavior, strip property type annotations and add suppress checktypes on
+   * functions.
+   */
+  private static class SuppressBehaviors extends AbstractPostOrderCallback {
+    private final AbstractCompiler compiler;
+
+    public SuppressBehaviors(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (isBehavior(n)) {
+        if (!n.isVar() && !n.isAssign()) {
+          compiler.report(JSError.make(n, POLYMER_UNQUALIFIED_BEHAVIOR));
+          return;
+        }
+
+        Node behaviorValue = n.getChildAtIndex(1);
+        if (n.isVar()) {
+          behaviorValue = n.getFirstChild().getFirstChild();
+        }
+        suppressBehavior(behaviorValue);
+      }
+    }
+
+    /**
+     * @return Whether the node is the declaration of a Behavior.
+     */
+    private boolean isBehavior(Node value) {
+      return value.getJSDocInfo() != null && value.getJSDocInfo().isPolymerBehavior();
+    }
+
+    /**
+     * Strip property type annotations and add suppress checktypes on functions.
+     */
+    private void suppressBehavior(Node behaviorValue) {
+      if (behaviorValue == null) {
+        compiler.report(JSError.make(behaviorValue, POLYMER_UNQUALIFIED_BEHAVIOR));
+        return;
+      }
+
+      if (behaviorValue.isArrayLit()) {
+        for (Node child : behaviorValue.children()) {
+          suppressBehavior(child);
+        }
+      } else if (behaviorValue.isObjectLit()) {
+        stripPropertyTypes(behaviorValue);
+        suppressCheckTypes(behaviorValue);
+      }
+    }
+
+    private void stripPropertyTypes(Node behaviorValue) {
+      List<MemberDefinition> properties = extractProperties(behaviorValue);
+      for (MemberDefinition property : properties) {
+        property.name.removeProp(Node.JSDOC_INFO_PROP);
+      }
+    }
+
+    private void suppressCheckTypes(Node behaviorValue) {
+      for (Node keyNode : behaviorValue.children()) {
+        if (keyNode.getFirstChild().isFunction()) {
+          keyNode.removeProp(Node.JSDOC_INFO_PROP);
+          JSDocInfoBuilder suppressDoc = new JSDocInfoBuilder(true);
+          suppressDoc.addSuppression("checkTypes");
+          keyNode.setJSDocInfo(suppressDoc.build());
+        }
+      }
+    }
+  }
+
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     NodeTraversal.traverse(compiler, scriptRoot, this);
+    SuppressBehaviors suppressBehaviorsCallback = new SuppressBehaviors(compiler);
+    NodeTraversal.traverse(compiler, scriptRoot, suppressBehaviorsCallback);
   }
 
   @Override
@@ -313,6 +391,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
 
       Node behaviorDeclaration = behaviorGlobalName.getDeclaration().getNode();
+      JSDocInfo behaviorInfo = NodeUtil.getBestJSDocInfo(behaviorDeclaration);
+      if (behaviorInfo == null || !behaviorInfo.isPolymerBehavior()) {
+        compiler.report(JSError.make(behaviorDeclaration, POLYMER_UNANNOTATED_BEHAVIOR));
+      }
       Node behaviorValue = NodeUtil.getRValueOfLValue(behaviorDeclaration);
 
       // Individual behaviors can also be arrays of behaviors. Parse them recursively.

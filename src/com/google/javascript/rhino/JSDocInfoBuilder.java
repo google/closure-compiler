@@ -1246,6 +1246,26 @@ public final class JSDocInfoBuilder {
   }
 
   /**
+   * Returns whether current JSDoc is annotated with {@code @polymerBehavior}.
+   */
+  public boolean isPolymerBehaviorRecorded() {
+    return currentInfo.isPolymerBehavior();
+  }
+
+  /**
+   * Records that this method is to be exposed as a polymerBehavior.
+   */
+  public boolean recordPolymerBehavior() {
+    if (!isPolymerBehaviorRecorded()) {
+      currentInfo.setPolymerBehavior(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
    * Returns whether current JSDoc is annotated with {@code @disposes}.
    */
   public boolean isDisposesRecorded() {

@@ -98,7 +98,9 @@ public class JSDocInfo implements Serializable {
       JAGGER_INJECT = 2,
       JAGGER_MODULE = 3,
       JAGGER_PROVIDE_PROMISE = 4,
-      JAGGER_PROVIDE = 5;
+      JAGGER_PROVIDE = 5,
+
+      POLYMER_BEHAVIOR = 6;
   }
 
   private static final class LazilyInitializedInfo implements Serializable {
@@ -1528,6 +1530,18 @@ public class JSDocInfo implements Serializable {
   void setWizaction(boolean wizaction) {
     lazyInitInfo();
     info.setBit(Property.WIZ_ACTION, wizaction);
+  }
+
+  /**
+   * Returns whether JSDoc is annotated with {@code @polymerBehavior} annotation.
+   */
+  public boolean isPolymerBehavior() {
+    return (info != null) && info.isBitSet(Property.POLYMER_BEHAVIOR);
+  }
+
+  void setPolymerBehavior(boolean polymerBehavior) {
+    lazyInitInfo();
+    info.setBit(Property.POLYMER_BEHAVIOR, polymerBehavior);
   }
 
   /**

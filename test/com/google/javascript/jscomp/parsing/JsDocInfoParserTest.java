@@ -4020,6 +4020,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@jaggerProvidePromise \n@jaggerProvidePromise*/", "extra @jaggerProvidePromise tag");
   }
 
+  public void testParsePolymerBehavior() throws Exception {
+    assertThat(parse("@polymerBehavior*/").isPolymerBehavior()).isTrue();
+  }
+
+  public void testParsePolymerBehaviorExtra() throws Exception {
+    parse("@polymerBehavior \n@polymerBehavior*/", "extra @polymerBehavior tag");
+  }
+
 
   public void testParseWizaction1() throws Exception {
     assertThat(parse("@wizaction*/").isWizaction()).isTrue();

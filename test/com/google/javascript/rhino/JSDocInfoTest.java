@@ -337,6 +337,14 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isExport());
   }
 
+  public void testSetPolymerBehavior() {
+    JSDocInfo info = new JSDocInfo();
+    assertFalse(info.isPolymerBehavior());
+    info.setPolymerBehavior(true);
+
+    assertTrue(info.isPolymerBehavior());
+  }
+
   public void testSetNoAlias() {
     JSDocInfo info = new JSDocInfo();
     info.setNoAlias(true);

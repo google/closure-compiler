@@ -63,6 +63,7 @@ enum Annotation {
   OVERRIDE,
   PACKAGE,
   PARAM,
+  POLYMER_BEHAVIOR,
   PRESERVE, // same as license
   PRESERVE_TRY,
   PRIVATE,
@@ -126,6 +127,7 @@ enum Annotation {
       put("owner", Annotation.AUTHOR).
       put("package", Annotation.PACKAGE).
       put("param", Annotation.PARAM).
+      put("polymerBehavior", Annotation.POLYMER_BEHAVIOR).
       put("preserve", Annotation.PRESERVE).
       put("preserveTry", Annotation.PRESERVE_TRY).
       put("private", Annotation.PRIVATE).
