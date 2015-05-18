@@ -36,37 +36,53 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
   protected static final String CLOSURE_BASE = "var goog;";
   protected static final String DEFAULT_EXTERNS =
-      CompilerTypeTestCase.DEFAULT_EXTERNS + "/** @return {string} */\n"
-      + "String.prototype.toString = function() { return '' };\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} arg\n"
-      + " * @return {number}\n"
-      + " */\n"
-      + "function Number(arg) {}\n"
-      + "/** @return {string} */\n"
-      + "Number.prototype.toString = function() { return '' };\n"
-      + "/**\n"
-      + " * @constructor\n"
-      + " * @param {*=} arg\n"
-      + " * @return {boolean}\n"
-      + " */\n"
-      + "function Boolean(arg) {}\n"
-      + "/** @return {string} */\n"
-      + "Boolean.prototype.toString = function() { return '' };\n"
-      + "/**\n"
-      + " * @param {?=} opt_begin\n"
-      + " * @param {?=} opt_end\n"
-      + " * @return {!Array.<T>}\n"
-      + " * @this {{length: number}|string}\n"
-      + " * @template T\n"
-      + " */\n"
-      + "Array.prototype.slice = function(opt_begin, opt_end) {};\n"
-      + "/**\n"
-      + " * @param {...?} var_args\n"
-      + " * @return {!Array.<?>}\n"
-      + " */\n"
-      + "Array.prototype.concat = function(var_args) {};\n";
+      CompilerTypeTestCase.DEFAULT_EXTERNS + Joiner.on('\n').join(
+          "/** @return {string} */",
+          "String.prototype.toString = function() { return '' };",
+          "/**",
+          " * @constructor",
+          " * @param {*=} arg",
+          " * @return {number}",
+          " */",
+          "function Number(arg) {}",
+          "/** @return {string} */",
+          "Number.prototype.toString = function() { return '' };",
+          "/**",
+          " * @constructor",
+          " * @param {*=} arg",
+          " * @return {boolean}",
+          " */",
+          "function Boolean(arg) {}",
+          "/** @return {string} */",
+          "Boolean.prototype.toString = function() { return '' };",
+          "/**",
+          " * @param {?=} opt_begin",
+          " * @param {?=} opt_end",
+          " * @return {!Array.<T>}",
+          " * @this {{length: number}|string}",
+          " * @template T",
+          " */",
+          "Array.prototype.slice = function(opt_begin, opt_end) {};",
+          "/**",
+          " * @param {...?} var_args",
+          " * @return {!Array.<?>}",
+          " */",
+          "Array.prototype.concat = function(var_args) {};",
+          "/** @interface */",
+          "function IThenable () {}",
+          "IThenable.prototype.then = function(onFulfilled) {};",
+          "/**",
+          " * @template T",
+          " * @constructor",
+          " * @implements {IThenable}",
+          " */",
+          "function Promise(resolver) {};",
+          "/**",
+          " * @template RESULT",
+          " * @param {function(): RESULT} onFulfilled",
+          " * @return {RESULT}",
+          " */",
+          "Promise.prototype.then = function(onFulfilled) {};");
 
   @Override
   protected void setUp() {

@@ -7735,44 +7735,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testUnannotatedFunctionSummaryDoesntCrash() {
-    typeCheckCustomExterns(
-        DEFAULT_EXTERNS + Joiner.on('\n').join(
-            "/** @interface */",
-            "var IThenable = function() {};",
-            "IThenable.prototype.then = function(onFulfilled) {};",
-            "/** @constructor @implements {IThenable} */",
-            "var Promise = function() {};",
-            "/**",
-            " * @param {function():RESULT} onFulfilled",
-            " * @template RESULT",
-            " */",
-            "Promise.prototype.then = function(onFulfilled) {};"),
-        Joiner.on('\n').join(
-            "var /** !Promise */ p;",
-            "function f(unused) {",
-            "  function g(){ return 5; }",
-            "  p.then(g);",
-            "}"));
+    typeCheck(Joiner.on('\n').join(
+        "var /** !Promise */ p;",
+        "function f(unused) {",
+        "  function g(){ return 5; }",
+        "  p.then(g);",
+        "}"));
 
-    typeCheckCustomExterns(
-        DEFAULT_EXTERNS + Joiner.on('\n').join(
-            "/** @interface */",
-            "var IThenable = function() {};",
-            "IThenable.prototype.then = function(onFulfilled) {};",
-            "/** @constructor @implements {IThenable} */",
-            "var Promise = function() {};",
-            "/**",
-            " * @param {function():RESULT} onFulfilled",
-            " * @return {RESULT}",
-            " * @template RESULT",
-            " */",
-            "Promise.prototype.then = function(onFulfilled) {};"),
-        Joiner.on('\n').join(
-            "var /** !Promise */ p;",
-            "function f(unused) {",
-            "  function g(){ return 5; }",
-            "  var /** null */ n = p.then(g);",
-            "}"),
+    typeCheck(Joiner.on('\n').join(
+        "var /** !Promise */ p;",
+        "function f(unused) {",
+        "  function g(){ return 5; }",
+        "  var /** null */ n = p.then(g);",
+        "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
@@ -11707,5 +11682,31 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}",
         "f('asdf', 0);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testGenericResolutionWithPromises() {
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @param {function():(T|!Promise<T>)} x",
+        " * @return {!Promise<T>}",
+        " * @template T",
+        " */",
+        "function f(x) { return /** @type {?} */ (null); }",
+        "function g(/** function(): !Promise<number> */ x) {",
+        "  var /** !Promise<number> */ n = f(x);",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {(T|!Promise<T>)} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return /** @type {?} */ (null); }",
+        "function g(/** !Promise<number> */ x) {",
+        "  var /** number */ n = f(x);",
+        "  var /** string */ s = f(x);",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }
