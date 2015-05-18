@@ -152,6 +152,8 @@ public class CompilerOptions implements Serializable, Cloneable {
    */
   public boolean ideMode;
 
+  private boolean parseJsDocDocumentation = false;
+
   /**
    * Even if checkTypes is disabled, clients might want to still infer types.
    * This is mostly used when ideMode is enabled.
@@ -1799,6 +1801,26 @@ public class CompilerOptions implements Serializable, Cloneable {
 
   public void setIdeMode(boolean ideMode) {
     this.ideMode = ideMode;
+  }
+
+  /**
+   * Enables or disables the parsing of JSDoc documentation. When IDE mode is
+   * enabled then documentation is always parsed.
+   *
+   * @param parseJsDocDocumentation
+   *           True to enable JSDoc documentation parsing, false to disable it.
+   */
+  public void setParseJsDocDocumentation(boolean parseJsDocDocumentation) {
+    this.parseJsDocDocumentation = parseJsDocDocumentation;
+  }
+
+  /**
+   * Checks JSDoc documentation will be parsed.
+   *
+   * @return True when JSDoc documentation will be parsed, false if not.
+   */
+  public boolean isParseJsDocDocumentation() {
+    return this.ideMode || this.parseJsDocDocumentation;
   }
 
   public void setSkipAllPasses(boolean skipAllPasses) {
