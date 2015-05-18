@@ -52,7 +52,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
       "*/" +
       "var Error;" +
       "var alert;" +
-      "";
+      "var unknown;";
 
   private static final String DEFAULT_CONFORMANCE =
       "requirement: {\n" +
@@ -941,7 +941,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: My rule message");
   }
 
-    public void testCustomBanUnknownThisProp2() {
+  public void testCustomBanUnknownThisProp2() {
     configuration = config(rule("BanUnknownDirectThisPropsReferences"), "My rule message");
 
     testSame(
@@ -1147,5 +1147,47 @@ public final class CheckConformanceTest extends CompilerTestCase {
     builder.addRequirementBuilder().addWhitelist("x").addWhitelist("x");
     CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
     assertEquals(1, errorManager.getErrorCount());
+  }
+
+  public void testCustomBanNullDeref1() {
+    configuration = config(rule("BanNullDeref"), "My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @param {string|null} n */ function f(n) { alert(n.prop); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @param {string|null} n */ function f(n) { alert(n['prop']); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @param {string|undefined} n */ function f(n) { alert(n.prop); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @param {?Function} fnOrNull */ function f(fnOrNull) { fnOrNull(); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @param {?Function} fnOrNull */ function f(fnOrNull) { new fnOrNull(); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+
+    testSame(
+        EXTERNS,
+        "/** @param {string} n */ function f(n) { alert(n.prop); }", null);
+
+    testSame(
+        EXTERNS,
+        "/** @param {?} n */ function f(n) { alert(n.prop); }", null);
   }
 }

@@ -919,6 +919,32 @@ public final class ConformanceRules {
     }
   }
 
+
+  /**
+   * Banned dereferencing null or undefined types.
+   */
+  public static final class BanNullDeref extends AbstractRule {
+    public BanNullDeref(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isGetProp() || n.isGetElem() || n.isNew() || n.isCall()) {
+        JSType targetType = n.getFirstChild().getJSType();
+        if (targetType != null
+            && !(targetType.isUnknownType()
+                || targetType.isEmptyType())
+            && (targetType.isNullable() || targetType.isVoidable())) {
+          return ConformanceResult.VIOLATION;
+        }
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+
   /**
    * Banned unknown "this" types.
    */
