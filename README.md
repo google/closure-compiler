@@ -121,7 +121,18 @@ will re-order the inputs automatically.
 4. Submit your reqest as an issue.
 
 ### Submitting patches
-1. All contributors must sign a contributor license agreement. See the [CONTRIBUTORS](https://raw.githubusercontent.com/google/closure-compiler/master/CONTRIBUTORS) file for details.
+1. All contributors must sign a contributor license agreement (CLA).
+   A CLA basically says that you own the rights to any code you contribute,
+   and that you give us permission to use that code in Closure Compiler.
+   You maintain the copyright on that code.
+   If you own all the rights to your code, you can fill out an
+   [individual CLA](http://code.google.com/legal/individual-cla-v1.0.html).
+   If your employer has any rights to your code, then they also need to fill out
+   a [corporate CLA](http://code.google.com/legal/corporate-cla-v1.0.html).
+   If you don't know if your employer has any rights to your code, you should
+   ask before signing anything.
+   By default, anyone with an @google.com email address already has a CLA
+   signed for them.
 2. To make sure your changes are of the type that will be accepted, ask about your patch on the [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
 3. Fork the repository.
 4. Make your changes.
