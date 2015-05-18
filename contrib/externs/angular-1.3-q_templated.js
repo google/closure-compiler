@@ -42,8 +42,8 @@ angular.$q.Promise;
 /**
  * @param {?(function(T):
  *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
- * @param {?(function(*): *)=} opt_onRejected
- * @param {?(function(*): *)=} opt_notifyCallback
+ * @param {?(function(?): ?)=} opt_onRejected
+ * @param {?(function(?): ?)=} opt_notifyCallback
  * @return {!angular.$q.Promise.<RESULT>}
  * @template RESULT
  */
@@ -81,7 +81,7 @@ angular.$q.Deferred.prototype.notify = function(opt_value) {};
 angular.$q.Deferred.prototype.promise;
 
 /**
- * @param {!Object.<!angular.$q.Promise>|!Array.<!angular.$q.Promise>} promises
+ * @param {!Object.<string, !angular.$q.Promise>|!Array.<!angular.$q.Promise>} promises
  * @return {!angular.$q.Promise.<!Object|!Array>}
  */
 angular.$q.prototype.all = function(promises) {};

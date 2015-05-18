@@ -60,8 +60,8 @@ angular.$http.HttpPromise;
 /**
  * @param {?(function(T):
  *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
- * @param {?(function(*): *)=} opt_onRejected
- * @param {?(function(*): *)=} opt_notifyCallback
+ * @param {?(function(?): ?)=} opt_onRejected
+ * @param {?(function(?): ?)=} opt_notifyCallback
  * @return {!angular.$http.HttpPromise.<RESULT>}
  * @template RESULT
  */
