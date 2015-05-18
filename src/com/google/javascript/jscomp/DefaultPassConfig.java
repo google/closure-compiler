@@ -72,11 +72,6 @@ public final class DefaultPassConfig extends PassConfig {
       DiagnosticType.error("JSC_CANNOT_USE_PROTOTYPE_AND_VAR",
           "Rename prototypes and inline variables cannot be used together.");
 
-  static final DiagnosticType CANNOT_USE_EXPORT_LOCALS_AND_EXTERN_PROP_REMOVAL =
-      DiagnosticType.error("JSC_CANNOT_USE_EXPORT_LOCALS_AND_EXTERN_PROP_REMOVAL",
-          "remove_unused_prototype_properties_in_externs " +
-          "and export_local_property_definitions cannot be used together.");
-
   // Miscellaneous errors.
   static final DiagnosticType REPORT_PATH_IO_ERROR =
       DiagnosticType.error("JSC_REPORT_PATH_IO_ERROR",
@@ -948,12 +943,6 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory generateExports = new PassFactory("generateExports", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      if (options.removeUnusedPrototypePropertiesInExterns
-          && options.exportLocalPropertyDefinitions) {
-        return new ErrorPass(
-            compiler, CANNOT_USE_EXPORT_LOCALS_AND_EXTERN_PROP_REMOVAL);
-      }
-
       CodingConvention convention = compiler.getCodingConvention();
       if (convention.getExportSymbolFunction() != null &&
           convention.getExportPropertyFunction() != null) {

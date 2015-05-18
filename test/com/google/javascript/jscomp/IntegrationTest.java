@@ -3093,12 +3093,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         FindExportableNodes.NON_GLOBAL_ERROR);
 
     options.exportLocalPropertyDefinitions = true;
-
-    // Local exports enabled, but removeUnusedPrototypePropertiesInExterns not
-    // disabled.
-    test(options, code,
-        DefaultPassConfig.CANNOT_USE_EXPORT_LOCALS_AND_EXTERN_PROP_REMOVAL);
-
     options.setRemoveUnusedPrototypePropertiesInExterns(false);
 
     // property name preserved due to export
