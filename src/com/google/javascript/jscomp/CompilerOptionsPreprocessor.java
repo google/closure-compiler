@@ -76,6 +76,11 @@ final class CompilerOptionsPreprocessor {
       // VariableReferenceCheck finds warnings that we don't, so leave them on.
     }
 
+    if (options.jqueryPass && options.closurePass) {
+      throw new InvalidOptionsException(
+          "The jQuery pass and the Closure pass cannot both be enabled.");
+    }
+
   }
 
   /**
