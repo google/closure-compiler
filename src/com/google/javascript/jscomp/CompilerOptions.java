@@ -525,7 +525,7 @@ public class CompilerOptions implements Serializable, Cloneable {
   public VariableRenamingPolicy variableRenaming;
 
   /** Controls which properties get renamed. */
-  public PropertyRenamingPolicy propertyRenaming;
+  PropertyRenamingPolicy propertyRenaming;
 
   /** Controls label renaming. */
   public boolean labelRenaming;

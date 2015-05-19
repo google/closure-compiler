@@ -104,26 +104,15 @@ class CollapseProperties implements CompilerPass {
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
   private Map<String, Name> nameMap;
 
-  private final boolean inlineAliases;
-
-  /**
-   * @param inlineAliases Whether we're allowed to inline local aliases of
-   *     namespaces, etc. It's set to false only by the deprecated property-
-   *     renaming policies {@code HEURISTIC} and {@code AGGRESSIVE_HEURISTIC}.
-   */
-  CollapseProperties(AbstractCompiler compiler, boolean inlineAliases) {
+  CollapseProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.inlineAliases = inlineAliases;
   }
 
   @Override
   public void process(Node externs, Node root) {
     GlobalNamespace namespace;
     namespace = new GlobalNamespace(compiler, root);
-
-    if (inlineAliases) {
-      inlineAliases(namespace);
-    }
+    inlineAliases(namespace);
     nameMap = namespace.getNameIndex();
     globalNames = namespace.getNameForest();
     checkNamespaces();
