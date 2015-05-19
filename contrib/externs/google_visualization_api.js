@@ -577,6 +577,16 @@ google.visualization.events.addListener =
 
 
 /**
+ * @param {!Object} eventSource
+ * @param {string} eventName
+ * @param {!Function} eventHandler
+ * @return {!Object}
+ */
+google.visualization.events.addOneTimeListener =
+    function(eventSource, eventName, eventHandler) {};
+
+
+/**
  * @param {Object} listener
  * @return {undefined}
  */
