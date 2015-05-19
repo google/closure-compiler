@@ -73,7 +73,8 @@ public final class Config {
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,
       boolean isIdeMode, LanguageMode languageMode,
       boolean acceptConstKeyword) {
-    this(annotationWhitelist, suppressionNames, isIdeMode, isIdeMode, languageMode, acceptConstKeyword);
+    this(annotationWhitelist, suppressionNames, isIdeMode, isIdeMode,
+        languageMode, acceptConstKeyword);
   }
 
   Config(Set<String> annotationWhitelist, Set<String> suppressionNames,

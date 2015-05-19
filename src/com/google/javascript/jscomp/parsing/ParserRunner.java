@@ -53,7 +53,8 @@ public final class ParserRunner {
                                     LanguageMode languageMode,
                                     boolean acceptConstKeyword,
                                     Set<String> extraAnnotationNames) {
-    return createConfig(isIdeMode, isIdeMode, languageMode, acceptConstKeyword, extraAnnotationNames);
+    return createConfig(
+        isIdeMode, isIdeMode, languageMode, acceptConstKeyword, extraAnnotationNames);
   }
 
   public static Config createConfig(boolean isIdeMode,
