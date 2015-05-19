@@ -801,11 +801,23 @@ var IThenable = function() {};
 
 
 /**
- * @param {?(function(TYPE):
- *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
+ * @param {?(function(TYPE):VALUE)=} opt_onFulfilled
  * @param {?(function(*): *)=} opt_onRejected
- * @return {!IThenable.<RESULT>}
- * @template RESULT
+ * @return {RESULT}
+ * @template VALUE
+ *
+ * When a Promise (or thenable) is returned from the fulfilled callback,
+ * the result is the payload of that promise, not the promise itself.
+ *
+ * @template RESULT := type('IThenable',
+ *     cond(isUnknown(VALUE), unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
+ * =:
  */
 IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
@@ -856,11 +868,23 @@ Promise.race = function(iterable) {};
 
 
 /**
- * @param {?(function(TYPE):
- *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
+ * @param {?(function(TYPE):VALUE)=} opt_onFulfilled
  * @param {?(function(*): *)=} opt_onRejected
- * @return {!Promise.<RESULT>}
- * @template RESULT
+ * @return {RESULT}
+ * @template VALUE
+ *
+ * When a Promise (or thenable) is returned from the fulfilled callback,
+ * the result is the payload of that promise, not the promise itself.
+ *
+ * @template RESULT := type('Promise',
+ *     cond(isUnknown(VALUE), unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
+ * =:
  * @override
  */
 Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
