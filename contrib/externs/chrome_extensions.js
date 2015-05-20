@@ -2053,22 +2053,6 @@ chrome.extension.onRequest;
 chrome.extension.onRequestExternal;
 
 
-/**
- * @see https://developer.chrome.com/extensions/runtime.html
- * @const
- */
-chrome.runtime = {};
-
-
-/** @type {!Object|undefined} */
-chrome.runtime.lastError = {};
-
-
-/**
- * @type {string|undefined}
- */
-chrome.runtime.lastError.message;
-
 
 /** @type {string} */
 chrome.runtime.id;
@@ -2181,17 +2165,6 @@ chrome.runtime.requestUpdateCheck = function(callback) {};
 chrome.runtime.restart = function() {};
 
 
-/**
- * @param {string|!Object.<string>=} opt_extensionIdOrConnectInfo Either the
- *     extensionId to connect to, in which case connectInfo params can be
- *     passed in the next optional argument, or the connectInfo params.
- * @param {!Object.<string>=} opt_connectInfo The connectInfo object,
- *     if arg1 was the extensionId to connect to.
- * @return {!Port} New port.
- */
-chrome.runtime.connect = function(
-    opt_extensionIdOrConnectInfo, opt_connectInfo) {};
-
 
 /**
  * @see http://developer.chrome.com/extensions/runtime.html#method-connectNative
@@ -2200,27 +2173,6 @@ chrome.runtime.connect = function(
  * @return {!Port} New port.
  */
 chrome.runtime.connectNative = function(application) {};
-
-
-/**
- * @param {string|*} extensionIdOrMessage Either the extensionId to send the
- *     message to, in which case the message is passed as the next arg, or the
- *     message itself.
- * @param {(*|Object|function(*): void)=} opt_messageOrOptsOrCallback
- *     One of:
- *     The message, if arg1 was the extensionId.
- *     The options for message sending, if arg1 was the message and this
- *     argument is not a function.
- *     The callback, if arg1 was the message and this argument is a function.
- * @param {(Object|function(*): void)=} opt_optsOrCallback
- *     Either the options for message sending, if arg2 was the message,
- *     or the callback.
- * @param {function(*): void=} opt_callback The callback function which
- *     takes a JSON response object sent by the handler of the request.
- */
-chrome.runtime.sendMessage = function(
-    extensionIdOrMessage, opt_messageOrOptsOrCallback, opt_optsOrCallback,
-    opt_callback) {};
 
 
 /**
@@ -5843,90 +5795,6 @@ IconInfo.prototype.url;
 
 
 
-/**
- * @see https://developer.chrome.com/extensions/tabs
- * @constructor
- */
-function Tab() {}
-
-
-// TODO: Make this field optional once dependent projects have been updated.
-/**
- * @type {number}
- */
-Tab.prototype.id;
-
-
-/** @type {number} */
-Tab.prototype.index;
-
-
-/** @type {number} */
-Tab.prototype.windowId;
-
-
-// TODO: Make this field optional once dependent projects have been updated.
-/**
- * @type {number}
- */
-Tab.prototype.openerTabId;
-
-
-/** @type {boolean} */
-Tab.prototype.highlighted;
-
-
-/** @type {boolean} */
-Tab.prototype.active;
-
-
-/** @type {boolean} */
-Tab.prototype.pinned;
-
-
-// TODO: Make this field optional once dependent projects have been updated.
-/**
- * @type {string}
- */
-Tab.prototype.url;
-
-
-// TODO: Make this field optional once dependent projects have been updated.
-/**
- * @type {string}
- */
-Tab.prototype.title;
-
-
-// TODO: Make this field optional once dependent projects have been updated.
-/**
- * @type {string}
- */
-Tab.prototype.favIconUrl;
-
-
-// TODO: Make this field optional once dependent projects have been updated.
-/**
- * @type {string}
- */
-Tab.prototype.status;
-
-
-/** @type {boolean} */
-Tab.prototype.incognito;
-
-
-/** @type {number|undefined} */
-Tab.prototype.width;
-
-
-/** @type {number|undefined} */
-Tab.prototype.height;
-
-
-/** @type {number|undefined} */
-Tab.prototype.sessionId;
-
 
 
 /**
@@ -5980,31 +5848,6 @@ ChromeWindow.prototype.state;
 ChromeWindow.prototype.alwaysOnTop;
 
 
-
-/**
- * @see https://developer.chrome.com/extensions/events.html
- * @constructor
- */
-function ChromeEvent() {}
-
-
-/** @param {!Function} callback */
-ChromeEvent.prototype.addListener = function(callback) {};
-
-
-/** @param {!Function} callback */
-ChromeEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {!Function} callback
- * @return {boolean}
- */
-ChromeEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-ChromeEvent.prototype.hasListeners = function() {};
 
 
 
@@ -6276,66 +6119,6 @@ chrome.pushMessaging.PushMessageEvent.prototype.hasListener =
  */
 chrome.pushMessaging.PushMessageEvent.prototype.hasListeners = function() {};
 
-
-
-/**
- * @see http://developer.chrome.com/apps/runtime.html#type-Port
- * @constructor
- */
-function Port() {}
-
-
-/** @type {string} */
-Port.prototype.name;
-
-
-/** @type {!ChromeEvent} */
-Port.prototype.onDisconnect;
-
-
-/** @type {!ChromeEvent} */
-Port.prototype.onMessage;
-
-
-/** @type {MessageSender} */
-Port.prototype.sender;
-
-
-/**
- * @param {Object.<string>} obj Message object.
- */
-Port.prototype.postMessage = function(obj) {};
-
-
-/**
- * Note: as of 2012-04-12, this function is no longer documented on
- * the public web pages, but there are still existing usages.
- */
-Port.prototype.disconnect = function() {};
-
-
-
-/**
- * @see http://developer.chrome.com/extensions/runtime.html#type-MessageSender
- * @constructor
- */
-function MessageSender() {}
-
-
-/** @type {!Tab|undefined} */
-MessageSender.prototype.tab;
-
-
-/** @type {string|undefined} */
-MessageSender.prototype.id;
-
-
-/** @type {string|undefined} */
-MessageSender.prototype.url;
-
-
-/** @type {string|undefined} */
-MessageSender.prototype.tlsChannelId;
 
 
 
