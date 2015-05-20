@@ -191,7 +191,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
 
     /**
-     * Strip property type annotations and add suppress checktypes on functions.
+     * Strip property type annotations and add suppress checkTypes and globalThis on functions.
      */
     private void suppressBehavior(Node behaviorValue) {
       if (behaviorValue == null) {
@@ -205,7 +205,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         }
       } else if (behaviorValue.isObjectLit()) {
         stripPropertyTypes(behaviorValue);
-        suppressCheckTypes(behaviorValue);
+        addBehaviorSuppressions(behaviorValue);
       }
     }
 
@@ -216,12 +216,13 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
     }
 
-    private void suppressCheckTypes(Node behaviorValue) {
+    private void addBehaviorSuppressions(Node behaviorValue) {
       for (Node keyNode : behaviorValue.children()) {
         if (keyNode.getFirstChild().isFunction()) {
           keyNode.removeProp(Node.JSDOC_INFO_PROP);
           JSDocInfoBuilder suppressDoc = new JSDocInfoBuilder(true);
           suppressDoc.addSuppression("checkTypes");
+          suppressDoc.addSuppression("globalThis");
           keyNode.setJSDocInfo(suppressDoc.build());
         }
       }
