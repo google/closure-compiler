@@ -852,6 +852,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       for (String param : ctorJSDocInfo.getParameterNames()) {
         newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
       }
+      newInfo.mergePropertyBitfieldFrom(ctorJSDocInfo);
     }
 
     if (NodeUtil.isStatement(classNode)) {

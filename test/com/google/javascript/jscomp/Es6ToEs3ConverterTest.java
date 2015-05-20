@@ -183,6 +183,26 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     ));
   }
 
+  public void testClassWithNgInject() {
+    test(Joiner.on('\n').join(
+        "class A {",
+        "  /** @ngInject */",
+        "  constructor($scope) {}",
+        "}"),
+        Joiner.on('\n').join(
+        "/** @constructor @struct @ngInject */",
+        "var A = function($scope) {}"));
+
+    test(Joiner.on('\n').join(
+        "/** @ngInject */",
+        "class A {",
+        "  constructor($scope) {}",
+        "}"),
+        Joiner.on('\n').join(
+        "/** @constructor @struct @ngInject */",
+        "var A = function($scope) {}"));
+  }
+
   public void testAnonymousSuper() {
     testError("f(class extends D { f() { super.g() } })", Es6ToEs3Converter.CANNOT_CONVERT);
   }

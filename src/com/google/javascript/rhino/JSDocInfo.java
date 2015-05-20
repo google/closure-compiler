@@ -491,6 +491,7 @@ public class JSDocInfo implements Serializable {
         && Objects.equals(jsDoc1.getMeaning(), jsDoc2.getMeaning())
         && Objects.equals(jsDoc1.getModifies(), jsDoc2.getModifies())
         && Objects.equals(jsDoc1.getOriginalCommentString(), jsDoc2.getOriginalCommentString())
+        && Objects.equals(jsDoc1.getPropertyBitField(), jsDoc2.getPropertyBitField())
         && Objects.equals(jsDoc1.getReferences(), jsDoc2.getReferences())
         && Objects.equals(jsDoc1.getReturnDescription(), jsDoc2.getReturnDescription())
         && Objects.equals(jsDoc1.getReturnType(), jsDoc2.getReturnType())
@@ -1716,6 +1717,17 @@ public class JSDocInfo implements Serializable {
   public Set<String> getModifies() {
     Set<String> modifies = info == null ? null : info.modifies;
     return modifies == null ? Collections.<String>emptySet() : modifies;
+  }
+
+  private Integer getPropertyBitField() {
+    return info == null ? null : info.propertyBitField;
+  }
+
+  void mergePropertyBitfieldFrom(JSDocInfo other) {
+    if (other.info != null) {
+      lazyInitInfo();
+      info.propertyBitField |= other.getPropertyBitField();
+    }
   }
 
   /**

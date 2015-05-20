@@ -1265,6 +1265,10 @@ public final class JSDocInfoBuilder {
     }
   }
 
+  public void mergePropertyBitfieldFrom(JSDocInfo other) {
+    currentInfo.mergePropertyBitfieldFrom(other);
+  }
+
   /**
    * Returns whether current JSDoc is annotated with {@code @disposes}.
    */
