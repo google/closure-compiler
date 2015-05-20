@@ -3583,7 +3583,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @interface */",
         "function High() {}",
         "/** @type {number} */",
-        "High.prototype.p = 123;",
+        "High.prototype.p;",
         "/** @constructor @implements {High} */",
         "function Mid() {}",
         "Mid.prototype.p = 123;",
@@ -3805,7 +3805,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testInvalidMethodPropertyOverride() {
     typeCheck(Joiner.on('\n').join(
         "/** @interface */ function Parent() {}",
-        "/** @type {number} */ Parent.prototype.y = 9;",
+        "/** @type {number} */ Parent.prototype.y;",
         "/** @constructor @implements {Parent} */ function Child() {}",
         "/** @param {string} x */ Child.prototype.y = function(x) {};"),
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
@@ -4034,18 +4034,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
   }
 
-  public void testInterfaceNonEmptyFunction() throws Exception {
+  public void testInvalidInitOfInterfaceProps() throws Exception {
     typeCheck(Joiner.on('\n').join(
         "/** @interface */ function T() {};",
         "T.prototype.x = function() { return 'foo'; }"),
         TypeCheck.INTERFACE_METHOD_NOT_EMPTY);
-  }
 
-  public void testInterfaceMistypedProp() {
     typeCheck(Joiner.on('\n').join(
-        "/** @interface */ function I() {}",
-        "/** @type {number} */ I.prototype.y = 'asdf';"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "/** @interface */ function I() {};",
+        "/** @type {number} */",
+        "I.prototype.n = 123;"),
+        GlobalTypeInfo.INVALID_INTERFACE_PROP_INITIALIZER);
   }
 
   public void testInterfaceSingleInheritance() {
@@ -7571,7 +7570,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @interface */ function Intf() {}",
         "/** @type {string} */",
-        "Intf.prototype.s = 'str';",
+        "Intf.prototype.s;",
         "/** @constructor @implements {Intf} */",
         "function C() {}",
         "/** @override */",
@@ -7582,7 +7581,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @interface */ function Intf() {}",
         "/** @type {string} */",
-        "Intf.prototype.s = 'str';",
+        "Intf.prototype.s;",
         "/** @constructor @implements {Intf} */",
         "function C() {}",
         "/** @type {number} @override */",
@@ -7592,7 +7591,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @interface */ function Intf() {}",
         "/** @type {string} */",
-        "Intf.prototype.s = 'str';",
+        "Intf.prototype.s;",
         "/** @constructor @implements {Intf} */",
         "function C() {}",
         "/** @override */",
@@ -8062,10 +8061,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testAbstractMethodOverrides() {
     typeCheck(Joiner.on('\n').join(
-        "/** @type {!Function} */ function abstractMethod(){}",
+        "/** @const */ var goog = {};",
+        "/** @type {!Function} */ goog.abstractMethod = function(){};",
         "/** @interface */ function I() {}",
         "/** @param {string=} opt_str */",
-        "I.prototype.done = abstractMethod;",
+        "I.prototype.done = goog.abstractMethod;",
         "/** @implements {I} @constructor */ function Foo() {}",
         "/** @override */ Foo.prototype.done = function(opt_str) {}",
         "/** @param {I} stats */ function f(stats) {}",

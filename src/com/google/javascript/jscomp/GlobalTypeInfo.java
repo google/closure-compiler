@@ -169,6 +169,11 @@ class GlobalTypeInfo implements CompilerPass {
           "JSC_FUNCTION_CONSTRUCTOR_NOT_DEFINED",
           "You must provide externs that define the built-in Function constructor.");
 
+  static final DiagnosticType INVALID_INTERFACE_PROP_INITIALIZER =
+      DiagnosticType.warning(
+          "JSC_INVALID_INTERFACE_PROP_INITIALIZER",
+          "Invalid initialization of interface property.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_INIT_TYPEDEF,
@@ -182,6 +187,7 @@ class GlobalTypeInfo implements CompilerPass {
       EXPECTED_INTERFACE,
       FUNCTION_CONSTRUCTOR_NOT_DEFINED,
       INEXISTENT_PARAM,
+      INVALID_INTERFACE_PROP_INITIALIZER,
       INVALID_PROP_OVERRIDE,
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
@@ -1208,8 +1214,22 @@ class GlobalTypeInfo implements CompilerPass {
         }
         return;
       }
+      mayWarnAboutInterfacePropInit(rawType, initializer);
       String pname = NodeUtil.getPrototypePropertyName(getProp);
       mayAddPropToPrototype(rawType, pname, getProp, initializer);
+    }
+
+    private void mayWarnAboutInterfacePropInit(RawNominalType rawType, Node initializer) {
+      if (rawType.isInterface() && initializer != null) {
+        String abstractMethodName = convention.getAbstractMethodName();
+        if (initializer.isFunction()
+            && !NodeUtil.isEmptyFunctionExpression(initializer)) {
+          warnings.add(JSError.make(initializer, TypeCheck.INTERFACE_METHOD_NOT_EMPTY));
+        } else if (!initializer.isFunction()
+            && !initializer.matchesQualifiedName(abstractMethodName)) {
+          warnings.add(JSError.make(initializer, INVALID_INTERFACE_PROP_INITIALIZER));
+        }
+      }
     }
 
     private void visitPrototypeAssignment(Node getProp) {
@@ -1701,11 +1721,6 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Find the declared type of the property.
       if (initializer != null && initializer.isFunction()) {
-        if (initializer.getLastChild().hasChildren() && rawType.isInterface()) {
-          warnings.add(JSError.make(initializer.getLastChild(),
-                  TypeCheck.INTERFACE_METHOD_NOT_EMPTY));
-        }
-
         // TODO(dimvar): we must do this for any function "defined" as the rhs
         // of an assignment to a property, not just when the property is a
         // prototype property.
