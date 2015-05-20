@@ -106,7 +106,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
   }
 
   private boolean isCrossModuleName(String name) {
-    return assumeCrossModuleNames || crossModuleNames.contains(name);
+    return assumeCrossModuleNames || crossModuleNames.contains(name)
+        || compiler.getCodingConvention().isExported(name, false);
   }
 
   private void addExternForGlobalSymbolNamespace() {

@@ -68,6 +68,12 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     testSame("var a, b = 1;");
   }
 
+  public void testVarDeclarations_export() {
+    assumeCrossModuleNames = false;
+    test("var _dumpException = 1;", "_._dumpException = 1");
+  }
+
+
   public void testVarDeclarations_acrossModules() {
     assumeCrossModuleNames = false;
     test(createModules(
