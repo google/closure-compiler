@@ -49,7 +49,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       "Redeclared variable: {0}");
 
   static final DiagnosticType AMBIGUOUS_FUNCTION_DECL =
-    DiagnosticType.disabled("AMBIGUOUS_FUNCTION_DECL",
+    DiagnosticType.error("AMBIGUOUS_FUNCTION_DECL",
         "Ambiguous use of a named function: {0}.");
 
   static final DiagnosticType EARLY_REFERENCE_ERROR = DiagnosticType.error(
