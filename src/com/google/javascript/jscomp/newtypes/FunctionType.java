@@ -603,15 +603,11 @@ public final class FunctionType {
       Multimap<String, JSType> typeMultimap) {
     Preconditions.checkState(this.typeParameters.isEmpty());
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
+    Preconditions.checkState(this != TOP_FUNCTION);
 
-    if (this == LOOSE_TOP_FUNCTION || other == LOOSE_TOP_FUNCTION) {
+    if (this == LOOSE_TOP_FUNCTION || other.isTopFunction()) {
       return true;
     }
-
-    Preconditions.checkState(
-        this.requiredFormals != null && other.requiredFormals != null,
-        "Cannot run unification algorithm on %s and %s", this, other);
-
     if (requiredFormals.size() != other.requiredFormals.size()) {
       return false;
     }

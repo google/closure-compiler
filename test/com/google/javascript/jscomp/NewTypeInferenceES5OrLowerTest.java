@@ -8008,7 +8008,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "};"));
 
     typeCheck(Joiner.on('\n').join(
-        "/** @param {function(T)} fn @param {T} x @template T */",
+        "/**",
+        " * @param {function(T)} fn",
+        " * @param {T} x",
+        " * @template T",
+        " */",
         "function reqGenFun(fn, x) {};",
         "function g(obj, str) {",
         "  var member = obj[str];",
@@ -8016,6 +8020,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    reqGenFun(member, str);",
         "  }",
         "};"));
+  }
+
+  public void testUnificationWithTopFunctionDoesntCrash() {
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @param {*} value",
+        " * @param {function(new: T, ...)} type",
+        " * @template T",
+        " */",
+        "function assertInstanceof(value, type) {}",
+        "/** @const */ var ctor = unresolvedGlobalVar;",
+        "function f(obj) {",
+        "  if (obj instanceof ctor) {",
+        "    return assertInstanceof(obj, ctor);",
+        "  }",
+        "}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testGetpropOnPossiblyInexistentPropertyDoesntCrash() {
