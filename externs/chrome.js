@@ -99,6 +99,190 @@ ChromeEvent.prototype.hasListeners = function() {};
 
 // TODO(tbreisacher): Add the addRules, getRules, and removeRules methods?
 
+
+
+/**
+ * Event whose listeners take a string parameter.
+ * @constructor
+ */
+function ChromeStringEvent() {}
+
+
+/** @param {function(string): void} callback */
+ChromeStringEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(string): void} callback */
+ChromeStringEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(string): void} callback
+ * @return {boolean}
+ */
+ChromeStringEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeStringEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take a boolean parameter.
+ * @constructor
+ */
+
+function ChromeBooleanEvent() {}
+
+
+/**
+ * @param {function(boolean): void} callback
+ */
+ChromeBooleanEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(boolean): void} callback
+ */
+ChromeBooleanEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(boolean): void} callback
+ * @return {boolean}
+ */
+ChromeBooleanEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+ChromeBooleanEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take a number parameter.
+ * @constructor
+ */
+
+function ChromeNumberEvent() {}
+
+
+/**
+ * @param {function(number): void} callback
+ */
+ChromeNumberEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(number): void} callback
+ */
+ChromeNumberEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(number): void} callback
+ * @return {boolean}
+ */
+ChromeNumberEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+ChromeNumberEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take an Object parameter.
+ * @constructor
+ */
+function ChromeObjectEvent() {}
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+ChromeObjectEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ */
+ChromeObjectEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Object): void} callback Callback.
+ * @return {boolean}
+ */
+ChromeObjectEvent.prototype.hasListener = function(callback) {};
+
+
+/**
+ * @return {boolean}
+ */
+ChromeObjectEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take a string array parameter.
+ * @constructor
+ */
+function ChromeStringArrayEvent() {}
+
+
+/** @param {function(!Array.<string>): void} callback */
+ChromeStringArrayEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(!Array.<string>): void} callback */
+ChromeStringArrayEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(!Array.<string>): void} callback
+ * @return {boolean}
+ */
+ChromeStringArrayEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeStringArrayEvent.prototype.hasListeners = function() {};
+
+
+
+/**
+ * Event whose listeners take two strings as parameters.
+ * @constructor
+ */
+function ChromeStringStringEvent() {}
+
+
+/** @param {function(string, string): void} callback */
+ChromeStringStringEvent.prototype.addListener = function(callback) {};
+
+
+/** @param {function(string, string): void} callback */
+ChromeStringStringEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {function(string, string): void} callback
+ * @return {boolean}
+ */
+ChromeStringStringEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeStringStringEvent.prototype.hasListeners = function() {};
+
+
+
 /**
  * @see http://developer.chrome.com/extensions/runtime.html#type-MessageSender
  * @constructor
@@ -197,6 +381,46 @@ Tab.prototype.height;
 
 /** @type {string|undefined} */
 Tab.prototype.sessionId;
+
+
+/** @const */
+chrome.app = {};
+
+/**
+ * @see https://developer.chrome.com/webstore/inline_installation#already-installed
+ * @type {boolean}
+ */
+chrome.app.isInstalled;
+
+/**
+ * @const
+ * @see https://developer.chrome.com/apps/webstore
+ */
+chrome.webstore = {};
+
+
+/**
+ * @param {string|function()|function(string)=}
+ *     opt_urlOrSuccessCallbackOrFailureCallback Either the URL to install or
+ *     the succcess callback taking no arg or the failure callback taking an
+ *     error string arg.
+ * @param {function()|function(string)=} opt_successCallbackOrFailureCallback
+ *     Either the succcess callback taking no arg or the failure callback
+ *     taking an error string arg.
+ * @param {function(string)=} opt_failureCallback The failure callback.
+ */
+chrome.webstore.install = function(
+    opt_urlOrSuccessCallbackOrFailureCallback,
+    opt_successCallbackOrFailureCallback,
+    opt_failureCallback) {};
+
+
+/** @type {!ChromeStringEvent} */
+chrome.webstore.onInstallStageChanged;
+
+
+/** @type {!ChromeNumberEvent} */
+chrome.webstore.onDownloadProgress;
 
 
 /**
