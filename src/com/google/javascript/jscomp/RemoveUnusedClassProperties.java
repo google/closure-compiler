@@ -61,8 +61,10 @@ class RemoveUnusedClassProperties
   private void removeUnused() {
     for (Node n : candidates) {
       Preconditions.checkState(n.isGetProp());
-      if (!used.contains(n.getLastChild().getString())) {
+      String propName = n.getLastChild().getString();
+      if (!used.contains(propName)) {
         Node parent = n.getParent();
+        Node replacement;
         if (NodeUtil.isAssignmentOp(parent)) {
           Node assign = parent;
           Preconditions.checkState(assign != null
@@ -70,14 +72,29 @@ class RemoveUnusedClassProperties
               && assign.getFirstChild() == n);
           compiler.reportChangeToEnclosingScope(assign);
           // 'this.x = y' to 'y'
-          assign.getParent().replaceChild(assign,
-              assign.getLastChild().detachFromParent());
+          replacement = assign.getLastChild().detachFromParent();
         } else if (parent.isInc() || parent.isDec()) {
           compiler.reportChangeToEnclosingScope(parent);
-          parent.getParent().replaceChild(parent, IR.number(0));
+          replacement = IR.number(0).srcref(parent);
         } else {
           throw new IllegalStateException("unexpected: " + parent);
         }
+
+        // If the property expression is complex preserve that part of the
+        // expression.
+        if (!n.isQualifiedName()) {
+          Node preserved = n.getFirstChild();
+          while (preserved.isGetProp()) {
+            preserved = preserved.getFirstChild();
+          }
+          replacement = IR.comma(
+              preserved.detachFromParent(),
+              replacement)
+              .srcref(parent);
+        }
+
+        compiler.reportChangeToEnclosingScope(parent);
+        parent.getParent().replaceChild(parent, replacement);
       }
     }
   }

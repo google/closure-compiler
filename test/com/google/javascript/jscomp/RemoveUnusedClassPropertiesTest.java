@@ -169,6 +169,22 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
         "new B().dostuff();\n");
   }
 
+  public void testNoRemoveSideEffect1() {
+    test(
+        "function A() {alert('me'); return function(){}}\n" +
+        "A().prototype.foo = function() {};\n",
+        "function A() {alert('me'); return function(){}}\n" +
+        "A(),function(){};\n");
+  }
+
+  public void testNoRemoveSideEffect2() {
+    test(
+        "function A() {alert('me'); return function(){}}\n" +
+        "A().prototype.foo++;\n",
+        "function A() {alert('me'); return function(){}}\n" +
+        "A(),0;\n");
+  }
+
   public void testPrototypeProps1() {
     test(
         "function A() {this.foo = 1;}\n" +
