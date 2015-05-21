@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
@@ -61,12 +62,34 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     disableTypeCheck();
   }
 
-  private void testScoped(String code, String expected) {
+  private void testScoped(String code, String expected, LanguageMode lang) {
+    setAcceptedLanguage(lang);
     test(GOOG_SCOPE_START_BLOCK + code + GOOG_SCOPE_END_BLOCK, expected);
   }
 
+  private void testScoped(String code, String expected) {
+    testScoped(code, expected, LanguageMode.ECMASCRIPT3);
+    testScoped(code, expected, LanguageMode.ECMASCRIPT6);
+  }
+
+  private void testScopedNoChanges(String aliases, String code, LanguageMode lang) {
+    setAcceptedLanguage(lang);
+    testScoped(aliases + code, code, lang);
+  }
+
   private void testScopedNoChanges(String aliases, String code) {
-    testScoped(aliases + code, code);
+    testScopedNoChanges(aliases, code, LanguageMode.ECMASCRIPT3);
+    testScopedNoChanges(aliases, code, LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testLet() {
+    testScoped("let d = goog.dom; d.createElement(DIV);",
+        "goog.dom.createElement(DIV)", LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testConst() {
+    testScoped("const d = goog.dom; d.createElement(DIV);",
+        "goog.dom.createElement(DIV)", LanguageMode.ECMASCRIPT6);
   }
 
   public void testOneLevel() {
@@ -612,11 +635,22 @@ public final class ScopedAliasesTest extends CompilerTestCase {
                "    return $jscomp.scope.x + $jscomp.scope.y; }");
   }
 
+  public void testOkAliasLocal_letConst() {
+    testScoped("let x = 10;",
+               SCOPE_NAMESPACE + "$jscomp.scope.x = 10",
+               LanguageMode.ECMASCRIPT6);
+    testScoped("const x = 10;",
+               SCOPE_NAMESPACE + "$jscomp.scope.x = 10",
+               LanguageMode.ECMASCRIPT6);
+  }
+
   public void testFunctionDeclaration() {
-    testScoped("if (x) { function f() {} } g(f)",
-               SCOPE_NAMESPACE +
-               "if (x) { $jscomp.scope.f = function () {}; } " +
-               "g($jscomp.scope.f); ");
+    testScoped(
+        "if (x) { function f() {} } g(f)",
+        SCOPE_NAMESPACE
+        + "if (x) { $jscomp.scope.f = function () {}; } "
+        + "g($jscomp.scope.f); ",
+        LanguageMode.ECMASCRIPT3);
   }
 
   public void testHoistedFunctionDeclaration() {

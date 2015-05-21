@@ -2458,7 +2458,7 @@ public final class NodeUtil {
     }
     return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
         || (NodeUtil.isForIn(parent) && parent.getFirstChild() == n)
-        || parent.isVar()
+        || parent.isVar() || parent.isLet() || parent.isConst()
         || (parent.isFunction() && parent.getFirstChild() == n)
         || parent.isDec()
         || parent.isInc()
@@ -3639,6 +3639,8 @@ public final class NodeUtil {
       case Token.ASSIGN:
         return n.getNext();
       case Token.VAR:
+      case Token.LET:
+      case Token.CONST:
         return n.getFirstChild();
       case Token.FUNCTION:
         return parent;
