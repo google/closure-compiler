@@ -72,6 +72,10 @@ jasmine.Clock.prototype.uninstall = function() {};
 jasmine.Clock.prototype.tick = function(ms) {};
 
 
+/** @param {!Date} date */
+jasmine.Clock.prototype.mockDate = function(date) {};
+
+
 
 /** @constructor */
 jasmine.Matchers = function() {};
