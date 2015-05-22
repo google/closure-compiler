@@ -267,10 +267,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
-    if (options.polymerPass) {
-      checks.add(polymerPass);
-    }
-
     checks.add(checkSideEffects);
 
     if (options.checkSuspiciousCode ||
@@ -301,6 +297,11 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closurePrimitives);
+    }
+
+    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite.
+    if (options.polymerPass) {
+      checks.add(polymerPass);
     }
 
     if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
@@ -425,6 +426,7 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
+    assertPolymerPassIndexValid(checks);
     return checks;
   }
 
@@ -905,6 +907,17 @@ public final class DefaultPassConfig extends PassConfig {
   private static void assertAllLoopablePasses(List<PassFactory> passes) {
     for (PassFactory pass : passes) {
       Preconditions.checkState(!pass.isOneTimePass());
+    }
+  }
+
+  /** Verify that the PolymerPass runs in a valid order. */
+  private void assertPolymerPassIndexValid(List<PassFactory> checks) {
+    int polymerIndex = checks.indexOf(polymerPass);
+    int closureIndex = checks.indexOf(closurePrimitives);
+
+    if (polymerIndex != -1 && closureIndex != -1) {
+      Preconditions.checkState(polymerIndex > closureIndex,
+          "The Polymer pass must run after goog.provide processing.");
     }
   }
 

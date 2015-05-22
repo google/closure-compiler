@@ -24,7 +24,6 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -494,10 +493,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       block.addChildToBack(var);
     }
 
-    appendPropertiesToBlock(cls, block);
+    appendPropertiesToBlock(cls, block, cls.target.getQualifiedName() + ".prototype.");
     appendBehaviorFunctionsToBlock(cls, block);
     List<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     addInterfaceExterns(cls, readOnlyProps);
+    removePropertyDocs(cls);
 
     block.useSourceInfoFromForTree(exprRoot);
     Node stmts = block.removeChildren();
@@ -575,13 +575,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   /**
    * Appends all properties in the ClassDefinition to the prototype of the custom element.
    */
-  private void appendPropertiesToBlock(final ClassDefinition cls, Node block) {
-    String qualifiedPath = cls.target.getQualifiedName() + ".prototype.";
+  private void appendPropertiesToBlock(final ClassDefinition cls, Node block, String basePath) {
     for (MemberDefinition prop : cls.props) {
       Node propertyNode = IR.exprResult(
-          NodeUtil.newQName(compiler, qualifiedPath + prop.name.getString()));
+          NodeUtil.newQName(compiler, basePath + prop.name.getString()));
       JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(prop.info);
-      prop.name.removeProp(Node.JSDOC_INFO_PROP);
 
       // Note that if the JSDoc already has a type, the type inferred from the Polymer syntax is
       // ignored.
@@ -590,14 +588,18 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         return;
       }
       info.recordType(propType);
-
-      // TODO(jlklein): Remove this when the renamer is fully feature complete, catching all
-      // rename issues listed in http://goo.gl/L4mdQA.
-      Preconditions.checkState(info.recordExport());
-      info.recordVisibility(Visibility.PUBLIC);
-
       propertyNode.getFirstChild().setJSDocInfo(info.build());
+
       block.addChildToBack(propertyNode);
+    }
+  }
+
+  /**
+   * Remove all JSDocs from properties of a class definition
+   */
+  private void removePropertyDocs(final ClassDefinition cls) {
+    for (MemberDefinition prop : cls.props) {
+      prop.name.removeProp(Node.JSDOC_INFO_PROP);
     }
   }
 
@@ -763,6 +765,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     varNode.setJSDocInfo(info.build());
     block.addChildToBack(varNode);
 
+    appendPropertiesToBlock(cls, block, interfaceName + ".prototype.");
     for (MemberDefinition prop : readOnlyProps) {
       // Add all _set* functions to avoid renaming.
       String propName = prop.name.getString();
@@ -808,10 +811,6 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         new Node(Token.BANG, IR.string(interfaceName)), VIRTUAL_FILE);
     constructorDoc.recordImplementedInterface(interfaceType);
 
-    // TODO(jlklein): Remove this when the renamer is fully feature complete, catching all
-    // rename issues listed in http://goo.gl/L4mdQA.
-    Preconditions.checkState(constructorDoc.recordExport());
-    constructorDoc.recordVisibility(Visibility.PUBLIC);
     return constructorDoc;
   }
 
