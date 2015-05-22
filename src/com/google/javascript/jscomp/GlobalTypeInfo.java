@@ -1204,6 +1204,9 @@ class GlobalTypeInfo implements CompilerPass {
         // We don't look at assignments to prototypes of non-constructors.
         return;
       }
+      if (initializer != null && initializer.isFunction()) {
+        parent.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+      }
       // We only add properties to the prototype of a class if the
       // property creations are in the same scope as the constructor
       // TODO(blickly): Rethink this

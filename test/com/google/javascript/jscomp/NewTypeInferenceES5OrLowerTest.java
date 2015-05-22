@@ -5655,7 +5655,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x) {}",
         "f(/** @type {!Bar<!Bar<number>>} */ (new Bar));"),
-        NewTypeInference.FAILED_TO_UNIFY);
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {T|null} x",
+        " */",
+        "function f(x) {}",
+        "f(new Foo);"));
   }
 
   public void testBoxedUnification() {
@@ -6961,17 +6971,37 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var /** Array<Foo> */ a = [new Bar];"));
 
     typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @param {!Array<number|string>} x",
+        " * @return {!Array<number>}",
+        " */",
+        "function f(x) {",
+        "  return /** @type {!Array<number>} */ (x);",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
         "/** @constructor */ function Foo() {}",
         "/** @constructor @extends {Foo} */ function Bar() {}",
         "var /** Array<Bar> */ a = [new Foo];"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    // TODO(blickly): Make other generics invariant to match old type inference
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {!Array<null|T>} y",
+        " */",
+        "function f(x, y) {}",
+        "f(new Foo, [new Foo]);"));
+
     typeCheck(Joiner.on('\n').join(
         "/** @constructor @param {T} x @template T */ function Gen(x){}",
         "/** @constructor */ function Foo() {}",
         "/** @constructor @extends {Foo} */ function Bar() {}",
-        "var /** Gen<Foo> */ a = new Gen(new Bar);"));
+        "var /** Gen<Foo> */ a = new Gen(new Bar);"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor @param {T} x @template T */ function Gen(x){}",
