@@ -126,6 +126,18 @@ public final class MissingRequireTest extends CompilerTestCase {
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
+  public void testInterfaceExtends() {
+    String js = Joiner.on('\n').join(
+      "/**",
+      " * @interface",
+      " * @extends {some.other.Interface}",
+      " */",
+      "function AnInterface() {}");
+
+    String warning = "'some.other.Interface' used but not goog.require'd";
+    test(js, js, null, MISSING_REQUIRE_WARNING, warning);
+  }
+
   public void testPassWithImplements() {
     String js = "goog.require('example.Foo');"
       + "/** @constructor @implements {example.Foo} */"

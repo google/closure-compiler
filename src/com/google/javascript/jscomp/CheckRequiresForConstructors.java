@@ -342,6 +342,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
         if (info.getBaseType() != null) {
           maybeAddUsage(t, n, info.getBaseType());
         }
+        for (JSTypeExpression extendedInterface : info.getExtendedInterfaces()) {
+          maybeAddUsage(t, n, extendedInterface);
+        }
       }
 
       for (Node typeNode : info.getTypeNodes()) {
