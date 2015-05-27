@@ -82,7 +82,17 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           " * @param {function(): RESULT} onFulfilled",
           " * @return {RESULT}",
           " */",
-          "Promise.prototype.then = function(onFulfilled) {};");
+          "Promise.prototype.then = function(onFulfilled) {};",
+          "/**",
+          " * @constructor",
+          " * @param {*=} opt_message",
+          " * @param {*=} opt_file",
+          " * @param {*=} opt_line",
+          " * @return {!Error}",
+          " */",
+          "function Error(opt_message, opt_file, opt_line) {}",
+          "/** @type {string} */",
+          "Error.prototype.stack;");
 
   @Override
   protected void setUp() {

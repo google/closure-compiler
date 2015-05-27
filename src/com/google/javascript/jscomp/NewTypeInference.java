@@ -768,7 +768,6 @@ final class NewTypeInference implements CompilerPass {
       switch (n.getType()) {
         case Token.BLOCK:
         case Token.BREAK:
-        case Token.CATCH:
         case Token.CONTINUE:
         case Token.DEFAULT_CASE:
         case Token.DEBUGGER:
@@ -777,6 +776,10 @@ final class NewTypeInference implements CompilerPass {
         case Token.SCRIPT:
         case Token.TRY:
           outEnv = inEnv;
+          break;
+        case Token.CATCH:
+          String catchVarname = n.getFirstChild().getString();
+          outEnv = envPutType(inEnv, catchVarname, JSType.UNKNOWN);
           break;
         case Token.EXPR_RESULT:
           println("\tsemi ", Token.name(n.getFirstChild().getType()));
@@ -1290,15 +1293,12 @@ final class NewTypeInference implements CompilerPass {
     if (varName.equals("undefined")) {
       return new EnvTypePair(inEnv, JSType.UNDEFINED);
     }
-    if (!currentScope.isDefinedLocally(varName, false)
-        && !varName.equals(currentScope.getName())
-        && !currentScope.isOuterVar(varName)) {
+    JSType inferredType = envGetType(inEnv, varName);
+    if (inferredType == null) {
       println("Found global variable ", varName);
       // For now, we don't warn for global variables
       return new EnvTypePair(inEnv, JSType.UNKNOWN);
-
     }
-    JSType inferredType = envGetType(inEnv, varName);
     println(varName, "'s inferredType: ", inferredType,
         " requiredType:  ", requiredType,
         " specializedType:  ", specializedType);
@@ -2876,7 +2876,7 @@ final class NewTypeInference implements CompilerPass {
     JSType inferredType = envGetType(outEnv, varName);
     println(varName, "'s inferredType: ", inferredType,
         " requiredType:  ", requiredType);
-    if (inferredType == null) { // Needed for the free vars in the tests
+    if (inferredType == null) {
       return new EnvTypePair(outEnv, JSType.UNKNOWN);
     }
     JSType preciseType = inferredType.specialize(requiredType);

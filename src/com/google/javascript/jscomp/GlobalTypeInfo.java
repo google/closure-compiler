@@ -921,17 +921,17 @@ class GlobalTypeInfo implements CompilerPass {
 
   private class ProcessScope extends AbstractShallowCallback {
     private final Scope currentScope;
-    /**
-     * Keep track of undeclared vars as they are crawled to warn about
-     * use before declaration and undeclared variables.
-     * We use a multimap so we can give all warnings rather than just the first.
-     */
-    private final Multimap<String, Node> undeclaredVars;
+    // /**
+    //  * Keep track of undeclared vars as they are crawled to warn about
+    //  * use before declaration and undeclared variables.
+    //  * We use a multimap so we can give all warnings rather than just the first.
+    //  */
+    // private final Multimap<String, Node> undeclaredVars;
     private Set<Node> lendsObjlits = new LinkedHashSet<>();
 
     ProcessScope(Scope currentScope) {
       this.currentScope = currentScope;
-      this.undeclaredVars = LinkedHashMultimap.create();
+      // this.undeclaredVars = LinkedHashMultimap.create();
     }
 
     void finishProcessingScope() {
@@ -1054,15 +1054,15 @@ class GlobalTypeInfo implements CompilerPass {
             } else if (currentScope.isDefinedLocally(name, false)) {
               // warnings.add(JSError.make(
               //     n, VariableReferenceCheck.REDECLARED_VARIABLE, name));
+              break;
             } else {
               // for (Node useBeforeDeclNode : undeclaredVars.get(name)) {
               //   warnings.add(JSError.make(useBeforeDeclNode,
               //       VariableReferenceCheck.EARLY_REFERENCE, name));
               // }
-              undeclaredVars.removeAll(name);
+              // undeclaredVars.removeAll(name);
               if (parent.isCatch()) {
-                currentScope.addLocal(
-                    name, JSType.UNKNOWN, false, n.isFromExterns());
+                currentScope.addLocal(name, JSType.UNKNOWN, false, false);
               } else {
                 boolean isConst = isConst(parent);
                 JSType declType = getVarTypeFromAnnotation(n);
@@ -1078,7 +1078,7 @@ class GlobalTypeInfo implements CompilerPass {
               currentScope.getTypedef(name) != null ||
               !name.equals(currentScope.getName()) &&
               !currentScope.isDefinedLocally(name, false)) {
-            undeclaredVars.put(name, n);
+            // undeclaredVars.put(name, n);
           }
           break;
         }
@@ -1179,10 +1179,10 @@ class GlobalTypeInfo implements CompilerPass {
     /** Returns the newly created scope for this function */
     private Scope visitFunctionLate(Node fn, RawNominalType ownerType) {
       Preconditions.checkArgument(fn.isFunction());
-      String fnName = NodeUtil.getFunctionName(fn);
-      if (fnName != null && !fnName.contains(".")) {
-        undeclaredVars.removeAll(fnName);
-      }
+      // String fnName = NodeUtil.getFunctionName(fn);
+      // if (fnName != null && !fnName.contains(".")) {
+      //   undeclaredVars.removeAll(fnName);
+      // }
       String internalName = getFunInternalName(fn);
       Scope fnScope = currentScope.getScope(internalName);
       updateFnScope(fnScope, ownerType);

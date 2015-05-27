@@ -5202,12 +5202,54 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(
         "try { throw 123; } catch (e) {} finally { 1 - 'asdf'; }",
         NewTypeInference.INVALID_OPERAND_TYPE);
-    // The next tests should fail when we model local scopes properly.
-    typeCheck("try {} catch (e) {} e;");
+
+    // Outside of the catch block, e is unknown, like any other global variable.
+    typeCheck(Joiner.on('\n').join(
+        "try {",
+        "  throw new Error();",
+        "} catch (e) {}",
+        "var /** number */ n = e;"));
+
+    // // For this to pass, we must model local scopes properly.
+    // typeCheck(Joiner.on('\n').join(
+    //     "var /** string */ e = 'str';",
+    //     "try {",
+    //     "  throw new Error();",
+    //     "} catch (e) {}",
+    //     "e - 3;"),
+    //     NewTypeInference.INVALID_OPERAND_TYPE);
 
     // typeCheck(
     //     "var /** string */ e = 'asdf'; try {} catch (e) {} e - 5;",
     //     VariableReferenceCheck.REDECLARED_VARIABLE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  try {",
+        "  } catch (e) {",
+        "    return e.stack;",
+        "  }",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  try {",
+        "    throw new Error();",
+        "  } catch (e) {",
+        "    var /** Error */ x = e;",
+        "  }",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  try {",
+        "    throw new Error();",
+        "  } catch (e) {",
+        "    var /** number */ x = e;",
+        "    var /** string */ y = e;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testIn() {
