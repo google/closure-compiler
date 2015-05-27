@@ -269,12 +269,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkSideEffects);
 
-    if (options.checkSuspiciousCode ||
-        options.enables(DiagnosticGroups.GLOBAL_THIS) ||
-        options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
-      checks.add(suspiciousCode);
-    }
-
     if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
         || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
       checks.add(checkRequires);
@@ -299,9 +293,16 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closurePrimitives);
     }
 
-    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite.
+    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite and *before*
+    // the suspicious code checks.
     if (options.polymerPass) {
       checks.add(polymerPass);
+    }
+
+    if (options.checkSuspiciousCode
+        || options.enables(DiagnosticGroups.GLOBAL_THIS)
+        || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
+      checks.add(suspiciousCode);
     }
 
     if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
@@ -914,10 +915,15 @@ public final class DefaultPassConfig extends PassConfig {
   private void assertPolymerPassIndexValid(List<PassFactory> checks) {
     int polymerIndex = checks.indexOf(polymerPass);
     int closureIndex = checks.indexOf(closurePrimitives);
+    int suspiciousCodeIndex = checks.indexOf(suspiciousCode);
 
     if (polymerIndex != -1 && closureIndex != -1) {
       Preconditions.checkState(polymerIndex > closureIndex,
           "The Polymer pass must run after goog.provide processing.");
+    }
+    if (polymerIndex != -1 && suspiciousCodeIndex != -1) {
+      Preconditions.checkState(polymerIndex < suspiciousCodeIndex,
+          "The Polymer pass must run befor suspiciousCode processing.");
     }
   }
 
