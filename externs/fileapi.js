@@ -262,10 +262,14 @@ Entry.prototype.getParent = function(successCallback, errorCallback) {};
 
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-file
+ * @param {!Array<string|!Blob|!ArrayBuffer>=} opt_contents
+ * @param {string=} opt_name
+ * @param {{type: (string|undefined), lastModified: (number|undefined)}=}
+ *     opt_properties
  * @constructor
  * @extends {Blob}
  */
-function File() {}
+function File(opt_contents, opt_name, opt_properties) {}
 
 /**
  * Chrome uses this instead of name.
