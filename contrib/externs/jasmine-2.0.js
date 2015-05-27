@@ -154,6 +154,14 @@ jasmine.Matchers.prototype.toThrow = function(opt_expected) {};
 
 
 /**
+ * @param {(!Function|string|!RegExp)} errorTypeOrMessageOrPattern
+ * @param {(string|RegExp)=} opt_messageOrPattern
+ */
+jasmine.Matchers.prototype.toThrowError = function(
+    errorTypeOrMessageOrPattern, opt_messageOrPattern) {};
+
+
+/**
  * @param {!Object} clazz
  * @return {!jasmine.Matchers}
  */
