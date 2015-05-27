@@ -1943,6 +1943,9 @@ angular.$parse_.assign = function(scope, newValue) {};
  */
 angular.$provide;
 
+/** @typedef {{$get: (!Array.<string|!Function>|!Function)}} */
+angular.$provide.Provider;
+
 /**
  * @param {string} name
  * @param {*} object
@@ -1965,7 +1968,8 @@ angular.$provide.factory = function(name, providerFunction) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} providerType
+ * @param {Function|Array.<string|Function>|angular.$provide.Provider}
+ *     providerType
  * @return {Object}
  */
 angular.$provide.provider = function(name, providerType) {};
