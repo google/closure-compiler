@@ -461,7 +461,7 @@ public final class CodePrinter {
       int newlines = CharMatcher.is('\n').countIn(str);
       if (newlines > 0) {
         lineIndex += newlines;
-        lineLength = str.length() - str.lastIndexOf("\n");
+        lineLength = str.length() - str.lastIndexOf('\n');
       }
     }
 
