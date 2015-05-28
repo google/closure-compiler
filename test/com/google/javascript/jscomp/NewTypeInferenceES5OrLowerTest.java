@@ -7797,6 +7797,55 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }
 
+  public void testSpecializingTypeVarDoesntGoToBottom() {
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        "  * @template T",
+        "  * @param {T} x",
+        "  */",
+        "function f(x) {",
+        "   if (typeof x === 'string') {",
+        "     return x.length;",
+        "  }",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        "  * @template T",
+        "  * @param {T} x",
+        "  */",
+        "function f(x) {",
+        "   if (typeof x === 'string') {",
+        "     return x - 5;",
+        "  }",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        "  * @template T",
+        "  * @param {T} x",
+        "  */",
+        "function f(x) {",
+        "   if (typeof x === 'string') {",
+        "     return x - 5;",
+        "  }",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        "  * @template T",
+        "  * @param {T} x",
+        "  */",
+        "function f(x) {",
+        "   if (typeof x === 'number') {",
+        "     (function(/** string */ y){})(x);",
+        "  }",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
   // TODO(blickly): This warning is not very good.
   public void testBottomPropAccessDoesntCrash() {
     typeCheck(Joiner.on('\n').join(

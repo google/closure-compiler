@@ -697,6 +697,10 @@ public abstract class JSType implements TypeI {
     String newTypevar;
     if (Objects.equals(getTypeVar(), other.getTypeVar())) {
       newTypevar = getTypeVar();
+    } else if (getTypeVar() != null && other.getTypeVar() == null) {
+      // Consider, e.g., function f(/** T|number */ x) { if (typeof x === 'string') { ... } }
+      // We want to specialize the T to string, rather than going to bottom.
+      return other;
     } else {
       newTypevar = null;
       newMask &= ~TYPEVAR_MASK;
