@@ -966,7 +966,8 @@ final class NewTypeInference implements CompilerPass {
                 declRetType.toString()));
       }
     } else if (declType.getNominalType() == null) {
-      builder.addRetType(actualRetType);
+      // If someone uses the result of a function that doesn't return, they get a warning.
+      builder.addRetType(actualRetType.isBottom() ? JSType.TOP : actualRetType);
     } else {
       // Don't infer a return type for constructors
       builder.addRetType(JSType.UNKNOWN);

@@ -1918,6 +1918,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testDontInferBottomReturn() {
+    typeCheck(
+        // Technically, BOTTOM is correct here, but since using dead code is error prone,
+        // we'd rather infer f to return TOP (and get a warning).
+        "function f() { throw ''; } f() - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
   public void testAssignToInvalidObject() {
     typeCheck(
         "n.foo = 5; var n;",
