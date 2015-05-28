@@ -2544,8 +2544,16 @@ final class NewTypeInference implements CompilerPass {
         mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
     }
+    FunctionType ft = recvType.getFunTypeIfSingletonObj();
+    if (ft != null && pname.equals("call")) {
+      return new EnvTypePair(pair.env,
+          commonTypes.fromFunctionType(ft.transformByCallProperty()));
+    }
+    if (ft != null && pname.equals("apply")) {
+      return new EnvTypePair(pair.env,
+          commonTypes.fromFunctionType(ft.transformByApplyProperty(commonTypes)));
+    }
     if (convention.isSuperClassReference(pname)) {
-      FunctionType ft = recvType.getFunTypeIfSingletonObj();
       if (ft != null && ft.isConstructor()) {
         JSType result = ft.getSuperPrototype();
         pair.type = result != null ? result : JSType.UNDEFINED;

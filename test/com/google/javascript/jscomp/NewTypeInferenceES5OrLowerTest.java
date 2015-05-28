@@ -11860,4 +11860,112 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testFunctionCallProperty() {
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "f.call(null, 'asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "f.call(null);"),
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "f.call(null, 1, 2);"),
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @param {number} x */",
+        "Foo.prototype.f = function(x) {};",
+        "Foo.prototype.f.call({ a: 123}, 1);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // We don't infer anything about a loose function from a .call invocation.
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  x(123) - 5;",
+        "  x.call(null, 'asdf');",
+        "}",
+        "f(function(/** string */ s) { return s; });"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return x; }",
+        "var /** number */ n = f.call(null, 'asdf');"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "new Foo.call(null);"),
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+  }
+
+  public void testFunctionApplyProperty() {
+    // We only check the receiver argument of a .apply invocation
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "f.apply(null, ['asdf']);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "f.apply(null, 'asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // We don't check arity in the array argument
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "f.apply(null, []);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "f.apply(null, [], 1, 2);"),
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @param {number} x */",
+        "Foo.prototype.f = function(x) {};",
+        "Foo.prototype.f.apply({ a: 123}, [1]);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // We don't infer anything about a loose function from a .apply invocation.
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  x(123) - 5;",
+        "  x.apply(null, ['asdf']);",
+        "}",
+        "f(function(/** string */ s) { return s; });"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return x; }",
+        "var /** number */ n = f.apply(null, ['asdf']);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "new Foo.apply(null);"),
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {}",
+        "function g() { f.apply(null, arguments); }"));
+  }
 }

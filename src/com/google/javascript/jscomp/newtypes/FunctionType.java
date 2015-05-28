@@ -303,6 +303,52 @@ public final class FunctionType {
     return NominalType.getConstructorObject(this);
   }
 
+  public FunctionType transformByCallProperty() {
+    if (isTopFunction() || isQmarkFunction() || isLoose) {
+      return QMARK_FUNCTION;
+    }
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    builder.addReqFormal(receiverCallApply(receiverType));
+    for (JSType type : requiredFormals) {
+      builder.addReqFormal(type);
+    }
+    for (JSType type : optionalFormals) {
+      builder.addOptFormal(type);
+    }
+    builder.addRestFormals(restFormals);
+    builder.addRetType(returnType);
+    builder.addTypeParameters(typeParameters);
+    return builder.buildFunction();
+  }
+
+  // We only typecheck the receiver type for a .apply function. To typecheck all
+  // arguments we either need tuple types or special handling in NTI to gather
+  // the types inside the array.
+  public FunctionType transformByApplyProperty(JSTypes commonTypes) {
+    if (isTopFunction() || isQmarkFunction() || isLoose) {
+      return QMARK_FUNCTION;
+    }
+    if (isGeneric()) {
+      return instantiateGenericsWithUnknown(this).transformByApplyProperty(commonTypes);
+    }
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    builder.addReqFormal(receiverCallApply(receiverType));
+    builder.addOptFormal(JSType.join(
+        commonTypes.getArrayInstance(), commonTypes.getArgumentsArrayType()));
+    builder.addRetType(returnType);
+    return builder.buildFunction();
+  }
+
+  private static JSType receiverCallApply(NominalType receiverType) {
+    if (receiverType == null) {
+      return JSType.UNKNOWN;
+    }
+    if (receiverType.isGeneric()) {
+      return receiverType.instantiateGenerics(JSType.MAP_TO_UNKNOWN).getInstanceAsJSType();
+    }
+    return receiverType.getInstanceAsJSType();
+  }
+
   // Used to get a declared type for an unannotated function that appears in
   // argument position.
   // Should only be used during GlobalTypeInfo.
