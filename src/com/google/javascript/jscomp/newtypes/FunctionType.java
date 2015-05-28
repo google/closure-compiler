@@ -92,12 +92,17 @@ public final class FunctionType {
         "null required formals for function: %s", this);
     for (JSType formal : requiredFormals) {
       Preconditions.checkNotNull(formal);
+      // A loose function has bottom formals in the bwd direction of NTI.
+      // See NTI#analyzeLooseCallNodeBwd.
+      Preconditions.checkState(isLoose || !formal.isBottom());
     }
-    Preconditions.checkNotNull(requiredFormals,
+    Preconditions.checkNotNull(optionalFormals,
         "null optional formals for function: %s", this);
     for (JSType formal : optionalFormals) {
       Preconditions.checkNotNull(formal);
+      Preconditions.checkState(!formal.isBottom());
     }
+    Preconditions.checkState(restFormals == null || !restFormals.isBottom());
     Preconditions.checkNotNull(returnType);
   }
 
@@ -473,21 +478,28 @@ public final class FunctionType {
     int maxRequiredArity = Math.max(
         f1.requiredFormals.size(), f2.requiredFormals.size());
     for (int i = 0; i < maxRequiredArity; i++) {
-      JSType reqFormal = nullAcceptingMeet(
-          f1.getFormalType(i), f2.getFormalType(i));
+      JSType reqFormal = nullAcceptingMeet(f1.getFormalType(i), f2.getFormalType(i));
+      if (reqFormal.isBottom()) {
+        return BOTTOM_FUNCTION;
+      }
       builder.addReqFormal(reqFormal);
     }
     int maxTotalArity = Math.max(
         f1.requiredFormals.size() + f1.optionalFormals.size(),
         f2.requiredFormals.size() + f2.optionalFormals.size());
     for (int i = maxRequiredArity; i < maxTotalArity; i++) {
-      JSType optFormal = nullAcceptingMeet(
-          f1.getFormalType(i), f2.getFormalType(i));
+      JSType optFormal = nullAcceptingMeet(f1.getFormalType(i), f2.getFormalType(i));
+      if (optFormal.isBottom()) {
+        return BOTTOM_FUNCTION;
+      }
       builder.addOptFormal(optFormal);
     }
     if (f1.restFormals != null && f2.restFormals != null) {
-      builder.addRestFormals(
-          nullAcceptingMeet(f1.restFormals, f2.restFormals));
+      JSType newRestFormals = nullAcceptingMeet(f1.restFormals, f2.restFormals);
+      if (newRestFormals.isBottom()) {
+        return BOTTOM_FUNCTION;
+      }
+      builder.addRestFormals(newRestFormals);
     }
     builder.addRetType(JSType.join(f1.returnType, f2.returnType));
     builder.addNominalType(

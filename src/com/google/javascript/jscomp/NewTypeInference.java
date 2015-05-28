@@ -121,13 +121,6 @@ final class NewTypeInference implements CompilerPass {
           "JSC_PROPERTY_ACCESS_ON_NONOBJECT",
           "Cannot access property {0} of non-object type {1}.");
 
-  static final DiagnosticType CALL_FUNCTION_WITH_BOTTOM_FORMAL =
-      DiagnosticType.warning(
-          "JSC_CALL_FUNCTION_WITH_BOTTOM_FORMAL",
-          "The #{0} formal parameter of this function has an invalid type, " +
-          "which prevents the function from being called.\n" +
-          "Please change the type.");
-
   static final DiagnosticType NOT_UNIQUE_INSTANTIATION =
       DiagnosticType.warning(
           "JSC_NOT_UNIQUE_INSTANTIATION",
@@ -202,7 +195,6 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
-      CALL_FUNCTION_WITH_BOTTOM_FORMAL,
       CANNOT_BIND_CTOR,
       CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
@@ -1635,7 +1627,7 @@ final class NewTypeInference implements CompilerPass {
     calleePair = mayWarnAboutNullableReferenceAndTighten(
         callee, calleePair.type, inEnv, commonTypes.topFunction());
     JSType calleeType = calleePair.type;
-    if (!calleeType.isSubtypeOf(commonTypes.topFunction())) {
+    if (calleeType.isBottom() || !calleeType.isSubtypeOf(commonTypes.topFunction())) {
       warnings.add(JSError.make(
           expr, TypeCheck.NOT_CALLABLE, calleeType.toString()));
     }
@@ -1833,11 +1825,7 @@ final class NewTypeInference implements CompilerPass {
     int i = 0;
     while (arg != null) {
       JSType formalType = funType.getFormalType(i);
-      if (formalType.isBottom()) {
-        warnings.add(JSError.make(call, CALL_FUNCTION_WITH_BOTTOM_FORMAL,
-                Integer.toString(i)));
-        formalType = JSType.UNKNOWN;
-      }
+      Preconditions.checkState(!formalType.isBottom());
       EnvTypePair pair = analyzeExprFwd(arg, env, formalType);
       JSType argTypeForDeferredCheck = pair.type;
       // Allow passing undefined for an optional argument.

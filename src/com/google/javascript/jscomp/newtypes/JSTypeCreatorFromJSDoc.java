@@ -93,6 +93,11 @@ public final class JSTypeCreatorFromJSDoc {
         "{0} cannot implement this type; "
         + "an interface can only extend, but not implement interfaces");
 
+  public static final DiagnosticType UNION_IS_UNINHABITABLE =
+    DiagnosticType.warning(
+        "JSC_UNION_IS_UNINHABITABLE",
+        "Union of {0} with {1} would create an impossible type.");
+
   private final CodingConvention convention;
 
   // Used to communicate state between methods when resolving enum types
@@ -213,7 +218,13 @@ public final class JSTypeCreatorFromJSDoc {
             warn("This union type is equivalent to '?'.", n);
             return JSType.UNKNOWN;
           }
-          union = JSType.join(union, nextType);
+          JSType nextUnion = JSType.join(union, nextType);
+          if (nextUnion.isBottom()) {
+            warnings.add(JSError.make(n, UNION_IS_UNINHABITABLE,
+                    nextType.toString(), union.toString()));
+            return JSType.UNKNOWN;
+          }
+          union = nextUnion;
         }
         return union;
       }

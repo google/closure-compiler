@@ -3374,7 +3374,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  y();",
         "  y(123);",
         "}"),
-        NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL);
+        TypeCheck.NOT_CALLABLE,
+        TypeCheck.NOT_CALLABLE);
 
     typeCheck(Joiner.on('\n').join(
         "function f(",
@@ -3953,16 +3954,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x, y) {",
         "  x(y);",
         "}"),
-        NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL);
+        JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE);
 
-    // typeCheck(Joiner.on('\n').join(
-    //     // Right now we treat the parameter as undeclared. This could change.
-    //     "/** @type {(function(string)|function(number))} */",
-    //     "function f(x) {",
-    //     "  x = 'str'; x = 7; x = null; x = true;",
-    //     "  x - 5;",
-    //     "}"),
-    //     NewTypeInference.INVALID_OPERAND_TYPE);
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template S, T",
+        " * @param {function(S):void | function(T):void} fun",
+        " */",
+        "function f(fun) {}"),
+        JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE);
   }
 
   public void testPrototypeOnNonCtorFunction() {
@@ -10086,7 +10086,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var E = { A: new High };",
         "/** @param {function(E)|function(!Low)} x */",
         "function f(x) { x(123); }"),
-        NewTypeInference.CALL_FUNCTION_WITH_BOTTOM_FORMAL);
+        JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE);
   }
 
   public void testEnumAliasing() {

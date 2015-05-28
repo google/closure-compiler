@@ -78,10 +78,8 @@ public final class FunctionTypeBuilder {
     }
     if (t == null) {
       optionalFormals.add(null);
-    } else if (t.isBottom()) {
-      // We keep bottom to warn about CALL_FUNCTION_WITH_BOTTOM_FORMAL.
-      optionalFormals.add(JSType.BOTTOM);
     } else {
+      Preconditions.checkArgument(!t.isBottom());
       optionalFormals.add(JSType.join(t, JSType.UNDEFINED));
     }
     return this;
