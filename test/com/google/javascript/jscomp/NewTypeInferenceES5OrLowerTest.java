@@ -8654,6 +8654,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @constructor @struct */",
         "function Foo() {}",
+        "Foo.prototype.method = function() { this.prop = 1; };"),
+        TypeCheck.ILLEGAL_PROPERTY_CREATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor @struct */",
+        "function Foo() {}",
         "Foo.prototype.method = function() { this.prop = 1; };",
         "(new Foo).prop = 2;"),
         TypeCheck.ILLEGAL_PROPERTY_CREATION,
