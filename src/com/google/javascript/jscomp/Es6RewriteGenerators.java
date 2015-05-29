@@ -979,7 +979,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
           break;
         case Token.CASE:
           if (controlCanExit(n.getFirstChild())) {
-            compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+            compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT_YET,
               "Case statements that contain yields"));
             return false;
           }
@@ -997,7 +997,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
         decomposer.exposeExpression(n);
         compiler.reportCodeChange();
       } else {
-        compiler.report(JSError.make(currentStatement, Es6ToEs3Converter.CANNOT_CONVERT,
+        compiler.report(JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT,
           "Undecomposable expression"));
       }
     }
