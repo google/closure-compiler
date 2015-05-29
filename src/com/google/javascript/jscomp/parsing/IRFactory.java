@@ -2095,7 +2095,7 @@ class IRFactory {
     }
 
     Node processYield(YieldExpressionTree tree) {
-      Node yield = new Node(Token.YIELD);
+      Node yield = newNode(Token.YIELD);
       if (tree.expression != null) {
         yield.addChildToBack(transform(tree.expression));
       }
