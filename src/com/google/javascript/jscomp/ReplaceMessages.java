@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -294,7 +295,8 @@ final class ReplaceMessages extends JsMessageVisitor {
     Node objLitNode = stringExprNode.getNext();
 
     // Build the replacement tree.
-    return constructStringExprNode(message.parts().iterator(), objLitNode);
+    return constructStringExprNode(
+        message.parts().iterator(), objLitNode, callNode);
   }
 
   /**
@@ -310,8 +312,9 @@ final class ReplaceMessages extends JsMessageVisitor {
    * @throws MalformedException if {@code parts} contains a placeholder
    *   reference that does not correspond to a valid placeholder name
    */
-  private static Node constructStringExprNode(Iterator<CharSequence> parts,
-                                              Node objLitNode) throws MalformedException {
+  private static Node constructStringExprNode(
+      Iterator<CharSequence> parts, Node objLitNode, Node refNode) throws MalformedException {
+    Preconditions.checkNotNull(refNode);
 
     CharSequence part = parts.next();
     Node partNode = null;
@@ -322,7 +325,7 @@ final class ReplaceMessages extends JsMessageVisitor {
       // The translated message is null
       if (objLitNode == null) {
         throw new MalformedException("Empty placeholder value map " +
-            "for a translated message with placeholders.", objLitNode);
+            "for a translated message with placeholders.", refNode);
       }
 
       for (Node key = objLitNode.getFirstChild(); key != null;
@@ -345,7 +348,7 @@ final class ReplaceMessages extends JsMessageVisitor {
 
     if (parts.hasNext()) {
       return IR.add(partNode,
-          constructStringExprNode(parts, objLitNode));
+          constructStringExprNode(parts, objLitNode, refNode));
     } else {
       return partNode;
     }
