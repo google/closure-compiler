@@ -758,7 +758,8 @@ angular.JQLite.wrap = function(element) {};
  *       function(string, (Function|Array.<string|Function>)):!angular.Module,
  *   name: string,
  *   provider: function(string,
- *       (Object|Function|Array.<string|Function>)):!angular.Module,
+ *       (angular.$provide.Provider|Function|Array.<string|Function>)):
+ *       !angular.Module,
  *   requires: !Array.<string>,
  *   run: function((Function|Array.<string|Function>)):!angular.Module,
  *   service:
@@ -817,7 +818,8 @@ angular.Module.filter = function(name, filterFactory) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} providerType
+ * @param {angular.$provide.Provider|Function|Array.<string|Function>}
+ *     providerType
  * @return {!angular.Module}
  */
 angular.Module.provider = function(name, providerType) {};
@@ -1936,7 +1938,8 @@ angular.$parse_.assign = function(scope, newValue) {};
  *   constant: function(string, *): Object,
  *   decorator: function(string, (!Function|Array.<string|!Function>)),
  *   factory: function(string, (!Function|Array.<string|!Function>)): Object,
- *   provider: function(string, (!Function|Array.<string|!Function>)): Object,
+ *   provider: function(string, (
+ *       !Function|Array.<string|!Function>|angular.$provide.Provider)): Object,
  *   service: function(string, (!Function|Array.<string|!Function>)): Object,
  *   value: function(string, *): Object
  *   }}
