@@ -233,6 +233,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
   }
 
   public void testProtobuffParseFail() {
+    super.allowSourcelessWarnings();
     this.instrumentationPb = "not an ascii pb\n";
     testError("function a(){b}", RhinoErrorReporter.PARSE_ERROR);
   }

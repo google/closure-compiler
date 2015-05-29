@@ -820,10 +820,12 @@ public abstract class CompilerTestCase extends TestCase  {
    *
    * @param externs Externs input
    * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
+   * @param type Expected warning or error, or null if no warning is expected
    * @param description The description of the expected warning,
    *      or null if no warning is expected or if the warning's description
    *      should not be examined
+   * @param error Whether the "type" parameter represents an error.
+   *   (false indicated the type is a warning). Ignored if type is null.
    */
   public void testSame(String externs, String js, DiagnosticType type,
                        String description, boolean error) {
@@ -1101,16 +1103,7 @@ public abstract class CompilerTestCase extends TestCase  {
           JSError[] warnings = errorManagers[i].getWarnings();
           JSError actual = warnings[0];
           assertThat(actual.getType()).isEqualTo(warning);
-
-          // Make sure that source information is always provided.
-          if (!allowSourcelessWarnings) {
-            assertTrue("Missing source file name in warning",
-                actual.sourceName != null && !actual.sourceName.isEmpty());
-            assertTrue("Missing line number in warning",
-                -1 != actual.lineNumber);
-            assertTrue("Missing char number in warning",
-                -1 != actual.getCharno());
-          }
+          validateSourceLocation(actual);
 
           if (description != null) {
             assertThat(actual.description).isEqualTo(description);
@@ -1213,17 +1206,31 @@ public abstract class CompilerTestCase extends TestCase  {
       }
       assertEquals("There should be one error. " + errors,
           1, compiler.getErrorCount());
-      assertEquals(errors, error, compiler.getErrors()[0].getType());
+      JSError actualError = compiler.getErrors()[0];
+      assertEquals(errors, error, actualError.getType());
+      validateSourceLocation(actualError);
 
       if (warning != null) {
         String warnings = "";
-        for (JSError actualError : compiler.getWarnings()) {
-          warnings += actualError.description + "\n";
+        for (JSError actualWarning : compiler.getWarnings()) {
+          warnings += actualWarning.description + "\n";
         }
         assertEquals("There should be one warning. " + warnings,
             1, compiler.getWarningCount());
         assertEquals(warnings, warning, compiler.getWarnings()[0].getType());
       }
+    }
+  }
+
+  private void validateSourceLocation(JSError jserror) {
+    // Make sure that source information is always provided.
+    if (!allowSourcelessWarnings) {
+      assertTrue("Missing source file name in warning: " + jserror,
+          jserror.sourceName != null && !jserror.sourceName.isEmpty());
+      assertTrue("Missing line number in warning: " + jserror,
+          -1 != jserror.lineNumber);
+      assertTrue("Missing char number in warning: " + jserror,
+          -1 != jserror.getCharno());
     }
   }
 
