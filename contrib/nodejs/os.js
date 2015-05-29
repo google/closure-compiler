@@ -26,7 +26,7 @@ var os = {};
  * @return {string}
  * @nosideeffects
  */
-os.tmdDir;
+os.tmpDir;
 
 /**
  * @return {string}
