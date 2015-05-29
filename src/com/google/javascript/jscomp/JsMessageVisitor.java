@@ -746,7 +746,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       if (!phNames.contains(phName)) {
         throw new MalformedException(
             "Unrecognized message placeholder referenced: " + phName,
-            objLitNode);
+            node);
       }
     }
 
@@ -756,7 +756,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       if (!usedPlaceholders.contains(phName)) {
         throw new MalformedException(
             "Unused message placeholder: " + phName,
-            objLitNode);
+            node);
       }
     }
   }
