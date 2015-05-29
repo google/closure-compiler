@@ -1526,7 +1526,7 @@ final class NewTypeInference implements CompilerPass {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
     JSType lhsReqType =
-        specializeWithCorrection(requiredType, JSType.NUM_OR_STR);
+        specializeKeep2ndWhenBottom(requiredType, JSType.NUM_OR_STR);
     LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, lhsReqType);
     JSType lhsType = lvalue.type;
     if (!lhsType.isSubtypeOf(JSType.NUM_OR_STR)) {
@@ -1863,8 +1863,7 @@ final class NewTypeInference implements CompilerPass {
       warnings.add(
           JSError.make(callNode, NewTypeInference.UNKNOWN_ASSERTION_TYPE));
     }
-    EnvTypePair pair =
-        analyzeExprFwd(assertedNode, env, JSType.UNKNOWN, assertedType);
+    EnvTypePair pair = analyzeExprFwd(assertedNode, env, JSType.UNKNOWN, assertedType);
     if (pair.type.isBottom()) {
       JSType t = analyzeExprFwd(assertedNode, env)
           .type.substituteGenericsWithUnknown();
@@ -2450,10 +2449,13 @@ final class NewTypeInference implements CompilerPass {
 
   private boolean mayWarnAboutNonObject(
       Node receiver, String pname, JSType recvType, JSType specializedType) {
+    // Can happen for IF tests that are never true
+    if (recvType.isBottom()) {
+      return true;
+    }
     // The warning depends on whether we are testing for the existence of a
     // property.
-    boolean isNotAnObject =
-        JSType.BOTTOM.equals(JSType.meet(recvType, JSType.TOP_OBJECT));
+    boolean isNotAnObject = JSType.meet(recvType, JSType.TOP_OBJECT).isBottom();
     boolean mayNotBeAnObject = !recvType.isSubtypeOf(JSType.TOP_OBJECT);
     if (isNotAnObject ||
         (!specializedType.isTruthy() && !specializedType.isFalsy() &&
@@ -2968,7 +2970,7 @@ final class NewTypeInference implements CompilerPass {
     // and again to take into account the side effects of the LHS itself.
     LValueResultBwd lvalue = analyzeLValueBwd(lhs, outEnv, requiredType, true);
     TypeEnv slicedEnv = lvalue.env;
-    JSType rhsReqType = specializeWithCorrection(lvalue.type, requiredType);
+    JSType rhsReqType = specializeKeep2ndWhenBottom(lvalue.type, requiredType);
     EnvTypePair pair = analyzeExprBwd(rhs, slicedEnv, rhsReqType);
     pair.env = analyzeLValueBwd(lhs, pair.env, requiredType, true).env;
     return pair;
@@ -2978,8 +2980,7 @@ final class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv outEnv, JSType requiredType) {
     Node lhs = expr.getFirstChild();
     Node rhs = expr.getLastChild();
-    JSType lhsReqType = specializeWithCorrection(
-        requiredType, JSType.NUM_OR_STR);
+    JSType lhsReqType = specializeKeep2ndWhenBottom(requiredType, JSType.NUM_OR_STR);
     LValueResultBwd lvalue = analyzeLValueBwd(lhs, outEnv, lhsReqType, false);
     // if lhs is a string, rhs can still be a number
     JSType rhsReqType = lvalue.type.isNumber() ? JSType.NUMBER : JSType.NUM_OR_STR;
@@ -3706,13 +3707,10 @@ final class NewTypeInference implements CompilerPass {
     return expr.isQualifiedName() ? expr.getQualifiedName() : "";
   }
 
-  private static JSType specializeWithCorrection(
-      JSType inferred, JSType required) {
-    JSType specializedType = inferred.specialize(required);
-    if (specializedType.isBottom()) {
-      return required;
-    }
-    return specializedType;
+  private static JSType specializeKeep2ndWhenBottom(
+      JSType toBeSpecialized, JSType fallback) {
+    JSType specializedType = toBeSpecialized.specialize(fallback);
+    return specializedType.isBottom() ? fallback : specializedType;
   }
 
   TypeEnv getEntryTypeEnv() {

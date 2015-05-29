@@ -11968,4 +11968,27 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x) {}",
         "function g() { f.apply(null, arguments); }"));
   }
+
+  public void testDontWarnOnPropAccessOfBottom() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Bar() {",
+        "  /** @type {?Object} */",
+        "  this.obj;",
+        "}",
+        "Bar.prototype.f = function() {",
+        "  this.obj = {};",
+        "  if (this.obj != null) {}",
+        "};"));
+
+    typeCheck(Joiner.on('\n').join(
+        "var x = {};",
+        "x.obj = {};",
+        "if (x.obj != null) {}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "var x = {};",
+        "x.obj = {};",
+        "if (x['obj'] != null) {}"));
+  }
 }
