@@ -13398,6 +13398,37 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         });
   }
 
+  public void testTemplateMap1() throws Exception {
+    // TODO(lgong): fix issue #980. Make the current type system detect mismatch between
+    // different template values involving interfaces.
+    testTypes(
+        "/** @interface \n" +
+        " *  @template KEY1, VALUE1 */\n" +
+        "var IObject = function() {};\n" +
+        "\n" +
+        "/** @interface \n" +
+        " *  @extends {IObject<number, VALUE2>}\n" +
+        " *  @template VALUE2 */\n" +
+        "var IArrayLike = function() {};\n" +
+        "\n" +
+        "/** @constructor \n" +
+        " *  @implements {IArrayLike<number>} */\n" +
+        "function Int8Array2() {}\n" +
+        "\n" +
+        "function f() {\n" +
+        "  /** @type {Int8Array2} */\n" +
+        "  var x = new Int8Array2();\n" +
+        "\n" +
+        "  /** @type {IArrayLike<string>} */\n" +
+        "  var y;\n" +
+        "  y = x;\n" +
+        "\n" +
+        "  /** @type {IObject<number, string>} */\n" +
+        "  var z;\n" +
+        "  z = x;\n" +
+        "}");
+  }
+
   private void testTypes(String js) throws Exception {
     testTypes(js, (String) null);
   }
