@@ -200,7 +200,7 @@ angular.mock = {};
 /**
  * @param {string} name
  * @param {Array.<string>=} opt_requires
- * @param {(Function|Array.<string|Function>)=} opt_configFn
+ * @param {angular.Injectable=} opt_configFn
  * @return {!angular.Module}
  */
 angular.module = function(name, opt_requires, opt_configFn) {};
@@ -363,7 +363,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *   bindToController: (boolean|undefined),
  *   compile: (function(
  *       !angular.JQLite=, !angular.Attributes=, Function=)|undefined),
- *   controller: (Function|Array.<string|Function>|string|undefined),
+ *   controller: (angular.Injectable|string|undefined),
  *   controllerAs: (string|undefined),
  *   link: (function(
  *       !angular.Scope=, !angular.JQLite=, !angular.Attributes=,
@@ -467,6 +467,11 @@ angular.Directive.terminal;
  * @type {(boolean|string|undefined)}
  */
 angular.Directive.transclude;
+
+/**
+ * @typedef {(Function|Array.<string|Function>)}
+ */
+angular.Injectable;
 
 /**
  * @typedef {{
@@ -742,28 +747,25 @@ angular.JQLite.wrap = function(element) {};
  * @typedef {{
  *   animation:
  *       function(string, function(...*):angular.Animation):!angular.Module,
- *   config: function((Function|Array.<string|Function>)):!angular.Module,
+ *   config: function(angular.Injectable):!angular.Module,
  *   constant: function(string, *):angular.Module,
  *   controller:
- *       (function(string, (Function|Array.<string|Function>)):!angular.Module|
- *       function(!Object.<(Function|Array.<string|Function>)>):
- *           !angular.Module),
+ *       (function(string, angular.Injectable):!angular.Module|
+ *       function(!Object.<angular.Injectable>):!angular.Module),
  *   directive:
- *       (function(string, (Function|Array.<string|Function>)):!angular.Module|
- *       function(!Object.<(Function|Array.<string|Function>)>):
- *           !angular.Module),
+ *       (function(string, angular.Injectable):!angular.Module|
+ *       function(!Object.<angular.Injectable>):!angular.Module),
  *   factory:
- *       function(string, (Function|Array.<string|Function>)):!angular.Module,
+ *       function(string, angular.Injectable):!angular.Module,
  *   filter:
- *       function(string, (Function|Array.<string|Function>)):!angular.Module,
+ *       function(string, angular.Injectable):!angular.Module,
  *   name: string,
  *   provider: function(string,
- *       (angular.$provide.Provider|Function|Array.<string|Function>)):
+ *       (angular.$provide.Provider|angular.Injectable)):
  *       !angular.Module,
  *   requires: !Array.<string>,
- *   run: function((Function|Array.<string|Function>)):!angular.Module,
- *   service:
- *       function(string, (Function|Array.<string|Function>)):!angular.Module,
+ *   run: function(angular.Injectable):!angular.Module,
+ *   service: function(string, angular.Injectable):!angular.Module,
  *   value: function(string, *):!angular.Module
  *   }}
  */
@@ -776,7 +778,7 @@ angular.Module;
 angular.Module.animation = function(name, animationFactory) {};
 
 /**
- * @param {Function|Array.<string|Function>} configFn
+ * @param {angular.Injectable} configFn
  * @return {!angular.Module}
  */
 angular.Module.config = function(configFn) {};
@@ -790,49 +792,48 @@ angular.Module.constant = function(name, object) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} constructor
+ * @param {angular.Injectable} constructor
  * @return {!angular.Module}
  */
 angular.Module.controller = function(name, constructor) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} directiveFactory
+ * @param {angular.Injectable} directiveFactory
  * @return {!angular.Module}
  */
 angular.Module.directive = function(name, directiveFactory) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} providerFunction
+ * @param {angular.Injectable} providerFunction
  * @return {!angular.Module}
  */
 angular.Module.factory = function(name, providerFunction) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} filterFactory
+ * @param {angular.Injectable} filterFactory
  * @return {!angular.Module}
  */
 angular.Module.filter = function(name, filterFactory) {};
 
 /**
  * @param {string} name
- * @param {angular.$provide.Provider|Function|Array.<string|Function>}
- *     providerType
+ * @param {angular.$provide.Provider|angular.Injectable} providerType
  * @return {!angular.Module}
  */
 angular.Module.provider = function(name, providerType) {};
 
 /**
- * @param {Function|Array.<string|Function>} initializationFn
+ * @param {angular.Injectable} initializationFn
  * @return {!angular.Module}
  */
 angular.Module.run = function(initializationFn) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} constructor
+ * @param {angular.Injectable} constructor
  * @return {!angular.Module}
  */
 angular.Module.service = function(name, constructor) {};
@@ -1233,7 +1234,7 @@ angular.$controller;
 
 /**
  * @typedef {{
- *   register: function((string|Object), (Function|Array)),
+ *   register: function((string|Object), angular.Injectable=),
  *   allowGlobals: function()
  *   }}
  */
@@ -1274,15 +1275,13 @@ angular.$filter.orderBy;
  *****************************************************************************/
 
 /**
- * @typedef {{
- *   register: function(string, (!Function|!Array.<string|!Function>))
- *   }}
+ * @typedef {{register: function(string, angular.Injectable)}}
  */
 angular.$filterProvider;
 
 /**
  * @param {string} name
- * @param {(!Function|!Array.<string|!Function>)} fn
+ * @param {angular.Injectable} fn
  */
 angular.$filterProvider.register = function(name, fn) {};
 
@@ -1447,18 +1446,17 @@ angular.$HttpProvider.useApplyAsync = function(opt_value) {};
 
 /**
  * @typedef {{
- *   annotate: function((Function|Array.<string|Function>)):Array.<string>,
+ *   annotate: function(angular.Injectable):Array.<string>,
  *   get: function(string):(?),
  *   has: function(string):boolean,
  *   instantiate: function(Function, Object=):Object,
- *   invoke: function(
- *       (!Function|Array.<string|!Function>), Object=, Object=):(?)
+ *   invoke: function(angular.Injectable, Object=, Object=):(?)
  *   }}
  */
 angular.$injector;
 
 /**
- * @param {(!Function|Array.<string|!Function>)} fn
+ * @param {angular.Injectable} fn
  * @return {Array.<string>}
  */
 angular.$injector.annotate = function(fn) {};
@@ -1483,7 +1481,7 @@ angular.$injector.has = function(name) {};
 angular.$injector.instantiate = function(type, opt_locals) {};
 
 /**
- * @param {(!Function|Array.<string|!Function>)} fn
+ * @param {angular.Injectable} fn
  * @param {Object=} opt_self
  * @param {Object=} opt_locals
  * @return {?}
@@ -1936,11 +1934,11 @@ angular.$parse_.assign = function(scope, newValue) {};
 /**
  * @typedef {{
  *   constant: function(string, *): Object,
- *   decorator: function(string, (!Function|Array.<string|!Function>)),
- *   factory: function(string, (!Function|Array.<string|!Function>)): Object,
- *   provider: function(string, (
- *       !Function|Array.<string|!Function>|angular.$provide.Provider)): Object,
- *   service: function(string, (!Function|Array.<string|!Function>)): Object,
+ *   decorator: function(string, angular.Injectable),
+ *   factory: function(string, angular.Injectable): Object,
+ *   provider: function(string, (angular.Injectable|angular.$provide.Provider)):
+ *       Object,
+ *   service: function(string, angular.Injectable): Object,
  *   value: function(string, *): Object
  *   }}
  */
@@ -1958,20 +1956,20 @@ angular.$provide.constant = function(name, object) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} decorator
+ * @param {angular.Injectable} decorator
  */
 angular.$provide.decorator = function(name, decorator) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} providerFunction
+ * @param {angular.Injectable} providerFunction
  * @return {Object}
  */
 angular.$provide.factory = function(name, providerFunction) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>|angular.$provide.Provider}
+ * @param {angular.Injectable|angular.$provide.Provider}
  *     providerType
  * @return {Object}
  */
@@ -1979,7 +1977,7 @@ angular.$provide.provider = function(name, providerType) {};
 
 /**
  * @param {string} name
- * @param {Function|Array.<string|Function>} constructor
+ * @param {angular.Injectable} constructor
  * @return {Object}
  */
 angular.$provide.service = function(name, constructor) {};
@@ -2093,12 +2091,12 @@ angular.$routeProvider.when = function(path, route) {};
 
 /**
  * @typedef {{
- *   controller: (Function|Array.<string|Function>|string|undefined),
+ *   controller: (angular.Injectable|string|undefined),
  *   controllerAs: (string|undefined),
  *   template: (string|undefined),
  *   templateUrl: (string|function(!Object.<string,string>=)|undefined),
  *   resolve: (Object.<string, (
- *       string|Function|Array.<string|Function>|!angular.$q.Promise
+ *       string|angular.Injectable|!angular.$q.Promise
  *       )>|undefined),
  *   redirectTo: (
  *       string|function(Object.<string>, string, Object): string|undefined),
@@ -2107,7 +2105,7 @@ angular.$routeProvider.when = function(path, route) {};
  */
 angular.$routeProvider.Params;
 
-/** @type {Function|Array.<string|Function>|string} */
+/** @type {angular.Injectable|string} */
 angular.$routeProvider.Params.controller;
 
 /** @type {string} */
@@ -2119,12 +2117,7 @@ angular.$routeProvider.Params.template;
 /** @type {string|function(!Object.<string,string>=)} */
 angular.$routeProvider.Params.templateUrl;
 
-/**
- * @type {
- *   Object.<string, (
- *       string|Function|Array.<string|Function>|!angular.$q.Promise
- *       )>}
- */
+/** @type {Object.<string, (string|angular.Injectable|!angular.$q.Promise)>} */
 angular.$routeProvider.Params.resolve;
 
 /** @type {string|function(Object.<string>, string, Object): string} */
