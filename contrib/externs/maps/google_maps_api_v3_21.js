@@ -1958,14 +1958,14 @@ google.maps.GeocoderResult.prototype.geometry;
 google.maps.GeocoderResult.prototype.partial_match;
 
 /**
- * @type {Array<string>}
- */
-google.maps.GeocoderResult.prototype.postcode_localities;
-
-/**
  * @type {string}
  */
 google.maps.GeocoderResult.prototype.place_id;
+
+/**
+ * @type {Array<string>}
+ */
+google.maps.GeocoderResult.prototype.postcode_localities;
 
 /**
  * @type {Array<string>}
