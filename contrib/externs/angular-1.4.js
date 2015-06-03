@@ -52,7 +52,6 @@
 var JQLiteSelector;
 
 /**
- * @type {Object}
  * @const
  */
 var angular = {};
@@ -743,202 +742,154 @@ angular.JQLite.val = function(opt_value) {};
  */
 angular.JQLite.wrap = function(element) {};
 
-/**
- * @typedef {{
- *   animation:
- *       function(string, function(...*):angular.Animation):!angular.Module,
- *   config: function(angular.Injectable):!angular.Module,
- *   constant: function(string, *):angular.Module,
- *   controller:
- *       (function(string, angular.Injectable):!angular.Module|
- *       function(!Object.<angular.Injectable>):!angular.Module),
- *   directive:
- *       (function(string, angular.Injectable):!angular.Module|
- *       function(!Object.<angular.Injectable>):!angular.Module),
- *   factory:
- *       function(string, angular.Injectable):!angular.Module,
- *   filter:
- *       function(string, angular.Injectable):!angular.Module,
- *   name: string,
- *   provider: function(string,
- *       (angular.$provide.Provider|angular.Injectable)):
- *       !angular.Module,
- *   requires: !Array.<string>,
- *   run: function(angular.Injectable):!angular.Module,
- *   service: function(string, angular.Injectable):!angular.Module,
- *   value: function(string, *):!angular.Module
- *   }}
- */
-angular.Module;
+/** @constructor */
+angular.Module = function() {};
 
 /**
  * @param {string} name
  * @param {function(...*):angular.Animation} animationFactory
  */
-angular.Module.animation = function(name, animationFactory) {};
+angular.Module.prototype.animation = function(name, animationFactory) {};
 
 /**
  * @param {angular.Injectable} configFn
  * @return {!angular.Module}
  */
-angular.Module.config = function(configFn) {};
+angular.Module.prototype.config = function(configFn) {};
 
 /**
  * @param {string} name
  * @param {*} object
  * @return {!angular.Module}
  */
-angular.Module.constant = function(name, object) {};
+angular.Module.prototype.constant = function(name, object) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} constructor
  * @return {!angular.Module}
  */
-angular.Module.controller = function(name, constructor) {};
+angular.Module.prototype.controller = function(name, constructor) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} directiveFactory
  * @return {!angular.Module}
  */
-angular.Module.directive = function(name, directiveFactory) {};
+angular.Module.prototype.directive = function(name, directiveFactory) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} providerFunction
  * @return {!angular.Module}
  */
-angular.Module.factory = function(name, providerFunction) {};
+angular.Module.prototype.factory = function(name, providerFunction) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} filterFactory
  * @return {!angular.Module}
  */
-angular.Module.filter = function(name, filterFactory) {};
+angular.Module.prototype.filter = function(name, filterFactory) {};
 
 /**
  * @param {string} name
  * @param {angular.$provide.Provider|angular.Injectable} providerType
  * @return {!angular.Module}
  */
-angular.Module.provider = function(name, providerType) {};
+angular.Module.prototype.provider = function(name, providerType) {};
 
 /**
  * @param {angular.Injectable} initializationFn
  * @return {!angular.Module}
  */
-angular.Module.run = function(initializationFn) {};
+angular.Module.prototype.run = function(initializationFn) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} constructor
  * @return {!angular.Module}
  */
-angular.Module.service = function(name, constructor) {};
+angular.Module.prototype.service = function(name, constructor) {};
 
 /**
  * @param {string} name
  * @param {*} object
  * @return {!angular.Module}
  */
-angular.Module.value = function(name, object) {};
+angular.Module.prototype.value = function(name, object) {};
 
 /**
  * @type {string}
  */
-angular.Module.name = '';
+angular.Module.prototype.name = '';
 
 /**
  * @type {Array.<string>}
  */
-angular.Module.requires;
+angular.Module.prototype.requires;
 
-/**
- * @typedef {{
- *   $$phase: string,
- *   $apply: function((string|function(!angular.Scope))=):*,
- *   $applyAsync: function((string|function(!angular.Scope))=),
- *   $broadcast: function(string, ...*),
- *   $destroy: function(),
- *   $digest: function(),
- *   $emit: function(string, ...*),
- *   $eval: function((string|function(!angular.Scope))=, Object=):*,
- *   $evalAsync: function((string|function())=),
- *   $id: string,
- *   $new: function(boolean=):!angular.Scope,
- *   $on: function(string, function(!angular.Scope.Event, ...?)):function(),
- *   $parent: !angular.Scope,
- *   $root: !angular.Scope,
- *   $watch: function(
- *       (string|Function), (string|Function)=, boolean=):function(),
- *   $watchCollection: function(
- *       (string|Function), (string|Function)=):function(),
- *   $watchGroup: function(
- *       Array.<string|Function>, (string|Function)=):function()
- *   }}
- */
+/** @constructor */
 angular.Scope;
 
 /** @type {string} */
-angular.Scope.$$phase;
+angular.Scope.prototype.$$phase;
 
 /**
  * @param {(string|function(!angular.Scope))=} opt_exp
  * @return {*}
  */
-angular.Scope.$apply = function(opt_exp) {};
+angular.Scope.prototype.$apply = function(opt_exp) {};
 
 /**
  * @param {string} name
  * @param {...*} args
  */
-angular.Scope.$broadcast = function(name, args) {};
+angular.Scope.prototype.$broadcast = function(name, args) {};
 
-angular.Scope.$destroy = function() {};
+angular.Scope.prototype.$destroy = function() {};
 
-angular.Scope.$digest = function() {};
+angular.Scope.prototype.$digest = function() {};
 
 /**
  * @param {string} name
  * @param {...*} args
  */
-angular.Scope.$emit = function(name, args) {};
+angular.Scope.prototype.$emit = function(name, args) {};
 
 /**
- * @param {(string|function())=} opt_exp
+ * @param {(string|function(angular.Scope):?)=} opt_exp
  * @param {Object=} opt_locals
  * @return {*}
  */
-angular.Scope.$eval = function(opt_exp, opt_locals) {};
+angular.Scope.prototype.$eval = function(opt_exp, opt_locals) {};
 
 /**
  * @param {(string|function())=} opt_exp
  */
-angular.Scope.$evalAsync = function(opt_exp) {};
+angular.Scope.prototype.$evalAsync = function(opt_exp) {};
 
 /** @type {string} */
-angular.Scope.$id;
+angular.Scope.prototype.$id;
 
 /**
  * @param {boolean=} opt_isolate
  * @return {!angular.Scope}
  */
-angular.Scope.$new = function(opt_isolate) {};
+angular.Scope.prototype.$new = function(opt_isolate) {};
 
 /**
  * @param {string} name
  * @param {function(!angular.Scope.Event, ...?)} listener
  * @return {function()}
  */
-angular.Scope.$on = function(name, listener) {};
+angular.Scope.prototype.$on = function(name, listener) {};
 
 /** @type {!angular.Scope} */
-angular.Scope.$parent;
+angular.Scope.prototype.$parent;
 
 /** @type {!angular.Scope} */
-angular.Scope.$root;
+angular.Scope.prototype.$root;
 
 /**
  * @param {string|!Function} exp
@@ -946,14 +897,15 @@ angular.Scope.$root;
  * @param {boolean=} opt_objectEquality
  * @return {function()}
  */
-angular.Scope.$watch = function(exp, opt_listener, opt_objectEquality) {};
+angular.Scope.prototype.$watch =
+    function(exp, opt_listener, opt_objectEquality) {};
 
 /**
  * @param {string|!Function} exp
  * @param {(string|Function)=} opt_listener
  * @return {function()}
  */
-angular.Scope.$watchCollection = function(exp, opt_listener) {};
+angular.Scope.prototype.$watchCollection = function(exp, opt_listener) {};
 
 /**
  * @typedef {{
