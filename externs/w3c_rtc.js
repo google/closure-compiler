@@ -256,6 +256,11 @@ var webkitMediaStream;
 function MediaTrackConstraintSetInterface_() {}
 
 /**
+ * @type {?string}
+ */
+MediaTrackConstraintSetInterface_.prototype.chromeMediaSource;
+
+/**
  * @type {?number}
  */
 MediaTrackConstraintSetInterface_.prototype.minWidth;
