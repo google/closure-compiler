@@ -250,7 +250,7 @@ public final class JSTypeCreatorFromJSDoc {
       case Token.STAR:
         return JSType.TOP;
       case Token.FUNCTION:
-        return getFunTypeHelper(n, null, registry, typeParameters);
+        return getFunTypeHelper(n, registry, typeParameters);
       default:
         throw new IllegalArgumentException("Unsupported type exp: " +
             Token.name(n.getType()) + " " + n.toStringTree());
@@ -449,15 +449,10 @@ public final class JSTypeCreatorFromJSDoc {
 
   // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a
   // type that doesn't have an associated AST node.
-  private JSType getFunTypeHelper(Node jsdocNode, RawNominalType ownerType,
-      DeclaredTypeRegistry registry, ImmutableList<String> typeParameters)
-      throws UnknownTypeException {
+  private JSType getFunTypeHelper(Node jsdocNode, DeclaredTypeRegistry registry,
+      ImmutableList<String> typeParameters) throws UnknownTypeException {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    if (ownerType != null) {
-      builder.addReceiverType(ownerType.getAsNominalType());
-    }
-    fillInFunTypeBuilder(
-        jsdocNode, ownerType, registry, typeParameters, builder);
+    fillInFunTypeBuilder(jsdocNode, null, registry, typeParameters, builder);
     return registry.getCommonTypes().fromFunctionType(builder.buildFunction());
   }
 
