@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 import com.google.javascript.rhino.Node;
 
@@ -32,13 +33,23 @@ import java.util.Map;
  */
 public abstract class Namespace {
   // These properties can themselves be namespaces
-  protected Map<String, RawNominalType> nominals = null;
-  protected Map<String, EnumType> enums = null;
-  protected Map<String, NamespaceLit> namespaces = null;
+  protected Map<String, RawNominalType> nominals = ImmutableMap.of();
+  protected Map<String, EnumType> enums = ImmutableMap.of();
+  protected Map<String, NamespaceLit> namespaces = ImmutableMap.of();
   // Non-namespace properties
-  protected Map<String, Typedef> typedefs = null;
-  protected Map<String, DeclaredTypeRegistry> scopes = null;
+  protected Map<String, Typedef> typedefs = ImmutableMap.of();
+  protected Map<String, DeclaredTypeRegistry> scopes = ImmutableMap.of();
+  // "Simple type" properties (i.e. represented as JSTypes rather than something more specific).
   protected PersistentMap<String, Property> otherProps = PersistentMap.create();
+
+  private boolean isDefined(String name) {
+    return nominals.containsKey(name)
+        || enums.containsKey(name)
+        || namespaces.containsKey(name)
+        || typedefs.containsKey(name)
+        || scopes.containsKey(name)
+        || otherProps.containsKey(name);
+  }
 
   public boolean isDefined(QualifiedName qname) {
     String name;
@@ -53,18 +64,13 @@ public abstract class Namespace {
         return false;
       }
     }
-    return ns.nominals != null && ns.nominals.containsKey(name)
-        || ns.enums != null && ns.enums.containsKey(name)
-        || ns.namespaces != null && ns.namespaces.containsKey(name)
-        || ns.typedefs != null && ns.typedefs.containsKey(name)
-        || ns.scopes != null && ns.scopes.containsKey(name)
-        || ns.otherProps.containsKey(name);
+    return ns.isDefined(name);
   }
 
   public void addSubnamespace(QualifiedName qname) {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
-    if (ns.namespaces == null) {
+    if (ns.namespaces.isEmpty()) {
       ns.namespaces = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
@@ -72,29 +78,36 @@ public abstract class Namespace {
   }
 
   public void addScope(QualifiedName qname, DeclaredTypeRegistry scope) {
-//     Preconditions.checkState(!isDefined(qname));  // Scopes+nominals can overlap
     Namespace ns = getReceiverNamespace(qname);
-    if (ns.scopes == null) {
+    if (ns.scopes.isEmpty()) {
       ns.scopes = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
     ns.scopes.put(name, scope);
   }
 
-  public DeclaredTypeRegistry getScope(QualifiedName qname) {
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns == null || ns.scopes == null) {
+  public Declaration getDeclaration(QualifiedName qname) {
+    Namespace recv = getReceiverNamespace(qname);
+    if (recv == null) {
       return null;
     }
     String name = qname.getRightmostName();
-    return ns.scopes.get(name);
+    if (!recv.isDefined(name)) {
+      return null;
+    }
+    Typedef typedef = recv.typedefs.get(name);
+    EnumType enumType = recv.enums.get(name);
+    RawNominalType rawType = recv.nominals.get(name);
+    DeclaredTypeRegistry scope = recv.scopes.get(name);
+    NamespaceLit ns = recv.namespaces.get(name);
+      return new Declaration(
+          null, typedef, ns, enumType, scope, rawType, false, false, false, false, false);
   }
-
 
   public void addNominalType(QualifiedName qname, RawNominalType rawNominalType) {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
-    if (ns.nominals == null) {
+    if (ns.nominals.isEmpty()) {
       ns.nominals = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
@@ -104,7 +117,7 @@ public abstract class Namespace {
   public void addTypedef(QualifiedName qname, Typedef td) {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
-    if (ns.typedefs == null) {
+    if (ns.typedefs.isEmpty()) {
       ns.typedefs = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
@@ -114,7 +127,7 @@ public abstract class Namespace {
   public void addEnum(QualifiedName qname, EnumType e) {
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
-    if (ns.enums == null) {
+    if (ns.enums.isEmpty()) {
       ns.enums = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
@@ -149,33 +162,6 @@ public abstract class Namespace {
     } else {
       return firstNamespace.getSubnamespace(qname.getAllButLeftmost());
     }
-  }
-
-  public RawNominalType getNominalType(QualifiedName qname) {
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns == null || ns.nominals == null) {
-      return null;
-    }
-    String name = qname.getRightmostName();
-    return ns.nominals.get(name);
-  }
-
-  public EnumType getEnumType(QualifiedName qname) {
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns == null || ns.enums == null) {
-      return null;
-    }
-    String name = qname.getRightmostName();
-    return ns.enums.get(name);
-  }
-
-  public Typedef getTypedef(QualifiedName qname) {
-    Namespace ns = getReceiverNamespace(qname);
-    if (ns == null || ns.typedefs == null) {
-      return null;
-    }
-    String name = qname.getRightmostName();
-    return ns.typedefs.get(name);
   }
 
   public boolean hasSubnamespace(QualifiedName qname) {

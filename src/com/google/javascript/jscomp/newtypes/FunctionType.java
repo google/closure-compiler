@@ -562,6 +562,7 @@ public final class FunctionType {
       return this;
     }
     FunctionType result = meet(this, other);
+    Preconditions.checkState(isInhabitable(result));
     if (this.isLoose() && !result.isLoose()) {
       result = result.withLoose();
     }

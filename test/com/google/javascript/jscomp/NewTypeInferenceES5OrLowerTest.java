@@ -7935,15 +7935,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */ var ns = ns || {};",
         "ns.fun = function(name) {};",
         "ns.fun = ns.fun || {};",
-        "ns.fun.get = function(/** string */ name) {};"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "ns.fun.get = function(/** string */ name) {};"));
 
     typeCheck(Joiner.on('\n').join(
         "/** @const */ var ns = ns || {};",
         "ns.fun = function(name) {};",
         "ns.fun.get = function(/** string */ name) {};",
-        "ns.fun = ns.fun || {};"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "ns.fun = ns.fun || {};"));
   }
 
   public void testInvalidEnumDoesntCrash() {
