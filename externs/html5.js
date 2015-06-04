@@ -1622,6 +1622,24 @@ HTMLVideoElement.prototype.webkitDecodedFrameCount;
 HTMLVideoElement.prototype.webkitDroppedFrameCount;
 
 /**
+ * @typedef {{
+ *    creationTime: number,
+ *    totalVideoFrames: number,
+ *    droppedVideoFrames: number,
+ *    corruptedVideoFrames: number,
+ *    totalFrameDelay: number
+ * }}
+ */
+var VideoPlaybackQuality;
+
+/**
+ * @see https://w3c.github.io/media-source/#htmlvideoelement-extensions
+ * @return {!VideoPlaybackQuality} Stats about the current playback.
+ */
+HTMLVideoElement.prototype.getVideoPlaybackQuality = function() {};
+
+
+/**
  * @constructor
  */
 function MediaError() {}
