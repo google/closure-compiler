@@ -181,13 +181,21 @@ public final class JSDocInfoPrinter {
       Node lb = typeNode.getFirstChild();
       for (int i = 0; i < lb.getChildCount() - 1; i++) {
         Node colon = lb.getChildAtIndex(i);
-        sb.append(colon.getFirstChild().getString() + ":");
-        appendTypeNode(sb, colon.getLastChild());
+        if (colon.hasChildren()) {
+          sb.append(colon.getFirstChild().getString() + ":");
+          appendTypeNode(sb, colon.getLastChild());
+        } else {
+          sb.append(colon.getString());
+        }
         sb.append(",");
       }
       Node lastColon = lb.getLastChild();
-      sb.append(lastColon.getFirstChild().getString() + ":");
-      appendTypeNode(sb, lastColon.getLastChild());
+      if (lastColon.hasChildren()) {
+        sb.append(lastColon.getFirstChild().getString() + ":");
+        appendTypeNode(sb, lastColon.getLastChild());
+      } else {
+        sb.append(lastColon.getString());
+      }
       sb.append("}");
     } else if (typeNode.getType() == Token.VOID) {
       sb.append("void");

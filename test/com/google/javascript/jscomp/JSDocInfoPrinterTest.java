@@ -77,6 +77,33 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals("/**@param {...number} foo\n*/", JSDocInfoPrinter.print(info));
   }
 
+  public void testRecordTypes() {
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("{foo: number}"), ""));
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/**@type {{foo:number}}\n*/", JSDocInfoPrinter.print(info));
+
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("{foo}"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@type {{foo}}\n*/", JSDocInfoPrinter.print(info));
+
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("{foo, bar}"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@type {{foo,bar}}\n*/", JSDocInfoPrinter.print(info));
+
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("{foo: number, bar}"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@type {{foo:number,bar}}\n*/", JSDocInfoPrinter.print(info));
+
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("{foo, bar: number}"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@type {{foo,bar:number}}\n*/", JSDocInfoPrinter.print(info));
+  }
+
   public void testTypes() {
     builder.recordReturnType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("number|string"), ""));
