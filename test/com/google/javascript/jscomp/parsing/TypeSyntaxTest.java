@@ -204,6 +204,24 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: my.parameterized.Type<ns.A,;");
   }
 
+  public void testInterface() {
+    parse("interface I {\n  foo: string;\n}");
+  }
+
+  public void testInterface_disallowExpression() {
+    expectErrors("Parse error. primary expression expected");
+    parse("var i = interface {};");
+  }
+
+  public void testInterfaceMember() {
+    Node ast = parse("interface I {\n  foo;\n}");
+    Node classMembers = ast.getFirstChild().getLastChild();
+    assertTreeEquals(
+        "has foo variable",
+        Node.newString(Token.MEMBER_VARIABLE_DEF, "foo"),
+        classMembers.getFirstChild());
+  }
+
   public void testMemberVariable() throws Exception {
     // Just make sure it round trips, no types for the moment.
     Node ast = parse("class Foo {\n  foo;\n}");

@@ -139,6 +139,9 @@ public class ParseTree {
   public WhileStatementTree asWhileStatement() { return (WhileStatementTree) this; }
   public WithStatementTree asWithStatement() { return (WithStatementTree) this; }
   public YieldExpressionTree asYieldStatement() { return (YieldExpressionTree) this; }
+  public InterfaceDeclarationTree asInterfaceDeclaration() {
+    return (InterfaceDeclarationTree) this;
+  }
 
   public boolean isPattern() {
     ParseTree parseTree = this;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 The Closure Compiler Authors.
+ * Copyright 2015 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class ClassDeclarationTree extends ParseTree {
+public class InterfaceDeclarationTree extends ParseTree {
   public final IdentifierToken name;
-  public final ParseTree superClass;
+  public final ImmutableList<ParseTree> superInterfaces;
   public final ImmutableList<ParseTree> elements;
 
-  public ClassDeclarationTree(SourceRange location, IdentifierToken name,
-      ParseTree superClass, ImmutableList<ParseTree> elements) {
-    super(ParseTreeType.CLASS_DECLARATION, location);
+  public InterfaceDeclarationTree(
+      SourceRange location,
+      IdentifierToken name,
+      ImmutableList<ParseTree> superInterfaces,
+      ImmutableList<ParseTree> elements) {
+    super(ParseTreeType.INTERFACE_DECLARATION, location);
 
     this.name = name;
-    this.superClass = superClass;
+    this.superInterfaces = superInterfaces;
     this.elements = elements;
   }
 }

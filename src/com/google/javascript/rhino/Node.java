@@ -2668,6 +2668,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.INSTANCEOF;
   }
 
+  public boolean isInterfaceMembers() {
+    return this.getType() == Token.INTERFACE_MEMBERS;
+  }
+
   public boolean isLabel() {
     return this.getType() == Token.LABEL;
   }

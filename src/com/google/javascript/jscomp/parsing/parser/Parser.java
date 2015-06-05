@@ -388,12 +388,40 @@ public class Parser {
     return peek(TokenType.CLASS);
   }
 
+  private boolean peekInterfaceDeclaration() {
+    return peek(TokenType.INTERFACE);
+  }
+
   private ParseTree parseClassDeclaration() {
     return parseClass(false);
   }
 
   private ParseTree parseClassExpression() {
     return parseClass(true);
+  }
+
+  private ParseTree parseInterfaceDeclaration() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.INTERFACE);
+    IdentifierToken name = eatId();
+    ImmutableList.Builder<ParseTree> superTypes = ImmutableList.builder();
+    if (peek(TokenType.EXTENDS)) {
+      eat(TokenType.EXTENDS);
+      ParseTree type = parseType();
+      superTypes.add(type);
+
+      while (peek(TokenType.COMMA)) {
+        eat(TokenType.COMMA);
+        type = parseType();
+        if (type != null) {
+          superTypes.add(type);
+        }
+      }
+    }
+    eat(TokenType.OPEN_CURLY);
+    ImmutableList<ParseTree> elements = parseClassElements();
+    eat(TokenType.CLOSE_CURLY);
+    return new InterfaceDeclarationTree(getTreeLocation(start), name, superTypes.build(), elements);
   }
 
   private ParseTree parseClass(boolean isExpression) {
@@ -411,8 +439,7 @@ public class Parser {
     eat(TokenType.OPEN_CURLY);
     ImmutableList<ParseTree> elements = parseClassElements();
     eat(TokenType.CLOSE_CURLY);
-    return new ClassDeclarationTree(
-        getTreeLocation(start), name, isExpression, superClass, elements);
+    return new ClassDeclarationTree(getTreeLocation(start), name, superClass, elements);
   }
 
   private ImmutableList<ParseTree> parseClassElements() {
@@ -539,6 +566,10 @@ public class Parser {
       return parseClassDeclaration();
     }
 
+    if (peekInterfaceDeclaration()) {
+      return parseInterfaceDeclaration();
+    }
+
     // Harmony let block scoped bindings. let can only appear in
     // a block, not as a standalone statement: if() let x ... illegal
     if (peek(TokenType.LET)) {
@@ -558,7 +589,7 @@ public class Parser {
   }
 
   private boolean peekDeclaration() {
-    return peek(TokenType.LET) || peekClassDeclaration();
+    return peek(TokenType.LET) || peekClassDeclaration() || peekInterfaceDeclaration();
   }
 
   private boolean peekFunction(int index) {

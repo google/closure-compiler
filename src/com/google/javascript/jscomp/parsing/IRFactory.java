@@ -67,6 +67,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTre
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
+import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
@@ -2082,6 +2083,21 @@ class IRFactory {
       return newNode(Token.CLASS, name, superClass, body);
     }
 
+    Node processInterfaceDeclaration(InterfaceDeclarationTree tree) {
+      maybeWarnEs6Feature(tree, "interface");
+
+      Node name = transformOrEmpty(tree.name, tree);
+      Node superInterfaces = transformListOrEmpty(Token.INTERFACE_EXTENDS, tree.superInterfaces);
+
+      Node body = newNode(Token.INTERFACE_MEMBERS);
+      setSourceInfo(body, tree);
+      for (ParseTree child : tree.elements) {
+        body.addChildToBack(transform(child));
+      }
+
+      return newNode(Token.INTERFACE, name, superInterfaces, body);
+    }
+
     Node processSuper(SuperExpressionTree tree) {
       maybeWarnEs6Feature(tree, "super");
       return newNode(Token.SUPER);
@@ -2248,10 +2264,10 @@ class IRFactory {
 
     private Node transformListOrEmpty(
         int type, ImmutableList<ParseTree> list) {
-      if (list != null) {
-        return transformList(type, list);
-      } else {
+      if (list == null || list.isEmpty()) {
         return newNode(Token.EMPTY);
+      } else {
+        return transformList(type, list);
       }
     }
 
@@ -2401,7 +2417,7 @@ class IRFactory {
 
         case COMMA_EXPRESSION:
           return processCommaExpression(node.asCommaExpression());
-        case NULL:  // this is not the null literal
+        case NULL: // this is not the null literal
           return processNull(node.asNull());
         case FINALLY:
           return processFinally(node.asFinally());
@@ -2473,6 +2489,10 @@ class IRFactory {
           return processArrayType(node.asArrayType());
         case MEMBER_VARIABLE:
           return processMemberVariable(node.asMemberVariable());
+
+          // TypeScript
+        case INTERFACE_DECLARATION:
+          return processInterfaceDeclaration(node.asInterfaceDeclaration());
 
         default:
           break;

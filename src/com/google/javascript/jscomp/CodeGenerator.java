@@ -149,28 +149,29 @@ class CodeGenerator {
     cc.startSourceMapping(n);
 
     switch (type) {
-      case Token.TRY: {
-        Preconditions.checkState(first.getNext().isBlock() &&
-                !first.getNext().hasMoreThanOneChild());
-        Preconditions.checkState(childCount >= 2 && childCount <= 3);
+      case Token.TRY:
+        {
+          Preconditions.checkState(
+              first.getNext().isBlock() && !first.getNext().hasMoreThanOneChild());
+          Preconditions.checkState(childCount >= 2 && childCount <= 3);
 
-        add("try");
-        add(first, Context.PRESERVE_BLOCK);
+          add("try");
+          add(first, Context.PRESERVE_BLOCK);
 
-        // second child contains the catch block, or nothing if there
-        // isn't a catch block
-        Node catchblock = first.getNext().getFirstChild();
-        if (catchblock != null) {
-          add(catchblock);
+          // second child contains the catch block, or nothing if there
+          // isn't a catch block
+          Node catchblock = first.getNext().getFirstChild();
+          if (catchblock != null) {
+            add(catchblock);
+          }
+
+          if (childCount == 3) {
+            cc.maybeInsertSpace();
+            add("finally");
+            add(last, Context.PRESERVE_BLOCK);
+          }
+          break;
         }
-
-        if (childCount == 3) {
-          cc.maybeInsertSpace();
-          add("finally");
-          add(last, Context.PRESERVE_BLOCK);
-        }
-        break;
-      }
 
       case Token.CATCH:
         Preconditions.checkState(childCount == 2);
@@ -269,8 +270,8 @@ class CodeGenerator {
 
       case Token.COMMA:
         Preconditions.checkState(childCount == 2);
-        unrollBinaryOperator(n, Token.COMMA, ",", context,
-            getContextForNoInOperator(context), 0, 0);
+        unrollBinaryOperator(
+            n, Token.COMMA, ",", context, getContextForNoInOperator(context), 0, 0);
         break;
 
       case Token.NUMBER:
@@ -282,45 +283,47 @@ class CodeGenerator {
       case Token.VOID:
       case Token.NOT:
       case Token.BITNOT:
-      case Token.POS: {
-        // All of these unary operators are right-associative
-        Preconditions.checkState(childCount == 1);
-        cc.addOp(NodeUtil.opToStrNoFail(type), false);
-        addExpr(first, NodeUtil.precedence(type), Context.OTHER);
-        break;
-      }
-
-      case Token.NEG: {
-        Preconditions.checkState(childCount == 1);
-
-        // It's important to our sanity checker that the code
-        // we print produces the same AST as the code we parse back.
-        // NEG is a weird case because Rhino parses "- -2" as "2".
-        if (n.getFirstChild().isNumber()) {
-          cc.addNumber(-n.getFirstChild().getDouble());
-        } else {
+      case Token.POS:
+        {
+          // All of these unary operators are right-associative
+          Preconditions.checkState(childCount == 1);
           cc.addOp(NodeUtil.opToStrNoFail(type), false);
           addExpr(first, NodeUtil.precedence(type), Context.OTHER);
+          break;
         }
 
-        break;
-      }
+      case Token.NEG:
+        {
+          Preconditions.checkState(childCount == 1);
 
-      case Token.HOOK: {
-        Preconditions.checkState(childCount == 3);
-        int p = NodeUtil.precedence(type);
-        Context rhsContext = getContextForNoInOperator(context);
-        addExpr(first, p + 1, context);
-        cc.addOp("?", true);
-        addExpr(first.getNext(), 1, rhsContext);
-        cc.addOp(":", true);
-        addExpr(last, 1, rhsContext);
-        break;
-      }
+          // It's important to our sanity checker that the code
+          // we print produces the same AST as the code we parse back.
+          // NEG is a weird case because Rhino parses "- -2" as "2".
+          if (n.getFirstChild().isNumber()) {
+            cc.addNumber(-n.getFirstChild().getDouble());
+          } else {
+            cc.addOp(NodeUtil.opToStrNoFail(type), false);
+            addExpr(first, NodeUtil.precedence(type), Context.OTHER);
+          }
+
+          break;
+        }
+
+      case Token.HOOK:
+        {
+          Preconditions.checkState(childCount == 3);
+          int p = NodeUtil.precedence(type);
+          Context rhsContext = getContextForNoInOperator(context);
+          addExpr(first, p + 1, context);
+          cc.addOp("?", true);
+          addExpr(first.getNext(), 1, rhsContext);
+          cc.addOp(":", true);
+          addExpr(last, 1, rhsContext);
+          break;
+        }
 
       case Token.REGEXP:
-        if (!first.isString() ||
-            !last.isString()) {
+        if (!first.isString() || !last.isString()) {
           throw new Error("Expected children to be strings");
         }
 
@@ -344,10 +347,8 @@ class CodeGenerator {
         boolean isArrow = n.isArrowFunction();
         // Arrow functions are complete expressions, so don't need parentheses
         // if they are in an expression result.
-        boolean notSingleExpr = n.getParent() == null
-            || !n.getParent().isExprResult();
-        boolean funcNeedsParens = (context == Context.START_OF_EXPR)
-            && (!isArrow || notSingleExpr);
+        boolean notSingleExpr = n.getParent() == null || !n.getParent().isExprResult();
+        boolean funcNeedsParens = (context == Context.START_OF_EXPR) && (!isArrow || notSingleExpr);
         if (funcNeedsParens) {
           add("(");
         }
@@ -361,7 +362,7 @@ class CodeGenerator {
 
         add(first);
 
-        add(first.getNext());  // param list
+        add(first.getNext()); // param list
 
         maybeAddTypeDecl(n);
         if (isArrow) {
@@ -459,8 +460,9 @@ class CodeGenerator {
         add(n.getString());
         break;
 
-      // CLASS -> NAME,EXPR|EMPTY,BLOCK
-      case Token.CLASS: {
+        // CLASS -> NAME,EXPR|EMPTY,BLOCK
+      case Token.CLASS:
+        {
           Preconditions.checkState(childCount == 3);
           boolean classNeedsParens = (context == Context.START_OF_EXPR);
           if (classNeedsParens) {
@@ -489,6 +491,7 @@ class CodeGenerator {
         break;
 
       case Token.CLASS_MEMBERS:
+      case Token.INTERFACE_MEMBERS:
         cc.beginBlock();
         for (Node c = first; c != null; c = c.getNext()) {
           add(c);
@@ -500,116 +503,121 @@ class CodeGenerator {
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
       case Token.MEMBER_FUNCTION_DEF:
-      case Token.MEMBER_VARIABLE_DEF: {
-        n.getParent().toStringTree();
-        Preconditions.checkState(n.getParent().isObjectLit()
-            || n.getParent().isClassMembers());
+      case Token.MEMBER_VARIABLE_DEF:
+        {
+          n.getParent().toStringTree();
+          Preconditions.checkState(
+              n.getParent().isObjectLit()
+                  || n.getParent().isClassMembers()
+                  || n.getParent().isInterfaceMembers());
 
-        if (n.isStaticMember()) {
-          add("static ");
-        }
-
-        if (!n.isMemberVariableDef() && n.getFirstChild().isGeneratorFunction()) {
-          Preconditions.checkState(type == Token.MEMBER_FUNCTION_DEF);
-          add("*");
-        }
-
-        switch (type) {
-          case Token.GETTER_DEF:
-            // Get methods have no parameters.
-            Preconditions.checkState(!first.getChildAtIndex(1).hasChildren());
-            add("get ");
-            break;
-          case Token.SETTER_DEF:
-            // Set methods have one parameter.
-            Preconditions.checkState(first.getChildAtIndex(1).hasOneChild());
-            add("set ");
-            break;
-          case Token.MEMBER_FUNCTION_DEF:
-          case Token.MEMBER_VARIABLE_DEF:
-            // nothing to do.
-            break;
-        }
-
-        // The name is on the GET or SET node.
-        String name = n.getString();
-        if (n.isMemberVariableDef()) {
-          add(n.getString());
-          maybeAddTypeDecl(n);
-          add(";");
-        } else {
-          Preconditions.checkState(childCount == 1);
-          Preconditions.checkState(first.isFunction());
-
-          // The function referenced by the definition should always be unnamed.
-          Preconditions.checkState(first.getFirstChild().getString().isEmpty());
-
-          Node fn = first;
-          Node parameters = fn.getChildAtIndex(1);
-          Node body = fn.getLastChild();
-
-          // Add the property name.
-          if (!n.isQuotedString() &&
-              TokenStream.isJSIdentifier(name) &&
-              // do not encode literally any non-literal characters that were
-              // Unicode escaped.
-              NodeUtil.isLatin(name)) {
-            add(name);
-          } else {
-            // Determine if the string is a simple number.
-            double d = getSimpleNumber(name);
-            if (!Double.isNaN(d)) {
-              cc.addNumber(d);
-            } else {
-              addJsString(n);
-            }
+          if (n.isStaticMember()) {
+            add("static ");
           }
-          add(parameters);
-          maybeAddTypeDecl(fn);
-          add(body, Context.PRESERVE_BLOCK);
+
+          if (!n.isMemberVariableDef() && n.getFirstChild().isGeneratorFunction()) {
+            Preconditions.checkState(type == Token.MEMBER_FUNCTION_DEF);
+            add("*");
+          }
+
+          switch (type) {
+            case Token.GETTER_DEF:
+              // Get methods have no parameters.
+              Preconditions.checkState(!first.getChildAtIndex(1).hasChildren());
+              add("get ");
+              break;
+            case Token.SETTER_DEF:
+              // Set methods have one parameter.
+              Preconditions.checkState(first.getChildAtIndex(1).hasOneChild());
+              add("set ");
+              break;
+            case Token.MEMBER_FUNCTION_DEF:
+            case Token.MEMBER_VARIABLE_DEF:
+              // nothing to do.
+              break;
+          }
+
+          // The name is on the GET or SET node.
+          String name = n.getString();
+          if (n.isMemberVariableDef()) {
+            add(n.getString());
+            maybeAddTypeDecl(n);
+            add(";");
+          } else {
+            Preconditions.checkState(childCount == 1);
+            Preconditions.checkState(first.isFunction());
+
+            // The function referenced by the definition should always be unnamed.
+            Preconditions.checkState(first.getFirstChild().getString().isEmpty());
+
+            Node fn = first;
+            Node parameters = fn.getChildAtIndex(1);
+            Node body = fn.getLastChild();
+
+            // Add the property name.
+            if (!n.isQuotedString()
+                && TokenStream.isJSIdentifier(name)
+                &&
+                // do not encode literally any non-literal characters that were
+                // Unicode escaped.
+                NodeUtil.isLatin(name)) {
+              add(name);
+            } else {
+              // Determine if the string is a simple number.
+              double d = getSimpleNumber(name);
+              if (!Double.isNaN(d)) {
+                cc.addNumber(d);
+              } else {
+                addJsString(n);
+              }
+            }
+            add(parameters);
+            maybeAddTypeDecl(fn);
+            add(body, Context.PRESERVE_BLOCK);
+          }
+          break;
         }
-        break;
-      }
 
       case Token.SCRIPT:
-      case Token.BLOCK: {
-        if (n.getClass() != Node.class) {
-          throw new Error("Unexpected Node subclass.");
-        }
-        boolean preserveBlock = context == Context.PRESERVE_BLOCK;
-        if (preserveBlock) {
-          cc.beginBlock();
-        }
-
-        boolean preferLineBreaks =
-            type == Token.SCRIPT ||
-            (type == Token.BLOCK &&
-                !preserveBlock &&
-                n.getParent() != null &&
-                n.getParent().isScript());
-        for (Node c = first; c != null; c = c.getNext()) {
-          add(c, Context.STATEMENT);
-
-          // VAR doesn't include ';' since it gets used in expressions
-          if (NodeUtil.isNameDeclaration(c)) {
-            cc.endStatement();
+      case Token.BLOCK:
+        {
+          if (n.getClass() != Node.class) {
+            throw new Error("Unexpected Node subclass.");
+          }
+          boolean preserveBlock = context == Context.PRESERVE_BLOCK;
+          if (preserveBlock) {
+            cc.beginBlock();
           }
 
-          if (c.isFunction() || c.isClass()) {
-            cc.maybeLineBreak();
-          }
+          boolean preferLineBreaks =
+              type == Token.SCRIPT
+                  || (type == Token.BLOCK
+                      && !preserveBlock
+                      && n.getParent() != null
+                      && n.getParent().isScript());
+          for (Node c = first; c != null; c = c.getNext()) {
+            add(c, Context.STATEMENT);
 
-          // Prefer to break lines in between top-level statements
-          // because top-level statements are more homogeneous.
-          if (preferLineBreaks) {
-            cc.notePreferredLineBreak();
+            // VAR doesn't include ';' since it gets used in expressions
+            if (NodeUtil.isNameDeclaration(c)) {
+              cc.endStatement();
+            }
+
+            if (c.isFunction() || c.isClass()) {
+              cc.maybeLineBreak();
+            }
+
+            // Prefer to break lines in between top-level statements
+            // because top-level statements are more homogeneous.
+            if (preferLineBreaks) {
+              cc.notePreferredLineBreak();
+            }
           }
+          if (preserveBlock) {
+            cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
+          }
+          break;
         }
-        if (preserveBlock) {
-          cc.endBlock(cc.breakAfterBlockFor(n, context == Context.STATEMENT));
-        }
-        break;
-      }
 
       case Token.FOR:
         if (childCount == 4) {
@@ -626,8 +634,7 @@ class CodeGenerator {
           add(";");
           add(first.getNext().getNext());
           add(")");
-          addNonEmptyStatement(
-              last, getContextForNonEmptyExpression(context), false);
+          addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         } else {
           Preconditions.checkState(childCount == 3);
           add("for");
@@ -637,8 +644,7 @@ class CodeGenerator {
           add("in");
           add(first.getNext());
           add(")");
-          addNonEmptyStatement(
-              last, getContextForNonEmptyExpression(context), false);
+          addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         }
         break;
 
@@ -652,8 +658,7 @@ class CodeGenerator {
         add("of");
         add(first.getNext());
         add(")");
-        addNonEmptyStatement(
-            last, getContextForNonEmptyExpression(context), false);
+        addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         break;
 
       case Token.DO:
@@ -676,46 +681,42 @@ class CodeGenerator {
         add("(");
         add(first);
         add(")");
-        addNonEmptyStatement(
-            last, getContextForNonEmptyExpression(context), false);
+        addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         break;
 
       case Token.EMPTY:
         Preconditions.checkState(childCount == 0);
         break;
 
-      case Token.GETPROP: {
-        Preconditions.checkState(
-            childCount == 2,
-            "Bad GETPROP: expected 2 children, but got %s", childCount);
-        Preconditions.checkState(
-            last.isString(),
-            "Bad GETPROP: RHS should be STRING");
-        boolean needsParens = (first.isNumber());
-        if (needsParens) {
-          add("(");
+      case Token.GETPROP:
+        {
+          Preconditions.checkState(
+              childCount == 2, "Bad GETPROP: expected 2 children, but got %s", childCount);
+          Preconditions.checkState(last.isString(), "Bad GETPROP: RHS should be STRING");
+          boolean needsParens = (first.isNumber());
+          if (needsParens) {
+            add("(");
+          }
+          addExpr(first, NodeUtil.precedence(type), context);
+          if (needsParens) {
+            add(")");
+          }
+          if (this.languageMode == LanguageMode.ECMASCRIPT3
+              && TokenStream.isKeyword(last.getString())) {
+            // Check for ECMASCRIPT3 keywords.
+            add("[");
+            add(last);
+            add("]");
+          } else {
+            add(".");
+            addIdentifier(last.getString());
+          }
+          break;
         }
-        addExpr(first, NodeUtil.precedence(type), context);
-        if (needsParens) {
-          add(")");
-        }
-        if (this.languageMode == LanguageMode.ECMASCRIPT3
-            && TokenStream.isKeyword(last.getString())) {
-          // Check for ECMASCRIPT3 keywords.
-          add("[");
-          add(last);
-          add("]");
-        } else {
-          add(".");
-          addIdentifier(last.getString());
-        }
-        break;
-      }
 
       case Token.GETELEM:
         Preconditions.checkState(
-            childCount == 2,
-            "Bad GETELEM: expected 2 children but got %s", childCount);
+            childCount == 2, "Bad GETELEM: expected 2 children but got %s", childCount);
         addExpr(first, NodeUtil.precedence(type), context);
         add("[");
         add(first.getNext());
@@ -727,24 +728,24 @@ class CodeGenerator {
         add("with(");
         add(first);
         add(")");
-        addNonEmptyStatement(
-            last, getContextForNonEmptyExpression(context), false);
+        addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         break;
 
       case Token.INC:
-      case Token.DEC: {
-        Preconditions.checkState(childCount == 1);
-        String o = type == Token.INC ? "++" : "--";
-        boolean postProp = n.getBooleanProp(Node.INCRDECR_PROP);
-        if (postProp) {
-          addExpr(first, NodeUtil.precedence(type), context);
-          cc.addOp(o, false);
-        } else {
-          cc.addOp(o, false);
-          add(first);
+      case Token.DEC:
+        {
+          Preconditions.checkState(childCount == 1);
+          String o = type == Token.INC ? "++" : "--";
+          boolean postProp = n.getBooleanProp(Node.INCRDECR_PROP);
+          if (postProp) {
+            addExpr(first, NodeUtil.precedence(type), context);
+            cc.addOp(o, false);
+          } else {
+            cc.addOp(o, false);
+            add(first);
+          }
+          break;
         }
-        break;
-      }
 
       case Token.CALL:
         // We have two special cases here:
@@ -756,8 +757,7 @@ class CodeGenerator {
         // then the call must not a FREE_CALL annotation. If it does, then
         // that means it was originally an call without an explicit this and
         // that must be preserved.
-        if (isIndirectEval(first)
-            || n.getBooleanProp(Node.FREE_CALL) && NodeUtil.isGet(first)) {
+        if (isIndirectEval(first) || n.getBooleanProp(Node.FREE_CALL) && NodeUtil.isGet(first)) {
           add("(0,");
           addExpr(first, NodeUtil.precedence(Token.COMMA), Context.OTHER);
           add(")");
@@ -772,8 +772,7 @@ class CodeGenerator {
 
       case Token.IF:
         boolean hasElse = childCount == 3;
-        boolean ambiguousElseClause =
-            context == Context.BEFORE_DANGLING_ELSE && !hasElse;
+        boolean ambiguousElseClause = context == Context.BEFORE_DANGLING_ELSE && !hasElse;
         if (ambiguousElseClause) {
           cc.beginBlock();
         }
@@ -790,12 +789,10 @@ class CodeGenerator {
         }
 
         if (hasElse) {
-          addNonEmptyStatement(
-              first.getNext(), Context.BEFORE_DANGLING_ELSE, false);
+          addNonEmptyStatement(first.getNext(), Context.BEFORE_DANGLING_ELSE, false);
           cc.maybeInsertSpace();
           add("else");
-          addNonEmptyStatement(
-              last, getContextForNonEmptyExpression(context), false);
+          addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
         } else {
           addNonEmptyStatement(first.getNext(), Context.OTHER, false);
           Preconditions.checkState(childCount == 2);
@@ -886,8 +883,7 @@ class CodeGenerator {
         // If the first child contains a CALL, then claim higher precedence
         // to force parentheses. Otherwise, when parsed, NEW will bind to the
         // first viable parentheses (don't traverse into functions).
-        if (NodeUtil.containsType(
-            first, Token.CALL, NodeUtil.MATCH_NOT_FUNCTION)) {
+        if (NodeUtil.containsType(first, Token.CALL, NodeUtil.MATCH_NOT_FUNCTION)) {
           precedence = NodeUtil.precedence(first.getType()) + 1;
         }
         addExpr(first, precedence, Context.OTHER);
@@ -906,8 +902,7 @@ class CodeGenerator {
         break;
 
       case Token.STRING:
-        Preconditions.checkState(
-            childCount == 0, "A string may not have children");
+        Preconditions.checkState(childCount == 0, "A string may not have children");
         // The string is already processed, don't escape it.
         if (n.getBooleanProp(Node.COOKED_STRING)) {
           add("\"" + n.getString() + "\"");
@@ -922,30 +917,32 @@ class CodeGenerator {
         add(first);
         break;
 
-      case Token.OBJECTLIT: {
-        boolean needsParens = (context == Context.START_OF_EXPR);
-        if (needsParens) {
-          add("(");
-        }
-        add("{");
-        for (Node c = first; c != null; c = c.getNext()) {
-          if (c != first) {
-            cc.listSeparator();
+      case Token.OBJECTLIT:
+        {
+          boolean needsParens = (context == Context.START_OF_EXPR);
+          if (needsParens) {
+            add("(");
           }
+          add("{");
+          for (Node c = first; c != null; c = c.getNext()) {
+            if (c != first) {
+              cc.listSeparator();
+            }
 
-          Preconditions.checkState(c.isComputedProp()
-              || c.isGetterDef()
-              || c.isSetterDef()
-              || c.isStringKey()
-              || c.isMemberFunctionDef());
-          add(c);
+            Preconditions.checkState(
+                c.isComputedProp()
+                    || c.isGetterDef()
+                    || c.isSetterDef()
+                    || c.isStringKey()
+                    || c.isMemberFunctionDef());
+            add(c);
+          }
+          add("}");
+          if (needsParens) {
+            add(")");
+          }
+          break;
         }
-        add("}");
-        if (needsParens) {
-          add(")");
-        }
-        break;
-      }
 
       case Token.COMPUTED_PROP:
         if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
@@ -1028,8 +1025,7 @@ class CodeGenerator {
         if (!last.isBlock()) {
           cc.maybeInsertSpace();
         }
-        addNonEmptyStatement(
-            last, getContextForNonEmptyExpression(context), true);
+        addNonEmptyStatement(last, getContextForNonEmptyExpression(context), true);
         break;
 
       case Token.CAST:
@@ -1058,7 +1054,7 @@ class CodeGenerator {
         add("`");
         break;
 
-      // Type Declaration ASTs.
+        // Type Declaration ASTs.
       case Token.STRING_TYPE:
         add("string");
         break;
@@ -1114,9 +1110,30 @@ class CodeGenerator {
         addList(first.getNext());
         add(">");
         break;
+        // CLASS -> NAME,EXPR|EMPTY,BLOCK
+      case Token.INTERFACE:
+        {
+          Preconditions.checkState(childCount == 3);
+          Node name = first;
+          Node superTypes = first.getNext();
+          Node members = last;
+
+          add("interface");
+          add(name);
+          if (!superTypes.isEmpty()) {
+            add("extends");
+            for (Node child = superTypes.getFirstChild(); child != null; child = child.getNext()) {
+              if (child != n.getFirstChild()) {
+                add(",");
+              }
+              add(child);
+            }
+          }
+          add(members);
+        }
+        break;
       default:
-        throw new RuntimeException(
-            "Unknown type " + Token.name(type) + "\n" + n.toStringTree());
+        throw new RuntimeException("Unknown type " + Token.name(type) + "\n" + n.toStringTree());
     }
 
     cc.endSourceMapping(n);
