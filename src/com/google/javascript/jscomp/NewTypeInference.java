@@ -59,12 +59,6 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  *
- * Features left to implement:
- * - @private (maybe)
- * - @protected (maybe)
- * - arguments array
- * - separate scope for catch variables
- * - bounded quantification for generics
  */
 final class NewTypeInference implements CompilerPass {
 
@@ -2138,18 +2132,17 @@ final class NewTypeInference implements CompilerPass {
     while (arg != null) {
       EnvTypePair pair =
           isFwd ? analyzeExprFwd(arg, typeEnv) : analyzeExprBwd(arg, typeEnv);
-      JSType unifTarget = funType.getFormalType(i);
-      JSType unifSource = pair.type;
-      if (!unifTarget.unifyWithSubtype(unifSource, typeParameters, typeMultimap)) {
+      JSType formalType = funType.getFormalType(i);
+      JSType passedArgType = pair.type;
+      if (!formalType.unifyWithSubtype(passedArgType, typeParameters, typeMultimap)) {
         // Unification may fail b/c of types irrelevant to generics, eg,
         // number vs string.
         // In this case, don't warn here; we'll show invalid-arg-type later.
-        JSType targetAfterInstantiation =
-            unifTarget.substituteGenericsWithUnknown();
-        if (!unifTarget.equals(targetAfterInstantiation)
-            && unifSource.isSubtypeOf(targetAfterInstantiation)) {
+        JSType formalAfterInstantiation = formalType.substituteGenericsWithUnknown();
+        if (!formalType.equals(formalAfterInstantiation)
+            && passedArgType.isSubtypeOf(formalAfterInstantiation)) {
           warnings.add(JSError.make(arg, FAILED_TO_UNIFY,
-                  unifTarget.toString(), unifSource.toString()));
+                  formalType.toString(), passedArgType.toString()));
         }
       }
       arg = arg.getNext();

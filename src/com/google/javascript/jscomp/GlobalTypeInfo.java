@@ -1615,7 +1615,7 @@ class GlobalTypeInfo implements CompilerPass {
           && declNode != parent.getFirstChild()) {
         DeclaredFunctionType calleeDeclType = getDeclaredFunctionTypeOfCalleeIfAny(
             parent.getFirstChild(), parentScope);
-        if (calleeDeclType != null) {
+        if (calleeDeclType != null && !calleeDeclType.isGeneric()) {
           int index = parent.getIndexOfChild(declNode) - 1;
           JSType declTypeFromCallee = calleeDeclType.getFormalType(index);
           if (declTypeFromCallee != null) {

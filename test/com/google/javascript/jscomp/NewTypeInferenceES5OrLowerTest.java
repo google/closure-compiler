@@ -5562,8 +5562,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {string} */",
         "var out;",
         "var result = apply(function(x){ out = x; return x; }, 0);"),
-        NewTypeInference.NOT_UNIQUE_INSTANTIATION,
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
 
     typeCheck(Joiner.on('\n').join(
         "/** @template T */",
@@ -5612,6 +5611,67 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " * @param {function(U)} x",
         " */",
         "Foo.prototype.f = function(x) { this.f(x); };"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {function(T)} x",
+        " */",
+        "function f(x) {}",
+        "function g(x) {}",
+        "f(g);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {function(T=)} x",
+        " */",
+        "function f(x) {}",
+        "function g(/** (number|undefined) */ x) {}",
+        "f(g);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {function(...T)} x",
+        " */",
+        "function f(x) {}",
+        "function g() {}",
+        "f(g);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @param {!Array<T>} arr",
+        " * @param {?function(this:S, T, number, ?) : boolean} f",
+        " * @param {S=} opt_obj",
+        " * @return {T|null}",
+        " * @template T,S",
+        " */",
+        "function gaf(arr, f, opt_obj) {",
+        "  return null;",
+        "};",
+        "/** @type {number|null} */",
+        "var x = gaf([1, 2, 3], function(x, y, z) { return true; });"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {function(T):boolean} x",
+        " */",
+        "function f(x) {}",
+        "f(function(x) { return 'asdf'; });"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {function(T)} y",
+        " */",
+        "function f(x, y) {}",
+        "f(123, function(x) { var /** string */ s = x; });"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
   }
 
   public void testGenericReturnType() {

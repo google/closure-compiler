@@ -24,7 +24,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -667,39 +666,24 @@ public final class FunctionType {
     if (this == LOOSE_TOP_FUNCTION || other.isTopFunction()) {
       return true;
     }
-    if (requiredFormals.size() != other.requiredFormals.size()) {
+    if (other.requiredFormals.size() > this.requiredFormals.size()) {
       return false;
     }
-    Iterator<JSType> thisReqFormals = requiredFormals.iterator();
-    Iterator<JSType> otherReqFormals = other.requiredFormals.iterator();
-    while (thisReqFormals.hasNext()) {
-      JSType reqFormal = thisReqFormals.next();
-      JSType otherReqFormal = otherReqFormals.next();
-      if (!reqFormal.unifyWithSubtype(otherReqFormal, typeParameters, typeMultimap)) {
+    int maxNonInfiniteArity = getMaxArityWithoutRestFormals();
+    for (int i = 0; i < maxNonInfiniteArity; i++) {
+      JSType thisFormal = getFormalType(i);
+      JSType otherFormal = other.getFormalType(i);
+      if (otherFormal != null
+          && !thisFormal.unifyWithSubtype(otherFormal, typeParameters, typeMultimap)) {
         return false;
       }
     }
-
-    if (optionalFormals.size() != other.optionalFormals.size()) {
-      return false;
-    }
-    Iterator<JSType> thisOptFormals = optionalFormals.iterator();
-    Iterator<JSType> otherOptFormals = other.optionalFormals.iterator();
-    while (thisOptFormals.hasNext()) {
-      JSType optFormal = thisOptFormals.next();
-      JSType otherOptFormal = otherOptFormals.next();
-      if (!optFormal.unifyWithSubtype(otherOptFormal, typeParameters, typeMultimap)) {
+    if (this.restFormals != null) {
+      JSType otherRestFormals = other.getFormalType(maxNonInfiniteArity);
+      if (otherRestFormals != null
+          && !this.restFormals.unifyWithSubtype(otherRestFormals, typeParameters, typeMultimap)) {
         return false;
       }
-    }
-
-    if (restFormals == null && other.restFormals != null ||
-        restFormals != null && other.restFormals == null) {
-      return false;
-    }
-    if (restFormals != null && !restFormals.unifyWithSubtype(
-        other.restFormals, typeParameters, typeMultimap)) {
-      return false;
     }
 
     if (nominalType == null && other.nominalType != null
