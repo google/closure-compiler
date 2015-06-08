@@ -503,6 +503,23 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
+  public void testNoTypeWarningForDupExternNamespace() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    externs = ImmutableList.of(SourceFile.fromCode(
+        "externs",
+        Joiner.on('\n').join(
+            "/** @const */",
+            "var ns = {};",
+            "/** @type {number} */",
+            "ns.prop1;",
+            "/** @const */",
+            "var ns = {};",
+            "/** @type {number} */",
+            "ns.prop2;")));
+    testSame(options, "");
+  }
+
   public void testCheckReferencesOff() {
     CompilerOptions options = createCompilerOptions();
     testSame(options, "x = 3; var x = 5;");

@@ -184,6 +184,15 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testSame("/** @type{{foo:string}} */ var foo; var asdf = foo;", "asdf.foo;", null);
   }
 
+  public void testDuplicateNamespaceInExterns() {
+    this.compareJsDoc = true;
+    testExternChanges(
+        "/** @const */ var ns = {}; /** @const */ var ns = {};",
+        "",
+        "/** @const */ var ns = {};");
+    this.compareJsDoc = false;
+  }
+
   public void testLetDeclarationInExterns() {
     testSameEs6("let asdf;", "asdf;", null);
   }
