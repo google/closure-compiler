@@ -174,6 +174,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
           return;
         }
 
+        // Add @nocollapse.
+        JSDocInfoBuilder newDocs = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+        newDocs.recordNoCollapse();
+        n.setJSDocInfo(newDocs.build());
+
         Node behaviorValue = n.getChildAtIndex(1);
         if (n.isVar()) {
           behaviorValue = n.getFirstChild().getFirstChild();
