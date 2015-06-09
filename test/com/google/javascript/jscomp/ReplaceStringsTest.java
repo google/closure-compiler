@@ -103,24 +103,23 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         compiler, "`", functionsToInspect, reserved, previous);
 
     return new CompilerPass() {
-        @Override
-        public void process(Node externs, Node js) {
-          Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
-          propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
+      @Override
+      public void process(Node externs, Node js) {
+        Map<String, CheckLevel> propertiesToErrorFor = new HashMap<>();
+        propertiesToErrorFor.put("foobar", CheckLevel.ERROR);
 
-          new CollapseProperties(compiler).process(externs, js);
-          if (runDisambiguateProperties) {
-            SourceInformationAnnotator sia =
-                new SourceInformationAnnotator(
-                    "test", false /* doSanityChecks */);
-            NodeTraversal.traverse(compiler, js, sia);
+        new CollapseProperties(compiler, true).process(externs, js);
+        if (runDisambiguateProperties) {
+          SourceInformationAnnotator sia =
+              new SourceInformationAnnotator("test", false /* doSanityChecks */);
+          NodeTraversal.traverse(compiler, js, sia);
 
-            DisambiguateProperties.forJSTypeSystem(
-                compiler, propertiesToErrorFor).process(externs, js);
-          }
-          pass.process(externs, js);
+          DisambiguateProperties.forJSTypeSystem(compiler, propertiesToErrorFor)
+              .process(externs, js);
         }
-      };
+        pass.process(externs, js);
+      }
+    };
   }
 
   @Override
