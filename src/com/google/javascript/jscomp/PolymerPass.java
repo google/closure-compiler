@@ -220,6 +220,25 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
     }
 
+    private void suppressDefaultValues(Node behaviorValue) {
+      for (MemberDefinition property : extractProperties(behaviorValue)) {
+        if (!property.value.isObjectLit()) {
+          continue;
+        }
+
+        Node defaultValue = NodeUtil.getFirstPropMatchingKey(property.value, "value");
+        if (defaultValue == null || !defaultValue.isFunction()) {
+          continue;
+        }
+        Node defaultValueKey = defaultValue.getParent();
+        JSDocInfoBuilder suppressDoc =
+            JSDocInfoBuilder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
+        suppressDoc.addSuppression("checkTypes");
+        suppressDoc.addSuppression("globalThis");
+        defaultValueKey.setJSDocInfo(suppressDoc.build());
+      }
+    }
+
     private void addBehaviorSuppressions(Node behaviorValue) {
       for (Node keyNode : behaviorValue.children()) {
         if (keyNode.getFirstChild().isFunction()) {
@@ -230,6 +249,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
           keyNode.setJSDocInfo(suppressDoc.build());
         }
       }
+      suppressDefaultValues(behaviorValue);
     }
   }
 
@@ -466,7 +486,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     objLitDoc.recordLends(cls.target.getQualifiedName() + ".prototype");
     objLit.setJSDocInfo(objLitDoc.build());
 
-    this.addThisTypeToFunctions(objLit, cls.target.getQualifiedName());
+    this.addTypesToFunctions(objLit, cls.target.getQualifiedName());
     this.switchDollarSignPropsToBrackets(objLit);
 
     // For simplicity add everything into a block, before adding it to the AST.
@@ -538,7 +558,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   /**
    * Add an @this annotation to all functions in the objLit.
    */
-  private void addThisTypeToFunctions(Node objLit, String thisType) {
+  private void addTypesToFunctions(Node objLit, String thisType) {
     Preconditions.checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
       Node value = keyNode.getFirstChild();
@@ -548,6 +568,24 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
             new Node(Token.BANG, IR.string(thisType)), VIRTUAL_FILE));
         keyNode.setJSDocInfo(fnDoc.build());
       }
+    }
+
+    // Add @this and @return to default property values.
+    for (MemberDefinition property : extractProperties(objLit)) {
+      if (!property.value.isObjectLit()) {
+        continue;
+      }
+
+      Node defaultValue = NodeUtil.getFirstPropMatchingKey(property.value, "value");
+      if (defaultValue == null || !defaultValue.isFunction()) {
+        continue;
+      }
+      Node defaultValueKey = defaultValue.getParent();
+      JSDocInfoBuilder fnDoc = JSDocInfoBuilder.maybeCopyFrom(defaultValueKey.getJSDocInfo());
+      fnDoc.recordThisType(new JSTypeExpression(
+          new Node(Token.BANG, IR.string(thisType)), VIRTUAL_FILE));
+      fnDoc.recordReturnType(getTypeFromProperty(property));
+      defaultValueKey.setJSDocInfo(fnDoc.build());
     }
   }
 
@@ -586,8 +624,6 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
           NodeUtil.newQName(compiler, basePath + prop.name.getString()));
       JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(prop.info);
 
-      // Note that if the JSDoc already has a type, the type inferred from the Polymer syntax is
-      // ignored.
       JSTypeExpression propType = getTypeFromProperty(prop);
       if (propType == null) {
         return;
@@ -661,6 +697,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    * @see https://github.com/Polymer/polymer/blob/0.8-preview/PRIMER.md#configuring-properties
    */
   private JSTypeExpression getTypeFromProperty(MemberDefinition property) {
+    if (property.info != null && property.info.hasType()) {
+      return property.info.getType();
+    }
+
     String typeString = "";
     if (property.value.isObjectLit()) {
       Node typeValue = NodeUtil.getFirstPropMatchingKey(property.value, "type");
