@@ -2422,6 +2422,34 @@ public final class NodeUtil {
     return isObjectCallMethod(callNode, "apply");
   }
 
+  static boolean isGoogBind(Node n) {
+    return n.isCall()
+        && n.getFirstChild().isQualifiedName()
+        && n.getFirstChild().matchesQualifiedName("goog.bind");
+  }
+
+  static boolean isGoogPartial(Node n) {
+    return n.isCall()
+        && n.getFirstChild().isQualifiedName()
+        && n.getFirstChild().matchesQualifiedName("goog.partial");
+  }
+
+  // Does not use type info. For example, it returns false for f.bind(...)
+  // because it cannot know whether f is a function.
+  static boolean isFunctionBind(Node expr) {
+    if (expr.isCall()) {
+      expr = expr.getFirstChild();
+    }
+    if (!expr.isGetProp()) {
+      return false;
+    }
+    if (isGoogBind(expr.getParent()) || isGoogPartial(expr.getParent())) {
+      return true;
+    }
+    return expr.getFirstChild().isFunction()
+        && expr.getLastChild().getString().equals("bind");
+  }
+
   /**
    * Determines whether this node is strictly on the left hand side of an assign
    * or var initialization. Notably, this does not include all L-values, only

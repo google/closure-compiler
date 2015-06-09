@@ -11510,6 +11510,23 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  poly.bind(new Foo('asdf'), x);",
         "}",
         "f(123);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {string} */",
+        "  this.p = 'asdf';",
+        "}",
+        "(function() { this.p - 5; }).bind(new Foo);"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.p = 123;",
+        "}",
+        "(function(x) { this.p - x; }).bind(new Foo, 321);"));
   }
 
   public void testClosureStyleFunctionBind() {
@@ -11554,6 +11571,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    goog.bind(x, {}, 1, 2);",
         "  }",
         "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {string} */",
+        "  this.p = 'asdf';",
+        "}",
+        "goog.bind(function() { this.p - 5; }, new Foo);"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck("goog.partial(function(x) {}, 123)");
   }
 
   public void testPlusBackwardInference() {

@@ -1727,8 +1727,8 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(env, JSType.UNKNOWN);
     }
     // Check if the receiver argument is there
-    if (isGoogBind(call) && call.getChildCount() <= 2
-        || !isGoogPartial(call) && call.getChildCount() == 1) {
+    if (NodeUtil.isGoogBind(call) && call.getChildCount() <= 2
+        || !NodeUtil.isGoogPartial(call) && call.getChildCount() == 1) {
       warnings.add(JSError.make(
           call, TypeCheck.WRONG_ARGUMENT_COUNT,
           getReadableCalleeName(call.getFirstChild()),
@@ -3219,36 +3219,16 @@ final class NewTypeInference implements CompilerPass {
         && convention.isPropertyTestFunction(expr);
   }
 
-  private boolean isGoogBind(Node n) {
-    return n.isCall()
-        && n.getFirstChild().isQualifiedName()
-        && n.getFirstChild().matchesQualifiedName("goog.bind");
-  }
-
-  private boolean isGoogPartial(Node n) {
-    return n.isCall()
-        && n.getFirstChild().isQualifiedName()
-        && n.getFirstChild().matchesQualifiedName("goog.partial");
-  }
-
   private boolean isFunctionBind(Node expr, TypeEnv env, boolean isFwd) {
-    if (!expr.isGetProp()) {
+    if (NodeUtil.isFunctionBind(expr)) {
+      return true;
+    }
+    if (!expr.isGetProp() || !expr.getLastChild().getString().equals("bind")) {
       return false;
     }
     Node recv = expr.getFirstChild();
-    if (!recv.isFunction() && !recv.isQualifiedName()) {
-      return false;
-    }
-    if (isGoogBind(expr.getParent()) || isGoogPartial(expr.getParent())) {
-      return true;
-    }
-    if (!expr.getLastChild().getString().equals("bind")) {
-      return false;
-    }
-    JSType recvType = isFwd
-        ? analyzeExprFwd(recv, env).type : analyzeExprBwd(recv, env).type;
-    return !recvType.isUnknown()
-        && recvType.isSubtypeOf(commonTypes.topFunction());
+    JSType recvType = isFwd ? analyzeExprFwd(recv, env).type : analyzeExprBwd(recv, env).type;
+    return !recvType.isUnknown() && recvType.isSubtypeOf(commonTypes.topFunction());
   }
 
   private boolean isGoogTypeof(Node expr) {

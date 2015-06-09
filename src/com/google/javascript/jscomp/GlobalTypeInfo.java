@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.jscomp.NewTypeInference.WarningReporter;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.newtypes.Declaration;
@@ -31,6 +32,7 @@ import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.EnumType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
+import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.JSTypes;
@@ -1459,7 +1461,7 @@ class GlobalTypeInfo implements CompilerPass {
           String varName = n.getString();
           if (varName.equals("undefined")) {
             return JSType.UNDEFINED;
-          } else if (currentScope.isNamespace(varName)) {
+          } else if (this.currentScope.isNamespace(varName)) {
             // Namespaces (literals, enums, constructors) get populated during
             // ProcessScope, so it's NOT safe to convert them to jstypes until
             // after ProcessScope is done. So, we don't try to do sth clever
@@ -1471,7 +1473,7 @@ class GlobalTypeInfo implements CompilerPass {
             // the object-literal declaration.)
             return null;
           }
-          return currentScope.getDeclaredTypeOf(varName);
+          return this.currentScope.getDeclaredTypeOf(varName);
         }
         case Token.OBJECTLIT: {
           JSType objLitType = JSType.TOP_OBJECT;
@@ -1489,12 +1491,12 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.GETPROP:
           Node recv = n.getFirstChild();
           if (recv.isQualifiedName()) {
-            EnumType et = currentScope.getEnum(QualifiedName.fromNode(recv));
+            EnumType et = this.currentScope.getEnum(QualifiedName.fromNode(recv));
             if (et != null
                 && et.enumLiteralHasKey(n.getLastChild().getString())) {
               return et.getEnumeratedType();
             }
-            if (currentScope.isNamespace(recv)) {
+            if (this.currentScope.isNamespace(recv)) {
               return null;
             }
             JSType recvType = simpleInferExprType(recv);
@@ -1612,30 +1614,15 @@ class GlobalTypeInfo implements CompilerPass {
         RawNominalType ownerType, Scope parentScope) {
       Preconditions.checkArgument(declNode.isFunction() || declNode.isGetProp());
 
-      Node parent = declNode.getParent();
-      // An unannotated function may appear in argument position.
-      // In that case, we use jsdoc info from the callee's jsdoc (if any).
-      if (fnDoc == null
-          && !NodeUtil.functionHasInlineJsdocs(declNode)
-          && parent.isCall()
-          && declNode != parent.getFirstChild()) {
-        DeclaredFunctionType calleeDeclType = getDeclaredFunctionTypeOfCalleeIfAny(
-            parent.getFirstChild(), parentScope);
-        if (calleeDeclType != null && !calleeDeclType.isGeneric()) {
-          int index = parent.getIndexOfChild(declNode) - 1;
-          JSType declTypeFromCallee = calleeDeclType.getFormalType(index);
-          if (declTypeFromCallee != null) {
-            DeclaredFunctionType t =
-                computeFnDeclaredTypeFromCallee(declNode, declTypeFromCallee);
-            if (t != null) {
-              return t;
-            }
-          }
+      // For an unannotated function, check if we can grab a type signature for
+      // it from the surrounding code where it appears.
+      if (fnDoc == null && !NodeUtil.functionHasInlineJsdocs(declNode)) {
+        DeclaredFunctionType t = getDeclaredFunctionTypeFromContext(
+            functionName, declNode, parentScope);
+        if (t != null) {
+          return t;
         }
       }
-      // When any of the above IFs fails, fall through to treat the function as
-      // a function without jsdoc.
-
       // TODO(dimvar): warn if multiple jsdocs for a fun
       RawNominalType ctorType =
           declNode.isFunction() ? nominaltypesByNode.get(declNode) : null;
@@ -1675,6 +1662,49 @@ class GlobalTypeInfo implements CompilerPass {
           || numFormals == (optArity + 1) && hasRestFormals) {
         return declType;
       }
+      return null;
+    }
+
+    // Returns null if it can't find a suitable type in the context
+    private DeclaredFunctionType getDeclaredFunctionTypeFromContext(
+        String functionName, Node declNode, Scope parentScope) {
+      Node parent = declNode.getParent();
+
+      // The function literal is used with .bind or goog.bind
+      if (NodeUtil.isFunctionBind(parent) && !NodeUtil.isGoogPartial(parent)) {
+        Node call = parent.isCall() ? parent : parent.getParent();
+        Bind bindComponents = convention.describeFunctionBind(call, true, false);
+        JSType recvType = simpleInferExprType(bindComponents.thisValue);
+        if (recvType == null) {
+          return null;
+        }
+        // Use typeParser for the formals, and only add the receiver type here.
+        DeclaredFunctionType allButRecvType = typeParser.getFunctionType(
+            null, functionName, declNode, null, null, parentScope);
+        DeclaredFunctionType onlyHasRecvType = (new FunctionTypeBuilder())
+            .addReceiverType(recvType.getNominalTypeIfSingletonObj())
+            .buildDeclaration();
+        // Using withTypeInfoFromSuper is a hack to add the receiver type.
+        return onlyHasRecvType.withTypeInfoFromSuper(allButRecvType, true);
+      }
+
+      // The function literal is an argument at a call
+      if (parent.isCall() && declNode != parent.getFirstChild()) {
+        DeclaredFunctionType calleeDeclType = getDeclaredFunctionTypeOfCalleeIfAny(
+            parent.getFirstChild(), parentScope);
+        if (calleeDeclType != null && !calleeDeclType.isGeneric()) {
+          int index = parent.getIndexOfChild(declNode) - 1;
+          JSType declTypeFromCallee = calleeDeclType.getFormalType(index);
+          if (declTypeFromCallee != null) {
+            DeclaredFunctionType t =
+                computeFnDeclaredTypeFromCallee(declNode, declTypeFromCallee);
+            if (t != null) {
+              return t;
+            }
+          }
+        }
+      }
+
       return null;
     }
 
