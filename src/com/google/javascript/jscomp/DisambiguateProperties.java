@@ -456,7 +456,7 @@ class DisambiguateProperties<T> implements CompilerPass {
                     "consider using @this";
             } else {
               String qName = n.getFirstChild().getQualifiedName();
-              suggestion = "Consider casting " + qName + " if you know it's type.";
+              suggestion = "Consider casting " + qName + " if you know its type.";
             }
           } else {
             List<String> errors = new ArrayList<>();
