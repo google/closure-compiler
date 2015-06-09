@@ -1454,8 +1454,8 @@ $.now = function() {};
 
 /**
  * @param {(string|Object<string,*>)=} arg1
- * @param {(string|function(!jQuery.event=))=} selector
- * @param {function(!jQuery.event=)=} handler
+ * @param {(string|function(!jQuery.Event=))=} selector
+ * @param {function(!jQuery.Event=)=} handler
  * @return {!jQuery}
  */
 jQuery.prototype.off = function(arg1, selector, handler) {};
