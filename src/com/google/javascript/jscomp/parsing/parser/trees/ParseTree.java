@@ -142,6 +142,9 @@ public class ParseTree {
   public InterfaceDeclarationTree asInterfaceDeclaration() {
     return (InterfaceDeclarationTree) this;
   }
+  public EnumDeclarationTree asEnumDeclaration() {
+    return (EnumDeclarationTree) this;
+  }
 
   public boolean isPattern() {
     ParseTree parseTree = this;

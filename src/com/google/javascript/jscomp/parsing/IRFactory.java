@@ -53,6 +53,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.DefaultClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DefaultParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.DoWhileStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.EmptyStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.EnumDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExportSpecifierTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ExpressionStatementTree;
@@ -1610,7 +1611,7 @@ class IRFactory {
 
     Node processComputedPropertyMemberVariable(ComputedPropertyMemberVariableTree tree) {
       maybeWarnEs6Feature(tree, "computed property");
-      maybeWarnTypeSyntax(tree);
+      maybeWarnTypeSyntax(tree, "computed property");
 
       Node n = newNode(Token.COMPUTED_PROP, transform(tree.property));
       maybeProcessType(n, tree.declaredType);
@@ -2084,9 +2085,9 @@ class IRFactory {
     }
 
     Node processInterfaceDeclaration(InterfaceDeclarationTree tree) {
-      maybeWarnEs6Feature(tree, "interface");
+      maybeWarnTypeSyntax(tree, "interface");
 
-      Node name = transformOrEmpty(tree.name, tree);
+      Node name = processName(tree.name);
       Node superInterfaces = transformListOrEmpty(Token.INTERFACE_EXTENDS, tree.superInterfaces);
 
       Node body = newNode(Token.INTERFACE_MEMBERS);
@@ -2096,6 +2097,19 @@ class IRFactory {
       }
 
       return newNode(Token.INTERFACE, name, superInterfaces, body);
+    }
+
+    Node processEnumDeclaration(EnumDeclarationTree tree) {
+      maybeWarnTypeSyntax(tree, "enum");
+
+      Node name = processName(tree.name);
+      Node body = newNode(Token.ENUM_MEMBERS);
+      setSourceInfo(body, tree);
+      for (ParseTree child : tree.members) {
+        body.addChildrenToBack(transform(child));
+      }
+
+      return newNode(Token.ENUM, name, body);
     }
 
     Node processSuper(SuperExpressionTree tree) {
@@ -2280,14 +2294,19 @@ class IRFactory {
       }
     }
 
-    void maybeWarnTypeSyntax(ParseTree node) {
+    void maybeWarnTypeSyntax(ParseTree node, String feature) {
       if (config.languageMode != LanguageMode.ECMASCRIPT6_TYPED) {
         errorReporter.warning(
-            "type syntax is only supported in ES6 typed mode",
+            "type syntax is only supported in ES6 typed mode: " + feature,
             sourceName,
-            lineno(node), charno(node));
+            lineno(node),
+            charno(node));
       }
       recordTypeSyntax(node.location);
+    }
+
+    void maybeWarnTypeSyntax(ParseTree node) {
+      maybeWarnTypeSyntax(node, "type annotation");
     }
 
     Node unsupportedLanguageFeature(ParseTree node, String feature) {
@@ -2493,7 +2512,8 @@ class IRFactory {
           // TypeScript
         case INTERFACE_DECLARATION:
           return processInterfaceDeclaration(node.asInterfaceDeclaration());
-
+        case ENUM_DECLARATION:
+          return processEnumDeclaration(node.asEnumDeclaration());
         default:
           break;
       }

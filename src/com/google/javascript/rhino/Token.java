@@ -229,6 +229,8 @@ public class Token {
       INTERFACE = 311,
       INTERFACE_EXTENDS = 312,
       INTERFACE_MEMBERS = 313,
+      ENUM = 314,
+      ENUM_MEMBERS = 315,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
@@ -530,6 +532,10 @@ public class Token {
         return "INTERFACE_EXTENDS";
       case INTERFACE_MEMBERS:
         return "INTERFACE_MEMBERS";
+      case ENUM:
+        return "ENUM";
+      case ENUM_MEMBERS:
+        return "ENUM_MEMBERS";
     }
 
         // Token without name
@@ -767,6 +773,8 @@ public class Token {
         return -1;
       case INTERFACE:
         return 3;
+      case ENUM:
+        return 2;
     }
     throw new IllegalStateException(
         "No arity defined for " + Token.name(token));

@@ -63,6 +63,19 @@ public final class TypeSyntaxTest extends TestCase {
     testErrorManager.expectErrors(errors);
   }
 
+  private void testNotEs6Typed(String source, String... features) {
+    for (int i = 0; i < features.length; i++) {
+      features[i] =
+          "type syntax is only supported in ES6 typed mode: "
+              + features[i]
+              + ". Use --language_in=ECMASCRIPT6_TYPED to enable ES6 typed features.";
+    }
+    expectErrors(features);
+    parse(source, LanguageMode.ECMASCRIPT6);
+    expectErrors(features);
+    parse(source, LanguageMode.ECMASCRIPT6_STRICT);
+  }
+
   public void testVariableDeclaration() {
     assertVarType("any", anyType(), "var foo: any = 'hello';");
     assertVarType("number", numberType(), "var foo: number = 'hello';");
@@ -208,6 +221,10 @@ public final class TypeSyntaxTest extends TestCase {
     parse("interface I {\n  foo: string;\n}");
   }
 
+  public void testInterface_notEs6Typed() {
+    testNotEs6Typed("interface I { foo: string;}", "interface", "type annotation");
+  }
+
   public void testInterface_disallowExpression() {
     expectErrors("Parse error. primary expression expected");
     parse("var i = interface {};");
@@ -220,6 +237,14 @@ public final class TypeSyntaxTest extends TestCase {
         "has foo variable",
         Node.newString(Token.MEMBER_VARIABLE_DEF, "foo"),
         classMembers.getFirstChild());
+  }
+
+  public void testEnum() {
+    parse("enum E {\n  a,\n  b,\n  c\n}");
+  }
+
+  public void testEnum_notEs6Typed() {
+    testNotEs6Typed("enum E {a, b, c}", "enum");
   }
 
   public void testMemberVariable() throws Exception {
@@ -272,13 +297,9 @@ public final class TypeSyntaxTest extends TestCase {
     assertNull(message + ": " + treeDiff, treeDiff);
   }
 
-  private Node parse(String source) {
-    return parse(source, source);
-  }
-
-  private Node parse(String source, String expected) {
+  private Node parse(String source, String expected, LanguageMode languageIn) {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
+    options.setLanguageIn(languageIn);
     options.setLanguageOut(LanguageMode.ECMASCRIPT6_TYPED);
     options.setPreserveTypeAnnotations(true);
     options.setPrettyPrint(true);
@@ -306,5 +327,17 @@ public final class TypeSyntaxTest extends TestCase {
     }
 
     return script;
+  }
+
+  private Node parse(String source, LanguageMode languageIn) {
+    return parse(source, source, languageIn);
+  }
+
+  private Node parse(String source) {
+    return parse(source, source, LanguageMode.ECMASCRIPT6_TYPED);
+  }
+
+  private Node parse(String source, String expected) {
+    return parse(source, expected, LanguageMode.ECMASCRIPT6_TYPED);
   }
 }
