@@ -422,19 +422,17 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       }
       Node behaviorValue = NodeUtil.getRValueOfLValue(behaviorDeclaration);
 
-      // Individual behaviors can also be arrays of behaviors. Parse them recursively.
-      if (behaviorValue.isArrayLit()) {
-        behaviors.addAll(extractBehaviors(behaviorValue));
-        continue;
-      }
-
-      if (behaviorValue == null || !behaviorValue.isObjectLit()) {
+      if (behaviorValue == null) {
         compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
-        continue;
+      } else if (behaviorValue.isArrayLit()) {
+        // Individual behaviors can also be arrays of behaviors. Parse them recursively.
+        behaviors.addAll(extractBehaviors(behaviorValue));
+      } else if (behaviorValue.isObjectLit()) {
+        behaviors.add(new BehaviorDefinition(
+            extractProperties(behaviorValue), getBehaviorFunctionsToCopy(behaviorValue)));
+      } else {
+        compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
       }
-
-      behaviors.add(new BehaviorDefinition(
-          extractProperties(behaviorValue), getBehaviorFunctionsToCopy(behaviorValue)));
     }
 
     return behaviors.build();
