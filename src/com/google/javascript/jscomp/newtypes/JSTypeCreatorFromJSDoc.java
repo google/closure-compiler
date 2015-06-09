@@ -312,7 +312,7 @@ public final class JSTypeCreatorFromJSDoc {
     if (outerTypeParameters.contains(name)) {
       return JSType.fromTypeVar(name);
     }
-    Declaration decl = registry.getDeclaration(QualifiedName.fromQname(name), true);
+    Declaration decl = registry.getDeclaration(QualifiedName.fromQualifiedString(name), true);
     if (decl == null) {
       unknownTypeNames.put(n, name);
       throw new UnknownTypeException("Unhandled type: " + name);

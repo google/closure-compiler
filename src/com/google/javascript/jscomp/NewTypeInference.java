@@ -466,8 +466,8 @@ final class NewTypeInference implements CompilerPass {
       // this entry will be overwritten in the foreach loop below.
       env = envPutType(env, "arguments", commonTypes.getArgumentsArrayType());
       JSType argsArrayElmType = JSType.UNKNOWN;
-      if (currentScope.getDeclaredType().hasRestFormals()) {
-        argsArrayElmType = currentScope.getDeclaredType().getRestFormalsType();
+      if (currentScope.getDeclaredFunctionType().hasRestFormals()) {
+        argsArrayElmType = currentScope.getDeclaredFunctionType().getRestFormalsType();
       }
       env = envPutType(env, ARGSARRAYELM_ID, argsArrayElmType);
     }
@@ -660,7 +660,7 @@ final class NewTypeInference implements CompilerPass {
           if (retExp == null) {
             inEnv = outEnv;
           } else {
-            JSType declRetType = currentScope.getDeclaredType().getReturnType();
+            JSType declRetType = currentScope.getDeclaredFunctionType().getReturnType();
             declRetType = declRetType == null ? JSType.UNKNOWN : declRetType;
             inEnv = analyzeExprBwd(retExp, outEnv, declRetType).env;
           }
@@ -773,7 +773,7 @@ final class NewTypeInference implements CompilerPass {
           break;
         case Token.RETURN: {
           Node retExp = n.getFirstChild();
-          JSType declRetType = currentScope.getDeclaredType().getReturnType();
+          JSType declRetType = currentScope.getDeclaredFunctionType().getReturnType();
           declRetType = declRetType == null ? JSType.UNKNOWN : declRetType;
           JSType actualRetType;
           if (retExp == null) {
@@ -889,7 +889,7 @@ final class NewTypeInference implements CompilerPass {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     Node fnRoot = fn.getRoot();
 
-    DeclaredFunctionType declType = fn.getDeclaredType();
+    DeclaredFunctionType declType = fn.getDeclaredFunctionType();
     int reqArity = declType.getRequiredArity();
     int optArity = declType.getOptionalArity();
     if (declType.isGeneric()) {
@@ -900,7 +900,7 @@ final class NewTypeInference implements CompilerPass {
     // or contains undefined can be marked as optional.
     List<String> formals = fn.getFormals();
     for (int i = reqArity - 1; i >= 0; i--) {
-      JSType formalType = fn.getDeclaredType().getFormalType(i);
+      JSType formalType = fn.getDeclaredFunctionType().getFormalType(i);
       if (formalType != null) {
         break;
       }
@@ -3127,7 +3127,7 @@ final class NewTypeInference implements CompilerPass {
         && !currentScope.isExternalFunction(calleeName)) {
       Scope s = currentScope.getScope(calleeName);
       JSType expectedRetType;
-      if (s.getDeclaredType().getReturnType() == null) {
+      if (s.getDeclaredFunctionType().getReturnType() == null) {
         expectedRetType = requiredType;
       } else {
         // No deferred check if the return type is declared

@@ -55,7 +55,7 @@ public final class QualifiedName {
               Splitter.on('.').split(qnameNode.getQualifiedName())));
   }
 
-  public static QualifiedName fromQname(String qname) {
+  public static QualifiedName fromQualifiedString(String qname) {
     return qname.contains(".") ?
         new QualifiedName(ImmutableList.copyOf(Splitter.on('.').split(qname))) :
         new QualifiedName(qname);

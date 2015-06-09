@@ -957,7 +957,7 @@ class GlobalTypeInfo implements CompilerPass {
       JSDocInfo jsdoc = objlit.getJSDocInfo();
       String lendsName = jsdoc.getLendsName();
       Preconditions.checkNotNull(lendsName);
-      QualifiedName lendsQname = QualifiedName.fromQname(lendsName);
+      QualifiedName lendsQname = QualifiedName.fromQualifiedString(lendsName);
       if (currentScope.isNamespace(lendsQname)) {
         processLendsToNamespace(lendsQname, lendsName, objlit);
       } else {
@@ -1343,7 +1343,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitClassPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
-      NominalType thisType = currentScope.getDeclaredType().getThisType();
+      NominalType thisType = currentScope.getDeclaredFunctionType().getThisType();
       if (thisType == null) {
         // This will get caught in NewTypeInference
         return;
@@ -1377,6 +1377,12 @@ class GlobalTypeInfo implements CompilerPass {
 
     private JSType getTypeAtPropDeclNode(Node declNode, JSDocInfo jsdoc) {
       Preconditions.checkArgument(!currentScope.isNamespace(declNode));
+      Node initializer = NodeUtil.getInitializer(declNode);
+      if (initializer != null && initializer.isFunction()) {
+        return commonTypes.fromFunctionType(
+            currentScope.getScope(getFunInternalName(initializer))
+            .getDeclaredFunctionType().toFunctionType());
+      }
       return getDeclaredTypeOfNode(jsdoc, currentScope);
     }
 
@@ -1416,7 +1422,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (n.isQualifiedName()) {
         Declaration decl = currentScope.getDeclaration(QualifiedName.fromNode(n), false);
         if (decl != null && decl.getFunctionScope() != null) {
-          DeclaredFunctionType funType = ((Scope) decl.getFunctionScope()).getDeclaredType();
+          DeclaredFunctionType funType = decl.getFunctionScope().getDeclaredFunctionType();
           if (funType != null) {
             return funType.toFunctionType();
           }
@@ -1722,7 +1728,7 @@ class GlobalTypeInfo implements CompilerPass {
         // of an assignment to a property, not just when the property is a
         // prototype property.
         methodScope = visitFunctionLate(initializer, rawType);
-        methodType = methodScope.getDeclaredType();
+        methodType = methodScope.getDeclaredFunctionType();
         propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
       } else {
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
@@ -1784,19 +1790,20 @@ class GlobalTypeInfo implements CompilerPass {
       return null;
     }
     if (fn.isFunction()) {
-      return currentScope.getScope(getFunInternalName(fn)).getDeclaredType();
+      return currentScope.getScope(getFunInternalName(fn)).getDeclaredFunctionType();
     }
     Preconditions.checkState(fn.isQualifiedName());
     Declaration decl = currentScope.getDeclaration(QualifiedName.fromNode(fn), false);
-    if (decl != null) {
-      if (decl.getFunctionScope() != null) {
-        return ((Scope) decl.getFunctionScope()).getDeclaredType();
-      }
-      if (decl.getTypeOfSimpleDecl() != null) {
-        FunctionType funType = decl.getTypeOfSimpleDecl().getFunType();
-        if (funType != null) {
-          return funType.toDeclaredFunctionType();
-        }
+    if (decl == null) {
+      return null;
+    }
+    if (decl.getFunctionScope() != null) {
+      return decl.getFunctionScope().getDeclaredFunctionType();
+    }
+    if (decl.getTypeOfSimpleDecl() != null) {
+      FunctionType funType = decl.getTypeOfSimpleDecl().getFunType();
+      if (funType != null) {
+        return funType.toDeclaredFunctionType();
       }
     }
     return null;
@@ -1952,7 +1959,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    public DeclaredFunctionType getDeclaredType() {
+    public DeclaredFunctionType getDeclaredFunctionType() {
       return declaredType;
     }
 
@@ -2023,8 +2030,7 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(qnameNode.isQualifiedName());
       if (qnameNode.isName()) {
         return isDefinedLocally(qnameNode.getString(), false);
-      } else if (qnameNode.isThis()
-          || unknownTypeNames.contains(qnameNode.getQualifiedName())) {
+      } else if (qnameNode.isThis()) {
         return true;
       }
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
@@ -2103,7 +2109,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     boolean hasThis() {
-      return isFunction() && getDeclaredType().getThisType() != null;
+      return isFunction() && getDeclaredFunctionType().getThisType() != null;
     }
 
     private RawNominalType getNominalType(QualifiedName qname) {
@@ -2133,7 +2139,7 @@ class GlobalTypeInfo implements CompilerPass {
         if (!hasThis()) {
           return null;
         }
-        return getDeclaredType().getThisType().getInstanceAsJSType();
+        return getDeclaredFunctionType().getThisType().getInstanceAsJSType();
       }
       Declaration decl = getLocalDeclaration(name, false);
       if (decl != null) {
@@ -2141,7 +2147,7 @@ class GlobalTypeInfo implements CompilerPass {
           Preconditions.checkState(!decl.getTypeOfSimpleDecl().isBottom(), "%s was bottom", name);
           return decl.getTypeOfSimpleDecl();
         } else if (decl.getFunctionScope() != null) {
-            DeclaredFunctionType scopeType = ((Scope) decl.getFunctionScope()).getDeclaredType();
+            DeclaredFunctionType scopeType = decl.getFunctionScope().getDeclaredFunctionType();
             if (scopeType != null) {
               return getCommonTypes().fromFunctionType(scopeType.toFunctionType());
             }
@@ -2152,7 +2158,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       if (name.equals(this.name)) {
         return getCommonTypes()
-            .fromFunctionType(getDeclaredType().toFunctionType());
+            .fromFunctionType(getDeclaredFunctionType().toFunctionType());
       }
       if (parent != null) {
         return parent.getDeclaredTypeOf(name);
@@ -2409,7 +2415,31 @@ class GlobalTypeInfo implements CompilerPass {
       qualifiedEnums = null;
     }
 
+    private void declareUnknownType(QualifiedName qname) {
+      if (qname.isIdentifier() || null == getNamespace(qname.getLeftmostName())) {
+        String name = qname.getLeftmostName();
+        Preconditions.checkState(!locals.containsKey(name));
+        externs.put(name, JSType.UNKNOWN);
+        return;
+      }
+      Namespace leftmost = getNamespace(qname.getLeftmostName());
+      QualifiedName props = qname.getAllButLeftmost();
+      // The forward declared type may be on an undeclared namespace.
+      // e.g. 'ns.Foo.Bar.Baz' when we don't even have a definition for ns.Foo.
+      // Thus, we need to find the prefix of the qname that is not declared.
+      while (!props.isIdentifier() && !leftmost.hasSubnamespace(props.getAllButRightmost())) {
+        props = props.getAllButRightmost();
+      }
+      Namespace ns =
+          props.isIdentifier() ? leftmost : leftmost.getSubnamespace(props.getAllButRightmost());
+      String pname = props.getRightmostName();
+      ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
+    }
+
     private void removeTmpData() {
+      for (String name : unknownTypeNames) {
+        declareUnknownType(QualifiedName.fromQualifiedString(name));
+      }
       unknownTypeNames = ImmutableSet.of();
       // For now, we put types of namespaces directly into the locals.
       // Alternatively, we could move this into NewTypeInference.initEdgeEnvs

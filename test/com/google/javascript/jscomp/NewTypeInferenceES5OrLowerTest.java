@@ -7995,13 +7995,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */ var ns = ns || {};",
         "ns.fun = function(name) {};",
         "ns.fun = ns.fun || {};",
-        "ns.fun.get = function(/** string */ name) {};"));
+        "ns.fun.get = function(/** string */ name) {};"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(Joiner.on('\n').join(
         "/** @const */ var ns = ns || {};",
         "ns.fun = function(name) {};",
         "ns.fun.get = function(/** string */ name) {};",
-        "ns.fun = ns.fun || {};"));
+        "ns.fun = ns.fun || {};"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testInvalidEnumDoesntCrash() {
@@ -11053,60 +11055,65 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "goog.addDependency = function(file, provides, requires){};",
         "goog.forwardDeclare = function(name){};");
 
-    typeCheck(DEFINITIONS + Joiner.on('\n').join(
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
         "goog.addDependency('', ['Foo'], []);",
         "goog.forwardDeclare('Bar');",
         "function f(/** !Foo */ x) {}",
         "function g(/** !Bar */ y) {}"));
 
-    typeCheck(DEFINITIONS + Joiner.on('\n').join(
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
         "/** @const */ var ns = {};",
         "goog.addDependency('', ['ns.Foo'], []);",
         "goog.forwardDeclare('ns.Bar');",
         "function f(/** !ns.Foo */ x) {}",
         "function g(/** !ns.Bar */ y) {}"));
 
-    typeCheck(DEFINITIONS + Joiner.on('\n').join(
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+        "/** @const */ var ns = {};",
+        "goog.forwardDeclare('ns.Bar');",
+        "function f(/** !ns.Baz */ x) {}"),
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
         "goog.addDependency('', ['Foo'], []);",
         "goog.forwardDeclare('Bar');",
         "var f = new Foo;",
         "var b = new Bar;"));
 
-    // TODO(blickly): Allow forward declared names that are used in code.
-    // typeCheck(DEFINITIONS +Joiner.on('\n').join(
-    //     "/** @const */ var ns = {};",
-    //     "goog.addDependency('', ['ns.Foo'], []);",
-    //     "goog.forwardDeclare('ns.Bar');",
-    //     "var f = new ns.Foo;",
-    //     "var b = new ns.Bar;"));
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+        "/** @const */ var ns = {};",
+        "goog.addDependency('', ['ns.Foo'], []);",
+        "goog.forwardDeclare('ns.Bar');",
+        "var f = new ns.Foo;",
+        "var b = new ns.Bar;"));
 
-    // typeCheck(DEFINITIONS + Joiner.on('\n').join(
-    //     "/** @const */ var ns = {};",
-    //     "goog.addDependency('', ['ns.subns.Foo'], []);",
-    //     "goog.forwardDeclare('ns.subns.Bar');",
-    //     "var f = new ns.subns.Foo;",
-    //     "var b = new ns.subns.Bar;"));
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+        "/** @const */ var ns = {};",
+        "goog.addDependency('', ['ns.subns.Foo'], []);",
+        "goog.forwardDeclare('ns.subns.Bar');",
+        "var f = new ns.subns.Foo;",
+        "var b = new ns.subns.Bar;"));
 
-    // typeCheck(DEFINITIONS + Joiner.on('\n').join(
-    //     "goog.addDependency('', ['ns.subns.Foo'], []);",
-    //     "goog.forwardDeclare('ns.subns.Bar');",
-    //     "var f = new ns.subns.Foo;",
-    //     "var b = new ns.subns.Bar;"));
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+        "goog.addDependency('', ['ns.subns.Foo'], []);",
+        "goog.forwardDeclare('ns.subns.Bar');",
+        "var f = new ns.subns.Foo;",
+        "var b = new ns.subns.Bar;"));
 
-    // typeCheck(DEFINITIONS + Joiner.on('\n').join(
-    //     "goog.forwardDeclare('ns.subns');",
-    //     "goog.forwardDeclare('ns.subns.Bar');",
-    //     "var b = new ns.subns.Bar;"));
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+        "goog.forwardDeclare('ns.subns');",
+        "goog.forwardDeclare('ns.subns.Bar');",
+        "var b = new ns.subns.Bar;"));
 
     // In the following cases the old type inference warned about arg type,
     // but we allow rather than create synthetic named type
-    typeCheck(DEFINITIONS + Joiner.on('\n').join(
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
         "goog.forwardDeclare('Foo');",
         "function f(/** !Foo */ x) {}",
         "/** @constructor */ function Bar(){}",
         "f(new Bar);"));
 
-    typeCheck(DEFINITIONS + Joiner.on('\n').join(
+    typeCheck(Joiner.on('\n').join(DEFINITIONS,
         "/** @const */ var ns = {};",
         "goog.forwardDeclare('ns.Foo');",
         "function f(/** !ns.Foo */ x) {}",
