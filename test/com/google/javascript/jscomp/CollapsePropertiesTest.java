@@ -37,7 +37,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Override public CompilerPass getProcessor(Compiler compiler) {
-    return new CollapseProperties(compiler, true);
+    return new CollapseProperties(compiler);
   }
 
   @Override
