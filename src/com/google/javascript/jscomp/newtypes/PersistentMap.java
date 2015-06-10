@@ -20,7 +20,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 
 /** A persistent map with non-destructive additions and removals  */
-public abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
+abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
 
   private static PersistentMap EMPTY;
   static {

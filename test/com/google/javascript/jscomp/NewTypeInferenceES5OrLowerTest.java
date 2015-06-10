@@ -12090,4 +12090,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "x.obj = {};",
         "if (x['obj'] != null) {}"));
   }
+
+  public void testClasslessObjectsHaveBuiltinProperties() {
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** !Object */ x) {",
+        "  return x.hasOwnProperty('asdf');",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** { a: number } */ x) {",
+        "  return x.hasOwnProperty('asdf');",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "var x = {};",
+        "x.hasOwnProperty('asdf');"));
+
+    typeCheck(Joiner.on('\n').join(
+        "var x = /** @struct */ { a: 1 };",
+        "x.hasOwnProperty('asdf');"));
+
+    typeCheck(Joiner.on('\n').join(
+        "var x = /** @dict */ { 'a': 1 };",
+        "x['hasOwnProperty']('asdf');"));
+  }
 }

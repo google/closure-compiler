@@ -37,6 +37,11 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   protected static final String CLOSURE_BASE = "var goog;";
   protected static final String DEFAULT_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS + Joiner.on('\n').join(
+          "/**",
+          " * @param {*} propertyName",
+          " * @return {boolean}",
+          " */",
+          "Object.prototype.hasOwnProperty = function(propertyName) {};",
           "/** @return {string} */",
           "String.prototype.toString = function() { return '' };",
           "/**",

@@ -155,6 +155,7 @@ public final class JSTypes {
 
   public void setObjectType(RawNominalType builtinObject) {
     this.builtinObject = builtinObject;
+    ObjectType.setObjectType(builtinObject.getAsNominalType());
   }
 
   public void setArrayType(RawNominalType arrayType) {

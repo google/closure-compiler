@@ -33,7 +33,7 @@ import java.util.TreeSet;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public final class ObjectType implements TypeWithProperties {
+final class ObjectType implements TypeWithProperties {
   // TODO(dimvar): currently, we can't distinguish between an obj at the top of
   // the proto chain (nominalType = null) and an obj for which we can't figure
   // out its class
@@ -53,6 +53,14 @@ public final class ObjectType implements TypeWithProperties {
       PersistentMap.of("_", Property.make(JSType.BOTTOM, JSType.BOTTOM));
   private static final ObjectType BOTTOM_OBJECT = new ObjectType(
       null, BOTTOM_MAP, null, false, ObjectKind.UNRESTRICTED);
+
+  // Represents the built-in Object type. It's not available when the ObjectType
+  // class is initialized because we read the definition from the externs.
+  // It is kind of a hack that this is a static field (since we do create an
+  // instance of JSTypes).
+  // Making it non static requires significant changes and I'm not sure it's
+  // worth it.
+  private static NominalType builtinObject = null;
 
   private ObjectType(NominalType nominalType,
       PersistentMap<String, Property> props, FunctionType fn, boolean isLoose,
@@ -109,6 +117,10 @@ public final class ObjectType implements TypeWithProperties {
     }
     return new ObjectType(
         null, props, null, false, ObjectKind.UNRESTRICTED);
+  }
+
+  static void setObjectType(NominalType builtinObject) {
+    ObjectType.builtinObject = builtinObject;
   }
 
   boolean isInhabitable() {
@@ -177,7 +189,7 @@ public final class ObjectType implements TypeWithProperties {
       // It's wrong to warn about a possibly absent property on loose objects.
       newProps = newProps.with(pname, prop.withRequired());
     }
-    // No need to call makeObjectType; we know new object is not inhabitable.
+    // No need to call makeObjectType; we know that the new object is inhabitable.
     return new ObjectType(
         nominalType, newProps, fn, true, this.objectKind);
   }
@@ -756,10 +768,13 @@ public final class ObjectType implements TypeWithProperties {
   private Property getLeftmostProp(QualifiedName qname) {
     String objName = qname.getLeftmostName();
     Property p = props.get(objName);
-    if (p == null && nominalType != null) {
-      p = nominalType.getProp(objName);
+    if (p != null) {
+      return p;
     }
-    return p;
+    if (nominalType != null) {
+      return nominalType.getProp(objName);
+    }
+    return builtinObject == null ? null : builtinObject.getProp(objName);
   }
 
   @Override
