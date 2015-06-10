@@ -417,6 +417,18 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testInsertArguments_castInArguments() {
+    String originalCode = "goog.dom.classes.add(foo, /** @type {String} */ (bar));";
+    String expectedCode = "goog.dom.classes.add(foo, baz, /** @type {String} */ (bar));";
+    Compiler compiler = getCompiler(originalCode);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .insertArguments(root.getFirstChild().getFirstChild(), 1, "baz")
+        .build();
+    assertChanges(fix, "", originalCode, expectedCode);
+  }
+
+  @Test
   public void testAddGoogRequire() {
     String before = "goog.provide('js.Foo');\n";
     String after =
