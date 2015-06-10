@@ -83,6 +83,7 @@ public final class CompileTask
   private boolean generateExports;
   private boolean replaceProperties;
   private boolean forceRecompile;
+  private boolean angularPass;
   private String replacePropertiesPrefix;
   private File outputFile;
   private String outputWrapper;
@@ -109,6 +110,7 @@ public final class CompileTask
     this.generateExports = false;
     this.replaceProperties = false;
     this.forceRecompile = false;
+    this.angularPass = false;
     this.replacePropertiesPrefix = "closure.define.";
     this.defineParams = new LinkedList();
     this.entryPointParams = new LinkedList();
@@ -274,6 +276,10 @@ public final class CompileTask
   public void setForceRecompile(boolean forceRecompile) {
     this.forceRecompile = forceRecompile;
   }
+  
+  public void setAngularPass(boolean angularPass) {
+    this.angularPass = angularPass;
+  }
 
   /**
    * Set generateExports option
@@ -415,6 +421,7 @@ public final class CompileTask
     options.setManageClosureDependencies(manageDependencies);
     convertEntryPointParameters(options);
     options.setTrustedStrings(true);
+    options.setAngularPass(angularPass);
 
     if (replaceProperties) {
       convertPropertiesMap(options);
