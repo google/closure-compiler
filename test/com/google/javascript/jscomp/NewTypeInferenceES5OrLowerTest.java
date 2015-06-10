@@ -12114,4 +12114,23 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var x = /** @dict */ { 'a': 1 };",
         "x['hasOwnProperty']('asdf');"));
   }
+
+  public void testInferThisInSimpleInferExprType() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @const */ var x = this",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {string} */",
+        "  this.p = 'asdf';",
+        "}",
+        "Foo.prototype.m = function() {",
+        "  goog.bind(function() { this.p - 5; }, this);",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

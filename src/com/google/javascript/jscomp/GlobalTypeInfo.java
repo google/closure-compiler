@@ -1457,6 +1457,8 @@ class GlobalTypeInfo implements CompilerPass {
           return JSType.TRUE_TYPE;
         case Token.FALSE:
           return JSType.FALSE_TYPE;
+        case Token.THIS:
+          return this.currentScope.getDeclaredTypeOf("this");
         case Token.NAME: {
           String varName = n.getString();
           if (varName.equals("undefined")) {
