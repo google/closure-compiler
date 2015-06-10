@@ -2565,8 +2565,9 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(pair.env, recvType.getProp(getterPname));
     }
     JSType resultType = recvType.getProp(propQname);
-    if (!propAccessNode.getParent().isExprResult() &&
-        !specializedType.isTruthy() && !specializedType.isFalsy()) {
+    if (!propAccessNode.getParent().isExprResult()
+        && !specializedType.isTruthy() && !specializedType.isFalsy()
+        && !recvType.isDict()) {
       if (!recvType.mayHaveProp(propQname)) {
         // TODO(dimvar): maybe don't warn if the getprop is inside a typeof,
         // see testMissingProperty8 (who relies on that for prop checking?)

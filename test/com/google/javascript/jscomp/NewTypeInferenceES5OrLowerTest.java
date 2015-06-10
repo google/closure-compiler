@@ -12133,4 +12133,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "};"),
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testNoInexistentPropWarningsForDicts() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor @dict */",
+        "function Foo() {}",
+        "(new Foo)['prop'] - 1;"));
+  }
 }

@@ -183,13 +183,6 @@ public final class NominalType {
     return rawType.getAllPropsOfClass();
   }
 
-  public ImmutableSet<String> getAllOwnProps() {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    builder.addAll(rawType.classProps.keySet());
-    builder.addAll(rawType.protoProps.keySet());
-    return builder.build();
-  }
-
   public NominalType getInstantiatedSuperclass() {
     Preconditions.checkState(rawType.isFinalized);
     if (rawType.superClass == null) {
@@ -713,8 +706,7 @@ public final class NominalType {
         if (superClass != null) {
           builder.addAll(superClass.rawType.getAllPropsOfClass());
         }
-        allProps = builder
-            .addAll(classProps.keySet()).addAll(protoProps.keySet()).build();
+        allProps = builder.addAll(classProps.keySet()).addAll(protoProps.keySet()).build();
       }
       return allProps;
     }
