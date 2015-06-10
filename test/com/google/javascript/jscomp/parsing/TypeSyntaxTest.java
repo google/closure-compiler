@@ -176,6 +176,11 @@ public final class TypeSyntaxTest extends TestCase {
     assertVarType("string[]", arrayOfString, "var foo: string[];");
   }
 
+  public void testArrayType_empty() {
+    expectErrors("Parse error. Unexpected token '[' in type expression");
+    parse("var x: [];");
+  }
+
   public void testArrayType_missingClose() {
     expectErrors("Parse error. ']' expected");
     parse("var foo: string[;");
@@ -184,6 +189,11 @@ public final class TypeSyntaxTest extends TestCase {
   public void testArrayType_qualifiedType() {
     TypeDeclarationNode arrayOfString = arrayType(namedType("mymod.ns.Type"));
     assertVarType("string[]", arrayOfString, "var foo: mymod.ns.Type[];");
+  }
+
+  public void testArrayType_trailingParameterizedType() {
+    expectErrors("Parse error. Semi-colon expected");
+    parse("var x: Foo[]<Bar>;");
   }
 
   public void testParameterizedType() {
@@ -215,6 +225,50 @@ public final class TypeSyntaxTest extends TestCase {
   public void testParameterizedType_trailing2() {
     expectErrors("Parse error. Unexpected token ';' in type expression");
     parse("var x: my.parameterized.Type<ns.A,;");
+  }
+
+  public void testParameterizedArrayType() {
+    parse("var x: Foo<Bar>[];");
+  }
+
+  public void testUnionType() {
+    parse("var x: string | number[];");
+    parse("var x: number[] | string;");
+    parse("var x: Array<Foo> | number[];");
+
+    Node ast = parse("var x: string | number[] | Array<Foo>;");
+    TypeDeclarationNode actualUnion = (TypeDeclarationNode)
+        (ast.getFirstChild().getFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    assertEquals(3, actualUnion.getChildCount());
+
+    Node ast2 = parse("var x: (string | number)[];");
+    TypeDeclarationNode actualArray2 = (TypeDeclarationNode)
+        (ast2.getFirstChild().getFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
+    assertEquals(Token.ARRAY_TYPE, actualArray2.getType());
+    assertEquals(Token.UNION_TYPE, actualArray2.getFirstChild().getType());
+  }
+
+  public void testUnionType_empty() {
+    expectErrors("Parse error. Unexpected token '|' in type expression");
+    parse("var x: |;");
+    expectErrors("Parse error. 'identifier' expected");
+    parse("var x: number |;");
+    expectErrors("Parse error. Unexpected token '|' in type expression");
+    parse("var x: | number;");
+  }
+
+  public void testUnionType_trailingParameterizedType() {
+    expectErrors("Parse error. Semi-colon expected");
+    parse("var x: (Foo|Bar)<T>;");
+  }
+
+  public void testUnionType_notEs6Typed() {
+    testNotEs6Typed("var x: string | number[] | Array<Foo>;", "type annotation");
+  }
+
+  public void testParenType_empty() {
+    expectErrors("Parse error. Unexpected token ')' in type expression");
+    parse("var x: ();");
   }
 
   public void testInterface() {

@@ -96,6 +96,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypeNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypedParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.UnionTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
@@ -878,21 +879,46 @@ public class Parser {
 
   private ParseTree parseType() {
     SourcePosition start = getTreeStartLocation();
-    if (peekId() || peek(TokenType.VOID)) {
-      // PredefinedType or TypeReference
-      ParseTree typeReference = parseTypeReference();
+    if (!peekId() && !peek(TokenType.VOID) && !peek(TokenType.OPEN_PAREN)) {
+      reportError("Unexpected token '%s' in type expression", peekType());
+      return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
+    }
 
-      if (!peekImplicitSemiColon() && peek(TokenType.OPEN_SQUARE)) {
-        // ArrayType
-        eat(TokenType.OPEN_SQUARE);
-        eat(TokenType.CLOSE_SQUARE);
-        typeReference =
-            new ArrayTypeTree(getTreeLocation(typeReference.location.start), typeReference);
-      }
+    ParseTree typeReference = parseArrayTypeExpression();
+    if (!peek(TokenType.BAR)) {
       return typeReference;
     }
-    reportError("Unexpected token '%s' in type expression", peekType());
-    return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
+    ImmutableList.Builder<ParseTree> unionType = ImmutableList.builder();
+    unionType.add(typeReference);
+    do {
+      eat(TokenType.BAR);
+      unionType.add(parseArrayTypeExpression());
+    } while (peek(TokenType.BAR));
+    return new UnionTypeTree(getTreeLocation(start), unionType.build());
+  }
+
+  private ParseTree parseArrayTypeExpression() {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree typeExpression = parseParenTypeExpression();
+    if (!peekImplicitSemiColon() && peek(TokenType.OPEN_SQUARE)) {
+      eat(TokenType.OPEN_SQUARE);
+      eat(TokenType.CLOSE_SQUARE);
+      typeExpression =
+          new ArrayTypeTree(getTreeLocation(start), typeExpression);
+    }
+    return typeExpression;
+  }
+
+  private ParseTree parseParenTypeExpression() {
+    ParseTree typeExpression;
+    if (peek(TokenType.OPEN_PAREN)) {
+      eat(TokenType.OPEN_PAREN);
+      typeExpression = parseType();
+      eat(TokenType.CLOSE_PAREN);
+    } else {
+      typeExpression = parseTypeReference();
+    }
+    return typeExpression;
   }
 
   private ParseTree parseTypeReference() {

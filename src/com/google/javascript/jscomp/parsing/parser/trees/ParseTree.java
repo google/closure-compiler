@@ -130,6 +130,7 @@ public class ParseTree {
   public TypedParameterTree asTypedParameter() { return (TypedParameterTree) this; }
   public ParameterizedTypeTree asParameterizedType() { return (ParameterizedTypeTree) this; }
   public ArrayTypeTree asArrayType() { return (ArrayTypeTree) this; }
+  public UnionTypeTree asUnionType() { return (UnionTypeTree) this; }
   public UnaryExpressionTree asUnaryExpression() { return (UnaryExpressionTree) this; }
   public VariableDeclarationListTree asVariableDeclarationList() {
     return (VariableDeclarationListTree) this; }

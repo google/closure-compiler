@@ -102,6 +102,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypeNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypedParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.UnionTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.VariableStatementTree;
@@ -2267,6 +2268,14 @@ class IRFactory {
       return TypeDeclarationsIRFactory.arrayType(process(tree.elementType));
     }
 
+    Node processUnionType(UnionTypeTree tree) {
+      ImmutableList.Builder<TypeDeclarationNode> options = ImmutableList.builder();
+      for (ParseTree option : tree.types) {
+        options.add((TypeDeclarationNode) process(option));
+      }
+      return TypeDeclarationsIRFactory.unionType(options.build());
+    }
+
     private Node transformList(
         int type, ImmutableList<ParseTree> list) {
       Node n = newNode(type);
@@ -2498,6 +2507,7 @@ class IRFactory {
         case ARGUMENT_LIST:
           break;
 
+        // ES6 Typed
         case TYPE_NAME:
           return processTypeName(node.asTypeName());
         case TYPE_ANNOTATION:
@@ -2506,14 +2516,16 @@ class IRFactory {
           return processParameterizedType(node.asParameterizedType());
         case ARRAY_TYPE:
           return processArrayType(node.asArrayType());
+        case UNION_TYPE:
+          return processUnionType(node.asUnionType());
         case MEMBER_VARIABLE:
           return processMemberVariable(node.asMemberVariable());
 
-          // TypeScript
         case INTERFACE_DECLARATION:
           return processInterfaceDeclaration(node.asInterfaceDeclaration());
         case ENUM_DECLARATION:
           return processEnumDeclaration(node.asEnumDeclaration());
+
         default:
           break;
       }

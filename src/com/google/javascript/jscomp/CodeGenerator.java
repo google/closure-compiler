@@ -1085,7 +1085,7 @@ class CodeGenerator {
         add(first);
         break;
       case Token.ARRAY_TYPE:
-        add(first);
+        addExpr(first, NodeUtil.precedence(Token.ARRAY_TYPE), context);
         add("[]");
         break;
       case Token.FUNCTION_TYPE:
