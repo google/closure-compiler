@@ -40,12 +40,26 @@ angular.$q;
 angular.$q.Promise;
 
 /**
- * @param {?(function(T):
- *             (RESULT|IThenable.<RESULT>|Thenable))=} opt_onFulfilled
- * @param {?(function(*): *)=} opt_onRejected
- * @param {?(function(*): *)=} opt_notifyCallback
- * @return {!angular.$q.Promise.<RESULT>}
- * @template RESULT
+ * Apply Type Transformation Language to allow more accurate templated type
+ * definition.
+ * This is copied from <code>goog.Thenable.prototype.then</code>, with the only
+ * difference being the raw type as angular.$q.Promise instead of goog.Promise.
+ *
+ * @param {?(function(this:THIS, T): VALUE)=} opt_onFulfilled
+ * @param {?(function(?): ?)=} opt_onRejected
+ * @param {?(function(?): ?)=} opt_notifyCallback
+ * @return {RESULT}
+ * @template THIS
+ * @template VALUE
+ * @template RESULT := type('angular.$q.Promise',
+ *     cond(isUnknown(VALUE), unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'angular.$q.Promise'),
+ *              unknown(),
+ *              V)))))
+ *  =:
  */
 angular.$q.Promise.prototype.then =
     function(opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};
@@ -81,8 +95,38 @@ angular.$q.Deferred.prototype.notify = function(opt_value) {};
 angular.$q.Deferred.prototype.promise;
 
 /**
- * @param {!Object.<!angular.$q.Promise>|!Array.<!angular.$q.Promise>} promises
- * @return {!angular.$q.Promise.<!Object|!Array>}
+ * $q.all has different output type based on the input type.
+ * When {@code promise} is an array, the output is an array too: for each item n
+ * in the input array, the corresponding item in the returned array would be the
+ * the same type of n, or if n is a templated $q.Promise, the type of the
+ * resolve value.
+ * When {@code promise} is in form of a record, the output should be also be a
+ * record with the same properties.
+ * When {@code promise} is other forms, the returned type is an Object.
+ *
+ * @param {VALUE} promises
+ * @template VALUE
+ * @return {ALLTYPE}
+ * @template ALLTYPE := type('angular.$q.Promise',
+ *   cond(isUnknown(VALUE), unknown(),
+ *     mapunion(VALUE, (x) =>
+ *       cond(sub(x, 'Array'),
+ *         cond(isTemplatized(x) && sub(rawTypeOf(x), 'IThenable'),
+ *           type('Array', templateTypeOf(x, 0)),
+ *           'Array'
+ *         ),
+ *         cond(isRecord(x),
+ *           maprecord(record(x), (kx, vx) => record({[kx]:
+ *             cond(isTemplatized(vx) && sub(rawTypeOf(vx), 'IThenable'),
+ *               templateTypeOf(vx, 0),
+ *               cond(sub(vx, 'angular.$q.Promise'),
+ *                 unknown(),
+ *                 vx
+ *               )
+ *             )
+ *           })),
+ *           'Object')))))
+ * =:
  */
 angular.$q.prototype.all = function(promises) {};
 
