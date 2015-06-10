@@ -74,7 +74,37 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
+            "",
+            "/** @return {string} */",
             "Subclass.staticMethod = Example.staticMethod;"));
+  }
+
+  public void testOverride() {
+    test(
+        Joiner.on('\n').join(
+            "/** @constructor */",
+            "function Example() {}",
+            "",
+            "/** @return {string} */",
+            "Example.staticMethod = function() { return ''; }",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.copyProperties(Subclass, Example);",
+            "",
+            "Subclass.staticMethod = function() { return 5; };"),
+        Joiner.on('\n').join(
+            "/** @constructor */",
+            "function Example() {}",
+            "",
+            "/** @return {string} */",
+            "Example.staticMethod = function() { return ''; }",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "",
+            "// This should be a type error, but currently we don't catch it.",
+            "Subclass.staticMethod = function() { return 5; };"));
   }
 
   /**
@@ -101,6 +131,8 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
+            "",
+            "/** @type {number} */",
             "Subclass.staticField = Example.staticField;"));
   }
 
