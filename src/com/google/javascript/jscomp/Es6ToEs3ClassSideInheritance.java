@@ -29,8 +29,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Rewrites static inheritance to explicitly copy inherited properties from super class to
- * sub class eliminating dynamic copying from the original transpilation pass in the process.
+ * Rewrites static inheritance to explicitly copy inherited properties from superclass to
+ * subclass so that the typechecker knows the subclass has those properties.
  *
  * For example, {@link Es6ToEs3Converter} will convert
  *
@@ -44,7 +44,7 @@ import java.util.Set;
  * function Foo() {}
  * Foo.f = function() {};
  * function Bar() {}
- * $jscomp$copy$properties(Foo, Bar);
+ * $jscomp.copyProperties(Foo, Bar);
  * </pre>
  *
  * and then this class will convert that to
@@ -111,6 +111,7 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
         }
       }
       parent.detachFromParent();
+      compiler.reportCodeChange();
     }
   }
 
