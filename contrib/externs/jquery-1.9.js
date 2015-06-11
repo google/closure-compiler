@@ -1009,8 +1009,8 @@ jQuery.holdReady = function(hold) {};
 $.holdReady = function(hold) {};
 
 /**
- * @param {function(!jQuery.event=)} arg1
- * @param {function(!jQuery.event=)=} handlerOut
+ * @param {function(!jQuery.Event=)} arg1
+ * @param {function(!jQuery.Event=)=} handlerOut
  * @return {!jQuery}
  */
 jQuery.prototype.hover = function(arg1, handlerOut) {};
