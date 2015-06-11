@@ -81,7 +81,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   private Set<String> nativeExternsAdded;
   private final Map<String, String> tagNameMap;
   private List<Node> polymerElementProps;
-  private Set<String> lifecycleCallbacks;
+  private final ImmutableSet<String> behaviorNamesNotToCopy;
   private GlobalNamespace globalNames;
 
   public PolymerPass(AbstractCompiler compiler) {
@@ -89,8 +89,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     tagNameMap = TagNameToType.getMap();
     polymerElementProps = new ArrayList<>();
     nativeExternsAdded = new HashSet<>();
-    lifecycleCallbacks = ImmutableSet.of(
-        "created", "attached", "detached", "attributeChanged", "configure", "ready");
+    behaviorNamesNotToCopy = ImmutableSet.of(
+        "created", "attached", "detached", "attributeChanged", "configure", "ready",
+        "properties", "listeners", "observers", "hostAttributes");
   }
 
   @Override
@@ -293,10 +294,14 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   private static final class BehaviorDefinition {
     final List<MemberDefinition> props;
     final List<MemberDefinition> functionsToCopy;
+    final List<MemberDefinition> nonPropertyMembersToCopy;
 
-    BehaviorDefinition(List<MemberDefinition> props, List<MemberDefinition> functionsToCopy) {
+    BehaviorDefinition(
+        List<MemberDefinition> props, List<MemberDefinition> functionsToCopy,
+        List<MemberDefinition> nonPropertyMembersToCopy) {
       this.props = props;
       this.functionsToCopy = functionsToCopy;
+      this.nonPropertyMembersToCopy = nonPropertyMembersToCopy;
     }
   }
 
@@ -405,7 +410,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     for (Node behaviorName : behaviorArray.children()) {
       if (behaviorName.isObjectLit()) {
         behaviors.add(new BehaviorDefinition(
-            extractProperties(behaviorName), getBehaviorFunctionsToCopy(behaviorName)));
+            extractProperties(behaviorName), getBehaviorFunctionsToCopy(behaviorName),
+            getNonPropertyMembersToCopy(behaviorName)));
         continue;
       }
 
@@ -429,7 +435,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         behaviors.addAll(extractBehaviors(behaviorValue));
       } else if (behaviorValue.isObjectLit()) {
         behaviors.add(new BehaviorDefinition(
-            extractProperties(behaviorValue), getBehaviorFunctionsToCopy(behaviorValue)));
+            extractProperties(behaviorValue), getBehaviorFunctionsToCopy(behaviorValue),
+            getNonPropertyMembersToCopy(behaviorValue)));
       } else {
         compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
       }
@@ -447,13 +454,32 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
     for (Node keyNode : behaviorObjLit.children()) {
       if (keyNode.isStringKey() && keyNode.getFirstChild().isFunction()
-          && !lifecycleCallbacks.contains(keyNode.getString())) {
+          && !behaviorNamesNotToCopy.contains(keyNode.getString())) {
         functionsToCopy.add(new MemberDefinition(NodeUtil.getBestJSDocInfo(keyNode), keyNode,
           keyNode.getFirstChild()));
       }
     }
 
     return functionsToCopy.build();
+  }
+
+  /**
+   * @return A list of MemberDefinitions in a behavior which are not in the properties block, but
+   *     should still be copied to the element prototype.
+   */
+  private List<MemberDefinition> getNonPropertyMembersToCopy(Node behaviorObjLit) {
+    Preconditions.checkState(behaviorObjLit.isObjectLit());
+    ImmutableList.Builder<MemberDefinition> membersToCopy = ImmutableList.builder();
+
+    for (Node keyNode : behaviorObjLit.children()) {
+      if (keyNode.isGetterDef() || (keyNode.isStringKey() && !keyNode.getFirstChild().isFunction()
+          && !behaviorNamesNotToCopy.contains(keyNode.getString()))) {
+        membersToCopy.add(new MemberDefinition(NodeUtil.getBestJSDocInfo(keyNode), keyNode,
+          keyNode.getFirstChild()));
+      }
+    }
+
+    return membersToCopy.build();
   }
 
   private static List<MemberDefinition> extractProperties(Node descriptor) {
@@ -517,7 +543,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
 
     appendPropertiesToBlock(cls, block, cls.target.getQualifiedName() + ".prototype.");
-    appendBehaviorFunctionsToBlock(cls, block);
+    appendBehaviorMembersToBlock(cls, block);
     List<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     addInterfaceExterns(cls, readOnlyProps);
     removePropertyDocs(cls);
@@ -643,9 +669,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   /**
-   * Appends all required behavior functions to the given block.
+   * Appends all required behavior functions and non-property members to the given block.
    */
-  private void appendBehaviorFunctionsToBlock(final ClassDefinition cls, Node block) {
+  private void appendBehaviorMembersToBlock(final ClassDefinition cls, Node block) {
     String qualifiedPath = cls.target.getQualifiedName() + ".prototype.";
     Map<String, Node> nameToExprResult = new HashMap<>();
     for (BehaviorDefinition behavior : cls.behaviors) {
@@ -664,6 +690,28 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         exprResult.getFirstChild().setJSDocInfo(info.build());
         block.addChildToBack(exprResult);
         nameToExprResult.put(fnName, exprResult);
+      }
+
+      // Copy other members.
+      for (MemberDefinition behaviorProp : behavior.nonPropertyMembersToCopy) {
+        String propName = behaviorProp.name.getString();
+        if (nameToExprResult.containsKey(propName)) {
+          block.removeChild(nameToExprResult.get(propName));
+        }
+
+        Node exprResult = IR.exprResult(NodeUtil.newQName(compiler, qualifiedPath + propName));
+        JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorProp.info);
+
+        if (behaviorProp.name.isGetterDef()) {
+          info = new JSDocInfoBuilder(true);
+          if (behaviorProp.info != null && behaviorProp.info.getReturnType() != null) {
+            info.recordType(behaviorProp.info.getReturnType());
+          }
+        }
+
+        exprResult.getFirstChild().setJSDocInfo(info.build());
+        block.addChildToBack(exprResult);
+        nameToExprResult.put(propName, exprResult);
       }
     }
   }
