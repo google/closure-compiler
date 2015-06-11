@@ -2082,8 +2082,8 @@ jQuery.type = function(obj) {};
 $.type = function(obj) {};
 
 /**
- * @param {(string|function(!jQuery.event=)|jQuery.event)=} arg1
- * @param {(function(!jQuery.event=)|boolean)=} arg2
+ * @param {(string|function(!jQuery.Event=)|jQuery.Event)=} arg1
+ * @param {(function(!jQuery.Event=)|boolean)=} arg2
  * @return {!jQuery}
  */
 jQuery.prototype.unbind = function(arg1, arg2) {};
