@@ -16,6 +16,18 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.javascript.rhino.TypeDeclarationsIR.anyType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.arrayType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.functionType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.undefinedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.voidType;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -63,6 +75,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FunctionTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
@@ -123,6 +136,7 @@ import com.google.javascript.rhino.TokenStream;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -2206,29 +2220,29 @@ class IRFactory {
         String typeName = tree.segments.get(0);
         switch (typeName) {
           case "any":
-            typeNode = TypeDeclarationsIRFactory.anyType();
+            typeNode = anyType();
             break;
           case "number":
-            typeNode = TypeDeclarationsIRFactory.numberType();
+            typeNode = numberType();
             break;
           case "boolean":
-            typeNode = TypeDeclarationsIRFactory.booleanType();
+            typeNode = booleanType();
             break;
           case "string":
-            typeNode = TypeDeclarationsIRFactory.stringType();
+            typeNode = stringType();
             break;
           case "void":
-            typeNode = TypeDeclarationsIRFactory.voidType();
+            typeNode = voidType();
             break;
           case "undefined":
-            typeNode = TypeDeclarationsIRFactory.undefinedType();
+            typeNode = undefinedType();
             break;
           default:
-            typeNode = TypeDeclarationsIRFactory.namedType(tree.segments);
+            typeNode = namedType(tree.segments);
             break;
         }
       } else {
-        typeNode = TypeDeclarationsIRFactory.namedType(tree.segments);
+        typeNode = namedType(tree.segments);
       }
       setSourceInfo(typeNode, tree);
       return typeNode;
@@ -2261,11 +2275,11 @@ class IRFactory {
         arguments.add((TypeDeclarationNode) process(arg));
       }
       TypeDeclarationNode typeName = (TypeDeclarationNode) process(tree.typeName);
-      return TypeDeclarationsIRFactory.parameterizedType(typeName, arguments.build());
+      return parameterizedType(typeName, arguments.build());
     }
 
     Node processArrayType(ArrayTypeTree tree) {
-      return TypeDeclarationsIRFactory.arrayType(process(tree.elementType));
+      return arrayType(process(tree.elementType));
     }
 
     Node processUnionType(UnionTypeTree tree) {
@@ -2273,7 +2287,18 @@ class IRFactory {
       for (ParseTree option : tree.types) {
         options.add((TypeDeclarationNode) process(option));
       }
-      return TypeDeclarationsIRFactory.unionType(options.build());
+      return unionType(options.build());
+    }
+
+    Node processFunctionType(FunctionTypeTree tree) {
+      LinkedHashMap<String, TypeDeclarationNode> parameters = new LinkedHashMap<>();
+      for (ParseTree param : tree.formalParameterList.parameters) {
+        TypedParameterTree typedParam = param.asTypedParameter();
+        parameters.put(
+            typedParam.param.asIdentifierExpression().identifierToken.toString(),
+            (TypeDeclarationNode) process(typedParam.typeAnnotation));
+      }
+      return functionType(process(tree.returnType), parameters, null, null);
     }
 
     private Node transformList(
@@ -2518,6 +2543,8 @@ class IRFactory {
           return processArrayType(node.asArrayType());
         case UNION_TYPE:
           return processUnionType(node.asUnionType());
+        case FUNCTION_TYPE:
+          return processFunctionType(node.asFunctionType());
         case MEMBER_VARIABLE:
           return processMemberVariable(node.asMemberVariable());
 

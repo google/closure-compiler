@@ -58,6 +58,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ForOfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.FunctionTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
@@ -761,7 +762,13 @@ public class Parser {
   private boolean peekArrowFunction() {
     if (peekId() && peekType(1) == TokenType.ARROW) {
       return true;
-    } else if (peekType() == TokenType.OPEN_PAREN) {
+    } else {
+      return peekArrowFunctionWithParenthesizedParameterList();
+    }
+  }
+
+  private boolean peekArrowFunctionWithParenthesizedParameterList() {
+    if (peek(TokenType.OPEN_PAREN)) {
       // TODO(johnlenz): determine if we can parse this without the
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
@@ -884,17 +891,33 @@ public class Parser {
       return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
     }
 
-    ParseTree typeReference = parseArrayTypeExpression();
+    ParseTree typeExpression = parseFunctionTypeExpression();
     if (!peek(TokenType.BAR)) {
-      return typeReference;
+      return typeExpression;
     }
     ImmutableList.Builder<ParseTree> unionType = ImmutableList.builder();
-    unionType.add(typeReference);
+    unionType.add(typeExpression);
     do {
       eat(TokenType.BAR);
       unionType.add(parseArrayTypeExpression());
     } while (peek(TokenType.BAR));
     return new UnionTypeTree(getTreeLocation(start), unionType.build());
+  }
+
+  private ParseTree parseFunctionTypeExpression() {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree typeExpression = null;
+    if (peekArrowFunctionWithParenthesizedParameterList()) {
+      FormalParameterListTree formalParameterList;
+      formalParameterList = parseFormalParameterList();
+      eat(TokenType.ARROW);
+      ParseTree returnType = parseType();
+      typeExpression = new FunctionTypeTree(
+          getTreeLocation(start), formalParameterList, returnType);
+    } else {
+      typeExpression = parseArrayTypeExpression();
+    }
+    return typeExpression;
   }
 
   private ParseTree parseArrayTypeExpression() {

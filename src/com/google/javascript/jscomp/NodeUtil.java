@@ -1422,13 +1422,14 @@ public final class NodeUtil {
       case Token.SUPER:
       case Token.TRUE:
       case Token.TEMPLATELIT:
-      case Token.UNION_TYPE:
-      case Token.FUNCTION_TYPE:
       // Tokens from the type declaration AST
+      case Token.UNION_TYPE:
         return 15;
+      case Token.FUNCTION_TYPE:
+        return 16;
       case Token.ARRAY_TYPE:
       case Token.PARAMETERIZED_TYPE:
-        return 16;
+        return 17;
       case Token.STRING_TYPE:
       case Token.NUMBER_TYPE:
       case Token.BOOLEAN_TYPE:
@@ -1438,9 +1439,9 @@ public final class NodeUtil {
       case Token.NAMED_TYPE:
       case Token.UNDEFINED_TYPE:
       case Token.REST_PARAMETER_TYPE:
-        return 17;
-      case Token.CAST:
         return 18;
+      case Token.CAST:
+        return 19;
 
       default:
         throw new IllegalStateException("Unknown precedence for "

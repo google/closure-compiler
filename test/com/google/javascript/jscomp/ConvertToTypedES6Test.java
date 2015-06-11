@@ -16,13 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.booleanType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.numberType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.stringType;
-import static com.google.javascript.rhino.Node.TypeDeclarationNode;
+import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Node.TypeDeclarationNode;
 
 import junit.framework.TestCase;
 
@@ -38,6 +38,7 @@ public final class ConvertToTypedES6Test extends TestCase {
 
   private Compiler compiler;
 
+  @Override
   public void setUp() throws Exception {
     super.setUp();
     compiler = new Compiler();

@@ -17,16 +17,6 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.THROW_ASSERTION_ERROR;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.anyType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.arrayType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.booleanType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.namedType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.numberType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.optionalParameter;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.parameterizedType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.recordType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.stringType;
-import static com.google.javascript.jscomp.parsing.TypeDeclarationsIRFactory.unionType;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 import static com.google.javascript.rhino.Token.ANY_TYPE;
 import static com.google.javascript.rhino.Token.ARRAY_TYPE;
@@ -38,6 +28,17 @@ import static com.google.javascript.rhino.Token.PARAMETERIZED_TYPE;
 import static com.google.javascript.rhino.Token.RECORD_TYPE;
 import static com.google.javascript.rhino.Token.REST_PARAMETER_TYPE;
 import static com.google.javascript.rhino.Token.STRING_TYPE;
+import static com.google.javascript.rhino.TypeDeclarationsIR.anyType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.arrayType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.functionType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.optionalParameter;
+import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.recordType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
 import static java.util.Arrays.asList;
 
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -180,8 +181,7 @@ public final class TypeDeclarationsIRFactoryTest extends TestCase {
     parameters.put("p1", optionalParameter(stringType()));
     parameters.put("p2", optionalParameter(numberType()));
     assertParseTypeAndConvert("function(?string=, number=)")
-        .isEqualTo(TypeDeclarationsIRFactory
-            .functionType(anyType(), parameters, null, null));
+        .isEqualTo(functionType(anyType(), parameters, null, null));
   }
 
   public void testConvertVarArgs() throws Exception {
