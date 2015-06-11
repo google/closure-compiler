@@ -288,7 +288,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
       if (advanceCase) {
         int caseNumber;
         if (currentStatement.isGeneratorMarker()) {
-          caseNumber = (int) currentStatement.getDouble();
+          caseNumber = (int) currentStatement.getFirstChild().getDouble();
         } else {
           caseNumber = generatorCaseCount;
           generatorCaseCount++;
@@ -407,8 +407,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
     }
     Node finallyBody = catchBlock.getNext();
     int catchStartState = generatorCaseCount++;
-    Node catchStart = IR.number(catchStartState);
-    catchStart.setGeneratorMarker(true);
+    Node catchStart = makeGeneratorMarker(catchStartState);
 
     Node errorNameGenerated = IR.name("$jscomp$generator$" + caughtError.getString());
 
@@ -425,11 +424,9 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
     if (finallyBody != null) {
       Node finallyName = IR.name(GENERATOR_FINALLY_JUMP + generatorCounter.get());
       int finallyStartState = generatorCaseCount++;
-      Node finallyStart = IR.number(finallyStartState);
-      finallyStart.setGeneratorMarker(true);
+      Node finallyStart = makeGeneratorMarker(finallyStartState);
       int finallyEndState = generatorCaseCount++;
-      Node finallyEnd = IR.number(finallyEndState);
-      finallyEnd.setGeneratorMarker(true);
+      Node finallyEnd = makeGeneratorMarker(finallyEndState);
 
       NodeTraversal.traverse(compiler,
           tryBody,
@@ -454,8 +451,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
           IR.assign(finallyName.cloneTree(), IR.number(finallyEndState))));
     } else {
       int catchEndState = generatorCaseCount++;
-      Node catchEnd = IR.number(catchEndState);
-      catchEnd.setGeneratorMarker(true);
+      Node catchEnd = makeGeneratorMarker(catchEndState);
       originalGeneratorBody.addChildAfter(catchEnd, catchBody);
       tryBody.addChildToBack(createStateUpdate(catchEndState));
       tryBody.addChildToBack(createSafeBreak());
@@ -531,11 +527,12 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
    */
   private void visitGeneratorMarker() {
     if (!currentLoopContext.isEmpty()
-        && currentLoopContext.get(0).breakCase == currentStatement.getDouble()) {
+        && currentLoopContext.get(0).breakCase == currentStatement.getFirstChild().getDouble()) {
       currentLoopContext.remove(0);
     }
     if (!currentExceptionContext.isEmpty()
-        && currentExceptionContext.get(0).catchStartCase == currentStatement.getDouble()) {
+        && currentExceptionContext.get(0).catchStartCase
+            == currentStatement.getFirstChild().getDouble()) {
       currentExceptionContext.remove(0);
     }
   }
@@ -555,8 +552,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
     Node invertedConditional = IR.ifNode(IR.not(condition),
         IR.block(createStateUpdate(ifEndState), createSafeBreak()));
     invertedConditional.setGeneratorSafe(true);
-    Node endIf = IR.number(ifEndState);
-    endIf.setGeneratorMarker(true);
+    Node endIf = makeGeneratorMarker(ifEndState);
 
     originalGeneratorBody.addChildToFront(invertedConditional);
     originalGeneratorBody.addChildAfter(ifBody, invertedConditional);
@@ -567,8 +563,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
 
       int elseEndState = generatorCaseCount++;
 
-      Node endElse = IR.number(elseEndState);
-      endElse.setGeneratorMarker(true);
+      Node endElse = makeGeneratorMarker(elseEndState);
 
       ifBody.addChildToBack(createStateUpdate(elseEndState));
       ifBody.addChildToBack(createSafeBreak());
@@ -638,8 +633,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
     int breakTarget = generatorCaseCount++;
     int cont = currentLoopContext.isEmpty() ? -1 : currentLoopContext.get(0).continueCase;
     currentLoopContext.add(0, new LoopContext(breakTarget, cont, null));
-    Node breakCase = IR.number(breakTarget);
-    breakCase.setGeneratorMarker(true);
+    Node breakCase = makeGeneratorMarker(breakTarget);
     originalGeneratorBody.addChildAfter(breakCase, insertionPoint);
   }
 
@@ -793,16 +787,14 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
 
     if (!incr.isEmpty()) {
       continueState = generatorCaseCount++;
-      Node continueCase = IR.number(continueState);
-      continueCase.setGeneratorMarker(true);
+      Node continueCase = makeGeneratorMarker(continueState);
       body.addChildToBack(continueCase);
       body.addChildToBack(incr.isBlock() ? incr : IR.exprResult(incr));
     }
 
     currentLoopContext.add(0, new LoopContext(generatorCaseCount, continueState, label));
 
-    Node beginCase = IR.number(loopBeginState);
-    beginCase.setGeneratorMarker(true);
+    Node beginCase = makeGeneratorMarker(loopBeginState);
     Node conditionalBranch = IR.ifNode(condition.isEmpty() ? IR.trueNode() : condition, body);
     Node setStateLoopStart = createStateUpdate(loopBeginState);
     Node breakToStart = createSafeBreak();
@@ -887,8 +879,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
     Node setReturnState =  IR.exprResult(
         IR.assign(finallyName.cloneTree(), IR.number(jumpPoint)));
     Node toFinally = createStateUpdate(finallyStartState);
-    Node returnPoint = IR.number(jumpPoint);
-    returnPoint.setGeneratorMarker(true);
+    Node returnPoint = makeGeneratorMarker(jumpPoint);
     Node returnBlock = IR.block(setReturnState, toFinally, createSafeBreak());
     returnBlock.addChildToBack(returnPoint);
     return returnBlock;
@@ -1047,6 +1038,12 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
       enclosingBlock.addChildToFront(IR.var(guardName));
       compiler.reportCodeChange();
     }
+  }
+
+  private static Node makeGeneratorMarker(int i) {
+    Node n = IR.exprResult(IR.number(i));
+    n.setGeneratorMarker(true);
+    return n;
   }
 
   class ControlExitsCheck implements NodeTraversal.Callback {
