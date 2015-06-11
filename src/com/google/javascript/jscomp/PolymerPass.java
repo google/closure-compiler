@@ -21,6 +21,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
+import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -295,13 +296,15 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     final List<MemberDefinition> props;
     final List<MemberDefinition> functionsToCopy;
     final List<MemberDefinition> nonPropertyMembersToCopy;
+    final boolean isGlobalDeclaration;
 
     BehaviorDefinition(
         List<MemberDefinition> props, List<MemberDefinition> functionsToCopy,
-        List<MemberDefinition> nonPropertyMembersToCopy) {
+        List<MemberDefinition> nonPropertyMembersToCopy, boolean isGlobalDeclaration) {
       this.props = props;
       this.functionsToCopy = functionsToCopy;
       this.nonPropertyMembersToCopy = nonPropertyMembersToCopy;
+      this.isGlobalDeclaration = isGlobalDeclaration;
     }
   }
 
@@ -409,24 +412,46 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     ImmutableList.Builder<BehaviorDefinition> behaviors = ImmutableList.builder();
     for (Node behaviorName : behaviorArray.children()) {
       if (behaviorName.isObjectLit()) {
+        this.switchDollarSignPropsToBrackets(behaviorName);
         behaviors.add(new BehaviorDefinition(
             extractProperties(behaviorName), getBehaviorFunctionsToCopy(behaviorName),
-            getNonPropertyMembersToCopy(behaviorName)));
+            getNonPropertyMembersToCopy(behaviorName), !NodeUtil.isInFunction(behaviorName)));
         continue;
       }
 
       Name behaviorGlobalName = globalNames.getSlot(behaviorName.getQualifiedName());
-      if (behaviorGlobalName == null || behaviorGlobalName.getDeclaration() == null) {
+      boolean isGlobalDeclaration = true;
+      if (behaviorGlobalName == null) {
         compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
         continue;
       }
 
-      Node behaviorDeclaration = behaviorGlobalName.getDeclaration().getNode();
-      JSDocInfo behaviorInfo = NodeUtil.getBestJSDocInfo(behaviorDeclaration);
-      if (behaviorInfo == null || !behaviorInfo.isPolymerBehavior()) {
-        compiler.report(JSError.make(behaviorDeclaration, POLYMER_UNANNOTATED_BEHAVIOR));
+      Ref behaviorDeclaration = behaviorGlobalName.getDeclaration();
+
+      // Use any set as a backup declaration, even if it's local.
+      if (behaviorDeclaration == null) {
+        List<Ref> behaviorRefs = behaviorGlobalName.getRefs();
+        for (Ref ref : behaviorRefs) {
+          if (ref.isSet()) {
+            isGlobalDeclaration = false;
+            behaviorDeclaration = ref;
+            break;
+          }
+        }
       }
-      Node behaviorValue = NodeUtil.getRValueOfLValue(behaviorDeclaration);
+
+      if (behaviorDeclaration == null) {
+        compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
+        continue;
+      }
+
+      Node behaviorDeclarationNode = behaviorDeclaration.getNode();
+      JSDocInfo behaviorInfo = NodeUtil.getBestJSDocInfo(behaviorDeclarationNode);
+      if (behaviorInfo == null || !behaviorInfo.isPolymerBehavior()) {
+        compiler.report(JSError.make(behaviorDeclarationNode, POLYMER_UNANNOTATED_BEHAVIOR));
+      }
+
+      Node behaviorValue = NodeUtil.getRValueOfLValue(behaviorDeclarationNode);
 
       if (behaviorValue == null) {
         compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
@@ -434,9 +459,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         // Individual behaviors can also be arrays of behaviors. Parse them recursively.
         behaviors.addAll(extractBehaviors(behaviorValue));
       } else if (behaviorValue.isObjectLit()) {
+        this.switchDollarSignPropsToBrackets(behaviorValue);
         behaviors.add(new BehaviorDefinition(
             extractProperties(behaviorValue), getBehaviorFunctionsToCopy(behaviorValue),
-            getNonPropertyMembersToCopy(behaviorValue)));
+            getNonPropertyMembersToCopy(behaviorValue), isGlobalDeclaration));
       } else {
         compiler.report(JSError.make(behaviorName, POLYMER_UNQUALIFIED_BEHAVIOR));
       }
@@ -682,10 +708,16 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
           block.removeChild(nameToExprResult.get(fnName));
         }
 
-        Node exprResult = IR.exprResult(IR.assign(
-            NodeUtil.newQName(compiler, qualifiedPath + fnName),
-            behaviorFunction.value.cloneTree()));
+        Node fnValue = behaviorFunction.value.cloneTree();
+        Node exprResult = IR.exprResult(
+            IR.assign(NodeUtil.newQName(compiler, qualifiedPath + fnName), fnValue));
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(behaviorFunction.info);
+
+        // Behaviors whose declarations are not in the global scope may contain references to
+        // symbols which do not exist in the element's scope. Only copy a function stub. See
+        if (!behavior.isGlobalDeclaration) {
+          NodeUtil.getFunctionBody(fnValue).removeChildren();
+        }
 
         exprResult.getFirstChild().setJSDocInfo(info.build());
         block.addChildToBack(exprResult);
