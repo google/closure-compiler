@@ -474,6 +474,9 @@ CanvasRenderingContext2D.prototype.textAlign;
 /** @type {string} */
 CanvasRenderingContext2D.prototype.textBaseline;
 
+/** @type {number} */
+CanvasRenderingContext2D.prototype.lineDashOffset;
+
 /**
  * @constructor
  */
