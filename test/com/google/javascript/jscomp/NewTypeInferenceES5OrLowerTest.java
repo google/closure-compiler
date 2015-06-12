@@ -11070,71 +11070,91 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
 
-  public void testForwardDeclarations() {
-    final String DEFINITIONS = Joiner.on('\n').join(
+  private static final String FORWARD_DECLARATION_DEFINITIONS = Joiner.on('\n').join(
         "/** @const */ var goog = {};",
         "goog.addDependency = function(file, provides, requires){};",
         "goog.forwardDeclare = function(name){};");
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+  public void testForwardDeclarations() {
+
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.addDependency('', ['Foo'], []);",
         "goog.forwardDeclare('Bar');",
         "function f(/** !Foo */ x) {}",
         "function g(/** !Bar */ y) {}"));
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "/** @const */ var ns = {};",
         "goog.addDependency('', ['ns.Foo'], []);",
         "goog.forwardDeclare('ns.Bar');",
         "function f(/** !ns.Foo */ x) {}",
         "function g(/** !ns.Bar */ y) {}"));
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "/** @const */ var ns = {};",
         "goog.forwardDeclare('ns.Bar');",
         "function f(/** !ns.Baz */ x) {}"),
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.addDependency('', ['Foo'], []);",
         "goog.forwardDeclare('Bar');",
         "var f = new Foo;",
         "var b = new Bar;"));
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "/** @const */ var ns = {};",
         "goog.addDependency('', ['ns.Foo'], []);",
         "goog.forwardDeclare('ns.Bar');",
         "var f = new ns.Foo;",
         "var b = new ns.Bar;"));
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "/** @const */ var ns = {};",
         "goog.addDependency('', ['ns.subns.Foo'], []);",
         "goog.forwardDeclare('ns.subns.Bar');",
         "var f = new ns.subns.Foo;",
         "var b = new ns.subns.Bar;"));
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.addDependency('', ['ns.subns.Foo'], []);",
         "goog.forwardDeclare('ns.subns.Bar');",
         "var f = new ns.subns.Foo;",
         "var b = new ns.subns.Bar;"));
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.forwardDeclare('ns.subns');",
         "goog.forwardDeclare('ns.subns.Bar');",
         "var b = new ns.subns.Bar;"));
 
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
+        "goog.forwardDeclare('num');",
+        "/** @type {number} */ var num = 5;",
+        "function f() { var /** null */ o = num; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
+        "goog.forwardDeclare('Foo');",
+        "/** @constructor */ function Foo(){}",
+        "function f(/** !Foo */ x) { var /** null */ n = x; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
+        "goog.forwardDeclare('ns.Foo');",
+        "/** @const */ var ns = {};",
+        "/** @constructor */ ns.Foo = function(){}",
+        "function f(/** !ns.Foo */ x) { var /** null */ n = x; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
     // In the following cases the old type inference warned about arg type,
     // but we allow rather than create synthetic named type
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.forwardDeclare('Foo');",
         "function f(/** !Foo */ x) {}",
         "/** @constructor */ function Bar(){}",
         "f(new Bar);"));
 
-    typeCheck(Joiner.on('\n').join(DEFINITIONS,
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "/** @const */ var ns = {};",
         "goog.forwardDeclare('ns.Foo');",
         "function f(/** !ns.Foo */ x) {}",

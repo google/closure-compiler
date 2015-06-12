@@ -2080,12 +2080,12 @@ class GlobalTypeInfo implements CompilerPass {
           || externs.containsKey(name)
           || localNamespaces.containsKey(name)
           || localTypedefs.containsKey(name)
-          || localEnums.containsKey(name)
-          || unknownTypeNames.contains(name)) {
+          || localEnums.containsKey(name)) {
         return true;
       }
       if (includeTypes) {
-        return declaredType != null && declaredType.isTypeVariableDefinedLocally(name);
+        return unknownTypeNames.contains(name)
+            || declaredType != null && declaredType.isTypeVariableDefinedLocally(name);
       }
       return false;
     }
@@ -2431,15 +2431,16 @@ class GlobalTypeInfo implements CompilerPass {
       if (qname.isIdentifier()) {
         return getDeclaration(qname.getLeftmostName(), includeTypes);
       }
-      if (unknownTypeNames.contains(qname.toString())) {
-        return new Declaration(
-            JSType.UNKNOWN, null, null, null, null, null, false, false, false, false, true);
-      }
       Namespace ns = getNamespace(qname.getLeftmostName());
       if (ns == null) {
         return null;
       }
-      return ns.getDeclaration(qname.getAllButLeftmost());
+      Declaration decl = ns.getDeclaration(qname.getAllButLeftmost());
+      if (decl == null && unknownTypeNames.contains(qname.toString())) {
+        return new Declaration(
+            JSType.UNKNOWN, null, null, null, null, null, false, false, false, false, true);
+      }
+      return decl;
     }
 
     public Declaration getDeclaration(String name, boolean includeTypes) {
@@ -2482,8 +2483,9 @@ class GlobalTypeInfo implements CompilerPass {
     private void declareUnknownType(QualifiedName qname) {
       if (qname.isIdentifier() || null == getNamespace(qname.getLeftmostName())) {
         String name = qname.getLeftmostName();
-        Preconditions.checkState(!locals.containsKey(name));
-        externs.put(name, JSType.UNKNOWN);
+        if (!locals.containsKey(name)) {
+          externs.put(name, JSType.UNKNOWN);
+        }
         return;
       }
       Namespace leftmost = getNamespace(qname.getLeftmostName());
