@@ -140,6 +140,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     setUp();
     final CompilerOptions options = compiler.getOptions();
     options.setClosurePass(true);
+    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),

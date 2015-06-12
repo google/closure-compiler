@@ -106,7 +106,7 @@ final class NewTypeInference implements CompilerPass {
           "Property {0} may not be present on {1}.");
 
   static final DiagnosticType NULLABLE_DEREFERENCE =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_NULLABLE_DEREFERENCE",
           "Attempt to use nullable type {0}.");
 

@@ -215,10 +215,11 @@ public class DiagnosticGroups {
           GlobalTypeInfo.ALL_DIAGNOSTICS,
           NewTypeInference.ALL_DIAGNOSTICS);
 
-  static {
-      DiagnosticGroups.registerGroup("newCheckTypesWarningsOverload",
+  public static final DiagnosticGroup NEW_CHECK_TYPES_ALL_CHECKS =
+      DiagnosticGroups.registerGroup("newCheckTypesAllChecks",
           NewTypeInference.NULLABLE_DEREFERENCE);
 
+  static {
       // Warnings that are absent in closure library
       DiagnosticGroups.registerGroup("newCheckTypesClosureClean",
 //           JSTypeCreatorFromJSDoc.BAD_JSDOC_ANNOTATION,
