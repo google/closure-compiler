@@ -33,6 +33,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -379,16 +380,33 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
     Node behaviorArray = NodeUtil.getFirstPropMatchingKey(descriptor, "behaviors");
     List<BehaviorDefinition> behaviors = extractBehaviors(behaviorArray);
-    ImmutableList.Builder<MemberDefinition> allProperties = ImmutableList.builder();
-    allProperties.addAll(extractProperties(descriptor));
+    List<MemberDefinition> allProperties = new LinkedList<>();
     for (BehaviorDefinition behavior : behaviors) {
-      allProperties.addAll(behavior.props);
+      overwriteMembersIfPresent(allProperties, behavior.props);
     }
+    overwriteMembersIfPresent(allProperties, extractProperties(descriptor));
 
     ClassDefinition def = new ClassDefinition(target, classInfo,
-        new MemberDefinition(ctorInfo, null, constructor), nativeBaseElement, allProperties.build(),
+        new MemberDefinition(ctorInfo, null, constructor), nativeBaseElement, allProperties,
         behaviors);
     return def;
+  }
+
+  /**
+   * Appends a list of new MemberDefinitions to the end of a list and removes any previous
+   * MemberDefinition in the list which has the same name as the new member.
+   */
+  private static void overwriteMembersIfPresent(
+      List<MemberDefinition> list, List<MemberDefinition> newMembers) {
+    for (MemberDefinition newMember : newMembers) {
+      for (MemberDefinition member : list) {
+        if (member.name.getString().equals(newMember.name.getString())) {
+          list.remove(member);
+          break;
+        }
+      }
+      list.add(newMember);
+    }
   }
 
   /**
