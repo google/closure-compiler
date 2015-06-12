@@ -74,13 +74,16 @@ PushSubscription.prototype.unsubscribe = function() {};
 //};
 
 /**
- * @see https://w3c.github.io/push-api/
+ * @see https://w3c.github.io/push-api/#idl-def-PushManager
  * @constructor
  */
 function PushManager() {}
 
-/** @return {!Promise<PushSubscription>} */
-PushManager.prototype.subscribe = function() {};
+/**
+ * @param {PushSubscriptionOptions=} opt_options
+ * @return {!Promise<PushSubscription>}
+ */
+PushManager.prototype.subscribe = function(opt_options) {};
 
 /** @return {!Promise<PushSubscription>} */
 PushManager.prototype.getSubscription = function() {};
@@ -90,6 +93,11 @@ PushManager.prototype.getSubscription = function() {};
 // Uncomment once it is available.
 // PushManager.prototype.hasPermission = function() {};
 
+/**
+ * @typedef {{userVisibleOnly: (boolean|undefined)}}
+ * @see https://w3c.github.io/push-api/#idl-def-PushSubscriptionOptions
+ */
+var PushSubscriptionOptions;
 
 /**
  * @see http://www.w3.org/TR/push-api/#idl-def-PushMessageData
