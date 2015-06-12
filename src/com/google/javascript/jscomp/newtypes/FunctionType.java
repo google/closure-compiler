@@ -478,10 +478,13 @@ public final class FunctionType {
       return false;
     }
 
-    // covariance for the this: type
-    if (receiverType != null && other.receiverType == null
-        || receiverType != null && other.receiverType != null
-           && !receiverType.isSubtypeOf(other.receiverType)) {
+    // The correct behavior is covariance for the @this type.
+    // However, we allow a function with @this to be a subtype of a
+    // function without @this, to avoid some false positives.
+    // See: testFunctionSubtypingWithReceiverTypes
+    // TODO(dimvar): revisit this after we allow any JSType for the receiverType
+    if (receiverType != null && other.receiverType != null
+        && !receiverType.isSubtypeOf(other.receiverType)) {
       return false;
     }
 

@@ -12258,4 +12258,47 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}",
         "addProp(new Foo(1), 5).prop - 1;"));
   }
+
+  public void testFunctionSubtypingWithReceiverTypes() {
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {function(this:T)} x",
+        " */",
+        "function f(x) {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "f(/** @this{Foo} */ function () {});"));
+
+    // We don't catch the NOT_UNIQUE_INSTANTIATION warning
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {function(this:T)} y",
+        " */",
+        "function f(x, y) {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "f(new Bar, /** @this{Foo} */function () {});"));
+
+    // Sets Bar#p to a number but we don't catch it
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  /** @type {string} */ this.p = 'asdf';",
+        "}",
+        "/**",
+        " * @this {Foo}",
+        " * @param {number} x",
+        " */",
+        "function f(x) { this.p = x; }",
+        "/** @param {function(number)} x */",
+        "function g(x) { x.call(new Bar, 123); }",
+        "g(f);"));
+  }
 }
