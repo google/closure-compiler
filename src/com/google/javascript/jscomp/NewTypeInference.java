@@ -187,8 +187,15 @@ final class NewTypeInference implements CompilerPass {
           "JSC_GOOG_BIND_EXPECTS_FUNCTION",
           "The first argument to goog.bind/goog.partial must be a function.");
 
+  static final DiagnosticType BOTTOM_PROP =
+      DiagnosticType.warning(
+          "JSC_BOTTOM_PROP",
+          "Property {0} of {1} cannot have a valid type."
+          + "Maybe the result of a union of incompatible types?");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
+      BOTTOM_PROP,
       CANNOT_BIND_CTOR,
       CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
@@ -2161,7 +2168,8 @@ final class NewTypeInference implements CompilerPass {
         }
         builder.put(typeParam, JSType.UNKNOWN);
       } else if (types.size() == 1) {
-        builder.put(typeParam, Iterables.getOnlyElement(types));
+        JSType t = Iterables.getOnlyElement(types);
+        builder.put(typeParam, t.isBottom() ? JSType.UNKNOWN : t);
       } else {
         // Put ? for any uninstantiated type variables
         builder.put(typeParam, JSType.UNKNOWN);
@@ -2567,6 +2575,11 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(pair.env, recvType.getProp(getterPname));
     }
     JSType resultType = recvType.getProp(propQname);
+    if (resultType != null && resultType.isBottom()) {
+      warnings.add(JSError.make(propAccessNode, BOTTOM_PROP,
+              pname, recvType.toString()));
+      return new EnvTypePair(pair.env, JSType.UNKNOWN);
+    }
     if (!propAccessNode.getParent().isExprResult()
         && !specializedType.isTruthy() && !specializedType.isFalsy()
         && !recvType.isDict()) {

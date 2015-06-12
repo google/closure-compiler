@@ -32,12 +32,14 @@ final class TypeWithPropertiesStatics {
       return null;
     }
     JSType ptype = JSType.BOTTOM;
+    boolean foundProp = false;
     for (TypeWithProperties t : types) {
       if (t.mayHaveProp(qname)) {
+        foundProp = true;
         ptype = JSType.join(ptype, t.getProp(qname));
       }
     }
-    return ptype.isBottom() ? null : ptype;
+    return foundProp ? ptype : null;
   }
 
   static JSType getDeclaredProp(

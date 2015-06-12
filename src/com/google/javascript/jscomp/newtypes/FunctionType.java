@@ -404,8 +404,13 @@ public final class FunctionType {
         f1.requiredFormals.size() + f1.optionalFormals.size(),
         f2.requiredFormals.size() + f2.optionalFormals.size());
     for (int i = minRequiredArity; i < maxTotalArity; i++) {
-      builder.addOptFormal(JSType.nullAcceptingJoin(
-          f1.getFormalType(i), f2.getFormalType(i)));
+      JSType t = JSType.nullAcceptingJoin(f1.getFormalType(i), f2.getFormalType(i));
+      if (t != null && t.isBottom()) {
+        // We will add the optional formal of the loose function in the fwd
+        // direction, when we have better type information.
+        break;
+      }
+      builder.addOptFormal(t);
     }
     // Loose types never have varargs, because there is no way for that
     // information to make it to a function summary

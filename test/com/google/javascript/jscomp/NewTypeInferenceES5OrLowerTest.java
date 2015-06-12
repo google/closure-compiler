@@ -1649,6 +1649,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x) {};",
         "f(function () {});"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  x(true, 'asdf');",
+        "  x(false);",
+        "}"));
   }
 
   public void testBackwardForwardPathologicalCase2() {
@@ -5693,6 +5699,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x, y) {}",
         "f(123, function(x) { var /** string */ s = x; });"),
         NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " */",
+        "function f(x) {}",
+        "var y = null;",
+        "if (!y) {",
+        "} else {",
+        "  f(y)",
+        "}"));
   }
 
   public void testGenericReturnType() {
@@ -7935,12 +7953,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
-  // TODO(blickly): This warning is not very good.
   public void testBottomPropAccessDoesntCrash() {
+    // TODO(blickly): This warning is not very good.
     typeCheck(Joiner.on('\n').join(
         "var obj = null;",
         "if (obj) obj.prop += 7;"),
         TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.m = function(/** number */ x) {};",
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.m = function(/** string */ x) {};",
+        "function f(/** null|!Foo|!Bar */ x, y) {",
+        "  if (x) {",
+        "    return x.m(y);",
+        "  }",
+        "}"),
+        NewTypeInference.BOTTOM_PROP);
   }
 
   public void testUnannotatedFunctionSummaryDoesntCrash() {
