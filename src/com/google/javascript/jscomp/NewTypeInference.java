@@ -1102,7 +1102,9 @@ final class NewTypeInference implements CompilerPass {
         break;
       case Token.THIS: {
         if (!currentScope.hasThis()) {
-          warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
+          if (expr.getParent().isGetProp() || expr.getParent().isGetElem()) {
+            warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
+          }
           resultPair = new EnvTypePair(inEnv, JSType.UNKNOWN);
         } else {
           // A trimmed-down version of analyzeNameFwd.

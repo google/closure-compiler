@@ -463,8 +463,7 @@ public final class JSTypeCreatorFromJSDoc {
     Node child = jsdocNode.getFirstChild();
     if (child.getType() == Token.THIS) {
       if (ownerType == null) {
-        builder.addReceiverType(
-            getNominalType(child.getFirstChild(), registry, typeParameters));
+        builder.addReceiverType(getNominalType(child.getFirstChild(), registry, typeParameters));
       }
       child = child.getNext();
     } else if (child.getType() == Token.NEW) {
@@ -812,9 +811,16 @@ public final class JSTypeCreatorFromJSDoc {
     }
 
     if (jsdoc.hasThisType() && ownerType == null) {
-      Node thisNode = jsdoc.getThisType().getRoot();
-      JSType thisType =
-          getMaybeTypeFromComment(thisNode, registry, typeParameters);
+      Node thisRoot = jsdoc.getThisType().getRoot();
+      Preconditions.checkState(thisRoot.getType() == Token.BANG);
+      Node thisNode = thisRoot.getFirstChild();
+      // JsDocInfoParser wraps @this types with !. But we warn when we see !T,
+      // and we don't want to warn for a ! that was automatically inserted.
+      // So, we bypass the ! here.
+      JSType thisType = getMaybeTypeFromComment(thisNode, registry, typeParameters);
+      if (thisType != null) {
+        thisType = thisType.removeType(JSType.NULL);
+      }
       // TODO(dimvar): thisType may be non-null but have a null
       // thisTypeAsNominal.
       // We currently only support nominal types for the receiver type, but

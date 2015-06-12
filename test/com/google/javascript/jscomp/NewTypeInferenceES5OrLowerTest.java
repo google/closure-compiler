@@ -263,7 +263,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testInvalidThisReference() {
     typeCheck("this.x = 5;", CheckGlobalThis.GLOBAL_THIS);
-    typeCheck("function f(x){}; f(this);", CheckGlobalThis.GLOBAL_THIS);
+
+    typeCheck("function f(x){}; f(this);");
+
+    typeCheck("function f(){ return this; }");
+
+    typeCheck("function f() { this.p = 1; }", CheckGlobalThis.GLOBAL_THIS);
+
+    typeCheck("function f() { return this.p; }", CheckGlobalThis.GLOBAL_THIS);
+
+    typeCheck("function f() { this['p']; }", CheckGlobalThis.GLOBAL_THIS);
+
+    // TODO(dimvar): Will be fixed once we handle any JSType as a receiver type
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @this {T}",
+        " */",
+        "function f(x) {",
+        "  this.p = 123;",
+        "}"),
+        CheckGlobalThis.GLOBAL_THIS);
   }
 
   public void testSuperClassWithUndeclaredProps() {
