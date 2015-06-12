@@ -1729,8 +1729,8 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(env, JSType.UNKNOWN);
     }
     // Check if the receiver argument is there
-    if (NodeUtil.isGoogBind(call) && call.getChildCount() <= 2
-        || !NodeUtil.isGoogPartial(call) && call.getChildCount() == 1) {
+    if (NodeUtil.isGoogBind(call.getFirstChild()) && call.getChildCount() <= 2
+        || !NodeUtil.isGoogPartial(call.getFirstChild()) && call.getChildCount() == 1) {
       warnings.add(JSError.make(
           call, TypeCheck.WRONG_ARGUMENT_COUNT,
           getReadableCalleeName(call.getFirstChild()),

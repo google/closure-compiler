@@ -11623,6 +11623,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck("goog.partial(function(x) {}, 123)");
+
+    typeCheck("goog.bind(function() {}, null)();");
   }
 
   public void testPlusBackwardInference() {
@@ -12298,6 +12300,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  return x;",
         "}",
         "addProp(new Foo(1), 5).prop - 1;"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.m = function() {",
+        "  this.prop = 123;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  /** @type {number} */",
+        "  x.prop = 123;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.prop = 123;",
+        "/** @type {!Foo} */",
+        "var x = new Foo;",
+        "/** @type {number} */",
+        "x.prop = 123;"));
   }
 
   public void testFunctionSubtypingWithReceiverTypes() {

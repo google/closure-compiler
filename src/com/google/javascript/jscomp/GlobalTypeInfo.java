@@ -1703,10 +1703,11 @@ class GlobalTypeInfo implements CompilerPass {
     private DeclaredFunctionType getDeclaredFunctionTypeFromContext(
         String functionName, Node declNode, Scope parentScope) {
       Node parent = declNode.getParent();
+      Node maybeBind = parent.isCall() ? parent.getFirstChild() : parent;
 
       // The function literal is used with .bind or goog.bind
-      if (NodeUtil.isFunctionBind(parent) && !NodeUtil.isGoogPartial(parent)) {
-        Node call = parent.isCall() ? parent : parent.getParent();
+      if (NodeUtil.isFunctionBind(maybeBind) && !NodeUtil.isGoogPartial(maybeBind)) {
+        Node call = maybeBind.getParent();
         Bind bindComponents = convention.describeFunctionBind(call, true, false);
         JSType recvType = simpleInferExprType(bindComponents.thisValue);
         if (recvType == null) {

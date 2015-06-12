@@ -722,8 +722,9 @@ public final class NominalType {
 
     public void addPropertyWhichMayNotBeOnAllInstances(String pname, JSType type) {
       Preconditions.checkState(!isFinalized);
-      Preconditions.checkState(!this.classProps.containsKey(pname));
-      Preconditions.checkState(!this.protoProps.containsKey(pname));
+      if (this.classProps.containsKey(pname) || this.protoProps.containsKey(pname)) {
+        return;
+      }
       if (this.objectKind == ObjectKind.UNRESTRICTED) {
         this.randomProps = this.randomProps.with(
             pname, Property.make(type == null ? JSType.UNKNOWN : type, type));
