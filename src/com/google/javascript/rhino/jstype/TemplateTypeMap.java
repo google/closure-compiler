@@ -181,6 +181,14 @@ public class TemplateTypeMap implements Serializable {
          resolvedTemplateValues.get(index);
   }
 
+  public JSType getConcreteTypeOfTemplateType(TemplateType key) {
+    JSType result = getTemplateType(key);
+    while (result.isTemplateType()) {
+      result = getTemplateType(result.toMaybeTemplateType());
+    }
+    return result;
+  }
+
   /**
    * An enum tracking the three different equivalence match states for a
    * template key-value pair.

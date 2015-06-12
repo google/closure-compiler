@@ -65,6 +65,25 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "goog.asserts = {};" +
       "/** @return {*} */ goog.asserts.assert = function(x) { return x; };";
 
+  /** A default set of externs for testing structural interface matching*/
+  private static final Joiner lineJoiner = Joiner.on("\n");
+  private static final String INTERFACE_DEFAULT_EXTERNS = lineJoiner.join(
+      "/**",
+      " * @interface",
+      " * @template KEY1, VALUE1",
+      " */",
+      "function IObject() {};",
+      "/**",
+      " * @interface",
+      " * @extends IObject<number, VALUE2>",
+      " * @template VALUE2",
+      " */",
+      "function IArrayLike() {};",
+      "/**",
+      " * @type{number}",
+      " */",
+      "IArrayLike.prototype.length;");
+
   /** A default set of externs for testing. */
   static final String DEFAULT_EXTERNS =
       "/**\n" +
@@ -106,7 +125,8 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
       "/** @type {!Arguments} */\n" +
       "var arguments;" +
       "" + ACTIVE_X_OBJECT_DEF +
-      "/** @type {?} */ var unknown;"; // For producing unknowns in tests.
+      "/** @type {?} */ var unknown;" + // For producing unknowns in tests.
+      INTERFACE_DEFAULT_EXTERNS;
 
   protected Compiler compiler;
 

@@ -13399,34 +13399,204 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTemplateMap1() throws Exception {
-    // TODO(lgong): fix issue #980. Make the current type system detect mismatch between
-    // different template values involving interfaces.
-    testTypes(
-        "/** @interface \n" +
-        " *  @template KEY1, VALUE1 */\n" +
-        "var IObject = function() {};\n" +
-        "\n" +
-        "/** @interface \n" +
-        " *  @extends {IObject<number, VALUE2>}\n" +
-        " *  @template VALUE2 */\n" +
-        "var IArrayLike = function() {};\n" +
-        "\n" +
-        "/** @constructor \n" +
-        " *  @implements {IArrayLike<number>} */\n" +
-        "function Int8Array2() {}\n" +
-        "\n" +
-        "function f() {\n" +
-        "  /** @type {Int8Array2} */\n" +
-        "  var x = new Int8Array2();\n" +
-        "\n" +
-        "  /** @type {IArrayLike<string>} */\n" +
-        "  var y;\n" +
-        "  y = x;\n" +
-        "\n" +
-        "  /** @type {IObject<number, string>} */\n" +
-        "  var z;\n" +
-        "  z = x;\n" +
-        "}");
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "function f() {\n"
+        + "  /** @type {Int8Array} */\n"
+        + "  var x = new Int8Array(10);\n"
+        + "  /** @type {IArrayLike<string>} */\n"
+        + "  var y;\n"
+        + "  y = x;\n"
+        + "}",
+        "assignment\n"
+        + "found   : (Int8Array|null)\n"
+        + "required: (IArrayLike<string>|null)");
+  }
+
+  public void testTemplateMap2() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "function f() {\n"
+        + "  /** @type {Int8Array} */\n"
+        + "  var x = new Int8Array(10);\n"
+        + "\n"
+        + "  /** @type {IObject<number, string>} */\n"
+        + "  var z;\n"
+        + "  z = x;\n"
+        + "}",
+        "assignment\n"
+        + "found   : (Int8Array|null)\n"
+        + "required: (IObject<number,string>|null)");
+  }
+
+  public void testTemplateMap3() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "function f() {\n"
+        + "  var x = new Int8Array(10);\n"
+        + "\n"
+        + "  /** @type {IArrayLike<string>} */\n"
+        + "  var y;\n"
+        + "  y = x;\n"
+        + "}",
+        "assignment\n"
+        + "found   : Int8Array\n"
+        + "required: (IArrayLike<string>|null)");
+  }
+
+  public void testTemplateMap4() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "function f() {\n"
+        + "  var x = new Int8Array(10);\n"
+        + "\n"
+        + "  /** @type {IObject<number, string>} */\n"
+        + "  var z;\n"
+        + "  z = x;\n"
+        + "}",
+        "assignment\n"
+        + "found   : Int8Array\n"
+        + "required: (IObject<number,string>|null)");
+  }
+
+  public void testTemplateMap5() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "function f() {\n"
+        + "  var x = new Int8Array(10);\n"
+        + "  /** @type {IArrayLike<number>} */\n"
+        + "  var y;\n"
+        + "  y = x;\n"
+        + "}");
+  }
+
+  public void testTemplateMap6() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "function f() {\n"
+        + "  var x = new Int8Array(10);\n"
+        + "  /** @type {IObject<number, number>} */\n"
+        + "  var z;\n"
+        + "  z = x;\n"
+        + "}");
+  }
+
+  private static final String EXTERNS_WITH_IARRAYLIKE_DECLS =
+      "/**\n"
+      + " * @constructor @implements IArrayLike<number>\n"
+      + " */\n"
+      + "function Int8Array(length, opt_byteOffset, opt_length) {}\n"
+      + "/** @type {number} */\n"
+      + "Int8Array.prototype.length;\n"
+      + "/**\n"
+      + "* @constructor\n"
+      + "* @extends {Int8Array}\n"
+      + "*/\n"
+      + "function Int8Array2(len) {};\n"
+      + "/**\n"
+      + " * @interface\n"
+      + " * @extends {IArrayLike<number>}\n"
+      + " */\n"
+      + "function IArrayLike2(){}\n"
+      + "\n"
+      + "/**\n"
+      + " * @constructor\n"
+      + " * @implements {IArrayLike2}\n"
+      + " */\n"
+      + "function Int8Array3(len) {};\n"
+      + "/** @type {number} */\n"
+      + "Int8Array3.prototype.length;\n"
+      + "/**\n" + " * @interface\n"
+      + " * @extends {IArrayLike<VALUE3>}\n"
+      + " * @template VALUE3\n"
+      + " */\n"
+      + "function IArrayLike3(){}\n"
+      + "/**\n"
+      + " * @constructor\n"
+      + " * @implements {IArrayLike3<number>}\n"
+      + " */\n"
+      + "function Int8Array4(length) {};\n"
+      + "/** @type {number} */\n"
+      + "Int8Array4.prototype.length;\n"
+      + "/**\n"
+      + " * @interface\n"
+      + " * @extends {IArrayLike<VALUE2>}\n"
+      + " * @template VALUE2\n"
+      + " */\n"
+      + "function IArrayLike4(){}\n"
+      + "/**\n"
+      + " * @interface\n"
+      + " * @extends {IArrayLike4<boolean>}\n"
+      + " */\n"
+      + "function IArrayLike5(){}\n"
+      + "/**\n"
+      + " * @constructor\n"
+      + " * @implements {IArrayLike5}\n"
+      + " */\n"
+      + "function BooleanArray5(length) {};\n"
+      + "/** @type {number} */\n"
+      + "BooleanArray5.prototype.length;";
+
+  public void testIArrayLike1() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "var arr = new Int8Array(7);\n"
+        + "// no warning\n"
+        + "arr[0] = 1;\n"
+        + "arr[1] = 2;\n");
+  }
+
+  public void testIArrayLike2() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "var arr = new Int8Array(7);\n"
+        + "// have warnings\n"
+        + "arr[3] = false;\n",
+        "assignment\n"
+        + "found   : boolean\n"
+        + "required: number");
+  }
+
+  public void testIArrayLike3() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "var arr = new Int8Array2(10);\n"
+        + "// have warnings\n"
+        + "arr[3] = false;\n",
+        "assignment\n"
+        + "found   : boolean\n"
+        + "required: number");
+  }
+
+  public void testIArrayLike4() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "var arr = new Int8Array2(10);\n"
+        + "// have warnings\n"
+        + "arr[3] = false;\n",
+        "assignment\n"
+        + "found   : boolean\n"
+        + "required: number");
+  }
+
+  public void testIArrayLike5() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "var arr = new Int8Array3(10);\n"
+        + "// have warnings\n"
+        + "arr[3] = false;\n",
+        "assignment\n"
+        + "found   : boolean\n"
+        + "required: number");
+  }
+
+  public void testIArrayLike6() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "var arr = new Int8Array4(10);\n"
+        + "// have warnings\n"
+        + "arr[3] = false;\n",
+        "assignment\n"
+        + "found   : boolean\n"
+        + "required: number");
+  }
+
+  public void testIArrayLike7() throws Exception {
+    testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
+        "var arr5 = new BooleanArray5(10);\n"
+        + "arr5[2] = true;\n"
+        + "arr5[3] = \"\";",
+        "assignment\n"
+        + "found   : string\n"
+        + "required: boolean");
   }
 
   private void testTypes(String js) throws Exception {
@@ -13533,6 +13703,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   void testTypesWithExterns(String externs, String js) throws Exception {
     testTypes(externs, js, (String) null, false);
+  }
+
+  void testTypesWithExtraExterns(String externs, String js) throws Exception {
+    testTypes(DEFAULT_EXTERNS + "\n" + externs, js, (String) null, false);
+  }
+
+  void testTypesWithExtraExterns(String externs,
+      String js, String description) throws Exception {
+    testTypes(DEFAULT_EXTERNS + "\n" + externs, js, description, false);
   }
 
   void testTypes(

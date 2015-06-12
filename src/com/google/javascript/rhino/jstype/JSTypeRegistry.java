@@ -81,7 +81,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * The name associated with the template variable corresponding to the
    * property key type of the built-in Javascript object.
    */
-  public static final String OBJECT_INDEX_TEMPLATE = "Object#Key";
+  private static final String OBJECT_INDEX_TEMPLATE = "Object#Key";
 
   private TemplateType objectIndexTemplateKey;
 
@@ -92,6 +92,22 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   public static final String OBJECT_ELEMENT_TEMPLATE = "Object#Element";
 
   private TemplateType objectElementTemplateKey;
+
+  /**
+   * The name associated with the template variable corresponding to the
+   * property key type for IObject<KEY, VALUE>.
+   */
+  private static final String I_OBJECT_KEY_TEMPLATE = "IObject#KEY1";
+
+  private TemplateType iobjectKeyTemplateKey;
+
+  /**
+   * The name associated with the template variable corresponding to the
+   * property value type for IObject<KEY, VALUE>.
+   */
+  public static final String I_OBJECT_VALUE_TEMPLATE = "IObject#VALUE1";
+
+  private TemplateType iobjectValueTemplateKey;
 
   /**
    * The UnionTypeBuilder caps the maximum number of alternate types it
@@ -175,6 +191,11 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   // there are no template types.
   private final TemplateTypeMap emptyTemplateTypeMap;
 
+  // string names used in JSDoc declaration for IObject
+  private static final String I_OBJECT_INTERFACE_NAME = "IObject";
+  private static final String I_OBJECT_KEY_NAME = "KEY1";
+  private static final String I_OBJECT_VALUE_NAME = "VALUE1";
+
   /**
    * Constructs a new type registry populated with the built-in types.
    */
@@ -202,7 +223,82 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public TemplateType getObjectIndexKey() {
     Preconditions.checkNotNull(objectIndexTemplateKey);
-    return objectIndexTemplateKey;
+    return this.objectIndexTemplateKey;
+  }
+
+  /**
+   * check if FunName<TEMP1, TEMP2...> matches IObject<..., VALUE1...>
+   * @param fnName is the function's name
+   * @param templateParamName is the name of the
+   * second template parameter in JSDoc
+   * @return true if matches, otherwise return false
+   */
+  public boolean isIObjectValueKey(String fnName, String templateParamName) {
+    return I_OBJECT_INTERFACE_NAME.equals(fnName)
+        && I_OBJECT_VALUE_NAME.equals(templateParamName);
+  }
+
+  /**
+   * @return The template variable corresponding to the property value type for
+   * <VALUE> in IObject<KEY, VALUE>.
+   */
+  public TemplateType getIObjectValueKey() {
+    return iobjectValueTemplateKey;
+  }
+
+  /**
+   * check if FunName<TEMP1, ...> matches IObject<KEY1, ...>
+   * @param fnName is the function's name
+   * @param templateParamName is the name of the
+   * first template parameter in JSDoc
+   * @return true if matches, otherwise return false
+   */
+  public boolean isIObjectKeyKey(String fnName, String templateParamName) {
+    return I_OBJECT_INTERFACE_NAME.equals(fnName)
+        && I_OBJECT_KEY_NAME.equals(templateParamName);
+  }
+
+  /**
+   * @return The template variable corresponding to the
+   * property key type of the IObject<KEY, VALUE> interface.
+   */
+  public TemplateType getIObjectKeyKey() {
+    Preconditions.checkNotNull(iobjectKeyTemplateKey);
+    return iobjectKeyTemplateKey;
+  }
+
+  /**
+   * check if a function declaration is the IObject interface
+   * @param fnName the function's name
+   * @param info the JSDoc from the function declaration
+   * @return true if it is, otherwise false
+   */
+  public boolean isIObject(String fnName, JSDocInfo info) {
+    if (!I_OBJECT_INTERFACE_NAME.equals(fnName)) {
+      return false;
+    }
+    ImmutableList<String> infoTemplateTypeNames = info.getTemplateTypeNames();
+    if (infoTemplateTypeNames.isEmpty() || infoTemplateTypeNames.size() != 2) {
+      return false;
+    }
+    if (!isIObjectKeyKey(fnName, infoTemplateTypeNames.get(0))
+        || !isIObjectValueKey(fnName, infoTemplateTypeNames.get(1))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * @return return an immutable list of template types of IObject,
+   * i.e., [KEY1, VALUE1]
+   */
+  public ImmutableList<TemplateType> getIObjectTemplateTypeNames() {
+    ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+    builder.add(getIObjectKeyKey());
+    builder.add(getIObjectValueKey());
+    ImmutableList<TemplateType> templateTypeNames = builder.build();
+    return templateTypeNames;
   }
 
   public ErrorReporter getErrorReporter() {
@@ -223,6 +319,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   private void initializeBuiltInTypes() {
     objectIndexTemplateKey = new TemplateType(this, OBJECT_INDEX_TEMPLATE);
     objectElementTemplateKey = new TemplateType(this, OBJECT_ELEMENT_TEMPLATE);
+    iobjectKeyTemplateKey = new TemplateType(this, I_OBJECT_KEY_TEMPLATE);
+    iobjectValueTemplateKey = new TemplateType(this, I_OBJECT_VALUE_TEMPLATE);
 
     // These locals shouldn't be all caps.
     BooleanType BOOLEAN_TYPE = new BooleanType(this);

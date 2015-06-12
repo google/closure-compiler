@@ -340,16 +340,27 @@ final class FunctionTypeBuilder {
         reportWarning(CONSTRUCTOR_REQUIRED, "@dict", formatFnName());
       }
 
-      // Class template types, which can be used in the scope of a constructor
-      // definition.
-      ImmutableList<String> typeParameters = info.getTemplateTypeNames();
-      if (!typeParameters.isEmpty() && (isConstructor || isInterface)) {
-        ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
-        for (String typeParameter : typeParameters) {
-          builder.add(typeRegistry.createTemplateType(typeParameter));
-        }
-        classTemplateTypeNames = builder.build();
+      if (typeRegistry.isIObject(fnName, info)) {
+        // This case is only for setting template types
+        // for IObject<KEY1, VALUE1>.
+        // In the (old) type system, there should be only one unique template
+        // type for <KEY1> and <VALUE1> respectively
+        classTemplateTypeNames = typeRegistry.getIObjectTemplateTypeNames();
         typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+      } else {
+        // Otherwise, create new template type for
+        // the template values of the constructor/interface
+        // Class template types, which can be used in the scope of a constructor
+        // definition.
+        ImmutableList<String> typeParameters = info.getTemplateTypeNames();
+        if (!typeParameters.isEmpty() && (isConstructor || isInterface)) {
+          ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
+          for (String typeParameter : typeParameters) {
+            builder.add(typeRegistry.createTemplateType(typeParameter));
+          }
+          classTemplateTypeNames = builder.build();
+          typeRegistry.setTemplateTypeNames(classTemplateTypeNames);
+        }
       }
 
       // base type
@@ -586,7 +597,11 @@ final class FunctionTypeBuilder {
           info.getTypeTransformations();
       if (!infoTemplateTypeNames.isEmpty()) {
         for (String key : infoTemplateTypeNames) {
-          builder.add(typeRegistry.createTemplateType(key));
+          if (typeRegistry.isIObjectValueKey(fnName, key)) {
+            builder.add(typeRegistry.getIObjectValueKey());
+          } else {
+            builder.add(typeRegistry.createTemplateType(key));
+          }
         }
       }
       if (!infoTypeTransformations.isEmpty()) {
