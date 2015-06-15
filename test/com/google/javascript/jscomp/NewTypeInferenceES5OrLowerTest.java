@@ -1067,6 +1067,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function takesFoo(/** Foo */ x) {}",
         "takesFoo(returnsObj());"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck("Object.prototype.hasOwnProperty.call({}, 'asdf');");
   }
 
   public void testCallsWithComplexOperator() {

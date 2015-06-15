@@ -481,15 +481,22 @@ public final class NominalType {
       this.typeParameters = typeParameters;
       this.isInterface = isInterface;
       this.objectKind = objectKind;
-      this.wrappedAsNominal =
-          new NominalType(ImmutableMap.<String, JSType>of(), this);
-      ObjectType objInstance = "Function".equals(name)
-          ? ObjectType.fromFunction(
-              FunctionType.TOP_FUNCTION, this.wrappedAsNominal)
-          : ObjectType.fromNominalType(this.wrappedAsNominal);
+      this.wrappedAsNominal = new NominalType(ImmutableMap.<String, JSType>of(), this);
+      ObjectType objInstance;
+      switch (name) {
+        case "Function":
+          objInstance = ObjectType.fromFunction(FunctionType.TOP_FUNCTION, this.wrappedAsNominal);
+          break;
+        case "Object":
+          // We do this to avoid having two instances of ObjectType that both
+          // represent the top JS object.
+          objInstance = ObjectType.TOP_OBJECT;
+          break;
+        default:
+          objInstance = ObjectType.fromNominalType(this.wrappedAsNominal);
+      }
       this.wrappedAsJSType = JSType.fromObjectType(objInstance);
-      this.wrappedAsNullableJSType = JSType.join(JSType.NULL,
-          this.wrappedAsJSType);
+      this.wrappedAsNullableJSType = JSType.join(JSType.NULL, this.wrappedAsJSType);
     }
 
     public static RawNominalType makeUnrestrictedClass(
