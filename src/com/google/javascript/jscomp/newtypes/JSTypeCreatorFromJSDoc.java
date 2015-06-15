@@ -78,7 +78,7 @@ public final class JSTypeCreatorFromJSDoc {
           "@implements used without @constructor or @interface for {0}");
 
   public static final DiagnosticType CONFLICTING_SHAPE_TYPE =
-      DiagnosticType.warning(
+      DiagnosticType.disabled(
           "JSC_CONFLICTING_SHAPE_TYPE",
           "{1} cannot extend this type; {0}s can only extend {0}s");
 

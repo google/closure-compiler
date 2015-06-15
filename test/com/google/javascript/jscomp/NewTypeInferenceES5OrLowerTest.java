@@ -8743,7 +8743,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @dict @extends {Foo} */",
         "function Bar() {}"));
 
-    // TODO(dimvar): remove conflicting shape type warning
     typeCheck(Joiner.on('\n').join(
         "/** @constructor @unrestricted */",
         "function Foo() {}",
@@ -8757,6 +8756,23 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @dict @extends {Foo} */",
         "function Bar() {}"),
         JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE);
+
+    // Detect bad inheritance but connect the classes anyway
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {string} */",
+        "  this.prop = 'asdf';",
+        "}",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " * @struct",
+        " */",
+        "function Bar() {}",
+        "(new Bar).prop - 123;"),
+        JSTypeCreatorFromJSDoc.CONFLICTING_SHAPE_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(Joiner.on('\n').join(
         "/** @interface */",
