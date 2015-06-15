@@ -181,6 +181,13 @@ jasmine.Matchers.prototype.toThrow = function(opt_expected) {};
 
 
 /**
+ * @param {Object} value
+ * @return {string}
+ */
+jasmine.pp = function(value) {};
+
+
+/**
  * @param {!Object} clazz
  * @return {!jasmine.Matchers}
  */
