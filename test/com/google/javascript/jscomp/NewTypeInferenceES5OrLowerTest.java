@@ -274,6 +274,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck("function f() { this['p']; }", CheckGlobalThis.GLOBAL_THIS);
 
+    typeCheck(Joiner.on('\n').join(
+        "function g(x) {}",
+        "g(function() { return this.p; })"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ function Foo(x) {}",
+        "new Foo(function() { return this.p; })"));
+
     // TODO(dimvar): Will be fixed once we handle any JSType as a receiver type
     typeCheck(Joiner.on('\n').join(
         "/**",

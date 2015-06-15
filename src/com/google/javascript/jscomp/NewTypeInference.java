@@ -1109,9 +1109,7 @@ final class NewTypeInference implements CompilerPass {
         break;
       case Token.THIS: {
         if (!currentScope.hasThis()) {
-          if (expr.getParent().isGetProp() || expr.getParent().isGetElem()) {
-            warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
-          }
+          mayWarnAboutGlobalThis(expr, currentScope);
           resultPair = new EnvTypePair(inEnv, JSType.UNKNOWN);
         } else {
           // A trimmed-down version of analyzeNameFwd.
@@ -2520,6 +2518,22 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
+  private boolean mayWarnAboutGlobalThis(Node thisExpr, Scope currentScope) {
+    Preconditions.checkArgument(thisExpr.isThis());
+    Preconditions.checkState(!currentScope.hasThis());
+    Node parent = thisExpr.getParent();
+    Node scopeParent = currentScope.getRoot().getParent();
+    if ((parent.isGetProp() || parent.isGetElem())
+        // Don't warn for callbacks. Most of them are not annotated but THIS is
+        // bound to a legitimate object at runtime. They do lose typechecking
+        // for THIS however, but we won't warn.
+        && !scopeParent.isCall() && !scopeParent.isNew()) {
+      warnings.add(JSError.make(thisExpr, CheckGlobalThis.GLOBAL_THIS));
+      return true;
+    }
+    return false;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
@@ -3399,7 +3413,7 @@ final class NewTypeInference implements CompilerPass {
               currentScope.getDeclaredTypeOf(THIS_ID),
               new QualifiedName(THIS_ID));
         } else {
-          warnings.add(JSError.make(expr, CheckGlobalThis.GLOBAL_THIS));
+          mayWarnAboutGlobalThis(expr, currentScope);
           lvalResult = new LValueResultFwd(inEnv, JSType.UNKNOWN, null, null);
         }
         break;
