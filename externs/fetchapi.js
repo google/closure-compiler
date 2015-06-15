@@ -295,7 +295,7 @@ var ResponseType = {
  * @param {RequestInit=} opt_init
  * @return {!Promise.<!Response>}
  */
-var fetch = function(input, opt_init) {};
+function fetch(input, opt_init) {}
 
 /**
  * @see https://fetch.spec.whatwg.org/#dom-global-fetch

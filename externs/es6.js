@@ -71,7 +71,7 @@ Iterator.prototype.next;
  * @implements {Iterator<VALUE>}
  * @template VALUE
  */
-var Generator = function() {};
+function Generator() {}
 
 /**
  * @param {?=} opt_value
@@ -797,7 +797,7 @@ var Thenable;
  * @interface
  * @template TYPE
  */
-var IThenable = function() {};
+function IThenable() {}
 
 
 /**
@@ -831,7 +831,7 @@ IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
  * @implements {IThenable.<TYPE>}
  * @template TYPE
  */
-var Promise = function(resolver) {};
+function Promise(resolver) {}
 
 
 /**

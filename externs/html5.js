@@ -860,7 +860,7 @@ Window.prototype.importScripts = function(var_args) {};
  * @see https://developer.mozilla.org/En/DOM/Worker/Functions_available_to_workers
  * @param {...string} var_args
  */
-var importScripts = function(var_args) {};
+function importScripts(var_args) {}
 
 /**
  * @see http://dev.w3.org/html5/workers/
@@ -1892,7 +1892,7 @@ var WheelEventInit;
  * @constructor
  * @extends {MouseEvent}
  */
-var WheelEvent = function(type, opt_eventInitDict) {};
+function WheelEvent(type, opt_eventInitDict) {}
 
 /** @const {number} */
 WheelEvent.prototype.deltaX;
@@ -1914,7 +1914,7 @@ WheelEvent.prototype.deltaMode;
  * @see http://developers.whatwg.org/dnd.html#datatransferitem
  * @constructor
  */
-var DataTransferItem = function() {};
+function DataTransferItem() {}
 
 /** @type {string} */
 DataTransferItem.prototype.kind;
@@ -1952,7 +1952,7 @@ DataTransferItem.prototype.webkitGetAsEntry = function() { return null; };
  * @see http://developers.whatwg.org/dnd.html#datatransferitem
  * @constructor
  */
-var DataTransferItemList = function() {};
+function DataTransferItemList() {}
 
 /** @type {number} */
 DataTransferItemList.prototype.length;

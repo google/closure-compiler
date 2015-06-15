@@ -172,6 +172,19 @@ function parseInt(num, base) {}
 function eval(code) {}
 
 /**
+ * @interface
+ * @template KEY1, VALUE1
+ */
+function IObject() {}
+
+/**
+ * @interface
+ * @extends {IObject<number, VALUE2>}
+ * @template VALUE2
+ */
+function IArrayLike() {}
+
+/**
  * @constructor
  * @param {*=} opt_value
  * @return {!Object}
