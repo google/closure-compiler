@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -80,12 +79,8 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
 
   @Override
   public void process(Node externs, Node root) {
-    FindCopyProp findCopyProp = new FindCopyProp();
-    NodeTraversal.traverse(compiler, root, findCopyProp);
-    if (findCopyProp.found) {
-      NodeTraversal.traverse(compiler, root, new FindStaticMembers());
-      NodeTraversal.traverse(compiler, root, this);
-    }
+    NodeTraversal.traverse(compiler, root, new FindStaticMembers());
+    NodeTraversal.traverse(compiler, root, this);
   }
 
   @Override
@@ -132,21 +127,6 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
     exprResult.useSourceInfoIfMissingFromForTree(superclassNameNode);
     insertionPoint.getParent().addChildAfter(exprResult, insertionPoint);
     staticMembers.put(subclassNameNode.getQualifiedName(), assign);
-  }
-
-  private class FindCopyProp extends AbstractPreOrderCallback {
-
-    private boolean found = false;
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      if (found || n.isCall()
-          && n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.COPY_PROP)) {
-        found = true;
-        return false;
-      }
-      return true;
-    }
   }
 
   private class FindStaticMembers extends NodeTraversal.AbstractPostOrderCallback {
