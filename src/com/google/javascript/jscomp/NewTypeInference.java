@@ -3236,7 +3236,8 @@ final class NewTypeInference implements CompilerPass {
     if (NodeUtil.isFunctionBind(expr)) {
       return true;
     }
-    if (!expr.isGetProp() || !expr.getLastChild().getString().equals("bind")) {
+    if (!expr.isGetProp() || !expr.isQualifiedName()
+        || !expr.getLastChild().getString().equals("bind")) {
       return false;
     }
     Node recv = expr.getFirstChild();
