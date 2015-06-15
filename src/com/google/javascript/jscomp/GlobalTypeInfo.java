@@ -1382,11 +1382,16 @@ class GlobalTypeInfo implements CompilerPass {
       if (isAnnotatedAsConst(getProp)) {
         warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
-      RawNominalType rawType = getRawTypeFromJSType(
-          simpleInferExprType(getProp.getFirstChild()));
-      if (rawType == null) {
+      JSType recvType = simpleInferExprType(getProp.getFirstChild());
+      if (recvType == null) {
         return;
       }
+      NominalType nt = recvType.getNominalTypeIfSingletonObj();
+      // Don't add stray properties to Object.
+      if (nt == null || nt.equals(commonTypes.getObjectType())) {
+        return;
+      }
+      RawNominalType rawType = nt.getRawNominalType();
       String pname = getProp.getLastChild().getString();
       JSType declType = getDeclaredTypeOfNode(
           NodeUtil.getBestJSDocInfo(getProp), currentScope);
@@ -1399,14 +1404,6 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (!rawType.mayHaveProp(pname)) {
         rawType.addPropertyWhichMayNotBeOnAllInstances(pname, null);
       }
-    }
-
-    private RawNominalType getRawTypeFromJSType(JSType t) {
-      if (t == null) {
-        return null;
-      }
-      NominalType nt = t.getNominalTypeIfSingletonObj();
-      return nt == null ? null : nt.getRawNominalType();
     }
 
     private JSType getTypeAtPropDeclNode(Node declNode, JSDocInfo jsdoc) {

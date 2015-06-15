@@ -727,8 +727,8 @@ final class ObjectType implements TypeWithProperties {
     return fn;
   }
 
-  public NominalType getNominalType() {
-    return nominalType;
+  NominalType getNominalType() {
+    return this.nominalType == null ? ObjectType.builtinObject : this.nominalType;
   }
 
   public ImmutableSet<String> getAllOwnProps() {

@@ -285,6 +285,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  this.p = 123;",
         "}"),
         CheckGlobalThis.GLOBAL_THIS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @this {Object} */",
+        "function f(pname) {",
+        "  var x = this[pname];",
+        "}"));
   }
 
   public void testSuperClassWithUndeclaredProps() {
@@ -12354,6 +12360,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var x = new Foo;",
         "/** @type {number} */",
         "x.prop = 123;"));
+  }
+
+  public void testAddingPropsToObject() {
+    typeCheck(Joiner.on('\n').join(
+        "Object.prototype.m = function() {",
+        "  /** @type {string} */",
+        "  this.prop = 'asdf';",
+        "};",
+        "(new Object).prop - 123;"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** !Object */ x) {",
+        "  /** @type {string} */",
+        "  x.prop = 'asdf';",
+        "}",
+        "(new Object).prop - 123;"),
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testFunctionSubtypingWithReceiverTypes() {
