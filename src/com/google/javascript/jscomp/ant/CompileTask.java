@@ -281,6 +281,10 @@ public final class CompileTask
     this.angularPass = angularPass;
   }
 
+  public void setAngularPass(boolean angularPass) {
+    this.angularPass = angularPass;
+  }
+
   /**
    * Set generateExports option
    */
