@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
@@ -60,14 +59,9 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testMemberVariable() throws Exception {
     test(
-        Joiner.on('\n').join(
-            "class C {",
-            "  mv: number;",
-            "  constructor() {",
-            "    this.f = 1;",
-            "  }",
-            "}"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
+            "class C {", "  mv: number;", "  constructor() {", "    this.f = 1;", "  }", "}"),
+        LINE_JOINER.join(
             "class C {",
             "  constructor() {",
             "    /** @type {number} */ this.mv;",
@@ -78,44 +72,26 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testMemberVariable_noCtor() throws Exception {
     test(
-        Joiner.on('\n').join(
-            "class C {",
-            "  mv: number;",
-            "}"),
-        Joiner.on('\n').join(
-            "class C {",
-            "  constructor() {",
-            "    /** @type {number} */ this.mv;",
-            "  }",
-            "}"));
+        LINE_JOINER.join("class C {", "  mv: number;", "}"),
+        LINE_JOINER.join(
+            "class C {", "  constructor() {", "    /** @type {number} */ this.mv;", "  }", "}"));
   }
 
   public void testMemberVariable_static() throws Exception {
     test(
-        Joiner.on('\n').join(
-            "class C {",
-            "  static smv;",
-            "}"),
-        Joiner.on('\n').join(
-            "class C {",
-            "  constructor() {",
-            "  }",
-            "}\n",
-            "C.smv;"));
+        LINE_JOINER.join("class C {", "  static smv;", "}"),
+        LINE_JOINER.join("class C {", "  constructor() {", "  }", "}\n", "C.smv;"));
   }
 
   public void testMemberVariable_unsupportedClassExpression() throws Exception {
     testError(
-        Joiner.on('\n').join(
-            "(class {",
-            "  x: number;",
-            "})"),
+        LINE_JOINER.join("(class {", "  x: number;", "})"),
         Es6TypedToEs6Converter.CANNOT_CONVERT_MEMBER_VARIABLES);
     }
 
   public void testComputedPropertyVariable() throws Exception {
     test(
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "class C {",
             "  ['mv']: number;",
             "  ['mv' + 2]: number;",
@@ -123,7 +99,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
             "    this.f = 1;",
             "  }",
             "}"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "class C {",
             "  constructor() {",
             "    /** @type {number} */ this['mv'];",
@@ -135,14 +111,8 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testComputedPropertyVariable_static() throws Exception {
     test(
-        Joiner.on('\n').join(
-            "class C {",
-            "  static ['smv' + 2]: number;",
-            "}"),
-        Joiner.on('\n').join(
-            "class C {",
-            "  constructor() {}",
-            "}",
-            "/** @type {number} */ C['smv' + 2];"));
+        LINE_JOINER.join("class C {", "  static ['smv' + 2]: number;", "}"),
+        LINE_JOINER.join(
+            "class C {", "  constructor() {}", "}", "/** @type {number} */ C['smv' + 2];"));
   }
 }

@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
-
 /**
  * Tests OptimizeReturns
  * @author johnlenz@google.com (John Lenz)
@@ -53,7 +51,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
    * Combine source strings using '\n' as the separator.
    */
   private static String newlineJoin(String ... parts) {
-    return Joiner.on("\n").join(parts);
+    return LINE_JOINER.join(parts);
   }
 
   public void testNoRewriteUsedResult1() throws Exception {

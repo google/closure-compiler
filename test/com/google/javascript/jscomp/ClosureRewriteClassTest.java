@@ -24,7 +24,6 @@ import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_TARGET_INVALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_UNEXPECTED_PARAMS;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
@@ -259,19 +258,19 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   public void testClassWithStaticInitFn() {
     test(
         "x.y = goog.defineClass(some.Super, {\n"
-        + "  constructor: function(){\n"
-        + "    this.foo = 1;\n"
-        + "  },\n"
-        + "  statics: function(cls) {\n"
-        + "    cls.prop1 = 1;\n"
-        + "    /** @const */\n"
-        + "    cls.PROP2 = 2;\n"
-        + "  },\n"
-        + "  anotherProp: 1,\n"
-        + "  aMethod: function() {}\n"
-        + "});",
+            + "  constructor: function(){\n"
+            + "    this.foo = 1;\n"
+            + "  },\n"
+            + "  statics: function(cls) {\n"
+            + "    cls.prop1 = 1;\n"
+            + "    /** @const */\n"
+            + "    cls.PROP2 = 2;\n"
+            + "  },\n"
+            + "  anotherProp: 1,\n"
+            + "  aMethod: function() {}\n"
+            + "});",
 
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor @struct @extends {some.Super} */",
             "x.y = function() { this.foo = 1; };",
             "goog.inherits(x.y, some.Super);",
@@ -285,22 +284,24 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testPrivate1() {
-    test(Joiner.on('\n').join(
-        "/** @private */",
-        "x.y_ = goog.defineClass(null, {",
-        "  constructor: function() {}",
-        "});"),
+    test(
+        LINE_JOINER.join(
+            "/** @private */",
+            "x.y_ = goog.defineClass(null, {",
+            "  constructor: function() {}",
+            "});"),
         "/** @private @constructor @struct */ x.y_ = function() {};");
   }
 
   public void testPrivate2() {
-    test(Joiner.on('\n').join(
-        "/** @private */",
-        "x.y_ = goog.defineClass(null, {",
-        "  /** @param {string} s */",
-        "  constructor: function(s) {}",
-        "});"),
-        Joiner.on('\n').join(
+    test(
+        LINE_JOINER.join(
+            "/** @private */",
+            "x.y_ = goog.defineClass(null, {",
+            "  /** @param {string} s */",
+            "  constructor: function(s) {}",
+            "});"),
+        LINE_JOINER.join(
             "/**",
             " * @private",
             " * @constructor",

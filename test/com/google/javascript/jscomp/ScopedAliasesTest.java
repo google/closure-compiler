@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -260,28 +259,31 @@ public final class ScopedAliasesTest extends CompilerTestCase {
    * @see https://github.com/google/closure-compiler/issues/400
    */
   public void testObjectLiteral() {
-    testScoped(Joiner.on('\n').join(
-        "var Foo = goog.Foo;",
-        "goog.x = {",
-        "  /** @param {Foo} foo */",
-        "  y: function(foo) { }",
-        "};"),
+    testScoped(
+        LINE_JOINER.join(
+            "var Foo = goog.Foo;",
+            "goog.x = {",
+            "  /** @param {Foo} foo */",
+            "  y: function(foo) { }",
+            "};"),
         "goog.x = {y: function(foo) { }};");
 
-    testScoped(Joiner.on('\n').join(
-        "var Foo = goog.Foo;",
-        "goog.x = {",
-        "  y:",
-        "  /** @param {Foo} foo */ function(foo) {}",
-        "};"),
+    testScoped(
+        LINE_JOINER.join(
+            "var Foo = goog.Foo;",
+            "goog.x = {",
+            "  y:",
+            "  /** @param {Foo} foo */ function(foo) {}",
+            "};"),
         "goog.x = {y: function(foo) {}};");
 
-    testScoped(Joiner.on('\n').join(
-        "var Foo = goog.Foo;",
-        "goog.x = {",
-        "  y:",
-        "  /** @type {function(Foo)} */ (function(foo) {})",
-        "};"),
+    testScoped(
+        LINE_JOINER.join(
+            "var Foo = goog.Foo;",
+            "goog.x = {",
+            "  y:",
+            "  /** @type {function(Foo)} */ (function(foo) {})",
+            "};"),
         "goog.x = {y: /** @type {function(Foo)} */ (function(foo) {})};");
   };
 
@@ -289,33 +291,36 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableTypeCheck(CheckLevel.WARNING);
     runTypeCheckAfterProcessing = true;
 
-    String externs = Joiner.on('\n').join(
-        "var ns;",
-        "/** @constructor */",
-        "ns.Foo;",
-        "",
-        "var goog;",
-        "/** @param {function()} fn */",
-        "goog.scope = function(fn) {}");
+    String externs =
+        LINE_JOINER.join(
+            "var ns;",
+            "/** @constructor */",
+            "ns.Foo;",
+            "",
+            "var goog;",
+            "/** @param {function()} fn */",
+            "goog.scope = function(fn) {}");
 
-    String js = Joiner.on('\n').join(
-        "goog.scope(function() {",
-        "  var Foo = ns.Foo;",
-        "  var x = {",
-        "    /** @param {Foo} foo */ y: function(foo) {}",
-        "  };",
-        "  x.y('');",
-        "});");
+    String js =
+        LINE_JOINER.join(
+            "goog.scope(function() {",
+            "  var Foo = ns.Foo;",
+            "  var x = {",
+            "    /** @param {Foo} foo */ y: function(foo) {}",
+            "  };",
+            "  x.y('');",
+            "});");
     test(externs, js, null, null, TypeValidator.TYPE_MISMATCH_WARNING);
 
-    js = Joiner.on('\n').join(
-        "goog.scope(function() {",
-        "  var Foo = ns.Foo;",
-        "  var x = {",
-        "    y: /** @param {Foo} foo */ function(foo) {}",
-        "  };",
-        "  x.y('');",
-        "});");
+    js =
+        LINE_JOINER.join(
+            "goog.scope(function() {",
+            "  var Foo = ns.Foo;",
+            "  var x = {",
+            "    y: /** @param {Foo} foo */ function(foo) {}",
+            "  };",
+            "  x.y('');",
+            "});");
     test(externs, js, null, null, TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -712,11 +717,12 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     enableTypeCheck(CheckLevel.WARNING);
     runTypeCheckAfterProcessing = true;
 
-    String js = Joiner.on('\n').join(
-      "goog.scope(function () {",
-      "  /** @constructor */ function F() {}",
-      "  /** @return {F} */ function createFoo() { return 1; }",
-      "});");
+    String js =
+        LINE_JOINER.join(
+            "goog.scope(function () {",
+            "  /** @constructor */ function F() {}",
+            "  /** @return {F} */ function createFoo() { return 1; }",
+            "});");
 
     test(js,
          SCOPE_NAMESPACE +

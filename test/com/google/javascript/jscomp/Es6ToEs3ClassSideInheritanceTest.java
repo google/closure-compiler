@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
-
 /**
  * Test case for {@link Es6ToEs3ClassSideInheritance}.
  *
@@ -35,7 +33,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testSimple() {
     test(
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "Example.staticMethod = function() { alert(1); }",
@@ -43,7 +41,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.copyProperties(Subclass, Example);"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "Example.staticMethod = function() { alert(1); }",
@@ -55,7 +53,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testTyped() {
     test(
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "",
@@ -65,7 +63,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.copyProperties(Subclass, Example);"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "",
@@ -81,7 +79,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
 
   public void testOverride() {
     test(
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "",
@@ -93,7 +91,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "$jscomp.copyProperties(Subclass, Example);",
             "",
             "Subclass.staticMethod = function() { return 5; };"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "",
@@ -112,7 +110,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
    */
   public void testStaticNonMethod() {
     test(
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "",
@@ -122,7 +120,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
             "$jscomp.copyProperties(Subclass, Example);"),
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
             "",

@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
@@ -54,186 +53,176 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
     test("var x = 5; function f(y=x) { var x; }",
         "var x = 5; function f(y=x) { var x$0; }");
 
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { return x(); }())) {",
-        "  var x; y++;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { return x(); }())) {",
-        "  var x$0; y++;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { return x(); }())) {",
+            "  var x; y++;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { return x(); }())) {",
+            "  var x$0; y++;",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { return x(); }())) {",
-        "  var x;",
-        "  { let x; x++; }",
-        "  x++;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { return x(); }())) {",
-        "  var x$0;",
-        "  { let x; x++; }",
-        "  x$0++;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { return x(); }())) {",
+            "  var x;",
+            "  { let x; x++; }",
+            "  x++;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { return x(); }())) {",
+            "  var x$0;",
+            "  { let x; x++; }",
+            "  x$0++;",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { return x(); }())) {",
-        "  var x; { x++ };",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { return x(); }())) {",
-        "  var x$0; { x$0++ };",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { return x(); }())) {",
+            "  var x; { x++ };",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { return x(); }())) {",
+            "  var x$0; { x$0++ };",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "function f(a = x, b = y) {",
-        "  var y, x;",
-        "  return function() { var x = () => y };",
-        "}"
-    ), Joiner.on('\n').join(
-        "function f(a = x, b = y) {",
-        "  var y$0, x$1;",
-        "  return function() { var x = () => y$0 };",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function f(a = x, b = y) {",
+            "  var y, x;",
+            "  return function() { var x = () => y };",
+            "}"),
+        LINE_JOINER.join(
+            "function f(a = x, b = y) {",
+            "  var y$0, x$1;",
+            "  return function() { var x = () => y$0 };",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "var x = 4;",
-        "function f(a=x) { let x = 5; { let x = 99; } return a + x; }"
-    ), Joiner.on('\n').join(
-        "var x = 4;",
-        "function f(a=x) { let x$0 = 5; { let x = 99; } return a + x$0; }"
-    ));
+    test(
+        LINE_JOINER.join(
+            "var x = 4;", "function f(a=x) { let x = 5; { let x = 99; } return a + x; }"),
+        LINE_JOINER.join(
+            "var x = 4;", "function f(a=x) { let x$0 = 5; { let x = 99; } return a + x$0; }"));
 
   }
 
   public void testRenameFunction() {
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=x()) {",
-        "  x();",
-        "  function x() {}",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=x()) {",
-        "  x$0();",
-        "  function x$0() {}",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}", "function f(y=x()) {", "  x();", "  function x() {}", "}"),
+        LINE_JOINER.join(
+            "function x() {}", "function f(y=x()) {", "  x$0();", "  function x$0() {}", "}"));
   }
 
   public void testGlobalDeclaration() {
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { w = 5; return w; }())) {",
-        "  let x = w;",
-        "  var w = 3;",
-        "  return w;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function y() { w = 5; return w; }())) {",
-        "  let x = w$0;",
-        "  var w$0 = 3;",
-        "  return w$0;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { w = 5; return w; }())) {",
+            "  let x = w;",
+            "  var w = 3;",
+            "  return w;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function y() { w = 5; return w; }())) {",
+            "  let x = w$0;",
+            "  var w$0 = 3;",
+            "  return w$0;",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function () { w = 5; return w; }())) {",
-        "  w;",
-        "  return w;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function () { w = 5; return w; }())) {",
-        "  w;",
-        "  return w;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function () { w = 5; return w; }())) {",
+            "  w;",
+            "  return w;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function () { w = 5; return w; }())) {",
+            "  w;",
+            "  return w;",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function () { w = 5; return w; }())) {",
-        "  w;",
-        "  var w = 3;",
-        "  return w;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function () { w = 5; return w; }())) {",
-        "  w$0;",
-        "  var w$0 = 3;",
-        "  return w$0;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function () { w = 5; return w; }())) {",
+            "  w;",
+            "  var w = 3;",
+            "  return w;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function () { w = 5; return w; }())) {",
+            "  w$0;",
+            "  var w$0 = 3;",
+            "  return w$0;",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function () { w = 5; return w; }())) {",
-        "  w;",
-        "  let w = 3;",
-        "  return w;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "function f(y=(function () { w = 5; return w; }())) {",
-        "  w$0;",
-        "  let w$0 = 3;",
-        "  return w$0;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function () { w = 5; return w; }())) {",
+            "  w;",
+            "  let w = 3;",
+            "  return w;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "function f(y=(function () { w = 5; return w; }())) {",
+            "  w$0;",
+            "  let w$0 = 3;",
+            "  return w$0;",
+            "}"));
   }
 
   public void testMultipleDefaultParams() {
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "var y = 1;",
-        "function f(z=x, w=y) {",
-        "  let x = y;",
-        "  var y = 3;",
-        "  return w;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "var y = 1;",
-        "function f(z=x, w=y) {",
-        "  let x$0 = y$1;",
-        "  var y$1 = 3;",
-        "  return w;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "var y = 1;",
+            "function f(z=x, w=y) {",
+            "  let x = y;",
+            "  var y = 3;",
+            "  return w;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "var y = 1;",
+            "function f(z=x, w=y) {",
+            "  let x$0 = y$1;",
+            "  var y$1 = 3;",
+            "  return w;",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "function x() {}",
-        "var y = 1;",
-        "function f(z=x, w=y) {",
-        "  var x;",
-        "  { let y; y++; }",
-        "  { var y; y++; }",
-        "  x++;",
-        "}"
-    ), Joiner.on('\n').join(
-        "function x() {}",
-        "var y = 1;",
-        "function f(z=x, w=y) {",
-        "  var x$0;",
-        "  { let y; y++; }",
-        "  { var y$1; y$1++; }",
-        "  x$0++;",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "function x() {}",
+            "var y = 1;",
+            "function f(z=x, w=y) {",
+            "  var x;",
+            "  { let y; y++; }",
+            "  { var y; y++; }",
+            "  x++;",
+            "}"),
+        LINE_JOINER.join(
+            "function x() {}",
+            "var y = 1;",
+            "function f(z=x, w=y) {",
+            "  var x$0;",
+            "  { let y; y++; }",
+            "  { var y$1; y$1++; }",
+            "  x$0++;",
+            "}"));
   }
 
   public void testArrow() {

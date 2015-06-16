@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.lint.CheckJSDoc.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_NAME_NOT_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
@@ -40,48 +39,28 @@ public final class CheckJSDocTest extends CompilerTestCase {
     this.setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
 
     testSame(
-        Joiner.on('\n').join(
-            "class Foo {",
-            "  /** @param {number} x */",
-            "  constructor(x) {}",
-            "}"));
+        LINE_JOINER.join("class Foo {", "  /** @param {number} x */", "  constructor(x) {}", "}"));
 
     testSame(
-        Joiner.on('\n').join(
-            "class Foo {",
-            "  /** @constructor */",
-            "  constructor() {}",
-            "}"),
+        LINE_JOINER.join("class Foo {", "  /** @constructor */", "  constructor() {}", "}"),
         DISALLOWED_MEMBER_JSDOC);
 
     testSame(
-        Joiner.on('\n').join(
-            "class Foo {",
-            "  /** @interface */",
-            "  constructor() {}",
-            "}"),
+        LINE_JOINER.join("class Foo {", "  /** @interface */", "  constructor() {}", "}"),
         DISALLOWED_MEMBER_JSDOC);
 
     testSame(
-        Joiner.on('\n').join(
-            "class Foo {",
-            "  /** @extends {Foo} */",
-            "  constructor() {}",
-            "}"),
+        LINE_JOINER.join("class Foo {", "  /** @extends {Foo} */", "  constructor() {}", "}"),
         DISALLOWED_MEMBER_JSDOC);
 
     testSame(
-        Joiner.on('\n').join(
-            "class Foo {",
-            "  /** @implements {Foo} */",
-            "  constructor() {}",
-            "}"),
+        LINE_JOINER.join("class Foo {", "  /** @implements {Foo} */", "  constructor() {}", "}"),
         DISALLOWED_MEMBER_JSDOC);
   }
 
   public void testMissingParam() {
     testSame(
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "/**",
             " * @param {string} x",
             // No @param for y.
@@ -89,57 +68,37 @@ public final class CheckJSDocTest extends CompilerTestCase {
             "function f(x, y) {}"),
         MISSING_PARAM_JSDOC);
 
-    testSame(Joiner.on('\n').join(
-        "/**",
-        " * @param {string} x",
-        " * @param {string} y",
-        " */",
-        "function f(x, y) {}"));
+    testSame(
+        LINE_JOINER.join(
+            "/**", " * @param {string} x", " * @param {string} y", " */", "function f(x, y) {}"));
 
-    testSame(Joiner.on('\n').join(
-        "/** @override */",
-        "Foo.bar = function(x, y) {}"));
+    testSame(LINE_JOINER.join("/** @override */", "Foo.bar = function(x, y) {}"));
   }
 
   public void testMissingPrivate() {
     testSame(
-        Joiner.on('\n').join(
-            "/**",
-            " * @return {number}",
-            " */",
-            "X.prototype.foo_ = function() { return 0; }"),
+        LINE_JOINER.join(
+            "/**", " * @return {number}", " */", "X.prototype.foo_ = function() { return 0; }"),
         MUST_BE_PRIVATE);
 
-    testSame(Joiner.on('\n').join(
-        "/**",
-        " * @return {number}",
-        " * @private",
-        " */",
-        "X.prototype.foo_ = function() { return 0; }"));
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {number}",
+            " * @private",
+            " */",
+            "X.prototype.foo_ = function() { return 0; }"));
   }
 
   public void testOptionalArgs() {
     testSame(
-        Joiner.on('\n').join(
-            "/**",
-            " * @param {number=} n",
-            " */",
-            "function f(n) {}"),
+        LINE_JOINER.join("/**", " * @param {number=} n", " */", "function f(n) {}"),
         OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME);
 
     testSame(
-        Joiner.on('\n').join(
-            "/**",
-            " * @param {number} opt_n",
-            " */",
-            "function f(opt_n) {}"),
+        LINE_JOINER.join("/**", " * @param {number} opt_n", " */", "function f(opt_n) {}"),
         OPTIONAL_NAME_NOT_MARKED_OPTIONAL);
 
-    testSame(
-        Joiner.on('\n').join(
-            "/**",
-            " * @param {number=} opt_n",
-            " */",
-            "function f(opt_n) {}"));
+    testSame(LINE_JOINER.join("/**", " * @param {number=} opt_n", " */", "function f(opt_n) {}"));
   }
 }

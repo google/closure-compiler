@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 
@@ -71,87 +70,45 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testUndeclaredLet() {
-    assertEarlyReferenceError(Joiner.on('\n').join(
-        "if (a) {",
-        "  x = 3;",
-        "  let x;",
-        "}"
-    ));
+    assertEarlyReferenceError(LINE_JOINER.join("if (a) {", "  x = 3;", "  let x;", "}"));
 
-    assertEarlyReferenceError(Joiner.on('\n').join(
-        "var x = 1;",
-        "if (true) {",
-        "  x++;",
-        "  let x = 3;",
-        "}"
-    ));
+    assertEarlyReferenceError(
+        LINE_JOINER.join("var x = 1;", "if (true) {", "  x++;", "  let x = 3;", "}"));
   }
 
   public void testUndeclaredConst() {
-    assertEarlyReferenceError(Joiner.on('\n').join(
-        "if (a) {",
-        "  x = 3;",
-        "  const x = 3;",
-        "}"
-    ));
+    assertEarlyReferenceError(LINE_JOINER.join("if (a) {", "  x = 3;", "  const x = 3;", "}"));
 
     // For the following, IE 11 gives "Assignment to const", but technically
     // they are also undeclared references, which get caught in the first place.
-    assertEarlyReferenceError(Joiner.on('\n').join(
-        "var x = 1;",
-        "if (true) {",
-        "  x++;",
-        "  const x = 3;",
-        "}"
-    ));
+    assertEarlyReferenceError(
+        LINE_JOINER.join("var x = 1;", "if (true) {", "  x++;", "  const x = 3;", "}"));
 
     assertEarlyReferenceError("a = 1; const a = 0;");
     assertEarlyReferenceError("a++; const a = 0;");
   }
 
   public void testIllegalLetShadowing() {
-    assertRedeclareError(Joiner.on('\n').join(
-        "if (a) {",
-        "  let x;",
-        "  var x;",
-        "}"
-    ));
+    assertRedeclareError(LINE_JOINER.join("if (a) {", "  let x;", "  var x;", "}"));
 
-    assertRedeclareError(Joiner.on('\n').join(
-        "if (a) {",
-        "  let x;",
-        "  let x;",
-        "}"
-    ));
+    assertRedeclareError(LINE_JOINER.join("if (a) {", "  let x;", "  let x;", "}"));
 
-    assertRedeclareError(Joiner.on('\n').join(
-        "function f() {",
-        "  let x;",
-        "  if (a) {",
-        "    var x;",
-        "  }",
-        "}"
-    ));
+    assertRedeclareError(
+        LINE_JOINER.join("function f() {", "  let x;", "  if (a) {", "    var x;", "  }", "}"));
 
-    assertNoWarning(Joiner.on('\n').join(
-        "function f() {",
-        "  if (a) {",
-        "    let x;",
-        "  }",
-        "  var x;",
-        "}"
-    ));
+    assertNoWarning(
+        LINE_JOINER.join("function f() {", "  if (a) {", "    let x;", "  }", "  var x;", "}"));
 
-    assertNoWarning(Joiner.on('\n').join(
-        "function f() {",
-        "  if (a) {",
-        "    let x;",
-        "  }",
-        "  if (b) {",
-        "    var x;",
-        "  }",
-        "}"
-    ));
+    assertNoWarning(
+        LINE_JOINER.join(
+            "function f() {",
+            "  if (a) {",
+            "    let x;",
+            "  }",
+            "  if (b) {",
+            "    var x;",
+            "  }",
+            "}"));
 
     assertRedeclareError("let x; var x;");
     assertRedeclareError("var x; let x;");
@@ -179,75 +136,37 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testIllegalConstShadowing() {
-    assertRedeclareError(Joiner.on('\n').join(
-        "if (a) {",
-        "  const x = 3;",
-        "  var x;",
-        "}"
-    ));
+    assertRedeclareError(LINE_JOINER.join("if (a) {", "  const x = 3;", "  var x;", "}"));
 
-    assertRedeclareError(Joiner.on('\n').join(
-        "function f() {",
-        "  const x = 3;",
-        "  if (a) {",
-        "    var x;",
-        "  }",
-        "}"
-    ));
+    assertRedeclareError(
+        LINE_JOINER.join(
+            "function f() {", "  const x = 3;", "  if (a) {", "    var x;", "  }", "}"));
   }
 
   public void testVarShadowing() {
-    assertRedeclare(Joiner.on('\n').join(
-        "if (a) {",
-        "  var x;",
-        "  var x;",
-        "}"
-    ));
+    assertRedeclare(LINE_JOINER.join("if (a) {", "  var x;", "  var x;", "}"));
 
-    assertRedeclareError(Joiner.on('\n').join(
-        "if (a) {",
-        "  var x;",
-        "  let x;",
-        "}"
-    ));
+    assertRedeclareError(LINE_JOINER.join("if (a) {", "  var x;", "  let x;", "}"));
 
-    assertRedeclare(Joiner.on('\n').join(
-        "function f() {",
-        "  var x;",
-        "  if (a) {",
-        "    var x;",
-        "  }",
-        "}"
-    ));
+    assertRedeclare(
+        LINE_JOINER.join("function f() {", "  var x;", "  if (a) {", "    var x;", "  }", "}"));
 
-    assertRedeclareError(Joiner.on('\n').join(
-        "function f() {",
-        "  if (a) {",
-        "    var x;",
-        "  }",
-        "  let x;",
-        "}"
-    ));
+    assertRedeclareError(
+        LINE_JOINER.join("function f() {", "  if (a) {", "    var x;", "  }", "  let x;", "}"));
 
-    assertNoWarning(Joiner.on('\n').join(
-        "function f() {",
-        "  var x;",
-        "  if (a) {",
-        "    let x;",
-        "  }",
-        "}"
-    ));
+    assertNoWarning(
+        LINE_JOINER.join("function f() {", "  var x;", "  if (a) {", "    let x;", "  }", "}"));
 
-    assertNoWarning(Joiner.on('\n').join(
-        "function f() {",
-        "  if (a) {",
-        "    var x;",
-        "  }",
-        "  if (b) {",
-        "    let x;",
-        "  }",
-        "}"
-    ));
+    assertNoWarning(
+        LINE_JOINER.join(
+            "function f() {",
+            "  if (a) {",
+            "    var x;",
+            "  }",
+            "  if (b) {",
+            "    let x;",
+            "  }",
+            "}"));
   }
 
   public void testParameterShadowing() {
@@ -261,20 +180,12 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertParameterShadowed("function f(x=3) { function x() {} }");
     assertParameterShadowed("function f(...x) { function x() {} }");
     assertNoWarning("function f(x) { if (true) { let x; } }");
-    assertNoWarning(Joiner.on('\n').join(
-        "function outer(x) {",
-        "  function inner() {",
-        "    let x = 1;",
-        "  }",
-        "}"
-    ));
-    assertNoWarning(Joiner.on('\n').join(
-        "function outer(x) {",
-        "  function inner() {",
-        "    var x = 1;",
-        "  }",
-        "}"
-    ));
+    assertNoWarning(
+        LINE_JOINER.join(
+            "function outer(x) {", "  function inner() {", "    let x = 1;", "  }", "}"));
+    assertNoWarning(
+        LINE_JOINER.join(
+            "function outer(x) {", "  function inner() {", "    var x = 1;", "  }", "}"));
   }
 
   public void testReassignedConst() {
@@ -301,46 +212,46 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testTryCatch() {
-    assertRedeclareError(Joiner.on('\n').join(
-        "function f() {",
-        "  try {",
-        "    let e = 0;",
-        "    if (true) {",
-        "      let e = 1;",
-        "    }",
-        "  } catch (e) {",
-        "    let e;",
-        "  }",
-        "}"
-    ));
+    assertRedeclareError(
+        LINE_JOINER.join(
+            "function f() {",
+            "  try {",
+            "    let e = 0;",
+            "    if (true) {",
+            "      let e = 1;",
+            "    }",
+            "  } catch (e) {",
+            "    let e;",
+            "  }",
+            "}"));
 
-    assertRedeclareError(Joiner.on('\n').join(
-        "function f() {",
-        "  try {",
-        "    let e = 0;",
-        "    if (true) {",
-        "      let e = 1;",
-        "    }",
-        "  } catch (e) {",
-        "      var e;",
-        "  }",
-        "}"
-    ));
+    assertRedeclareError(
+        LINE_JOINER.join(
+            "function f() {",
+            "  try {",
+            "    let e = 0;",
+            "    if (true) {",
+            "      let e = 1;",
+            "    }",
+            "  } catch (e) {",
+            "      var e;",
+            "  }",
+            "}"));
 
-    assertRedeclareError(Joiner.on('\n').join(
-        "function f() {",
-        "  try {",
-        "    let e = 0;",
-        "    if (true) {",
-        "      let e = 1;",
-        "    }",
-        "  } catch (e) {",
-        "    function e() {",
-        "      var e;",
-        "    }",
-        "  }",
-        "}"
-    ));
+    assertRedeclareError(
+        LINE_JOINER.join(
+            "function f() {",
+            "  try {",
+            "    let e = 0;",
+            "    if (true) {",
+            "      let e = 1;",
+            "    }",
+            "  } catch (e) {",
+            "    function e() {",
+            "      var e;",
+            "    }",
+            "  }",
+            "}"));
   }
 
   public void testClass() {

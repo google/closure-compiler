@@ -84,93 +84,112 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   public void testBundle1() {
     test(
-        "goog.loadModule(function(exports) {" +
-        "goog.module('ns.a');" +
-        "var b = goog.require('ns.b');" +
-        "return exports;});",
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) {",
+            "  goog.module('ns.a');",
+            "  var b = goog.require('ns.b');",
+            "  return exports;",
+            "});"),
 
-        "goog.provide('ns.a');" +
-        "goog.require('ns.b');" +
-        "goog.scope(function(){" +
-        "  var b = ns.b;" +
-        "});");
+        LINE_JOINER.join(
+            "goog.provide('ns.a');",
+            "goog.require('ns.b');",
+            "goog.scope(function() {",
+            "  var b = ns.b;",
+            "});"));
   }
 
   public void testBundle2() {
     test(
-        "goog.loadModule(function(exports) {" +
-        "goog.module('ns.a');" +
-        "var b = goog.require('ns.b');" +
-        "return exports;});" +
-        "goog.loadModule(function(exports) {" +
-        "goog.module('ns.c');" +
-        "var b = goog.require('ns.b');" +
-        "return exports;});",
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) {",
+            "  goog.module('ns.a');",
+            "  var b = goog.require('ns.b');",
+            "  return exports;",
+            "});",
+            "goog.loadModule(function(exports) {",
+            "  goog.module('ns.c');",
+            "  var b = goog.require('ns.b');",
+            "  return exports;",
+            "});"),
 
-        "goog.provide('ns.a');" +
-        "goog.require('ns.b');" +
-        "goog.scope(function(){" +
-        "  var b = ns.b;" +
-        "});" +
-        "goog.provide('ns.c');" +
-        "goog.require('ns.b');" +
-        "goog.scope(function(){" +
-        "  var b = ns.b;" +
-        "});");
+        LINE_JOINER.join(
+            "goog.provide('ns.a');",
+            "goog.require('ns.b');",
+            "goog.scope(function() {",
+            "  var b = ns.b;",
+            "});",
+            "goog.provide('ns.c');",
+            "goog.require('ns.b');",
+            "goog.scope(function() {",
+            "  var b = ns.b;",
+            "});"));
   }
 
   public void testBundle3() {
     test(
-        "goog.loadModule(function(exports) {'use strict';" +
-        "goog.module('ns.a');" +
-        "goog.module.declareLegacyNamespace();" +
-        "var b = goog.require('ns.b');" +
-        "return exports;});",
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) {",
+            "  'use strict';",
+            "  goog.module('ns.a');",
+            "  goog.module.declareLegacyNamespace();",
+            "  var b = goog.require('ns.b');",
+            "  return exports;",
+            "});"),
 
-        "'use strict';" +
-        "goog.provide('ns.a');" +
-        "goog.require('ns.b');" +
-        "goog.scope(function(){" +
-        "  var b = ns.b;" +
-        "});");
+        LINE_JOINER.join(
+            "'use strict';",
+            "goog.provide('ns.a');",
+            "goog.require('ns.b');",
+            "goog.scope(function() {",
+            "  var b = ns.b;",
+            "});"));
   }
 
   public void testBundle4() {
     test(
-        "goog.loadModule(function(exports) {'use strict';" +
-        "goog.module('ns.a');" +
-        "var b = goog.require('goog.asserts');" +
-        "return exports;});",
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) {",
+            "  'use strict';",
+            "  goog.module('ns.a');",
+            "  var b = goog.require('goog.asserts');",
+            "  return exports;",
+            "});"),
 
-        "'use strict';" +
-        "goog.provide('ns.a');" +
-        "goog.require('goog.asserts');" +
-        "goog.scope(function(){" +
-        "  var b = goog.asserts;" +
-        "});");
+        LINE_JOINER.join(
+            "'use strict';",
+            "goog.provide('ns.a');",
+            "goog.require('goog.asserts');",
+            "goog.scope(function() {",
+            "  var b = goog.asserts;",
+            "});"));
   }
 
   public void testBundle5() {
     test(
-        "goog.loadModule(function(exports) {'use strict';" +
-        "goog.module('xid');" +
-        "" +
-        "goog.module.declareLegacyNamespace();" +
-        "" +
-        "var asserts = goog.require('goog.asserts');" +
-        "" +
-        "exports = function(id) {" +
-        "  return xid.internal_(id);" +
-        "};" +
-        "var xid = exports;" +
-        "return exports;});",
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) {",
+            "  'use strict';",
+            "  goog.module('xid');",
+            "  goog.module.declareLegacyNamespace();",
+            "  var asserts = goog.require('goog.asserts');",
+            "  exports = function(id) {",
+            "    return xid.internal_(id);",
+            "  };",
+            "  var xid = exports;",
+            "  return exports;",
+            "});"),
 
-        "goog.provide('xid');" +
-        "goog.require('goog.asserts');" +
-        "goog.scope(function(){" +
-        "var asserts=goog.asserts;" +
-        "/** @const */ xid=function(id){return xid_module.internal_(id)};" +
-        "var xid_module=xid})");
+        LINE_JOINER.join(
+            "goog.provide('xid');",
+            "goog.require('goog.asserts');",
+            "goog.scope(function() {",
+            "  var asserts = goog.asserts;",
+            "  /** @const */ xid = function(id) {",
+            "    return xid_module.internal_(id);",
+            "  };",
+            "  var xid_module = xid;",
+            "});"));
   }
 
   public void testAliasShadowsGlobal1() {

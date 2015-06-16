@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
@@ -64,20 +63,18 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   public void testImport() {
-    test("import name from 'test'; use(name);", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.require('module$test');",
-        "use(module$test.default);"
-    ));
+    test(
+        "import name from 'test'; use(name);",
+        LINE_JOINER.join(
+            FILEOVERVIEW, "goog.require('module$test');", "use(module$test.default);"));
 
     test("import {n as name} from 'test';",
         FILEOVERVIEW + "goog.require('module$test');");
 
-    test("import x, {f as foo, b as bar} from 'test'; use(x);", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.require('module$test');",
-        "use(module$test.default);"
-    ));
+    test(
+        "import x, {f as foo, b as bar} from 'test'; use(x);",
+        LINE_JOINER.join(
+            FILEOVERVIEW, "goog.require('module$test');", "use(module$test.default);"));
   }
 
   public void testImportStar() {
@@ -92,57 +89,58 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   public void testExport() {
-    test("export var a = 1, b = 2;", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "var a$$module$testcode = 1, b$$module$testcode = 2;",
-        "var module$testcode = {};",
-        "module$testcode.a = a$$module$testcode;",
-        "module$testcode.b = b$$module$testcode;"
-    ));
-
-    test("export var a; export var b;", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "var a$$module$testcode; var b$$module$testcode;",
-        "var module$testcode = {};",
-        "module$testcode.a = a$$module$testcode;",
-        "module$testcode.b = b$$module$testcode;"
-    ));
-
-    test("export function f() {};", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "function f$$module$testcode() {}",
-        "var module$testcode = {};",
-        "module$testcode.f = f$$module$testcode;"
-    ));
-
-    test("export function f() {}; function g() { f(); }", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "function f$$module$testcode() {}",
-        "function g$$module$testcode() { f$$module$testcode(); }",
-        "var module$testcode = {};",
-        "module$testcode.f = f$$module$testcode;"
-    ));
+    test(
+        "export var a = 1, b = 2;",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var a$$module$testcode = 1, b$$module$testcode = 2;",
+            "var module$testcode = {};",
+            "module$testcode.a = a$$module$testcode;",
+            "module$testcode.b = b$$module$testcode;"));
 
     test(
-        Joiner.on('\n').join(
-            "export function MyClass() {};",
-            "MyClass.prototype.foo = function() {};"),
-        Joiner.on('\n').join(
+        "export var a; export var b;",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var a$$module$testcode; var b$$module$testcode;",
+            "var module$testcode = {};",
+            "module$testcode.a = a$$module$testcode;",
+            "module$testcode.b = b$$module$testcode;"));
+
+    test(
+        "export function f() {};",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "function f$$module$testcode() {}",
+            "var module$testcode = {};",
+            "module$testcode.f = f$$module$testcode;"));
+
+    test(
+        "export function f() {}; function g() { f(); }",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "function f$$module$testcode() {}",
+            "function g$$module$testcode() { f$$module$testcode(); }",
+            "var module$testcode = {};",
+            "module$testcode.f = f$$module$testcode;"));
+
+    test(
+        LINE_JOINER.join("export function MyClass() {};", "MyClass.prototype.foo = function() {};"),
+        LINE_JOINER.join(
             FILEOVERVIEW,
             "goog.provide('module$testcode');",
             "function MyClass$$module$testcode() {}",
             "MyClass$$module$testcode.prototype.foo = function() {};",
             "var module$testcode = {};",
-            "module$testcode.MyClass = MyClass$$module$testcode;"
-    ));
+            "module$testcode.MyClass = MyClass$$module$testcode;"));
 
     test(
         "var f = 1; var b = 2; export {f as foo, b as bar};",
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             FILEOVERVIEW,
             "goog.provide('module$testcode');",
             "var f$$module$testcode = 1;",
@@ -153,8 +151,9 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   public void testExportWithJsDoc() {
-    test("/** @constructor */ export function F() { return '';}",
-        Joiner.on('\n').join(
+    test(
+        "/** @constructor */ export function F() { return '';}",
+        LINE_JOINER.join(
             FILEOVERVIEW,
             "goog.provide('module$testcode');",
             "/** @constructor */",
@@ -162,8 +161,9 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "var module$testcode = {};",
             "module$testcode.F = F$$module$testcode"));
 
-    test("/** @return {string} */ export function f() { return '';}",
-        Joiner.on('\n').join(
+    test(
+        "/** @return {string} */ export function f() { return '';}",
+        LINE_JOINER.join(
             FILEOVERVIEW,
             "goog.provide('module$testcode');",
             "/** @return {string} */",
@@ -171,8 +171,9 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "var module$testcode = {};",
             "module$testcode.f = f$$module$testcode"));
 
-    test("/** @return {string} */ export var f = function() { return '';}",
-        Joiner.on('\n').join(
+    test(
+        "/** @return {string} */ export var f = function() { return '';}",
+        LINE_JOINER.join(
             FILEOVERVIEW,
             "goog.provide('module$testcode');",
             "/** @return {string} */",
@@ -180,8 +181,9 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "var module$testcode = {};",
             "module$testcode.f = f$$module$testcode"));
 
-    test("/** @type {number} */ export var x = 3",
-        Joiner.on('\n').join(
+    test(
+        "/** @type {number} */ export var x = 3",
+        LINE_JOINER.join(
             FILEOVERVIEW,
             "goog.provide('module$testcode');",
             "/** @type {number} */",
@@ -191,253 +193,262 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   public void testImportAndExport() {
-    test(Joiner.on('\n').join(
-        "import {name as n} from 'other';",
-        "use(n);",
-        "export {n as name};"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "goog.require('module$other');",
-        "use(module$other.name);",
-        "var module$testcode = {};",
-        "module$testcode.name = module$other.name;"
-    ));
+    test(
+        LINE_JOINER.join("import {name as n} from 'other';", "use(n);", "export {n as name};"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "goog.require('module$other');",
+            "use(module$other.name);",
+            "var module$testcode = {};",
+            "module$testcode.name = module$other.name;"));
   }
 
   public void testExportFrom() {
-    test("export {name} from 'other';", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "goog.require('module$other');",
-        "var module$testcode={};",
-        "module$testcode.name = module$other.name;"));
+    test(
+        "export {name} from 'other';",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "goog.require('module$other');",
+            "var module$testcode={};",
+            "module$testcode.name = module$other.name;"));
 
-    test("export {a, b as c, d} from 'other';", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "goog.require('module$other');",
-        "var module$testcode={};",
-        "module$testcode.a = module$other.a;",
-        "module$testcode.c = module$other.b;",
-        "module$testcode.d = module$other.d;"));
+    test(
+        "export {a, b as c, d} from 'other';",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "goog.require('module$other');",
+            "var module$testcode={};",
+            "module$testcode.a = module$other.a;",
+            "module$testcode.c = module$other.b;",
+            "module$testcode.d = module$other.d;"));
   }
 
   public void testExportDefault() {
-    test("export default 'someString';", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "var $jscompDefaultExport$$module$testcode = 'someString';",
-        "var module$testcode={};",
-        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+    test(
+        "export default 'someString';",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var $jscompDefaultExport$$module$testcode = 'someString';",
+            "var module$testcode={};",
+            "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
-    test("var x = 5; export default x;", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "var x$$module$testcode = 5;",
-        "var $jscompDefaultExport$$module$testcode = x$$module$testcode;",
-        "var module$testcode={};",
-        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+    test(
+        "var x = 5; export default x;",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var x$$module$testcode = 5;",
+            "var $jscompDefaultExport$$module$testcode = x$$module$testcode;",
+            "var module$testcode={};",
+            "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
-    test("export default function f(){}; var x = f();", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "function f$$module$testcode() {}",
-        "var x$$module$testcode = f$$module$testcode();",
-        "var module$testcode = {};",
-        "module$testcode.default = f$$module$testcode;"));
+    test(
+        "export default function f(){}; var x = f();",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "function f$$module$testcode() {}",
+            "var x$$module$testcode = f$$module$testcode();",
+            "var module$testcode = {};",
+            "module$testcode.default = f$$module$testcode;"));
 
-    test("export default class Foo {}; var x = new Foo;", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "class Foo$$module$testcode {}",
-        "var x$$module$testcode = new Foo$$module$testcode;",
-        "var module$testcode = {};",
-        "module$testcode.default = Foo$$module$testcode;"));
+    test(
+        "export default class Foo {}; var x = new Foo;",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "class Foo$$module$testcode {}",
+            "var x$$module$testcode = new Foo$$module$testcode;",
+            "var module$testcode = {};",
+            "module$testcode.default = Foo$$module$testcode;"));
   }
 
   public void testExportDefault_anonymous() {
-    test("export default class {};", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "var $jscompDefaultExport$$module$testcode = class {};",
-        "var module$testcode = {};",
-        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+    test(
+        "export default class {};",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var $jscompDefaultExport$$module$testcode = class {};",
+            "var module$testcode = {};",
+            "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
-    test("export default function() {}", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "var $jscompDefaultExport$$module$testcode = function() {}",
-        "var module$testcode = {};",
-        "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
+    test(
+        "export default function() {}",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var $jscompDefaultExport$$module$testcode = function() {}",
+            "var module$testcode = {};",
+            "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
   }
 
   public void testExtendImportedClass() {
-    test(Joiner.on('\n').join(
-        "import {Parent} from 'parent';",
-        "class Child extends Parent {",
-        "  /** @param {Parent} parent */",
-        "  useParent(parent) {}",
-        "}"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.require('module$parent');",
-        "class Child$$module$testcode extends module$parent.Parent {",
-        "  /** @param {Parent$$module$parent} parent */",
-        "  useParent(parent) {}",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "import {Parent} from 'parent';",
+            "class Child extends Parent {",
+            "  /** @param {Parent} parent */",
+            "  useParent(parent) {}",
+            "}"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.require('module$parent');",
+            "class Child$$module$testcode extends module$parent.Parent {",
+            "  /** @param {Parent$$module$parent} parent */",
+            "  useParent(parent) {}",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "import {Parent} from 'parent';",
-        "class Child extends Parent {",
-        "  /** @param {./parent.Parent} parent */",
-        "  useParent(parent) {}",
-        "}"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.require('module$parent');",
-        "class Child$$module$testcode extends module$parent.Parent {",
-        "  /** @param {module$parent.Parent} parent */",
-        "  useParent(parent) {}",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "import {Parent} from 'parent';",
+            "class Child extends Parent {",
+            "  /** @param {./parent.Parent} parent */",
+            "  useParent(parent) {}",
+            "}"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.require('module$parent');",
+            "class Child$$module$testcode extends module$parent.Parent {",
+            "  /** @param {module$parent.Parent} parent */",
+            "  useParent(parent) {}",
+            "}"));
 
-    test(Joiner.on('\n').join(
-        "import {Parent} from 'parent';",
-        "export class Child extends Parent {",
-        "  /** @param {Parent} parent */",
-        "  useParent(parent) {}",
-        "}"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "goog.require('module$parent');",
-        "class Child$$module$testcode extends module$parent.Parent {",
-        "  /** @param {Parent$$module$parent} parent */",
-        "  useParent(parent) {}",
-        "}",
-        "var module$testcode = {};",
-        "/** @const */ module$testcode.Child = Child$$module$testcode;"
-    ));
+    test(
+        LINE_JOINER.join(
+            "import {Parent} from 'parent';",
+            "export class Child extends Parent {",
+            "  /** @param {Parent} parent */",
+            "  useParent(parent) {}",
+            "}"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "goog.require('module$parent');",
+            "class Child$$module$testcode extends module$parent.Parent {",
+            "  /** @param {Parent$$module$parent} parent */",
+            "  useParent(parent) {}",
+            "}",
+            "var module$testcode = {};",
+            "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
 
   public void testFixTypeNode() {
-    test(Joiner.on('\n').join(
-        "export class Child {",
-        "  /** @param {Child} child */",
-        "  useChild(child) {}",
-        "}"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "class Child$$module$testcode {",
-        "  /** @param {Child$$module$testcode} child */",
-        "  useChild(child) {}",
-        "}",
-        "var module$testcode = {};",
-        "/** @const */ module$testcode.Child = Child$$module$testcode;"
-    ));
+    test(
+        LINE_JOINER.join(
+            "export class Child {", "  /** @param {Child} child */", "  useChild(child) {}", "}"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "class Child$$module$testcode {",
+            "  /** @param {Child$$module$testcode} child */",
+            "  useChild(child) {}",
+            "}",
+            "var module$testcode = {};",
+            "/** @const */ module$testcode.Child = Child$$module$testcode;"));
 
-    test(Joiner.on('\n').join(
-        "export class Child {",
-        "  /** @param {Child.Foo.Bar.Baz} baz */",
-        "  useBaz(baz) {}",
-        "}"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "class Child$$module$testcode {",
-        "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
-        "  useBaz(baz) {}",
-        "}",
-        "var module$testcode = {};",
-        "/** @const */ module$testcode.Child = Child$$module$testcode;"
-    ));
+    test(
+        LINE_JOINER.join(
+            "export class Child {",
+            "  /** @param {Child.Foo.Bar.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "class Child$$module$testcode {",
+            "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}",
+            "var module$testcode = {};",
+            "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
 
   public void testReferenceToTypeFromOtherModule() {
-    test(Joiner.on('\n').join(
-        "export class Foo {",
-        "  /** @param {./other.Baz} baz */",
-        "  useBaz(baz) {}",
-        "}"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "class Foo$$module$testcode {",
-        "  /** @param {module$other.Baz} baz */",
-        "  useBaz(baz) {}",
-        "}",
-        "var module$testcode = {};",
-        "/** @const */ module$testcode.Foo = Foo$$module$testcode;"
-    ));
+    test(
+        LINE_JOINER.join(
+            "export class Foo {", "  /** @param {./other.Baz} baz */", "  useBaz(baz) {}", "}"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "class Foo$$module$testcode {",
+            "  /** @param {module$other.Baz} baz */",
+            "  useBaz(baz) {}",
+            "}",
+            "var module$testcode = {};",
+            "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
   }
 
   public void testRenameTypedef() {
-    test(Joiner.on('\n').join(
-        "import 'other';",
-        "/** @typedef {string|!Object} */",
-        "export var UnionType;"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "goog.require('module$other');",
-        "/** @typedef {string|!Object} */",
-        "var UnionType$$module$testcode;",
-        "var module$testcode = {};",
-        "/** @typedef {UnionType$$module$testcode} */",
-        "module$testcode.UnionType;"
-    ));
+    test(
+        LINE_JOINER.join(
+            "import 'other';", "/** @typedef {string|!Object} */", "export var UnionType;"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "goog.require('module$other');",
+            "/** @typedef {string|!Object} */",
+            "var UnionType$$module$testcode;",
+            "var module$testcode = {};",
+            "/** @typedef {UnionType$$module$testcode} */",
+            "module$testcode.UnionType;"));
   }
 
   public void testRenameImportedReference() {
-    test(Joiner.on('\n').join(
-        "import {f} from 'test';",
-        "import {b as bar} from 'test';",
-        "f();",
-        "function g() {",
-        "  f();",
-        "  bar++;",
-        "  function h() {",
-        "    var f = 3;",
-        "    { let f = 4; }",
-        "  }",
-        "}"
-    ), Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.require('module$test');",
-        "module$test.f();",
-        "function g$$module$testcode() {",
-        "  module$test.f();",
-        "  module$test.b++;",
-        "  function h() {",
-        "    var f = 3;",
-        "    { let f = 4; }",
-        "  }",
-        "}"
-    ));
+    test(
+        LINE_JOINER.join(
+            "import {f} from 'test';",
+            "import {b as bar} from 'test';",
+            "f();",
+            "function g() {",
+            "  f();",
+            "  bar++;",
+            "  function h() {",
+            "    var f = 3;",
+            "    { let f = 4; }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.require('module$test');",
+            "module$test.f();",
+            "function g$$module$testcode() {",
+            "  module$test.f();",
+            "  module$test.b++;",
+            "  function h() {",
+            "    var f = 3;",
+            "    { let f = 4; }",
+            "  }",
+            "}"));
   }
 
   public void testGoogRequires_noChange() {
     testSame("goog.require('foo.bar');");
     testSame("var bar = goog.require('foo.bar');");
 
-    test("goog.require('foo.bar'); export var x;", Joiner.on('\n').join(
-         FILEOVERVIEW,
-         "goog.provide('module$testcode');",
-         "goog.require('foo.bar');",
-         "var x$$module$testcode;",
-         "var module$testcode = {};",
-         "module$testcode.x = x$$module$testcode"));
+    test(
+        "goog.require('foo.bar'); export var x;",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "goog.require('foo.bar');",
+            "var x$$module$testcode;",
+            "var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode"));
 
-    test("export var x; goog.require('foo.bar');", Joiner.on('\n').join(
-         FILEOVERVIEW,
-         "goog.provide('module$testcode');",
-         "var x$$module$testcode;",
-         "goog.require('foo.bar');",
-         "var module$testcode = {};",
-         "module$testcode.x = x$$module$testcode"));
+    test(
+        "export var x; goog.require('foo.bar');",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var x$$module$testcode;",
+            "goog.require('foo.bar');",
+            "var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode"));
 
     test("import * as s from 'someplace'; goog.require('foo.bar');",
          FILEOVERVIEW + "goog.require('module$someplace'); goog.require('foo.bar');");
@@ -447,34 +458,42 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   }
 
   public void testGoogRequires_rewrite() {
-    test("var bar = goog.require('foo.bar'); export var x;", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "goog.require('foo.bar');",
-        "var bar$$module$testcode = foo.bar;",
-        "var x$$module$testcode;",
-        "var module$testcode = {};",
-        "module$testcode.x = x$$module$testcode"));
+    test(
+        "var bar = goog.require('foo.bar'); export var x;",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "goog.require('foo.bar');",
+            "var bar$$module$testcode = foo.bar;",
+            "var x$$module$testcode;",
+            "var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode"));
 
-    test("export var x; var bar = goog.require('foo.bar');", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.provide('module$testcode');",
-        "var x$$module$testcode;",
-        "goog.require('foo.bar');",
-        "var bar$$module$testcode = foo.bar;",
-        "var module$testcode = {};",
-        "module$testcode.x = x$$module$testcode"));
+    test(
+        "export var x; var bar = goog.require('foo.bar');",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.provide('module$testcode');",
+            "var x$$module$testcode;",
+            "goog.require('foo.bar');",
+            "var bar$$module$testcode = foo.bar;",
+            "var module$testcode = {};",
+            "module$testcode.x = x$$module$testcode"));
 
-    test("import * as s from 'someplace'; var bar = goog.require('foo.bar');", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.require('module$someplace');",
-        "goog.require('foo.bar');",
-        "var bar$$module$testcode = foo.bar;"));
+    test(
+        "import * as s from 'someplace'; var bar = goog.require('foo.bar');",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.require('module$someplace');",
+            "goog.require('foo.bar');",
+            "var bar$$module$testcode = foo.bar;"));
 
-    test("var bar = goog.require('foo.bar'); import * as s from 'someplace';", Joiner.on('\n').join(
-        FILEOVERVIEW,
-        "goog.require('module$someplace');",
-        "goog.require('foo.bar');",
-        "var bar$$module$testcode = foo.bar;"));
+    test(
+        "var bar = goog.require('foo.bar'); import * as s from 'someplace';",
+        LINE_JOINER.join(
+            FILEOVERVIEW,
+            "goog.require('module$someplace');",
+            "goog.require('foo.bar');",
+            "var bar$$module$testcode = foo.bar;"));
   }
 }
