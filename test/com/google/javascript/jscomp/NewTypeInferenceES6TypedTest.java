@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for the new type inference on transpiled ES6 code that includes
@@ -35,7 +34,7 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
     super.setUp();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
     passes.add(makePassFactory("convertDeclaredTypesToJSDoc",
-            new ConvertDeclaredTypesToJSDoc(compiler)));
+            new Es6TypedToEs6ConverterForColonTypes(compiler)));
     addES6TranspilationPasses();
   }
 

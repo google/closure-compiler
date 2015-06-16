@@ -34,9 +34,11 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.testing.TestErrorManager;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeDeclarationsIR;
 
 import junit.framework.TestCase;
 
@@ -45,8 +47,7 @@ import junit.framework.TestCase;
  * in the syntax.
  * <p>
  * (It tests both parsing from source to a parse tree, and conversion from a
- * parse tree to an AST in {@link IRFactory}
- * and {@link TypeDeclarationsIRFactory}.)
+ * parse tree to an AST in {@link IR} and {@link TypeDeclarationsIR}.)
  *
  * @author martinprobst@google.com (Martin Probst)
  */

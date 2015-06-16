@@ -17,7 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
+public final class Es6TypedToEs6ConverterForClassTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
@@ -39,7 +39,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(new PassFactory("convertDeclaredTypesToJSDoc", true) {
       // To make sure types copied.
       @Override CompilerPass create(AbstractCompiler compiler) {
-        return new ConvertDeclaredTypesToJSDoc(compiler); 
+        return new Es6TypedToEs6ConverterForColonTypes(compiler);
       }
     });
     optimizer.addOneTimePass(new PassFactory("es6ConvertSuper", true) {
@@ -51,7 +51,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(new PassFactory("convertEs6TypedToEs6", true) {
       // Required for classes that don't have a ctor.
       @Override CompilerPass create(AbstractCompiler compiler) {
-        return new Es6TypedToEs6Converter(compiler);
+        return new Es6TypedToEs6ConverterForClass(compiler);
       }
     });
     return optimizer;
@@ -86,7 +86,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   public void testMemberVariable_unsupportedClassExpression() throws Exception {
     testError(
         LINE_JOINER.join("(class {", "  x: number;", "})"),
-        Es6TypedToEs6Converter.CANNOT_CONVERT_MEMBER_VARIABLES);
+        Es6TypedToEs6ConverterForClass.CANNOT_CONVERT_MEMBER_VARIABLES);
     }
 
   public void testComputedPropertyVariable() throws Exception {

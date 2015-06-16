@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
-public final class ConvertDeclaredTypesToJSDocTest extends TestCase {
+public final class Es6TypedToEs6ConverterForColonTypesTest extends TestCase {
 
   public void testBuiltins() throws Exception {
     assertTypeConversion("?", "any");
@@ -63,7 +63,7 @@ public final class ConvertDeclaredTypesToJSDocTest extends TestCase {
         ImmutableList.<SourceFile>of(), ImmutableList.of(SourceFile.fromCode("js", js)), options);
     compiler.parseInputs();
 
-    CompilerPass pass = new ConvertDeclaredTypesToJSDoc(compiler);
+    CompilerPass pass = new Es6TypedToEs6ConverterForColonTypes(compiler);
     pass.process(compiler.getRoot().getFirstChild(), compiler.getRoot().getLastChild());
 
     return compiler.getRoot().getLastChild();

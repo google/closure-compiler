@@ -33,12 +33,12 @@ import com.google.javascript.rhino.Token;
  *
  * TODO(alexeagle): handle inline-style JSDoc annotations as well.
  */
-public final class ConvertToTypedES6
+public final class JsdocToEs6TypedConverter
     extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  public ConvertToTypedES6(AbstractCompiler compiler) {
+  public JsdocToEs6TypedConverter(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

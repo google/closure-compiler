@@ -25,7 +25,8 @@ import com.google.javascript.rhino.Token;
  * Conversion pass that converts ES6 type syntax code to plain ES6, currently transpiles member
  * variables (aka fields).
  */
-public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
+public final class Es6TypedToEs6ConverterForClass implements
+    NodeTraversal.Callback, HotSwapCompilerPass {
   static final DiagnosticType CANNOT_CONVERT_MEMBER_VARIABLES = DiagnosticType.error(
       "JSC_CANNOT_CONVERT_FIELDS",
       "Can only convert class member variables (fields) in declarations or the right hand side of "
@@ -33,7 +34,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
   private final AbstractCompiler compiler;
 
-  Es6TypedToEs6Converter(AbstractCompiler compiler) {
+  Es6TypedToEs6ConverterForClass(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 

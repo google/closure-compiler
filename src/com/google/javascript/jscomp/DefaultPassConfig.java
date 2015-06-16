@@ -1153,7 +1153,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("convertEs6Typed", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6TypedToEs6Converter(compiler);
+      return new Es6TypedToEs6ConverterForClass(compiler);
     }
   };
 
@@ -1177,7 +1177,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("convertDeclaredTypesToJSDoc", true) {
     @Override
     CompilerPass create(AbstractCompiler compiler) {
-      return new ConvertDeclaredTypesToJSDoc(compiler);
+      return new Es6TypedToEs6ConverterForColonTypes(compiler);
     }
   };
 
@@ -1185,7 +1185,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("ConvertToTypedES6", true) {
     @Override
     CompilerPass create(AbstractCompiler compiler) {
-      return new ConvertToTypedES6(compiler);
+      return new JsdocToEs6TypedConverter(compiler);
     }
   };
 

@@ -29,12 +29,12 @@ import com.google.javascript.rhino.Token;
  * Converts {@link Node#getDeclaredTypeExpression()} to {@link JSDocInfo#getType()} type
  * annotations. Types are marked as inline types.
  */
-public final class ConvertDeclaredTypesToJSDoc
+public final class Es6TypedToEs6ConverterForColonTypes
     extends AbstractPostOrderCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
-  ConvertDeclaredTypesToJSDoc(AbstractCompiler compiler) {
+  Es6TypedToEs6ConverterForColonTypes(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
