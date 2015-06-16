@@ -1086,14 +1086,14 @@ class GlobalTypeInfo implements CompilerPass {
         }
 
         case Token.GETPROP:
-          if (parent.isExprResult()) {
+          if (parent.isExprResult() && n.isQualifiedName()) {
             visitPropertyDeclaration(n);
           }
           break;
 
         case Token.ASSIGN: {
           Node lvalue = n.getFirstChild();
-          if (lvalue.isGetProp() && parent.isExprResult()) {
+          if (lvalue.isGetProp() && lvalue.isQualifiedName() && parent.isExprResult()) {
             visitPropertyDeclaration(lvalue);
           }
           break;
@@ -1377,10 +1377,13 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitOtherPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
+      Preconditions.checkArgument(getProp.isQualifiedName());
       if (isAnnotatedAsConst(getProp)) {
         warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
       }
-      JSType recvType = simpleInferExprType(getProp.getFirstChild());
+      QualifiedName recvQname = QualifiedName.fromNode(getProp.getFirstChild());
+      Declaration d = this.currentScope.getDeclaration(recvQname, false);
+      JSType recvType = d == null ? null : d.getTypeOfSimpleDecl();
       if (recvType == null) {
         return;
       }
@@ -1984,7 +1987,11 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     Node getRoot() {
-      return root;
+      return this.root;
+    }
+
+    Scope getParent() {
+      return this.parent;
     }
 
     private Node getBody() {
@@ -2238,7 +2245,12 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private Scope getScopeHelper(String fnName) {
-      Declaration decl = getDeclaration(fnName, false);
+      Declaration decl;
+      if (fnName.contains(".")) {
+        decl = getDeclaration(QualifiedName.fromQualifiedString(fnName), false);
+      } else {
+        decl = getDeclaration(fnName, false);
+      }
       return decl == null ? null : (Scope) decl.getFunctionScope();
     }
 

@@ -1671,7 +1671,7 @@ final class NewTypeInference implements CompilerPass {
     TypeEnv tmpEnv = analyzeCallNodeArgumentsFwd(
         expr, expr.getChildAtIndex(1), funType, argTypes, inEnv);
     if (callee.isName()) {
-      String calleeName = callee.getQualifiedName();
+      String calleeName = callee.getString();
       if (currentScope.isKnownFunction(calleeName)
           && !currentScope.isExternalFunction(calleeName)) {
         // Local function definitions will be type-checked more
@@ -2651,7 +2651,8 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private void collectTypesForFreeVarsFwd(Node callee, TypeEnv env) {
-    Scope calleeScope = currentScope.getScope(callee.getQualifiedName());
+    Preconditions.checkArgument(callee.isName());
+    Scope calleeScope = currentScope.getScope(callee.getString());
     for (String freeVar : calleeScope.getOuterVars()) {
       if (calleeScope.getDeclaredTypeOf(freeVar) == null) {
         FunctionType summary = summaries.get(calleeScope).getFunType();
@@ -2666,7 +2667,8 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv collectTypesForFreeVarsBwd(Node callee, TypeEnv env) {
-    Scope calleeScope = currentScope.getScope(callee.getQualifiedName());
+    Preconditions.checkArgument(callee.isName());
+    Scope calleeScope = currentScope.getScope(callee.getString());
     for (String freeVar : calleeScope.getOuterVars()) {
       if (!currentScope.isDefinedLocally(freeVar, false) &&
           !currentScope.isOuterVar(freeVar)) {
@@ -3146,7 +3148,8 @@ final class NewTypeInference implements CompilerPass {
 
   private void createDeferredCheckBwd(Node expr, JSType requiredType) {
     Preconditions.checkArgument(expr.isCall());
-    String calleeName = expr.getFirstChild().getQualifiedName();
+    Preconditions.checkArgument(expr.getFirstChild().isName());
+    String calleeName = expr.getFirstChild().getString();
     // Local function definitions will be type-checked more
     // exactly using their summaries, and don't need deferred checks
     if (currentScope.isKnownFunction(calleeName)
@@ -3781,8 +3784,7 @@ final class NewTypeInference implements CompilerPass {
       }
       for (JSType argType : this.argTypes) {
         JSType formalType = fnSummary.getFormalType(i);
-        if (argNode.isName() &&
-            callerScope.isKnownFunction(argNode.getString())) {
+        if (argNode.isName() && callerScope.isKnownFunction(argNode.getString())) {
           argType = summaries.get(callerScope.getScope(argNode.getString()));
         }
         if (argType != null && !argType.isSubtypeOf(formalType)) {

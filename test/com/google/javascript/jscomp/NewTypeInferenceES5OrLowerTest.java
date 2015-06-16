@@ -12260,6 +12260,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
         "function Foo() {}",
+        "function f() {",
+        "  (new Foo).prop = 123;",
+        "}",
+        "var s = (new Foo).prop;"),
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
         "function f(/** !Foo */ x) {",
         "  x.prop = 'asdf';", // we don't declare the type to be string
         "}",
