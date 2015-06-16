@@ -128,6 +128,7 @@ public class ParseTree {
   public TryStatementTree asTryStatement() { return (TryStatementTree) this; }
   public TypeNameTree asTypeName() { return (TypeNameTree) this; }
   public TypedParameterTree asTypedParameter() { return (TypedParameterTree) this; }
+  public OptionalParameterTree asOptionalParameter() { return (OptionalParameterTree) this; }
   public ParameterizedTypeTree asParameterizedType() { return (ParameterizedTypeTree) this; }
   public ArrayTypeTree asArrayType() { return (ArrayTypeTree) this; }
   public UnionTypeTree asUnionType() { return (UnionTypeTree) this; }

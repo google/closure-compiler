@@ -171,6 +171,13 @@ public class TypeDeclarationsIR {
     return node;
   }
 
+  private static Node maybeAddType(Node node, TypeDeclarationNode type) {
+    if (type != null) {
+      node.setDeclaredTypeExpression(type);
+    }
+    return node;
+  }
+
   /**
    * Represents a function type.
    * Closure has syntax like {@code {function(string, boolean):number}}
@@ -187,25 +194,33 @@ public class TypeDeclarationsIR {
    *     BOOLEAN_TYPE
    * </pre>
    * @param returnType the type returned by the function, possibly UNKNOWN_TYPE
-   * @param parameters the types of the parameters.
+   * @param requiredParams the names and types of the required parameters.
+   * @param optionalParams the names and types of the optional parameters.
    * @param restName the name of the rest parameter, if any.
    * @param restType the type of the rest parameter, if any.
    */
   public static TypeDeclarationNode functionType(
-      Node returnType, LinkedHashMap<String, TypeDeclarationNode> parameters,
+      Node returnType, LinkedHashMap<String, TypeDeclarationNode> requiredParams,
+      LinkedHashMap<String, TypeDeclarationNode> optionalParams,
       String restName, TypeDeclarationNode restType) {
     TypeDeclarationNode node = new TypeDeclarationNode(Token.FUNCTION_TYPE, returnType);
-    for (Map.Entry<String, TypeDeclarationNode> parameter : parameters.entrySet()) {
-      Node stringKey = IR.stringKey(parameter.getKey());
-      stringKey.addChildToFront(parameter.getValue());
-      node.addChildToBack(stringKey);
+    Preconditions.checkNotNull(requiredParams);
+    Preconditions.checkNotNull(optionalParams);
+
+    for (Map.Entry<String, TypeDeclarationNode> param : requiredParams.entrySet()) {
+      Node name = IR.name(param.getKey());
+      node.addChildToBack(maybeAddType(name, param.getValue()));
     }
+
+    for (Map.Entry<String, TypeDeclarationNode> param : optionalParams.entrySet()) {
+      Node name = IR.name(param.getKey());
+      name.putBooleanProp(Node.OPT_PARAM_ES6_TYPED, true);
+      node.addChildToBack(maybeAddType(name, param.getValue()));
+    }
+
     if (restName != null) {
-      Node rest = IR.stringKey(restName);
-      if (restType != null) {
-        rest.addChildToBack(arrayType(restType));
-      }
-      node.addChildToBack(restParams(rest));
+      Node rest = Node.newString(Token.REST, restName);
+      node.addChildrenToBack(maybeAddType(rest, restType));
     }
     return node;
   }
@@ -278,32 +293,6 @@ public class TypeDeclarationsIR {
 
   public static TypeDeclarationNode unionType(TypeDeclarationNode... options) {
     return unionType(Arrays.asList(options));
-  }
-
-  /**
-   * Represents a function parameter type which may be repeated.
-   * Closure calls this Variable Parameters and accepts a syntax like
-   * {@code {function(string, ...number): number}}
-   *
-   * <p>
-   * <pre>
-   * FUNCTION_TYPE
-   *   NUMBER_TYPE
-   *   STRING_KEY p1
-   *     STRING_TYPE
-   *   REST_PARAMETER_TYPE
-   *     STRING_KEY p2
-   *       NUMBER_TYPE
-   * </pre>
-   * @param type an array type that is seen inside the function body
-   * @return a new node representing the function parameter type
-   */
-  public static TypeDeclarationNode restParams(Node type) {
-    TypeDeclarationNode node = new TypeDeclarationNode(Token.REST_PARAMETER_TYPE);
-    if (type != null) {
-      node.addChildToBack(type);
-    }
-    return node;
   }
 
   /**

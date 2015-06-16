@@ -26,7 +26,6 @@ import static com.google.javascript.rhino.Token.NAMED_TYPE;
 import static com.google.javascript.rhino.Token.NUMBER_TYPE;
 import static com.google.javascript.rhino.Token.PARAMETERIZED_TYPE;
 import static com.google.javascript.rhino.Token.RECORD_TYPE;
-import static com.google.javascript.rhino.Token.REST_PARAMETER_TYPE;
 import static com.google.javascript.rhino.Token.STRING_TYPE;
 import static com.google.javascript.rhino.TypeDeclarationsIR.anyType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.arrayType;
@@ -34,7 +33,6 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.functionType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
-import static com.google.javascript.rhino.TypeDeclarationsIR.optionalParameter;
 import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.recordType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
@@ -139,12 +137,12 @@ public final class TypeDeclarationsIRFactoryTest extends TestCase {
   }
 
   public void testConvertFunctionType() throws Exception {
-    Node stringKey = IR.stringKey("p1");
-    stringKey.addChildToFront(stringType());
-    Node stringKey1 = IR.stringKey("p2");
-    stringKey1.addChildToFront(booleanType());
+    Node p1 = IR.name("p1");
+    p1.setDeclaredTypeExpression(stringType());
+    Node p2 = IR.name("p2");
+    p2.setDeclaredTypeExpression(booleanType());
     assertParseTypeAndConvert("function(string, boolean)")
-        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, anyType(), stringKey, stringKey1));
+        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, anyType(), p1, p2));
   }
 
   public void testConvertFunctionReturnType() throws Exception {
@@ -153,35 +151,35 @@ public final class TypeDeclarationsIRFactoryTest extends TestCase {
   }
 
   public void testConvertFunctionThisType() throws Exception {
-    Node stringKey1 = IR.stringKey("p1");
-    stringKey1.addChildToFront(stringType());
+    Node p1 = IR.name("p1");
+    p1.setDeclaredTypeExpression(stringType());
     assertParseTypeAndConvert("function(this:goog.ui.Menu, string)")
-        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, anyType(), stringKey1));
+        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, anyType(), p1));
   }
 
   public void testConvertFunctionNewType() throws Exception {
-    Node stringKey1 = IR.stringKey("p1");
-    stringKey1.addChildToFront(stringType());
+    Node p1 = IR.name("p1");
+    p1.setDeclaredTypeExpression(stringType());
     assertParseTypeAndConvert("function(new:goog.ui.Menu, string)")
-        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, anyType(), stringKey1));
+        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, anyType(), p1));
   }
 
   public void testConvertVariableParameters() throws Exception {
-    Node stringKey1 = IR.stringKey("p1");
-    stringKey1.addChildToFront(stringType());
-    Node stringKey2 = IR.stringKey("p2");
-    stringKey2.addChildToFront(arrayType(numberType()));
+    Node p1 = IR.name("p1");
+    p1.setDeclaredTypeExpression(stringType());
+    Node p2 = IR.rest("p2");
+    p2.setDeclaredTypeExpression(arrayType(numberType()));
     assertParseTypeAndConvert("function(string, ...number): number")
-        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, numberType(),
-            stringKey1, new TypeDeclarationNode(REST_PARAMETER_TYPE, stringKey2)));
+        .isEqualTo(new TypeDeclarationNode(FUNCTION_TYPE, numberType(), p1, p2));
   }
 
   public void testConvertOptionalFunctionParameters() throws Exception {
-    LinkedHashMap<String, TypeDeclarationNode> parameters = new LinkedHashMap<>();
-    parameters.put("p1", optionalParameter(stringType()));
-    parameters.put("p2", optionalParameter(numberType()));
+    LinkedHashMap<String, TypeDeclarationNode> requiredParams = new LinkedHashMap<>();
+    LinkedHashMap<String, TypeDeclarationNode> optionalParams = new LinkedHashMap<>();
+    optionalParams.put("p1", stringType());
+    optionalParams.put("p2", numberType());
     assertParseTypeAndConvert("function(?string=, number=)")
-        .isEqualTo(functionType(anyType(), parameters, null, null));
+        .isEqualTo(functionType(anyType(), requiredParams, optionalParams, null, null));
   }
 
   public void testConvertVarArgs() throws Exception {

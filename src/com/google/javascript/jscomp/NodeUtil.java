@@ -1438,7 +1438,6 @@ public final class NodeUtil {
       case Token.NULLABLE_TYPE:
       case Token.NAMED_TYPE:
       case Token.UNDEFINED_TYPE:
-      case Token.REST_PARAMETER_TYPE:
         return 18;
       case Token.CAST:
         return 19;

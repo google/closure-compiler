@@ -75,6 +75,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParameterizedTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
@@ -763,17 +764,17 @@ public class Parser {
     if (peekId() && peekType(1) == TokenType.ARROW) {
       return true;
     } else {
-      return peekArrowFunctionWithParenthesizedParameterList();
+      return peekArrowFunctionWithParenthesizedParameterList(false);
     }
   }
 
-  private boolean peekArrowFunctionWithParenthesizedParameterList() {
+  private boolean peekArrowFunctionWithParenthesizedParameterList(boolean inTypeExpression) {
     if (peek(TokenType.OPEN_PAREN)) {
       // TODO(johnlenz): determine if we can parse this without the
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
       try {
-        p.parseFormalParameterList();
+        p.parseFormalParameterList(inTypeExpression);
         if (p.peek(TokenType.COLON)) {
           p.parseTypeAnnotation();
         }
@@ -809,61 +810,71 @@ public class Parser {
   }
 
   private FormalParameterListTree parseFormalParameterList() {
+    return parseFormalParameterList(false);
+  }
+
+  private boolean peekParameter(boolean inTypeExpression) {
+    if (peekId() || peek(TokenType.SPREAD)) {
+      return true;
+    }
+    if (!inTypeExpression) {
+      return peek(TokenType.OPEN_SQUARE) || peek(TokenType.OPEN_CURLY);
+    }
+    return false;
+  }
+
+  private ParseTree parseParameter(boolean inTypeExpression) {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree parameter = null;
+    boolean isRestParam = false;
+
+    if (peek(TokenType.SPREAD)) {
+      isRestParam = true;
+      eat(TokenType.SPREAD);
+      parameter = new RestParameterTree(getTreeLocation(start), eatId());
+    } else if (peekId()) {
+      parameter = parseIdentifierExpression();
+      if (peek(TokenType.QUESTION)) {
+        eat(TokenType.QUESTION);
+        parameter = new OptionalParameterTree(getTreeLocation(start), parameter);
+      }
+    } else if (!inTypeExpression) {
+      if (peek(TokenType.OPEN_SQUARE)) {
+        parameter = parseArrayPattern(PatternKind.INITIALIZER);
+      } else if (peek(TokenType.OPEN_CURLY)) {
+        parameter = parseObjectPattern(PatternKind.INITIALIZER);
+      }
+    }
+
+    ParseTree typeAnnotation = null;
+    SourceRange typeLocation = null;
+    if (peek(TokenType.COLON)) {
+      typeAnnotation = parseTypeAnnotation();
+      typeLocation = getTreeLocation(getTreeStartLocation());
+    }
+
+    if (!inTypeExpression && !isRestParam && peek(TokenType.EQUAL)) {
+      eat(TokenType.EQUAL);
+      ParseTree defaultValue = parseAssignmentExpression();
+      parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
+    }
+
+    if (typeAnnotation != null) {
+      // Must be a direct child of the parameter list.
+      parameter = new TypedParameterTree(typeLocation, parameter, typeAnnotation);
+    }
+
+    return parameter;
+  }
+
+  private FormalParameterListTree parseFormalParameterList(boolean inTypeExpression) {
     SourcePosition listStart = getTreeStartLocation();
     eat(TokenType.OPEN_PAREN);
 
-    // FormalParameterList :
-    //   ... Identifier
-    //   FormalParameterListNoRest
-    //   FormalParameterListNoRest , ... Identifier
-    //
-    // FormalParameterListNoRest :
-    //   Identifier
-    //   Identifier = AssignmentExprssion
-    //   FormalParameterListNoRest , Identifier
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
 
-    while (peek(TokenType.SPREAD) || peekId()
-        || peek(TokenType.OPEN_SQUARE) || peek(TokenType.OPEN_CURLY)) {
-
-      SourcePosition start = getTreeStartLocation();
-
-      if (peek(TokenType.SPREAD)) {
-        eat(TokenType.SPREAD);
-        result.add(new RestParameterTree(getTreeLocation(start), eatId()));
-
-        // Rest parameters must be the last parameter; so we must be done.
-        break;
-      }
-
-      ParseTree parameter;
-      ParseTree typeAnnotation = null;
-      SourceRange typeLocation = null;
-      if (peekId()) {
-        parameter = parseIdentifierExpression();
-        if (peek(TokenType.COLON)) {
-          SourcePosition typeStart = getTreeStartLocation();
-          typeAnnotation = parseTypeAnnotation();
-          typeLocation = getTreeLocation(typeStart);
-        }
-      } else if (peek(TokenType.OPEN_SQUARE)) {
-        parameter = parseArrayPattern(PatternKind.INITIALIZER);
-      } else {
-        parameter = parseObjectPattern(PatternKind.INITIALIZER);
-      }
-
-      if (peek(TokenType.EQUAL)) {
-        eat(TokenType.EQUAL);
-        ParseTree defaultValue = parseAssignmentExpression();
-        parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
-      }
-
-      if (typeAnnotation != null) {
-        // Must be a direct child of the parameter list.
-        parameter = new TypedParameterTree(typeLocation, parameter, typeAnnotation);
-      }
-
-      result.add(parameter);
+    while (peekParameter(inTypeExpression)) {
+      result.add(parseParameter(inTypeExpression));
 
       if (!peek(TokenType.CLOSE_PAREN)) {
         Token comma = eat(TokenType.COMMA);
@@ -907,9 +918,9 @@ public class Parser {
   private ParseTree parseFunctionTypeExpression() {
     SourcePosition start = getTreeStartLocation();
     ParseTree typeExpression = null;
-    if (peekArrowFunctionWithParenthesizedParameterList()) {
+    if (peekArrowFunctionWithParenthesizedParameterList(true)) {
       FormalParameterListTree formalParameterList;
-      formalParameterList = parseFormalParameterList();
+      formalParameterList = parseFormalParameterList(true);
       eat(TokenType.ARROW);
       ParseTree returnType = parseType();
       typeExpression = new FunctionTypeTree(

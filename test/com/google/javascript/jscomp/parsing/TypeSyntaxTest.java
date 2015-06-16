@@ -117,27 +117,32 @@ public final class TypeSyntaxTest extends TestCase {
   }
 
   public void testFunctionParamDeclaration_destructuringArray() {
-    // TODO(martinprobst): implement.
-    expectErrors("Parse error. ',' expected");
-    parse("function foo([x]: string) {}");
+    parse("function foo([x]: string[]) {\n}");
   }
 
   public void testFunctionParamDeclaration_destructuringArrayInner() {
-    // TODO(martinprobst): implement.
+    // This syntax is not supported by TypeScript.
     expectErrors("Parse error. ']' expected");
     parse("function foo([x: string]) {}");
   }
 
   public void testFunctionParamDeclaration_destructuringObject() {
-    // TODO(martinprobst): implement.
-    expectErrors("Parse error. ',' expected");
-    parse("function foo({x}: string) {}");
+    parse("function foo({x}: any) {\n}");
   }
 
   public void testFunctionParamDeclaration_arrow() {
     Node fn = parse("(x: string) => 'hello' + x;").getFirstChild().getFirstChild();
     Node param = fn.getFirstChild().getNext().getFirstChild();
     assertDeclaredType("string type", stringType(), param);
+  }
+
+  public void testFunctionParamDeclaration_optionalParam() {
+    parse("function foo(x?) {\n}");
+  }
+
+  public void testFunctionParamDeclaration_notEs6Typed() {
+    testNotEs6Typed("function foo(x: string) {}", "type annotation");
+    testNotEs6Typed("function foo(x?) {}", "optional parameter");
   }
 
   public void testFunctionReturn() {
@@ -268,25 +273,79 @@ public final class TypeSyntaxTest extends TestCase {
   }
 
   public void testFunctionType() {
-    parse("var n: (p1:string) => boolean;");
-    parse("var n: (p1:string, p2:number) => boolean;");
+    parse("var n: (p1) => boolean;");
+    parse("var n: (p1, p2) => boolean;");
+    parse("var n: (p1: string) => boolean;");
+    parse("var n: (p1: string, p2: number) => boolean;");
     parse("var n: () => () => number;");
     parse("(number): () => number => number;");
 
-    Node ast = parse("var n: (p1:string, p2:number) => boolean[];");
+    Node ast = parse("var n: (p1: string, p2: number) => boolean[];");
     TypeDeclarationNode function = (TypeDeclarationNode)
         (ast.getFirstChild().getFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
     assertNode(function).hasType(Token.FUNCTION_TYPE);
 
-    Node ast2 = parse("var n: (p1:string, p2:number) => boolean | number;");
+    Node ast2 = parse("var n: (p1: string, p2: number) => boolean | number;");
     TypeDeclarationNode function2 = (TypeDeclarationNode)
         (ast2.getFirstChild().getFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
     assertNode(function2).hasType(Token.FUNCTION_TYPE);
 
-    Node ast3 = parse("var n: (p1:string, p2:number) => Array<Foo>;");
+    Node ast3 = parse("var n: (p1: string, p2: number) => Array<Foo>;");
     TypeDeclarationNode function3 = (TypeDeclarationNode)
         (ast3.getFirstChild().getFirstChild().getProp(Node.DECLARED_TYPE_EXPR));
     assertNode(function3).hasType(Token.FUNCTION_TYPE);
+  }
+
+  public void testFunctionType_optionalParam() {
+    parse("var n: (p1?) => boolean;");
+    parse("var n: (p1?: string) => boolean;");
+    parse("var n: (p1?: string, p2?) => boolean;");
+  }
+
+  public void testFunctionType_illegalParam() {
+    expectErrors("Parse error. Unexpected token '...' in type expression");
+    parse("var n : (...p1 p2) => number;");
+    expectErrors("Parse error. ')' expected");
+    parse("var n: (p1 = 5) => number;");
+    expectErrors("Parse error. ')' expected");
+    parse("var n: (p1 : p2 : p3) => number;");
+    expectErrors("Parse error. ')' expected");
+    parse("var n: (p1 : p2?) => number;");
+    expectErrors("Parse error. ')' expected");
+    parse("var n: (p1 : p2 = p3) => number;");
+    expectErrors("Parse error. Unexpected token '{' in type expression");
+    parse("var n: ({x, y}, z) => number;");
+    expectErrors("Parse error. Unexpected token '[' in type expression");
+    parse("var n: ([x, y], z) => number;");
+  }
+
+  public void testFunctionType_restParam() {
+    parse("var n: (...p1) => boolean;");
+    parse("var n: (...p1: number[]) => boolean;");
+    parse("var n: (p0: number, ...p1) => boolean;");
+    parse("var n: (p0?: number, ...p1) => boolean;");
+  }
+
+  public void testFunctionType_restParamNotArrayType() {
+    expectErrors("Parse error. A rest parameter must be of an array type.");
+    parse("var n: (...p1:number) => boolean;");
+  }
+
+  public void testFunctionType_restNotLastParam() {
+    expectErrors("Parse error. A rest parameter must be last in a parameter list.");
+    parse("var n: (...p0, p1) => boolean;");
+    expectErrors("Parse error. A rest parameter must be last in a parameter list.");
+    parse("var n: (...p0, ...p1) => boolean;");
+  }
+
+  public void testFunctionType_requiredParamAfterOptional() {
+    expectErrors("Parse error. A required parameter cannot follow an optional parameter.");
+    parse("var n: (p0?, p1) => boolean;");
+  }
+
+  public void testFunctionType_bothRestAndOptionalParam() {
+    expectErrors("Parse error. Unexpected token '...' in type expression");
+    parse("var n: (...p0?:number) => boolean;");
   }
 
   public void testFunctionType_incomplete() {
@@ -305,6 +364,11 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: p1:string => boolean;");
     expectErrors("Parse error. Semi-colon expected");
     parse("var n: p1:string, p2:number => boolean;");
+  }
+
+  public void testFunctionType_notEs6Typed() {
+    testNotEs6Typed("var n: (p1:string) => boolean;", "type annotation");
+    testNotEs6Typed("var n: (p1?) => boolean;", "type annotation", "optional parameter");
   }
 
   public void testInterface() {
@@ -411,7 +475,7 @@ public final class TypeSyntaxTest extends TestCase {
       String actual = new CodePrinter.Builder(script)
           .setCompilerOptions(options)
           .setTypeRegistry(compiler.getTypeIRegistry())
-          .build()  // does the actual printing.
+          .build() // does the actual printing.
           .trim();
       assertThat(actual).isEqualTo(expected);
     }

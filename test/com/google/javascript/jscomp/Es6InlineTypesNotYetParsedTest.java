@@ -90,7 +90,7 @@ public final class Es6InlineTypesNotYetParsedTest extends CompilerTestCase {
 
   public void testFunctionType() {
     assertSource("/** @type {function(string,number):boolean} */ var n;")
-        .transpilesTo("var n: (p1:string, p2:number) => boolean;");
+        .transpilesTo("var n: (p1: string, p2: number) => boolean;");
   }
 
   public void testTypeUnion() {

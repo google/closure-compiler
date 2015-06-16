@@ -230,6 +230,9 @@ class CodeGenerator {
 
       case Token.NAME:
         addIdentifier(n.getString());
+        if (n.getBooleanProp(Node.OPT_PARAM_ES6_TYPED)) {
+          add("?");
+        }
         maybeAddTypeDecl(n);
 
         if (first != null && !first.isEmpty()) {
@@ -253,6 +256,7 @@ class CodeGenerator {
 
       case Token.ARRAY_PATTERN:
         addArrayPattern(n);
+        maybeAddTypeDecl(n);
         break;
 
       case Token.PARAM_LIST:
@@ -1001,6 +1005,7 @@ class CodeGenerator {
 
       case Token.OBJECT_PATTERN:
         addObjectPattern(n, context);
+        maybeAddTypeDecl(n);
         break;
 
       case Token.SWITCH:
@@ -1096,15 +1101,6 @@ class CodeGenerator {
         cc.addOp("=>", true);
         add(returnType);
         break;
-      case Token.OPTIONAL_PARAMETER:
-        // The '?' token was printed in #maybeAddTypeDecl because it
-        // must come before the colon
-        add(first);
-        break;
-      case Token.REST_PARAMETER_TYPE:
-        add("...");
-        add(first);
-        break;
       case Token.UNION_TYPE:
         addList(first, "|");
         break;
@@ -1161,9 +1157,6 @@ class CodeGenerator {
 
   private void maybeAddTypeDecl(Node n) {
     if (n.getDeclaredTypeExpression() != null) {
-      if (n.getDeclaredTypeExpression().getType() == Token.OPTIONAL_PARAMETER) {
-        add("?");
-      }
       add(":");
       cc.maybeInsertSpace();
       add(n.getDeclaredTypeExpression());

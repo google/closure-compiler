@@ -45,14 +45,7 @@ import java.util.LinkedHashMap;
 import javax.annotation.Nullable;
 
 /**
- * Produces ASTs which represent JavaScript type declarations, both those
- * created from closure-style type declarations in a JSDoc node (via a
- * conversion from the rhino AST produced in
- * {@link IRFactory}) as well as those created from TypeScript-style inline type
- * declarations.
- *
- * <p>This is an alternative to the AST found in the root property of
- * JSTypeExpression, which is a crufty AST that reuses language tokens.
+ * Converts root nodes of JSTypeExpressions into TypeDeclaration ASTs.
  *
  * @author alexeagle@google.com (Alex Eagle)
  */
@@ -163,7 +156,8 @@ public final class TypeDeclarationsIRFactory {
         }
       case Token.FUNCTION:
         Node returnType = anyType();
-        LinkedHashMap<String, TypeDeclarationNode> parameters = new LinkedHashMap<>();
+        LinkedHashMap<String, TypeDeclarationNode> requiredParams = new LinkedHashMap<>();
+        LinkedHashMap<String, TypeDeclarationNode> optionalParams = new LinkedHashMap<>();
         String restName = null;
         TypeDeclarationNode restType = null;
         for (Node child2 : n.children()) {
@@ -172,12 +166,18 @@ public final class TypeDeclarationsIRFactory {
             for (Node param : child2.children()) {
               String paramName = "p" + paramIdx++;
               if (param.getType() == Token.ELLIPSIS) {
-                restName = paramName;
                 if (param.getFirstChild() != null) {
-                  restType = convertTypeNodeAST(param.getFirstChild());
+                  restType = arrayType(convertTypeNodeAST(param.getFirstChild()));
                 }
+                restName = paramName;
               } else {
-                parameters.put(paramName, convertTypeNodeAST(param));
+                TypeDeclarationNode paramNode = convertTypeNodeAST(param);
+                if (paramNode.getType() == Token.OPTIONAL_PARAMETER) {
+                  optionalParams.put(paramName,
+                      (TypeDeclarationNode) paramNode.removeFirstChild());
+                } else {
+                  requiredParams.put(paramName, convertTypeNodeAST(param));
+                }
               }
             }
           } else if (child2.isNew()) {
@@ -190,7 +190,7 @@ public final class TypeDeclarationsIRFactory {
             returnType = convertTypeNodeAST(child2);
           }
         }
-        return functionType(returnType, parameters, restName, restType);
+        return functionType(returnType, requiredParams, optionalParams, restName, restType);
       case Token.EQUALS:
         TypeDeclarationNode optionalParam = convertTypeNodeAST(n.getFirstChild());
         return optionalParam == null ? null : optionalParameter(optionalParam);

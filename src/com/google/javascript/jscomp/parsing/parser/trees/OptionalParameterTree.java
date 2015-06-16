@@ -18,17 +18,11 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-/**
- * A parameter with a type specified.
- */
-public class TypedParameterTree extends ParseTree {
-
+public class OptionalParameterTree extends ParseTree {
   public final ParseTree param;
-  public final ParseTree typeAnnotation;
 
-  public TypedParameterTree(SourceRange location, ParseTree param, ParseTree typeAnnotation) {
-    super(ParseTreeType.TYPED_PARAMETER, location);
+  public OptionalParameterTree(SourceRange location, ParseTree param) {
+    super(ParseTreeType.OPTIONAL_PARAMETER, location);
     this.param = param;
-    this.typeAnnotation = typeAnnotation;
   }
 }

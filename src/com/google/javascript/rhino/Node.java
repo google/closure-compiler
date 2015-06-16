@@ -130,8 +130,9 @@ public class Node implements Cloneable, Serializable {
                                   // Nodes which represent a typed NAME or
                                   // FUNCTION.
                                   //
-      TYPE_BEFORE_CAST = 79;      // The type of an expression before the cast.
+      TYPE_BEFORE_CAST = 79,      // The type of an expression before the cast.
                                   // This will be present only if the expression is casted.
+      OPT_PARAM_ES6_TYPED = 80;   // The node is an optional parameter in ES6 Typed syntax.
 
 
   public static final int   // flags for INCRDECR_PROP
@@ -184,6 +185,7 @@ public class Node implements Cloneable, Serializable {
         case CONSTANT_PROPERTY_DEF: return "constant_property_def";
         case DECLARED_TYPE_EXPR: return "declared_type_expr";
         case TYPE_BEFORE_CAST: return "type_before_cast";
+        case OPT_PARAM_ES6_TYPED: return "opt_param_es6_typed";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

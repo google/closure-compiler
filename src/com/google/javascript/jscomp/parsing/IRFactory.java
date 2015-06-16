@@ -93,6 +93,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectPatternTree;
+import com.google.javascript.jscomp.parsing.parser.trees.OptionalParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParameterizedTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParenExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ParseTree;
@@ -1419,14 +1420,16 @@ class IRFactory {
 
     Node processFormalParameterList(FormalParameterListTree tree) {
       Node params = newNode(Token.PARAM_LIST);
-      for (ParseTree param : tree.parameters) {
-        Node paramNode = transformNodeWithInlineJsDoc(param, false);
-        // Children must be simple names, default parameters, rest
-        // parameters, or destructuring patterns.
-        Preconditions.checkState(paramNode.isName() || paramNode.isRest()
-            || paramNode.isArrayPattern() || paramNode.isObjectPattern()
-            || paramNode.isDefaultValue());
-        params.addChildToBack(paramNode);
+      if (checkParameters(tree.parameters)) {
+        for (ParseTree param : tree.parameters) {
+          Node paramNode = transformNodeWithInlineJsDoc(param, false);
+          // Children must be simple names, default parameters, rest
+          // parameters, or destructuring patterns.
+          Preconditions.checkState(paramNode.isName() || paramNode.isRest()
+              || paramNode.isArrayPattern() || paramNode.isObjectPattern()
+              || paramNode.isDefaultValue());
+          params.addChildToBack(paramNode);
+        }
       }
       return params;
     }
@@ -2249,9 +2252,15 @@ class IRFactory {
     }
 
     Node processTypedParameter(TypedParameterTree typeAnnotation) {
-      maybeWarnTypeSyntax(typeAnnotation);
       Node param = process(typeAnnotation.param);
       maybeProcessType(param, typeAnnotation.typeAnnotation);
+      return param;
+    }
+
+    Node processOptionalParameter(OptionalParameterTree optionalParam) {
+      maybeWarnTypeSyntax(optionalParam, "optional parameter");
+      Node param = process(optionalParam.param);
+      param.putBooleanProp(Node.OPT_PARAM_ES6_TYPED, true);
       return param;
     }
 
@@ -2290,15 +2299,93 @@ class IRFactory {
       return unionType(options.build());
     }
 
-    Node processFunctionType(FunctionTypeTree tree) {
-      LinkedHashMap<String, TypeDeclarationNode> parameters = new LinkedHashMap<>();
-      for (ParseTree param : tree.formalParameterList.parameters) {
-        TypedParameterTree typedParam = param.asTypedParameter();
-        parameters.put(
-            typedParam.param.asIdentifierExpression().identifierToken.toString(),
-            (TypeDeclarationNode) process(typedParam.typeAnnotation));
+    private boolean checkParameters(ImmutableList<ParseTree> params) {
+      boolean seenOptional = false;
+      boolean good = true;
+      for (int i = 0; i < params.size(); i++) {
+        ParseTree param = params.get(i);
+        TypeDeclarationNode type = null;
+        if (param.type == ParseTreeType.TYPED_PARAMETER) {
+          TypedParameterTree typedParam = param.asTypedParameter();
+          type = (TypeDeclarationNode) process(typedParam.typeAnnotation);
+          param = typedParam.param;
+        }
+        switch (param.type) {
+          case IDENTIFIER_EXPRESSION:
+            if (seenOptional) {
+              errorReporter.error(
+                  "A required parameter cannot follow an optional parameter.",
+                  sourceName,
+                  lineno(param),
+                  charno(param));
+              good = false;
+            }
+            break;
+          case OPTIONAL_PARAMETER:
+            seenOptional = true;
+            break;
+          case REST_PARAMETER:
+            if (i != params.size() - 1) {
+              errorReporter.error(
+                  "A rest parameter must be last in a parameter list.",
+                  sourceName,
+                  lineno(param),
+                  charno(param));
+              good = false;
+            }
+            if (type != null && type.getType() != Token.ARRAY_TYPE) {
+              errorReporter.error(
+                  "A rest parameter must be of an array type.",
+                  sourceName,
+                  lineno(param),
+                  charno(param));
+              good = false;
+            }
+            break;
+          default:
+        }
       }
-      return functionType(process(tree.returnType), parameters, null, null);
+      return good;
+    }
+
+    Node processFunctionType(FunctionTypeTree tree) {
+      LinkedHashMap<String, TypeDeclarationNode> requiredParams = new LinkedHashMap<>();
+      LinkedHashMap<String, TypeDeclarationNode> optionalParams = new LinkedHashMap<>();
+      String restName = null;
+      TypeDeclarationNode restType = null;
+      if (checkParameters(tree.formalParameterList.parameters)) {
+        for (ParseTree param : tree.formalParameterList.parameters) {
+          TypeDeclarationNode type = null;
+          if (param.type == ParseTreeType.TYPED_PARAMETER) {
+            TypedParameterTree typedParam = param.asTypedParameter();
+            type = (TypeDeclarationNode) process(typedParam.typeAnnotation);
+            param = typedParam.param;
+          }
+          switch (param.type) {
+            case IDENTIFIER_EXPRESSION:
+              requiredParams.put(
+                  param.asIdentifierExpression().identifierToken.toString(),
+                  type);
+              break;
+            case OPTIONAL_PARAMETER:
+              maybeWarnTypeSyntax(param, "optional parameter");
+              optionalParams.put(
+                  param.asOptionalParameter().param.asIdentifierExpression()
+                      .identifierToken.toString(),
+                  type);
+              break;
+            case REST_PARAMETER:
+              restName = param.asRestParameter().identifier.toString();
+              restType = type;
+              break;
+            default:
+              throw new IllegalStateException("Illegal parameter type: " + param.type);
+          }
+        }
+      }
+
+      return functionType(process(tree.returnType), requiredParams, optionalParams,
+          restName, restType);
     }
 
     private Node transformList(
@@ -2535,8 +2622,10 @@ class IRFactory {
         // ES6 Typed
         case TYPE_NAME:
           return processTypeName(node.asTypeName());
-        case TYPE_ANNOTATION:
+        case TYPED_PARAMETER:
           return processTypedParameter(node.asTypedParameter());
+        case OPTIONAL_PARAMETER:
+          return processOptionalParameter(node.asOptionalParameter());
         case PARAMETERIZED_TYPE_TREE:
           return processParameterizedType(node.asParameterizedType());
         case ARRAY_TYPE:
