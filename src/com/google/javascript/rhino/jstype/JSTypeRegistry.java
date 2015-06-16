@@ -290,6 +290,22 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
+   * check if an object type is an instance of a function that
+   * implements the IObject interface
+   * @param type the object instance type
+   * @return true if it is, otherwise false
+   */
+  public boolean isInstanceOfIObject(JSType type) {
+    Preconditions.checkNotNull(type);
+    TemplateTypeMap typeMap = type.getTemplateTypeMap();
+    if (typeMap == null) {
+      return false;
+    }
+    // check the template key for IObject
+    return typeMap.hasTemplateType(getIObjectKeyKey());
+  }
+
+  /**
    * @return return an immutable list of template types of IObject,
    * i.e., [KEY1, VALUE1]
    */

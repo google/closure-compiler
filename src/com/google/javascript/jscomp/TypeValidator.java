@@ -370,7 +370,13 @@ class TypeValidator {
       expectStringOrNumber(t, indexNode, indexType, "property access");
     } else {
       ObjectType dereferenced = objType.dereference();
-      if (dereferenced != null && dereferenced
+      if (dereferenced != null && typeRegistry.isInstanceOfIObject(objType)) {
+        // make sure that the indexType is consistent with the
+        // type declared in <KEY1> from IObject<KEY1, VALUE1>
+        expectCanAssignTo(t, indexNode, indexType, dereferenced
+            .getTemplateTypeMap().getTemplateType(typeRegistry.getIObjectKeyKey()),
+            "restricted index type");
+      } else if (dereferenced != null && dereferenced
           .getTemplateTypeMap()
           .hasTemplateKey(typeRegistry.getObjectIndexKey())) {
         expectCanAssignTo(t, indexNode, indexType, dereferenced
