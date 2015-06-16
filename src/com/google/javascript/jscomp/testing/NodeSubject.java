@@ -24,7 +24,13 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * A Truth Subject for the Node class.
+ * A Truth Subject for the Node class. Usage:
+ * <pre>
+ *   import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+ *   ...
+ *   assertNode(node1).isEqualTo(node2);
+ *   assertNode(node1).hasType(Token.FUNCTION);
+ * </pre>
  */
 public final class NodeSubject extends Subject<NodeSubject, Node> {
   public static NodeSubject assertNode(Node node) {
