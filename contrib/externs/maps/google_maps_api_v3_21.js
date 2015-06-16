@@ -3167,6 +3167,11 @@ google.maps.MapPanes.prototype.floatPane;
 /**
  * @type {Node}
  */
+google.maps.MapPanes.prototype.floatShadow;
+
+/**
+ * @type {Node}
+ */
 google.maps.MapPanes.prototype.mapPane;
 
 /**
@@ -3177,12 +3182,22 @@ google.maps.MapPanes.prototype.markerLayer;
 /**
  * @type {Node}
  */
+google.maps.MapPanes.prototype.overlayImage;
+
+/**
+ * @type {Node}
+ */
 google.maps.MapPanes.prototype.overlayLayer;
 
 /**
  * @type {Node}
  */
 google.maps.MapPanes.prototype.overlayMouseTarget;
+
+/**
+ * @type {Node}
+ */
+google.maps.MapPanes.prototype.overlayShadow;
 
 /**
  * @interface
