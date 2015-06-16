@@ -80,7 +80,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
   private final AbstractCompiler compiler;
 
-  private static class ModuleDescription {
+  private class ModuleDescription {
     Node moduleDecl;
     String moduleNamespace = "";
     Node requireInsertNode = null;
@@ -137,13 +137,18 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
     if (inModule()) {
       switch (n.getType()) {
+        case Token.SCRIPT:
+          current.moduleScope = t.getScope();
+          break;
         case Token.BLOCK:
           if (current.moduleScopeRoot == parent && parent.isFunction()) {
             current.moduleScope = t.getScope();
           }
           break;
-        case Token.SCRIPT:
-          current.moduleScope = t.getScope();
+        default:
+          if (current.moduleScopeRoot == parent && parent.isBlock()) {
+            current.moduleScope = t.getScope();
+          }
           break;
       }
     }
@@ -269,7 +274,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
       case Token.RETURN:
         // Remove the "return exports" for bundled goog.module files.
-        if (t.getScopeRoot() == current.moduleScopeRoot) {
+        if (parent == current.moduleStatementRoot) {
           n.detachFromParent();
         }
         break;
@@ -500,18 +505,23 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     }).traverseAtScope(s);
   }
 
-  private static Node getModuleScopeRootForLoadModuleCall(Node n) {
+  private Node getModuleScopeRootForLoadModuleCall(Node n) {
     Preconditions.checkState(n.isCall());
     Node fn = n.getLastChild();
     Preconditions.checkState(fn.isFunction());
+    if (compiler.getLanguageMode().isEs6OrHigher()) {
+      return fn.getLastChild();
+    }
     return fn;
   }
 
-  private static Node getModuleStatementRootForLoadModuleCall(Node n) {
-    Node fn = getModuleScopeRootForLoadModuleCall(n);
-    Node block = fn.getLastChild();
-    Preconditions.checkState(block.isBlock());
-    return block;
+  private Node getModuleStatementRootForLoadModuleCall(Node n) {
+    Node scopeRoot = getModuleScopeRootForLoadModuleCall(n);
+    if (scopeRoot.isFunction()) {
+      return scopeRoot.getLastChild();
+    } else {
+      return scopeRoot;
+    }
   }
 
   private Node skipHeaderNodes(Node script) {

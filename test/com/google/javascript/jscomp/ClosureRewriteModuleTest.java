@@ -36,7 +36,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
   }
 
   @Override
