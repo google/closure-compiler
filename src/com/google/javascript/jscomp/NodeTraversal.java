@@ -372,7 +372,18 @@ public class NodeTraversal {
       traverseBranch(body, n);
 
       popScope();
+    } else if (n.isBlock()) {
+      if (inputId == null) {
+        inputId = NodeUtil.getInputId(n);
+      }
+      sourceName = getSourceName(n);
+      curNode = n;
+      pushScope(s);
+      traverseBranch(n, n.getParent());
+
+      popScope();
     } else {
+      Preconditions.checkState(s.isGlobal(), "Expected global scope. Got:", s);
       traverseWithScope(n, s);
     }
   }

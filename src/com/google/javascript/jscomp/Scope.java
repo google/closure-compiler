@@ -47,7 +47,9 @@ public class Scope implements StaticScope {
    */
   Scope(Scope parent, Node rootNode) {
     Preconditions.checkNotNull(parent);
-    Preconditions.checkArgument(rootNode != parent.rootNode);
+    Preconditions.checkArgument(
+        rootNode != parent.rootNode,
+        "Root node: %s\nParent's root node: %s", rootNode, parent.rootNode);
 
     this.parent = parent;
     this.rootNode = rootNode;
@@ -58,6 +60,11 @@ public class Scope implements StaticScope {
     this.parent = null;
     this.rootNode = rootNode;
     this.depth = 0;
+  }
+
+  @Override
+  public String toString() {
+    return "Scope@" + rootNode;
   }
 
   static Scope createGlobalScope(Node rootNode) {
