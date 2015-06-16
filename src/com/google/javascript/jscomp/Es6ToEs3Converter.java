@@ -744,7 +744,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
         JSTypeExpression existingType = membersToDeclare.get(member.getString());
         if (existingType != null && !existingType.equals(typeExpr)) {
-          compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE));
+          compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, member.getString()));
         } else {
           membersToDeclare.put(member.getString(), typeExpr);
         }
