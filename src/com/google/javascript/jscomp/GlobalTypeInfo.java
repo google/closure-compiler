@@ -1142,21 +1142,19 @@ class GlobalTypeInfo implements CompilerPass {
         visitClassPropertyDeclaration(getProp);
       }
       // Prototype property
-      else if (isPropertyDeclaration(getProp) && isPrototypeProperty(getProp)) {
+      else if (isPrototypeProperty(getProp)) {
         visitPrototypePropertyDeclaration(getProp);
       }
       // Direct assignment to the prototype
-      else if (isPropertyDeclaration(getProp) && NodeUtil.isPrototypeAssignment(getProp)) {
+      else if (NodeUtil.isPrototypeAssignment(getProp)) {
         visitPrototypeAssignment(getProp);
       }
       // "Static" property on constructor
-      else if (isPropertyDeclaration(getProp) &&
-          isStaticCtorProp(getProp, currentScope)) {
+      else if (isStaticCtorProp(getProp, currentScope)) {
         visitConstructorPropertyDeclaration(getProp);
       }
       // Namespace property
-      else if (isPropertyDeclaration(getProp) &&
-          currentScope.isNamespace(getProp.getFirstChild())) {
+      else if (currentScope.isNamespace(getProp.getFirstChild())) {
         visitNamespacePropertyDeclaration(getProp);
       }
       // Other property
@@ -1874,14 +1872,6 @@ class GlobalTypeInfo implements CompilerPass {
   private static boolean isClassPropAccess(Node n, Scope s) {
     return n.isGetProp() && n.getFirstChild().isThis() &&
         (s.isConstructor() || s.isPrototypeMethod());
-  }
-
-  // TODO(blickly): Move to NodeUtil
-  private static boolean isPropertyDeclaration(Node getProp) {
-    Preconditions.checkArgument(getProp.isGetProp());
-    Node parent = getProp.getParent();
-    return parent.isExprResult() ||
-        (parent.isAssign() && parent.getParent().isExprResult());
   }
 
   // In contrast to the NodeUtil method, here we only accept properties directly

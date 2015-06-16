@@ -12268,6 +12268,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
         "function Foo() {}",
+        "function f(/** !Foo */ x) {",
+        "  var y = x.prop;",
+        "}",
+        "var z = (new Foo).prop;"),
+        TypeCheck.INEXISTENT_PROPERTY,
+        TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
         "function f() {",
         "  var x = new Foo;",
         "  x.prop = 123;", // x not inferred as Foo during GTI
