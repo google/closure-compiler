@@ -37,7 +37,7 @@ import java.util.Set;
  * https://github.com/google/closure-compiler/wiki/ECMAScript6 lists which ES6 features are
  * supported. Other classes that start with "Es6" do other parts of the transpilation.
  *
- * In most cases, the output is valid as ES3 (hence the class name) but in some cases, if
+ * <p>In most cases, the output is valid as ES3 (hence the class name) but in some cases, if
  * the output language is set to ES5, we rely on ES5 features such as getters, setters,
  * and Object.defineProperties.
  *
@@ -864,7 +864,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
     if (NodeUtil.isStatement(classNode)) {
       constructor.getFirstChild().setString("");
-      Node ctorVar = IR.var(IR.name(metadata.fullClassName), constructor);
+      Node ctorVar = IR.var(metadata.classNameNode.cloneNode(), constructor);
       ctorVar.useSourceInfoIfMissingFromForTree(classNode);
       parent.replaceChild(classNode, ctorVar);
     } else {
