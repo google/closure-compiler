@@ -318,10 +318,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test("/** @enum */ var a = {b: 0, c: 1};",
          "var a$b = 0; var a$c = 1;");
 
-    // @nocollapse on enum keys is ignored
     test("/** @enum */ var a = { /** @nocollapse */ b: 0, c: 1};",
-        "var a$b = 0; var a$c = 1;", null,
-        CollapseProperties.INVALID_NOCOLLAPSE);
+        "var a$c = 1; var a = {b: 0};");
   }
 
   public void testEnumDepth2() {
@@ -334,14 +332,13 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForEnumDepth1_1() {
     // An enum's values are always collapsed, even if the enum object is
     // referenced in a such a way that an alias is created for it.
+    // Unless an enum property has @nocollapse
     test("/** @enum */ var a = {b: 0}; var c = a; c.b = 1; a.b != c.b;",
          "var a$b = 0; var a = {b: a$b}; var c = a; c.b = 1; a$b != c.b;");
 
-    // @nocollapse on enum keys is also ignored
     test("/** @enum */ var a = { /** @nocollapse */ b: 0}; var c = a; c.b = 1;"
-        + "a.b != c.b;",
-        "var a$b = 0; var a = {b: a$b}; var c = a; c.b = 1; a$b != c.b;",
-        null, CollapseProperties.INVALID_NOCOLLAPSE);
+        + "a.b == c.b;",
+        "var a = {b: 0}; var c = a; c.b = 1; a.b == c.b;");
   }
 
   public void testAliasCreatedForEnumDepth1_2() {
@@ -368,12 +365,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     testSame("var a = {}; /** @nocollapse @enum */ a.b = {c: 0};"
         + "var d = a.b; d.c = 1; a.b.c == d.c;");
 
-    // @nocollapse on enum keys is ignored
     test("var a = {}; /** @enum */ a.b = {/** @nocollapse */ c: 0};"
-        + "var d = a.b; d.c = 1; a.b.c != d.c;",
-        "var a$b$c = 0; var a$b = {c: a$b$c};"
-        + "var d = a$b; d.c = 1; a$b$c != d.c;", null,
-        CollapseProperties.INVALID_NOCOLLAPSE);
+        + "var d = a.b; d.c = 1; a.b.c == d.c;",
+        "var a$b = {c: 0};"
+        + "var d = a$b; d.c = 1; a$b.c == d.c;");
   }
 
   public void testAliasCreatedForEnumDepth2_2() {
@@ -2098,11 +2093,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test("/** @enum { { a: { b: number}} } */"
         + "var e = { KEY1: { a: { /** @nocollapse */ b: 123}},\n"
         + "  KEY2: { a: { b: 456}}\n"
-        + "}", null, null, CollapseProperties.INVALID_NOCOLLAPSE);
+        + "}",
+        "var e$KEY1$a={b:123}; var e$KEY2$a$b=456;");
 
     test("/** @enum */ var e = { A: 1, B: 2 };\n"
         + "/** @type {{ c: { d: number } }} */ e.name1 = {"
-        + "  c: { /** @nocollapse */ d: 123 } };", null, null,
-        CollapseProperties.INVALID_NOCOLLAPSE);
+        + "  c: { /** @nocollapse */ d: 123 } };",
+        "var e$A=1; var e$B=2; var e$name1$c={d:123};");
+
+    test("/** @enum */ var e = { A: 1, B: 2};\n"
+        + "/** @nocollapse */ e.foo = { bar: true };",
+        "var e$A=1; var e$B=2; var e = {}; e.foo = { bar: true };");
   }
 }

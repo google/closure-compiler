@@ -1077,11 +1077,6 @@ class GlobalNamespace
     }
 
     boolean isCollapsingExplicitlyDenied() {
-      // Enum keys are always collapsed. @nocollapse annotations are ignored
-      if (isDescendantOfEnum()) {
-        return false;
-      }
-
       if (docInfo == null) {
         Ref ref = getDeclaration();
         if (ref != null) {
@@ -1190,24 +1185,6 @@ class GlobalNamespace
      */
     boolean isSimpleName() {
       return parent == null;
-    }
-
-    /**
-     * Determines whether a node is a property of an enum.
-     * This is recursive because static properties can be added to enums after
-     * declaration.
-     */
-    boolean isDescendantOfEnum() {
-      if (parent == null) {
-        return false;
-      }
-
-      if (parent.type == Type.OBJECTLIT && parent.docInfo != null &&
-          parent.docInfo.hasEnumParameterType()) {
-        return true;
-      }
-
-      return parent.isDescendantOfEnum();
     }
 
     @Override public String toString() {

@@ -92,10 +92,6 @@ class CollapseProperties implements CompilerPass {
       "Variable {0} aliases a constructor, "
       + "so it cannot be assigned multiple times");
 
-  static final DiagnosticType INVALID_NOCOLLAPSE = DiagnosticType.warning(
-      "JSC_INVALID_NOCOLLAPSE",
-      "@nocollapse is not permitted here");
-
   private AbstractCompiler compiler;
 
   /** Global namespace tree */
@@ -689,14 +685,6 @@ class CollapseProperties implements CompilerPass {
 
     // Handle this name first so that nested object literals get unrolled.
     if (n.canCollapse()) {
-      // Enum properties are always collapsed. Warn when @nocollapse
-      // is used on an enum property
-      if (n.docInfo != null && n.docInfo.isNoCollapse() &&
-          n.isDescendantOfEnum()) {
-        compiler.report(
-            JSError.make(n.getDeclaration().getNode(), INVALID_NOCOLLAPSE));
-      }
-
       updateObjLitOrFunctionDeclaration(n, alias, canCollapseChildNames);
     }
 
