@@ -276,10 +276,6 @@ public final class CompileTask
   public void setForceRecompile(boolean forceRecompile) {
     this.forceRecompile = forceRecompile;
   }
-  
-  public void setAngularPass(boolean angularPass) {
-    this.angularPass = angularPass;
-  }
 
   public void setAngularPass(boolean angularPass) {
     this.angularPass = angularPass;
