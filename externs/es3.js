@@ -29,7 +29,7 @@
 
 /**
  * @constructor
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Functions_and_function_scope/arguments
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments
  */
 function Arguments() {}
 
@@ -43,7 +43,7 @@ Arguments.prototype.callee;
  * Use the non-standard {@see Function.prototype.caller} property of a function
  * object instead.
  * @type {Function}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Functions/arguments/caller
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments/caller
  * @deprecated
  */
 Arguments.prototype.caller;
@@ -56,21 +56,21 @@ Arguments.prototype.length;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Properties/Infinity
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity
  * @const
  */
 var Infinity;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Properties/NaN
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN
  * @const
  */
 var NaN;
 
 /**
  * @type {undefined}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Properties/undefined
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined
  * @const
  */
 var undefined;
@@ -79,7 +79,7 @@ var undefined;
  * @param {string} uri
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/decodeURI
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURI
  */
 function decodeURI(uri) {}
 
@@ -87,7 +87,7 @@ function decodeURI(uri) {}
  * @param {string} uri
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/decodeURIComponent
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent
  */
 function decodeURIComponent(uri) {}
 
@@ -95,7 +95,7 @@ function decodeURIComponent(uri) {}
  * @param {string} uri
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/encodeURI
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
  */
 function encodeURI(uri) {}
 
@@ -103,7 +103,7 @@ function encodeURI(uri) {}
  * @param {string} uri
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/encodeURIComponent
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
  */
 function encodeURIComponent(uri) {}
 
@@ -131,7 +131,7 @@ function unescape(str) {}
  * @param {*} num
  * @return {boolean}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/isFinite
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isFinite
  */
 function isFinite(num) {}
 
@@ -139,7 +139,7 @@ function isFinite(num) {}
  * @param {*} num
  * @return {boolean}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/isNaN
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isNaN
  */
 function isNaN(num) {}
 
@@ -147,7 +147,7 @@ function isNaN(num) {}
  * @param {*} num
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/parseFloat
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseFloat
  */
 function parseFloat(num) {}
 
@@ -160,14 +160,14 @@ function parseFloat(num) {}
  * @param {number|undefined} base
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/parseInt
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt
  */
 function parseInt(num, base) {}
 
 /**
  * @param {string} code
  * @return {*}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Functions/eval
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
  */
 function eval(code) {}
 
@@ -189,14 +189,14 @@ function IArrayLike() {}
  * @param {*=} opt_value
  * @return {!Object}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object
  */
 function Object(opt_value) {}
 
 /**
  * The constructor of the current object.
  * @type {Function}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/constructor
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor
  */
 Object.prototype.constructor = function() {};
 
@@ -208,7 +208,7 @@ Object.prototype.constructor = function() {};
  * @param {string} sprop
  * @param {Function} fun
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/defineGetter
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineGetter
  */
 Object.prototype.__defineGetter__ = function(sprop, fun) {};
 
@@ -220,7 +220,7 @@ Object.prototype.__defineGetter__ = function(sprop, fun) {};
  * @param {string} sprop
  * @param {Function} fun
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/defineSetter
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineSetter
  */
 Object.prototype.__defineSetter__ = function(sprop, fun) {};
 
@@ -230,7 +230,7 @@ Object.prototype.__defineSetter__ = function(sprop, fun) {};
  * @param {*} propertyName Implicitly cast to a string.
  * @return {boolean}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/hasOwnProperty
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty
  */
 Object.prototype.hasOwnProperty = function(propertyName) {};
 
@@ -240,7 +240,7 @@ Object.prototype.hasOwnProperty = function(propertyName) {};
  * @param {Object} other
  * @return {boolean}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/isPrototypeOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf
  */
 Object.prototype.isPrototypeOf = function(other) {};
 
@@ -252,7 +252,7 @@ Object.prototype.isPrototypeOf = function(other) {};
  * getter should be returned
  * @return {Function}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/lookupGetter
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/lookupGetter
  */
 Object.prototype.__lookupGetter__ = function(sprop) {};
 
@@ -264,7 +264,7 @@ Object.prototype.__lookupGetter__ = function(sprop) {};
  *     setter should be returned.
  * @return {Function}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/lookupSetter
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/lookupSetter
  */
 Object.prototype.__lookupSetter__ = function(sprop) {};
 
@@ -274,7 +274,7 @@ Object.prototype.__lookupSetter__ = function(sprop) {};
  *
  * @param {Function} fun
  * @return {*}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/noSuchMethod
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/noSuchMethod
  */
 Object.prototype.__noSuchMethod__ = function(fun) {};
 
@@ -284,7 +284,7 @@ Object.prototype.__noSuchMethod__ = function(fun) {};
  *
  * @type {Object}
  * @deprecated
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/parent
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/parent
  */
 Object.prototype.__parent__;
 
@@ -295,7 +295,7 @@ Object.prototype.__parent__;
  * Will be null on Object.prototype.
  *
  * @type {Object}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/proto
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/proto
  */
 Object.prototype.__proto__;
 
@@ -307,7 +307,7 @@ Object.prototype.__proto__;
  * @param {string} propertyName
  * @return {boolean}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/propertyIsEnumerable
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable
  */
 Object.prototype.propertyIsEnumerable = function(propertyName) {};
 
@@ -315,7 +315,7 @@ Object.prototype.propertyIsEnumerable = function(propertyName) {};
  * Returns a localized string representing the object.
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/toLocaleString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toLocaleString
  */
 Object.prototype.toLocaleString = function() {};
 
@@ -324,7 +324,7 @@ Object.prototype.toLocaleString = function() {};
  * Mozilla-only.
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/toSource
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
  */
 Object.prototype.toSource = function() {};
 
@@ -333,7 +333,7 @@ Object.prototype.toSource = function() {};
  * @this {*}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/toString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString
  */
 Object.prototype.toString = function() {};
 
@@ -341,7 +341,7 @@ Object.prototype.toString = function() {};
  * Removes a watchpoint set with the {@see Object.prototype.watch} method.
  * Mozilla-only.
  * @param {string} prop The name of a property of the object.
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/unwatch
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/unwatch
  */
 Object.prototype.unwatch = function(prop) {};
 
@@ -349,7 +349,7 @@ Object.prototype.unwatch = function(prop) {};
  * Returns the object's {@code this} value.
  * @return {*}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/valueOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf
  */
 Object.prototype.valueOf = function() {};
 
@@ -358,7 +358,7 @@ Object.prototype.valueOf = function() {};
  * Mozilla-only.
  * @param {string} prop The name of a property of the object.
  * @param {Function} handler A function to call.
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Object/watch
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/watch
  */
 Object.prototype.watch = function(prop, handler) {};
 
@@ -368,21 +368,21 @@ Object.prototype.watch = function(prop, handler) {};
  * @param {...*} var_args
  * @nosideeffects
  * @throws {Error}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function
  */
 function Function(var_args) {}
 
 /**
  * @param {...*} var_args
  * @return {*}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function/call
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call
  */
 Function.prototype.call = function(var_args) {};
 
 /**
  * @param {...*} var_args
  * @return {*}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function/apply
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply
  */
 Function.prototype.apply = function(var_args) {};
 
@@ -391,14 +391,14 @@ Function.prototype.arguments;
 /**
  * @type {number}
  * @deprecated
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function/arity
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/arity
  */
 Function.prototype.arity;
 
 /**
  * Nonstandard; Mozilla and JScript only.
  * @type {Function}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function/caller
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/caller
  */
 Function.prototype.caller;
 
@@ -412,13 +412,13 @@ Function.prototype.displayName;
 /**
  * Expected number of arguments.
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function/length
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length
  */
 Function.prototype.length;
 
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function/name
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name
  */
 Function.prototype.name;
 
@@ -437,7 +437,7 @@ Function.prototype.toString = function() {};
  * @return {!Array.<?>}
  * @nosideeffects
  * @template T
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array
  */
 function Array(var_args) {}
 
@@ -451,7 +451,7 @@ function Array(var_args) {}
  * @return {!Array.<?>}
  * @this {*}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/concat
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat
  */
 Array.prototype.concat = function(var_args) {};
 
@@ -464,7 +464,7 @@ Array.prototype.concat = function(var_args) {};
  * @return {string}
  * @this {{length: number}|string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/join
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join
  */
 Array.prototype.join = function(opt_separator) {};
 
@@ -475,7 +475,7 @@ Array.prototype.join = function(opt_separator) {};
  * @this {{length: number}|Array.<T>}
  * @modifies {this}
  * @template T
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/pop
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop
  */
 Array.prototype.pop = function() {};
 
@@ -488,7 +488,7 @@ Array.prototype.pop = function() {};
  * @this {{length: number}|Array.<T>}
  * @template T
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/push
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push
  */
 Array.prototype.push = function(var_args) {};
 
@@ -498,7 +498,7 @@ Array.prototype.push = function(var_args) {};
  *
  * @this {{length: number}}
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reverse
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse
  */
 Array.prototype.reverse = function() {};
 
@@ -510,7 +510,7 @@ Array.prototype.reverse = function() {};
  * @modifies {this}
  * @return {T}
  * @template T
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/shift
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift
  */
 Array.prototype.shift = function() {};
 
@@ -525,7 +525,7 @@ Array.prototype.shift = function() {};
  * @this {{length: number}|Array.<T>|string}
  * @template T
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/slice
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
  */
 Array.prototype.slice = function(opt_begin, opt_end) {};
 
@@ -536,7 +536,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  *     defines the sort order.
  * @this {{length: number}|Array.<T>}
  * @template T
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/sort
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
  */
 Array.prototype.sort = function(opt_compareFunction) {};
 
@@ -554,7 +554,7 @@ Array.prototype.sort = function(opt_compareFunction) {};
  * @this {{length: number}|Array.<T>}
  * @modifies {this}
  * @template T
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/splice
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
  */
 Array.prototype.splice = function(opt_index, opt_howMany, var_args) {};
 
@@ -562,7 +562,7 @@ Array.prototype.splice = function(opt_index, opt_howMany, var_args) {};
  * @return {string}
  * @this {Object}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/toSource
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSource
  */
 Array.prototype.toSource;
 
@@ -582,7 +582,7 @@ Array.prototype.toString = function() {};
  * @return {number} The new length of the array
  * @this {{length: number}}
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/unshift
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift
  */
 Array.prototype.unshift = function(var_args) {};
 
@@ -595,7 +595,7 @@ Array.prototype.unshift = function(var_args) {};
  * @return {R}
  * @this {{length: number}|Array.<T>|string}
  * @template T,R
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reduce
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
  */
 Array.prototype.reduce = function(callback, opt_initialValue) {};
 
@@ -608,7 +608,7 @@ Array.prototype.reduce = function(callback, opt_initialValue) {};
  * @return {R}
  * @this {{length: number}|Array.<T>|string}
  * @template T,R
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/reduceRight
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduceRight
  */
 Array.prototype.reduceRight = function(callback, opt_initialValue) {};
 
@@ -619,7 +619,7 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
  * @return {boolean}
  * @this {{length: number}|Array.<T>|string}
  * @template T,S
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/every
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every
  */
 Array.prototype.every = function(callback, opt_thisobj) {};
 
@@ -630,7 +630,7 @@ Array.prototype.every = function(callback, opt_thisobj) {};
  * @return {!Array.<T>}
  * @this {{length: number}|Array.<T>|string}
  * @template T,S
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/filter
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
  */
 Array.prototype.filter = function(callback, opt_thisobj) {};
 
@@ -640,7 +640,7 @@ Array.prototype.filter = function(callback, opt_thisobj) {};
  * @param {S=} opt_thisobj
  * @this {{length: number}|Array.<T>|string}
  * @template T,S
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/forEach
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
  */
 Array.prototype.forEach = function(callback, opt_thisobj) {};
 
@@ -652,7 +652,7 @@ Array.prototype.forEach = function(callback, opt_thisobj) {};
  * @this {{length: number}|Array.<T>|string}
  * @nosideeffects
  * @template T
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/indexOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
  */
 Array.prototype.indexOf = function(obj, opt_fromIndex) {};
 
@@ -664,7 +664,7 @@ Array.prototype.indexOf = function(obj, opt_fromIndex) {};
  * @this {{length: number}|Array.<T>|string}
  * @nosideeffects
  * @template T
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/lastIndexOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf
  */
 Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
 
@@ -675,7 +675,7 @@ Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
  * @return {!Array.<R>}
  * @this {{length: number}|Array.<T>|string}
  * @template T,S,R
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/map
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
  */
 Array.prototype.map = function(callback, opt_thisobj) {};
 
@@ -686,25 +686,25 @@ Array.prototype.map = function(callback, opt_thisobj) {};
  * @return {boolean}
  * @this {{length: number}|Array.<T>|string}
  * @template T,S
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/some
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
  */
 Array.prototype.some = function(callback, opt_thisobj) {};
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/index
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/index
  */
 Array.prototype.index;
 
 /**
  * @type {?string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/input
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/input
  */
 Array.prototype.input;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/length
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length
  */
 Array.prototype.length;
 
@@ -742,7 +742,7 @@ Array.forEach = function(arr, callback, opt_context) {};
  * @return {number}
  * @template T
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/indexOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
  */
 Array.indexOf = function(arr, obj, opt_fromIndex) {};
 
@@ -754,7 +754,7 @@ Array.indexOf = function(arr, obj, opt_fromIndex) {};
  * @return {number}
  * @template T
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Array/lastIndexOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf
  */
 Array.lastIndexOf = function(arr, obj, opt_fromIndex) {};
 
@@ -789,14 +789,14 @@ Array.isArray = function(arr) {};
  * @param {*=} opt_value
  * @return {boolean}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Boolean
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean
  */
 function Boolean(opt_value) {}
 
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Boolean/toSource
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean/toSource
  * @override
  */
 Boolean.prototype.toSource = function() {};
@@ -814,7 +814,7 @@ Boolean.prototype.toString = function() {};
  * @param {*=} opt_value
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number
  */
 function Number(opt_value) {}
 
@@ -823,7 +823,7 @@ function Number(opt_value) {}
  * @param {number=} opt_fractionDigits
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/toExponential
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toExponential
  */
 Number.prototype.toExponential = function(opt_fractionDigits) {};
 
@@ -832,7 +832,7 @@ Number.prototype.toExponential = function(opt_fractionDigits) {};
  * @param {*=} opt_digits
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/toFixed
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed
  */
 Number.prototype.toFixed = function(opt_digits) {};
 
@@ -841,7 +841,7 @@ Number.prototype.toFixed = function(opt_digits) {};
  * @param {number=} opt_precision
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/toPrecision
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toPrecision
  */
 Number.prototype.toPrecision = function(opt_precision) {};
 
@@ -851,7 +851,7 @@ Number.prototype.toPrecision = function(opt_precision) {};
  * @param {(number|Number)=} opt_radix An optional radix.
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/toString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString
  * @override
  */
 Number.prototype.toString = function(opt_radix) {};
@@ -859,38 +859,38 @@ Number.prototype.toString = function(opt_radix) {};
 // Properties.
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/MAX_VALUE
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_VALUE
  */
 Number.MAX_VALUE;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/MIN_VALUE
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_VALUE
  */
 Number.MIN_VALUE;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/NaN
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/NaN
  */
 Number.NaN;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/NEGATIVE_INFINITY
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/NEGATIVE_INFINITY
  */
 Number.NEGATIVE_INFINITY;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Number/POSITIVE_INFINITY
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/POSITIVE_INFINITY
  */
 Number.POSITIVE_INFINITY;
 
 
 /**
  * @const
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
  */
 var Math = {};
 
@@ -898,7 +898,7 @@ var Math = {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/abs
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/abs
  */
 Math.abs = function(x) {};
 
@@ -906,7 +906,7 @@ Math.abs = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/acos
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/acos
  */
 Math.acos = function(x) {};
 
@@ -914,7 +914,7 @@ Math.acos = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/asin
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/asin
  */
 Math.asin = function(x) {};
 
@@ -922,7 +922,7 @@ Math.asin = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/atan
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/atan
  */
 Math.atan = function(x) {};
 
@@ -931,7 +931,7 @@ Math.atan = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/atan2
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/atan2
  */
 Math.atan2 = function(y, x) {};
 
@@ -939,7 +939,7 @@ Math.atan2 = function(y, x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/ceil
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/ceil
  */
 Math.ceil = function(x) {};
 
@@ -947,7 +947,7 @@ Math.ceil = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/cos
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/cos
  */
 Math.cos = function(x) {};
 
@@ -955,7 +955,7 @@ Math.cos = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/exp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/exp
  */
 Math.exp = function(x) {};
 
@@ -963,7 +963,7 @@ Math.exp = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/floor
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/floor
  */
 Math.floor = function(x) {};
 
@@ -971,7 +971,7 @@ Math.floor = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/log
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/log
  */
 Math.log = function(x) {};
 
@@ -979,7 +979,7 @@ Math.log = function(x) {};
  * @param {...*} var_args
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/max
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/max
  */
 Math.max = function(var_args) {};
 
@@ -987,7 +987,7 @@ Math.max = function(var_args) {};
  * @param {...*} var_args
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/min
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/min
  */
 Math.min = function(var_args) {};
 
@@ -996,14 +996,14 @@ Math.min = function(var_args) {};
  * @param {*} y
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/pow
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/pow
  */
 Math.pow = function(x, y) {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/random
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
  */
 Math.random = function() {};
 
@@ -1011,7 +1011,7 @@ Math.random = function() {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/round
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round
  */
 Math.round = function(x) {};
 
@@ -1019,7 +1019,7 @@ Math.round = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/sin
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sin
  */
 Math.sin = function(x) {};
 
@@ -1027,7 +1027,7 @@ Math.sin = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/sqrt
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sqrt
  */
 Math.sqrt = function(x) {};
 
@@ -1035,14 +1035,14 @@ Math.sqrt = function(x) {};
  * @param {*} x
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/tan
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/tan
  */
 Math.tan = function(x) {};
 
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/toSource
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/toSource
  */
 Math.toSource = function() {};
 
@@ -1050,49 +1050,49 @@ Math.toSource = function() {};
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/E
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/E
  */
 Math.E;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/LN2
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/LN2
  */
 Math.LN2;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/LN10
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/LN10
  */
 Math.LN10;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/LOG2E
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/LOG2E
  */
 Math.LOG2E;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/LOG10E
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/LOG10E
  */
 Math.LOG10E;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/PI
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/PI
  */
 Math.PI;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/SQRT1_2
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/SQRT1_2
  */
 Math.SQRT1_2;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Math/SQRT2
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/SQRT2
  */
 Math.SQRT2;
 
@@ -1108,7 +1108,7 @@ Math.SQRT2;
  * @constructor
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
  */
 function Date(opt_yr_num, opt_mo_num, opt_day_num, opt_hr_num, opt_min_num,
     opt_sec_num, opt_ms_num) {}
@@ -1116,7 +1116,7 @@ function Date(opt_yr_num, opt_mo_num, opt_day_num, opt_hr_num, opt_min_num,
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/now
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now
  */
 Date.now = function() {};
 
@@ -1126,7 +1126,7 @@ Date.now = function() {};
  * @param {*} date
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/parse
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/parse
  */
 Date.parse = function(date) {};
 
@@ -1140,7 +1140,7 @@ Date.parse = function(date) {};
  * @param {number=} opt_ms
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/UTC
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/UTC
  */
 Date.UTC = function(year, month,
                     opt_date, opt_hours, opt_minute, opt_second, opt_ms) {};
@@ -1148,133 +1148,133 @@ Date.UTC = function(year, month,
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getDate
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getDate
  */
 Date.prototype.getDate = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getDay
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getDay
  */
 Date.prototype.getDay = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getMonth
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth
  */
 Date.prototype.getMonth = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getFullYear
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear
  */
 Date.prototype.getFullYear = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getYear
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getYear
  */
 Date.prototype.getYear = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getHours
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getHours
  */
 Date.prototype.getHours = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getMinutes
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMinutes
  */
 Date.prototype.getMinutes = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getSeconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getSeconds
  */
 Date.prototype.getSeconds = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getMilliseconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMilliseconds
  */
 Date.prototype.getMilliseconds = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getTime
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime
  */
 Date.prototype.getTime = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getTimezoneOffset
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
  */
 Date.prototype.getTimezoneOffset = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCDate
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCDate
  */
 Date.prototype.getUTCDate = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCDay
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCDay
  */
 Date.prototype.getUTCDay = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCMonth
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCMonth
  */
 Date.prototype.getUTCMonth = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCFullYear
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCFullYear
  */
 Date.prototype.getUTCFullYear = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCHours
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCHours
  */
 Date.prototype.getUTCHours = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCMinutes
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCMinutes
  */
 Date.prototype.getUTCMinutes = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCSeconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCSeconds
  */
 Date.prototype.getUTCSeconds = function() {};
 
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/getUTCMilliseconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getUTCMilliseconds
  */
 Date.prototype.getUTCMilliseconds = function() {};
 
@@ -1283,7 +1283,7 @@ Date.prototype.getUTCMilliseconds = function() {};
  *
  * @param {number} dayValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setDate
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setDate
  */
 Date.prototype.setDate = function(dayValue) {};
 
@@ -1293,7 +1293,7 @@ Date.prototype.setDate = function(dayValue) {};
  * @param {number} monthValue
  * @param {number=} opt_dayValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setMonth
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setMonth
  */
 Date.prototype.setMonth = function(monthValue, opt_dayValue) {};
 
@@ -1304,7 +1304,7 @@ Date.prototype.setMonth = function(monthValue, opt_dayValue) {};
  * @param {number=} opt_monthValue
  * @param {number=} opt_dayValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setFullYear
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setFullYear
  */
 Date.prototype.setFullYear =
     function(yearValue, opt_monthValue, opt_dayValue) {};
@@ -1315,7 +1315,7 @@ Date.prototype.setFullYear =
  * @param {number} yearValue
  * @deprecated
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setYear
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setYear
  */
 Date.prototype.setYear = function(yearValue) {};
 
@@ -1327,7 +1327,7 @@ Date.prototype.setYear = function(yearValue) {};
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setHours
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setHours
  */
 Date.prototype.setHours = function(hoursValue, opt_minutesValue,
                                    opt_secondsValue, opt_msValue) {};
@@ -1339,7 +1339,7 @@ Date.prototype.setHours = function(hoursValue, opt_minutesValue,
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setMinutes
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setMinutes
  */
 Date.prototype.setMinutes =
     function(minutesValue, opt_secondsValue, opt_msValue) {};
@@ -1350,7 +1350,7 @@ Date.prototype.setMinutes =
  * @param {number} secondsValue
  * @param {number=} opt_msValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setSeconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setSeconds
  */
 Date.prototype.setSeconds = function(secondsValue, opt_msValue) {};
 
@@ -1359,7 +1359,7 @@ Date.prototype.setSeconds = function(secondsValue, opt_msValue) {};
  *
  * @param {number} millisecondsValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setMilliseconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setMilliseconds
  */
 Date.prototype.setMilliseconds = function(millisecondsValue) {};
 
@@ -1369,7 +1369,7 @@ Date.prototype.setMilliseconds = function(millisecondsValue) {};
  *
  * @param {number} timeValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setTime
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setTime
  */
 Date.prototype.setTime = function(timeValue) {};
 
@@ -1378,7 +1378,7 @@ Date.prototype.setTime = function(timeValue) {};
  *
  * @param {number} dayValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCDate
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCDate
  */
 Date.prototype.setUTCDate = function(dayValue) {};
 
@@ -1388,7 +1388,7 @@ Date.prototype.setUTCDate = function(dayValue) {};
  * @param {number} monthValue
  * @param {number=} opt_dayValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCMonth
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCMonth
  */
 Date.prototype.setUTCMonth = function(monthValue, opt_dayValue) {};
 
@@ -1399,7 +1399,7 @@ Date.prototype.setUTCMonth = function(monthValue, opt_dayValue) {};
  * @param {number=} opt_monthValue
  * @param {number=} opt_dayValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCFullYear
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCFullYear
  */
 Date.prototype.setUTCFullYear = function(yearValue, opt_monthValue,
                                          opt_dayValue) {};
@@ -1412,7 +1412,7 @@ Date.prototype.setUTCFullYear = function(yearValue, opt_monthValue,
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCHours
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCHours
  */
 Date.prototype.setUTCHours = function(hoursValue, opt_minutesValue,
                                       opt_secondsValue, opt_msValue) {};
@@ -1424,7 +1424,7 @@ Date.prototype.setUTCHours = function(hoursValue, opt_minutesValue,
  * @param {number=} opt_secondsValue
  * @param {number=} opt_msValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCMinutes
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCMinutes
  */
 Date.prototype.setUTCMinutes = function(minutesValue, opt_secondsValue,
                                         opt_msValue) {};
@@ -1436,7 +1436,7 @@ Date.prototype.setUTCMinutes = function(minutesValue, opt_secondsValue,
  * @param {number} secondsValue
  * @param {number=} opt_msValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCSeconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCSeconds
  */
 Date.prototype.setUTCSeconds = function(secondsValue, opt_msValue) {};
 
@@ -1445,14 +1445,14 @@ Date.prototype.setUTCSeconds = function(secondsValue, opt_msValue) {};
  *
  * @param {number} millisecondsValue
  * @modifies {this}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/setUTCMilliseconds
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setUTCMilliseconds
  */
 Date.prototype.setUTCMilliseconds = function(millisecondsValue) {};
 
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toSource
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toSource
  * @override
  */
 Date.prototype.toSource = function() {};
@@ -1467,21 +1467,21 @@ Date.prototype.toDateString = function() {};
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toGMTString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toGMTString
  */
 Date.prototype.toGMTString = function() {};
 
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toTimeString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTimeString
  */
 Date.prototype.toTimeString = function() {};
 
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toUTCString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString
  */
 Date.prototype.toUTCString = function() {};
 
@@ -1490,7 +1490,7 @@ Date.prototype.toUTCString = function() {};
  * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleDateString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString
  */
 Date.prototype.toLocaleDateString = function(opt_locales, opt_options) {};
 
@@ -1498,7 +1498,7 @@ Date.prototype.toLocaleDateString = function(opt_locales, opt_options) {};
  * @param {string} formatString
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleFormat
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleFormat
  */
 Date.prototype.toLocaleFormat = function(formatString) {};
 
@@ -1507,7 +1507,7 @@ Date.prototype.toLocaleFormat = function(formatString) {};
  * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString
  * @see http://www.ecma-international.org/ecma-402/1.0/#sec-13.3.1
  * @override
  */
@@ -1518,7 +1518,7 @@ Date.prototype.toLocaleString = function(opt_locales, opt_options) {};
  * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/toLocaleTimeString
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleTimeString
  */
 Date.prototype.toLocaleTimeString = function(opt_locales, opt_options) {};
 
@@ -1533,7 +1533,7 @@ Date.prototype.toString = function() {};
 /**
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Date/valueOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/valueOf
  */
 Date.prototype.valueOf;
 
@@ -1542,7 +1542,7 @@ Date.prototype.valueOf;
  * @param {*=} opt_str
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
  */
 function String(opt_str) {}
 // Functions:
@@ -1551,7 +1551,7 @@ function String(opt_str) {}
  * @param {...number} var_args
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/fromCharCode
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCharCode
  */
 String.fromCharCode = function(var_args) {};
 
@@ -1559,7 +1559,7 @@ String.fromCharCode = function(var_args) {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/anchor
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/anchor
  */
 String.prototype.anchor = function() {};
 
@@ -1567,7 +1567,7 @@ String.prototype.anchor = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/big
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/big
  */
 String.prototype.big = function() {};
 
@@ -1575,7 +1575,7 @@ String.prototype.big = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/blink
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/blink
  */
 String.prototype.blink = function() {};
 
@@ -1583,7 +1583,7 @@ String.prototype.blink = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/bold
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/bold
  */
 String.prototype.bold = function() {};
 
@@ -1594,7 +1594,7 @@ String.prototype.bold = function() {};
  * @param {number} index
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/charAt
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
  */
 String.prototype.charAt = function(index) {};
 
@@ -1606,7 +1606,7 @@ String.prototype.charAt = function(index) {};
  * @param {number=} opt_index
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/charCodeAt
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charCodeAt
  */
 String.prototype.charCodeAt = function(opt_index) {};
 
@@ -1617,7 +1617,7 @@ String.prototype.charCodeAt = function(opt_index) {};
  * @param {...*} var_args
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/concat
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/concat
  */
 String.prototype.concat = function(var_args) {};
 
@@ -1625,7 +1625,7 @@ String.prototype.concat = function(var_args) {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/fixed
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fixed
  */
 String.prototype.fixed = function() {};
 
@@ -1634,7 +1634,7 @@ String.prototype.fixed = function() {};
  * @param {string} color
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/fontcolor
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fontcolor
  */
 String.prototype.fontcolor = function(color) {};
 
@@ -1643,7 +1643,7 @@ String.prototype.fontcolor = function(color) {};
  * @param {number} size
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/fontsize
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fontsize
  */
 String.prototype.fontsize = function(size) {};
 
@@ -1657,7 +1657,7 @@ String.prototype.fontsize = function(size) {};
  * @param {(number|null)=} opt_fromIndex
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/indexOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/indexOf
  */
 String.prototype.indexOf = function(searchValue, opt_fromIndex) {};
 
@@ -1665,7 +1665,7 @@ String.prototype.indexOf = function(searchValue, opt_fromIndex) {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/italics
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/italics
  */
 String.prototype.italics = function() {};
 
@@ -1679,7 +1679,7 @@ String.prototype.italics = function() {};
  * @param {(number|null)=} opt_fromIndex
  * @return {number}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/lastIndexOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/lastIndexOf
  */
 String.prototype.lastIndexOf = function(searchValue, opt_fromIndex) {};
 
@@ -1688,7 +1688,7 @@ String.prototype.lastIndexOf = function(searchValue, opt_fromIndex) {};
  * @param {string} hrefAttribute
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/link
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/link
  */
 String.prototype.link = function(hrefAttribute) {};
 
@@ -1716,7 +1716,7 @@ String.prototype.localeCompare = function(compareString, locales, options) {};
  * @return {Array.<string>} This should really return an Array with a few
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see Regexp.prototype.exec.
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/match
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match
  */
 String.prototype.match = function(regexp) {};
 
@@ -1724,7 +1724,7 @@ String.prototype.match = function(regexp) {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/quote
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/quote
  */
 String.prototype.quote = function() {};
 
@@ -1739,7 +1739,7 @@ String.prototype.quote = function() {};
  * @param {string|Function} str
  * @param {string=} opt_flags
  * @return {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/replace
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
  */
 String.prototype.replace = function(regex, str, opt_flags) {};
 
@@ -1750,7 +1750,7 @@ String.prototype.replace = function(regex, str, opt_flags) {};
  * @this {String|string}
  * @param {RegExp|string} regexp
  * @return {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/search
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/search
  */
 String.prototype.search = function(regexp) {};
 
@@ -1760,7 +1760,7 @@ String.prototype.search = function(regexp) {};
  * @param {number=} opt_end
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/slice
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice
  */
 String.prototype.slice = function(begin, opt_end) {};
 
@@ -1768,7 +1768,7 @@ String.prototype.slice = function(begin, opt_end) {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/small
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/small
  */
 String.prototype.small = function() {};
 
@@ -1778,14 +1778,14 @@ String.prototype.small = function() {};
  * @param {number=} opt_limit
  * @return {!Array.<string>}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/split
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/split
  */
 String.prototype.split = function(opt_separator, opt_limit) {};
 
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/strike
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/strike
  */
 String.prototype.strike = function() {};
 
@@ -1793,7 +1793,7 @@ String.prototype.strike = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/sub
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/sub
  */
 String.prototype.sub = function() {};
 
@@ -1803,7 +1803,7 @@ String.prototype.sub = function() {};
  * @param {number=} opt_length
  * @return {string} The specified substring.
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/substr
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substr
  */
 String.prototype.substr = function(start, opt_length) {};
 
@@ -1813,7 +1813,7 @@ String.prototype.substr = function(start, opt_length) {};
  * @param {number=} opt_end
  * @return {string} The specified substring.
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/substring
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substring
  */
 String.prototype.substring = function(start, opt_end) {};
 
@@ -1821,7 +1821,7 @@ String.prototype.substring = function(start, opt_end) {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/sup
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/sup
  */
 String.prototype.sup = function() {};
 
@@ -1829,7 +1829,7 @@ String.prototype.sup = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/toLocaleUpperCase
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase
  */
 String.prototype.toLocaleUpperCase = function() {};
 
@@ -1837,7 +1837,7 @@ String.prototype.toLocaleUpperCase = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/toLocaleLowerCase
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleLowerCase
  */
 String.prototype.toLocaleLowerCase = function() {};
 
@@ -1845,7 +1845,7 @@ String.prototype.toLocaleLowerCase = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/toLowerCase
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLowerCase
  */
 String.prototype.toLowerCase = function() {};
 
@@ -1853,14 +1853,14 @@ String.prototype.toLowerCase = function() {};
  * @this {String|string}
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/toUpperCase
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toUpperCase
  */
 String.prototype.toUpperCase = function() {};
 
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/toSource
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toSource
  * @override
  */
 String.prototype.toSource = function() {};
@@ -1876,13 +1876,13 @@ String.prototype.toString = function() {};
 /**
  * @return {string}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/valueOf
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/valueOf
  */
 String.prototype.valueOf;
 
 /**
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/String/length
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
  */
 String.prototype.length;
 
@@ -1892,7 +1892,7 @@ String.prototype.length;
  * @param {*=} opt_flags
  * @return {!RegExp}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 function RegExp(opt_pattern, opt_flags) {}
 
@@ -1903,7 +1903,7 @@ function RegExp(opt_pattern, opt_flags) {}
  * @modifies {this}
  * @deprecated
  * @see http://msdn.microsoft.com/en-us/library/x9cswe0z(v=VS.85).aspx
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/compile
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/compile
  */
 RegExp.prototype.compile = function(pattern, opt_flags) {};
 
@@ -1913,14 +1913,14 @@ RegExp.prototype.compile = function(pattern, opt_flags) {};
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see String.prototype.match.
  * @see http://msdn.microsoft.com/en-us/library/z908hy33(VS.85).aspx
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/exec
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
  */
 RegExp.prototype.exec = function(str) {};
 
 /**
  * @param {*} str The string to search.
  * @return {boolean} Whether the string was matched.
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/test
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test
  */
 RegExp.prototype.test = function(str) {};
 
@@ -1971,47 +1971,47 @@ RegExp.rightContext;
 
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$1;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$2;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$3;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$4;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$5;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$6;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$7;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$8;
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 RegExp.$9;
 
@@ -2021,35 +2021,35 @@ RegExp.$9;
  * Whether to test the regular expression against all possible matches
  * in a string, or only against the first.
  * @type {boolean}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/global
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/global
  */
 RegExp.prototype.global;
 
 /**
  * Whether to ignore case while attempting a match in a string.
  * @type {boolean}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/ignoreCase
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/ignoreCase
  */
 RegExp.prototype.ignoreCase;
 
 /**
  * The index at which to start the next match.
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/lastIndex
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/lastIndex
  */
 RegExp.prototype.lastIndex;
 
 /**
  * Whether or not to search in strings across multiple lines.
  * @type {boolean}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/multiline
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/multiline
  */
 RegExp.prototype.multiline;
 
 /**
  * The text of the pattern.
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RegExp/source
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/source
  */
 RegExp.prototype.source;
 
@@ -2061,7 +2061,7 @@ RegExp.prototype.source;
  * @param {*=} opt_line
  * @return {!Error}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
  */
 function Error(opt_message, opt_file, opt_line) {}
 
@@ -2098,26 +2098,26 @@ Error.prototype.description;
 /**
  * Mozilla-only.
  * @type {number}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/lineNumber
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/lineNumber
  */
 Error.prototype.lineNumber;
 
 /**
  * Mozilla-only
  * @type {string}
- * @see https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/fileName
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/fileName
  */
 Error.prototype.fileName;
 
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/name
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name
  */
 Error.prototype.name;
 
 /**
  * @type {string}
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/message
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message
  */
 Error.prototype.message;
 
@@ -2138,7 +2138,7 @@ Error.prototype.stack;
  * @param {*=} opt_line
  * @return {!EvalError}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/EvalError
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError
  */
 function EvalError(opt_message, opt_file, opt_line) {}
 
@@ -2150,7 +2150,7 @@ function EvalError(opt_message, opt_file, opt_line) {}
  * @param {*=} opt_line
  * @return {!RangeError}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/RangeError
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError
  */
 function RangeError(opt_message, opt_file, opt_line) {}
 
@@ -2162,7 +2162,7 @@ function RangeError(opt_message, opt_file, opt_line) {}
  * @param {*=} opt_line
  * @return {!ReferenceError}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/ReferenceError
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError
  */
 function ReferenceError(opt_message, opt_file, opt_line) {}
 
@@ -2174,7 +2174,7 @@ function ReferenceError(opt_message, opt_file, opt_line) {}
  * @param {*=} opt_line
  * @return {!SyntaxError}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/SyntaxError
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError
  */
 function SyntaxError(opt_message, opt_file, opt_line) {}
 
@@ -2186,7 +2186,7 @@ function SyntaxError(opt_message, opt_file, opt_line) {}
  * @param {*=} opt_line
  * @return {!TypeError}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/TypeError
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError
  */
 function TypeError(opt_message, opt_file, opt_line) {}
 
@@ -2198,7 +2198,7 @@ function TypeError(opt_message, opt_file, opt_line) {}
  * @param {*=} opt_line
  * @return {!URIError}
  * @nosideeffects
- * @see http://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/URIError
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError
  */
 function URIError(opt_message, opt_file, opt_line) {}
 
