@@ -243,6 +243,10 @@ class ScopedAliases implements HotSwapCompilerPass {
       Node aliasDefinition = aliasVar.getInitialValue();
       String aliasName = aliasVar.getName();
       String typeName = aliasReference.getString();
+      if (typeName.startsWith("$jscomp.scope.")) {
+        // Already visited.
+        return;
+      }
       String aliasExpanded =
           Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
       Preconditions.checkState(typeName.startsWith(aliasName),
