@@ -2348,7 +2348,12 @@ public class CompilerOptions implements Serializable, Cloneable {
   //////////////////////////////////////////////////////////////////////////////
   // Enums
 
-  /** When to do the extra sanity checks */
+  /**
+   * A language mode applies to the whole compilation job.
+   * As a result, the compiler does not support mixed strict and non-strict in
+   * the same compilation job. Therefore, the 'use strict' directive is ignored
+   * when the language mode is not strict.
+   */
   public static enum LanguageMode {
     /**
      * 90's JavaScript
