@@ -39,9 +39,11 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * An object type with declared template types, such as
@@ -74,11 +76,17 @@ public final class TemplatizedType extends ProxyObjectType {
   }
 
   @Override
-  String toStringHelper(boolean forAnnotations) {
+  String toStringHelper(final boolean forAnnotations) {
     String typeString = super.toStringHelper(forAnnotations);
 
     if (!templateTypes.isEmpty()) {
-      typeString += "<" + Joiner.on(",").join(templateTypes) + ">";
+      typeString += "<"
+          + Joiner.on(",").join(Lists.transform(templateTypes, new Function<JSType, String>() {
+            @Override
+            public String apply(JSType type) {
+              return type.toStringHelper(forAnnotations);
+            }
+          })) + ">";
     }
 
     return typeString;
