@@ -355,6 +355,26 @@ public class IR {
     return new Node(Token.GETPROP, target, prop);
   }
 
+  public static Node getprop(Node target, Node prop, Node ...moreProps) {
+    Preconditions.checkState(mayBeExpression(target));
+    Preconditions.checkState(prop.isString());
+    Node result = new Node(Token.GETPROP, target, prop);
+    for (Node moreProp : moreProps) {
+      Preconditions.checkState(moreProp.isString());
+      result = new Node(Token.GETPROP, result, moreProp);
+    }
+    return result;
+  }
+
+  public static Node getprop(Node target, String prop, String ...moreProps) {
+    Preconditions.checkState(mayBeExpression(target));
+    Node result = new Node(Token.GETPROP, target, IR.string(prop));
+    for (String moreProp : moreProps) {
+      result = new Node(Token.GETPROP, result, IR.string(moreProp));
+    }
+    return result;
+  }
+
   public static Node getelem(Node target, Node elem) {
     Preconditions.checkState(mayBeExpression(target));
     Preconditions.checkState(mayBeExpression(elem));
