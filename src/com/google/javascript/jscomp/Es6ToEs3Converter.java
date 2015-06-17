@@ -778,7 +778,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         }
 
         Node newNode = NodeUtil.newExpr(assign);
-        metadata.insertStaticMember(newNode);
+        metadata.insertNodeAndAdvance(newNode);
       }
     }
 
@@ -795,7 +795,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
       declInfo.recordType(entry.getValue());
       declaration.setJSDocInfo(declInfo.build());
-      metadata.insertStaticMember(
+      metadata.insertNodeAndAdvance(
           IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
     }
 
@@ -805,7 +805,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           prototypeAccess.cloneTree(),
           metadata.defineProperties));
       definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
-      metadata.insertStaticMember(definePropsCall);
+      metadata.insertNodeAndAdvance(definePropsCall);
     }
 
     Preconditions.checkNotNull(constructor);
@@ -1145,7 +1145,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       }
     }
 
-    void insertStaticMember(Node newNode) {
+    void insertNodeAndAdvance(Node newNode) {
       insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
       insertionPoint = newNode;
     }

@@ -15,9 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.Es6ToEs3Converter.ClassDeclarationMetadata;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -61,59 +59,33 @@ public final class Es6TypedToEs6ConverterForClass implements
     Node classNode = n;
 
     Node classMembers = classNode.getLastChild();
-    // Find the constructor, see if it has member variables.
-    Node constructor = null;
-    boolean hasMemberVariable = false;
-    for (Node member : classMembers.children()) {
-      if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
-        constructor = member.getFirstChild();
-      } else {
-        hasMemberVariable |=
-            member.isMemberVariableDef()
-                || (member.isComputedProp() && member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE));
-      }
-      if (constructor != null && hasMemberVariable) {
-        break;
-      }
-    }
-
-    if (!hasMemberVariable) {
-      return;
-    }
-
-    Preconditions.checkNotNull(constructor, "Constructor should be added by Es6ConvertSuper");
 
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
-    if (metadata == null) {
-      compiler.report(JSError.make(n, CANNOT_CONVERT_MEMBER_VARIABLES));
-      return;
-    }
 
-    Node classNameAccess = NodeUtil.newQName(compiler, metadata.fullClassName);
-    Node memberVarInsertionPoint = null;  // To insert up front initially
     for (Node member : classMembers.children()) {
       // Functions are handled by the regular Es6ToEs3Converter
       if (!member.isMemberVariableDef() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)) {
         continue;
       }
-      compiler.reportCodeChange();
+
+      if (metadata == null) {
+        compiler.report(JSError.make(n, CANNOT_CONVERT_MEMBER_VARIABLES));
+        return;
+      }
+
       member.getParent().removeChild(member);
 
+      Node classNameAccess = NodeUtil.newQName(compiler, metadata.fullClassName);
+      Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, classNameAccess, "prototype");
       Node qualifiedMemberAccess =
           Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, classNameAccess,
-              IR.thisNode());
+              prototypeAcess);
       // Copy type information.
       qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
       Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
       newNode.useSourceInfoIfMissingFromForTree(member);
-      if (member.isStaticMember()) {
-        // Static fields are transpiled on the ctor function.
-        metadata.insertStaticMember(newNode);
-      } else {
-        // Instance fields are transpiled to statements inside the ctor function.
-        constructor.getLastChild().addChildAfter(newNode, memberVarInsertionPoint);
-        memberVarInsertionPoint = newNode;
-      }
+      metadata.insertNodeAndAdvance(newNode);
+      compiler.reportCodeChange();
     }
   }
 }

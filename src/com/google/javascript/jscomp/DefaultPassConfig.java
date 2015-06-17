@@ -219,19 +219,13 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
         && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
       checks.add(convertDeclaredTypesToJSDoc);
+      checks.add(convertEs6TypedToEs6);
     }
 
     if (options.lowerFromEs6()) {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6ConvertSuper);
-    }
-    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
-        && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
-      // Needs ctor already created by es6ConvertSuper pass.
-      checks.add(convertEs6TypedToEs6);
-    }
-    if (options.lowerFromEs6()) {
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);
       checks.add(rewriteGenerators);
