@@ -296,6 +296,15 @@ CanvasRenderingContext2D.prototype.clip = function(opt_fillRule) {};
 /**
  * @param {number} x
  * @param {number} y
+ * @return {boolean}
+ * @nosideeffects
+ * @see http://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/isPointInStroke
+ */
+CanvasRenderingContext2D.prototype.isPointInStroke = function(x, y) {};
+
+/**
+ * @param {number} x
+ * @param {number} y
  * @param {string=} opt_fillRule
  * @return {boolean}
  * @nosideeffects
