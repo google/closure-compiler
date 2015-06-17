@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.Es6ToEs3Converter.ClassDeclarationMetadata;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -29,12 +30,16 @@ import com.google.javascript.rhino.Token;
  * Converts {@link Node#getDeclaredTypeExpression()} to {@link JSDocInfo#getType()} type
  * annotations. Types are marked as inline types.
  */
-public final class Es6TypedToEs6ConverterForColonTypes
-    extends AbstractPostOrderCallback implements CompilerPass {
+public final class Es6TypedToEs6Converter
+    extends AbstractPostOrderCallback implements HotSwapCompilerPass {
+  static final DiagnosticType CANNOT_CONVERT_MEMBER_VARIABLES = DiagnosticType.error(
+      "JSC_CANNOT_CONVERT_FIELDS",
+      "Can only convert class member variables (fields) in declarations or the right hand side of "
+          + "a simple assignment.");
 
   private final AbstractCompiler compiler;
 
-  Es6TypedToEs6ConverterForColonTypes(AbstractCompiler compiler) {
+  Es6TypedToEs6Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -44,7 +49,46 @@ public final class Es6TypedToEs6ConverterForColonTypes
   }
 
   @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, this);
+  }
+
+  @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.getType() == Token.CLASS) {
+      Node classNode = n;
+
+      Node classMembers = classNode.getLastChild();
+
+      ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
+
+      for (Node member : classMembers.children()) {
+        // Functions are handled by the regular Es6ToEs3Converter
+        if (!member.isMemberVariableDef() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)) {
+          continue;
+        }
+
+        if (metadata == null) {
+          compiler.report(JSError.make(n, CANNOT_CONVERT_MEMBER_VARIABLES));
+          return;
+        }
+
+        member.getParent().removeChild(member);
+
+        Node classNameAccess = NodeUtil.newQName(compiler, metadata.fullClassName);
+        Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, classNameAccess, "prototype");
+        Node qualifiedMemberAccess =
+            Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, classNameAccess,
+                prototypeAcess);
+        // Copy type information.
+        qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
+        Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
+        newNode.useSourceInfoIfMissingFromForTree(member);
+        metadata.insertNodeAndAdvance(newNode);
+        compiler.reportCodeChange();
+      }
+    }
+
     TypeDeclarationNode type = n.getDeclaredTypeExpression();
     if (type == null) {
       return;

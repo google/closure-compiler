@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for the new type inference on transpiled ES6 code.

@@ -218,7 +218,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
         && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
-      checks.add(convertDeclaredTypesToJSDoc);
       checks.add(convertEs6TypedToEs6);
     }
 
@@ -1147,7 +1146,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("convertEs6Typed", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6TypedToEs6ConverterForClass(compiler);
+      return new Es6TypedToEs6Converter(compiler);
     }
   };
 
@@ -1164,14 +1163,6 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new Es6ToEs3ClassSideInheritance(compiler);
-    }
-  };
-
-  private final PassFactory convertDeclaredTypesToJSDoc =
-      new PassFactory("convertDeclaredTypesToJSDoc", true) {
-    @Override
-    CompilerPass create(AbstractCompiler compiler) {
-      return new Es6TypedToEs6ConverterForColonTypes(compiler);
     }
   };
 

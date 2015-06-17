@@ -122,8 +122,6 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
             new Es6SplitVariableDeclarations(compiler)));
     passes.add(makePassFactory("es6ConvertSuper",
             new Es6ConvertSuper(compiler)));
-    passes.add(makePassFactory("convertEs6TypedToEs6",
-            new Es6TypedToEs6ConverterForClass(compiler)));
     passes.add(makePassFactory("convertEs6",
             new Es6ToEs3Converter(compiler)));
     passes.add(makePassFactory("Es6RewriteLetConst",
