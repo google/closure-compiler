@@ -161,15 +161,6 @@ class IRFactory {
       "Non-JSDoc comment has annotations. " +
       "Did you mean to start it with '/**'?";
 
-  static final String MISPLACED_TYPE_ANNOTATION =
-      "Type annotations are not allowed here. Are you missing parentheses?";
-
-  static final String MISPLACED_FUNCTION_ANNOTATION =
-      "This JSDoc is not attached to a function node. Are you missing parentheses?";
-
-  static final String MISPLACED_MSG_ANNOTATION =
-      "@desc, @hidden, and @meaning annotations should only be on message nodes.";
-
   static final String INVALID_ES3_PROP_NAME =
       "Keywords and reserved words are not allowed as unquoted property " +
       "names in older versions of JavaScript. " +
@@ -215,9 +206,6 @@ class IRFactory {
   static final String UNEXPECTED_RETURN = "return must be inside function";
 
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
-
-  static final String ANNOTATION_DEPRECATED =
-      "The %s annotation is deprecated.%s";
 
   private final String sourceString;
   private final List<Integer> newlines;
@@ -358,7 +346,6 @@ class IRFactory {
   }
 
   private void validate(Node n) {
-    validateJsDoc(n);
     validateParameters(n);
     validateBreakContinue(n);
     validateReturn(n);
@@ -483,68 +470,6 @@ class IRFactory {
     }
   }
 
-  private void validateJsDoc(Node n) {
-    validateTypeAnnotations(n);
-    validateFunctionJsDoc(n);
-    validateMsgJsDoc(n);
-    validateDeprecatedJsDoc(n);
-  }
-
-  /**
-   * Checks that deprecated annotations such as @expose are not present
-   */
-  private void validateDeprecatedJsDoc(Node n) {
-    JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      return;
-    }
-    if (info.isExpose()) {
-      errorReporter.warning(
-          String.format(ANNOTATION_DEPRECATED, "@expose",
-              " Use @nocollapse or @export instead."),
-          sourceName,
-          n.getLineno(), n.getCharno());
-    }
-  }
-
-  /**
-   * Checks that annotations for messages ({@code @desc}, {@code @hidden}, and {@code @meaning})
-   * are in the proper place, namely on names starting with MSG_ which indicates they should be
-   * extracted for translation. A later pass checks that the right side is a call to goog.getMsg.
-   */
-  private void validateMsgJsDoc(Node n) {
-    JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      return;
-    }
-    if (info.getDescription() != null || info.isHidden() || info.getMeaning() != null) {
-      boolean descOkay = false;
-      switch (n.getType()) {
-        case Token.ASSIGN: {
-          Node lhs = n.getFirstChild();
-          if (lhs.isName()) {
-            descOkay = lhs.getString().startsWith("MSG_");
-          } else if (lhs.isQualifiedName()) {
-            descOkay = lhs.getLastChild().getString().startsWith("MSG_");
-          }
-          break;
-        }
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
-          descOkay = n.getFirstChild().getString().startsWith("MSG_");
-          break;
-        case Token.STRING_KEY:
-          descOkay = n.getString().startsWith("MSG_");
-          break;
-      }
-      if (!descOkay) {
-        errorReporter.warning(MISPLACED_MSG_ANNOTATION,
-            sourceName, n.getLineno(), n.getCharno());
-      }
-    }
-  }
-
   private JSDocInfo recordJsDoc(SourceRange location, JSDocInfo info) {
     if (info != null && info.hasTypeInformation()) {
       hasJsDocTypeAnnotations = true;
@@ -563,111 +488,6 @@ class IRFactory {
       errorReporter.error("Bad type syntax"
           + " - can only have JSDoc or inline type annotations, not both",
           sourceName, lineno(location.start), charno(location.start));
-    }
-  }
-
-  /**
-   * Checks that JSDoc intended for a function is actually attached to a
-   * function.
-   */
-  private void validateFunctionJsDoc(Node n) {
-    JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      return;
-    }
-    if (info.containsFunctionDeclaration() && !info.hasType()) {
-      // This JSDoc should be attached to a FUNCTION node, or an assignment
-      // with a function as the RHS, etc.
-      switch (n.getType()) {
-        case Token.FUNCTION:
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
-        case Token.GETTER_DEF:
-        case Token.SETTER_DEF:
-        case Token.MEMBER_FUNCTION_DEF:
-        case Token.STRING_KEY:
-        case Token.EXPORT:
-          return;
-        case Token.GETELEM:
-        case Token.GETPROP:
-          if (n.getFirstChild().isQualifiedName()) {
-            return;
-          }
-          break;
-        case Token.ASSIGN: {
-          // TODO(tbreisacher): Check that the RHS of the assignment is a
-          // function. Note that it can be a FUNCTION node, but it can also be
-          // a call to goog.abstractMethod, goog.functions.constant, etc.
-          return;
-        }
-      }
-      errorReporter.warning(MISPLACED_FUNCTION_ANNOTATION,
-          sourceName,
-          n.getLineno(), n.getCharno());
-    }
-  }
-
-  /**
-   * Check that JSDoc with a {@code @type} annotation is in a valid place.
-   */
-  @SuppressWarnings("incomplete-switch")
-  private void validateTypeAnnotations(Node n) {
-    JSDocInfo info = n.getJSDocInfo();
-    if (info != null && info.hasType()) {
-      boolean valid = false;
-      switch (n.getType()) {
-        // Function declarations are valid
-        case Token.FUNCTION:
-          valid = isFunctionDeclaration(n);
-          break;
-        // Object literal properties, catch declarations and variable
-        // initializers are valid.
-        case Token.NAME:
-        case Token.DEFAULT_VALUE:
-          Node parent = n.getParent();
-          switch (parent.getType()) {
-            case Token.STRING_KEY:
-            case Token.GETTER_DEF:
-            case Token.SETTER_DEF:
-            case Token.CATCH:
-            case Token.FUNCTION:
-            case Token.VAR:
-            case Token.LET:
-            case Token.CONST:
-            case Token.PARAM_LIST:
-              valid = true;
-              break;
-          }
-          break;
-        // Casts, variable declarations, exports, and object literal properties are all valid.
-        case Token.CAST:
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
-        case Token.EXPORT:
-        case Token.STRING_KEY:
-        case Token.GETTER_DEF:
-        case Token.SETTER_DEF:
-          valid = true;
-          break;
-        // Property assignments are valid, if at the root of an expression.
-        case Token.ASSIGN:
-          valid =
-              n.getParent().isExprResult()
-                  && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
-          break;
-        case Token.GETPROP:
-          valid = n.getParent().isExprResult() && n.isQualifiedName();
-          break;
-        case Token.CALL:
-          valid = info.isDefine();
-          break;
-      }
-
-      if (!valid) {
-        errorReporter.warning(MISPLACED_TYPE_ANNOTATION, sourceName, n.getLineno(), n.getCharno());
-      }
     }
   }
 
