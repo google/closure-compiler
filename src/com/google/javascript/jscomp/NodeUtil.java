@@ -539,7 +539,6 @@ public final class NodeUtil {
         return true;
       case Token.CAST:
       case Token.NOT:
-        return isImmutableValue(n.getFirstChild());
       case Token.VOID:
       case Token.NEG:
         return isImmutableValue(n.getFirstChild());
@@ -547,9 +546,7 @@ public final class NodeUtil {
         String name = n.getString();
         // We assume here that programs don't change the value of the keyword
         // undefined to something other than the value undefined.
-        return "undefined".equals(name)
-            || "Infinity".equals(name)
-            || "NaN".equals(name);
+        return "undefined".equals(name) || "Infinity".equals(name) || "NaN".equals(name);
     }
 
     return false;
@@ -2039,20 +2036,18 @@ public final class NodeUtil {
    */
   static boolean isControlStructureCodeBlock(Node parent, Node n) {
     switch (parent.getType()) {
+      case Token.DO:
+        return parent.getFirstChild() == n;
+      case Token.TRY:
+        return parent.getFirstChild() == n || parent.getLastChild() == n;
       case Token.FOR:
       case Token.FOR_OF:
       case Token.WHILE:
       case Token.LABEL:
       case Token.WITH:
-        return parent.getLastChild() == n;
-      case Token.DO:
-        return parent.getFirstChild() == n;
-      case Token.IF:
-        return parent.getFirstChild() != n;
-      case Token.TRY:
-        return parent.getFirstChild() == n || parent.getLastChild() == n;
       case Token.CATCH:
         return parent.getLastChild() == n;
+      case Token.IF:
       case Token.SWITCH:
       case Token.CASE:
         return parent.getFirstChild() != n;
@@ -2548,48 +2543,88 @@ public final class NodeUtil {
    */
   public static String opToStr(int operator) {
     switch (operator) {
-      case Token.BITOR: return "|";
-      case Token.OR: return "||";
-      case Token.BITXOR: return "^";
-      case Token.AND: return "&&";
-      case Token.BITAND: return "&";
-      case Token.SHEQ: return "===";
-      case Token.EQ: return "==";
-      case Token.NOT: return "!";
-      case Token.NE: return "!=";
-      case Token.SHNE: return "!==";
-      case Token.LSH: return "<<";
-      case Token.IN: return "in";
-      case Token.LE: return "<=";
-      case Token.LT: return "<";
-      case Token.URSH: return ">>>";
-      case Token.RSH: return ">>";
-      case Token.GE: return ">=";
-      case Token.GT: return ">";
-      case Token.MUL: return "*";
-      case Token.DIV: return "/";
-      case Token.MOD: return "%";
-      case Token.BITNOT: return "~";
-      case Token.ADD: return "+";
-      case Token.SUB: return "-";
-      case Token.POS: return "+";
-      case Token.NEG: return "-";
-      case Token.ASSIGN: return "=";
-      case Token.ASSIGN_BITOR: return "|=";
-      case Token.ASSIGN_BITXOR: return "^=";
-      case Token.ASSIGN_BITAND: return "&=";
-      case Token.ASSIGN_LSH: return "<<=";
-      case Token.ASSIGN_RSH: return ">>=";
-      case Token.ASSIGN_URSH: return ">>>=";
-      case Token.ASSIGN_ADD: return "+=";
-      case Token.ASSIGN_SUB: return "-=";
-      case Token.ASSIGN_MUL: return "*=";
-      case Token.ASSIGN_DIV: return "/=";
-      case Token.ASSIGN_MOD: return "%=";
-      case Token.VOID: return "void";
-      case Token.TYPEOF: return "typeof";
-      case Token.INSTANCEOF: return "instanceof";
-      default: return null;
+      case Token.BITOR:
+        return "|";
+      case Token.OR:
+        return "||";
+      case Token.BITXOR:
+        return "^";
+      case Token.AND:
+        return "&&";
+      case Token.BITAND:
+        return "&";
+      case Token.SHEQ:
+        return "===";
+      case Token.EQ:
+        return "==";
+      case Token.NOT:
+        return "!";
+      case Token.NE:
+        return "!=";
+      case Token.SHNE:
+        return "!==";
+      case Token.LSH:
+        return "<<";
+      case Token.IN:
+        return "in";
+      case Token.LE:
+        return "<=";
+      case Token.LT:
+        return "<";
+      case Token.URSH:
+        return ">>>";
+      case Token.RSH:
+        return ">>";
+      case Token.GE:
+        return ">=";
+      case Token.GT:
+        return ">";
+      case Token.MUL:
+        return "*";
+      case Token.DIV:
+        return "/";
+      case Token.MOD:
+        return "%";
+      case Token.BITNOT:
+        return "~";
+      case Token.ADD:
+      case Token.POS:
+        return "+";
+      case Token.SUB:
+      case Token.NEG:
+        return "-";
+      case Token.ASSIGN:
+        return "=";
+      case Token.ASSIGN_BITOR:
+        return "|=";
+      case Token.ASSIGN_BITXOR:
+        return "^=";
+      case Token.ASSIGN_BITAND:
+        return "&=";
+      case Token.ASSIGN_LSH:
+        return "<<=";
+      case Token.ASSIGN_RSH:
+        return ">>=";
+      case Token.ASSIGN_URSH:
+        return ">>>=";
+      case Token.ASSIGN_ADD:
+        return "+=";
+      case Token.ASSIGN_SUB:
+        return "-=";
+      case Token.ASSIGN_MUL:
+        return "*=";
+      case Token.ASSIGN_DIV:
+        return "/=";
+      case Token.ASSIGN_MOD:
+        return "%=";
+      case Token.VOID:
+        return "void";
+      case Token.TYPEOF:
+        return "typeof";
+      case Token.INSTANCEOF:
+        return "instanceof";
+      default:
+        return null;
     }
   }
 

@@ -631,7 +631,6 @@ class GlobalNamespace
       if (parent != null) {
         switch (parent.getType()) {
           case Token.EXPR_RESULT:
-            break;
           case Token.IF:
           case Token.INSTANCEOF:
           case Token.TYPEOF:
@@ -652,9 +651,7 @@ class GlobalNamespace
             }
             break;
           case Token.NEW:
-            type = n == parent.getFirstChild()
-                   ? Ref.Type.DIRECT_GET
-                   : Ref.Type.ALIASING_GET;
+            type = n == parent.getFirstChild() ? Ref.Type.DIRECT_GET : Ref.Type.ALIASING_GET;
             break;
           case Token.OR:
           case Token.AND:

@@ -250,14 +250,14 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           // Only traverse the body of the for loop.
           return n == parent.getLastChild();
 
-        // Skip the conditions.
+        case Token.DO:
+          // Only traverse the body of the do-while.
+          return n != parent.getFirstChild().getNext();
+
+        // Skip conditions, and only traverse the body of the cases
         case Token.IF:
         case Token.WHILE:
         case Token.WITH:
-          return n != parent.getFirstChild();
-        case Token.DO:
-          return n != parent.getFirstChild().getNext();
-        // Only traverse the body of the cases
         case Token.SWITCH:
         case Token.CASE:
         case Token.CATCH:

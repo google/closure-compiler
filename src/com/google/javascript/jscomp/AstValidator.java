@@ -148,8 +148,6 @@ public final class AstValidator implements CompilerPass {
         validateContinue(n);
         return;
       case Token.EMPTY:
-        validateChildless(n);
-        return;
       case Token.DEBUGGER:
         validateChildless(n);
         return;
@@ -163,8 +161,7 @@ public final class AstValidator implements CompilerPass {
         validateExport(n);
         return;
       default:
-        violation("Expected statement but was "
-            + Token.name(n.getType()) + ".", n);
+        violation("Expected statement but was " + Token.name(n.getType()) + ".", n);
     }
   }
 
@@ -191,34 +188,6 @@ public final class AstValidator implements CompilerPass {
       case Token.BITNOT:
       case Token.CAST:
         validateUnaryOp(n);
-        return;
-
-      // General binary ops
-      case Token.COMMA:
-      case Token.OR:
-      case Token.AND:
-      case Token.BITOR:
-      case Token.BITXOR:
-      case Token.BITAND:
-      case Token.EQ:
-      case Token.NE:
-      case Token.SHEQ:
-      case Token.SHNE:
-      case Token.LT:
-      case Token.GT:
-      case Token.LE:
-      case Token.GE:
-      case Token.INSTANCEOF:
-      case Token.IN:
-      case Token.LSH:
-      case Token.RSH:
-      case Token.URSH:
-      case Token.SUB:
-      case Token.ADD:
-      case Token.MUL:
-      case Token.MOD:
-      case Token.DIV:
-        validateBinaryOp(n);
         return;
 
       // Assignments
@@ -254,7 +223,32 @@ public final class AstValidator implements CompilerPass {
         validateName(n);
         return;
 
+      // General binary ops
       case Token.GETELEM:
+      case Token.COMMA:
+      case Token.OR:
+      case Token.AND:
+      case Token.BITOR:
+      case Token.BITXOR:
+      case Token.BITAND:
+      case Token.EQ:
+      case Token.NE:
+      case Token.SHEQ:
+      case Token.SHNE:
+      case Token.LT:
+      case Token.GT:
+      case Token.LE:
+      case Token.GE:
+      case Token.INSTANCEOF:
+      case Token.IN:
+      case Token.LSH:
+      case Token.RSH:
+      case Token.URSH:
+      case Token.SUB:
+      case Token.ADD:
+      case Token.MUL:
+      case Token.MOD:
+      case Token.DIV:
         validateBinaryOp(n);
         return;
 
@@ -303,8 +297,7 @@ public final class AstValidator implements CompilerPass {
         return;
 
       default:
-        violation("Expected expression but was "
-            + Token.name(n.getType()), n);
+        violation("Expected expression but was " + Token.name(n.getType()), n);
     }
   }
 

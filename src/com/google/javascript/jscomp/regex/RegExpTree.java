@@ -774,7 +774,7 @@ public abstract class RegExpTree {
       }
       if (flags.indexOf('i') >= 0) {
         String canonicalized = CaseCanonicalize.caseCanonicalize(text);
-        if (text != canonicalized) {
+        if (!text.equals(canonicalized)) {
           return new Text(canonicalized);
         }
       }
@@ -889,9 +889,11 @@ public abstract class RegExpTree {
       // This mirrors the branches that renders a suffix in appendSourceCode below.
       if (max == Integer.MAX_VALUE) {
         switch (min) {
-          case 0: return 1;  // *
-          case 1: return 1;  // +
-          default: return 3 + numDecimalDigits(min);  // {3,}
+          case 0:  // *
+          case 1:  // +
+            return 1;
+          default:
+            return 3 + numDecimalDigits(min); // {3,}
         }
       }
       if (min == 0 && max == 1) {

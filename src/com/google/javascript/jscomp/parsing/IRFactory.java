@@ -297,17 +297,11 @@ class IRFactory {
         reservedKeywords = null; // use TokenStream.isKeyword instead
         break;
       case ECMASCRIPT5:
-        reservedKeywords = ES5_RESERVED_KEYWORDS;
-        break;
-      case ECMASCRIPT5_STRICT:
-        reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
-        break;
       case ECMASCRIPT6:
         reservedKeywords = ES5_RESERVED_KEYWORDS;
         break;
+      case ECMASCRIPT5_STRICT:
       case ECMASCRIPT6_STRICT:
-        reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
-        break;
       case ECMASCRIPT6_TYPED:
         reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
         break;
@@ -623,14 +617,6 @@ class IRFactory {
     if (info != null && info.hasType()) {
       boolean valid = false;
       switch (n.getType()) {
-        // Casts, variable declarations, and exports are valid.
-        case Token.CAST:
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
-        case Token.EXPORT:
-          valid = true;
-          break;
         // Function declarations are valid
         case Token.FUNCTION:
           valid = isFunctionDeclaration(n);
@@ -654,7 +640,12 @@ class IRFactory {
               break;
           }
           break;
-        // Object literal properties are valid
+        // Casts, variable declarations, exports, and object literal properties are all valid.
+        case Token.CAST:
+        case Token.VAR:
+        case Token.LET:
+        case Token.CONST:
+        case Token.EXPORT:
         case Token.STRING_KEY:
         case Token.GETTER_DEF:
         case Token.SETTER_DEF:
@@ -662,8 +653,9 @@ class IRFactory {
           break;
         // Property assignments are valid, if at the root of an expression.
         case Token.ASSIGN:
-          valid = n.getParent().isExprResult()
-            && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
+          valid =
+              n.getParent().isExprResult()
+                  && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
           break;
         case Token.GETPROP:
           valid = n.getParent().isExprResult() && n.isQualifiedName();
@@ -674,9 +666,7 @@ class IRFactory {
       }
 
       if (!valid) {
-        errorReporter.warning(MISPLACED_TYPE_ANNOTATION,
-            sourceName,
-            n.getLineno(), n.getCharno());
+        errorReporter.warning(MISPLACED_TYPE_ANNOTATION, sourceName, n.getLineno(), n.getCharno());
       }
     }
   }
@@ -815,7 +805,6 @@ class IRFactory {
   private boolean shouldAttachJSDocHere(ParseTree tree) {
     switch (tree.type) {
       case EXPRESSION_STATEMENT:
-        return false;
       case LABELLED_STATEMENT:
         return false;
       case CALL_EXPRESSION:
@@ -2615,10 +2604,6 @@ class IRFactory {
         case SPREAD_EXPRESSION:
           return processSpreadExpression(node.asSpreadExpression());
 
-          // TODO(johnlenz): handle these or remove parser support
-        case ARGUMENT_LIST:
-          break;
-
         // ES6 Typed
         case TYPE_NAME:
           return processTypeName(node.asTypeName());
@@ -2642,6 +2627,8 @@ class IRFactory {
         case ENUM_DECLARATION:
           return processEnumDeclaration(node.asEnumDeclaration());
 
+          // TODO(johnlenz): handle these or remove parser support
+        case ARGUMENT_LIST:
         default:
           break;
       }

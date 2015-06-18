@@ -335,22 +335,19 @@ import java.util.Set;
 
     int indexOfChildInParent = siblings.indexOf(child);
 
-    switch(parent.getType()) {
+    switch (parent.getType()) {
       case Token.IF:
       case Token.HOOK:
         return (indexOfChildInParent == 1 || indexOfChildInParent == 2);
-      case Token.WHILE:
-      case Token.DO:
-        return true;
       case Token.FOR:
         // Only initializer is not control dependent
         return indexOfChildInParent != 0;
       case Token.SWITCH:
-          return indexOfChildInParent > 0;
+        return indexOfChildInParent > 0;
+      case Token.WHILE:
+      case Token.DO:
       case Token.AND:
-        return true;
       case Token.OR:
-        return true;
       case Token.FUNCTION:
         return true;
 

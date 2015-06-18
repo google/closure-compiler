@@ -508,17 +508,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         typeable = visitName(t, n, parent);
         break;
 
-      case Token.PARAM_LIST:
-        typeable = false;
-        break;
-
       case Token.COMMA:
         ensureTyped(t, n, getJSType(n.getLastChild()));
-        break;
-
-      case Token.TRUE:
-      case Token.FALSE:
-        ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
       case Token.THIS:
@@ -531,14 +522,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case Token.NUMBER:
         ensureTyped(t, n, NUMBER_TYPE);
-        break;
-
-      case Token.STRING:
-        ensureTyped(t, n, STRING_TYPE);
-        break;
-
-      case Token.STRING_KEY:
-        typeable = false;
         break;
 
       case Token.GETTER_DEF:
@@ -556,8 +539,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
       case Token.GETPROP:
         visitGetProp(t, n, parent);
-        typeable = !(parent.isAssign() &&
-                     parent.getFirstChild() == n);
+        typeable = !(parent.isAssign() && parent.getFirstChild() == n);
         break;
 
       case Token.GETELEM:
@@ -595,6 +577,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, NUMBER_TYPE);
         break;
 
+      case Token.TRUE:
+      case Token.FALSE:
       case Token.NOT:
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
@@ -603,6 +587,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         ensureTyped(t, n, VOID_TYPE);
         break;
 
+      case Token.STRING:
       case Token.TYPEOF:
         ensureTyped(t, n, STRING_TYPE);
         break;
@@ -610,8 +595,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.BITNOT:
         childType = getJSType(n.getFirstChild());
         if (!childType.matchesInt32Context()) {
-          report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getType()),
-              childType.toString());
+          report(t, n, BIT_OPERATION, NodeUtil.opToStr(n.getType()), childType.toString());
         }
         ensureTyped(t, n, NUMBER_TYPE);
         break;
@@ -661,16 +645,19 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           }
         } else {
           // SHEQ or SHNE
-          if (!leftTypeRestricted.canTestForShallowEqualityWith(
-                  rightTypeRestricted)) {
-            result = n.getType() == Token.SHEQ ?
-                TernaryValue.FALSE : TernaryValue.TRUE;
+          if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
+            result = n.getType() == Token.SHEQ ? TernaryValue.FALSE : TernaryValue.TRUE;
           }
         }
 
         if (result != TernaryValue.UNKNOWN) {
-          report(t, n, DETERMINISTIC_TEST, leftType.toString(),
-              rightType.toString(), result.toString());
+          report(
+              t,
+              n,
+              DETERMINISTIC_TEST,
+              leftType.toString(),
+              rightType.toString(),
+              result.toString());
         }
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
@@ -683,13 +670,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         leftType = getJSType(n.getFirstChild());
         rightType = getJSType(n.getLastChild());
         if (rightType.isNumber()) {
-          validator.expectNumber(
-              t, n, leftType, "left side of numeric comparison");
+          validator.expectNumber(t, n, leftType, "left side of numeric comparison");
         } else if (leftType.isNumber()) {
-          validator.expectNumber(
-              t, n, rightType, "right side of numeric comparison");
-        } else if (leftType.matchesNumberContext() &&
-                   rightType.matchesNumberContext()) {
+          validator.expectNumber(t, n, rightType, "right side of numeric comparison");
+        } else if (leftType.matchesNumberContext() && rightType.matchesNumberContext()) {
           // OK.
         } else {
           // Whether the comparison is numeric will be determined at runtime
@@ -697,12 +681,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           // should match a string context.
           String message = "left side of comparison";
           validator.expectString(t, n, leftType, message);
-          validator.expectNotNullOrUndefined(
-              t, n, leftType, message, getNativeType(STRING_TYPE));
+          validator.expectNotNullOrUndefined(t, n, leftType, message, getNativeType(STRING_TYPE));
           message = "right side of comparison";
           validator.expectString(t, n, rightType, message);
-          validator.expectNotNullOrUndefined(
-              t, n, rightType, message, getNativeType(STRING_TYPE));
+          validator.expectNotNullOrUndefined(t, n, rightType, message, getNativeType(STRING_TYPE));
         }
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
@@ -725,8 +707,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         rightType = getJSType(right).restrictByNotNullOrUndefined();
         validator.expectAnyObject(
             t, left, getJSType(left), "deterministic instanceof yields false");
-        validator.expectActualObject(
-            t, right, rightType, "instanceof requires an object");
+        validator.expectActualObject(t, right, rightType, "instanceof requires an object");
         ensureTyped(t, n, BOOLEAN_TYPE);
         break;
 
@@ -786,7 +767,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         visitFunction(t, n);
         break;
 
-      // These nodes have no interesting type behavior.
+        // These nodes have no interesting type behavior.
+        // These nodes require data flow analysis.
+      case Token.PARAM_LIST:
+      case Token.STRING_KEY:
       case Token.LABEL:
       case Token.LABEL_NAME:
       case Token.SWITCH:
@@ -801,10 +785,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case Token.CONTINUE:
       case Token.DEBUGGER:
       case Token.THROW:
-        typeable = false;
-        break;
-
-      // These nodes require data flow analysis.
       case Token.DO:
       case Token.IF:
       case Token.WHILE:
@@ -830,8 +810,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           ensureTyped(t, n);
         } else {
           // If this is an enum, then give that type to the objectlit as well.
-          if ((n.isObjectLit())
-              && (parent.getJSType() instanceof EnumType)) {
+          if ((n.isObjectLit()) && (parent.getJSType() instanceof EnumType)) {
             ensureTyped(t, n, parent.getJSType());
           } else {
             ensureTyped(t, n);

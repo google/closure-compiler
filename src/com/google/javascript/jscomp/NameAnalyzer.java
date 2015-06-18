@@ -1856,17 +1856,20 @@ final class NameAnalyzer implements CompilerPass {
       case Token.NAME:
       case Token.RETURN:
         return true;
+
       case Token.AND:
       case Token.OR:
       case Token.HOOK:
-        return parent.getFirstChild() == n;
-      case Token.FOR:
-        return parent.getFirstChild().getNext() == n;
       case Token.IF:
       case Token.WHILE:
         return parent.getFirstChild() == n;
+
+      case Token.FOR:
+        return parent.getFirstChild().getNext() == n;
+
       case Token.DO:
         return parent.getLastChild() == n;
+
       default:
         return false;
     }
