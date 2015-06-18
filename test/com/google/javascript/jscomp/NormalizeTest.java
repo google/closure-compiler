@@ -461,13 +461,11 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testExposeSimple() {
-    setExpectParseWarningsThisTest();
     test("var x = {}; /** @expose */ x.y = 3; x.y = 5;",
          "var x = {}; x['y'] = 3; x['y'] = 5;");
   }
 
   public void testExposeComplex() {
-    setExpectParseWarningsThisTest();
     test(
         "var x = {/** @expose */ a: 1, b: 2};"
         + "x.a = 3; /** @expose */ x.b = 5;",
