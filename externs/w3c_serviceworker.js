@@ -271,6 +271,9 @@ ServiceWorkerGlobalScope.prototype.onevicted;
 /** @type {?function(!MessageEvent)} */
 ServiceWorkerGlobalScope.prototype.onmessage;
 
+/** @type {IDBFactory} */
+ServiceWorkerGlobalScope.prototype.indexedDB;
+
 /**
  * @see http://www.w3.org/TR/service-workers/#service-worker-client-interface
  * @constructor
