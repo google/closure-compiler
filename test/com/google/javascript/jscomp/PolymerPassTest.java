@@ -638,6 +638,87 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  /**
+   * Test that behavior property types are copied correctly to multiple elements. See b/21929103.
+   */
+  public void testBehaviorForMultipleElements() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var FunObject = function() {};",
+            "/** @polymerBehavior */",
+            "var FunBehavior = {",
+            "  properties: {",
+            "    /** @type {!FunObject} */",
+            "    funThing: {",
+            "      type: Object,",
+            "    }",
+            "  },",
+            "};",
+            "var A = Polymer({",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    pets: {",
+            "      type: Array,",
+            "      notify: true,",
+            "    },",
+            "    name: String,",
+            "  },",
+            "  behaviors: [ FunBehavior ],",
+            "});",
+            "var B = Polymer({",
+            "  is: 'y-element',",
+            "  properties: {",
+            "    foo: String,",
+            "  },",
+            "  behaviors: [ FunBehavior ],",
+            "});"),
+
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var FunObject = function() {};",
+            "/** @polymerBehavior @nocollapse */",
+            "var FunBehavior = {",
+            "  properties: {",
+            "    funThing: {",
+            "      type: Object,",
+            "    }",
+            "  },",
+            "};",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface}*/",
+            "var A = function() {};",
+            "/** @type {!FunObject} */",
+            "A.prototype.funThing;",
+            "/** @type {!Array} */",
+            "A.prototype.pets;",
+            "/** @type {string} */",
+            "A.prototype.name;",
+            "A = Polymer(/** @lends {A.prototype} */ {",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    pets: {",
+            "      type: Array,",
+            "      notify: true,",
+            "    },",
+            "    name: String,",
+            "  },",
+            "  behaviors: [ FunBehavior ],",
+            "});",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerBInterface}*/",
+            "var B = function() {};",
+            "/** @type {!FunObject} */",
+            "B.prototype.funThing;",
+            "/** @type {string} */",
+            "B.prototype.foo;",
+            "B = Polymer(/** @lends {B.prototype} */ {",
+            "  is: 'y-element',",
+            "  properties: {",
+            "    foo: String,",
+            "  },",
+            "  behaviors: [ FunBehavior ],",
+            "});"));
+  }
+
   public void testSimpleBehavior() {
     test(
         LINE_JOINER.join(

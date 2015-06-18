@@ -590,7 +590,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     appendBehaviorMembersToBlock(cls, block);
     List<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     addInterfaceExterns(cls, readOnlyProps);
-    removePropertyDocs(cls);
+    removePropertyDocs(objLit);
 
     block.useSourceInfoFromForTree(exprRoot);
     Node stmts = block.removeChildren();
@@ -706,8 +706,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   /**
    * Remove all JSDocs from properties of a class definition
    */
-  private void removePropertyDocs(final ClassDefinition cls) {
-    for (MemberDefinition prop : cls.props) {
+  private void removePropertyDocs(final Node objLit) {
+    for (MemberDefinition prop : extractProperties(objLit)) {
       prop.name.removeProp(Node.JSDOC_INFO_PROP);
     }
   }
