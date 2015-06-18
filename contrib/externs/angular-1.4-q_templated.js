@@ -60,6 +60,7 @@ angular.$q.Promise;
  *              unknown(),
  *              V)))))
  *  =:
+ * @override
  */
 angular.$q.Promise.prototype.then =
     function(opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};

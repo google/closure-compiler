@@ -52,7 +52,7 @@ angular.$http.Response.prototype.config;
 
 /**
  * @constructor
- * @extends angular.$q.Promise.<!angular.$http.Response.<T>>
+ * @extends {angular.$q.Promise.<!angular.$http.Response.<T>>}
  * @template T
  */
 angular.$http.HttpPromise;
@@ -64,6 +64,7 @@ angular.$http.HttpPromise;
  * @param {?(function(*): *)=} opt_notifyCallback
  * @return {!angular.$http.HttpPromise.<RESULT>}
  * @template RESULT
+ * @override
  */
 angular.$http.HttpPromise.prototype.then =
     function(opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};
@@ -71,12 +72,14 @@ angular.$http.HttpPromise.prototype.then =
 /**
  * @param {?function(?)} callback
  * @return {!angular.$http.HttpPromise.<T>}
+ * @override
  */
 angular.$http.HttpPromise.prototype.catch = function(callback) {};
 
 /**
  * @param {?function(?)} callback
  * @return {!angular.$http.HttpPromise.<T>}
+ * @override
  */
 angular.$http.HttpPromise.prototype.finally = function(callback) {};
 

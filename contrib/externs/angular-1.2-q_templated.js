@@ -46,6 +46,7 @@ angular.$q.Promise;
  * @param {?(function(*): *)=} opt_notifyCallback
  * @return {!angular.$q.Promise.<RESULT>}
  * @template RESULT
+ * @override
  */
 angular.$q.Promise.prototype.then =
     function(opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};

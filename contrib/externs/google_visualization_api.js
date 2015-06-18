@@ -421,6 +421,7 @@ google.visualization.DataTable.prototype.sort = function(sortColumns) {};
 
 /**
  * @return {string} JSON representation.
+ * @override
  */
 google.visualization.DataTable.prototype.toJSON = function() {};
 
@@ -877,6 +878,7 @@ google.visualization.DataView.prototype.toDataTable = function() {};
 
 /**
  * @return {string} JSON representation.
+ * @override
  */
 google.visualization.DataView.prototype.toJSON = function() {};
 
@@ -2018,6 +2020,7 @@ google.visualization.ChartWrapper.prototype.draw = function(opt_container) {};
 
 /**
  * @return {string} JSON representation.
+ * @override
  */
 google.visualization.ChartWrapper.prototype.toJSON = function() {};
 
@@ -2188,6 +2191,7 @@ google.visualization.ControlWrapper.prototype.draw = function(opt_container) {};
 
 /**
  * @return {string} JSON representation.
+ * @override
  */
 google.visualization.ControlWrapper.prototype.toJSON = function() {};
 

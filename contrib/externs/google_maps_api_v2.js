@@ -382,6 +382,7 @@ google.maps.Bounds;
 /**
  * @nosideeffects
  * @return {string}
+ * @override
  */
 GBounds.prototype.toString = function() {};
 
@@ -888,6 +889,7 @@ GPoint.prototype.equals = function(other) {};
 /**
  * @nosideeffects
  * @return {string}
+ * @override
  */
 GPoint.prototype.toString = function() {};
 
@@ -930,6 +932,7 @@ GSize.prototype.equals = function(other) {};
 /**
  * @nosideeffects
  * @return {string}
+ * @override
  */
 GSize.prototype.toString = function() {};
 
@@ -2038,6 +2041,7 @@ google.maps.MercatorProjection;
  * @param {GLatLng} latlng
  * @param {number} zoom
  * @return {GPoint}
+ * @override
  */
 GMercatorProjection.prototype.fromLatLngToPixel = function(latlng, zoom) {};
 
@@ -2047,6 +2051,7 @@ GMercatorProjection.prototype.fromLatLngToPixel = function(latlng, zoom) {};
  * @param {number} zoom
  * @param {boolean=} unbounded
  * @return {GLatLng}
+ * @override
  */
 GMercatorProjection.prototype.fromPixelToLatLng =
     function(pixel, zoom, unbounded) {};
@@ -2056,6 +2061,7 @@ GMercatorProjection.prototype.fromPixelToLatLng =
  * @param {number} zoom
  * @param {number} tilesize
  * @return {boolean}
+ * @override
  */
 GMercatorProjection.prototype.tileCheckRange =
     function(tile, zoom, tilesize) {};
@@ -2063,6 +2069,7 @@ GMercatorProjection.prototype.tileCheckRange =
 /**
  * @nosideeffects
  * @param {number} zoom
+ * @override
  */
 GMercatorProjection.prototype.getWrapWidth = function(zoom) {};
 

@@ -1361,6 +1361,7 @@ jQuery.jqXHR.prototype.onreadystatechange = function (callback) {};
  * @param {function()=} failFilter
  * @param {function()=} progressFilter
  * @return {jQuery.jqXHR}
+ * @override
  */
 jQuery.jqXHR.prototype.pipe =
     function(doneFilter, failFilter, progressFilter) {};

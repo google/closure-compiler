@@ -223,6 +223,7 @@ YouTubePlayer.prototype.getDuration = function() {};
  * @param {string} event The event to listen for.
  * @param {string|EventListener|Function} listener The function to call
  *     when the event occurs.
+ * @override
  */
 YouTubePlayer.prototype.addEventListener = function(event, listener) {};
 
