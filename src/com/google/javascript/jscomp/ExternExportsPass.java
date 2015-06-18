@@ -439,6 +439,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           definitionMap.put(name, parent);
         }
 
+        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
+        if (jsdoc != null && jsdoc.isExport()) {
+          handleExportDefinition(t, n);
+        }
+
         // Only handle function calls. This avoids assignments
         // that do not export items directly.
         if (!parent.isCall()) {
@@ -446,16 +451,17 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         }
 
         if (exportPropertyFunctionNames.contains(name)) {
-          handlePropertyExport(parent);
+          handlePropertyExportCall(parent);
         }
 
         if (exportSymbolFunctionNames.contains(name)) {
-          handleSymbolExport(parent);
+          handleSymbolExportCall(parent);
         }
+
     }
   }
 
-  private void handleSymbolExport(Node parent) {
+  private void handleSymbolExportCall(Node parent) {
     // Ensure that we only check valid calls with the 2 arguments
     // (plus the GETPROP node itself).
     if (parent.getChildCount() != 3) {
@@ -476,7 +482,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     this.exports.add(new SymbolExport(nameArg.getString(), valueArg));
   }
 
-  private void handlePropertyExport(Node parent) {
+  private void handlePropertyExportCall(Node parent) {
     // Ensure that we only check valid calls with the 3 arguments
     // (plus the GETPROP node itself).
     if (parent.getChildCount() != 4) {
@@ -504,4 +510,30 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
                            nameArg.getString(),
                            valueArg));
   }
+
+  private void handleExportDefinition(NodeTraversal t, Node definitionNode) {
+    // For now, only handle properties defined on this inside of a constructor
+    if (!definitionNode.isGetProp()
+        || !definitionNode.getFirstChild().isThis()) {
+      // Not a property on THIS
+      return;
+    }
+
+    Node constructorNode = t.getEnclosingFunction();
+    JSDocInfo constructorJsdoc = NodeUtil.getBestJSDocInfo(constructorNode);
+    if (constructorJsdoc == null || !constructorJsdoc.isConstructor()) {
+      // Not inside a constructor
+      return;
+    }
+
+    String constructorName = NodeUtil.getFunctionName(constructorNode);
+    String propertyName = definitionNode.getLastChild().getString();
+
+    // Add the export to the list.
+    this.exports.add(
+        new PropertyExport(constructorName + ".prototype",
+                           propertyName,
+                           NodeUtil.getInitializer(definitionNode)));
+  }
+
 }
