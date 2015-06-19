@@ -25,6 +25,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeDeclarationsIR;
 
 /**
  * Converts {@link Node#getDeclaredTypeExpression()} to {@link JSDocInfo#getType()} type
@@ -55,41 +56,61 @@ public final class Es6TypedToEs6Converter
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.getType() == Token.CLASS) {
-      Node classNode = n;
+    switch (n.getType()) {
+      case Token.CLASS:
+        visitClass(n, parent);
+        break;
+      case Token.NAME:
+      case Token.REST:
+      case Token.FUNCTION: // Return types are colon types on the function node
+        visitColonType(n);
+        break;
+      default:
 
-      Node classMembers = classNode.getLastChild();
-
-      ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
-
-      for (Node member : classMembers.children()) {
-        // Functions are handled by the regular Es6ToEs3Converter
-        if (!member.isMemberVariableDef() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)) {
-          continue;
-        }
-
-        if (metadata == null) {
-          compiler.report(JSError.make(n, CANNOT_CONVERT_MEMBER_VARIABLES));
-          return;
-        }
-
-        member.getParent().removeChild(member);
-
-        Node classNameAccess = NodeUtil.newQName(compiler, metadata.fullClassName);
-        Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, classNameAccess, "prototype");
-        Node qualifiedMemberAccess =
-            Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, classNameAccess,
-                prototypeAcess);
-        // Copy type information.
-        qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
-        Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
-        newNode.useSourceInfoIfMissingFromForTree(member);
-        metadata.insertNodeAndAdvance(newNode);
-        compiler.reportCodeChange();
-      }
     }
+  }
 
-    TypeDeclarationNode type = n.getDeclaredTypeExpression();
+  private void visitClass(Node n, Node parent) {
+    Node classNode = n;
+    Node classMembers = classNode.getLastChild();
+    ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
+
+    for (Node member : classMembers.children()) {
+      // Functions are handled by the regular Es6ToEs3Converter
+      if (!member.isMemberVariableDef() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)) {
+        continue;
+      }
+
+      if (metadata == null) {
+        compiler.report(JSError.make(n, CANNOT_CONVERT_MEMBER_VARIABLES));
+        return;
+      }
+
+      member.getParent().removeChild(member);
+
+      Node classNameAccess = NodeUtil.newQName(compiler, metadata.fullClassName);
+      Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, classNameAccess, "prototype");
+      Node qualifiedMemberAccess =
+          Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, classNameAccess,
+              prototypeAcess);
+      // Copy type information.
+      visitColonType(member);
+      qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
+      Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
+      newNode.useSourceInfoIfMissingFromForTree(member);
+      metadata.insertNodeAndAdvance(newNode);
+      compiler.reportCodeChange();
+    }
+  }
+
+  private void visitColonType(Node n) {
+    Node type = n.getDeclaredTypeExpression();
+    boolean hasColonType = type != null;
+    if (n.isRest() && hasColonType) {
+      type = new Node(Token.ELLIPSIS, convertWithLocation(type.removeFirstChild()));
+    } else {
+      type = maybeProcessOptionalParameter(n, type);
+    }
     if (type == null) {
       return;
     }
@@ -99,20 +120,40 @@ public final class Es6TypedToEs6Converter
         "Nodes must not have both type declarations and JSDoc types");
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
 
-    Node typeRoot = convertWithLocation(type);
-    JSTypeExpression typeExpression = new JSTypeExpression(typeRoot, n.getSourceFileName());
-    if (n.isFunction()) {
-      builder.recordReturnType(typeExpression);
-    } else if (n.getType() == Token.MEMBER_VARIABLE_DEF) {
-      builder.recordType(typeExpression);
-    } else {
-      builder.recordType(typeExpression);
-      builder.recordInlineType();
+    JSTypeExpression typeExpression = new JSTypeExpression(type, n.getSourceFileName());
+    switch (n.getType()) {
+      case Token.FUNCTION:
+        builder.recordReturnType(typeExpression);
+        break;
+      case Token.MEMBER_VARIABLE_DEF:
+        builder.recordType(typeExpression);
+        break;
+      default:
+        builder.recordType(typeExpression);
+        builder.recordInlineType();
     }
 
     info = builder.build();
     n.setJSDocInfo(info);
-    n.setDeclaredTypeExpression(null); // clear out declared type
+
+    if (hasColonType) {
+      n.setDeclaredTypeExpression(null); // clear out declared type
+      compiler.reportCodeChange();
+    }
+  }
+
+  private Node maybeCreateAnyType(Node type) {
+    return type == null ? TypeDeclarationsIR.anyType() : type;
+  }
+
+  private Node maybeProcessOptionalParameter(Node n, Node type) {
+    if (n.getBooleanProp(Node.OPT_PARAM_ES6_TYPED)) {
+      n.putBooleanProp(Node.OPT_PARAM_ES6_TYPED, false);
+      type = maybeCreateAnyType(type);
+      return new Node(Token.EQUALS, convertWithLocation(type));
+    } else {
+      return type == null ? null : convertWithLocation(type);
+    }
   }
 
   private Node convertWithLocation(Node type) {
@@ -156,11 +197,35 @@ public final class Es6TypedToEs6Converter
       }
       // Composite types.
       case Token.FUNCTION_TYPE:
+        Node returnType = type.getFirstChild();
+        Node paramList = new Node(Token.PARAM_LIST);
+        for (Node param = returnType.getNext(); param != null; param = param.getNext()) {
+          Node paramType = param.getDeclaredTypeExpression();
+          if (param.isRest()) {
+            if (paramType == null) {
+              paramType = new Node(Token.ELLIPSIS, new Node(Token.QMARK));
+            } else {
+              paramType = new Node(Token.ELLIPSIS,
+                  convertWithLocation(paramType.getFirstChild()));
+            }
+          } else {
+            paramType = maybeProcessOptionalParameter(param, maybeCreateAnyType(paramType));
+          }
+          paramList.addChildToBack(paramType);
+        }
+        Node function = new Node(Token.FUNCTION);
+        function.addChildToBack(paramList);
+        function.addChildToBack(convertWithLocation(returnType));
+        return function;
       case Token.UNION_TYPE:
-      case Token.OPTIONAL_PARAMETER:
+        Node pipe = new Node(Token.PIPE);
+        for (Node child : type.children()) {
+          pipe.addChildToBack(convertWithLocation(child));
+        }
+        return pipe;
       case Token.RECORD_TYPE:
       default:
-        // TODO(martinprobst): Implement.
+        // TODO(moz): Implement.
         break;
     }
     throw new IllegalArgumentException(

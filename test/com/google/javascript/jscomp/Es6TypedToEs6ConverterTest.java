@@ -15,12 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.parsing.JsDocInfoParser;
-import com.google.javascript.jscomp.testing.NodeSubject;
-import com.google.javascript.rhino.JSTypeExpression;
-import com.google.javascript.rhino.Node;
 
 public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
@@ -50,7 +45,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     return optimizer;
   }
 
-  public void testMemberVariable() throws Exception {
+  public void testMemberVariable() {
     test(
         LINE_JOINER.join(
             "class C {",
@@ -68,23 +63,23 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
             "/** @type {number} */ C.prototype.mv;"));
   }
 
-  public void testMemberVariable_noCtor() throws Exception {
+  public void testMemberVariable_noCtor() {
     test("class C { mv: number; }",
          "class C {} /** @type {number} */ C.prototype.mv;");
   }
 
-  public void testMemberVariable_static() throws Exception {
+  public void testMemberVariable_static() {
     test("class C { static smv; }", "class C {} C.smv;");
   }
 
-  public void testMemberVariable_anonymousClass() throws Exception {
+  public void testMemberVariable_anonymousClass() {
     testSame("(class {})");
-
+    testSame("(class { f() {}})");
     testError("(class { x: number; })",
         Es6TypedToEs6Converter.CANNOT_CONVERT_MEMBER_VARIABLES);
   }
 
-  public void testComputedPropertyVariable() throws Exception {
+  public void testComputedPropertyVariable() {
     test(
         LINE_JOINER.join(
             "class C {",
@@ -104,72 +99,63 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
             "/** @type {number} */ C.prototype['mv' + 2];"));
   }
 
-  public void testComputedPropertyVariable_static() throws Exception {
+  public void testComputedPropertyVariable_static() {
     test("class C { static ['smv' + 2]: number; }",
          "class C {} /** @type {number} */ C['smv' + 2];");
   }
 
-  public void testBuiltins() throws Exception {
-    assertTypeConversion("?", "any");
-    assertTypeConversion("number", "number");
-    assertTypeConversion("boolean", "boolean");
-    assertTypeConversion("string", "string");
-    assertTypeConversion("void", "void");
+  public void testUnionType() {
+    test("var x: string | number;", "var /** string | number */ x;");
   }
 
-  public void testNamedType() throws Exception {
-    assertTypeConversion("!foo", "foo");
-    assertTypeConversion("!foo.bar.Baz", "foo.bar.Baz");
+  public void testTypedParameter() {
+    test("function f(p1: number) {}", "function f(/** number */ p1) {}");
   }
 
-  public void testArrayType() throws Exception {
-    assertTypeConversion("!Array.<string>", "string[]");
-    assertTypeConversion("!Array.<!test.Type>", "test.Type[]");
+  public void testOptionalParameter() {
+    test("function f(p1?: number) {}", "function f(/** number= */ p1) {}");
+    test("function f(p1?) {}", "function f(/** ?= */ p1) {}");
   }
 
-  public void testParameterizedType() throws Exception {
-    assertTypeConversion("!test.Type<string>", "test.Type<string>");
-    assertTypeConversion("!test.Type<!A, !B>", "test.Type<A, B>");
-    assertTypeConversion("!test.Type<!A<!X>, !B>", "test.Type<A<X>, B>");
+  public void testRestParameter() {
+    test("function f(...p1: number[]) {}", "function f(/** ...number */ ...p1) {}");
+    test("function f(...p1) {}", "function f(...p1) {}");
   }
 
-  public void testParameterizedArrayType() throws Exception {
-    assertTypeConversion("!Array.<!test.Type<number>>", "test.Type<number>[]");
+  public void testBuiltins() {
+    test("var x: any;", "var /** ? */ x;");
+    test("var x: number;", "var /** number */ x;");
+    test("var x: boolean;", "var /** boolean */ x;");
+    test("var x: string;", "var /** string */ x;");
+    test("var x: void;", "var /** void */ x;");
   }
 
-  public Node parseAndProcess(String js) {
-    Compiler compiler = new Compiler();
-
-    CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
-    compiler.init(
-        ImmutableList.<SourceFile>of(), ImmutableList.of(SourceFile.fromCode("js", js)), options);
-    compiler.parseInputs();
-
-    CompilerPass pass = new Es6TypedToEs6Converter(compiler);
-    pass.process(compiler.getRoot().getFirstChild(), compiler.getRoot().getLastChild());
-
-    return compiler.getRoot().getLastChild();
+  public void testNamedType() {
+    test("var x: foo;", "var /** !foo */ x;");
+    test("var x: foo.bar.Baz;", "var /** !foo.bar.Baz */ x;");
   }
 
-  private void assertTypeConversion(String expected, String typeSyntax) {
-    Node jsDocAst = JsDocInfoParser.parseTypeString(expected);
-    Node block = parseAndProcess("var x: " + typeSyntax + ";");
-    Node script = block.getFirstChild();
-    Node var = script.getFirstChild();
-    Node name = var.getFirstChild();
-
-    JSTypeExpression typeAst = name.getJSDocInfo().getType();
-    assertNotNull(typeSyntax + " should produce a type AST", typeAst);
-
-    NodeSubject.assertNode(typeAst.getRoot()).isEqualTo(jsDocAst);
-    assertNoDeclaredTypes(block);
+  public void testArrayType() {
+    test("var x: string[];", "var /** !Array.<string> */ x;");
+    test("var x: test.Type[];", "var /** !Array.<!test.Type> */ x;");
   }
 
-  private void assertNoDeclaredTypes(Node n) {
-    assertNull("declared type should be removed at " + n, n.getDeclaredTypeExpression());
-    for (Node child : n.children()) {
-      assertNoDeclaredTypes(child);
-    }
+  public void testParameterizedType() {
+    test("var x: test.Type<string>;", "var /** !test.Type<string> */ x;");
+    test("var x: test.Type<A, B>;", "var /** !test.Type<!A, !B> */ x;");
+    test("var x: test.Type<A<X>, B>;", "var /** !test.Type<!A<!X>, !B> */ x;");
+  }
+
+  public void testParameterizedArrayType() {
+    test("var x: test.Type<number>[];", "var /** !Array.<!test.Type<number>> */ x;");
+  }
+
+  public void testFunctionType() {
+    test("var x: (foo: number) => boolean;", "var /** function(number): boolean */ x;");
+    test("var x: (foo?: number) => boolean;", "var /** function(number=): boolean */ x;");
+    test("var x: (...foo: number[]) => boolean;", "var /** function(...number): boolean */ x;");
+    test("var x: (foo, bar?: number) => boolean;", "var /** function(?, number=): boolean */ x;");
+    test("var x: (foo: string, ...bar) => boolean;",
+         "var /** function(string, ...?): boolean */ x;");
   }
 }
