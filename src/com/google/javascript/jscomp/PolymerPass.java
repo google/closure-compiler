@@ -606,7 +606,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     addInterfaceExterns(cls, readOnlyProps);
     removePropertyDocs(objLit);
 
-    block.useSourceInfoFromForTree(exprRoot);
+    block.useSourceInfoIfMissingFromForTree(exprRoot);
     Node stmts = block.removeChildren();
     Node parent = exprRoot.getParent();
 
