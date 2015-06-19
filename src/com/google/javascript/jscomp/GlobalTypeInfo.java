@@ -2386,7 +2386,6 @@ class GlobalTypeInfo implements CompilerPass {
       }
       JSType type = null;
       boolean isFormal = false;
-      boolean isFromExterns = false;
       boolean isForwardDeclaration = false;
       boolean isTypeVar = false;
       if (locals.containsKey(name)) {
@@ -2408,7 +2407,6 @@ class GlobalTypeInfo implements CompilerPass {
         isTypeVar = true;
         type = JSType.fromTypeVar(name);
       } else if (externs.containsKey(name)) {
-        isFromExterns = true;
         type = externs.get(name);
       } else if (unknownTypeNames.contains(name)) {
         isForwardDeclaration = true;
@@ -2423,7 +2421,6 @@ class GlobalTypeInfo implements CompilerPass {
           isFormal,
           isTypeVar,
           constVars.contains(name),
-          isFromExterns,
           isForwardDeclaration);
     }
 
@@ -2438,7 +2435,7 @@ class GlobalTypeInfo implements CompilerPass {
       Declaration decl = ns.getDeclaration(qname.getAllButLeftmost());
       if (decl == null && unknownTypeNames.contains(qname.toString())) {
         return new Declaration(
-            JSType.UNKNOWN, null, null, null, null, null, false, false, false, false, true);
+            JSType.UNKNOWN, null, null, null, null, null, false, false, false, true);
       }
       return decl;
     }

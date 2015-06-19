@@ -36,14 +36,13 @@ public class Declaration {
   private boolean isFormal;
   private boolean isTypeVar;
   private boolean isConstant;
-  private boolean isFromExterns;
   private boolean isForwardDeclaration;
 
   public Declaration(JSType simpleType,
       Typedef typedef, NamespaceLit namespaceLit, EnumType enumType,
       DeclaredTypeRegistry functionScope, RawNominalType nominal,
       boolean isFormal, boolean isTypeVar,
-      boolean isConstant, boolean isFromExterns, boolean isForwardDeclaration) {
+      boolean isConstant, boolean isForwardDeclaration) {
     this.simpleType = simpleType;
     this.typedef = typedef;
     this.namespaceLit = namespaceLit;
@@ -53,7 +52,6 @@ public class Declaration {
     this.isFormal = isFormal;
     this.isTypeVar = isTypeVar;
     this.isConstant = isConstant;
-    this.isFromExterns = isFromExterns;
     this.isForwardDeclaration = isForwardDeclaration;
     this.checkValid();
   }
@@ -116,10 +114,6 @@ public class Declaration {
 
   public boolean isConstant() {
      return isConstant;
-  }
-
-  public boolean isFromExterns() {
-     return isFromExterns;
   }
 
   public boolean isForwardDeclaration() {
