@@ -418,9 +418,9 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return b.meeny+c.miny+b.tiger" +
             "}"},
         new DiagnosticType[]{
-            CheckJSDoc.ANNOTATION_DEPRECATED,
-            CheckJSDoc.ANNOTATION_DEPRECATED,
-            CheckJSDoc.ANNOTATION_DEPRECATED});
+            RhinoErrorReporter.PARSE_ERROR,
+            RhinoErrorReporter.PARSE_ERROR,
+            RhinoErrorReporter.PARSE_ERROR});
   }
 
   public void testCheckSymbolsOff() {

@@ -6705,7 +6705,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "document.getElementById;\n" +
         "var list = /** @type {!Array<string>} */ ['hello', 'you'];\n" +
         "list.push('?');\n" +
-        "document.getElementById('node').innerHTML = list.toString();");
+        "document.getElementById('node').innerHTML = list.toString();",
+        // Parse warning, but still applied.
+        "Type annotations are not allowed here. " +
+        "Are you missing parentheses?");
   }
 
   public void testIssue483() throws Exception {
@@ -7188,7 +7191,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function foo(opt_f) {" +
         "  /** @type {Function} */" +
         "  return opt_f || function () {};" +
-        "}");
+        "}",
+        "Type annotations are not allowed here. Are you missing parentheses?");
   }
 
   /**
