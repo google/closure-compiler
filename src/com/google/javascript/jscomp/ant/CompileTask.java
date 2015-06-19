@@ -80,6 +80,7 @@ public final class CompileTask
   private boolean manageDependencies;
   private boolean prettyPrint;
   private boolean printInputDelimiter;
+  private boolean preferSingleQuotes;
   private boolean generateExports;
   private boolean replaceProperties;
   private boolean forceRecompile;
@@ -107,6 +108,7 @@ public final class CompileTask
     this.manageDependencies = false;
     this.prettyPrint = false;
     this.printInputDelimiter = false;
+    this.preferSingleQuotes = false;
     this.generateExports = false;
     this.replaceProperties = false;
     this.forceRecompile = false;
@@ -271,6 +273,15 @@ public final class CompileTask
   }
 
   /**
+   * Normally, when there are an equal number of single and double quotes
+   * in a string, the compiler will use double quotes. Set this to true
+   * to prefer single quotes.
+   */
+  public void setPreferSingleQuotes(boolean singlequotes) {
+    this.preferSingleQuotes = singlequotes;
+  }
+
+  /**
    * Set force recompile option
    */
   public void setForceRecompile(boolean forceRecompile) {
@@ -412,6 +423,7 @@ public final class CompileTask
 
     options.setPrettyPrint(this.prettyPrint);
     options.setPrintInputDelimiter(this.printInputDelimiter);
+    options.setPreferSingleQuotes(this.preferSingleQuotes);
     options.setGenerateExports(this.generateExports);
 
     options.setLanguageIn(this.languageIn);
