@@ -29,10 +29,12 @@ import java.util.List;
  */
 public final class RhinoErrorReporterTest extends TestCase {
 
+  private boolean reportMisplacedTypeAnnotations;
   private boolean reportEs3Props;
 
   @Override
   protected void setUp() throws Exception {
+    reportMisplacedTypeAnnotations = false;
     reportEs3Props = true;
     super.setUp();
   }
@@ -58,6 +60,25 @@ public final class RhinoErrorReporterTest extends TestCase {
     assertEquals(8, error.getCharno());
   }
 
+  public void testMisplacedTypeAnnotation() throws Exception {
+    reportMisplacedTypeAnnotations = false;
+
+    assertNoWarningOrError("var x = /** @type {string} */ y;");
+
+    reportMisplacedTypeAnnotations = true;
+
+    String message =
+        "Type annotations are not allowed here. " +
+        "Are you missing parentheses?";
+    JSError error = assertWarning(
+        "var x = /** @type {string} */ y;",
+        RhinoErrorReporter.MISPLACED_TYPE_ANNOTATION,
+        message);
+
+    assertEquals(1, error.getLineNumber());
+    assertEquals(30, error.getCharno());
+  }
+
   public void testInvalidEs3Prop() throws Exception {
     reportEs3Props = false;
 
@@ -77,6 +98,19 @@ public final class RhinoErrorReporterTest extends TestCase {
 
     assertEquals(1, error.getLineNumber());
     assertEquals(10, error.getCharno());
+  }
+
+  public void testAnnotationDeprecated() throws Exception {
+    String message =
+        "The @expose annotation is deprecated. Use @nocollapse or @export "
+        + "instead.";
+    JSError error = assertWarning(
+        "/** @expose */ var x = 1;",
+        RhinoErrorReporter.ANNOTATION_DEPRECATED,
+        message);
+
+    assertEquals(1, error.getLineNumber());
+    assertEquals(15, error.getCharno());
   }
 
   /**
@@ -121,6 +155,11 @@ public final class RhinoErrorReporterTest extends TestCase {
   private Compiler parseCode(String code) {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    if (reportMisplacedTypeAnnotations) {
+      options.setWarningLevel(
+          DiagnosticGroups.MISPLACED_TYPE_ANNOTATION,
+          CheckLevel.WARNING);
+    }
 
     if (!reportEs3Props) {
       options.setWarningLevel(

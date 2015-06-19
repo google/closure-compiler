@@ -17,6 +17,9 @@
 package com.google.javascript.jscomp.parsing;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_FUNCTION_ANNOTATION;
+import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_MSG_ANNOTATION;
+import static com.google.javascript.jscomp.parsing.IRFactory.MISPLACED_TYPE_ANNOTATION;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -61,6 +64,9 @@ public final class NewParserTest extends BaseJSTypeTestCase {
       "and '-->' are treated as a '//' " +
       "for legacy reasons. Removing this from your code is " +
       "safe for all browsers currently in use.";
+
+  private static final String ANNOTATION_DEPRECATED_WARNING =
+      "The %s annotation is deprecated.%s";
 
   private Config.LanguageMode mode;
   private boolean isIdeMode = false;
@@ -532,9 +538,10 @@ public final class NewParserTest extends BaseJSTypeTestCase {
    * propagate to following code due to {@link JSDocInfo} aggregation.
    */
   public void testJSDocAttachment6() throws Exception {
-    Node functionNode = parse(
+    Node functionNode = parseWarning(
         "var a = /** @param {number} index */5;"
-        + "/** @return boolean */function f(index){}")
+        + "/** @return boolean */function f(index){}",
+        MISPLACED_FUNCTION_ANNOTATION)
         .getFirstChild().getNext();
 
     assertThat(functionNode.getType()).isEqualTo(Token.FUNCTION);
@@ -651,10 +658,10 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
   public void testJSDocAttachment17() {
     Node fn =
-        parse(
+        parseWarning(
             "function f() { " +
             "  return /** @type {string} */ (g(1 /** @desc x */));" +
-            "};").getFirstChild();
+            "};", MISPLACED_MSG_ANNOTATION).getFirstChild();
     assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
     Node cast = fn.getLastChild().getFirstChild().getFirstChild();
     assertThat(cast.getType()).isEqualTo(Token.CAST);
@@ -673,11 +680,12 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
   public void testJSDocAttachment19() {
     Node fn =
-        parse(
+        parseWarning(
             "function f() { " +
             "  /** @type {string} */" +
             "  return;" +
-            "};").getFirstChild();
+            "};",
+            MISPLACED_TYPE_ANNOTATION).getFirstChild();
     assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
 
     Node ret = fn.getLastChild().getFirstChild();
@@ -687,11 +695,11 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
   public void testJSDocAttachment20() {
     Node fn =
-        parse(
+        parseWarning(
             "function f() { " +
             "  /** @type {string} */" +
             "  if (true) return;" +
-            "};").getFirstChild();
+            "};", MISPLACED_TYPE_ANNOTATION).getFirstChild();
     assertThat(fn.getType()).isEqualTo(Token.FUNCTION);
 
     Node ret = fn.getLastChild().getFirstChild();
@@ -865,6 +873,17 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("/** @desc Foo. */ x.y.z.MSG_BAR = goog.getMsg('hello');");
     parse("/** @desc Foo. */ MSG_BAR = goog.getMsg('hello');");
     parse("var msgs = {/** @desc x */ MSG_X: goog.getMsg('x')}");
+  }
+
+  public void testMisplacedDescAnnotation() {
+    parseWarning("/** @desc Foo. */ var bar = goog.getMsg('hello');",
+        MISPLACED_MSG_ANNOTATION);
+    parseWarning("/** @desc Foo. */ x.y.z.bar = goog.getMsg('hello');",
+        MISPLACED_MSG_ANNOTATION);
+    parseWarning("var msgs = {/** @desc x */ x: goog.getMsg('x')}",
+        MISPLACED_MSG_ANNOTATION);
+    parseWarning("/** @desc Foo. */ bar = goog.getMsg('x');",
+        MISPLACED_MSG_ANNOTATION);
   }
 
   public void testUnescapedSlashInRegexpCharClass() {
@@ -2137,6 +2156,47 @@ public final class NewParserTest extends BaseJSTypeTestCase {
         "'(' expected");
   }
 
+  public void testMisplacedTypeAnnotation1() {
+    // misuse with COMMA
+    parseWarning(
+        "var o = {};" +
+        "/** @type {string} */ o.prop1 = 1, o.prop2 = 2;",
+        MISPLACED_TYPE_ANNOTATION);
+  }
+
+  public void testMisplacedTypeAnnotation2() {
+    // missing parentheses for the cast.
+    parseWarning(
+        "var o = /** @type {string} */ getValue();",
+        MISPLACED_TYPE_ANNOTATION);
+  }
+
+  public void testMisplacedTypeAnnotation3() {
+    // missing parentheses for the cast.
+    parseWarning(
+        "var o = 1 + /** @type {string} */ value;",
+        MISPLACED_TYPE_ANNOTATION);
+  }
+
+  public void testMisplacedTypeAnnotation4() {
+    // missing parentheses for the cast.
+    parseWarning(
+        "var o = /** @type {!Array.<string>} */ ['hello', 'you'];",
+        MISPLACED_TYPE_ANNOTATION);
+  }
+
+  public void testMisplacedTypeAnnotation5() {
+    // missing parentheses for the cast.
+    parseWarning(
+        "var o = (/** @type {!Foo} */ {});",
+        MISPLACED_TYPE_ANNOTATION);
+  }
+
+  public void testMisplacedTypeAnnotation6() {
+    parseWarning("var o = /** @type {function():string} */ function() {return 'str';}",
+        MISPLACED_TYPE_ANNOTATION);
+  }
+
   public void testValidTypeAnnotation1() {
     parse("/** @type {string} */ var o = 'str';");
     parse("var /** @type {string} */ o = 'str', /** @type {number} */ p = 0;");
@@ -2642,6 +2702,12 @@ public final class NewParserTest extends BaseJSTypeTestCase {
         + "\n"
         + "goog.provide('ns.foo');\n"
         + "");
+  }
+
+  public void testExposeDeprecated() {
+    parseWarning("/** @expose */ var x = 0;",
+        String.format(ANNOTATION_DEPRECATED_WARNING, "@expose",
+            " Use @nocollapse or @export instead."));
   }
 
   private Node script(Node stmt) {
