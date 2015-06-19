@@ -103,6 +103,9 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       "JSC_NO_TREE_GENERATED_ERROR",
       "Code contains errors. No tree was generated.");
 
+  static final String WAITING_FOR_INPUT_WARNING =
+      "The compiler is waiting for input via stdin.";
+
   private final CommandLineConfig config;
 
   private final PrintStream defaultJsOutput;
@@ -469,6 +472,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
           throw new FlagUsageException("Bundle files cannot be generated " +
               "when the input is from stdin.");
         }
+
+        this.err.println(WAITING_FOR_INPUT_WARNING);
         inputs.add(SourceFile.fromInputStream("stdin", System.in, inputCharset));
         usingStdin = true;
       }
