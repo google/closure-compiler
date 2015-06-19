@@ -310,16 +310,30 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   private static final class ClassDefinition {
+    /** The target node (LHS) for the Polymer element definition. */
     final Node target;
+
+    /** The object literal passed to the call to the Polymer() function. */
+    final Node descriptor;
+
+    /** The constructor function for the element. */
     final MemberDefinition constructor;
+
+    /** The name of the native HTML element which this element extends. */
     final String nativeBaseElement;
+
+    /** Properties declared in the Polymer "properties" block. */
     final List<MemberDefinition> props;
+
+    /** Flattened list of behavior definitions used by this element. */
     final List<BehaviorDefinition> behaviors;
 
-    ClassDefinition(Node target, JSDocInfo classInfo, MemberDefinition constructor,
+    ClassDefinition(Node target, Node descriptor, JSDocInfo classInfo, MemberDefinition constructor,
         String nativeBaseElement, List<MemberDefinition> props,
         List<BehaviorDefinition> behaviors) {
       this.target = target;
+      Preconditions.checkState(descriptor.isObjectLit());
+      this.descriptor = descriptor;
       this.constructor = constructor;
       this.nativeBaseElement = nativeBaseElement;
       this.props = props;
@@ -386,7 +400,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
     overwriteMembersIfPresent(allProperties, extractProperties(descriptor));
 
-    ClassDefinition def = new ClassDefinition(target, classInfo,
+    ClassDefinition def = new ClassDefinition(target, descriptor, classInfo,
         new MemberDefinition(ctorInfo, null, constructor), nativeBaseElement, allProperties,
         behaviors);
     return def;
@@ -549,7 +563,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       call = call.getFirstChild();
     }
 
-    Node objLit = NodeUtil.getArgumentForCallOrNew(call, 0);
+    Node objLit = cls.descriptor;
     JSDocInfoBuilder objLitDoc = new JSDocInfoBuilder(true);
     objLitDoc.recordLends(cls.target.getQualifiedName() + ".prototype");
     objLit.setJSDocInfo(objLitDoc.build());
@@ -721,6 +735,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     for (BehaviorDefinition behavior : cls.behaviors) {
       for (MemberDefinition behaviorFunction : behavior.functionsToCopy) {
         String fnName = behaviorFunction.name.getString();
+        // Don't copy functions already defined by the element itself.
+        if (NodeUtil.getFirstPropMatchingKey(cls.descriptor, fnName) != null) {
+          continue;
+        }
+
         // Avoid copying over the same function twice. The last definition always wins.
         if (nameToExprResult.containsKey(fnName)) {
           block.removeChild(nameToExprResult.get(fnName));

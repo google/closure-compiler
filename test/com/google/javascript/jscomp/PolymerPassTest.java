@@ -805,6 +805,66 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  /**
+   * Test that if a behavior function is implemented by the Element, the function from the behavior
+   * is not copied to the prototype of the Element.
+   */
+  public void testBehaviorFunctionOverriddenByElement() {
+    test(
+        LINE_JOINER.join(
+            "/** @polymerBehavior */",
+            "var FunBehavior = {",
+            "  /** @param {string} funAmount */",
+            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
+            "};",
+            "var A = Polymer({",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    pets: {",
+            "      type: Array,",
+            "      notify: true,",
+            "    },",
+            "    name: String,",
+            "  },",
+            "  /** @param {string} funAmount */",
+            "  doSomethingFun: function(funAmount) {",
+            "    alert('Element doing something' + funAmount + ' fun!');",
+            "  },",
+            "  behaviors: [ FunBehavior ],",
+            "});"),
+
+        LINE_JOINER.join(
+            "/** @polymerBehavior @nocollapse */",
+            "var FunBehavior = {",
+            "  /** @suppress {checkTypes|globalThis} */",
+            "  doSomethingFun: function(funAmount) { alert('Something ' + funAmount + ' fun!'); },",
+            "};",
+            "/** @constructor @extends {PolymerElement} @implements {PolymerAInterface}*/",
+            "var A = function() {};",
+            "/** @type {!Array} */",
+            "A.prototype.pets;",
+            "/** @type {string} */",
+            "A.prototype.name;",
+            "A = Polymer(/** @lends {A.prototype} */ {",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    pets: {",
+            "      type: Array,",
+            "      notify: true,",
+            "    },",
+            "    name: String,",
+            "  },",
+            "  /**",
+            "   * @param {string} funAmount",
+            "   * @this {A}",
+            "   */",
+            "  doSomethingFun: function(funAmount) {",
+            "    alert('Element doing something' + funAmount + ' fun!');",
+            "  },",
+            "  behaviors: [ FunBehavior ],",
+            "});"));
+  }
+
   public void testBehaviorDefaultValueSuppression() {
     test(
         LINE_JOINER.join(
