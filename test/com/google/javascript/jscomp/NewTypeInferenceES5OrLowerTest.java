@@ -4777,6 +4777,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"));
 
+    typeCheck(Joiner.on('\n').join(
+        "function f() { }",
+        "function g() {",
+        "  throw f();",
+        "}"));
+
     typeCheck("throw (1 - 'asdf');", NewTypeInference.INVALID_OPERAND_TYPE);
   }
 

@@ -373,7 +373,11 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv getOutEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
-    Preconditions.checkArgument(!dn.getOutEdges().isEmpty());
+    if (dn.getOutEdges().isEmpty()) {
+      // This occurs when visiting a throw in the backward direction.
+      Preconditions.checkArgument(dn.getValue().isThrow());
+      return getTypeEnvFromDeclaredTypes();
+    }
     List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
         dn.getOutEdges();
     if (outEdges.size() == 1) {
@@ -650,10 +654,6 @@ final class NewTypeInference implements CompilerPass {
       List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset) {
     for (DiGraphNode<Node, ControlFlowGraph.Branch> dn : workset) {
       Node n = dn.getValue();
-      if (n.isThrow()) { // Throw statements have no out edges.
-        // TODO(blickly): Support analyzing the body of the THROW
-        continue;
-      }
       TypeEnv outEnv = getOutEnv(dn);
       TypeEnv inEnv;
       println("\tBWD Statment: ", n);
@@ -722,6 +722,7 @@ final class NewTypeInference implements CompilerPass {
               n.getFirstChild() : NodeUtil.getConditionExpression(n);
           inEnv = analyzeExprBwd(expr, outEnv).env;
           break;
+        case Token.THROW:
         case Token.CASE:
         case Token.SWITCH:
           inEnv = analyzeExprBwd(n.getFirstChild(), outEnv).env;
