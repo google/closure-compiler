@@ -211,6 +211,8 @@ public class Token {
       RECORD_TYPE = 213,
       UNDEFINED_TYPE = 214,
       ARRAY_TYPE = 215,
+      GENERIC_TYPE = 216,
+      GENERIC_TYPE_LIST = 217,
 
       // JSDoc-only tokens
       ANNOTATION = 300,
@@ -475,6 +477,10 @@ public class Token {
         return "RECORD_TYPE";
       case UNDEFINED_TYPE:
         return "UNDEFINED_TYPE";
+      case GENERIC_TYPE:
+        return "GENERIC_TYPE";
+      case GENERIC_TYPE_LIST:
+        return "GENERIC_TYPE_LIST";
 
       case ARRAY_PATTERN:
         return "ARRAY_PATTERN";

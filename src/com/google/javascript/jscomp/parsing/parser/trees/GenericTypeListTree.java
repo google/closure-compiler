@@ -16,27 +16,22 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class InterfaceDeclarationTree extends ParseTree {
-  public final IdentifierToken name;
-  public final GenericTypeListTree generics;
-  public final ImmutableList<ParseTree> superInterfaces;
-  public final ImmutableList<ParseTree> elements;
+import java.util.LinkedHashMap;
 
-  public InterfaceDeclarationTree(
-      SourceRange location,
-      IdentifierToken name,
-      GenericTypeListTree generics,
-      ImmutableList<ParseTree> superInterfaces,
-      ImmutableList<ParseTree> elements) {
-    super(ParseTreeType.INTERFACE_DECLARATION, location);
+/**
+ * A tree representing generic type(s) in classes and functions
+ * ({@code class Foo<T extends () => boolean, U>}).
+ */
+public class GenericTypeListTree extends ParseTree {
 
-    this.name = name;
+  public final LinkedHashMap<IdentifierToken, ParseTree> generics;
+
+  public GenericTypeListTree(SourceRange location,
+      LinkedHashMap<IdentifierToken, ParseTree> generics) {
+    super(ParseTreeType.GENERIC_TYPE_LIST, location);
     this.generics = generics;
-    this.superInterfaces = superInterfaces;
-    this.elements = elements;
   }
 }

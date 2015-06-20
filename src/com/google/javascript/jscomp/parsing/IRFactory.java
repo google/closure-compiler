@@ -76,6 +76,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ForStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FormalParameterListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FunctionDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.FunctionTypeTree;
+import com.google.javascript.jscomp.parsing.parser.trees.GenericTypeListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.GetAccessorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
@@ -139,6 +140,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -1372,6 +1374,13 @@ class IRFactory {
         setSourceInfo(emptyName, functionTree);
         node.addChildToBack(emptyName);
       }
+
+      if (functionTree.generics != null) {
+        maybeWarnTypeSyntax(functionTree, "generic function");
+        node.getFirstChild().putProp(Node.GENERIC_TYPE_LIST,
+            transform(functionTree.generics));
+      }
+
       node.addChildToBack(transform(functionTree.formalParameterList));
 
       if (functionTree.returnType != null) {
@@ -2080,6 +2089,10 @@ class IRFactory {
       maybeWarnEs6Feature(tree, "class");
 
       Node name = transformOrEmpty(tree.name, tree);
+      if (tree.generics != null) {
+        maybeWarnTypeSyntax(tree, "generic class");
+        name.putProp(Node.GENERIC_TYPE_LIST, transform(tree.generics));
+      }
       Node superClass = transformOrEmpty(tree.superClass, tree);
 
       Node body = newNode(Token.CLASS_MEMBERS);
@@ -2095,6 +2108,11 @@ class IRFactory {
       maybeWarnTypeSyntax(tree, "interface");
 
       Node name = processName(tree.name);
+      if (tree.generics != null) {
+        maybeWarnTypeSyntax(tree, "generic interface");
+        name.putProp(Node.GENERIC_TYPE_LIST, transform(tree.generics));
+      }
+
       Node superInterfaces = transformListOrEmpty(Token.INTERFACE_EXTENDS, tree.superInterfaces);
 
       Node body = newNode(Token.INTERFACE_MEMBERS);
@@ -2377,6 +2395,19 @@ class IRFactory {
           restName, restType);
     }
 
+    Node processGenericTypeList(GenericTypeListTree tree) {
+      Node list = new Node(Token.GENERIC_TYPE_LIST);
+      for (Map.Entry<IdentifierToken, ParseTree> generic : tree.generics.entrySet()) {
+        Node type = newStringNode(Token.GENERIC_TYPE, generic.getKey().value);
+        ParseTree bound = generic.getValue();
+        if (bound != null) {
+          type.addChildToBack(transform(bound));
+        }
+        list.addChildToBack(type);
+      }
+      return list;
+    }
+
     private Node transformList(
         int type, ImmutableList<ParseTree> list) {
       Node n = newNode(type);
@@ -2619,6 +2650,8 @@ class IRFactory {
           return processUnionType(node.asUnionType());
         case FUNCTION_TYPE:
           return processFunctionType(node.asFunctionType());
+        case GENERIC_TYPE_LIST:
+          return processGenericTypeList(node.asGenericTypeList());
         case MEMBER_VARIABLE:
           return processMemberVariable(node.asMemberVariable());
 

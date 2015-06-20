@@ -2415,6 +2415,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("a => b");
     parse("a => { return b }");
     parse("a => b");
+    parse("var x = (a => b);");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("a => b",

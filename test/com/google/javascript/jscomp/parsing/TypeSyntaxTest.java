@@ -216,6 +216,8 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testParameterizedType_empty() {
     expectErrors("Parse error. Unexpected token '>' in type expression");
+    parse("var x: my.parameterized.Type<>;");
+    expectErrors("Parse error. Unexpected token '>' in type expression");
     parse("var x: my.parameterized.Type<ns.A, >;");
   }
 
@@ -436,6 +438,42 @@ public final class TypeSyntaxTest extends TestCase {
     Node members = classDecl.getChildAtIndex(2);
     Node method = members.getFirstChild().getFirstChild();
     assertDeclaredType("string return type", stringType(), method);
+  }
+
+  public void testGenericInterface() {
+    parse("interface Foo<T> {\n}");
+
+    testNotEs6Typed("interface Foo<T> {\n}", "interface", "generic interface");
+  }
+
+  public void testGenericClass() {
+    parse("class Foo<T> {\n}");
+    parse("class Foo<U, V> {\n}");
+    parse("class Foo<U extends () => boolean, V> {\n}");
+    parse("var Foo = class<T> {\n};");
+
+    testNotEs6Typed("class Foo<T> {}", "generic class");
+  }
+
+  public void testGenericFunction() {
+    parse("function foo<T>() {\n}");
+    parse("var x = <K, V>(p) => 3;");
+    parse("class Foo {\n  f<T>() {\n  }\n}");
+    parse("(function<T>() {\n})();");
+    parse("function* foo<T>() {\n}");
+
+    expectErrors("Parse error. Unexpected token '<' in type expression");
+    parse("var n: (<T>p1) => boolean;");
+    expectErrors("Parse error. '>' expected");
+    parse("function foo<T() {\n}");
+    expectErrors("Parse error. 'identifier' expected");
+    parse("function foo<>() {\n}");
+
+    // Typecasting, not supported yet.
+    expectErrors("Parse error. primary expression expected");
+    parse("var x = <T>((p:T) => 3);");
+
+    testNotEs6Typed("function foo<T>() {}", "generic function");
   }
 
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {

@@ -22,14 +22,17 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class ClassDeclarationTree extends ParseTree {
   public final IdentifierToken name;
+  public final GenericTypeListTree generics;
   public final ParseTree superClass;
   public final ImmutableList<ParseTree> elements;
 
   public ClassDeclarationTree(SourceRange location, IdentifierToken name,
-      ParseTree superClass, ImmutableList<ParseTree> elements) {
+      GenericTypeListTree generics, ParseTree superClass,
+      ImmutableList<ParseTree> elements) {
     super(ParseTreeType.CLASS_DECLARATION, location);
 
     this.name = name;
+    this.generics = generics;
     this.superClass = superClass;
     this.elements = elements;
   }

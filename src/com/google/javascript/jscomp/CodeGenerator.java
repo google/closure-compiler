@@ -342,7 +342,7 @@ class CodeGenerator {
         }
         break;
 
-      case Token.FUNCTION:
+      case Token.FUNCTION: {
         if (n.getClass() != Node.class) {
           throw new Error("Unexpected Node subclass.");
         }
@@ -352,7 +352,8 @@ class CodeGenerator {
         // Arrow functions are complete expressions, so don't need parentheses
         // if they are in an expression result.
         boolean notSingleExpr = n.getParent() == null || !n.getParent().isExprResult();
-        boolean funcNeedsParens = (context == Context.START_OF_EXPR) && (!isArrow || notSingleExpr);
+        boolean funcNeedsParens = (context == Context.START_OF_EXPR)
+            && (!isArrow || notSingleExpr);
         if (funcNeedsParens) {
           add("(");
         }
@@ -362,9 +363,14 @@ class CodeGenerator {
         }
         if (n.isGeneratorFunction()) {
           add("*");
+          if (!first.getString().isEmpty()) {
+            cc.maybeInsertSpace();
+          }
         }
 
         add(first);
+
+        maybeAddGenericTypes(first);
 
         add(first.getNext()); // param list
 
@@ -379,7 +385,7 @@ class CodeGenerator {
           add(")");
         }
         break;
-
+      }
       case Token.REST:
         add("...");
         add(n.getString());
@@ -481,6 +487,9 @@ class CodeGenerator {
           if (!name.isEmpty()) {
             add(name);
           }
+
+          maybeAddGenericTypes(first);
+
           if (!superClass.isEmpty()) {
             add("extends");
             add(superClass);
@@ -576,6 +585,7 @@ class CodeGenerator {
                 // Unicode escaped.
                 NodeUtil.isLatin(name)) {
               add(name);
+              maybeAddGenericTypes(fn.getFirstChild());
             } else {
               // Determine if the string is a simple number.
               double d = getSimpleNumber(name);
@@ -1117,6 +1127,25 @@ class CodeGenerator {
         add(">");
         break;
         // CLASS -> NAME,EXPR|EMPTY,BLOCK
+      case Token.GENERIC_TYPE_LIST:
+        add("<");
+        Node generic = n.getFirstChild();
+        add(generic);
+        while ((generic = generic.getNext()) != null) {
+          add(",");
+          cc.maybeInsertSpace();
+          add(generic);
+        }
+        add(">");
+        break;
+      case Token.GENERIC_TYPE:
+        addIdentifier(n.getString());
+        if (n.hasChildren()) {
+          add("extends");
+          cc.maybeInsertSpace();
+          add(n.getFirstChild());
+        }
+        break;
       case Token.INTERFACE:
         {
           Preconditions.checkState(childCount == 3);
@@ -1126,6 +1155,7 @@ class CodeGenerator {
 
           add("interface");
           add(name);
+          maybeAddGenericTypes(name);
           if (!superTypes.isEmpty()) {
             add("extends");
             for (Node child = superTypes.getFirstChild(); child != null; child = child.getNext()) {
@@ -1160,6 +1190,13 @@ class CodeGenerator {
       add(":");
       cc.maybeInsertSpace();
       add(n.getDeclaredTypeExpression());
+    }
+  }
+
+  private void maybeAddGenericTypes(Node n) {
+    Node generics = (Node) n.getProp(Node.GENERIC_TYPE_LIST);
+    if (generics != null) {
+      add(generics);
     }
   }
 

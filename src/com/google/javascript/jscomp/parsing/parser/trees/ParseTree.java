@@ -133,6 +133,7 @@ public class ParseTree {
   public ArrayTypeTree asArrayType() { return (ArrayTypeTree) this; }
   public UnionTypeTree asUnionType() { return (UnionTypeTree) this; }
   public FunctionTypeTree asFunctionType() { return (FunctionTypeTree) this; }
+  public GenericTypeListTree asGenericTypeList() { return (GenericTypeListTree) this; }
   public UnaryExpressionTree asUnaryExpression() { return (UnaryExpressionTree) this; }
   public VariableDeclarationListTree asVariableDeclarationList() {
     return (VariableDeclarationListTree) this; }
