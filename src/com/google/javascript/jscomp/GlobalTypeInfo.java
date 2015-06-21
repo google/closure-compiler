@@ -583,11 +583,11 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(qnameNode.isGetProp());
       Preconditions.checkArgument(qnameNode.isQualifiedName());
       Node recv = qnameNode.getFirstChild();
-      if (!currentScope.isNamespace(recv)) {
+      if (!currentScope.isNamespace(recv) && !mayCreateFunctionNamespace(recv)) {
         return;
       }
       if (NodeUtil.isNamespaceDecl(qnameNode)) {
-        visitNamespace(qnameNode);
+        visitObjlitNamespace(qnameNode);
       } else if (NodeUtil.isTypedefDecl(qnameNode)) {
         visitTypedef(qnameNode);
       } else if (NodeUtil.isEnumDecl(qnameNode)) {
@@ -617,7 +617,7 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.VAR: {
           Node nameNode = n.getFirstChild();
           if (NodeUtil.isNamespaceDecl(nameNode)) {
-            visitNamespace(nameNode);
+            visitObjlitNamespace(nameNode);
           } else if (NodeUtil.isTypedefDecl(nameNode)) {
             visitTypedef(nameNode);
           } else if (NodeUtil.isEnumDecl(nameNode)) {
@@ -659,15 +659,40 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    private void visitNamespace(Node qnameNode) {
-      if (currentScope.isDefined(qnameNode)) {
+    // Returns true iff it creates a new function namespace
+    private boolean mayCreateFunctionNamespace(Node qnameNode) {
+      // TODO(dimvar): handle functions-as-namespaces declared on namespaces
+      if (!qnameNode.isName()) {
+        return false;
+      }
+      Preconditions.checkState(!currentScope.isNamespace(qnameNode));
+      if (currentScope.isKnownFunction(qnameNode.getString())) {
+        visitNamespaceHelper(qnameNode, false);
+        return true;
+      }
+      return false;
+    }
+
+    private void visitObjlitNamespace(Node qnameNode) {
+      visitNamespaceHelper(qnameNode, true);
+    }
+
+    private void visitNamespaceHelper(Node qnameNode, boolean isObjlitNamespace) {
+      if (isObjlitNamespace && currentScope.isDefined(qnameNode)) {
         return;
       }
       if (qnameNode.isGetProp()) {
         Preconditions.checkState(qnameNode.getParent().isAssign());
         qnameNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       }
-      currentScope.addNamespace(qnameNode, qnameNode.isFromExterns());
+      Scope s;
+      if (isObjlitNamespace) {
+        s = currentScope;
+      } else {
+        // s is the scope that contains the function
+        s = currentScope.getScope(qnameNode.getString()).getParent();
+      }
+      s.addNamespace(qnameNode, qnameNode.isFromExterns());
     }
 
     private void visitTypedef(Node qnameNode) {
@@ -758,8 +783,10 @@ class GlobalTypeInfo implements CompilerPass {
 
     private String createFunctionInternalName(Node fn, Node nameNode) {
       String internalName = null;
-      if (nameNode == null || !nameNode.isName()) {
-        // Anonymous and qualified names need gensymed names.
+      if (nameNode == null || !nameNode.isName()
+          || nameNode.getParent().isAssign()) {
+        // Anonymous functions, qualified names, and stray assignments
+        // (eg, f = function(x) { ... }; ) get gensymed names.
         internalName = ANON_FUN_PREFIX + freshId;
         anonFunNames.put(fn, internalName);
         freshId++;
@@ -847,7 +874,8 @@ class GlobalTypeInfo implements CompilerPass {
           return;
         }
         if (nameNode.isName()
-            || currentScope.isNamespace(nameNode.getFirstChild())) {
+            || currentScope.isNamespace(nameNode.getFirstChild())
+            || mayCreateFunctionNamespace(nameNode.getFirstChild())) {
           if (nameNode.isGetProp()) {
             fn.getParent().getFirstChild()
                 .putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -1947,6 +1975,8 @@ class GlobalTypeInfo implements CompilerPass {
     // Name on the function AST node; null for top scope & anonymous functions
     private final String name;
     private final JSTypes commonTypes;
+    // Becomes true after removeTmpData is run; so it's true during NTI.
+    private boolean isFinalized = false;
 
     // A local w/out declared type is mapped to null, not to JSType.UNKNOWN.
     private final Map<String, JSType> locals = new LinkedHashMap<>();
@@ -1956,6 +1986,9 @@ class GlobalTypeInfo implements CompilerPass {
     // outerVars are the variables that appear free in this scope
     // and are defined in an enclosing scope.
     private final Set<String> outerVars = new LinkedHashSet<>();
+    // When a function is also used as a namespace, we add entries to both
+    // localFunDefs and localNamespaces. After removeTmpData (when NTI runs),
+    // the function has an entry in localFunDefs, and in locals or externs.
     private final Map<String, Scope> localFunDefs = new LinkedHashMap<>();
     private Set<String> unknownTypeNames = new LinkedHashSet<>();
     private Map<String, RawNominalType> localClassDefs = new LinkedHashMap<>();
@@ -2061,6 +2094,13 @@ class GlobalTypeInfo implements CompilerPass {
 
     boolean isLocalFunDef(String name) {
       return localFunDefs.containsKey(name);
+    }
+
+    boolean isFunctionNamespace(String name) {
+      Preconditions.checkArgument(!name.contains("."));
+      Preconditions.checkState(isFinalized);
+      Declaration d = getDeclaration(name, false);
+      return d != null && d.getFunctionScope() != null && d.getTypeOfSimpleDecl() != null;
     }
 
     // In other languages, type names and variable names are in distinct
@@ -2399,9 +2439,14 @@ class GlobalTypeInfo implements CompilerPass {
             type = formalType;
           }
         }
+      } else if (localFunDefs.containsKey(name)) {
+        // After finalization, the externs contain the correct type for
+        // external function namespaces, don't rely on localFunDefs
+        if (isFinalized && externs.containsKey(name)) {
+          type = externs.get(name);
+        }
       } else if (localTypedefs.containsKey(name) || localNamespaces.containsKey(name)
-          || localEnums.containsKey(name) || localFunDefs.containsKey(name)
-          || localClassDefs.containsKey(name)) {
+          || localEnums.containsKey(name) || localClassDefs.containsKey(name)) {
         // Any further declarations are shadowed
       } else if (declaredType != null && declaredType.isTypeVariableDefinedLocally(name)) {
         isTypeVar = true;
@@ -2509,6 +2554,11 @@ class GlobalTypeInfo implements CompilerPass {
       for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {
         String name = entry.getKey();
         JSType t = entry.getValue().toJSType();
+        if (localFunDefs.containsKey(name)) {
+          FunctionType ft = localFunDefs.get(name).getDeclaredFunctionType().toFunctionType();
+          JSType funTypeAsJstype = getCommonTypes().fromFunctionType(ft);
+          t = funTypeAsJstype.specialize(t);
+        }
         if (externs.containsKey(name)) {
           externs.put(name, t);
         } else {
@@ -2525,6 +2575,7 @@ class GlobalTypeInfo implements CompilerPass {
       localClassDefs = ImmutableMap.of();
       localTypedefs = ImmutableMap.of();
       localEnums = ImmutableMap.of();
+      isFinalized = true;
     }
 
     @Override

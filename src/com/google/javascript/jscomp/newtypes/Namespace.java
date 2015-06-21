@@ -68,6 +68,8 @@ public abstract class Namespace {
   }
 
   public void addSubnamespace(QualifiedName qname) {
+    // TODO(dimvar): needs to change when we handle functions-as-namespaces
+    // that are properties of namespaces
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.namespaces.isEmpty()) {

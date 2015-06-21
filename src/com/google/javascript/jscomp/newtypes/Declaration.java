@@ -58,22 +58,25 @@ public class Declaration {
 
   private void checkValid() {
     if (simpleType != null) {
-      Preconditions.checkState(typedef == null && namespaceLit == null && enumType == null
-          && functionScope == null && nominal == null);
+      Preconditions.checkState(typedef == null && namespaceLit == null
+          && enumType == null && nominal == null);
     }
     if (typedef != null) {
-      Preconditions.checkState(simpleType == null && namespaceLit == null && enumType == null
-          && functionScope == null && nominal == null);
+      Preconditions.checkState(simpleType == null && namespaceLit == null
+          && enumType == null && functionScope == null && nominal == null);
     }
     if (namespaceLit != null) {
-      Preconditions.checkState(simpleType == null && typedef == null && enumType == null
-          && functionScope == null && nominal == null);
+      Preconditions.checkState(simpleType == null && typedef == null
+          && enumType == null && nominal == null);
     }
     if (enumType != null) {
-      Preconditions.checkState(simpleType == null && typedef == null && namespaceLit == null
-          && functionScope == null && nominal == null);
+      Preconditions.checkState(simpleType == null && typedef == null
+          && namespaceLit == null && functionScope == null && nominal == null);
     }
-    if (functionScope != null || nominal != null) {
+    if (functionScope != null) {
+      Preconditions.checkState(typedef == null && enumType == null);
+    }
+    if (nominal != null) {
       // Note: Non-null nominal with null function is allowed. e.g. /** @ctor */ var Bar = Foo;
       Preconditions.checkState(simpleType == null
           && typedef == null && namespaceLit == null && enumType == null);

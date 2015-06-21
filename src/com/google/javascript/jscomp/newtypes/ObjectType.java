@@ -900,12 +900,17 @@ final class ObjectType implements TypeWithProperties {
         return nominalType.appendTo(builder);
       }
     }
-    if (nominalType != null) {
+    if (nominalType != null && !nominalType.getName().equals("Function")) {
       nominalType.appendTo(builder);
     } else if (isStruct()) {
       builder.append("struct");
     } else if (isDict()) {
       builder.append("dict");
+    }
+    if (fn != null) {
+      builder.append("<|");
+      fn.appendTo(builder);
+      builder.append("|>");
     }
     if (nominalType == null || !props.isEmpty()) {
       builder.append('{');

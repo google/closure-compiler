@@ -8012,6 +8012,10 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var /** null */ n = p.then(g);",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "function f(x, y, z) {}",
+        "f(1, 2, 3);");
   }
 
   public void testSpecializeLooseNullDoesntCrash() {
@@ -12470,5 +12474,103 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @param {function(number)} x */",
         "function g(x) { x.call(new Bar, 123); }",
         "g(f);"));
+  }
+
+  public void testFunctionNamespacesThatArentProperties() {
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {}",
+        "/** @type {number} */",
+        "f.prop = 123;",
+        "function h() {",
+        "  var /** string */ s = f.prop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {}",
+        "function g() {",
+        "  /** @type {number} */",
+        "  f.prop = 123;",
+        "}",
+        "function h() {",
+        "  var /** string */ s = f.prop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {}",
+        "/** @constructor */",
+        "f.Foo = function() {};",
+        "/** @param {!f.Foo} x */",
+        "function g(x) {}",
+        "function h() { g(new f.Foo()); }"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {}",
+        "/** @constructor */",
+        "f.Foo = function() {};",
+        "/** @param {!f.Foo} x */",
+        "function g(x) {}",
+        "function h() { g(123); }"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "/** @type {number} */",
+        "f.prop = 123;",
+        "f('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number */ x) {}",
+        "/** @type {string} */",
+        "f.prop = 'str';",
+        "function g() { f(f.prop); }"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) { return x - 1; }",
+        "/** @type {string} */",
+        "f.prop = 'str';",
+        "function g() { f(f.prop); }"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // f is ? in NTI, so we get no warning for f.e.A.
+    typeCheck(Joiner.on('\n').join(
+        "f = function() {};",
+        "/** @enum */",
+        "f.e = { A: 1 };",
+        "function g() { var /** string */ s = f.e.A; }"));
+
+    typeCheck(Joiner.on('\n').join(
+        "var f = function() {};",
+        "/** @enum */",
+        "f.e = { A: 1 };",
+        "function g() { var /** string */ s = f.e.A; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        Joiner.on('\n').join(
+            DEFAULT_EXTERNS,
+            "function f(x) {}",
+            "/** @type {number} */",
+            "f.prop;"),
+        Joiner.on('\n').join(
+            "function h() {",
+            "  var /** string */ s = f.prop;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        Joiner.on('\n').join(
+            DEFAULT_EXTERNS,
+            "function f(x) {}",
+            "/** @constructor */",
+            "f.Foo = function() {};"),
+        Joiner.on('\n').join(
+            "/** @param {!f.Foo} x */",
+            "function g(x) {}",
+            "function h() { g(123); }"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 }

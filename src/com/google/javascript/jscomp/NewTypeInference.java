@@ -443,7 +443,9 @@ final class NewTypeInference implements CompilerPass {
     // For all scopes, add local variables and (local) function definitions
     // to the environment.
     for (String local : currentScope.getLocals()) {
-      entryEnv = envPutType(entryEnv, local, JSType.UNDEFINED);
+      if (!currentScope.isFunctionNamespace(local)) {
+        entryEnv = envPutType(entryEnv, local, JSType.UNDEFINED);
+      }
     }
     for (String fnName : currentScope.getLocalFunDefs()) {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
@@ -463,7 +465,8 @@ final class NewTypeInference implements CompilerPass {
   private TypeEnv getTypeEnvFromDeclaredTypes() {
     TypeEnv env = new TypeEnv();
     Set<String> varNames = currentScope.getOuterVars();
-    varNames.addAll(currentScope.getLocals());
+    Set<String> locals = currentScope.getLocals();
+    varNames.addAll(locals);
     varNames.addAll(currentScope.getExterns());
     if (currentScope.isFunction()) {
       if (currentScope.getName() != null) {
@@ -483,9 +486,11 @@ final class NewTypeInference implements CompilerPass {
       env = envPutType(env, ARGSARRAYELM_ID, argsArrayElmType);
     }
     for (String varName : varNames) {
-      JSType declType = currentScope.getDeclaredTypeOf(varName);
-      env = envPutType(env, varName,
-          declType == null ? JSType.UNKNOWN : pickInitialType(declType));
+      if (!locals.contains(varName) || !currentScope.isFunctionNamespace(varName)) {
+        JSType declType = currentScope.getDeclaredTypeOf(varName);
+        env = envPutType(env, varName,
+            declType == null ? JSType.UNKNOWN : pickInitialType(declType));
+      }
     }
     for (String fnName : currentScope.getLocalFunDefs()) {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
@@ -892,10 +897,11 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private void createSummary(Scope fn) {
+    Node fnRoot = fn.getRoot();
+    Preconditions.checkArgument(!fnRoot.isFromExterns());
     TypeEnv entryEnv = getEntryTypeEnv();
     TypeEnv exitEnv = getFinalTypeEnv();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    Node fnRoot = fn.getRoot();
 
     DeclaredFunctionType declType = fn.getDeclaredFunctionType();
     int reqArity = declType.getRequiredArity();
@@ -969,9 +975,19 @@ final class NewTypeInference implements CompilerPass {
     JSType summary = commonTypes.fromFunctionType(builder.buildFunction());
     println("Function summary for ", fn.getReadableName());
     println("\t", summary);
+    Scope enclosingScope = fn.getParent();
+    Node fnNameNode = NodeUtil.getFunctionNameNode(fnRoot);
+    // TODO(dimvar): handle functions as namespaces that are props of namespaces
+    String fnName = fnNameNode != null && fnNameNode.isName()
+        ? fnNameNode.getString() : null;
+    if (fnName != null && enclosingScope.isFunctionNamespace(fnName)) {
+      JSType namespaceType = enclosingScope.getDeclaredTypeOf(fnName);
+      // Remove the less precise function type from the namespace type
+      namespaceType = JSType.meet(namespaceType, JSType.TOP_OBJECT);
+      summary = summary.specialize(namespaceType);
+    }
     summaries.put(fn, summary);
     maybeSetTypeI(fnRoot, summary);
-    Node fnNameNode = NodeUtil.getFunctionNameNode(fnRoot);
     if (fnNameNode != null) {
       maybeSetTypeI(fnNameNode, summary);
     }
