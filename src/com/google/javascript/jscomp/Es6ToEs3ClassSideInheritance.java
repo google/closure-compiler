@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -45,7 +46,7 @@ import java.util.Set;
  * function Foo() {}
  * Foo.f = function() {};
  * function Bar() {}
- * $jscomp.copyProperties(Foo, Bar);
+ * $jscomp.inherits(Foo, Bar);
  * </pre>
  *
  * and then this class will convert that to
@@ -54,6 +55,7 @@ import java.util.Set;
  * function Foo() {}
  * Foo.f = function() {};
  * function Bar() {}
+ * $jscomp.inherits(Foo, Bar);
  * Bar.f = Foo.f;
  * </pre>
  *
@@ -65,7 +67,10 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
   final AbstractCompiler compiler;
 
   // Map from class names to the static members in each class.
-  private final Multimap<String, Node> staticMembers = ArrayListMultimap.create();
+  private final Multimap<String, Node> staticMethods = ArrayListMultimap.create();
+
+  // Map from class names to static properties (getters/setters) in each class.
+  private final Multimap<String, Node> staticProperties = ArrayListMultimap.create();
 
   static final DiagnosticType DUPLICATE_CLASS = DiagnosticType.error(
       "DUPLICATE_CLASS",
@@ -88,27 +93,44 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
     if (!n.isCall()) {
       return;
     }
-    if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.COPY_PROP)) {
+    if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.INHERITS)) {
       Node superclassNameNode = n.getLastChild();
       Node subclassNameNode = n.getChildBefore(superclassNameNode);
       if (multiplyDefinedClasses.contains(superclassNameNode.getQualifiedName())) {
         compiler.report(JSError.make(n, DUPLICATE_CLASS));
         return;
       }
-      for (Node staticMember : staticMembers.get(superclassNameNode.getQualifiedName())) {
-        copyStaticMember(staticMember, superclassNameNode, subclassNameNode, parent);
+      for (Node staticMethod : staticMethods.get(superclassNameNode.getQualifiedName())) {
+        copyStaticMethod(staticMethod, superclassNameNode, subclassNameNode, parent);
       }
-      parent.detachFromParent();
-      compiler.reportCodeChange();
+
+      for (Node staticProperty : staticProperties.get(superclassNameNode.getQualifiedName())) {
+        Preconditions.checkState(staticProperty.isGetProp(), staticProperty);
+        String memberName = staticProperty.getLastChild().getString();
+        // Add a declaration. Assuming getters are side-effect free,
+        // this is a no-op statement, but it lets the typechecker know about the property.
+        Node getprop = IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName));
+
+        JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticProperty.getJSDocInfo());
+        JSTypeExpression unknown = new JSTypeExpression(new Node(Token.QMARK), "<synthetic>");
+        info.recordType(unknown); // In case there wasn't a type specified on the base class.
+        getprop.setJSDocInfo(info.build());
+
+        Node declaration = IR.exprResult(getprop);
+        declaration.useSourceInfoIfMissingFromForTree(n);
+        parent.getParent().addChildAfter(declaration, parent);
+        staticProperties.put(subclassNameNode.getQualifiedName(), staticProperty);
+        compiler.reportCodeChange();
+      }
     }
   }
 
-  private void copyStaticMember(Node staticMember,
-      Node superclassNameNode, Node subclassNameNode, Node insertionPoint) {
+  private void copyStaticMethod(
+      Node staticMember, Node superclassNameNode, Node subclassNameNode, Node insertionPoint) {
     Preconditions.checkState(staticMember.isAssign(), staticMember);
     String memberName = staticMember.getFirstChild().getLastChild().getString();
 
-    for (Node subclassMember : staticMembers.get(subclassNameNode.getQualifiedName())) {
+    for (Node subclassMember : staticMethods.get(subclassNameNode.getQualifiedName())) {
       Preconditions.checkState(subclassMember.isAssign(), subclassMember);
       if (subclassMember.getFirstChild().getLastChild().getString().equals(memberName)) {
         // This subclass overrides the static method, so there is no need to copy the
@@ -126,7 +148,8 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
     Node exprResult = IR.exprResult(assign);
     exprResult.useSourceInfoIfMissingFromForTree(superclassNameNode);
     insertionPoint.getParent().addChildAfter(exprResult, insertionPoint);
-    staticMembers.put(subclassNameNode.getQualifiedName(), assign);
+    staticMethods.put(subclassNameNode.getQualifiedName(), assign);
+    compiler.reportCodeChange();
   }
 
   private class FindStaticMembers extends NodeTraversal.AbstractPostOrderCallback {
@@ -134,12 +157,17 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
 
     @Override
     public void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
-      switch(n.getType()) {
+      switch (n.getType()) {
         case Token.VAR:
           visitVar(n);
           break;
         case Token.ASSIGN:
           visitAssign(n);
+          break;
+        case Token.GETPROP:
+          if (parent.isExprResult()) {
+            visitGetProp(n);
+          }
           break;
         case Token.FUNCTION:
           visitFunctionClassDef(n);
@@ -159,6 +187,13 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
       }
     }
 
+    private void visitGetProp(Node n) {
+      String className = n.getFirstChild().getQualifiedName();
+      if (classNames.contains(className)) {
+        staticProperties.put(className, n);
+      }
+    }
+
     private void visitAssign(Node n) {
       // Alias for classes. We assume that the alias appears after the class
       // declaration.
@@ -166,14 +201,13 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
         String maybeAlias = n.getFirstChild().getQualifiedName();
         if (maybeAlias != null) {
           classNames.add(maybeAlias);
-          staticMembers.putAll(maybeAlias,
-              staticMembers.get(n.getLastChild().getQualifiedName()));
+          staticMethods.putAll(maybeAlias, staticMethods.get(n.getLastChild().getQualifiedName()));
         }
       } else if (n.getFirstChild().isGetProp()) {
         Node getProp = n.getFirstChild();
         String maybeClassName = getProp.getFirstChild().getQualifiedName();
         if (classNames.contains(maybeClassName)) {
-          staticMembers.put(maybeClassName, n);
+          staticMethods.put(maybeClassName, n);
         }
       }
     }
@@ -188,7 +222,7 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
         String maybeAlias = child.getQualifiedName();
         if (maybeAlias != null) {
           classNames.add(maybeAlias);
-          staticMembers.putAll(maybeAlias, staticMembers.get(maybeOriginalName));
+          staticMethods.putAll(maybeAlias, staticMethods.get(maybeOriginalName));
         }
       }
     }

@@ -31,6 +31,11 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
     return new Es6ToEs3ClassSideInheritance(compiler);
   }
 
+  @Override
+  public int getNumRepetitions() {
+    return 1;
+  }
+
   public void testSimple() {
     test(
         LINE_JOINER.join(
@@ -40,7 +45,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
-            "$jscomp.copyProperties(Subclass, Example);"),
+            "$jscomp.inherits(Subclass, Example);"),
         LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
@@ -48,6 +53,8 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);",
+            "",
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
@@ -62,7 +69,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
-            "$jscomp.copyProperties(Subclass, Example);"),
+            "$jscomp.inherits(Subclass, Example);"),
         LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
@@ -72,6 +79,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
+            "$jscomp.inherits(Subclass,Example);",
             "",
             "/** @return {string} */",
             "Subclass.staticMethod = Example.staticMethod;"));
@@ -88,7 +96,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
-            "$jscomp.copyProperties(Subclass, Example);",
+            "$jscomp.inherits(Subclass, Example);",
             "",
             "Subclass.staticMethod = function() { return 5; };"),
         LINE_JOINER.join(
@@ -100,6 +108,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);",
             "",
             "// This should be a type error, but currently we don't catch it.",
             "Subclass.staticMethod = function() { return 5; };"));
@@ -119,7 +128,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
-            "$jscomp.copyProperties(Subclass, Example);"),
+            "$jscomp.inherits(Subclass, Example);"),
         LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
@@ -129,9 +138,75 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @constructor @extends {Example} */",
             "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);",
             "",
             "/** @type {number} */",
             "Subclass.staticField = Example.staticField;"));
   }
 
+  public void testGetterSetter() {
+    test(
+        // This is what the Es6ToEs3Converter produces for:
+        //
+        //   class Example {
+        //     static get property() {}
+        //   }
+        //
+        // or
+        //
+        //   class Example {
+        //     static set property(x) {}
+        //   }
+        //
+        // (It also outputs a call to Object.defineProperties() but the ClassSideInheritance pass
+        // doesn't care about that, so it's omitted from this test.)
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Example() {}",
+            "",
+            "/** @type {string} */",
+            "Example.property;",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Example() {}",
+            "",
+            "/** @type {string} */",
+            "Example.property;",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);",
+            "",
+            "/** @type {string} */",
+            "Subclass.property;"));
+  }
+
+  public void testGetterSetter_noType() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Example() {}",
+            "",
+            "Example.property;",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Example() {}",
+            "",
+            "Example.property;",
+            "",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);",
+            "",
+            "/** @type {?} */",
+            "Subclass.property;"));
+  }
 }

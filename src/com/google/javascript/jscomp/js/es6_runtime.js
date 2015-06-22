@@ -74,35 +74,30 @@ $jscomp.makeIterator = function(iterable) {
 };
 
 /**
- * Transfers properties on the from object onto the to object.
+ * Inherit the prototype methods and static methods from one constructor
+ * into another.
  *
- * @param {!Object} to
- * @param {!Object} from
- */
-$jscomp.copyProperties = function(to, from) {
-  for (var p in from) {
-    to[p] = from[p];
-  }
-};
-
-/**
- * Inherit the prototype methods from one constructor into another.
- *
- * NOTE: This is a copy of goog.inherits moved here to remove dependency on
- * the closure library for Es6ToEs3 transpilation.
+ * This wires up the prototype chain (like goog.inherits) and copies static
+ * properties, for ES6-to-ES{3,5} transpilation.
  *
  * Usage:
  * <pre>
- * function ParentClass(a, b) { }
- * ParentClass.prototype.foo = function(a) { };
+ *   function ParentClass() {}
  *
- * function ChildClass(a, b, c) {
- *   ChildClass.base(this, 'constructor', a, b);
- * }
- * $jscomp$inherits(ChildClass, ParentClass);
+ *   // Regular method.
+ *   ParentClass.prototype.foo = function(a) {};
  *
- * var child = new ChildClass('a', 'b', 'see');
- * child.foo(); // This works.
+ *   // Static method.
+ *   ParentClass.bar = function() {};
+ *
+ *   function ChildClass() {
+ *     ParentClass.call(this);
+ *   }
+ *   $jscomp.inherits(ChildClass, ParentClass);
+ *
+ *   var child = new ChildClass();
+ *   child.foo();
+ *   ChildClass.bar();  // Static inheritance.
  * </pre>
  *
  * @param {!Function} childCtor Child class.
@@ -115,4 +110,15 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   childCtor.prototype = new tempCtor();
   /** @override */
   childCtor.prototype.constructor = childCtor;
+
+  for (var p in parentCtor) {
+    if (Object.defineProperties) {
+      var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
+      Object.defineProperty(
+          childCtor, p, /** @type {!ObjectPropertyDescriptor} */ (descriptor));
+    } else {
+      // Pre-ES5 browser. Just copy with an assignment.
+      childCtor[p] = parentCtor[p];
+    }
+  }
 };

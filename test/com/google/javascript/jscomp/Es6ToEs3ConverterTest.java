@@ -43,7 +43,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
           // Stub out just enough of es6_runtime.js to satisfy the typechecker.
           // In a real compilation, the entire library will be loaded by
           // the InjectEs6RuntimeLibrary pass.
-          "$jscomp.copyProperties = function(x,y) {};",
           "$jscomp.inherits = function(x,y) {};");
 
   private LanguageMode languageOut;
@@ -320,7 +319,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {};",
             "/** @constructor @struct @extends {D} */",
             "var C = function(var_args) { D.apply(this, arguments); };",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);"));
 
     test(
@@ -332,7 +330,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C = function() {",
             "  D.call(this);",
             "}",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);"));
 
     test(
@@ -344,7 +341,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C = function(str) { ",
             "  D.call(this, str);",
             "}",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);"));
 
     test(
@@ -352,7 +348,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct @extends {ns.D} */",
             "var C = function(var_args) { ns.D.apply(this, arguments); };",
-            "$jscomp.copyProperties(C, ns.D);",
             "$jscomp.inherits(C, ns.D);"));
   }
 
@@ -415,7 +410,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C = function() {",
             "  D.call(this);",
             "}",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);"));
 
     test(
@@ -427,7 +421,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C = function(str) {",
             "  D.call(this,str);",
             "}",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);"));
 
     test(
@@ -442,7 +435,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {}",
             "/** @constructor @struct @extends {D} */",
             "var C = function() { }",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);",
             "C.prototype.foo = function() {",
             "  return D.prototype.foo.call(this);",
@@ -460,7 +452,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {}",
             "/** @constructor @struct @extends {D} */",
             "var C = function() {};",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);",
             "C.prototype.foo = function(bar) {",
             "  return D.prototype.foo.call(this, bar);",
@@ -482,7 +473,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  var D = function() {",
             "    C.call(this);",
             "  }",
-            "  $jscomp.copyProperties(D, C);",
             "  $jscomp.inherits(D, C);",
             "};"));
 
@@ -496,7 +486,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function() {};",
             "/** @constructor @struct @extends {D} */",
             "var C = function() {}",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);",
             "C.prototype.f = function() {",
             "  D.prototype.f.call(this);",
@@ -531,7 +520,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.f = function() {",
             "  /** @constructor @struct @extends{C} */",
             "  var D = function(var_args) { C.apply(this, arguments); };",
-            "  $jscomp.copyProperties(D, C);",
             "  $jscomp.inherits(D, C);",
             "};"));
   }
@@ -585,7 +573,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C=function(args) {",
             "  D.call.apply(D, [].concat([this], args));",
             "};",
-            "$jscomp.copyProperties(C,D);",
             "$jscomp.inherits(C,D);"));
   }
 
@@ -597,7 +584,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct @extends {B} */",
             "var S = function(var_args) { B.apply(this, arguments); };",
-            "$jscomp.copyProperties(S, B);",
             "$jscomp.inherits(S, B);",
             "/** @this {?} */",
             "S.f=function() { B.f.call(this) }"));
@@ -607,7 +593,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct @extends {B} */",
             "var S = function(var_args) { B.apply(this, arguments); };",
-            "$jscomp.copyProperties(S, B);",
             "$jscomp.inherits(S, B);",
             "S.prototype.f=function() {",
             "  B.prototype.f.call(this);",
@@ -661,7 +646,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "D.f = function () {};",
             "/** @constructor @struct @extends{D} */",
             "var C = function() {};",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);",
             "C.f();"));
 
@@ -681,7 +665,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "D.f = function() {};",
             "/** @constructor @struct @extends{D} */",
             "var C = function() { };",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);",
             "C.prototype.f = function() {};",
             "C.f();"));
@@ -702,7 +685,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "D.f = function() {};",
             "/** @constructor @struct @extends{D} */",
             "var C = function() { };",
-            "$jscomp.copyProperties(C, D);",
             "$jscomp.inherits(C, D);",
             "C.f = function() {};",
             "C.prototype.g = function() {};"));
@@ -774,7 +756,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "Foo.prototype.f = function() {};",
             "/** @constructor @struct @extends {Foo} */",
             "var Sub=function(var_args) { Foo.apply(this, arguments); }",
-            "$jscomp.copyProperties(Sub, Foo);",
             "$jscomp.inherits(Sub, Foo);",
             "(new Sub).f();"),
         null,
@@ -802,7 +783,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "function Foo(){}Foo.f=function(){};",
             "var Sub=function(var_args){Foo.apply(this,arguments)};",
-            "$jscomp.copyProperties(Sub,Foo);",
             "$jscomp.inherits(Sub,Foo)"),
         null,
         null);
@@ -824,6 +804,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.value;",
             "Object.defineProperties(C.prototype, {",
             "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /** @this {C} */",
             "    get: function() {",
             "      return 0;",
@@ -840,6 +822,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.value;",
             "Object.defineProperties(C.prototype, {",
             "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /** @this {C} */",
             "    set: function(val) {",
             "      this.internalVal = val;",
@@ -865,6 +849,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.value;",
             "Object.defineProperties(C.prototype, {",
             "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /** @this {C} */",
             "    set: function(val) {",
             "      this.internalVal = val;",
@@ -897,12 +883,16 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.alwaysThree;",
             "Object.defineProperties(C.prototype, {",
             "  alwaysTwo: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /** @this {C} */",
             "    get: function() {",
             "      return 2;",
             "    }",
             "  },",
             "  alwaysThree: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /** @this {C} */",
             "    get: function() {",
             "      return 3;",
@@ -927,6 +917,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.value;",
             "Object.defineProperties(C.prototype, {",
             "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /**",
             "     * @return {number}",
             "     * @this {C}",
@@ -946,6 +938,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.value;",
             "Object.defineProperties(C.prototype, {",
             "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /**",
             "     * @this {C}",
             "     * @param {string} v",
@@ -981,6 +975,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.value;",
             "Object.defineProperties(C.prototype, {",
             "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /** @type {string} */",
             "    get: function() {}",
             "  }",
@@ -999,6 +995,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.value;",
             "Object.defineProperties(C.prototype, {",
             "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
             "    /** @type {string} */",
             "    set: function(v) {}",
             "  }",
@@ -1013,8 +1011,62 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testStaticGetterSetter() {
     languageOut = LanguageMode.ECMASCRIPT5;
 
-    testError("class C { static get foo() {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
-    testError("class C { static set foo(x) {} }", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test(
+        "class C { static get foo() {} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.foo;",
+            "Object.defineProperties(C, {",
+            "  foo: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {C} */",
+            "    get: function() {}",
+            "  }",
+            "})"));
+
+    test(
+        LINE_JOINER.join("class C { static get foo() {} }", "class Sub extends C {}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.foo;",
+            "Object.defineProperties(C, {",
+            "  foo: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {C} */",
+            "    get: function() {}",
+            "  }",
+            "})",
+            "",
+            "/** @constructor @struct @extends {C} */",
+            "var Sub = function(var_args) {",
+            "  C.apply(this, arguments);",
+            "};",
+            "$jscomp.inherits(Sub, C)"));
+  }
+
+  public void testStaticSetter() {
+    languageOut = LanguageMode.ECMASCRIPT5;
+    test(
+        "class C { static set foo(x) {} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.foo;",
+            "Object.defineProperties(C, {",
+            "  foo: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @this {C} */",
+            "    set: function(x) {}",
+            "  }",
+            "});"));
   }
 
   /**
@@ -1070,7 +1122,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "};"));
 
     test(
-        "var f = x => { this.init(); this.doThings(); this.done(); };",
+        LINE_JOINER.join(
+            "var f = x => {", "  this.init();", "  this.doThings();", "  this.done();", "};"),
         LINE_JOINER.join(
             "/** @const */ var $jscomp$this = this;",
             "var f = function(x) {",
