@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -28,6 +27,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -61,8 +62,7 @@ import java.util.Set;
  *
  * @author mattloring@google.com (Matthew Loring)
  */
-public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallback
-    implements CompilerPass {
+public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
 
   final AbstractCompiler compiler;
 
@@ -84,16 +84,14 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new FindStaticMembers());
-    NodeTraversal.traverse(compiler, root, this);
+    FindStaticMembers findStaticMembers = new FindStaticMembers();
+    NodeTraversal.traverse(compiler, root, findStaticMembers);
+    processInherits(findStaticMembers.inheritsCalls);
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!n.isCall()) {
-      return;
-    }
-    if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.INHERITS)) {
+  private void processInherits(List<Node> inheritsCalls) {
+    for (Node n : inheritsCalls) {
+      Node parent = n.getParent();
       Node superclassNameNode = n.getLastChild();
       Node subclassNameNode = n.getChildBefore(superclassNameNode);
       if (multiplyDefinedClasses.contains(superclassNameNode.getQualifiedName())) {
@@ -154,10 +152,16 @@ public final class Es6ToEs3ClassSideInheritance extends AbstractPostOrderCallbac
 
   private class FindStaticMembers extends NodeTraversal.AbstractPostOrderCallback {
     private final Set<String> classNames = new HashSet<>();
+    private final List<Node> inheritsCalls = new LinkedList<>();
 
     @Override
     public void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
       switch (n.getType()) {
+        case Token.CALL:
+          if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.INHERITS)) {
+            inheritsCalls.add(n);
+          }
+          break;
         case Token.VAR:
           visitVar(n);
           break;
