@@ -2864,16 +2864,18 @@ chrome.pageAction.onClicked;
 
 /**
  * @const
+ * @see https://developer.chrome.com/apps/browser
  */
 chrome.browser = {};
 
 
 /**
  * @param {{url: string}} details An object with a single 'url' key.
- * @param {function(): void} callback The callback function. If an error occurs
- * opening the URL, chrome.runtime.lastError will be set to the error message.
+ * @param {(function(): void)=} opt_callback The callback function. If an error
+ * occurs opening the URL, chrome.runtime.lastError will be set to the error
+ * message.
  */
-chrome.browser.openTab = function(details, callback) {};
+chrome.browser.openTab = function(details, opt_callback) {};
 
 
 /**
