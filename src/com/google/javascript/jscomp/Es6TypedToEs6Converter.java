@@ -37,6 +37,9 @@ public final class Es6TypedToEs6Converter
       "JSC_CANNOT_CONVERT_FIELDS",
       "Can only convert class member variables (fields) in declarations or the right hand side of "
           + "a simple assignment.");
+  static final DiagnosticType CANNOT_CONVERT_BOUNDED_GENERICS = DiagnosticType.error(
+      "JSC_CANNOT_CONVERT_BOUNDED_GENERICS",
+      "Bounded generics are not yet implemented.");
 
   private final AbstractCompiler compiler;
 
@@ -58,21 +61,46 @@ public final class Es6TypedToEs6Converter
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.CLASS:
+        maybeAddGenerics(n, n);
         visitClass(n, parent);
         break;
       case Token.NAME:
       case Token.REST:
-      case Token.FUNCTION: // Return types are colon types on the function node
         visitColonType(n);
+        break;
+      case Token.FUNCTION:
+        // For member functions (eg. class Foo<T> { f() {} }), the JSDocInfo
+        // needs to go on the synthetic MEMBER_FUNCTION_DEF node.
+        maybeAddGenerics(n, parent.getType() == Token.MEMBER_FUNCTION_DEF
+            ? parent
+            : n);
+        visitColonType(n); // Return types are colon types on the function node
         break;
       default:
 
     }
   }
 
+  private void maybeAddGenerics(Node src, Node dst) {
+    Node name = src.getFirstChild();
+    Node generics = (Node) name.getProp(Node.GENERIC_TYPE_LIST);
+    if (generics != null) {
+      JSDocInfoBuilder doc = JSDocInfoBuilder.maybeCopyFrom(dst.getJSDocInfo());
+      // Discard the type bound (the "extends" part) for now
+      for (Node typeName : generics.children()) {
+        doc.recordTemplateTypeName(typeName.getString());
+        if (typeName.hasChildren()) {
+          compiler.report(JSError.make(name, CANNOT_CONVERT_BOUNDED_GENERICS));
+          return;
+        }
+      }
+      name.putProp(Node.GENERIC_TYPE_LIST, null);
+      dst.setJSDocInfo(doc.build());
+    }
+  }
+
   private void visitClass(Node n, Node parent) {
-    Node classNode = n;
-    Node classMembers = classNode.getLastChild();
+    Node classMembers = n.getLastChild();
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
 
     for (Node member : classMembers.children()) {

@@ -158,4 +158,23 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var x: (foo: string, ...bar) => boolean;",
          "var /** function(string, ...?): boolean */ x;");
   }
+
+
+  public void testGenericClass() {
+    test("class Foo<T> {}", "/** @template T */ class Foo {}");
+    test("class Foo<U, V> {}", "/** @template U, V */ class Foo {}");
+    test("var Foo = class<T> {};", "var Foo = /** @template T */ class {};");
+
+    // Currently, bounded generics are not supported.
+    testError("class Foo<U extends () => boolean, V> {}",
+        Es6TypedToEs6Converter.CANNOT_CONVERT_BOUNDED_GENERICS);
+  }
+
+  public void testGenericFunction() {
+    test("function foo<T>() {}", "/** @template T */ function foo() {}");
+    test("var x = <K, V>(p) => 3;", "var x = /** @template K, V */ (p) => 3");
+    test("class Foo { f<T>() {} }", "class Foo { /** @template T */ f() {} }");
+    test("(function<T>() {})();", "(/** @template T */ function() {})();");
+    test("function* foo<T>() {}", "/** @template T */ function* foo() {}");
+  }
 }
