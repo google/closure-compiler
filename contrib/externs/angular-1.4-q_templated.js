@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for the $q service in Angular 1.3
+ * @fileoverview Externs for the $q service in Angular 1.4
  * NOTE: Due to a JS compiler bug, any use of a templated class must occur after
  * the class is defined. Please be careful with the ordering of the classes and
  * functions.
