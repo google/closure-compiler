@@ -55,6 +55,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "",
+            "/** @suppress {visibility} */",
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
@@ -81,7 +82,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass,Example);",
             "",
-            "/** @return {string} */",
+            "/** @return {string} @suppress {visibility} */",
             "Subclass.staticMethod = Example.staticMethod;"));
   }
 
@@ -140,7 +141,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "",
-            "/** @type {number} */",
+            "/** @type {number} @suppress {visibility} */",
             "Subclass.staticField = Example.staticField;"));
   }
 
@@ -181,7 +182,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "",
-            "/** @type {string} */",
+            "/** @type {string} @suppress {visibility} */",
             "Subclass.property;"));
   }
 
@@ -206,7 +207,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "",
-            "/** @type {?} */",
+            "/** @type {?} @suppress {visibility} */",
             "Subclass.property;"));
   }
 }

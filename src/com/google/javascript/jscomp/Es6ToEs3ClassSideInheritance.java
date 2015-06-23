@@ -112,6 +112,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
         JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticProperty.getJSDocInfo());
         JSTypeExpression unknown = new JSTypeExpression(new Node(Token.QMARK), "<synthetic>");
         info.recordType(unknown); // In case there wasn't a type specified on the base class.
+        info.addSuppression("visibility");
         getprop.setJSDocInfo(info.build());
 
         Node declaration = IR.exprResult(getprop);
@@ -142,6 +143,7 @@ public final class Es6ToEs3ClassSideInheritance implements CompilerPass {
     Node assign = IR.assign(
         IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName)),
         IR.getprop(superclassNameNode.cloneTree(), IR.string(memberName)));
+    info.addSuppression("visibility");
     assign.setJSDocInfo(info.build());
     Node exprResult = IR.exprResult(assign);
     exprResult.useSourceInfoIfMissingFromForTree(superclassNameNode);
