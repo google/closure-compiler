@@ -1288,6 +1288,7 @@ public class CommandLineRunner extends
     "iphone.js",
     "mediasource.js",
     "page_visibility.js",
+    "streamsapi.js",
     "v8.js",
     "webstorage.js",
     "w3c_anim_timing.js",

@@ -233,6 +233,9 @@ Response.redirect = function(url, opt_status) {};
 /** @type {boolean} */
 Response.prototype.bodyUsed;
 
+/** @type {!ReadableByteStream} */
+Response.prototype.body;
+
 /** @return {!Promise.<!ArrayBuffer>} */
 Response.prototype.arrayBuffer = function() {};
 
