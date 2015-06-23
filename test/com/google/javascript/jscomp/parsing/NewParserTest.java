@@ -46,8 +46,10 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   private static final String MISSING_GT_MESSAGE =
       "Bad type annotation. missing closing >";
 
-  private static final String UNLABELED_BREAK =
-      "unlabelled break must be inside loop or switch";
+  private static final String MISSING_CURLY_BRACES =
+      "Bad type annotation. Type annotations should have curly braces.";
+
+  private static final String UNLABELED_BREAK = "unlabelled break must be inside loop or switch";
 
   private static final String UNEXPECTED_CONTINUE =
       "continue must be inside loop";
@@ -417,7 +419,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testJSDocAttachment1() {
-    Node varNode = parse("/** @type number */var a;").getFirstChild();
+    Node varNode = parse("/** @type {number} */var a;").getFirstChild();
 
     // VAR
     assertThat(varNode.getType()).isEqualTo(Token.VAR);
@@ -432,7 +434,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT6;
 
-    Node letNode = parse("/** @type number */let a;").getFirstChild();
+    Node letNode = parse("/** @type {number} */let a;").getFirstChild();
 
     // LET
     assertThat(letNode.getType()).isEqualTo(Token.LET);
@@ -445,7 +447,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     assertThat(letNameNode.getType()).isEqualTo(Token.NAME);
     assertThat(letNameNode.getJSDocInfo()).isNull();
 
-    Node constNode = parse("/** @type number */const a = 0;").getFirstChild();
+    Node constNode = parse("/** @type {number} */const a = 0;").getFirstChild();
 
     // CONST
     assertThat(constNode.getType()).isEqualTo(Token.CONST);
@@ -460,7 +462,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testJSDocAttachment2() {
-    Node varNode = parse("/** @type number */var a,b;").getFirstChild();
+    Node varNode = parse("/** @type {number} */var a,b;").getFirstChild();
 
     // VAR
     assertThat(varNode.getType()).isEqualTo(Token.VAR);
@@ -480,8 +482,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testJSDocAttachment3() {
-    Node assignNode = parse(
-        "/** @type number */goog.FOO = 5;").getFirstChild().getFirstChild();
+    Node assignNode = parse("/** @type {number} */goog.FOO = 5;").getFirstChild().getFirstChild();
     assertThat(assignNode.getType()).isEqualTo(Token.ASSIGN);
     JSDocInfo info = assignNode.getJSDocInfo();
     assertThat(info).isNotNull();
@@ -509,9 +510,8 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testJSDocAttachment5() {
-    Node varNode = parse(
-        "var /** @type number */a, /** @define {number} */b = 5;")
-        .getFirstChild();
+    Node varNode =
+        parse("var /** @type {number} */a, /** @define {number} */b = 5;").getFirstChild();
 
     // ASSIGN
     assertThat(varNode.getType()).isEqualTo(Token.VAR);
@@ -797,7 +797,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testIncorrectJSDocDoesNotAlterJSParsing1() throws Exception {
     assertNodeEquality(
         parse("var a = [1,2]"),
-        parseWarning("/** @type Array.<number*/var a = [1,2]",
+        parseWarning("/** @type {Array<number} */var a = [1,2]",
             MISSING_GT_MESSAGE));
   }
 

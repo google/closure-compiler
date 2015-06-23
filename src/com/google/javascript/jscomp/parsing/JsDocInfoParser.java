@@ -1881,6 +1881,8 @@ public final class JsDocInfoParser {
 
       return typeNode;
     } else {
+      // TODO(tbreisacher): Add a SuggestedFix for this warning.
+      reportTypeSyntaxWarning("msg.jsdoc.missing.braces");
       return parseTypeExpression(token);
     }
   }

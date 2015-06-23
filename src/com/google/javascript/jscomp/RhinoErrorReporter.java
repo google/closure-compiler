@@ -36,6 +36,11 @@ class RhinoErrorReporter {
   static final DiagnosticType TYPE_PARSE_ERROR =
       DiagnosticType.warning("JSC_TYPE_PARSE_ERROR", "{0}");
 
+  // This is separate from TYPE_PARSE_ERROR because there are many instances of this warning
+  // and it is unfeasible to fix them all right away.
+  static final DiagnosticType JSDOC_MISSING_BRACES_WARNING =
+      DiagnosticType.disabled("JSC_JSDOC_MISSING_BRACES_WARNING", "{0}");
+
   // Special-cased errors, so that they can be configured via the
   // warnings API.
   static final DiagnosticType TRAILING_COMMA =
@@ -154,8 +159,14 @@ class RhinoErrorReporter {
             " are not allowed as unquoted property.*"),
             INVALID_ES3_PROP_NAME)
 
+        // Type annotation warnings.
+        .put(
+            replacePlaceHolders("Bad type annotation. Type annotations should have curly braces."),
+            JSDOC_MISSING_BRACES_WARNING)
+
         // Type annotation errors.
-        .put(Pattern.compile("^Bad type annotation.*"),
+        .put(Pattern.compile(
+            "^Bad type annotation.*(?!Type annotations should have curly braces\\.)"),
             TYPE_PARSE_ERROR)
 
         // Parse tree too deep.

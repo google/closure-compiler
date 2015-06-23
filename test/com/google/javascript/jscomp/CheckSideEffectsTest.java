@@ -97,12 +97,12 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   public void testTypeAnnotations() {
     testWarning("x;", "JSCOMPILER_PRESERVE(x);", e);
     testWarning("a.b.c.d;", "JSCOMPILER_PRESERVE(a.b.c.d);", e);
-    testWarning("/** @type Number */ a.b.c.d;", ok);
-    testWarning("if (true) { /** @type Number */ a.b.c.d; }", ok);
+    testWarning("/** @type {Number} */ a.b.c.d;", ok);
+    testWarning("if (true) { /** @type {Number} */ a.b.c.d; }", ok);
 
     testWarning("function A() { this.foo; }",
          "function A() { JSCOMPILER_PRESERVE(this.foo); }", e);
-    testWarning("function A() { /** @type Number */ this.foo; }", ok);
+    testWarning("function A() { /** @type {Number} */ this.foo; }", ok);
   }
 
   public void testJSDocComments() {

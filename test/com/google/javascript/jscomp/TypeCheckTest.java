@@ -138,8 +138,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck11() throws Exception {
-    testTypes("/**@type !Number */var a;" +
-        "/**@type !String */var b;" +
+    testTypes("/**@type {!Number} */var a;" +
+        "/**@type {!String} */var b;" +
         "a = b;",
         "assignment\n" +
         "found   : String\n" +
@@ -212,7 +212,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck21() throws Exception {
-    testTypes("/** @type Array<String> */var foo;");
+    testTypes("/** @type {Array<String>} */var foo;");
   }
 
   public void testTypeCheck22() throws Exception {
@@ -548,16 +548,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNullAnd() throws Exception {
-    testTypes("/** @type null */var x;\n" +
-        "/** @type number */var r = x && x;",
+    testTypes("/** @type {null} */var x;\n" +
+        "/** @type {number} */var r = x && x;",
         "initializing variable\n" +
         "found   : null\n" +
         "required: number");
   }
 
   public void testNullOr() throws Exception {
-    testTypes("/** @type null */var x;\n" +
-        "/** @type number */var r = x || x;",
+    testTypes("/** @type {null} */var x;\n" +
+        "/** @type {number} */var r = x || x;",
         "initializing variable\n" +
         "found   : null\n" +
         "required: number");
@@ -1534,9 +1534,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testScoping2() throws Exception {
     testTypes(
-        "/** @type number */ var a;" +
+        "/** @type {number} */ var a;" +
         "function Foo() {" +
-        "  /** @type string */ var a;" +
+        "  /** @type {string} */ var a;" +
         "}");
   }
 
@@ -1566,7 +1566,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testScoping7() throws Exception {
     testTypes("/** @constructor */function A() {" +
-        "  /** @type !A */this.a = null;" +
+        "  /** @type {!A} */this.a = null;" +
         "}",
         "assignment to property a of A\n" +
         "found   : null\n" +
@@ -1576,7 +1576,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testScoping8() throws Exception {
     testTypes("/** @constructor */function A() {}" +
         "/** @constructor */function B() {" +
-        "  /** @type !A */this.a = null;" +
+        "  /** @type {!A} */this.a = null;" +
         "}",
         "assignment to property a of B\n" +
         "found   : null\n" +
@@ -1585,7 +1585,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testScoping9() throws Exception {
     testTypes("/** @constructor */function B() {" +
-        "  /** @type !A */this.a = null;" +
+        "  /** @type {!A} */this.a = null;" +
         "}" +
         "/** @constructor */function A() {}",
         "assignment to property a of B\n" +
@@ -1812,19 +1812,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testFunctionInference5() throws Exception {
     testFunctionType(
-        "/** @this Date\n@return {string} */function f(a) {}",
-        "function (this:Date, ?): string");
+        "/** @this {Date}\n@return {string} */function f(a) {}", "function (this:Date, ?): string");
   }
 
   public void testFunctionInference6() throws Exception {
     testFunctionType(
-        "/** @this Date\n@return {string} */function f(opt_a) {}",
+        "/** @this {Date}\n@return {string} */function f(opt_a) {}",
         "function (this:Date, ?=): string");
   }
 
   public void testFunctionInference7() throws Exception {
     testFunctionType(
-        "/** @this Date */function f(a,b,c,var_args) {}",
+        "/** @this {Date} */function f(a,b,c,var_args) {}",
         "function (this:Date, ?, ?, ?, ...?): undefined");
   }
 
@@ -1842,7 +1841,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testFunctionInference10() throws Exception {
     testFunctionType(
-        "/** @this Date\n@param {boolean} b\n@return {string} */" +
+        "/** @this {Date}\n@param {boolean} b\n@return {string} */" +
         "var f = function(a,b) {};",
         "function (this:Date, ?, boolean): string");
   }
@@ -2633,7 +2632,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // using the variable initialization check to verify the function's type
     testTypes(
         functionDef +
-        "/** @type number */var a=" + functionName + ";",
+        "/** @type {number} */var a=" + functionName + ";",
         "initializing variable\n" +
         "found   : " + functionType + "\n" +
         "required: number");
@@ -2648,7 +2647,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       String functionType) throws Exception {
     testTypes(
         functionDef,
-        "/** @type number */var a=" + functionName + ";",
+        "/** @type {number} */var a=" + functionName + ";",
         "initializing variable\n" +
         "found   : " + functionType + "\n" +
         "required: number", false);
@@ -2794,8 +2793,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 //   }
 
   public void testComparison2() throws Exception {
-    testTypes("/**@type number*/var a;" +
-        "/**@type !Date */var b;" +
+    testTypes("/**@type {number}*/var a;" +
+        "/**@type {!Date} */var b;" +
         "if (a!==b) {}",
         "condition always evaluates to true\n" +
         "left : number\n" +
@@ -2815,8 +2814,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testComparison5() throws Exception {
-    testTypes("/** @type null */var a;" +
-        "/** @type null */var b;" +
+    testTypes("/** @type {null} */var a;" +
+        "/** @type {null} */var b;" +
         "a == b",
         "condition always evaluates to true\n" +
         "left : null\n" +
@@ -2824,8 +2823,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testComparison6() throws Exception {
-    testTypes("/** @type null */var a;" +
-        "/** @type null */var b;" +
+    testTypes("/** @type {null} */var a;" +
+        "/** @type {null} */var b;" +
         "a != b",
         "condition always evaluates to false\n" +
         "left : null\n" +
@@ -2995,7 +2994,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testEnum7() throws Exception {
     testTypes("/** @enum */var a={AA:1,BB:2,CC:3};" +
-        "/** @type a */var b=a.D;",
+        "/** @type {a} */var b=a.D;",
         "element D does not exist on this enum");
   }
 
@@ -4806,12 +4805,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testSwitchCase1() throws Exception {
-    testTypes("/**@type number*/var a;" +
-        "/**@type string*/var b;" +
-        "switch(a){case b:;}",
-        "case expression doesn't match switch\n" +
-        "found   : string\n" +
-        "required: number");
+    testTypes(
+        "/**@type {number}*/var a;" + "/**@type {string}*/var b;" + "switch(a){case b:;}",
+        "case expression doesn't match switch\n" + "found   : string\n" + "required: number");
   }
 
   public void testSwitchCase2() throws Exception {
@@ -4846,8 +4842,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testVar5() throws Exception {
     testTypes("var goog = {};" +
-        "/** @type string */goog.foo = 'hello';" +
-        "/** @type number */var a = goog.foo;",
+        "/** @type {string} */goog.foo = 'hello';" +
+        "/** @type {number} */var a = goog.foo;",
         "initializing variable\n" +
         "found   : string\n" +
         "required: number");
@@ -4867,7 +4863,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testVar7() throws Exception {
-    testTypes("/** @type number */var a, b;",
+    testTypes("/** @type {number} */var a, b;",
         "declaration of multiple variables with shared type information");
   }
 
@@ -4881,22 +4877,22 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testVar10() throws Exception {
-    testTypes("/** @type !Number */var foo = 'abc';",
+    testTypes("/** @type {!Number} */var foo = 'abc';",
         "initializing variable\n" +
         "found   : string\n" +
         "required: Number");
   }
 
   public void testVar11() throws Exception {
-    testTypes("var /** @type !Date */foo = 'abc';",
+    testTypes("var /** @type {!Date} */foo = 'abc';",
         "initializing variable\n" +
         "found   : string\n" +
         "required: Date");
   }
 
   public void testVar12() throws Exception {
-    testTypes("var /** @type !Date */foo = 'abc', " +
-        "/** @type !RegExp */bar = 5;",
+    testTypes("var /** @type {!Date} */foo = 'abc', " +
+        "/** @type {!RegExp} */bar = 5;",
         new String[] {
         "initializing variable\n" +
         "found   : string\n" +
@@ -4908,7 +4904,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testVar13() throws Exception {
     // this caused an NPE
-    testTypes("var /** @type number */a,a;");
+    testTypes("var /** @type {number} */a,a;");
   }
 
   public void testVar14() throws Exception {
@@ -4928,7 +4924,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testAssign1() throws Exception {
     testTypes("var goog = {};" +
-        "/** @type number */goog.foo = 'hello';",
+        "/** @type {number} */goog.foo = 'hello';",
         "assignment to property foo of goog\n" +
         "found   : string\n" +
         "required: number");
@@ -4936,7 +4932,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testAssign2() throws Exception {
     testTypes("var goog = {};" +
-        "/** @type number */goog.foo = 3;" +
+        "/** @type {number}  */goog.foo = 3;" +
         "goog.foo = 'hello';",
         "assignment to property foo of goog\n" +
         "found   : string\n" +
@@ -4945,7 +4941,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testAssign3() throws Exception {
     testTypes("var goog = {};" +
-        "/** @type number */goog.foo = 3;" +
+        "/** @type {number}  */goog.foo = 3;" +
         "goog.foo = 4;");
   }
 
@@ -4969,23 +4965,22 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOr1() throws Exception {
-    testTypes("/** @type number */var a;" +
-        "/** @type number */var b;" +
+    testTypes("/** @type {number}  */var a;" +
+        "/** @type {number}  */var b;" +
         "a + b || undefined;");
   }
 
   public void testOr2() throws Exception {
-    testTypes("/** @type number */var a;" +
-        "/** @type number */var b;" +
-        "/** @type number */var c = a + b || undefined;",
+    testTypes("/** @type {number}  */var a;" +
+        "/** @type {number}  */var b;" +
+        "/** @type {number}  */var c = a + b || undefined;",
         "initializing variable\n" +
         "found   : (number|undefined)\n" +
         "required: number");
   }
 
   public void testOr3() throws Exception {
-    testTypes("/** @type {(number, undefined)} */var a;" +
-        "/** @type number */var c = a || 3;");
+    testTypes("/** @type {(number, undefined)} */var a;" + "/** @type {number}  */var c = a || 3;");
   }
 
   /**
@@ -5011,32 +5006,30 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAnd1() throws Exception {
-    testTypes("/** @type number */var a;" +
-        "/** @type number */var b;" +
-        "a + b && undefined;");
+    testTypes(
+        "/** @type {number}  */var a;" + "/** @type {number}  */var b;" + "a + b && undefined;");
   }
 
   public void testAnd2() throws Exception {
-    testTypes("/** @type number */var a;" +
-        "/** @type number */var b;" +
-        "/** @type number */var c = a + b && undefined;",
-        "initializing variable\n" +
-        "found   : (number|undefined)\n" +
-        "required: number");
+    testTypes(
+        "/** @type {number}  */var a;"
+            + "/** @type {number}  */var b;"
+            + "/** @type {number}  */var c = a + b && undefined;",
+        "initializing variable\n" + "found   : (number|undefined)\n" + "required: number");
   }
 
   public void testAnd3() throws Exception {
-    testTypes("/** @type {(!Array, undefined)} */var a;" +
-        "/** @type number */var c = a && undefined;",
-        "initializing variable\n" +
-        "found   : undefined\n" +
-        "required: number");
+    testTypes(
+        "/** @type {(!Array, undefined)} */var a;"
+            + "/** @type {number}  */var c = a && undefined;",
+        "initializing variable\n" + "found   : undefined\n" + "required: number");
   }
 
   public void testAnd4() throws Exception {
-    testTypes("/** @param {number} x */function f(x){};\n" +
-        "/** @type null */var x; /** @type {number?} */var y;\n" +
-        "if (x && y) { f(y) }");
+    testTypes(
+        "/** @param {number} x */function f(x){};\n"
+            + "/** @type {null}  */var x; /** @type {number?} */var y;\n"
+            + "if (x && y) { f(y) }");
   }
 
   public void testAnd5() throws Exception {
@@ -5056,7 +5049,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // case since x && x is always false. The implementation of this requires
     // a more precise handling of a null value within a variable's type.
     // Currently, a null value defaults to ? which passes every check.
-    testTypes("/** @type null */var x; if (x && x) {}");
+    testTypes("/** @type {null} */var x; if (x && x) {}");
   }
 
   public void testAnd8() throws Exception {
@@ -5096,28 +5089,28 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("/** @return {(string,null)} */" +
         "function f() { return null;}" +
         "/** @type {(string,null)} */ var a = f();" +
-        "/** @type string */" +
+        "/** @type {string} */" +
         "var b = a ? a : 'default';");
   }
 
   public void testHookRestrictsType2() throws Exception {
     testTypes("/** @type {String} */" +
         "var a = null;" +
-        "/** @type null */" +
+        "/** @type {null} */" +
         "var b = a ? null : a;");
   }
 
   public void testHookRestrictsType3() throws Exception {
     testTypes("/** @type {String} */" +
         "var a;" +
-        "/** @type null */" +
+        "/** @type {null} */" +
         "var b = (!a) ? a : null;");
   }
 
   public void testHookRestrictsType4() throws Exception {
     testTypes("/** @type {(boolean,undefined)} */" +
         "var a;" +
-        "/** @type boolean */" +
+        "/** @type {boolean} */" +
         "var b = a != null ? a : true;");
   }
 
@@ -5174,11 +5167,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testHigherOrderFunctions2() throws Exception {
     testTypes(
-        "/** @type {function():!Date} */var f;" +
-        "/** @type boolean */var a = f();",
-        "initializing variable\n" +
-        "found   : Date\n" +
-        "required: boolean");
+        "/** @type {function():!Date} */var f;" + "/** @type {boolean} */var a = f();",
+        "initializing variable\n" + "found   : Date\n" + "required: boolean");
   }
 
   public void testHigherOrderFunctions3() throws Exception {
@@ -5333,55 +5323,55 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testClosure1() throws Exception {
     testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @type {string|undefined} */var a;" +
-        "/** @type string */" +
-        "var b = goog.isDef(a) ? a : 'default';",
+        CLOSURE_DEFS
+            + "/** @type {string|undefined} */var a;"
+            + "/** @type {string} */"
+            + "var b = goog.isDef(a) ? a : 'default';",
         null);
   }
 
   public void testClosure2() throws Exception {
     testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @type {string?} */var a;" +
-        "/** @type string */" +
-        "var b = goog.isNull(a) ? 'default' : a;",
+        CLOSURE_DEFS
+            + "/** @type {string?} */var a;"
+            + "/** @type {string} */"
+            + "var b = goog.isNull(a) ? 'default' : a;",
         null);
   }
 
   public void testClosure3() throws Exception {
     testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @type {string|null|undefined} */var a;" +
-        "/** @type string */" +
-        "var b = goog.isDefAndNotNull(a) ? a : 'default';",
+        CLOSURE_DEFS
+            + "/** @type {string|null|undefined} */var a;"
+            + "/** @type {string} */"
+            + "var b = goog.isDefAndNotNull(a) ? a : 'default';",
         null);
   }
 
   public void testClosure4() throws Exception {
     testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @type {string|undefined} */var a;" +
-        "/** @type string */" +
-        "var b = !goog.isDef(a) ? 'default' : a;",
+        CLOSURE_DEFS
+            + "/** @type {string|undefined} */var a;"
+            + "/** @type {string} */"
+            + "var b = !goog.isDef(a) ? 'default' : a;",
         null);
   }
 
   public void testClosure5() throws Exception {
     testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @type {string?} */var a;" +
-        "/** @type string */" +
-        "var b = !goog.isNull(a) ? a : 'default';",
+        CLOSURE_DEFS
+            + "/** @type {string?} */var a;"
+            + "/** @type {string} */"
+            + "var b = !goog.isNull(a) ? a : 'default';",
         null);
   }
 
   public void testClosure6() throws Exception {
     testClosureTypes(
-        CLOSURE_DEFS +
-        "/** @type {string|null|undefined} */var a;" +
-        "/** @type string */" +
-        "var b = !goog.isDefAndNotNull(a) ? 'default' : a;",
+        CLOSURE_DEFS
+            + "/** @type {string|null|undefined} */var a;"
+            + "/** @type {string} */"
+            + "var b = !goog.isDefAndNotNull(a) ? 'default' : a;",
         null);
   }
 
@@ -5958,10 +5948,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testThis5() throws Exception {
-    testTypes("/** @this Date\n@return {number}*/function h() { return this }",
-        "inconsistent return type\n" +
-        "found   : Date\n" +
-        "required: number");
+    testTypes(
+        "/** @this {Date}\n@return {number}*/function h() { return this }",
+        "inconsistent return type\n" + "found   : Date\n" + "required: number");
   }
 
   public void testThis6() throws Exception {
@@ -6202,40 +6191,41 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testControlFlowRestrictsType1() throws Exception {
-    testTypes("/** @return {String?} */ function f() { return null; }" +
-        "/** @type {String?} */ var a = f();" +
-        "/** @type String */ var b = new String('foo');" +
-        "/** @type null */ var c = null;" +
-        "if (a) {" +
-        "  b = a;" +
-        "} else {" +
-        "  c = a;" +
-        "}");
+    testTypes(
+        "/** @return {String?} */ function f() { return null; }"
+            + "/** @type {String?} */ var a = f();"
+            + "/** @type {String} */ var b = new String('foo');"
+            + "/** @type {null} */ var c = null;"
+            + "if (a) {"
+            + "  b = a;"
+            + "} else {"
+            + "  c = a;"
+            + "}");
   }
 
   public void testControlFlowRestrictsType2() throws Exception {
-    testTypes("/** @return {(string,null)} */ function f() { return null; }" +
-        "/** @type {(string,null)} */ var a = f();" +
-        "/** @type string */ var b = 'foo';" +
-        "/** @type null */ var c = null;" +
-        "if (a) {" +
-        "  b = a;" +
-        "} else {" +
-        "  c = a;" +
-        "}",
-        "assignment\n" +
-        "found   : (null|string)\n" +
-        "required: null");
+    testTypes(
+        "/** @return {(string,null)} */ function f() { return null; }"
+            + "/** @type {(string,null)} */ var a = f();"
+            + "/** @type {string} */ var b = 'foo';"
+            + "/** @type {null} */ var c = null;"
+            + "if (a) {"
+            + "  b = a;"
+            + "} else {"
+            + "  c = a;"
+            + "}",
+        "assignment\n" + "found   : (null|string)\n" + "required: null");
   }
 
   public void testControlFlowRestrictsType3() throws Exception {
-    testTypes("/** @type {(string,void)} */" +
-        "var a;" +
-        "/** @type string */" +
-        "var b = 'foo';" +
-        "if (a) {" +
-        "  b = a;" +
-        "}");
+    testTypes(
+        "/** @type {(string,void)} */"
+            + "var a;"
+            + "/** @type {string} */"
+            + "var b = 'foo';"
+            + "if (a) {"
+            + "  b = a;"
+            + "}");
   }
 
   public void testControlFlowRestrictsType4() throws Exception {
@@ -6317,7 +6307,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testSwitchCase3() throws Exception {
-    testTypes("/** @type String */" +
+    testTypes("/** @type {String} */" +
         "var a = new String('foo');" +
         "switch (a) { case 'A': }");
   }
@@ -6459,42 +6449,42 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNumberAutoboxing() throws Exception {
-    testTypes("/** @type Number */var a = 4;",
+    testTypes("/** @type {Number} */var a = 4;",
         "initializing variable\n" +
         "found   : number\n" +
         "required: (Number|null)");
   }
 
   public void testNumberUnboxing() throws Exception {
-    testTypes("/** @type number */var a = new Number(4);",
+    testTypes("/** @type {number} */var a = new Number(4);",
         "initializing variable\n" +
         "found   : Number\n" +
         "required: number");
   }
 
   public void testStringAutoboxing() throws Exception {
-    testTypes("/** @type String */var a = 'hello';",
+    testTypes("/** @type {String} */var a = 'hello';",
         "initializing variable\n" +
         "found   : string\n" +
         "required: (String|null)");
   }
 
   public void testStringUnboxing() throws Exception {
-    testTypes("/** @type string */var a = new String('hello');",
+    testTypes("/** @type {string} */var a = new String('hello');",
         "initializing variable\n" +
         "found   : String\n" +
         "required: string");
   }
 
   public void testBooleanAutoboxing() throws Exception {
-    testTypes("/** @type Boolean */var a = true;",
+    testTypes("/** @type {Boolean} */var a = true;",
         "initializing variable\n" +
         "found   : boolean\n" +
         "required: (Boolean|null)");
   }
 
   public void testBooleanUnboxing() throws Exception {
-    testTypes("/** @type boolean */var a = new Boolean(false);",
+    testTypes("/** @type {boolean} */var a = new Boolean(false);",
         "initializing variable\n" +
         "found   : Boolean\n" +
         "required: boolean");
@@ -6880,9 +6870,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "* @interface\n" +
         "*/\n" +
         "function TwoNumbers() {}\n" +
-        "/** @type number */\n" +
+        "/** @type {number} */\n" +
         "TwoNumbers.prototype.first;\n" +
-        "/** @type number */\n" +
+        "/** @type {number} */\n" +
         "TwoNumbers.prototype.second;\n" +
         "/** @return {number} */ function f() { return SOME_DEFAULT; }",
         "inconsistent return type\n" +
@@ -9053,7 +9043,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testUnknownConstructorInstanceType2() throws Exception {
-    testTypes("function g(f) { return /** @type Array */(new f()); }");
+    testTypes("function g(f) { return /** @type {Array} */(new f()); }");
   }
 
   public void testUnknownConstructorInstanceType3() throws Exception {
@@ -9170,7 +9160,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult p = parseAndTypeCheckWithScope(
         "var goog = {};" +
         "goog.A = /** @constructor */function() {};" +
-        "/** @type number */goog.A.prototype.m1 = 5");
+        "/** @type {number} */goog.A.prototype.m1 = 5");
 
     testAddingMethodsUsingPrototypeIdiomComplexNamespace(p);
   }
@@ -9180,7 +9170,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     TypeCheckResult p = parseAndTypeCheckWithScope(
         "var goog = {};" +
         "/** @constructor */goog.A = function() {};" +
-        "/** @type number */goog.A.prototype.m1 = 5");
+        "/** @type {number} */goog.A.prototype.m1 = 5");
 
     testAddingMethodsUsingPrototypeIdiomComplexNamespace(p);
   }
@@ -9254,13 +9244,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testPrototypePropertyTypes() throws Exception {
     Node js1Node = parseAndTypeCheck(
         "/** @constructor */function A() {\n" +
-        "  /** @type string */ this.m1;\n" +
-        "  /** @type Object? */ this.m2 = {};\n" +
-        "  /** @type boolean */ this.m3;\n" +
+        "  /** @type {string} */ this.m1;\n" +
+        "  /** @type {Object?} */ this.m2 = {};\n" +
+        "  /** @type {boolean} */ this.m3;\n" +
         "}\n" +
-        "/** @type string */ A.prototype.m4;\n" +
-        "/** @type number */ A.prototype.m5 = 0;\n" +
-        "/** @type boolean */ A.prototype.m6;\n");
+        "/** @type {string} */ A.prototype.m4;\n" +
+        "/** @type {number} */ A.prototype.m5 = 0;\n" +
+        "/** @type {boolean} */ A.prototype.m6;\n");
 
     ObjectType instanceType = getInstanceType(js1Node);
     assertEquals(NATIVE_PROPERTIES_COUNT + 6,
@@ -10322,7 +10312,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDfa1() throws Exception {
-    testTypes("var x = null;\n x = 1;\n /** @type number */ var y = x;");
+    testTypes("var x = null;\n x = 1;\n /** @type {number} */ var y = x;");
   }
 
   public void testDfa2() throws Exception {
@@ -10780,7 +10770,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testGetTypedPercent4() throws Exception {
     String js = "var n = {};\n /** @constructor */ n.T = function() {};\n" +
-        "/** @type n.T */ var x = new n.T();";
+        "/** @type {n.T} */ var x = new n.T();";
     assertEquals(100.0, getTypedPercent(js), 0.1);
   }
 
@@ -11339,7 +11329,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node n = parseAndTypeCheck("/** @param {number} a \n"
         + "* @param {number} b */\n"
         + "function f(a, b) {\n"
-        + "/** @type number */"
+        + "/** @type {number} */"
         + "var i = 0;"
         + "for (; (i + a) < b; ++i) {}}");
 
@@ -11353,12 +11343,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node n = parseAndTypeCheck("/** @constructor */ function Foo() {};\n"
         + "Foo.prototype.hi = false;"
         + "function foo(a, b) {\n"
-        + "  /** @type Array */"
+        + "  /** @type {Array} */"
         + "  var arr;"
-        + "  /** @type number */"
+        + "  /** @type {number} */"
         + "  var iter;"
         + "  for (iter = 0; iter < arr.length; ++ iter) {"
-        + "    /** @type Foo */"
+        + "    /** @type {Foo} */"
         + "    var afoo = arr[iter];"
         + "    afoo;"
         + "  }"
@@ -11912,7 +11902,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Generic<!Bar>} */ var y;\n" +
         "" +
         "x = y;\n" + // no warning
-        "/** @type null */ var z1 = y;\n" +
+        "/** @type {null} */ var z1 = y;\n" +
         "",
         "initializing variable\n" +
         "found   : (Generic<Foo>|null)\n" +
@@ -11938,7 +11928,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @type {Generic<!Bar>} */ var y;\n" +
         "" +
         "y = x;\n" + // no warning.
-        "/** @type null */ var z1 = x;\n" +
+        "/** @type {null} */ var z1 = x;\n" +
         "",
         "initializing variable\n" +
         "found   : (Generic<Foo>|null)\n" +

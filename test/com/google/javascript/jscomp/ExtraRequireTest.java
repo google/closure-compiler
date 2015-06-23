@@ -44,7 +44,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
     testSame("goog.require('foo.Bar'); /** @type {Array<foo.Bar>} */ var x;");
     testSame("goog.require('foo.Bar'); var x = new foo.Bar.Baz();");
     testSame("goog.require('foo.bar'); var x = foo.bar();");
-    testSame("goog.require('foo.bar'); var x = /** @type foo.bar */ (null);");
+    testSame("goog.require('foo.bar'); var x = /** @type {foo.bar} */ (null);");
     testSame("goog.require('foo.bar'); function f(/** foo.bar */ x) {}");
     testSame("goog.require('foo.bar'); alert(foo.bar.baz);");
     testSame("/** @suppress {extraRequire} */ goog.require('foo.bar');");

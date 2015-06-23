@@ -98,11 +98,12 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseNamedType1() throws Exception {
-    assertThat(parse("@type null", "Unexpected end of file")).isNull();
+    assertThat(parse("@type {null}", "Unexpected end of file")).isNull();
   }
 
   public void testParseNamedType2() throws Exception {
-    JSDocInfo info = parse("@type null*/");
+    JSDocInfo info =
+        parse("@type null*/", "Bad type annotation. Type annotations should have curly braces.");
     assertTypeEquals(NULL_TYPE, info.getType());
   }
 
@@ -151,7 +152,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTypedefType1() throws Exception {
-    JSDocInfo info = parse("@typedef string */");
+    JSDocInfo info = parse("@typedef {string} */");
     assertThat(info.hasTypedefType()).isTrue();
     assertTypeEquals(STRING_TYPE, info.getTypedefType());
   }
@@ -253,15 +254,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseTemplatizedTypeAlternateSyntax() throws Exception {
-    JSDocInfo info = parse("@type !Array<number> */");
-    assertTypeEquals(
-        createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
+    JSDocInfo info = parse("@type {!Array<number>} */");
+    assertTypeEquals(createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
   public void testParseTemplatizedType1() throws Exception {
-    JSDocInfo info = parse("@type !Array.<number> */");
-    assertTypeEquals(
-        createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
+    JSDocInfo info =
+        parse(
+            "@type !Array.<number> */",
+            "Bad type annotation. Type annotations should have curly braces.");
+    assertTypeEquals(createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
   public void testParseTemplatizedType2() throws Exception {
@@ -271,11 +273,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseTemplatizedType3() throws Exception {
-    JSDocInfo info = parse("@type !Array.<(number,null)>*/");
+    JSDocInfo info = parse("@type {!Array.<(number,null)>}*/");
     assertTypeEquals(
-        createTemplatizedType(ARRAY_TYPE,
-            createUnionType(NUMBER_TYPE, NULL_TYPE)),
-        info.getType());
+        createTemplatizedType(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)), info.getType());
   }
 
   public void testParseTemplatizedType4() throws Exception {
@@ -361,9 +361,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseTemplatizedType13() throws Exception {
-    JSDocInfo info = parse("@type !Array.<?> */");
-    assertTypeEquals(
-        createTemplatizedType(ARRAY_TYPE, UNKNOWN_TYPE), info.getType());
+    JSDocInfo info = parse("@type {!Array.<?>} */");
+    assertTypeEquals(createTemplatizedType(ARRAY_TYPE, UNKNOWN_TYPE), info.getType());
   }
 
   public void testParseUnionType1() throws Exception {
@@ -601,12 +600,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testIssue477() throws Exception {
-    parse("@type function */",
-        "Bad type annotation. missing opening (");
+    parse("@type {function} */", "Bad type annotation. missing opening (");
   }
 
   public void testMalformedThisAnnotation() throws Exception {
-    parse("@this */",
+    parse(
+        "@this */",
+        "Bad type annotation. Type annotations should have curly braces.",
         "Bad type annotation. type not recognized due to syntax error");
   }
 
@@ -804,33 +804,27 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseNewline2() throws Exception {
-    JSDocInfo info = parse("@type !Array.<\n* number\n* > */");
-    assertTypeEquals(
-        createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
+    JSDocInfo info = parse("@type {!Array.<\n* number\n* >} */");
+    assertTypeEquals(createTemplatizedType(ARRAY_TYPE, NUMBER_TYPE), info.getType());
   }
 
   public void testParseNewline3() throws Exception {
-    JSDocInfo info = parse("@type !Array.<(number,\n* null)>*/");
+    JSDocInfo info = parse("@type {!Array.<(number,\n* null)>}*/");
     assertTypeEquals(
-        createTemplatizedType(
-            ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
-        info.getType());
+        createTemplatizedType(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)), info.getType());
   }
 
   public void testParseNewline4() throws Exception {
-    JSDocInfo info = parse("@type !Array.<(number|\n* null)>*/");
+    JSDocInfo info = parse("@type {!Array.<(number|\n* null)>}*/");
     assertTypeEquals(
-        createTemplatizedType(
-            ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)),
-        info.getType());
+        createTemplatizedType(ARRAY_TYPE, createUnionType(NUMBER_TYPE, NULL_TYPE)), info.getType());
   }
 
   public void testParseNewline5() throws Exception {
-    JSDocInfo info = parse("@type !Array.<function(\n* )\n* :\n* Date>*/");
+    JSDocInfo info = parse("@type {!Array.<function(\n* )\n* :\n* Date>}*/");
     assertTypeEquals(
-        createTemplatizedType(ARRAY_TYPE,
-            registry.createFunctionType(
-                createUnionType(DATE_TYPE, NULL_TYPE))),
+        createTemplatizedType(
+            ARRAY_TYPE, registry.createFunctionType(createUnionType(DATE_TYPE, NULL_TYPE))),
         info.getType());
   }
 
@@ -871,21 +865,20 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseThisType2() throws Exception {
     JSDocInfo info =
-        parse("@this goog.foo.Bar*/");
-    assertTypeEquals(
-        registry.createNamedType("goog.foo.Bar", null, -1, -1),
-        info.getThisType());
+        parse(
+            "@this goog.foo.Bar*/",
+            "Bad type annotation. Type annotations should have curly braces.");
+    assertTypeEquals(registry.createNamedType("goog.foo.Bar", null, -1, -1), info.getThisType());
   }
 
   public void testParseThisType3() throws Exception {
-    parse("@type {number}\n@this goog.foo.Bar*/",
-        "Bad type annotation. type annotation incompatible " +
-        "with other annotations");
+    parse(
+        "@type {number}\n@this {goog.foo.Bar}*/",
+        "Bad type annotation. type annotation incompatible " + "with other annotations");
   }
 
   public void testParseThisType4() throws Exception {
-    resolve(parse("@this number*/").getThisType(),
-        "@this must specify an object type");
+    resolve(parse("@this {number}*/").getThisType(), "@this must specify an object type");
   }
 
   public void testParseThisType5() throws Exception {
@@ -1265,8 +1258,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseEnum3() throws Exception {
-    assertTypeEquals(STRING_TYPE,
-        parse("@enum string*/").getEnumParameterType());
+    assertTypeEquals(
+        STRING_TYPE,
+        parse("@enum string*/", "Bad type annotation. Type annotations should have curly braces.")
+            .getEnumParameterType());
   }
 
   public void testParseDesc1() throws Exception {
@@ -1577,7 +1572,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseDefineErrors4() throws Exception {
-    parse("@type string \n @define {string} */", "conflicting @define tag");
+    parse("@type {string} \n @define {string} */", "conflicting @define tag");
   }
 
   public void testParseDefineErrors5() throws Exception {
@@ -1589,9 +1584,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseDefineErrors8() throws Exception {
-    parse("@define {string}\n @type string */",
-        "Bad type annotation. " +
-        "type annotation incompatible with other annotations");
+    parse(
+        "@define {string}\n @type {string} */",
+        "Bad type annotation. " + "type annotation incompatible with other annotations");
   }
 
   public void testParseOverride1() throws Exception {

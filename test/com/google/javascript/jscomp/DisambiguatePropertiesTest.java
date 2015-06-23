@@ -79,7 +79,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;";
     testSets(js, js, "{a=[[Foo.prototype]]}");
@@ -89,7 +89,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype = {a: 0};\n"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;";
     String expected = "{a=[[Foo.prototype]]}";
@@ -101,7 +101,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype = { get a() {return  0},"
         + "                  set a(b) {} };\n"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;";
     String expected = "{a=[[Foo.prototype]]}";
@@ -112,7 +112,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype = {'a': 0};\n"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F['a'] = 0;";
     String expected = "{}";
@@ -123,7 +123,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;";
     testSets(js, js, "{a=[[Foo.prototype]]}");
@@ -167,12 +167,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype.a = 0;"
-        + "/** @type Bar */\n"
+        + "/** @type {Bar} */\n"
         + "var B = new Bar;\n"
         + "B.a = 0;";
     String output = ""
@@ -191,12 +191,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype = {a: 0};"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype = {a: 0};"
-        + "/** @type Bar */\n"
+        + "/** @type {Bar} */\n"
         + "var B = new Bar;\n"
         + "B.a = 0;";
 
@@ -218,13 +218,13 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype = { get a() {return  0},"
         + "                  set a(b) {} };\n"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype = { get a() {return  0},"
         + "                  set a(b) {} };\n"
-        + "/** @type Bar */\n"
+        + "/** @type {Bar} */\n"
         + "var B = new Bar;\n"
         + "B.a = 0;";
 
@@ -247,12 +247,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype = {a: 0};"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype = {'a': 0};"
-        + "/** @type Bar */\n"
+        + "/** @type {Bar} */\n"
         + "var B = new Bar;\n"
         + "B['a'] = 0;";
 
@@ -272,11 +272,11 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   public void testTwoTypes5() {
     String js = ""
         + "/** @constructor @template T */ function Foo() { this.a = 0; }\n"
-        + "/** @type Foo.<string> */\n"
+        + "/** @type {Foo<string>} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;"
         + "/** @constructor @template T */ function Bar() { this.a = 0; }\n"
-        + "/** @type Bar.<string> */\n"
+        + "/** @type {Bar<string>} */\n"
         + "var B = new Bar;\n"
         + "B.a = 0;";
     String output = ""
@@ -294,7 +294,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;"
         + "Foo.prototype.b = 0;"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;"
         + "F.b = 0;";
@@ -308,14 +308,14 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;"
         + "Foo.prototype.b = 0;"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Foo;\n"
         + "F.a = 0;"
         + "F.b = 0;"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype.a = 0;"
         + "Bar.prototype.b = 0;"
-        + "/** @type Bar */\n"
+        + "/** @type {Bar} */\n"
         + "var B = new Bar;\n"
         + "B.a = 0;"
         + "B.b = 0;";
@@ -477,10 +477,10 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
       + "/** @constructor */ function Foo() {}\n"
       + "Foo.prototype.a = 0;\n"
-      + "/** @constructor\n* @extends Foo */ function Bar() {}\n"
+      + "/** @constructor\n* @extends {Foo} */ function Bar() {}\n"
       + "/** @override */\n"
       + "Bar.prototype.a = 0;\n"
-      + "/** @type Bar */ var B = new Bar;\n"
+      + "/** @type {Bar} */ var B = new Bar;\n"
       + "B.a = 0;"
       + "/** @constructor */ function Baz() {}\n"
       + "Baz.prototype.a = function(){};\n";
@@ -981,9 +981,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n"
-        + "/** @constructor \n @implements I */ function Foo() {};\n"
+        + "/** @constructor \n @implements {I} */ function Foo() {};\n"
         + "Foo.prototype.a;\n"
-        + "/** @type I */\n"
+        + "/** @type {I} */\n"
         + "var F = new Foo;"
         + "var x = F.a;";
     testSets(js, "{a=[[Foo.prototype, I.prototype]]}");
@@ -993,11 +993,11 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     String js = ""
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n"
-        + "/** @constructor \n @implements I */ function Foo() {};\n"
+        + "/** @constructor \n @implements {I} */ function Foo() {};\n"
         + "Foo.prototype.a;\n"
         + "/** @constructor \n @extends Foo */ function Bar() {};\n"
         + "Bar.prototype.a;\n"
-        + "/** @type Bar */\n"
+        + "/** @type {Bar} */\n"
         + "var B = new Bar;"
         + "B.a = 0";
     testSets(js, "{a=[[Foo.prototype, I.prototype]]}");
@@ -1009,12 +1009,12 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "I.prototype.a;\n"
         + "/** @interface */ function I2() {};\n"
         + "I2.prototype.a;\n"
-        + "/** @constructor \n @implements I */ function Foo() {};\n"
+        + "/** @constructor \n @implements {I} */ function Foo() {};\n"
         + "Foo.prototype.a;\n"
-        + "/** @constructor \n @extends Foo \n @implements I2*/\n"
+        + "/** @constructor \n @extends {Foo} \n @implements {I2}*/\n"
         + "function Bar() {};\n"
         + "Bar.prototype.a;\n"
-        + "/** @type Bar */\n"
+        + "/** @type {Bar} */\n"
         + "var B = new Bar;"
         + "B.a = 0";
     testSets(js, "{a=[[Foo.prototype, I.prototype, I2.prototype]]}");
@@ -1025,9 +1025,9 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @interface */ function I2() {};\n"
         + "I2.prototype.a;\n"
         + "/** @constructor */ function Bar() {}\n"
-        + "/** @type I */\n"
+        + "/** @type {I} */\n"
         + "var i = new Bar;\n" // Make I invalidating
-        + "/** @constructor \n @implements I \n @implements I2 */"
+        + "/** @constructor \n @implements {I} \n @implements {I2} */"
         + "function Foo() {};\n"
         + "/** @override */\n"
         + "Foo.prototype.a = 0;\n"
@@ -1042,7 +1042,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @interface */ function I() {};\n"
         + "/** @interface */ function I2() {};\n"
         + "I2.prototype.a;\n"
-        + "/** @constructor \n @implements I \n @implements I2 */"
+        + "/** @constructor \n @implements {I} \n @implements {I2} */"
         + "function Foo() {};\n"
         + "/** @override */"
         + "Foo.prototype.a = 0;\n"
@@ -1068,7 +1068,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n"
         + "/** @interface \n @extends I */ function I2() {};\n"
-        + "/** @constructor \n @implements I2 */"
+        + "/** @constructor \n @implements {I2} */"
         + "function Foo() {};\n"
         + "/** @override */\n"
         + "Foo.prototype.a = 0;\n"
@@ -1118,7 +1118,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
         + "Foo.prototype.a = 0;\n"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype.a = 0;\n"
-        + "/** @type Foo */\n"
+        + "/** @type {Foo} */\n"
         + "var F = new Bar;\n"
         + "F.a = 0;";
 
