@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
-import com.google.javascript.jscomp.lint.CheckJSDoc;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -198,16 +197,17 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
+    // Verify JsDoc annotations
+    checks.add(checkJsDoc);
+
     if (options.closurePass) {
       checks.add(closureRewriteModule);
     }
 
     // ES6 compatible passes.
 
-    if (!options.transpileOnly) {
-      if (options.declaredGlobalExternsOnWindow) {
-        checks.add(declaredGlobalExternsOnWindow);
-      }
+    if (!options.transpileOnly && options.declaredGlobalExternsOnWindow) {
+      checks.add(declaredGlobalExternsOnWindow);
     }
 
     // ES6 transpilation passes.
@@ -944,6 +944,14 @@ public final class DefaultPassConfig extends PassConfig {
           "Exports can only be generated if export symbol/property " +
           "functions are set.");
 
+  /** Verifies JSDoc annotations are used properly. */
+  private final PassFactory checkJsDoc = new PassFactory("checkJsDoc", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new CheckJSDoc(compiler);
+    }
+  };
+
   /** Generates exports for @export annotations. */
   private final PassFactory generateExports = new PassFactory("generateExports", true) {
     @Override
@@ -1512,7 +1520,7 @@ public final class DefaultPassConfig extends PassConfig {
       return combineChecks(compiler, ImmutableList.<Callback>of(
           new CheckEnums(compiler),
           new CheckInterfaces(compiler),
-          new CheckJSDoc(compiler),
+          new com.google.javascript.jscomp.lint.CheckJSDoc(compiler),
           new CheckNullableReturn(compiler),
           new CheckPrototypeProperties(compiler),
           new ImplicitNullabilityCheck(compiler)));
