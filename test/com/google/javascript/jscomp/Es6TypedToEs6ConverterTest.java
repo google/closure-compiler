@@ -159,7 +159,6 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "var /** function(string, ...?): boolean */ x;");
   }
 
-
   public void testGenericClass() {
     test("class Foo<T> {}", "/** @template T */ class Foo {}");
     test("class Foo<U, V> {}", "/** @template U, V */ class Foo {}");
@@ -176,5 +175,13 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("class Foo { f<T>() {} }", "class Foo { /** @template T */ f() {} }");
     test("(function<T>() {})();", "(/** @template T */ function() {})();");
     test("function* foo<T>() {}", "/** @template T */ function* foo() {}");
+  }
+
+  public void testImplements() {
+    test("class Foo implements Bar, Baz {}",
+         "/** @implements {Bar} @implements {Baz} */ class Foo {}");
+    // The "extends" clause is handled by @link {Es6ToEs3Converter}
+    test("class Foo extends Bar implements Baz {}",
+         "/** @implements {Baz} */ class Foo extends Bar {}");
   }
 }

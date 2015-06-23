@@ -100,6 +100,17 @@ public final class Es6TypedToEs6Converter
   }
 
   private void visitClass(Node n, Node parent) {
+    Node interfaces = (Node) n.getProp(Node.IMPLEMENTS);
+    if (interfaces != null) {
+      JSDocInfoBuilder doc = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+      for (Node child : interfaces.children()) {
+        Node type = convertWithLocation(child);
+        doc.recordImplementedInterface(new JSTypeExpression(type, n.getSourceFileName()));
+      }
+      n.putProp(Node.IMPLEMENTS, null);
+      n.setJSDocInfo(doc.build());
+    }
+
     Node classMembers = n.getLastChild();
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
 
