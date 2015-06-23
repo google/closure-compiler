@@ -74,10 +74,10 @@ function ObjectPropertyDescriptor() {}
 /** @type {*} */
 ObjectPropertyDescriptor.prototype.value;
 
-/** @type {(function():?)||undefined} */
+/** @type {(function():?)|undefined} */
 ObjectPropertyDescriptor.prototype.get;
 
-/** @type {(function(?):void)||undefined} */
+/** @type {(function(?):void)|undefined} */
 ObjectPropertyDescriptor.prototype.set;
 
 /** @type {boolean|undefined} */
