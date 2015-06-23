@@ -64,28 +64,33 @@ public final class Es6TypedToEs6Converter
         maybeAddGenerics(n, n);
         visitClass(n, parent);
         break;
+      case Token.INTERFACE:
+        maybeAddGenerics(n, n);
+        visitInterface(n);
+        break;
       case Token.NAME:
       case Token.REST:
-        visitColonType(n);
+        visitColonType(n, n);
         break;
       case Token.FUNCTION:
         // For member functions (eg. class Foo<T> { f() {} }), the JSDocInfo
         // needs to go on the synthetic MEMBER_FUNCTION_DEF node.
-        maybeAddGenerics(n, parent.getType() == Token.MEMBER_FUNCTION_DEF
+        Node jsDocNode = parent.getType() == Token.MEMBER_FUNCTION_DEF
             ? parent
-            : n);
-        visitColonType(n); // Return types are colon types on the function node
+            : n;
+        maybeAddGenerics(n, jsDocNode);
+        visitColonType(n, jsDocNode); // Return types are colon types on the function node
         break;
       default:
 
     }
   }
 
-  private void maybeAddGenerics(Node src, Node dst) {
-    Node name = src.getFirstChild();
+  private void maybeAddGenerics(Node n, Node jsDocNode) {
+    Node name = n.getFirstChild();
     Node generics = (Node) name.getProp(Node.GENERIC_TYPE_LIST);
     if (generics != null) {
-      JSDocInfoBuilder doc = JSDocInfoBuilder.maybeCopyFrom(dst.getJSDocInfo());
+      JSDocInfoBuilder doc = JSDocInfoBuilder.maybeCopyFrom(jsDocNode.getJSDocInfo());
       // Discard the type bound (the "extends" part) for now
       for (Node typeName : generics.children()) {
         doc.recordTemplateTypeName(typeName.getString());
@@ -95,7 +100,7 @@ public final class Es6TypedToEs6Converter
         }
       }
       name.putProp(Node.GENERIC_TYPE_LIST, null);
-      dst.setJSDocInfo(doc.build());
+      jsDocNode.setJSDocInfo(doc.build());
     }
   }
 
@@ -125,24 +130,63 @@ public final class Es6TypedToEs6Converter
         return;
       }
 
-      member.getParent().removeChild(member);
-
-      Node classNameAccess = NodeUtil.newQName(compiler, metadata.fullClassName);
-      Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, classNameAccess, "prototype");
-      Node qualifiedMemberAccess =
-          Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, classNameAccess,
-              prototypeAcess);
-      // Copy type information.
-      visitColonType(member);
-      qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
-      Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
-      newNode.useSourceInfoIfMissingFromForTree(member);
-      metadata.insertNodeAndAdvance(newNode);
+      metadata.insertNodeAndAdvance(createPropertyDefinition(member, metadata.fullClassName));
       compiler.reportCodeChange();
     }
   }
 
-  private void visitColonType(Node n) {
+  private void visitInterface(Node n) {
+    Node name = n.getFirstChild();
+    Node superTypes = name.getNext();
+    JSDocInfoBuilder doc = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+    doc.recordInterface();
+    if (!superTypes.isEmpty()) {
+      for (Node child : superTypes.children()) {
+        Node type = convertWithLocation(child);
+        doc.recordExtendedInterface(new JSTypeExpression(type, n.getSourceFileName()));
+      }
+    }
+    n.setJSDocInfo(doc.build());
+
+    Node insertionPoint = n;
+    Node members = n.getLastChild();
+    for (Node member : members.children()) {
+      // Synthesize a block for method signatures.
+      if (member.isMemberFunctionDef()) {
+        Node function = member.getFirstChild();
+        function.getLastChild().setType(Token.BLOCK);
+        function.putBooleanProp(Node.METHOD_SIGNATURE, false);
+        continue;
+      }
+
+      Node newNode = createPropertyDefinition(member, name.getString());
+      insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
+      insertionPoint = newNode;
+    }
+
+    // Convert interface to class
+    n.setType(Token.CLASS);
+    Node empty = new Node(Token.EMPTY).useSourceInfoIfMissingFrom(n);
+    n.replaceChild(superTypes, empty);
+    members.setType(Token.CLASS_MEMBERS);
+    compiler.reportCodeChange();
+  }
+
+  private Node createPropertyDefinition(Node member, String name) {
+    member.detachFromParent();
+    Node nameAccess = NodeUtil.newQName(compiler, name);
+    Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, nameAccess, "prototype");
+    Node qualifiedMemberAccess =
+        Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, nameAccess,
+            prototypeAcess);
+    // Copy type information.
+    visitColonType(member, member);
+    qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
+    Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
+    return newNode.useSourceInfoIfMissingFromForTree(member);
+  }
+
+  private void visitColonType(Node n, Node jsDocNode) {
     Node type = n.getDeclaredTypeExpression();
     boolean hasColonType = type != null;
     if (n.isRest() && hasColonType) {
@@ -154,7 +198,7 @@ public final class Es6TypedToEs6Converter
       return;
     }
 
-    JSDocInfo info = n.getJSDocInfo();
+    JSDocInfo info = jsDocNode.getJSDocInfo();
     Preconditions.checkState(info == null || info.getType() == null,
         "Nodes must not have both type declarations and JSDoc types");
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
@@ -173,7 +217,7 @@ public final class Es6TypedToEs6Converter
     }
 
     info = builder.build();
-    n.setJSDocInfo(info);
+    jsDocNode.setJSDocInfo(info);
 
     if (hasColonType) {
       n.setDeclaredTypeExpression(null); // clear out declared type

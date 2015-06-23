@@ -495,10 +495,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.INTERFACE);
     IdentifierToken name = eatId();
-    GenericTypeListTree generics = null;
-    if (peek(TokenType.OPEN_ANGLE)) {
-      generics = parseGenericTypes();
-    }
+    GenericTypeListTree generics = maybeParseGenericTypes();
     ImmutableList.Builder<ParseTree> superTypes = ImmutableList.builder();
     if (peek(TokenType.EXTENDS)) {
       eat(TokenType.EXTENDS);
@@ -514,10 +511,56 @@ public class Parser {
       }
     }
     eat(TokenType.OPEN_CURLY);
-    ImmutableList<ParseTree> elements = parseClassElements();
+    ImmutableList<ParseTree> elements = parseInterfaceElements();
     eat(TokenType.CLOSE_CURLY);
     return new InterfaceDeclarationTree(getTreeLocation(start), name, generics,
         superTypes.build(), elements);
+  }
+
+  private ImmutableList<ParseTree> parseInterfaceElements() {
+    ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
+
+    while (peekInterfaceElement()) {
+      result.add(parseInterfaceElement());
+    }
+
+    return result.build();
+  }
+
+  private boolean peekInterfaceElement() {
+    Token token = peekToken();
+    switch (token.type) {
+      case NEW:
+      case IDENTIFIER:
+      case OPEN_SQUARE:
+        return true;
+      default:
+        return Keywords.isKeyword(token.type);
+    }
+  }
+
+  private ParseTree parseInterfaceElement() {
+    SourcePosition start = getTreeStartLocation();
+
+    IdentifierToken name = null;
+    TokenType type = peekType();
+    if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
+      name = eatIdOrKeywordAsId();
+    } else {
+      // TODO(moz): Parse IndexSignature, CallSignature and ConstructSignature
+    }
+
+    if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
+      // Method signature.
+      ParseTree function = parseMethodSignature(start, name);
+      eat(TokenType.SEMI_COLON);
+      return function;
+    } else {
+      // Property signature.
+      ParseTree declaredType = maybeParseColonType();
+      eat(TokenType.SEMI_COLON);
+      return new MemberVariableTree(getTreeLocation(start), name, false, declaredType);
+    }
   }
 
   private ParseTree parseEnumDeclaration() {
@@ -555,11 +598,7 @@ public class Parser {
       name = eatId();
     }
 
-    GenericTypeListTree genericTypes = null;
-    if (peek(TokenType.OPEN_ANGLE)) {
-      genericTypes = parseGenericTypes();
-    }
-
+    GenericTypeListTree generics = maybeParseGenericTypes();
     ParseTree superClass = null;
     if (peek(TokenType.EXTENDS)) {
       eat(TokenType.EXTENDS);
@@ -584,7 +623,7 @@ public class Parser {
     eat(TokenType.OPEN_CURLY);
     ImmutableList<ParseTree> elements = parseClassElements();
     eat(TokenType.CLOSE_CURLY);
-    return new ClassDeclarationTree(getTreeLocation(start), name, genericTypes,
+    return new ClassDeclarationTree(getTreeLocation(start), name, generics,
         superClass, interfaces.build(), elements);
   }
 
@@ -661,10 +700,7 @@ public class Parser {
       if (isGenerator) {
         reportError("Member variable cannot be prefixed by '*' (generator function)");
       }
-      ParseTree declaredType = null;
-      if (peek(TokenType.COLON)) {
-        declaredType = parseTypeAnnotation();
-      }
+      ParseTree declaredType = maybeParseColonType();
       if (peek(TokenType.EQUAL)) {
         reportError("Member variable initializers ('=') are not supported");
       }
@@ -678,6 +714,18 @@ public class Parser {
     }
   }
 
+  private FunctionDeclarationTree parseMethodSignature(SourcePosition start,
+      IdentifierToken name) {
+    GenericTypeListTree generics = maybeParseGenericTypes();
+    FormalParameterListTree formalParameterList = parseFormalParameterList();
+    ParseTree returnType = maybeParseColonType();
+    ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
+    FunctionDeclarationTree declaration = new FunctionDeclarationTree(
+        getTreeLocation(start), name, generics, false, false,
+        FunctionDeclarationTree.Kind.MEMBER, formalParameterList, returnType, functionBody);
+    return declaration;
+  }
+
   private FunctionDeclarationTree parseFunctionTail(
       SourcePosition start, IdentifierToken name,
       boolean isStatic, boolean isGenerator,
@@ -685,21 +733,12 @@ public class Parser {
 
     inGeneratorContext.addLast(isGenerator);
 
-    GenericTypeListTree genericTypes = null;
-    if (peek(TokenType.OPEN_ANGLE)) {
-      genericTypes = parseGenericTypes();
-    }
-
+    GenericTypeListTree generics = maybeParseGenericTypes();
     FormalParameterListTree formalParameterList = parseFormalParameterList();
-
-    ParseTree returnType = null;
-    if (peek(TokenType.COLON)) {
-      returnType = parseTypeAnnotation();
-    }
-
+    ParseTree returnType = maybeParseColonType();
     BlockTree functionBody = parseFunctionBody();
-    FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
-        getTreeLocation(start), name, genericTypes, isStatic, isGenerator,
+    FunctionDeclarationTree declaration = new FunctionDeclarationTree(
+        getTreeLocation(start), name, generics, isStatic, isGenerator,
         kind, formalParameterList, returnType, functionBody);
 
     inGeneratorContext.removeLast();
@@ -760,11 +799,7 @@ public class Parser {
 
     inGeneratorContext.addLast(false);
 
-    GenericTypeListTree genericTypes = null;
-    if (peek(TokenType.OPEN_ANGLE)) {
-      genericTypes = parseGenericTypes();
-    }
-
+    GenericTypeListTree generics = maybeParseGenericTypes();
     FormalParameterListTree formalParameterList;
     if (peekId()) {
       ParseTree param = parseIdentifierExpression();
@@ -791,7 +826,7 @@ public class Parser {
     }
 
     FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
-        getTreeLocation(start), null, genericTypes, false, false,
+        getTreeLocation(start), null, generics, false, false,
         FunctionDeclarationTree.Kind.ARROW,
         formalParameterList, returnType, functionBody);
 
@@ -814,9 +849,7 @@ public class Parser {
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
       try {
-        if (peek(TokenType.OPEN_ANGLE)) {
-          p.parseGenericTypes();
-        }
+        p.maybeParseGenericTypes();
         p.parseFormalParameterList(inTypeExpression);
         if (p.peek(TokenType.COLON)) {
           p.parseTypeAnnotation();
@@ -2114,7 +2147,11 @@ public class Parser {
     return new MissingPrimaryExpressionTree(getTreeLocation(start));
   }
 
-  private GenericTypeListTree parseGenericTypes() {
+  private GenericTypeListTree maybeParseGenericTypes() {
+    if (!peek(TokenType.OPEN_ANGLE)) {
+      return null;
+    }
+
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.OPEN_ANGLE);
     LinkedHashMap<IdentifierToken, ParseTree> types = new LinkedHashMap<>();
@@ -2132,6 +2169,14 @@ public class Parser {
     } while (peekId());
     eat(TokenType.CLOSE_ANGLE);
     return new GenericTypeListTree(getTreeLocation(start), types);
+  }
+
+  private ParseTree maybeParseColonType() {
+    ParseTree type = null;
+    if (peek(TokenType.COLON)) {
+      type = parseTypeAnnotation();
+    }
+    return type;
   }
 
   /**

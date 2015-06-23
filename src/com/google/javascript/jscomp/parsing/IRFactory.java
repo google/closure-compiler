@@ -1329,6 +1329,7 @@ class IRFactory {
       boolean isMember = (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER);
       boolean isArrow = (functionTree.kind == FunctionDeclarationTree.Kind.ARROW);
       boolean isGenerator = functionTree.isGenerator;
+      boolean isSignature = (functionTree.functionBody.type == ParseTreeType.EMPTY_STATEMENT);
 
       if (!isEs6Mode()) {
         if (isGenerator) {
@@ -1388,8 +1389,9 @@ class IRFactory {
         node.setDeclaredTypeExpression(convertTypeTree(functionTree.returnType));
       }
 
-      Node bodyNode = transform(functionTree.functionBody);
-      if (!isArrow && !bodyNode.isBlock()) {
+      Node bodyNode = null;
+      bodyNode = transform(functionTree.functionBody);
+      if (!isArrow && !isSignature && !bodyNode.isBlock()) {
         // When in ideMode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
         Preconditions.checkState(config.isIdeMode);
@@ -1400,6 +1402,7 @@ class IRFactory {
 
       node.setIsGeneratorFunction(isGenerator);
       node.setIsArrowFunction(isArrow);
+      node.putBooleanProp(Node.METHOD_SIGNATURE, isSignature);
 
       Node result;
 
@@ -1408,6 +1411,7 @@ class IRFactory {
         Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, name.value);
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
+        node.setDeclaredTypeExpression(node.getDeclaredTypeExpression());
         result = member;
       } else {
         result = node;

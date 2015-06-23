@@ -122,6 +122,12 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("function f(...p1) {}", "function f(...p1) {}");
   }
 
+    public void testReturnType() {
+      test("function f(...p1: number[]): void {}",
+           "/** @return{void} */ function f(/** ...number */ ...p1) {}");
+      test("function f(...p1) {}", "function f(...p1) {}");
+    }
+
   public void testBuiltins() {
     test("var x: any;", "var /** ? */ x;");
     test("var x: number;", "var /** number */ x;");
@@ -177,11 +183,25 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("function* foo<T>() {}", "/** @template T */ function* foo() {}");
   }
 
+  public void testGenericInterface() {
+    test("interface I<T> { foo: T; }",
+         "/** @interface @template T */ class I {} /** @type {!T} */ I.prototype.foo;");
+  }
+
   public void testImplements() {
     test("class Foo implements Bar, Baz {}",
          "/** @implements {Bar} @implements {Baz} */ class Foo {}");
     // The "extends" clause is handled by @link {Es6ToEs3Converter}
     test("class Foo extends Bar implements Baz {}",
          "/** @implements {Baz} */ class Foo extends Bar {}");
+  }
+
+  public void testInterface() {
+    test("interface I { foo: string; }",
+         "/** @interface */ class I {} /** @type {string} */ I.prototype.foo;");
+    test("interface Foo extends Bar, Baz {}",
+         "/** @interface @extends {Bar} @extends {Baz} */ class Foo {}");
+    test("interface I { foo(p: string): boolean; }",
+         "/** @interface */ class I { /** @return {boolean} */ foo(/** string */ p) {} }");
   }
 }

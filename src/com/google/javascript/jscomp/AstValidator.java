@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -159,6 +160,9 @@ public final class AstValidator implements CompilerPass {
         return;
       case Token.EXPORT:
         validateExport(n);
+        return;
+      case Token.INTERFACE:
+        validateInterface(n);
         return;
       default:
         violation("Expected statement but was " + Token.name(n.getType()) + ".", n);
@@ -413,6 +417,46 @@ public final class AstValidator implements CompilerPass {
     validateExpression(n.getFirstChild());
   }
 
+  private void validateInterface(Node n) {
+    validateEs6TypedFeature("interface", n);
+    validateNodeType(Token.INTERFACE, n);
+    validateChildCount(n);
+    Node name = n.getFirstChild();
+    validateName(name);
+    Node superTypes = name.getNext();
+    if (superTypes.isEmpty()) {
+      validateChildless(superTypes);
+    } else {
+      validateInterfaceExtends(superTypes);
+    }
+    validateInterfaceMembers(n.getLastChild());
+  }
+
+  private void validateInterfaceExtends(Node n) {
+    validateNodeType(Token.INTERFACE_EXTENDS, n);
+    for (Node child : n.children()) {
+      validateNamedType(child);
+    }
+  }
+
+  private void validateInterfaceMembers(Node n) {
+    validateNodeType(Token.INTERFACE_MEMBERS, n);
+    for (Node child : n.children()) {
+      validateInterfaceMember(child);
+    }
+  }
+
+  private void validateInterfaceMember(Node n) {
+    if (n.getType() == Token.MEMBER_FUNCTION_DEF) {
+      validateChildCount(n);
+      validateFunctionExpression(n.getFirstChild());
+    } else if (n.getType() == Token.MEMBER_VARIABLE_DEF) {
+      validateChildless(n);
+    } else {
+      violation("Interface contained member of invalid type " + Token.name(n.getType()), n);
+    }
+  }
+
   /**
    * In a class declaration, unlike a class expression,
    * the class name is required.
@@ -568,17 +612,23 @@ public final class AstValidator implements CompilerPass {
 
     validateParameters(n.getChildAtIndex(1));
 
+    Node name = n.getFirstChild();
+    Node body = n.getLastChild();
     if (n.isArrowFunction()) {
       validateEs6Feature("arrow functions", n);
-      validateEmptyName(n.getFirstChild());
-      if (n.getLastChild().getType() == Token.BLOCK) {
-        validateBlock(n.getLastChild());
+      validateEmptyName(name);
+      if (body.getType() == Token.BLOCK) {
+        validateBlock(body);
       } else {
-        validateExpression(n.getLastChild());
+        validateExpression(body);
       }
     } else {
-      validateOptionalName(n.getFirstChild());
-      validateBlock(n.getLastChild());
+      validateOptionalName(name);
+      if (n.getBooleanProp(Node.METHOD_SIGNATURE)) {
+        validateNodeType(Token.EMPTY, body);
+      } else {
+        validateBlock(body);
+      }
     }
   }
 
@@ -1156,6 +1206,12 @@ public final class AstValidator implements CompilerPass {
     validateExpression(n.getLastChild());
   }
 
+  private void validateNamedType(Node n) {
+    validateNodeType(Token.NAMED_TYPE, n);
+    validateChildCount(n);
+    validateName(n.getFirstChild());
+  }
+
   private void violation(String message, Node n) {
     violationHandler.handleViolation(message, n);
   }
@@ -1233,5 +1289,11 @@ public final class AstValidator implements CompilerPass {
 
   private boolean isEs6OrHigher() {
     return compiler.getLanguageMode().isEs6OrHigher();
+  }
+
+  private void validateEs6TypedFeature(String feature, Node n) {
+    if (!compiler.getLanguageMode().equals(LanguageMode.ECMASCRIPT6_TYPED)) {
+      violation("Feature '" + feature + "' is only allowed in ES6 Typed mode.", n);
+    }
   }
 }

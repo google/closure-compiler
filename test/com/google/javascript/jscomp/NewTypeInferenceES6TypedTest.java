@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 /**
  * Tests for the new type inference on transpiled ES6 code that includes
  * type annotations in the language syntax.
@@ -120,5 +122,36 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         + "}\n"
         + "(new Foo).prop - 5;\n",
         TypeCheck.INEXISTENT_PROPERTY);
+  }
+
+  public void testInterface() {
+    typeCheck(LINE_JOINER.join(
+        "interface Foo {",
+        "  prop: number;",
+        "}",
+        "class Bar implements Foo {",
+        "}"),
+        TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED);
+
+    typeCheck(LINE_JOINER.join(
+        "interface Foo {",
+        "  prop: number;",
+        "}",
+        "class Bar extends Foo {",
+        "}"),
+        TypeCheck.CONFLICTING_EXTENDED_TYPE);
+
+    typeCheck("interface Foo extends Foo {}",
+        JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
+
+    typeCheck(LINE_JOINER.join(
+        "interface Foo {",
+        "  prop: number;",
+        "}",
+        "interface Bar {",
+        "  prop: string;",
+        "}",
+        "interface Baz extends Foo, Bar {}"),
+        TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE);
   }
 }

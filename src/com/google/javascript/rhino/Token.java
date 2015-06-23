@@ -784,6 +784,8 @@ public class Token {
         return 3;
       case ENUM:
         return 2;
+      case NAMED_TYPE:
+        return 1;
     }
     throw new IllegalStateException(
         "No arity defined for " + Token.name(token));

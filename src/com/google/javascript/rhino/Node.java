@@ -134,7 +134,8 @@ public class Node implements Cloneable, Serializable {
                                   // This will be present only if the expression is casted.
       OPT_PARAM_ES6_TYPED = 80,   // The node is an optional parameter in ES6 Typed syntax.
       GENERIC_TYPE_LIST = 81,     // Generic type list in ES6 typed syntax.
-      IMPLEMENTS = 82;            // "implements" clause in ES6 typed syntax.
+      IMPLEMENTS = 82,            // "implements" clause in ES6 typed syntax.
+      METHOD_SIGNATURE = 83;      // Method signature in interfaces in ES6 typed syntax.
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -189,6 +190,7 @@ public class Node implements Cloneable, Serializable {
         case OPT_PARAM_ES6_TYPED: return "opt_param_es6_typed";
         case GENERIC_TYPE_LIST:       return "generic_type";
         case IMPLEMENTS:       return "implements";
+        case METHOD_SIGNATURE: return "method_signature";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }

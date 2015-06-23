@@ -375,8 +375,19 @@ public final class TypeSyntaxTest extends TestCase {
   }
 
   public void testInterface() {
-    parse("interface I {\n  foo: string;\n}");
+    parse("interface I {\n}");
     parse("interface Foo extends Bar, Baz {\n}");
+    parse("interface I {\n  foo: string;\n}");
+    parse("interface I {\n  foo(p: boolean): string;\n}");
+    parse("interface I {\n  foo<T>(p: boolean): string;\n}");
+
+    expectErrors("Parse error. ';' expected");
+    parse("interface I { foo(p: boolean): string {}}");
+
+    // TODO(moz): Enable these
+    //parse("interface I {\n  (p: boolean): string;\n}");
+    //parse("interface I {\n  new (p: boolean): string;\n}");
+    //parse("interface I {\n  [foo: string]: number;\n}");
   }
 
   public void testInterface_notEs6Typed() {

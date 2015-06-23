@@ -609,7 +609,11 @@ class CodeGenerator {
             }
             add(parameters);
             maybeAddTypeDecl(fn);
-            add(body, Context.PRESERVE_BLOCK);
+            if (body.isEmpty()) {
+              add(";");
+            } else {
+              add(body, Context.PRESERVE_BLOCK);
+            }
           }
           break;
         }
