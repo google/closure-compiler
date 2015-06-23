@@ -28,7 +28,7 @@ import java.util.Iterator;
  * CommonJS module. See {@link ProcessCommonJSModules} for follow up processing
  * step.
  */
-class TransformAMDToCJSModule implements CompilerPass {
+public final class TransformAMDToCJSModule implements CompilerPass {
 
   @VisibleForTesting
   static final DiagnosticType UNSUPPORTED_DEFINE_SIGNATURE_ERROR =
@@ -52,7 +52,7 @@ class TransformAMDToCJSModule implements CompilerPass {
   private final AbstractCompiler compiler;
   private int renameIndex = 0;
 
-  TransformAMDToCJSModule(AbstractCompiler compiler) {
+  public TransformAMDToCJSModule(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
