@@ -565,11 +565,27 @@ public class Parser {
       eat(TokenType.EXTENDS);
       superClass = parseExpression();
     }
+
+    ImmutableList.Builder<ParseTree> interfaces = ImmutableList.builder();
+    if (peek(TokenType.IMPLEMENTS)) {
+      eat(TokenType.IMPLEMENTS);
+      ParseTree type = parseType();
+      interfaces.add(type);
+
+      while (peek(TokenType.COMMA)) {
+        eat(TokenType.COMMA);
+        type = parseType();
+        if (type != null) {
+          interfaces.add(type);
+        }
+      }
+    }
+
     eat(TokenType.OPEN_CURLY);
     ImmutableList<ParseTree> elements = parseClassElements();
     eat(TokenType.CLOSE_CURLY);
     return new ClassDeclarationTree(getTreeLocation(start), name, genericTypes,
-        superClass, elements);
+        superClass, interfaces.build(), elements);
   }
 
   private ImmutableList<ParseTree> parseClassElements() {

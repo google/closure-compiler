@@ -233,6 +233,7 @@ public class Token {
       INTERFACE_MEMBERS = 313,
       ENUM = 314,
       ENUM_MEMBERS = 315,
+      IMPLEMENTS = 316,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
@@ -542,6 +543,8 @@ public class Token {
         return "ENUM";
       case ENUM_MEMBERS:
         return "ENUM_MEMBERS";
+      case IMPLEMENTS:
+        return "IMPLEMENTS";
     }
 
         // Token without name

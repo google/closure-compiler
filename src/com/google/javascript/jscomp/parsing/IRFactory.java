@@ -2094,6 +2094,7 @@ class IRFactory {
         name.putProp(Node.GENERIC_TYPE_LIST, transform(tree.generics));
       }
       Node superClass = transformOrEmpty(tree.superClass, tree);
+      Node interfaces = transformListOrEmpty(Token.IMPLEMENTS, tree.interfaces);
 
       Node body = newNode(Token.CLASS_MEMBERS);
       setSourceInfo(body, tree);
@@ -2101,7 +2102,12 @@ class IRFactory {
         body.addChildToBack(transform(child));
       }
 
-      return newNode(Token.CLASS, name, superClass, body);
+      Node classNode = newNode(Token.CLASS, name, superClass, body);
+      if (!interfaces.isEmpty()) {
+        maybeWarnTypeSyntax(tree, "implements");
+        classNode.putProp(Node.IMPLEMENTS, interfaces);
+      }
+      return classNode;
     }
 
     Node processInterfaceDeclaration(InterfaceDeclarationTree tree) {

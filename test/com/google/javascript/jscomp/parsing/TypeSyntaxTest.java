@@ -376,6 +376,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testInterface() {
     parse("interface I {\n  foo: string;\n}");
+    parse("interface Foo extends Bar, Baz {\n}");
   }
 
   public void testInterface_notEs6Typed() {
@@ -474,6 +475,13 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x = <T>((p:T) => 3);");
 
     testNotEs6Typed("function foo<T>() {}", "generic function");
+  }
+
+  public void testImplements() {
+    parse("class Foo implements Bar, Baz {\n}");
+    parse("class Foo extends Bar implements Baz {\n}");
+
+    testNotEs6Typed("class Foo implements Bar {\n}", "implements");
   }
 
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {

@@ -24,16 +24,19 @@ public class ClassDeclarationTree extends ParseTree {
   public final IdentifierToken name;
   public final GenericTypeListTree generics;
   public final ParseTree superClass;
+  public final ImmutableList<ParseTree> interfaces;
   public final ImmutableList<ParseTree> elements;
 
   public ClassDeclarationTree(SourceRange location, IdentifierToken name,
       GenericTypeListTree generics, ParseTree superClass,
+      ImmutableList<ParseTree> interfaces,
       ImmutableList<ParseTree> elements) {
     super(ParseTreeType.CLASS_DECLARATION, location);
 
     this.name = name;
     this.generics = generics;
     this.superClass = superClass;
+    this.interfaces = interfaces;
     this.elements = elements;
   }
 }

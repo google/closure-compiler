@@ -494,6 +494,18 @@ class CodeGenerator {
             add("extends");
             add(superClass);
           }
+
+          Node interfaces = (Node) n.getProp(Node.IMPLEMENTS);
+          if (interfaces != null) {
+            add("implements");
+            Node child = interfaces.getFirstChild();
+            add(child);
+            while ((child = child.getNext()) != null) {
+              add(",");
+              cc.maybeInsertSpace();
+              add(child);
+            }
+          }
           add(members);
           cc.endClass(context == Context.STATEMENT);
 
@@ -1158,11 +1170,12 @@ class CodeGenerator {
           maybeAddGenericTypes(name);
           if (!superTypes.isEmpty()) {
             add("extends");
-            for (Node child = superTypes.getFirstChild(); child != null; child = child.getNext()) {
-              if (child != n.getFirstChild()) {
-                add(",");
-              }
-              add(child);
+            Node superType = superTypes.getFirstChild();
+            add(superType);
+            while ((superType = superType.getNext()) != null) {
+              add(",");
+              cc.maybeInsertSpace();
+              add(superType);
             }
           }
           add(members);
