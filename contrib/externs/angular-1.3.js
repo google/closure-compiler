@@ -19,7 +19,6 @@
  *
  * TODO: Mocks.
  * TODO: Remaining Services:
- *     $compileProvider
  *     $cookies
  *     $cookieStore
  *     $document
@@ -1159,6 +1158,19 @@ angular.$animateProvider.prototype.classNameFilter = function(
  *               function(!angular.JQLite, !angular.Scope=)=): !angular.JQLite}
  */
 angular.$compile;
+
+// TODO(martinprobst): remaining $compileProvider methods.
+
+/**
+ * @constructor
+ */
+angular.$compileProvider;
+
+/**
+ * @param {boolean=} opt_enabled
+ * @return {boolean|!angular.$compileProvider}
+ */
+angular.$compileProvider.prototype.debugInfoEnabled = function(opt_enabled) {};
 
 /******************************************************************************
  * $cacheFactory Service
