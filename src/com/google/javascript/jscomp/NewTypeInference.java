@@ -260,6 +260,8 @@ final class NewTypeInference implements CompilerPass {
   private Map<Node, DeferredCheck> deferredChecks;
   private ControlFlowGraph<Node> cfg;
   private Scope currentScope;
+  // This TypeEnv should be computed once per scope
+  private TypeEnv typeEnvFromDeclaredTypes = null;
   private GlobalTypeInfo symbolTable;
   private JSTypes commonTypes;
   // RETVAL_ID is used when we calculate the summary type of a function
@@ -373,17 +375,15 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv getOutEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
-    if (dn.getOutEdges().isEmpty()) {
+    List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges = dn.getOutEdges();
+    if (outEdges.isEmpty()) {
       // This occurs when visiting a throw in the backward direction.
       Preconditions.checkArgument(dn.getValue().isThrow());
-      return getTypeEnvFromDeclaredTypes();
+      return this.typeEnvFromDeclaredTypes;
     }
-    List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges =
-        dn.getOutEdges();
     if (outEdges.size() == 1) {
       return envs.get(outEdges.get(0));
     }
-
     Set<TypeEnv> envSet = new LinkedHashSet<>();
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : outEdges) {
       TypeEnv env = envs.get(de);
@@ -391,20 +391,13 @@ final class NewTypeInference implements CompilerPass {
         envSet.add(env);
       }
     }
+    Preconditions.checkState(!envSet.isEmpty());
     return TypeEnv.join(envSet);
   }
 
   private TypeEnv setOutEnv(
       DiGraphNode<Node, ControlFlowGraph.Branch> dn, TypeEnv e) {
     for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getOutEdges()) {
-      envs.put(de, e);
-    }
-    return e;
-  }
-
-  private TypeEnv setInEnv(
-      DiGraphNode<Node, ControlFlowGraph.Branch> dn, TypeEnv e) {
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getInEdges()) {
       envs.put(de, e);
     }
     return e;
@@ -515,17 +508,6 @@ final class NewTypeInference implements CompilerPass {
     return summaryType;
   }
 
-  // Initialize the type environments on the CFG edges before the BWD analysis.
-  private void initEdgeEnvsBwd() {
-    TypeEnv env = getTypeEnvFromDeclaredTypes();
-    // Ideally, we would like to only set the in edges of the implicit return
-    // rather than all edges. However, throws can have out edges not connected
-    // to the implicit return, so we simply initialize all edges.
-    for (DiGraphEdge<Node, ControlFlowGraph.Branch> e : cfg.getEdges()) {
-      envs.put(e, env);
-    }
-  }
-
   private JSType pickInitialType(JSType declType) {
     Preconditions.checkNotNull(declType);
     FunctionType funType = declType.getFunTypeIfSingletonObj();
@@ -631,9 +613,20 @@ final class NewTypeInference implements CompilerPass {
         new LinkedList<>();
     buildWorkset(cfg.getEntry(), workset);
     /* println("Workset: ", workset); */
+    this.typeEnvFromDeclaredTypes = getTypeEnvFromDeclaredTypes();
     if (scope.isFunction() && scope.hasUndeclaredFormalsOrOuters()) {
       Collections.reverse(workset);
-      initEdgeEnvsBwd();
+      // Ideally, we would like to only set the in-edges of the implicit return
+      // rather than all edges. However, we cannot do that because of a bug in
+      // workset construction. (The test testBadWorksetConstruction would fail.)
+      // In buildWorksetHelper, if a loop contains break, we add the FOLLOW node
+      // of the loop before adding the loop header twice. So, the 2nd addition
+      // of the loop header has no effect. We should fix workset creation
+      // (eg, by putting edges instead of nodes in seen, or some other way that
+      // correctly waits for all incoming edges).
+      for (DiGraphEdge<Node, ControlFlowGraph.Branch> e : cfg.getEdges()) {
+        envs.put(e, this.typeEnvFromDeclaredTypes);
+      }
       analyzeFunctionBwd(workset);
       Collections.reverse(workset);
       // TODO(dimvar): Revisit what we throw away after the bwd analysis
@@ -643,9 +636,10 @@ final class NewTypeInference implements CompilerPass {
         updatePeakMem();
       }
     } else {
-      TypeEnv entryEnv = getTypeEnvFromDeclaredTypes();
+      TypeEnv entryEnv = this.typeEnvFromDeclaredTypes;
       initEdgeEnvsFwd(entryEnv);
     }
+    this.typeEnvFromDeclaredTypes = null;
     analyzeFunctionFwd(workset);
     if (scope.isFunction()) {
       createSummary(scope);
@@ -659,7 +653,7 @@ final class NewTypeInference implements CompilerPass {
       List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset) {
     for (DiGraphNode<Node, ControlFlowGraph.Branch> dn : workset) {
       Node n = dn.getValue();
-      TypeEnv outEnv = getOutEnv(dn);
+      TypeEnv outEnv = Preconditions.checkNotNull(getOutEnv(dn));
       TypeEnv inEnv;
       println("\tBWD Statment: ", n);
       println("\t\toutEnv: ", outEnv);
@@ -742,7 +736,9 @@ final class NewTypeInference implements CompilerPass {
           }
       }
       println("\t\tinEnv: ", inEnv);
-      setInEnv(dn, inEnv);
+      for (DiGraphEdge<Node, ControlFlowGraph.Branch> de : dn.getInEdges()) {
+        envs.put(de, inEnv);
+      }
     }
   }
 
@@ -899,9 +895,13 @@ final class NewTypeInference implements CompilerPass {
   private void createSummary(Scope fn) {
     Node fnRoot = fn.getRoot();
     Preconditions.checkArgument(!fnRoot.isFromExterns());
-    TypeEnv entryEnv = getEntryTypeEnv();
-    TypeEnv exitEnv = getFinalTypeEnv();
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    TypeEnv entryEnv = getEntryTypeEnv();
+    TypeEnv exitEnv = getInEnv(cfg.getImplicitReturn());
+    if (exitEnv == null) {
+      // This function only exits with THROWs
+      exitEnv = envPutType(new TypeEnv(), RETVAL_ID, JSType.BOTTOM);
+    }
 
     DeclaredFunctionType declType = fn.getDeclaredFunctionType();
     int reqArity = declType.getRequiredArity();
@@ -3736,15 +3736,6 @@ final class NewTypeInference implements CompilerPass {
 
   TypeEnv getEntryTypeEnv() {
     return getOutEnv(cfg.getEntry());
-  }
-
-  private TypeEnv getFinalTypeEnv() {
-    TypeEnv env = getInEnv(cfg.getImplicitReturn());
-    if (env == null) {
-      // This function only exits with THROWs
-      return envPutType(new TypeEnv(), RETVAL_ID, JSType.BOTTOM);
-    }
-    return env;
   }
 
   private static class DeferredCheck {

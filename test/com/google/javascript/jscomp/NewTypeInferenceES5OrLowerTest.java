@@ -4796,6 +4796,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"));
 
     typeCheck("throw (1 - 'asdf');", NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) { throw x - 1; }",
+        "f('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testQnameInJsdoc() {
@@ -12584,5 +12589,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "function g(x) {}",
             "function h() { g(123); }"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testBadWorksetConstruction() {
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  for (var i = 0; i < 10; i++) {",
+        "    break;",
+        "  }",
+        "  x++;",
+        "};"));
   }
 }
