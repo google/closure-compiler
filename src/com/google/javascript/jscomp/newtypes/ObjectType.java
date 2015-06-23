@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.javascript.rhino.Node;
 
 import java.util.List;
 import java.util.Map;
@@ -731,13 +730,6 @@ final class ObjectType implements TypeWithProperties {
     return this.nominalType == null ? ObjectType.builtinObject : this.nominalType;
   }
 
-  public ImmutableSet<String> getAllOwnProps() {
-    // Used by the type conversion pass.
-    // The implementation works only for object literals.
-    Preconditions.checkState(this.nominalType == null);
-    return ImmutableSet.copyOf(props.keySet());
-  }
-
   @Override
   public JSType getProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);
@@ -758,11 +750,6 @@ final class ObjectType implements TypeWithProperties {
       return p.isDeclared() ? p.getDeclaredType() : null;
     }
     return p.getType().getDeclaredProp(qname.getAllButLeftmost());
-  }
-
-  public Node getPropDefsite(QualifiedName qname) {
-    Preconditions.checkArgument(qname.isIdentifier());
-    return getLeftmostProp(qname).getDefsite();
   }
 
   private Property getLeftmostProp(QualifiedName qname) {

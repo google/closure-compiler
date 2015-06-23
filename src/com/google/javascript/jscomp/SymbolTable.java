@@ -1100,15 +1100,6 @@ public final class SymbolTable {
       this.declaration = ref;
     }
 
-    public boolean inGlobalScope() {
-      return scope.isGlobalScope();
-    }
-
-    public boolean inExterns() {
-      Node n = getDeclarationNode();
-      return n == null ? false : n.isFromExterns();
-    }
-
     public Node getDeclarationNode() {
       return declaration == null ? null : declaration.getNode();
     }

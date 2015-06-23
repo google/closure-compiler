@@ -2216,13 +2216,6 @@ class GlobalTypeInfo implements CompilerPass {
       return decl == null ? null : decl.getNominal();
     }
 
-    JSType getUnresolvedTypeByName(String name) {
-      if (unknownTypeNames.contains(name)) {
-        return JSType.UNKNOWN;
-      }
-      return null;
-    }
-
     @Override
     public JSTypes getCommonTypes() {
       if (isTopLevel()) {

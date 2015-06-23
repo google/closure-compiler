@@ -91,10 +91,6 @@ public class Declaration {
      return typedef;
   }
 
-  public NamespaceLit getNamespaceLit() {
-     return namespaceLit;
-  }
-
   public EnumType getEnum() {
      return enumType;
   }
@@ -107,20 +103,12 @@ public class Declaration {
      return nominal;
   }
 
-  public boolean isFormal() {
-     return isFormal;
-  }
-
   public boolean isTypeVar() {
      return isTypeVar;
   }
 
   public boolean isConstant() {
      return isConstant;
-  }
-
-  public boolean isForwardDeclaration() {
-     return isForwardDeclaration;
   }
 
   public Namespace getNamespace() {

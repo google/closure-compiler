@@ -153,10 +153,6 @@ public final class NominalType {
     return rawType.name;
   }
 
-  public Node getDefsite() {
-    return rawType.defSite;
-  }
-
   // Only used for keys in GlobalTypeInfo
   public RawNominalType getId() {
     return rawType;
@@ -218,10 +214,6 @@ public final class NominalType {
     }
     Property p = rawType.getProp(pname);
     return p == null ? null : p.substituteGenerics(typeMap);
-  }
-
-  public Node getPropDefsite(String pname) {
-    return getProp(pname).getDefsite();
   }
 
   public JSType getPropDeclaredType(String pname) {

@@ -284,8 +284,6 @@ class NameReferenceGraph extends
     // The node that references the name.
     public final Node site;
 
-    private JSModule module = null;
-
     public Reference(Node site) {
       this.site = site;
     }
