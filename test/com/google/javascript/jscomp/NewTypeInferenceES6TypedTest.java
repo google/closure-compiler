@@ -51,80 +51,108 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
 
     typeCheck("function f(): void { return undefined; }");
 
-    typeCheck(
-        "class Foo {}\n"
-        + "var x: Foo = new Foo;");
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
+        "var x: Foo = new Foo;"));
   }
 
   public void testSimpleAnnotationsWarnings() {
-    typeCheck(
-        "var x: number[] = ['hello'];",
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+    typeCheck("var x: number[] = ['hello'];", NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testSimpleFunctions() {
-    typeCheck(
-        "function f(x: number) {}\n"
-        + "f(123);");
+    typeCheck(LINE_JOINER.join(
+        "function f(x: number) {}",
+        "f(123);"));
 
-    typeCheck(
-        "function f(x: number) {}\n"
-        + "f('asdf');",
+    typeCheck(LINE_JOINER.join(
+        "function f(x: number) {}",
+        "f('asdf');"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    typeCheck(
-        "function f(x): string { return x; }\n"
-        + "f(123);",
+    typeCheck(LINE_JOINER.join(
+        "function f(x): string { return x; }",
+        "f(123);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testSimpleClasses() {
-    typeCheck(
-        "class Foo {}\n"
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
         // Nominal types are non-nullable by default
-        + "var x: Foo = null;",
+        "var x: Foo = null;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(
-        "class Foo {}\n"
-        + "class Bar {}\n"
-        + "var x: Bar = new Foo;",
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
+        "class Bar {}",
+        "var x: Bar = new Foo;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testClassPropertyDeclarations() {
-    typeCheck(
-        "class Foo {\n"
-        + "  prop: number;\n"
-        + "  constructor() { this.prop = 'asdf'; }\n"
-        + "}\n",
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  prop: number;",
+        "  constructor() { this.prop = 'asdf'; }",
+        "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(
-        "class Foo {\n"
-        + "  prop: string;\n"
-        + "}\n"
-        + "(new Foo).prop - 5;\n",
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  prop: string;",
+        "}",
+        "(new Foo).prop - 5;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    typeCheck(
-        "class Foo {\n"
-        + "  static prop: number;\n"
-        + "}\n"
-        + "Foo.prop = 'asdf';\n",
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  static prop: number;",
+        "}",
+        "Foo.prop = 'asdf';"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     // TODO(dimvar): up to ES5, prop decls use dot.
     // Should we start allowing [] for @unrestricted classes?
-    typeCheck(
-        "/** @unrestricted */ class Foo {\n"
-        + "  ['prop']: string;\n"
-        + "}\n"
-        + "(new Foo).prop - 5;\n",
+    typeCheck(LINE_JOINER.join(
+        "/** @unrestricted */ class Foo {",
+        "  ['prop']: string;",
+        "}",
+        "(new Foo).prop - 5;"),
         TypeCheck.INEXISTENT_PROPERTY);
   }
 
+  public void testOptionalParameter() {
+    typeCheck(LINE_JOINER.join(
+        "function foo(p1?: string) {}",
+        "foo(); foo('str');"));
+
+    typeCheck(LINE_JOINER.join(
+        "function foo(p0, p1?: string) {}",
+        "foo('2', 3)"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testClass() {
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  prop: number;",
+        "}",
+        "class Bar extends Foo {",
+        "}",
+        "(new Bar).prop = '3'"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck("class Foo extends Foo {}",
+        JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
+  }
+
   public void testInterface() {
+    typeCheck(LINE_JOINER.join(
+        "interface Foo {}",
+        "(new Foo);"),
+        TypeCheck.NOT_A_CONSTRUCTOR);
+
     typeCheck(LINE_JOINER.join(
         "interface Foo {",
         "  prop: number;",
