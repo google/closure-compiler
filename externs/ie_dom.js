@@ -303,7 +303,7 @@ var window;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms535220(VS.85).aspx
- * @type ClipboardData
+ * @type {ClipboardData}
  */
 Window.prototype.clipboardData;
 

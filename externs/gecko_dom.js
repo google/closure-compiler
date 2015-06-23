@@ -42,7 +42,7 @@ function HTMLSpanElement() {}
 Window.prototype.Components;
 
 /**
- * @type Window
+ * @type {Window}
  * @see https://developer.mozilla.org/en/DOM/window.content
  */
 Window.prototype.content;

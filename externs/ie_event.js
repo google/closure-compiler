@@ -74,7 +74,7 @@ Event.prototype.qualifier;
 /** @type {number} */
 Event.prototype.reason;
 
-/** @type {Object.<*,*>} */
+/** @type {Object.<*>} */
 Event.prototype.recordset;
 
 /** @type {boolean} */

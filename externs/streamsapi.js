@@ -155,7 +155,7 @@ ReadableStreamController.prototype.error = function(e) {};
  */
 function ReadableStreamReader(stream) {}
 
-/** @type boolean */
+/** @type {boolean} */
 ReadableStreamReader.prototype.closed;
 
 /**
@@ -285,7 +285,7 @@ ReadableByteStreamController.prototype.error = function(e) {};
  */
 function ReadableByteStreamReader(stream) {}
 
-/** @type boolean */
+/** @type {boolean} */
 ReadableByteStreamReader.prototype.closed;
 
 /**
