@@ -161,8 +161,7 @@ public final class JSTypeCreatorFromJSDoc {
     if (expr == null) {
       return null;
     }
-    return getTypeFromComment(expr.getRoot(), registry, typeParameters == null
-        ? ImmutableList.<String>of() : typeParameters);
+    return getTypeFromComment(expr.getRoot(), registry, typeParameters);
   }
 
   // Very similar to JSTypeRegistry#createFromTypeNodesInternal
@@ -188,7 +187,9 @@ public final class JSTypeCreatorFromJSDoc {
   private JSType getTypeFromCommentHelper(Node n, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) throws UnknownTypeException {
     Preconditions.checkNotNull(n);
-    Preconditions.checkNotNull(typeParameters);
+    if (typeParameters == null) {
+      typeParameters = ImmutableList.of();
+    }
     switch (n.getType()) {
       case Token.LC:
         return getRecordTypeHelper(n, registry, typeParameters);
@@ -845,47 +846,38 @@ public final class JSTypeCreatorFromJSDoc {
     while (iterator.hasNext()) {
       String pname = iterator.nextString();
       Node param = iterator.getNode();
-      JSType inlineParamType = (ignoreJsdoc || ignoreFunNode)
-          ? null : getDeclaredTypeOfNode(
-              param.getJSDocInfo(), registry, typeParameters);
-      boolean isRequired = true;
-      boolean isRestFormals = false;
-      JSTypeExpression texp = jsdoc == null ? null : jsdoc.getParameterType(pname);
-      Node jsdocNode = texp == null ? null : texp.getRoot();
-      if (param != null) {
-        if (convention.isOptionalParameter(param)) {
-          isRequired = false;
-        } else if (convention.isVarArgsParameter(param)) {
-          isRequired = false;
-          isRestFormals = true;
-        }
+      ParameterKind p = ParameterKind.REQUIRED;
+      if (param != null && convention.isOptionalParameter(param)) {
+        p = ParameterKind.OPTIONAL;
+      } else if (param != null && convention.isVarArgsParameter(param)) {
+        p = ParameterKind.REST;
       }
-      JSType fnParamType = null;
-      if (jsdocNode != null) {
-        if (jsdocNode.getType() == Token.EQUALS) {
-          isRequired = false;
-          jsdocNode = jsdocNode.getFirstChild();
-        } else if (jsdocNode.getType() == Token.ELLIPSIS) {
-          isRequired = false;
-          isRestFormals = true;
-          jsdocNode = jsdocNode.getFirstChild();
-        }
-        fnParamType = getTypeFromComment(jsdocNode, registry, typeParameters);
-      }
-      if (inlineParamType != null) {
-        // TODO(dimvar): The support for inline optional parameters is currently
-        // broken, so this is always a required parameter. See b/11481388. Fix.
-        builder.addReqFormal(inlineParamType);
-        if (fnParamType != null) {
+      ParameterType inlineParamType = (ignoreJsdoc || ignoreFunNode || param.getJSDocInfo() == null)
+          ? null : parseParameter(param.getJSDocInfo().getType(), p, registry, typeParameters);
+      ParameterType fnParamType = inlineParamType;
+      JSTypeExpression jsdocExp = jsdoc == null ? null : jsdoc.getParameterType(pname);
+      if (jsdocExp != null) {
+        if (inlineParamType == null) {
+          fnParamType = parseParameter(jsdocExp, p, registry, typeParameters);
+        } else {
           warn("Found two JsDoc comments for formal parameter " + pname, param);
         }
-      } else if (isRequired) {
-        builder.addReqFormal(fnParamType);
-      } else if (isRestFormals) {
-        builder.addRestFormals(
-            fnParamType == null ? JSType.UNKNOWN : fnParamType);
-      } else {
-        builder.addOptFormal(fnParamType);
+      }
+      JSType t  = null;
+      if (fnParamType != null) {
+        p = fnParamType.kind;
+        t = fnParamType.type;
+      }
+      switch (p) {
+          case REQUIRED:
+            builder.addReqFormal(t);
+            break;
+          case OPTIONAL:
+            builder.addOptFormal(t);
+            break;
+          case REST:
+            builder.addRestFormals(t != null ? t : JSType.UNKNOWN);
+            break;
       }
     }
   }
@@ -1016,4 +1008,48 @@ public final class JSTypeCreatorFromJSDoc {
     warnings.add(JSError.make(faultyNode, BAD_JSDOC_ANNOTATION, msg));
   }
 
+  private ParameterType parseParameter(
+      JSTypeExpression jsdoc, ParameterKind p,
+      DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
+    if (jsdoc == null) {
+      return null;
+    }
+    return parseParameter(jsdoc.getRoot(), p, registry, typeParameters);
+  }
+
+  private ParameterType parseParameter(
+      Node jsdoc, ParameterKind p,
+      DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
+    if (jsdoc == null) {
+      return null;
+    }
+    switch (jsdoc.getType()) {
+      case Token.EQUALS:
+        p = ParameterKind.OPTIONAL;
+        jsdoc = jsdoc.getFirstChild();
+        break;
+      case Token.ELLIPSIS:
+        p = ParameterKind.REST;
+        jsdoc = jsdoc.getFirstChild();
+        break;
+    }
+    JSType t = getMaybeTypeFromComment(jsdoc, registry, typeParameters);
+    return new ParameterType(t, p);
+  }
+
+  private static class ParameterType {
+    private JSType type;
+    private ParameterKind kind;
+
+    ParameterType(JSType type, ParameterKind kind) {
+      this.type = type;
+      this.kind = kind;
+    }
+  }
+
+  private static enum ParameterKind {
+    REQUIRED,
+    OPTIONAL,
+    REST,
+  }
 }

@@ -3291,11 +3291,23 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"));
 
     typeCheck(Joiner.on('\n').join(
-        "/** @param {function(number=)} fnum */",
-        "function f(fnum) {",
-        "  fnum(); fnum('asdf');",
-        "}"),
+        "function f(/** ...number */ fnum) {}",
+        "f(); f(1, 2, 3); f(1, 2, 'asdf');"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(
+        "function f(/** number= */ x, /** number */ y) {}",
+        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number= */ x) {}",
+        "f(); f('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** number= */ x) {}",
+        "f(1, 2);"),
+        TypeCheck.WRONG_ARGUMENT_COUNT);
 
     typeCheck(Joiner.on('\n').join(
         "/** @param {function(...number)} fnum */",
