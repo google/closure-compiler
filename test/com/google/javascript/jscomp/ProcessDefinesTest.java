@@ -282,16 +282,16 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   public void testNamespacedDefine2b() {
     overrides.put("a.B", new Node(Token.TRUE));
-    test("var a = { /** @define {boolean} */ B : false };",
-         null,
-         ProcessDefines.INVALID_DEFINE_INIT_ERROR, null);
+    testError(
+        "var a = { /** @define {boolean} */ B : false };",
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
   public void testNamespacedDefine2c() {
     overrides.put("a.B", new Node(Token.TRUE));
-    test("var a = { /** @define {boolean} */ get B() { return false } };",
-      null,
-      ProcessDefines.INVALID_DEFINE_INIT_ERROR, null);
+    testError(
+        "var a = { /** @define {boolean} */ get B() { return false } };",
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
   public void testNamespacedDefine3() {

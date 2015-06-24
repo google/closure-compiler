@@ -711,11 +711,9 @@ public final class Es6RewriteLetConstTest extends CompilerTestCase {
   public void testDoWhileForOfCapturedLetAnnotated() {
     enableTypeCheck(CheckLevel.WARNING);
 
-    test("/** @type {number} */ let x = 5; x = 'str';",
-        null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("/** @type {number} */ let x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
 
-    test("let /** number */ x = 5; x = 'str';",
-        null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("let /** number */ x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
 
     test(
         LINE_JOINER.join(

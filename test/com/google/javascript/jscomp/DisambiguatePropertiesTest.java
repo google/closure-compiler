@@ -1305,7 +1305,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
    * {field=[[Type1, Type2]]}
    */
   private void testSets(String js, String fieldTypes, DiagnosticType warning) {
-    test(js, null, null, warning);
+    testWarning(js, warning);
     assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
