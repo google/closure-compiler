@@ -159,6 +159,22 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C = function(a) { this.a = a; };",
             "C.prototype.foo = function() { console.log(this.a); };",
             "C.prototype.bar = function() { alert(this.a); };"));
+
+    test(
+        LINE_JOINER.join(
+            "if (true) {",
+            "   class Foo{}",
+            "} else {",
+            "   class Foo{}",
+            "}"),
+        LINE_JOINER.join(
+            "if (true) {",
+            "    /** @constructor @struct */",
+            "    var Foo = function() {};",
+            "} else {",
+            "    /** @constructor @struct */",
+            "    var Foo$0 = function() {};",
+            "}"));
   }
 
   public void testClassWithNgInject() {

@@ -149,6 +149,10 @@ public class IR {
     return declaration(lhs, value, Token.VAR);
   }
 
+  public static Node let(Node lhs, Node value) {
+    return declaration(lhs, value, Token.LET);
+  }
+
   public static Node var(Node lhs) {
     return declaration(lhs, Token.VAR);
   }
