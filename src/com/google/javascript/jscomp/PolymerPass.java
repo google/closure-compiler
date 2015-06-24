@@ -147,7 +147,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
      * PolymerElement.
      */
     private boolean isPolymerElementPropExpr(Node value) {
-      return value != null && value.isExprResult() && value.getFirstChild().isAssign()
+      return value != null && value.isExprResult()
           && value.getFirstChild().getFirstChild().isGetProp()
           && NodeUtil.getRootOfQualifiedName(
               value.getFirstChild().getFirstChild()).matchesQualifiedName(POLYMER_ELEMENT_NAME);
