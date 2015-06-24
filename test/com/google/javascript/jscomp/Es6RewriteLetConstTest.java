@@ -805,6 +805,26 @@ public final class Es6RewriteLetConstTest extends CompilerTestCase {
             "}"));
   }
 
+
+  public void testClass() {
+    test(LINE_JOINER.join(
+            "class C {}",
+            "var c1 = C;",
+            "{",
+            "  class C {}",
+            "  var c2 = C;",
+            "}",
+            "C === c1;"),
+        LINE_JOINER.join(
+            "class C {}",
+            "var c1 = C;",
+            "{",
+            "  class C$0 {}",
+            "  var c2 = C$0;",
+            "}",
+            "C === c1;"));
+  }
+
   public void testRenameJsDoc() {
     test(LINE_JOINER.join(
         "function f() {",

@@ -54,21 +54,21 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    // TODO(moz): Add support for renaming classes.
-    if (!n.isLet() && !n.isConst() && !NodeUtil.isBlockScopedFunctionDeclaration(n)) {
+    if (!n.isLet() && !n.isConst() && !NodeUtil.isBlockScopedFunctionDeclaration(n)
+        && !NodeUtil.isClassDeclaration(n)) {
       return;
     }
 
     Scope scope = t.getScope();
     Node nameNode = n.getFirstChild();
-    if (!n.isFunction() && !nameNode.hasChildren()
+    if (!n.isClass() && !n.isFunction() && !nameNode.hasChildren()
         && (parent == null || !NodeUtil.isEnhancedFor(parent))) {
       nameNode.addChildToFront(
           IR.name("undefined").useSourceInfoIfMissingFrom(nameNode));
     }
 
     String oldName = nameNode.getString();
-    if (n.isLet() || n.isConst()) {
+    if (n.isLet() || n.isConst() || NodeUtil.isClassDeclaration(n)) {
       blockScopedDeclarations.add(n);
     }
     Scope hoistScope = scope.getClosestHoistScope();
@@ -127,6 +127,9 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
   private void varify() {
     if (!blockScopedDeclarations.isEmpty()) {
       for (Node n : blockScopedDeclarations) {
+        if (n.isClass()) {
+          continue;
+        }
         if (n.isConst()) {
           JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
           builder.recordConstancy();
