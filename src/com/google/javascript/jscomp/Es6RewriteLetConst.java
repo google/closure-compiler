@@ -93,7 +93,7 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
       }
     }
     if (doRename) {
-      t.getCompiler().reportCodeChange();
+      compiler.reportCodeChange();
     }
   }
 
@@ -164,16 +164,32 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
   }
 
   /**
-   * Renames references when necessary.
+   * Renames references in code and JSDoc when necessary.
    */
   private class RenameReferences extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!NodeUtil.isReferenceName(n)) {
-        return;
+      if (NodeUtil.isReferenceName(n)) {
+        renameReference(t, n);
       }
 
+      JSDocInfo info = n.getJSDocInfo();
+      if (info != null) {
+        renameTypeNode(t, info.getTypeNodes());
+      }
+    }
+
+    private void renameTypeNode(NodeTraversal t, Iterable<Node> typeNodes) {
+      for (Node type : typeNodes) {
+        if (type.isString()) {
+          renameReference(t, type);
+        }
+        renameTypeNode(t, type.children());
+      }
+    }
+
+    private void renameReference(NodeTraversal t, Node n) {
       Scope referencedIn = t.getScope();
       String oldName = n.getString();
       Scope current = referencedIn;
@@ -194,7 +210,7 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
       }
       if (doRename) {
         n.setString(newName);
-        t.getCompiler().reportCodeChange();
+        compiler.reportCodeChange();
       }
     }
   }
