@@ -420,6 +420,17 @@ public abstract class CompilerTestCase extends TestCase  {
     test(js, null, error, null);
   }
 
+  /**
+   * Verifies that the compiler generates the given warning for the given input.
+   *
+   * @param js Input
+   * @param warning Expected warning
+   */
+  public void testWarning(String js, DiagnosticType warning) {
+    assertNotNull("Must assert an warning", warning);
+    test(js, null, null, warning);
+  }
+
 
   /**
    * Verifies that the compiler pass's JS output matches the expected output,

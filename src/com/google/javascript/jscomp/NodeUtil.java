@@ -2121,7 +2121,7 @@ public final class NodeUtil {
   /**
    * @return Whether the node is used as a statement.
    */
-  static boolean isStatement(Node n) {
+  public static boolean isStatement(Node n) {
     return isStatementParent(n.getParent());
   }
 
