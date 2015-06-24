@@ -1203,8 +1203,7 @@ class IRFactory {
         node.setDeclaredTypeExpression(convertTypeTree(functionTree.returnType));
       }
 
-      Node bodyNode = null;
-      bodyNode = transform(functionTree.functionBody);
+      Node bodyNode = transform(functionTree.functionBody);
       if (!isArrow && !isSignature && !bodyNode.isBlock()) {
         // When in ideMode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
