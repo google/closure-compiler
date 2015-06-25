@@ -297,6 +297,12 @@ md.$mdThemingProvider.Theme.prototype.backgroundPalette =
  */
 md.$mdThemingProvider.Theme.prototype.warnPalette = function(warnPalette) {};
 
+/**
+ * @param {boolean=} isDark
+ * @return {md.$mdThemingProvider.Theme}
+ */
+md.$mdThemingProvider.Theme.prototype.dark = function(isDark) {};
+
 /*****************************************************************************/
 
 
