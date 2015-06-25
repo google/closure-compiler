@@ -33,6 +33,7 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
+import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.parsing.ParserRunner;
@@ -1522,7 +1523,7 @@ public final class DefaultPassConfig extends PassConfig {
           new CheckEmptyStatements(compiler),
           new CheckEnums(compiler),
           new CheckInterfaces(compiler),
-          new com.google.javascript.jscomp.lint.CheckJSDoc(compiler),
+          new CheckJSDocStyle(compiler),
           new CheckNullableReturn(compiler),
           new CheckPrototypeProperties(compiler),
           new ImplicitNullabilityCheck(compiler)));

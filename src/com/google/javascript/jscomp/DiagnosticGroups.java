@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
+import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
@@ -423,10 +424,10 @@ public class DiagnosticGroups {
           // checkTypes DiagnosticGroup
           CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
-          com.google.javascript.jscomp.lint.CheckJSDoc.MISSING_PARAM_JSDOC,
-          com.google.javascript.jscomp.lint.CheckJSDoc.MUST_BE_PRIVATE,
-          com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_NAME_NOT_MARKED_OPTIONAL,
-          com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
+          CheckJSDocStyle.MISSING_PARAM_JSDOC,
+          CheckJSDocStyle.MUST_BE_PRIVATE,
+          CheckJSDocStyle.OPTIONAL_NAME_NOT_MARKED_OPTIONAL,
+          CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
           CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,

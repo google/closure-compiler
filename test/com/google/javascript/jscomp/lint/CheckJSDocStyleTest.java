@@ -15,11 +15,11 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.lint.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
-import static com.google.javascript.jscomp.lint.CheckJSDoc.MISSING_PARAM_JSDOC;
-import static com.google.javascript.jscomp.lint.CheckJSDoc.MUST_BE_PRIVATE;
-import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_NAME_NOT_MARKED_OPTIONAL;
-import static com.google.javascript.jscomp.lint.CheckJSDoc.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.DISALLOWED_MEMBER_JSDOC;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAM_JSDOC;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_NAME_NOT_MARKED_OPTIONAL;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -27,12 +27,12 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 
 /**
- * Test case for {@link CheckJSDoc}.
+ * Test case for {@link CheckJSDocStyle}.
  */
-public final class CheckJSDocTest extends CompilerTestCase {
+public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return new CheckJSDoc(compiler);
+    return new CheckJSDocStyle(compiler);
   }
 
   public void testInvalidClassJsdoc() {
