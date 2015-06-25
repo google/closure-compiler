@@ -760,8 +760,9 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   public void testBanGoogBase() {
     banGoogBase = true;
-    testSame("function Foo() { goog.base(this, 1, 2); }" + FOO_INHERITS,
-        ProcessClosurePrimitives.USE_OF_GOOG_BASE, true);
+    testError(
+        "function Foo() { goog.base(this, 1, 2); }" + FOO_INHERITS,
+        ProcessClosurePrimitives.USE_OF_GOOG_BASE);
   }
 
   public void testInvalidBase1() {
@@ -1082,15 +1083,10 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   public void testDefineValuesErrors() {
-    testSame("var CLOSURE_DEFINES = {'FOO': a};",
-        CLOSURE_DEFINES_ERROR, true);
-    testSame("var CLOSURE_DEFINES = {'FOO': 0+1};",
-        CLOSURE_DEFINES_ERROR, true);
-    testSame("var CLOSURE_DEFINES = {'FOO': 'value' + 'value'};",
-        CLOSURE_DEFINES_ERROR, true);
-    testSame("var CLOSURE_DEFINES = {'FOO': !true};",
-        CLOSURE_DEFINES_ERROR, true);
-    testSame("var CLOSURE_DEFINES = {'FOO': -true};",
-        CLOSURE_DEFINES_ERROR, true);
+    testError("var CLOSURE_DEFINES = {'FOO': a};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': 0+1};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': 'value' + 'value'};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': !true};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'FOO': -true};", CLOSURE_DEFINES_ERROR);
   }
 }

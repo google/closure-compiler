@@ -232,16 +232,11 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   public void testInvalidModule() {
-    testSame(
-        "goog.module(a);",
-        INVALID_MODULE_IDENTIFIER, true);
+    testError("goog.module(a);", INVALID_MODULE_IDENTIFIER);
   }
 
   public void testInvalidRequire() {
-    testSame(
-        "goog.module('ns.a');" +
-        "goog.require(a);",
-        INVALID_REQUIRE_IDENTIFIER, true);
+    testError("goog.module('ns.a');" + "goog.require(a);", INVALID_REQUIRE_IDENTIFIER);
   }
 
 
@@ -259,18 +254,12 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
 
   public void testInvalidGoogModuleGet1() {
-    testSame(
-        "function f() {"
-        + "goog.module.get(a);"
-        + "}",
-        INVALID_GET_IDENTIFIER, true);
+    testError("function f() {" + "goog.module.get(a);" + "}", INVALID_GET_IDENTIFIER);
   }
 
   public void testInvalidGoogModuleGet2() {
 
-    testSame(
-        "goog.module.get('a');",
-        INVALID_GET_CALL_SCOPE, true);
+    testError("goog.module.get('a');", INVALID_GET_CALL_SCOPE);
   }
 
   public void testExport1() {

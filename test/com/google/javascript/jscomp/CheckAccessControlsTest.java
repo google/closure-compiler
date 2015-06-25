@@ -1350,67 +1350,68 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testDeclarationAndConventionConflict1() {
-    testSame(
-        "/** @constructor */ function Foo() {}"
-        + "/** @protected */ Foo.prototype.length_;",
-        CONVENTION_MISMATCH, true);
+    testError(
+        "/** @constructor */ function Foo() {}" + "/** @protected */ Foo.prototype.length_;",
+        CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict2() {
-    testSame(
+    testError(
         "/** @constructor */ function Foo() {}\n"
-        + "/** @public {number} */ Foo.prototype.length_;\n",
-        CONVENTION_MISMATCH, true);
+            + "/** @public {number} */ Foo.prototype.length_;\n",
+        CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict3() {
-    testSame(
-        "/** @constructor */ function Foo() {"
-        + "  /** @protected */ this.length_ = 1;\n"
-        + "}\n",
-        CONVENTION_MISMATCH, true);
+    testError(
+        "/** @constructor */ function Foo() {" + "  /** @protected */ this.length_ = 1;\n" + "}\n",
+        CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict4a() {
-    testSame(
+
+    testError(
         "/** @constructor */ function Foo() {}"
-        + "Foo.prototype = { /** @protected */ length_: 1 }\n"
-        + "new Foo().length_",
-        CONVENTION_MISMATCH, true);
+            + "Foo.prototype = { /** @protected */ length_: 1 }\n"
+            + "new Foo().length_",
+        CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict4b() {
-    testSame(
+
+    testError(
         "/** @const */ var NS = {}; /** @constructor */ NS.Foo = function() {};"
-        + "NS.Foo.prototype = { /** @protected */ length_: 1 };\n"
-        + "(new NS.Foo()).length_;",
-        CONVENTION_MISMATCH, true);
+            + "NS.Foo.prototype = { /** @protected */ length_: 1 };\n"
+            + "(new NS.Foo()).length_;",
+        CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict5() {
-    testSame(
+
+    testError(
         "/** @constructor */ function Foo() {}\n"
-        + "Foo.prototype = { /** @protected */ get length_() { return 1; } }\n",
-        CONVENTION_MISMATCH, true);
+            + "Foo.prototype = { /** @protected */ get length_() { return 1; } }\n",
+        CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict6() {
-    testSame(
+
+    testError(
         "/** @constructor */ function Foo() {}\n"
-        + "Foo.prototype = { /** @protected */ set length_(x) { } }\n",
-        CONVENTION_MISMATCH, true);
+            + "Foo.prototype = { /** @protected */ set length_(x) { } }\n",
+        CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict7() {
-    testSame("/** @public */ var Foo_;", CONVENTION_MISMATCH, true);
+    testError("/** @public */ var Foo_;", CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict8() {
-    testSame("/** @package */ var Foo_;", CONVENTION_MISMATCH, true);
+    testError("/** @package */ var Foo_;", CONVENTION_MISMATCH);
   }
 
   public void testDeclarationAndConventionConflict9() {
-    testSame("/** @protected */ var Foo_;", CONVENTION_MISMATCH, true);
+    testError("/** @protected */ var Foo_;", CONVENTION_MISMATCH);
   }
 
   public void testConstantProperty1a() {

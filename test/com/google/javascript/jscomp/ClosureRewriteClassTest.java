@@ -312,75 +312,75 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testInvalid1() {
-    testSame("var x = goog.defineClass();", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
-    testSame("var x = goog.defineClass('foo');", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
-    testSame("var x = goog.defineClass(foo());", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
-    testSame("var x = goog.defineClass({'foo':1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
-    testSame("var x = goog.defineClass({1:1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
+    testError("var x = goog.defineClass();", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testError("var x = goog.defineClass('foo');", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testError("var x = goog.defineClass(foo());", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testError("var x = goog.defineClass({'foo':1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testError("var x = goog.defineClass({1:1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
 
-    testSame("var x = goog.defineClass({get foo() {return 1}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID,
-        true);
-    testSame("var x = goog.defineClass({set foo(a) {}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID, true);
+    testError(
+        "var x = goog.defineClass({get foo() {return 1}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testError("var x = goog.defineClass({set foo(a) {}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
   }
 
   public void testInvalid2() {
-    testSame("var x = goog.defineClass(null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID, true);
-    testSame("var x = goog.defineClass(null, null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID, true);
-    testSame("var x = goog.defineClass(null, foo());", GOOG_CLASS_DESCRIPTOR_NOT_VALID, true);
+    testError("var x = goog.defineClass(null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
+    testError("var x = goog.defineClass(null, null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
+    testError("var x = goog.defineClass(null, foo());", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
   }
 
   public void testInvalid3() {
-    testSame("var x = goog.defineClass(null, {});", GOOG_CLASS_CONSTRUCTOR_MISSING, true);
+    testError("var x = goog.defineClass(null, {});", GOOG_CLASS_CONSTRUCTOR_MISSING);
 
-    testSame(
-        "/** @interface */\n"
-        + "var x = goog.defineClass(null, { constructor: function() {} });",
-        GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE, true);
+    testError(
+        "/** @interface */\n" + "var x = goog.defineClass(null, { constructor: function() {} });",
+        GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE);
   }
 
   public void testInvalid4() {
-    testSame(
+    testError(
         "var x = goog.defineClass(null, {"
-        + "  constructor: function(){},"
-        + "  statics: null"
-        + "});",
-        GOOG_CLASS_STATICS_NOT_VALID, true);
-    testSame(
+            + "  constructor: function(){},"
+            + "  statics: null"
+            + "});",
+        GOOG_CLASS_STATICS_NOT_VALID);
+
+    testError(
         "var x = goog.defineClass(null, {"
-        + "  constructor: function(){},"
-        + "  statics: foo"
-        + "});",
-        GOOG_CLASS_STATICS_NOT_VALID, true);
-    testSame(
+            + "  constructor: function(){},"
+            + "  statics: foo"
+            + "});",
+        GOOG_CLASS_STATICS_NOT_VALID);
+
+    testError(
         "var x = goog.defineClass(null, {"
-        + "  constructor: function(){},"
-        + "  statics: {'foo': 1}"
-        + "});",
-        GOOG_CLASS_STATICS_NOT_VALID, true);
-    testSame(
+            + "  constructor: function(){},"
+            + "  statics: {'foo': 1}"
+            + "});",
+        GOOG_CLASS_STATICS_NOT_VALID);
+
+    testError(
         "var x = goog.defineClass(null, {"
-        + "  constructor: function(){},"
-        + "  statics: {1: 1}"
-        + "});",
-        GOOG_CLASS_STATICS_NOT_VALID, true);
+            + "  constructor: function(){},"
+            + "  statics: {1: 1}"
+            + "});",
+        GOOG_CLASS_STATICS_NOT_VALID);
   }
 
   public void testInvalid5() {
-    testSame(
-        "var x = goog.defineClass(null, {"
-        + "  constructor: function(){}"
-        + "}, null);",
-        GOOG_CLASS_UNEXPECTED_PARAMS, true);
+    testError(
+        "var x = goog.defineClass(null, {" + "  constructor: function(){}" + "}, null);",
+        GOOG_CLASS_UNEXPECTED_PARAMS);
   }
 
   public void testInvalid6() {
-    testSame("goog.defineClass();", GOOG_CLASS_TARGET_INVALID, true);
+    testError("goog.defineClass();", GOOG_CLASS_TARGET_INVALID);
 
-    testSame("var x = goog.defineClass() || null;", GOOG_CLASS_TARGET_INVALID, true);
+    testError("var x = goog.defineClass() || null;", GOOG_CLASS_TARGET_INVALID);
 
-    testSame("({foo: goog.defineClass()});", GOOG_CLASS_TARGET_INVALID, true);
+    testError("({foo: goog.defineClass()});", GOOG_CLASS_TARGET_INVALID);
   }
 
   public void testNgInject() {

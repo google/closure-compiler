@@ -768,22 +768,6 @@ public abstract class CompilerTestCase extends TestCase  {
    * Verifies that the compiler pass's JS output is the same as its input
    * and (optionally) that an expected warning is issued.
    *
-   * @param js Input and output
-   * @param diag Expected error or warning, or null if none is expected
-   * @param error true if diag is an error, false if it is a warning
-   */
-  public void testSame(String js, DiagnosticType diag, boolean error) {
-    if (error) {
-      test(js, null, diag, null);
-    } else {
-      test(js, js, null, diag);
-    }
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output is the same as its input
-   * and (optionally) that an expected warning is issued.
-   *
    * @param externs Externs input
    * @param js Input and output
    * @param warning Expected warning, or null if no warning is expected
