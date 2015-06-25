@@ -402,7 +402,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         } else if (parent.getType() == Token.PARAM_LIST) {
           // Parameters of the scope function also get a BAD_PARAMETERS
           // error.
-        } else if (isVar || isFunctionDecl) {
+        } else if (isVar || isFunctionDecl || NodeUtil.isClassDeclaration(parent)) {
           boolean isHoisted = NodeUtil.isHoistedFunctionDeclaration(parent);
           Node grandparent = parent.getParent();
           Node value = v.getInitialValue();
@@ -421,9 +421,9 @@ class ScopedAliases implements HotSwapCompilerPass {
 
           // First, we need to free up the function expression (EXPR)
           // to be used in another expression.
-          if (isFunctionDecl) {
+          if (isFunctionDecl || NodeUtil.isClassDeclaration(parent)) {
             // Replace "function NAME() { ... }" with "var NAME;".
-            Node existingName = v.getNameNode();
+            // Replace "class NAME { ... }" with "var NAME;".
 
             // We can't keep the local name on the function expression,
             // because IE is buggy and will leak the name into the global
@@ -432,10 +432,16 @@ class ScopedAliases implements HotSwapCompilerPass {
             //
             // This will only cause problems if this is a hoisted, recursive
             // function, and the programmer is using the hoisting.
-            Node newName = IR.name("").useSourceInfoFrom(existingName);
-            value.replaceChild(existingName, newName);
+            Node newName;
+            if (isFunctionDecl) {
+              newName = IR.name("");
+            } else {
+              newName = IR.empty();
+            }
+            newName.useSourceInfoFrom(n);
+            value.replaceChild(n, newName);
 
-            varNode = IR.var(existingName).useSourceInfoFrom(existingName);
+            varNode = IR.var(n).useSourceInfoFrom(n);
             grandparent.replaceChild(parent, varNode);
           } else {
             if (value != null) {

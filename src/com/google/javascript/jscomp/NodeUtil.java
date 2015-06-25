@@ -3704,6 +3704,7 @@ public final class NodeUtil {
       case Token.CONST:
         return n.getFirstChild();
       case Token.FUNCTION:
+      case Token.CLASS:
         return parent;
     }
     return null;

@@ -254,6 +254,29 @@ public final class ScopedAliasesTest extends CompilerTestCase {
          "goog.bar.newMethod2=function(goog$$1, b){return goog.bar + b};");
   }
 
+  public void testFunctionDeclarationInScope() {
+    testScoped("var foo = function() {};", SCOPE_NAMESPACE + "$jscomp.scope.foo = function() {};");
+  }
+
+  public void testClassDefinition1() {
+    testScoped(
+        "class Foo {}", SCOPE_NAMESPACE + "$jscomp.scope.Foo=class{}", LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testClassDefinition2() {
+    testScoped(
+        "var bar = goog.bar;" + "class Foo { constructor() { this.x = bar; }}",
+        SCOPE_NAMESPACE + "$jscomp.scope.Foo = class { constructor() { this.x = goog.bar; } }",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testClassDefinition3() {
+    testScoped(
+        "var bar = {};" + "bar.Foo = class {};",
+        SCOPE_NAMESPACE + "$jscomp.scope.bar = {}; $jscomp.scope.bar.Foo = class {}",
+        LanguageMode.ECMASCRIPT6);
+  }
+
   /**
    * Make sure we don't hit an IllegalStateException for this case.
    * @see https://github.com/google/closure-compiler/issues/400
