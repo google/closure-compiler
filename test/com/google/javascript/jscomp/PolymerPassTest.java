@@ -1523,6 +1523,21 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"),
         POLYMER_INVALID_PROPERTY);
+
+    testError(
+        LINE_JOINER.join(
+            "var foo = {};",
+            "foo.bar = {};",
+            "Polymer({",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    isHappy: {",
+            "      type: foo.Bar,",
+            "      value: true,",
+            "    },",
+            "  },",
+            "});"),
+        POLYMER_INVALID_PROPERTY);
   }
 
   public void testInvalidBehavior() {
