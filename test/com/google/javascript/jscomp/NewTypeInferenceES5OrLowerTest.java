@@ -8232,6 +8232,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "};"));
   }
 
+  // public void testVarargs() {
+  //   // TODO(blickly): Investigate why this doesn't pass
+  //   typeCheck(Joiner.on('\n').join(
+  //       "function foo(baz, /** ...number */ es6_rest_args) {",
+  //       "  var bar = [].slice.call(arguments, 0);",
+  //       "}",
+  //       "foo(); foo(3); foo(3, 4);"));
+  // }
+
   // public void testAccessVarargsDoesntCrash() {
   //   // TODO(blickly): Support arguments so we only get one warning
   //   typeCheck(Joiner.on('\n').join(
