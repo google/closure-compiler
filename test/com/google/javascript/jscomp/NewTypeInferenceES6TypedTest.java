@@ -133,6 +133,23 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
+  public void testRestParameter() {
+    typeCheck(LINE_JOINER.join(
+        "function foo(...p1: number[]) {}",
+        "foo(); foo(3); foo(3, 4);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function foo(...p1: number[]) {}",
+        "foo('3')"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck("function foo(...p1: number[]) { var s:string = p1[0]; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck("function foo(...p1: number[]) { p1 = ['3']; }",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testClass() {
     typeCheck(LINE_JOINER.join(
         "class Foo {",

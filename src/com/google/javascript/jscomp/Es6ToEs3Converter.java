@@ -68,6 +68,16 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       "CONFLICTING_GETTER_SETTER_TYPE",
       "The types of the getter and setter for property ''{0}'' do not match.");
 
+  static final DiagnosticType BAD_REST_PARAMETER_ANNOTATION = DiagnosticType.warning(
+      "BAD_REST_PARAMETER_ANNOTATION",
+      "Missing \"...\" in type annotation for rest parameter.");
+
+  // The name of the index variable for populating the rest parameter array.
+  private static final String REST_INDEX = "$jscomp$restIndex";
+
+  // The name of the placeholder for the rest parameters.
+  private static final String REST_PARAMS = "$jscomp$restParams";
+
   // The name of the vars that capture 'this' and 'arguments'
   // for converting arrow functions.
   private static final String THIS_VAR = "$jscomp$this";
@@ -542,11 +552,64 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       } else if (param.isRest()) { // rest parameter
         param.setType(Token.NAME);
         param.setVarArgs(true);
-        // Transpile to: param = [].slice.call(arguments, i);
-        Node newArr = IR.exprResult(IR.assign(IR.name(param.getString()),
-            IR.call(IR.getprop(IR.getprop(IR.arraylit(), IR.string("slice")),
-                IR.string("call")), IR.name("arguments"), IR.number(i))));
+        String paramName = param.getString();
+
+        Node newBlock = IR.block().useSourceInfoFrom(block);
+        Node name = IR.name(paramName);
+        Node let = IR.let(name, IR.name(REST_PARAMS))
+            .useSourceInfoIfMissingFromForTree(block);
+        newBlock.addChildToFront(let);
+        if (insertSpot != null) {
+          for (Node statement = insertSpot.getNext(); statement != null;
+              statement = statement.getNext()) {
+            newBlock.addChildToBack(statement.detachFromParent());
+          }
+        } else {
+          for (Node child : block.children()) {
+            newBlock.addChildToBack(child.detachFromParent());
+          }
+        }
+
+        // Make sure rest parameters are typechecked
+        JSTypeExpression type = null;
+        JSDocInfo info = param.getJSDocInfo();
+        if (info != null) {
+          type = info.getType();
+        } else {
+          JSDocInfo functionInfo = function.getJSDocInfo();
+          if (functionInfo != null) {
+            type = functionInfo.getParameterType(paramName);
+          }
+        }
+        if (type != null) {
+          Node arrayType = IR.string("Array");
+          Node typeNode = type.getRoot();
+          if (typeNode.getType() != Token.ELLIPSIS) {
+            compiler.report(JSError.make(typeNode, BAD_REST_PARAMETER_ANNOTATION));
+          }
+          Node memberType = typeNode.getType() == Token.ELLIPSIS
+              ? typeNode.getFirstChild().cloneNode()
+              : typeNode.cloneNode();
+          arrayType.addChildToFront(
+              new Node(Token.BLOCK, memberType).copyInformationFrom(typeNode));
+          JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+          builder.recordType(new JSTypeExpression(new Node(Token.BANG, arrayType),
+              param.getSourceFileName()));
+          name.setJSDocInfo(builder.build());
+        }
+
+        Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
         block.addChildAfter(newArr.useSourceInfoIfMissingFromForTree(param), insertSpot);
+        Node init = IR.var(IR.name(REST_INDEX), IR.number(i));
+        Node cond = IR.lt(IR.name(REST_INDEX),
+            IR.getprop(IR.name("arguments"), IR.string("length")));
+        Node incr = IR.inc(IR.name(REST_INDEX), false);
+        Node body = IR.block(IR.exprResult(IR.assign(
+            IR.getelem(IR.name(REST_PARAMS), IR.sub(IR.name(REST_INDEX), IR.number(i))),
+            IR.getelem(IR.name("arguments"), IR.name(REST_INDEX)))));
+        block.addChildAfter(IR.forNode(init, cond, incr, body)
+            .useSourceInfoIfMissingFromForTree(param), newArr);
+        block.addChildToBack(newBlock);
         compiler.reportCodeChange();
       } else if (param.isDestructuringPattern()) {
         String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);

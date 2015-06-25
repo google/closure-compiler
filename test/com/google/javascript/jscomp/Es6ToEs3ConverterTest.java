@@ -1319,24 +1319,94 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testRestParameter() {
-    test(
-        "function f(...zero) {}",
-        "function f(zero) { zero = [].slice.call(arguments, 0); }");
-    test(
-        "function f(zero, ...one) {}",
-        "function f(zero, one) { one = [].slice.call(arguments, 1); }");
-    test(
-        "function f(zero, one, ...two) {}",
-        "function f(zero, one, two) { two = [].slice.call(arguments, 2); }");
+    test("function f(...zero) { return zero; }",
+        LINE_JOINER.join(
+        "function f(zero) {",
+        "  var $jscomp$restParams = [];",
+        "  for (var $jscomp$restIndex = 0; $jscomp$restIndex < arguments.length;",
+        "      ++$jscomp$restIndex) {",
+        "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
+        "  }",
+        "  {",
+        "    var zero$0 = $jscomp$restParams;",
+        "    return zero$0;",
+        "  }",
+        "}"));
+
+    test("function f(zero, ...one) {}",
+        LINE_JOINER.join(
+        "function f(zero, one) {",
+        "  var $jscomp$restParams = [];",
+        "  for (var $jscomp$restIndex = 1; $jscomp$restIndex < arguments.length;",
+        "      ++$jscomp$restIndex) {",
+        "    $jscomp$restParams[$jscomp$restIndex - 1] = arguments[$jscomp$restIndex];",
+        "  }",
+        "  {",
+        "    var one$0 = $jscomp$restParams;",
+        "  }",
+        "}"));
+
+    test("function f(zero, one, ...two) {}",
+        LINE_JOINER.join(
+        "function f(zero, one, two) {",
+        "  var $jscomp$restParams = [];",
+        "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
+        "      ++$jscomp$restIndex) {",
+        "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
+        "  }",
+        "  {",
+        "    var two$0 = $jscomp$restParams;",
+        "  }",
+        "}"));
+
+    // Make sure we get type checking on the rest parameters
+    test("/** @param {...number} zero */ function f(...zero) {}",
+        LINE_JOINER.join(
+        "/** @param {...number} zero */ function f(zero) {",
+        "  var $jscomp$restParams = [];",
+        "  for (var $jscomp$restIndex = 0; $jscomp$restIndex < arguments.length;",
+        "      ++$jscomp$restIndex) {",
+        "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
+        "  }",
+        "  {",
+        "    var /** !Array<number> */ zero$0 = $jscomp$restParams;",
+        "  }",
+        "}"));
+
+    // Inline type
+    test("function f(/** ...number */ ...zero) {}",
+        LINE_JOINER.join(
+        "function f(/** ...number */ zero) {",
+        "  var $jscomp$restParams = [];",
+        "  for (var $jscomp$restIndex = 0; $jscomp$restIndex < arguments.length;",
+        "      ++$jscomp$restIndex) {",
+        "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
+        "  }",
+        "  {",
+        "    var /** !Array<number> */ zero$0 = $jscomp$restParams;",
+        "  }",
+        "}"));
+
+    // Warn on /** number */
+    testWarning("function f(/** number */ ...zero) {}",
+                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
+    testWarning("/** @param {number} zero */ function f(...zero) {}",
+                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
   }
 
   public void testDefaultAndRestParameters() {
-    test(
-        "function f(zero, one = 1, ...two) {}",
+    test("function f(zero, one = 1, ...two) {}",
         LINE_JOINER.join(
             "function f(zero, one, two) {",
             "  one = (one === undefined) ? 1 : one;",
-            "  two = [].slice.call(arguments, 2);",
+            "  var $jscomp$restParams = [];",
+            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
+            "      ++$jscomp$restIndex) {",
+            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
+            "  }",
+            "  {",
+            "    var two$0 = $jscomp$restParams;",
+            "  }",
             "}"));
   }
 
