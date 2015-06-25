@@ -698,7 +698,7 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitTypedef(Node qnameNode) {
       Preconditions.checkState(qnameNode.isQualifiedName());
       qnameNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
-      if (NodeUtil.getInitializer(qnameNode) != null) {
+      if (NodeUtil.getRValueOfLValue(qnameNode) != null) {
         warnings.add(JSError.make(qnameNode, CANNOT_INIT_TYPEDEF));
       }
       // if (qnameNode.isName()
@@ -728,7 +728,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (currentScope.isDefined(qnameNode)) {
         return;
       }
-      Node init = NodeUtil.getInitializer(qnameNode);
+      Node init = NodeUtil.getRValueOfLValue(qnameNode);
       // First check if the definition is an alias of a previous enum.
       if (init != null && init.isQualifiedName()) {
         EnumType et = currentScope.getEnum(QualifiedName.fromNode(init));
@@ -928,7 +928,7 @@ class GlobalTypeInfo implements CompilerPass {
       Node aliasedDef = nameNode.getParent();
       Preconditions.checkState(aliasedDef.isVar() || aliasedDef.isAssign());
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(aliasedDef);
-      Node init = NodeUtil.getInitializer(nameNode);
+      Node init = NodeUtil.getRValueOfLValue(nameNode);
       RawNominalType rawType =
           currentScope.getNominalType(QualifiedName.fromNode(init));
       String initQname = init.getQualifiedName();
@@ -1359,7 +1359,7 @@ class GlobalTypeInfo implements CompilerPass {
         }
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
-        Node initializer = NodeUtil.getInitializer(declNode);
+        Node initializer = NodeUtil.getRValueOfLValue(declNode);
         JSType t = initializer == null
             ? null : simpleInferExprType(initializer);
         if (t == null) {
@@ -1437,7 +1437,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private JSType getTypeAtPropDeclNode(Node declNode, JSDocInfo jsdoc) {
       Preconditions.checkArgument(!currentScope.isNamespace(declNode));
-      Node initializer = NodeUtil.getInitializer(declNode);
+      Node initializer = NodeUtil.getRValueOfLValue(declNode);
       if (initializer != null && initializer.isFunction()) {
         return commonTypes.fromFunctionType(
             currentScope.getScope(getFunInternalName(initializer))
@@ -1450,7 +1450,7 @@ class GlobalTypeInfo implements CompilerPass {
       if (constExpr.isFromExterns()) {
         return false;
       }
-      Node initializer = NodeUtil.getInitializer(constExpr);
+      Node initializer = NodeUtil.getRValueOfLValue(constExpr);
       if (initializer == null) {
         warnings.add(JSError.make(constExpr, CONST_WITHOUT_INITIALIZER));
         return true;
@@ -1469,7 +1469,7 @@ class GlobalTypeInfo implements CompilerPass {
         warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
         return null;
       }
-      Node rhs = NodeUtil.getInitializer(constExpr);
+      Node rhs = NodeUtil.getRValueOfLValue(constExpr);
       JSType rhsType = simpleInferExprType(rhs);
       if (rhsType == null || rhsType.isUnknown()) {
         warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));

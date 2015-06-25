@@ -533,7 +533,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     this.exports.add(
         new PropertyExport(constructorName + ".prototype",
                            propertyName,
-                           NodeUtil.getInitializer(definitionNode)));
+                           NodeUtil.getRValueOfLValue(definitionNode)));
   }
 
 }
