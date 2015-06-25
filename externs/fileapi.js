@@ -298,6 +298,12 @@ File.prototype.name;
 File.prototype.lastModifiedDate;
 
 /**
+ * @see http://www.w3.org/TR/FileAPI/#dfn-lastModified
+ * @type {number}
+ */
+File.prototype.lastModified;
+
+/**
  * @see http://www.w3.org/TR/file-system-api/#the-fileentry-interface
  * @constructor
  * @extends {Entry}
