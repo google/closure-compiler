@@ -41,6 +41,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       DiagnosticType.warning("JSC_ANNOTATION_DEPRECATED",
           "The {0} annotation is deprecated. {1}");
 
+  public static final DiagnosticType DISALLOWED_MEMBER_JSDOC =
+      DiagnosticType.warning("JSC_DISALLOWED_MEMBER_JSDOC",
+          "Class level JSDocs (@interface, @extends, etc.) are not allowed on class members");
+
   private final AbstractCompiler compiler;
 
   CheckJSDoc(AbstractCompiler compiler) {
@@ -61,6 +65,21 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateMsgJsDoc(t, n, info);
     validateDeprecatedJsDoc(t, n, info);
     validateNoCollapse(t, n, info);
+    validateClassLevelJsDoc(t, n, info);
+  }
+
+
+  /**
+   * Checks that class-level annotations like @interface/@extends are not used on member functions.
+   */
+  private void validateClassLevelJsDoc(NodeTraversal t, Node n, JSDocInfo info) {
+    if (info != null && n.isMemberFunctionDef()) {
+      if (info.isConstructor() || info.isInterface() || info.hasBaseType()
+          || info.getImplementedInterfaceCount() != 0
+          || info.getExtendedInterfacesCount() != 0) {
+        t.report(n, DISALLOWED_MEMBER_JSDOC);
+      }
+    }
   }
 
   /**

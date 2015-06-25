@@ -399,6 +399,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
+          CheckJSDoc.DISALLOWED_MEMBER_JSDOC,
           CheckJSDoc.MISPLACED_ANNOTATION,
           CheckJSDoc.MISPLACED_MSG_ANNOTATION);
 

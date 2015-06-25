@@ -44,11 +44,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       DiagnosticType.warning("JSC_OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME",
           "Optional parameter name {0} must be prefixed with opt_");
 
-  // TODO(blickly): Move this warning (which is not a style issue) to CheckJSDoc
-  public static final DiagnosticType DISALLOWED_MEMBER_JSDOC =
-      DiagnosticType.warning("JSC_DISALLOWED_MEMBER_JSDOC",
-          "Class level JSDocs (@interface, @extends, etc.) are not allowed on class members");
-
   private final AbstractCompiler compiler;
 
   public CheckJSDocStyle(AbstractCompiler compiler) {
@@ -86,14 +81,6 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
             && !jsDoc.getVisibility().equals(Visibility.PRIVATE)) {
           t.report(n, MUST_BE_PRIVATE, name);
         }
-      }
-    } else if (n.isMemberFunctionDef()) {
-      JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
-      if (jsDoc != null
-          && (jsDoc.isConstructor() || jsDoc.isInterface() || jsDoc.hasBaseType()
-              || jsDoc.getImplementedInterfaceCount() != 0
-              || jsDoc.getExtendedInterfacesCount() != 0)) {
-        t.report(n, DISALLOWED_MEMBER_JSDOC);
       }
     }
   }

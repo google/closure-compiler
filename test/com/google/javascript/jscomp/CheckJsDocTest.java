@@ -17,8 +17,11 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckJSDoc.ANNOTATION_DEPRECATED;
+import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
+
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link CheckJSDoc}.
@@ -35,91 +38,110 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions() {
-    CompilerOptions options = new CompilerOptions();
+    CompilerOptions options = getOptions(new CompilerOptions());
     options.setWarningLevel(
         DiagnosticGroups.MISPLACED_TYPE_ANNOTATION, CheckLevel.WARNING);
     return options;
   }
 
-  public void testSameWithWarning(String src, DiagnosticType warning) {
-    test(src, src, null, warning);
+  public void testInvalidClassJsdoc() {
+    this.setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+
+    testSame("class Foo { /** @param {number} x */ constructor(x) {}}");
+
+    testWarning(
+        "class Foo { /** @constructor */ constructor() {}}",
+        DISALLOWED_MEMBER_JSDOC);
+
+    testWarning(
+        "class Foo { /** @interface */ constructor() {}}",
+        DISALLOWED_MEMBER_JSDOC);
+
+    testWarning(
+        "class Foo { /** @extends {Foo} */ constructor() {}}",
+        DISALLOWED_MEMBER_JSDOC);
+
+    testWarning(
+        "class Foo { /** @implements {Foo} */ constructor() {}}",
+        DISALLOWED_MEMBER_JSDOC);
   }
 
+
   public void testExposeDeprecated() {
-    testSameWithWarning("/** @expose */ var x = 0;", ANNOTATION_DEPRECATED);
+    testWarning("/** @expose */ var x = 0;", ANNOTATION_DEPRECATED);
   }
 
   public void testJSDocFunctionNodeAttachment() {
-    testSameWithWarning("var a = /** @param {number} index */5;"
+    testWarning("var a = /** @param {number} index */5;"
         + "/** @return boolean */function f(index){}", MISPLACED_ANNOTATION);
   }
 
   public void testJSDocDescAttachment() {
-    testSameWithWarning(
+    testWarning(
         "function f() { return /** @type {string} */ (g(1 /** @desc x */)); };",
         MISPLACED_MSG_ANNOTATION);
 
-    testSameWithWarning("/** @desc Foo. */ var bar = goog.getMsg('hello');",
+    testWarning("/** @desc Foo. */ var bar = goog.getMsg('hello');",
         MISPLACED_MSG_ANNOTATION);
-    testSameWithWarning("/** @desc Foo. */ x.y.z.bar = goog.getMsg('hello');",
+    testWarning("/** @desc Foo. */ x.y.z.bar = goog.getMsg('hello');",
         MISPLACED_MSG_ANNOTATION);
-    testSameWithWarning("var msgs = {/** @desc x */ x: goog.getMsg('x')}",
+    testWarning("var msgs = {/** @desc x */ x: goog.getMsg('x')}",
         MISPLACED_MSG_ANNOTATION);
-    testSameWithWarning("/** @desc Foo. */ bar = goog.getMsg('x');",
+    testWarning("/** @desc Foo. */ bar = goog.getMsg('x');",
         MISPLACED_MSG_ANNOTATION);
   }
 
   public void testJSDocTypeAttachment() {
-    testSameWithWarning(
+    testWarning(
         "function f() {  /** @type {string} */ if (true) return; };", MISPLACED_ANNOTATION);
 
-    testSameWithWarning(
+    testWarning(
         "function f() {  /** @type {string} */  return; };", MISPLACED_ANNOTATION);
   }
 
 
   public void testMisplacedTypeAnnotation1() {
     // misuse with COMMA
-    testSameWithWarning(
+    testWarning(
         "var o = {}; /** @type {string} */ o.prop1 = 1, o.prop2 = 2;", MISPLACED_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation2() {
     // missing parentheses for the cast.
-    testSameWithWarning(
+    testWarning(
         "var o = /** @type {string} */ getValue();",
         MISPLACED_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation3() {
     // missing parentheses for the cast.
-    testSameWithWarning(
+    testWarning(
         "var o = 1 + /** @type {string} */ value;",
         MISPLACED_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation4() {
     // missing parentheses for the cast.
-    testSameWithWarning(
+    testWarning(
         "var o = /** @type {!Array.<string>} */ ['hello', 'you'];",
         MISPLACED_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation5() {
     // missing parentheses for the cast.
-    testSameWithWarning(
+    testWarning(
         "var o = (/** @type {!Foo} */ {});",
         MISPLACED_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation6() {
-    testSameWithWarning(
+    testWarning(
         "var o = /** @type {function():string} */ function() {return 'str';}",
         MISPLACED_ANNOTATION);
   }
 
   public void testMisplacedTypeAnnotation7() {
-    testSameWithWarning(
+    testWarning(
         "var x = /** @type {string} */ y;",
         MISPLACED_ANNOTATION);
   }
@@ -129,7 +151,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testMisplacedNocollapseAnnotation1() {
-    testSameWithWarning(
+    testWarning(
         "/** @constructor */ function foo() {};"
             + "/** @nocollapse */ foo.prototype.bar = function() {};",
         MISPLACED_ANNOTATION);

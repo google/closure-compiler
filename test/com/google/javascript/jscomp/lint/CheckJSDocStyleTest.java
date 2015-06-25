@@ -15,14 +15,12 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.lint.CheckJSDocStyle.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAM_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_NAME_NOT_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 
 import com.google.javascript.jscomp.Compiler;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 
@@ -33,29 +31,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckJSDocStyle(compiler);
-  }
-
-  public void testInvalidClassJsdoc() {
-    this.setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
-
-    testSame(
-        LINE_JOINER.join("class Foo {", "  /** @param {number} x */", "  constructor(x) {}", "}"));
-
-    testSame(
-        LINE_JOINER.join("class Foo {", "  /** @constructor */", "  constructor() {}", "}"),
-        DISALLOWED_MEMBER_JSDOC);
-
-    testSame(
-        LINE_JOINER.join("class Foo {", "  /** @interface */", "  constructor() {}", "}"),
-        DISALLOWED_MEMBER_JSDOC);
-
-    testSame(
-        LINE_JOINER.join("class Foo {", "  /** @extends {Foo} */", "  constructor() {}", "}"),
-        DISALLOWED_MEMBER_JSDOC);
-
-    testSame(
-        LINE_JOINER.join("class Foo {", "  /** @implements {Foo} */", "  constructor() {}", "}"),
-        DISALLOWED_MEMBER_JSDOC);
   }
 
   public void testMissingParam() {
