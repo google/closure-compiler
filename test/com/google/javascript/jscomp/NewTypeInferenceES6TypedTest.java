@@ -54,10 +54,14 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
     typeCheck(LINE_JOINER.join(
         "class Foo {}",
         "var x: Foo = new Foo;"));
+
+    typeCheck("var x: {p: string; q: number};");
   }
 
   public void testSimpleAnnotationsWarnings() {
     typeCheck("var x: number[] = ['hello'];", NewTypeInference.MISTYPED_ASSIGN_RHS);
+    typeCheck("var x: {p: string; q: number}; x = {p: 3, q: 3}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testSimpleFunctions() {

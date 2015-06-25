@@ -131,6 +131,7 @@ public class ParseTree {
   public OptionalParameterTree asOptionalParameter() { return (OptionalParameterTree) this; }
   public ParameterizedTypeTree asParameterizedType() { return (ParameterizedTypeTree) this; }
   public ArrayTypeTree asArrayType() { return (ArrayTypeTree) this; }
+  public RecordTypeTree asRecordType() { return (RecordTypeTree) this; }
   public UnionTypeTree asUnionType() { return (UnionTypeTree) this; }
   public FunctionTypeTree asFunctionType() { return (FunctionTypeTree) this; }
   public GenericTypeListTree asGenericTypeList() { return (GenericTypeListTree) this; }

@@ -160,12 +160,10 @@ public class TypeDeclarationsIR {
       LinkedHashMap<String, TypeDeclarationNode> properties) {
     TypeDeclarationNode node = new TypeDeclarationNode(Token.RECORD_TYPE);
     for (Map.Entry<String, TypeDeclarationNode> prop : properties.entrySet()) {
-      if (prop.getValue() == null) {
-        node.addChildToBack(IR.stringKey(prop.getKey()));
-      } else {
-        Node stringKey = IR.stringKey(prop.getKey());
+      Node stringKey = IR.stringKey(prop.getKey());
+      node.addChildToBack(stringKey);
+      if (prop.getValue() != null) {
         stringKey.addChildToFront(prop.getValue());
-        node.addChildToBack(stringKey);
       }
     }
     return node;
@@ -188,10 +186,8 @@ public class TypeDeclarationsIR {
    * <pre>
    * FUNCTION_TYPE
    *   NUMBER_TYPE
-   *   STRING_KEY p1
-   *     STRING_TYPE
-   *   STRING_KEY p2
-   *     BOOLEAN_TYPE
+   *   STRING_KEY p1 [declared_type_expr: STRING_TYPE]
+   *   STRING_KEY p2 [declared_type_expr: BOOLEAN_TYPE]
    * </pre>
    * @param returnType the type returned by the function, possibly UNKNOWN_TYPE
    * @param requiredParams the names and types of the required parameters.

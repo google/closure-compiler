@@ -307,6 +307,15 @@ public final class Es6TypedToEs6Converter
         }
         return pipe;
       case Token.RECORD_TYPE:
+        Node lb = new Node(Token.LB);
+        for (Node stringKey : type.children()) {
+          Node colon = new Node(Token.COLON);
+          Node original = stringKey.removeFirstChild();
+          colon.addChildToBack(stringKey.detachFromParent());
+          colon.addChildToBack(convertWithLocation(original));
+          lb.addChildrenToBack(colon);
+        }
+        return new Node(Token.LC, lb);
       default:
         // TODO(moz): Implement.
         break;

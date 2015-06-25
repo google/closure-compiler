@@ -107,7 +107,7 @@ public final class Es6InlineTypesNotYetParsedTest extends CompilerTestCase {
 
   public void testRecordType() {
     assertSource("/** @type {{myNum: number, myObject}} */ var s;")
-        .transpilesTo("var s: {myNum:number ; myObject};");
+        .transpilesTo("var s: {myNum:number, myObject};");
   }
 
   public void testParameterizedType() {

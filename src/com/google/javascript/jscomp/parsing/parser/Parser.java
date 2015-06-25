@@ -84,6 +84,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
 import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
+import com.google.javascript.jscomp.parsing.parser.trees.RecordTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
@@ -973,7 +974,8 @@ public class Parser {
 
   private ParseTree parseType() {
     SourcePosition start = getTreeStartLocation();
-    if (!peekId() && !peek(TokenType.VOID) && !peek(TokenType.OPEN_PAREN)) {
+    if (!peekId() && !peek(TokenType.VOID) && !peek(TokenType.OPEN_PAREN)
+        && !peek(TokenType.OPEN_CURLY)) {
       reportError("Unexpected token '%s' in type expression", peekType());
       return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
     }
@@ -1025,6 +1027,36 @@ public class Parser {
       eat(TokenType.OPEN_PAREN);
       typeExpression = parseType();
       eat(TokenType.CLOSE_PAREN);
+    } else {
+      typeExpression = parseRecordTypeExpression();
+    }
+    return typeExpression;
+  }
+
+  private ParseTree parseRecordTypeExpression() {
+    SourcePosition start = getTreeStartLocation();
+    ParseTree typeExpression;
+    if (peek(TokenType.OPEN_CURLY)) {
+      eat(TokenType.OPEN_CURLY);
+      LinkedHashMap<IdentifierToken, ParseTree> members = new LinkedHashMap<>();
+      while (peekId()) {
+        IdentifierToken name = eatId();
+        eat(TokenType.COLON);
+        ParseTree type = parseType();
+        members.put(name, type);
+        if (peek(TokenType.CLOSE_CURLY)) {
+          break;
+        } else {
+          // The standard delimiter is semicolon, but we also accept comma
+          if (peekImplicitSemiColon()) {
+            eatPossibleImplicitSemiColon();
+          } else {
+            eat(TokenType.COMMA);
+          }
+        }
+      }
+      typeExpression = new RecordTypeTree(getTreeLocation(start), members);
+      eat(TokenType.CLOSE_CURLY);
     } else {
       typeExpression = parseTypeReference();
     }

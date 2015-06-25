@@ -23,6 +23,7 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.functionType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
+import static com.google.javascript.rhino.TypeDeclarationsIR.recordType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.undefinedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
@@ -102,6 +103,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ParseTreeType;
 import com.google.javascript.jscomp.parsing.parser.trees.PostfixExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ProgramTree;
 import com.google.javascript.jscomp.parsing.parser.trees.PropertyNameAssignmentTree;
+import com.google.javascript.jscomp.parsing.parser.trees.RecordTypeTree;
 import com.google.javascript.jscomp.parsing.parser.trees.RestParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ReturnStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.SetAccessorTree;
@@ -2121,6 +2123,14 @@ class IRFactory {
       return arrayType(process(tree.elementType));
     }
 
+    Node processRecordType(RecordTypeTree tree) {
+      LinkedHashMap<String, TypeDeclarationNode> members = new LinkedHashMap<>();
+      for (Map.Entry<IdentifierToken, ParseTree> entry : tree.members.entrySet()) {
+        members.put(entry.getKey().value, (TypeDeclarationNode) process(entry.getValue()));
+      }
+      return recordType(members);
+    }
+
     Node processUnionType(UnionTypeTree tree) {
       ImmutableList.Builder<TypeDeclarationNode> options = ImmutableList.builder();
       for (ParseTree option : tree.types) {
@@ -2469,6 +2479,8 @@ class IRFactory {
           return processParameterizedType(node.asParameterizedType());
         case ARRAY_TYPE:
           return processArrayType(node.asArrayType());
+        case RECORD_TYPE:
+          return processRecordType(node.asRecordType());
         case UNION_TYPE:
           return processUnionType(node.asUnionType());
         case FUNCTION_TYPE:

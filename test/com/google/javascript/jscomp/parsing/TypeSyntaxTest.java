@@ -203,6 +203,13 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: Foo[]<Bar>;");
   }
 
+  public void testRecordType() {
+    parse("var x: {p:string, q:string, r:string};");
+    parse("var x: {p:string, q:string}[];");
+    parse("var x: {p:string, q:string} | string;");
+    parse("var x: (o: {p:string, q:string}) => r;");
+  }
+
   public void testParameterizedType() {
     TypeDeclarationNode parameterizedType =
         parameterizedType(
@@ -281,6 +288,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: (p1: string) => boolean;");
     parse("var n: (p1: string, p2: number) => boolean;");
     parse("var n: () => () => number;");
+    parse("var n: (p1: string) => {};");
     parse("(number): () => number => number;");
 
     Node ast = parse("var n: (p1: string, p2: number) => boolean[];");
@@ -316,7 +324,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: (p1 : p2?) => number;");
     expectErrors("Parse error. ')' expected");
     parse("var n: (p1 : p2 = p3) => number;");
-    expectErrors("Parse error. Unexpected token '{' in type expression");
+    expectErrors("Parse error. ':' expected");
     parse("var n: ({x, y}, z) => number;");
     expectErrors("Parse error. Unexpected token '[' in type expression");
     parse("var n: ([x, y], z) => number;");
@@ -354,8 +362,6 @@ public final class TypeSyntaxTest extends TestCase {
   public void testFunctionType_incomplete() {
     expectErrors("Parse error. Unexpected token ';' in type expression");
     parse("var n: (p1:string) =>;");
-    expectErrors("Parse error. Unexpected token '{' in type expression");
-    parse("var n: (p1:string) => {};");
     expectErrors("Parse error. Unexpected token '=>' in type expression");
     parse("var n: => boolean;");
   }

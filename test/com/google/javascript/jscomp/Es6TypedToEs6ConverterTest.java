@@ -146,6 +146,13 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var x: test.Type[];", "var /** !Array.<!test.Type> */ x;");
   }
 
+  public void testRecordType() {
+    test("var x: {p: string; q: number};", "var /** {p: string, q: number} */ x;");
+    test("var x: {p: string, q: number};", "var /** {p: string, q: number} */ x;");
+    test("var x: {p: string; q: {p: string; q: number}};",
+         "var /** {p: string, q: {p: string, q: number}}*/ x;");
+  }
+
   public void testParameterizedType() {
     test("var x: test.Type<string>;", "var /** !test.Type<string> */ x;");
     test("var x: test.Type<A, B>;", "var /** !test.Type<!A, !B> */ x;");

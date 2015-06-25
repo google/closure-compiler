@@ -1132,7 +1132,7 @@ class CodeGenerator {
         break;
       case Token.RECORD_TYPE:
         add("{");
-        addList(first, false, Context.STATEMENT, ";");
+        addList(first, false, Context.OTHER, ",");
         add("}");
         break;
       case Token.PARAMETERIZED_TYPE:
@@ -1145,13 +1145,7 @@ class CodeGenerator {
         // CLASS -> NAME,EXPR|EMPTY,BLOCK
       case Token.GENERIC_TYPE_LIST:
         add("<");
-        Node generic = n.getFirstChild();
-        add(generic);
-        while ((generic = generic.getNext()) != null) {
-          add(",");
-          cc.maybeInsertSpace();
-          add(generic);
-        }
+        addList(first, false, Context.STATEMENT, ",");
         add(">");
         break;
       case Token.GENERIC_TYPE:
