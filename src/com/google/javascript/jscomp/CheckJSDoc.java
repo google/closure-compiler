@@ -189,14 +189,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     if (info != null && info.hasType()) {
       boolean valid = false;
       switch (n.getType()) {
-        // Casts, variable declarations, and exports are valid.
-        case Token.CAST:
-        case Token.VAR:
-        case Token.LET:
-        case Token.CONST:
-        case Token.EXPORT:
-          valid = true;
-          break;
         // Function declarations are valid
         case Token.FUNCTION:
           valid = NodeUtil.isFunctionDeclaration(n);
@@ -220,7 +212,12 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
               break;
           }
           break;
-        // Object literal properties are valid
+        // Casts, variable declarations, exports, and Object literal properties are valid.
+        case Token.CAST:
+        case Token.VAR:
+        case Token.LET:
+        case Token.CONST:
+        case Token.EXPORT:
         case Token.STRING_KEY:
         case Token.GETTER_DEF:
         case Token.SETTER_DEF:
@@ -228,8 +225,9 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           break;
         // Property assignments are valid, if at the root of an expression.
         case Token.ASSIGN:
-          valid = n.getParent().isExprResult()
-              && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
+          valid =
+              n.getParent().isExprResult()
+                  && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
           break;
         case Token.GETPROP:
           valid = n.getParent().isExprResult() && n.isQualifiedName();
