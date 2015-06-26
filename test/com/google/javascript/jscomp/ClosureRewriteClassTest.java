@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_MISSING;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_DESCRIPTOR_NOT_VALID;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_NG_INJECT_ON_CLASS;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_STATICS_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_SUPER_CLASS_NOT_VALID;
@@ -49,7 +51,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
     compareJsDoc = true;
@@ -60,8 +61,39 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     return 1;
   }
 
+  private void testRewrite(String code, String expected, LanguageMode lang) {
+    setAcceptedLanguage(lang);
+    test(code, expected);
+  }
+
+  private void testRewrite(String code, String expected){
+    testRewrite(code, expected, LanguageMode.ECMASCRIPT3);
+    testRewrite(code, expected, LanguageMode.ECMASCRIPT6);
+  }
+
+  private void testRewriteError(String js, DiagnosticType error, LanguageMode lang) {
+    setAcceptedLanguage(lang);
+    testError(js, error);
+  }
+
+  private void testRewriteError(String js, DiagnosticType error){
+    testRewriteError(js, error, LanguageMode.ECMASCRIPT3);
+    testRewriteError(js, error, LanguageMode.ECMASCRIPT6);
+  }
+
+  private void testRewriteWarning(String code, String expected,
+                                  DiagnosticType warning, LanguageMode lang) {
+    setAcceptedLanguage(lang);
+    test(code, expected, null, warning);
+  }
+
+  private void testRewriteWarning(String code, String expected, DiagnosticType warning) {
+    testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT3);
+    testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT6);
+  }
+
   public void testBasic1() {
-    test(
+    testRewrite(
         "var x = goog.defineClass(null, {\n"
         + "  constructor: function(){}\n"
         + "});",
@@ -71,7 +103,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testBasic2() {
-    test(
+    testRewrite(
         "var x = {};\n"
         + "x.y = goog.defineClass(null, {\n"
         + "  constructor: function(){}\n"
@@ -84,7 +116,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testBasic3() {
     // verify we don't add a goog.inherits for Object
-    test(
+    testRewrite(
         "var x = goog.defineClass(Object, {\n"
         + "  constructor: function(){}\n"
         + "});",
@@ -96,7 +128,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   public void testAnnotations1() {
     // verify goog.defineClass values are constructible, by default
     enableTypeCheck(CheckLevel.WARNING);
-    test(
+    testRewrite(
         "var x = goog.defineClass(Object, {\n"
         + "  constructor: function(){}\n"
         + "});"
@@ -110,7 +142,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   public void testAnnotations2a() {
     // @interface is preserved
     enableTypeCheck(CheckLevel.WARNING);
-    test(
+    testRewriteWarning(
         "var x = goog.defineClass(null, {\n"
         + "  /** @interface */\n"
         + "  constructor: function(){}\n"
@@ -120,14 +152,13 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         "/** @interface */\n"
         + "var x = function() {};"
         + "new x();",
-        null,
         TypeCheck.NOT_A_CONSTRUCTOR);
   }
 
   public void testAnnotations2b() {
     // @interface is preserved, at the class level too
     enableTypeCheck(CheckLevel.WARNING);
-    test(
+    testRewriteWarning(
         "/** @interface */\n"
         + "var x = goog.defineClass(null, {});"
         + "new x();",
@@ -135,14 +166,13 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         "/** @interface */\n"
         + "var x = function() {};"
         + "new x();",
-        null,
         TypeCheck.NOT_A_CONSTRUCTOR);
   }
 
   public void testAnnotations3a() {
     // verify goog.defineClass is a @struct by default
     enableTypeCheck(CheckLevel.WARNING);
-    test(
+    testRewriteWarning(
         "var y = goog.defineClass(null, {\n"
         + "  constructor: function(){}\n"
         + "});\n"
@@ -157,14 +187,13 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "var x = function() {this.a = 1};\n"
         + "goog.inherits(x,y);\n"
         + "use(new y().a);\n",
-        null,
         TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testAnnotations3b() {
     // verify goog.defineClass is a @struct by default, but can be overridden
     enableTypeCheck(CheckLevel.WARNING);
-    test(
+    testRewrite(
         "/** @unrestricted */"
         + "var y = goog.defineClass(null, {\n"
         + "  constructor: function(){}\n"
@@ -183,7 +212,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testInnerClass1() {
-    test(
+    testRewrite(
         "var x = goog.defineClass(some.Super, {\n"
         + "  constructor: function(){\n"
         + "    this.foo = 1;\n"
@@ -206,7 +235,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testComplete1() {
-    test(
+    testRewrite(
         "var x = goog.defineClass(some.Super, {\n"
         + "  constructor: function(){\n"
         + "    this.foo = 1;\n"
@@ -231,7 +260,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testComplete2() {
-    test(
+    testRewrite(
         "x.y = goog.defineClass(some.Super, {\n"
         + "  constructor: function(){\n"
         + "    this.foo = 1;\n"
@@ -256,7 +285,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testClassWithStaticInitFn() {
-    test(
+    testRewrite(
         "x.y = goog.defineClass(some.Super, {\n"
             + "  constructor: function(){\n"
             + "    this.foo = 1;\n"
@@ -284,7 +313,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testPrivate1() {
-    test(
+    testRewrite(
         LINE_JOINER.join(
             "/** @private */",
             "x.y_ = goog.defineClass(null, {",
@@ -294,7 +323,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testPrivate2() {
-    test(
+    testRewrite(
         LINE_JOINER.join(
             "/** @private */",
             "x.y_ = goog.defineClass(null, {",
@@ -312,56 +341,57 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testInvalid1() {
-    testError("var x = goog.defineClass();", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
-    testError("var x = goog.defineClass('foo');", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
-    testError("var x = goog.defineClass(foo());", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
-    testError("var x = goog.defineClass({'foo':1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
-    testError("var x = goog.defineClass({1:1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testRewriteError("var x = goog.defineClass();", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testRewriteError("var x = goog.defineClass('foo');", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testRewriteError("var x = goog.defineClass(foo());", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testRewriteError("var x = goog.defineClass({'foo':1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testRewriteError("var x = goog.defineClass({1:1});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
 
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
-
-    testError(
-        "var x = goog.defineClass({get foo() {return 1}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
-    testError("var x = goog.defineClass({set foo(a) {}});", GOOG_CLASS_SUPER_CLASS_NOT_VALID);
+    testRewriteError(
+        "var x = goog.defineClass({get foo() {return 1}});",
+        GOOG_CLASS_SUPER_CLASS_NOT_VALID, LanguageMode.ECMASCRIPT5);
+    testRewriteError(
+        "var x = goog.defineClass({set foo(a) {}});",
+        GOOG_CLASS_SUPER_CLASS_NOT_VALID, LanguageMode.ECMASCRIPT5);
   }
 
   public void testInvalid2() {
-    testError("var x = goog.defineClass(null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
-    testError("var x = goog.defineClass(null, null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
-    testError("var x = goog.defineClass(null, foo());", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
+    testRewriteError("var x = goog.defineClass(null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
+    testRewriteError("var x = goog.defineClass(null, null);", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
+    testRewriteError("var x = goog.defineClass(null, foo());", GOOG_CLASS_DESCRIPTOR_NOT_VALID);
   }
 
   public void testInvalid3() {
-    testError("var x = goog.defineClass(null, {});", GOOG_CLASS_CONSTRUCTOR_MISSING);
+    testRewriteError("var x = goog.defineClass(null, {});", GOOG_CLASS_CONSTRUCTOR_MISSING);
 
-    testError(
+    testRewriteError(
         "/** @interface */\n" + "var x = goog.defineClass(null, { constructor: function() {} });",
         GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE);
   }
 
   public void testInvalid4() {
-    testError(
+    testRewriteError(
         "var x = goog.defineClass(null, {"
             + "  constructor: function(){},"
             + "  statics: null"
             + "});",
         GOOG_CLASS_STATICS_NOT_VALID);
 
-    testError(
+    testRewriteError(
         "var x = goog.defineClass(null, {"
             + "  constructor: function(){},"
             + "  statics: foo"
             + "});",
         GOOG_CLASS_STATICS_NOT_VALID);
 
-    testError(
+    testRewriteError(
         "var x = goog.defineClass(null, {"
             + "  constructor: function(){},"
             + "  statics: {'foo': 1}"
             + "});",
         GOOG_CLASS_STATICS_NOT_VALID);
 
-    testError(
+    testRewriteError(
         "var x = goog.defineClass(null, {"
             + "  constructor: function(){},"
             + "  statics: {1: 1}"
@@ -370,21 +400,21 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testInvalid5() {
-    testError(
+    testRewriteError(
         "var x = goog.defineClass(null, {" + "  constructor: function(){}" + "}, null);",
         GOOG_CLASS_UNEXPECTED_PARAMS);
   }
 
   public void testInvalid6() {
-    testError("goog.defineClass();", GOOG_CLASS_TARGET_INVALID);
+    testRewriteError("goog.defineClass();", GOOG_CLASS_TARGET_INVALID);
 
-    testError("var x = goog.defineClass() || null;", GOOG_CLASS_TARGET_INVALID);
+    testRewriteError("var x = goog.defineClass() || null;", GOOG_CLASS_TARGET_INVALID);
 
-    testError("({foo: goog.defineClass()});", GOOG_CLASS_TARGET_INVALID);
+    testRewriteError("({foo: goog.defineClass()});", GOOG_CLASS_TARGET_INVALID);
   }
 
   public void testNgInject() {
-    test(
+    testRewrite(
         "var x = goog.defineClass(Object, {\n"
         + "  /** @ngInject */ constructor: function(x, y) {}\n"
         + "});",
@@ -393,13 +423,186 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testNgInject_onClass() {
-    test(
+    testRewriteWarning(
         "/** @ngInject */\n"
         + "var x = goog.defineClass(Object, {\n"
         + "  constructor: function(x, y) {}\n"
         + "});",
         "/** @ngInject @constructor @struct */\n"
         + "var x = function(x, y) {};",
-        null, GOOG_CLASS_NG_INJECT_ON_CLASS);
+        GOOG_CLASS_NG_INJECT_ON_CLASS);
   }
+
+  public void testExtendedObjLitMethodDefinition1() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor() {}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var FancyClass = function() {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitMethodDefinition2() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  someMethod1() {},",
+            "  someMethod2() {}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var FancyClass = function() {};",
+            "FancyClass.prototype.someMethod1 = function() {};",
+            "FancyClass.prototype.someMethod2 = function() {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitMethodDefinition3() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor() {},",
+            "  someMethod1() {},",
+            "  someMethod2() {}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var FancyClass = function() {};",
+            "FancyClass.prototype.someMethod1 = function() {};",
+            "FancyClass.prototype.someMethod2 = function() {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitMethodDefinition4() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor() {},",
+            "  statics:{",
+            "    someMethod1() {}",
+            "  },",
+            "  someMethod2() {}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var FancyClass = function() {};",
+            "FancyClass.someMethod1 = function() {};",
+            "FancyClass.prototype.someMethod2 = function() {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitComputedPropName1() {
+    testRewriteError(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  ['someCompProp_' + 42]: 47,",
+            "  someMember: 49,",
+            "  constructor: function() {},",
+            "});"),
+        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitComputedPropName2() {
+    testRewriteError(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  statics:{",
+            "    ['someCompProp_' + 1999]: 47",
+            "  }",
+            "});"),
+        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitShorthandAssignment1() {
+    testRewriteError(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  someShorthand, ",
+            "  constructor: function(){},",
+            "  someMethod: function() {}",
+            "});"),
+        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjShorthandAssignment2() {
+    testRewriteError(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  statics:{",
+            "    someShorthand",
+            "  }",
+            "});"),
+        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitSuperCall1() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  someMethod: function() {",
+            "    super.someMethod();",
+            "  }",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "  var FancyClass = function() {};",
+            "  FancyClass.prototype.someMethod = function() {",
+            "    super.someMethod();",
+            "  };"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitSuperCall2() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {super();},",
+            "  someMethod: function() {}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "  var FancyClass = function() {super();};",
+            "  FancyClass.prototype.someMethod = function() {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitSuperCall3() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  someMethod: function() {super();}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var FancyClass = function() {};",
+            "FancyClass.prototype.someMethod = function() {super();};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+//public void testNestedObjectLiteral(){
+//testRewriteError(
+//    LINE_JOINER.join(
+//        "var FancyClass = goog.defineClass(null, {",
+//        "  constructor: function() {},",
+//        "  someNestedObjLit:{}",
+//        "});"),
+//    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT6);
+//testRewriteError(
+//    LINE_JOINER.join(
+//        "var FancyClass = goog.defineClass(null, {",
+//        "  constructor() {},",
+//        "  statics:{",
+//        "    someNestedObjLit:{}",
+//        "  }",
+//        "});"),
+//    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT6);
+//}
 }

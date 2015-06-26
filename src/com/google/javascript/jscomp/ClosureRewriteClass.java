@@ -70,11 +70,20 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       "JSC_GOOG_CLASS_UNEXPECTED_PARAMS",
       "The class definition has too many arguments.");
 
+  static final DiagnosticType GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED =
+      DiagnosticType.error(
+          "JSC_GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED",
+          "Computed property names not supported in goog.defineClass.");
+
+  static final DiagnosticType GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED =
+      DiagnosticType.error(
+          "JSC_GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED",
+          "Shorthand assignments not supported in goog.defineClass.");
+
   // Warnings
   static final DiagnosticType GOOG_CLASS_NG_INJECT_ON_CLASS = DiagnosticType.warning(
       "JSC_GOOG_CLASS_NG_INJECT_ON_CLASS",
       "@ngInject should be declared on the constructor, not on the class.");
-
 
   private final AbstractCompiler compiler;
 
@@ -221,11 +230,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     }
 
     Node description = NodeUtil.getArgumentForCallOrNew(callNode, 1);
-    if (description == null
-        || !description.isObjectLit()
-        || !validateObjLit(description)) {
-      // report bad class definition
-      compiler.report(JSError.make(callNode, GOOG_CLASS_DESCRIPTOR_NOT_VALID));
+    if (!validateObjLit(description, callNode)) {
+      // Errors will be reported in the validate method. Keeping here clean
       return null;
     }
 
@@ -260,7 +266,11 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     Node statics = null;
     Node staticsProp = extractProperty(description, "statics");
     if (staticsProp != null) {
-      if (staticsProp.isObjectLit() && validateObjLit(staticsProp)) {
+      if (staticsProp.isObjectLit()){
+        if (!validateObjLit(staticsProp, staticsProp.getParent())) {
+          // Errors will be reported in the validate method. Keeping here clean
+          return null;
+        }
         statics = staticsProp;
       } else if (staticsProp.isFunction()) {
         classModifier = staticsProp;
@@ -300,14 +310,52 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     return node;
   }
 
-  // Only unquoted plain properties are currently supported.
-  private static boolean validateObjLit(Node objlit) {
+  /**
+   * @param objlit              the object literal being checked.
+   * @param parent              the parent of the object literal node
+   * @return false if the node is not an object literal, or if it contains any
+   *         property that is neither unquoted plain property nor member
+   *         function definition (ES6 feature)
+   */
+  private boolean validateObjLit(Node objlit, Node parent) {
+    if (objlit == null || !objlit.isObjectLit()) {
+      reportErrorOnContext(parent);
+      return false;
+    }
+
     for (Node key : objlit.children()) {
+      if (key.isMemberFunctionDef()) {
+        continue;
+      }
+      if (key.isComputedProp()) {
+        // report using computed property name
+        compiler.report(JSError.make(objlit,
+            GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED));
+        return false;
+      }
+      if (key.isStringKey() && !key.hasChildren()) {
+        // report using shorthand assignment
+        compiler.report(JSError.make(objlit,
+            GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED));
+        return false;
+      }
       if (!key.isStringKey() || key.isQuotedString()) {
+        reportErrorOnContext(parent);
         return false;
       }
     }
     return true;
+  }
+
+  private void reportErrorOnContext(Node parent){
+    if (parent.isStringKey()){
+      compiler.report(JSError.make(parent, GOOG_CLASS_STATICS_NOT_VALID));
+    } else {
+      // Report error in the context that the objlit is an
+      // argument of goog.defineClass call.
+      Preconditions.checkState(parent.isCall());
+      compiler.report(JSError.make(parent, GOOG_CLASS_DESCRIPTOR_NOT_VALID));
+    }
   }
 
   /**
@@ -316,7 +364,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   private static Node extractProperty(Node objlit, String keyName) {
     for (Node keyNode : objlit.children()) {
       if (keyNode.getString().equals(keyName)) {
-        return keyNode.isStringKey() ? keyNode.getFirstChild() : null;
+        return keyNode.getFirstChild();
       }
     }
     return null;
