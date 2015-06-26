@@ -97,6 +97,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.TemplateSubstitutionTre
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TypeAliasTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypeNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypedParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
@@ -765,6 +766,10 @@ public class Parser {
       return parseEnumDeclaration();
     }
 
+    if (peekTypeAlias()) {
+      return parseTypeAlias();
+    }
+
     // Harmony let block scoped bindings. let can only appear in
     // a block, not as a standalone statement: if() let x ... illegal
     if (peek(TokenType.LET)) {
@@ -776,7 +781,8 @@ public class Parser {
   }
 
   private boolean peekSourceElement() {
-    return peekFunction() || peekStatementStandard() || peekDeclaration();
+    return peekFunction() || peekStatementStandard() || peekDeclaration()
+        || peekTypeAlias();
   }
 
   private boolean peekFunction() {
@@ -788,6 +794,11 @@ public class Parser {
         || peekClassDeclaration()
         || peekInterfaceDeclaration()
         || peekEnumDeclaration();
+  }
+
+  private boolean peekTypeAlias() {
+    return peek(TokenType.TYPE) && !peekImplicitSemiColon(1)
+        && peek(1, TokenType.IDENTIFIER) && peek(2, TokenType.EQUAL);
   }
 
   private boolean peekFunction(int index) {
@@ -974,6 +985,7 @@ public class Parser {
 
   private ParseTree parseType() {
     SourcePosition start = getTreeStartLocation();
+    // TODO(moz): Parse type query
     if (!peekId() && !peek(TokenType.VOID) && !peek(TokenType.OPEN_PAREN)
         && !peek(TokenType.OPEN_CURLY)) {
       reportError("Unexpected token '%s' in type expression", peekType());
@@ -1220,6 +1232,7 @@ public class Parser {
     case DEBUGGER:
     case YIELD:
     case IDENTIFIER:
+    case TYPE:
     case THIS:
     case CLASS:
     case SUPER:
@@ -1740,6 +1753,7 @@ public class Parser {
     case THIS:
       return parseThisExpression();
     case IDENTIFIER:
+    case TYPE:
       return parseIdentifierExpression();
     case NUMBER:
     case STRING:
@@ -2237,6 +2251,7 @@ public class Parser {
       case FALSE:
       case FUNCTION:
       case IDENTIFIER:
+      case TYPE:
       case MINUS:
       case MINUS_MINUS:
       case NEW:
@@ -2999,6 +3014,16 @@ public class Parser {
     return value;
   }
 
+  private ParseTree parseTypeAlias() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.TYPE);
+    IdentifierToken alias = eatId();
+    eat(TokenType.EQUAL);
+    ParseTree original = parseType();
+    eatPossibleImplicitSemiColon();
+    return new TypeAliasTree(getTreeLocation(start), alias, original);
+  }
+
   /**
    * Consume a (possibly implicit) semi-colon. Reports an error if a semi-colon is not present.
    */
@@ -3018,10 +3043,21 @@ public class Parser {
    * Returns true if an implicit or explicit semi colon is at the current location.
    */
   private boolean peekImplicitSemiColon() {
-    return getNextLine() > getLastLine()
-        || peek(TokenType.SEMI_COLON)
-        || peek(TokenType.CLOSE_CURLY)
-        || peek(TokenType.END_OF_FILE);
+    return peekImplicitSemiColon(0);
+  }
+
+  private boolean peekImplicitSemiColon(int index) {
+    boolean lineAdvanced;
+    if (index == 0) {
+      lineAdvanced = getNextLine() > getLastLine();
+    } else {
+      lineAdvanced =
+          peekToken(index).location.start.line > peekToken(index - 1).location.end.line;
+    }
+    return lineAdvanced
+        || peek(index, TokenType.SEMI_COLON)
+        || peek(index, TokenType.CLOSE_CURLY)
+        || peek(index, TokenType.END_OF_FILE);
   }
 
   /**
@@ -3063,8 +3099,8 @@ public class Parser {
 
   private boolean peekId(int index) {
     TokenType type = peekType(index);
-    return type == TokenType.IDENTIFIER ||
-        (!inStrictContext() && Keywords.isStrictKeyword(type));
+    return type == TokenType.IDENTIFIER || type == TokenType.TYPE
+        || (!inStrictContext() && Keywords.isStrictKeyword(type));
   }
 
   /**

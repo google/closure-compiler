@@ -41,6 +41,10 @@ public final class Es6TypedToEs6Converter
       "JSC_CANNOT_CONVERT_BOUNDED_GENERICS",
       "Bounded generics are not yet implemented.");
 
+  static final DiagnosticType TYPE_ALIAS_ALREADY_DECLARED = DiagnosticType.error(
+      "JSC_TYPE_ALIAS_ALREADY_DECLARED",
+      "Type alias already declared as a variable: {0}");
+
   private final AbstractCompiler compiler;
 
   Es6TypedToEs6Converter(AbstractCompiler compiler) {
@@ -80,6 +84,9 @@ public final class Es6TypedToEs6Converter
             : n;
         maybeAddGenerics(n, jsDocNode);
         visitColonType(n, jsDocNode); // Return types are colon types on the function node
+        break;
+      case Token.TYPE_ALIAS:
+        visitTypeAlias(t, n, parent);
         break;
       default:
 
@@ -223,6 +230,21 @@ public final class Es6TypedToEs6Converter
       n.setDeclaredTypeExpression(null); // clear out declared type
       compiler.reportCodeChange();
     }
+  }
+
+  private void visitTypeAlias(NodeTraversal t, Node n, Node parent) {
+    String alias = n.getString();
+    if (t.getScope().isDeclared(alias, true)) {
+      compiler.report(
+          JSError.make(n, TYPE_ALIAS_ALREADY_DECLARED, alias));
+    }
+    Node var = IR.var(IR.name(n.getString())).useSourceInfoFromForTree(n);
+    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    builder.recordTypedef(new JSTypeExpression(
+        convertWithLocation(n.getFirstChild()), n.getSourceFileName()));
+    var.setJSDocInfo(builder.build());
+    parent.replaceChild(n, var);
+    compiler.reportCodeChange();
   }
 
   private Node maybeCreateAnyType(Node type) {

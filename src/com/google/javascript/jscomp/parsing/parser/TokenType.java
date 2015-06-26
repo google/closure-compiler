@@ -144,6 +144,9 @@ public enum TokenType {
   TEMPLATE_MIDDLE("template middle"),
   TEMPLATE_TAIL("template tail"),
   NO_SUBSTITUTION_TEMPLATE("no substitution template"),
+
+  // TypeScript
+  TYPE
   ;
 
   public final String value;

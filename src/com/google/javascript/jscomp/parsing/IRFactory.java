@@ -116,6 +116,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.TemplateSubstitutionTre
 import com.google.javascript.jscomp.parsing.parser.trees.ThisExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TypeAliasTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypeNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypedParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
@@ -2139,6 +2140,13 @@ class IRFactory {
       return unionType(options.build());
     }
 
+    Node processTypeAlias(TypeAliasTree tree) {
+      maybeWarnTypeSyntax(tree, "type alias");
+      Node typeAlias = newStringNode(Token.TYPE_ALIAS, tree.alias.value);
+      typeAlias.addChildrenToFront(process(tree.original));
+      return typeAlias;
+    }
+
     private boolean checkParameters(ImmutableList<ParseTree> params) {
       boolean seenOptional = false;
       boolean good = true;
@@ -2495,6 +2503,8 @@ class IRFactory {
         case ENUM_DECLARATION:
           return processEnumDeclaration(node.asEnumDeclaration());
 
+        case TYPE_ALIAS:
+          return processTypeAlias(node.asTypeAlias());
           // TODO(johnlenz): handle these or remove parser support
         case ARGUMENT_LIST:
         default:

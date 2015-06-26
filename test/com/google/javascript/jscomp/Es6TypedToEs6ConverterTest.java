@@ -211,4 +211,12 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("interface I { foo(p: string): boolean; }",
          "/** @interface */ class I { /** @return {boolean} */ foo(/** string */ p) {} }");
   }
+
+  public void testTypeAlias() {
+    test("type Foo = number;", "/** @typedef{number} */ var Foo;");
+    testError("type Foo = number; var Foo = 3; ",
+        Es6TypedToEs6Converter.TYPE_ALIAS_ALREADY_DECLARED);
+    testError("let Foo = 3; type Foo = number;",
+        Es6TypedToEs6Converter.TYPE_ALIAS_ALREADY_DECLARED);
+  }
 }

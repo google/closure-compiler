@@ -1928,6 +1928,13 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parseError("class = 1;", "'identifier' expected");
   }
 
+  public void testTypeScriptKeywords() {
+    parse("type = 2;");
+    parse("var type = 3;");
+    parse("type\nx = 5");
+    parse("while (i--) { type = types[i]; }");
+  }
+
   public void testKeywordsAsProperties() {
     mode = LanguageMode.ECMASCRIPT3;
 

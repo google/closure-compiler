@@ -501,6 +501,12 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("class Foo implements Bar {\n}", "implements");
   }
 
+  public void testTypeAlias() {
+    parse("type Foo = number;");
+
+    testNotEs6Typed("type Foo = number;", "type alias");
+  }
+
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {
     Node varDecl = parse(source, source).getFirstChild();
     assertDeclaredType(message, expectedType, varDecl.getFirstChild());

@@ -1189,6 +1189,13 @@ class CodeGenerator {
           add(members);
           break;
         }
+      case Token.TYPE_ALIAS:
+        add("type");
+        add(n.getString());
+        cc.addOp("=", true);
+        add(last);
+        cc.endStatement();
+        break;
       default:
         throw new RuntimeException("Unknown type " + Token.name(type) + "\n" + n.toStringTree());
     }

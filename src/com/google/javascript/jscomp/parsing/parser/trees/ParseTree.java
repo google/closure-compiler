@@ -150,6 +150,9 @@ public class ParseTree {
   public EnumDeclarationTree asEnumDeclaration() {
     return (EnumDeclarationTree) this;
   }
+  public TypeAliasTree asTypeAlias() {
+    return (TypeAliasTree) this;
+  }
 
   public boolean isPattern() {
     ParseTree parseTree = this;

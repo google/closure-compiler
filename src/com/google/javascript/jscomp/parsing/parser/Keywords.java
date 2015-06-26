@@ -78,7 +78,10 @@ public enum Keywords {
     //7.8 Literals
     NULL("null", TokenType.NULL),
     TRUE("true", TokenType.TRUE),
-    FALSE("false", TokenType.FALSE);
+    FALSE("false", TokenType.FALSE),
+
+    // TypeScript
+    TYPE("type", TokenType.TYPE);
 
   private static final Map<String, Keywords> KEYWORDS_BY_NAME;
   private static final Map<TokenType, Keywords> KEYWORDS_BY_TYPE;

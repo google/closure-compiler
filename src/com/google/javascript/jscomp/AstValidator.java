@@ -164,6 +164,9 @@ public final class AstValidator implements CompilerPass {
       case Token.INTERFACE:
         validateInterface(n);
         return;
+      case Token.TYPE_ALIAS:
+        validateTypeAlias(n);
+        return;
       default:
         violation("Expected statement but was " + Token.name(n.getType()) + ".", n);
     }
@@ -1210,6 +1213,12 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.NAMED_TYPE, n);
     validateChildCount(n);
     validateName(n.getFirstChild());
+  }
+
+  private void validateTypeAlias(Node n) {
+    validateEs6TypedFeature("type alias", n);
+    validateNodeType(Token.TYPE_ALIAS, n);
+    validateChildCount(n);
   }
 
   private void violation(String message, Node n) {

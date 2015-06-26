@@ -56,12 +56,15 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         "var x: Foo = new Foo;"));
 
     typeCheck("var x: {p: string; q: number};");
+
+    typeCheck("type Foo = number; var x: Foo = 3;");
   }
 
   public void testSimpleAnnotationsWarnings() {
     typeCheck("var x: number[] = ['hello'];", NewTypeInference.MISTYPED_ASSIGN_RHS);
     typeCheck("var x: {p: string; q: number}; x = {p: 3, q: 3}",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+    typeCheck("type Foo = number; var x: Foo = '3';", NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testSimpleFunctions() {
