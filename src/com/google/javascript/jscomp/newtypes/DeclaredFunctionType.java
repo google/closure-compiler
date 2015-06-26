@@ -178,6 +178,14 @@ public final class DeclaredFunctionType {
     return false;
   }
 
+  public DeclaredFunctionType withReceiverType(NominalType newReceiver) {
+    return new DeclaredFunctionType(
+        this.requiredFormals, this.optionalFormals,
+        this.restFormals, this.returnType, this.nominalType,
+        newReceiver,
+        this.typeParameters);
+  }
+
   public DeclaredFunctionType withTypeInfoFromSuper(
       DeclaredFunctionType superType, boolean getsTypeInfoFromParentMethod) {
     // getsTypeInfoFromParentMethod is true when a method without jsdoc overrides

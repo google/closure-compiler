@@ -32,7 +32,6 @@ import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.EnumType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
-import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.JSTypes;
@@ -1742,11 +1741,7 @@ class GlobalTypeInfo implements CompilerPass {
         // Use typeParser for the formals, and only add the receiver type here.
         DeclaredFunctionType allButRecvType = typeParser.getFunctionType(
             null, functionName, declNode, null, null, parentScope);
-        DeclaredFunctionType onlyHasRecvType = (new FunctionTypeBuilder())
-            .addReceiverType(recvType.getNominalTypeIfSingletonObj())
-            .buildDeclaration();
-        // Using withTypeInfoFromSuper is a hack to add the receiver type.
-        return onlyHasRecvType.withTypeInfoFromSuper(allButRecvType, true);
+        return allButRecvType.withReceiverType(recvType.getNominalTypeIfSingletonObj());
       }
 
       // The function literal is an argument at a call
