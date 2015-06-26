@@ -13257,6 +13257,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
   }
 
+  public void testCheckObjectKeysVariousTags5() throws Exception {
+    testTypes(
+        "/** @typedef {null|undefined} */ var Foo;\n"
+        + "/** @param {Object<!Foo, number>} x */ function f(x) {}",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
   public void testCheckObjectKeysGoodKey1() throws Exception {
     testTypes("/** @type {!Object<number, number>} */ var k;");
   }
