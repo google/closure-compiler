@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 
 /**
@@ -109,13 +110,15 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
    * as returning a nullable type, other than {?}.
    */
   private static boolean isReturnTypeNullable(Node n) {
-    if (n == null) {
+    if (n == null || !n.isFunction()) {
       return false;
     }
-    if (!n.isFunction()) {
+    FunctionType functionType = n.getJSType().toMaybeFunctionType();
+    if (functionType == null) {
+      // If the JSDoc declares a non-function type on a function node, we still shouldn't crash.
       return false;
     }
-    JSType returnType = n.getJSType().toMaybeFunctionType().getReturnType();
+    JSType returnType = functionType.getReturnType();
     if (returnType == null
         || returnType.isUnknownType() || !returnType.isNullable()) {
       return false;

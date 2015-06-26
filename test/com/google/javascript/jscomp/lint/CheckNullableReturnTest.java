@@ -200,6 +200,11 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
         + "}");
   }
 
+  public void testNonfunctionTypeDoesntCrash() {
+    enableClosurePass();
+    test("goog.forwardDeclare('FunType'); /** @type {!FunType} */ (function() { return; })", null);
+  }
+
   private static String createFunction(String body) {
     return "/** @return {?Object} */ function foo() {" + body + "}";
   }
