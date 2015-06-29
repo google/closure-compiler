@@ -975,22 +975,44 @@ final class NewTypeInference implements CompilerPass {
     JSType summary = commonTypes.fromFunctionType(builder.buildFunction());
     println("Function summary for ", fn.getReadableName());
     println("\t", summary);
-    Scope enclosingScope = fn.getParent();
-    Node fnNameNode = NodeUtil.getFunctionNameNode(fnRoot);
-    // TODO(dimvar): handle functions as namespaces that are props of namespaces
-    String fnName = fnNameNode != null && fnNameNode.isName()
-        ? fnNameNode.getString() : null;
-    if (fnName != null && enclosingScope.isFunctionNamespace(fnName)) {
-      JSType namespaceType = enclosingScope.getDeclaredTypeOf(fnName);
-      // Remove the less precise function type from the namespace type
-      namespaceType = JSType.meet(namespaceType, JSType.TOP_OBJECT);
-      summary = summary.specialize(namespaceType);
-    }
+    summary = mayChangeSummaryForFunctionsWithProperties(fn, summary);
     summaries.put(fn, summary);
     maybeSetTypeI(fnRoot, summary);
+    Node fnNameNode = NodeUtil.getFunctionNameNode(fnRoot);
     if (fnNameNode != null) {
       maybeSetTypeI(fnNameNode, summary);
     }
+  }
+
+  private JSType mayChangeSummaryForFunctionsWithProperties(Scope fnScope, JSType currentSummary) {
+    Scope enclosingScope = fnScope.getParent();
+    Node fnNameNode = NodeUtil.getFunctionNameNode(fnScope.getRoot());
+    JSType summary = currentSummary;
+    JSType namespaceType = null;
+    if (fnNameNode == null) {
+      return currentSummary;
+    }
+    if (fnNameNode.isName()) {
+      String fnName = fnNameNode.getString();
+      if (enclosingScope.isFunctionNamespace(fnName)) {
+        namespaceType = enclosingScope.getDeclaredTypeOf(fnName);
+      }
+    } else if (fnNameNode.isQualifiedName()) {
+      QualifiedName qname = QualifiedName.fromNode(fnNameNode);
+      JSType rootNs = enclosingScope.getDeclaredTypeOf(qname.getLeftmostName());
+      namespaceType = rootNs == null ? null : rootNs.getProp(qname.getAllButLeftmost());
+    }
+    // After GTI, Namespace objects are no longer stored in scopes, so we can't
+    // tell with certainty if a property-function is a namespace.
+    // (isFunctionNamespace only works for variable-functions.)
+    // The isFunctionWithProperties check is a good-enough substitute.
+    if (namespaceType != null && namespaceType.isFunctionWithProperties()) {
+      // Replace the less-precise declared function type with the new function summary.
+      summary = namespaceType.withFunction(
+          currentSummary.getFunTypeIfSingletonObj(),
+          commonTypes.getFunctionType());
+    }
+    return summary;
   }
 
   // TODO(dimvar): To get the adjusted end-of-fwd type for objs, we must be

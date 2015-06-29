@@ -361,6 +361,11 @@ public abstract class JSType implements TypeI {
     return !(getMask() == NON_SCALAR_MASK && getObjs().size() == 1);
   }
 
+  public boolean isFunctionWithProperties() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    return obj != null && obj.isFunctionWithProperties();
+  }
+
   public static boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
     Preconditions.checkArgument(
         lhs.isSubtypeOf(TOP_SCALAR) || rhs.isSubtypeOf(TOP_SCALAR));
@@ -880,11 +885,26 @@ public abstract class JSType implements TypeI {
     return makeType(newMask, objsBuilder.build(), getTypeVar(), enumBuilder.build());
   }
 
-  public FunctionType getFunTypeIfSingletonObj() {
+  // Adds ft to this type, replacing the current function, if any.
+  public JSType withFunction(FunctionType ft, NominalType fnNominal) {
+    Preconditions.checkNotNull(ft);
+    ObjectType ot = getObjTypeIfSingletonObj();
+    // This method is used for a very narrow purpose, hence these checks.
+    Preconditions.checkNotNull(ot);
+    Preconditions.checkState(getMask() == NON_SCALAR_MASK);
+    return fromObjectType(ot.withFunction(ft, fnNominal));
+  }
+
+  private ObjectType getObjTypeIfSingletonObj() {
     if (getMask() != NON_SCALAR_MASK || getObjs().size() > 1) {
       return null;
     }
-    return Iterables.getOnlyElement(getObjs()).getFunType();
+    return Iterables.getOnlyElement(getObjs());
+  }
+
+  public FunctionType getFunTypeIfSingletonObj() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    return obj == null ? null : obj.getFunType();
   }
 
   public FunctionType getFunType() {

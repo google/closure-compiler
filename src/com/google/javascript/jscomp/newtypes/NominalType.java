@@ -456,7 +456,7 @@ public final class NominalType {
     private final ObjectKind objectKind;
     private FunctionType ctorFn;
     private JSType ctorFnWrappedAsJSType;
-    private NominalType builtinFunction;
+    private JSTypes commonTypes;
 
     private RawNominalType(
         Node defSite, String name, ImmutableList<String> typeParameters,
@@ -542,10 +542,10 @@ public final class NominalType {
     }
 
     public void setCtorFunction(
-        FunctionType ctorFn, NominalType builtinFunction) {
+        FunctionType ctorFn, JSTypes commonTypes) {
       Preconditions.checkState(!isFinalized);
       this.ctorFn = ctorFn;
-      this.builtinFunction = builtinFunction;
+      this.commonTypes = commonTypes;
     }
 
     private boolean hasAncestorClass(RawNominalType ancestor) {
@@ -828,11 +828,11 @@ public final class NominalType {
     // adding all the static properties.
     private JSType getConstructorObject(FunctionType ctorFn) {
       Preconditions.checkState(isFinalized);
-
       if (this.ctorFn != ctorFn || this.ctorFnWrappedAsJSType == null) {
-        JSType result = withNamedTypes(ObjectType.makeObjectType(
-            this.builtinFunction, otherProps, ctorFn,
-            ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
+        ObjectType ctorFnAsObj = ObjectType.makeObjectType(
+            this.commonTypes.getFunctionType(), this.otherProps, ctorFn,
+            ctorFn.isLoose(), ObjectKind.UNRESTRICTED);
+        JSType result = withNamedTypes(this.commonTypes, ctorFnAsObj);
         if (this.ctorFn == ctorFn) {
           this.ctorFnWrappedAsJSType = result;
         }
@@ -890,7 +890,7 @@ public final class NominalType {
     }
 
     @Override
-    public JSType toJSType() {
+    public JSType toJSType(JSTypes commonTypes) {
       Preconditions.checkState(this.isFinalized);
       return getConstructorObject(this.ctorFn);
     }

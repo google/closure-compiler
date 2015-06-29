@@ -83,10 +83,10 @@ public final class EnumType extends Namespace implements TypeWithProperties {
   }
 
   @Override
-  public JSType toJSType() {
+  public JSType toJSType(JSTypes commonTypes) {
     Preconditions.checkState(state == State.RESOLVED);
     if (enumObjType == null) {
-      enumObjType = computeObjType();
+      enumObjType = computeObjType(commonTypes);
     }
     return enumObjType;
   }
@@ -125,16 +125,15 @@ public final class EnumType extends Namespace implements TypeWithProperties {
    *   var X = { ONE: 1, TWO: 2 };
    * the properties of the object literal are constant.
    */
-  private JSType computeObjType() {
+  private JSType computeObjType(JSTypes commonTypes) {
     Preconditions.checkState(enumPropType != null);
     PersistentMap<String, Property> propMap = otherProps;
     for (String s : props) {
       propMap = propMap.with(s,
           Property.makeConstant(null, enumPropType, enumPropType));
     }
-    return withNamedTypes(
-        ObjectType.makeObjectType(
-            null, propMap, null, false, ObjectKind.UNRESTRICTED));
+    ObjectType obj = ObjectType.makeObjectType(null, propMap, null, false, ObjectKind.UNRESTRICTED);
+    return withNamedTypes(commonTypes, obj);
   }
 
   @Override
