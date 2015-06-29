@@ -425,8 +425,6 @@ public final class NominalType {
    */
   public static class RawNominalType extends Namespace {
     private final String name;
-    // The function node (if any) that defines the type
-    private final Node defSite;
     // Each instance of the class has these properties by default
     private PersistentMap<String, Property> classProps = PersistentMap.create();
     // The object pointed to by the prototype property of the constructor of
@@ -469,7 +467,6 @@ public final class NominalType {
         typeParameters = ImmutableList.of();
       }
       this.name = name;
-      this.defSite = defSite;
       this.typeParameters = typeParameters;
       this.isInterface = isInterface;
       this.objectKind = objectKind;

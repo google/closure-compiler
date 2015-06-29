@@ -88,10 +88,6 @@ class Property {
     return declaredType != null;
   }
 
-  Node getDefsite() {
-    return defSite;
-  }
-
   JSType getType() {
     return inferredType;
   }

@@ -103,7 +103,7 @@ public abstract class Namespace {
     DeclaredTypeRegistry scope = recv.scopes.get(name);
     NamespaceLit ns = recv.namespaces.get(name);
       return new Declaration(
-          null, typedef, ns, enumType, scope, rawType, false, false, false, false);
+          null, typedef, ns, enumType, scope, rawType, false, false, false);
   }
 
   public void addNominalType(QualifiedName qname, RawNominalType rawNominalType) {
