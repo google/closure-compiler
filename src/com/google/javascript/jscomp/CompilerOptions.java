@@ -1939,6 +1939,8 @@ public class CompilerOptions implements Serializable, Cloneable {
             : ExtractPrototypeMemberDeclarationsMode.OFF;
   }
 
+  // USE_IIFE is currently unused. Consider removing support for it and
+  // deleting this setter.
   public void setExtractPrototypeMemberDeclarations(ExtractPrototypeMemberDeclarationsMode mode) {
     this.extractPrototypeMemberDeclarations = mode;
   }
