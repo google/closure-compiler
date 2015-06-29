@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.parsing.parser;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
@@ -264,6 +265,7 @@ public class Parser {
 
   // ImportDeclaration
   // ExportDeclaration
+  // TypeScript AmbientDeclaration
   // SourceElement
   private ParseTree parseScriptElement() {
     if (peekImportDeclaration()) {
@@ -272,6 +274,10 @@ public class Parser {
 
     if (peekExportDeclaration()) {
       return parseExportDeclaration();
+    }
+
+    if (peekAmbientDeclaration()) {
+      return parseAmbientDeclaration();
     }
 
     return parseSourceElement();
@@ -403,32 +409,31 @@ public class Parser {
     ParseTree export = null;
     ImmutableList<ParseTree> exportSpecifierList = null;
     switch (peekType()) {
-    case STAR:
-      isExportAll = true;
-      nextToken();
-      break;
-    case FUNCTION:
-      export = parseFunctionDeclaration();
-      break;
-    case CLASS:
-      export = parseClassDeclaration();
-      break;
-    case DEFAULT:
-      isDefault = true;
-      nextToken();
-      export = parseExpression();
-      break;
-    case OPEN_CURLY:
-      isExportSpecifier = true;
-      exportSpecifierList = parseExportSpecifierSet();
-      break;
-    default:
-      // unreachable, parse as a var decl to get a parse error.
-    case VAR:
-    case LET:
-    case CONST:
-      export = parseVariableDeclarationList();
-      break;
+      case STAR:
+        isExportAll = true;
+        nextToken();
+        break;
+      case FUNCTION:
+        export = parseFunctionDeclaration();
+        break;
+      case CLASS:
+        export = parseClassDeclaration();
+        break;
+      case DEFAULT:
+        isDefault = true;
+        nextToken();
+        export = parseExpression();
+        break;
+      case OPEN_CURLY:
+        isExportSpecifier = true;
+        exportSpecifierList = parseExportSpecifierSet();
+        break;
+      default: // unreachable, parse as a var decl to get a parse error.
+      case VAR:
+      case LET:
+      case CONST:
+        export = parseVariableDeclarationList();
+        break;
     }
 
     LiteralToken moduleSpecifier = null;
@@ -728,6 +733,18 @@ public class Parser {
     return declaration;
   }
 
+  private FunctionDeclarationTree parseAmbientFunctionDeclaration(SourcePosition start,
+      IdentifierToken name, boolean isGenerator) {
+    GenericTypeListTree generics = maybeParseGenericTypes();
+    FormalParameterListTree formalParameterList = parseFormalParameterList();
+    ParseTree returnType = maybeParseColonType();
+    ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
+    FunctionDeclarationTree declaration = new FunctionDeclarationTree(
+        getTreeLocation(start), name, generics, false, isGenerator,
+        FunctionDeclarationTree.Kind.DECLARATION, formalParameterList, returnType, functionBody);
+    return declaration;
+  }
+
   private FunctionDeclarationTree parseFunctionTail(
       SourcePosition start, IdentifierToken name,
       boolean isStatic, boolean isGenerator,
@@ -781,8 +798,7 @@ public class Parser {
   }
 
   private boolean peekSourceElement() {
-    return peekFunction() || peekStatementStandard() || peekDeclaration()
-        || peekTypeAlias();
+    return peekFunction() || peekStatementStandard() || peekDeclaration();
   }
 
   private boolean peekFunction() {
@@ -799,6 +815,16 @@ public class Parser {
   private boolean peekTypeAlias() {
     return peek(TokenType.TYPE) && !peekImplicitSemiColon(1)
         && peek(1, TokenType.IDENTIFIER) && peek(2, TokenType.EQUAL);
+  }
+
+  private boolean peekAmbientDeclaration() { // AmbientModuleDeclaration not supported
+    return peek(TokenType.DECLARE) && !peekImplicitSemiColon(1)
+        && (peek(1, TokenType.VAR)
+         || peek(1, TokenType.LET)
+         || peek(1, TokenType.CONST)
+         || peek(1, TokenType.FUNCTION)
+         || peek(1, TokenType.CLASS)
+         || peek(1, TokenType.ENUM));
   }
 
   private boolean peekFunction(int index) {
@@ -895,6 +921,15 @@ public class Parser {
     return parseFunctionTail(
         start, name, false, isGenerator,
         FunctionDeclarationTree.Kind.EXPRESSION);
+  }
+
+  private ParseTree parseAmbientFunctionDeclaration() {
+    SourcePosition start = getTreeStartLocation();
+    eat(Keywords.FUNCTION.type);
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
+    IdentifierToken name = eatId();
+
+    return parseAmbientFunctionDeclaration(start, name, isGenerator);
   }
 
   private FormalParameterListTree parseFormalParameterList() {
@@ -1233,6 +1268,7 @@ public class Parser {
     case YIELD:
     case IDENTIFIER:
     case TYPE:
+    case DECLARE:
     case THIS:
     case CLASS:
     case SUPER:
@@ -1754,6 +1790,7 @@ public class Parser {
       return parseThisExpression();
     case IDENTIFIER:
     case TYPE:
+    case DECLARE:
       return parseIdentifierExpression();
     case NUMBER:
     case STRING:
@@ -2252,6 +2289,7 @@ public class Parser {
       case FUNCTION:
       case IDENTIFIER:
       case TYPE:
+      case DECLARE:
       case MINUS:
       case MINUS_MINUS:
       case NEW:
@@ -3024,6 +3062,38 @@ public class Parser {
     return new TypeAliasTree(getTreeLocation(start), alias, original);
   }
 
+  private ParseTree parseAmbientDeclaration() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.DECLARE);
+    ParseTree declare;
+    switch (peekType()) {
+      case FUNCTION:
+        declare = parseAmbientFunctionDeclaration();
+        break;
+      case CLASS:
+        declare = parseClassDeclaration();
+        break;
+      case ENUM:
+        declare = parseEnumDeclaration();
+        break;
+      default: // unreachable, parse as a var decl to get a parse error.
+      case VAR:
+      case LET:
+      case CONST:
+        declare = parseVariableDeclarationListNoIn();
+        // AmbientVariebleDeclaration may not have initializer
+        for (VariableDeclarationTree tree : declare.asVariableDeclarationList().declarations) {
+          if (tree.initializer != null) {
+            reportError("Ambient variable declaration may not have initializer");
+          }
+        }
+        break;
+    }
+
+    eatPossibleImplicitSemiColon();
+    return new AmbientDeclarationTree(getTreeLocation(start), declare);
+  }
+
   /**
    * Consume a (possibly implicit) semi-colon. Reports an error if a semi-colon is not present.
    */
@@ -3099,7 +3169,7 @@ public class Parser {
 
   private boolean peekId(int index) {
     TokenType type = peekType(index);
-    return type == TokenType.IDENTIFIER || type == TokenType.TYPE
+    return type == TokenType.IDENTIFIER || type == TokenType.TYPE || type == TokenType.DECLARE
         || (!inStrictContext() && Keywords.isStrictKeyword(type));
   }
 

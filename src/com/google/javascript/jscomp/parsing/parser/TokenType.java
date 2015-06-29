@@ -146,7 +146,8 @@ public enum TokenType {
   NO_SUBSTITUTION_TEMPLATE("no substitution template"),
 
   // TypeScript
-  TYPE
+  TYPE,
+  DECLARE
   ;
 
   public final String value;

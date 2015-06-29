@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.LiteralToken;
 import com.google.javascript.jscomp.parsing.parser.TokenType;
+import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayLiteralExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayPatternTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArrayTypeTree;
@@ -2147,6 +2148,11 @@ class IRFactory {
       return typeAlias;
     }
 
+    Node processAmbientDeclaration(AmbientDeclarationTree tree) {
+      maybeWarnTypeSyntax(tree, "ambient declaration");
+      return new Node(Token.DECLARE, process(tree.declaration));
+    }
+
     private boolean checkParameters(ImmutableList<ParseTree> params) {
       boolean seenOptional = false;
       boolean good = true;
@@ -2506,6 +2512,9 @@ class IRFactory {
         case TYPE_ALIAS:
           return processTypeAlias(node.asTypeAlias());
           // TODO(johnlenz): handle these or remove parser support
+        case AMBIENT_DECLARATION:
+          return processAmbientDeclaration(node.asAmbientDeclaration());
+
         case ARGUMENT_LIST:
         default:
           break;

@@ -235,6 +235,7 @@ public class Token {
       ENUM_MEMBERS = 315,
       IMPLEMENTS = 316,
       TYPE_ALIAS = 317,
+      DECLARE = 318,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
@@ -548,6 +549,8 @@ public class Token {
         return "IMPLEMENTS";
       case TYPE_ALIAS:
         return "TYPE_ALIAS";
+      case DECLARE:
+        return "DECLARE";
     }
 
         // Token without name

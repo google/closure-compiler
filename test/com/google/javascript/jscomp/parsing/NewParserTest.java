@@ -1933,6 +1933,11 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("var type = 3;");
     parse("type\nx = 5");
     parse("while (i--) { type = types[i]; }");
+
+    parse("declare = 2;");
+    parse("var declare = 3;");
+    parse("declare\nx = 5");
+    parse("while (i--) { declare = declares[i]; }");
   }
 
   public void testKeywordsAsProperties() {

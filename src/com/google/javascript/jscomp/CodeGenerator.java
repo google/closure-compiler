@@ -1196,6 +1196,11 @@ class CodeGenerator {
         add(last);
         cc.endStatement();
         break;
+      case Token.DECLARE:
+        add("declare");
+        add(first);
+        cc.endStatement();
+        break;
       default:
         throw new RuntimeException("Unknown type " + Token.name(type) + "\n" + n.toStringTree());
     }

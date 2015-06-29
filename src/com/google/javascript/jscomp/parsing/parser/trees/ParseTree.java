@@ -147,12 +147,9 @@ public class ParseTree {
   public InterfaceDeclarationTree asInterfaceDeclaration() {
     return (InterfaceDeclarationTree) this;
   }
-  public EnumDeclarationTree asEnumDeclaration() {
-    return (EnumDeclarationTree) this;
-  }
-  public TypeAliasTree asTypeAlias() {
-    return (TypeAliasTree) this;
-  }
+  public EnumDeclarationTree asEnumDeclaration() { return (EnumDeclarationTree) this; }
+  public TypeAliasTree asTypeAlias() { return (TypeAliasTree) this; }
+  public AmbientDeclarationTree asAmbientDeclaration() { return (AmbientDeclarationTree) this; }
 
   public boolean isPattern() {
     ParseTree parseTree = this;

@@ -507,6 +507,26 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("type Foo = number;", "type alias");
   }
 
+  public void testAmbientDeclaration() {
+    parse("declare var x, y;");
+    parse("declare let x;");
+    parse("declare const x;");
+    parse("declare function foo();");
+    parse("declare class Foo {\n};");
+    parse("declare enum Foo {\n};");
+
+    expectErrors("Parse error. Ambient variable declaration may not have initializer");
+    parse("declare var x = 3;");
+    expectErrors("Parse error. Ambient variable declaration may not have initializer");
+    parse("declare const x = 3;");
+    expectErrors("Parse error. Semi-colon expected");
+    parse("declare function foo() {}");
+    expectErrors("Parse error. Semi-colon expected");
+    parse("if (true) { declare var x; }");
+
+    testNotEs6Typed("declare var x;", "ambient declaration");
+  }
+
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {
     Node varDecl = parse(source, source).getFirstChild();
     assertDeclaredType(message, expectedType, varDecl.getFirstChild());
