@@ -80,6 +80,12 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
           "JSC_GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED",
           "Shorthand assignments not supported in goog.defineClass.");
 
+  static final DiagnosticType GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED =
+      DiagnosticType.error(
+          "JSC_GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED",
+          "Arrow functions not supported in goog.defineClass. Object literal method"
+          + " definition may be an alternative.");
+
   // Warnings
   static final DiagnosticType GOOG_CLASS_NG_INJECT_ON_CLASS = DiagnosticType.warning(
       "JSC_GOOG_CLASS_NG_INJECT_ON_CLASS",
@@ -337,6 +343,14 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
         // report using shorthand assignment
         compiler.report(JSError.make(objlit,
             GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED));
+        return false;
+      }
+      if (key.isStringKey()
+          && key.hasChildren()
+          && key.getFirstChild().isArrowFunction()){
+        // report using arrow function
+        compiler.report(JSError.make(objlit,
+            GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED));
         return false;
       }
       if (!key.isStringKey() || key.isQuotedString()) {

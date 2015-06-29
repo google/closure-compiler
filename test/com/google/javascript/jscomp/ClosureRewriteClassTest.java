@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_MISSING;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_DESCRIPTOR_NOT_VALID;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_NG_INJECT_ON_CLASS;
@@ -492,6 +493,66 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "var FancyClass = function() {};",
             "FancyClass.someMethod1 = function() {};",
             "FancyClass.prototype.someMethod2 = function() {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitArrowFunction1() {
+    testRewriteError(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  someArrowFunc: value => value",
+            "});"),
+        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitArrowFunction2() {
+    testRewriteError(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  statics:{",
+            "    someArrowFunc: value => value",
+            "  }",
+            "});"),
+        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitArrowFunction3() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  statics:{",
+            "    someFunction() {",
+            "      return () => 42",
+            "    }",
+            "  }",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "  var FancyClass = function() {};",
+            "  FancyClass.someFunction = function() {",
+            "    return () => 42",
+            "  };"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testExtendedObjLitArrowFunction4() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function() {},",
+            "  someFunction: function() {",
+            "      return () => 42",
+            "  }",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "  var FancyClass = function() {};",
+            "  FancyClass.prototype.someFunction = function(){",
+            "    return () => 42",
+            "  };"),
         LanguageMode.ECMASCRIPT6);
   }
 
