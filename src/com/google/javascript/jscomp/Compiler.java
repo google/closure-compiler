@@ -58,6 +58,7 @@ import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1822,11 +1823,13 @@ public class Compiler extends AbstractCompiler {
           cb.append(delimiter)
             .append("\n");
         }
-        if (root.getJSDocInfo() != null &&
-            root.getJSDocInfo().getLicense() != null) {
-          cb.append("/*\n")
-            .append(root.getJSDocInfo().getLicense())
-            .append("*/\n");
+        if (root.getJSDocInfo() != null) {
+          String license = root.getJSDocInfo().getLicense();
+          if (license != null && cb.addLicense(license)) {
+            cb.append("/*\n")
+              .append(license)
+              .append("*/\n");
+          }
         }
 
         // If there is a valid source map, then indicate to it that the current
@@ -1889,6 +1892,7 @@ public class Compiler extends AbstractCompiler {
     private final StringBuilder sb = new StringBuilder();
     private int lineCount = 0;
     private int colCount = 0;
+    private final Set<String> uniqueLicenses = new HashSet<>();
 
     /** Removes all text, but leaves the line count unchanged. */
     void reset() {
@@ -1942,6 +1946,11 @@ public class Compiler extends AbstractCompiler {
     boolean endsWith(String suffix) {
       return (sb.length() > suffix.length())
           && suffix.equals(sb.substring(sb.length() - suffix.length()));
+    }
+
+    /** Adds a license and returns whether it is unique (has yet to be encountered). */
+    boolean addLicense(String license) {
+      return uniqueLicenses.add(license);
     }
   }
 
