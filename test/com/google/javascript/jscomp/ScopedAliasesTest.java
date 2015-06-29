@@ -258,6 +258,24 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     testScoped("var foo = function() {};", SCOPE_NAMESPACE + "$jscomp.scope.foo = function() {};");
   }
 
+  public void testFunctionDeclarationInScope_letConst() {
+    testScoped(
+        "var baz = goog.bar; let foo = function() {return baz;};",
+        SCOPE_NAMESPACE + "$jscomp.scope.foo = function() {return goog.bar;};",
+        LanguageMode.ECMASCRIPT6);
+    testScoped(
+        "var baz = goog.bar; const foo = function() {return baz;};",
+        SCOPE_NAMESPACE + "$jscomp.scope.foo = function() {return goog.bar;};",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testArrowFunction() {
+    testScoped(
+        "var foo = goog.bar; var v = (x => x + foo);",
+        SCOPE_NAMESPACE + "$jscomp.scope.v = (x => x + goog.bar)",
+        LanguageMode.ECMASCRIPT6);
+  }
+
   public void testClassDefinition1() {
     testScoped(
         "class Foo {}", SCOPE_NAMESPACE + "$jscomp.scope.Foo=class{}", LanguageMode.ECMASCRIPT6);
@@ -274,6 +292,24 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     testScoped(
         "var bar = {};" + "bar.Foo = class {};",
         SCOPE_NAMESPACE + "$jscomp.scope.bar = {}; $jscomp.scope.bar.Foo = class {}",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testClassDefinition_letConst() {
+    testScoped(
+        "let bar = {};" + "bar.Foo = class {};",
+        SCOPE_NAMESPACE + "$jscomp.scope.bar = {}; $jscomp.scope.bar.Foo = class {}",
+        LanguageMode.ECMASCRIPT6);
+    testScoped(
+        "const bar = {};" + "bar.Foo = class {};",
+        SCOPE_NAMESPACE + "$jscomp.scope.bar = {}; $jscomp.scope.bar.Foo = class {}",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testDefaultParameter() {
+    testScoped(
+        "var foo = goog.bar; var f = function(y=foo) {};",
+        SCOPE_NAMESPACE + "$jscomp.scope.f = function(y=goog.bar) {};",
         LanguageMode.ECMASCRIPT6);
   }
 
@@ -308,7 +344,32 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "  /** @type {function(Foo)} */ (function(foo) {})",
             "};"),
         "goog.x = {y: /** @type {function(Foo)} */ (function(foo) {})};");
-  };
+  }
+
+  public void testObjectLiteralShorthand() {
+    testScoped(
+        "var bar = goog.bar; var Foo = {bar};",
+        SCOPE_NAMESPACE + "$jscomp.scope.Foo={bar: goog.bar};",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testObjectLiteralMethods() {
+    testScoped(
+        "var foo = goog.bar; var obj = {toString() {return foo}};",
+        SCOPE_NAMESPACE + "$jscomp.scope.obj = {toString() {return goog.bar}};",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testObjectLiteralComputedPropertyNames() {
+    testScoped(
+        "var foo = goog.bar; var obj = {[(() => foo)()]: baz};",
+        SCOPE_NAMESPACE + "$jscomp.scope.obj = {[(() => goog.bar)()]:baz};",
+        LanguageMode.ECMASCRIPT6);
+    testScoped(
+        "var foo = goog.bar; var obj = {[x => x + foo]: baz};",
+        SCOPE_NAMESPACE + "$jscomp.scope.obj = {[x => x + goog.bar]:baz};",
+        LanguageMode.ECMASCRIPT6);
+  }
 
   public void testJsDocNotIgnored() {
     enableTypeCheck(CheckLevel.WARNING);
@@ -887,8 +948,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   private static class TransformationHandlerSpy
       implements AliasTransformationHandler {
 
-    private final Map<String, List<SourcePosition<AliasTransformation>>>
-        observedPositions = 
+    private final Map<String, List<SourcePosition<AliasTransformation>>> observedPositions =
         new HashMap<>();
 
     public final List<AliasTransformation> constructedAliases =

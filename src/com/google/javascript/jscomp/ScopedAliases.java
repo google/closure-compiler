@@ -229,7 +229,12 @@ class ScopedAliases implements HotSwapCompilerPass {
       Node aliasDefinition = aliasVar.getInitialValue();
       Node replacement = aliasDefinition.cloneTree();
       replacement.useSourceInfoFromForTree(aliasReference);
-      aliasReference.getParent().replaceChild(aliasReference, replacement);
+      if (aliasReference.getType() == Token.STRING_KEY) {
+        Preconditions.checkState(!aliasReference.hasChildren());
+        aliasReference.addChildToFront(replacement);
+      } else {
+        aliasReference.getParent().replaceChild(aliasReference, replacement);
+      }
     }
   }
 
@@ -574,8 +579,9 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
 
       int type = n.getType();
+      boolean isObjLitShorthand = type == Token.STRING_KEY && !n.hasChildren();
       Var aliasVar = null;
-      if (type == Token.NAME) {
+      if (type == Token.NAME || isObjLitShorthand) {
         String name = n.getString();
         Var lexicalVar = t.getScope().getVar(name);
         if (lexicalVar != null && lexicalVar == aliases.get(name)) {
@@ -586,7 +592,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       // Validate the top-level of the goog.scope block.
       if (t.getScopeDepth() == scopeFunctionDepth
           && findScopeMethodCall(t.getScope().getRootNode()) != null) {
-        if (aliasVar != null && NodeUtil.isLValue(n)) {
+        if (aliasVar != null && !isObjLitShorthand && NodeUtil.isLValue(n)) {
           if (aliasVar.getNode() == n) {
             aliasDefinitionsInOrder.add(n);
 
