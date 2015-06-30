@@ -7750,6 +7750,34 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "(new G).method('asdf', 'asdf');"),
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         CheckMissingReturn.MISSING_RETURN_STATEMENT);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.m = function() {};",
+        "/** @constructor @extends {Foo}*/",
+        "function Bar() {}",
+        "/**",
+        " * @param {number=} x",
+        " * @override",
+        " */",
+        "Bar.prototype.m = function(x) {};",
+        "(new Bar).m(123);"));
+
+    typeCheck("(123).toString(16);");
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor @extends {Foo}*/",
+        "function Bar() {}",
+        "/**",
+        " * @param {number=} x",
+        " * @override",
+        " */",
+        "Bar.prototype.m = function(x) {};",
+        "(new Bar).m(123);"),
+        TypeCheck.UNKNOWN_OVERRIDE);
   }
 
   public void testOverrideNoInitializer() {

@@ -563,7 +563,8 @@ class GlobalTypeInfo implements CompilerPass {
       return false;
     }
     JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(pd.defSite);
-    return jsdoc == null || jsdoc.isOverride();
+    return jsdoc == null
+        || jsdoc.isOverride() && !jsdoc.containsFunctionDeclaration();
   }
 
   /**
@@ -1812,9 +1813,6 @@ class GlobalTypeInfo implements CompilerPass {
 
       // Find the declared type of the property.
       if (initializer != null && initializer.isFunction()) {
-        // TODO(dimvar): we must do this for any function "defined" as the rhs
-        // of an assignment to a property, not just when the property is a
-        // prototype property.
         methodScope = visitFunctionLate(initializer, rawType);
         methodType = methodScope.getDeclaredFunctionType();
         propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
