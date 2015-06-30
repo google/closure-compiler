@@ -269,6 +269,51 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         LanguageMode.ECMASCRIPT6);
   }
 
+  public void testLetConstShadowing() {
+    testScoped(
+        "var foo = goog.bar; var f = function() {"
+            + "let foo = baz; return foo;};",
+        SCOPE_NAMESPACE + "$jscomp.scope.f = function() {"
+            + "let foo = baz; return foo;};",
+        LanguageMode.ECMASCRIPT6);
+    testScoped(
+        "var foo = goog.bar; var f = function() {"
+            + "const foo = baz; return foo;};",
+        SCOPE_NAMESPACE + "$jscomp.scope.f = function() {"
+            + "const foo = baz; return foo;};",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testYieldExpression() {
+    testScoped("var foo = goog.bar; var f = function*() {yield foo;};",
+        SCOPE_NAMESPACE + "$jscomp.scope.f = function*() {yield goog.bar;};",
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testDestructuringError() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testScopedError("var [x] = [1];",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+  }
+
+  public void testObjectDescructuringError1() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testScopedError("var {x} = {x: 1};",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+  }
+
+  public void testObjectDescructuringError2() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testScopedError("var {x: y} = {x: 1};",
+        ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+  }
+
+  public void testNonTopLevelDestructuring() {
+    testScoped("var f = function() {var [x, y] = [1, 2];};",
+        SCOPE_NAMESPACE + "$jscomp.scope.f = function() {var [x, y] = [1, 2];};",
+        LanguageMode.ECMASCRIPT6);
+  }
+
   public void testArrowFunction() {
     testScoped(
         "var foo = goog.bar; var v = (x => x + foo);",
