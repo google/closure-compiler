@@ -479,28 +479,29 @@ final class ObjectType implements TypeWithProperties {
    * Optional properties create cycles in the type lattice, eg,
    * { } \le { p: num= }  and also   { p: num= } \le { }.
    */
-  boolean isSubtypeOf(boolean keepLoosenessOfThis, ObjectType obj2) {
-    if (obj2 == TOP_OBJECT) {
+  boolean isSubtypeOf(boolean keepLoosenessOfThis, ObjectType other) {
+    if (other == TOP_OBJECT) {
       return true;
     }
 
-    if ((keepLoosenessOfThis && this.isLoose) || obj2.isLoose) {
-      return this.isLooseSubtypeOf(obj2);
+    if ((keepLoosenessOfThis && this.isLoose) || other.isLoose) {
+      return this.isLooseSubtypeOf(other);
     }
 
-    if ((this.nominalType == null && obj2.nominalType != null)
-        || this.nominalType != null && obj2.nominalType != null &&
-        !this.nominalType.isSubtypeOf(obj2.nominalType)) {
+    NominalType thisNt = this.nominalType;
+    NominalType otherNt = other.nominalType;
+    if (thisNt == null && otherNt != null
+        || thisNt != null && otherNt != null && !thisNt.isSubtypeOf(otherNt)) {
       return false;
     }
 
-    if (!objectKind.isSubtypeOf(obj2.objectKind)) {
+    if (otherNt == null && !this.objectKind.isSubtypeOf(other.objectKind)) {
       return false;
     }
 
     // If nominalType1 < nominalType2, we only need to check that the
-    // properties of obj2 are in (obj1 or nominalType1)
-    for (Map.Entry<String, Property> entry : obj2.props.entrySet()) {
+    // properties of other are in (obj1 or nominalType1)
+    for (Map.Entry<String, Property> entry : other.props.entrySet()) {
       String pname = entry.getKey();
       Property prop2 = entry.getValue();
       Property prop1 = this.getLeftmostProp(new QualifiedName(pname));
@@ -517,50 +518,50 @@ final class ObjectType implements TypeWithProperties {
       }
     }
 
-    if (obj2.fn == null) {
+    if (other.fn == null) {
       return true;
     } else if (this.fn == null) {
       // Can only be executed if we have declared types for callable objects.
       return false;
     }
-    return this.fn.isSubtypeOf(obj2.fn);
+    return this.fn.isSubtypeOf(other.fn);
   }
 
   // We never infer properties as optional on loose objects,
   // and we don't warn about possibly inexistent properties.
-  boolean isLooseSubtypeOf(ObjectType obj2) {
-    Preconditions.checkState(isLoose || obj2.isLoose);
-    if (obj2 == TOP_OBJECT) {
+  boolean isLooseSubtypeOf(ObjectType other) {
+    Preconditions.checkState(isLoose || other.isLoose);
+    if (other == TOP_OBJECT) {
       return true;
     }
 
     if (!isLoose) {
-      if (!objectKind.isSubtypeOf(obj2.objectKind)) {
+      if (!objectKind.isSubtypeOf(other.objectKind)) {
         return false;
       }
-      for (String pname : obj2.props.keySet()) {
+      for (String pname : other.props.keySet()) {
         QualifiedName qname = new QualifiedName(pname);
         if (!mayHaveProp(qname) ||
-            !getProp(qname).isSubtypeOf(obj2.getProp(qname))) {
+            !getProp(qname).isSubtypeOf(other.getProp(qname))) {
           return false;
         }
       }
-    } else { // this is loose, obj2 may be loose
+    } else { // this is loose, other may be loose
       for (String pname : props.keySet()) {
         QualifiedName qname = new QualifiedName(pname);
-        if (obj2.mayHaveProp(qname) &&
-            !getProp(qname).isSubtypeOf(obj2.getProp(qname))) {
+        if (other.mayHaveProp(qname) &&
+            !getProp(qname).isSubtypeOf(other.getProp(qname))) {
           return false;
         }
       }
     }
 
-    if (obj2.fn == null) {
-      return this.fn == null || obj2.isLoose();
+    if (other.fn == null) {
+      return this.fn == null || other.isLoose();
     } else if (this.fn == null) {
       return isLoose;
     }
-    return fn.isLooseSubtypeOf(obj2.fn);
+    return fn.isLooseSubtypeOf(other.fn);
   }
 
   ObjectType specialize(ObjectType other) {

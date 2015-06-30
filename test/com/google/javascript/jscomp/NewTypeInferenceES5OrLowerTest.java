@@ -8860,6 +8860,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor @dict @implements {Foo} */",
         "function Bar() {}"),
         JSTypeCreatorFromJSDoc.DICT_IMPLEMENTS_INTERF);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @struct",
+        " * @extends {Foo}",
+        " * @suppress {newCheckTypesAllChecks}",
+        " */",
+        "function Bar() {}",
+        "var /** !Foo */ x = new Bar;"));
   }
 
   public void testStructPropCreation() {
