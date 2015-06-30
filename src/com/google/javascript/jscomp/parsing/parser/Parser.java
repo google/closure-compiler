@@ -265,6 +265,9 @@ public class Parser {
 
   // ImportDeclaration
   // ExportDeclaration
+  // TypeScript InterfaceDeclaration
+  // TypeScript EnumDeclaration
+  // TypeScript TypeAlias
   // TypeScript AmbientDeclaration
   // SourceElement
   private ParseTree parseScriptElement() {
@@ -274,6 +277,18 @@ public class Parser {
 
     if (peekExportDeclaration()) {
       return parseExportDeclaration();
+    }
+
+    if (peekInterfaceDeclaration()) {
+      return parseInterfaceDeclaration();
+    }
+
+    if (peekEnumDeclaration()) {
+      return parseEnumDeclaration();
+    }
+
+    if (peekTypeAlias()) {
+      return parseTypeAlias();
     }
 
     if (peekAmbientDeclaration()) {
@@ -775,18 +790,6 @@ public class Parser {
       return parseClassDeclaration();
     }
 
-    if (peekInterfaceDeclaration()) {
-      return parseInterfaceDeclaration();
-    }
-
-    if (peekEnumDeclaration()) {
-      return parseEnumDeclaration();
-    }
-
-    if (peekTypeAlias()) {
-      return parseTypeAlias();
-    }
-
     // Harmony let block scoped bindings. let can only appear in
     // a block, not as a standalone statement: if() let x ... illegal
     if (peek(TokenType.LET)) {
@@ -806,10 +809,7 @@ public class Parser {
   }
 
   private boolean peekDeclaration() {
-    return peek(TokenType.LET)
-        || peekClassDeclaration()
-        || peekInterfaceDeclaration()
-        || peekEnumDeclaration();
+    return peek(TokenType.LET) || peekClassDeclaration();
   }
 
   private boolean peekTypeAlias() {

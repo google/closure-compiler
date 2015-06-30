@@ -389,6 +389,8 @@ public final class TypeSyntaxTest extends TestCase {
 
     expectErrors("Parse error. ';' expected");
     parse("interface I { foo(p: boolean): string {}}");
+    expectErrors("Parse error. '}' expected");
+    parse("if (true) { interface I {} }");
 
     // TODO(moz): Enable these
     //parse("interface I {\n  (p: boolean): string;\n}");
@@ -416,6 +418,9 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testEnum() {
     parse("enum E {\n  a,\n  b,\n  c\n}");
+
+    expectErrors("Parse error. '}' expected");
+    parse("if (true) { enum E {} }");
   }
 
   public void testEnum_notEs6Typed() {
@@ -503,6 +508,9 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testTypeAlias() {
     parse("type Foo = number;");
+
+    expectErrors("Parse error. Semi-colon expected");
+    parse("if (true) { type Foo = number; }");
 
     testNotEs6Typed("type Foo = number;", "type alias");
   }
