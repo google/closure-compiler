@@ -92,10 +92,6 @@ class AngularPass extends AbstractPostOrderCallback
           "@ngInject can only be used when defining a function or " +
           "assigning a function expression.");
 
-  static final DiagnosticType FUNCTION_NAME_ERROR =
-      DiagnosticType.error("JSC_FUNCTION_NAME_ERROR",
-          "Unable to determine target function name for @ngInject.");
-
   @Override
   public void process(Node externs, Node root) {
     hotSwapScript(root, null);
