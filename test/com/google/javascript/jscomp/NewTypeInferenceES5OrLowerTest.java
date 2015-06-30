@@ -2426,8 +2426,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(
         "var x = true ? function(/** number */ y){} : 5; x('str');",
-        TypeCheck.NOT_CALLABLE,
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        TypeCheck.NOT_CALLABLE);
   }
 
   public void testAnonymousNominalType() {
@@ -3054,11 +3053,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */ function Foo() {}",
-        "function takesFoos(/** Foo */ afoo) {}",
-        "function f(/** boolean */ cond, /** (number|Foo) */ x) {",
-        "  if (x instanceof (cond || Foo)) { takesFoos(x); }",
-        "}"),
+        "({} instanceof (true || Foo))"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ function Foo() {}",
+        "function takesFoos(/** Foo */ afoo) {}",
+        "function f(/** (number|Foo) */ x) {",
+        "  if (x instanceof Foo) { takesFoos(x); }",
+        "}"));
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */ function Foo() {}",

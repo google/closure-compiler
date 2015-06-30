@@ -908,11 +908,8 @@ public abstract class JSType implements TypeI {
   }
 
   public FunctionType getFunType() {
-    if (getObjs().isEmpty()) {
-      return null;
-    }
-    if (getObjs().size() == 1) { // The common case is fast
-      return Iterables.getOnlyElement(getObjs()).getFunType();
+    if (getObjs().size() <= 1) { // The common case is fast
+      return getFunTypeIfSingletonObj();
     }
     FunctionType result = FunctionType.TOP_FUNCTION;
     for (ObjectType obj : getObjs()) {
@@ -1133,7 +1130,7 @@ public abstract class JSType implements TypeI {
 
   @Override
   public boolean isFunctionType() {
-    return getFunType() != null;
+    return getFunTypeIfSingletonObj() != null;
   }
 
   @Override
