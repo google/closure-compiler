@@ -1219,7 +1219,6 @@ class IRFactory {
 
       node.setIsGeneratorFunction(isGenerator);
       node.setIsArrowFunction(isArrow);
-      node.putBooleanProp(Node.METHOD_SIGNATURE, isSignature);
 
       Node result;
 
@@ -2150,7 +2149,7 @@ class IRFactory {
 
     Node processAmbientDeclaration(AmbientDeclarationTree tree) {
       maybeWarnTypeSyntax(tree, "ambient declaration");
-      return new Node(Token.DECLARE, process(tree.declaration));
+      return newNode(Token.DECLARE, transform(tree.declaration));
     }
 
     private boolean checkParameters(ImmutableList<ParseTree> params) {
@@ -2243,7 +2242,7 @@ class IRFactory {
     }
 
     Node processGenericTypeList(GenericTypeListTree tree) {
-      Node list = new Node(Token.GENERIC_TYPE_LIST);
+      Node list = newNode(Token.GENERIC_TYPE_LIST);
       for (Map.Entry<IdentifierToken, ParseTree> generic : tree.generics.entrySet()) {
         Node type = newStringNode(Token.GENERIC_TYPE, generic.getKey().value);
         ParseTree bound = generic.getValue();

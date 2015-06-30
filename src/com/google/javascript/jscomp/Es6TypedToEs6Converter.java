@@ -88,8 +88,10 @@ public final class Es6TypedToEs6Converter
       case Token.TYPE_ALIAS:
         visitTypeAlias(t, n, parent);
         break;
+      case Token.DECLARE:
+        visitAmbientDeclaration(n, parent);
+        break;
       default:
-
     }
   }
 
@@ -162,7 +164,6 @@ public final class Es6TypedToEs6Converter
       if (member.isMemberFunctionDef()) {
         Node function = member.getFirstChild();
         function.getLastChild().setType(Token.BLOCK);
-        function.putBooleanProp(Node.METHOD_SIGNATURE, false);
         continue;
       }
 
@@ -244,6 +245,28 @@ public final class Es6TypedToEs6Converter
         convertWithLocation(n.getFirstChild()), n.getSourceFileName()));
     var.setJSDocInfo(builder.build());
     parent.replaceChild(n, var);
+    compiler.reportCodeChange();
+  }
+
+  private void visitAmbientDeclaration(Node n, Node parent) {
+    Node child = n.removeFirstChild();
+    JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(child.getJSDocInfo());
+    builder.addSuppression("duplicate");
+    switch (child.getType()) {
+      case Token.FUNCTION:
+        child.replaceChild(child.getLastChild(), IR.block().useSourceInfoFrom(child));
+        break;
+      case Token.LET:
+        child.setType(Token.VAR);
+        break;
+      case Token.CONST:
+        builder.recordConstancy();
+        child.setType(Token.VAR);
+        break;
+    }
+    child.setJSDocInfo(builder.build());
+
+    parent.replaceChild(n, child);
     compiler.reportCodeChange();
   }
 

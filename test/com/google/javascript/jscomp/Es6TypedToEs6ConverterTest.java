@@ -219,4 +219,15 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     testError("let Foo = 3; type Foo = number;",
         Es6TypedToEs6Converter.TYPE_ALIAS_ALREADY_DECLARED);
   }
+
+  public void testAmbientDeclaration() {
+    test("declare var x;", "/** @suppress {duplicate} */ var x;");
+    test("declare let x;", "/** @suppress {duplicate} */ var x;");
+    test("declare const x;", "/** @const @suppress {duplicate} */ var x;");
+    test("declare function f();", "/** @suppress {duplicate} */ function f() {}");
+    // TODO(moz): Change this after enums are transpiled
+    test("declare enum Foo {}", "/** @suppress {duplicate} */ enum Foo {}");
+    test("declare class C {};", "/** @suppress {duplicate} */ class C {}");
+
+  }
 }

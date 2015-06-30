@@ -164,8 +164,14 @@ public final class AstValidator implements CompilerPass {
       case Token.INTERFACE:
         validateInterface(n);
         return;
+      case Token.ENUM:
+        validateEnum(n);
+        return;
       case Token.TYPE_ALIAS:
         validateTypeAlias(n);
+        return;
+      case Token.DECLARE:
+        validateAmbientDeclaration(n);
         return;
       default:
         violation("Expected statement but was " + Token.name(n.getType()) + ".", n);
@@ -452,11 +458,24 @@ public final class AstValidator implements CompilerPass {
   private void validateInterfaceMember(Node n) {
     if (n.getType() == Token.MEMBER_FUNCTION_DEF) {
       validateChildCount(n);
-      validateFunctionExpression(n.getFirstChild());
+      validateFunctionSignature(n.getFirstChild());
     } else if (n.getType() == Token.MEMBER_VARIABLE_DEF) {
       validateChildless(n);
     } else {
       violation("Interface contained member of invalid type " + Token.name(n.getType()), n);
+    }
+  }
+
+  private void validateEnum(Node n) {
+    validateNodeType(Token.ENUM, n);
+    validateName(n.getFirstChild());
+    validateEnumMembers(n.getLastChild());
+  }
+
+  private void validateEnumMembers(Node n) {
+    validateNodeType(Token.ENUM_MEMBERS, n);
+    for (Node child : n.children()) {
+      validateObjectLitStringKey(child);
     }
   }
 
@@ -606,10 +625,18 @@ public final class AstValidator implements CompilerPass {
     validateChildCount(n);
     validateName(n.getFirstChild());
     validateParameters(n.getChildAtIndex(1));
-    validateBlock(n.getLastChild());
+    validateFunctionBody(n.getLastChild(), false);
   }
 
   private void validateFunctionExpression(Node n) {
+    validateFunctionExpressionHelper(n, false);
+  }
+
+  private void validateFunctionSignature(Node n) {
+    validateFunctionExpressionHelper(n, true);
+  }
+
+  private void validateFunctionExpressionHelper(Node n, boolean isAmbient) {
     validateNodeType(Token.FUNCTION, n);
     validateChildCount(n);
 
@@ -627,11 +654,15 @@ public final class AstValidator implements CompilerPass {
       }
     } else {
       validateOptionalName(name);
-      if (n.getBooleanProp(Node.METHOD_SIGNATURE)) {
-        validateNodeType(Token.EMPTY, body);
-      } else {
-        validateBlock(body);
-      }
+      validateFunctionBody(body, isAmbient);
+    }
+  }
+
+  private void validateFunctionBody(Node n, boolean noBlock) {
+    if (noBlock) {
+      validateNodeType(Token.EMPTY, n);
+    } else {
+      validateBlock(n);
     }
   }
 
@@ -1219,6 +1250,28 @@ public final class AstValidator implements CompilerPass {
     validateEs6TypedFeature("type alias", n);
     validateNodeType(Token.TYPE_ALIAS, n);
     validateChildCount(n);
+  }
+
+  private void validateAmbientDeclaration(Node n) {
+    validateEs6TypedFeature("ambient declaration", n);
+    validateNodeType(Token.DECLARE, n);
+    Node child = n.getFirstChild();
+    switch (child.getType()) {
+      case Token.VAR:
+      case Token.LET:
+      case Token.CONST:
+        validateNameDeclarationHelper(child.getType(), child);
+        break;
+      case Token.FUNCTION:
+        validateFunctionSignature(child);
+        break;
+      case Token.CLASS:
+        validateClassDeclaration(child);
+        break;
+      case Token.ENUM:
+        validateEnum(child);
+        break;
+    }
   }
 
   private void violation(String message, Node n) {
