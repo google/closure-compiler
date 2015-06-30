@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests {@link AngularPass}.
@@ -152,5 +153,127 @@ public final class AngularPassTest extends CompilerTestCase {
 
     testError("/** @ngInject */ var x",
               AngularPass.INJECT_NON_FUNCTION_ERROR);
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+
+    testError("class FnClass {constructor(a, b) {/** @ngInject */ this.x = 42}}",
+        AngularPass.INJECT_NON_FUNCTION_ERROR);
+
+    testError("class FnClass {constructor(a, b) {/** @ngInject */ this.x}}",
+        AngularPass.INJECT_NON_FUNCTION_ERROR);
+  }
+
+  public void testNgInjectAddsInjectToClass() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError("/** @ngInject */ class FnClass {constructor(a, b) {}}",
+        AngularPass.INJECT_NON_FUNCTION_ERROR);
+  }
+
+  public void testNgInjectAddsInjectToClassConstructor() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("class FnClass {/** @ngInject */ constructor(a, b) {}}",
+        "class FnClass{constructor(a, b){}}"
+        + "FnClass['$inject'] = ['a', 'b'];");
+  }
+
+  public void testNgInjectAddsInjectToClassMethod() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+         LINE_JOINER.join(
+             "class FnClass {",
+             "  constructor(a, b) {}",
+             "  /** @ngInject */ ",
+             "  methodA(c, d){}",
+             "}"),
+         LINE_JOINER.join(
+             "class FnClass {",
+             "  constructor(a, b){}",
+             "  methodA(c, d){}",
+             "}",
+             "FnClass.prototype.methodA['$inject'] = ['c','d']"));
+  }
+
+  public void testNgInjectAddsInjectToStaticMethod() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor(a, b) {}",
+            "  /** @ngInject */ ",
+            "  static methodA(c, d) {}",
+            "}"),
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor(a, b) {}",
+            "  static methodA(c, d) {}",
+            "}",
+            "FnClass.methodA['$inject'] = ['c','d']"));
+  }
+
+  public void testNgInjectAddsInjectToClassGenerator() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+         LINE_JOINER.join(
+             "class FnClass {",
+             "  constructor(a, b) {}",
+             "  /** @ngInject */ ",
+             "  * methodA(c, d){}",
+             "}"),
+         LINE_JOINER.join(
+             "class FnClass {",
+             "  constructor(a, b){}",
+             "  *methodA(c, d){}",
+             "}",
+             "FnClass.prototype.methodA['$inject'] = ['c','d']"));
+  }
+
+  public void testNgInjectAddsInjectToClassMixOldStyle() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor() {",
+            "    /** @ngInject */ ",
+            "    this.someMethod = function(a, b){}",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor() {",
+            "    this.someMethod = function(a, b){}",
+            "    this.someMethod['$inject'] = ['a','b']",
+            "  }",
+            "}"));
+  }
+
+  public void testNgInjectAddsInjectToClassArrowFunc() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+          LINE_JOINER.join(
+              "class FnClass {",
+              "  constructor() {",
+              "    /** @ngInject */ ",
+              "    this.someMethod = (a, b) => 42",
+              "  }",
+              "}"),
+          LINE_JOINER.join(
+              "class FnClass {",
+              "  constructor() {",
+              "    this.someMethod = (a, b) => 42",
+              "    this.someMethod['$inject'] = ['a','b']",
+              "  }",
+              "}"));
+  }
+
+  public void testNgInjectAddsInjectToClassCompMethodName() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError(
+          LINE_JOINER.join(
+              "class FnClass {",
+              "  constructor() {}",
+              "    /** @ngInject */ ",
+              "  ['comp' + 'MethodName'](a, b){}",
+              "}"),
+          AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 }

@@ -227,8 +227,27 @@ class AngularPass extends AbstractPostOrderCallback
         fn = getDeclarationRValue(n);
         target = n;
         break;
+
+      // handles class method case:
+      // class clName(){
+      //   constructor(){}
+      //   someMethod(){} <===
+      // }
+      case Token.MEMBER_FUNCTION_DEF:
+        Node parent = n.getParent();
+        if (parent.isClassMembers()){
+          Node classNode = parent.getParent();
+          String midPart = n.isStaticMember() ? "." : ".prototype.";
+          name = NodeUtil.getClassName(classNode) + midPart + n.getString();
+          if (n.getString() == "constructor") {
+            name = NodeUtil.getClassName(classNode);
+          }
+          fn = n.getFirstChild();
+          target = classNode;
+        }
+        break;
     }
-    // checks that it is a function declaration.
+
     if (fn == null || !fn.isFunction()) {
       compiler.report(t.makeError(n, INJECT_NON_FUNCTION_ERROR));
       return;
