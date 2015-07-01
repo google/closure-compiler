@@ -1010,6 +1010,27 @@ angular.$animate.prototype.animate = function(
     element, from, to, opt_className, opt_options) {};
 
 /**
+ * @param {string} event
+ * @param {JQLiteSelector} container
+ * @param {function(JQLiteSelector, string)} callback
+ */
+angular.$animate.prototype.on = function(event, container, callback) {};
+
+/**
+ * @param {string} event
+ * @param {JQLiteSelector=} opt_container
+ * @param {function(JQLiteSelector, string)=} opt_callback
+ */
+angular.$animate.prototype.off = function(event, opt_container, opt_callback) {
+};
+
+/**
+ * @param {JQLiteSelector} element
+ * @param {JQLiteSelector} parentElement
+ */
+angular.$animate.prototype.pin = function(element, parentElement) {};
+
+/**
  * @param {JQLiteSelector} element
  * @param {JQLiteSelector} parentElement
  * @param {JQLiteSelector} afterElement
