@@ -77,6 +77,9 @@ public final class Es6TypedToEs6Converter
         maybeAddGenerics(n, n);
         visitInterface(n);
         break;
+      case Token.ENUM:
+        visitEnum(n, parent);
+        break;
       case Token.NAME:
       case Token.REST:
         maybeVisitColonType(n, n);
@@ -197,6 +200,36 @@ public final class Es6TypedToEs6Converter
     qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
     Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
     return newNode.useSourceInfoIfMissingFromForTree(member);
+  }
+
+  private void visitEnum(Node n, Node parent) {
+    Node name = n.getFirstChild();
+    Node members = n.getLastChild();
+    double nextValue = 0;
+    Node[] stringKeys = new Node[members.getChildCount()];
+    for (int i = 0; i < members.getChildCount(); i++) {
+      Node child = members.getChildAtIndex(i);
+      if (child.hasChildren()) {
+        nextValue = child.getFirstChild().getDouble() + 1;
+      } else {
+        child.addChildToFront(IR.number(nextValue++));
+      }
+      stringKeys[i] = child;
+    }
+    for (Node child : stringKeys) {
+      child.detachFromParent();
+    }
+    Node var = IR.var(name.detachFromParent());
+    Node objectlit = IR.objectlit(stringKeys);
+    name.addChildToFront(objectlit);
+
+    JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+    builder.recordEnumParameterType(
+        new JSTypeExpression(IR.string("number"), n.getSourceFileName()));
+    var.setJSDocInfo(builder.build());
+
+    parent.replaceChild(n, var.useSourceInfoIfMissingFromForTree(n));
+    compiler.reportCodeChange();
   }
 
   private void maybeClearColonType(Node n, boolean hasColonType) {

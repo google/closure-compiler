@@ -211,6 +211,10 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "/** @implements {Baz} */ class Foo extends Bar {}");
   }
 
+  public void testEnum() {
+    test("enum E { Foo, Bar }", "/** @enum {number} */ var E = { Foo: 0, Bar: 1 }");
+  }
+
   public void testInterface() {
     test("interface I { foo: string; }",
          "/** @interface */ class I {} /** @type {string} */ I.prototype.foo;");
@@ -233,8 +237,8 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("declare let x;", "/** @suppress {duplicate} */ var x;");
     test("declare const x;", "/** @const @suppress {duplicate} */ var x;");
     test("declare function f();", "/** @suppress {duplicate} */ function f() {}");
-    // TODO(moz): Change this after enums are transpiled
-    test("declare enum Foo {}", "/** @suppress {duplicate} */ enum Foo {}");
+    // TODO(moz): Remove the newline once we fix JsDocInfoParser
+    test("declare enum Foo {}", "/** @enum {number}\n@suppress {duplicate} */ var Foo = {}");
     test("declare class C {};", "/** @suppress {duplicate} */ class C {}");
 
   }
