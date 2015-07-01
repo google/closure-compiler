@@ -535,6 +535,16 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("declare var x;", "ambient declaration");
   }
 
+  public void testTypeQuery() {
+    parse("var x: typeof y;");
+    parse("var x: typeof Foo.Bar.Baz;");
+    parse("var x: typeof y | Bar;");
+
+    expectErrors("Parse error. 'identifier' expected");
+    parse("var x : typeof Foo.Bar.");
+    testNotEs6Typed("var x: typeof y;", "type annotation");
+  }
+
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {
     Node varDecl = parse(source, source).getFirstChild();
     assertDeclaredType(message, expectedType, varDecl.getFirstChild());

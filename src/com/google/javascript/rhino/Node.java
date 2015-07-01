@@ -866,6 +866,10 @@ public class Node implements Cloneable, Serializable {
     }
   }
 
+  public boolean hasProps() {
+    return propListHead != null;
+  }
+
   /**
    * @param item The item to inspect
    * @param propType The property to look for

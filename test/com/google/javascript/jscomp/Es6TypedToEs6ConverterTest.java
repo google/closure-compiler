@@ -108,6 +108,14 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var x: string | number;", "var /** string | number */ x;");
   }
 
+  // TypeQuery is currently not supported.
+  public void testTypeQuery() {
+    testError("var x: typeof y | number;",
+        Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED);
+    testError("var x: (p1: typeof y) => number;",
+        Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED);
+  }
+
   public void testTypedParameter() {
     test("function f(p1: number) {}", "function f(/** number */ p1) {}");
   }
@@ -122,11 +130,11 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("function f(...p1) {}", "function f(...p1) {}");
   }
 
-    public void testReturnType() {
-      test("function f(...p1: number[]): void {}",
-           "/** @return{void} */ function f(/** ...number */ ...p1) {}");
-      test("function f(...p1) {}", "function f(...p1) {}");
-    }
+  public void testReturnType() {
+    test("function f(...p1: number[]): void {}",
+         "/** @return{void} */ function f(/** ...number */ ...p1) {}");
+    test("function f(...p1) {}", "function f(...p1) {}");
+  }
 
   public void testBuiltins() {
     test("var x: any;", "var /** ? */ x;");

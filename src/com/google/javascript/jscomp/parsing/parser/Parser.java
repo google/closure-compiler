@@ -100,6 +100,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.ThrowStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TryStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypeAliasTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypeNameTree;
+import com.google.javascript.jscomp.parsing.parser.trees.TypeQueryTree;
 import com.google.javascript.jscomp.parsing.parser.trees.TypedParameterTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnaryExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.UnionTypeTree;
@@ -1020,9 +1021,8 @@ public class Parser {
 
   private ParseTree parseType() {
     SourcePosition start = getTreeStartLocation();
-    // TODO(moz): Parse type query
     if (!peekId() && !peek(TokenType.VOID) && !peek(TokenType.OPEN_PAREN)
-        && !peek(TokenType.OPEN_CURLY)) {
+        && !peek(TokenType.OPEN_CURLY) && !peek(TokenType.TYPEOF)) {
       reportError("Unexpected token '%s' in type expression", peekType());
       return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
     }
@@ -1105,9 +1105,34 @@ public class Parser {
       typeExpression = new RecordTypeTree(getTreeLocation(start), members);
       eat(TokenType.CLOSE_CURLY);
     } else {
-      typeExpression = parseTypeReference();
+      typeExpression = parseTypeQuery();
     }
     return typeExpression;
+  }
+
+  private ParseTree parseTypeQuery() {
+    SourcePosition start = getTreeStartLocation();
+    if (peek(TokenType.TYPEOF)) {
+      eat(TokenType.TYPEOF);
+
+      IdentifierToken token = eatId();
+      ImmutableList.Builder<String> identifiers = ImmutableList.builder();
+      if (token != null) {
+        identifiers.add(token.value);
+      }
+      while (peek(TokenType.PERIOD)) {
+        // TypeQueryExpression . IdentifierName
+        eat(TokenType.PERIOD);
+        token = eatId();
+        if (token == null) {
+          break;
+        }
+        identifiers.add(token.value);
+      }
+      return new TypeQueryTree(getTreeLocation(start), identifiers.build());
+    } else {
+      return parseTypeReference();
+    }
   }
 
   private ParseTree parseTypeReference() {

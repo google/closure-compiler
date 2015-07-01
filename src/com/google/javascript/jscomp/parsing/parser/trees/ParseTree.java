@@ -134,6 +134,7 @@ public class ParseTree {
   public RecordTypeTree asRecordType() { return (RecordTypeTree) this; }
   public UnionTypeTree asUnionType() { return (UnionTypeTree) this; }
   public FunctionTypeTree asFunctionType() { return (FunctionTypeTree) this; }
+  public TypeQueryTree asTypeQuery() { return (TypeQueryTree) this; }
   public GenericTypeListTree asGenericTypeList() { return (GenericTypeListTree) this; }
   public UnaryExpressionTree asUnaryExpression() { return (UnaryExpressionTree) this; }
   public VariableDeclarationListTree asVariableDeclarationList() {
