@@ -841,6 +841,11 @@ angular.Scope.prototype.$$phase;
 angular.Scope.prototype.$apply = function(opt_exp) {};
 
 /**
+ * @param {(string|function(!angular.Scope))=} opt_exp
+ */
+angular.Scope.prototype.$applyAsync = function(opt_exp) {};
+
+/**
  * @param {string} name
  * @param {...*} args
  */
