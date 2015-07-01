@@ -1937,6 +1937,9 @@ angular.$provide;
 /** @typedef {{$get: (!Array.<string|!Function>|!Function)}} */
 angular.$provide.Provider;
 
+/** @typedef {(!Array.<string|!Function>|!Function)} */
+angular.$provide.Provider.$get;
+
 /**
  * @param {string} name
  * @param {*} object
