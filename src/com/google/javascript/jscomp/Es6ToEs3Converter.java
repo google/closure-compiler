@@ -78,11 +78,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   // The name of the placeholder for the rest parameters.
   private static final String REST_PARAMS = "$jscomp$restParams";
 
-  // The name of the vars that capture 'this' and 'arguments'
-  // for converting arrow functions.
-  private static final String THIS_VAR = "$jscomp$this";
-  private static final String ARGUMENTS_VAR = "$jscomp$arguments";
-
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
 
   private static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
@@ -121,11 +116,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.FUNCTION:
-        if (n.isArrowFunction()) {
-          visitArrowFunction(t, n);
-        }
-        break;
       case Token.PARAM_LIST:
         visitParamList(n, parent);
         break;
@@ -1037,64 +1027,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
   }
 
-  /**
-   * Converts ES6 arrow functions to standard anonymous ES3 functions.
-   */
-  private void visitArrowFunction(NodeTraversal t, Node n) {
-    n.setIsArrowFunction(false);
-    Node body = n.getLastChild();
-    if (!body.isBlock()) {
-      body.detachFromParent();
-      body = IR.block(IR.returnNode(body).srcref(body)).srcref(body);
-      n.addChildToBack(body);
-    }
-
-    UpdateThisAndArgumentsReferences updater =
-        new UpdateThisAndArgumentsReferences();
-    NodeTraversal.traverse(compiler, body, updater);
-    addVarDecls(t, updater.changedThis, updater.changedArguments);
-
-    compiler.reportCodeChange();
-  }
-
-  private void addVarDecls(
-      NodeTraversal t, boolean addThis, boolean addArguments) {
-    Scope scope = t.getScope();
-    if (scope.isDeclared(THIS_VAR, false)) {
-      addThis = false;
-    }
-    if (scope.isDeclared(ARGUMENTS_VAR, false)) {
-      addArguments = false;
-    }
-
-    Node parent = t.getScopeRoot();
-    if (parent.isFunction()) {
-      // Add the new node at the beginning of the function body.
-      parent = parent.getLastChild();
-    }
-    if (parent.isSyntheticBlock() && parent.getFirstChild().isScript()) {
-      // Add the new node inside the SCRIPT node instead of the
-      // synthetic block that contains it.
-      parent = parent.getFirstChild();
-    }
-
-    CompilerInput input = compiler.getInput(parent.getInputId());
-    if (addArguments) {
-      Node name = IR.name(ARGUMENTS_VAR);
-      Node argumentsVar = IR.declaration(name, IR.name("arguments"), Token.CONST);
-      argumentsVar.useSourceInfoIfMissingFromForTree(parent);
-      parent.addChildToFront(argumentsVar);
-      scope.declare(ARGUMENTS_VAR, name, input);
-    }
-    if (addThis) {
-      Node name = IR.name(THIS_VAR);
-      Node thisVar = IR.declaration(name, IR.thisNode(), Token.CONST);
-      thisVar.useSourceInfoIfMissingFromForTree(parent);
-      parent.addChildToFront(thisVar);
-      scope.declare(THIS_VAR, name, input);
-    }
-  }
-
   private static String getUniqueClassName(String qualifiedName) {
     return qualifiedName;
   }
@@ -1107,30 +1039,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         IR.sheq(getprop, IR.name("undefined")),
         defaultValue,
         getprop.cloneTree());
-  }
-
-  private static class UpdateThisAndArgumentsReferences
-      implements NodeTraversal.Callback {
-    private boolean changedThis = false;
-    private boolean changedArguments = false;
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isThis()) {
-        Node name = IR.name(THIS_VAR).srcref(n);
-        parent.replaceChild(n, name);
-        changedThis = true;
-      } else if (n.isName() && n.getString().equals("arguments")) {
-        Node name = IR.name(ARGUMENTS_VAR).srcref(n);
-        parent.replaceChild(n, name);
-        changedArguments = true;
-      }
-    }
-
-    @Override
-    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      return !n.isFunction() || n.isArrowFunction();
-    }
   }
 
   private class CheckClassAssignments extends NodeTraversal.AbstractPostOrderCallback {
