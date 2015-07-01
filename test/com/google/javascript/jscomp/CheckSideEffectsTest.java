@@ -16,12 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public final class CheckSideEffectsTest extends CompilerTestCase {
   public CheckSideEffectsTest() {
     this.parseTypeInfo = true;
     allowExternsChanges(true);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
   }
 
   @Override
@@ -38,6 +39,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     test(js, expected, null, warning);
   }
 
+  @Override
   public void testWarning(String js, DiagnosticType warning) {
     test(js, js, null, warning);
   }
@@ -56,8 +58,8 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testWarning("x == 3;", "JSCOMPILER_PRESERVE(x == 3);", e);
 
     testWarning("var x = 'test'", ok);
-    testWarning("var x = 'test'\n'str'",
-         "var x = 'test'\nJSCOMPILER_PRESERVE('str')", e);
+    testWarning("var x = 'test'\n'Breakstr'",
+         "var x = 'test'\nJSCOMPILER_PRESERVE('Breakstr')", e);
 
     testWarning("", ok);
     testWarning("foo();;;;bar();;;;", ok);
@@ -76,6 +78,31 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testWarning("function x(){}\nfunction f(a, b){}\nf(1,(2, 3));",
          "function x(){}\nfunction f(a, b){}\n" +
          "f(1,(JSCOMPILER_PRESERVE(2), 3));", e);
+
+    testWarning("var x = `TemplateA`\n'TestB'",
+        "var x = `TemplateA`\nJSCOMPILER_PRESERVE('TestB')", e);
+    testWarning("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", e);
+    testWarning(
+        LINE_JOINER.join(
+            "var name = 'Bad';",
+            "`${name}Template`;"),
+        LINE_JOINER.join(
+            "var name = 'Bad';",
+            "JSCOMPILER_PRESERVE(`${name}Template`)"), e);
+    testWarning(
+        LINE_JOINER.join(
+            "var name = 'BadTail';",
+            "`Template${name}`;"),
+        LINE_JOINER.join(
+            "var name = 'BadTail';",
+            "JSCOMPILER_PRESERVE(`Template${name}`)"), e);
+    testWarning(
+        LINE_JOINER.join(
+            "var name = 'Good';",
+            "var templateString = `${name}Template`;"), ok);
+    testWarning("var templateString = `Template`;", ok);
+    testWarning("tagged`Template`;", ok);
+    testWarning("tagged`${name}Template`;", ok);
   }
 
   public void testUselessCodeInFor() {

@@ -120,7 +120,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     if (!isResultUsed) {
       if (isSimpleOp || !NodeUtil.mayHaveSideEffects(n, t.getCompiler())) {
         String msg = "This code lacks side-effects. Is there a bug?";
-        if (n.isString()) {
+        if (n.isString() || n.isTemplateLit()) {
           msg = "Is there a missing '+' on the previous line?";
         } else if (isSimpleOp) {
           msg = "The result of the '" + Token.name(n.getType()).toLowerCase() +
