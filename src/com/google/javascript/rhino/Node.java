@@ -2781,6 +2781,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.SWITCH;
   }
 
+  public boolean isTaggedTemplateLit(){
+    return this.getType() == Token.TAGGED_TEMPLATELIT;
+  }
+
   public boolean isTemplateLit(){
     return this.getType() == Token.TEMPLATELIT;
   }

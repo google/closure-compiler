@@ -305,6 +305,10 @@ public final class AstValidator implements CompilerPass {
         validateTemplateLit(n);
         return;
 
+      case Token.TAGGED_TEMPLATELIT:
+        validateTaggedTemplateLit(n);
+        return;
+
       case Token.YIELD:
         validateYield(n);
         return;
@@ -399,6 +403,14 @@ public final class AstValidator implements CompilerPass {
     for (Node child : n.children()) {
       validateName(child);
     }
+  }
+
+  private void validateTaggedTemplateLit(Node n) {
+    validateEs6Feature("template literal", n);
+    validateNodeType(Token.TAGGED_TEMPLATELIT, n);
+    validateChildCount(n);
+    validateExpression(n.getFirstChild());
+    validateTemplateLit(n.getLastChild());
   }
 
   private void validateTemplateLit(Node n) {

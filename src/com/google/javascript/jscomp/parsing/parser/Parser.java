@@ -1871,7 +1871,7 @@ public class Parser {
    * handling). In this case, operand would be "foo", which is the callsite.
    *
    * <p>We store this operand in the TemplateLiteralExpressionTree and
-   * generate a CALL node if it's not null later when transpiling.
+   * generate a TAGGED_TEMPLATELIT node if it's not null later when transpiling.
    *
    * @param operand A non-null value would represent the callsite
    * @return The template literal expression

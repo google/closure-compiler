@@ -185,15 +185,15 @@ public class Token {
 
       COMPUTED_PROP = 175,
 
-      TEMPLATELIT = 176, // template literal
-      TEMPLATELIT_SUB = 177, // template literal substitution
+      TAGGED_TEMPLATELIT = 176, // tagged template literal, e.g. foo`bar`
+      TEMPLATELIT = 177, // template literal
+      TEMPLATELIT_SUB = 178, // template literal substitution
 
-      DEFAULT_VALUE = 178, // Formal parameter or destructuring element
-      // with a default value
+      DEFAULT_VALUE = 179, // Formal parameter or destructuring element with a default value
 
       // ECMAScript 6 Typed AST Nodes.
 
-      MEMBER_VARIABLE_DEF = 179,
+      MEMBER_VARIABLE_DEF = 180,
 
       // Used by type declaration ASTs
       STRING_TYPE = 200,
@@ -336,6 +336,8 @@ public class Token {
         return "ARRAYLIT";
       case OBJECTLIT:
         return "OBJECTLIT";
+      case TAGGED_TEMPLATELIT:
+        return "TAGGED_TEMPLATELIT";
       case TEMPLATELIT:
         return "TEMPLATELIT";
       case TEMPLATELIT_SUB:
@@ -652,6 +654,8 @@ public class Token {
         return -1;
       case OBJECTLIT:
         return -1;
+      case TAGGED_TEMPLATELIT:
+        return 2;
       case TEMPLATELIT:
         return -1;
       case TEMPLATELIT_SUB:

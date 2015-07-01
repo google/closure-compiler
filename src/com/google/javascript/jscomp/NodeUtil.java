@@ -1016,12 +1016,11 @@ public final class NodeUtil {
         }
         return true;
 
+      case Token.TAGGED_TEMPLATELIT:
+        return functionCallHasSideEffects(n);
+
       case Token.TEMPLATELIT:
-        if (n.getFirstChild().isString()){
-          break;
-        } else {
-          return functionCallHasSideEffects(n);
-        }
+        break;
 
       default:
         if (isSimpleOperator(n)) {
@@ -1145,7 +1144,7 @@ public final class NodeUtil {
    */
   static boolean functionCallHasSideEffects(
       Node callNode, @Nullable AbstractCompiler compiler) {
-    Preconditions.checkState(callNode.isCall() || callNode.isTemplateLit(), callNode);
+    Preconditions.checkState(callNode.isCall() || callNode.isTaggedTemplateLit(), callNode);
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -1410,6 +1409,7 @@ public final class NodeUtil {
       case Token.THIS:
       case Token.SUPER:
       case Token.TRUE:
+      case Token.TAGGED_TEMPLATELIT:
       case Token.TEMPLATELIT:
       // Tokens from the type declaration AST
       case Token.UNION_TYPE:

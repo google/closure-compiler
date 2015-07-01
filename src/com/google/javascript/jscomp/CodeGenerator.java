@@ -1075,11 +1075,12 @@ class CodeGenerator {
         add(")");
         break;
 
+      case Token.TAGGED_TEMPLATELIT:
+        add(first, Context.START_OF_EXPR);
+        add(first.getNext());
+        break;
+
       case Token.TEMPLATELIT:
-        if (!first.isString()) {
-          add(first, Context.START_OF_EXPR);
-          first = first.getNext();
-        }
         add("`");
         for (Node c = first; c != null; c = c.getNext()) {
           if (c.isString()) {

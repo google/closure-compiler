@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -27,26 +28,18 @@ import com.google.javascript.rhino.Token;
 class Es6TemplateLiterals {
   private static final String TEMPLATELIT_VAR = "$jscomp$templatelit$";
 
-  static void visitTemplateLiteral(NodeTraversal t, Node n) {
-    if (n.getFirstChild().isString()) {
-      createUntaggedTemplateLiteral(n);
-    } else {
-      createTaggedTemplateLiteral(t, n);
-    }
-    t.getCompiler().reportCodeChange();
-  }
-
   /**
    * Converts `${a} b ${c} d ${e}` to (a + " b " + c + " d " + e)
    *
    * @param n A TEMPLATELIT node that is not prefixed with a tag
    */
-  private static void createUntaggedTemplateLiteral(Node n) {
+  static void visitTemplateLiteral(NodeTraversal t, Node n) {
     int length = n.getChildCount();
     if (length == 0) {
       n.getParent().replaceChild(n, IR.string("\"\""));
     } else {
-      Node first = n.removeFirstChild(); // first is always a STRING node
+      Node first = n.removeFirstChild();
+      Preconditions.checkState(first.isString());
       if (length == 1) {
         n.getParent().replaceChild(n, first);
       } else {
@@ -69,6 +62,7 @@ class Es6TemplateLiterals {
         n.getParent().replaceChild(n, add.useSourceInfoIfMissingFromForTree(n));
       }
     }
+    t.getCompiler().reportCodeChange();
   }
 
   /**
@@ -82,12 +76,13 @@ class Es6TemplateLiterals {
    *
    *   See template_literal_test.js for more examples.
    *
-   * @param n A TEMPLATELIT node that is prefixed with a tag
+   * @param n A TAGGED_TEMPLATELIT node
    */
-  private static void createTaggedTemplateLiteral(NodeTraversal t, Node n) {
+  static void visitTaggedTemplateLiteral(NodeTraversal t, Node n) {
+    Node templateLit = n.getLastChild();
     // Prepare the raw and cooked string arrays.
-    Node raw = createRawStringArray(n);
-    Node cooked = createCookedStringArray(n);
+    Node raw = createRawStringArray(templateLit);
+    Node cooked = createCookedStringArray(templateLit);
 
     // Create a variable representing the template literal.
     Node callsiteId = IR.name(
@@ -103,34 +98,38 @@ class Es6TemplateLiterals {
     script.addChildAfter(defineRaw, var);
 
     // Generate the call expression.
-    Node[] args = new Node[n.getChildCount() / 2];
-    args[0] = callsiteId.cloneNode();
-    for (int i = 1, j = 2; i < args.length; i++, j += 2) {
-      args[i] = n.getChildAtIndex(j).removeFirstChild();
+    Node call = IR.call(n.removeFirstChild(), callsiteId.cloneNode());
+    for (Node child = templateLit.getFirstChild(); child != null; child = child.getNext()) {
+      if (!child.isString()) {
+        call.addChildToBack(child.removeFirstChild());
+      }
     }
-    Node call = IR.call(n.removeFirstChild(), args)
-        .useSourceInfoIfMissingFromForTree(n);
+    call.useSourceInfoIfMissingFromForTree(templateLit);
     call.putBooleanProp(Node.FREE_CALL, !call.getFirstChild().isGetProp());
     n.getParent().replaceChild(n, call);
+    t.getCompiler().reportCodeChange();
   }
 
   private static Node createRawStringArray(Node n) {
-    Node[] items = new Node[n.getChildCount() / 2];
-    for (int i = 0, j = 1; i < items.length; i++, j += 2) {
-      items[i] = IR.string(
-          (String) n.getChildAtIndex(j).getProp(Node.RAW_STRING_VALUE));
+    Node array = IR.arraylit();
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isString()) {
+        array.addChildToBack(IR.string((String) child.getProp(Node.RAW_STRING_VALUE)));
+      }
     }
-    return IR.arraylit(items);
+    return array;
   }
 
   private static Node createCookedStringArray(Node n) {
-    Node[] items = new Node[n.getChildCount() / 2];
-    for (int i = 0, j = 1; i < items.length; i++, j += 2) {
-      items[i] = IR.string(cookString(
-          (String) n.getChildAtIndex(j).getProp(Node.RAW_STRING_VALUE)));
-      items[i].putBooleanProp(Node.COOKED_STRING, true);
+    Node array = IR.arraylit();
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isString()) {
+        Node string = IR.string(cookString((String) child.getProp(Node.RAW_STRING_VALUE)));
+        string.putBooleanProp(Node.COOKED_STRING, true);
+        array.addChildToBack(string);
+      }
     }
-    return IR.arraylit(items);
+    return array;
   }
 
   /**

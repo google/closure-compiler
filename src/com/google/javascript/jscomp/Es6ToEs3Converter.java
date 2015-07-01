@@ -184,8 +184,13 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           }
         }
         break;
+      case Token.TAGGED_TEMPLATELIT:
+        Es6TemplateLiterals.visitTaggedTemplateLiteral(t, n);
+        break;
       case Token.TEMPLATELIT:
-        Es6TemplateLiterals.visitTemplateLiteral(t, n);
+        if (!parent.isTaggedTemplateLit()) {
+          Es6TemplateLiterals.visitTemplateLiteral(t, n);
+        }
         break;
       case Token.ARRAY_PATTERN:
         visitArrayPattern(t, n, parent);

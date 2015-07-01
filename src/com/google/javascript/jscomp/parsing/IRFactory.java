@@ -1641,11 +1641,13 @@ class IRFactory {
 
     Node processTemplateLiteral(TemplateLiteralExpressionTree tree) {
       maybeWarnEs6Feature(tree, "template literals");
+      Node templateLitNode = newNode(Token.TEMPLATELIT);
+      setSourceInfo(templateLitNode, tree);
       Node node = tree.operand == null
-          ? newNode(Token.TEMPLATELIT)
-          : newNode(Token.TEMPLATELIT, transform(tree.operand));
+          ? templateLitNode
+          : newNode(Token.TAGGED_TEMPLATELIT, transform(tree.operand), templateLitNode);
       for (ParseTree child : tree.elements) {
-        node.addChildToBack(transform(child));
+        templateLitNode.addChildToBack(transform(child));
       }
       return node;
     }
