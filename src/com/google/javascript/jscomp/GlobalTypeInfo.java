@@ -2241,7 +2241,8 @@ class GlobalTypeInfo implements CompilerPass {
         Preconditions.checkState(decl.getNamespace() == null);
         return null;
       }
-      if (name.equals(this.name)) {
+      // When a function is a namespace, the parent scope has a better type.
+      if (name.equals(this.name) && !parent.isFunctionNamespace(name)) {
         return getCommonTypes()
             .fromFunctionType(getDeclaredFunctionType().toFunctionType());
       }

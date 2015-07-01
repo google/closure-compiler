@@ -12696,6 +12696,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var /** string */ s = f.subns.prop;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  f.prop = function() {};",
+        "}"));
   }
 
   public void testFunctionNamespacesThatAreProperties() {
