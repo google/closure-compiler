@@ -952,6 +952,7 @@ public final class NodeUtil {
       case Token.STRING:
       case Token.STRING_KEY:
       case Token.SWITCH:
+      case Token.TEMPLATELIT_SUB:
       case Token.TRY:
       case Token.EMPTY:
         break;
@@ -1014,6 +1015,13 @@ public final class NodeUtil {
           break;
         }
         return true;
+
+      case Token.TEMPLATELIT:
+        if (n.getFirstChild().isString()){
+          break;
+        } else {
+          return functionCallHasSideEffects(n);
+        }
 
       default:
         if (isSimpleOperator(n)) {
@@ -1137,10 +1145,7 @@ public final class NodeUtil {
    */
   static boolean functionCallHasSideEffects(
       Node callNode, @Nullable AbstractCompiler compiler) {
-    if (!callNode.isCall()) {
-      throw new IllegalStateException(
-          "Expected CALL node, got " + Token.name(callNode.getType()));
-    }
+    Preconditions.checkState(callNode.isCall() || callNode.isTemplateLit(), callNode);
 
     if (callNode.isNoSideEffectsCall()) {
       return false;

@@ -2025,6 +2025,10 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("`hello`");
     assertPrint("`hel\rlo`", "`hel\nlo`");
     assertPrint("`hel\r\nlo`", "`hel\nlo`");
+    assertPrint("`hello`\n'world'", "`hello`;\"world\"");
+    assertPrint("`hello`\n`world`", "`hello``world`");
+    assertPrint("var x=`TestA`\n`TemplateB`", "var x=`TestA``TemplateB`");
+    assertPrintSame("`hello``world`");
 
     assertPrintSame("`hello${world}!`");
     assertPrintSame("`hello${world} ${name}!`");

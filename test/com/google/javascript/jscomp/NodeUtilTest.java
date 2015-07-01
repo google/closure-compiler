@@ -42,7 +42,7 @@ public final class NodeUtilTest extends TestCase {
   private static Node parse(String js) {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
-    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT5);
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
     Node n = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
     return n;
@@ -384,6 +384,15 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(false, "(function(a, b) {  })");
     assertSideEffect(false, "a ? c : d");
     assertSideEffect(false, "'1' + navigator.userAgent");
+
+    assertSideEffect(false, "`template`");
+    assertSideEffect(false, "`template${name}`");
+    assertSideEffect(false, "`${name}template`");
+    assertSideEffect(true, "`${naming()}template`");
+    assertSideEffect(true, "templateFunction`template`");
+    assertSideEffect(true, "st = `${name}template`");
+    assertSideEffect(true, "tempFunc = templateFunction`template`");
+
 
     assertSideEffect(false, "new RegExp('foobar', 'i')");
     assertSideEffect(true, "new RegExp(SomethingWacky(), 'i')");
