@@ -30,14 +30,13 @@
 /**
  * @constructor
  */
-angular.$q;
+angular.$q = function() {};
 
 /**
  * @constructor
  * @template T
- * @extends {IThenable.<T>}
  */
-angular.$q.Promise;
+angular.$q.Promise = function() {};
 
 /**
  * Apply Type Transformation Language to allow more accurate templated type
@@ -60,7 +59,6 @@ angular.$q.Promise;
  *              unknown(),
  *              V)))))
  *  =:
- * @override
  */
 angular.$q.Promise.prototype.then =
     function(opt_onFulfilled, opt_onRejected, opt_notifyCallback) {};

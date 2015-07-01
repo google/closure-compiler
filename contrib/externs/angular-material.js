@@ -22,7 +22,7 @@
 
 
 /**
- * @const {Object}
+ * @const
  */
 var md = {};
 
