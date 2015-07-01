@@ -239,7 +239,8 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("declare function f();", "/** @suppress {duplicate} */ function f() {}");
     // TODO(moz): Remove the newline once we fix JsDocInfoParser
     test("declare enum Foo {}", "/** @enum {number}\n@suppress {duplicate} */ var Foo = {}");
-    test("declare class C {};", "/** @suppress {duplicate} */ class C {}");
+    test("declare class C { constructor(); };",
+         "/** @suppress {duplicate} */ class C { constructor() {} }");
 
   }
 }

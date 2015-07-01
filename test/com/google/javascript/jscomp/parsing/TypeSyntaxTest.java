@@ -386,6 +386,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("interface I {\n  foo: string;\n}");
     parse("interface I {\n  foo(p: boolean): string;\n}");
     parse("interface I {\n  foo<T>(p: boolean): string;\n}");
+    parse("interface I {\n  *foo(p: boolean);\n}");
 
     expectErrors("Parse error. ';' expected");
     parse("interface I { foo(p: boolean): string {}}");
@@ -520,7 +521,8 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare let x;");
     parse("declare const x;");
     parse("declare function foo();");
-    parse("declare class Foo {\n};");
+    parse("declare class Foo {\n  constructor();\n  foo();\n};");
+    parse("declare class Foo {\n  static *foo(bar: string);\n};");
     parse("declare enum Foo {\n};");
 
     expectErrors("Parse error. Ambient variable declaration may not have initializer");
@@ -531,6 +533,8 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare function foo() {}");
     expectErrors("Parse error. Semi-colon expected");
     parse("if (true) { declare var x; }");
+    expectErrors("Parse error. ';' expected");
+    parse("declare class Foo {\n  constructor() {}\n};");
 
     testNotEs6Typed("declare var x;", "ambient declaration");
   }

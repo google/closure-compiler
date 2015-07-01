@@ -153,7 +153,7 @@ public final class AstValidator implements CompilerPass {
         validateChildless(n);
         return;
       case Token.CLASS:
-        validateClassDeclaration(n);
+        validateClassDeclaration(n, false);
         return;
       case Token.IMPORT:
         validateImport(n);
@@ -495,12 +495,16 @@ public final class AstValidator implements CompilerPass {
    * In a class declaration, unlike a class expression,
    * the class name is required.
    */
-  private void validateClassDeclaration(Node n) {
-    validateClass(n);
+  private void validateClassDeclaration(Node n, boolean isAmbient) {
+    validateClassHelper(n, isAmbient);
     validateName(n.getFirstChild());
   }
 
   private void validateClass(Node n) {
+    validateClassHelper(n, false);
+  }
+
+  private void validateClassHelper(Node n, boolean isAmbient) {
     validateEs6Feature("classes", n);
     validateNodeType(Token.CLASS, n);
     validateChildCount(n);
@@ -519,22 +523,27 @@ public final class AstValidator implements CompilerPass {
       validateExpression(superClass);
     }
 
-    validateClassMembers(n.getLastChild());
+    validateClassMembers(n.getLastChild(), isAmbient);
   }
 
-  private void validateClassMembers(Node n) {
+  private void validateClassMembers(Node n, boolean isAmbient) {
     validateNodeType(Token.CLASS_MEMBERS, n);
     for (Node c : n.children()) {
-      validateClassMember(c);
+      validateClassMember(c, isAmbient);
     }
   }
 
-  private void validateClassMember(Node n) {
+  private void validateClassMember(Node n, boolean isAmbient) {
     if (n.getType() == Token.MEMBER_FUNCTION_DEF
         || n.getType() == Token.GETTER_DEF
         || n.getType() == Token.SETTER_DEF) {
       validateChildCount(n);
-      validateFunctionExpression(n.getFirstChild());
+      Node function = n.getFirstChild();
+      if (isAmbient) {
+        validateFunctionSignature(function);
+      } else {
+        validateFunctionExpression(function);
+      }
     } else if (n.getType() == Token.MEMBER_VARIABLE_DEF) {
       validateChildless(n);
     } else if (n.isComputedProp()) {
@@ -1120,7 +1129,7 @@ public final class AstValidator implements CompilerPass {
         validateObjectLitStringKey(n);
         return;
       case Token.MEMBER_FUNCTION_DEF:
-        validateClassMember(n);
+        validateClassMember(n, false);
         if (n.isStaticMember()) {
           violation("Keys in an object literal should not be static.", n);
         }
@@ -1278,7 +1287,7 @@ public final class AstValidator implements CompilerPass {
         validateFunctionSignature(child);
         break;
       case Token.CLASS:
-        validateClassDeclaration(child);
+        validateClassDeclaration(child, true);
         break;
       case Token.ENUM:
         validateEnum(child);

@@ -433,7 +433,7 @@ public class Parser {
         export = parseFunctionDeclaration();
         break;
       case CLASS:
-        export = parseClassDeclaration();
+        export = parseClassDeclaration(false);
         break;
       case DEFAULT:
         isDefault = true;
@@ -506,12 +506,12 @@ public class Parser {
     return peek(TokenType.ENUM);
   }
 
-  private ParseTree parseClassDeclaration() {
-    return parseClass(false);
+  private ParseTree parseClassDeclaration(boolean isAmbient) {
+    return parseClass(false, isAmbient);
   }
 
   private ParseTree parseClassExpression() {
-    return parseClass(true);
+    return parseClass(true, false);
   }
 
   private ParseTree parseInterfaceDeclaration() {
@@ -556,6 +556,7 @@ public class Parser {
       case NEW:
       case IDENTIFIER:
       case OPEN_SQUARE:
+      case STAR:
         return true;
       default:
         return Keywords.isKeyword(token.type);
@@ -565,8 +566,11 @@ public class Parser {
   private ParseTree parseInterfaceElement() {
     SourcePosition start = getTreeStartLocation();
 
+    boolean isGenerator = eatOpt(TokenType.STAR) != null;
+
     IdentifierToken name = null;
     TokenType type = peekType();
+
     if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
       name = eatIdOrKeywordAsId();
     } else {
@@ -575,8 +579,7 @@ public class Parser {
 
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // Method signature.
-      ParseTree function = parseMethodSignature(start, name);
-      eat(TokenType.SEMI_COLON);
+      ParseTree function = parseMethodSignature(start, name, false, isGenerator);
       return function;
     } else {
       // Property signature.
@@ -613,7 +616,7 @@ public class Parser {
     return result.build();
   }
 
-  private ParseTree parseClass(boolean isExpression) {
+  private ParseTree parseClass(boolean isExpression, boolean isAmbient) {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.CLASS);
     IdentifierToken name = null;
@@ -644,17 +647,17 @@ public class Parser {
     }
 
     eat(TokenType.OPEN_CURLY);
-    ImmutableList<ParseTree> elements = parseClassElements();
+    ImmutableList<ParseTree> elements = parseClassElements(isAmbient);
     eat(TokenType.CLOSE_CURLY);
     return new ClassDeclarationTree(getTreeLocation(start), name, generics,
         superClass, interfaces.build(), elements);
   }
 
-  private ImmutableList<ParseTree> parseClassElements() {
+  private ImmutableList<ParseTree> parseClassElements(boolean isAmbient) {
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
 
     while (peekClassElement()) {
-      result.add(parseClassElement());
+      result.add(parseClassElement(isAmbient));
     }
 
     return result.build();
@@ -674,7 +677,7 @@ public class Parser {
     }
   }
 
-  private ParseTree parseClassElement() {
+  private ParseTree parseClassElement(boolean isAmbient) {
     if (peek(TokenType.SEMI_COLON)) {
       return parseEmptyStatement();
     }
@@ -684,10 +687,10 @@ public class Parser {
     if (peekSetAccessor(true)) {
       return parseSetAccessor();
     }
-    return parseClassMemberDeclaration(true);
+    return parseClassMemberDeclaration(true, isAmbient);
   }
 
-  private ParseTree parseClassMemberDeclaration(boolean allowStatic) {
+  private ParseTree parseClassMemberDeclaration(boolean allowStatic, boolean isAmbient) {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = false;
     if (allowStatic && peek(TokenType.STATIC) && peekType(1) != TokenType.OPEN_PAREN) {
@@ -712,7 +715,9 @@ public class Parser {
       FunctionDeclarationTree.Kind kind =
           nameExpr == null ? FunctionDeclarationTree.Kind.MEMBER
               : FunctionDeclarationTree.Kind.EXPRESSION;
-      ParseTree function = parseFunctionTail(start, name, isStatic, isGenerator, kind);
+      ParseTree function = isAmbient
+          ? parseMethodSignature(start, name, isStatic, isGenerator)
+          : parseFunctionTail(start, name, isStatic, isGenerator, kind);
       if (kind == FunctionDeclarationTree.Kind.MEMBER) {
         return function;
       } else {
@@ -738,14 +743,15 @@ public class Parser {
   }
 
   private FunctionDeclarationTree parseMethodSignature(SourcePosition start,
-      IdentifierToken name) {
+      IdentifierToken name, boolean isStatic, boolean isGenerator) {
     GenericTypeListTree generics = maybeParseGenericTypes();
     FormalParameterListTree formalParameterList = parseFormalParameterList();
     ParseTree returnType = maybeParseColonType();
     ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
     FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, false, false,
+        getTreeLocation(start), name, generics, isStatic, isGenerator,
         FunctionDeclarationTree.Kind.MEMBER, formalParameterList, returnType, functionBody);
+    eat(TokenType.SEMI_COLON);
     return declaration;
   }
 
@@ -788,7 +794,7 @@ public class Parser {
     }
 
     if (peekClassDeclaration()) {
-      return parseClassDeclaration();
+      return parseClassDeclaration(false);
     }
 
     // Harmony let block scoped bindings. let can only appear in
@@ -2098,7 +2104,7 @@ public class Parser {
       } else if (peekSetAccessor(false)) {
         return parseSetAccessor();
       } else if (peekType(1) == TokenType.OPEN_PAREN) {
-        return parseClassMemberDeclaration(false);
+        return parseClassMemberDeclaration(false, false);
       } else {
         return parsePropertyNameAssignment();
       }
@@ -2127,7 +2133,7 @@ public class Parser {
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       // parseMethodDeclaration will consume the '*'.
-      return parseClassMemberDeclaration(false);
+      return parseClassMemberDeclaration(false, false);
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.STAR);
@@ -3096,7 +3102,7 @@ public class Parser {
         declare = parseAmbientFunctionDeclaration();
         break;
       case CLASS:
-        declare = parseClassDeclaration();
+        declare = parseClassDeclaration(true);
         break;
       case ENUM:
         declare = parseEnumDeclaration();

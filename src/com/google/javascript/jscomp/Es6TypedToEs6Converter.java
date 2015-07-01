@@ -298,6 +298,16 @@ public final class Es6TypedToEs6Converter
       case Token.FUNCTION:
         child.replaceChild(child.getLastChild(), IR.block().useSourceInfoFrom(child));
         break;
+      case Token.CLASS:
+        Node members = child.getLastChild();
+        for (Node member : members.children()) {
+          if (member.isMemberFunctionDef()) {
+            Node function = member.getFirstChild();
+            function.replaceChild(
+                function.getLastChild(), IR.block().copyInformationFrom(function));
+          }
+        }
+        break;
       case Token.LET:
         child.setType(Token.VAR);
         break;
