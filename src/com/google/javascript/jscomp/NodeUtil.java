@@ -1823,7 +1823,7 @@ public final class NodeUtil {
    */
   static boolean referencesThis(Node n) {
     Node start = (n.isFunction()) ? n.getLastChild() : n;
-    return containsType(start, Token.THIS, MATCH_NOT_FUNCTION);
+    return containsType(start, Token.THIS, MATCH_NOT_THIS_BINDING);
   }
 
   /**
@@ -2374,7 +2374,7 @@ public final class NodeUtil {
     return isNameReferenced(
         function.getLastChild(),
         "arguments",
-        MATCH_NOT_FUNCTION);
+        MATCH_NOT_THIS_BINDING);
   }
 
   /**
@@ -3187,6 +3187,13 @@ public final class NodeUtil {
   static final Predicate<Node> MATCH_NOT_FUNCTION = new MatchNotFunction();
 
   static final Predicate<Node> MATCH_NOT_CLASS = new MatchNotClass();
+
+  static final Predicate<Node> MATCH_NOT_THIS_BINDING = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return !n.isFunction() || n.isArrowFunction();
+    }
+  };
 
   /**
    * A predicate for matching statements without exiting the current scope.

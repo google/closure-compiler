@@ -635,6 +635,9 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.referencesThis(n));
     assertFalse(NodeUtil.referencesThis(
         parse("(b?foo():null)")));
+
+    assertTrue(NodeUtil.referencesThis(parse("()=>this")));
+    assertTrue(NodeUtil.referencesThis(parse("() => { () => alert(this); }")));
   }
 
   public void testGetNodeTypeReferenceCount() {
