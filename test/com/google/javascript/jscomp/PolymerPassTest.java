@@ -348,6 +348,48 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  public void testListenersAndHostAttributeKeysQuoted() {
+    test(
+        LINE_JOINER.join(
+            "var X = Polymer({",
+            "  is: 'x-element',",
+            "  listeners: {",
+            "    click: 'handleClick',",
+            "    'foo-bar': 'handleClick',",
+            "  },",
+            "  hostAttributes: {",
+            "    role: 'button',",
+            "    'foo-bar': 'done',",
+            "    blah: 1,",
+            "  },",
+            "",
+            "  handleClick: function(e) {",
+            "    alert('Thank you for clicking');",
+            "  },",
+            "});"),
+
+        LINE_JOINER.join(
+            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface}*/",
+            "var X = function() {};",
+            "X = Polymer(/** @lends {X.prototype} */ {",
+            "  is: 'x-element',",
+            "  listeners: {",
+            "    'click': 'handleClick',",
+            "    'foo-bar': 'handleClick',",
+            "  },",
+            "  hostAttributes: {",
+            "    'role': 'button',",
+            "    'foo-bar': 'done',",
+            "    'blah': 1,",
+            "  },",
+            "",
+            "  /** @this {X} */",
+            "  handleClick: function(e) {",
+            "    alert('Thank you for clicking');",
+            "  },",
+            "});"));
+  }
+
   public void testNativeElementExtension() {
     String js = LINE_JOINER.join("Polymer({", "  is: 'x-input',", "  extends: 'input',", "});");
 
@@ -728,6 +770,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "      value: true,",
             "    }",
             "  },",
+            "  listeners: {",
+            "    click: 'doSomethingFun',",
+            "  },",
             "  /** @type {string} */",
             "  foo: 'hooray',",
             "",
@@ -760,6 +805,9 @@ public class PolymerPassTest extends CompilerTestCase {
             "      type: Boolean,",
             "      value: true,",
             "    }",
+            "  },",
+            "  listeners: {",
+            "    'click': 'doSomethingFun',",
             "  },",
             "  /** @type {string} */",
             "  foo: 'hooray',",

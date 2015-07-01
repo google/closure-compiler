@@ -445,6 +445,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     for (Node behaviorName : behaviorArray.children()) {
       if (behaviorName.isObjectLit()) {
         this.switchDollarSignPropsToBrackets(behaviorName);
+        this.quoteListenerAndHostAttributeKeys(behaviorName);
         behaviors.add(new BehaviorDefinition(
             extractProperties(behaviorName), getBehaviorFunctionsToCopy(behaviorName),
             getNonPropertyMembersToCopy(behaviorName), !NodeUtil.isInFunction(behaviorName)));
@@ -492,6 +493,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
         behaviors.addAll(extractBehaviors(behaviorValue));
       } else if (behaviorValue.isObjectLit()) {
         this.switchDollarSignPropsToBrackets(behaviorValue);
+        this.quoteListenerAndHostAttributeKeys(behaviorValue);
         behaviors.add(new BehaviorDefinition(
             extractProperties(behaviorValue), getBehaviorFunctionsToCopy(behaviorValue),
             getNonPropertyMembersToCopy(behaviorValue), isGlobalDeclaration));
@@ -570,6 +572,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
     this.addTypesToFunctions(objLit, cls.target.getQualifiedName());
     this.switchDollarSignPropsToBrackets(objLit);
+    this.quoteListenerAndHostAttributeKeys(objLit);
 
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
@@ -693,6 +696,22 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
               }
             },
             Predicates.<Node>alwaysTrue());
+      }
+    }
+  }
+
+  /**
+   * Makes sure that the keys for listeners and hostAttributes blocks are quoted to avoid renaming.
+   */
+  private void quoteListenerAndHostAttributeKeys(Node objLit) {
+    Preconditions.checkState(objLit.isObjectLit());
+    for (Node keyNode : objLit.children()) {
+      if (!keyNode.getString().equals("listeners")
+          && !keyNode.getString().equals("hostAttributes")) {
+        continue;
+      }
+      for (Node keyToQuote : keyNode.getFirstChild().children()) {
+        keyToQuote.setQuotedString();
       }
     }
   }
