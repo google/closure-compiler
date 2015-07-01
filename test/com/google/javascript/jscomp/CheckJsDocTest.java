@@ -38,7 +38,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions() {
-    CompilerOptions options = getOptions(new CompilerOptions());
+    CompilerOptions options = super.getOptions();
     options.setWarningLevel(
         DiagnosticGroups.MISPLACED_TYPE_ANNOTATION, CheckLevel.WARNING);
     return options;

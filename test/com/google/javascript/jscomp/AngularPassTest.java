@@ -40,11 +40,11 @@ public final class AngularPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions() {
-    CompilerOptions options = new CompilerOptions();
+    CompilerOptions options = super.getOptions();
     // enables angularPass.
     options.angularPass = true;
     compareJsDoc = false;
-    return getOptions(options);
+    return options;
   }
 
   public void testNgInjectAddsInjectToFunctions() throws Exception {

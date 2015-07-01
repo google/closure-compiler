@@ -76,8 +76,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
   @Override
   protected CompilerOptions getOptions() {
-    CompilerOptions options = new CompilerOptions();
-    super.getOptions(options);
+    CompilerOptions options = super.getOptions();
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
     options.setCodingConvention(getCodingConvention());
