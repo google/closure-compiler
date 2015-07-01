@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
+import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -1519,14 +1520,19 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("lintChecks", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return combineChecks(compiler, ImmutableList.<Callback>of(
-          new CheckEmptyStatements(compiler),
-          new CheckEnums(compiler),
-          new CheckInterfaces(compiler),
-          new CheckJSDocStyle(compiler),
-          new CheckNullableReturn(compiler),
-          new CheckPrototypeProperties(compiler),
-          new ImplicitNullabilityCheck(compiler)));
+      ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder()
+          .add(new CheckEmptyStatements(compiler))
+          .add(new CheckEnums(compiler))
+          .add(new CheckInterfaces(compiler))
+          .add(new CheckJSDocStyle(compiler))
+          .add(new CheckNullableReturn(compiler))
+          .add(new CheckPrototypeProperties(compiler))
+          .add(new ImplicitNullabilityCheck(compiler));
+      if (options.closurePass) {
+        callbacks.add(new CheckRequiresAndProvidesSorted(compiler));
+      }
+
+      return combineChecks(compiler, callbacks.build());
     }
   };
 
