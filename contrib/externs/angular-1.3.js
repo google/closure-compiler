@@ -890,6 +890,11 @@ angular.Scope.$$phase;
 angular.Scope.$apply = function(opt_exp) {};
 
 /**
+ * @param {(string|function(!angular.Scope))=} opt_exp
+ */
+angular.Scope.$applyAsync = function(opt_exp) {};
+
+/**
  * @param {string} name
  * @param {...*} args
  */
