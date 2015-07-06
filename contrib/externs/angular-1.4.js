@@ -1889,62 +1889,46 @@ angular.$provide.prototype.value = function(name, object) {};
  * $route Service
  *****************************************************************************/
 
-/**
- * @typedef {{
- *   reload: function(),
- *   current: !angular.$route.Route,
- *   routes: Array.<!angular.$route.Route>
- * }}
- */
-angular.$route;
+/** @constructor */
+angular.$route = function() {};
 
 /** @type {function()} */
-angular.$route.reload = function() {};
+angular.$route.prototype.reload = function() {};
 
 /**
  * @param {!Object<string,string>} object
  */
-angular.$route.updateParams = function(object) {};
+angular.$route.prototype.updateParams = function(object) {};
 
 /** @type {!angular.$route.Route} */
-angular.$route.current;
+angular.$route.prototype.current;
 
 /** @type {Array.<!angular.$route.Route>} */
-angular.$route.routes;
+angular.$route.prototype.routes;
 
-/**
- * @typedef {{
- *   $route: angular.$routeProvider.Params,
- *   locals: Object.<string, *>,
- *   params: Object.<string, string>,
- *   pathParams: Object.<string, string>,
- *   scope: Object.<string, *>,
- *   originalPath: (string|undefined),
- *   regexp: (RegExp|undefined)
- * }}
- */
-angular.$route.Route;
+/** @constructor */
+angular.$route.Route = function() {};
 
 /** @type {angular.$routeProvider.Params} */
-angular.$route.Route.$route;
+angular.$route.Route.prototype.$route;
 
 /** @type {Object.<string, *>} */
-angular.$route.Route.locals;
+angular.$route.Route.prototype.locals;
 
 /** @type {Object.<string, string>} */
-angular.$route.Route.params;
+angular.$route.Route.prototype.params;
 
 /** @type {Object.<string, string>} */
-angular.$route.Route.pathParams;
+angular.$route.Route.prototype.pathParams;
 
 /** @type {Object.<string, *>} */
-angular.$route.Route.scope;
+angular.$route.Route.prototype.scope;
 
 /** @type {string|undefined} */
-angular.$route.Route.originalPath;
+angular.$route.Route.prototype.originalPath;
 
 /** @type {RegExp|undefined} */
-angular.$route.Route.regexp;
+angular.$route.Route.prototype.regexp;
 
 /******************************************************************************
  * $routeParams Service
