@@ -259,48 +259,43 @@ angular.Animation.prototype.addClass = function(element, done) {};
 angular.Animation.prototype.removeClass = function(element, done) {};
 
 /**
- * @typedef {{
- *   $attr: Object.<string,string>,
- *   $normalize: function(string): string,
- *   $observe: function(string, function(*)): function(),
- *   $set: function(string, ?(string|boolean), boolean=, string=)
- *   }}
+ * @constructor
  */
-angular.Attributes;
+angular.Attributes = function() {};
 
 /**
  * @type {Object.<string, string>}
  */
-angular.Attributes.$attr;
+angular.Attributes.prototype.$attr;
 
 /**
  * @param {string} classVal
  */
-angular.Attributes.$addClass = function(classVal) {};
+angular.Attributes.prototype.$addClass = function(classVal) {};
 
 /**
  * @param {string} classVal
  */
-angular.Attributes.$removeClass = function(classVal) {};
+angular.Attributes.prototype.$removeClass = function(classVal) {};
 
 /**
  * @param {string} newClasses
  * @param {string} oldClasses
  */
-angular.Attributes.$updateClass = function(newClasses, oldClasses) {};
+angular.Attributes.prototype.$updateClass = function(newClasses, oldClasses) {};
 
 /**
  * @param {string} name
  * @return {string}
  */
-angular.Attributes.$normalize = function(name) {};
+angular.Attributes.prototype.$normalize = function(name) {};
 
 /**
  * @param {string} key
  * @param {function(*)} fn
  * @return {function()}
  */
-angular.Attributes.$observe = function(key, fn) {};
+angular.Attributes.prototype.$observe = function(key, fn) {};
 
 /**
  * @param {string} key
@@ -308,7 +303,8 @@ angular.Attributes.$observe = function(key, fn) {};
  * @param {boolean=} opt_writeAttr
  * @param {string=} opt_attrName
  */
-angular.Attributes.$set = function(key, value, opt_writeAttr, opt_attrName) {};
+angular.Attributes.prototype.$set =
+    function(key, value, opt_writeAttr, opt_attrName) {};
 
 /**
  * @typedef {{
