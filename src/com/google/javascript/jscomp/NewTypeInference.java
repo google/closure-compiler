@@ -1932,10 +1932,8 @@ final class NewTypeInference implements CompilerPass {
     pair = mayWarnAboutNullableReferenceAndTighten(
         receiver, pair.type, pair.env, JSType.TOP_OBJECT);
     JSType recvType = pair.type.autobox(commonTypes);
-    // TODO(dimvar): we don't know the prop name here so we're passing the
-    // empty string. Consider improving the error msg.
-    if (!mayWarnAboutNonObject(receiver, "", recvType, specializedType) &&
-        !mayWarnAboutStructPropAccess(receiver, recvType)) {
+    if (!mayWarnAboutNonObject(receiver, recvType, specializedType)
+        && !mayWarnAboutStructPropAccess(receiver, recvType)) {
       if (isArrayType(recvType) || recvType.equals(commonTypes.getArgumentsArrayType())) {
         pair = analyzeExprFwd(index, pair.env, JSType.NUMBER);
         if (!commonTypes.isNumberScalarOrObj(pair.type)) {
@@ -2490,7 +2488,7 @@ final class NewTypeInference implements CompilerPass {
   // These functions return true iff they produce a warning
 
   private boolean mayWarnAboutNonObject(
-      Node receiver, String pname, JSType recvType, JSType specializedType) {
+      Node receiver, JSType recvType, JSType specializedType) {
     // Can happen for IF tests that are never true
     if (recvType.isBottom()) {
       return true;
@@ -2503,10 +2501,22 @@ final class NewTypeInference implements CompilerPass {
         (!specializedType.isTruthy() && !specializedType.isFalsy() &&
             mayNotBeAnObject)) {
       warnings.add(JSError.make(receiver, PROPERTY_ACCESS_ON_NONOBJECT,
-          pname, recvType.toString()));
+              getPropNameForErrorMsg(receiver.getParent()),
+              recvType.toString()));
       return true;
     }
     return false;
+  }
+
+  private String getPropNameForErrorMsg(Node propAccessNode) {
+    Preconditions.checkArgument(propAccessNode.isGetProp() || propAccessNode.isGetElem());
+    Node propNode = propAccessNode.getLastChild();
+    if (propNode.isString()) {
+      return propNode.getString();
+    } else if (propNode.isQualifiedName()) {
+      return "[" + propNode.getQualifiedName() + "]";
+    }
+    return "[unknown property]";
   }
 
   private boolean mayWarnAboutStructPropAccess(Node obj, JSType type) {
@@ -2600,8 +2610,8 @@ final class NewTypeInference implements CompilerPass {
     pair = mayWarnAboutNullableReferenceAndTighten(
         receiver, pair.type, pair.env, JSType.TOP_OBJECT);
     JSType recvType = pair.type.autobox(commonTypes);
-    if (recvType.isUnknown() ||
-        mayWarnAboutNonObject(receiver, pname, recvType, specializedType)) {
+    if (recvType.isUnknown()
+        || mayWarnAboutNonObject(receiver, recvType, specializedType)) {
       return new EnvTypePair(pair.env, requiredType);
     }
     FunctionType ft = recvType.getFunTypeIfSingletonObj();
