@@ -228,6 +228,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RewriteArrowFunction);
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
+      checks.add(es6RewriteDestructuring);
       checks.add(es6ConvertSuper);
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);
@@ -1106,13 +1107,21 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
+  private final PassFactory es6RewriteDestructuring =
+      new PassFactory("Es6RewriteDestructuring", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new Es6RewriteDestructuring(compiler);
+        }
+      };
+
   private final HotSwapPassFactory es6RenameVariablesInParamLists =
       new HotSwapPassFactory("Es6RenameVariablesInParamLists", true) {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6RenameVariablesInParamLists(compiler);
-    }
-  };
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new Es6RenameVariablesInParamLists(compiler);
+        }
+      };
 
   private final PassFactory es6RewriteArrowFunction =
       new PassFactory("Es6RewriteArrowFunction", true) {

@@ -592,8 +592,8 @@ public class IR {
   // helper methods
 
   private static Node binaryOp(int token, Node expr1, Node expr2) {
-    Preconditions.checkState(mayBeExpression(expr1));
-    Preconditions.checkState(mayBeExpression(expr2));
+    Preconditions.checkState(mayBeExpression(expr1), expr1);
+    Preconditions.checkState(mayBeExpression(expr2), expr2);
     return new Node(token, expr1, expr2);
   }
 

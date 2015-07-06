@@ -80,10 +80,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   private static final String FRESH_SPREAD_VAR = "$jscomp$spread$args";
 
-  private static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
-
-  private int destructuringVarCounter = 0;
-
   private static final String FRESH_COMP_PROP_VAR = "$jscomp$compprop";
 
   private static final String ITER_BASE = "$jscomp$iter$";
@@ -109,15 +105,15 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   }
 
   /**
-   * Some nodes (such as arrow functions) must be visited pre-order in order to rewrite the
+   * Some nodes must be visited pre-order in order to rewrite the
    * references to {@code this} correctly.
    * Everything else is translated post-order in {@link #visit}.
    */
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
-      case Token.PARAM_LIST:
-        visitParamList(n, parent);
+      case Token.REST:
+        visitRestParam(n, parent);
         break;
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
@@ -182,231 +178,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           Es6TemplateLiterals.visitTemplateLiteral(t, n);
         }
         break;
-      case Token.ARRAY_PATTERN:
-        visitArrayPattern(t, n, parent);
-        break;
-      case Token.OBJECT_PATTERN:
-        visitObjectPattern(t, n, parent);
-        break;
-    }
-  }
-
-  private void visitObjectPattern(NodeTraversal t, Node objectPattern, Node parent) {
-    Node rhs, nodeToDetach;
-    if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
-      rhs = objectPattern.getLastChild();
-      nodeToDetach = parent;
-    } else if (parent.isAssign() && parent.getParent().isExprResult()) {
-      rhs = parent.getLastChild();
-      nodeToDetach = parent.getParent();
-    } else if (parent.isStringKey() || parent.isArrayPattern()
-        || parent.isDefaultValue()) {
-      // Nested object pattern; do nothing. We will visit it after rewriting the parent.
-      return;
-    } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
-      visitDestructuringPatternInEnhancedFor(objectPattern);
-      return;
-    } else if (parent.isCatch()) {
-      visitDestructuringPatternInCatch(objectPattern);
-      return;
-    } else {
-      throw new IllegalStateException("Unexpected OBJECT_PATTERN parent: " + parent);
-    }
-
-    // Convert 'var {a: b, c: d} = rhs' to:
-    // var temp = rhs;
-    // var b = temp.a;
-    // var d = temp.c;
-    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
-        .useSourceInfoIfMissingFromForTree(objectPattern);
-    nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
-
-    for (Node child = objectPattern.getFirstChild(), next;
-        child != null;
-        child = next) {
-      next = child.getNext();
-
-      Node newLHS, newRHS;
-      if (child.isStringKey()) {
-        Preconditions.checkState(child.hasChildren());
-        Node getprop = new Node(child.isQuotedString() ? Token.GETELEM : Token.GETPROP,
-                                IR.name(tempVarName),
-                                IR.string(child.getString()));
-
-        Node value = child.removeFirstChild();
-        if (!value.isDefaultValue()) {
-          newLHS = value;
-          newRHS = getprop;
-        } else {
-          newLHS = value.removeFirstChild();
-          Node defaultValue = value.removeFirstChild();
-          newRHS = defaultValueHook(getprop, defaultValue);
-        }
-      } else if (child.isComputedProp()) {
-        if (child.getLastChild().isDefaultValue()) {
-          newLHS = child.getLastChild().removeFirstChild();
-          Node getelem = IR.getelem(
-              IR.name(tempVarName),
-              child.removeFirstChild());
-
-          String intermediateTempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-          Node intermediateDecl = IR.var(IR.name(intermediateTempVarName), getelem);
-          intermediateDecl.useSourceInfoIfMissingFromForTree(child);
-          nodeToDetach.getParent().addChildBefore(intermediateDecl, nodeToDetach);
-
-          newRHS = defaultValueHook(
-              IR.name(intermediateTempVarName),
-              child.getLastChild().removeFirstChild());
-        } else {
-          newRHS = IR.getelem(IR.name(tempVarName), child.removeFirstChild());
-          newLHS = child.removeFirstChild();
-        }
-      } else if (child.isDefaultValue()) {
-        newLHS = child.removeFirstChild();
-        Node defaultValue = child.removeFirstChild();
-        Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
-        newRHS = defaultValueHook(getprop, defaultValue);
-      } else {
-        throw new IllegalStateException("Unexpected OBJECT_PATTERN child: " + child);
-      }
-
-      Node newNode;
-      if (NodeUtil.isNameDeclaration(parent)) {
-        newNode = IR.declaration(newLHS, newRHS, parent.getType());
-      } else if (parent.isAssign()) {
-        newNode = IR.exprResult(IR.assign(newLHS, newRHS));
-      } else {
-        throw new IllegalStateException("not reached");
-      }
-      newNode.useSourceInfoIfMissingFromForTree(child);
-
-      nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
-
-      // Explicitly visit the LHS of the new node since it may be a nested
-      // destructuring pattern.
-      visit(t, newLHS, newLHS.getParent());
-    }
-
-    nodeToDetach.detachFromParent();
-    compiler.reportCodeChange();
-  }
-
-  private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
-    Node rhs, nodeToDetach;
-    if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
-      // The array pattern is the only child, because Es6SplitVariableDeclarations
-      // has already run.
-      Preconditions.checkState(arrayPattern.getNext() == null);
-      rhs = arrayPattern.getLastChild();
-      nodeToDetach = parent;
-    } else if (parent.isAssign()) {
-      rhs = arrayPattern.getNext();
-      nodeToDetach = parent.getParent();
-      Preconditions.checkState(nodeToDetach.isExprResult());
-    } else if (parent.isArrayPattern() || parent.isDefaultValue()
-        || parent.isStringKey()) {
-      // This is a nested array pattern. Don't do anything now; we'll visit it
-      // after visiting the parent.
-      return;
-    } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
-      visitDestructuringPatternInEnhancedFor(arrayPattern);
-      return;
-    } else if (parent.isCatch()) {
-      visitDestructuringPatternInCatch(arrayPattern);
-      return;
-    } else {
-      throw new IllegalStateException("Unexpected ARRAY_PATTERN parent: " + parent);
-    }
-
-    // Convert 'var [x, y] = rhs' to:
-    // var temp = rhs;
-    // var x = temp[0];
-    // var y = temp[1];
-    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
-        .useSourceInfoIfMissingFromForTree(arrayPattern);
-    nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
-
-    int i = 0;
-    for (Node child = arrayPattern.getFirstChild(), next;
-        child != null;
-        child = next, i++) {
-      next = child.getNext();
-      if (child.isEmpty()) {
-        continue;
-      }
-
-      Node newLHS, newRHS;
-      if (child.isDefaultValue()) {
-        Node getElem = IR.getelem(IR.name(tempVarName), IR.number(i));
-        //   [x = defaultValue] = rhs;
-        // becomes
-        //   var temp = rhs;
-        //   x = (temp[0] === undefined) ? defaultValue : temp[0];
-        newLHS = child.getFirstChild().detachFromParent();
-        newRHS = defaultValueHook(getElem, child.getLastChild().detachFromParent());
-      } else if (child.isRest()) {
-        newLHS = child.detachFromParent();
-        newLHS.setType(Token.NAME);
-        // [].slice.call(temp, i)
-        newRHS = IR.call(
-            IR.getprop(IR.getprop(IR.arraylit(), IR.string("slice")), IR.string("call")),
-            IR.name(tempVarName), IR.number(i));
-      } else {
-        newLHS = child.detachFromParent();
-        newRHS = IR.getelem(IR.name(tempVarName), IR.number(i));
-      }
-      Node newNode;
-      if (parent.isAssign()) {
-        Node assignment = IR.assign(newLHS, newRHS);
-        newNode = IR.exprResult(assignment);
-      } else {
-        newNode = IR.declaration(newLHS, newRHS, parent.getType());
-      }
-      newNode.useSourceInfoIfMissingFromForTree(arrayPattern);
-
-      nodeToDetach.getParent().addChildBefore(newNode, nodeToDetach);
-      // Explicitly visit the LHS of the new node since it may be a nested
-      // destructuring pattern.
-      visit(t, newLHS, newLHS.getParent());
-    }
-    nodeToDetach.detachFromParent();
-    compiler.reportCodeChange();
-  }
-
-  private void visitDestructuringPatternInCatch(Node pattern) {
-    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node catchBlock = pattern.getNext();
-
-    pattern.getParent().replaceChild(pattern, IR.name(tempVarName));
-    catchBlock.addChildToFront(
-        IR.declaration(pattern, IR.name(tempVarName), Token.LET));
-  }
-
-  private void visitDestructuringPatternInEnhancedFor(Node pattern) {
-    Node forNode;
-    int declarationType;
-    if (NodeUtil.isEnhancedFor(pattern.getParent())) {
-      forNode = pattern.getParent();
-      declarationType = Token.ASSIGN;
-    } else {
-      forNode = pattern.getParent().getParent();
-      declarationType = pattern.getParent().getType();
-      Preconditions.checkState(NodeUtil.isEnhancedFor(forNode));
-    }
-
-    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node block = forNode.getLastChild();
-    if (declarationType == Token.ASSIGN) {
-      pattern.getParent().replaceChild(pattern,
-          IR.declaration(IR.name(tempVarName), Token.LET));
-      block.addChildToFront(
-          IR.exprResult(IR.assign(pattern, IR.name(tempVarName))));
-    } else {
-      pattern.getParent().replaceChild(pattern, IR.name(tempVarName));
-      block.addChildToFront(
-          IR.declaration(pattern, IR.name(tempVarName), declarationType));
     }
   }
 
@@ -496,124 +267,67 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   }
 
   /**
-   * Processes trailing default and rest parameters.
+   * Processes a rest parameter
    */
-  private void visitParamList(Node paramList, Node function) {
-    Node insertSpot = null;
-    Node block = function.getLastChild();
-    for (int i = 0; i < paramList.getChildCount(); i++) {
-      Node param = paramList.getChildAtIndex(i);
-      if (param.isDefaultValue()) {
-        Node nameOrPattern = param.removeFirstChild();
-        Node defaultValue = param.removeFirstChild();
-        Node newParam;
+  private void visitRestParam(Node restParam, Node paramList) {
+    Node functionBody = paramList.getLastSibling();
 
-        // Treat name=undefined (and equivalent) as if it was just name.  There
-        // is no need to generate a (name===void 0?void 0:name) statement for
-        // such arguments.
-        boolean isNoop = false;
-        if (!nameOrPattern.isName()) {
-          // Do not try to optimise unless nameOrPattern is a simple name.
-        } else if (defaultValue.isName()) {
-          isNoop = "undefined".equals(defaultValue.getString());
-        } else if (defaultValue.isVoid()) {
-          // Any kind of 'void literal' is fine, but 'void fun()' or anything
-          // else with side effects isn't.  We're not trying to be particularly
-          // smart here and treat 'void {}' for example as if it could cause
-          // side effects.  Any sane person will type 'name=undefined' or
-          // 'name=void 0' so this should not be an issue.
-          isNoop = NodeUtil.isImmutableValue(defaultValue.getFirstChild());
-        }
+    restParam.setType(Token.NAME);
+    restParam.setVarArgs(true);
+    String paramName = restParam.getString();
 
-        if (isNoop) {
-          newParam = nameOrPattern.cloneTree();
-        } else {
-          newParam = nameOrPattern.isName() ? nameOrPattern
-              : IR.name(DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++));
-          Node lhs = nameOrPattern.cloneTree();
-          Node rhs = defaultValueHook(newParam.cloneTree(), defaultValue);
-          Node newStatement = nameOrPattern.isName()
-              ? IR.exprResult(IR.assign(lhs, rhs))
-              : IR.var(lhs, rhs);
-          newStatement.useSourceInfoIfMissingFromForTree(param);
-          block.addChildAfter(newStatement, insertSpot);
-          insertSpot = newStatement;
-        }
+    Node newBlock = IR.block().useSourceInfoFrom(functionBody);
+    Node name = IR.name(paramName);
+    Node let = IR.let(name, IR.name(REST_PARAMS))
+        .useSourceInfoIfMissingFromForTree(functionBody);
+    newBlock.addChildToFront(let);
 
-        paramList.replaceChild(param, newParam);
-        newParam.setOptionalArg(true);
+    for (Node child : functionBody.children()) {
+      newBlock.addChildToBack(child.detachFromParent());
+    }
 
-        compiler.reportCodeChange();
-      } else if (param.isRest()) { // rest parameter
-        param.setType(Token.NAME);
-        param.setVarArgs(true);
-        String paramName = param.getString();
-
-        Node newBlock = IR.block().useSourceInfoFrom(block);
-        Node name = IR.name(paramName);
-        Node let = IR.let(name, IR.name(REST_PARAMS))
-            .useSourceInfoIfMissingFromForTree(block);
-        newBlock.addChildToFront(let);
-        if (insertSpot != null) {
-          for (Node statement = insertSpot.getNext(); statement != null;
-              statement = statement.getNext()) {
-            newBlock.addChildToBack(statement.detachFromParent());
-          }
-        } else {
-          for (Node child : block.children()) {
-            newBlock.addChildToBack(child.detachFromParent());
-          }
-        }
-
-        // Make sure rest parameters are typechecked
-        JSTypeExpression type = null;
-        JSDocInfo info = param.getJSDocInfo();
-        if (info != null) {
-          type = info.getType();
-        } else {
-          JSDocInfo functionInfo = function.getJSDocInfo();
-          if (functionInfo != null) {
-            type = functionInfo.getParameterType(paramName);
-          }
-        }
-        if (type != null) {
-          Node arrayType = IR.string("Array");
-          Node typeNode = type.getRoot();
-          if (typeNode.getType() != Token.ELLIPSIS) {
-            compiler.report(JSError.make(typeNode, BAD_REST_PARAMETER_ANNOTATION));
-          }
-          Node memberType = typeNode.getType() == Token.ELLIPSIS
-              ? typeNode.getFirstChild().cloneNode()
-              : typeNode.cloneNode();
-          arrayType.addChildToFront(
-              new Node(Token.BLOCK, memberType).copyInformationFrom(typeNode));
-          JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
-          builder.recordType(new JSTypeExpression(new Node(Token.BANG, arrayType),
-              param.getSourceFileName()));
-          name.setJSDocInfo(builder.build());
-        }
-
-        Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
-        block.addChildAfter(newArr.useSourceInfoIfMissingFromForTree(param), insertSpot);
-        Node init = IR.var(IR.name(REST_INDEX), IR.number(i));
-        Node cond = IR.lt(IR.name(REST_INDEX),
-            IR.getprop(IR.name("arguments"), IR.string("length")));
-        Node incr = IR.inc(IR.name(REST_INDEX), false);
-        Node body = IR.block(IR.exprResult(IR.assign(
-            IR.getelem(IR.name(REST_PARAMS), IR.sub(IR.name(REST_INDEX), IR.number(i))),
-            IR.getelem(IR.name("arguments"), IR.name(REST_INDEX)))));
-        block.addChildAfter(IR.forNode(init, cond, incr, body)
-            .useSourceInfoIfMissingFromForTree(param), newArr);
-        block.addChildToBack(newBlock);
-        compiler.reportCodeChange();
-      } else if (param.isDestructuringPattern()) {
-        String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-        paramList.replaceChild(param, IR.name(tempVarName));
-        Node newDecl = IR.var(param, IR.name(tempVarName));
-        block.addChildAfter(newDecl, insertSpot);
-        insertSpot = newDecl;
+    // Make sure rest parameters are typechecked
+    JSTypeExpression type = null;
+    JSDocInfo info = restParam.getJSDocInfo();
+    if (info != null) {
+      type = info.getType();
+    } else {
+      JSDocInfo functionInfo = paramList.getParent().getJSDocInfo();
+      if (functionInfo != null) {
+        type = functionInfo.getParameterType(paramName);
       }
     }
+    if (type != null) {
+      Node arrayType = IR.string("Array");
+      Node typeNode = type.getRoot();
+      if (typeNode.getType() != Token.ELLIPSIS) {
+        compiler.report(JSError.make(typeNode, BAD_REST_PARAMETER_ANNOTATION));
+      }
+      Node memberType =
+          typeNode.getType() == Token.ELLIPSIS
+              ? typeNode.getFirstChild().cloneNode()
+              : typeNode.cloneNode();
+      arrayType.addChildToFront(new Node(Token.BLOCK, memberType).copyInformationFrom(typeNode));
+      JSDocInfoBuilder builder = new JSDocInfoBuilder(false);
+      builder.recordType(
+          new JSTypeExpression(new Node(Token.BANG, arrayType), restParam.getSourceFileName()));
+      name.setJSDocInfo(builder.build());
+    }
+
+    int restIndex = paramList.getIndexOfChild(restParam);
+    Node newArr = IR.var(IR.name(REST_PARAMS), IR.arraylit());
+    functionBody.addChildToFront(newArr.useSourceInfoIfMissingFromForTree(restParam));
+    Node init = IR.var(IR.name(REST_INDEX), IR.number(restIndex));
+    Node cond = IR.lt(IR.name(REST_INDEX), IR.getprop(IR.name("arguments"), IR.string("length")));
+    Node incr = IR.inc(IR.name(REST_INDEX), false);
+    Node body = IR.block(IR.exprResult(IR.assign(
+        IR.getelem(IR.name(REST_PARAMS), IR.sub(IR.name(REST_INDEX), IR.number(restIndex))),
+        IR.getelem(IR.name("arguments"), IR.name(REST_INDEX)))));
+    functionBody.addChildAfter(IR.forNode(init, cond, incr, body)
+        .useSourceInfoIfMissingFromForTree(restParam), newArr);
+    functionBody.addChildToBack(newBlock);
+    compiler.reportCodeChange();
+
     // For now, we are running transpilation before type-checking, so we'll
     // need to make sure changes don't invalidate the JSDoc annotations.
     // Therefore we keep the parameter list the same length and only initialize
@@ -1029,16 +743,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   private static String getUniqueClassName(String qualifiedName) {
     return qualifiedName;
-  }
-
-  /**
-   * Helper for transpiling DEFAULT_VALUE trees.
-   */
-  private static Node defaultValueHook(Node getprop, Node defaultValue) {
-    return IR.hook(
-        IR.sheq(getprop, IR.name("undefined")),
-        defaultValue,
-        getprop.cloneTree());
   }
 
   private class CheckClassAssignments extends NodeTraversal.AbstractPostOrderCallback {
