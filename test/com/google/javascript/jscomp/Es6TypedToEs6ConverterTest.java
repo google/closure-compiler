@@ -235,10 +235,9 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   public void testAmbientDeclaration() {
     test("declare var x;", "/** @suppress {duplicate} */ var x;");
     test("declare let x;", "/** @suppress {duplicate} */ var x;");
-    test("declare const x;", "/** @const @suppress {duplicate} */ var x;");
+    test("declare const x;", "/** @suppress {duplicate} @const */ var x;");
     test("declare function f();", "/** @suppress {duplicate} */ function f() {}");
-    // TODO(moz): Remove the newline once we fix JsDocInfoParser
-    test("declare enum Foo {}", "/** @enum {number}\n@suppress {duplicate} */ var Foo = {}");
+    test("declare enum Foo {}", "/** @suppress {duplicate} @enum {number} */ var Foo = {}");
     test("declare class C { constructor(); };",
          "/** @suppress {duplicate} */ class C { constructor() {} }");
 

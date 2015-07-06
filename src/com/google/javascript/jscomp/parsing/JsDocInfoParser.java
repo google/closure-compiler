@@ -517,6 +517,8 @@ public final class JsDocInfoParser {
           if (token != JsDocToken.EOL && token != JsDocToken.EOC) {
             type = createJSTypeExpression(
                 parseAndRecordTypeNode(token));
+          } else {
+            restoreLookAhead(token);
           }
 
           if (type == null) {
@@ -526,8 +528,7 @@ public final class JsDocInfoParser {
             parser.addTypeWarning(
                 "msg.jsdoc.incompat.type", lineno, charno);
           }
-          token = eatUntilEOLIfNotAnnotation(token);
-          return token;
+          return eatUntilEOLIfNotAnnotation();
 
         case EXPOSE:
           if (!jsdocBuilder.recordExpose()) {
@@ -1264,6 +1265,7 @@ public final class JsDocInfoParser {
     if (token != JsDocToken.LEFT_CURLY) {
       parser.addParserWarning("msg.jsdoc.suppress",
           stream.getLineno(), stream.getCharno());
+      return token;
     } else {
       Set<String> suppressions = new HashSet<>();
       while (true) {
@@ -1299,8 +1301,8 @@ public final class JsDocInfoParser {
               stream.getLineno(), stream.getCharno());
         }
       }
+      return eatUntilEOLIfNotAnnotation();
     }
-    return token;
   }
 
   /**

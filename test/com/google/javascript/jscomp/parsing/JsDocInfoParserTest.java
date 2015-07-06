@@ -1264,6 +1264,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             .getEnumParameterType());
   }
 
+  public void testParseJsDocAfterEnum() throws Exception {
+    JSDocInfo info = parse("@enum {string} @suppress {x} */");
+    assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x"));
+  }
+
   public void testParseDesc1() throws Exception {
     assertThat(parse("@desc hello world!*/").getDescription()).isEqualTo("hello world!");
   }
@@ -2197,6 +2202,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testSuppress3() throws Exception {
     JSDocInfo info = parse("@suppress {x,y} */");
     assertThat(info.getSuppressions()).isEqualTo(ImmutableSet.of("x", "y"));
+  }
+
+  public void testJsDocAfterSuppress() throws Exception {
+    JSDocInfo info = parse("@suppress {x,y} @const {string} */");
+    assertTypeEquals(STRING_TYPE, info.getType());
   }
 
   public void testBadSuppress1() throws Exception {
