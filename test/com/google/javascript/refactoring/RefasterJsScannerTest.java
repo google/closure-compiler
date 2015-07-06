@@ -487,6 +487,25 @@ public class RefasterJsScannerTest {
     assertChanges(externs, originalCode, expectedCode, template);
   }
 
+  @Test
+  public void test_functionCalls() throws Exception {
+    // Assigning the function as a property of an object is important to this test since it
+    // tracks a corner case in the TemplateAstMatcher code.
+    String externs = "var foo = {}; /** @return {number} */ foo.someFn = function() {}";
+    String originalCode = "foo.someFn();";
+    String expectedCode = "foo.someFn().someOtherFn();";
+    String template = ""
+        + "/** @param {function():number} fn */\n"
+        + "function before_template(fn) {\n"
+        + "  fn();\n"
+        + "}\n"
+        + "/** @param {function():number} fn */\n"
+        + "function after_template(fn) {\n"
+        + "  fn().someOtherFn();\n"
+        + "}\n";
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
   private Compiler createCompiler() {
     return new Compiler();
   }

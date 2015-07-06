@@ -149,6 +149,16 @@ public final class RefasterJsScanner extends Scanner {
           return templateMatch.cloneTree();
         }
       }
+    } else if (templateNode.isCall()
+        && templateNode.getBooleanProp(Node.FREE_CALL)
+        && templateNode.getFirstChild().isName()) {
+      String name = templateNode.getFirstChild().getString();
+      if (templateNodeToMatchMap.containsKey(name)) {
+        // If this function call matches a template parameter, don't treat it as a free call.
+        // This mirrors the behavior in the TemplateAstMatcher as well as ensures the code
+        // generator doesn't generate code like "(0,fn)()".
+        clone.putBooleanProp(Node.FREE_CALL, false);
+      }
     }
     for (Node child : templateNode.children()) {
       clone.addChildToBack(transformNode(child, templateNodeToMatchMap));

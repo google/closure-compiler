@@ -329,6 +329,12 @@ public final class TemplateAstMatcher {
       if (!ast.isName()) {
         return false;
       }
+    } else if (template.isCall()) {
+      // Loosely match CALL nodes. isEquivalentToShallow checks free calls against non-free calls,
+      // but the template should ignore that distinction.
+      if (ast == null || !ast.isCall() || ast.getChildCount() != template.getChildCount()) {
+        return false;
+      }
       // But check any children.
     } else if (!template.isEquivalentToShallow(ast)) {
       return false;
