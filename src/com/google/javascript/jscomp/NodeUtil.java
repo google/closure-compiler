@@ -935,28 +935,6 @@ public final class NodeUtil {
     // that we know to be safe
     switch (n.getType()) {
       // other side-effect free statements and expressions
-      case Token.CAST:
-      case Token.AND:
-      case Token.BLOCK:
-      case Token.EXPR_RESULT:
-      case Token.HOOK:
-      case Token.IF:
-      case Token.IN:
-      case Token.PARAM_LIST:
-      case Token.NUMBER:
-      case Token.OR:
-      case Token.THIS:
-      case Token.TRUE:
-      case Token.FALSE:
-      case Token.NULL:
-      case Token.STRING:
-      case Token.STRING_KEY:
-      case Token.SWITCH:
-      case Token.TEMPLATELIT_SUB:
-      case Token.TRY:
-      case Token.EMPTY:
-        break;
-
       // Throws are by definition side effects, and yields are similar.
       case Token.THROW:
       case Token.YIELD:
@@ -1019,6 +997,26 @@ public final class NodeUtil {
       case Token.TAGGED_TEMPLATELIT:
         return functionCallHasSideEffects(n);
 
+      case Token.CAST:
+      case Token.AND:
+      case Token.BLOCK:
+      case Token.EXPR_RESULT:
+      case Token.HOOK:
+      case Token.IF:
+      case Token.IN:
+      case Token.PARAM_LIST:
+      case Token.NUMBER:
+      case Token.OR:
+      case Token.THIS:
+      case Token.TRUE:
+      case Token.FALSE:
+      case Token.NULL:
+      case Token.STRING:
+      case Token.STRING_KEY:
+      case Token.SWITCH:
+      case Token.TEMPLATELIT_SUB:
+      case Token.TRY:
+      case Token.EMPTY:
       case Token.TEMPLATELIT:
         break;
 
