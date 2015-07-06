@@ -1373,40 +1373,34 @@ angular.$HttpProvider.prototype.useApplyAsync = function(opt_value) {};
  *****************************************************************************/
 
 /**
- * @typedef {{
- *   annotate: function(angular.Injectable):Array.<string>,
- *   get: function(string):(?),
- *   has: function(string):boolean,
- *   instantiate: function(Function, Object=):Object,
- *   invoke: function(angular.Injectable, Object=, Object=):(?)
- *   }}
+ * @constructor
  */
-angular.$injector;
+angular.$injector = function() {};
 
 /**
  * @param {angular.Injectable} fn
  * @return {Array.<string>}
  */
-angular.$injector.annotate = function(fn) {};
+angular.$injector.prototype.annotate = function(fn) {};
 
 /**
  * @param {string} name
  * @return {?}
  */
-angular.$injector.get = function(name) {};
+angular.$injector.prototype.get = function(name) {};
 
 /**
  * @param {string} name
  * @return {boolean}
  */
-angular.$injector.has = function(name) {};
+angular.$injector.prototype.has = function(name) {};
 
 /**
  * @param {!Function} type
  * @param {Object=} opt_locals
  * @return {Object}
  */
-angular.$injector.instantiate = function(type, opt_locals) {};
+angular.$injector.prototype.instantiate = function(type, opt_locals) {};
 
 /**
  * @param {angular.Injectable} fn
@@ -1414,25 +1408,22 @@ angular.$injector.instantiate = function(type, opt_locals) {};
  * @param {Object=} opt_locals
  * @return {?}
  */
-angular.$injector.invoke = function(fn, opt_self, opt_locals) {};
+angular.$injector.prototype.invoke = function(fn, opt_self, opt_locals) {};
 
 /******************************************************************************
  * $interpolateProvider Service
  *****************************************************************************/
 
 /**
- * @typedef {{
- *   startSymbol: function(string),
- *   endSymbol: function(string)
- *   }}
+ * @constructor
  */
-angular.$interpolateProvider;
+angular.$interpolateProvider = function() {};
 
 /** @type {function(string)} */
-angular.$interpolateProvider.startSymbol;
+angular.$interpolateProvider.prototype.startSymbol;
 
 /** @type {function(string)} */
-angular.$interpolateProvider.endSymbol;
+angular.$interpolateProvider.prototype.endSymbol;
 
 /******************************************************************************
  * $interval Service
@@ -1466,70 +1457,59 @@ angular.$interval_.cancel = function(promise) {};
  *****************************************************************************/
 
 /**
- * @typedef {{
- *   absUrl: function():string,
- *   hash: function(string=):string,
- *   host: function():string,
- *   path: function(string=):(string|!angular.$location),
- *   port: function():number,
- *   protocol: function():string,
- *   replace: function(),
- *   search: function((string|Object.<string, string>)=,
- *       ?(string|Array.<string>|boolean|number)=): (!Object|angular.$location),
- *   url: function(string=):string
- *   }}
+ * @constructor
  */
-angular.$location;
+angular.$location = function() {};
 
 /**
  * @return {string}
  */
-angular.$location.absUrl = function() {};
+angular.$location.prototype.absUrl = function() {};
 
 /**
  * @param {string=} opt_hash
  * @return {string}
  */
-angular.$location.hash = function(opt_hash) {};
+angular.$location.prototype.hash = function(opt_hash) {};
 
 /**
  * @return {string}
  */
-angular.$location.host = function() {};
+angular.$location.prototype.host = function() {};
 
 /**
  * @param {string=} opt_path
  * @return {string|!angular.$location}
  */
-angular.$location.path = function(opt_path) {};
+angular.$location.prototype.path = function(opt_path) {};
 
 /**
  * @return {number}
  */
-angular.$location.port = function() {};
+angular.$location.prototype.port = function() {};
 
 /**
  * @return {string}
  */
-angular.$location.protocol = function() {};
+angular.$location.prototype.protocol = function() {};
 
 /**
  * @type {function()}
  */
-angular.$location.replace = function() {};
+angular.$location.prototype.replace = function() {};
 
 /**
  * @param {(string|Object.<string, string>)=} opt_search
  * @param {?(string|Array.<string>|boolean|number)=} opt_paramValue
  * @return {(!Object|angular.$location)}
  */
-angular.$location.search = function(opt_search, opt_paramValue) {};
+angular.$location.prototype.search = function(opt_search, opt_paramValue) {};
 
 /**
  * @param {string=} opt_url
  * @return {string}
  */
-angular.$location.url = function(opt_url) {};
+angular.$location.prototype.url = function(opt_url) {};
 
 /******************************************************************************
  * $locationProvider Service
@@ -1544,62 +1524,55 @@ angular.$location.url = function(opt_url) {};
 angular.$locationProvider.html5ModeConfig;
 
 /**
- * @typedef {{
- *   hashPrefix:
- *       function(string=): (string|!angular.$locationProvider),
- *   html5Mode:
- *       function(
- *           (boolean|angular.$locationProvider.html5ModeConfig)=):
- *               (boolean|!angular.$locationProvider)
- *   }}
+ * @constructor
  */
-angular.$locationProvider;
+angular.$locationProvider = function() {};
 
 /**
  * @param {string=} opt_prefix
  * @return {string|!angular.$locationProvider}
  */
-angular.$locationProvider.hashPrefix = function(opt_prefix) {};
+angular.$locationProvider.prototype.hashPrefix = function(opt_prefix) {};
 
 /**
  * @param {(boolean|angular.$locationProvider.html5ModeConfig)=} opt_mode
  * @return {boolean|!angular.$locationProvider}
  */
-angular.$locationProvider.html5Mode = function(opt_mode) {};
+angular.$locationProvider.prototype.html5Mode = function(opt_mode) {};
 
 /******************************************************************************
  * $log Service
  *****************************************************************************/
 
 /**
- * @typedef {{
- *   error: function(...*),
- *   info: function(...*),
- *   log: function(...*),
- *   warn: function(...*)
- *   }}
+ * @constructor
  */
-angular.$log;
+angular.$log = function() {};
 
 /**
  * @param {...*} var_args
  */
-angular.$log.error = function(var_args) {};
+angular.$log.prototype.debug = function(var_args) {};
 
 /**
  * @param {...*} var_args
  */
-angular.$log.info = function(var_args) {};
+angular.$log.prototype.error = function(var_args) {};
 
 /**
  * @param {...*} var_args
  */
-angular.$log.log = function(var_args) {};
+angular.$log.prototype.info = function(var_args) {};
 
 /**
  * @param {...*} var_args
  */
-angular.$log.warn = function(var_args) {};
+angular.$log.prototype.log = function(var_args) {};
+
+/**
+ * @param {...*} var_args
+ */
+angular.$log.prototype.warn = function(var_args) {};
 
 /******************************************************************************
  * NgModelController
@@ -1860,17 +1833,9 @@ angular.$parse_.assign = function(scope, newValue) {};
  *****************************************************************************/
 
 /**
- * @typedef {{
- *   constant: function(string, *): Object,
- *   decorator: function(string, angular.Injectable),
- *   factory: function(string, angular.Injectable): Object,
- *   provider: function(string, (angular.Injectable|angular.$provide.Provider)):
- *       Object,
- *   service: function(string, angular.Injectable): Object,
- *   value: function(string, *): Object
- *   }}
+ * @constructor
  */
-angular.$provide;
+angular.$provide = function() {};
 
 /** @typedef {{$get: (!Array.<string|!Function>|!Function)}} */
 angular.$provide.Provider;
@@ -1883,20 +1848,20 @@ angular.$provide.Provider.$get;
  * @param {*} object
  * @return {Object}
  */
-angular.$provide.constant = function(name, object) {};
+angular.$provide.prototype.constant = function(name, object) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} decorator
  */
-angular.$provide.decorator = function(name, decorator) {};
+angular.$provide.prototype.decorator = function(name, decorator) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} providerFunction
  * @return {Object}
  */
-angular.$provide.factory = function(name, providerFunction) {};
+angular.$provide.prototype.factory = function(name, providerFunction) {};
 
 /**
  * @param {string} name
@@ -1904,21 +1869,21 @@ angular.$provide.factory = function(name, providerFunction) {};
  *     providerType
  * @return {Object}
  */
-angular.$provide.provider = function(name, providerType) {};
+angular.$provide.prototype.provider = function(name, providerType) {};
 
 /**
  * @param {string} name
  * @param {angular.Injectable} constructor
  * @return {Object}
  */
-angular.$provide.service = function(name, constructor) {};
+angular.$provide.prototype.service = function(name, constructor) {};
 
 /**
  * @param {string} name
  * @param {*} object
  * @return {Object}
  */
-angular.$provide.value = function(name, object) {};
+angular.$provide.prototype.value = function(name, object) {};
 
 /******************************************************************************
  * $route Service
