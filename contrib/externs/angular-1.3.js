@@ -2015,6 +2015,7 @@ angular.$provide.value = function(name, object) {};
 /**
  * @typedef {{
  *   reload: function(),
+ *   updateParams: function(!Object<string,string>),
  *   current: !angular.$route.Route,
  *   routes: Array.<!angular.$route.Route>
  * }}
