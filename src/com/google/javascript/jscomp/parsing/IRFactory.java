@@ -1752,10 +1752,10 @@ class IRFactory {
         operand.setDouble(-operand.getDouble());
         return operand;
       } else {
-        if (type == Token.DELPROP &&
-            !(operand.isGetProp() ||
-              operand.isGetElem() ||
-              operand.isName())) {
+        if (type == Token.DELPROP
+            && !(operand.isGetProp()
+                || operand.isGetElem()
+                || operand.isName())) {
           String msg =
               "Invalid delete operand. Only properties can be deleted.";
           errorReporter.error(
@@ -1923,6 +1923,10 @@ class IRFactory {
       Node body = newNode(Token.CLASS_MEMBERS);
       setSourceInfo(body, tree);
       for (ParseTree child : tree.elements) {
+        if (child.type == ParseTreeType.MEMBER_VARIABLE ||
+            child.type == ParseTreeType.COMPUTED_PROPERTY_MEMBER_VARIABLE) {
+          maybeWarnTypeSyntax(child, "member variable in class");
+        }
         body.addChildToBack(transform(child));
       }
 

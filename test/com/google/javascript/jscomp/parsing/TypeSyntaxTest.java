@@ -156,13 +156,13 @@ public final class TypeSyntaxTest extends TestCase {
     assertDeclaredType("string type", stringType(), fn);
   }
 
-  public void testFunctionReturn_typeInDocAndSyntax() throws Exception {
+  public void testFunctionReturn_typeInDocAndSyntax() {
     expectErrors("Parse error. Bad type syntax - "
         + "can only have JSDoc or inline type annotations, not both");
     parse("function /** string */ foo(): string { return 'hello'; }");
   }
 
-  public void testFunctionReturn_typeInJsdocOnly() throws Exception {
+  public void testFunctionReturn_typeInJsdocOnly() {
     parse("function /** string */ foo() { return 'hello'; }",
         "function/** string */foo() {\n  return 'hello';\n}");
   }
@@ -428,20 +428,19 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("enum E {a, b, c}", "enum");
   }
 
-  public void testMemberVariable() throws Exception {
-    // Just make sure it round trips, no types for the moment.
+  public void testMemberVariable() {
     Node ast = parse("class Foo {\n  foo;\n}");
     Node classMembers = ast.getFirstChild().getLastChild();
     assertTreeEquals("has foo variable", Node.newString(Token.MEMBER_VARIABLE_DEF, "foo"),
         classMembers.getFirstChild());
   }
 
-  public void testMemberVariable_generator() throws Exception {
+  public void testMemberVariable_generator() {
     expectErrors("Parse error. Member variable cannot be prefixed by '*' (generator function)");
     parse("class X { *foo: number; }");
   }
 
-  public void testComputedPropertyMemberVariable() throws Exception {
+  public void testComputedPropertyMemberVariable() {
     parse("class Foo {\n  ['foo'];\n}");
   }
 
@@ -450,6 +449,11 @@ public final class TypeSyntaxTest extends TestCase {
     Node members = classDecl.getChildAtIndex(2);
     Node memberVariable = members.getFirstChild();
     assertDeclaredType("string field type", stringType(), memberVariable);
+  }
+
+  public void testMemberVariable_notEs6Typed() {
+    testNotEs6Typed("class Foo {\n  foo;\n}", "member variable in class");
+    testNotEs6Typed("class Foo {\n  ['foo'];\n}", "member variable in class", "computed property");
   }
 
   public void testMethodType() {
