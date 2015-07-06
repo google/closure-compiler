@@ -1348,29 +1348,25 @@ angular.$http.pendingRequests;
 angular.$http.Interceptor;
 
 /**
- * @typedef {{
- *   defaults: !angular.$http.Config,
- *   interceptors: !Array.<string|function(...*): !angular.$http.Interceptor>,
- *   useApplyAsync: function(boolean=):(boolean|!angular.$HttpProvider)
- * }}
+ * @constructor
  */
-angular.$HttpProvider;
+angular.$HttpProvider = function() {};
 
 /**
  * @type {angular.$http.Config}
  */
-angular.$HttpProvider.defaults;
+angular.$HttpProvider.prototype.defaults;
 
 /**
  * @type {!Array.<string|function(...*): !angular.$http.Interceptor>}
  */
-angular.$HttpProvider.interceptors;
+angular.$HttpProvider.prototype.interceptors;
 
 /**
  * @param {boolean=} opt_value
  * @return {boolean|!angular.$HttpProvider}
  */
-angular.$HttpProvider.useApplyAsync = function(opt_value) {};
+angular.$HttpProvider.prototype.useApplyAsync = function(opt_value) {};
 
 /******************************************************************************
  * $injector Service
