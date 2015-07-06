@@ -1263,8 +1263,8 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       mayWarnAboutInterfacePropInit(rawType, initializer);
-      String pname = NodeUtil.getPrototypePropertyName(getProp);
-      mayAddPropToPrototype(rawType, pname, getProp, initializer);
+      mayAddPropToPrototype(
+          rawType, getProp.getLastChild().getString(), getProp, initializer);
     }
 
     private void mayWarnAboutInterfacePropInit(RawNominalType rawType, Node initializer) {

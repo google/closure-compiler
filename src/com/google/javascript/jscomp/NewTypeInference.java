@@ -1044,13 +1044,17 @@ final class NewTypeInference implements CompilerPass {
     if (!NodeUtil.isPrototypeMethod(fn)) {
       return false;
     }
-    // TODO(dimvar): We need all the qname here before .prototype, not just
-    // the qname root; see testAnnotatedPropertyOnInterface1
-    String typeName =
-        NodeUtil.getRootOfQualifiedName(fn.getParent().getFirstChild())
-        .getString();
-    JSType t = methodScope.getDeclaredTypeOf(typeName);
-    return t != null && t.isInterfaceDefinition();
+    JSType maybeInterface;
+    Node ntQnameNode = NodeUtil.getPrototypeClassName(fn.getParent().getFirstChild());
+    if (ntQnameNode.isName()) {
+      maybeInterface = methodScope.getDeclaredTypeOf(ntQnameNode.getString());
+    } else {
+      QualifiedName ntQname = QualifiedName.fromNode(ntQnameNode);
+      JSType rootNamespace = methodScope.getDeclaredTypeOf(ntQname.getLeftmostName());
+      maybeInterface = rootNamespace == null
+          ? null : rootNamespace.getProp(ntQname.getAllButLeftmost());
+    }
+    return maybeInterface != null && maybeInterface.isInterfaceDefinition();
   }
 
   private static boolean hasPathWithNoReturn(ControlFlowGraph<Node> cfg) {

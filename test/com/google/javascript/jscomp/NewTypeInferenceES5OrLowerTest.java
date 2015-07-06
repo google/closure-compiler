@@ -12843,4 +12843,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testInterfaceMethodNoReturn() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @interface */",
+        "ns.Foo = function() {};",
+        "/** @return {number} */",
+        "ns.Foo.prototype.m = function() {};"));
+
+    // Don't crash when ns.Foo is not defined.
+    typeCheck("ns.Foo.prototype.m = function() {};");
+  }
 }
