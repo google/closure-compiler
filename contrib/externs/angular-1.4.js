@@ -457,274 +457,231 @@ angular.Directive.transclude;
 angular.Injectable;
 
 /**
- * @typedef {{
- *   addClass: function(string): !angular.JQLite,
- *   after: function(JQLiteSelector): !angular.JQLite,
- *   append: function(JQLiteSelector): !angular.JQLite,
- *   attr: function(string, (string|boolean)=):
- *       (!angular.JQLite|string|boolean),
- *   bind: function(string, Function): !angular.JQLite,
- *   children: function(): !angular.JQLite,
- *   clone: function(): !angular.JQLite,
- *   contents: function(): !angular.JQLite,
- *   controller: function(string=): Object,
- *   css: function((string|!Object), string=): (!angular.JQLite|string),
- *   data: function(string=, *=): *,
- *   detach: function(): !angular.JQLite,
- *   empty: function(): !angular.JQLite,
- *   eq: function(number): !angular.JQLite,
- *   find: function(string): !angular.JQLite,
- *   hasClass: function(string): boolean,
- *   html: function(string=): (!angular.JQLite|string),
- *   inheritedData: function(string=, *=): *,
- *   injector: function(): !angular.$injector,
- *   isolateScope: function(): (!angular.Scope|undefined),
- *   length: number,
- *   next: function(): !angular.JQLite,
- *   on: function(string, Function): !angular.JQLite,
- *   off: function(string=, Function=): !angular.JQLite,
- *   one: function(string, Function): !angular.JQLite,
- *   parent: function(): !angular.JQLite,
- *   prepend: function(JQLiteSelector): !angular.JQLite,
- *   prop: function(string, *=): *,
- *   ready: function(Function): !angular.JQLite,
- *   remove: function(): !angular.JQLite,
- *   removeAttr: function(string): !angular.JQLite,
- *   removeClass: function(string): !angular.JQLite,
- *   removeData: function(string=): !angular.JQLite,
- *   replaceWith: function(JQLiteSelector): !angular.JQLite,
- *   scope: function(): !angular.Scope,
- *   text: function(string=): (!angular.JQLite|string),
- *   toggleClass: function(string, boolean=): !angular.JQLite,
- *   triggerHandler: function(string, *=): !angular.JQLite,
- *   unbind: function(string=, Function=): !angular.JQLite,
- *   val: function(string=): (!angular.JQLite|string),
- *   wrap: function(JQLiteSelector): !angular.JQLite
- *   }}
+ * @constructor
  */
-angular.JQLite;
+angular.JQLite = function() {};
 
 /**
  * @param {string} name
  * @return {!angular.JQLite}
  */
-angular.JQLite.addClass = function(name) {};
+angular.JQLite.prototype.addClass = function(name) {};
 
 /**
  * @param {JQLiteSelector} element
  * @return {!angular.JQLite}
  */
-angular.JQLite.after = function(element) {};
+angular.JQLite.prototype.after = function(element) {};
 
 /**
  * @param {JQLiteSelector} element
  * @return {!angular.JQLite}
  */
-angular.JQLite.append = function(element) {};
+angular.JQLite.prototype.append = function(element) {};
 
 /**
  * @param {string} name
  * @param {(string|boolean)=} opt_value
  * @return {!angular.JQLite|string|boolean}
  */
-angular.JQLite.attr = function(name, opt_value) {};
+angular.JQLite.prototype.attr = function(name, opt_value) {};
 
 /**
  * @param {string} type
  * @param {Function} fn
  * @return {!angular.JQLite}
  */
-angular.JQLite.bind = function(type, fn) {};
+angular.JQLite.prototype.bind = function(type, fn) {};
 
 /**
  * @return {!angular.JQLite}
  */
-angular.JQLite.children = function() {};
+angular.JQLite.prototype.children = function() {};
 
 /**
  * @return {!angular.JQLite}
  */
-angular.JQLite.clone = function() {};
+angular.JQLite.prototype.clone = function() {};
 
 /**
  * @return {!angular.JQLite}
  */
-angular.JQLite.contents = function() {};
+angular.JQLite.prototype.contents = function() {};
 
 /**
  * @param {string=} opt_name
  * @return {Object}
  */
-angular.JQLite.controller = function(opt_name) {};
+angular.JQLite.prototype.controller = function(opt_name) {};
 
 /**
  * @param {(string|!Object)} nameOrObject
  * @param {string=} opt_value
  * @return {!angular.JQLite|string}
  */
-angular.JQLite.css = function(nameOrObject, opt_value) {};
+angular.JQLite.prototype.css = function(nameOrObject, opt_value) {};
 
 /**
  * @param {string=} opt_key
  * @param {*=} opt_value
  * @return {*}
  */
-angular.JQLite.data = function(opt_key, opt_value) {};
+angular.JQLite.prototype.data = function(opt_key, opt_value) {};
 
 /**
  * @param {number} index
  * @return {!angular.JQLite}
  */
-angular.JQLite.eq = function(index) {};
+angular.JQLite.prototype.eq = function(index) {};
 
 /**
  * @param {string} selector
  * @return {!angular.JQLite}
  */
-angular.JQLite.find = function(selector) {};
+angular.JQLite.prototype.find = function(selector) {};
 
 /**
  * @param {string} name
  * @return {boolean}
  */
-angular.JQLite.hasClass = function(name) {};
+angular.JQLite.prototype.hasClass = function(name) {};
 
 /**
  * @param {string=} opt_value
  * @return {!angular.JQLite|string}
  */
-angular.JQLite.html = function(opt_value) {};
+angular.JQLite.prototype.html = function(opt_value) {};
 
 /**
  * @param {string=} opt_key
  * @param {*=} opt_value
  * @return {*}
  */
-angular.JQLite.inheritedData = function(opt_key, opt_value) {};
+angular.JQLite.prototype.inheritedData = function(opt_key, opt_value) {};
 
 /**
  * @return {!angular.$injector}
  */
-angular.JQLite.injector = function() {};
+angular.JQLite.prototype.injector = function() {};
 
 /** @type {number} */
-angular.JQLite.length;
+angular.JQLite.prototype.length;
 
 /**
  * @return {!angular.JQLite}
  */
-angular.JQLite.next = function() {};
+angular.JQLite.prototype.next = function() {};
 
 /**
  * @param {string} type
  * @param {Function} fn
  * @return {!angular.JQLite}
  */
-angular.JQLite.on = function(type, fn) {};
+angular.JQLite.prototype.on = function(type, fn) {};
 
 /**
  * @param {string=} opt_type
  * @param {Function=} opt_fn
  * @return {!angular.JQLite}
  */
-angular.JQLite.off = function(opt_type, opt_fn) {};
+angular.JQLite.prototype.off = function(opt_type, opt_fn) {};
 
 /**
  * @return {!angular.JQLite}
  */
-angular.JQLite.parent = function() {};
+angular.JQLite.prototype.parent = function() {};
 
 /**
  * @param {JQLiteSelector} element
  * @return {!angular.JQLite}
  */
-angular.JQLite.prepend = function(element) {};
+angular.JQLite.prototype.prepend = function(element) {};
 
 /**
  * @param {string} name
  * @param {*=} opt_value
  * @return {*}
  */
-angular.JQLite.prop = function(name, opt_value) {};
+angular.JQLite.prototype.prop = function(name, opt_value) {};
 
 /**
  * @param {Function} fn
  * @return {!angular.JQLite}
  */
-angular.JQLite.ready = function(fn) {};
+angular.JQLite.prototype.ready = function(fn) {};
 
 /**
  * @return {!angular.JQLite}
  */
-angular.JQLite.remove = function() {};
-
-/**
- * @param {string} name
- * @return {!angular.JQLite}
- */
-angular.JQLite.removeAttr = function(name) {};
+angular.JQLite.prototype.remove = function() {};
 
 /**
  * @param {string} name
  * @return {!angular.JQLite}
  */
-angular.JQLite.removeClass = function(name) {};
+angular.JQLite.prototype.removeAttr = function(name) {};
+
+/**
+ * @param {string} name
+ * @return {!angular.JQLite}
+ */
+angular.JQLite.prototype.removeClass = function(name) {};
 
 /**
  * @param {string=} opt_name
  * @return {!angular.JQLite}
  */
-angular.JQLite.removeData = function(opt_name) {};
+angular.JQLite.prototype.removeData = function(opt_name) {};
 
 /**
  * @param {JQLiteSelector} element
  * @return {!angular.JQLite}
  */
-angular.JQLite.replaceWith = function(element) {};
+angular.JQLite.prototype.replaceWith = function(element) {};
 
 /**
  * @return {!angular.Scope}
  */
-angular.JQLite.scope = function() {};
+angular.JQLite.prototype.scope = function() {};
 
 /**
  * @param {string=} opt_value
  * @return {!angular.JQLite|string}
  */
-angular.JQLite.text = function(opt_value) {};
+angular.JQLite.prototype.text = function(opt_value) {};
 
 /**
  * @param {string} name
  * @param {boolean=} opt_condition
  * @return {!angular.JQLite}
  */
-angular.JQLite.toggleClass = function(name, opt_condition) {};
+angular.JQLite.prototype.toggleClass = function(name, opt_condition) {};
 
 /**
  * @param {string} type
  * @param {*=} opt_value
  * @return {!angular.JQLite}
  */
-angular.JQLite.triggerHandler = function(type, opt_value) {};
+angular.JQLite.prototype.triggerHandler = function(type, opt_value) {};
 
 /**
  * @param {string=} opt_type
  * @param {Function=} opt_fn
  * @return {!angular.JQLite}
  */
-angular.JQLite.unbind = function(opt_type, opt_fn) {};
+angular.JQLite.prototype.unbind = function(opt_type, opt_fn) {};
 
 /**
  * @param {string=} opt_value
  * @return {!angular.JQLite|string}
  */
-angular.JQLite.val = function(opt_value) {};
+angular.JQLite.prototype.val = function(opt_value) {};
 
 /**
  * @param {JQLiteSelector} element
  * @return {!angular.JQLite}
  */
-angular.JQLite.wrap = function(element) {};
+angular.JQLite.prototype.wrap = function(element) {};
 
 /** @constructor */
 angular.Module = function() {};
