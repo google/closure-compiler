@@ -178,7 +178,8 @@ class InlineVariables implements CompilerPass {
               referenceInfo.isAssignedOnceInLifetime()) {
             Reference init = referenceInfo.getInitializingReference();
             Node value = init.getAssignedValue();
-            if (value != null && value.isName()) {
+            if (value != null && value.isName()
+                && !value.getString().equals(v.getName())) {
               aliasCandidates.put(value, new AliasCandidate(v, referenceInfo));
             }
           }
