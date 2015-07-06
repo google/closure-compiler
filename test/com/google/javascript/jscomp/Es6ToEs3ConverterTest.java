@@ -54,7 +54,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     enableAstValidation(true);
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
-    compareJsDoc = true;
   }
 
   @Override
@@ -327,7 +326,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testExtends() {
-    compareJsDoc = false;
     test(
         "class D {} class C extends D {}",
         LINE_JOINER.join(
@@ -415,8 +413,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperCall() {
-    compareJsDoc = false;
-
     test(
         "class D {} class C extends D { constructor() { super(); } }",
         LINE_JOINER.join(
@@ -527,7 +523,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  var D = function() {}",
             "};"));
 
-    compareJsDoc = false;
     test(
         "class C { f() { class D extends C {} } }",
         LINE_JOINER.join(
@@ -593,7 +588,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperCallNonConstructor() {
-    compareJsDoc = false;
 
     test(
         "class S extends B { static f() { super(); } }",
@@ -647,7 +641,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testStaticInheritance() {
-    compareJsDoc = false;
 
     test(
         LINE_JOINER.join(
@@ -723,7 +716,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testInvalidClassUse() {
     enableTypeCheck(CheckLevel.WARNING);
-    compareJsDoc = false;
 
     test(
         EXTERNS_BASE,
@@ -764,9 +756,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "Foo.f = function() {};",
             "class Sub extends Foo {}"),
         LINE_JOINER.join(
-            "function Foo(){}Foo.f=function(){};",
-            "var Sub=function(var_args){Foo.apply(this,arguments)};",
-            "$jscomp.inherits(Sub,Foo)"),
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.f = function() {};",
+            "/** @constructor @struct @extends {Foo} */",
+            "var Sub = function(var_args) { Foo.apply(this, arguments); };",
+            "$jscomp.inherits(Sub, Foo);"),
         null,
         null);
   }
@@ -1229,7 +1224,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testForOf() {
-    compareJsDoc = false;
 
     // With array literal and declaring new bound variable.
     test(
