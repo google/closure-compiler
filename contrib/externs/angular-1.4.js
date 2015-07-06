@@ -219,55 +219,44 @@ angular.toJson = function(obj, opt_pretty) {};
 angular.uppercase = function(s) {};
 
 /**
- * @typedef {{
- *   enter: (function(!angular.JQLite, !Function): (!Function|undefined)|
- *       undefined),
- *   leave: (function(!angular.JQLite, !Function): (!Function|undefined)|
- *       undefined),
- *   move: (function(!angular.JQLite, !Function): (!Function|undefined)|
- *       undefined),
- *   addClass: (function(!angular.JQLite, !Function): (!Function|undefined)|
- *       undefined),
- *   removeClass: (function(!angular.JQLite, !Function): (!Function|undefined)|
- *       undefined)
- *   }}
+ * @constructor
  */
-angular.Animation;
+angular.Animation = function() {};
 
 /**
  * @param {!angular.JQLite} element
  * @param {!Function} done
  * @return {(!Function|undefined)}
  */
-angular.Animation.enter = function(element, done) {};
+angular.Animation.prototype.enter = function(element, done) {};
 
 /**
  * @param {!angular.JQLite} element
  * @param {!Function} done
  * @return {(!Function|undefined)}
  */
-angular.Animation.leave = function(element, done) {};
+angular.Animation.prototype.leave = function(element, done) {};
 
 /**
  * @param {!angular.JQLite} element
  * @param {!Function} done
  * @return {(!Function|undefined)}
  */
-angular.Animation.move = function(element, done) {};
+angular.Animation.prototype.move = function(element, done) {};
 
 /**
  * @param {!angular.JQLite} element
  * @param {!Function} done
  * @return {(!Function|undefined)}
  */
-angular.Animation.addClass = function(element, done) {};
+angular.Animation.prototype.addClass = function(element, done) {};
 
 /**
  * @param {!angular.JQLite} element
  * @param {!Function} done
  * @return {(!Function|undefined)}
  */
-angular.Animation.removeClass = function(element, done) {};
+angular.Animation.prototype.removeClass = function(element, done) {};
 
 /**
  * @typedef {{
