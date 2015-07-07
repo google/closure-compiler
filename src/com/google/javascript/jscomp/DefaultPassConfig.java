@@ -207,16 +207,23 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureRewriteModule);
     }
 
-    // ES6 compatible passes.
+    if (options.lowerFromEs6()) {
+      checks.add(es6RewriteArrowFunction);
+      checks.add(es6RenameVariablesInParamLists);
+      checks.add(es6SplitVariableDeclarations);
+      checks.add(es6RewriteDestructuring);
+    }
 
     if (!options.transpileOnly && options.declaredGlobalExternsOnWindow) {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
-    // ES6 transpilation passes.
-
     if (options.lowerFromEs6() || options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
+    }
+
+    if (!options.transpileOnly && options.closurePass) {
+      checks.add(closureGoogScopeAliases);
     }
 
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
@@ -225,10 +232,6 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.lowerFromEs6()) {
-      checks.add(es6RewriteArrowFunction);
-      checks.add(es6RenameVariablesInParamLists);
-      checks.add(es6SplitVariableDeclarations);
-      checks.add(es6RewriteDestructuring);
       checks.add(es6ConvertSuper);
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);
@@ -253,7 +256,6 @@ public final class DefaultPassConfig extends PassConfig {
     // End of ES6 transpilation passes.
 
     if (options.closurePass) {
-      checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
     }
 
