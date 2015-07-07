@@ -3346,3 +3346,11 @@ function HTMLTemplateElement() {}
  * @type {!DocumentFragment}
  */
 HTMLTemplateElement.prototype.content;
+
+
+/**
+ * @type {?Document}
+ * @see w3c_dom2.js
+ * @see http://www.w3.org/TR/html-imports/#interface-import
+ */
+HTMLLinkElement.prototype.import;
