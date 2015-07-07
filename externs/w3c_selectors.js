@@ -26,6 +26,7 @@
  * @param {string} selectors
  * @return {Element}
  * @override
+ * @nosideeffects
  */
 Document.prototype.querySelector = function(selectors) {};
 
@@ -33,6 +34,7 @@ Document.prototype.querySelector = function(selectors) {};
  * @param {string} selectors
  * @return {!NodeList}
  * @override
+ * @nosideeffects
  */
 Document.prototype.querySelectorAll = function(selectors) {};
 
@@ -40,6 +42,7 @@ Document.prototype.querySelectorAll = function(selectors) {};
  * @param {string} selectors
  * @return {Element}
  * @override
+ * @nosideeffects
  */
 Element.prototype.querySelector = function(selectors) {};
 
@@ -47,6 +50,7 @@ Element.prototype.querySelector = function(selectors) {};
  * @param {string} selectors
  * @return {!NodeList}
  * @override
+ * @nosideeffects
  */
 Element.prototype.querySelectorAll = function(selectors) {};
 
@@ -55,6 +59,7 @@ Element.prototype.querySelectorAll = function(selectors) {};
  * https://developer.mozilla.org/en-US/docs/Web/API/Element.matches
  * @param {string} selectors
  * @return {boolean}
+ * @nosideeffects
  */
 Element.prototype.matches = function(selectors) {};
 
@@ -62,6 +67,7 @@ Element.prototype.matches = function(selectors) {};
  * @param {string} selectors
  * @param {(Node|NodeList)=} refNodes
  * @return {boolean}
+ * @nosideeffects
  */
 Element.prototype.matchesSelector = function(selectors, refNodes) {};
 
@@ -69,6 +75,7 @@ Element.prototype.matchesSelector = function(selectors, refNodes) {};
  * @see https://developer.mozilla.org/en/DOM/Node.mozMatchesSelector
  * @param {string} selectors
  * @return {boolean}
+ * @nosideeffects
  */
 Element.prototype.mozMatchesSelector = function(selectors) {};
 
@@ -76,6 +83,7 @@ Element.prototype.mozMatchesSelector = function(selectors) {};
  * @see http://developer.apple.com/library/safari/documentation/WebKit/Reference/ElementClassRef/Element/Element.html
  * @param {string} selectors
  * @return {boolean}
+ * @nosideeffects
  */
 Element.prototype.webkitMatchesSelector = function(selectors) {};
 
@@ -83,6 +91,7 @@ Element.prototype.webkitMatchesSelector = function(selectors) {};
  * @see http://msdn.microsoft.com/en-us/library/ff975201.aspx
  * @param {string} selectors
  * @return {boolean}
+ * @nosideeffects
  */
 Element.prototype.msMatchesSelector = function(selectors) {};
 
@@ -90,5 +99,6 @@ Element.prototype.msMatchesSelector = function(selectors) {};
  * @see http://www.opera.com/docs/changelogs/windows/1150/
  * @param {string} selectors
  * @return {boolean}
+ * @nosideeffects
  */
 Element.prototype.oMatchesSelector = function(selectors) {};
