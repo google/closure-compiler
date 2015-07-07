@@ -394,7 +394,7 @@ import java.util.Set;
     return NodeUtil.has(node, new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
-        return input.isCall() || input.isNew();
+        return input.isCall() || input.isNew() || input.isTaggedTemplateLit();
       }},
       NOT_FUNCTION_PREDICATE);
   }

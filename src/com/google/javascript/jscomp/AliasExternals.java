@@ -519,7 +519,7 @@ class AliasExternals implements CompilerPass {
      */
     private boolean canReplaceWithGetProp(Node propNameNode, Node getPropNode,
           Node parent) {
-      boolean isCallTarget = (parent.isCall())
+      boolean isCallTarget = parent.isCall()
           && (parent.getFirstChild() == getPropNode);
       boolean isAssignTarget = NodeUtil.isAssignmentOp(parent)
           && (parent.getFirstChild() == getPropNode);

@@ -248,7 +248,7 @@ public final class SuggestedFix {
      */
     public Builder rename(Node n, String name, boolean replaceEntireName) {
       Node nodeToRename = null;
-      if (n.isCall()) {
+      if (n.isCall() || n.isTaggedTemplateLit()) {
         Node child = n.getFirstChild();
         nodeToRename = child;
         if (!replaceEntireName && child.isGetProp()) {

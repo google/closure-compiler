@@ -79,7 +79,8 @@ public final class SourceMap {
             || node.isName()
             || NodeUtil.isGet(node)
             || NodeUtil.isObjectLitKey(node)
-            || (node.isString() && NodeUtil.isGet(node.getParent()));
+            || (node.isString() && NodeUtil.isGet(node.getParent()))
+            || node.isTaggedTemplateLit();
       }
     }
   }

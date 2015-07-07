@@ -59,4 +59,8 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
         "class Foo {}\n"
         + "class Bar extends Foo {}");
   }
+
+  public void testTaggedTemplateLitGlobalThisRef() {
+    typeCheck("taggedTemp`${this.a}TaggedTemp`", CheckGlobalThis.GLOBAL_THIS);
+  }
 }

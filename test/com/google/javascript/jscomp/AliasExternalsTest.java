@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link AliasExternals}.
  *
@@ -227,6 +229,12 @@ public final class AliasExternalsTest extends CompilerTestCase {
          formatPropNameDecl("prototype") +
          "Foo[$$PROP_prototype].bar = function() { return 'foo'; }");
     test("Foo.notreplaced = 5", "Foo.notreplaced=5");
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("taggedTemplate`${name.length}Template`",
+         formatPropNameDecl("length") +
+         "taggedTemplate`${name[$$PROP_length]}Template`");
+    testSame("String.raw`Template`");
+
   }
 
   /**

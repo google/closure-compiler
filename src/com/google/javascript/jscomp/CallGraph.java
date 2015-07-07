@@ -54,6 +54,7 @@ import java.util.Map;
  * return true.
  *
  * <p>TODO(dcc): Have CallGraph (optionally?) include functions for externs.
+ * <p>TODO(huajiewu): Add support of tagged template in call graph.
  *
  * @author dcc@google.com (Devin Coughlin)
  */
