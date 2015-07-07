@@ -567,6 +567,25 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         ""
         + "/** @typedef {x} */ types.actual;"
         + "/** @typedef {goog.Timer} */ types.expected;");
+
+    testScoped(
+        LINE_JOINER.join(
+            "/** @typedef {string} */ var s;",
+            "/** @type {s} */ var t;"),
+        LINE_JOINER.join(
+            SCOPE_NAMESPACE,
+            "/** @typedef {string} */ $jscomp.scope.s;",
+            "/** @type {$jscomp.scope.s} */ $jscomp.scope.t;"));
+
+    testScoped(
+        LINE_JOINER.join(
+            "/** @typedef {string} */ let s;",
+            "/** @type {s} */ var t;"),
+        LINE_JOINER.join(
+            SCOPE_NAMESPACE,
+            "/** @typedef {string} */ $jscomp.scope.s;",
+            "/** @type {$jscomp.scope.s} */ $jscomp.scope.t;"),
+        LanguageMode.ECMASCRIPT6);
   }
 
   public void testJsDocRecord() {

@@ -3656,7 +3656,7 @@ public final class NodeUtil {
       } else if (parent.isFunction()) {
         // FUNCTION may be inside ASSIGN
         return getBestJSDocInfo(parent);
-      } else if (parent.isVar() && parent.hasOneChild()) {
+      } else if (NodeUtil.isNameDeclaration(parent) && parent.hasOneChild()) {
         return parent.getJSDocInfo();
       } else if ((parent.isHook() && parent.getFirstChild() != n)
                  || parent.isOr()
