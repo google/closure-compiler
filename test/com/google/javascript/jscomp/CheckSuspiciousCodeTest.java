@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for CheckSuspiciousCode
  */
@@ -64,6 +66,9 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testOk("for(x in y) x = y;");
     test("for(x in y); x = y;", e);
     testOk("for(x in y){} x = y;");
+    testOk("var y = [1, 2, 3]; for(x of y) console.log(x);");
+    test("var y = [1, 2, 3]; for(x of y); console.log(x);", e);
+    testOk("var y = [1, 2, 3]; for(x of y){} console.log(x);");
   }
 
   public void testSuspiciousIn() {
@@ -78,6 +83,19 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testSame("'foo' in !Object", CheckSuspiciousCode.SUSPICIOUS_IN_OPERATOR);
     testSame("'foo' in Object", null);
     testSame("'foo' in {}", null);
+  }
+
+  public void testForOf() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("var y = [1, 2, 3]; for (var x of y) console.log(x);");
+    testSame("var y = [1, 2, 3]; for (var x of 'test') console.log(x);");
+    testSame("for (var x of 123) console.log(x);");
+    testSame("for (var x of false) console.log(x);");
+    testSame("for (var x of true) console.log(x);");
+    testSame("for (var x of undefined) console.log(x);");
+    testSame("for (var x of NaN) console.log(x);");
+    testSame("for (var x of Infinity) console.log(x);");
+    testSame("for (var x of null) console.log(x);");
   }
 
   private void testReportNaN(String js) {
@@ -168,6 +186,15 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
 
     // TODO(apavlov): It would be nice to have this report, too.
     testOk("(4 + 5) instanceof Number");
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testOk("(()=>42) instanceof Function");
+    testOk("class Person{} Person instanceof Function");
+    testOk(LINE_JOINER.join(
+        "class Person{}",
+        "var peter = new Person();",
+        "peter instanceof Person"));
+    testOk("taggedTemplate`${tagged}Temp` instanceof Function");
   }
 
   private void testReportInstanceOf(String left, String right) {
