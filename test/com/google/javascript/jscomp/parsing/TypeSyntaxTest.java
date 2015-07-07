@@ -204,10 +204,10 @@ public final class TypeSyntaxTest extends TestCase {
   }
 
   public void testRecordType() {
-    parse("var x: {p:string, q:string, r:string};");
-    parse("var x: {p:string, q:string}[];");
-    parse("var x: {p:string, q:string} | string;");
-    parse("var x: (o: {p:string, q:string}) => r;");
+    parse("var x: {p: string, q: string, r: string};");
+    parse("var x: {p: string, q: string}[];");
+    parse("var x: {p: string, q: string} | string;");
+    parse("var x: (o: {p: string, q: string}) => r;");
   }
 
   public void testParameterizedType() {
@@ -324,7 +324,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var n: (p1 : p2?) => number;");
     expectErrors("Parse error. ')' expected");
     parse("var n: (p1 : p2 = p3) => number;");
-    expectErrors("Parse error. ':' expected");
+    expectErrors("Parse error. ')' expected");
     parse("var n: ({x, y}, z) => number;");
     expectErrors("Parse error. Unexpected token '[' in type expression");
     parse("var n: ([x, y], z) => number;");
@@ -388,7 +388,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("interface I {\n  foo<T>(p: boolean): string;\n}");
     parse("interface I {\n  *foo(p: boolean);\n}");
 
-    expectErrors("Parse error. ';' expected");
+    expectErrors("Parse error. ',' expected");
     parse("interface I { foo(p: boolean): string {}}");
     expectErrors("Parse error. '}' expected");
     parse("if (true) { interface I {} }");
@@ -551,6 +551,16 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. 'identifier' expected");
     parse("var x : typeof Foo.Bar.");
     testNotEs6Typed("var x: typeof y;", "type annotation");
+  }
+
+  public void testOptionalProperty() {
+    parse("interface I {\n  foo?: number;\n}");
+    parse("interface I {\n  foo?(): number;\n}");
+    parse("type I = {foo?: number};");
+    parse("var x: {foo?: number};");
+
+    expectErrors("Parse error. ';' expected");
+    parse("class C { foo?: number; }");
   }
 
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {

@@ -23,7 +23,6 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.functionType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.namedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.numberType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.parameterizedType;
-import static com.google.javascript.rhino.TypeDeclarationsIR.recordType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.stringType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.undefinedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
@@ -1221,6 +1220,7 @@ class IRFactory {
 
       node.setIsGeneratorFunction(isGenerator);
       node.setIsArrowFunction(isArrow);
+      node.putBooleanProp(Node.OPT_ES6_TYPED, functionTree.isOptional);
 
       Node result;
 
@@ -1980,6 +1980,7 @@ class IRFactory {
       Node member = newStringNode(Token.MEMBER_VARIABLE_DEF, tree.name.value);
       maybeProcessType(member, tree.declaredType);
       member.setStaticMember(tree.isStatic);
+      member.putBooleanProp(Node.OPT_ES6_TYPED, tree.isOptional);
       return member;
     }
 
@@ -2101,7 +2102,7 @@ class IRFactory {
     Node processOptionalParameter(OptionalParameterTree optionalParam) {
       maybeWarnTypeSyntax(optionalParam, "optional parameter");
       Node param = transform(optionalParam.param);
-      param.putBooleanProp(Node.OPT_PARAM_ES6_TYPED, true);
+      param.putBooleanProp(Node.OPT_ES6_TYPED, true);
       return param;
     }
 
@@ -2133,11 +2134,11 @@ class IRFactory {
     }
 
     Node processRecordType(RecordTypeTree tree) {
-      LinkedHashMap<String, TypeDeclarationNode> members = new LinkedHashMap<>();
-      for (Map.Entry<IdentifierToken, ParseTree> entry : tree.members.entrySet()) {
-        members.put(entry.getKey().value, (TypeDeclarationNode) transform(entry.getValue()));
+      TypeDeclarationNode node = new TypeDeclarationNode(Token.RECORD_TYPE);
+      for (ParseTree child : tree.members) {
+        node.addChildToBack(transform(child));
       }
-      return cloneProps(recordType(members));
+      return cloneProps(node);
     }
 
     Node processUnionType(UnionTypeTree tree) {

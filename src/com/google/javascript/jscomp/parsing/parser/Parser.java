@@ -545,6 +545,14 @@ public class Parser {
 
     while (peekInterfaceElement()) {
       result.add(parseInterfaceElement());
+      if (!peek(TokenType.CLOSE_CURLY)) {
+        // The standard delimiter is semicolon, but we also accept comma
+        if (peekImplicitSemiColon()) {
+          eatPossibleImplicitSemiColon();
+        } else {
+          eat(TokenType.COMMA);
+        }
+      }
     }
 
     return result.build();
@@ -577,15 +585,21 @@ public class Parser {
       // TODO(moz): Parse IndexSignature, CallSignature and ConstructSignature
     }
 
+    boolean isOptional = false;
+    if (peek(TokenType.QUESTION)) {
+      eat(TokenType.QUESTION);
+      isOptional = true;
+    }
+
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // Method signature.
-      ParseTree function = parseMethodSignature(start, name, false, isGenerator);
+      ParseTree function = parseMethodSignature(start, name, false, isGenerator, isOptional);
       return function;
     } else {
       // Property signature.
       ParseTree declaredType = maybeParseColonType();
-      eat(TokenType.SEMI_COLON);
-      return new MemberVariableTree(getTreeLocation(start), name, false, declaredType);
+      return new MemberVariableTree(getTreeLocation(start), name, false,
+          isOptional, declaredType);
     }
   }
 
@@ -715,9 +729,13 @@ public class Parser {
       FunctionDeclarationTree.Kind kind =
           nameExpr == null ? FunctionDeclarationTree.Kind.MEMBER
               : FunctionDeclarationTree.Kind.EXPRESSION;
-      ParseTree function = isAmbient
-          ? parseMethodSignature(start, name, isStatic, isGenerator)
-          : parseFunctionTail(start, name, isStatic, isGenerator, kind);
+      ParseTree function;
+      if (isAmbient) {
+        function = parseMethodSignature(start, name, isStatic, isGenerator, false);
+        eat(TokenType.SEMI_COLON);
+      } else {
+        function = parseFunctionTail(start, name, isStatic, isGenerator, kind);
+      }
       if (kind == FunctionDeclarationTree.Kind.MEMBER) {
         return function;
       } else {
@@ -734,7 +752,7 @@ public class Parser {
       }
       eat(TokenType.SEMI_COLON);
       if (nameExpr == null) {
-        return new MemberVariableTree(getTreeLocation(start), name, isStatic, declaredType);
+        return new MemberVariableTree(getTreeLocation(start), name, isStatic, false, declaredType);
       } else {
         return new ComputedPropertyMemberVariableTree(getTreeLocation(start), nameExpr, isStatic,
             declaredType);
@@ -743,15 +761,14 @@ public class Parser {
   }
 
   private FunctionDeclarationTree parseMethodSignature(SourcePosition start,
-      IdentifierToken name, boolean isStatic, boolean isGenerator) {
+      IdentifierToken name, boolean isStatic, boolean isGenerator, boolean isOptional) {
     GenericTypeListTree generics = maybeParseGenericTypes();
     FormalParameterListTree formalParameterList = parseFormalParameterList();
     ParseTree returnType = maybeParseColonType();
     ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
     FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, isStatic, isGenerator,
+        getTreeLocation(start), name, generics, isStatic, isGenerator, isOptional,
         FunctionDeclarationTree.Kind.MEMBER, formalParameterList, returnType, functionBody);
-    eat(TokenType.SEMI_COLON);
     return declaration;
   }
 
@@ -762,7 +779,7 @@ public class Parser {
     ParseTree returnType = maybeParseColonType();
     ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
     FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, false, isGenerator,
+        getTreeLocation(start), name, generics, false, isGenerator, false,
         FunctionDeclarationTree.Kind.DECLARATION, formalParameterList, returnType, functionBody);
     return declaration;
   }
@@ -779,7 +796,7 @@ public class Parser {
     ParseTree returnType = maybeParseColonType();
     BlockTree functionBody = parseFunctionBody();
     FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, isStatic, isGenerator,
+        getTreeLocation(start), name, generics, isStatic, isGenerator, false,
         kind, formalParameterList, returnType, functionBody);
 
     inGeneratorContext.removeLast();
@@ -871,7 +888,7 @@ public class Parser {
     }
 
     FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
-        getTreeLocation(start), null, generics, false, false,
+        getTreeLocation(start), null, generics, false, false, false,
         FunctionDeclarationTree.Kind.ARROW,
         formalParameterList, returnType, functionBody);
 
@@ -1091,24 +1108,7 @@ public class Parser {
     ParseTree typeExpression;
     if (peek(TokenType.OPEN_CURLY)) {
       eat(TokenType.OPEN_CURLY);
-      LinkedHashMap<IdentifierToken, ParseTree> members = new LinkedHashMap<>();
-      while (peekId()) {
-        IdentifierToken name = eatId();
-        eat(TokenType.COLON);
-        ParseTree type = parseType();
-        members.put(name, type);
-        if (peek(TokenType.CLOSE_CURLY)) {
-          break;
-        } else {
-          // The standard delimiter is semicolon, but we also accept comma
-          if (peekImplicitSemiColon()) {
-            eatPossibleImplicitSemiColon();
-          } else {
-            eat(TokenType.COMMA);
-          }
-        }
-      }
-      typeExpression = new RecordTypeTree(getTreeLocation(start), members);
+      typeExpression = new RecordTypeTree(getTreeLocation(start), parseInterfaceElements());
       eat(TokenType.CLOSE_CURLY);
     } else {
       typeExpression = parseTypeQuery();

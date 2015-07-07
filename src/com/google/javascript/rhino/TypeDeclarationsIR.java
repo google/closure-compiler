@@ -210,7 +210,7 @@ public class TypeDeclarationsIR {
 
     for (Map.Entry<String, TypeDeclarationNode> param : optionalParams.entrySet()) {
       Node name = IR.name(param.getKey());
-      name.putBooleanProp(Node.OPT_PARAM_ES6_TYPED, true);
+      name.putBooleanProp(Node.OPT_ES6_TYPED, true);
       node.addChildToBack(maybeAddType(name, param.getValue()));
     }
 

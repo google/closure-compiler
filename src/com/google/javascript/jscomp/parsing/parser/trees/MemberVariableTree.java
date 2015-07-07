@@ -26,13 +26,15 @@ import javax.annotation.Nullable;
 public class MemberVariableTree extends ParseTree {
   public final IdentifierToken name;
   public final boolean isStatic;
+  public final boolean isOptional;
   @Nullable public final ParseTree declaredType;
 
   public MemberVariableTree(SourceRange location, IdentifierToken name, boolean isStatic,
-      @Nullable ParseTree declaredType) {
+      boolean isOptional, @Nullable ParseTree declaredType) {
     super(ParseTreeType.MEMBER_VARIABLE, location);
     this.name = name;
     this.isStatic = isStatic;
+    this.isOptional = isOptional;
     this.declaredType = declaredType;
   }
 }

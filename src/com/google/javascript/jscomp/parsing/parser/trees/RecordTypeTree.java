@@ -16,17 +16,14 @@
 
 package com.google.javascript.jscomp.parsing.parser.trees;
 
-import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
-
-import java.util.LinkedHashMap;
 
 public class RecordTypeTree extends ParseTree {
 
-  public final LinkedHashMap<IdentifierToken, ParseTree> members;
+  public final ImmutableList<ParseTree> members;
 
-  public RecordTypeTree(
-      SourceRange location, LinkedHashMap<IdentifierToken, ParseTree> members) {
+  public RecordTypeTree(SourceRange location, ImmutableList<ParseTree> members) {
     super(ParseTreeType.RECORD_TYPE, location);
 
     this.members = members;

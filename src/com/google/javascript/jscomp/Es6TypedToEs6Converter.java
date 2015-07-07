@@ -50,6 +50,11 @@ public final class Es6TypedToEs6Converter
       "JSC_TYPE_QUERY_NOT_SUPPORTED",
       "Type query is currently not supported.");
 
+  static final DiagnosticType UNSUPPORTED_RECORD_TYPE = DiagnosticType.error(
+      "JSC_UNSUPPORTED_RECORD_TYPE",
+      "Currently only member variables are supported in record types, please consider "
+          + "using interfaces instead.");
+
   private final AbstractCompiler compiler;
 
   Es6TypedToEs6Converter(AbstractCompiler compiler) {
@@ -327,8 +332,8 @@ public final class Es6TypedToEs6Converter
   }
 
   private Node maybeProcessOptionalParameter(Node n, Node type) {
-    if (n.getBooleanProp(Node.OPT_PARAM_ES6_TYPED)) {
-      n.putBooleanProp(Node.OPT_PARAM_ES6_TYPED, false);
+    if (n.getBooleanProp(Node.OPT_ES6_TYPED)) {
+      n.putBooleanProp(Node.OPT_ES6_TYPED, false);
       type = maybeCreateAnyType(n, type);
       return new Node(Token.EQUALS, convertWithLocation(type));
     } else {
@@ -406,11 +411,18 @@ public final class Es6TypedToEs6Converter
         return pipe;
       case Token.RECORD_TYPE:
         Node lb = new Node(Token.LB);
-        for (Node stringKey : type.children()) {
+        for (Node memberVar : type.children()) {
+          if (!memberVar.isMemberVariableDef()) {
+            compiler.report(JSError.make(type, UNSUPPORTED_RECORD_TYPE));
+            continue;
+          }
           Node colon = new Node(Token.COLON);
-          Node original = stringKey.removeFirstChild();
-          colon.addChildToBack(stringKey.detachFromParent());
-          colon.addChildToBack(convertWithLocation(original));
+          memberVar.setType(Token.STRING_KEY);
+          Node memberType = convertWithLocation(
+              maybeCreateAnyType(memberVar, memberVar.getDeclaredTypeExpression()));
+          memberVar.setDeclaredTypeExpression(null);
+          colon.addChildToBack(memberVar.detachFromParent());
+          colon.addChildToBack(memberType);
           lb.addChildrenToBack(colon);
         }
         return new Node(Token.LC, lb);

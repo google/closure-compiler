@@ -37,11 +37,12 @@ public class FunctionDeclarationTree extends ParseTree {
   public final ParseTree functionBody;
   public final boolean isStatic;
   public final boolean isGenerator;
+  public final boolean isOptional;
   public final Kind kind;
 
   public FunctionDeclarationTree(SourceRange location, IdentifierToken name,
-      GenericTypeListTree generics, boolean isStatic, boolean isGenerator, Kind kind,
-      FormalParameterListTree formalParameterList, @Nullable ParseTree returnType,
+      GenericTypeListTree generics, boolean isStatic, boolean isGenerator, boolean isOptional,
+      Kind kind, FormalParameterListTree formalParameterList, @Nullable ParseTree returnType,
       ParseTree functionBody) {
     super(ParseTreeType.FUNCTION_DECLARATION, location);
 
@@ -49,6 +50,7 @@ public class FunctionDeclarationTree extends ParseTree {
     this.generics = generics;
     this.isStatic = isStatic;
     this.isGenerator = isGenerator;
+    this.isOptional = isOptional;
     this.kind = kind;
     this.formalParameterList = formalParameterList;
     this.returnType = returnType;

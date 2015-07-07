@@ -1404,6 +1404,7 @@ public final class NodeUtil {
       case Token.SPREAD:
       case Token.STRING:
       case Token.STRING_KEY:
+      case Token.MEMBER_VARIABLE_DEF:
       case Token.THIS:
       case Token.SUPER:
       case Token.TRUE:

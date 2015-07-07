@@ -132,7 +132,8 @@ public class Node implements Cloneable, Serializable {
                                   //
       TYPE_BEFORE_CAST = 79,      // The type of an expression before the cast.
                                   // This will be present only if the expression is casted.
-      OPT_PARAM_ES6_TYPED = 80,   // The node is an optional parameter in ES6 Typed syntax.
+      OPT_ES6_TYPED = 80,         // The node is an optional parameter or property
+                                  // in ES6 Typed syntax.
       GENERIC_TYPE_LIST = 81,     // Generic type list in ES6 typed syntax.
       IMPLEMENTS = 82;            // "implements" clause in ES6 typed syntax.
 
@@ -186,7 +187,7 @@ public class Node implements Cloneable, Serializable {
         case CONSTANT_PROPERTY_DEF: return "constant_property_def";
         case DECLARED_TYPE_EXPR: return "declared_type_expr";
         case TYPE_BEFORE_CAST: return "type_before_cast";
-        case OPT_PARAM_ES6_TYPED: return "opt_param_es6_typed";
+        case OPT_ES6_TYPED:    return "opt_es6_typed";
         case GENERIC_TYPE_LIST:       return "generic_type";
         case IMPLEMENTS:       return "implements";
         default:
@@ -2679,6 +2680,10 @@ public class Node implements Cloneable, Serializable {
 
   public boolean isInterfaceMembers() {
     return this.getType() == Token.INTERFACE_MEMBERS;
+  }
+
+  public boolean isRecordType() {
+    return this.getType() == Token.RECORD_TYPE;
   }
 
   public boolean isLabel() {

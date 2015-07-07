@@ -230,9 +230,7 @@ class CodeGenerator {
 
       case Token.NAME:
         addIdentifier(n.getString());
-        if (n.getBooleanProp(Node.OPT_PARAM_ES6_TYPED)) {
-          add("?");
-        }
+        maybeAddOptional(n);
         maybeAddTypeDecl(n);
 
         if (first != null && !first.isEmpty()) {
@@ -544,7 +542,8 @@ class CodeGenerator {
           Preconditions.checkState(
               n.getParent().isObjectLit()
                   || n.getParent().isClassMembers()
-                  || n.getParent().isInterfaceMembers());
+                  || n.getParent().isInterfaceMembers()
+                  || n.getParent().isRecordType());
 
           if (n.isStaticMember()) {
             add("static ");
@@ -576,8 +575,11 @@ class CodeGenerator {
           String name = n.getString();
           if (n.isMemberVariableDef()) {
             add(n.getString());
+            maybeAddOptional(n);
             maybeAddTypeDecl(n);
-            add(";");
+            if (!n.getParent().isRecordType()) {
+              add(";");
+            }
           } else {
             Preconditions.checkState(childCount == 1);
             Preconditions.checkState(first.isFunction());
@@ -607,6 +609,7 @@ class CodeGenerator {
                 addJsString(n);
               }
             }
+            maybeAddOptional(fn);
             add(parameters);
             maybeAddTypeDecl(fn);
             if (body.isEmpty()) {
@@ -1221,6 +1224,12 @@ class CodeGenerator {
     Node generics = (Node) n.getProp(Node.GENERIC_TYPE_LIST);
     if (generics != null) {
       add(generics);
+    }
+  }
+
+  private void maybeAddOptional(Node n) {
+    if (n.getBooleanProp(Node.OPT_ES6_TYPED)) {
+      add("?");
     }
   }
 
