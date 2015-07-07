@@ -563,6 +563,22 @@ public final class TypeSyntaxTest extends TestCase {
     parse("class C { foo?: number; }");
   }
 
+  public void testIndexSignature() {
+    parse("interface I {\n  [foo: number]: number;\n}");
+    parse("var i: {[foo: number]: number;};");
+    parse("class C {\n  [foo: number]: number;\n}");
+
+    expectErrors("Parse error. ':' expected");
+    parse("interface I { [foo: number]; }");
+    expectErrors("Parse error. ':' expected");
+    parse("interface I { [foo]: number; }");
+    expectErrors("Parse error. Index signature parameter type must be 'string' or 'number'");
+    parse("interface I {\n  [foo: any]: number;\n}");
+
+    testNotEs6Typed("class C {\n  [foo: number]: number;\n}",
+        "index signature", "type annotation", "type annotation");
+  }
+
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {
     Node varDecl = parse(source, source).getFirstChild();
     assertDeclaredType(message, expectedType, varDecl.getFirstChild());

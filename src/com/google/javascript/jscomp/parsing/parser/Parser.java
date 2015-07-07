@@ -66,6 +66,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTre
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
@@ -581,8 +582,10 @@ public class Parser {
 
     if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
       name = eatIdOrKeywordAsId();
+    } else if (type == TokenType.OPEN_SQUARE) { // IndexSignature
+      return parseIndexSignature();
     } else {
-      // TODO(moz): Parse IndexSignature, CallSignature and ConstructSignature
+      // TODO(moz): Parse CallSignature and ConstructSignature
     }
 
     boolean isOptional = false;
@@ -720,6 +723,9 @@ public class Parser {
       nameExpr = null;
       name = eatIdOrKeywordAsId();
     } else {
+      if (peekIndexSignature()) {
+        return parseIndexSignature();
+      }
       nameExpr = parseComputedPropertyName();
       name = null;
     }
@@ -839,6 +845,25 @@ public class Parser {
   private boolean peekTypeAlias() {
     return peek(TokenType.TYPE) && !peekImplicitSemiColon(1)
         && peek(1, TokenType.IDENTIFIER) && peek(2, TokenType.EQUAL);
+  }
+
+  private boolean peekIndexSignature() {
+    return peek(TokenType.OPEN_SQUARE) && peek(1, TokenType.IDENTIFIER)
+        && peek(2, TokenType.COLON);
+  }
+
+  private IndexSignatureTree parseIndexSignature() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.OPEN_SQUARE);
+    IdentifierToken name = eatIdOrKeywordAsId();
+    eat(TokenType.COLON);
+    ParseTree indexType = parseTypeName(); // must be 'string' or 'number'
+    eat(TokenType.CLOSE_SQUARE);
+    eat(TokenType.COLON);
+    ParseTree declaredType = parseType();
+    ParseTree nameTree = new MemberVariableTree(getTreeLocation(start), name, false,
+        false, indexType);
+    return new IndexSignatureTree(getTreeLocation(start), nameTree, declaredType);
   }
 
   private boolean peekAmbientDeclaration() { // AmbientModuleDeclaration not supported

@@ -233,6 +233,7 @@ public class Token {
       TYPE_ALIAS = 317,
       DECLARE = 318,
       MEMBER_VARIABLE_DEF = 319,
+      INDEX_SIGNATURE = 320,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
@@ -550,11 +551,13 @@ public class Token {
         return "TYPE_ALIAS";
       case DECLARE:
         return "DECLARE";
+      case INDEX_SIGNATURE:
+        return "INDEX_SIGNATURE";
     }
 
-        // Token without name
-        throw new IllegalStateException("No name defined for " + token);
-    }
+    // Token without name
+    throw new IllegalStateException("No name defined for " + token);
+  }
 
   /** If the arity isn't always the same, this function returns -1 */
   public static int arity(int token) {

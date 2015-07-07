@@ -83,6 +83,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.IdentifierExpressionTre
 import com.google.javascript.jscomp.parsing.parser.trees.IfStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ImportSpecifierTree;
+import com.google.javascript.jscomp.parsing.parser.trees.IndexSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.InterfaceDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LabelledStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.LiteralExpressionTree;
@@ -2161,6 +2162,24 @@ class IRFactory {
       return newNode(Token.DECLARE, transform(tree.declaration));
     }
 
+    Node processIndexSignature(IndexSignatureTree tree) {
+      maybeWarnTypeSyntax(tree, "index signature");
+      Node name = transform(tree.name);
+      Node indexType = name.getDeclaredTypeExpression();
+      if (indexType.getType() != Token.NUMBER_TYPE
+          && indexType.getType() != Token.STRING_TYPE) {
+        errorReporter.error(
+            "Index signature parameter type must be 'string' or 'number'",
+            sourceName,
+            lineno(tree.name),
+            charno(tree.name));
+      }
+
+      Node signature = newNode(Token.INDEX_SIGNATURE, name);
+      maybeProcessType(signature, tree.declaredType);
+      return signature;
+    }
+
     private boolean checkParameters(ImmutableList<ParseTree> params) {
       boolean seenOptional = false;
       boolean good = true;
@@ -2530,10 +2549,13 @@ class IRFactory {
 
         case TYPE_ALIAS:
           return processTypeAlias(node.asTypeAlias());
-          // TODO(johnlenz): handle these or remove parser support
         case AMBIENT_DECLARATION:
           return processAmbientDeclaration(node.asAmbientDeclaration());
 
+        case INDEX_SIGNATURE:
+          return processIndexSignature(node.asIndexSignature());
+
+        // TODO(johnlenz): handle these or remove parser support
         case ARGUMENT_LIST:
         default:
           break;

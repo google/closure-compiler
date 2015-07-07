@@ -2686,6 +2686,10 @@ public class Node implements Cloneable, Serializable {
     return this.getType() == Token.RECORD_TYPE;
   }
 
+  public boolean isIndexSignature() {
+    return this.getType() == Token.INDEX_SIGNATURE;
+  }
+
   public boolean isLabel() {
     return this.getType() == Token.LABEL;
   }

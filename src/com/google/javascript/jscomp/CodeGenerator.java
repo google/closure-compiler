@@ -511,7 +511,8 @@ class CodeGenerator {
               n.getParent().isObjectLit()
                   || n.getParent().isClassMembers()
                   || n.getParent().isInterfaceMembers()
-                  || n.getParent().isRecordType());
+                  || n.getParent().isRecordType()
+                  || n.getParent().isIndexSignature());
 
           if (n.isStaticMember()) {
             add("static ");
@@ -545,7 +546,8 @@ class CodeGenerator {
             add(n.getString());
             maybeAddOptional(n);
             maybeAddTypeDecl(n);
-            if (!n.getParent().isRecordType()) {
+            if (!n.getParent().isRecordType()
+                && !n.getParent().isIndexSignature()) {
               add(";");
             }
           } else {
@@ -1172,6 +1174,13 @@ class CodeGenerator {
         add("declare");
         add(first);
         cc.endStatement();
+        break;
+      case Token.INDEX_SIGNATURE:
+        add("[");
+        add(first);
+        add("]");
+        maybeAddTypeDecl(n);
+        add(";");
         break;
       default:
         throw new RuntimeException("Unknown type " + Token.name(type) + "\n" + n.toStringTree());
