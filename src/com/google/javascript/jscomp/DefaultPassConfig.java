@@ -224,6 +224,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (!options.transpileOnly && options.closurePass) {
       checks.add(closureGoogScopeAliases);
+      checks.add(closureRewriteClass);
     }
 
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
@@ -254,10 +255,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
-
-    if (options.closurePass) {
-      checks.add(closureRewriteClass);
-    }
 
     if (options.jqueryPass) {
       checks.add(jqueryAliases);
