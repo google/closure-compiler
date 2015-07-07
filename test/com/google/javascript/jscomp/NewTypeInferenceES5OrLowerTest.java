@@ -7640,7 +7640,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testCasts() {
-    typeCheck("(/** @type {number} */ ('asdf'));", TypeValidator.INVALID_CAST);
+    typeCheck(
+        "(/** @type {number} */ ('asdf'));",
+        NewTypeInference.INVALID_CAST);
 
     typeCheck(Joiner.on('\n').join(
         "function f(/** (number|string) */ x) {",
@@ -7651,13 +7653,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck("(/** @type {number} */ (/** @type {?} */ ('asdf')))");
 
-    // Ignore null when checking whether we are casting to a subtype
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
         "function Parent() {}",
         "/** @constructor @extends {Parent} */",
         "function Child() {}",
         "/** @type {Child|null} */ (new Parent);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (number|string) */ x) {",
+        "  return /** @type {number|boolean} */ (x);",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function High() {}",
+        "/** @constructor @extends {High} */",
+        "function Low() {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** (!Foo|!Low) */ x) {",
+        "  return /** @type {!High} */ (x);",
+        "}"));
   }
 
   public void testOverride() {

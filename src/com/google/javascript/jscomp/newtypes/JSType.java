@@ -763,6 +763,10 @@ public abstract class JSType implements TypeI {
     return makeType(newMask, newObjs, newTypevar, enumBuilder.build());
   }
 
+  public static boolean haveCommonSubtype(JSType lhs, JSType rhs) {
+    return lhs.isBottom() || rhs.isBottom() || !meet(lhs, rhs).isBottom();
+  }
+
   private JSType makeTruthy() {
     if (this.isTop() || this.isUnknown()) {
       return this;

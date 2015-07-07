@@ -267,6 +267,7 @@ public class DiagnosticGroups {
           NewTypeInference.FORIN_EXPECTS_STRING_KEY,
 //           NewTypeInference.GOOG_BIND_EXPECTS_FUNCTION,
 //           NewTypeInference.INVALID_ARGUMENT_TYPE,
+//           NewTypeInference.INVALID_CAST,
           NewTypeInference.INVALID_INFERRED_RETURN_TYPE,
 //           NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE,
 //           NewTypeInference.INVALID_OPERAND_TYPE,
@@ -289,7 +290,6 @@ public class DiagnosticGroups {
           TypeCheck.NOT_CALLABLE,
 //           TypeCheck.WRONG_ARGUMENT_COUNT,
 //           TypeValidator.ILLEGAL_PROPERTY_ACCESS,
-//           TypeValidator.INVALID_CAST,
           TypeValidator.UNKNOWN_TYPEOF_VALUE);
   }
 

@@ -194,6 +194,12 @@ final class NewTypeInference implements CompilerPass {
           "Property {0} of {1} cannot have a valid type."
           + "Maybe the result of a union of incompatible types?");
 
+  static final DiagnosticType INVALID_CAST =
+      DiagnosticType.warning("JSC_INVALID_CAST",
+          "invalid cast - the types don't have a common subtype\n" +
+          "from: {0}\n" +
+          "to  : {1}");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
       BOTTOM_PROP,
@@ -206,6 +212,7 @@ final class NewTypeInference implements CompilerPass {
       FORIN_EXPECTS_STRING_KEY,
       GOOG_BIND_EXPECTS_FUNCTION,
       INVALID_ARGUMENT_TYPE,
+      INVALID_CAST,
       INVALID_INFERRED_RETURN_TYPE,
       INVALID_OBJLIT_PROPERTY_TYPE,
       INVALID_OPERAND_TYPE,
@@ -229,7 +236,6 @@ final class NewTypeInference implements CompilerPass {
       TypeCheck.NOT_CALLABLE,
       TypeCheck.WRONG_ARGUMENT_COUNT,
       TypeValidator.ILLEGAL_PROPERTY_ACCESS,
-      TypeValidator.INVALID_CAST,
       TypeValidator.UNKNOWN_TYPEOF_VALUE);
 
   private static String getFileWhereWarningOccurred(JSError warning) {
@@ -1118,8 +1124,7 @@ final class NewTypeInference implements CompilerPass {
    */
   private EnvTypePair analyzeExprFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
-    Preconditions.checkArgument(
-        requiredType != null && !requiredType.isBottom());
+    Preconditions.checkArgument(requiredType != null && !requiredType.isBottom());
     EnvTypePair resultPair = null;
     switch (expr.getType()) {
       case Token.EMPTY: // can be created by a FOR with empty condition
@@ -2016,10 +2021,9 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
     JSType fromType = pair.type;
     JSType toType = symbolTable.getCastType(expr);
-    if (!toType.removeType(JSType.NULL).isSubtypeOf(fromType)
-        && !fromType.isSubtypeOf(toType)) {
-      warnings.add(JSError.make(expr, TypeValidator.INVALID_CAST,
-              fromType.toString(), toType.toString()));
+    if (!JSType.haveCommonSubtype(fromType, toType)) {
+      warnings.add(JSError.make(
+          expr, INVALID_CAST, fromType.toString(), toType.toString()));
     }
     pair.type = toType;
     return pair;
@@ -2487,11 +2491,11 @@ final class NewTypeInference implements CompilerPass {
     }
     // The warning depends on whether we are testing for the existence of a
     // property.
-    boolean isNotAnObject = JSType.meet(recvType, JSType.TOP_OBJECT).isBottom();
+    boolean isNotAnObject = !JSType.haveCommonSubtype(recvType, JSType.TOP_OBJECT);
     boolean mayNotBeAnObject = !recvType.isSubtypeOf(JSType.TOP_OBJECT);
-    if (isNotAnObject ||
-        (!specializedType.isTruthy() && !specializedType.isFalsy() &&
-            mayNotBeAnObject)) {
+    if (isNotAnObject
+        || (!specializedType.isTruthy() && !specializedType.isFalsy()
+            && mayNotBeAnObject)) {
       warnings.add(JSError.make(receiver, PROPERTY_ACCESS_ON_NONOBJECT,
               getPropNameForErrorMsg(receiver.getParent()),
               recvType.toString()));
@@ -2704,7 +2708,7 @@ final class NewTypeInference implements CompilerPass {
         FunctionType summary = summaries.get(calleeScope).getFunType();
         JSType outerType = envGetType(env, freeVar);
         JSType innerType = summary.getOuterVarPrecondition(freeVar);
-        if (outerType != null && JSType.meet(outerType, innerType).isBottom()) {
+        if (outerType != null && !JSType.haveCommonSubtype(outerType, innerType)) {
           warnings.add(JSError.make(callee, CROSS_SCOPE_GOTCHA,
                   freeVar, outerType.toString(), innerType.toString()));
         }
@@ -3789,8 +3793,7 @@ final class NewTypeInference implements CompilerPass {
 
     void updateReturn(JSType expectedRetType) {
       if (this.expectedRetType != null) {
-        this.expectedRetType =
-            JSType.meet(this.expectedRetType, expectedRetType);
+        this.expectedRetType = JSType.meet(this.expectedRetType, expectedRetType);
       }
     }
 
