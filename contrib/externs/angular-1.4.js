@@ -1033,11 +1033,11 @@ angular.$animate.prototype.setClass = function(
     element, add, remove, opt_options) {};
 
 /**
+ * @param {(boolean|JQLiteSelector)=} opt_elementOrValue
  * @param {boolean=} opt_value
- * @param {JQLiteSelector=} opt_element
  * @return {boolean}
  */
-angular.$animate.prototype.enabled = function(opt_value, opt_element) {};
+angular.$animate.prototype.enabled = function(opt_elementOrValue, opt_value) {};
 
 /**
  * @param {angular.$q.Promise} animationPromise
