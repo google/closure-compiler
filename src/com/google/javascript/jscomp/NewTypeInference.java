@@ -446,9 +446,6 @@ final class NewTypeInference implements CompilerPass {
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.getConstructorObject();
-      } else {
-        summaryType = summaryType.withProperty(
-            new QualifiedName("prototype"), JSType.TOP_OBJECT);
       }
       entryEnv = envPutType(entryEnv, fnName, summaryType);
     }
@@ -491,9 +488,6 @@ final class NewTypeInference implements CompilerPass {
       FunctionType fnType = summaryType.getFunType();
       if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.getConstructorObject();
-      } else {
-        summaryType = summaryType.withProperty(
-            new QualifiedName("prototype"), JSType.TOP_OBJECT);
       }
       env = envPutType(env, fnName, summaryType);
     }
@@ -518,10 +512,8 @@ final class NewTypeInference implements CompilerPass {
       // TODO(dimvar): when declType is a union, consider also creating
       // appropriate ctor objs. (This is going to be rare.)
       return funType.getConstructorObject();
-    } else {
-      return declType.withProperty(
-          new QualifiedName("prototype"), JSType.TOP_OBJECT);
     }
+    return declType;
   }
 
   private void buildWorkset(

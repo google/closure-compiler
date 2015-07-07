@@ -52,6 +52,7 @@ final class ObjectType implements TypeWithProperties {
       PersistentMap.of("_", Property.make(JSType.BOTTOM, JSType.BOTTOM));
   private static final ObjectType BOTTOM_OBJECT = new ObjectType(
       null, BOTTOM_MAP, null, false, ObjectKind.UNRESTRICTED);
+  private static final Property UNKNOWN_PROP = Property.make(JSType.UNKNOWN, null);
 
   // Represents the built-in Object type. It's not available when the ObjectType
   // class is initialized because we read the definition from the externs.
@@ -92,6 +93,9 @@ final class ObjectType implements TypeWithProperties {
       props = PersistentMap.create();
     } else if (containsBottomProp(props) || !FunctionType.isInhabitable(fn)) {
       return BOTTOM_OBJECT;
+    }
+    if (fn != null && !props.containsKey("prototype")) {
+      props = props.with("prototype", UNKNOWN_PROP);
     }
     return new ObjectType(nominalType, props, fn, isLoose, ok);
   }
@@ -307,9 +311,9 @@ final class ObjectType implements TypeWithProperties {
 
   private ObjectType withPropertyRequired(String pname) {
     Property oldProp = this.props.get(pname);
-    Property newProp = oldProp == null ?
-        Property.make(JSType.UNKNOWN, null) :
-        Property.make(oldProp.getType(), oldProp.getDeclaredType());
+    Property newProp = oldProp == null
+        ? UNKNOWN_PROP
+        : Property.make(oldProp.getType(), oldProp.getDeclaredType());
     return ObjectType.makeObjectType(
         nominalType, this.props.with(pname, newProp), fn,
         isLoose, this.objectKind);

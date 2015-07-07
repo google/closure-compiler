@@ -4032,6 +4032,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testPrototypeOnNonCtorFunction() {
     typeCheck("function Foo() {}; Foo.prototype.y = 5;");
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** Function */ x) {",
+        "  var y = x != null ? x.prototype : null;",
+        "}"));
   }
 
   public void testInvalidTypeReference() {
