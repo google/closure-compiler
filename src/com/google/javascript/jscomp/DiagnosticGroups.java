@@ -464,6 +464,9 @@ public class DiagnosticGroups {
     // For internal use only, so there is no constant for it.
     DiagnosticGroups.registerGroup("invalidProvide",
         ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
+
+    DiagnosticGroups.registerGroup("es6Typed",
+        RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
   }
 
   /**
