@@ -1957,6 +1957,9 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("(a=>b)(1)", "((a)=>b)(1)");
     assertPrintSame("var z={x:(a)=>1}");
     assertPrint("(a,b)=>b", "(a,b)=>b");
+    assertPrintSame("()=>(a,b)");
+    assertPrint("(()=>a),b", "()=>a,b");
+    assertPrint("()=>(a=b)", "()=>a=b");
   }
 
   public void testDeclarations() {

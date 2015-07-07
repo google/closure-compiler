@@ -191,10 +191,6 @@ public class Token {
 
       DEFAULT_VALUE = 179, // Formal parameter or destructuring element with a default value
 
-      // ECMAScript 6 Typed AST Nodes.
-
-      MEMBER_VARIABLE_DEF = 180,
-
       // Used by type declaration ASTs
       STRING_TYPE = 200,
       BOOLEAN_TYPE = 201,
@@ -236,6 +232,7 @@ public class Token {
       IMPLEMENTS = 316,
       TYPE_ALIAS = 317,
       DECLARE = 318,
+      MEMBER_VARIABLE_DEF = 319,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.

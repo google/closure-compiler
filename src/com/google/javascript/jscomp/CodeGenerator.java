@@ -345,42 +345,10 @@ class CodeGenerator {
           throw new Error("Unexpected Node subclass.");
         }
         Preconditions.checkState(childCount == 3);
-
-        boolean isArrow = n.isArrowFunction();
-        // Arrow functions are complete expressions, so don't need parentheses
-        // if they are in an expression result.
-        boolean notSingleExpr = n.getParent() == null || !n.getParent().isExprResult();
-        boolean funcNeedsParens = (context == Context.START_OF_EXPR)
-            && (!isArrow || notSingleExpr);
-        if (funcNeedsParens) {
-          add("(");
-        }
-
-        if (!isArrow) {
-          add("function");
-        }
-        if (n.isGeneratorFunction()) {
-          add("*");
-          if (!first.getString().isEmpty()) {
-            cc.maybeInsertSpace();
-          }
-        }
-
-        add(first);
-
-        maybeAddGenericTypes(first);
-
-        add(first.getNext()); // param list
-
-        maybeAddTypeDecl(n);
-        if (isArrow) {
-          cc.addOp("=>", true);
-        }
-        add(last, Context.PRESERVE_BLOCK);
-        cc.endFunction(context == Context.STATEMENT);
-
-        if (funcNeedsParens) {
-          add(")");
+        if (n.isArrowFunction()) {
+          addArrowFunction(n, first, last, context);
+        } else {
+          addFunction(n, first, last, context);
         }
         break;
       }
@@ -1210,6 +1178,76 @@ class CodeGenerator {
     }
 
     cc.endSourceMapping(n);
+  }
+
+  private boolean arrowFunctionNeedsParens(Node parent, Context context) {
+    if (parent == null) {
+      return false;
+    }
+    switch (parent.getType()) {
+      case Token.EXPR_RESULT:
+      case Token.COMMA:
+        // Arrow function bodies bind more tightly than commas, and need no parens in that case.
+        return false;
+      default:
+        return (context == Context.START_OF_EXPR);
+    }
+  }
+
+  private void addArrowFunction(Node n, Node first, Node last, Context context) {
+    Preconditions.checkState(first.getString().isEmpty());
+    boolean funcNeedsParens = arrowFunctionNeedsParens(n.getParent(), context);
+    if (funcNeedsParens) {
+      add("(");
+    }
+
+    maybeAddGenericTypes(first);
+
+    add(first.getNext()); // param list
+    maybeAddTypeDecl(n);
+
+    cc.addOp("=>", true);
+
+    if (last.isBlock()) {
+      add(last, Context.PRESERVE_BLOCK);
+    } else {
+      // This is a hack. Arrow functions have no token type, but
+      // blockless arrow function bodies have lower precedence than anything other than commas.
+      addExpr(last, NodeUtil.precedence(Token.COMMA) + 1, Context.PRESERVE_BLOCK);
+    }
+    cc.endFunction(context == Context.STATEMENT);
+
+    if (funcNeedsParens) {
+      add(")");
+    }
+  }
+
+  private void addFunction(Node n, Node first, Node last, Context context) {
+    boolean funcNeedsParens = (context == Context.START_OF_EXPR);
+    if (funcNeedsParens) {
+      add("(");
+    }
+
+    add("function");
+    if (n.isGeneratorFunction()) {
+      add("*");
+      if (!first.getString().isEmpty()) {
+        cc.maybeInsertSpace();
+      }
+    }
+
+    add(first);
+    maybeAddGenericTypes(first);
+
+    add(first.getNext()); // param list
+    maybeAddTypeDecl(n);
+
+    add(last, Context.PRESERVE_BLOCK);
+    cc.endFunction(context == Context.STATEMENT);
+
+    if (funcNeedsParens) {
+      add(")");
+    }
   }
 
   private void maybeAddTypeDecl(Node n) {
