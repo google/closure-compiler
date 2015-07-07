@@ -356,14 +356,7 @@ public final class FunctionType {
       return FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration();
     }
     Preconditions.checkState(!isLoose(), "Loose function: %s", this);
-    // Don't do it for generic types.
-    if (isGeneric()) {
-      return null;
-    }
-    // Don't do it for anonymous constructors
-    if (nominalType != null) {
-      return null;
-    }
+    Preconditions.checkState(!isGeneric(), "Generic function: %s", this);
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     for (JSType type : requiredFormals) {
       builder.addReqFormal(type);

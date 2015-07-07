@@ -254,6 +254,10 @@ public abstract class JSType implements TypeI {
     return BOTTOM_MASK == getMask();
   }
 
+  public boolean isUndefined() {
+    return UNDEFINED_MASK == getMask();
+  }
+
   public boolean isUnknown() {
     return UNKNOWN_MASK == getMask();
   }
@@ -899,7 +903,7 @@ public abstract class JSType implements TypeI {
     return fromObjectType(ot.withFunction(ft, fnNominal));
   }
 
-  private ObjectType getObjTypeIfSingletonObj() {
+  public ObjectType getObjTypeIfSingletonObj() {
     if (getMask() != NON_SCALAR_MASK || getObjs().size() > 1) {
       return null;
     }
@@ -912,14 +916,13 @@ public abstract class JSType implements TypeI {
   }
 
   public FunctionType getFunType() {
-    if (getObjs().size() <= 1) { // The common case is fast
-      return getFunTypeIfSingletonObj();
-    }
-    FunctionType result = FunctionType.TOP_FUNCTION;
     for (ObjectType obj : getObjs()) {
-      result = FunctionType.meet(result, obj.getFunType());
+      FunctionType ft = obj.getFunType();
+      if (ft != null) {
+        return ft;
+      }
     }
-    return result;
+    return null;
   }
 
   public NominalType getNominalTypeIfSingletonObj() {

@@ -118,11 +118,12 @@ public final class JSTypeCreatorFromJSDoc {
 
   public JSTypeCreatorFromJSDoc(CodingConvention convention) {
     this.objectOrNull = JSType.join(JSType.TOP_OBJECT, JSType.NULL);
-    this.qmarkFunctionDeclared = FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration();
+    this.qmarkFunctionDeclared = new FunctionAndSlotType(
+        null, FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration());
     this.convention = convention;
   }
 
-  private DeclaredFunctionType qmarkFunctionDeclared;
+  private FunctionAndSlotType qmarkFunctionDeclared;
   private JSType qmarkFunctionOrNull = null;
 
   private JSType getQmarkFunctionOrNull(JSTypes commonTypes) {
@@ -493,6 +494,7 @@ public final class JSTypeCreatorFromJSDoc {
         } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
           warn("Wrong parameter order: required parameters are first, " +
               "then optional, then varargs", jsdocNode);
+          builder.addPlaceholderFormal();
         }
       }
       child = child.getNext();
@@ -552,16 +554,26 @@ public final class JSTypeCreatorFromJSDoc {
     return jsdocNode.isString() && jsdocNode.getString().equals("Function");
   }
 
+  public static class FunctionAndSlotType {
+    public JSType slotType;
+    public DeclaredFunctionType functionType;
+
+    public FunctionAndSlotType(JSType slotType, DeclaredFunctionType functionType) {
+      this.slotType = slotType;
+      this.functionType = functionType;
+    }
+  }
+
   /**
    * Consumes either a "classic" function jsdoc with @param, @return, etc,
-   * or a jsdoc with @type{function ...} and finds the types of the formal
+   * or a jsdoc with @type {function ...} and finds the types of the formal
    * parameters and the return value. It returns a builder because the callers
    * of this function must separately handle @constructor, @interface, etc.
    *
    * constructorType is non-null iff this function is a constructor or
    * interface declaration.
    */
-  public DeclaredFunctionType getFunctionType(
+  public FunctionAndSlotType getFunctionType(
       JSDocInfo jsdoc, String functionName, Node declNode,
       RawNominalType constructorType, RawNominalType ownerType,
       DeclaredTypeRegistry registry) {
@@ -571,136 +583,32 @@ public final class JSTypeCreatorFromJSDoc {
     }
     try {
       if (jsdoc != null && jsdoc.getType() != null) {
-        Node jsdocNode = jsdoc.getType().getRoot();
-        int tokenType = jsdocNode.getType();
-        if (tokenType == Token.FUNCTION) {
-          if (declNode.isFunction()) {
-            return getFunTypeFromAtTypeJsdoc(
-                jsdoc, declNode, ownerType, registry, builder);
-          }
-          try {
-            // TODO(blickly): Use typeParameters here
-            fillInFunTypeBuilder(jsdocNode, ownerType, registry,
-                ImmutableList.<String>of(), builder);
-            return builder.buildDeclaration();
-          } catch (UnknownTypeException e) {
-            return qmarkFunctionDeclared;
-          }
-        }
-        if (isQmarkFunction(jsdocNode)) {
+        JSType simpleType = getDeclaredTypeOfNode(jsdoc, ownerType, registry);
+        if (simpleType.isUnknown() || simpleType.isTop()) {
           return qmarkFunctionDeclared;
+        }
+        FunctionType funType = simpleType.getFunType();
+        if (funType != null) {
+          JSType slotType = simpleType.isFunctionType() ? null : simpleType;
+          DeclaredFunctionType declType = funType.toDeclaredFunctionType();
+          if (ownerType != null) {
+            declType = declType.withReceiverType(ownerType.getAsNominalType());
+          }
+          return new FunctionAndSlotType(slotType, declType);
         } else {
           warn("The function is annotated with a non-function jsdoc. " +
               "Ignoring jsdoc.", declNode);
-          return getFunTypeFromTypicalFunctionJsdoc(null, functionName,
-              declNode, constructorType, ownerType, registry, builder, true);
+          jsdoc = null;
         }
       }
-      return getFunTypeFromTypicalFunctionJsdoc(jsdoc, functionName,
+      DeclaredFunctionType declType = getFunTypeFromTypicalFunctionJsdoc(jsdoc, functionName,
           declNode, constructorType, ownerType, registry, builder, false);
+      return new FunctionAndSlotType(null, declType);
     } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
       warn("Wrong parameter order: required parameters are first, " +
           "then optional, then varargs. Ignoring jsdoc.", declNode);
       return qmarkFunctionDeclared;
     }
-  }
-
-  private DeclaredFunctionType getFunTypeFromAtTypeJsdoc(
-      JSDocInfo jsdoc, Node funNode, RawNominalType ownerType,
-      DeclaredTypeRegistry registry, FunctionTypeBuilder builder) {
-    Preconditions.checkArgument(funNode.isFunction());
-    Node childJsdoc = jsdoc.getType().getRoot().getFirstChild();
-    Node param = funNode.getFirstChild().getNext().getFirstChild();
-    Node paramType;
-    boolean warnedForMissingTypes = false;
-    boolean warnedForInlineJsdoc = false;
-    ImmutableList<String> typeParameters = ownerType == null
-        ? ImmutableList.<String>of() : ownerType.getTypeParameters();
-
-    if (childJsdoc.getType() == Token.THIS) {
-      if (ownerType == null) {
-        builder.addReceiverType(getNominalType(
-            childJsdoc.getFirstChild(), registry, typeParameters));
-      }
-      childJsdoc = childJsdoc.getNext();
-    } else if (childJsdoc.getType() == Token.NEW) {
-      builder.addNominalType(
-          getNominalType(childJsdoc.getFirstChild(), registry, typeParameters));
-      childJsdoc = childJsdoc.getNext();
-    }
-    if (childJsdoc.getType() == Token.PARAM_LIST) {
-      paramType = childJsdoc.getFirstChild();
-      childJsdoc = childJsdoc.getNext(); // go to the return type
-    } else { // empty parameter list
-      paramType = null;
-    }
-
-    while (param != null) {
-      if (paramType == null) {
-        if (!warnedForMissingTypes) {
-          warn("The function has more formal parameters than the types " +
-              "declared in the JSDoc", funNode);
-          warnedForMissingTypes = true;
-        }
-        builder.addOptFormal(JSType.UNKNOWN);
-      } else {
-        if (!warnedForInlineJsdoc && param.getJSDocInfo() != null) {
-          warn("The function cannot have both an @type jsdoc and inline " +
-              "jsdocs. Ignoring inline jsdocs.", param);
-          warnedForInlineJsdoc = true;
-        }
-        switch (paramType.getType()) {
-          case Token.EQUALS:
-            builder.addOptFormal(getTypeFromComment(
-                paramType.getFirstChild(), registry, typeParameters));
-            break;
-          case Token.ELLIPSIS:
-            if (!warnedForMissingTypes) {
-              warn("The function has more formal parameters than the types " +
-                  "declared in the JSDoc", funNode);
-              warnedForMissingTypes = true;
-              builder.addOptFormal(JSType.UNKNOWN);
-            }
-            break;
-          default:
-            builder.addReqFormal(
-                getTypeFromComment(paramType, registry, typeParameters));
-            break;
-        }
-        paramType = paramType.getNext();
-      }
-      param = param.getNext();
-    }
-
-    if (paramType != null) {
-      if (paramType.getType() == Token.ELLIPSIS) {
-        builder.addRestFormals(getTypeFromComment(
-            paramType.getFirstChild(), registry, typeParameters));
-      } else {
-        warn("The function has fewer formal parameters than the types " +
-            "declared in the JSDoc", funNode);
-      }
-    }
-    if (!warnedForInlineJsdoc &&
-        funNode.getFirstChild().getJSDocInfo() != null) {
-      warn("The function cannot have both an @type jsdoc and inline " +
-          "jsdocs. Ignoring the inline return jsdoc.", funNode);
-    }
-    if (jsdoc.getReturnType() != null) {
-      warn("The function cannot have both an @type jsdoc and @return " +
-          "jsdoc. Ignoring @return jsdoc.", funNode);
-    }
-    if (funNode.getParent().isSetterDef()) {
-      if (childJsdoc != null) {
-        warn("Cannot declare a return type on a setter", funNode);
-      }
-      builder.addRetType(JSType.UNDEFINED);
-    } else {
-      builder.addRetType(
-          getTypeFromComment(childJsdoc, registry, typeParameters));
-    }
-
-    return builder.buildDeclaration();
   }
 
   private static class ParamIterator {
@@ -890,14 +798,8 @@ public final class JSTypeCreatorFromJSDoc {
     JSDocInfo inlineRetJsdoc =
         ignoreJsdoc ? null : funNode.getFirstChild().getJSDocInfo();
     JSTypeExpression retTypeExp = jsdoc == null ? null : jsdoc.getReturnType();
-    if (parent.isSetterDef()) {
-      // inline returns for setters are attached to the function body.
-      // Consider fixing this.
-      inlineRetJsdoc = ignoreJsdoc ? null :
-          funNode.getLastChild().getJSDocInfo();
-      if (retTypeExp != null || inlineRetJsdoc != null) {
-        warn("Cannot declare a return type on a setter", funNode);
-      }
+    if (parent.isSetterDef() && retTypeExp == null) {
+      // inline returns for getters/setters are not parsed
       builder.addRetType(JSType.UNDEFINED);
     } else if (inlineRetJsdoc != null) {
       builder.addRetType(

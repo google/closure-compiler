@@ -1673,7 +1673,7 @@ final class NewTypeInference implements CompilerPass {
       warnings.add(JSError.make(
           expr, TypeCheck.NOT_CALLABLE, calleeType.toString()));
     }
-    FunctionType funType = calleeType.getFunType();
+    FunctionType funType = calleeType.getFunTypeIfSingletonObj();
     if (funType == null
         || funType.isTopFunction() || funType.isQmarkFunction()) {
       return analyzeCallNodeArgsFwdWhenError(expr, inEnv);

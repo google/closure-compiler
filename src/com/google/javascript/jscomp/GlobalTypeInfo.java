@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.newtypes.EnumType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
+import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.FunctionAndSlotType;
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.Namespace;
 import com.google.javascript.jscomp.newtypes.NamespaceLit;
@@ -175,6 +176,18 @@ class GlobalTypeInfo implements CompilerPass {
           "JSC_INVALID_INTERFACE_PROP_INITIALIZER",
           "Invalid initialization of interface property.");
 
+  static final DiagnosticType SETTER_WITH_RETURN =
+      DiagnosticType.warning(
+          "JSC_SETTER_WITH_RETURN",
+          "Cannot declare a return type on a setter.");
+
+  static final DiagnosticType WRONG_PARAMETER_COUNT =
+      DiagnosticType.warning(
+          "JSC_WRONG_PARAMETER_COUNT",
+          "Function definition does not have the declared number of parameters.\n"
+          + "Expected: {0}\n"
+          + "Found: {1}");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_INIT_TYPEDEF,
@@ -194,9 +207,11 @@ class GlobalTypeInfo implements CompilerPass {
       MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
       REDECLARED_PROPERTY,
+      SETTER_WITH_RETURN,
       STRUCTDICT_WITHOUT_CTOR,
       UNDECLARED_NAMESPACE,
       UNRECOGNIZED_TYPE_NAME,
+      WRONG_PARAMETER_COUNT,
       TypeCheck.CONFLICTING_EXTENDED_TYPE,
       TypeCheck.ENUM_NOT_CONSTANT,
       TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
@@ -1453,11 +1468,12 @@ class GlobalTypeInfo implements CompilerPass {
 
     private JSType getTypeAtPropDeclNode(Node declNode, JSDocInfo jsdoc) {
       Preconditions.checkArgument(!currentScope.isNamespace(declNode));
-      Node initializer = NodeUtil.getRValueOfLValue(declNode);
-      if (initializer != null && initializer.isFunction()) {
-        return commonTypes.fromFunctionType(
-            currentScope.getScope(getFunInternalName(initializer))
-            .getDeclaredFunctionType().toFunctionType());
+      QualifiedName qname = QualifiedName.fromNode(declNode);
+      if (qname != null) {
+        Declaration decl = currentScope.getDeclaration(qname, false);
+        if (decl != null && decl.getTypeOfSimpleDecl() != null) {
+          return decl.getTypeOfSimpleDecl();
+        }
       }
       return getDeclaredTypeOfNode(jsdoc, currentScope);
     }
@@ -1702,12 +1718,34 @@ class GlobalTypeInfo implements CompilerPass {
       // TODO(dimvar): warn if multiple jsdocs for a fun
       RawNominalType ctorType =
           declNode.isFunction() ? nominaltypesByNode.get(declNode) : null;
-      DeclaredFunctionType result = typeParser.getFunctionType(
+      FunctionAndSlotType result = typeParser.getFunctionType(
           fnDoc, functionName, declNode, ctorType, ownerType, parentScope);
-      if (ctorType != null) {
-        ctorType.setCtorFunction(result.toFunctionType(), commonTypes);
+      Node qnameNode = declNode.isGetProp() ? declNode : NodeUtil.getFunctionNameNode(declNode);
+      if (result.slotType != null && qnameNode != null && qnameNode.isName()) {
+        parentScope.addSimpleType(qnameNode, result.slotType);
       }
-      return result;
+      if (ctorType != null) {
+        ctorType.setCtorFunction(result.functionType.toFunctionType(), commonTypes);
+      }
+      if (declNode.isFunction()) {
+        maybeWarnFunctionDeclaration(declNode, result.functionType);
+      }
+      return result.functionType;
+    }
+
+    private void maybeWarnFunctionDeclaration(Node funNode, DeclaredFunctionType funType) {
+      if (funNode.getParent().isSetterDef()) {
+        JSType returnType = funType.getReturnType();
+        if (returnType != null && !returnType.isUnknown() && !returnType.isUndefined()) {
+          warnings.add(JSError.make(funNode, SETTER_WITH_RETURN));
+        }
+      }
+      int declaredArity = funType.getOptionalArity();
+      int parameterCount = funNode.getFirstChild().getNext().getChildCount();
+      if (!funType.hasRestFormals() && parameterCount != declaredArity) {
+        warnings.add(JSError.make(funNode, WRONG_PARAMETER_COUNT,
+            String.valueOf(declaredArity), String.valueOf(parameterCount)));
+      }
     }
 
     // We only return a non-null result if the arity of declNode matches the
@@ -1719,7 +1757,7 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkNotNull(declaredTypeAsJSType);
 
       FunctionType funType = declaredTypeAsJSType.getFunType();
-      if (funType == null) {
+      if (funType == null || funType.isConstructor() || funType.isInterfaceDefinition()) {
         return null;
       }
       DeclaredFunctionType declType = funType.toDeclaredFunctionType();
@@ -1756,7 +1794,7 @@ class GlobalTypeInfo implements CompilerPass {
         }
         // Use typeParser for the formals, and only add the receiver type here.
         DeclaredFunctionType allButRecvType = typeParser.getFunctionType(
-            null, functionName, declNode, null, null, parentScope);
+            null, functionName, declNode, null, null, parentScope).functionType;
         return allButRecvType.withReceiverType(recvType.getNominalTypeIfSingletonObj());
       }
 
@@ -1807,32 +1845,24 @@ class GlobalTypeInfo implements CompilerPass {
      */
     private void mayAddPropToPrototype(
         RawNominalType rawType, String pname, Node defSite, Node initializer) {
-      Scope methodScope;
-      DeclaredFunctionType methodType;
-      JSType propDeclType;
+      Scope methodScope = null;
+      DeclaredFunctionType methodType = null;
+      JSType propDeclType = null;
 
-      // Find the declared type of the property.
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
       if (initializer != null && initializer.isFunction()) {
         methodScope = visitFunctionLate(initializer, rawType);
         methodType = methodScope.getDeclaredFunctionType();
+      } else if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
+        // We're parsing a function declaration without a function initializer
+        methodType = computeFnDeclaredType(jsdoc, pname, defSite, rawType, currentScope);
+      }
+
+      // Find the declared type of the property.
+      if (jsdoc != null && jsdoc.hasType()) {
+        propDeclType = typeParser.getDeclaredTypeOfNode(jsdoc, rawType, currentScope);
+      } else if (methodType != null) {
         propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
-      } else {
-        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
-        if (jsdoc != null && jsdoc.containsFunctionDeclaration()) {
-          // We're parsing a function declaration without a function initializer
-          methodScope = null;
-          methodType = computeFnDeclaredType(jsdoc, pname, defSite, rawType, currentScope);
-          propDeclType = commonTypes.fromFunctionType(methodType.toFunctionType());
-        } else if (jsdoc != null && jsdoc.hasType()) {
-          // We are parsing a non-function prototype property
-          methodScope = null;
-          methodType = null;
-          propDeclType = typeParser.getDeclaredTypeOfNode(jsdoc, rawType, currentScope);
-        } else {
-          methodScope = null;
-          methodType = null;
-          propDeclType = null;
-        }
       }
       propertyDefs.put(rawType, pname, new PropertyDef(defSite, methodType, methodScope));
 
@@ -2094,7 +2124,10 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkArgument(!name.contains("."));
       Preconditions.checkState(isFinalized);
       Declaration d = getDeclaration(name, false);
-      return d != null && d.getFunctionScope() != null && d.getTypeOfSimpleDecl() != null;
+      if (d == null || d.getFunctionScope() == null || d.getTypeOfSimpleDecl() == null) {
+        return false;
+      }
+      return d.getTypeOfSimpleDecl().getObjTypeIfSingletonObj() != null;
     }
 
     // In other languages, type names and variable names are in distinct
@@ -2304,8 +2337,20 @@ class GlobalTypeInfo implements CompilerPass {
       return ImmutableSet.copyOf(externs.keySet());
     }
 
+    // Like addLocal, but used when the type is already defined locally
+    private void addSimpleType(Node qnameNode, JSType declType) {
+      Preconditions.checkState(qnameNode.isName());
+      String name = qnameNode.getString();
+      if (qnameNode.isFromExterns()) {
+        externs.put(name, declType);
+      } else {
+        locals.put(name, declType);
+      }
+    }
+
     private void addLocal(String name, JSType declType,
         boolean isConstant, boolean isFromExterns) {
+      Preconditions.checkArgument(!name.contains("."));
       Preconditions.checkArgument(!isDefinedLocally(name, false));
       if (isConstant) {
         constVars.add(name);

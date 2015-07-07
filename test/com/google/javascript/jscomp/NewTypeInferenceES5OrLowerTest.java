@@ -860,8 +860,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(Joiner.on('\n').join(
         "/** @type {function():number} */",
-        "function /** number */ f() { return 1; }"),
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        "function /** number */ f() { return 1; }"));
 
     typeCheck(Joiner.on('\n').join(
         "function f(/** function(number) */ fnum, floose, cond) {",
@@ -3373,16 +3372,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         TypeCheck.WRONG_ARGUMENT_COUNT);
 
     typeCheck(
-        "/** @type {function()} */ function f(x) {}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        "/** @type {number|function()} */ function f(x) {}",
+        GlobalTypeInfo.WRONG_PARAMETER_COUNT);
 
     typeCheck(
-        "/** @type {function(number)} */ function f() {}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        "/** @type {number|function(number)} */ function f() {}",
+        GlobalTypeInfo.WRONG_PARAMETER_COUNT);
 
     typeCheck(
-        "/** @type {function(number)} */ function f(/** number */ x) {}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        "/** @type {function(number)} */ function f(/** number */ x) {}");
 
     typeCheck(Joiner.on('\n').join(
         "/**",
@@ -3409,10 +3407,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @return {number} */ function /** number */ f() { return 1; }",
         RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
 
-    typeCheck(Joiner.on('\n').join(
-        "/** @type {function(): number} */",
-        "function /** number */ f() { return 1; }"),
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+    typeCheck(
+        "/** @type {function(): number} */ function /** number */ f() { return 1; }");
 
     typeCheck(Joiner.on('\n').join(
         "/** @type {function(...number)} */ function f() {}",
@@ -3425,8 +3421,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(
-        "/** @type {function(...number)} */ function f(x) {}",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        "/** @type {function(...number)} */ function f(x) {}");
 
     typeCheck(Joiner.on('\n').join(
         "/**",
@@ -9069,6 +9064,68 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   //       VarCheck.UNDEFINED_VAR_ERROR);
   // }
 
+   public void testFunctionUnions() {
+     typeCheck("/** @type {?function()} */ function f() {};");
+
+     typeCheck(
+         "/** @type {?function()} */ function f() {}; f = 7;",
+         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+     typeCheck("/** @type {?function()} */ function f() {}; f = null;");
+
+     typeCheck(
+         "/** @const */ var ns = {}; /** @type {?function()} */ ns.f = function() {}; ns.f = 7;",
+         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+     typeCheck(
+         "/** @const */var ns = {}; /** @type {?function()} */ns.f = function(){}; ns.f = null;");
+
+     typeCheck(
+         "/** @type {?function(string)} */ function f(x) { x-5; };",
+         NewTypeInference.INVALID_OPERAND_TYPE);
+
+     typeCheck(
+         "/** @const */var ns = {}; /** @type {?function(string)} */ns.f = function(x){ x-5; };",
+         NewTypeInference.INVALID_OPERAND_TYPE);
+
+     typeCheck(Joiner.on('\n').join(
+         "/** @constructor */ function Foo(){}",
+         "/** @type {?function()} */ Foo.prototype.f;",
+         "(new Foo).f = 7;"),
+         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+     typeCheck(Joiner.on('\n').join(
+         "/** @constructor */ function Foo(){}",
+         "/** @type {?function()} */ Foo.prototype.f;",
+         "(new Foo).f = null;"));
+
+     typeCheck(Joiner.on('\n').join(
+         "/** @constructor */ function Foo(){}",
+         "/** @type {?function()} */ Foo.prototype.f = function() {};",
+         "(new Foo).f = 7;"),
+         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+     typeCheck(Joiner.on('\n').join(
+         "/** @constructor */ function Foo(){}",
+         "/** @type {?function()} */ Foo.prototype.f = function() {};",
+         "(new Foo).f = null;"));
+   }
+
+   public void testFunctionTypedefs() {
+     typeCheck("/** @typedef {function()} */ var Fun; /** @type {Fun} */ function f() {};");
+
+     typeCheck(Joiner.on('\n').join(
+         "/** @typedef {function(string)} */ var TakesString;",
+         "/** @type {TakesString} */ function f(x) {}",
+         "f(123);"),
+         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+     typeCheck(Joiner.on('\n').join(
+        "/** @typedef {number|function()} */ var FunctionUnion;",
+        "/** @type {FunctionUnion} */ function f(x) {}"),
+        GlobalTypeInfo.WRONG_PARAMETER_COUNT);
+   }
+
   public void testGetters() {
     typeCheck(
         "var x = { /** @return {string} */ get a() { return 1; } };",
@@ -9131,16 +9188,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testSetters() {
     typeCheck(
-        "var x = { /** @return {string} */ set a(b) {} };",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        "var x = { /** @return {string} */ set a(b) { return ''; } };",
+        GlobalTypeInfo.SETTER_WITH_RETURN);
 
     typeCheck(
-        "var x = { /** @type{function(number):number} */ set a(b) {} };",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
-
-    typeCheck(
-        "var x = { set /** string */ a(b) {} };",
-        RhinoErrorReporter.BAD_JSDOC_ANNOTATION);
+        "var x = { /** @type{function(number):number} */ set a(b) { return 5; } };",
+        GlobalTypeInfo.SETTER_WITH_RETURN);
 
     typeCheck(Joiner.on('\n').join(
         "var x = {",
