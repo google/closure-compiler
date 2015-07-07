@@ -93,6 +93,29 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testSame("var templateString = `Template`;");
     testSame("tagged`Template`;");
     testSame("tagged`${name}Template`;");
+
+    testSame(LINE_JOINER.join(
+        "var obj = {",
+        "  itm1: 1,",
+        "  itm2: 2",
+        "}",
+        "var { itm1: de_item1, itm2: de_item2 } = obj;"));
+    testSame(LINE_JOINER.join(
+        "var obj = {",
+        "  itm1: 1,",
+        "  itm2: 2",
+        "}",
+        "var { itm1, itm2 } = obj;"));
+    testSame(LINE_JOINER.join(
+        "var arr = ['item1', 'item2', 'item3'];",
+        "var [ itm1 = 1, itm2 = 2 ] = arr;"));
+    testSame(LINE_JOINER.join(
+        "var arr = ['item1', 'item2', 'item3'];",
+        "var [ itm1 = 1, itm2 = 2 ] = badArr;"));
+    testSame(LINE_JOINER.join(
+        "var arr = ['item1', 'item2', 'item3'];",
+        "function f(){}",
+        "var [ itm1 = f(), itm2 = 2 ] = badArr;"));
   }
 
   public void testUselessCodeInFor() {
