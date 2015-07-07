@@ -34,7 +34,11 @@ import java.util.List;
 public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   protected List<PassFactory> passes;
 
-  protected static final String CLOSURE_BASE = "var goog;";
+  protected static final String CLOSURE_BASE =
+      Joiner.on('\n').join(
+          "/** @const */ var goog = {};",
+          "/** @return {void} */",
+          "goog.nullFunction = function() {};");
   protected static final String DEFAULT_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS + Joiner.on('\n').join(
           "/**",

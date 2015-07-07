@@ -564,16 +564,41 @@ public final class FunctionType {
 
   FunctionType specialize(FunctionType other) {
     if (other == null
-        || other.isQmarkFunction()
-        || !this.isLoose() && other.isLoose()) {
+        || other.isQmarkFunction() || other.isTopFunction() || equals(other)
+        || !isLoose() && other.isLoose()
+        || isGeneric() || other.isGeneric()) {
       return this;
     }
-    FunctionType result = meet(this, other);
-    Preconditions.checkState(isInhabitable(result));
-    if (this.isLoose() && !result.isLoose()) {
-      result = result.withLoose();
+    if (isTopFunction() || isQmarkFunction()) {
+      return isLoose() ? other.withLoose() : other;
     }
-    return result;
+    if (isLoose()) {
+      return looseJoin(this, other);
+    }
+    FunctionTypeBuilder builder = new FunctionTypeBuilder();
+    int i = 0;
+    for (JSType formal : this.requiredFormals) {
+      builder.addReqFormal(
+          JSType.nullAcceptingJoin(formal, other.getFormalType(i)));
+      i++;
+    }
+    for (JSType formal : this.optionalFormals) {
+      builder.addOptFormal(
+          JSType.nullAcceptingJoin(formal, other.getFormalType(i)));
+      i++;
+    }
+    if (this.restFormals != null) {
+      builder.addRestFormals(
+          JSType.nullAcceptingJoin(this.restFormals, other.getFormalType(i)));
+    }
+    JSType retType = this.returnType.specialize(other.returnType);
+    if (retType.isBottom()) {
+      return BOTTOM_FUNCTION;
+    }
+    builder.addRetType(retType);
+    builder.addNominalType(NominalType.pickSubclass(this.nominalType, other.nominalType));
+    builder.addReceiverType(NominalType.pickSubclass(this.receiverType, other.receiverType));
+    return builder.buildFunction();
   }
 
   static FunctionType meet(FunctionType f1, FunctionType f2) {
