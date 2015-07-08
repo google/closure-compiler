@@ -151,6 +151,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   public void testArrayType() {
     test("var x: string[];", "var /** !Array.<string> */ x;");
+    test("var x: string[][];", "var /** !Array.<!Array.<string>> */ x;");
     test("var x: test.Type[];", "var /** !Array.<!test.Type> */ x;");
   }
 

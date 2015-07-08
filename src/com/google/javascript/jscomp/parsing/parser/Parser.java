@@ -1107,11 +1107,10 @@ public class Parser {
   private ParseTree parseArrayTypeExpression() {
     SourcePosition start = getTreeStartLocation();
     ParseTree typeExpression = parseParenTypeExpression();
-    if (!peekImplicitSemiColon() && peek(TokenType.OPEN_SQUARE)) {
+    while (!peekImplicitSemiColon() && peek(TokenType.OPEN_SQUARE)) {
       eat(TokenType.OPEN_SQUARE);
       eat(TokenType.CLOSE_SQUARE);
-      typeExpression =
-          new ArrayTypeTree(getTreeLocation(start), typeExpression);
+      typeExpression = new ArrayTypeTree(getTreeLocation(start), typeExpression);
     }
     return typeExpression;
   }

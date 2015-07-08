@@ -179,6 +179,8 @@ public final class TypeSyntaxTest extends TestCase {
   public void testArrayType() {
     TypeDeclarationNode arrayOfString = arrayType(stringType());
     assertVarType("string[]", arrayOfString, "var foo: string[];");
+
+    parse("var foo: string[][];");
   }
 
   public void testArrayType_empty() {
