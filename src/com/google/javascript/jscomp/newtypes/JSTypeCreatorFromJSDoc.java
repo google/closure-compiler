@@ -463,14 +463,16 @@ public final class JSTypeCreatorFromJSDoc {
       ImmutableList<String> typeParameters, FunctionTypeBuilder builder)
       throws UnknownTypeException {
     Node child = jsdocNode.getFirstChild();
+    NominalType builtinObject = registry.getCommonTypes().getObjectType();
     if (child.getType() == Token.THIS) {
       if (ownerType == null) {
-        builder.addReceiverType(getNominalType(child.getFirstChild(), registry, typeParameters));
+        NominalType nt = getNominalType(child.getFirstChild(), registry, typeParameters);
+        builder.addReceiverType(nt == null ? builtinObject : nt);
       }
       child = child.getNext();
     } else if (child.getType() == Token.NEW) {
-      builder.addNominalType(
-          getNominalType(child.getFirstChild(), registry, typeParameters));
+      NominalType nt = getNominalType(child.getFirstChild(), registry, typeParameters);
+      builder.addNominalType(nt == null ? builtinObject : nt);
       child = child.getNext();
     }
     if (child.getType() == Token.PARAM_LIST) {
@@ -734,10 +736,10 @@ public final class JSTypeCreatorFromJSDoc {
       // thisTypeAsNominal.
       // We currently only support nominal types for the receiver type, but
       // people use other types as well: unions, records, etc.
-      // Decide what to do about those.
-      NominalType thisTypeAsNominal = thisType == null
-          ? null : thisType.getNominalTypeIfSingletonObj();
-      builder.addReceiverType(thisTypeAsNominal);
+      // For now, we just use the generic Object for these.
+      NominalType nt = thisType == null ? null : thisType.getNominalTypeIfSingletonObj();
+      NominalType builtinObject = registry.getCommonTypes().getObjectType();
+      builder.addReceiverType(nt == null ? builtinObject : nt);
     }
 
     return builder.buildDeclaration();

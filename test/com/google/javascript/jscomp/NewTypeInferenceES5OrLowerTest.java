@@ -282,7 +282,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @constructor */ function Foo(x) {}",
         "new Foo(function() { return this.p; })"));
 
-    // TODO(dimvar): Will be fixed once we handle any JSType as a receiver type
     typeCheck(Joiner.on('\n').join(
         "/**",
         " * @template T",
@@ -291,8 +290,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x) {",
         "  this.p = 123;",
-        "}"),
-        CheckGlobalThis.GLOBAL_THIS);
+        "}"));
 
     typeCheck(Joiner.on('\n').join(
         "/** @this {Object} */",
@@ -3863,20 +3861,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testInheritanceImplicitObjectSubtyping() {
-    String objectExterns = DEFAULT_EXTERNS
-        + "/** @return {string} */ Object.prototype.toString = function() {};";
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ function Foo() {}",
+        "/** @override */ Foo.prototype.toString = function(){ return ''; };"));
 
-    typeCheckCustomExterns(
-        objectExterns,
-        Joiner.on('\n').join(
-            "/** @constructor */ function Foo() {}",
-            "/** @override */ Foo.prototype.toString = function(){ return ''; };"));
-
-    typeCheckCustomExterns(
-        objectExterns,
-        Joiner.on('\n').join(
-            "/** @constructor */ function Foo() {}",
-            "/** @override */ Foo.prototype.toString = function(){ return 5; };"),
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ function Foo() {}",
+        "/** @override */ Foo.prototype.toString = function(){ return 5; };"),
         NewTypeInference.RETURN_NONDECLARED_TYPE);
   }
 
@@ -11644,7 +11635,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
         "function Foo() {}",
-        "Foo.prototype.toString = function() {};",
+        "Foo.prototype.toString = function() { return ''; };",
         "function f(/** (number|!Foo) */ x) {",
         "  return x.toString();",
         "}"));
@@ -12985,5 +12976,27 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     // Don't crash when ns.Foo is not defined.
     typeCheck("ns.Foo.prototype.m = function() {};");
+  }
+
+  public void testUnknownNewAndThisFunctionAnnotations() {
+    // Don't warn for unknown this
+    typeCheck(Joiner.on('\n').join(
+        "/** @this {Number|String} */",
+        "function f() {",
+        "  return this.toString();",
+        "}"));
+
+    // Don't warn for unknown this
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {function(this:(Number|String))} */",
+        "function f() {",
+        "  return this.toString();",
+        "}"));
+
+    // Don't warn that f isn't a constructor
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {function(new:(Number|String))} */",
+        "function f() {}",
+        "var x = new f();"));
   }
 }
