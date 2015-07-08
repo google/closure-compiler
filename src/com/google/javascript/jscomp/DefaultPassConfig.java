@@ -207,7 +207,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureRewriteModule);
     }
 
-    if (options.lowerFromEs6()) {
+    // Early ES6 transpilation.
+    // Includes ES6 features that are straightforward to transpile.
+    // We won't handle them natively in the rest of the compiler, so we always
+    // transpile them, even if the output language is also ES6.
+    if (options.getLanguageIn().isEs6OrHigher()) {
       checks.add(es6RewriteArrowFunction);
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
@@ -232,6 +236,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertEs6TypedToEs6);
     }
 
+    // Late ES6 transpilation.
+    // Includes ES6 features that are best handled natively by the compiler.
+    // As we convert more passes to handle these features, we will be moving
+    // the transpilation later in the compilation.
     if (options.lowerFromEs6()) {
       checks.add(es6ConvertSuper);
       checks.add(convertEs6ToEs3);
