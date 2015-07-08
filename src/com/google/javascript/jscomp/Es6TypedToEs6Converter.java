@@ -257,8 +257,6 @@ public final class Es6TypedToEs6Converter
     }
 
     JSDocInfo info = jsDocNode.getJSDocInfo();
-    Preconditions.checkState(info == null || info.getType() == null,
-        "Nodes must not have both type declarations and JSDoc types");
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
 
     JSTypeExpression typeExpression = new JSTypeExpression(type, n.getSourceFileName());

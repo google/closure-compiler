@@ -492,8 +492,7 @@ class IRFactory {
   private void recordTypeSyntax(SourceRange location) {
     hasTypeSyntax = true;
     if (hasJsDocTypeAnnotations) {
-      errorReporter.error("Bad type syntax"
-          + " - can only have JSDoc or inline type annotations, not both",
+      errorReporter.error("Can only have JSDoc or inline type annotations, not both",
           sourceName, lineno(location.start), charno(location.start));
     }
   }

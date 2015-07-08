@@ -100,8 +100,7 @@ public final class TypeSyntaxTest extends TestCase {
   }
 
   public void testTypeInDocAndSyntax() {
-    expectErrors("Parse error. Bad type syntax - "
-        + "can only have JSDoc or inline type annotations, not both");
+    expectErrors("Can only have JSDoc or inline type annotations, not both");
     parse("var /** string */ foo: string = 'hello';");
   }
 
@@ -157,8 +156,7 @@ public final class TypeSyntaxTest extends TestCase {
   }
 
   public void testFunctionReturn_typeInDocAndSyntax() {
-    expectErrors("Parse error. Bad type syntax - "
-        + "can only have JSDoc or inline type annotations, not both");
+    expectErrors("Can only have JSDoc or inline type annotations, not both");
     parse("function /** string */ foo(): string { return 'hello'; }");
   }
 
