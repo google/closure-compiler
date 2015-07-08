@@ -468,13 +468,20 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateInterfaceMember(Node n) {
-    if (n.getType() == Token.MEMBER_FUNCTION_DEF) {
-      validateChildCount(n);
-      validateFunctionSignature(n.getFirstChild());
-    } else if (n.getType() == Token.MEMBER_VARIABLE_DEF) {
-      validateChildless(n);
-    } else {
-      violation("Interface contained member of invalid type " + Token.name(n.getType()), n);
+    switch (n.getType()) {
+      case Token.MEMBER_FUNCTION_DEF:
+        validateChildCount(n);
+        validateFunctionSignature(n.getFirstChild());
+        break;
+      case Token.MEMBER_VARIABLE_DEF:
+        validateChildless(n);
+        break;
+      case Token.INDEX_SIGNATURE:
+        validateChildCount(n);
+        validateChildless(n.getFirstChild());
+        break;
+      default:
+        violation("Interface contained member of invalid type " + Token.name(n.getType()), n);
     }
   }
 
@@ -534,24 +541,32 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateClassMember(Node n, boolean isAmbient) {
-    if (n.getType() == Token.MEMBER_FUNCTION_DEF
-        || n.getType() == Token.GETTER_DEF
-        || n.getType() == Token.SETTER_DEF) {
-      validateChildCount(n);
-      Node function = n.getFirstChild();
-      if (isAmbient) {
-        validateFunctionSignature(function);
-      } else {
-        validateFunctionExpression(function);
-      }
-    } else if (n.getType() == Token.MEMBER_VARIABLE_DEF) {
-      validateChildless(n);
-    } else if (n.isComputedProp()) {
-      validateComputedPropClassMethod(n);
-    } else if (n.isEmpty()) {
-      // Empty is allowed too.
-    } else {
-      violation("Class contained member of invalid type " + Token.name(n.getType()), n);
+    switch (n.getType()) {
+      case Token.MEMBER_FUNCTION_DEF:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
+        validateChildCount(n);
+        Node function = n.getFirstChild();
+        if (isAmbient) {
+          validateFunctionSignature(function);
+        } else {
+          validateFunctionExpression(function);
+        }
+        break;
+      case Token.MEMBER_VARIABLE_DEF:
+        validateChildless(n);
+        break;
+      case Token.COMPUTED_PROP:
+        validateComputedPropClassMethod(n);
+        break;
+      case Token.INDEX_SIGNATURE:
+        validateChildCount(n);
+        validateChildless(n.getFirstChild());
+        break;
+      case Token.EMPTY: // Empty is allowed too.
+        break;
+      default:
+        violation("Class contained member of invalid type " + Token.name(n.getType()), n);
     }
   }
 

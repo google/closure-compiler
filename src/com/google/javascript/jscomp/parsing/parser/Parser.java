@@ -724,7 +724,9 @@ public class Parser {
       name = eatIdOrKeywordAsId();
     } else {
       if (peekIndexSignature()) {
-        return parseIndexSignature();
+        ParseTree indexSignature = parseIndexSignature();
+        eat(TokenType.SEMI_COLON);
+        return indexSignature;
       }
       nameExpr = parseComputedPropertyName();
       name = null;

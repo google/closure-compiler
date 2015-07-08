@@ -798,6 +798,10 @@ public class Token {
         return 1;
       case TYPE_ALIAS:
         return 1;
+      case INDEX_SIGNATURE:
+        return 1;
+      case MEMBER_VARIABLE_DEF:
+        return 0;
     }
     throw new IllegalStateException(
         "No arity defined for " + Token.name(token));

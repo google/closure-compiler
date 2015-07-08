@@ -127,21 +127,25 @@ public final class Es6TypedToEs6Converter
   }
 
   private void visitClass(Node n, Node parent) {
+    JSDocInfoBuilder doc = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
     Node interfaces = (Node) n.getProp(Node.IMPLEMENTS);
     if (interfaces != null) {
-      JSDocInfoBuilder doc = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
       for (Node child : interfaces.children()) {
         Node type = convertWithLocation(child);
         doc.recordImplementedInterface(new JSTypeExpression(type, n.getSourceFileName()));
       }
       n.putProp(Node.IMPLEMENTS, null);
-      n.setJSDocInfo(doc.build());
     }
 
     Node classMembers = n.getLastChild();
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
 
     for (Node member : classMembers.children()) {
+      if (member.isIndexSignature()) {
+        doc.recordImplementedInterface(createIObject(member));
+        continue;
+      }
+
       // Functions are handled by the regular Es6ToEs3Converter
       if (!member.isMemberVariableDef() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)) {
         continue;
@@ -155,6 +159,8 @@ public final class Es6TypedToEs6Converter
       metadata.insertNodeAndAdvance(createPropertyDefinition(member, metadata.fullClassName));
       compiler.reportCodeChange();
     }
+
+    n.setJSDocInfo(doc.build());
   }
 
   private void visitInterface(Node n) {
@@ -168,7 +174,6 @@ public final class Es6TypedToEs6Converter
         doc.recordExtendedInterface(new JSTypeExpression(type, n.getSourceFileName()));
       }
     }
-    n.setJSDocInfo(doc.build());
 
     Node insertionPoint = n;
     Node members = n.getLastChild();
@@ -179,11 +184,15 @@ public final class Es6TypedToEs6Converter
         function.getLastChild().setType(Token.BLOCK);
         continue;
       }
-
+      if (member.isIndexSignature()) {
+        doc.recordExtendedInterface(createIObject(member));
+        continue;
+      }
       Node newNode = createPropertyDefinition(member, name.getString());
       insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
       insertionPoint = newNode;
     }
+    n.setJSDocInfo(doc.build());
 
     // Convert interface to class
     n.setType(Token.CLASS);
@@ -191,6 +200,20 @@ public final class Es6TypedToEs6Converter
     n.replaceChild(superTypes, empty);
     members.setType(Token.CLASS_MEMBERS);
     compiler.reportCodeChange();
+  }
+
+  private JSTypeExpression createIObject(Node indexSignature) {
+    Node indexType = convertWithLocation(indexSignature.getFirstChild()
+        .getDeclaredTypeExpression());
+    Node declaredType = convertWithLocation(indexSignature.getDeclaredTypeExpression());
+    Node block = new Node(Token.BLOCK, indexType, declaredType);
+    Node iObject = IR.string("IObject");
+    iObject.addChildrenToFront(block);
+    JSTypeExpression bang = new JSTypeExpression(new Node(Token.BANG, iObject)
+        .useSourceInfoIfMissingFromForTree(indexSignature), indexSignature.getSourceFileName());
+    indexSignature.detachFromParent();
+    compiler.reportCodeChange();
+    return bang;
   }
 
   private Node createPropertyDefinition(Node member, String name) {
