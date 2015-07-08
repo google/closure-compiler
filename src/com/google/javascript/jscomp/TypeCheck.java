@@ -41,6 +41,7 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.NamedType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
@@ -2137,6 +2138,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (templatizedType.getReferencedType().isArrayType()) {
         return isStringifiable(templatizedType.getTemplateTypes().get(0));
       }
+    }
+
+    // Named types are usually @typedefs. For such types we need to check underlying type specified
+    // in @typedef annotation.
+    if (type instanceof NamedType) {
+      return isStringifiable(((NamedType) type).getReferencedType());
     }
 
     // Handle interfaces and classes.
