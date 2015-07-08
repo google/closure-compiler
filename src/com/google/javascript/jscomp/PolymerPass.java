@@ -48,10 +48,13 @@ import java.util.Set;
  */
 final class PolymerPass extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 
-  // Errors
-  static final DiagnosticType POLYMER_DESCRIPTOR_NOT_VALID = DiagnosticType.error(
-      "JSC_POLYMER_DESCRIPTOR_NOT_VALID", "The class descriptor must be an object literal.");
+  // TODO(jlklein): Switch back to an error when everyone is upgraded to Polymer 1.0
+  static final DiagnosticType POLYMER_DESCRIPTOR_NOT_VALID = DiagnosticType.warning(
+      "JSC_POLYMER_DESCRIPTOR_NOT_VALID",
+      "The argument to Polymer() is not an obj lit (perhaps because this is a pre-Polymer-1.0 "
+      + "call). Ignoring this call.");
 
+  // Errors
   static final DiagnosticType POLYMER_MISSING_IS = DiagnosticType.error("JSC_POLYMER_MISSING_IS",
       "The class descriptor must include an 'is' property.");
 

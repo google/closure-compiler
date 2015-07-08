@@ -1544,7 +1544,9 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   public void testInvalid1() {
-    testError("var x = Polymer();", POLYMER_DESCRIPTOR_NOT_VALID);
+    disableTypeCheck();
+    testWarning("var x = Polymer('blah');", POLYMER_DESCRIPTOR_NOT_VALID);
+    testWarning("var x = Polymer('foo-bar', {});", POLYMER_DESCRIPTOR_NOT_VALID);
     testError("var x = Polymer({},'blah');", POLYMER_UNEXPECTED_PARAMS);
     testError("var x = Polymer({});", POLYMER_MISSING_IS);
   }
