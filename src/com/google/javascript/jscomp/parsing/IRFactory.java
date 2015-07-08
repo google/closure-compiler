@@ -1091,6 +1091,7 @@ class IRFactory {
     }
 
     Node processForOf(ForOfStatementTree loopNode) {
+      maybeWarnEs6Feature(loopNode, "for-of loop");
       Node initializer = transform(loopNode.initializer);
       ImmutableSet<Integer> invalidInitializers =
           ImmutableSet.of(Token.ARRAYLIT, Token.OBJECTLIT);

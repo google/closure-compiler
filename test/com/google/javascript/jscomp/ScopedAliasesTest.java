@@ -772,6 +772,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   public void testNonAliasLocal() {
     testScopedError("try { } catch (e) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
     testScopedError("for (var k in { a: 1, b: 2 }) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testScopedError("for (var k of [1, 2, 3]) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
   }
 

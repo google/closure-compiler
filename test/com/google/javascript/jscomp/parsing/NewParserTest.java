@@ -107,6 +107,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testBreakInForOf() {
+    mode = LanguageMode.ECMASCRIPT6;
     parse(""
         + "for (var x of [1, 2, 3]) {\n"
         + "  if (x == 2) break;\n"
@@ -150,6 +151,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testContinueInForOf() {
+    mode = LanguageMode.ECMASCRIPT6;
     parse(""
         + "for (var x of [1, 2, 3]) {\n"
         + "  if (x == 2) continue;\n"

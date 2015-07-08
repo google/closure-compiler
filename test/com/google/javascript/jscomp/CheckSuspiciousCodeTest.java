@@ -66,6 +66,7 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
     testOk("for(x in y) x = y;");
     test("for(x in y); x = y;", e);
     testOk("for(x in y){} x = y;");
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testOk("var y = [1, 2, 3]; for(x of y) console.log(x);");
     test("var y = [1, 2, 3]; for(x of y); console.log(x);", e);
     testOk("var y = [1, 2, 3]; for(x of y){} console.log(x);");
