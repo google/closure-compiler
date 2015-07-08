@@ -85,13 +85,15 @@ public final class JSDocInfoPrinter {
       for (String name : info.getParameterNames()) {
         sb.append("@param {");
         appendTypeNode(sb, info.getParameterType(name).getRoot());
-        sb.append("} " + name + "\n");
+        sb.append("} ");
+        sb.append(name);
+        sb.append(' ');
       }
     }
     if (info.hasReturnType()) {
       sb.append("@return {");
       appendTypeNode(sb, info.getReturnType().getRoot());
-      sb.append("}\n");
+      sb.append("} ");
     }
     if (info.hasThisType()) {
       sb.append("@this {");
@@ -101,7 +103,7 @@ public final class JSDocInfoPrinter {
       } else {
         appendTypeNode(sb, typeNode);
       }
-      sb.append("}\n");
+      sb.append("} ");
     }
     if (info.hasBaseType()) {
       sb.append("@extends {");
@@ -111,7 +113,7 @@ public final class JSDocInfoPrinter {
       } else {
         appendTypeNode(sb, typeNode);
       }
-      sb.append("}\n");
+      sb.append("} ");
     }
     for (JSTypeExpression type : info.getImplementedInterfaces()) {
       sb.append("@implements {");
@@ -121,12 +123,12 @@ public final class JSDocInfoPrinter {
       } else {
         appendTypeNode(sb, typeNode);
       }
-      sb.append("}\n");
+      sb.append("} ");
     }
     if (info.hasTypedefType()) {
       sb.append("@typedef {");
       appendTypeNode(sb, info.getTypedefType().getRoot());
-      sb.append("}\n");
+      sb.append("} ");
     }
     if (info.hasType()) {
       if (info.isInlineType()) {
@@ -136,18 +138,18 @@ public final class JSDocInfoPrinter {
       } else {
         sb.append("@type {");
         appendTypeNode(sb, info.getType().getRoot());
-        sb.append("}\n");
+        sb.append("} ");
       }
     }
     if (!info.getThrownTypes().isEmpty()) {
       sb.append("@throws {");
       appendTypeNode(sb, info.getThrownTypes().get(0).getRoot());
-      sb.append("}\n");
+      sb.append("} ");
     }
     if (info.hasEnumParameterType()) {
       sb.append("@enum {");
       appendTypeNode(sb, info.getEnumParameterType().getRoot());
-      sb.append("}\n");
+      sb.append("} ");
     }
     sb.append("*/");
     return sb.toString();
