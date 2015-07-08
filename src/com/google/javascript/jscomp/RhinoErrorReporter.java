@@ -88,8 +88,8 @@ class RhinoErrorReporter {
           "to enable ES6 typed features.");
 
   static final DiagnosticType MISPLACED_TYPE_SYNTAX =
-      DiagnosticType.error("MISPLACED_TYPE_SYNTAX", "Bad type syntax"
-            + " - can only have JSDoc or inline type annotations, not both");
+      DiagnosticType.error("MISPLACED_TYPE_SYNTAX",
+          "Can only have JSDoc or inline type annotations, not both");
 
   // A map of Rhino messages to their DiagnosticType.
   private final Map<Pattern, DiagnosticType> typeMap;
@@ -160,7 +160,7 @@ class RhinoErrorReporter {
         .put(Pattern.compile("^type syntax is only supported in ES6 typed mode.*"),
             ES6_TYPED)
 
-        .put(Pattern.compile("^can only have JSDoc or inline type.*"),
+        .put(Pattern.compile("^Can only have JSDoc or inline type.*"),
             MISPLACED_TYPE_SYNTAX)
 
         .build();

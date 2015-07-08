@@ -482,8 +482,7 @@ class IRFactory {
     if (info != null && info.hasTypeInformation()) {
       hasJsDocTypeAnnotations = true;
       if (hasTypeSyntax) {
-        errorReporter.error("Bad type syntax"
-            + " - can only have JSDoc or inline type annotations, not both",
+        errorReporter.error("Can only have JSDoc or inline type annotations, not both",
             sourceName, lineno(location.start), charno(location.start));
       }
     }
