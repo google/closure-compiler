@@ -36,24 +36,22 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
     return 1;
   }
 
-  private void foldSame(String js) {
-    testSame(js);
-  }
-
-  private void fold(String js, String expected) {
-    test(js, expected);
-  }
-
   public void testArrowFunctions() {
-    foldSame("function f() {}");
-    foldSame("(function() { this.x = 5; })");
-    foldSame("(function() { return arguments[0]; })");
-    foldSame("(function() { return ()=>this; })");
-    foldSame("(function() { return ()=>arguments[0]; })");
-    fold("(function() { x++; return 5; })", "()=>{x++;return 5}");
-    fold("(function() { return 5; })", "()=>5");
-    fold("()=>{ return 5; }", "()=>5");
-    fold("(function() { return; })", "()=>undefined");
-    fold("(function(x) { return x+1 })", "(x) => x+1");
+    testSame("function f() {}");
+    testSame("(function() { this.x = 5; })");
+    testSame("(function() { return arguments[0]; })");
+    testSame("(function() { return ()=>this; })");
+    testSame("(function() { return ()=>arguments[0]; })");
+    test("(function() { x++; return 5; })", "()=>{x++;return 5}");
+    test("(function() { return 5; })", "()=>5");
+    test("()=>{ return 5; }", "()=>5");
+    test("(function() { return; })", "()=>undefined");
+    test("(function(x) { return x+1 })", "(x) => x+1");
+  }
+
+  public void testMemberFunctions() {
+    test("({ method : function(){} });", "({ method(){} });");
+    test("({ method : function(){ return this; } });", "({ method(){ return this; } });");
+    testSame("({ method: ()=>this })");
   }
 }

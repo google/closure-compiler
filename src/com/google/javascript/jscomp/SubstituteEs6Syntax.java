@@ -52,12 +52,16 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch(n.getType()) {
       case Token.FUNCTION:
-        if (n.getFirstChild().getString().isEmpty() && !n.isArrowFunction()
-            && !NodeUtil.isVarArgsFunction(n) // i.e. doesn't reference arguments
-            && !NodeUtil.referencesThis(n.getLastChild())) {
-          // When possible, change regular function to arrow functions
-          n.setIsArrowFunction(true);
-          compiler.reportCodeChange();
+        if (n.getFirstChild().getString().isEmpty() && !n.isArrowFunction()) {
+          if (parent.isStringKey()) {
+            parent.setType(Token.MEMBER_FUNCTION_DEF);
+            compiler.reportCodeChange();
+          } else if (!NodeUtil.isVarArgsFunction(n) // i.e. doesn't reference arguments
+              && !NodeUtil.referencesThis(n.getLastChild())) {
+            // When possible, change regular function to arrow functions
+            n.setIsArrowFunction(true);
+            compiler.reportCodeChange();
+          }
         }
         if (n.isArrowFunction()) {
           maybeSimplifyArrowFunctionBody(n, n.getLastChild());
