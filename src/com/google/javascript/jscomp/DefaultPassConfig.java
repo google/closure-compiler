@@ -432,7 +432,7 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
-    assertPolymerPassIndexValid(checks);
+    assertValidOrder(checks);
     return checks;
   }
 
@@ -916,11 +916,18 @@ public final class DefaultPassConfig extends PassConfig {
     }
   }
 
-  /** Verify that the PolymerPass runs in a valid order. */
-  private void assertPolymerPassIndexValid(List<PassFactory> checks) {
+  /**
+   * Certain checks need to run in a particular order. For example, the PolymerPass
+   * will not work correctly unless it runs after the goog.provide() processing.
+   * This enforces those constraints.
+   * @param checks The list of check passes
+   */
+  private void assertValidOrder(List<PassFactory> checks) {
     int polymerIndex = checks.indexOf(polymerPass);
     int closureIndex = checks.indexOf(closurePrimitives);
     int suspiciousCodeIndex = checks.indexOf(suspiciousCode);
+    int checkVarsIndex = checks.indexOf(checkVariableReferences);
+    int googScopeIndex = checks.indexOf(closureGoogScopeAliases);
 
     if (polymerIndex != -1 && closureIndex != -1) {
       Preconditions.checkState(polymerIndex > closureIndex,
@@ -929,6 +936,12 @@ public final class DefaultPassConfig extends PassConfig {
     if (polymerIndex != -1 && suspiciousCodeIndex != -1) {
       Preconditions.checkState(polymerIndex < suspiciousCodeIndex,
           "The Polymer pass must run befor suspiciousCode processing.");
+    }
+    if (googScopeIndex != -1) {
+      Preconditions.checkState(checkVarsIndex != -1,
+          "goog.scope processing requires variable checking");
+      Preconditions.checkState(checkVarsIndex < googScopeIndex,
+          "Variable checking must happen before goog.scope processing.");
     }
   }
 

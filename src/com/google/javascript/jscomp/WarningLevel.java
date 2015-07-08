@@ -57,7 +57,6 @@ public enum WarningLevel {
 
     options.setCheckProvides(CheckLevel.OFF);
     options.setCheckMissingGetCssNameLevel(CheckLevel.OFF);
-    options.setAggressiveVarCheck(CheckLevel.OFF);
     options.setCheckTypes(false);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
