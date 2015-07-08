@@ -58,6 +58,9 @@ public final class JSDocInfoPrinter {
     if (info.isConstant()) {
       sb.append("@const ");
     }
+    if (info.isExport()) {
+      sb.append("@export ");
+    }
     if (info.isDeprecated()) {
       sb.append("@deprecated ");
       sb.append(info.getDeprecationReason() + " ");
