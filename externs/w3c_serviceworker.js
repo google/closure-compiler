@@ -453,7 +453,7 @@ CacheStorage.prototype.keys = function() {};
  */
 function ExtendableEvent(type, opt_eventInitDict) {}
 
-/** @param {Promise} f */
+/** @param {IThenable} f */
 ExtendableEvent.prototype.waitUntil = function(f) {};
 
 /**
