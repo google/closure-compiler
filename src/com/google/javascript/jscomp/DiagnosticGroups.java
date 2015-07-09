@@ -426,7 +426,7 @@ public class DiagnosticGroups {
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
           CheckJSDocStyle.MISSING_PARAM_JSDOC,
           CheckJSDocStyle.MUST_BE_PRIVATE,
-          CheckJSDocStyle.OPTIONAL_NAME_NOT_MARKED_OPTIONAL,
+          CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
           CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,

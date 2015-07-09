@@ -17,10 +17,11 @@ package com.google.javascript.jscomp.lint;
 
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAM_JSDOC;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
-import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_NAME_NOT_MARKED_OPTIONAL;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
 
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 
@@ -28,13 +29,20 @@ import com.google.javascript.jscomp.CompilerTestCase;
  * Test case for {@link CheckJSDocStyle}.
  */
 public final class CheckJSDocStyleTest extends CompilerTestCase {
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+  }
+
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new CheckJSDocStyle(compiler);
   }
 
   public void testMissingParam() {
-    testSame(
+    testWarning(
         LINE_JOINER.join(
             "/**",
             " * @param {string} x",
@@ -45,9 +53,47 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
     testSame(
         LINE_JOINER.join(
-            "/**", " * @param {string} x", " * @param {string} y", " */", "function f(x, y) {}"));
+            "/**",
+            " * @param {string} x",
+            " * @param {string} y",
+            " */",
+            "function f(x, y) {}"));
 
-    testSame(LINE_JOINER.join("/** @override */", "Foo.bar = function(x, y) {}"));
+    testSame(LINE_JOINER.join(
+        "/** @override */",
+        "Foo.bar = function(x, y) {}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {string=} x",
+            " */",
+            "function f(x = 1) {}"));
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {string} x",
+            " */",
+            "function f(x = 1) {}"),
+        OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {string} x",
+            // No @param for y.
+            " */",
+            "function f(x, y = 1) {}"),
+        MISSING_PARAM_JSDOC);
+
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {...string} args",
+            " */",
+            "function f(...args) {}"));
+
   }
 
   public void testMissingPrivate() {
@@ -72,7 +118,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
     testSame(
         LINE_JOINER.join("/**", " * @param {number} opt_n", " */", "function f(opt_n) {}"),
-        OPTIONAL_NAME_NOT_MARKED_OPTIONAL);
+        OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
 
     testSame(LINE_JOINER.join("/**", " * @param {number=} opt_n", " */", "function f(opt_n) {}"));
   }
