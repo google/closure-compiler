@@ -506,11 +506,19 @@ chrome.app.window.AppWindow.prototype.contentWindow;
 
 
 /**
- * @typedef {{
- *   left: (number|undefined),
- *   top: (number|undefined),
- *   width: (number|undefined),
- *   height: (number|undefined)
+ * @typedef {?{
+ *   left: number,
+ *   top: number,
+ *   width: number,
+ *   height: number,
+ *   minWidth: (number|undefined),
+ *   minHeight: (number|undefined),
+ *   maxWidth: (number|undefined),
+ *   maxHeight: (number|undefined),
+ *   setPosition: function(number, number),
+ *   setSize: function(number, number),
+ *   setMinimumSize: function(number, number),
+ *   setMaximumSize: function(number, number)
  * }}
  * @see http://developer.chrome.com/apps/app.window.html#type-Bounds
  */
@@ -518,20 +526,63 @@ chrome.app.window.Bounds;
 
 
 /**
- * @typedef {{
+ * @typedef {?{
+ *   left: (number|undefined),
+ *   top: (number|undefined),
+ *   width: (number|undefined),
+ *   height: (number|undefined),
+ *   minWidth: (number|undefined),
+ *   minHeight: (number|undefined),
+ *   maxWidth: (number|undefined),
+ *   maxHeight: (number|undefined)
+ * }}
+ * @see http://developer.chrome.com/apps/app_window#type-BoundsSpecification
+ */
+chrome.app.window.BoundsSpecification;
+
+
+/**
+ * @typedef {?{
+ *   left: (number|undefined),
+ *   top: (number|undefined),
+ *   width: (number|undefined),
+ *   height: (number|undefined)
+ * }}
+ * @see http://developer.chrome.com/apps/app_window#type-ContentBounds
+ */
+chrome.app.window.ContentBounds;
+
+
+/**
+ * @typedef {?{
+ *   type: (string|undefined),
+ *   color: (string|undefined),
+ *   activeColor: (string|undefined),
+ *   inactiveColor: (string|undefined)
+ * }}
+ * @see http://developer.chrome.com/apps/app_window#type-FrameOptions
+ */
+chrome.app.window.FrameOptions;
+
+
+/**
+ * @typedef {?{
  *   id: (string|undefined),
+ *   innerBounds: (!chrome.app.window.BoundsSpecification|undefined),
+ *   outerBounds: (!chrome.app.window.BoundsSpecification|undefined),
  *   minWidth: (number|undefined),
  *   minHeight: (number|undefined),
  *   maxWidth: (number|undefined),
  *   maxHeight: (number|undefined),
- *   frame: (string|undefined),
- *   bounds: (!chrome.app.window.Bounds|undefined),
- *   transparentBackground: (boolean|undefined),
+ *   frame: (!chrome.app.window.FrameOptions|string|undefined),
+ *   bounds: (!chrome.app.window.ContentBounds|undefined),
  *   state: (string|undefined),
  *   hidden: (boolean|undefined),
  *   resizable: (boolean|undefined),
+ *   singleton: (boolean|undefined),
  *   alwaysOnTop: (boolean|undefined),
- *   focused: (boolean|undefined)
+ *   focused: (boolean|undefined),
+ *   visibleOnAllWorkspaces: (boolean|undefined)
  * }}
  * @see http://developer.chrome.com/apps/app.window.html#method-create
  */
