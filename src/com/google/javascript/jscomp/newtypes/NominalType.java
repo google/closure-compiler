@@ -168,7 +168,7 @@ public final class NominalType {
 
   /** True iff it has all properties and the RawNominalType is immutable */
   public boolean isFinalized() {
-    return rawType.isFinalized;
+    return this.rawType.isFinalized;
   }
 
   public ImmutableSet<String> getAllPropsOfInterface() {
@@ -425,6 +425,8 @@ public final class NominalType {
    */
   public static class RawNominalType extends Namespace {
     private final String name;
+    // The function node (if any) that defines the type
+    private final Node defSite;
     // Each instance of the class has these properties by default
     private PersistentMap<String, Property> classProps = PersistentMap.create();
     // The object pointed to by the prototype property of the constructor of
@@ -467,6 +469,7 @@ public final class NominalType {
         typeParameters = ImmutableList.of();
       }
       this.name = name;
+      this.defSite = defSite;
       this.typeParameters = typeParameters;
       this.isInterface = isInterface;
       this.objectKind = objectKind;
@@ -517,6 +520,10 @@ public final class NominalType {
       return name;
     }
 
+    public Node getDefSite() {
+      return this.defSite;
+    }
+
     public boolean isClass() {
       return !isInterface;
     }
@@ -535,6 +542,10 @@ public final class NominalType {
 
     public boolean isDict() {
       return objectKind.isDict();
+    }
+
+    public boolean isFinalized() {
+      return this.isFinalized;
     }
 
     ImmutableList<String> getTypeParameters() {

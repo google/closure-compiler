@@ -314,8 +314,8 @@ final class NewTypeInference implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     try {
-      symbolTable = compiler.getSymbolTable();
-      commonTypes = symbolTable.getTypesUtilObject();
+      this.symbolTable = compiler.getSymbolTable();
+      this.commonTypes = symbolTable.getTypesUtilObject();
       for (Scope scope : symbolTable.getScopes()) {
         analyzeFunction(scope);
         envs.clear();
@@ -331,7 +331,7 @@ final class NewTypeInference implements CompilerPass {
       if (currentScope != null) {
         message += "\nIn scope: " + currentScope;
       }
-      compiler.throwInternalError(message, unexpectedException);
+      this.compiler.throwInternalError(message, unexpectedException);
     }
   }
 

@@ -98,13 +98,14 @@ public abstract class Namespace {
     if (!recv.isDefined(name)) {
       return null;
     }
+    JSType simpleType = recv.getPropDeclaredType(name);
     Typedef typedef = recv.typedefs.get(name);
     EnumType enumType = recv.enums.get(name);
     RawNominalType rawType = recv.nominals.get(name);
     DeclaredTypeRegistry scope = recv.scopes.get(name);
     NamespaceLit ns = recv.namespaces.get(name);
-      return new Declaration(
-          null, typedef, ns, enumType, scope, rawType, false, false, false);
+    return new Declaration(
+        simpleType, typedef, ns, enumType, scope, rawType, false, false, false);
   }
 
   public final void addNominalType(QualifiedName qname, RawNominalType rawNominalType) {

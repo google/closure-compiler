@@ -49,10 +49,8 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,7 +74,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   static final DiagnosticType REDECLARED_PROPERTY = DiagnosticType.warning(
       "JSC_REDECLARED_PROPERTY",
-      "Found two declarations for property {0} of type {1}.\n");
+      "Found two declarations for property {0} on type {1}.\n");
 
   static final DiagnosticType INVALID_PROP_OVERRIDE = DiagnosticType.warning(
       "JSC_INVALID_PROP_OVERRIDE",
@@ -294,8 +292,7 @@ class GlobalTypeInfo implements CompilerPass {
     Preconditions.checkNotNull(warnings, "Cannot rerun GlobalTypeInfo.process");
     Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
-    globalScope =
-        new Scope(root, null, ImmutableList.<String>of(), commonTypes);
+    globalScope = new Scope(root, null, ImmutableList.<String>of(), commonTypes);
     scopes.add(globalScope);
 
     // Processing of a scope is split into many separate phases, and it's not
@@ -354,7 +351,9 @@ class GlobalTypeInfo implements CompilerPass {
 
     // (7) Adjust types of properties based on inheritance information.
     //     Report errors in the inheritance chain.
-    reportInheritanceErrors();
+    for (RawNominalType rawType : nominaltypesByNode.values()) {
+      checkAndFinalizeNominalType(rawType);
+    }
 
     nominaltypesByNode = null;
     propertyDefs = null;
@@ -411,107 +410,99 @@ class GlobalTypeInfo implements CompilerPass {
     return null;
   }
 
-  /** Report all errors that must be checked at the end of GlobalTypeInfo */
-  private void reportInheritanceErrors() {
-    Deque<Node> workset = new LinkedList<>(nominaltypesByNode.keySet());
-    int iterations = 0;
-    final int MAX_ITERATIONS = 50000;
-  workset_loop:
-    while (!workset.isEmpty()) {
-      // TODO(blickly): Fix this infinite loop and remove these counters
-      Preconditions.checkState(iterations < MAX_ITERATIONS);
-      Node funNode = workset.removeFirst();
-      RawNominalType rawNominalType = nominaltypesByNode.get(funNode);
-      NominalType superClass = rawNominalType.getSuperClass();
-      Set<String> nonInheritedPropNames = rawNominalType.getAllOwnProps();
-      if (superClass != null && !superClass.isFinalized()) {
-        workset.addLast(funNode);
-        iterations++;
-        continue workset_loop;
-      }
-      for (NominalType superInterf : rawNominalType.getInterfaces()) {
-        if (!superInterf.isFinalized()) {
-          workset.addLast(funNode);
-          iterations++;
-          continue workset_loop;
-        }
-      }
-
-      Multimap<String, DeclaredFunctionType> propMethodTypesToProcess =
-          LinkedHashMultimap.create();
-      Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
-      // Collect inherited types for extended classes
-      if (superClass != null) {
-        Preconditions.checkState(superClass.isFinalized());
-        // TODO(blickly): Can we optimize this to skip unnecessary iterations?
-        for (String pname : superClass.getAllPropsOfClass()) {
-          nonInheritedPropNames.remove(pname);
-          checkSuperProperty(rawNominalType, superClass, pname,
-              propMethodTypesToProcess, propTypesToProcess);
-        }
-      }
-      // Collect inherited types for extended/implemented interfaces
-      for (NominalType superInterf : rawNominalType.getInterfaces()) {
-        Preconditions.checkState(superInterf.isFinalized());
-        for (String pname : superInterf.getAllPropsOfInterface()) {
-          nonInheritedPropNames.remove(pname);
-          checkSuperProperty(rawNominalType, superInterf, pname,
-              propMethodTypesToProcess, propTypesToProcess);
-        }
-      }
-      // Munge inherited types of methods
-      for (String pname : propMethodTypesToProcess.keySet()) {
-        Collection<DeclaredFunctionType> methodTypes =
-            propMethodTypesToProcess.get(pname);
-        Preconditions.checkState(!methodTypes.isEmpty());
-        PropertyDef localPropDef =
-            propertyDefs.get(rawNominalType, pname);
-        // To find the declared type of a method, we must meet declared types
-        // from all inherited methods.
-        DeclaredFunctionType superMethodType =
-            DeclaredFunctionType.meet(methodTypes);
-        DeclaredFunctionType updatedMethodType =
-            localPropDef.methodType.withTypeInfoFromSuper(
-                superMethodType, getsTypeInfoFromParentMethod(localPropDef));
-        localPropDef.updateMethodType(updatedMethodType);
-        propTypesToProcess.put(pname,
-            commonTypes.fromFunctionType(updatedMethodType.toFunctionType()));
-      }
-      // Check inherited types of all props
-    add_interface_props:
-      for (String pname : propTypesToProcess.keySet()) {
-        Collection<JSType> defs = propTypesToProcess.get(pname);
-        Preconditions.checkState(!defs.isEmpty());
-        JSType resultType = JSType.TOP;
-        for (JSType inheritedType : defs) {
-          resultType = JSType.meet(resultType, inheritedType);
-          if (!resultType.isBottom()) {
-            resultType = inheritedType;
-          } else {
-            // TOOD(blickly): Fix this error message to include supertype names
-            warnings.add(JSError.make(
-                funNode, TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
-                NodeUtil.getFunctionName(funNode), pname, "", ""));
-            continue add_interface_props;
-          }
-        }
-        // TODO(dimvar): check if we can have @const props here
-        rawNominalType.addProtoProperty(pname, null, resultType, false);
-      }
-
-      // Warn for a prop declared with @override that isn't overriding anything.
-      for (String pname : nonInheritedPropNames) {
-        Node defSite = propertyDefs.get(rawNominalType, pname).defSite;
-        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
-        if (jsdoc != null && jsdoc.isOverride()) {
-          warnings.add(JSError.make(defSite, TypeCheck.UNKNOWN_OVERRIDE,
-                  pname, rawNominalType.getName()));
-        }
-      }
-
-      // Finalize nominal type once all properties are added.
-      rawNominalType.finalizeNominalType();
+  private void checkAndFinalizeNominalType(RawNominalType rawType) {
+    if (rawType.isFinalized()) {
+      return;
     }
+    NominalType superClass = rawType.getSuperClass();
+    Set<String> nonInheritedPropNames = rawType.getAllOwnProps();
+    if (superClass != null && !superClass.isFinalized()) {
+      checkAndFinalizeNominalType(superClass.getRawNominalType());
+    }
+    for (NominalType superInterf : rawType.getInterfaces()) {
+      if (!superInterf.isFinalized()) {
+        checkAndFinalizeNominalType(superInterf.getRawNominalType());
+      }
+    }
+
+    Multimap<String, DeclaredFunctionType> propMethodTypesToProcess =
+        LinkedHashMultimap.create();
+    Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
+    // Collect inherited types for extended classes
+    if (superClass != null) {
+      Preconditions.checkState(superClass.isFinalized());
+      // TODO(blickly): Can we optimize this to skip unnecessary iterations?
+      for (String pname : superClass.getAllPropsOfClass()) {
+        nonInheritedPropNames.remove(pname);
+        checkSuperProperty(rawType, superClass, pname,
+            propMethodTypesToProcess, propTypesToProcess);
+      }
+    }
+
+    // Collect inherited types for extended/implemented interfaces
+    for (NominalType superInterf : rawType.getInterfaces()) {
+      Preconditions.checkState(superInterf.isFinalized());
+      for (String pname : superInterf.getAllPropsOfInterface()) {
+        nonInheritedPropNames.remove(pname);
+        checkSuperProperty(rawType, superInterf, pname,
+            propMethodTypesToProcess, propTypesToProcess);
+      }
+    }
+
+    // Munge inherited types of methods
+    for (String pname : propMethodTypesToProcess.keySet()) {
+      Collection<DeclaredFunctionType> methodTypes =
+          propMethodTypesToProcess.get(pname);
+      Preconditions.checkState(!methodTypes.isEmpty());
+      PropertyDef localPropDef =
+          propertyDefs.get(rawType, pname);
+      // To find the declared type of a method, we must meet declared types
+      // from all inherited methods.
+      DeclaredFunctionType superMethodType =
+          DeclaredFunctionType.meet(methodTypes);
+      DeclaredFunctionType updatedMethodType =
+          localPropDef.methodType.withTypeInfoFromSuper(
+              superMethodType, getsTypeInfoFromParentMethod(localPropDef));
+      localPropDef.updateMethodType(updatedMethodType);
+      propTypesToProcess.put(pname,
+          commonTypes.fromFunctionType(updatedMethodType.toFunctionType()));
+    }
+
+    // Check inherited types of all props
+ add_interface_props:
+    for (String pname : propTypesToProcess.keySet()) {
+      Collection<JSType> defs = propTypesToProcess.get(pname);
+      Preconditions.checkState(!defs.isEmpty());
+      JSType resultType = JSType.TOP;
+      for (JSType inheritedType : defs) {
+        resultType = JSType.meet(resultType, inheritedType);
+        if (!resultType.isBottom()) {
+          resultType = inheritedType;
+        } else {
+          Node defSite = rawType.getDefSite();
+          // TODO(blickly): Fix this error message to include supertype names
+          warnings.add(JSError.make(
+              defSite, TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
+              NodeUtil.getFunctionName(defSite), pname, "", ""));
+          continue add_interface_props;
+        }
+      }
+      // TODO(dimvar): check if we can have @const props here
+      rawType.addProtoProperty(pname, null, resultType, false);
+    }
+
+    // Warn for a prop declared with @override that isn't overriding anything.
+    for (String pname : nonInheritedPropNames) {
+      Node propDefsite = propertyDefs.get(rawType, pname).defSite;
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propDefsite);
+      if (jsdoc != null && jsdoc.isOverride()) {
+        warnings.add(JSError.make(propDefsite, TypeCheck.UNKNOWN_OVERRIDE,
+                pname, rawType.getName()));
+      }
+    }
+
+    // Finalize nominal type once all properties are added.
+    rawType.finalizeNominalType();
   }
 
   private void checkSuperProperty(
@@ -1322,7 +1313,7 @@ class GlobalTypeInfo implements CompilerPass {
       RawNominalType classType = currentScope.getNominalType(ctorQname);
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
-      JSType propDeclType = getTypeAtPropDeclNode(getProp, jsdoc);
+      JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
       boolean isConst = isConst(getProp);
       if (propDeclType != null || isConst) {
         JSType previousPropType = classType.getCtorPropDeclaredType(pname);
@@ -1369,7 +1360,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
-      JSType propDeclType = getTypeAtPropDeclNode(declNode, jsdoc);
+      JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
       boolean isConst = isConst(declNode);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
@@ -1464,18 +1455,6 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (!rawType.mayHaveProp(pname)) {
         rawType.addPropertyWhichMayNotBeOnAllInstances(pname, null);
       }
-    }
-
-    private JSType getTypeAtPropDeclNode(Node declNode, JSDocInfo jsdoc) {
-      Preconditions.checkArgument(!currentScope.isNamespace(declNode));
-      QualifiedName qname = QualifiedName.fromNode(declNode);
-      if (qname != null) {
-        Declaration decl = currentScope.getDeclaration(qname, false);
-        if (decl != null && decl.getTypeOfSimpleDecl() != null) {
-          return decl.getTypeOfSimpleDecl();
-        }
-      }
-      return getDeclaredTypeOfNode(jsdoc, currentScope);
     }
 
     boolean mayWarnAboutNoInit(Node constExpr) {
@@ -1581,24 +1560,7 @@ class GlobalTypeInfo implements CompilerPass {
           return objLitType;
         }
         case Token.GETPROP:
-          Node recv = n.getFirstChild();
-          if (recv.isQualifiedName()) {
-            EnumType et = this.currentScope.getEnum(QualifiedName.fromNode(recv));
-            if (et != null
-                && et.enumLiteralHasKey(n.getLastChild().getString())) {
-              return et.getEnumeratedType();
-            }
-            if (this.currentScope.isNamespace(recv)) {
-              return null;
-            }
-            JSType recvType = simpleInferExprType(recv);
-            QualifiedName qname =
-                new QualifiedName(n.getLastChild().getString());
-            if (recvType != null && recvType.mayHaveProp(qname)) {
-              return recvType.getProp(qname);
-            }
-          }
-          return null;
+          return simpleInferGetpropType(n);
         case Token.COMMA:
         case Token.ASSIGN:
           return simpleInferExprType(n.getLastChild());
@@ -1652,6 +1614,29 @@ class GlobalTypeInfo implements CompilerPass {
               return null;
           }
       }
+    }
+
+    private JSType simpleInferGetpropType(Node n) {
+      Preconditions.checkArgument(n.isGetProp());
+      Node recv = n.getFirstChild();
+      if (!recv.isQualifiedName()) {
+        return null;
+      }
+      String pname = n.getLastChild().getString();
+      EnumType et = this.currentScope.getEnum(QualifiedName.fromNode(recv));
+      if (et != null
+          && et.enumLiteralHasKey(pname)) {
+        return et.getEnumeratedType();
+      }
+      if (this.currentScope.isNamespace(recv)) {
+        return null;
+      }
+      JSType recvType = simpleInferExprType(recv);
+      QualifiedName propQname = new QualifiedName(pname);
+      if (recvType != null && recvType.mayHaveProp(propQname)) {
+        return recvType.getProp(propQname);
+      }
+      return null;
     }
 
     private boolean mayAddPropToType(Node getProp, RawNominalType rawType) {
