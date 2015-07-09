@@ -2869,7 +2869,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testES5toES6() throws Exception {
     CompilerOptions options = createCompilerOptions();
-    options.setAllowEs6Out(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT6_STRICT);
     CompilationLevel.SIMPLE_OPTIMIZATIONS

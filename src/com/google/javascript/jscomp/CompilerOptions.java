@@ -77,24 +77,6 @@ public class CompilerOptions implements Serializable, Cloneable {
   private LanguageMode languageOut;
 
   /**
-   * Allows ES6 compilation output.
-   */
-  private boolean allowEs6Out;
-
-  /**
-   * Allow ES6 as the output language.
-   * WARNING: Enabling this option may cause the compiler to crash
-   *     or produce incorrect output.
-   */
-  public void setAllowEs6Out(boolean value) {
-    allowEs6Out = value;
-  }
-
-  public boolean getAllowEs6Out() {
-    return allowEs6Out;
-  }
-
-  /**
    * If true, transpile ES6 to ES3 only. All others passes will be skipped.
    */
   boolean transpileOnly;
@@ -985,9 +967,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     // Accepted language
     languageIn = LanguageMode.ECMASCRIPT3;
     languageOut = LanguageMode.NO_TRANSPILE;
-
-    // Experimental
-    allowEs6Out = false;
 
     // Language variation
     acceptConstKeyword = false;
