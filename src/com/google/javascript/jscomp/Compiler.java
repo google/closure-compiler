@@ -2121,6 +2121,7 @@ public class Compiler extends AbstractCompiler {
       case ECMASCRIPT5_STRICT:
       case ECMASCRIPT6:
       case ECMASCRIPT6_STRICT:
+      case ECMASCRIPT6_TYPED:
         return true;
       case ECMASCRIPT3:
         return false;
