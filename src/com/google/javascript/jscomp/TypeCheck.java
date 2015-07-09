@@ -247,7 +247,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "Illegal key, the object literal is a {0}");
 
   static final DiagnosticType NON_STRINGIFIABLE_OBJECT_KEY =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_NON_STRINGIFIABLE_OBJECT_KEY",
           "Object type \"{0}\" contains non-stringifiable key and it may lead to an "
           + "error. Please use ES6 Map instead or implement your own Map structure.");
@@ -287,6 +287,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       IN_USED_WITH_STRUCT,
       ILLEGAL_PROPERTY_CREATION,
       ILLEGAL_OBJLIT_KEY,
+      NON_STRINGIFIABLE_OBJECT_KEY,
       RhinoErrorReporter.TYPE_PARSE_ERROR,
       TypedScopeCreator.UNKNOWN_LENDS,
       TypedScopeCreator.LENDS_ON_NON_OBJECT,
