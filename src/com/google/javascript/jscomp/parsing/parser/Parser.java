@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CallExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.CallSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
@@ -566,6 +567,8 @@ public class Parser {
       case IDENTIFIER:
       case OPEN_SQUARE:
       case STAR:
+      case OPEN_ANGLE:
+      case OPEN_PAREN:
         return true;
       default:
         return Keywords.isKeyword(token.type);
@@ -580,12 +583,14 @@ public class Parser {
     IdentifierToken name = null;
     TokenType type = peekType();
 
-    if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
+    if (type == TokenType.NEW) {
+      return parseCallSignature(true); // ConstructSignature
+    } else if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
       name = eatIdOrKeywordAsId();
     } else if (type == TokenType.OPEN_SQUARE) { // IndexSignature
       return parseIndexSignature();
-    } else {
-      // TODO(moz): Parse CallSignature and ConstructSignature
+    } else if (type == TokenType.OPEN_ANGLE || type == TokenType.OPEN_PAREN) { // CallSignature
+      return parseCallSignature(false);
     }
 
     boolean isOptional = false;
@@ -867,6 +872,17 @@ public class Parser {
     ParseTree nameTree = new MemberVariableTree(getTreeLocation(start), name, false,
         false, indexType);
     return new IndexSignatureTree(getTreeLocation(start), nameTree, declaredType);
+  }
+
+  private CallSignatureTree parseCallSignature(boolean isNew) {
+    SourcePosition start = getTreeStartLocation();
+    if (isNew) {
+      eat(TokenType.NEW);
+    }
+    GenericTypeListTree generics = maybeParseGenericTypes();
+    FormalParameterListTree params = parseFormalParameterList(ParamContext.SIGNATURE);
+    ParseTree returnType = maybeParseColonType();
+    return new CallSignatureTree(getTreeLocation(start), isNew, generics, params, returnType);
   }
 
   private boolean peekAmbientDeclaration() { // AmbientModuleDeclaration not supported

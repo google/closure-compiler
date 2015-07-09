@@ -1182,6 +1182,15 @@ class CodeGenerator {
         maybeAddTypeDecl(n);
         add(";");
         break;
+      case Token.CALL_SIGNATURE:
+        if (n.getBooleanProp(Node.CONSTRUCT_SIGNATURE)) {
+          add("new ");
+        }
+        maybeAddGenericTypes(n);
+        add(first);
+        maybeAddTypeDecl(n);
+        add(";");
+        break;
       default:
         throw new RuntimeException("Unknown type " + Token.name(type) + "\n" + n.toStringTree());
     }

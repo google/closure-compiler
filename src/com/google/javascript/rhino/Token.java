@@ -234,6 +234,7 @@ public class Token {
       DECLARE = 318,
       MEMBER_VARIABLE_DEF = 319,
       INDEX_SIGNATURE = 320,
+      CALL_SIGNATURE = 321,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
@@ -553,6 +554,8 @@ public class Token {
         return "DECLARE";
       case INDEX_SIGNATURE:
         return "INDEX_SIGNATURE";
+      case CALL_SIGNATURE:
+        return "CALL_SIGNATURE";
     }
 
     // Token without name

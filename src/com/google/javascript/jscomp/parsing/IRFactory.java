@@ -46,6 +46,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.BinaryOperatorTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BlockTree;
 import com.google.javascript.jscomp.parsing.parser.trees.BreakStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CallExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.CallSignatureTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CaseClauseTree;
 import com.google.javascript.jscomp.parsing.parser.trees.CatchTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ClassDeclarationTree;
@@ -1195,18 +1196,9 @@ class IRFactory {
         node.addChildToBack(emptyName);
       }
 
-      if (functionTree.generics != null) {
-        maybeWarnTypeSyntax(functionTree, "generic function");
-        node.getFirstChild().putProp(Node.GENERIC_TYPE_LIST,
-            transform(functionTree.generics));
-      }
-
+      maybeProcessGenerics(node.getFirstChild(), functionTree.generics);
       node.addChildToBack(transform(functionTree.formalParameterList));
-
-      if (functionTree.returnType != null) {
-        recordJsDoc(functionTree.returnType.location, node.getJSDocInfo());
-        node.setDeclaredTypeExpression(convertTypeTree(functionTree.returnType));
-      }
+      maybeProcessType(node, functionTree.returnType);
 
       Node bodyNode = transform(functionTree.functionBody);
       if (!isArrow && !isSignature && !bodyNode.isBlock()) {
@@ -1913,10 +1905,8 @@ class IRFactory {
       maybeWarnEs6Feature(tree, "class");
 
       Node name = transformOrEmpty(tree.name, tree);
-      if (tree.generics != null) {
-        maybeWarnTypeSyntax(tree, "generic class");
-        name.putProp(Node.GENERIC_TYPE_LIST, transform(tree.generics));
-      }
+      maybeProcessGenerics(name, tree.generics);
+
       Node superClass = transformOrEmpty(tree.superClass, tree);
       Node interfaces = transformListOrEmpty(Token.IMPLEMENTS, tree.interfaces);
 
@@ -1942,10 +1932,7 @@ class IRFactory {
       maybeWarnTypeSyntax(tree, "interface");
 
       Node name = processName(tree.name);
-      if (tree.generics != null) {
-        maybeWarnTypeSyntax(tree, "generic interface");
-        name.putProp(Node.GENERIC_TYPE_LIST, transform(tree.generics));
-      }
+      maybeProcessGenerics(name, tree.generics);
 
       Node superInterfaces = transformListOrEmpty(Token.INTERFACE_EXTENDS, tree.superInterfaces);
 
@@ -2107,12 +2094,18 @@ class IRFactory {
     }
 
     private void maybeProcessType(Node typeTarget, ParseTree typeTree) {
-      if (typeTree == null) {
-        return;
+      if (typeTree != null) {
+        recordJsDoc(typeTree.location, typeTarget.getJSDocInfo());
+        Node typeExpression = convertTypeTree(typeTree);
+        typeTarget.setDeclaredTypeExpression(typeExpression);
       }
-      recordJsDoc(typeTree.location, typeTarget.getJSDocInfo());
-      Node typeExpression = convertTypeTree(typeTree);
-      typeTarget.setDeclaredTypeExpression(typeExpression);
+    }
+
+    private void maybeProcessGenerics(Node n, GenericTypeListTree generics) {
+      if (generics != null) {
+        maybeWarnTypeSyntax(generics, "generics");
+        n.putProp(Node.GENERIC_TYPE_LIST, transform(generics));
+      }
     }
 
     private Node convertTypeTree(ParseTree typeTree) {
@@ -2176,6 +2169,15 @@ class IRFactory {
 
       Node signature = newNode(Token.INDEX_SIGNATURE, name);
       maybeProcessType(signature, tree.declaredType);
+      return signature;
+    }
+
+    Node processCallSignature(CallSignatureTree tree) {
+      maybeWarnTypeSyntax(tree, tree.isNew ? "constructor signature" : "call signature");
+      Node signature = newNode(Token.CALL_SIGNATURE, transform(tree.formalParameterList));
+      maybeProcessType(signature, tree.returnType);
+      maybeProcessGenerics(signature, tree.generics);
+      signature.putBooleanProp(Node.CONSTRUCT_SIGNATURE, tree.isNew);
       return signature;
     }
 
@@ -2553,6 +2555,8 @@ class IRFactory {
 
         case INDEX_SIGNATURE:
           return processIndexSignature(node.asIndexSignature());
+        case CALL_SIGNATURE:
+          return processCallSignature(node.asCallSignature());
 
         // TODO(johnlenz): handle these or remove parser support
         case ARGUMENT_LIST:

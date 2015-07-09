@@ -152,6 +152,7 @@ public class ParseTree {
   public TypeAliasTree asTypeAlias() { return (TypeAliasTree) this; }
   public AmbientDeclarationTree asAmbientDeclaration() { return (AmbientDeclarationTree) this; }
   public IndexSignatureTree asIndexSignature() { return (IndexSignatureTree) this; }
+  public CallSignatureTree asCallSignature() { return (CallSignatureTree) this; }
 
   public boolean isPattern() {
     ParseTree parseTree = this;

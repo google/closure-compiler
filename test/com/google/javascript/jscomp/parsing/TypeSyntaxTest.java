@@ -475,7 +475,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("interface Foo<T> {\n}");
     parse("interface J<F extends Array<I<number>>> {\n}");
 
-    testNotEs6Typed("interface Foo<T> {\n}", "interface", "generic interface");
+    testNotEs6Typed("interface Foo<T> {\n}", "interface", "generics");
   }
 
   public void testGenericClass() {
@@ -484,7 +484,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("class Foo<U extends () => boolean, V> {\n}");
     parse("var Foo = class<T> {\n};");
 
-    testNotEs6Typed("class Foo<T> {}", "generic class");
+    testNotEs6Typed("class Foo<T> {}", "generics");
   }
 
   public void testGenericFunction() {
@@ -505,7 +505,7 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. primary expression expected");
     parse("var x = <T>((p:T) => 3);");
 
-    testNotEs6Typed("function foo<T>() {}", "generic function");
+    testNotEs6Typed("function foo<T>() {}", "generics");
   }
 
   public void testImplements() {
@@ -605,6 +605,22 @@ public final class TypeSyntaxTest extends TestCase {
 
     testNotEs6Typed("class C {\n  [foo: number]: number;\n}",
         "index signature", "type annotation", "type annotation");
+  }
+
+  public void testCallSignature() {
+    parse("interface I {\n  (foo: number): number;\n}");
+    parse("interface I {\n  <T>(foo: number): number;\n}");
+    parse("var i: {(foo: number): number;};");
+
+    testNotEs6Typed("interface I { (foo); }", "interface", "call signature");
+  }
+
+  public void testConstructSignature() {
+    parse("interface I {\n  new (foo: number): number;\n}");
+    parse("interface I {\n  new <T>(foo: number): number;\n}");
+    parse("var i: {new (foo: number): number;};");
+
+    testNotEs6Typed("interface I { new (foo); }", "interface", "constructor signature");
   }
 
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {

@@ -135,7 +135,8 @@ public class Node implements Cloneable, Serializable {
       OPT_ES6_TYPED = 80,         // The node is an optional parameter or property
                                   // in ES6 Typed syntax.
       GENERIC_TYPE_LIST = 81,     // Generic type list in ES6 typed syntax.
-      IMPLEMENTS = 82;            // "implements" clause in ES6 typed syntax.
+      IMPLEMENTS = 82,            // "implements" clause in ES6 typed syntax.
+      CONSTRUCT_SIGNATURE = 83;   // This node is a TypeScript ConstructSignature
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -190,6 +191,7 @@ public class Node implements Cloneable, Serializable {
         case OPT_ES6_TYPED:    return "opt_es6_typed";
         case GENERIC_TYPE_LIST:       return "generic_type";
         case IMPLEMENTS:       return "implements";
+        case CONSTRUCT_SIGNATURE: return "construct_signature";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
