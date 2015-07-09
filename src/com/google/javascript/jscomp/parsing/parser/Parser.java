@@ -1083,6 +1083,7 @@ public class Parser {
       return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
     }
 
+
     ParseTree typeExpression = parseFunctionTypeExpression();
     if (!peek(TokenType.BAR)) {
       return typeExpression;
@@ -1188,6 +1189,7 @@ public class Parser {
     // < TypeArgumentList >
     // TypeArgumentList , TypeArgument
     eat(TokenType.OPEN_ANGLE);
+    scanner.incTypeParameterLevel();
     ImmutableList.Builder<ParseTree> typeArguments = ImmutableList.builder();
     ParseTree type = parseType();
     typeArguments.add(type);
@@ -1200,6 +1202,7 @@ public class Parser {
       }
     }
     eat(TokenType.CLOSE_ANGLE);
+    scanner.decTypeParameterLevel();
 
     return new ParameterizedTypeTree(getTreeLocation(start), typeName, typeArguments.build());
   }
@@ -2300,6 +2303,7 @@ public class Parser {
 
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.OPEN_ANGLE);
+    scanner.incTypeParameterLevel();
     LinkedHashMap<IdentifierToken, ParseTree> types = new LinkedHashMap<>();
     do {
       IdentifierToken name = eatId();
@@ -2314,6 +2318,7 @@ public class Parser {
       }
     } while (peekId());
     eat(TokenType.CLOSE_ANGLE);
+    scanner.decTypeParameterLevel();
     return new GenericTypeListTree(getTreeLocation(start), types);
   }
 

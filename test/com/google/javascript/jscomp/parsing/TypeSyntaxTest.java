@@ -219,6 +219,9 @@ public final class TypeSyntaxTest extends TestCase {
                 namedType("ns.B")));
     assertVarType("parameterized type 2 args", parameterizedType,
         "var x: my.parameterized.Type<ns.A, ns.B>;");
+
+    parse("var x: Foo<Bar<Baz>>;");
+    parse("var x: A<B<C<D>>>;");
   }
 
   public void testParameterizedType_empty() {
@@ -470,6 +473,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   public void testGenericInterface() {
     parse("interface Foo<T> {\n}");
+    parse("interface J<F extends Array<I<number>>> {\n}");
 
     testNotEs6Typed("interface Foo<T> {\n}", "interface", "generic interface");
   }
