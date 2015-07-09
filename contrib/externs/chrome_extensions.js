@@ -8642,6 +8642,10 @@ chrome.mdns.ServiceListEvent.prototype.hasListeners = function() {};
 chrome.mdns.onServiceList;
 
 
+/** @param {function()} callback */
+chrome.mdns.forceDiscovery = function(callback) {};
+
+
 /**
  * @const
  * @see http://goo.gl/79p5h5
