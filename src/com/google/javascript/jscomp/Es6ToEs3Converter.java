@@ -274,7 +274,28 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
     restParam.setType(Token.NAME);
     restParam.setVarArgs(true);
+
+    // Make sure rest parameters are typechecked
+    JSTypeExpression type = null;
+    JSDocInfo info = restParam.getJSDocInfo();
     String paramName = restParam.getString();
+    if (info != null) {
+      type = info.getType();
+    } else {
+      JSDocInfo functionInfo = paramList.getParent().getJSDocInfo();
+      if (functionInfo != null) {
+        type = functionInfo.getParameterType(paramName);
+      }
+    }
+    if (type != null && type.getRoot().getType() != Token.ELLIPSIS) {
+      compiler.report(JSError.make(restParam, BAD_REST_PARAMETER_ANNOTATION));
+    }
+
+    if (!functionBody.hasChildren()) {
+      // If function has no body, we are done!
+      compiler.reportCodeChange();
+      return;
+    }
 
     Node newBlock = IR.block().useSourceInfoFrom(functionBody);
     Node name = IR.name(paramName);
@@ -286,23 +307,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       newBlock.addChildToBack(child.detachFromParent());
     }
 
-    // Make sure rest parameters are typechecked
-    JSTypeExpression type = null;
-    JSDocInfo info = restParam.getJSDocInfo();
-    if (info != null) {
-      type = info.getType();
-    } else {
-      JSDocInfo functionInfo = paramList.getParent().getJSDocInfo();
-      if (functionInfo != null) {
-        type = functionInfo.getParameterType(paramName);
-      }
-    }
     if (type != null) {
       Node arrayType = IR.string("Array");
       Node typeNode = type.getRoot();
-      if (typeNode.getType() != Token.ELLIPSIS) {
-        compiler.report(JSError.make(typeNode, BAD_REST_PARAMETER_ANNOTATION));
-      }
       Node memberType =
           typeNode.getType() == Token.ELLIPSIS
               ? typeNode.getFirstChild().cloneNode()

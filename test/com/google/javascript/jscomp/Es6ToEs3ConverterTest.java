@@ -1089,59 +1089,29 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "  }",
         "}"));
 
-    test("function f(zero, ...one) {}",
-        LINE_JOINER.join(
-        "function f(zero, one) {",
-        "  var $jscomp$restParams = [];",
-        "  for (var $jscomp$restIndex = 1; $jscomp$restIndex < arguments.length;",
-        "      ++$jscomp$restIndex) {",
-        "    $jscomp$restParams[$jscomp$restIndex - 1] = arguments[$jscomp$restIndex];",
-        "  }",
-        "  {",
-        "    var one$0 = $jscomp$restParams;",
-        "  }",
-        "}"));
+    test("function f(zero, ...one) {}", "function f(zero, one) {}");
+    test("function f(zero, one, ...two) {}", "function f(zero, one, two) {}");
 
-    test("function f(zero, one, ...two) {}",
-        LINE_JOINER.join(
-        "function f(zero, one, two) {",
-        "  var $jscomp$restParams = [];",
-        "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-        "      ++$jscomp$restIndex) {",
-        "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-        "  }",
-        "  {",
-        "    var two$0 = $jscomp$restParams;",
-        "  }",
-        "}"));
-
-    // Make sure we get type checking on the rest parameters
+    // Function-level and inline type
     test("/** @param {...number} zero */ function f(...zero) {}",
-        LINE_JOINER.join(
-        "/** @param {...number} zero */ function f(zero) {",
-        "  var $jscomp$restParams = [];",
-        "  for (var $jscomp$restIndex = 0; $jscomp$restIndex < arguments.length;",
-        "      ++$jscomp$restIndex) {",
-        "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
-        "  }",
-        "  {",
-        "    var /** !Array<number> */ zero$0 = $jscomp$restParams;",
-        "  }",
-        "}"));
-
-    // Inline type
+         "/** @param {...number} zero */ function f(zero) {}");
     test("function f(/** ...number */ ...zero) {}",
+         "function f(/** ...number */ zero) {}");
+
+    // Make sure we get type checking inside the function for the rest parameters.
+    test("/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
         LINE_JOINER.join(
-        "function f(/** ...number */ zero) {",
-        "  var $jscomp$restParams = [];",
-        "  for (var $jscomp$restIndex = 0; $jscomp$restIndex < arguments.length;",
-        "      ++$jscomp$restIndex) {",
-        "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
-        "  }",
-        "  {",
-        "    var /** !Array<number> */ zero$0 = $jscomp$restParams;",
-        "  }",
-        "}"));
+            "/** @param {...number} two */ function f(zero, one, two) {",
+            "  var $jscomp$restParams = [];",
+            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
+            "      ++$jscomp$restIndex) {",
+            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
+            "  }",
+            "  {",
+            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
+            "    return two$0;",
+            "  }",
+            "}"));
 
     // Warn on /** number */
     testWarning("function f(/** number */ ...zero) {}",
