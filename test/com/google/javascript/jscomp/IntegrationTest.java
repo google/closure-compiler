@@ -1904,11 +1904,10 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testLanguageMode() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
 
     String code = "var a = {get f(){}}";
 
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     Compiler compiler = compile(options, code);
     checkUnexpectedErrorsOrWarnings(compiler, 1);
     assertEquals(
@@ -1920,39 +1919,42 @@ public final class IntegrationTest extends IntegrationTestCase {
         compiler.getErrors()[0].toString());
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
-
     testSame(options, code);
   }
 
   public void testLanguageMode2() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
 
     String code = "var a  = 2; delete a;";
 
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-
     testSame(options, code);
 
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5_STRICT);
-
     test(options,
         code,
         code,
         StrictModeCheck.DELETE_VARIABLE);
   }
+
+  public void testEs6LanguageMode() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+
+    test(options, "var a = function() { return foo(bar); };", "var a = ()=>foo(bar);");
+    test(options,
+        "var o = { x:5, getX:function() { return this.x; } }",
+        "var o = { x:5, getX() { return this.x; } }");
+  }
+
+
 
   public void testIssue598() {
     CompilerOptions options = createCompilerOptions();

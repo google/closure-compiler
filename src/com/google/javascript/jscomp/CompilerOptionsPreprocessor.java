@@ -51,13 +51,6 @@ final class CompilerOptionsPreprocessor {
           options.getLanguageIn(), options.getLanguageOut());
     }
 
-    if (options.getLanguageOut().isEs6OrHigher()
-        && !options.transpileOnly && !options.getAllowEs6Out()) {
-      throw new InvalidOptionsException(
-          "ES6 is only supported for transpilation to a lower ECMAScript"
-          + " version. Set --language_out to ES3, ES5, or ES5_STRICT.");
-    }
-
     if (!options.inlineFunctions
         && options.maxFunctionSizeAfterInlining
         != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) {

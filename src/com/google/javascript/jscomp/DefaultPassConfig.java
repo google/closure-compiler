@@ -222,7 +222,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
-    if (options.lowerFromEs6() || options.aggressiveVarCheck.isOn()) {
+    if (options.getLanguageIn().isEs6OrHigher() || options.aggressiveVarCheck.isOn()) {
       checks.add(checkVariableReferences);
     }
 
@@ -238,9 +238,9 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
-    // As we convert more passes to handle these features, we will be moving
-    // the transpilation later in the compilation.
-    if (options.lowerFromEs6()) {
+    // As we convert more passes to handle these features, we will be moving the transpilation
+    // later in the compilation, and eventually only transpiling when the output is lower than ES6.
+    if (options.getLanguageIn().isEs6OrHigher()) {
       checks.add(es6ConvertSuper);
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);
@@ -256,7 +256,7 @@ public final class DefaultPassConfig extends PassConfig {
       return checks;
     }
 
-    if (options.lowerFromEs6()) {
+    if (options.getLanguageIn().isEs6OrHigher()) {
       checks.add(es6RuntimeLibrary);
     }
 
@@ -778,6 +778,11 @@ public final class DefaultPassConfig extends PassConfig {
     // Safety checks
     passes.add(sanityCheckAst);
     passes.add(sanityCheckVars);
+
+    // Raise to ES6, if allowed
+    if (options.getLanguageOut().isEs6OrHigher()) {
+      passes.add(optimizeToEs6);
+    }
 
     return passes;
   }
@@ -2655,6 +2660,14 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new CheckConformance(
           compiler, ImmutableList.copyOf(options.getConformanceConfigs()));
+    }
+  };
+
+  /** Optimizations that output ES6 features. */
+  private final PassFactory optimizeToEs6 = new PassFactory("optimizeToEs6", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new SubstituteEs6Syntax(compiler);
     }
   };
 }
