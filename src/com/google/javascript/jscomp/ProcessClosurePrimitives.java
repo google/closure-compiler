@@ -81,6 +81,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       + "For more information see "
       + "https://github.com/google/closure-compiler/wiki/A-word-about-the-type-Object");
 
+  static final DiagnosticType CLASS_NAMESPACE_ERROR = DiagnosticType.error(
+      "JSC_CLASS_NAMESPACE_ERROR",
+    "\"{0}\" cannot be both provided and declared as a class. Try var {0} = class '{'...'}'");
+
   static final DiagnosticType FUNCTION_NAMESPACE_ERROR = DiagnosticType.error(
       "JSC_FUNCTION_NAMESPACE_ERROR",
       "\"{0}\" cannot be both provided and declared as a function");
@@ -241,8 +245,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         Node left = n.getFirstChild();
         if (left.isGetProp()) {
           Node name = left.getFirstChild();
-          if (name.isName() &&
-              GOOG.equals(name.getString())) {
+          if (name.isName() && GOOG.equals(name.getString())) {
             // For the sake of simplicity, we report code changes
             // when we see a provides/requires, and don't worry about
             // reporting the change when we actually do the replacement.
@@ -308,6 +311,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         handleTypedefDefinition(t, n);
         break;
 
+      case Token.CLASS:
+        if (t.inGlobalScope() && !NodeUtil.isClassExpression(n)) {
+          String name = n.getFirstChild().getString();
+          ProvidedName pn = providedNames.get(name);
+          if (pn != null) {
+            compiler.report(t.makeError(n, CLASS_NAMESPACE_ERROR, name));
+          }
+        }
+        break;
+
       case Token.FUNCTION:
         // If this is a declaration of a provided named function, this is an
         // error. Hoisted functions will explode if they're provided.
@@ -346,11 +359,13 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       HashMap<String, Node> builder = new HashMap<>();
       builder.putAll(compiler.getDefaultDefineValues());
       for (Node c : n.getFirstChild().children()) {
-         if (c.isStringKey() && isValidDefineValue(c.getFirstChild())) {
-           builder.put(c.getString(), c.getFirstChild().cloneTree());
-         } else {
-           reportBadClosureCommonDefinesDefinition(t, c);
-         }
+        if (c.isStringKey()
+            && c.getFirstChild() != null  // Shorthand assignment
+            && isValidDefineValue(c.getFirstChild())) {
+          builder.put(c.getString(), c.getFirstChild().cloneTree());
+        } else {
+          reportBadClosureCommonDefinesDefinition(t, c);
+        }
       }
       compiler.setDefaultDefineValues(ImmutableMap.copyOf(builder));
     }
@@ -536,6 +551,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     // If requested report uses of goog.base.
     t.report(n, USE_OF_GOOG_BASE);
 
+    if (baseUsedInClass(n)){
+      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
+      return;
+    }
+
     Node callee = n.getFirstChild();
     Node thisArg = callee.getNext();
     if (thisArg == null || !thisArg.isThis()) {
@@ -639,6 +659,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     //
     // Most of the logic here is just to make sure the AST's
     // structure is what we expect it to be.
+
+    if (baseUsedInClass(n)){
+      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
+      return;
+    }
 
     Node callTarget = n.getFirstChild();
     Node baseContainerNode = callTarget.getFirstChild();
@@ -821,6 +846,16 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     return null;
+  }
+
+  /** Verify if goog.base call is used in a class */
+  private boolean baseUsedInClass(Node n){
+    for (Node curr = n; curr != null; curr = curr.getParent()){
+      if (curr.isClassMembers()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Reports an incorrect use of super-method calling. */
