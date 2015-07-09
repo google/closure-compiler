@@ -563,6 +563,30 @@ public final class TypeSyntaxTest extends TestCase {
     parse("class C { foo?: number; }");
   }
 
+  public void testParamNoInitializer() {
+    expectErrors("Parse error. ',' expected");
+    parse("declare function foo(bar = 3);");
+    expectErrors("Parse error. ',' expected");
+    parse("interface I { foo(bar = 3); }");
+    expectErrors("Parse error. ',' expected");
+    parse("declare class C { foo(bar = 3); }");
+  }
+
+  public void testParamDestructuring() {
+    parse("declare function foo([bar]);");
+    parse("declare function foo({bar:bar});");
+
+    expectErrors("Parse error. ',' expected");
+    parse("interface I { foo(bar = 3); }");
+    expectErrors("Parse error. ',' expected");
+    parse("declare class C { foo(bar = 3); }");
+
+    expectErrors("Parse error. Unexpected token '[' in type expression");
+    parse("var x: ([foo]) => number;");
+    expectErrors("Parse error. Semi-colon expected");
+    parse("var x: ({foo:foo}) => number;");
+  }
+
   public void testIndexSignature() {
     parse("interface I {\n  [foo: number]: number;\n}");
     parse("var i: {[foo: number]: number;};");
