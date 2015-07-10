@@ -79,6 +79,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       "JSC_POLYMER_UNANNOTATED_BEHAVIOR",
       "Behavior declarations must be annotated with @polymerBehavior.");
 
+  static final DiagnosticType POLYMER_SHORTHAND_NOT_SUPPORTED = DiagnosticType.error(
+      "JSC_POLYMER_SHORTHAND_NOT_SUPPORTED",
+      "Shorthand assignment in object literal is not allowed in "
+      + "Polymer call arguments");
+
   static final String VIRTUAL_FILE = "<PolymerPass.java>";
 
   private final AbstractCompiler compiler;
@@ -516,7 +521,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     ImmutableList.Builder<MemberDefinition> functionsToCopy = ImmutableList.builder();
 
     for (Node keyNode : behaviorObjLit.children()) {
-      if (keyNode.isStringKey() && keyNode.getFirstChild().isFunction()
+      if ((keyNode.isStringKey() && keyNode.getFirstChild().isFunction()
+          || keyNode.isMemberFunctionDef())
           && !behaviorNamesNotToCopy.contains(keyNode.getString())) {
         functionsToCopy.add(new MemberDefinition(NodeUtil.getBestJSDocInfo(keyNode), keyNode,
           keyNode.getFirstChild()));
@@ -569,6 +575,11 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     }
 
     Node objLit = cls.descriptor;
+    if (hasShorthandAssignment(objLit)){
+      compiler.report(JSError.make(objLit, POLYMER_SHORTHAND_NOT_SUPPORTED));
+      return;
+    }
+
     JSDocInfoBuilder objLitDoc = new JSDocInfoBuilder(true);
     objLitDoc.recordLends(cls.target.getQualifiedName() + ".prototype");
     objLit.setJSDocInfo(objLitDoc.build());
@@ -649,7 +660,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   private void addTypesToFunctions(Node objLit, String thisType) {
     Preconditions.checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
-      Node value = keyNode.getFirstChild();
+      Node value = keyNode.getLastChild();
       if (value != null && value.isFunction()) {
         JSDocInfoBuilder fnDoc = JSDocInfoBuilder.maybeCopyFrom(keyNode.getJSDocInfo());
         fnDoc.recordThisType(new JSTypeExpression(
@@ -662,6 +673,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     for (MemberDefinition property : extractProperties(objLit)) {
       if (!property.value.isObjectLit()) {
         continue;
+      }
+      if (hasShorthandAssignment(property.value)){
+        compiler.report(JSError.make(property.value, POLYMER_SHORTHAND_NOT_SUPPORTED));
+        return;
       }
 
       Node defaultValue = NodeUtil.getFirstPropMatchingKey(property.value, "value");
@@ -709,6 +724,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   private void quoteListenerAndHostAttributeKeys(Node objLit) {
     Preconditions.checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
+      if (keyNode.isComputedProp()) {
+        continue;
+      }
       if (!keyNode.getString().equals("listeners")
           && !keyNode.getString().equals("hostAttributes")) {
         continue;
@@ -1020,4 +1038,15 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   private static boolean isPolymerCall(Node value) {
     return value != null && value.isCall() && value.getFirstChild().matchesQualifiedName("Polymer");
   }
+
+  private boolean hasShorthandAssignment (Node objLit){
+    Preconditions.checkState(objLit.isObjectLit());
+    for (Node property : objLit.children()){
+      if (property.isStringKey() && !property.hasChildren()){
+        return true;
+      }
+    }
+    return false;
+  }
+
 }
