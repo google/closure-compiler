@@ -1981,10 +1981,6 @@ public final class JsDocInfoParser {
       // top-level unions are allowed
       if (match(JsDocToken.PIPE)) {
         next();
-        if (match(JsDocToken.PIPE)) {
-          // We support double pipes for backwards-compatibility.
-          next();
-        }
         skipEOLs();
         token = next();
         return parseUnionTypeWithAlternate(token, typeExpr);
@@ -2365,11 +2361,6 @@ public final class JsDocInfoParser {
         Preconditions.checkState(
             token == JsDocToken.PIPE || token == JsDocToken.COMMA);
 
-        boolean isPipe = token == JsDocToken.PIPE;
-        if (isPipe && match(JsDocToken.PIPE)) {
-          // We support double pipes for backwards compatibility.
-          next();
-        }
         skipEOLs();
         token = next();
       }

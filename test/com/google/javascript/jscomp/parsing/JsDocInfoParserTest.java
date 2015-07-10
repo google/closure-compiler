@@ -375,11 +375,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(createUnionType(BOOLEAN_TYPE, NULL_TYPE), info.getType());
   }
 
-  public void testParseUnionType3() throws Exception {
-    JSDocInfo info = parse("@type {boolean||null}*/");
-    assertTypeEquals(createUnionType(BOOLEAN_TYPE, NULL_TYPE), info.getType());
-  }
-
   public void testParseUnionType4() throws Exception {
     JSDocInfo info = parse("@type {(Array.<boolean>,null)}*/");
     assertTypeEquals(createUnionType(
@@ -403,20 +398,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseUnionType7() throws Exception {
     JSDocInfo info = parse("@type {null|Array.<boolean>}*/");
-    assertTypeEquals(createUnionType(
-        createTemplatizedType(
-            ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
-  }
-
-  public void testParseUnionType8() throws Exception {
-    JSDocInfo info = parse("@type {null||Array.<boolean>}*/");
-    assertTypeEquals(createUnionType(
-        createTemplatizedType(
-            ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
-  }
-
-  public void testParseUnionType9() throws Exception {
-    JSDocInfo info = parse("@type {Array.<boolean>||null}*/");
     assertTypeEquals(createUnionType(
         createTemplatizedType(
             ARRAY_TYPE, BOOLEAN_TYPE), NULL_TYPE), info.getType());
@@ -473,6 +454,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseUnionTypeError1() throws Exception {
     parse("@type {(string,|number)} */",
+        "Bad type annotation. type not recognized due to syntax error");
+  }
+
+  public void testParseUnionTypeError2() throws Exception {
+    parse("@type {string||number} */",
         "Bad type annotation. type not recognized due to syntax error");
   }
 
@@ -848,7 +834,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testParseReturnType3() throws Exception {
     JSDocInfo info =
-        parse("@return {((null||Array.<boolean>,string),boolean)}*/");
+        parse("@return {((null|Array.<boolean>,string),boolean)}*/");
     assertTypeEquals(
         createUnionType(createTemplatizedType(ARRAY_TYPE, BOOLEAN_TYPE),
             NULL_TYPE, STRING_TYPE, BOOLEAN_TYPE),

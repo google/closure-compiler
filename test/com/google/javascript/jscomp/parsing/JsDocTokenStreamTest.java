@@ -81,22 +81,6 @@ public final class JsDocTokenStreamTest extends TestCase {
         tokens, strings);
   }
 
-  public void testJsDocTokenization3() throws Exception {
-    List<JsDocToken> tokens = ImmutableList.of(
-        ANNOTATION, LEFT_CURLY, STRING, LEFT_ANGLE, STRING, PIPE, STRING, RIGHT_ANGLE, RIGHT_CURLY);
-    List<String> strings = ImmutableList.of("param", "Array", "string", "null");
-    testJSDocTokenStream("@param {Array.<string||null>}", tokens, strings);
-    testJSDocTokenStream("@param {Array.< string || null> }", tokens, strings);
-    testJSDocTokenStream("@param {Array.<string || null >  } ",
-        tokens, strings);
-    testJSDocTokenStream("@param {Array .<string   ||null>}", tokens, strings);
-    testJSDocTokenStream("@param {Array.< string||null>}", tokens, strings);
-    testJSDocTokenStream("@param {  Array.<string||null>}", tokens, strings);
-    testJSDocTokenStream(" @param   {Array.<string||null>}", tokens, strings);
-    testJSDocTokenStream("@param   {   Array.<string|| null> }",
-        tokens, strings);
-  }
-
   public void testJsDocTokenization4() throws Exception {
     List<JsDocToken> tokens = ImmutableList.of(
         ANNOTATION, LEFT_CURLY, STRING, LEFT_ANGLE, LEFT_PAREN, STRING, COMMA,

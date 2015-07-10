@@ -130,7 +130,6 @@ class JsDocTokenStream {
           return JsDocToken.EQUALS;
 
         case '|':
-          matchChar('|');
           return JsDocToken.PIPE;
 
         case '<':
