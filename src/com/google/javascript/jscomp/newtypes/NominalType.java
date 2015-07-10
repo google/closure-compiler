@@ -427,6 +427,9 @@ public final class NominalType {
     private final String name;
     // The function node (if any) that defines the type
     private final Node defSite;
+    // If a nominal type is finalized early b/c of a @const inference, we
+    // record the @const declaration (usually an assignment node).
+    private Node constDeclNode;
     // Each instance of the class has these properties by default
     private PersistentMap<String, Property> classProps = PersistentMap.create();
     // The object pointed to by the prototype property of the constructor of
@@ -522,6 +525,28 @@ public final class NominalType {
 
     public Node getDefSite() {
       return this.defSite;
+    }
+
+    public Node getConstDeclNode() {
+      if (this.constDeclNode != null) {
+        return this.constDeclNode;
+      }
+      Node n = null;
+      if (this.superClass != null) {
+        n = this.superClass.rawType.getConstDeclNode();
+      }
+      if (n != null) {
+        return n;
+      }
+      if (this.interfaces != null) {
+        for (NominalType interf : interfaces) {
+          n = interf.rawType.getConstDeclNode();
+          if (n != null) {
+            return n;
+          }
+        }
+      }
+      return null;
     }
 
     public boolean isClass() {
@@ -880,7 +905,7 @@ public final class NominalType {
     }
 
     // If we try to mutate the class after the AST-preparation phase, error.
-    public RawNominalType finalizeNominalType() {
+    public void finalizeNominalType(Node constDeclNode) {
       Preconditions.checkState(this.ctorFn != null);
       // System.out.println("Class " + name +
       //     " created with class properties: " + classProps +
@@ -889,8 +914,8 @@ public final class NominalType {
         this.interfaces = ImmutableSet.of();
       }
       addCtorProperty("prototype", null, createProtoObject(), false);
+      this.constDeclNode = constDeclNode;
       this.isFinalized = true;
-      return this;
     }
 
     @Override

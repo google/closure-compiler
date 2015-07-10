@@ -186,6 +186,12 @@ class GlobalTypeInfo implements CompilerPass {
           + "Expected: {0}\n"
           + "Found: {1}");
 
+  static final DiagnosticType NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION =
+      DiagnosticType.warning(
+          "JSC_NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION",
+          "Cannot add more properties to type {0}."
+          + " The type (or one of its subtypes) has been assigned to a @const name: {1}.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
       CANNOT_INIT_TYPEDEF,
@@ -204,6 +210,7 @@ class GlobalTypeInfo implements CompilerPass {
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
+      NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION,
       REDECLARED_PROPERTY,
       SETTER_WITH_RETURN,
       STRUCTDICT_WITHOUT_CTOR,
@@ -352,7 +359,7 @@ class GlobalTypeInfo implements CompilerPass {
     // (7) Adjust types of properties based on inheritance information.
     //     Report errors in the inheritance chain.
     for (RawNominalType rawType : nominaltypesByNode.values()) {
-      checkAndFinalizeNominalType(rawType);
+      checkAndFinalizeNominalType(rawType, null);
     }
 
     nominaltypesByNode = null;
@@ -410,18 +417,19 @@ class GlobalTypeInfo implements CompilerPass {
     return null;
   }
 
-  private void checkAndFinalizeNominalType(RawNominalType rawType) {
+  // constDeclNode is non-null iff rawType is finalized b/c of @const inference.
+  private void checkAndFinalizeNominalType(RawNominalType rawType, Node constDeclNode) {
     if (rawType.isFinalized()) {
       return;
     }
     NominalType superClass = rawType.getSuperClass();
     Set<String> nonInheritedPropNames = rawType.getAllOwnProps();
     if (superClass != null && !superClass.isFinalized()) {
-      checkAndFinalizeNominalType(superClass.getRawNominalType());
+      checkAndFinalizeNominalType(superClass.getRawNominalType(), constDeclNode);
     }
     for (NominalType superInterf : rawType.getInterfaces()) {
       if (!superInterf.isFinalized()) {
-        checkAndFinalizeNominalType(superInterf.getRawNominalType());
+        checkAndFinalizeNominalType(superInterf.getRawNominalType(), constDeclNode);
       }
     }
 
@@ -502,7 +510,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     // Finalize nominal type once all properties are added.
-    rawType.finalizeNominalType();
+    rawType.finalizeNominalType(constDeclNode);
   }
 
   private void checkSuperProperty(
@@ -1255,6 +1263,13 @@ class GlobalTypeInfo implements CompilerPass {
         // We don't look at assignments to prototypes of non-constructors.
         return;
       }
+      if (rawType.isFinalized()) {
+        warnings.add(JSError.make(getProp,
+                NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION,
+                rawType.getName(),
+                rawType.getConstDeclNode().toString()));
+        return;
+      }
       if (initializer != null && initializer.isFunction()) {
         parent.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       }
@@ -1311,6 +1326,13 @@ class GlobalTypeInfo implements CompilerPass {
       QualifiedName ctorQname = QualifiedName.fromNode(getProp.getFirstChild());
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
       RawNominalType classType = currentScope.getNominalType(ctorQname);
+      if (classType.isFinalized()) {
+        warnings.add(JSError.make(getProp,
+                NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION,
+                classType.getName(),
+                classType.getConstDeclNode().toString()));
+        return;
+      }
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
@@ -1481,7 +1503,7 @@ class GlobalTypeInfo implements CompilerPass {
         return null;
       }
       Node rhs = NodeUtil.getRValueOfLValue(constExpr);
-      JSType rhsType = simpleInferExprType(rhs);
+      JSType rhsType = simpleInferExprType(rhs, constExpr.getParent());
       if (rhsType == null || rhsType.isUnknown()) {
         warnings.add(JSError.make(constExpr, COULD_NOT_INFER_CONST_TYPE));
         return null;
@@ -1503,6 +1525,10 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private JSType simpleInferExprType(Node n) {
+      return simpleInferExprType(n, null);
+    }
+
+    private JSType simpleInferExprType(Node n, Node constDeclNode) {
       switch (n.getType()) {
         case Token.REGEXP:
           return commonTypes.getRegexpType();
@@ -1511,12 +1537,12 @@ class GlobalTypeInfo implements CompilerPass {
             return null;
           }
           Node child = n.getFirstChild();
-          JSType arrayType = simpleInferExprType(child);
+          JSType arrayType = simpleInferExprType(child, constDeclNode);
           if (arrayType == null) {
             return null;
           }
           while (null != (child = child.getNext())) {
-            if (!arrayType.equals(simpleInferExprType(child))) {
+            if (!arrayType.equals(simpleInferExprType(child, constDeclNode))) {
               return null;
             }
           }
@@ -1528,28 +1554,14 @@ class GlobalTypeInfo implements CompilerPass {
           return JSType.FALSE_TYPE;
         case Token.THIS:
           return this.currentScope.getDeclaredTypeOf("this");
-        case Token.NAME: {
-          String varName = n.getString();
-          if (varName.equals("undefined")) {
-            return JSType.UNDEFINED;
-          } else if (this.currentScope.isNamespace(varName)) {
-            // Namespaces (literals, enums, constructors) get populated during
-            // ProcessScope, so it's NOT safe to convert them to jstypes until
-            // after ProcessScope is done. So, we don't try to do sth clever
-            // here to find the type of a namespace property.
-            // However, in the GETPROP case, we special-case for enum
-            // properties, because enums get resolved right after
-            // CollectNamedTypes, so we know the enumerated type.
-            // (But we still don't know the types of enum properties outside
-            // the object-literal declaration.)
-            return null;
-          }
-          return this.currentScope.getDeclaredTypeOf(varName);
-        }
+        case Token.NAME:
+          return simpleInferDeclaration(
+              this.currentScope.getDeclaration(n.getString(), false),
+              constDeclNode);
         case Token.OBJECTLIT: {
           JSType objLitType = JSType.TOP_OBJECT;
           for (Node prop : n.children()) {
-            JSType propType = simpleInferExprType(prop.getFirstChild());
+            JSType propType = simpleInferExprType(prop.getFirstChild(), constDeclNode);
             if (propType == null) {
               return null;
             }
@@ -1560,10 +1572,10 @@ class GlobalTypeInfo implements CompilerPass {
           return objLitType;
         }
         case Token.GETPROP:
-          return simpleInferGetpropType(n);
+          return simpleInferGetpropType(n, constDeclNode);
         case Token.COMMA:
         case Token.ASSIGN:
-          return simpleInferExprType(n.getLastChild());
+          return simpleInferExprType(n.getLastChild(), constDeclNode);
         case Token.CALL:
         case Token.NEW: {
           Node callee = n.getFirstChild();
@@ -1581,7 +1593,7 @@ class GlobalTypeInfo implements CompilerPass {
             for (Node argNode = n.getFirstChild().getNext();
                  argNode != null;
                  argNode = argNode.getNext()) {
-              JSType t = simpleInferExprType(argNode);
+              JSType t = simpleInferExprType(argNode, constDeclNode);
               if (t == null) {
                 return null;
               }
@@ -1616,25 +1628,58 @@ class GlobalTypeInfo implements CompilerPass {
       }
     }
 
-    private JSType simpleInferGetpropType(Node n) {
+    private JSType simpleInferGetpropType(Node n, Node constDeclNode) {
       Preconditions.checkArgument(n.isGetProp());
       Node recv = n.getFirstChild();
       if (!recv.isQualifiedName()) {
         return null;
       }
+      QualifiedName recvQname = QualifiedName.fromNode(recv);
       String pname = n.getLastChild().getString();
-      EnumType et = this.currentScope.getEnum(QualifiedName.fromNode(recv));
-      if (et != null
-          && et.enumLiteralHasKey(pname)) {
-        return et.getEnumeratedType();
-      }
-      if (this.currentScope.isNamespace(recv)) {
+      Declaration decl = this.currentScope.getDeclaration(recvQname, false);
+      if (decl == null) {
         return null;
       }
-      JSType recvType = simpleInferExprType(recv);
+      EnumType et = decl.getEnum();
+      if (et != null && et.enumLiteralHasKey(pname)) {
+        return et.getEnumeratedType();
+      }
       QualifiedName propQname = new QualifiedName(pname);
+      Namespace ns = decl.getNamespace();
+      if (ns != null) {
+        return simpleInferDeclaration(ns.getDeclaration(propQname), constDeclNode);
+      }
+      JSType recvType = simpleInferExprType(recv, constDeclNode);
       if (recvType != null && recvType.mayHaveProp(propQname)) {
         return recvType.getProp(propQname);
+      }
+      return null;
+    }
+
+    // Namespaces (literals, enums, constructors) get populated during
+    // ProcessScope, so it's generally NOT safe to convert them to jstypes until
+    // after ProcessScope is done.
+    // So, we only do limited inference of namespace properties here.
+    // We finalize nominal types early if needed, and later warn if new
+    // properties are added to a nominal type that is already finalized.
+    private JSType simpleInferDeclaration(Declaration decl, Node constDeclNode) {
+      if (decl == null) {
+        return null;
+      }
+      if (constDeclNode != null) {
+        RawNominalType rawType = decl.getNominal();
+        if (rawType != null) {
+          checkAndFinalizeNominalType(rawType, constDeclNode);
+          return rawType.toJSType(commonTypes);
+        }
+      }
+      if (decl.getTypeOfSimpleDecl() != null) {
+        return decl.getTypeOfSimpleDecl();
+      }
+      Scope funScope = (Scope) decl.getFunctionScope();
+      if (funScope != null) {
+        return commonTypes.fromFunctionType(
+            funScope.getDeclaredFunctionType().toFunctionType());
       }
       return null;
     }
@@ -2248,13 +2293,14 @@ class GlobalTypeInfo implements CompilerPass {
       Declaration decl = getLocalDeclaration(name, false);
       if (decl != null) {
         if (decl.getTypeOfSimpleDecl() != null) {
-          Preconditions.checkState(!decl.getTypeOfSimpleDecl().isBottom(), "%s was bottom", name);
+          Preconditions.checkState(!decl.getTypeOfSimpleDecl().isBottom(),
+              "%s was bottom", name);
           return decl.getTypeOfSimpleDecl();
-        } else if (decl.getFunctionScope() != null) {
-            DeclaredFunctionType scopeType = decl.getFunctionScope().getDeclaredFunctionType();
-            if (scopeType != null) {
-              return getCommonTypes().fromFunctionType(scopeType.toFunctionType());
-            }
+        }
+        Scope funScope = (Scope) decl.getFunctionScope();
+        if (funScope != null) {
+          return getCommonTypes().fromFunctionType(
+              funScope.getDeclaredFunctionType().toFunctionType());
         }
         Preconditions.checkState(decl.getNamespace() == null);
         return null;
