@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for the "missing requires" check in {@link CheckRequiresForConstructors}.
@@ -51,14 +52,30 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testPassWithOneNew() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};", "goog.require('foo.bar.goo');", "var bar = new foo.bar.goo();");
+            "var goog = {};",
+            "goog.require('foo.bar.goo');",
+            "var bar = new foo.bar.goo();");
     testSame(js);
+  }
+
+  public void testPassWithNewDeclaredClass() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("class C {}; var c = new C();");
+  }
+
+  public void testClassRecognizedAsConstructor() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("/** @constructor */ module$test.A = function() {};"
+                + "class C extends module$test.A {}");
+    testSame("module$test.A = class {}; class C extends module$test.A {}");
   }
 
   public void testPassWithOneNewOuterClass() {
     String js =
         LINE_JOINER.join(
-            "var goog = {};", "goog.require('goog.foo.Bar');", "var bar = new goog.foo.Bar.Baz();");
+            "var goog = {};",
+            "goog.require('goog.foo.Bar');",
+            "var bar = new goog.foo.Bar.Baz();");
     testSame(js);
   }
 
@@ -106,6 +123,24 @@ public final class MissingRequireTest extends CompilerTestCase {
             "/** @constructor @extends {goog.foo.Bar.Inner} */",
             "function SubClass() {}");
     testSame(js);
+  }
+
+  public void testPassEs6ClassExtends() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    String js =
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.require('goog.foo.Bar');",
+            "",
+            "class SubClass extends goog.foo.Bar.Inner {}");
+    testSame(js);
+  }
+
+  public void testFailEs6ClassExtends() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    String js = "var goog = {}; class SubClass extends goog.foo.Bar.Inner {}";
+    String warning = "'goog.foo.Bar.Inner' used but not goog.require'd";
+    test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 
   public void testFailWithNestedNewNodes() {

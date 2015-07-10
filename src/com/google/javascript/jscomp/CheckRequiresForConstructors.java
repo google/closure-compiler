@@ -157,6 +157,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
           break;
         case Token.NEW:
           visitNewNode(t, n);
+          break;
+        case Token.CLASS:
+          visitClassNode(n);
       }
     }
 
@@ -282,6 +285,17 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       // so it doesn't make sense to require the user to goog.require all of them.
       for (; qNameNode != null; qNameNode = qNameNode.getFirstChild()) {
         weakUsages.put(qNameNode.getQualifiedName(), qNameNode);
+      }
+    }
+
+    private void visitClassNode(Node classNode) {
+      String name = NodeUtil.getClassName(classNode);
+      if (name != null) {
+        constructors.add(name);
+      }
+      Node extendClass = classNode.getFirstChild().getNext();
+      if (extendClass.isQualifiedName()) {
+        usages.put(extendClass.getQualifiedName(), extendClass);
       }
     }
 
