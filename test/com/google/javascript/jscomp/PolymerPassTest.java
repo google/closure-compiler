@@ -167,7 +167,10 @@ public class PolymerPassTest extends CompilerTestCase {
 
   public void testVarTarget() {
     test(
-        LINE_JOINER.join("var X = Polymer({", "  is: 'x-element',", "});"),
+        LINE_JOINER.join(
+            "var X = Polymer({",
+            "  is: 'x-element',",
+            "});"),
 
         LINE_JOINER.join(
             "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
@@ -179,7 +182,10 @@ public class PolymerPassTest extends CompilerTestCase {
 
   public void testDefaultTypeNameTarget() {
     test(
-        LINE_JOINER.join("Polymer({", "  is: 'x',", "});"),
+        LINE_JOINER.join(
+            "Polymer({",
+            "  is: 'x',",
+            "});"),
 
         LINE_JOINER.join(
             "/**",
@@ -194,7 +200,11 @@ public class PolymerPassTest extends CompilerTestCase {
 
   public void testPathAssignmentTarget() {
     test(
-        LINE_JOINER.join("var x = {};", "x.Z = Polymer({", "  is: 'x-element',", "});"),
+        LINE_JOINER.join(
+            "var x = {};",
+            "x.Z = Polymer({",
+            "  is: 'x-element',",
+            "});"),
 
         LINE_JOINER.join(
             "var x = {};",
@@ -315,6 +325,32 @@ public class PolymerPassTest extends CompilerTestCase {
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
             "  factoryImpl: function(name) { alert('hi, ' + name); },",
+            "});"));
+  }
+
+  public void testShorthandConstructorExtraction() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "var X = Polymer({",
+            "  is: 'x-element',",
+            "  /**",
+            "   * @param {string} name",
+            "   */",
+            "  factoryImpl(name) { alert('hi, ' + name); },",
+            "});"),
+
+        LINE_JOINER.join(
+            "/**",
+            " * @param {string} name",
+            " * @constructor @extends {PolymerElement}",
+            " * @implements {PolymerXInterface}",
+            " */",
+            "var X = function(name) { alert('hi, ' + name); };",
+            "",
+            "X = Polymer(/** @lends {X.prototype} */ {",
+            "  is: 'x-element',",
+            "  factoryImpl(name) { alert('hi, ' + name); },",
             "});"));
   }
 
@@ -531,6 +567,45 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  public void testPropertiesDefaultValueShortHandFunction(){
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var ES6Test = Polymer({",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    user: {",
+            "      type: Object,",
+            "      value(){ return new User();},",
+            "    },",
+            "  },",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "",
+            "/** ",
+            " * @constructor @extends {PolymerElement} ",
+            " * @implements {PolymerES6TestInterface}",
+            " */",
+            "var ES6Test = function() {};",
+            "/** @type {!Object} */",
+            "ES6Test.prototype.user;",
+            "",
+            "ES6Test = Polymer(/** @lends {ES6Test.prototype} */ {",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    user: {",
+            "      type: Object,",
+            "      /** @this {ES6Test} @return {!Object} */",
+            "      value() { return new User(); },",
+            "    },",
+            "  },",
+            "});"));
+  }
+
   public void testReadOnlyPropertySetters() {
     String js =
         LINE_JOINER.join(
@@ -571,6 +646,85 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
 
     testExternChanges(EXTERNS, js, READONLY_EXTERNS);
+  }
+
+  public void testShorthandFunctionDefinition(){
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "var ES6Test = Polymer({",
+            "  is: 'x-element',",
+            "  sayHi() {",
+            "    alert('hi');",
+            "  },",
+            "});"),
+        LINE_JOINER.join(
+            "/** ",
+            " * @constructor @extends {PolymerElement} ",
+            " * @implements {PolymerES6TestInterface} ",
+            " */",
+            "var ES6Test = function() {};",
+            "",
+            "ES6Test = Polymer(/** @lends {ES6Test.prototype} */ {",
+            "  is: 'x-element',",
+            "  /** @this {ES6Test} */",
+            "  sayHi() {",
+            "    alert('hi');",
+            "  },",
+            "});"));
+  }
+
+  public void testShorthandLifecycleCallbacks(){
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "var ES6Test = Polymer({",
+            "  is: 'x-element',",
+            "  /** @override */",
+            "  created() {",
+            "    alert('Shorthand created');",
+            "  },",
+            "});"),
+        LINE_JOINER.join(
+            "/** ",
+            " * @constructor @extends {PolymerElement} ",
+            " * @implements {PolymerES6TestInterface} ",
+            " */",
+            "var ES6Test = function() {};",
+            "",
+            "ES6Test = Polymer(/** @lends {ES6Test.prototype} */ {",
+            "  is: 'x-element',",
+            "  /** @override @this {ES6Test} */",
+            "  created() {",
+            "    alert('Shorthand created');",
+            "  },",
+            "});"));
+  }
+
+  public void testShorthandFunctionDefinitionWithReturn(){
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "var ESTest = Polymer({",
+            "  is: 'x-element',",
+            "  sayHi() {",
+            "    return [1, 2];",
+            "  },",
+            "});"),
+        LINE_JOINER.join(
+            "/** ",
+            " * @constructor @extends {PolymerElement} ",
+            " * @implements {PolymerESTestInterface} ",
+            " */",
+            "var ESTest = function() {};",
+            "",
+            "ESTest = Polymer(/** @lends {ESTest.prototype} */ {",
+            "  is: 'x-element',",
+            "  /** @this {ESTest} */",
+            "  sayHi() {",
+            "    return [1, 2];",
+            "  },",
+            "});"));
   }
 
   public void testThisTypeAddedToFunctions() {
@@ -673,6 +827,40 @@ public class PolymerPassTest extends CompilerTestCase {
             "   */",
             "  sayHelloTo_: function(name) {",
             "    this.$['otherThing'].touch();",
+            "  },",
+            "});"));
+  }
+
+  public void testDollarSignPropsInShorthandFunctionConvertedToBrackets() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var SomeType = function() {};",
+            "SomeType.prototype.toggle = function() {};",
+            "var ES6Test = Polymer({",
+            "  is: 'x-element',",
+            "  sayHi() {",
+            "    this.$.checkbox.toggle();",
+            "  },",
+            "});"),
+
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var SomeType = function() {};",
+            "SomeType.prototype.toggle = function() {};",
+            "",
+            "/** ",
+            " * @constructor @extends {PolymerElement} ",
+            " * @implements {PolymerES6TestInterface} ",
+            " */",
+            "var ES6Test = function() {};",
+            "",
+            "ES6Test = Polymer(/** @lends {ES6Test.prototype} */ {",
+            "  is: 'x-element',",
+            "  /** @this {ES6Test} */",
+            "  sayHi() {",
+            "    this.$['checkbox'].toggle();",
             "  },",
             "});"));
   }
@@ -1549,6 +1737,8 @@ public class PolymerPassTest extends CompilerTestCase {
     testWarning("var x = Polymer('foo-bar', {});", POLYMER_DESCRIPTOR_NOT_VALID);
     testError("var x = Polymer({},'blah');", POLYMER_UNEXPECTED_PARAMS);
     testError("var x = Polymer({});", POLYMER_MISSING_IS);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError("var x = Polymer({is});", POLYMER_MISSING_IS);
   }
 
   public void testInvalidProperties() {

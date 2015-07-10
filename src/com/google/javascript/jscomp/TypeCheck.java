@@ -762,6 +762,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         break;
       }
 
+      case Token.MEMBER_FUNCTION_DEF:
+        ensureTyped(t, n, getJSType(n.getFirstChild()));
+        break;
+
       case Token.FUNCTION:
         visitFunction(t, n);
         break;
