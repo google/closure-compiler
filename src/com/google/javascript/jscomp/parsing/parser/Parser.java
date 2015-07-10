@@ -1045,7 +1045,12 @@ public class Parser {
     ParseTree typeAnnotation = null;
     SourceRange typeLocation = null;
     if (peek(TokenType.COLON)) {
-      typeAnnotation = parseTypeAnnotation();
+      if (peek(1, TokenType.STRING)) {
+        eat(TokenType.COLON);
+        typeAnnotation = parseLiteralExpression(); // Specialized Signature
+      } else {
+        typeAnnotation = parseTypeAnnotation();
+      }
       typeLocation = getTreeLocation(getTreeStartLocation());
     }
 
@@ -1093,12 +1098,11 @@ public class Parser {
 
   private ParseTree parseType() {
     SourcePosition start = getTreeStartLocation();
-    if (!peekId() && !peek(TokenType.VOID) && !peek(TokenType.OPEN_PAREN)
-        && !peek(TokenType.OPEN_CURLY) && !peek(TokenType.TYPEOF)) {
+    if (!peekId() && !EnumSet.of(TokenType.VOID, TokenType.OPEN_PAREN, TokenType.OPEN_CURLY,
+          TokenType.TYPEOF).contains(peekType())) {
       reportError("Unexpected token '%s' in type expression", peekType());
       return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
     }
-
 
     ParseTree typeExpression = parseFunctionTypeExpression();
     if (!peek(TokenType.BAR)) {

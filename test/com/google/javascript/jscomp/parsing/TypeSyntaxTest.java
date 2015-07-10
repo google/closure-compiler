@@ -623,6 +623,14 @@ public final class TypeSyntaxTest extends TestCase {
     testNotEs6Typed("interface I { new (foo); }", "interface", "constructor signature");
   }
 
+  public void testSpecializedSignature() {
+    parse("declare function foo(bar: 'string');");
+    parse("interface I {\n  foo(bar: 'string'): number;\n}");
+
+    expectErrors("Parse error. Unexpected token 'string literal' in type expression");
+    parse("var x: 'string'");
+  }
+
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {
     Node varDecl = parse(source, source).getFirstChild();
     assertDeclaredType(message, expectedType, varDecl.getFirstChild());

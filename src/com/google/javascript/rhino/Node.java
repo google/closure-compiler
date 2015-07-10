@@ -203,6 +203,7 @@ public class Node implements Cloneable, Serializable {
   public static class TypeDeclarationNode extends Node {
 
     private static final long serialVersionUID = 1L;
+    private String str; // This is used for specialized signatures.
 
     public TypeDeclarationNode(int nodeType) {
       super(nodeType);
@@ -218,6 +219,25 @@ public class Node implements Cloneable, Serializable {
 
     public TypeDeclarationNode(int nodeType, Node left, Node mid, Node right) {
       super(nodeType, left, mid, right);
+    }
+
+    /**
+     * returns the string content.
+     * @return non null.
+     */
+    @Override
+    public String getString() {
+      return str;
+    }
+
+    /**
+     * sets the string content.
+     * @param str the new value.  Non null.
+     */
+    @Override
+    public void setString(String str) {
+      Preconditions.checkNotNull(str);
+      this.str = str;
     }
   }
 
@@ -945,10 +965,10 @@ public class Node implements Cloneable, Serializable {
   }
 
   /**
-   * TODO(alexeagle): this should take a TypeDeclarationNode
+   * Sets the syntactical type specified on this node.
    * @param typeExpression
    */
-  public void setDeclaredTypeExpression(Node typeExpression) {
+  public void setDeclaredTypeExpression(TypeDeclarationNode typeExpression) {
     putProp(DECLARED_TYPE_EXPR, typeExpression);
   }
 

@@ -2097,7 +2097,12 @@ class IRFactory {
       if (typeTree != null) {
         recordJsDoc(typeTree.location, typeTarget.getJSDocInfo());
         Node typeExpression = convertTypeTree(typeTree);
-        typeTarget.setDeclaredTypeExpression(typeExpression);
+        if (typeExpression.isString()) {
+          String string = typeExpression.getString();
+          typeExpression = cloneProps(new TypeDeclarationNode(Token.STRING));
+          typeExpression.setString(string);
+        }
+        typeTarget.setDeclaredTypeExpression((TypeDeclarationNode) typeExpression);
       }
     }
 
@@ -2186,10 +2191,10 @@ class IRFactory {
       boolean good = true;
       for (int i = 0; i < params.size(); i++) {
         ParseTree param = params.get(i);
-        TypeDeclarationNode type = null;
+        Node type = null;
         if (param.type == ParseTreeType.TYPED_PARAMETER) {
           TypedParameterTree typedParam = param.asTypedParameter();
-          type = (TypeDeclarationNode) transform(typedParam.typeAnnotation);
+          type = transform(typedParam.typeAnnotation);
           param = typedParam.param;
         }
         switch (param.type) {
