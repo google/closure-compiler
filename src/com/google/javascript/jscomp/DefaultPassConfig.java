@@ -211,7 +211,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Includes ES6 features that are straightforward to transpile.
     // We won't handle them natively in the rest of the compiler, so we always
     // transpile them, even if the output language is also ES6.
-    if (options.getLanguageIn().isEs6OrHigher()) {
+    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       checks.add(es6RewriteArrowFunction);
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
