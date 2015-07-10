@@ -240,7 +240,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
     // later in the compilation, and eventually only transpiling when the output is lower than ES6.
-    if (options.getLanguageIn().isEs6OrHigher()) {
+    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       checks.add(es6ConvertSuper);
       checks.add(convertEs6ToEs3);
       checks.add(rewriteLetConst);

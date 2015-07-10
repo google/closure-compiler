@@ -90,6 +90,20 @@ public class CompilerOptions implements Serializable, Cloneable {
   }
 
   /**
+   * If true, don't transpile ES6 to ES3.
+   *  WARNING: Enabling this option will likely cause the compiler to crash
+   *     or produce incorrect output.
+   */
+  boolean skipTranspilationAndCrash = false;
+
+  /**
+   * Allow disabling ES6 to ES3 transpilation.
+   */
+  public void setSkipTranspilationAndCrash(boolean value) {
+    skipTranspilationAndCrash = value;
+  }
+
+  /**
    * Whether the compiler accepts the `const' keyword.
    */
   boolean acceptConstKeyword;
