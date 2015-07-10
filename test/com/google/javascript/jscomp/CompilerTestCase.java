@@ -1099,8 +1099,8 @@ public abstract class CompilerTestCase extends TestCase  {
         assertEquals(
             "There should be one warning, repeated "
                 + numRepetitions
-                + " time(s). Warnings: "
-                + aggregateWarnings,
+                + " time(s). Warnings: \n"
+                + LINE_JOINER.join(aggregateWarnings),
             numRepetitions,
             aggregateWarningCount);
         for (int i = 0; i < numRepetitions; ++i) {
