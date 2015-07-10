@@ -203,10 +203,6 @@ public final class DefaultPassConfig extends PassConfig {
     // Verify JsDoc annotations
     checks.add(checkJsDoc);
 
-    if (options.closurePass) {
-      checks.add(closureRewriteModule);
-    }
-
     // Early ES6 transpilation.
     // Includes ES6 features that are straightforward to transpile.
     // We won't handle them natively in the rest of the compiler, so we always
@@ -216,6 +212,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
+    }
+
+    // goog.module rewrite must happen even if options.transpileOnly is set.
+    if (options.closurePass) {
+      checks.add(closureRewriteModule);
     }
 
     if (!options.transpileOnly && options.declaredGlobalExternsOnWindow) {
