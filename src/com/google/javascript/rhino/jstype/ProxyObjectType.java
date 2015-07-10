@@ -232,7 +232,13 @@ public class ProxyObjectType extends ObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return referencedType.isSubtype(that);
+    return referencedType.isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
+    return referencedType.isSubtype(that, implicitImplCache);
   }
 
   @Override

@@ -161,10 +161,16 @@ public class EnumElementType extends ObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtypeHelper(this, that)) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
       return true;
     } else {
-      return primitiveType.isSubtype(that);
+      return primitiveType.isSubtype(that, implicitImplCache);
     }
   }
 

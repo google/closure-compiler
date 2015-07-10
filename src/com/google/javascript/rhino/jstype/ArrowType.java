@@ -59,8 +59,7 @@ final class ArrowType extends JSType {
   // Whether the return type is inferred.
   final boolean returnTypeInferred;
 
-  ArrowType(JSTypeRegistry registry, Node parameters,
-      JSType returnType) {
+  ArrowType(JSTypeRegistry registry, Node parameters, JSType returnType) {
     this(registry, parameters, returnType, false);
   }
 
@@ -77,7 +76,13 @@ final class ArrowType extends JSType {
   }
 
   @Override
-  public boolean isSubtype(JSType other) {
+  public boolean isSubtype(JSType that) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType other,
+      ImplCache implicitImplCache) {
     if (!(other instanceof ArrowType)) {
       return false;
     }
@@ -88,7 +93,7 @@ final class ArrowType extends JSType {
     // Section 3.4.7: Subtyping Function Types.
 
     // this.returnType <: that.returnType (covariant)
-    if (!this.returnType.isSubtype(that.returnType)) {
+    if (!this.returnType.isSubtype(that.returnType, implicitImplCache)) {
       return false;
     }
 
@@ -118,7 +123,7 @@ final class ArrowType extends JSType {
       JSType thatParamType = thatParam.getJSType();
       if (thisParamType != null) {
         if (thatParamType == null ||
-            !thatParamType.isSubtype(thisParamType)) {
+            !thatParamType.isSubtype(thisParamType, implicitImplCache)) {
           return false;
         }
       }

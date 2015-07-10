@@ -5570,6 +5570,13 @@ public class JSTypeTest extends BaseJSTypeTestCase {
             "Proxy " + typeJ + " should be castable to Proxy " + typeI,
             proxyTypeJ.canCastTo(proxyTypeI));
 
+        // due to structural interface matching, a subtype could be considered
+        // as the super type of its super type (if they are structurally the same)
+        // when this happens, the following checks are skipped.
+        if (typeI.isSubtype(typeJ) && typeJ.isSubtype(typeI)) {
+          continue;
+        }
+
         if (checkSubtyping) {
           if (i <= j) {
             assertTrue(typeJ + " should be a subtype of " + typeI,

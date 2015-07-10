@@ -742,7 +742,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("function (this:I): ?", i.getType().toString());
     assertTrue(i.getType().isInterface());
     assertTrue(i.getType().isFunctionType());
-    assertTrue(i.getType().toMaybeFunctionType().usesImplicitMatch());
+    assertTrue(i.getType().toMaybeFunctionType().isStructuralInterface());
   }
 
   public void testStructuralInterfaceMatchingOnInterface2() throws Exception {
@@ -754,7 +754,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     assertEquals("function (this:I): ?", i.getType().toString());
     assertTrue(i.getType().isInterface());
     assertTrue(i.getType().isFunctionType());
-    assertFalse(i.getType().toMaybeFunctionType().usesImplicitMatch());
+    assertFalse(i.getType().toMaybeFunctionType().isStructuralInterface());
   }
 
   public void testStructuralInterfaceMatchingOnInterface3() throws Exception {
@@ -765,7 +765,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar baz = globalScope.getVar("I.prototype.baz");
     assertTrue(baz.getType().isInterface());
     assertTrue(baz.getType().isFunctionType());
-    assertTrue(baz.getType().toMaybeFunctionType().usesImplicitMatch());
+    assertTrue(baz.getType().toMaybeFunctionType().isStructuralInterface());
   }
 
   public void testStructuralInterfaceMatchingOnInterface4() throws Exception {
@@ -776,7 +776,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     TypedVar baz = globalScope.getVar("I.prototype.baz");
     assertTrue(baz.getType().isInterface());
     assertTrue(baz.getType().isFunctionType());
-    assertFalse(baz.getType().toMaybeFunctionType().usesImplicitMatch());
+    assertFalse(baz.getType().toMaybeFunctionType().isStructuralInterface());
   }
 
   public void testStructuralInterfaceMatchingOnInterface5() throws Exception {
@@ -787,7 +787,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar cBaz = globalScope.getVar("cbaz");
     assertTrue(cBaz.getType().isFunctionType());
-    assertTrue(cBaz.getType().toMaybeFunctionType().usesImplicitMatch());
+    assertTrue(cBaz.getType().toMaybeFunctionType().isStructuralInterface());
   }
 
   public void testStructuralInterfaceMatchingOnInterface6() throws Exception {
@@ -798,7 +798,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     TypedVar cBaz = globalScope.getVar("cbaz");
     assertTrue(cBaz.getType().isFunctionType());
-    assertFalse(cBaz.getType().toMaybeFunctionType().usesImplicitMatch());
+    assertFalse(cBaz.getType().toMaybeFunctionType().isStructuralInterface());
   }
 
   public void testPropertiesOnInterface() throws Exception {

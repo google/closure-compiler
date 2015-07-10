@@ -73,7 +73,13 @@ public class NoObjectType extends FunctionType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtypeHelper(this, that)) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
       return true;
     } else {
       return that.isObject() && !that.isNoType() && !that.isNoResolvedType();

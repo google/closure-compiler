@@ -374,7 +374,13 @@ public class PrototypeObjectType extends ObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtypeHelper(this, that)) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
       return true;
     }
 
@@ -387,7 +393,7 @@ public class PrototypeObjectType extends ObjectType {
 
     // record types
     if (that.isRecordType()) {
-      return RecordType.isSubtype(this, that.toMaybeRecordType());
+      return RecordType.isSubtype(this, that.toMaybeRecordType(), implicitImplCache);
     }
 
     // Interfaces
@@ -398,14 +404,14 @@ public class PrototypeObjectType extends ObjectType {
 
     if (getConstructor() != null && getConstructor().isInterface()) {
       for (ObjectType thisInterface : getCtorExtendedInterfaces()) {
-        if (thisInterface.isSubtype(that)) {
+        if (thisInterface.isSubtype(that, implicitImplCache)) {
           return true;
         }
       }
     } else if (thatCtor != null && thatCtor.isInterface()) {
       Iterable<ObjectType> thisInterfaces = getCtorImplementedInterfaces();
       for (ObjectType thisInterface : thisInterfaces) {
-        if (thisInterface.isSubtype(that)) {
+        if (thisInterface.isSubtype(that, implicitImplCache)) {
           return true;
         }
       }

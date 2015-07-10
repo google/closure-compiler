@@ -39,7 +39,6 @@
 
 package com.google.javascript.rhino.jstype;
 
-
 /**
  * An unresolved type that was forward declared. So we know it exists,
  * but that it wasn't pulled into this binary.
@@ -76,7 +75,13 @@ class NoResolvedType extends NoType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtypeHelper(this, that)) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
       return true;
     } else {
       return !that.isNoType();

@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 
+
 /**
  * Bottom type, representing the subclass of any value or object.
  *
@@ -82,6 +83,12 @@ public class NoType extends NoObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
+    return isSubtype(that, null);
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
     return true;
   }
 

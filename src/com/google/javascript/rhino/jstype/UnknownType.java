@@ -100,6 +100,12 @@ public class UnknownType extends ObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
+    return isSubtype(that, null);
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
     return true;
   }
 

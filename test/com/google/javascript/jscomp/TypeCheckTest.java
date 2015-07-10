@@ -47,11 +47,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   private static final Joiner LINE_JOINER = Joiner.on("\n");
   private static final String SUGGESTION_CLASS =
-      "/** @constructor\n */\n" +
-      "function Suggest() {}\n" +
-      "Suggest.prototype.a = 1;\n" +
-      "Suggest.prototype.veryPossible = 1;\n" +
-      "Suggest.prototype.veryPossible2 = 1;\n";
+      "/** @constructor\n */\n"
+      + "function Suggest() {}\n"
+      + "Suggest.prototype.a = 1;\n"
+      + "Suggest.prototype.veryPossible = 1;\n"
+      + "Suggest.prototype.veryPossible2 = 1;\n";
 
   @Override
   public void setUp() {
@@ -92,9 +92,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testPrivateType() throws Exception {
     testTypes(
         "/** @private {number} */ var x = false;",
-        "initializing variable\n" +
-        "found   : boolean\n" +
-        "required: number");
+        "initializing variable\n"
+        + "found   : boolean\n"
+        + "required: number");
   }
 
   public void testTypeCheck1() throws Exception {
@@ -102,10 +102,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck2() throws Exception {
-    testTypes("/**@return {void}*/function foo(){ var x=foo(); x--; }",
-        "increment/decrement\n" +
-        "found   : undefined\n" +
-        "required: number");
+    testTypes(
+        "/**@return {void}*/function foo(){ var x=foo(); x--; }",
+        "increment/decrement\n"
+        + "found   : undefined\n"
+        + "required: number");
   }
 
   public void testTypeCheck4() throws Exception {
@@ -113,10 +114,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck5() throws Exception {
-    testTypes("/**@return {void}*/function foo(){ var a = +foo(); }",
-        "sign operator\n" +
-        "found   : undefined\n" +
-        "required: number");
+    testTypes(
+        "/**@return {void}*/function foo(){ var a = +foo(); }",
+        "sign operator\n"
+        + "found   : undefined\n"
+        + "required: number");
   }
 
   public void testTypeCheck6() throws Exception {
@@ -13839,6 +13841,1508 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "assignment",
             "found   : string",
             "required: number"));
+  }
+
+  /**
+   * although C1 does not declare to extend Interface1,
+   * obj2 : C1 still structurally matches obj1 : Interface1
+   * because of the structural interface matching
+   * (Interface1 is declared with @record tag)
+   */
+  public void testStructuralInterfaceMatching1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function Interface1() {}",
+            "/** @type {number} */",
+            "Interface1.prototype.length;",
+            "",
+            "/** @constructor */",
+            "function C1() {}",
+            "/** @type {number} */",
+            "C1.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type{Interface1} */",
+            "var obj1;",
+            "/** @type{C1} */",
+            "var obj2 = new C1();",
+            "obj1 = obj2;"));
+  }
+
+
+
+  public void testStructuralInterfaceMatching2() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function Interface1() {}",
+            "/** @type {number} */",
+            "Interface1.prototype.length;",
+            "",
+            "/** @constructor */",
+            "function C1() {}",
+            "/** @type {number} */",
+            "C1.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type{Interface1} */",
+            "var obj1;",
+            "var obj2 = new C1();",
+            "obj1 = obj2;"));
+  }
+
+  public void testStructuralInterfaceMatching3() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " */",
+            "function I1() {}",
+            "",
+            "/**",
+            " * @record",
+            " */",
+            "function I2() {}"),
+        LINE_JOINER.join(
+            "/** @type {I1} */",
+            "var i1;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i1 = i2;",
+            "i2 = i1;"));
+  }
+
+  public void testStructuralInterfaceMatching4_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " */",
+            "function I1() {}",
+            "",
+            "/**",
+            " * @record",
+            " */",
+            "function I2() {}"),
+        LINE_JOINER.join(
+            "/** @type {I1} */",
+            "var i1;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i2 = i1;",
+            "i1 = i2;"));
+  }
+
+  public void testStructuralInterfaceMatching5_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " */",
+            "function I1() {}",
+            "",
+            "/**",
+            " * @interface",
+            " */",
+            "function I3() {}",
+            "/** @type {number} */",
+            "I3.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {I1} */",
+            "var i1;",
+            "/** @type {I3} */",
+            "var i3;",
+            "i1 = i3;"));
+  }
+
+  public void testStructuralInterfaceMatching7_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " */",
+            "function I1() {}",
+            "",
+            "/** @constructor */",
+            "function C1() {}",
+            "/** @type {number} */",
+            "C1.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {I1} */",
+            "var i1;" +
+            "/** @type {C1} */",
+            "var c1;",
+            "i1 = c1;   // no warning"));
+  }
+
+  public void testStructuralInterfaceMatching9() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C1() {}",
+            "/** @type {number} */",
+            "C1.prototype.length;",
+            "",
+            "/** @constructor */",
+            "function C2() {}",
+            "/** @type {number} */",
+            "C2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {C1} */",
+            "var c1;" +
+            "/** @type {C2} */",
+            "var c2;",
+            "c1 = c2;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C2|null)",
+            "required: (C1|null)"));
+  }
+
+  public void testStructuralInterfaceMatching11_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @interface",
+            " */",
+            "function I3() {}",
+            "/** @type {number} */",
+            "I3.prototype.length;",
+            "",
+            "/** ",
+            " * @record",
+            " * @extends I3",
+            " */",
+            "function I4() {}",
+            "/** @type {boolean} */",
+            "I4.prototype.prop;",
+            "",
+            "/** @constructor */",
+            "function C4() {}",
+            "/** @type {number} */",
+            "C4.prototype.length;",
+            "/** @type {boolean} */",
+            "C4.prototype.prop;"),
+        LINE_JOINER.join(
+            "/** @type {I4} */",
+            "var i4;" +
+            "/** @type {C4} */",
+            "var c4;",
+            "i4 = c4;"));
+  }
+
+  public void testStructuralInterfaceMatching13() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            "   * @record",
+            "   */",
+            "  function I5() {}",
+            "  /** @type {I5} */",
+            "  I5.prototype.next;",
+            "",
+            "  /**",
+            "   * @interface",
+            "   */",
+            "  function C5() {}",
+            "  /** @type {C5} */",
+            "  C5.prototype.next;"),
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;" +
+            "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;"));
+  }
+
+  public void testStructuralInterfaceMatching13_2() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            "   * @record",
+            "   */",
+            "  function I5() {}",
+            "  /** @type {I5} */",
+            "  I5.prototype.next;",
+            "",
+            "  /**",
+            "   * @record",
+            "   */",
+            "  function C5() {}",
+            "  /** @type {C5} */",
+            "  C5.prototype.next;"),
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;" +
+            "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;"));
+  }
+
+  public void testStructuralInterfaceMatching13_3() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            "   * @interface",
+            "   */",
+            "  function I5() {}",
+            "  /** @type {I5} */",
+            "  I5.prototype.next;",
+            "",
+            "  /**",
+            "   * @record",
+            "   */",
+            "  function C5() {}",
+            "  /** @type {C5} */",
+            "  C5.prototype.next;"),
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;" +
+            "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C5|null)",
+            "required: (I5|null)"));
+  }
+
+  public void testStructuralInterfaceMatching15() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " */",
+            "function I5() {}",
+            "/** @type {I5} */",
+            "I5.prototype.next;",
+            "",
+            "/** @constructor */",
+            "function C6() {}",
+            "/** @type {C6} */",
+            "C6.prototype.next;",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C5() {}",
+            "/** @type {C6} */",
+            "C5.prototype.next;"),
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;" +
+            "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;"));
+  }
+
+  /**
+   * a very long structural chain, all property types from I5 and C5
+   * are structurally the same, I5 is declared as @record
+   * so structural interface matching will be performed
+   */
+  private static final String EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD =
+      LINE_JOINER.join(
+          "/**",
+          " * @record",
+          " */",
+          "function I5() {}",
+          "/** @type {I5} */",
+          "I5.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6() {}",
+          "/** @type {C6} */",
+          "C6.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_1() {}",
+          "/** @type {C6} */",
+          "C6_1.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_2() {}",
+          "/** @type {C6_1} */",
+          "C6_2.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_3() {}",
+          "/** @type {C6_2} */",
+          "C6_3.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_4() {}",
+          "/** @type {C6_3} */",
+          "C6_4.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_5() {}",
+          "/** @type {C6_4} */",
+          "C6_5.prototype.next;",
+          "",
+          "/**",
+          " * @constructor",
+          " */",
+          "function C5() {}",
+          "/** @type {C6_5} */",
+          "C5.prototype.next;");
+
+  public void testStructuralInterfaceMatching16_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;" +
+            "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;"));
+  }
+
+  public void testStructuralInterfaceMatching17_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+        LINE_JOINER.join(
+            "/** @type {C5} */",
+            "var c5;",
+            "/**",
+            " * @param {I5} i5",
+            " */",
+            "function f(i5) {}",
+            "",
+            "f(c5);"));
+  }
+
+  public void testStructuralInterfaceMatching18_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;" +
+            "/** @type {C5} */",
+            "var c5;",
+            "i5.next = c5;"));
+  }
+
+  /**
+   * a very long non-structural chain, there is a slight difference between
+   * the property type structural of I5 and that of C5:
+   * I5.next.next.next.next.next has type I5
+   * while
+   * C5.next.next.next.next.next has type number
+   */
+  private static final String EXTERNS_FOR_LONG_NONMATCHING_CHAIN =
+      LINE_JOINER.join(
+          "/**",
+          " * @record",
+          " */",
+          "function I5() {}",
+          "/** @type {I5} */",
+          "I5.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6() {}",
+          "/** @type {number} */",
+          "C6.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_1() {}",
+          "/** @type {C6} */",
+          "C6_1.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_2() {}",
+          "/** @type {C6_1} */",
+          "C6_2.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_3() {}",
+          "/** @type {C6_2} */",
+          "C6_3.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_4() {}",
+          "/** @type {C6_3} */",
+          "C6_4.prototype.next;",
+          "",
+          "/** @constructor */",
+          "function C6_5() {}",
+          "/** @type {C6_4} */",
+          "C6_5.prototype.next;",
+          "",
+          "/**",
+          " * @interface",
+          " */",
+          "function C5() {}",
+          "/** @type {C6_5} */",
+          "C5.prototype.next;");
+
+  public void testStructuralInterfaceMatching19() throws Exception {
+    testTypesWithExtraExterns(
+        // the type structure of I5 and C5 are different
+        EXTERNS_FOR_LONG_NONMATCHING_CHAIN,
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;",
+            "/** @type {C5} */",
+            "var c5;",
+            "i5 = c5;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C5|null)",
+            "required: (I5|null)"));
+  }
+
+  public void testStructuralInterfaceMatching20() throws Exception {
+    testTypesWithExtraExterns(
+        // the type structure of I5 and C5 are different
+        EXTERNS_FOR_LONG_NONMATCHING_CHAIN,
+        LINE_JOINER.join(
+            "/** @type {C5} */",
+            "var c5;",
+            "/**",
+            " * @param {I5} i5",
+            " */",
+            "function f(i5) {}",
+            "",
+            "f(c5);"),
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : (C5|null)",
+            "required: (I5|null)"));
+  }
+
+  public void testStructuralInterfaceMatching21() throws Exception {
+    testTypesWithExtraExterns(
+        // the type structure of I5 and C5 are different
+        EXTERNS_FOR_LONG_NONMATCHING_CHAIN,
+        LINE_JOINER.join(
+            "/** @type {I5} */",
+            "var i5;",
+            "/** @type {C5} */",
+            "var c5;",
+            "i5.next = c5;"),
+        LINE_JOINER.join(
+            "assignment to property next of I5",
+            "found   : (C5|null)",
+            "required: (I5|null)"));
+  }
+
+  /**
+   * structural interface matching will also be able to
+   * structurally match ordinary function types
+   * check if the return types of the ordinary function types match
+   * (should match, since declared with @record)
+   */
+  public void testStructuralInterfaceMatching22_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * structural interface matching will also be able to
+   * structurally match ordinary function types
+   * check if the return types of the ordinary function types match
+   * (should not match)
+   */
+  public void testStructuralInterfaceMatching23() throws Exception {
+    testTypesWithExtraExterns(
+        // the type structure of I5 and C5 are different
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_NONMATCHING_CHAIN,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C7|null)",
+            "required: (I7|null)"));
+  }
+
+  /**
+   * structural interface matching will also be able to
+   * structurally match ordinary function types
+   * check if the parameter types of the ordinary function types match
+   * (should match, since declared with @record)
+   */
+  public void testStructuralInterfaceMatching24_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(C5): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(I5): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * structural interface matching will also be able to
+   * structurally match ordinary function types
+   * check if the parameter types of the ordinary function types match
+   * (should match, since declared with @record)
+   */
+  public void testStructuralInterfaceMatching26_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(C5, C5, I5): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(I5, C5): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * structural interface matching will also be able to
+   * structurally match ordinary function types
+   * check if the parameter types of the ordinary function types match
+   * (should match)
+   */
+  public void testStructuralInterfaceMatching29_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * the "this" of I5 and C5 are covariants, so should match
+   */
+  public void testStructuralInterfaceMatching30_1_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/** @record */",
+            "function I7() {}",
+            "/** @type{function(this:I5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * the "this" of I5 and C5 are covariants, so should match
+   */
+  public void testStructuralInterfaceMatching30_2_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * the "this" of I5 and C5 are covariants, so should match
+   */
+  public void testStructuralInterfaceMatching30_3_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */ function I5() {}",
+            "/** @constructor @implements {I5} */ function C5() {}",
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * I7 is declared with @record tag, so it will match
+   */
+  public void testStructuralInterfaceMatching30_3_2() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */ function I5() {}",
+            "/** @constructor @implements {I5} */ function C5() {}",
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * Although I7 is declared with @record tag,
+   * note that I5 is declared with @interface and C5 does not
+   * extend I5, so it will not match
+   */
+  public void testStructuralInterfaceMatching30_3_3() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */ function I5() {}",
+            "/** @constructor */ function C5() {}",
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C7|null)",
+            "required: (I7|null)"));
+  }
+
+  public void testStructuralInterfaceMatching30_3_4() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            "/** @record */ function I5() {}",
+            "/** @constructor */ function C5() {}",
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * the "this" of I5 and C5 are covariants, so should match
+   */
+  public void testStructuralInterfaceMatching30_4_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            "/** @record */ function I5() {}",
+            "/** @constructor @implements {I5} */ function C5() {}",
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:I5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * although I7 is declared with @record tag
+   * I5 is declared with @interface tag, so no structural interface matching
+   */
+  public void testStructuralInterfaceMatching30_4_2() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */ function I5() {}",
+            "/** @constructor */ function C5() {}",
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:I5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:C5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C7|null)",
+            "required: (I7|null)"));
+  }
+
+  /**
+   * structural interface matching will also be able to
+   * structurally match ordinary function types
+   * check if the this types of the ordinary function types match
+   * (should match)
+   */
+  public void testStructuralInterfaceMatching31_1() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"));
+  }
+
+  /**
+   * test structural interface matching for record types
+   */
+  public void testStructuralInterfaceMatching32_2() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {{prop: I7, prop2: C7}}*/",
+            "var r1;",
+            "/** @type {{prop: C7, prop2: C7}} */",
+            "var r2;",
+            "r1 = r2;"));
+  }
+
+  /**
+   * test structural interface matching for record types
+   */
+  public void testStructuralInterfaceMatching33_3() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {{prop: I7, prop2: C7}}*/",
+            "var r1;",
+            "/** @type {{prop: C7, prop2: C7, prop3: C7}} */",
+            "var r2;",
+            "r1 = r2;"));
+  }
+
+  /**
+   * test structural interface matching for a combination of
+   * ordinary function types and record types
+   */
+  public void testStructuralInterfaceMatching36_2() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {{fun: function(C7):I7, prop: {prop: I7}}} */",
+            " var com1;",
+            "/** @type {{fun: function(I7):C7, prop: {prop: C7}}} */",
+            "var com2;",
+            "",
+            "com1 = com2;"));
+  }
+
+  /**
+   * test structural interface matching for a combination of
+   * ordinary function types and record types
+   */
+  public void testStructuralInterfaceMatching36_3() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {{fun: function(C7):I7, prop: {prop: I7}}} */",
+            " var com1;",
+            "/** @type {{fun: function(I7):C7, prop: {prop: C7}}} */",
+            "var com2;",
+            "",
+            "com1 = com2;"));
+  }
+
+  /**
+   * test structural interface matching for a combination of
+   * ordinary function types and record types
+   * here C7 does not structurally match I7
+   */
+  public void testStructuralInterfaceMatching37() throws Exception {
+    testTypesWithExtraExterns(
+        // the type structure of I5 and C5 are different
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_NONMATCHING_CHAIN,
+            "/**",
+            " * @record",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {{fun: function(C7):I7, prop: {prop: I7}}} */",
+            "var com1;",
+            "/** @type {{fun: function(I7):C7, prop: {prop: C7}}} */",
+            "var com2;",
+            "",
+            "com1 = com2;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {fun: function ((I7|null)): (C7|null), prop: {prop: (C7|null)}}",
+            "required: {fun: function ((C7|null)): (I7|null), prop: {prop: (I7|null)}}"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching39() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {I2} */",
+            "var o1 = {length : 'test'};"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : {length: string}",
+            "required: (I2|null)"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching40() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {I2} */",
+            "var o1 = {length : 123};"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching40_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {I2} */",
+            "var o1 = {length : 123};"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching41() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {I2} */",
+            "var o1 = {length : 123};",
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching41_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {I2} */",
+            "var o1 = {length : 123};",
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching42() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {{length: number}} */",
+            "var o1 = {length : 123};",
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching42_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type {{length: number}} */",
+            "var o1 = {length : 123};",
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching43() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "var o1 = {length : 123};",
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;"));
+  }
+
+  /**
+   * test structural interface matching for object literals
+   */
+  public void testStructuralInterfaceMatching43_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/** @type {number} */",
+            "I2.prototype.length;"),
+        LINE_JOINER.join(
+            "var o1 = {length : 123};",
+            "/** @type {I2} */",
+            "var i;",
+            "i = o1;"));
+  }
+
+  public void testStructuralInterfaceMatching44() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */ function I() {}",
+            "/** @type {!Function} */ I.prototype.removeEventListener;",
+            "/** @type {!Function} */ I.prototype.addEventListener;",
+            "/** @constructor */ function C() {}",
+            "/** @type {!Function} */ C.prototype.addEventListener;"),
+        LINE_JOINER.join(
+            "/** @param {C|I} x */",
+            "function f(x) { x.addEventListener(); }",
+            "f(new C());"));
+  }
+
+  /**
+   * Currently, the structural interface matching does not support structural
+   * matching for template types
+   * Using @template @interfaces requires @implements them explicitly.
+   */
+  public void testStructuralInterfaceMatching45() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record",
+            " *  @template X",
+            " */ function I() {}",
+            "/** @constructor */",
+            "function C() {}"),
+        LINE_JOINER.join(
+            "/** @type {I} */ var i;",
+            "/** @type {C} */ var c = new C();",
+            "i = c"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C|null)",
+            "required: (I|null)"));
+  }
+
+  public void testStructuralInterfaceMatching46() throws Exception {
+    testTypesWithExtraExterns(
+        "",
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function I2() {}",
+            "/**",
+            " * @interface",
+            " * @extends {I2}",
+            " */",
+            "function I3() {}",
+            "/**",
+            " * @record",
+            " * @extends {I3}",
+            " */",
+            "function I4() {}",
+            "/** @type {I4} */",
+            "var i4;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i4 = i2;"));
+  }
+
+  public void testStructuralInterfaceMatching47() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function I2() {}",
+            "/**",
+            " * @interface",
+            " * @extends {I2}",
+            " */",
+            "function I3() {}",
+            "/**",
+            " * @record",
+            " * @extends {I3}",
+            " */",
+            "function I4() {}"),
+        LINE_JOINER.join(
+            "/** @type {I4} */",
+            "var i4;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i4 = i2;"));
+  }
+
+  public void testStructuralInterfaceMatching48() throws Exception {
+    testTypesWithExtraExterns(
+        "",
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function I2() {}",
+            "/**",
+            " * @record",
+            " * @extends {I2}",
+            " */",
+            "function I3() {}",
+            "/** @type {I3} */",
+            "var i3;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i3 = i2;"));
+  }
+
+  public void testStructuralInterfaceMatching49() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function I2() {}",
+            "/**",
+            " * @record",
+            " * @extends {I2}",
+            " */",
+            "function I3() {}"),
+        LINE_JOINER.join(
+            "/** @type {I3} */",
+            "var i3;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i3 = i2;"));
+  }
+
+  public void testStructuralInterfaceMatching49_2() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I2() {}",
+            "/**",
+            " * @record",
+            " * @extends {I2}",
+            " */",
+            "function I3() {}"),
+        LINE_JOINER.join(
+            "/** @type {I3} */",
+            "var i3;",
+            "/** @type {I2} */",
+            "var i2;",
+            "i3 = i2;"));
+  }
+
+  public void testStructuralInterfaceMatching50() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function I2() {}",
+            "/**",
+            " * @record",
+            " * @extends {I2}",
+            " */",
+            "function I3() {}"),
+        LINE_JOINER.join(
+            "/** @type {I3} */",
+            "var i3;",
+            "/** @type {{length : number}} */",
+            "var r = {length: 123};",
+            "i3 = r;"));
+  }
+
+  /**
+   * here we temporarily disable structural interface
+   * matching for interfaces that is declared with @interface tag
+   */
+  public void testStructuralInterfaceMatching1_1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function Interface1() {}",
+            "/** @type {number} */",
+            "Interface1.prototype.length;",
+            "",
+            "/** @constructor */",
+            "function C1() {}",
+            "/** @type {number} */",
+            "C1.prototype.length;"),
+        LINE_JOINER.join(
+            "/** @type{Interface1} */",
+            "var obj1;",
+            "/** @type{C1} */",
+            "var obj2 = new C1();",
+            "obj1 = obj2;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C1|null)",
+            "required: (Interface1|null)"));
+  }
+
+  /**
+   * structural interface matching will also be able to
+   * structurally match ordinary function types
+   * check if the return types of the ordinary function types match
+   * (should not match, since I7 is declared with @interface)
+   */
+  public void testStructuralInterfaceMatching22_2() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            EXTERNS_FOR_LONG_MATCHING_CHAIN_RECORD,
+            "/**",
+            " * @interface",
+            " */",
+            "function I7() {}",
+            "/** @type{function(): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C7|null)",
+            "required: (I7|null)"));
+  }
+
+  /**
+   * declared with @interface, no structural interface matching
+   */
+  public void testStructuralInterfaceMatching30_3() throws Exception {
+    testTypesWithExtraExterns(
+        // I5 and C5 shares the same type structure
+        LINE_JOINER.join(
+            "/** @interface */ function I5() {}",
+            "/** @constructor @implements {I5} */ function C5() {}",
+            "/**",
+            " * @interface",
+            " */",
+            "function I7() {}",
+            "/** @type{function(this:C5, C5, C5, I5=): I5} */",
+            "I7.prototype.getElement = function(){};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function C7() {}",
+            "/** @type{function(this:I5, I5, C5=, I5=): C5} */",
+            "C7.prototype.getElement = function(){};"),
+        LINE_JOINER.join(
+            "/** @type {I7} */",
+            "var i7;",
+            "/** @type {C7} */",
+            "var c7;",
+            "",
+            "i7 = c7;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : (C7|null)",
+            "required: (I7|null)"));
   }
 
   public void testCovarianceForRecordType1() throws Exception {

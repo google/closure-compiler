@@ -52,9 +52,11 @@ import com.google.javascript.rhino.TypeI;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -118,7 +120,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * if this is an interface, indicate whether or not it supports
    * structural interface matching
    */
-  private boolean usesImplicitMatch;
+  private boolean isStructuralInterface;
 
   /**
    * The interfaces directly implemented by this function (for constructors)
@@ -164,7 +166,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
           registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     }
     this.call = arrowType;
-    this.usesImplicitMatch = false;
+    this.isStructuralInterface = false;
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -182,7 +184,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
-    this.usesImplicitMatch = false;
+    this.isStructuralInterface = false;
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -495,6 +497,35 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
 
     return true;
+  }
+
+  /**
+   * check whether or not this function type has implemented
+   * the given interface
+   * if this function is an interface, check whether or not
+   * this interface has extended the given interface
+   * @param interfaceType the interface type
+   * @return true if implemented
+   */
+  public boolean explicitlyImplOrExtInterface(FunctionType interfaceType) {
+    Preconditions.checkArgument(interfaceType.isInterface());
+    for (ObjectType implementedInterface : getAllImplementedInterfaces()) {
+      FunctionType ctor = implementedInterface.getConstructor();
+      if (ctor != null && ctor.checkEquivalenceHelper(
+          interfaceType, EquivalenceMethod.IDENTITY)) {
+        return true;
+      }
+    }
+    for (ObjectType implementedInterface : getExtendedInterfaces()) {
+      FunctionType ctor = implementedInterface.getConstructor();
+      if (ctor != null && ctor.checkEquivalenceHelper(
+          interfaceType, EquivalenceMethod.IDENTITY)) {
+        return true;
+      } else if (ctor != null) {
+        return ctor.explicitlyImplOrExtInterface(interfaceType);
+      }
+    }
+    return false;
   }
 
   /**
@@ -1040,7 +1071,13 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtypeHelper(this, that)) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
       return true;
     }
 
@@ -1055,29 +1092,36 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         return false;
       }
 
-      // If functionA is a subtype of functionB, then their "this" types
-      // should be contravariant. However, this causes problems because
-      // of the way we enforce overrides. Because function(this:SubFoo)
-      // is not a subtype of function(this:Foo), our override check treats
-      // this as an error. Let's punt on all this for now.
-      // TODO(nicksantos): fix this.
-      boolean treatThisTypesAsCovariant =
-        // An interface 'this'-type is non-restrictive.
-        // In practical terms, if C implements I, and I has a method m,
-        // then any m doesn't necessarily have to C#m's 'this'
-        // type doesn't need to match I.
-        (other.typeOfThis.toObjectType() != null &&
-             other.typeOfThis.toObjectType().getConstructor() != null &&
-             other.typeOfThis.toObjectType().getConstructor().isInterface()) ||
-
-        // If one of the 'this' types is covariant of the other,
-        // then we'll treat them as covariant (see comment above).
-        other.typeOfThis.isSubtype(this.typeOfThis) ||
-        this.typeOfThis.isSubtype(other.typeOfThis);
-      return treatThisTypesAsCovariant && this.call.isSubtype(other.call);
+      return treatThisTypesAsCovariant(other, implicitImplCache)
+          && this.call.isSubtype(other.call, implicitImplCache);
     }
 
-    return getNativeType(JSTypeNative.FUNCTION_PROTOTYPE).isSubtype(that);
+    return getNativeType(JSTypeNative.FUNCTION_PROTOTYPE)
+        .isSubtype(that, implicitImplCache);
+  }
+
+  protected boolean treatThisTypesAsCovariant(FunctionType other,
+      ImplCache implicitImplCache) {
+    // If functionA is a subtype of functionB, then their "this" types
+    // should be contravariant. However, this causes problems because
+    // of the way we enforce overrides. Because function(this:SubFoo)
+    // is not a subtype of function(this:Foo), our override check treats
+    // this as an error. Let's punt on all this for now.
+    // TODO(nicksantos): fix this.
+    boolean treatThisTypesAsCovariant =
+      // An interface 'this'-type is non-restrictive.
+      // In practical terms, if C implements I, and I has a method m,
+      // then any m doesn't necessarily have to C#m's 'this'
+      // type doesn't need to match I.
+      (other.typeOfThis.toObjectType() != null &&
+           other.typeOfThis.toObjectType().getConstructor() != null &&
+           other.typeOfThis.toObjectType().getConstructor().isInterface()) ||
+
+      // If one of the 'this' types is covariant of the other,
+      // then we'll treat them as covariant (see comment above).
+      other.typeOfThis.isSubtype(this.typeOfThis, implicitImplCache) ||
+      this.typeOfThis.isSubtype(other.typeOfThis, implicitImplCache);
+    return treatThisTypesAsCovariant;
   }
 
   @Override
@@ -1350,10 +1394,44 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   public void setImplicitMatch(boolean flag) {
     Preconditions.checkState(isInterface());
-    usesImplicitMatch = flag;
+    isStructuralInterface = flag;
   }
 
-  public boolean usesImplicitMatch() {
-    return isInterface() && usesImplicitMatch;
+  public boolean isStructuralInterface() {
+    return isInterface() && isStructuralInterface;
+  }
+
+  /**
+   * get the map of properties to types covered in a function type
+   * @return a Map that maps the property's name to the property's type
+   */
+  @Override
+  public Map<String, JSType> getPropertyTypeMap() {
+    Map<String, JSType> propTypeMap = new HashMap<String, JSType>();
+    updatePropertyTypeMap(this, propTypeMap);
+    return propTypeMap;
+  }
+
+  private static void updatePropertyTypeMap(
+      FunctionType type, Map<String, JSType> propTypeMap) {
+    if (type == null) { return; }
+    // retrieve all property types on the prototype of this class
+    ObjectType prototype = type.getPrototype();
+    if (prototype != null) {
+      Set<String> propNames = prototype.getOwnPropertyNames();
+      for (String name : propNames) {
+        if (!propTypeMap.containsKey(name)) {
+          JSType propType = prototype.getPropertyType(name);
+          propTypeMap.put(name, propType);
+        }
+      }
+    }
+    // retrieve all property types from its super class
+    Iterable<ObjectType> iterable = type.getExtendedInterfaces();
+    if (iterable != null) {
+      for (ObjectType interfaceType : iterable) {
+        updatePropertyTypeMap(interfaceType.getConstructor(), propTypeMap);
+      }
+    }
   }
 }

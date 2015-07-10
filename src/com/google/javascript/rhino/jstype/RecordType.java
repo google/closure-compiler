@@ -100,7 +100,6 @@ public class RecordType extends PrototypeObjectType {
             property, prop.getType(), prop.getPropertyNode());
       }
     }
-
     // Freeze the record type.
     isFrozen = true;
   }
@@ -211,13 +210,19 @@ public class RecordType extends PrototypeObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    if (JSType.isSubtypeHelper(this, that)) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
+    if (JSType.isSubtypeHelper(this, that, implicitImplCache)) {
       return true;
     }
 
     // Top of the record types is the empty record, or OBJECT_TYPE.
     if (registry.getNativeObjectType(
-            JSTypeNative.OBJECT_TYPE).isSubtype(that)) {
+            JSTypeNative.OBJECT_TYPE).isSubtype(that, implicitImplCache)) {
       return true;
     }
 
@@ -228,11 +233,17 @@ public class RecordType extends PrototypeObjectType {
       return false;
     }
 
-    return RecordType.isSubtype(this, that.toMaybeRecordType());
+    return RecordType.isSubtype(this, that.toMaybeRecordType(), implicitImplCache);
   }
 
   /** Determines if typeA is a subtype of typeB */
   static boolean isSubtype(ObjectType typeA, RecordType typeB) {
+    return isSubtype(typeA, typeB, new ImplCache());
+  }
+
+  /** Determines if typeA is a subtype of typeB */
+  static boolean isSubtype(ObjectType typeA, RecordType typeB,
+      ImplCache implicitImplCache) {
     // typeA is a subtype of record type typeB iff:
     // 1) typeA has all the properties declared in typeB.
     // 2) And for each property of typeB, its type must be
@@ -243,7 +254,7 @@ public class RecordType extends PrototypeObjectType {
       }
       JSType propA = typeA.getPropertyType(property);
       JSType propB = typeB.getPropertyType(property);
-      if (!propA.isSubtype(propB)) {
+      if (!propA.isSubtype(propB, implicitImplCache)) {
         return false;
       }
     }

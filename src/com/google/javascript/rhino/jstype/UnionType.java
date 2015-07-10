@@ -464,6 +464,12 @@ public class UnionType extends JSType {
 
   @Override
   public boolean isSubtype(JSType that) {
+    return isSubtype(that, new ImplCache());
+  }
+
+  @Override
+  protected boolean isSubtype(JSType that,
+      ImplCache implicitImplCache) {
     // unknown
     if (that.isUnknownType()) {
       return true;
@@ -473,7 +479,7 @@ public class UnionType extends JSType {
       return true;
     }
     for (JSType element : alternates) {
-      if (!element.isSubtype(that)) {
+      if (!element.isSubtype(that, implicitImplCache)) {
         return false;
       }
     }
