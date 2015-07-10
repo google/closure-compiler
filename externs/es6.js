@@ -919,9 +919,18 @@ function Promise(resolver) {}
 
 
 /**
- * @param {(TYPE|IThenable<TYPE>)=} opt_value
- * @return {!Promise<TYPE>}
- * @template TYPE
+ * @param {VALUE=} opt_value
+ * @return {RESULT}
+ * @template VALUE
+ * @template RESULT := type('Promise',
+ *     cond(isUnknown(VALUE), unknown(),
+ *       mapunion(VALUE, (V) =>
+ *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
+ *           templateTypeOf(V, 0),
+ *           cond(sub(V, 'Thenable'),
+ *              unknown(),
+ *              V)))))
+ * =:
  */
 Promise.resolve = function(opt_value) {};
 
