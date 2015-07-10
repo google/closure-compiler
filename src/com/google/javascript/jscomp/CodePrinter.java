@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.javascript.jscomp.CodePrinter.Builder.CodeGeneratorFactory;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -565,6 +564,8 @@ public final class CodePrinter {
   public static final class Builder {
     private final Node root;
     private CompilerOptions options = new CompilerOptions();
+    private boolean lineBreak;
+    private boolean prettyPrint;
     private boolean outputTypes = false;
     private SourceMap sourceMap = null;
     private boolean tagAsStrict;
@@ -590,11 +591,9 @@ public final class CodePrinter {
      * Sets the output options from compiler options.
      */
     public Builder setCompilerOptions(CompilerOptions options) {
-      try {
-        this.options = (CompilerOptions) options.clone();
-      } catch (CloneNotSupportedException e) {
-        throw Throwables.propagate(e);
-      }
+      this.options = options;
+      this.prettyPrint = options.prettyPrint;
+      this.lineBreak = options.lineBreak;
       return this;
     }
 
@@ -608,7 +607,7 @@ public final class CodePrinter {
      * @param prettyPrint If true, pretty printing will be used.
      */
     public Builder setPrettyPrint(boolean prettyPrint) {
-      options.setPrettyPrint(prettyPrint);
+      this.prettyPrint = prettyPrint;
       return this;
     }
 
@@ -617,7 +616,7 @@ public final class CodePrinter {
      * @param lineBreak If true, line breaking is done automatically.
      */
     public Builder setLineBreak(boolean lineBreak) {
-      options.setLineBreak(lineBreak);
+      this.lineBreak = lineBreak;
       return this;
     }
 
@@ -662,8 +661,8 @@ public final class CodePrinter {
             "Cannot build without root node being specified");
       }
 
-      return toSource(root, Format.fromOptions(options, outputTypes), options,
-          sourceMap, tagAsStrict, codeGeneratorFactory);
+      return toSource(root, Format.fromOptions(options, outputTypes, prettyPrint), options,
+          sourceMap, tagAsStrict, lineBreak, codeGeneratorFactory);
     }
   }
 
@@ -672,14 +671,14 @@ public final class CodePrinter {
     PRETTY,
     TYPED;
 
-    static Format fromOptions(CompilerOptions options, boolean outputTypes) {
+    static Format fromOptions(CompilerOptions options, boolean outputTypes, boolean prettyPrint) {
       if (options.getLanguageOut() == LanguageMode.ECMASCRIPT6_TYPED) {
         return Format.PRETTY;
       }
       if (outputTypes) {
         return Format.TYPED;
       }
-      return options.prettyPrint ? Format.PRETTY : Format.COMPACT;
+      return prettyPrint ? Format.PRETTY : Format.COMPACT;
     }
   }
 
@@ -687,7 +686,7 @@ public final class CodePrinter {
    * Converts a tree to JS code
    */
   private static String toSource(Node root, Format outputFormat,
-      CompilerOptions options, SourceMap sourceMap, boolean tagAsStrict,
+      CompilerOptions options, SourceMap sourceMap, boolean tagAsStrict, boolean lineBreak,
       CodeGeneratorFactory codeGeneratorFactory) {
     Preconditions.checkState(options.sourceMapDetailLevel != null);
 
@@ -695,7 +694,7 @@ public final class CodePrinter {
     MappedCodePrinter mcp =
         outputFormat == Format.COMPACT
         ? new CompactCodePrinter(
-            options.lineBreak,
+            lineBreak,
             options.preferLineBreakAtEndOfFile,
             options.lineLengthThreshold,
             createSourceMap,

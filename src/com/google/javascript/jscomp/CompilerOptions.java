@@ -39,7 +39,7 @@ import java.util.Set;
  * Compiler options
  * @author nicksantos@google.com (Nick Santos)
  */
-public class CompilerOptions implements Serializable, Cloneable {
+public class CompilerOptions implements Serializable {
 
   // Unused. For people using reflection to circumvent access control.
   @SuppressWarnings("unused")
@@ -1695,13 +1695,6 @@ public class CompilerOptions implements Serializable, Cloneable {
     return languageOut != LanguageMode.NO_TRANSPILE
         && !languageIn.isEs6OrHigher()
         && languageOut == LanguageMode.ECMASCRIPT6_TYPED;
-  }
-
-  @Override
-  public Object clone() throws CloneNotSupportedException {
-    CompilerOptions clone = (CompilerOptions) super.clone();
-    // TODO(bolinfest): Add relevant custom cloning.
-    return clone;
   }
 
   public void setAliasTransformationHandler(
