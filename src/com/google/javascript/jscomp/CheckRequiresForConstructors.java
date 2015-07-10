@@ -26,7 +26,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,15 +77,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     Callback callback = new CheckRequiresForConstructorsCallback();
-    NodeTraversal.traverseRootsTyped(compiler, callback, externs, root);
+    NodeTraversal.traverseRoots(compiler, callback, externs, root);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     Callback callback = new CheckRequiresForConstructorsCallback();
-    Scope globalScope =
-        SyntacticScopeCreator.makeTyped(compiler).createScope(scriptRoot, null);
-    new NodeTraversal(compiler, callback).traverseWithScope(scriptRoot, globalScope);
+    new NodeTraversal(compiler, callback).traverse(scriptRoot);
   }
 
   // Return true if the name is a class name (starts with an uppercase
@@ -138,12 +135,12 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       switch (n.getType()) {
         case Token.ASSIGN:
         case Token.VAR:
-          maybeAddConstructor(t, n);
+          maybeAddConstructor(n);
           break;
         case Token.FUNCTION:
           // Exclude function expressions.
           if (NodeUtil.isStatement(n)) {
-            maybeAddConstructor(t, n);
+            maybeAddConstructor(n);
           }
           break;
         case Token.GETPROP:
@@ -274,7 +271,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
 
       String name = root.getString();
-      TypedVar var = t.getTypedScope().getVar(name);
+      Var var = t.getScope().getVar(name);
       if (var != null && (var.isLocal() || var.isExtern())) {
         return;
       }
@@ -299,7 +296,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
       }
     }
 
-    private void maybeAddConstructor(NodeTraversal t, Node n) {
+    private void maybeAddConstructor(Node n) {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null) {
         String ctorName = n.getFirstChild().getQualifiedName();
@@ -308,8 +305,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
         } else {
           JSTypeExpression typeExpr = info.getType();
           if (typeExpr != null) {
-            JSType type = typeExpr.evaluate(t.getTypedScope(), compiler.getTypeIRegistry());
-            if (type.isConstructor()) {
+            Node typeExprRoot = typeExpr.getRoot();
+            if (typeExprRoot.isFunction() && typeExprRoot.getFirstChild().isNew()) {
               constructors.add(ctorName);
             }
           }
@@ -398,7 +395,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
           if (typeNode.isString()) {
             String typeString = typeNode.getString();
             String rootName = Splitter.on('.').split(typeString).iterator().next();
-            TypedVar var = t.getTypedScope().getVar(rootName);
+            Var var = t.getScope().getVar(rootName);
             if (var == null || !var.isExtern()) {
               usagesMap.put(typeString, n);
 
