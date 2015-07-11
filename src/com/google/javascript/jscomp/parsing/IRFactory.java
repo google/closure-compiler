@@ -2098,9 +2098,8 @@ class IRFactory {
         recordJsDoc(typeTree.location, typeTarget.getJSDocInfo());
         Node typeExpression = convertTypeTree(typeTree);
         if (typeExpression.isString()) {
-          String string = typeExpression.getString();
-          typeExpression = cloneProps(new TypeDeclarationNode(Token.STRING));
-          typeExpression.setString(string);
+          typeExpression = cloneProps(
+              new TypeDeclarationNode(Token.STRING, typeExpression.getString()));
         }
         typeTarget.setDeclaredTypeExpression((TypeDeclarationNode) typeExpression);
       }

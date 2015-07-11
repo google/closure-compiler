@@ -58,7 +58,7 @@ import java.util.Set;
  *
  */
 
-public class Node implements Cloneable, Serializable {
+public class Node implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -205,6 +205,11 @@ public class Node implements Cloneable, Serializable {
     private static final long serialVersionUID = 1L;
     private String str; // This is used for specialized signatures.
 
+    public TypeDeclarationNode(int nodeType, String str) {
+      super(nodeType);
+      this.str = str;
+    }
+
     public TypeDeclarationNode(int nodeType) {
       super(nodeType);
     }
@@ -230,14 +235,9 @@ public class Node implements Cloneable, Serializable {
       return str;
     }
 
-    /**
-     * sets the string content.
-     * @param str the new value.  Non null.
-     */
     @Override
-    public void setString(String str) {
-      Preconditions.checkNotNull(str);
-      this.str = str;
+    public TypeDeclarationNode cloneNode() {
+      return copyNodeFields(new TypeDeclarationNode(type, str));
     }
   }
 
@@ -281,6 +281,11 @@ public class Node implements Cloneable, Serializable {
     }
 
     private double number;
+
+    @Override
+    public NumberNode cloneNode() {
+      return copyNodeFields(new NumberNode(number));
+    }
   }
 
   private static class StringNode extends Node {
@@ -351,6 +356,11 @@ public class Node implements Cloneable, Serializable {
     }
 
     private String str;
+
+    @Override
+    public StringNode cloneNode() {
+      return copyNodeFields(new StringNode(type, str));
+    }
   }
 
   // PropListItems must be immutable so that they can be shared.
@@ -1448,6 +1458,10 @@ public class Node implements Cloneable, Serializable {
     return propListHead;
   }
 
+  void setPropListHead(PropListItem propListHead) {
+    this.propListHead = propListHead;
+  }
+
   public Node getParent() {
     return parent;
   }
@@ -1943,19 +1957,14 @@ public class Node implements Cloneable, Serializable {
    * @return A detached clone of the Node, specifically excluding its children.
    */
   public Node cloneNode() {
-    Node result;
-    try {
-      result = (Node) super.clone();
-      // PropListItem lists are immutable and can be shared so there is no
-      // need to clone them here.
-      result.next = null;
-      result.first = null;
-      result.last = null;
-      result.parent = null;
-    } catch (CloneNotSupportedException e) {
-      throw new RuntimeException(e.getMessage());
-    }
-    return result;
+    return copyNodeFields(new Node(type));
+  }
+
+  <T extends Node> T copyNodeFields(T dst) {
+    dst.setSourceEncodedPosition(this.sourcePosition);
+    dst.setTypeI(this.typei);
+    dst.setPropListHead(this.propListHead);
+    return dst;
   }
 
   /**
