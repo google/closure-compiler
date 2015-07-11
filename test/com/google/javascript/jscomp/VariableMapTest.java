@@ -127,11 +127,10 @@ public final class VariableMapTest extends TestCase {
   }
 
   public void testReverseThrowsErrorOnDuplicate() {
-    VariableMap vm = new VariableMap(ImmutableMap.of("AA", "b", "BB", "b"));
     try {
-      vm.getNewNameToOriginalNameMap();
+      new VariableMap(ImmutableMap.of("AA", "b", "BB", "b"));
       fail();
-    } catch (java.lang.IllegalArgumentException expected) {
+    } catch (IllegalArgumentException expected) {
     }
   }
 

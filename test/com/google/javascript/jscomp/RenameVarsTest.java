@@ -481,8 +481,8 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testPrevUsedMapWithDuplicates() {
-    previouslyUsedMap = makeVariableMap("Foo", "z", "Bar", "z");
     try {
+      makeVariableMap("Foo", "z", "Bar", "z");
       testSame("");
       fail();
     } catch (java.lang.IllegalArgumentException expected) {
