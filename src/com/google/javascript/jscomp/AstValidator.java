@@ -53,7 +53,9 @@ public final class AstValidator implements CompilerPass {
       @Override
       public void handleViolation(String message, Node n) {
         throw new IllegalStateException(
-            message + ". Reference node:\n" + n.toStringTree());
+            message + ". Reference node:\n" + n.toStringTree()
+            + "\n Parent node:\n"
+            + ((n.getParent() != null) ? n.getParent().toStringTree() : " no parent "));
       }
     });
   }
