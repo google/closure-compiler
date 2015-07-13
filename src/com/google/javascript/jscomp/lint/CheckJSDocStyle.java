@@ -75,7 +75,7 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           param = param.getFirstChild();
           nameOptional = true;
         } else {
-          nameOptional = compiler.getCodingConvention().isOptionalParameter(param);
+          nameOptional = param.getString().startsWith("opt_");
         }
 
         if (!jsDoc.hasParameterType(param.getString())) {
