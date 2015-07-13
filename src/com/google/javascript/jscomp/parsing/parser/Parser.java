@@ -379,7 +379,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     IdentifierToken importedName = eatId();
     IdentifierToken destinationName = null;
-    if (peekPredefinedString(PredefinedName.AS)){
+    if (peekPredefinedString(PredefinedName.AS)) {
       eatPredefinedString(PredefinedName.AS);
       destinationName = eatId();
     }
@@ -488,7 +488,7 @@ public class Parser {
     SourcePosition start = getTreeStartLocation();
     IdentifierToken importedName = eatId();
     IdentifierToken destinationName = null;
-    if (peekPredefinedString(PredefinedName.AS)){
+    if (peekPredefinedString(PredefinedName.AS)) {
       eatPredefinedString(PredefinedName.AS);
       destinationName = eatId();
     }
@@ -1647,7 +1647,7 @@ public class Parser {
   }
 
   private boolean peekVariableDeclarationList() {
-    switch(peekType()) {
+    switch (peekType()) {
       case VAR:
       case CONST:
       case LET:
@@ -1716,7 +1716,7 @@ public class Parser {
     return new BreakStatementTree(getTreeLocation(start), name);
   }
 
-  //12.9 The return Statement
+  // 12.9 The return Statement
   private ParseTree parseReturnStatement() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.RETURN);
@@ -2516,7 +2516,7 @@ public class Parser {
   private ParseTree parseLogicalOR(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseLogicalAND(expressionIn);
-    while (peek(TokenType.OR)){
+    while (peek(TokenType.OR)) {
       Token operator = eat(TokenType.OR);
       ParseTree right = parseLogicalAND(expressionIn);
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2528,7 +2528,7 @@ public class Parser {
   private ParseTree parseLogicalAND(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseBitwiseOR(expressionIn);
-    while (peek(TokenType.AND)){
+    while (peek(TokenType.AND)) {
       Token operator = eat(TokenType.AND);
       ParseTree right = parseBitwiseOR(expressionIn);
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2540,7 +2540,7 @@ public class Parser {
   private ParseTree parseBitwiseOR(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseBitwiseXOR(expressionIn);
-    while (peek(TokenType.BAR)){
+    while (peek(TokenType.BAR)) {
       Token operator = eat(TokenType.BAR);
       ParseTree right = parseBitwiseXOR(expressionIn);
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2552,7 +2552,7 @@ public class Parser {
   private ParseTree parseBitwiseXOR(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseBitwiseAND(expressionIn);
-    while (peek(TokenType.CARET)){
+    while (peek(TokenType.CARET)) {
       Token operator = eat(TokenType.CARET);
       ParseTree right = parseBitwiseAND(expressionIn);
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2564,7 +2564,7 @@ public class Parser {
   private ParseTree parseBitwiseAND(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseEquality(expressionIn);
-    while (peek(TokenType.AMPERSAND)){
+    while (peek(TokenType.AMPERSAND)) {
       Token operator = eat(TokenType.AMPERSAND);
       ParseTree right = parseEquality(expressionIn);
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2576,7 +2576,7 @@ public class Parser {
   private ParseTree parseEquality(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseRelational(expressionIn);
-    while (peekEqualityOperator()){
+    while (peekEqualityOperator()) {
       Token operator = nextToken();
       ParseTree right = parseRelational(expressionIn);
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2600,7 +2600,7 @@ public class Parser {
   private ParseTree parseRelational(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseShiftExpression();
-    while (peekRelationalOperator(expressionIn)){
+    while (peekRelationalOperator(expressionIn)) {
       Token operator = nextToken();
       ParseTree right = parseShiftExpression();
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2627,7 +2627,7 @@ public class Parser {
   private ParseTree parseShiftExpression() {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseAdditiveExpression();
-    while (peekShiftOperator()){
+    while (peekShiftOperator()) {
       Token operator = nextToken();
       ParseTree right = parseAdditiveExpression();
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2650,7 +2650,7 @@ public class Parser {
   private ParseTree parseAdditiveExpression() {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseMultiplicativeExpression();
-    while (peekAdditiveOperator()){
+    while (peekAdditiveOperator()) {
       Token operator = nextToken();
       ParseTree right = parseMultiplicativeExpression();
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2672,7 +2672,7 @@ public class Parser {
   private ParseTree parseMultiplicativeExpression() {
     SourcePosition start = getTreeStartLocation();
     ParseTree left = parseUnaryExpression();
-    while (peekMultiplicativeOperator()){
+    while (peekMultiplicativeOperator()) {
       Token operator = nextToken();
       ParseTree right = parseUnaryExpression();
       left = new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
