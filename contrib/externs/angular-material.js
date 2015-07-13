@@ -184,6 +184,13 @@ md.$toast.prototype.show = function(options) {};
 
 
 /**
+ * @param {string} text
+ * @return {angular.$q.Promise}
+ */
+md.$toast.prototype.showSimple = function(text) {};
+
+
+/**
  * @type {function(*=)}
  */
 md.$toast.prototype.hide = function() {};
