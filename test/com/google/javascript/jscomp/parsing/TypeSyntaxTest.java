@@ -541,7 +541,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare function foo() {}");
     expectErrors("Parse error. Semi-colon expected");
     parse("if (true) { declare var x; }");
-    expectErrors("Parse error. ';' expected");
+    expectErrors("Parse error. Semi-colon expected");
     parse("declare class Foo {\n  constructor() {}\n};");
 
     testNotEs6Typed("declare var x;", "ambient declaration");
@@ -563,7 +563,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("type I = {foo?: number};");
     parse("var x: {foo?: number};");
 
-    expectErrors("Parse error. ';' expected");
+    expectErrors("Parse error. Semi-colon expected");
     parse("class C { foo?: number; }");
   }
 

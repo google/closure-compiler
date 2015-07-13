@@ -730,7 +730,7 @@ public class Parser {
     } else {
       if (peekIndexSignature()) {
         ParseTree indexSignature = parseIndexSignature();
-        eat(TokenType.SEMI_COLON);
+        eatPossibleImplicitSemiColon();
         return indexSignature;
       }
       nameExpr = parseComputedPropertyName();
@@ -745,7 +745,7 @@ public class Parser {
       ParseTree function;
       if (isAmbient) {
         function = parseMethodSignature(start, name, isStatic, isGenerator, false);
-        eat(TokenType.SEMI_COLON);
+        eatPossibleImplicitSemiColon();
       } else {
         function = parseFunctionTail(start, name, isStatic, isGenerator, kind);
       }
@@ -763,7 +763,7 @@ public class Parser {
       if (peek(TokenType.EQUAL)) {
         reportError("Member variable initializers ('=') are not supported");
       }
-      eat(TokenType.SEMI_COLON);
+      eatPossibleImplicitSemiColon();
       if (nameExpr == null) {
         return new MemberVariableTree(getTreeLocation(start), name, isStatic, false, declaredType);
       } else {

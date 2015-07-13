@@ -46,21 +46,30 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   }
 
   public void testMemberVariable() {
-    test(
+    test(LINE_JOINER.join(
+        "class C {",
+        "  mv: number;",
+        "  constructor() {",
+        "    this.f = 1;",
+        "  }",
+        "}"),
         LINE_JOINER.join(
-            "class C {",
-            "  mv: number;",
-            "  constructor() {",
-            "    this.f = 1;",
-            "  }",
-            "}"),
+        "class C {",
+        "  constructor() {",
+        "    this.f = 1;",
+        "  }",
+        "}",
+        "/** @type {number} */ C.prototype.mv;"));
+
+    test(LINE_JOINER.join(
+        "class C {",
+        "  on: {",
+        "    p: string;",
+        "  }",
+        "}"),
         LINE_JOINER.join(
-            "class C {",
-            "  constructor() {",
-            "    this.f = 1;",
-            "  }",
-            "}",
-            "/** @type {number} */ C.prototype.mv;"));
+        "class C {}",
+        "/** @type {{p: string}} */ C.prototype.on;"));
   }
 
   public void testMemberVariable_noCtor() {
@@ -160,6 +169,12 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var x: {p: string, q: number};", "var /** {p: string, q: number} */ x;");
     test("var x: {p: string; q: {p: string; q: number}};",
          "var /** {p: string, q: {p: string, q: number}}*/ x;");
+
+    test(LINE_JOINER.join(
+        "var x: {",
+        "  p: string;",
+        "};"),
+        "var /** {p: string} */ x;");
 
     testError("var x: {constructor(); q: number};",
         Es6TypedToEs6Converter.UNSUPPORTED_RECORD_TYPE);
