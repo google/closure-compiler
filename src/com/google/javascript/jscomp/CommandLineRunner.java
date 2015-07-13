@@ -412,11 +412,6 @@ public class CommandLineRunner extends
         usage = "Process CommonJS modules to a concatenable form.")
     private boolean processCommonJsModules = false;
 
-    @Option(name = "--transpile_only",
-        hidden = true,
-        usage = "Run ES6 to ES3 transpilation only, skip other passes.")
-    private boolean transpileOnly = false;
-
     @Option(name = "--common_js_module_path_prefix",
         hidden = true,
         usage = "Path prefix to be removed from CommonJS module names.")
@@ -1088,7 +1083,6 @@ public class CommandLineRunner extends
           .setLanguageIn(flags.languageIn)
           .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)
-          .setTranspileOnly(flags.transpileOnly)
           .setCommonJSModulePathPrefix(flags.commonJsPathPrefix)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)

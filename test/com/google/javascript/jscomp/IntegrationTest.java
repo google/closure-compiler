@@ -1663,7 +1663,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     String code = "var a;";
 
-    options.skipAllPasses = true;
+    options.skipNonTranspilationPasses = true;
     options.sourceMapOutputPath = "./src.map";
 
     Compiler compiler = compile(options, code);

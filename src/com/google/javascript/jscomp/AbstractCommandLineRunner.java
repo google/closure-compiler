@@ -381,7 +381,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     options.acceptConstKeyword = config.acceptConstKeyword;
     options.transformAMDToCJSModules = config.transformAMDToCJSModules;
     options.processCommonJSModules = config.processCommonJSModules;
-    options.transpileOnly = config.transpileOnly;
     options.commonJSModulePathPrefix = config.commonJSModulePathPrefix;
     options.angularPass = config.angularPass;
     options.tracer = config.tracerMode;
@@ -2066,16 +2065,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     CommandLineConfig setProcessCommonJSModules(
         boolean processCommonJSModules) {
       this.processCommonJSModules = processCommonJSModules;
-      return this;
-    }
-
-    private boolean transpileOnly = false;
-
-    /**
-     * Sets whether to run up to ES6 transpilation only.
-     */
-    CommandLineConfig setTranspileOnly(boolean transpileOnly) {
-      this.transpileOnly = transpileOnly;
       return this;
     }
 

@@ -755,7 +755,7 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
-    if (!options.skipAllPasses) {
+    if (!options.skipNonTranspilationPasses || options.lowerFromEs6()) {
       check();
       if (hasErrors()) {
         return;

@@ -77,19 +77,6 @@ public class CompilerOptions implements Serializable {
   private LanguageMode languageOut;
 
   /**
-   * If true, transpile ES6 to ES3 only. All others passes will be skipped.
-   */
-  boolean transpileOnly;
-
-  /**
-   * Only do transpilation, don't inject es6_runtime.js or
-   * do any optimizations (this is useful for per-file transpilation).
-   */
-  public void setTranspileOnly(boolean value) {
-    transpileOnly = value;
-  }
-
-  /**
    * If true, don't transpile ES6 to ES3.
    *  WARNING: Enabling this option will likely cause the compiler to crash
    *     or produce incorrect output.
@@ -161,8 +148,9 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Configures the compiler to skip as many passes as possible.
+   * If transpilation is requested, it will be run, but all others passes will be skipped.
    */
-  boolean skipAllPasses;
+  boolean skipNonTranspilationPasses;
 
   /**
    * Configures the compiler to run expensive sanity checks after
@@ -987,8 +975,7 @@ public class CompilerOptions implements Serializable {
     acceptTypeSyntax = false;
 
     // Checks
-    transpileOnly = false;
-    skipAllPasses = false;
+    skipNonTranspilationPasses = false;
     devMode = DevMode.OFF;
     checkDeterminism = false;
     checkSymbols = false;
@@ -1265,7 +1252,7 @@ public class CompilerOptions implements Serializable {
    * Skip all possible passes, to make the compiler as fast as possible.
    */
   public void skipAllCompilerPasses() {
-    skipAllPasses = true;
+    skipNonTranspilationPasses = true;
   }
 
   /**
@@ -1809,8 +1796,12 @@ public class CompilerOptions implements Serializable {
     return this.ideMode || this.parseJsDocDocumentation;
   }
 
-  public void setSkipAllPasses(boolean skipAllPasses) {
-    this.skipAllPasses = skipAllPasses;
+  /**
+   * Skip all passes (other than transpilation, if requested). Don't inject es6_runtime.js
+   * or do any checks/optimizations (this is useful for per-file transpilation).
+   */
+  public void setSkipNonTranspilationPasses(boolean skipNonTranspilationPasses) {
+    this.skipNonTranspilationPasses = skipNonTranspilationPasses;
   }
 
   public void setDevMode(DevMode devMode) {

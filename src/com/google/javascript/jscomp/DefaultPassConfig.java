@@ -214,12 +214,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RewriteDestructuring);
     }
 
-    // goog.module rewrite must happen even if options.transpileOnly is set.
+    // goog.module rewrite must happen even if options.skipNonTranspilationPasses is set.
     if (options.closurePass) {
       checks.add(closureRewriteModule);
     }
 
-    if (!options.transpileOnly && options.declaredGlobalExternsOnWindow) {
+    if (!options.skipNonTranspilationPasses && options.declaredGlobalExternsOnWindow) {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
@@ -227,7 +227,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkVariableReferences);
     }
 
-    if (!options.transpileOnly && options.closurePass) {
+    if (!options.skipNonTranspilationPasses && options.closurePass) {
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
     }
@@ -260,7 +260,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertToTypedES6);
     }
 
-    if (options.transpileOnly) {
+    if (options.skipNonTranspilationPasses) {
       return checks;
     }
 
@@ -441,7 +441,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getOptimizations() {
     List<PassFactory> passes = new ArrayList<>();
 
-    if (options.transpileOnly) {
+    if (options.skipNonTranspilationPasses) {
       return passes;
     }
 
