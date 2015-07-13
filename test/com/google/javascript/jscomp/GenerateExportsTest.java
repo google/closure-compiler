@@ -111,6 +111,12 @@ public final class GenerateExportsTest extends Es6CompilerTestCase {
          "google_exportSymbol('FOO', FOO)");
   }
 
+  public void testExportEs6ArrowFunction() {
+    testEs6("/** @export */var fn = ()=>{};",
+          "var fn = ()=>{};"
+        + "google_exportSymbol('fn', fn)");
+  }
+
   public void testNoExport() {
     test("var FOO = 5", "var FOO=5");
   }
@@ -295,5 +301,4 @@ public final class GenerateExportsTest extends Es6CompilerTestCase {
     testSame(code);
     testExternChanges(code, "Object.prototype.foo;");
   }
-
 }
