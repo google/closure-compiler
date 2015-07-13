@@ -242,6 +242,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequires);
     }
 
+    checks.add(checkSideEffects);
+
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
@@ -277,8 +279,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.angularPass) {
       checks.add(angularPass);
     }
-
-    checks.add(checkSideEffects);
 
     if (options.checkProvides.isOn()) {
       checks.add(checkProvides);

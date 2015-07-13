@@ -2809,12 +2809,12 @@ public final class NodeUtil {
   }
 
   /**
-   * Gets the root node of a qualified name. Must be either NAME or THIS.
+   * Gets the root node of a qualified name. Must be either NAME, THIS or SUPER.
    */
   static Node getRootOfQualifiedName(Node qName) {
     for (Node current = qName; true;
          current = current.getFirstChild()) {
-      if (current.isName() || current.isThis()) {
+      if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
       }
       Preconditions.checkState(current.isGetProp());
