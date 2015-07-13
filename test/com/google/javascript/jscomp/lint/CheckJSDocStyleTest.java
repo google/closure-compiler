@@ -96,6 +96,64 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   }
 
+  public void testMissingParamWithDestructuringPattern() {
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {void}",
+            " */",
+            "function f(namedParam, {destructuring:pattern}) {",
+            "}"),
+        MISSING_PARAM_JSDOC);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {void}",
+            " */",
+            "function f({destructuring:pattern}, namedParam) {",
+            "}"),
+        MISSING_PARAM_JSDOC);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {void}",
+            " */",
+            "function f(namedParam, [pattern]) {",
+            "}"),
+        MISSING_PARAM_JSDOC);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {void}",
+            " */",
+            "function f([pattern], namedParam) {",
+            "}"),
+        MISSING_PARAM_JSDOC);
+  }
+
+  public void testMissingParamWithDestructuringPatternWithDefault() {
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {void}",
+            " */",
+            "function f(namedParam, {destructuring:pattern} = defaultValue) {",
+            "}"),
+        MISSING_PARAM_JSDOC);
+
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @return {void}",
+            " */",
+            "function f(namedParam, [pattern] = defaultValue) {",
+            "}"),
+        MISSING_PARAM_JSDOC);
+  }
+
   public void testMissingPrivate() {
     testSame(
         LINE_JOINER.join(

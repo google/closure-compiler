@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -74,8 +75,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         if (param.isDefaultValue()) {
           param = param.getFirstChild();
           nameOptional = true;
-        } else {
+        } else if (param.isName()) {
           nameOptional = param.getString().startsWith("opt_");
+        } else {
+          Preconditions.checkState(param.isDestructuringPattern() || param.isRest(), param);
+          continue;
         }
 
         if (!jsDoc.hasParameterType(param.getString())) {
