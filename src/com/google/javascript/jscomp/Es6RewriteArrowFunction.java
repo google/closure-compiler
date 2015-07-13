@@ -27,7 +27,7 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
 
   static final DiagnosticType THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT = DiagnosticType.warning(
       "JSC_THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT",
-      "You have 'this' reference in an arrow function inside a object literal. "
+      "You have 'this' reference in an arrow function inside an object literal. "
       + "The reference may refer to an unintended target after rewrite.");
 
   private final AbstractCompiler compiler;
