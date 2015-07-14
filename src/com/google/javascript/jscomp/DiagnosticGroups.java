@@ -26,8 +26,11 @@ import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Named groups of DiagnosticTypes exposed by Compiler.
@@ -36,6 +39,9 @@ import java.util.Map;
 public class DiagnosticGroups {
   static final DiagnosticType UNUSED =
       DiagnosticType.warning("JSC_UNUSED", "{0}");
+
+  public static final Set<String> wildcardExcludedGroups =
+      new HashSet<String>(Arrays.asList(new String[] { "reportUnknownTypes" }));
 
   public DiagnosticGroups() {}
 

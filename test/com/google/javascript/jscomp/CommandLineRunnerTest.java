@@ -165,6 +165,17 @@ public final class CommandLineRunnerTest extends TestCase {
     test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
   }
 
+  public void testWarningGuardWildcard1() {
+    args.add("--jscomp_warning=*");
+    test("function f() { this.a = 3; }", CheckGlobalThis.GLOBAL_THIS);
+  }
+
+  public void testWarningGuardWildcardOrdering() {
+    args.add("--jscomp_warning=*");
+    args.add("--jscomp_off=globalThis");
+    testSame("function f() { this.a = 3; }");
+  }
+
   public void testSimpleModeLeavesUnusedParams() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     testSame("window.f = function(a) {};");
