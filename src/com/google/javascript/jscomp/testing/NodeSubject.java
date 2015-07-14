@@ -53,4 +53,12 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
         + " not of type " + Token.name(type);
     assertEquals(message, type, getSubject().getType());
   }
+
+  public void hasCharno(int charno) {
+    assertEquals(charno, getSubject().getCharno());
+  }
+
+  public void hasLength(int length) {
+    assertEquals(length, getSubject().getLength());
+  }
 }

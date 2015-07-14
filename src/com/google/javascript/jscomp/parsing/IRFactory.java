@@ -1814,6 +1814,7 @@ class IRFactory {
       if (decl.initializer != null) {
         Node initializer = transform(decl.initializer);
         node.addChildToBack(initializer);
+        maybeSetLength(node, decl.location.start, decl.location.end);
       }
       maybeProcessType(node, decl.declaredType);
       return node;

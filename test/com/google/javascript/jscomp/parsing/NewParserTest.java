@@ -158,6 +158,24 @@ public final class NewParserTest extends BaseJSTypeTestCase {
         + "}");
   }
 
+  /** @bug 19100575 */
+  public void testVarSourceLocations() {
+    isIdeMode = true;
+
+    Node n = parse("var x, y = 1;");
+    Node var = n.getFirstChild();
+    assertNode(var).hasType(Token.VAR);
+
+    Node x = var.getFirstChild();
+    assertNode(x).hasType(Token.NAME);
+    assertNode(x).hasCharno("var ".length());
+
+    Node y = x.getNext();
+    assertNode(y).hasType(Token.NAME);
+    assertNode(y).hasCharno("var x, ".length());
+    assertNode(y).hasLength("y = 1".length());
+  }
+
   public void testReturn() {
     parse("function foo() { return 1; }");
     parseError("return;", UNEXPECTED_RETURN);
