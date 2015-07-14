@@ -2287,4 +2287,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         + "}",
         null);
   }
+
+  public void testCollapsedNameAlreadyTaken() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function Funny$Name(){};",
+            "function Funny(){};",
+            "Funny.Name = 5;",
+            "var x = new Funny$Name();"),
+        LINE_JOINER.join(
+            "/** @constructor */ function Funny$Name(){};",
+            "function Funny(){};",
+            "var Funny$Name$0 = 5;",
+            "var x = new Funny$Name();"));
+
+    test("var ns$x = 0; var ns$x$0 = 1; var ns = {}; ns.x = 8;",
+         "var ns$x = 0; var ns$x$0 = 1; var ns$x$1 = 8;");
+
+    test("var ns$x = 0; var ns$x$0 = 1; var ns$x$1 = 2; var ns = {}; ns.x = 8;",
+         "var ns$x = 0; var ns$x$0 = 1; var ns$x$1 = 2; var ns$x$2 = 8;");
+
+    test("var ns$x = {}; ns$x.y = 2; var ns = {}; ns.x = {}; ns.x.y = 8;",
+         "var ns$x$y = 2; var ns$x$0$y = 8;");
+  }
 }

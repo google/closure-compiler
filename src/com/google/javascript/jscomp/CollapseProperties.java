@@ -1134,13 +1134,19 @@ class CollapseProperties implements CompilerPass {
     return numStubs;
   }
 
-  private static String appendPropForAlias(String root, String prop) {
+  private String appendPropForAlias(String root, String prop) {
     if (prop.indexOf('$') != -1) {
       // Encode '$' in a property as '$0'. Because '0' cannot be the
       // start of an identifier, this will never conflict with our
       // encoding from '.' -> '$'.
       prop = prop.replace("$", "$0");
     }
-    return root + '$' + prop;
+    String result = root + '$' + prop;
+    int id = 0;
+    while (nameMap.containsKey(result)) {
+      result = root + '$' + prop + '$' + id;
+      id++;
+    }
+    return result;
   }
 }
