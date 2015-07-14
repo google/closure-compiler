@@ -20,7 +20,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -49,14 +48,25 @@ import java.util.Set;
  * </ul>
  *
  */
-class CheckRequiresForConstructors implements HotSwapCompilerPass {
+class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
   private final CodingConvention codingConvention;
 
+  private final Set<String> constructors = new HashSet<>();
+  private final Map<String, Node> requires = new HashMap<>();
+
+  // Adding an entry to usages indicates that the name is used and should be required.
+  private final Map<String, Node> usages = new HashMap<>();
+
+  // Adding an entry to weakUsages indicates that the name is used, but in a way which may not
+  // require a goog.require, such as in a @type annotation. If the only usages of a name are
+  // in weakUsages, don't give a missingRequire warning, nor an extraRequire warning.
+  private final Map<String, Node> weakUsages = new HashMap<>();
+
   // Warnings
-  static final DiagnosticType MISSING_REQUIRE_WARNING = DiagnosticType.disabled(
-      "JSC_MISSING_REQUIRE_WARNING",
-      "''{0}'' used but not goog.require''d");
+  static final DiagnosticType MISSING_REQUIRE_WARNING =
+      DiagnosticType.disabled(
+          "JSC_MISSING_REQUIRE_WARNING", "''{0}'' used but not goog.require''d");
 
   static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING",
@@ -76,14 +86,12 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
-    Callback callback = new CheckRequiresForConstructorsCallback();
-    NodeTraversal.traverseRoots(compiler, callback, externs, root);
+    NodeTraversal.traverseRoots(compiler, this, externs, root);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    Callback callback = new CheckRequiresForConstructorsCallback();
-    new NodeTraversal(compiler, callback).traverse(scriptRoot);
+    new NodeTraversal(compiler, this).traverse(scriptRoot);
   }
 
   // Return true if the name is a class name (starts with an uppercase
@@ -106,23 +114,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
     return null;
   }
-
-  /**
-   * This class "records" each constructor and goog.require visited and creates
-   * a warning for each new node without an appropriate goog.require node.
-   *
-   */
-  private class CheckRequiresForConstructorsCallback implements Callback {
-    private final Set<String> constructors = new HashSet<>();
-    private final Map<String, Node> requires = new HashMap<>();
-
-    // Adding an entry to usages indicates that the name is used and should be required.
-    private final Map<String, Node> usages = new HashMap<>();
-
-    // Adding an entry to weakUsages indicates that the name is used, but in a way which may not
-    // require a goog.require, such as in a @type annotation. If the only usages of a name are
-    // in weakUsages, don't give a missingRequire warning, nor an extraRequire warning.
-    private final Map<String, Node> weakUsages = new HashMap<>();
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -417,5 +408,4 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass {
 
       NodeUtil.visitPreOrder(rootTypeNode, visitor, pred);
     }
-  }
 }
