@@ -160,6 +160,12 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("var x = 1; const x = 2;", VarCheck.LET_CONST_MULTIPLY_DECLARED_ERROR);
   }
 
+  public void testMultiplyDeclareLetsInDifferentScope() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("let x = 1; if (123) {let x = 2;}");
+    testSame("try {let x = 1;} catch(x){}");
+  }
+
   public void testReferencedVarDefinedClass() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testError("var x; class x{ }", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
