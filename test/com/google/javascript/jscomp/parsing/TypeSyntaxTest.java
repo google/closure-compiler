@@ -65,6 +65,13 @@ public final class TypeSyntaxTest extends TestCase {
     testErrorManager.expectErrors(errors);
   }
 
+  private void testNotEs6TypedFullError(String source, String error) {
+    expectErrors(error);
+    parse(source, LanguageMode.ECMASCRIPT6);
+    expectErrors(error);
+    parse(source, LanguageMode.ECMASCRIPT6_STRICT);
+  }
+
   private void testNotEs6Typed(String source, String... features) {
     for (int i = 0; i < features.length; i++) {
       features[i] =
@@ -555,6 +562,47 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. 'identifier' expected");
     parse("var x : typeof Foo.Bar.");
     testNotEs6Typed("var x: typeof y;", "type annotation");
+  }
+
+  public void testAccessibilityModifier() {
+    parse("class Foo {\n  private constructor() {\n  }\n}");
+    parse("class Foo {\n  protected static bar: number;\n}");
+    parse("class Foo {\n  protected bar() {\n  }\n}");
+    parse("class Foo {\n  private get() {\n  }\n}");
+    parse("class Foo {\n  private set() {\n  }\n}");
+    parse("class Foo {\n  private ['foo']() {\n  }\n}");
+    parse("class Foo {\n  private [Symbol.iterator]() {\n  }\n}");
+    parse("class Foo {\n  private ['foo'];\n}");
+
+    // TODO(moz): Enable this
+    //parse("class Foo {\n  constructor(public bar) {}}");
+
+    expectErrors("Parse error. primary expression expected");
+    parse("public var x;");
+    expectErrors("Parse error. primary expression expected");
+    parse("public function foo() {}");
+    expectErrors("Parse error. Semi-colon expected");
+    parse("class Foo { static private constructor() {}}");
+
+
+    testNotEs6TypedFullError(
+        "class Foo { private constructor() {} }",
+        "Parse error. Accessibility modifier is only supported in ES6 typed mode");
+    testNotEs6TypedFullError(
+        "class Foo { protected bar; }",
+        "Parse error. Accessibility modifier is only supported in ES6 typed mode");
+    testNotEs6TypedFullError(
+        "class Foo { protected bar() {} }",
+        "Parse error. Accessibility modifier is only supported in ES6 typed mode");
+    testNotEs6TypedFullError(
+        "class Foo { private get() {} }",
+        "Parse error. Accessibility modifier is only supported in ES6 typed mode");
+    testNotEs6TypedFullError(
+        "class Foo { private set() {} }",
+        "Parse error. Accessibility modifier is only supported in ES6 typed mode");
+    testNotEs6TypedFullError(
+        "class Foo { private [Symbol.iterator]() {} }",
+        "Parse error. Accessibility modifier is only supported in ES6 typed mode");
   }
 
   public void testOptionalProperty() {

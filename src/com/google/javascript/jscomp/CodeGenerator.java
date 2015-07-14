@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
@@ -514,6 +515,7 @@ class CodeGenerator {
                   || n.getParent().isRecordType()
                   || n.getParent().isIndexSignature());
 
+          maybeAddAccessibilityModifier(n);
           if (n.isStaticMember()) {
             add("static ");
           }
@@ -958,6 +960,7 @@ class CodeGenerator {
         }
 
       case Token.COMPUTED_PROP:
+        maybeAddAccessibilityModifier(n);
         if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
           add("get ");
         } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
@@ -1265,6 +1268,13 @@ class CodeGenerator {
 
     if (funcNeedsParens) {
       add(")");
+    }
+  }
+
+  private void maybeAddAccessibilityModifier(Node n) {
+    Visibility access = (Visibility) n.getProp(Node.ACCESS_MODIFIER);
+    if (access != null) {
+      add(access.toString().toLowerCase() + " ");
     }
   }
 

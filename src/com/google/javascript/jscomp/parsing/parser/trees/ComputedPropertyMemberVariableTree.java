@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.parsing.parser.trees;
 
+import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 import javax.annotation.Nullable;
@@ -25,13 +26,16 @@ import javax.annotation.Nullable;
 public class ComputedPropertyMemberVariableTree extends ParseTree {
   public final ParseTree property;
   public final boolean isStatic;
+  @Nullable public final TokenType access;
   @Nullable public final ParseTree declaredType;
 
   public ComputedPropertyMemberVariableTree(SourceRange location, ParseTree property,
-      boolean isStatic, @Nullable ParseTree declaredType) {
+      boolean isStatic,  @Nullable TokenType access, @Nullable ParseTree declaredType) {
     super(ParseTreeType.COMPUTED_PROPERTY_MEMBER_VARIABLE, location);
+
     this.property = property;
     this.isStatic = isStatic;
+    this.access = access;
     this.declaredType = declaredType;
   }
 }

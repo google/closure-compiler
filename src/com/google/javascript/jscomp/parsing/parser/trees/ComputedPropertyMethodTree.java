@@ -15,14 +15,21 @@
  */
 package com.google.javascript.jscomp.parsing.parser.trees;
 
+import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
+import javax.annotation.Nullable;
+
 public class ComputedPropertyMethodTree extends ParseTree {
+  @Nullable public final TokenType access;
   public final ParseTree property;
   public final ParseTree method;
 
-  public ComputedPropertyMethodTree(SourceRange location, ParseTree property, ParseTree method) {
+  public ComputedPropertyMethodTree(SourceRange location, @Nullable TokenType access,
+      ParseTree property, ParseTree method) {
     super(ParseTreeType.COMPUTED_PROPERTY_METHOD, location);
+
+    this.access = access;
     this.property = property;
     this.method = method;
   }

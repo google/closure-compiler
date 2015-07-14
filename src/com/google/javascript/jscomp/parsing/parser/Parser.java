@@ -200,6 +200,7 @@ public class Parser {
       ES6_TYPED,
     }
 
+    public final boolean is6Typed;
     public final boolean atLeast6;
     public final boolean atLeast5;
     public final boolean isStrictMode;
@@ -208,6 +209,7 @@ public class Parser {
     public final boolean warnES6NumberLiteral;
 
     public Config(Mode mode) {
+      is6Typed = mode == Mode.ES6_TYPED;
       atLeast6 = mode == Mode.ES6 || mode == Mode.ES6_STRICT
           || mode == Mode.ES6_TYPED;
       atLeast5 = atLeast6 || mode == Mode.ES5 || mode == Mode.ES5_STRICT;
@@ -601,13 +603,14 @@ public class Parser {
 
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // Method signature.
-      ParseTree function = parseMethodSignature(start, name, false, isGenerator, isOptional);
+      ParseTree function = parseMethodSignature(
+          start, name, false, isGenerator, isOptional, null);
       return function;
     } else {
       // Property signature.
       ParseTree declaredType = maybeParseColonType();
-      return new MemberVariableTree(getTreeLocation(start), name, false,
-          isOptional, declaredType);
+      return new MemberVariableTree(
+          getTreeLocation(start), name, false, isOptional, null, declaredType);
     }
   }
 
@@ -700,19 +703,22 @@ public class Parser {
   }
 
   private ParseTree parseClassElement(boolean isAmbient) {
+    TokenType access = maybeParseAccessibilityModifier();
+
     if (peek(TokenType.SEMI_COLON)) {
       return parseEmptyStatement();
     }
     if (peekGetAccessor(true)) {
-      return parseGetAccessor();
+      return parseGetAccessor(access);
     }
     if (peekSetAccessor(true)) {
-      return parseSetAccessor();
+      return parseSetAccessor(access);
     }
-    return parseClassMemberDeclaration(true, isAmbient);
+    return parseClassMemberDeclaration(true, isAmbient, access);
   }
 
-  private ParseTree parseClassMemberDeclaration(boolean allowStatic, boolean isAmbient) {
+  private ParseTree parseClassMemberDeclaration(
+      boolean allowStatic, boolean isAmbient, TokenType access) {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = false;
     if (allowStatic && peek(TokenType.STATIC) && peekType(1) != TokenType.OPEN_PAREN) {
@@ -739,20 +745,30 @@ public class Parser {
 
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // Member function.
-      FunctionDeclarationTree.Kind kind =
-          nameExpr == null ? FunctionDeclarationTree.Kind.MEMBER
-              : FunctionDeclarationTree.Kind.EXPRESSION;
+      FunctionDeclarationTree.Kind kind;
+      TokenType accessOnFunction;
+      if (nameExpr == null) {
+        kind = FunctionDeclarationTree.Kind.MEMBER;
+        accessOnFunction = access;
+      } else {
+        kind = FunctionDeclarationTree.Kind.EXPRESSION;
+        accessOnFunction = null; // Accessibility modifier goes on the ComputedPropertyMethodTree
+      }
+
       ParseTree function;
       if (isAmbient) {
-        function = parseMethodSignature(start, name, isStatic, isGenerator, false);
+        function = parseMethodSignature(
+            start, name, isStatic, isGenerator, false, accessOnFunction);
         eatPossibleImplicitSemiColon();
       } else {
-        function = parseFunctionTail(start, name, isStatic, isGenerator, kind);
+        function = parseFunctionTail(
+            start, name, isStatic, isGenerator, accessOnFunction, kind);
       }
       if (kind == FunctionDeclarationTree.Kind.MEMBER) {
         return function;
       } else {
-        return new ComputedPropertyMethodTree(getTreeLocation(start), nameExpr, function);
+        return new ComputedPropertyMethodTree(
+            getTreeLocation(start), access, nameExpr, function);
       }
     } else {
       // Member variable.
@@ -765,23 +781,26 @@ public class Parser {
       }
       eatPossibleImplicitSemiColon();
       if (nameExpr == null) {
-        return new MemberVariableTree(getTreeLocation(start), name, isStatic, false, declaredType);
+        return new MemberVariableTree(
+            getTreeLocation(start), name, isStatic, false, access, declaredType);
       } else {
-        return new ComputedPropertyMemberVariableTree(getTreeLocation(start), nameExpr, isStatic,
-            declaredType);
+        return new ComputedPropertyMemberVariableTree(getTreeLocation(start),
+            nameExpr, isStatic, access, declaredType);
       }
     }
   }
 
   private FunctionDeclarationTree parseMethodSignature(SourcePosition start,
-      IdentifierToken name, boolean isStatic, boolean isGenerator, boolean isOptional) {
+      IdentifierToken name, boolean isStatic, boolean isGenerator,
+      boolean isOptional, TokenType access) {
     GenericTypeListTree generics = maybeParseGenericTypes();
     FormalParameterListTree formalParameterList = parseFormalParameterList(ParamContext.SIGNATURE);
     ParseTree returnType = maybeParseColonType();
     ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
     FunctionDeclarationTree declaration = new FunctionDeclarationTree(
         getTreeLocation(start), name, generics, isStatic, isGenerator, isOptional,
-        FunctionDeclarationTree.Kind.MEMBER, formalParameterList, returnType, functionBody);
+        access, FunctionDeclarationTree.Kind.MEMBER, formalParameterList, returnType,
+        functionBody);
     return declaration;
   }
 
@@ -792,14 +811,14 @@ public class Parser {
     ParseTree returnType = maybeParseColonType();
     ParseTree functionBody = new EmptyStatementTree(getTreeLocation(start));
     FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, false, isGenerator, false,
+        getTreeLocation(start), name, generics, false, isGenerator, false, null,
         FunctionDeclarationTree.Kind.DECLARATION, formalParameterList, returnType, functionBody);
     return declaration;
   }
 
   private FunctionDeclarationTree parseFunctionTail(
       SourcePosition start, IdentifierToken name,
-      boolean isStatic, boolean isGenerator,
+      boolean isStatic, boolean isGenerator, TokenType access,
       FunctionDeclarationTree.Kind kind) {
 
     inGeneratorContext.addLast(isGenerator);
@@ -810,7 +829,7 @@ public class Parser {
     ParseTree returnType = maybeParseColonType();
     BlockTree functionBody = parseFunctionBody();
     FunctionDeclarationTree declaration = new FunctionDeclarationTree(
-        getTreeLocation(start), name, generics, isStatic, isGenerator, false,
+        getTreeLocation(start), name, generics, isStatic, isGenerator, false, access,
         kind, formalParameterList, returnType, functionBody);
 
     inGeneratorContext.removeLast();
@@ -870,7 +889,7 @@ public class Parser {
     eat(TokenType.COLON);
     ParseTree declaredType = parseType();
     ParseTree nameTree = new MemberVariableTree(getTreeLocation(start), name, false,
-        false, indexType);
+        false, null, indexType);
     return new IndexSignatureTree(getTreeLocation(start), nameTree, declaredType);
   }
 
@@ -932,7 +951,7 @@ public class Parser {
     }
 
     FunctionDeclarationTree declaration =  new FunctionDeclarationTree(
-        getTreeLocation(start), null, generics, false, false, false,
+        getTreeLocation(start), null, generics, false, false, false, null,
         FunctionDeclarationTree.Kind.ARROW,
         formalParameterList, returnType, functionBody);
 
@@ -976,7 +995,7 @@ public class Parser {
     IdentifierToken name = eatId();
 
     return parseFunctionTail(
-        start, name, false, isGenerator,
+        start, name, false, isGenerator, null,
         FunctionDeclarationTree.Kind.DECLARATION);
   }
 
@@ -987,7 +1006,7 @@ public class Parser {
     IdentifierToken name = eatIdOpt();
 
     return parseFunctionTail(
-        start, name, false, isGenerator,
+        start, name, false, isGenerator, null,
         FunctionDeclarationTree.Kind.EXPRESSION);
   }
 
@@ -2105,7 +2124,8 @@ public class Parser {
 
     eat(TokenType.OPEN_CURLY);
     Token commaToken = null;
-    while (peekPropertyNameOrComputedProp(0) || peek(TokenType.STAR)) {
+    while (peekPropertyNameOrComputedProp(0) || peek(TokenType.STAR)
+        || peekAccessibilityModifier()) {
       commaToken = null;
       result.add(parsePropertyAssignment());
       commaToken = eatOpt(TokenType.COMMA);
@@ -2155,11 +2175,11 @@ public class Parser {
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       if (peekGetAccessor(false)) {
-        return parseGetAccessor();
+        return parseGetAccessor(null);
       } else if (peekSetAccessor(false)) {
-        return parseSetAccessor();
+        return parseSetAccessor(null);
       } else if (peekType(1) == TokenType.OPEN_PAREN) {
-        return parseClassMemberDeclaration(false, false);
+        return parseClassMemberDeclaration(false, false, null);
       } else {
         return parsePropertyNameAssignment();
       }
@@ -2173,8 +2193,9 @@ public class Parser {
         return new ComputedPropertyDefinitionTree(getTreeLocation(start), name, value);
       } else {
         ParseTree value = parseFunctionTail(
-            start, null, false, false, FunctionDeclarationTree.Kind.EXPRESSION);
-        return new ComputedPropertyMethodTree(getTreeLocation(start), name, value);
+            start, null, false, false, null, FunctionDeclarationTree.Kind.EXPRESSION);
+        return new ComputedPropertyMethodTree(
+            getTreeLocation(start), null, name, value);
       }
     } else {
       throw new RuntimeException("unreachable");
@@ -2188,15 +2209,15 @@ public class Parser {
         || type == TokenType.IDENTIFIER
         || Keywords.isKeyword(type)) {
       // parseMethodDeclaration will consume the '*'.
-      return parseClassMemberDeclaration(false, false);
+      return parseClassMemberDeclaration(false, false, null);
     } else {
       SourcePosition start = getTreeStartLocation();
       eat(TokenType.STAR);
       ParseTree name = parseComputedPropertyName();
 
       ParseTree value = parseFunctionTail(
-          start, null, false, true, FunctionDeclarationTree.Kind.EXPRESSION);
-      return new ComputedPropertyMethodTree(getTreeLocation(start), name, value);
+          start, null, false, true, null, FunctionDeclarationTree.Kind.EXPRESSION);
+      return new ComputedPropertyMethodTree(getTreeLocation(start), null, name, value);
     }
   }
 
@@ -2232,7 +2253,7 @@ public class Parser {
         && ((IdentifierToken) peekToken(index)).value.equals(string);
   }
 
-  private ParseTree parseGetAccessor() {
+  private ParseTree parseGetAccessor(TokenType access) {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = eatOpt(TokenType.STATIC) != null;
     eatPredefinedString(PredefinedName.GET);
@@ -2249,7 +2270,7 @@ public class Parser {
       eat(TokenType.CLOSE_PAREN);
       BlockTree body = parseFunctionBody();
       return new ComputedPropertyGetterTree(
-          getTreeLocation(start), property, isStatic, body);
+          getTreeLocation(start), property, isStatic, access, body);
     }
   }
 
@@ -2259,7 +2280,7 @@ public class Parser {
         && peekPropertyNameOrComputedProp(index + 1);
   }
 
-  private ParseTree parseSetAccessor() {
+  private ParseTree parseSetAccessor(TokenType access) {
     SourcePosition start = getTreeStartLocation();
     boolean isStatic = eatOpt(TokenType.STATIC) != null;
     eatPredefinedString(PredefinedName.SET);
@@ -2278,7 +2299,7 @@ public class Parser {
       eat(TokenType.CLOSE_PAREN);
       BlockTree body = parseFunctionBody();
       return new ComputedPropertySetterTree(
-          getTreeLocation(start), property, isStatic, parameter, body);
+          getTreeLocation(start), property, isStatic, access, parameter, body);
     }
   }
 
@@ -3259,6 +3280,22 @@ public class Parser {
     TokenType type = peekType(index);
     return type == TokenType.IDENTIFIER || type == TokenType.TYPE || type == TokenType.DECLARE
         || (!inStrictContext() && Keywords.isStrictKeyword(type));
+  }
+
+  private boolean peekAccessibilityModifier() {
+    return EnumSet.of(TokenType.PUBLIC, TokenType.PROTECTED, TokenType.PRIVATE)
+        .contains(peekType());
+  }
+
+  private TokenType maybeParseAccessibilityModifier() {
+    if (peekAccessibilityModifier()) {
+      if (!config.is6Typed) {
+        reportError("Accessibility modifier is only supported in ES6 typed mode");
+      }
+      return nextToken().type;
+    } else {
+      return null;
+    }
   }
 
   /**

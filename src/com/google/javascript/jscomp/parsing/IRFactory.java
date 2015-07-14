@@ -135,6 +135,7 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
@@ -1221,6 +1222,7 @@ class IRFactory {
         Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, name.value);
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
+        maybeProcessAccessibilityModifier(member, functionTree, functionTree.access);
         node.setDeclaredTypeExpression(node.getDeclaredTypeExpression());
         result = member;
       } else {
@@ -1446,7 +1448,9 @@ class IRFactory {
       Node n = newNode(Token.COMPUTED_PROP, transform(tree.property));
       maybeProcessType(n, tree.declaredType);
       n.putBooleanProp(Node.COMPUTED_PROP_VARIABLE, true);
+      n.putProp(Node.ACCESS_MODIFIER, tree.access);
       n.setStaticMember(tree.isStatic);
+      maybeProcessAccessibilityModifier(n, tree, tree.access);
       return n;
     }
 
@@ -1459,6 +1463,7 @@ class IRFactory {
       if (tree.method.asFunctionDeclaration().isStatic) {
         n.setStaticMember(true);
       }
+      maybeProcessAccessibilityModifier(n, tree, tree.access);
       return n;
     }
 
@@ -1969,6 +1974,7 @@ class IRFactory {
       maybeProcessType(member, tree.declaredType);
       member.setStaticMember(tree.isStatic);
       member.putBooleanProp(Node.OPT_ES6_TYPED, tree.isOptional);
+      maybeProcessAccessibilityModifier(member, tree, tree.access);
       return member;
     }
 
@@ -2321,6 +2327,26 @@ class IRFactory {
             "this language feature is only supported in es6 mode: " + feature,
             sourceName,
             lineno(node), charno(node));
+      }
+    }
+
+    void maybeProcessAccessibilityModifier(Node n, ParseTree tree, TokenType type) {
+      if (type != null) {
+        Visibility access;
+        switch (type) {
+          case PUBLIC:
+            access = Visibility.PUBLIC;
+            break;
+          case PROTECTED:
+            access = Visibility.PROTECTED;
+            break;
+          case PRIVATE:
+            access = Visibility.PRIVATE;
+            break;
+          default:
+            throw new IllegalStateException("Unexpected access modifier type");
+        }
+        n.putProp(Node.ACCESS_MODIFIER, access);
       }
     }
 

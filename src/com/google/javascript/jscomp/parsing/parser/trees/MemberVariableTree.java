@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
+import com.google.javascript.jscomp.parsing.parser.TokenType;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 import javax.annotation.Nullable;
@@ -27,14 +28,17 @@ public class MemberVariableTree extends ParseTree {
   public final IdentifierToken name;
   public final boolean isStatic;
   public final boolean isOptional;
+  @Nullable public final TokenType access;
   @Nullable public final ParseTree declaredType;
 
   public MemberVariableTree(SourceRange location, IdentifierToken name, boolean isStatic,
-      boolean isOptional, @Nullable ParseTree declaredType) {
+      boolean isOptional, @Nullable TokenType access, @Nullable ParseTree declaredType) {
     super(ParseTreeType.MEMBER_VARIABLE, location);
+
     this.name = name;
     this.isStatic = isStatic;
     this.isOptional = isOptional;
+    this.access = access;
     this.declaredType = declaredType;
   }
 }

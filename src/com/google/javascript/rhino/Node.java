@@ -136,7 +136,8 @@ public class Node implements Serializable {
                                   // in ES6 Typed syntax.
       GENERIC_TYPE_LIST = 81,     // Generic type list in ES6 typed syntax.
       IMPLEMENTS = 82,            // "implements" clause in ES6 typed syntax.
-      CONSTRUCT_SIGNATURE = 83;   // This node is a TypeScript ConstructSignature
+      CONSTRUCT_SIGNATURE = 83,   // This node is a TypeScript ConstructSignature
+      ACCESS_MODIFIER = 84;       // TypeScript accessibility modifiers (public, protected, private)
 
   public static final int   // flags for INCRDECR_PROP
       DECR_FLAG = 0x1,
@@ -192,6 +193,7 @@ public class Node implements Serializable {
         case GENERIC_TYPE_LIST:       return "generic_type";
         case IMPLEMENTS:       return "implements";
         case CONSTRUCT_SIGNATURE: return "construct_signature";
+        case ACCESS_MODIFIER: return "access_modifier";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
