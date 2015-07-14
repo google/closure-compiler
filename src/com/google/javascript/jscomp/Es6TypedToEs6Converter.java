@@ -126,7 +126,7 @@ public final class Es6TypedToEs6Converter
           return;
         }
       }
-      name.putProp(Node.GENERIC_TYPE_LIST, null);
+      name.removeProp(Node.GENERIC_TYPE_LIST);
       jsDocNode.setJSDocInfo(doc.build());
     }
   }
@@ -139,7 +139,7 @@ public final class Es6TypedToEs6Converter
         Node type = convertWithLocation(child);
         doc.recordImplementedInterface(new JSTypeExpression(type, n.getSourceFileName()));
       }
-      n.putProp(Node.IMPLEMENTS, null);
+      n.removeProp(Node.IMPLEMENTS);
     }
 
     Node classMembers = n.getLastChild();
