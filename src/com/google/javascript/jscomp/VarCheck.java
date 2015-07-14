@@ -80,6 +80,11 @@ class VarCheck extends AbstractPostOrderCallback implements
         "JSC_VAR_ARGUMENTS_SHADOWED_ERROR",
         "Shadowing \"arguments\" is not allowed");
 
+  static final DiagnosticType LET_CONST_MULTIPLY_DECLARED_ERROR =
+      DiagnosticType.error(
+          "JSC_LET_CONST_MULTIPLY_DECLARED_ERROR",
+          "Duplicate let / const declaration in the same scope is not allowed.");
+
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
@@ -116,7 +121,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   private ScopeCreator createScopeCreator() {
     if (compiler.getLanguageMode().isEs6OrHigher()) {
       // Redeclaration check is handled in VariableReferenceCheck for ES6
-      return new Es6SyntacticScopeCreator(compiler);
+      return new Es6SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
     } else if (sanityCheck) {
       return SyntacticScopeCreator.makeUntyped(compiler);
     } else {
@@ -324,18 +329,12 @@ class VarCheck extends AbstractPostOrderCallback implements
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
 
-    JSDocInfo info = n.getJSDocInfo();
-    if (info == null) {
-      info = parent.getJSDocInfo();
-    }
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
     if (info != null && info.getSuppressions().contains("duplicate")) {
       return true;
     }
 
-    info = origVar.nameNode.getJSDocInfo();
-    if (info == null) {
-      info = origParent.getJSDocInfo();
-    }
+    info = NodeUtil.getBestJSDocInfo(origVar.nameNode);
     return (info != null && info.getSuppressions().contains("duplicate"));
   }
 
@@ -355,6 +354,13 @@ class VarCheck extends AbstractPostOrderCallback implements
         if (origParent.isCatch() &&
             parent.isCatch()) {
           // Okay, both are 'catch(x)' variables.
+          return;
+        }
+
+        if (parent.isLet() || parent.isConst() ||
+            origParent.isLet() || origParent.isConst()) {
+          compiler.report(
+              JSError.make(n, LET_CONST_MULTIPLY_DECLARED_ERROR));
           return;
         }
 
