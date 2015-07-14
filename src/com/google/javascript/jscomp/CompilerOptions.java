@@ -181,9 +181,13 @@ public class CompilerOptions implements Serializable {
   /** Checks that all symbols are defined */
   public boolean checkSymbols;
 
-  public CheckLevel aggressiveVarCheck;
+  CheckLevel aggressiveVarCheck;
 
-  /** Checks for suspicious variable definitions and undefined variables */
+  /**
+   * Checks for suspicious variable definitions and undefined variables.
+   * These checks are on by default. Please use DiagnosticGroups to silence/promote to error.
+   */
+  @Deprecated
   public void setAggressiveVarCheck(CheckLevel level) {
     this.aggressiveVarCheck = level;
   }

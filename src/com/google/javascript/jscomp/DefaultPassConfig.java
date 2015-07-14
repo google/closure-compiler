@@ -223,9 +223,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
-    if (options.getLanguageIn().isEs6OrHigher() || options.aggressiveVarCheck.isOn()) {
-      checks.add(checkVariableReferences);
-    }
+    checks.add(checkVariableReferences);
 
     if (!options.skipNonTranspilationPasses && options.closurePass) {
       checks.add(closureGoogScopeAliases);
