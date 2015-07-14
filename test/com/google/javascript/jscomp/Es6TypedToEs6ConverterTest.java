@@ -272,4 +272,18 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     testError("var x: { [foo: string]: number; };",
         Es6TypedToEs6Converter.UNSUPPORTED_RECORD_TYPE);
   }
+
+  public void testAccessibilityModifier() {
+    test("class Foo { private constructor() {} }",
+         "class Foo { /** @private */ constructor() {} }");
+    test("class Foo { protected bar() {} }", "class Foo { /** @protected */ bar() {} }");
+    test("class Foo { protected static bar: number; }",
+         "class Foo {} /** @protected @type {number} */ Foo.bar;");
+    test("class Foo { private get() {} }", "class Foo { /** @private */ get() {} }");
+    test("class Foo { public set() {} }", "class Foo { /** @public */ set() {} }");
+    testError("class Foo { private ['foo']() {} }",
+        Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER);
+    testError("class Foo { private ['foo']; }",
+        Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER);
+  }
 }

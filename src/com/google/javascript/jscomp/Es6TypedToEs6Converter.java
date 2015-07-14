@@ -20,6 +20,7 @@ import com.google.javascript.jscomp.Es6ToEs3Converter.ClassDeclarationMetadata;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -54,6 +55,10 @@ public final class Es6TypedToEs6Converter
       "JSC_UNSUPPORTED_RECORD_TYPE",
       "Currently only member variables are supported in record types, please consider "
           + "using interfaces instead.");
+
+  static final DiagnosticType COMPUTED_PROP_ACCESS_MODIFIER = DiagnosticType.error(
+      "JSC_UNSUPPORTED_ACCESS_MODIFIER",
+      "Accessibility is not checked on computed properties");
 
   private final AbstractCompiler compiler;
 
@@ -148,6 +153,7 @@ public final class Es6TypedToEs6Converter
 
       // Functions are handled by the regular Es6ToEs3Converter
       if (!member.isMemberVariableDef() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)) {
+        maybeAddVisibility(member);
         continue;
       }
 
@@ -225,6 +231,8 @@ public final class Es6TypedToEs6Converter
             prototypeAcess);
     // Copy type information.
     maybeVisitColonType(member, member);
+    maybeAddVisibility(member);
+
     qualifiedMemberAccess.setJSDocInfo(member.getJSDocInfo());
     Node newNode = NodeUtil.newExpr(qualifiedMemberAccess);
     return newNode.useSourceInfoIfMissingFromForTree(member);
@@ -260,10 +268,16 @@ public final class Es6TypedToEs6Converter
     compiler.reportCodeChange();
   }
 
-  private void maybeClearColonType(Node n, boolean hasColonType) {
-    if (hasColonType) {
-      n.setDeclaredTypeExpression(null);
-      compiler.reportCodeChange();
+  private void maybeAddVisibility(Node n) {
+    Visibility access = (Visibility) n.getProp(Node.ACCESS_MODIFIER);
+    if (access != null) {
+      if (n.isComputedProp()) {
+        compiler.report(JSError.make(n, COMPUTED_PROP_ACCESS_MODIFIER));
+      }
+      JSDocInfoBuilder memberDoc = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
+      memberDoc.recordVisibility(access);
+      n.setJSDocInfo(memberDoc.build());
+      n.removeProp(Node.ACCESS_MODIFIER);
     }
   }
 
@@ -298,7 +312,10 @@ public final class Es6TypedToEs6Converter
     info = builder.build();
     jsDocNode.setJSDocInfo(info);
 
-    maybeClearColonType(n, hasColonType);
+    if (hasColonType) {
+      n.setDeclaredTypeExpression(null);
+      compiler.reportCodeChange();
+    }
   }
 
   private void visitTypeAlias(NodeTraversal t, Node n, Node parent) {
