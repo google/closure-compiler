@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -29,21 +30,55 @@ import java.util.Map;
  */
 public final class InferConstsTest extends TestCase {
   public void testSimple() {
-    testInferConsts("var x = 3;", "x");
-    testInferConsts("var x = 3, y = 4;", "x", "y");
+    testConsts("var x = 3;", "x");
+    testConsts("/** @const */ var x;", "x");
+    testConsts("var x = 3, y = 4;", "x", "y");
+    testConsts("var x = 3, y;", "x");
+    testConsts("var x = 3;  function f(){x;}", "x");
+  }
+
+  public void testSimpleLetConst() {
+    testConsts("let x = 3, y", "x");
+    testConsts("let x = 3; let y = 4;", "x", "y");
+    testConsts("let x = 3, y = 4; x++;", "y");
+    testConsts("let x = 3;  function f(){let x = 4;}", "x");
+    testConsts("/** @const */ let x;", "x");
+    testConsts("const x = 1;", "x");
+  }
+
+  public void testUnfound() {
+    testNotConsts("var x = 2; x++;", "x");
+    testNotConsts("var x = 2; x = 3;", "x");
+    testNotConsts("var x = 3;  function f(){x++;}", "x");
+    testNotConsts("let x = 3; x++;", "x");
+    testNotConsts("let x = 3; x = 2;", "x", "y");
+    testNotConsts("/** @const */let x; let y;", "y");
+    testNotConsts("let x = 3;  function f() {let x = 4; x++;} x++;", "x");
   }
 
   public void testArguments() {
-    testInferConsts("var arguments = 3;");
+    testConsts("var arguments = 3;");
   }
 
-  public void testInferConsts(String js, String... constants) {
+  private void testConsts(String js, String... constants) {
+    testInferConstsHelper(true, js, constants);
+  }
+
+  private void testNotConsts(String js, String... constants) {
+    testInferConstsHelper(false, js, constants);
+  }
+
+  private void testInferConstsHelper(boolean constExpected,
+      String js, String... constants) {
     Compiler compiler = new Compiler();
 
     SourceFile extern = SourceFile.fromCode("extern", "");
     SourceFile input = SourceFile.fromCode("js", js);
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(input),
         new CompilerOptions());
+
+    compiler.options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compiler.setLanguageMode(LanguageMode.ECMASCRIPT6);
     compiler.parseInputs();
 
     CompilerPass inferConsts = new InferConsts(compiler);
@@ -55,9 +90,15 @@ public final class InferConstsTest extends TestCase {
 
     FindConstants constFinder = new FindConstants(constants);
     NodeTraversal.traverse(compiler, n, constFinder);
+
     for (String name : constants) {
-      assertTrue("Did not find a const node for " + name,
-          constFinder.foundNodes.containsKey(name));
+      if (constExpected) {
+        assertTrue("Expect constant: " + name,
+            constFinder.foundNodes.containsKey(name));
+      } else {
+        assertTrue("Unexpected constant: " + name,
+            !constFinder.foundNodes.containsKey(name));
+      }
     }
   }
 

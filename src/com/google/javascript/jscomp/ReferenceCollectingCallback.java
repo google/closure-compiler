@@ -695,11 +695,10 @@ class ReferenceCollectingCallback implements ScopedCallback,
      * Determines whether the variable is initialized at the declaration.
      */
     boolean isInitializingDeclaration() {
-      // VAR is the only type of variable declaration that may not initialize
-      // its variable. Catch blocks, named functions, and parameters all do.
-      return isDeclaration() &&
-          !getParent().isVar() ||
-          nameNode.getFirstChild() != null;
+      // VAR and LET are the only types of variable declarations that may not initialize
+      // their variables. Catch blocks, named functions, and parameters all do.
+      return (isDeclaration() && !getParent().isVar() && !getParent().isLet())
+        || nameNode.getFirstChild() != null;
     }
 
    /**
