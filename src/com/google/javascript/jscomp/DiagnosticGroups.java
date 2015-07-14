@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
@@ -26,9 +27,7 @@ import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,7 +40,7 @@ public class DiagnosticGroups {
       DiagnosticType.warning("JSC_UNUSED", "{0}");
 
   public static final Set<String> wildcardExcludedGroups =
-      new HashSet<String>(Arrays.asList(new String[] { "reportUnknownTypes" }));
+      ImmutableSet.of("reportUnknownTypes");
 
   public DiagnosticGroups() {}
 
