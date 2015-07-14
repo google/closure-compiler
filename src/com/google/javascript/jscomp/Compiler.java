@@ -347,12 +347,10 @@ public class Compiler extends AbstractCompiler {
     reconcileOptionsWithGuards();
 
     // Initialize the warnings guard.
-    List<WarningsGuard> guards = ImmutableList.of(
-        new SuppressDocWarningsGuard(
-            getDiagnosticGroups().getRegisteredGroups()),
-        options.getWarningsGuard());
-
-    this.warningsGuard = new ComposeWarningsGuard(guards);
+    this.warningsGuard =
+        new ComposeWarningsGuard(
+            new SuppressDocWarningsGuard(getDiagnosticGroups().getRegisteredGroups()),
+            options.getWarningsGuard());
   }
 
   /**
@@ -812,10 +810,7 @@ public class Compiler extends AbstractCompiler {
     // the client wanted since they probably meant to use their
     // own PassConfig object.
     Preconditions.checkNotNull(passes);
-
-    if (this.passes != null) {
-      throw new IllegalStateException("this.passes has already been assigned");
-    }
+    Preconditions.checkState(this.passes == null, "setPassConfig was already called");
     this.passes = passes;
   }
 
