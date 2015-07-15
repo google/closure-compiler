@@ -56,6 +56,7 @@ public final class ES6ModuleLoaderTest extends TestCase {
     assertUri("a.js", loader.normalizeInputAddress(input("a.js")));
     assertUri("some.js", loader.normalizeInputAddress(input("some.js")));
     assertUri("/x.js", loader.normalizeInputAddress(input("/x.js")));
+    assertUri("x-y.js", loader.normalizeInputAddress(input("x:y.js")));
   }
 
   public void testDuplicateUris() throws Exception {

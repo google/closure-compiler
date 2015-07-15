@@ -135,7 +135,8 @@ public final class ES6ModuleLoader {
   }
 
   private static URI createUri(String input) {
-    String forwardSlashes = input.replace("\\", MODULE_SLASH);
+    // Colons might cause URI.create() to fail
+    String forwardSlashes = input.replace(':', '-').replace("\\", MODULE_SLASH);
     return URI.create(forwardSlashes).normalize();
   }
 
