@@ -152,7 +152,6 @@ public class JSDocInfo implements Serializable {
           .toString();
     }
 
-    @Override
     protected LazilyInitializedInfo clone() {
       LazilyInitializedInfo other = new LazilyInitializedInfo();
       other.baseType = baseType;
@@ -447,7 +446,6 @@ public class JSDocInfo implements Serializable {
   // Visible for testing.
   JSDocInfo() {}
 
-  @Override
   public JSDocInfo clone() {
     JSDocInfo other = new JSDocInfo();
     other.info = this.info == null ? null : this.info.clone();

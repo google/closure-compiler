@@ -128,7 +128,6 @@ public final class JSTypeExpression implements Serializable {
     return "type: " + root.toString();
   }
 
-  @Override
   public JSTypeExpression clone() {
     return new JSTypeExpression(root.cloneTree(), sourceName);
   }

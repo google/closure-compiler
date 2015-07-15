@@ -50,7 +50,7 @@ final class CharRanges {
    * Returns an instance containing all and only the given members.
    */
   public static CharRanges withMembers(int... members) {
-    return new CharRanges(intArrayToRanges(members.clone()));
+    return new CharRanges(intArrayToRanges(Arrays.copyOf(members, members.length)));
   }
 
   /**
@@ -59,7 +59,7 @@ final class CharRanges {
    *     non-contiguous, [inclusive start, exclusive end) ranges.
    */
   public static CharRanges withRanges(int... ranges) {
-    ranges = ranges.clone();
+    ranges = Arrays.copyOf(ranges, ranges.length);
     if ((ranges.length & 1) != 0) { throw new IllegalArgumentException(); }
     for (int i = 1; i < ranges.length; ++i) {
       if (ranges[i] <= ranges[i - 1]) {
