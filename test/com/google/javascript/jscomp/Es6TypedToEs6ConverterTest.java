@@ -255,7 +255,8 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("declare var x;", "/** @suppress {duplicate} */ var x;");
     test("declare let x;", "/** @suppress {duplicate} */ var x;");
     test("declare const x;", "/** @suppress {duplicate} @const */ var x;");
-    test("declare function f();", "/** @suppress {duplicate} */ function f() {}");
+    test("declare function f(): number;",
+         "/** @suppress {duplicate, missingReturn} @return {number} */ function f() {}");
     test("declare enum Foo {}", "/** @suppress {duplicate} @enum {number} */ var Foo = {}");
     test("declare class C { constructor(); };",
          "/** @suppress {duplicate} */ class C { constructor() {} }");

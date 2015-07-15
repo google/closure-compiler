@@ -340,6 +340,7 @@ public final class Es6TypedToEs6Converter
     switch (child.getType()) {
       case Token.FUNCTION:
         child.replaceChild(child.getLastChild(), IR.block().useSourceInfoFrom(child));
+        builder.addSuppression("missingReturn");
         break;
       case Token.CLASS:
         Node members = child.getLastChild();

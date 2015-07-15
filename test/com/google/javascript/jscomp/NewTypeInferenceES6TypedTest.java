@@ -206,4 +206,11 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         "interface Baz extends Foo, Bar {}"),
         TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE);
   }
+
+  public void testAmbientDeclaration() {
+    typeCheck("declare var x: number;");
+    typeCheck("declare function f(): number;");
+    typeCheck("declare class C { constructor(); }");
+    typeCheck("declare enum Foo { BAR }");
+  }
 }
