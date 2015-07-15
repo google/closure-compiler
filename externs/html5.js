@@ -512,9 +512,16 @@ function TextMetrics() {}
 TextMetrics.prototype.width;
 
 /**
+ * @param {Uint8ClampedArray|number} dataOrWidth In the first form, this is the
+ *     array of pixel data.  In the second form, this is the image width.
+ * @param {number} widthOrHeight In the first form, this is the image width.  In
+ *     the second form, this is the image height.
+ * @param {number=} opt_height In the first form, this is the optional image
+ *     height.  The second form omits this argument.
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#imagedata
  * @constructor
  */
-function ImageData() {}
+function ImageData(dataOrWidth, widthOrHeight, opt_height) {}
 
 /** @type {Uint8ClampedArray} */
 ImageData.prototype.data;
