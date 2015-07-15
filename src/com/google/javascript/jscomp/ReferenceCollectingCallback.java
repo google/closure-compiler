@@ -746,6 +746,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
           || (parentType == Token.CONST && nameNode.getFirstChild() != null)
           || parentType == Token.INC
           || parentType == Token.DEC
+          || parentType == Token.CATCH
           || (NodeUtil.isAssignmentOp(parent)
               && parent.getFirstChild() == nameNode)
           || isLhsOfForInExpression(nameNode);
