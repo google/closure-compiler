@@ -738,10 +738,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(renameVars);
     }
 
-    if (options.groupVariableDeclarations) {
-      passes.add(groupVariableDeclarations);
-    }
-
     // This pass should run after names stop changing.
     if (options.processObjectPropertyString) {
       passes.add(objectPropertyStringPostprocess);
@@ -2200,17 +2196,6 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new CollapseVariableDeclarations(compiler);
-    }
-  };
-
-  /**
-   * Simple global collapses of variable declarations.
-   */
-  private final PassFactory groupVariableDeclarations =
-      new PassFactory("groupVariableDeclarations", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new GroupVariableDeclarations(compiler);
     }
   };
 

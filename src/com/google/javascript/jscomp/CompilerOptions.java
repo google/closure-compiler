@@ -439,9 +439,6 @@ public class CompilerOptions implements Serializable {
   /** Collapses multiple variable declarations into one */
   public boolean collapseVariableDeclarations;
 
-  /** Group multiple variable declarations into one */
-  boolean groupVariableDeclarations;
-
   /**
    * Collapses anonymous function declarations into named function
    * declarations
@@ -1024,7 +1021,6 @@ public class CompilerOptions implements Serializable {
     removeUnusedLocalVars = false;
     aliasExternals = false;
     collapseVariableDeclarations = false;
-    groupVariableDeclarations = false;
     collapseAnonymousFunctions = false;
     aliasableStrings = Collections.emptySet();
     aliasStringsBlacklist = "";
@@ -1943,10 +1939,6 @@ public class CompilerOptions implements Serializable {
 
   public void setCollapseVariableDeclarations(boolean enabled) {
     this.collapseVariableDeclarations = enabled;
-  }
-
-  public void setGroupVariableDeclarations(boolean enabled) {
-    this.groupVariableDeclarations = enabled;
   }
 
   public void setCollapseAnonymousFunctions(boolean enabled) {
