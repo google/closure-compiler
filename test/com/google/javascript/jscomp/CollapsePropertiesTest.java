@@ -2141,4 +2141,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var exports = null;\n" +
         "var y = $jscomp$scope$Foo$staticprop$A;");
   }
+
+  public void testDontCrashAtComma() {
+    test(
+        "var ns = {};\n"
+        + "ns.Foo = {};\n"
+        + "var Baz = {};\n"
+        + "Baz.Foo = ns.Foo;\n"
+        + "(Baz.Foo.bar = 10, 123);",
+
+        "var Baz$Foo=null;\n"
+        + "(ns$Foo$bar = 10, 123);");
+
+  }
 }
