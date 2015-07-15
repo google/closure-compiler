@@ -442,7 +442,6 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testCheckReferencesOn() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckSymbols(true);
-    options.setAggressiveVarCheck(CheckLevel.ERROR);
     test(options, "x = 3; var x = 5;", VariableReferenceCheck.EARLY_REFERENCE);
   }
 
@@ -850,7 +849,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.syntheticBlockStartMarker = "synStart";
     options.syntheticBlockEndMarker = "synEnd";
     options.setCheckSymbols(true);
-    options.setAggressiveVarCheck(CheckLevel.ERROR);
     options.processObjectPropertyString = true;
     options.setCollapseProperties(true);
     test(options, CLOSURE_BOILERPLATE, CLOSURE_COMPILED);

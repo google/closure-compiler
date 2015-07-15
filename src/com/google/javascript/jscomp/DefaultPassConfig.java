@@ -1416,8 +1416,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkVariableReferences", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new VariableReferenceCheck(
-          compiler, options.aggressiveVarCheck);
+      return new VariableReferenceCheck(compiler);
     }
   };
 

@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 
-
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -43,7 +42,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     // Treats bad reads as errors, and reports bad write warnings.
-    return new VariableReferenceCheck(compiler, CheckLevel.WARNING);
+    return new VariableReferenceCheck(compiler);
   }
 
   @Override
