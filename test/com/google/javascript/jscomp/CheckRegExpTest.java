@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * @author johnlenz@google.com (John Lenz)
  */
@@ -80,15 +82,30 @@ public final class CheckRegExpTest extends CompilerTestCase {
     testReference("f(RegExp);", true);
     testReference("new f(RegExp);", true);
     testReference("var x = RegExp; x.test()", true);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testReference("let x = RegExp;", true);
+    testReference("const x = RegExp;", true);
 
     // No RegExp reference is OK.
     testReference("var x;", false);
 
     // Local RegExp is OK.
     testReference("function f() {var RegExp; RegExp.test();}", false);
+    testReference("function *gen() {var RegExp; yield RegExp.test();}", false);
 
     // Property named 'RegExp' is OK.
     testReference("var x = {RegExp: {}}; x.RegExp.$1;", false);
+
+    // Class property is also OK.
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testReference(LINE_JOINER.join(
+        "class x {",
+        "  constructor() {this.RegExp = {};}",
+        "  method() {",
+        "    this.RegExp.$1;",
+        "    this.RegExp.test();",
+        "  }",
+        "}"), false);
   }
 
   public void testInvalidRange() {
