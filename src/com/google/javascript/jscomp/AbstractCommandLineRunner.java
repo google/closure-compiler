@@ -259,7 +259,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (config.warningGuards != null) {
       for (WarningGuardSpec.Entry entry : config.warningGuards.entries) {
-        diagnosticGroups.setWarningLevel(options, entry.groupName, entry.level);
+        if ("*".equals(entry.groupName)) {
+          Set<String> groupNames =
+              diagnosticGroups.getRegisteredGroups().keySet();
+          for (String groupName : groupNames) {
+            if (!DiagnosticGroups.wildcardExcludedGroups.contains(groupName)) {
+              diagnosticGroups.setWarningLevel(options, groupName, entry.level);
+            }
+          }
+        } else {
+          diagnosticGroups.setWarningLevel(options, entry.groupName,
+              entry.level);
+        }
       }
     }
 
