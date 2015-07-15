@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckProvides.MISSING_PROVIDE_WARNING;
 
 import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link CheckProvides}.
@@ -40,6 +41,27 @@ public final class CheckProvidesTest extends CompilerTestCase {
   public void testHarmless() {
     String js = "goog.provide('X'); /** @constructor */ X = function(){};";
     testSame(js);
+  }
+
+  public void testHarmlessEs6Class() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("goog.provide('X'); var X = class {};");
+    testSame("goog.provide('X'); class X {};");
+    testSame("goog.provide('foo.bar.X'); foo.bar.X = class {};");
+  }
+
+  public void testMissingProvideEs6Class() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    String js = "class X {};";
+    String warning = "missing goog.provide('X')";
+    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+
+    js = "var X = class {};";
+    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+
+    js = "foo.bar.X = class {};";
+    warning = "missing goog.provide('foo.bar.X')";
+    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
   }
 
   public void testNoProvideInnerClass() {

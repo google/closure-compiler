@@ -77,12 +77,16 @@ class CheckProvides implements HotSwapCompilerPass {
         case Token.FUNCTION:
           visitFunctionNode(n, parent);
           break;
+        case Token.CLASS:
+          visitClassNode(n);
+          break;
         case Token.SCRIPT:
           visitScriptNode();
       }
     }
 
     private void visitFunctionNode(Node n, Node parent) {
+      // TODO(user): Use NodeUtil.getBestJSDocInfo/getFunctionName to recognize all functions.
       Node name = null;
       JSDocInfo info = parent.getJSDocInfo();
       if (info != null && info.isConstructor()) {
@@ -102,6 +106,13 @@ class CheckProvides implements HotSwapCompilerPass {
             ctors.put(qualifiedName, name);
           }
         }
+      }
+    }
+
+    private void visitClassNode(Node classNode) {
+      String name = NodeUtil.getClassName(classNode);
+      if (name != null) {
+        ctors.put(name, classNode);
       }
     }
 
