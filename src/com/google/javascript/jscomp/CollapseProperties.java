@@ -172,7 +172,7 @@ class CollapseProperties implements CompilerPass {
           } else if (ref.type == Type.ALIASING_GET
               && ref.scope.isGlobal()
               && ref.getTwin() == null) { // ignore aliases in chained assignments
-            if (inlineGlobalAliasIfPossible(ref, namespace)) {
+            if (inlineGlobalAliasIfPossible(name, ref, namespace)) {
               name.removeRef(ref);
             }
           }
@@ -201,14 +201,20 @@ class CollapseProperties implements CompilerPass {
    * @return Whether the alias was inlined.
    */
   private boolean inlineGlobalAliasIfPossible(
-      Ref alias, GlobalNamespace namespace) {
+      Name name, Ref alias, GlobalNamespace namespace) {
     // Ensure that the alias is assigned to global name at that the
     // declaration.
-
     Node aliasParent = alias.node.getParent();
+    // We special-case for constructors here, to inline constructor aliases
+    // more aggressively in global scope.
+    // We do this because constructor properties are always collapsed no matter
+    // what, so we want to inline the aliases also to avoid breakages.
+    if (name.isConstructor() && aliasParent.isName()) {
+      return inlineAliasIfPossible(name, alias, namespace);
+    }
     if (aliasParent.isAssign() && NodeUtil.isExecutedExactlyOnce(aliasParent)) {
       if (aliasParent.getFirstChild().isQualifiedName()) {
-        Name name = namespace.getSlot(aliasParent.getFirstChild().getQualifiedName());
+        name = namespace.getSlot(aliasParent.getFirstChild().getQualifiedName());
         if (name != null && isInlinableGlobalAlias(name)) {
           List<AstChange> newNodes = new ArrayList<>();
 

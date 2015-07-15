@@ -1201,6 +1201,10 @@ class GlobalNamespace
     private static JSDocInfo getDocInfoForDeclaration(Ref ref) {
       if (ref.node != null) {
         Node refParent = ref.node.getParent();
+        if (refParent == null) {
+          // May happen when inlineAliases removes refs from the AST.
+          return null;
+        }
         switch (refParent.getType()) {
           case Token.FUNCTION:
           case Token.ASSIGN:

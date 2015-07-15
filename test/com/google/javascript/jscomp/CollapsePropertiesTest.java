@@ -438,13 +438,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     // People don't typically iterate through static members of a class or
     // refer to them using an alias for the class name.
     test("/** @constructor */ var a = function(){}; a.b = 1; "
-         + "var c = a; c.b = 2; a.b != c.b;",
-         "var a = function(){}; var a$b = 1; var c = a; c.b = 2; a$b != c.b;");
+         + "var c = a; c.b = 2; a.b == c.b;",
+         "var a = function(){}; var a$b = 1; var c = null; a$b = 2; a$b == a$b;");
 
     // Sometimes we want to prevent static members of a constructor from
     // being collapsed.
-    testSame("/** @constructor */ var a = function(){};"
-        + "/** @nocollapse */ a.b = 1; var c = a; c.b = 2; a.b == c.b;");
+    test("/** @constructor */ var a = function(){};"
+        + "/** @nocollapse */ a.b = 1; var c = a; c.b = 2; a.b == c.b;",
+        "/** @constructor */ var a = function(){};"
+        + "/** @nocollapse */ a.b = 1; var c = null; a.b = 2; a.b == a.b;");
   }
 
   public void testAliasCreatedForFunctionDepth1_2() {
@@ -487,15 +489,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAliasCreatedForCtorDepth2() {
     test("var a = {}; /** @constructor */ a.b = function() {}; "
          + "a.b.c = 1; var d = a.b;"
-         + "a.b.c != d.c;",
-         "var a$b = function() {}; var a$b$c = 1; var d = a$b;"
-         + "a$b$c != d.c;");
+         + "a.b.c == d.c;",
+         "var a$b = function() {}; var a$b$c = 1; var d = null;"
+         + "a$b$c == a$b$c;");
 
     test("var a = {}; /** @constructor */ a.b = function() {}; "
         + "/** @nocollapse */ a.b.c = 1; var d = a.b;"
         + "a.b.c == d.c;",
-        "var a$b = function() {}; a$b.c = 1; var d = a$b;"
-        + "a$b.c == d.c;");
+        "var a$b = function() {}; a$b.c = 1; var d = null;"
+        + "a$b.c == a$b.c;");
   }
 
   public void testAliasCreatedForClassDepth1_1() {
@@ -863,16 +865,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAddPropertyToUncollapsibleNamedCtorInLocalScopeDepth1() {
-    testSame(
-          "/** @constructor */ function a() {} var a$b; var c = a; "
-          + "(function() {a$b = 0;})(); a$b;");
+    test(
+        "/** @constructor */ function a() {} var a$b; var c = a; "
+        + "(function() {a$b = 0;})(); a$b;",
+        "/** @constructor */ function a() {} var a$b; var c = null; "
+        + "(function() {a$b = 0;})(); a$b;");
   }
 
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth1() {
     test("/** @constructor */ var a = function() {}; var c = a; "
          + "(function() {a.b = 0;})(); a.b;",
          "var a = function() {}; var a$b; "
-         + "var c = a; (function() {a$b = 0;})(); a$b;");
+         + "var c = null; (function() {a$b = 0;})(); a$b;");
   }
 
   public void testAddPropertyToUncollapsibleObjectInLocalScopeDepth2() {
@@ -892,7 +896,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth2() {
     test("var a = {}; /** @constructor */ a.b = function (){}; var d = a.b;"
          + "(function() {a.b.c = 0;})(); a.b.c;",
-         "var a$b = function (){}; var a$b$c; var d = a$b;"
+         "var a$b = function (){}; var a$b$c; var d = null;"
          + "(function() {a$b$c = 0;})(); a$b$c;");
   }
 
@@ -929,7 +933,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testAddPropertyToChildOfUncollapsibleCtorInLocalScope() {
     test("/** @constructor */ var a = function() {}; a.b = {x: 0}; var c = a;"
          + "(function() {a.b.y = 0;})(); a.b.y;",
-         "var a = function() {}; var a$b$x = 0; var a$b$y; var c = a;"
+         "var a = function() {}; var a$b$x = 0; var a$b$y; var c = null;"
          + "(function() {a$b$y = 0;})(); a$b$y;");
   }
 
@@ -2104,5 +2108,37 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test("/** @enum */ var e = { A: 1, B: 2};\n"
         + "/** @nocollapse */ e.foo = { bar: true };",
         "var e$A=1; var e$B=2; var e = {}; e.foo = { bar: true };");
+  }
+
+  public void testCodeGeneratedByGoogModule() {
+    // The static property is added to the exports object and not collapsed
+    test(
+        "var $jscomp = {};\n" +
+        "$jscomp.scope = {};\n" +
+        "/** @constructor */\n" +
+        "$jscomp.scope.Foo = function() {};\n" +
+        "var exports = $jscomp.scope.Foo;\n" +
+        "exports.staticprop = {A:1};\n" +
+        "var y = exports.staticprop.A;",
+
+        "var $jscomp$scope$Foo = function() {}\n" +
+        "var exports = null;\n" +
+        "var $jscomp$scope$Foo$staticprop = {A:1};\n" +
+        "var y = $jscomp$scope$Foo$staticprop.A;");
+
+    // The static property is added to the constructor and is collapsed
+    test(
+        "var $jscomp = {};\n" +
+        "$jscomp.scope = {};\n" +
+        "/** @constructor */\n" +
+        "$jscomp.scope.Foo = function() {};\n" +
+        "$jscomp.scope.Foo.staticprop = {A:1};\n" +
+        "var exports = $jscomp.scope.Foo;\n" +
+        "var y = exports.staticprop.A;",
+
+        "var $jscomp$scope$Foo = function() {}\n" +
+        "var $jscomp$scope$Foo$staticprop$A = 1;\n" +
+        "var exports = null;\n" +
+        "var y = $jscomp$scope$Foo$staticprop$A;");
   }
 }
