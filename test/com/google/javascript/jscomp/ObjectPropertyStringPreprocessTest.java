@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link ObjectPropertyStringPreprocess}
@@ -65,6 +66,24 @@ public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
 
   public void testStringLiteralExpectedError() {
     testError("new goog.testing.ObjectPropertyString(foo, bar)",
+        ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
+  }
+
+  public void testTemplateStringError() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError("new goog.testing.ObjectPropertyString(foo, `bar`)",
+        ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
+    testError("new goog.testing.ObjectPropertyString(foo, `${A}bar`)",
+        ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
+    testError("new goog.testing.ObjectPropertyString(foo, `bar${A}`)",
+        ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
+  }
+
+  public void testTaggedTemplateError() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError("new goog.testing.ObjectPropertyString(foo, tagged`bar`)",
+        ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
+    testError("new goog.testing.ObjectPropertyString(foo, tagged`${Foo}bar`)",
         ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
   }
 }
