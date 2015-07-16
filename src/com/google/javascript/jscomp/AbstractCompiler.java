@@ -268,11 +268,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract boolean acceptEcmaScript5();
 
   /**
-   * @return Whether the compiler accepts `const' keyword.
-   */
-  abstract boolean acceptConstKeyword();
-
-  /**
    * Represents the different contexts for which the compiler could have
    * distinct configurations.
    */

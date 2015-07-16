@@ -503,11 +503,6 @@ public class CommandLineRunner extends
         usage = "Prints out a JSON file of dependencies between modules.")
     private String outputModuleDependencies = "";
 
-    @Option(name = "--accept_const_keyword",
-        hidden = true,
-        usage = "Allows usage of const keyword.")
-    private boolean acceptConstKeyword = false;
-
     // TODO(tbreisacher): Remove the "(experimental)" for ES6 when it's stable enough.
     @Option(name = "--language_in",
         hidden = true,
@@ -1080,7 +1075,6 @@ public class CommandLineRunner extends
           .setClosureEntryPoints(flags.closureEntryPoint)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputModuleDependencies(flags.outputModuleDependencies)
-          .setAcceptConstKeyword(flags.acceptConstKeyword)
           .setLanguageIn(flags.languageIn)
           .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)

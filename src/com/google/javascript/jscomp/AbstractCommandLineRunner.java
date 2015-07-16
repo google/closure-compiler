@@ -389,7 +389,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     }
 
-    options.acceptConstKeyword = config.acceptConstKeyword;
     options.transformAMDToCJSModules = config.transformAMDToCJSModules;
     options.processCommonJSModules = config.processCommonJSModules;
     options.commonJSModulePathPrefix = config.commonJSModulePathPrefix;
@@ -2010,16 +2009,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setOutputBundle(List<String> outputBundles) {
       this.outputBundles = outputBundles;
-      return this;
-    }
-
-    private boolean acceptConstKeyword = false;
-
-    /**
-     * Sets whether to accept usage of 'const' keyword.
-     */
-    CommandLineConfig setAcceptConstKeyword(boolean acceptConstKeyword) {
-      this.acceptConstKeyword = acceptConstKeyword;
       return this;
     }
 

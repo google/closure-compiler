@@ -94,8 +94,6 @@ public final class RefactoringDriver {
 
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.ERROR);
 
-    options.setAcceptConstKeyword(true);
-
     return options;
   }
 

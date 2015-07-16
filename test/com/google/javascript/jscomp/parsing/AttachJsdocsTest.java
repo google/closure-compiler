@@ -785,7 +785,7 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     Node script = ParserRunner.parse(
         new SimpleSourceFile("input", false),
         source,
-        ParserRunner.createConfig(true, mode, false, null),
+        ParserRunner.createConfig(true, mode, null),
         testErrorReporter).ast;
 
     // verifying that all warnings were seen

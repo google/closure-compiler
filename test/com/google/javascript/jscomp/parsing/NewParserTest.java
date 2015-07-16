@@ -2698,7 +2698,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     ParseResult result = ParserRunner.parse(
         new SimpleSourceFile("input", false),
         source,
-        ParserRunner.createConfig(isIdeMode, mode, false, null),
+        ParserRunner.createConfig(isIdeMode, mode, null),
         testErrorReporter);
     Node script = result.ast;
 
@@ -2720,7 +2720,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     Node script = ParserRunner.parse(
         file,
         string,
-        ParserRunner.createConfig(isIdeMode, mode, false, null),
+        ParserRunner.createConfig(isIdeMode, mode, null),
         testErrorReporter).ast;
 
     // verifying that all warnings were seen

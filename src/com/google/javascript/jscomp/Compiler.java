@@ -2125,12 +2125,6 @@ public class Compiler extends AbstractCompiler {
             "unexpected language mode: " + options.getLanguageIn());
     }
   }
-
-  @Override
-  public boolean acceptConstKeyword() {
-    return options.acceptConstKeyword;
-  }
-
   @Override
   Config getParserConfig(ConfigContext context) {
     if (parserConfig == null) {
@@ -2177,7 +2171,6 @@ public class Compiler extends AbstractCompiler {
         isIdeMode(),
         options.isParseJsDocDocumentation(),
         mode,
-        acceptConstKeyword(),
         options.extraAnnotationNames);
   }
 

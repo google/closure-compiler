@@ -91,11 +91,6 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Whether the compiler accepts the `const' keyword.
-   */
-  boolean acceptConstKeyword;
-
-  /**
    * Whether the compiler accepts type syntax ({@code var foo: string;}).
    */
   boolean acceptTypeSyntax;
@@ -968,7 +963,6 @@ public class CompilerOptions implements Serializable {
     languageOut = LanguageMode.NO_TRANSPILE;
 
     // Language variation
-    acceptConstKeyword = false;
     acceptTypeSyntax = false;
 
     // Checks
@@ -1483,13 +1477,6 @@ public class CompilerOptions implements Serializable {
    */
   public void setChainCalls(boolean value) {
     this.chainCalls = value;
-  }
-
-  /**
-   * If true, accept `const' keyword.
-   */
-  public void setAcceptConstKeyword(boolean value) {
-    this.acceptConstKeyword = value;
   }
 
   /**

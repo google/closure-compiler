@@ -190,10 +190,9 @@ public final class JsDocInfoParser {
   public static Node parseTypeString(String typeString) {
     Config config = new Config(
         new HashSet<String>(),
-         new HashSet<String>(),
+        new HashSet<String>(),
         false,
-        LanguageMode.ECMASCRIPT3,
-        false);
+        LanguageMode.ECMASCRIPT3);
     JsDocInfoParser parser = new JsDocInfoParser(
         new JsDocTokenStream(typeString),
         typeString,
