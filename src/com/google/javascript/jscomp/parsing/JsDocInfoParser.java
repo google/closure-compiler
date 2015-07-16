@@ -473,7 +473,7 @@ public final class JsDocInfoParser {
 
         case FILE_OVERVIEW:
           String fileOverview = "";
-          if (jsdocBuilder.shouldParseDocumentation()) {
+          if (jsdocBuilder.shouldParseDocumentation() && !lookAheadForAnnotation()) {
             ExtractionInfo fileOverviewInfo =
                 extractMultilineTextualBlock(token,
                     WhitespaceOption.TRIM);
@@ -482,7 +482,7 @@ public final class JsDocInfoParser {
 
             token = fileOverviewInfo.token;
           } else {
-            token = eatTokensUntilEOL(token);
+            token = eatUntilEOLIfNotAnnotation();
           }
 
           if (!jsdocBuilder.recordFileOverview(fileOverview)) {

@@ -2297,8 +2297,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testBadModifies9() throws Exception {
-    parse("@nosideeffects\n"
-        + "@modifies {this} */", "conflicting @modifies tag");
+    parse("@nosideeffects @modifies {this} */", "conflicting @modifies tag");
   }
 
   //public void testNoParseFileOverview() throws Exception {
@@ -2338,10 +2337,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testProtectedVisibilityNotAllowedInFileOverview() {
     parseFileOverview("@fileoverview \n * @protected */",
         "protected visibility not allowed in @fileoverview block");
+    parseFileOverview("@fileoverview @protected */",
+        "protected visibility not allowed in @fileoverview block");
   }
 
   public void testPrivateVisibilityNotAllowedInFileOverview() {
     parseFileOverview("@fileoverview \n @private */",
+        "private visibility not allowed in @fileoverview block");
+    parseFileOverview("@fileoverview @private */",
         "private visibility not allowed in @fileoverview block");
   }
 
@@ -3865,6 +3868,11 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
   }
 
+  public void testJsDocAfterStatic() {
+    JSDocInfo info = parse("@static @type {number} */");
+    assertTypeEquals(NUMBER_TYPE, info.getType());
+  }
+
   public void testNonIdentifierAnnotation() {
     // Try to whitelist an annotation that is not a valid JS identifier.
     // It should not work.
@@ -4018,7 +4026,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParsePolymerBehaviorExtra() throws Exception {
     parse("@polymerBehavior \n@polymerBehavior*/", "extra @polymerBehavior tag");
   }
-
 
   public void testParseWizaction1() throws Exception {
     assertThat(parse("@wizaction*/").isWizaction()).isTrue();
