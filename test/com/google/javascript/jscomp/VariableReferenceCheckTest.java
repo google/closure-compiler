@@ -80,6 +80,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     // Only test local scope since global scope is covered elsewhere
     assertRedeclare("function f() { var a = 2; var a = 3; }");
     assertRedeclare("function f(a) { var a = 2; }");
+    assertRedeclare("function f(a) { if (!a) var a = 6; }");
   }
 
   public void testEarlyReference() {

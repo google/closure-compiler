@@ -298,7 +298,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           compiler.report(JSError.make(referenceNode, REASSIGNED_CONSTANT, v.name));
         }
 
-        if (isDeclaration && !v.isVar()
+        if (isDeclaration && !reference.isVarDeclaration()
             && reference.getGrandparent().isAddedBlock()) {
           compiler.report(JSError.make(referenceNode, DECLARATION_NOT_DIRECTLY_IN_BLOCK, v.name));
         }
