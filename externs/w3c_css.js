@@ -2043,6 +2043,11 @@ Document.prototype.elementFromPoint = function(x, y) {};
  */
 Document.prototype.caretPositionFromPoint = function(x, y) {};
 
+/**
+ * @type {Element}
+ * @see http://dev.w3.org/csswg/cssom-view/#dom-document-scrollingelement
+ */
+Document.prototype.scrollingElement;
 
 /**
  * @constructor
