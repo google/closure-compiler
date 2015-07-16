@@ -282,6 +282,7 @@ class VarCheck extends AbstractPostOrderCallback implements
         switch (parent.getType()) {
           case Token.VAR:
           case Token.FUNCTION:
+          case Token.CLASS:
           case Token.PARAM_LIST:
             // These are okay.
             break;
@@ -329,12 +330,12 @@ class VarCheck extends AbstractPostOrderCallback implements
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
 
-    JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+    JSDocInfo info = parent.getJSDocInfo();
     if (info != null && info.getSuppressions().contains("duplicate")) {
       return true;
     }
 
-    info = NodeUtil.getBestJSDocInfo(origVar.nameNode);
+    info = origParent.getJSDocInfo();
     return (info != null && info.getSuppressions().contains("duplicate"));
   }
 

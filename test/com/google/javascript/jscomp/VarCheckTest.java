@@ -449,6 +449,10 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testSuppressionWithInlineJsDoc() {
+    testSame("/** @suppress {duplicate} */ var /** number */ a; var a;");
+  }
+
   public void testDuplicateVar() {
     testError("/** @define {boolean} */ var DEF = false; var DEF = true;",
         VAR_MULTIPLY_DECLARED_ERROR);
