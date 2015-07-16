@@ -107,7 +107,6 @@ public enum WarningLevel {
     // false positives.
     options.setCheckTypes(true);
     options.setCheckGlobalNamesLevel(CheckLevel.WARNING);
-    options.setAggressiveVarCheck(CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.DEPRECATED, CheckLevel.WARNING);

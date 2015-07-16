@@ -2107,7 +2107,6 @@ public class CompilerOptions implements Serializable {
 
   public void setClosurePass(boolean closurePass) {
     this.closurePass = closurePass;
-    setAggressiveVarCheck(CheckLevel.ERROR);
   }
 
   public void setPreserveGoogRequires(boolean preserveGoogRequires) {
