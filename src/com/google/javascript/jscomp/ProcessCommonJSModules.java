@@ -23,9 +23,9 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1
@@ -37,12 +37,6 @@ import java.util.regex.Pattern;
  * ordering.
  */
 public final class ProcessCommonJSModules implements CompilerPass {
-  public static final String DEFAULT_FILENAME_PREFIX =
-      "." + ES6ModuleLoader.MODULE_SLASH;
-
-  private static final String MODULE_NAME_SEPARATOR = "\\$";
-  private static final String MODULE_NAME_PREFIX = "module$";
-
   private static final String EXPORTS = "exports";
 
   private final Compiler compiler;
@@ -91,23 +85,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
   }
 
   String inputToModuleName(CompilerInput input) {
-    return toModuleName(loader.getLoadAddress(input));
-  }
-
-  /**
-   * Turns a filename into a JS identifier that is used for moduleNames in
-   * rewritten code. Removes leading ./, replaces / with $, removes trailing .js
-   * and replaces - with _. All moduleNames get a "module$" prefix.
-   */
-  public static String toModuleName(String filename) {
-    return MODULE_NAME_PREFIX +
-        filename.replaceAll("^\\." + Pattern.quote(ES6ModuleLoader.MODULE_SLASH), "")
-            .replaceAll(Pattern.quote(ES6ModuleLoader.MODULE_SLASH), MODULE_NAME_SEPARATOR)
-            .replaceAll(Pattern.quote("\\"), MODULE_NAME_SEPARATOR)
-            .replaceAll("\\.js$", "")
-            .replaceAll("-", "_")
-            .replaceAll(":", "_")
-            .replaceAll("\\.", "");
+    return ES6ModuleLoader.toModuleName(loader.normalizeInputAddress(input));
   }
 
   /**
@@ -185,14 +163,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = require.getChildAtIndex(1).getString();
-      String loadAddress = loader.locate(requireName, t.getInput());
-      try {
-        loader.load(loadAddress);
-      } catch (ES6ModuleLoader.LoadFailedException e) {
-        t.makeError(require, ES6ModuleLoader.LOAD_ERROR, requireName);
+      URI loadAddress = loader.locateCommonJsModule(requireName, t.getInput());
+      if (loadAddress == null) {
+        compiler.report(t.makeError(require, ES6ModuleLoader.LOAD_ERROR, requireName));
+        return;
       }
 
-      String moduleName = toModuleName(loadAddress);
+      String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
       Node moduleRef = IR.name(moduleName).srcref(require);
       parent.replaceChild(require, moduleRef);
       Node script = getCurrentScriptNode(parent);
@@ -454,13 +431,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           String moduleName = name.substring(0, endIndex);
-          String loadAddress = loader.locate(moduleName, t.getInput());
+          URI loadAddress = loader.locateCommonJsModule(moduleName, t.getInput());
           if (loadAddress == null) {
             t.makeError(typeNode, ES6ModuleLoader.LOAD_ERROR, moduleName);
             return;
           }
 
-          String globalModuleName = toModuleName(loadAddress);
+          String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
           typeNode.setString(
               localTypeName == null ?
               globalModuleName :

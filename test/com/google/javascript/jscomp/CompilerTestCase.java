@@ -225,6 +225,10 @@ public abstract class CompilerTestCase extends TestCase  {
     this.filename = filename;
   }
 
+  public String getFilename() {
+    return filename;
+  }
+
   /**
    * Returns the number of times the pass should be run before results are
    * verified.
@@ -955,7 +959,16 @@ public abstract class CompilerTestCase extends TestCase  {
     compiler.addChangeHandler(recentChange);
 
     Node root = compiler.parseInputs();
-    assertNotNull("Unexpected parse error(s): " + LINE_JOINER.join(compiler.getErrors()), root);
+    
+    String errorMsg = LINE_JOINER.join(compiler.getErrors());
+    if (root == null && expected == null && error != null) {
+      // Might be an expected parse error.
+      assertEquals("Expected one parse error, but got " + errorMsg, 1, compiler.getErrorCount());
+      JSError actualError = compiler.getErrors()[0];
+      assertEquals("Unexpected parse error(s): " + errorMsg, error, actualError.getType());
+      return;
+    }
+    assertNotNull("Unexpected parse error(s): " + errorMsg, root);
     if (!expectParseWarningsThisTest) {
       assertEquals(
           "Unexpected parse warnings(s): " + LINE_JOINER.join(compiler.getWarnings()),
@@ -980,9 +993,6 @@ public abstract class CompilerTestCase extends TestCase  {
     int aggregateWarningCount = 0;
     List<JSError> aggregateWarnings = new ArrayList<>();
     boolean hasCodeChanged = false;
-
-    assertFalse("Code should not change before processing",
-        recentChange.hasCodeChanged());
 
     for (int i = 0; i < numRepetitions; ++i) {
       if (compiler.getErrorCount() == 0) {

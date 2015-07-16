@@ -788,8 +788,7 @@ public class CompilerOptions implements Serializable {
   boolean processCommonJSModules = false;
 
   /** CommonJS module prefix. */
-  String commonJSModulePathPrefix =
-      ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
+  List<String> moduleRoots = ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
 
   //--------------------------------
@@ -2284,10 +2283,17 @@ public class CompilerOptions implements Serializable {
   }
 
   /**
-   * Sets a path prefix for CommonJS modules.
+   * Sets a path prefix for CommonJS modules (maps to {@link #setModuleRoots(List)}).
    */
   public void setCommonJSModulePathPrefix(String commonJSModulePathPrefix) {
-    this.commonJSModulePathPrefix = commonJSModulePathPrefix;
+    setModuleRoots(ImmutableList.of(commonJSModulePathPrefix));
+  }
+
+  /**
+   * Sets the module roots.
+   */
+  public void setModuleRoots(List<String> moduleRoots) {
+    this.moduleRoots = moduleRoots;
   }
 
   /**

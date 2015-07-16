@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.rhino.Node;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,11 +34,20 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new ProcessCommonJSModules(
-        compiler,
-        new ES6ModuleLoader(compiler, "foo/bar/"),
-        false);
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        // Process only the last child to avoid issues with multiple scripts.
+        Node testCodeScript = root.getLastChild();
+        assertEquals("Last source should be main test script", getFilename() + ".js",
+            testCodeScript.getSourceFileName());
+        ProcessCommonJSModules processor = new ProcessCommonJSModules(
+          compiler,
+          new ES6ModuleLoader(ImmutableList.of("foo/bar/"), compiler.getInputsForTesting()),
+          false);
+        processor.process(externs, testCodeScript);
+      }};
   }
 
   @Override
@@ -44,20 +55,26 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     return 1;
   }
 
+  void testModules(String input, String expected) {
+    ProcessEs6ModulesTest.testModules(this, input, expected);
+  }
+
   public void testWithoutExports() {
     setFilename("test");
-    test(
-        "var name = require('name');" +
+    testModules(
+        "var name = require('other');" +
         "name()",
         "goog.provide('module$test');" +
         "var module$test = {};" +
-        "goog.require('module$name');" +
-        "var name$$module$test = module$name;" +
+        "goog.require('module$other');" +
+        "var name$$module$test = module$other;" +
         "name$$module$test();");
     setFilename("test/sub");
-    test(
-        "var name = require('mod/name');" +
-        "(function() { name(); })();",
+    ProcessEs6ModulesTest.testModules(this,
+        ImmutableList.of(
+            SourceFile.fromCode("mod/name.js", ""),
+            SourceFile.fromCode("test/sub.js",
+                "var name = require('mod/name');" + "(function() { name(); })();")),
         "goog.provide('module$test$sub');" +
         "var module$test$sub = {};" +
         "goog.require('module$mod$name');" +
@@ -67,26 +84,26 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   public void testExports() {
     setFilename("test");
-    test(
-        "var name = require('name');" +
+    testModules(
+        "var name = require('other');" +
         "exports.foo = 1;",
         "goog.provide('module$test');" +
         "/** @const */ var module$test = {};" +
-        "goog.require('module$name');" +
-        "var name$$module$test = module$name;" +
+        "goog.require('module$other');" +
+        "var name$$module$test = module$other;" +
         "module$test.foo = 1;");
-    test(
-        "var name = require('name');" +
+    testModules(
+        "var name = require('other');" +
         "module.exports = function() {};",
         "goog.provide('module$test');" +
-        "goog.require('module$name');" +
-        "var name$$module$test = module$name;" +
+        "goog.require('module$other');" +
+        "var name$$module$test = module$other;" +
         "/** @const */ var module$test = function () {};");
   }
 
   public void testPropertyExports() {
     setFilename("test");
-    test(
+    testModules(
         "exports.one = 1;" +
         "module.exports.obj = {};" +
         "module.exports.obj.two = 2;",
@@ -99,7 +116,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   public void testModuleExportsWrittenWithExportsRefs() {
     setFilename("test");
-    test(
+    testModules(
         "exports.one = 1;" +
         "module.exports = {};",
         "goog.provide('module$test');" +
@@ -111,7 +128,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   public void testVarRenaming() {
     setFilename("test");
-    test(
+    testModules(
         "var a = 1, b = 2;" +
         "(function() { var a; b = 4})()",
         "goog.provide('module$test');" +
@@ -122,35 +139,39 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   public void testDash() {
     setFilename("test-test");
-    test(
-        "var name = require('name'); exports.foo = 1;",
+    testModules(
+        "var name = require('other'); exports.foo = 1;",
         "goog.provide('module$test_test');" +
         "var module$test_test = {};" +
-        "goog.require('module$name');" +
-        "var name$$module$test_test = module$name;" +
+        "goog.require('module$other');" +
+        "var name$$module$test_test = module$other;" +
         "module$test_test.foo = 1;");
   }
 
   public void testIndex() {
-    setFilename("foo/index.js");
-    test(
-        "var name = require('../name'); exports.bar = 1;",
+    setFilename("foo/index");
+    testModules(
+        "var name = require('../other'); exports.bar = 1;",
         "goog.provide('module$foo$index');" +
         "var module$foo$index = {};" +
-        "goog.require('module$name');" +
-        "var name$$module$foo$index = module$name;" +
+        "goog.require('module$other');" +
+        "var name$$module$foo$index = module$other;" +
         "module$foo$index.bar = 1;");
   }
 
   public void testModuleName() {
     setFilename("foo/bar");
-    test(
-        "var name = require('name');",
+    testModules(
+        "var name = require('other');",
         "goog.provide('module$foo$bar'); var module$foo$bar = {};" +
-        "goog.require('module$name');" +
-        "var name$$module$foo$bar = module$name;");
-    test(
-        "var name = require('./name');",
+        "goog.require('module$other');" +
+        "var name$$module$foo$bar = module$other;");
+    ProcessEs6ModulesTest.testModules(
+        this,
+        ImmutableList.of(
+            SourceFile.fromCode("foo/name.js", ""),
+            SourceFile.fromCode("foo/bar.js",
+                "var name = require('./name');")),
         "goog.provide('module$foo$bar');" +
         "var module$foo$bar = {};" +
         "goog.require('module$foo$name');" +
@@ -187,7 +208,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     compiler.initCompilerOptionsIfTesting();
     compiler.getOptions().setProcessCommonJSModules(true);
     compiler.getOptions().dependencyOptions.setEntryPoints(
-        ImmutableList.of(ProcessCommonJSModules.toModuleName("a")));
+        ImmutableList.of(ES6ModuleLoader.toModuleName(URI.create("a"))));
     compiler.compile(ImmutableList.of(SourceFile.fromCode("externs.js", "")),
         shuffled, compiler.getOptions());
 
