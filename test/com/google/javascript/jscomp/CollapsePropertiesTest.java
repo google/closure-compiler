@@ -2111,7 +2111,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testCodeGeneratedByGoogModule() {
-    // The static property is added to the exports object and not collapsed
+    // The static property is added to the exports object
     test(
         "var $jscomp = {};\n" +
         "$jscomp.scope = {};\n" +
@@ -2123,10 +2123,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
         "var $jscomp$scope$Foo = function() {}\n" +
         "var exports = null;\n" +
-        "var $jscomp$scope$Foo$staticprop = {A:1};\n" +
-        "var y = $jscomp$scope$Foo$staticprop.A;");
+        "var $jscomp$scope$Foo$staticprop$A = 1;\n" +
+        "var y = $jscomp$scope$Foo$staticprop$A;");
 
-    // The static property is added to the constructor and is collapsed
+    // The static property is added to the constructor
     test(
         "var $jscomp = {};\n" +
         "$jscomp.scope = {};\n" +
@@ -2152,6 +2152,34 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
         "var Baz$Foo=null;\n"
         + "(ns$Foo$bar = 10, 123);");
+  }
 
+  public void testInlineCtorInObjLit() {
+    test(
+        "/** @constructor */\n"
+        + "function Foo() {}\n"
+        + "/** @constructor */\n"
+        + "var Bar = Foo;\n"
+        + "var objlit = {\n"
+        + "  'prop' : Bar\n"
+        + "};",
+
+        "function Foo() {}\n"
+        + "var Bar = null;\n"
+        + "var objlit$prop = Foo;");
+  }
+
+  public void testDontCrashCtorAliasWithEnum() {
+    test(
+        "var ns = {};\n"
+        + "/** @constructor */\n"
+        + "ns.Foo = function () {};\n"
+        + "var Bar = ns.Foo;\n"
+        + "/** @const @enum */\n"
+        + "Bar.prop = { A: 1 };",
+
+        "var ns$Foo = function(){};\n"
+        + "var Bar = null;\n"
+        + "var ns$Foo$prop$A = 1");
   }
 }
