@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Token;
 /**
  * Rewrites ES6 destructuring patterns and default parameters to valid ES3 code.
  */
-public final class Es6RewriteDestructuring implements NodeTraversal.Callback, CompilerPass {
+public final class Es6RewriteDestructuring implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
   private static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
@@ -36,7 +36,13 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Co
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverse(compiler, externs, this);
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override

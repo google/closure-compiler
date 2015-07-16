@@ -23,6 +23,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6_TYPED);
+    enableCompareAsTree(true);
   }
 
   @Override
@@ -252,14 +253,17 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   }
 
   public void testAmbientDeclaration() {
-    test("declare var x;", "/** @suppress {duplicate} */ var x;");
-    test("declare let x;", "/** @suppress {duplicate} */ var x;");
-    test("declare const x;", "/** @suppress {duplicate} @const */ var x;");
-    test("declare function f(): number;",
-         "/** @suppress {duplicate, missingReturn} @return {number} */ function f() {}");
-    test("declare enum Foo {}", "/** @suppress {duplicate} @enum {number} */ var Foo = {}");
-    test("declare class C { constructor(); };",
-         "/** @suppress {duplicate} */ class C { constructor() {} }");
+    enableCompareAsTree(false);
+    testExternChanges(
+        "declare var x: number;",
+        "/** @suppress {duplicate} */ var /** number */ x;");
+    testExternChanges("declare let x;", "var x;");
+    testExternChanges("declare const x;", "/** @const */ var x;");
+    testExternChanges("declare function f(): number;", "/** @return {number} */ function f() {}");
+    testExternChanges(
+        "declare enum Foo {}",
+        "/** @suppress {duplicate} @enum {number} */ var Foo = {}");
+    testExternChanges("declare class C { constructor(); };", "class C { constructor() {} }");
   }
 
   public void testIndexSignature() {

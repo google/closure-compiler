@@ -68,6 +68,7 @@ public final class Es6TypedToEs6Converter
 
   @Override
   public void process(Node externs, Node scriptRoot) {
+    NodeTraversal.traverse(compiler, externs, this);
     NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
@@ -107,7 +108,7 @@ public final class Es6TypedToEs6Converter
         visitTypeAlias(t, n, parent);
         break;
       case Token.DECLARE:
-        visitAmbientDeclaration(n, parent);
+        visitAmbientDeclaration(n);
         break;
       default:
     }
@@ -333,14 +334,12 @@ public final class Es6TypedToEs6Converter
     compiler.reportCodeChange();
   }
 
-  private void visitAmbientDeclaration(Node n, Node parent) {
+  private void visitAmbientDeclaration(Node n) {
     Node child = n.removeFirstChild();
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(child.getJSDocInfo());
-    builder.addSuppression("duplicate");
     switch (child.getType()) {
       case Token.FUNCTION:
         child.replaceChild(child.getLastChild(), IR.block().useSourceInfoFrom(child));
-        builder.addSuppression("missingReturn");
         break;
       case Token.CLASS:
         Node members = child.getLastChild();
@@ -352,6 +351,10 @@ public final class Es6TypedToEs6Converter
           }
         }
         break;
+      case Token.ENUM:
+      case Token.VAR:
+        builder.addSuppression("duplicate");
+        break;
       case Token.LET:
         child.setType(Token.VAR);
         break;
@@ -362,7 +365,8 @@ public final class Es6TypedToEs6Converter
     }
     child.setJSDocInfo(builder.build());
 
-    parent.replaceChild(n, child);
+    n.detachFromParent();
+    compiler.getSynthesizedExternsInput().getAstRoot(compiler).addChildToBack(child);
     compiler.reportCodeChange();
   }
 

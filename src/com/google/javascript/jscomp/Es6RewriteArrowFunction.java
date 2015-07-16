@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Token;
  * Converts ES6 arrow functions to standard anonymous ES3 functions.
  */
 public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallback
-    implements CompilerPass {
+    implements HotSwapCompilerPass {
 
   static final DiagnosticType THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT = DiagnosticType.warning(
       "JSC_THIS_REFERENCE_IN_ARROWFUNC_OF_OBJLIT",
@@ -43,7 +43,13 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverse(compiler, externs, this);
     NodeTraversal.traverse(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverse(compiler, scriptRoot, this);
   }
 
   @Override
