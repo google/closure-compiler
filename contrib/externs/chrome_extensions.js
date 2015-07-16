@@ -247,69 +247,7 @@ chrome.app.runtime.LaunchItem.prototype.entry;
 chrome.app.runtime.LaunchItem.prototype.type;
 
 
-
-/**
- * @constructor
- * @see http://developer.chrome.com/apps/app_runtime.html
- */
-chrome.app.runtime.LaunchData = function() {};
-
-
-/** @type {string|undefined} */
-chrome.app.runtime.LaunchData.prototype.id;
-
-
-/** @type {!Array.<!chrome.app.runtime.LaunchItem>|undefined} */
-chrome.app.runtime.LaunchData.prototype.items;
-
-
-/** @type {string|undefined} */
-chrome.app.runtime.LaunchData.prototype.url;
-
-
-/** @type {string|undefined} */
-chrome.app.runtime.LaunchData.prototype.referrerUrl;
-
-
-/** @type {boolean|undefined} */
-chrome.app.runtime.LaunchData.prototype.isKioskSession;
-
-
-
-/**
- * The type of chrome.app.runtime.onLaunched.
- * @constructor
- */
-chrome.app.runtime.LaunchEvent = function() {};
-
-
-/**
- * @param {function(!chrome.app.runtime.LaunchData)} callback
- * @see http://developer.chrome.com/apps/app.runtime.html#event-onLaunched
- */
-chrome.app.runtime.LaunchEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.app.runtime.LaunchData)} callback
- */
-chrome.app.runtime.LaunchEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.app.runtime.LaunchData)} callback
- * @return {boolean}
- */
-chrome.app.runtime.LaunchEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.app.runtime.LaunchEvent.prototype.hasListeners = function() {};
-
-
-/** @type {!chrome.app.runtime.LaunchEvent} */
+/** @type {!ChromeObjectEvent} */
 chrome.app.runtime.onLaunched;
 
 
