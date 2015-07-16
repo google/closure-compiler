@@ -124,6 +124,12 @@ public final class NodeUtil {
    */
   static TernaryValue getPureBooleanValue(Node n) {
     switch (n.getType()) {
+      case Token.TEMPLATELIT:
+        if (n.hasOneChild()) {
+          return TernaryValue.forBoolean(!n.getFirstChild().getString().isEmpty());
+        }
+        break;
+
       case Token.STRING:
         return TernaryValue.forBoolean(n.getString().length() > 0);
 
@@ -157,6 +163,7 @@ public final class NodeUtil {
 
       case Token.TRUE:
       case Token.REGEXP:
+      case Token.CLASS:
         return TernaryValue.TRUE;
 
       case Token.ARRAYLIT:
@@ -2067,13 +2074,8 @@ public final class NodeUtil {
       case Token.DO:
         return n.getLastChild();
       case Token.FOR:
-        switch (n.getChildCount()) {
-          case 3:
-            return null;
-          case 4:
-            return n.getFirstChild().getNext();
-        }
-        throw new IllegalArgumentException("malformed 'for' statement " + n);
+        return NodeUtil.isForIn(n) ? null : n.getFirstChild().getNext();
+      case Token.FOR_OF:
       case Token.CASE:
         return null;
     }

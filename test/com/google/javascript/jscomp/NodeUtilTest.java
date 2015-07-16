@@ -113,6 +113,13 @@ public final class NodeUtilTest extends TestCase {
     // Known but getBooleanValue return false for expressions with side-effects
     assertPureBooleanUnknown("{a:foo()}");
     assertPureBooleanUnknown("[foo()]");
+
+    assertPureBooleanTrue("`definiteLength`");
+    assertPureBooleanFalse("``");
+    assertPureBooleanUnknown("`${indefinite}Length`");
+
+    assertPureBooleanTrue("class Klass{}");
+
   }
 
   private void assertPureBooleanTrue(String val) {

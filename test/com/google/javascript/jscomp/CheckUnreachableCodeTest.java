@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link CheckUnreachableCode}.
  *
@@ -208,6 +210,90 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "  function g() { if(false) { } }\n" +
         "}\n");
   }
+
+  public void testES6FeaturesInIfExpression() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    // class X{} always eval to true by toBoolean();
+    assertUnreachable("if(!class {}) x = 1;");
+    assertUnreachable("if(!class A{}) x = 1;");
+
+    // Template string with substitution and tagged template will be evaluated
+    // to UNKNOWN. Template string with definite length (without substitution)
+    // will be evaled like a normal string.
+    assertUnreachable("if(!`tempLit`) {x = 1;}");
+    assertUnreachable("if(``) {x = 1;}");
+    testSame("if(`temp${sub}Lit`) {x = 1;} else {x = 2;}");
+    testSame("if(`${sub}`) {x = 1;} else {x = 2;}");
+    testSame("if(tagged`tempLit`) {x = 1;} else {x = 2;}");
+
+    // Functions were deemed UNKNOWN, so they remain UNKNOWN.
+    // TODO(tbreisacher): Treat functions as truthy.
+    testSame("if(()=>true) {x = 1;} else {x = 2;}");
+  }
+
+  public void testES6FeaturesInTryCatch() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    assertUnreachable("try { let x = 1; } catch(e) {}");
+    assertUnreachable("try { const x = 1; } catch(e) {}");
+    assertUnreachable("try {()=>42;} catch(e) {}");
+    assertUnreachable("try {function *gen(){};} catch(e) {}");
+    // Assumed tagged template may throw exception.
+    testSame("try {tagged`temp`;} catch(e) {}");
+
+    assertUnreachable("try { var obj = {a(){}};} catch(e) {}");
+    testSame("try { var obj = {a(){}}; obj.a();} catch(e) {}");
+  }
+
+  public void testCorrectForOfBreakAndContinues() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("for(x of [1, 2, 3]) {foo();}");
+    testSame("for(x of [1, 2, 3]) {foo(); break;}");
+    testSame("for(x of [1, 2, 3]) {foo(); continue;}");
+  }
+
+  public void testInCorrectForOfBreakAndContinues() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    assertUnreachable("for(x of [1, 2, 3]) {foo(); break; bar();}");
+    assertUnreachable("for(x of [1, 2, 3]) {foo(); continue; bar();}");
+
+    assertUnreachable("for(x of [1, 2, 3]) {if(x) {break; bar();}}");
+    //TODO(user): ES6 scope creator could not correctly handle its scope yet.
+    //                Enable the test after functional scope creator is in place.
+    //assertUnreachable("for(x of [1, 2, 3]) {if(x) {continue; bar();}}");
+  }
+
+  public void testReturnsInShorthandFunctionOfObjLit() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame(LINE_JOINER.join(
+        "var obj = {",
+        "  f() { ",
+        "    switch(x) { ",
+        "      default: return; ",
+        "      case 1: x++; ",
+        "    }",
+        "  }",
+        "}"));
+    assertUnreachable(LINE_JOINER.join(
+        "var obj = {f() {",
+        "  switch(x) { ",
+        "    default: return; ",
+        "    case 1: return; ",
+        "  }",
+        "  return; ",
+        "}}"));
+    testSame("var obj = {f() { if(x) {return;} else {return; }}}");
+    assertUnreachable(LINE_JOINER.join(
+        "var obj = {f() { ",
+        "  if(x) {",
+        "    return;",
+        "  } else {",
+        "    return;",
+        "  }",
+        "  return; ",
+        "}}"));
+  }
+
+
 
   private void assertUnreachable(String js) {
     test(js, js, null, CheckUnreachableCode.UNREACHABLE_CODE);
