@@ -73,8 +73,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     protected final Node value;
 
     Export(String symbolName, Node value) {
-      this.symbolName = symbolName;
-      this.value = value;
+      this.symbolName = Preconditions.checkNotNull(symbolName);
+      this.value = Preconditions.checkNotNull(value);
     }
 
     /**
@@ -329,7 +329,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     public PropertyExport(String exportPath, String symbolName, Node value) {
       super(symbolName, value);
 
-      this.exportPath = exportPath;
+      this.exportPath = Preconditions.checkNotNull(exportPath);
     }
 
     @Override
@@ -528,12 +528,11 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
 
     String constructorName = NodeUtil.getFunctionName(constructorNode);
     String propertyName = definitionNode.getLastChild().getString();
+    String prototypeName = constructorName + ".prototype";
+    Node propertyNameNode = NodeUtil.newQName(compiler, "this." + propertyName);
 
     // Add the export to the list.
-    this.exports.add(
-        new PropertyExport(constructorName + ".prototype",
-                           propertyName,
-                           NodeUtil.getRValueOfLValue(definitionNode)));
+    this.exports.add(new PropertyExport(prototypeName, propertyName, propertyNameNode));
   }
 
 }

@@ -532,6 +532,32 @@ public final class ExternExportsPassTest extends TestCase {
         + "F.prototype.x;\n");
   }
 
+  public void testExportLocalPropertyInConstructor3() throws Exception {
+    compileAndCheck(
+        "/** @constructor */function F() { /** @export */ this.x;}"
+        + "goog.exportSymbol('F', F);",
+        "/**\n"
+        + " * @constructor\n"
+        + " */\n"
+        + "var F = function() {\n};\n"
+        + "F.prototype.x;\n");
+  }
+
+  public void testExportLocalPropertyInConstructor4() throws Exception {
+    compileAndCheck(
+        "/** @constructor */function F() { /** @export */ this.x = function(/** string */ x){};}"
+        + "goog.exportSymbol('F', F);",
+        "/**\n"
+        + " * @constructor\n"
+        + " */\n"
+        + "var F = function() {\n};\n"
+        + "/**\n"
+        + " * @param {string} x\n"
+        + " * @return {undefined}\n"
+        + " */\n"
+        + "F.prototype.x = function(x) {\n};\n");
+  }
+
   public void testExportLocalPropertyNotInConstructor() throws Exception {
     compileAndCheck(
         "function f() { /** @export */ this.x = 5;}"
