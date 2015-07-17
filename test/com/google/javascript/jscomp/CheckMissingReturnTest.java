@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link CheckMissingReturn}.
@@ -71,6 +71,8 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
     // Test try catch finally.
     testNotMissing("try { return foo() } catch (e) { } finally { }");
+    testNotMissing("try {throw e;} catch (e) { return foo() } finally { }");
+    testNotMissing("try {} catch (e) {} finally {return foo()};");
 
     // Nested function.
     testNotMissing(
@@ -228,13 +230,43 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     return "/** @return {" + returnType + "} */ function foo() {" + body + "}";
   }
 
-  private void testMissing(String returnType, String body) {
+  private static String createShorthandFunctionInObjLit(
+      String returnType, String body) {
+    return LINE_JOINER.join(
+        "var obj = {",
+        "  /** @return {" + returnType + "} */",
+        "  foo() {", body, "}",
+        "}");
+  }
+
+  private void testMissingInTraditionalFunction(String returnType, String body) {
     String js = createFunction(returnType, body);
     testError(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
-  private void testNotMissing(String returnType, String body) {
+  private void testNotMissingInTraditionalFunction(String returnType, String body) {
     testSame(createFunction(returnType, body));
+  }
+
+  private void testMissingInShorthandFunction(String returnType, String body) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    String js = createShorthandFunctionInObjLit(returnType, body);
+    testError(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
+  }
+
+  private void testNotMissingInShorthandFunction(String returnType, String body) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame(createShorthandFunctionInObjLit(returnType, body));
+  }
+
+  private void testMissing(String returnType, String body) {
+    testMissingInTraditionalFunction(returnType, body);
+    testMissingInShorthandFunction(returnType, body);
+  }
+
+  private void testNotMissing(String returnType, String body) {
+    testNotMissingInTraditionalFunction(returnType, body);
+    testNotMissingInShorthandFunction(returnType, body);
   }
 
   /** Creates function with return type {number} */
