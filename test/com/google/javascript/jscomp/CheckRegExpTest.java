@@ -91,6 +91,7 @@ public final class CheckRegExpTest extends CompilerTestCase {
 
     // Local RegExp is OK.
     testReference("function f() {var RegExp; RegExp.test();}", false);
+    testReference("function f() {let RegExp; RegExp.test();}", false);
     testReference("function *gen() {var RegExp; yield RegExp.test();}", false);
 
     // Property named 'RegExp' is OK.
