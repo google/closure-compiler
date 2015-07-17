@@ -529,6 +529,11 @@ angular.JQLite.prototype.css = function(nameOrObject, opt_value) {};
 angular.JQLite.prototype.data = function(opt_key, opt_value) {};
 
 /**
+ * @return {!angular.JQLite}
+ */
+angular.JQLite.prototype.detach = function() {};
+
+/**
  * @param {number} index
  * @return {!angular.JQLite}
  */
