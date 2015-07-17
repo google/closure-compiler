@@ -25,49 +25,49 @@ var FB = {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.getsession/
- * @return {Object.<*,*>}
+ * @return {Object<string,*>}
  */
 FB.getSession = function() { };
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.api/
  * @param {string} path
- * @param {(string|Object.<string, *>|function(Object.<*,*>))=} method
- * @param {(Object.<string, *>|function(Object.<*,*>))=} params
- * @param {function(Object.<*,*>)=} callback
+ * @param {(string|Object<string, *>|function(Object<string,*>))=} method
+ * @param {(Object<string, *>|function(Object<string,*>))=} params
+ * @param {function(Object<string,*>)=} callback
  */
 FB.api = function(path, method, params, callback) { };
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.getloginstatus/
- * @param {function(Object.<*,*>)} callback
+ * @param {function(Object<string,*>)} callback
  * @param {boolean=} force
  */
 FB.getLoginStatus = function(callback, force) {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.init/
- * @param {Object.<string,*>=} opt_opts
+ * @param {Object<string,*>=} opt_opts
  */
 FB.init = function(opt_opts) {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.login/
- * @param {function(Object.<*,*>)} callback
- * @param {Object.<string,*>=} opt_opts
+ * @param {function(Object<string,*>)} callback
+ * @param {Object<string,*>=} opt_opts
  */
 FB.login = function(callback, opt_opts) {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.logout/
- * @param {function(Object.<*,*>)=} callback
+ * @param {function(Object<string,*>)=} callback
  */
 FB.logout = function(callback) {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.ui/
- * @param {Object.<string, *>} params
- * @param {function(Object.<*,*>)=} callback
+ * @param {Object<string, *>} params
+ * @param {function(Object<string,*>)=} callback
  */
 FB.ui = function(params, callback) { };
 
@@ -77,14 +77,14 @@ FB.Event = {};
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.Event.subscribe/
  * @param {string} eventName
- * @param {function(Object.<*,*>)} callback
+ * @param {function(Object<string,*>)} callback
  */
 FB.Event.subscribe = function(eventName, callback) {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.Event.unsubscribe/
  * @param {string} eventName
- * @param {function(Object.<*,*>)} callback
+ * @param {function(Object<string,*>)} callback
  */
 FB.Event.unsubscribe = function(eventName, callback) {};
 
@@ -94,7 +94,7 @@ FB.XFBML = {};
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.XFBML.parse/
  * @param {Element=} node
- * @param {function(Object.<*,*>)=} callback
+ * @param {function(Object<string,*>)=} callback
  */
 FB.XFBML.parse = function(node, callback) {};
 
@@ -119,9 +119,9 @@ FB.Data.query = function(template, var_data) {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.data.waiton/
- * @param {Array.<*>} dependencies
- * @param {function(Object.<*,*>)} callback
- * @return {Object.<*,*>}
+ * @param {Array<*>} dependencies
+ * @param {function(Object<string,*>)} callback
+ * @return {Object<string,*>}
  */
 FB.Data.waitOn = function(dependencies, callback) {};
 
@@ -137,12 +137,12 @@ FB.Canvas.setAutoResize = function(onOrOff, interval) {};
 
 /**
  * @see http://developers.facebook.com/docs/reference/javascript/fb.Canvas.setSize/
- * @param {Object.<*, number>} params
+ * @param {Object<string, number>} params
  */
 FB.Canvas.setSize = function(params) {};
 
 /**
  * @see https://developers.facebook.com/docs/reference/javascript/FB.Canvas.getPageInfo/
- * @param {function(Object.<*,*>)} callback
+ * @param {function(Object<string,*>)} callback
  */
 FB.Canvas.getPageInfo = function(callback) {};
