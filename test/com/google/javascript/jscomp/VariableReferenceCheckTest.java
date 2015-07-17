@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Test that warnings are generated in appropriate cases and appropriate
@@ -56,6 +57,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("function foo() { bar(); } function bar() { foo(); } ");
     assertNoWarning("function f(d) { d = 3; }");
     assertNoWarning(VARIABLE_RUN);
+    assertNoWarning("if (a) { var x; }");
     assertNoWarning("function f() { " + VARIABLE_RUN + "}");
   }
 
@@ -74,6 +76,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testCorrectCatch() {
     assertNoWarning("function f() { try { var x = 2; } catch (x) {} }");
+    assertNoWarning("function f(e) { e = 3; try {} catch (e) {} }");
   }
 
   public void testRedeclare() {
@@ -191,12 +194,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
    */
   private void assertRedeclare(String js) {
     testSame(js, VariableReferenceCheck.REDECLARED_VARIABLE);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame(js, VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
   /**
    * Expects the JS to generate one bad-write warning.
    */
   private void assertUndeclared(String js) {
+    testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
   }
 
@@ -205,13 +212,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
    */
   private void assertAmbiguous(String js) {
     testSame(js, VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame(js); // In ES6, these are block scoped functions, so no ambiguity.
   }
-
 
   /**
    * Expects the JS to generate no errors or warnings.
    */
   private void assertNoWarning(String js) {
+    testSame(js);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testSame(js);
   }
 }

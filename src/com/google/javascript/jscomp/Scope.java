@@ -173,12 +173,28 @@ public class Scope implements StaticScope {
       if (scope.vars.containsKey(name)) {
         return true;
       }
-      if (scope.parent != null && recurse) {
+
+      // In ES6, we create a separate "function parameter scope" above the function block scope to
+      // handle default parameters. Since nothing in the function block scope is allowed to shadow
+      // the variables in the function scope, we treat the two scopes as one in this method.
+      if (scope.isFunctionBlockScope() || (scope.parent != null && recurse)) {
         scope = scope.parent;
         continue;
       }
       return false;
     }
+  }
+
+  public boolean isDeclaredInFunction(String name) {
+    if (vars.containsKey(name)) {
+      return true;
+    }
+    Scope parent = getParent();
+    if (parent != null && parent.getRootNode().isFunction()
+        && parent.isDeclared(name, false)) {
+      return true;
+    }
+    return false;
   }
 
   /**

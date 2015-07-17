@@ -115,10 +115,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         ReferenceCollection referenceCollection = referenceMap.getReferences(v);
         // TODO(moz): Figure out why this could be null
         if (referenceCollection != null) {
-          if (scope.getRootNode().isFunction() && v.getParentNode().isDefaultValue()
-              && v.getParentNode().getFirstChild() == v.getNode()) {
+          if (scope.getRootNode().isFunction() && v.isDefaultParam()) {
             checkDefaultParam(v, scope);
-          } else if (scope.isFunctionBlockScope()) {
+          }
+          if (scope.getRootNode().isFunction()) {
             checkShadowParam(v, scope, referenceCollection.references);
           }
           checkVar(v, referenceCollection.references);
@@ -156,23 +156,22 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       }
     }
 
-    private void checkShadowParam(Var v, Scope scope, List<Reference> references) {
-      Scope functionScope = scope.getParent();
+    private void checkShadowParam(Var v, Scope functionScope, List<Reference> references) {
       Var maybeParam = functionScope.getVar(v.getName());
       if (maybeParam != null && maybeParam.isParam()
           && maybeParam.getScope() == functionScope) {
         for (Reference r : references) {
-          if (!r.isDeclaration() || r.getScope() != scope) {
-            continue;
+          if (r.isDeclaration() && !r.getNode().equals(v.getNameNode())) {
+            if (!compiler.getLanguageMode().isEs6OrHigher() && r.getParent().isCatch()) {
+              continue;
+            }
+            compiler.report(
+                JSError.make(
+                    r.getNode(),
+                    (r.isVarDeclaration() || r.isHoistedFunction())
+                    ? REDECLARED_VARIABLE
+                    : PARAMETER_SHADOWED_ERROR, v.name));
           }
-          compiler.report(
-              JSError.make(
-                  r.getNode(),
-                  (r.isVarDeclaration() || r.isHoistedFunction())
-                      && !(maybeParam.getNode().getParent().isDefaultValue()
-                          || maybeParam.getNode().isRest())
-                  ? REDECLARED_VARIABLE
-                  : PARAMETER_SHADOWED_ERROR, v.name));
         }
       }
     }
@@ -231,9 +230,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               // better yet, make sure the generated code never violates
               // the requirement to pass aggressive var check!
               DiagnosticType diagnosticType;
-              if (v.isLet() || v.isConst()
+              if (v.isLet() || v.isConst() || v.isClass()
                   || letConstShadowsVar || shadowCatchVar) {
                 diagnosticType = REDECLARED_VARIABLE_ERROR;
+              } else if (reference.getNode().getParent().isCatch()) {
+                return;
               } else {
                 diagnosticType = REDECLARED_VARIABLE;
               }
@@ -286,7 +287,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               isUndeclaredReference = true;
               compiler.report(
                   JSError.make(reference.getNode(),
-                               (v.isLet() || v.isConst() || v.isParam())
+                               (v.isLet() || v.isConst() || v.isClass() || v.isParam())
                                    ? EARLY_REFERENCE_ERROR
                                    : EARLY_REFERENCE, v.name));
             }

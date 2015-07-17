@@ -647,7 +647,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     private static boolean isDeclarationHelper(Node node) {
       Node parent = node.getParent();
 
-      // Special case for class B extends A, A is not a redeclaration.
+      // Special case for class B extends A, A is not a declaration.
       if (parent.isClass() && node != parent.getFirstChild()) {
         return false;
       }
@@ -672,6 +672,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
         return isDeclarationHelper(parent);
       }
 
+      // Special case for arrow function
+      if (parent.isArrowFunction()) {
+        return node == parent.getFirstChild();
+      }
+
       return DECLARATION_PARENTS.contains(parent.getType());
     }
 
@@ -685,6 +690,10 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
     boolean isConstDeclaration() {
       return getParent().isConst();
+    }
+
+    boolean isClassDeclaration() {
+      return getParent().isClass() && getNode() == getParent().getFirstChild();
     }
 
     boolean isHoistedFunction() {

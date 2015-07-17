@@ -25,9 +25,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
 
-  private static final String VARIABLE_RUN =
-      "var a = 1; var b = 2; var c = a + b, d = c;";
-
   private static final String LET_RUN =
       "let a = 1; let b = 2; let c = a + b, d = c;";
 
@@ -38,18 +35,13 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
 
   @Override
   public void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
   }
 
   public void testCorrectCode() {
-    assertNoWarning("function foo(d) { (function() { d.foo(); }); d.bar(); } ");
-    assertNoWarning("function foo() { bar(); } function bar() { foo(); } ");
-    assertNoWarning("function f(d) { d = 3; }");
-    assertNoWarning(VARIABLE_RUN);
     assertNoWarning(LET_RUN);
-    assertNoWarning("function f() { " + VARIABLE_RUN + "}");
     assertNoWarning("function f() { " + LET_RUN + "}");
-    assertNoWarning("if (a) { var x; }");
     assertNoWarning("try { let e; } catch (e) { let x; }");
   }
 
@@ -104,7 +96,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclareError("const x = 0, x = 0;");
   }
 
-  public void testIllegalLetConstEarlyReference() {
+  public void testIllegalBlockScopedEarlyReference() {
     assertEarlyReferenceError("let x = x");
     assertEarlyReferenceError("const x = x");
     assertEarlyReferenceError("let x = x || 0");
@@ -112,6 +104,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
     // In the following cases, "x" might not be reachable but we warn anyways
     assertEarlyReferenceError("let x = expr || x");
     assertEarlyReferenceError("const x = expr || x");
+    assertEarlyReferenceError("X; class X {};");
   }
 
   public void testCorrectEarlyReference() {
@@ -156,20 +149,27 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
   public void testParameterShadowing() {
     assertParameterShadowed("function f(x) { let x; }");
     assertParameterShadowed("function f(x) { const x = 3; }");
-    assertRedeclare("function f(x) { function x() {} }");
     assertParameterShadowed("function f(X) { class X {} }");
+
+    assertRedeclare("function f(x) { function x() {} }");
     assertRedeclare("function f(x) { var x; }");
-    assertParameterShadowed("function f(x=3) { var x; }");
-    assertParameterShadowed("function f(...x) { var x; }");
-    assertParameterShadowed("function f(x=3) { function x() {} }");
-    assertParameterShadowed("function f(...x) { function x() {} }");
+    assertRedeclare("function f(x=3) { var x; }");
+    assertRedeclare("function f(...x) { var x; }");
+    assertRedeclare("function f(...x) { function x() {} }");
+    assertRedeclare("function f(x=3) { function x() {} }");
     assertNoWarning("function f(x) { if (true) { let x; } }");
-    assertNoWarning(
-        LINE_JOINER.join(
-            "function outer(x) {", "  function inner() {", "    let x = 1;", "  }", "}"));
-    assertNoWarning(
-        LINE_JOINER.join(
-            "function outer(x) {", "  function inner() {", "    var x = 1;", "  }", "}"));
+    assertNoWarning(LINE_JOINER.join(
+        "function outer(x) {",
+        "  function inner() {",
+        "    let x = 1;",
+        "  }",
+        "}"));
+    assertNoWarning(LINE_JOINER.join(
+        "function outer(x) {",
+        "  function inner() {",
+        "    var x = 1;",
+        "  }",
+        "}"));
   }
 
   public void testReassignedConst() {

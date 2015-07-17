@@ -2107,7 +2107,7 @@ public final class NodeUtil {
           return false;
         }
         Node child = n.getFirstChild();
-        return child != null && !child.isScript();
+        return child != null && !child.isScript(); // Optimization for empty blocks
       case Token.FOR:
       case Token.FOR_OF:
         return true;
