@@ -107,6 +107,11 @@ class GenerateExports implements CompilerPass {
           && parentNode.getLastChild().getString().equals(PROTOTYPE_PROPERTY)) {
         grandparent = parentNode.getFirstChild().getQualifiedName();
       }
+    } else if (node.getParent().isMemberFunctionDef()) {
+      Node classNode = node.getParent().getParent().getParent();
+      parent = NodeUtil.getClassName(classNode);
+      parent += node.getParent().isStaticMember() ? "" : ".prototype";
+      export = parent + "." + export;
     }
 
     boolean useExportSymbol = true;
@@ -114,6 +119,8 @@ class GenerateExports implements CompilerPass {
       // grandparent is only set for properties exported off a prototype obj.
       useExportSymbol = false;
     } else if (parent != null && exports.containsKey(parent)) {
+      useExportSymbol = false;
+    } else if (node.getParent().isMemberFunctionDef()) {
       useExportSymbol = false;
     }
 
@@ -190,8 +197,12 @@ class GenerateExports implements CompilerPass {
    * @return property name.
    */
   private static String getPropertyName(Node node) {
-    Preconditions.checkArgument(node.isGetProp());
-    return node.getLastChild().getString();
+    Preconditions.checkArgument(node.isGetProp() || node.getParent().isMemberFunctionDef());
+    if (node.isGetProp()) {
+      return node.getLastChild().getString();
+    } else {
+      return node.getParent().getString();
+    }
   }
 
   /** Lazily create a "new" externs root for undeclared variables. */

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Generate exports unit test.
@@ -146,6 +147,63 @@ public final class GenerateExportsTest extends CompilerTestCase {
   public void testExportClass() {
     test("/** @export */ function G() {} foo();",
          "function G() {} google_exportSymbol('G', G); foo();");
+  }
+
+  public void testExportClassMember() {
+    test(LINE_JOINER.join(
+          "/** @export */ function F() {}",
+          "/** @export */ F.prototype.method = function() {};"),
+         LINE_JOINER.join(
+          "function F() {}",
+          "google_exportSymbol('F', F);",
+          "F.prototype.method = function() {};",
+          "goog.exportProperty(F.prototype, 'method', F.prototype.method);"));
+  }
+
+  public void testExportEs6ClassSymbol() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @export */ class G {} foo();",
+         "class G {} google_exportSymbol('G', G); foo();");
+
+    test("/** @export */ G = class {}; foo();",
+         "G = class {}; google_exportSymbol('G', G); foo();");
+  }
+
+  public void testExportEs6ClassProperty() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(LINE_JOINER.join(
+          "/** @export */ G = class {};",
+          "/** @export */ G.foo = class {};"),
+        LINE_JOINER.join(
+          "G = class {}; google_exportSymbol('G', G);",
+          "G.foo = class {};",
+          "goog.exportProperty(G, 'foo', G.foo)"));
+
+    test(LINE_JOINER.join(
+           "G = class {};",
+           "/** @export */ G.prototype.foo = class {};"),
+         LINE_JOINER.join(
+           "G = class {}; G.prototype.foo = class {};",
+           "goog.exportProperty(G.prototype, 'foo', G.prototype.foo)"));
+  }
+
+  public void testExportEs6ClassMembers() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(LINE_JOINER.join(
+          "/** @export */ class G {",
+          "  /** @export */ method() {} }"),
+         LINE_JOINER.join(
+          "class G { method() {} }",
+          "google_exportSymbol('G', G);",
+          "goog.exportProperty(G.prototype, 'method', G.prototype.method);"));
+
+    test(LINE_JOINER.join(
+          "/** @export */ class G {",
+          "/** @export */ static method() {} }"),
+         LINE_JOINER.join(
+          "class G { static method() {} }",
+          "google_exportSymbol('G', G);",
+          "goog.exportProperty(G, 'method', G.method);"));
   }
 
   public void testExportSubclass() {
