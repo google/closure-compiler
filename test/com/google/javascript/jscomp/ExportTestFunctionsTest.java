@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for ExportTestFunctions.
  *
@@ -158,6 +160,13 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
     testSame("goog.testing.testSuite({'a': function() {}, 'b': function() {}});");
     test(
         "goog.testing.testSuite({a: function() {}, b: function() {}});",
+        "goog.testing.testSuite({'a': function() {}, 'b': function() {}});");
+  }
+
+  public void testMemberDefInObjLit() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        "goog.testing.testSuite({a() {}, b() {}});",
         "goog.testing.testSuite({'a': function() {}, 'b': function() {}});");
   }
 }

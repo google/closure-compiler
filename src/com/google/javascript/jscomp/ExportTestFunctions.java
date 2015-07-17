@@ -90,13 +90,23 @@ class ExportTestFunctions implements CompilerPass {
         }
       } else if (n.isObjectLit()
           && isCallTargetQName(n.getParent(), "goog.testing.testSuite")) {
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+        for (Node c : n.children()) {
           if (c.isStringKey() && !c.isQuotedString()) {
             c.setQuotedString();
             compiler.reportCodeChange();
+          } else if (c.isMemberFunctionDef()) {
+            rewriteMemberDefInObjLit(c, n);
           }
         }
       }
+    }
+
+    private void rewriteMemberDefInObjLit(Node memberDef, Node objLit) {
+      String name = memberDef.getString();
+      Node stringKey = IR.stringKey(name, memberDef.getFirstChild().detachFromParent());
+      objLit.replaceChild(memberDef, stringKey);
+      stringKey.setQuotedString();
+      compiler.reportCodeChange();
     }
 
     // TODO(johnlenz): move test suite declaration into the
