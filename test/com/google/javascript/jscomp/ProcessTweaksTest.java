@@ -165,6 +165,10 @@ public final class ProcessTweaksTest extends CompilerTestCase {
         ProcessTweaks.NON_GLOBAL_TWEAK_INIT_ERROR);
   }
 
+  public void testRegisterInIf() {
+    testSame("if (true) {goog.tweak.registerBoolean('TweakA', 'desc');};");
+  }
+
   public void testWrongGetter1() {
     testSame("goog.tweak.registerBoolean('TweakA', 'desc');" +
         "goog.tweak.getString('TweakA')",

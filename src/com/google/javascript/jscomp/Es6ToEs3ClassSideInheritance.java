@@ -85,15 +85,15 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
-    NodeTraversal.traverse(compiler, externs, findStaticMembers);
-    NodeTraversal.traverse(compiler, root, findStaticMembers);
+    NodeTraversal.traverseEs6(compiler, externs, findStaticMembers);
+    NodeTraversal.traverseEs6(compiler, root, findStaticMembers);
     processInherits(findStaticMembers.inheritsCalls);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
-    NodeTraversal.traverse(compiler, scriptRoot, findStaticMembers);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, findStaticMembers);
     processInherits(findStaticMembers.inheritsCalls);
   }
 

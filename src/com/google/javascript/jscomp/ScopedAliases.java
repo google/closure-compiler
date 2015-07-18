@@ -589,7 +589,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         MakeDeclaredNamesUnique uniquifier =
             new MakeDeclaredNamesUnique(renamer);
         Node parent = t.getScopeRoot().getParent();
-        NodeTraversal.traverse(compiler, parent, uniquifier);
+        NodeTraversal.traverseEs6(compiler, parent, uniquifier);
       }
     }
 

@@ -211,7 +211,7 @@ class ProcessDefines implements CompilerPass {
     }
 
     CollectDefines pass = new CollectDefines(compiler, allDefines);
-    NodeTraversal.traverse(compiler, root, pass);
+    NodeTraversal.traverseEs6(compiler, root, pass);
     return pass.getAllDefines();
   }
 
@@ -314,7 +314,7 @@ class ProcessDefines implements CompilerPass {
             }
             break;
           default:
-            if (t.inGlobalScope()) {
+            if (t.getScope().getClosestHoistScope().isGlobal()) {
               // Treat this as a reference to a define in the global scope.
               // After this point, the define must not be reassigned,
               // or it's an error.

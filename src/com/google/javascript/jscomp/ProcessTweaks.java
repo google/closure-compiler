@@ -312,7 +312,7 @@ class ProcessTweaks implements CompilerPass {
    */
   private CollectTweaksResult collectTweaks(Node root) {
     CollectTweaks pass = new CollectTweaks();
-    NodeTraversal.traverse(compiler, root, pass);
+    NodeTraversal.traverseEs6(compiler, root, pass);
 
     Map<String, TweakInfo> tweakInfos = pass.allTweaks;
     for (TweakInfo tweakInfo : tweakInfos.values()) {
@@ -383,7 +383,7 @@ class ProcessTweaks implements CompilerPass {
           }
 
           // Ensure tweaks are registered in the global scope.
-          if (!t.inGlobalScope()) {
+          if (!t.getScope().getClosestHoistScope().isGlobal()) {
             compiler.report(
                 t.makeError(n, NON_GLOBAL_TWEAK_INIT_ERROR, tweakId));
             break;

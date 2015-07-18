@@ -304,9 +304,9 @@ class GlobalTypeInfo implements CompilerPass {
     //   defined in the global scope.
     CollectNamedTypes rootCnt = new CollectNamedTypes(globalScope);
     if (externs != null) {
-      NodeTraversal.traverse(compiler, externs, rootCnt);
+      NodeTraversal.traverseEs6(compiler, externs, rootCnt);
     }
-    NodeTraversal.traverse(compiler, root, rootCnt);
+    NodeTraversal.traverseEs6(compiler, root, rootCnt);
     // (2) Determine the type represented by each typedef and each enum
     globalScope.resolveTypedefs(typeParser);
     globalScope.resolveEnums(typeParser);
@@ -314,7 +314,7 @@ class GlobalTypeInfo implements CompilerPass {
     for (int i = 1; i < scopes.size(); i++) {
       NTIScope s = scopes.get(i);
       CollectNamedTypes cnt = new CollectNamedTypes(s);
-      NodeTraversal.traverse(compiler, s.getBody(), cnt);
+      NodeTraversal.traverseEs6(compiler, s.getBody(), cnt);
       s.resolveTypedefs(typeParser);
       s.resolveEnums(typeParser);
       if (NewTypeInference.measureMem) {
@@ -334,9 +334,9 @@ class GlobalTypeInfo implements CompilerPass {
     //     - Declare properties on types
     ProcessScope rootPs = new ProcessScope(globalScope);
     if (externs != null) {
-      NodeTraversal.traverse(compiler, externs, rootPs);
+      NodeTraversal.traverseEs6(compiler, externs, rootPs);
     }
-    NodeTraversal.traverse(compiler, root, rootPs);
+    NodeTraversal.traverseEs6(compiler, root, rootPs);
     // (5) Things that must happen after the traversal of the scope
     rootPs.finishProcessingScope();
     for (String name : globalScope.getUnknownTypeNames()) {
@@ -347,7 +347,7 @@ class GlobalTypeInfo implements CompilerPass {
     for (int i = 1; i < scopes.size(); i++) {
       NTIScope s = scopes.get(i);
       ProcessScope ps = new ProcessScope(s);
-      NodeTraversal.traverse(compiler, s.getBody(), ps);
+      NodeTraversal.traverseEs6(compiler, s.getBody(), ps);
       ps.finishProcessingScope();
       if (NewTypeInference.measureMem) {
         NewTypeInference.updatePeakMem();

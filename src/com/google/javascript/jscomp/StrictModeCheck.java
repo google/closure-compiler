@@ -114,7 +114,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   @Override public void process(Node externs, Node root) {
     NodeTraversal.traverseRoots(compiler, this, externs, root);
-    NodeTraversal.traverse(compiler, root, new NonExternChecks());
+    NodeTraversal.traverseEs6(compiler, root, new NonExternChecks());
   }
 
   @Override public void visit(NodeTraversal t, Node n, Node parent) {

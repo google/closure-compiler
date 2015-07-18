@@ -78,7 +78,7 @@ public final class CheckConformance extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     if (!rules.isEmpty()) {
-      NodeTraversal.traverse(compiler, root, this);
+      NodeTraversal.traverseEs6(compiler, root, this);
     }
   }
 

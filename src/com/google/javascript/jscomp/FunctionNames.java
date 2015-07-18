@@ -60,11 +60,11 @@ class FunctionNames implements CompilerPass, Serializable {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, functionListExtractor);
+    NodeTraversal.traverseEs6(compiler, root, functionListExtractor);
     FunctionExpressionNamer namer = new FunctionExpressionNamer(functionMap);
     AnonymousFunctionNamingCallback namingCallback =
         new AnonymousFunctionNamingCallback(namer);
-    NodeTraversal.traverse(compiler, root, namingCallback);
+    NodeTraversal.traverseEs6(compiler, root, namingCallback);
   }
 
   public Iterable<Node> getFunctionNodeList() {

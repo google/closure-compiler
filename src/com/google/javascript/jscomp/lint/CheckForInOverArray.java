@@ -84,11 +84,11 @@ public final class CheckForInOverArray
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, originalRoot, this);
+    NodeTraversal.traverseEs6(compiler, originalRoot, this);
   }
 }
