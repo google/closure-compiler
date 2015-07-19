@@ -4631,13 +4631,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   public void testSimpleInferNamespaces() {
     typeCheck(Joiner.on('\n').join(
         "/** @const */ var ns = {};",
-        "/** @const */ var x = ns;"),
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+        "/** @const */ ns.numprop = 123;",
+        "/** @const */ var x = ns;",
+        "function f() { var /** string */ s = x.numprop; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(Joiner.on('\n').join(
         "/** @enum {number} */ var e = { FOO : 5 };",
-        "/** @const */ var x = e;"),
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+        "/** @const */ e.numprop = 123;",
+        "/** @const */ var x = e;",
+        "function f() { var /** string */ s = x.numprop; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(Joiner.on('\n').join(
         "/** @const */ var ns = {};",
@@ -11421,7 +11425,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "goog.forwardDeclare = function(name){};");
 
   public void testForwardDeclarations() {
-
     typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.addDependency('', ['Foo'], []);",
         "goog.forwardDeclare('Bar');",
@@ -11505,6 +11508,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** !ns.Foo */ x) {}",
         "/** @constructor */ function Bar(){}",
         "f(new Bar);"));
+
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
+        "goog.forwardDeclare('ns.Foo');",
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "var c = ns;"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
+            "goog.forwardDeclare('ns.ns2.Foo');",
+            "/** @const */",
+            "var ns = {};",
+            "/** @const */",
+            "ns.ns2 = {};",
+            "/** @const */",
+            "var c = ns;",
+            "var x = new ns.ns2.Foo();"),
+        // This is a bad warning; ns2 was finalized early because of ns, so
+        // GTI#declareUnknownType didn't add Foo on ns2, and didn't know
+        // the constDeclNode of ns2.
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testDontLookupInParentScopeForNamesWithoutDeclaredType() {
@@ -13048,14 +13073,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var x = new f();"));
   }
 
-  public void testDontAddPropsToNomTypesAfterEarlyFinalization() {
+  public void testDontAddPropsToNamespacesAfterEarlyFinalization() {
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
         "function Foo() {}",
         "/** @const */",
         "var Bar = Foo;",
         "Foo.prop = 123;"),
-        GlobalTypeInfo.NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION);
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
@@ -13065,7 +13090,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var Baz = Bar;",
         "Foo.prop = 123;"),
-        GlobalTypeInfo.NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION);
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
 
     typeCheck(Joiner.on('\n').join(
         "/** @interface */",
@@ -13075,7 +13100,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var Baz = Bar;",
         "Foo.prototype.prop = 123;"),
-        GlobalTypeInfo.NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION);
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
@@ -13083,7 +13108,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var Bar = Foo;",
         "Foo.prototype.prop = 123;"),
-        GlobalTypeInfo.NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION);
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
 
     typeCheck(Joiner.on('\n').join(
         "/** @interface */",
@@ -13093,6 +13118,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var Baz = Bar;",
         "Foo.prop = 123;"),
-        GlobalTypeInfo.NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION);
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {}",
+        "/** @const */",
+        "var x = ns;",
+        "ns.prop = 123;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @enum */",
+        "var e = { A: 1 }",
+        "/** @const */",
+        "var x = e;",
+        "e.prop = 123;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+  }
+
+  public void test123() {
+
   }
 }

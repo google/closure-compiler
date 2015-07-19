@@ -186,11 +186,11 @@ class GlobalTypeInfo implements CompilerPass {
           + "Expected: {0}\n"
           + "Found: {1}");
 
-  static final DiagnosticType NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION =
+  static final DiagnosticType NAMESPACE_MODIFIED_AFTER_FINALIZATION =
       DiagnosticType.warning(
-          "JSC_NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION",
-          "Cannot add more properties to type {0}."
-          + " The type (or one of its subtypes) has been assigned to a @const name: {1}.");
+          "JSC_NAMESPACE_MODIFIED_AFTER_FINALIZATION",
+          "Cannot add more properties to namespace {0}."
+          + " The namespace (or one of its subtypes) has been assigned to a @const name: {1}.");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
@@ -210,7 +210,7 @@ class GlobalTypeInfo implements CompilerPass {
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
-      NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION,
+      NAMESPACE_MODIFIED_AFTER_FINALIZATION,
       REDECLARED_PROPERTY,
       SETTER_WITH_RETURN,
       STRUCTDICT_WITHOUT_CTOR,
@@ -365,7 +365,7 @@ class GlobalTypeInfo implements CompilerPass {
     nominaltypesByNode = null;
     propertyDefs = null;
     for (Scope s : scopes) {
-      s.removeTmpData();
+      s.removeTmpData(warnings);
     }
     Map<Node, String> unknownTypes = typeParser.getUnknownTypesMap();
     for (Map.Entry<Node, String> unknownTypeEntry : unknownTypes.entrySet()) {
@@ -510,7 +510,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     // Finalize nominal type once all properties are added.
-    rawType.finalizeNominalType(constDeclNode);
+    rawType.finalize(constDeclNode);
   }
 
   private void checkSuperProperty(
@@ -1265,7 +1265,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       if (rawType.isFinalized()) {
         warnings.add(JSError.make(getProp,
-                NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION,
+                NAMESPACE_MODIFIED_AFTER_FINALIZATION,
                 rawType.getName(),
                 rawType.getConstDeclNode().toString()));
         return;
@@ -1328,7 +1328,7 @@ class GlobalTypeInfo implements CompilerPass {
       RawNominalType classType = currentScope.getNominalType(ctorQname);
       if (classType.isFinalized()) {
         warnings.add(JSError.make(getProp,
-                NOMINAL_TYPE_MODIFIED_AFTER_FINALIZATION,
+                NAMESPACE_MODIFIED_AFTER_FINALIZATION,
                 classType.getName(),
                 classType.getConstDeclNode().toString()));
         return;
@@ -1381,6 +1381,13 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
+      if (ns.isFinalized()) {
+        warnings.add(JSError.make(recv,
+                NAMESPACE_MODIFIED_AFTER_FINALIZATION,
+                ns.getName(),
+                ns.getConstDeclNode().toString()));
+        return;
+      }
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
       JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
       boolean isConst = isConst(declNode);
@@ -1660,17 +1667,21 @@ class GlobalTypeInfo implements CompilerPass {
     // ProcessScope, so it's generally NOT safe to convert them to jstypes until
     // after ProcessScope is done.
     // So, we only do limited inference of namespace properties here.
-    // We finalize nominal types early if needed, and later warn if new
-    // properties are added to a nominal type that is already finalized.
+    // We finalize namespace types early if needed, and later warn if new
+    // properties are added to a namespace that is already finalized.
     private JSType simpleInferDeclaration(Declaration decl, Node constDeclNode) {
       if (decl == null) {
         return null;
       }
       if (constDeclNode != null) {
-        RawNominalType rawType = decl.getNominal();
-        if (rawType != null) {
-          checkAndFinalizeNominalType(rawType, constDeclNode);
-          return rawType.toJSType(commonTypes);
+        Namespace ns = decl.getNamespace();
+        if (ns != null) {
+          if (ns instanceof RawNominalType) {
+            checkAndFinalizeNominalType((RawNominalType) ns, constDeclNode);
+          } else {
+            ns.finalize(constDeclNode);
+          }
+          return ns.toJSType(commonTypes);
         }
       }
       if (decl.getTypeOfSimpleDecl() != null) {
@@ -2131,6 +2142,8 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     private void addUnknownTypeNames(List<String> names) {
+      // TODO(dimvar): if sm uses a goog.forwardDeclare in a local scope, give
+      // an error instead of crashing.
       Preconditions.checkState(this.isTopLevel());
       unknownTypeNames.addAll(names);
     }
@@ -2396,7 +2409,8 @@ class GlobalTypeInfo implements CompilerPass {
     private void addNamespace(Node qnameNode, boolean isFromExterns) {
       Preconditions.checkArgument(!isNamespace(qnameNode));
       if (qnameNode.isName()) {
-        localNamespaces.put(qnameNode.getString(), new NamespaceLit());
+        String varName = qnameNode.getString();
+        localNamespaces.put(varName, new NamespaceLit(varName));
         if (isFromExterns) {
           // We don't know the full type of a namespace until after we see all
           // its properties. But we want to add it to the externs, otherwise it
@@ -2584,8 +2598,11 @@ class GlobalTypeInfo implements CompilerPass {
       qualifiedEnums = null;
     }
 
-    private void declareUnknownType(QualifiedName qname) {
+    private void declareUnknownType(QualifiedName qname, WarningReporter warnings) {
       if (qname.isIdentifier() || null == getNamespace(qname.getLeftmostName())) {
+        // TODO(dimvar): If the code before the return is deleted, no unit tests fail.
+        // That's because we consider the unknown type a global variable, which we type ?.
+        // Any reason to keep this code, or just delete it?
         String name = qname.getLeftmostName();
         if (!locals.containsKey(name)) {
           externs.put(name, JSType.UNKNOWN);
@@ -2600,15 +2617,21 @@ class GlobalTypeInfo implements CompilerPass {
       while (!props.isIdentifier() && !leftmost.hasSubnamespace(props.getAllButRightmost())) {
         props = props.getAllButRightmost();
       }
-      Namespace ns =
-          props.isIdentifier() ? leftmost : leftmost.getSubnamespace(props.getAllButRightmost());
-      String pname = props.getRightmostName();
-      ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
+      Namespace ns = props.isIdentifier()
+          ? leftmost : leftmost.getSubnamespace(props.getAllButRightmost());
+      if (!ns.isFinalized()) {
+        String pname = props.getRightmostName();
+        ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
+      } else if (ns.getConstDeclNode() != null) {
+        // ns was used as the rhs of an assign where the lhs is @const, but it contains
+        // a forward-declared type, so we can't infer its type correctly.
+        warnings.add(JSError.make(ns.getConstDeclNode(), COULD_NOT_INFER_CONST_TYPE));
+      }
     }
 
-    private void removeTmpData() {
+    private void removeTmpData(WarningReporter warnings) {
       for (String name : unknownTypeNames) {
-        declareUnknownType(QualifiedName.fromQualifiedString(name));
+        declareUnknownType(QualifiedName.fromQualifiedString(name), warnings);
       }
       unknownTypeNames = ImmutableSet.of();
       JSTypes commonTypes = getCommonTypes();
@@ -2616,7 +2639,9 @@ class GlobalTypeInfo implements CompilerPass {
       // Alternatively, we could move this into NewTypeInference.initEdgeEnvs
       for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {
         String name = entry.getKey();
-        JSType t = entry.getValue().toJSType(commonTypes);
+        NamespaceLit nslit = entry.getValue();
+        nslit.finalize(null);
+        JSType t = nslit.toJSType(commonTypes);
         // If it's a function namespace, add the function type to the result
         if (localFunDefs.containsKey(name)) {
           t = t.withFunction(
@@ -2630,7 +2655,9 @@ class GlobalTypeInfo implements CompilerPass {
         }
       }
       for (Map.Entry<String, EnumType> entry : localEnums.entrySet()) {
-        locals.put(entry.getKey(), entry.getValue().toJSType(commonTypes));
+        EnumType et = entry.getValue();
+        et.finalize(null);
+        locals.put(entry.getKey(), et.toJSType(commonTypes));
       }
       for (String typedefName : localTypedefs.keySet()) {
         locals.put(typedefName, JSType.UNDEFINED);

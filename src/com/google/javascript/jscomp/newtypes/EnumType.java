@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSTypeExpression;
 
+import com.google.javascript.rhino.Node;
+
 import java.util.Collection;
 
 /**
@@ -43,13 +45,10 @@ public final class EnumType extends Namespace implements TypeWithProperties {
 
   private State state;
   private JSTypeExpression typeExpr;
-  private String name;
   // The type that accompanies the enum declaration
   private JSType declaredType;
   // The type of the enum's properties, a subtype of the previous field.
   private JSType enumPropType;
-  // The type of the object literal that defines the enum
-  private JSType enumObjType;
   // All properties have the same type, so we only need a set, not a map.
   private ImmutableSet<String> props;
 
@@ -69,51 +68,49 @@ public final class EnumType extends Namespace implements TypeWithProperties {
   }
 
   public boolean isResolved() {
-    return state == State.RESOLVED;
+    return this.state == State.RESOLVED;
   }
 
   public JSType getEnumeratedType() {
-    Preconditions.checkState(state == State.RESOLVED);
+    Preconditions.checkState(this.state == State.RESOLVED);
     return declaredType;
   }
 
   public JSType getPropType() {
-    Preconditions.checkState(state == State.RESOLVED);
+    Preconditions.checkState(this.state == State.RESOLVED);
     return enumPropType;
   }
 
   @Override
-  public JSType toJSType(JSTypes commonTypes) {
-    Preconditions.checkState(state == State.RESOLVED);
-    if (enumObjType == null) {
-      enumObjType = computeObjType(commonTypes);
-    }
-    return enumObjType;
+  public void finalize(Node constDeclNode) {
+    Preconditions.checkState(this.state == State.RESOLVED);
+    this.constDeclNode = constDeclNode;
+    this.isFinalized = true;
   }
 
   // Returns null iff there is a type cycle
   public JSTypeExpression getTypeExpr() {
-    Preconditions.checkState(state != State.RESOLVED);
-    if (state == State.DURING_RESOLUTION) {
+    Preconditions.checkState(this.state != State.RESOLVED);
+    if (this.state == State.DURING_RESOLUTION) {
       return null;
     }
-    state = State.DURING_RESOLUTION;
+    this.state = State.DURING_RESOLUTION;
     return typeExpr;
   }
 
   public JSTypeExpression getTypeExprForErrorReporting() {
-    Preconditions.checkState(state == State.DURING_RESOLUTION);
+    Preconditions.checkState(this.state == State.DURING_RESOLUTION);
     return typeExpr;
   }
 
   void resolveEnum(JSType t) {
     Preconditions.checkNotNull(t);
-    if (state == State.RESOLVED) {
+    if (this.state == State.RESOLVED) {
       return;
     }
-    Preconditions.checkState(state == State.DURING_RESOLUTION,
-        "Expected state DURING_RESOLUTION but found %s", state.toString());
-    state = State.RESOLVED;
+    Preconditions.checkState(this.state == State.DURING_RESOLUTION,
+        "Expected state DURING_RESOLUTION but found %s", this.state.toString());
+    this.state = State.RESOLVED;
     typeExpr = null;
     declaredType = t;
     enumPropType = JSType.fromEnum(this);
@@ -125,7 +122,8 @@ public final class EnumType extends Namespace implements TypeWithProperties {
    *   var X = { ONE: 1, TWO: 2 };
    * the properties of the object literal are constant.
    */
-  private JSType computeObjType(JSTypes commonTypes) {
+  @Override
+  protected JSType computeJSType(JSTypes commonTypes) {
     Preconditions.checkState(enumPropType != null);
     PersistentMap<String, Property> propMap = otherProps;
     for (String s : props) {

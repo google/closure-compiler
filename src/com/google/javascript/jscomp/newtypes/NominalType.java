@@ -424,7 +424,6 @@ public final class NominalType {
    * created from it by instantiation.
    */
   public static class RawNominalType extends Namespace {
-    private final String name;
     // The function node (if any) that defines the type
     private final Node defSite;
     // If a nominal type is finalized early b/c of a @const inference, we
@@ -439,8 +438,6 @@ public final class NominalType {
     // for @struct. We use this map to remember the names of props added outside
     // the constructor and the prototype methods.
     private PersistentMap<String, Property> randomProps = PersistentMap.create();
-    // The "static" properties of the constructor are stored in the namespace.
-    boolean isFinalized = false;
     // Consider a generic type A<T> which inherits from a generic type B<T>.
     // All instantiated A classes, such as A<number>, A<string>, etc,
     // have the same superclass and interfaces fields, because they have the
@@ -460,7 +457,6 @@ public final class NominalType {
     private final ImmutableList<String> typeParameters;
     private final ObjectKind objectKind;
     private FunctionType ctorFn;
-    private JSType ctorFnWrappedAsJSType;
     private JSTypes commonTypes;
 
     private RawNominalType(
@@ -519,14 +515,11 @@ public final class NominalType {
           defSite, name.toString(), typeParameters, true, ObjectKind.STRUCT);
     }
 
-    public String getName() {
-      return name;
-    }
-
     public Node getDefSite() {
       return this.defSite;
     }
 
+    @Override
     public Node getConstDeclNode() {
       if (this.constDeclNode != null) {
         return this.constDeclNode;
@@ -569,17 +562,13 @@ public final class NominalType {
       return objectKind.isDict();
     }
 
-    public boolean isFinalized() {
-      return this.isFinalized;
-    }
-
     ImmutableList<String> getTypeParameters() {
       return typeParameters;
     }
 
     public void setCtorFunction(
         FunctionType ctorFn, JSTypes commonTypes) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       this.ctorFn = ctorFn;
       this.commonTypes = commonTypes;
     }
@@ -597,7 +586,7 @@ public final class NominalType {
 
     /** @return Whether the superclass can be added without creating a cycle. */
     public boolean addSuperClass(NominalType superClass) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       Preconditions.checkState(this.superClass == null);
       if (superClass.rawType.hasAncestorClass(this)) {
         return false;
@@ -624,7 +613,7 @@ public final class NominalType {
 
     /** @return Whether the interface can be added without creating a cycle. */
     public boolean addInterfaces(ImmutableSet<NominalType> interfaces) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       Preconditions.checkState(this.interfaces == null);
       Preconditions.checkNotNull(interfaces);
       if (this.isInterface) {
@@ -726,7 +715,7 @@ public final class NominalType {
 
     private ImmutableSet<String> getAllPropsOfInterface() {
       Preconditions.checkState(isInterface);
-      Preconditions.checkState(isFinalized);
+      Preconditions.checkState(this.isFinalized);
       if (allProps == null) {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         if (interfaces != null) {
@@ -741,7 +730,7 @@ public final class NominalType {
 
     private ImmutableSet<String> getAllPropsOfClass() {
       Preconditions.checkState(!isInterface);
-      Preconditions.checkState(isFinalized);
+      Preconditions.checkState(this.isFinalized);
       if (allProps == null) {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         if (superClass != null) {
@@ -753,7 +742,7 @@ public final class NominalType {
     }
 
     public void addPropertyWhichMayNotBeOnAllInstances(String pname, JSType type) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       if (this.classProps.containsKey(pname) || this.protoProps.containsKey(pname)) {
         return;
       }
@@ -767,7 +756,7 @@ public final class NominalType {
 
     /** Add a new non-optional declared property to instances of this class */
     public void addClassProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       if (type == null && isConstant) {
         type = JSType.UNKNOWN;
       }
@@ -785,7 +774,7 @@ public final class NominalType {
 
     /** Add a new undeclared property to instances of this class */
     public void addUndeclaredClassProperty(String pname, Node defSite) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       // Only do so if there isn't a declared prop already.
       if (mayHaveProp(pname)) {
         return;
@@ -797,7 +786,7 @@ public final class NominalType {
 
     /** Add a new non-optional declared prototype property to this class */
     public void addProtoProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       if (type == null && isConstant) {
         type = JSType.UNKNOWN;
       }
@@ -815,7 +804,7 @@ public final class NominalType {
 
     /** Add a new undeclared prototype property to this class */
     public void addUndeclaredProtoProperty(String pname, Node defSite) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       if (!this.protoProps.containsKey(pname) ||
           this.protoProps.get(pname).getDeclaredType() == null) {
         this.protoProps = this.protoProps.with(pname,
@@ -841,13 +830,13 @@ public final class NominalType {
 
     /** Add a new non-optional declared property to this class's constructor */
     public void addCtorProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       super.addProperty(pname, defSite, type, isConstant);
     }
 
     /** Add a new undeclared property to this class's constructor */
     public void addUndeclaredCtorProperty(String pname, Node defSite) {
-      Preconditions.checkState(!isFinalized);
+      Preconditions.checkState(!this.isFinalized);
       super.addUndeclaredProperty(pname, defSite, JSType.UNKNOWN, false);
     }
 
@@ -863,18 +852,14 @@ public final class NominalType {
     // For those, we should just be creating a basic function type, not be
     // adding all the static properties.
     private JSType getConstructorObject(FunctionType ctorFn) {
-      Preconditions.checkState(isFinalized);
-      if (this.ctorFn != ctorFn || this.ctorFnWrappedAsJSType == null) {
+      Preconditions.checkState(this.isFinalized);
+      if (this.ctorFn != ctorFn || this.namespaceType == null) {
         ObjectType ctorFnAsObj = ObjectType.makeObjectType(
             this.commonTypes.getFunctionType(), this.otherProps, ctorFn,
             ctorFn.isLoose(), ObjectKind.UNRESTRICTED);
-        JSType result = withNamedTypes(this.commonTypes, ctorFnAsObj);
-        if (this.ctorFn == ctorFn) {
-          this.ctorFnWrappedAsJSType = result;
-        }
-        return result;
+        return withNamedTypes(this.commonTypes, ctorFnAsObj);
       }
-      return this.ctorFnWrappedAsJSType;
+      return this.namespaceType;
     }
 
     private StringBuilder appendGenericSuffixTo(
@@ -904,8 +889,8 @@ public final class NominalType {
       return builder;
     }
 
-    // If we try to mutate the class after the AST-preparation phase, error.
-    public void finalizeNominalType(Node constDeclNode) {
+    @Override
+    public void finalize(Node constDeclNode) {
       Preconditions.checkState(this.ctorFn != null);
       // System.out.println("Class " + name +
       //     " created with class properties: " + classProps +
@@ -926,8 +911,7 @@ public final class NominalType {
     }
 
     @Override
-    public JSType toJSType(JSTypes commonTypes) {
-      Preconditions.checkState(this.isFinalized);
+    protected JSType computeJSType(JSTypes commonTypes) {
       return getConstructorObject(this.ctorFn);
     }
 
