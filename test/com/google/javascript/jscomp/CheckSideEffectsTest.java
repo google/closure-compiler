@@ -130,6 +130,10 @@ public final class CheckSideEffectsTest extends Es6CompilerTestCase {
     testSameEs6("function c(a, b = f()) {}; c(1);");
     testSameEs6("function c(a, {b, c}) {}; c(1);");
     testSameEs6("function c(a, {b, c}) {}; c(1, {b: 2, c: 3});");
+
+    testWarningEs6("var f = s => {key:s}", e);
+    testWarningEs6("var f = s => {key:s + 1}", e);
+    testWarningEs6("var f = s => {s}", e);
   }
 
   public void testUselessCodeInFor() {
