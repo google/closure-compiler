@@ -2218,6 +2218,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
       }
     }
+    if (type.isOrdinaryFunction()) {
+      FunctionType function = type.toMaybeFunctionType();
+      for (Node parameter : function.getParameters()) {
+        JSType result = findObjectWithNonStringifiableKey(parameter.getJSType());
+        if (result != null) {
+          return result;
+        }
+      }
+      return findObjectWithNonStringifiableKey(function.getReturnType());
+    }
     return null;
   }
 
