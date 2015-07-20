@@ -72,6 +72,16 @@ class FindExportableNodes extends AbstractPostOrderCallback {
   public void visit(NodeTraversal t, Node n, Node parent) {
     JSDocInfo docInfo = n.getJSDocInfo();
     if (docInfo != null && docInfo.isExport()) {
+
+      if (parent.isAssign() && (n.isFunction() || n.isClass())) {
+        JSDocInfo parentInfo = parent.getJSDocInfo();
+        if (parentInfo != null && parentInfo.isExport()) {
+          // ScopedAliases produces export annotations on both the function/class
+          // node and assign node, we only want to visit the assign node.
+          return;
+        }
+      }
+
       String export = null;
       GenerateNodeContext context = null;
 

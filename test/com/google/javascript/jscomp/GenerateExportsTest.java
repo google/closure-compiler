@@ -206,6 +206,21 @@ public final class GenerateExportsTest extends CompilerTestCase {
           "goog.exportProperty(G, 'method', G.method);"));
   }
 
+  public void testGoogScopeFunctionOutput() {
+    test(
+        "/** @export */ $jscomp.scope.foo = /** @export */ function() {}",
+        "$jscomp.scope.foo = /** @export */ function() {};"
+            + "google_exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);");
+  }
+
+  public void testGoogScopeClassOutput() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        "/** @export */ $jscomp.scope.foo = /** @export */ class {}",
+        "$jscomp.scope.foo = /** @export */ class {};"
+            + "google_exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);");
+  }
+
   public void testExportSubclass() {
     test("var goog = {}; function F() {}" +
          "/** @export */ function G() {} goog.inherits(G, F);",

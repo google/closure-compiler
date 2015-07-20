@@ -703,6 +703,19 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         + "/** @param draggable */ types.expected;");
   }
 
+  public void testJSDocCopiedForFunctions() {
+    testScoped(
+        "/** @export */ function Foo() {}",
+        SCOPE_NAMESPACE + "/** @export */ $jscomp.scope.Foo =/** @export */ function() {}");
+  }
+
+  public void testJSDocCopiedForClasses() {
+    testScoped(
+        "/** @export */ class Foo {}",
+        SCOPE_NAMESPACE + "/** @export */ $jscomp.scope.Foo = /** @export */ class {}",
+        LanguageMode.ECMASCRIPT6);
+  }
+
   public void testIssue772() {
     testTypes(
         "var b = a.b;" +
