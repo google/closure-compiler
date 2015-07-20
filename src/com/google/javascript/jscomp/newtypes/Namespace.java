@@ -55,6 +55,18 @@ public abstract class Namespace {
 
   public abstract void finalize(Node constDeclNode);
 
+  protected final void finalizeSubnamespaces(Node constDeclNode) {
+    for (RawNominalType rawType : nominals.values()) {
+      rawType.finalize(constDeclNode);
+    }
+    for (EnumType et : enums.values()) {
+      et.finalize(constDeclNode);
+    }
+    for (NamespaceLit ns : namespaces.values()) {
+      ns.finalize(constDeclNode);
+    }
+  }
+
   protected abstract JSType computeJSType(JSTypes commonTypes);
 
   public final String getName() {

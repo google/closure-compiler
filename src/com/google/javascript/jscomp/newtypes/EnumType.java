@@ -83,7 +83,11 @@ public final class EnumType extends Namespace implements TypeWithProperties {
 
   @Override
   public void finalize(Node constDeclNode) {
+    if (this.isFinalized) {
+      return;
+    }
     Preconditions.checkState(this.state == State.RESOLVED);
+    finalizeSubnamespaces(constDeclNode);
     this.constDeclNode = constDeclNode;
     this.isFinalized = true;
   }

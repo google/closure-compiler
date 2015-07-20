@@ -891,7 +891,11 @@ public final class NominalType {
 
     @Override
     public void finalize(Node constDeclNode) {
+      if (this.isFinalized) {
+        return;
+      }
       Preconditions.checkState(this.ctorFn != null);
+      finalizeSubnamespaces(constDeclNode);
       // System.out.println("Class " + name +
       //     " created with class properties: " + classProps +
       //     " and prototype properties: " + protoProps);

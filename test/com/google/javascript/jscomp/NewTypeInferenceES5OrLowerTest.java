@@ -11526,10 +11526,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "/** @const */",
             "var c = ns;",
             "var x = new ns.ns2.Foo();"),
-        // This is a bad warning; ns2 was finalized early because of ns, so
-        // GTI#declareUnknownType didn't add Foo on ns2, and didn't know
-        // the constDeclNode of ns2.
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
         TypeCheck.INEXISTENT_PROPERTY);
+
+    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
+            "goog.forwardDeclare('Foo.Bar');",
+            "/** @constructor */",
+            "function Foo() {}",
+            "var x = new Foo.Bar()"));
   }
 
   public void testDontLookupInParentScopeForNamesWithoutDeclaredType() {
@@ -13135,9 +13139,38 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var x = e;",
         "e.prop = 123;"),
         GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
-  }
 
-  public void test123() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @const */",
+        "var x = ns;",
+        "/** @type {number} */",
+        "ns.Foo.prop = 123;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
 
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Bar() {}",
+        "/** @constructor */",
+        "Bar.Foo = function() {};",
+        "/** @const */",
+        "var x = Bar;",
+        "/** @type {number} */",
+        "Bar.Foo.prop = 123;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @enum */",
+        "var e = {A:1};",
+        "/** @constructor */",
+        "e.Foo = function() {};",
+        "/** @const */",
+        "var x = e;",
+        "/** @type {number} */",
+        "e.Foo.prop = 123;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
   }
 }

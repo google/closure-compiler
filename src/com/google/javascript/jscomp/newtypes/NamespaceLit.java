@@ -30,6 +30,10 @@ public final class NamespaceLit extends Namespace {
 
   @Override
   public void finalize(Node constDeclNode) {
+    if (this.isFinalized) {
+      return;
+    }
+    finalizeSubnamespaces(constDeclNode);
     this.constDeclNode = constDeclNode;
     this.isFinalized = true;
   }

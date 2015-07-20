@@ -365,7 +365,7 @@ class GlobalTypeInfo implements CompilerPass {
     nominaltypesByNode = null;
     propertyDefs = null;
     for (Scope s : scopes) {
-      s.removeTmpData(warnings);
+      s.removeTmpData();
     }
     Map<Node, String> unknownTypes = typeParser.getUnknownTypesMap();
     for (Map.Entry<Node, String> unknownTypeEntry : unknownTypes.entrySet()) {
@@ -1011,6 +1011,8 @@ class GlobalTypeInfo implements CompilerPass {
       //   warnings.add(JSError.make(nameNode,
       //         VarCheck.UNDEFINED_VAR_ERROR, nameNode.getString()));
       // }
+
+      this.currentScope.declareUnknownTypes(warnings);
     }
 
     /**
@@ -2598,6 +2600,12 @@ class GlobalTypeInfo implements CompilerPass {
       qualifiedEnums = null;
     }
 
+    private void declareUnknownTypes(WarningReporter warnings) {
+      for (String name : this.unknownTypeNames) {
+        declareUnknownType(QualifiedName.fromQualifiedString(name), warnings);
+      }
+    }
+
     private void declareUnknownType(QualifiedName qname, WarningReporter warnings) {
       if (qname.isIdentifier() || null == getNamespace(qname.getLeftmostName())) {
         // TODO(dimvar): If the code before the return is deleted, no unit tests fail.
@@ -2622,17 +2630,16 @@ class GlobalTypeInfo implements CompilerPass {
       if (!ns.isFinalized()) {
         String pname = props.getRightmostName();
         ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
-      } else if (ns.getConstDeclNode() != null) {
-        // ns was used as the rhs of an assign where the lhs is @const, but it contains
-        // a forward-declared type, so we can't infer its type correctly.
+      } else {
+        Preconditions.checkNotNull(ns.getConstDeclNode(),
+            "Namespace %s was finalized incorrectly", ns.getName());
+        // ns was used as the rhs of an assign where the lhs is @const, but it
+        // contains an unknown type, so we can't infer its type correctly.
         warnings.add(JSError.make(ns.getConstDeclNode(), COULD_NOT_INFER_CONST_TYPE));
       }
     }
 
-    private void removeTmpData(WarningReporter warnings) {
-      for (String name : unknownTypeNames) {
-        declareUnknownType(QualifiedName.fromQualifiedString(name), warnings);
-      }
+    private void removeTmpData() {
       unknownTypeNames = ImmutableSet.of();
       JSTypes commonTypes = getCommonTypes();
       // For now, we put types of namespaces directly into the locals.
