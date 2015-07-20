@@ -34,6 +34,12 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
   public static final DiagnosticType DUPLICATE_ENUM_VALUE = DiagnosticType.warning(
       "JSC_DUPLICATE_ENUM_VALUE",
       "The value {0} is duplicated in this enum.");
+  public static final DiagnosticType COMPUTED_PROP_NAME_IN_ENUM = DiagnosticType.warning(
+      "JSC_COMPUTED_PROP_NAME_IN_ENUM",
+      "Computed property name used in enum.");
+  public static final DiagnosticType SHORTHAND_ASSIGNMENT_IN_ENUM = DiagnosticType.warning(
+      "JSC_SHORTHAND_ASSIGNMENT_IN_ENUM",
+      "Shorthand assignment used in enum.");
 
   private final AbstractCompiler compiler;
 
@@ -51,17 +57,39 @@ public final class CheckEnums extends AbstractPostOrderCallback implements Compi
     if (n.isObjectLit()) {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(n);
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
+        checkSpecialNamingAndAssignmentUsage(t, n);
         checkDuplicateEnumValues(t, n);
       }
+    }
+  }
+
+  private void checkSpecialNamingAndAssignmentUsage(NodeTraversal t, Node n) {
+    for (Node child : n.children()) {
+      checkComputedPropName(t, child);
+      checkShorthandAssignment(t, child);
+    }
+  }
+
+  private void checkComputedPropName(NodeTraversal t, Node node) {
+    if (node.isComputedProp()) {
+      t.report(node, COMPUTED_PROP_NAME_IN_ENUM);
+    }
+  }
+
+  private void checkShorthandAssignment(NodeTraversal t, Node node) {
+    if (node.isStringKey() && !node.hasChildren()) {
+      t.report(node, SHORTHAND_ASSIGNMENT_IN_ENUM);
     }
   }
 
   private void checkDuplicateEnumValues(NodeTraversal t, Node n) {
     Set<String> values = new HashSet<>();
     for (Node child : n.children()) {
-      Node valueNode = child.getFirstChild();
+      Node valueNode = child.getLastChild();
       String value;
-      if (valueNode.isString()) {
+      if (valueNode == null) {
+        return;
+      } else if (valueNode.isString()) {
         value = valueNode.getString();
       } else if (valueNode.isNumber()) {
         value = Double.toString(valueNode.getDouble());
