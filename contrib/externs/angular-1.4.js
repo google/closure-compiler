@@ -343,7 +343,7 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
 
 /**
  * @typedef {{
- *   bindToController: (boolean|undefined),
+ *   bindToController: (boolean|!Object<string, string>|undefined),
  *   compile: (function(
  *       !angular.JQLite=, !angular.Attributes=, Function=)|undefined),
  *   controller: (angular.Injectable|string|undefined),
@@ -371,85 +371,6 @@ angular.LinkingFunctions.post = function(scope, iElement, iAttrs, controller) {
  *   }}
  */
 angular.Directive;
-
-/**
- * @param {!angular.JQLite=} tElement
- * @param {!angular.Attributes=} tAttrs
- * @param {Function=} transclude
- * @return {Function|angular.LinkingFunctions|undefined}
- */
-angular.Directive.compile = function(tElement, tAttrs, transclude) {};
-
-angular.Directive.controller = function() {};
-
-/**
- * @type {string|undefined}
- */
-angular.Directive.controllerAs;
-
-/**
- * @type {(
- *   function(!angular.Scope=, !angular.JQLite=, !angular.Attributes=,
- *     (!Object|!Array.<!Object>)=)|
- *   !angular.LinkingFunctions|
- *   undefined
- * )}
- */
-angular.Directive.link;
-
-/**
- * @type {(string|undefined)}
- */
-angular.Directive.name;
-
-/**
- * @type {(number|undefined)}
- */
-angular.Directive.priority;
-
-/**
- * @type {(boolean|undefined)}
- */
-angular.Directive.replace;
-
-/**
- * @type {(string|Array.<string>|undefined)}
- */
-angular.Directive.require;
-
-/**
- * @type {(string|undefined)}
- */
-angular.Directive.restrict;
-
-/**
- * @type {(boolean|Object.<string, string>|undefined)}
- */
-angular.Directive.scope;
-
-/**
- * @type {(
- *   string|
- *   function(!angular.JQLite=,!angular.Attributes=): string|
- *   undefined
- * )}
- */
-angular.Directive.template;
-
-/**
- * @type {(string|function(!angular.JQLite=, !angular.Attributes=)|undefined)}
- */
-angular.Directive.templateUrl;
-
-/**
- * @type {(boolean|undefined)}
- */
-angular.Directive.terminal;
-
-/**
- * @type {(boolean|string|undefined)}
- */
-angular.Directive.transclude;
 
 /**
  * @typedef {(Function|Array.<string|Function>)}
