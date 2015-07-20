@@ -319,6 +319,28 @@ public final class NodeUtilTest extends TestCase {
     testGetFunctionName(parent.getLastChild(), "qualified.name2");
   }
 
+  public void testGetBestFunctionName1() throws Exception {
+    Compiler compiler = new Compiler();
+    Node parent = compiler.parseTestCode("function func(){}");
+
+    assertEquals("func",
+        NodeUtil.getNearestFunctionName(parent.getFirstChild()));
+  }
+
+  public void testGetBestFunctionName2() throws Exception {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compiler.initOptions(options);
+
+    Node parent = compiler.parseTestCode("var obj = {memFunc(){}}")
+        .getFirstChild().getFirstChild().getFirstChild().getFirstChild();
+
+    assertEquals("memFunc",
+        NodeUtil.getNearestFunctionName(parent.getLastChild()));
+  }
+
+
   private void testGetFunctionName(Node function, String name) {
     assertEquals(Token.FUNCTION, function.getType());
     assertEquals(name, NodeUtil.getFunctionName(function));

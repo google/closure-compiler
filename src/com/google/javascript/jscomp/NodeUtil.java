@@ -499,6 +499,7 @@ public final class NodeUtil {
    * <li>{@code &#123;name: function() ...&#125;}</li>
    * <li>{@code function name() ...}</li>
    * <li>{@code var name = function() ...}</li>
+   * <li>{@code var obj = {name() {} ...}}</li>
    * <li>{@code qualified.name = function() ...}</li>
    * <li>{@code var name2 = function name1() ...}</li>
    * <li>{@code qualified.name2 = function name1() ...}</li>
@@ -517,9 +518,10 @@ public final class NodeUtil {
       return name;
     }
 
-    // Check for the form { 'x' : function() { } }
+    // Check for the form { 'x' : function() { }} and {x() {}}
     Node parent = n.getParent();
     switch (parent.getType()) {
+      case Token.MEMBER_FUNCTION_DEF:
       case Token.SETTER_DEF:
       case Token.GETTER_DEF:
       case Token.STRING_KEY:
