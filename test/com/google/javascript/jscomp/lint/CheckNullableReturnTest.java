@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.lint;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
@@ -124,41 +125,65 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
   }
 
   public void testTwoBranches() {
-    testError(""
-        + "/** @return {SomeType} */\n"
-        + "function f() {\n"
-        + "  if (foo) {\n"
-        + "    return new SomeType();\n"
-        + "  } else {\n"
-        + "    return new SomeType();\n"
-        + "  }\n"
-        + "}");
+    testError(LINE_JOINER.join(
+        "/** @return {SomeType} */",
+        "function f() {",
+        "  if (foo) {",
+        "    return new SomeType();",
+        "  } else {",
+        "    return new SomeType();",
+        "  }",
+        "}"));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError(LINE_JOINER.join(
+        "var obj = {",
+        "  /** @return {SomeType} */",
+        "  f() {",
+        "    if (foo) {",
+        "      return new SomeType();",
+        "    } else {",
+        "      return new SomeType();",
+        "    }",
+        "  }",
+        "}"));
   }
 
   public void testTryCatch() {
-    testError(""
-        + "/** @return {SomeType} */\n"
-        + "function f() {\n"
-        + "  try {\n"
-        + "    return new SomeType();\n"
-        + "  } catch (e) {\n"
-        + "    return new SomeType();\n"
-        + "  }\n"
-        + "}");
+    testError(LINE_JOINER.join(
+        "/** @return {SomeType} */",
+        "function f() {",
+        "  try {",
+        "    return new SomeType();",
+        "  } catch (e) {",
+        "    return new SomeType();",
+        "  }",
+        "}"));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError(LINE_JOINER.join(
+        "var obj = {",
+        "  /** @return {SomeType} */",
+        "  f() {",
+        "    try {",
+        "      return new SomeType();",
+        "    } catch (e) {",
+        "      return new SomeType();",
+        "    }",
+        "  }",
+        "}"));
 
-    testBodyOk(""
-        + "try {\n"
-        + "  if (a) throw '';\n"
-        + "} catch (e) {\n"
-        + "  return null;\n"
-        + "}\n"
-        + "return {}");
+    testBodyOk(LINE_JOINER.join(
+        "try {",
+        "  if (a) throw '';",
+        "} catch (e) {",
+        "  return null;",
+        "}",
+        "return {}"));
 
-    testBodyOk(""
-        + "try {\n"
-        + "  return bar();\n"
-        + "} catch (e) {\n"
-        + "} finally { }");
+    testBodyOk(LINE_JOINER.join(
+        "try {",
+        "  return bar();",
+        "} catch (e) {",
+        "} finally { }"));
   }
 
   public void testNoExplicitReturn() {
@@ -184,20 +209,37 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
   }
 
   public void testNoWarningOnEmptyFunction() {
-    testOk(""
-        + "/** @return {SomeType} */\n"
-        + "function f() {}");
+    testOk(LINE_JOINER.join(
+        "/** @return {SomeType} */",
+        "function f() {}"));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testOk(LINE_JOINER.join(
+        "var obj = {",
+        "  /** @return {SomeType} */\n",
+        "  f() {}",
+        "}"));
   }
 
   public void testNoWarningOnXOrNull() {
-    testOk(""
-        + "/**\n"
-        + " * @param {!Array.<!Object>} arr\n"
-        + " * @return {Object}\n"
-        + " */\n"
-        + "function f4(arr) {\n"
-        + "  return arr[0] || null;\n"
-        + "}");
+    testOk(LINE_JOINER.join(
+        "/**",
+        " * @param {!Array.<!Object>} arr",
+        " * @return {Object}",
+        " */",
+        "function f4(arr) {",
+        "  return arr[0] || null;",
+        "}"));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testOk(LINE_JOINER.join(
+        "var obj = {",
+        "  /**",
+        "   * @param {!Array.<!Object>} arr",
+        "   * @return {Object}",
+        "   */",
+        "  f4(arr) {",
+        "    return arr[0] || null;",
+        "  }",
+        "}"));
   }
 
   public void testNonfunctionTypeDoesntCrash() {
@@ -207,6 +249,10 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
 
   private static String createFunction(String body) {
     return "/** @return {?Object} */ function foo() {" + body + "}";
+  }
+
+  private static String createShorthandFunctionInObjLit(String body) {
+    return "var obj = {/** @return {?Object} */ foo() {" + body + "}}";
   }
 
   private void testOk(String js) {
@@ -219,9 +265,13 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
 
   private void testBodyOk(String body) {
     testOk(createFunction(body));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testOk(createShorthandFunctionInObjLit(body));
   }
 
   private void testBodyError(String body) {
     testError(createFunction(body));
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError(createShorthandFunctionInObjLit(body));
   }
 }
