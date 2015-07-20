@@ -3662,8 +3662,8 @@ public final class NodeUtil {
         return getBestJSDocInfo(parent);
       } else if (isObjectLitKey(parent)) {
         return parent.getJSDocInfo();
-      } else if (parent.isFunction()) {
-        // FUNCTION may be inside ASSIGN
+      } else if (parent.isFunction() || parent.isClass()) {
+        // FUNCTION and CLASS may be inside ASSIGN
         return getBestJSDocInfo(parent);
       } else if (NodeUtil.isNameDeclaration(parent) && parent.hasOneChild()) {
         return parent.getJSDocInfo();

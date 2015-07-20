@@ -1773,6 +1773,14 @@ public final class NodeUtilTest extends TestCase {
     assertNodeTreesEqual(expected, actual);
   }
 
+  public void testGetBestJsDocInfoForClasses() {
+    Node classNode = getClassNode("/** @export */ class Foo {}");
+    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
+
+    classNode = getClassNode("/** @export */ var Foo = class {}");
+    assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
+  }
+
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, "x");
@@ -1794,6 +1802,24 @@ public final class NodeUtilTest extends TestCase {
     assertEquals(
         expected,
         NodeUtil.getNearestFunctionName(getFunctionNode(js)));
+  }
+
+  static Node getClassNode(String js) {
+   Node root = parse(js);
+    return getClassNode(root);
+  }
+
+  static Node getClassNode(Node n) {
+    if (n.isClass()) {
+      return n;
+    }
+    for (Node c : n.children()) {
+      Node result = getClassNode(c);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
   }
 
   static Node getFunctionNode(String js) {
