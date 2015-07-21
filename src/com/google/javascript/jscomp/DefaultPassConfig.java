@@ -250,6 +250,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(jqueryAliases);
     }
 
+    if (options.angularPass && !options.skipNonTranspilationPasses) {
+      checks.add(angularPass);
+    }
+
     if (options.generateExports && !options.skipNonTranspilationPasses) {
       checks.add(generateExports);
     }
@@ -281,10 +285,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
-
-    if (options.angularPass) {
-      checks.add(angularPass);
-    }
 
     if (options.exportTestFunctions) {
       checks.add(exportTestFunctions);
