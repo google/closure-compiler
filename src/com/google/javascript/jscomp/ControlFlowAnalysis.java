@@ -146,6 +146,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    Preconditions.checkArgument(
+        NodeUtil.isValidCfgRoot(root), "Unexpected control flow graph root %s", root);
     this.root = root;
     astPositionCounter = 0;
     astPosition = new HashMap<>();
@@ -265,7 +267,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         case Token.LABEL:
           return n != parent.getFirstChild();
         case Token.FUNCTION:
-          return n == parent.getFirstChild().getNext().getNext();
+          return n == parent.getLastChild();
         case Token.CONTINUE:
         case Token.BREAK:
         case Token.EXPR_RESULT:
@@ -528,9 +530,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
   private void handleFunction(Node node) {
     // A block transfer control to its first child if it is not empty.
-    Preconditions.checkState(node.getChildCount() >= 3);
+    Preconditions.checkState(node.isFunction());
+    Preconditions.checkState(node.getChildCount() == 3);
     createEdge(node, Branch.UNCOND,
-        computeFallThrough(node.getFirstChild().getNext().getNext()));
+        computeFallThrough(node.getLastChild()));
     Preconditions.checkState(exceptionHandler.peek() == node);
     exceptionHandler.pop();
   }

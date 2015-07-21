@@ -134,7 +134,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     // Process the body of the function.
     Preconditions.checkState(t.getScopeRoot().isFunction());
-    cfa.process(null, t.getScopeRoot().getLastChild());
+    cfa.process(null, t.getScopeRoot());
     cfg = cfa.getCfg();
     reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler);
     reachingDef.analyze();

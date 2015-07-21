@@ -2109,12 +2109,28 @@ public final class NodeUtil {
           return false;
         }
         Node child = n.getFirstChild();
-        return child != null && !child.isScript(); // Optimization for empty blocks
+        return child != null && !child.isScript();
       case Token.FOR:
       case Token.FOR_OF:
         return true;
     }
     return false;
+  }
+
+  static boolean isValidCfgRoot(Node n) {
+    switch (n.getType()) {
+      case Token.FUNCTION:
+      case Token.SCRIPT:
+        return true;
+      case Token.BLOCK:
+        // Only valid for top level synthetic block
+        if (n.getParent() == null
+            || n.getFirstChild() != null && n.getFirstChild().isScript()) {
+          return true;
+        }
+      default:
+        return false;
+    }
   }
 
   /**

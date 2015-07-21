@@ -257,9 +257,13 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("for(x of [1, 2, 3]) {foo(); continue; bar();}");
 
     assertUnreachable("for(x of [1, 2, 3]) {if(x) {break; bar();}}");
-    //TODO(user): ES6 scope creator could not correctly handle its scope yet.
-    //                Enable the test after functional scope creator is in place.
-    //assertUnreachable("for(x of [1, 2, 3]) {if(x) {continue; bar();}}");
+    assertUnreachable("for(x of [1, 2, 3]) {if(x) {continue; bar();}}");
+  }
+
+  public void testForLoopsEs6() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    assertUnreachable("for(;;) {if(x) {continue; bar();}}");
+    assertUnreachable("for(x in y) {if(x) {continue; bar();}}");
   }
 
   public void testReturnsInShorthandFunctionOfObjLit() {

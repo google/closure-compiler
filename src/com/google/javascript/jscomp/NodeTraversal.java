@@ -55,6 +55,12 @@ public class NodeTraversal {
    */
   private final Deque<Node> scopeRoots = new ArrayDeque<>();
 
+  /**
+   * A stack of scope roots that are valid cfg roots. All cfg roots that have not been created
+   * are represented in this Deque.
+   */
+  private final Deque<Node> cfgRoots = new ArrayDeque<>();
+
 
   /**
    * Stack of control flow graphs (CFG). There is one CFG per scope. CFGs
@@ -635,15 +641,7 @@ public class NodeTraversal {
 
   /** Examines the functions stack for the last instance of a function node. */
   public Node getEnclosingFunction() {
-    if (scopes.size() + scopeRoots.size() < 2) {
-      return null;
-    } else {
-      if (scopeRoots.isEmpty()) {
-        return scopes.peek().getRootNode();
-      } else {
-        return scopeRoots.peek();
-      }
-    }
+    return getScopeDepth() < 2 ? null : getCfgRoot();
   }
 
   /** Creates a new scope (e.g. when entering a function). */
@@ -651,7 +649,10 @@ public class NodeTraversal {
     Preconditions.checkState(curNode != null);
     compiler.setScope(node);
     scopeRoots.push(node);
-    cfgs.push(null);
+    if (NodeUtil.isValidCfgRoot(node)) {
+      cfgRoots.push(node);
+      cfgs.push(null);
+    }
     if (scopeCallback != null) {
       scopeCallback.enterScope(this);
     }
@@ -670,7 +671,9 @@ public class NodeTraversal {
     Preconditions.checkState(curNode != null);
     compiler.setScope(s.getRootNode());
     scopes.push(s);
-    cfgs.push(null);
+    if (NodeUtil.isValidCfgRoot(s.getRootNode())) {
+      cfgs.push(null);
+    }
     if (!quietly && scopeCallback != null) {
       scopeCallback.enterScope(this);
     }
@@ -688,12 +691,18 @@ public class NodeTraversal {
     if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
+    Node scopeRoot;
     if (scopeRoots.isEmpty()) {
-      scopes.pop();
+      scopeRoot = scopes.pop().getRootNode();
     } else {
-      scopeRoots.pop();
+      scopeRoot = scopeRoots.pop();
     }
-    cfgs.pop();
+    if (NodeUtil.isValidCfgRoot(scopeRoot)) {
+      cfgs.pop();
+      if (!cfgRoots.isEmpty()) {
+        Preconditions.checkState(cfgRoots.pop() == scopeRoot);
+      }
+    }
     if (hasScope()) {
       compiler.setScope(getScopeRoot());
     }
@@ -712,6 +721,7 @@ public class NodeTraversal {
       scopes.push(scope);
     }
     scopeRoots.clear();
+    cfgRoots.clear();
     // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
   }
@@ -727,7 +737,7 @@ public class NodeTraversal {
   public ControlFlowGraph<Node> getControlFlowGraph() {
     if (cfgs.peek() == null) {
       ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-      cfa.process(null, getScopeRoot());
+      cfa.process(null, getCfgRoot());
       cfgs.pop();
       cfgs.push(cfa.getCfg());
     }
@@ -740,6 +750,18 @@ public class NodeTraversal {
       return scopes.peek().getRootNode();
     } else {
       return scopeRoots.peek();
+    }
+  }
+
+  private Node getCfgRoot() {
+    if (cfgRoots.isEmpty()) {
+      Scope currScope = scopes.peek();
+      while (currScope.isBlockScope()) {
+        currScope = currScope.getParent();
+      }
+      return currScope.getRootNode();
+    } else {
+      return cfgRoots.peek();
     }
   }
 

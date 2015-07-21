@@ -264,7 +264,8 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
   }
 
   public boolean isBlockScope() {
-    throw new IllegalStateException("Method isBlockScope cannot be called on typed scopes.");
+    // TypedScope is not ES6 compatible yet, so always return false for now.
+    return false;
   }
 
   public boolean isHoistScope() {
