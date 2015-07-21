@@ -119,7 +119,7 @@ public final class SortedDependenciesTest extends TestCase {
           ImmutableList.of(a, b, c));
       fail("expected exception");
     } catch (CircularDependencyException e) {
-      assertThat(e.getMessage()).isEqualTo("a -> a");
+      assertThat(e.getMessage()).isEqualTo("c -> b -> a -> c");
     }
   }
 
@@ -147,6 +147,90 @@ public final class SortedDependenciesTest extends TestCase {
     assertSortedInputs(
         ImmutableList.of(c, b, a),
         ImmutableList.of(c, b, a));
+  }
+
+  public void testSort6() {
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "gin", "gin", provides("gin"), requires("tonic"), false);
+    SimpleDependencyInfo b = new SimpleDependencyInfo(
+        "tonic", "tonic", provides("tonic"), requires("gin2"), false);
+    SimpleDependencyInfo c = new SimpleDependencyInfo(
+        "gin2", "gin2", provides("gin2"), requires("gin"), false);
+    SimpleDependencyInfo d = new SimpleDependencyInfo(
+        "gin3", "gin3", provides("gin3"), requires("gin"), false);
+
+    try {
+      new SortedDependencies<>(
+          ImmutableList.of(a, b, c, d));
+      fail("expected exception");
+    } catch (CircularDependencyException e) {
+      assertThat(e.getMessage()).isEqualTo("tonic -> gin2 -> gin -> tonic");
+    }
+  }
+
+  public void testSort7() {
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "gin", "gin", provides("gin"), requires("tonic"), false);
+    SimpleDependencyInfo b = new SimpleDependencyInfo(
+        "tonic", "tonic", provides("tonic"), requires("gin"), false);
+    SimpleDependencyInfo c = new SimpleDependencyInfo(
+        "gin2", "gin2", provides("gin2"), requires("gin"), false);
+    SimpleDependencyInfo d = new SimpleDependencyInfo(
+        "gin3", "gin3", provides("gin3"), requires("gin"), false);
+
+    try {
+      new SortedDependencies<>(
+          ImmutableList.of(a, b, c, d));
+      fail("expected exception");
+    } catch (CircularDependencyException e) {
+      assertThat(e.getMessage()).isEqualTo("tonic -> gin -> tonic");
+    }
+  }
+
+  public void testSort8() {
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "A", "A", provides("A"), requires("B"), false);
+    SimpleDependencyInfo b = new SimpleDependencyInfo(
+        "B", "B", provides("B"), requires("C"), false);
+    SimpleDependencyInfo c = new SimpleDependencyInfo(
+        "C", "C", provides("C"), requires("D"), false);
+    SimpleDependencyInfo d = new SimpleDependencyInfo(
+        "D", "D", provides("D"), requires("A"), false);
+
+    try {
+      new SortedDependencies<>(
+          ImmutableList.of(a, b, c, d));
+      fail("expected exception");
+    } catch (CircularDependencyException e) {
+      assertThat(e.getMessage()).isEqualTo("B -> C -> D -> A -> B");
+    }
+  }
+
+  public void testSort9() {
+    SimpleDependencyInfo a = new SimpleDependencyInfo(
+        "A", "A", provides("A"), requires("B"), false);
+    SimpleDependencyInfo a2 = new SimpleDependencyInfo(
+        "A", "A", provides("A"), requires("B1"), false);
+    SimpleDependencyInfo b = new SimpleDependencyInfo(
+        "B", "B", provides("B"), requires("C"), false);
+    SimpleDependencyInfo c = new SimpleDependencyInfo(
+        "C", "C", provides("C"), requires("E"), false);
+    SimpleDependencyInfo d = new SimpleDependencyInfo(
+        "D", "D", provides("D"), requires("A"), false);
+    SimpleDependencyInfo e = new SimpleDependencyInfo(
+        "B1", "B1", provides("B1"), requires("C1"), false);
+    SimpleDependencyInfo f = new SimpleDependencyInfo(
+        "C1", "C1", provides("C1"), requires("D1"), false);
+    SimpleDependencyInfo g = new SimpleDependencyInfo(
+        "D1", "D1", provides("D1"), requires("A"), false);
+
+    try {
+      new SortedDependencies<>(
+          ImmutableList.of(a, a2, b, c, d, e, f, g));
+      fail("expected exception");
+    } catch (CircularDependencyException ex) {
+      assertThat(ex.getMessage()).isEqualTo("B1 -> C1 -> D1 -> A -> B1");
+    }
   }
 
   private void assertSortedInputs(

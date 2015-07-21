@@ -146,9 +146,16 @@ public final class SortedDependencies<INPUT extends DependencyInfo> {
           findRequireInSubGraphOrFail(current, subGraph),
           subGraph, deps, covered);
 
-      // Don't add the input to the list if the cycle has closed already.
-      if (cycle.get(0) != cycle.get(cycle.size() - 1)) {
+      if (current == cycle.get(0)) {
+        return cycle;
+      } else if (cycle.size() == 1 && cycle.get(0) != current) {
         cycle.add(current);
+        // Don't add the input to the list if the cycle has closed already.
+      } else if (cycle.get(0) != current
+          && cycle.get(0) != cycle.get(cycle.size() - 1)) {
+        if (cycle.get(cycle.size() - 1) != current) {
+          cycle.add(current);
+        }
       }
 
       return cycle;
