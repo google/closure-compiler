@@ -340,7 +340,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   public void testReadPropertyOfGlobalThis() {
-    testSame("f(this.prop);");
+    testSame("Object.prototype.prop;", "f(this.prop);", null);
   }
 
   public void testSetQuotedPropertyOfThis() {
@@ -477,6 +477,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         + " * @implements {Foo}\n"
         + " */\n"
         + "function Bar(){}\n"
+        + "Bar.prototype.y;\n"
         + "/** @inheritDoc */\n"
         + "Bar.prototype.x = function() { return this.y; };\n"
         + "Bar.prototype.z = function() {};\n"
@@ -484,12 +485,13 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         + "/** @type {Foo} */ (new Bar).y;";
     String output = ""
         + "function Foo(){}\n"
-        + "Foo.prototype.a = function(){};\n"
+        + "Foo.prototype.b = function(){};\n"
         + "function Bar(){}\n"
-        + "Bar.prototype.a = function() { return this.b; };\n"
+        + "Bar.prototype.a;\n"
+        + "Bar.prototype.b = function() { return this.a; };\n"
         + "Bar.prototype.c = function() {};\n"
         // Simulates inline getters.
-        + "(new Bar).b;";
+        + "(new Bar).a;";
     test(js, output);
   }
 

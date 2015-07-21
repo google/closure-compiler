@@ -90,10 +90,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
           "JSC_INEXISTENT_ENUM_ELEMENT",
           "element {0} does not exist on this enum");
 
-  // TODO(johnlenz): enable this by default, now that we have created
-  // "POSSIBLE_INEXISTENT_PROPERTY"
-  static final DiagnosticType INEXISTENT_PROPERTY =
-      DiagnosticType.disabled(
+  public static final DiagnosticType INEXISTENT_PROPERTY =
+      DiagnosticType.warning(
           "JSC_INEXISTENT_PROPERTY",
           "Property {0} never defined on {1}");
 
