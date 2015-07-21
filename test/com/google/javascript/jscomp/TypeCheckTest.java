@@ -45,7 +45,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   private CheckLevel reportMissingOverrides = CheckLevel.WARNING;
 
-  private static final Joiner lineJoiner = Joiner.on("\n");
+  private static final Joiner LINE_JOINER = Joiner.on("\n");
   private static final String SUGGESTION_CLASS =
       "/** @constructor\n */\n" +
       "function Suggest() {}\n" +
@@ -13607,10 +13607,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIArrayLike8() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Int8Array(10);",
             "arr2[true] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : boolean",
             "required: number"));
@@ -13618,10 +13618,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIArrayLike9() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Int8Array2(10);",
             "arr2[true] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : boolean",
             "required: number"));
@@ -13629,10 +13629,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIArrayLike10() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Int8Array3(10);",
             "arr2[true] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : boolean",
             "required: number"));
@@ -13640,10 +13640,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIArrayLike11() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Int8Array4(10);",
             "arr2[true] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : boolean",
             "required: number"));
@@ -13651,10 +13651,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIArrayLike12() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new BooleanArray5(10);",
             "arr2['prop'] = true;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : string",
             "required: number"));
@@ -13662,17 +13662,17 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testIArrayLike13() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var numOrStr = null ? 0 : 'prop';",
             "var arr2 = new BooleanArray5(10);",
             "arr2[numOrStr] = true;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : (number|string)",
             "required: number"));
   }
 
-  private static final String EXTERNS_WITH_IOBJECT_DECLS = lineJoiner.join(
+  private static final String EXTERNS_WITH_IOBJECT_DECLS = LINE_JOINER.join(
       "/**",
       " * @constructor",
       " * @implements IObject<(string|number), number>",
@@ -13687,7 +13687,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject1() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Object2();",
             "arr2[0] = 1;"));
   }
@@ -13695,7 +13695,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject2() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Object2();",
             "arr2['str'] = 1;"));
   }
@@ -13703,10 +13703,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject3() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Object2();",
             "arr2[true] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : boolean",
             "required: (number|string)"));
@@ -13715,10 +13715,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject4() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Object2();",
             "arr2[function (){}] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : function (): undefined",
             "required: (number|string)"));
@@ -13727,10 +13727,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject5() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Object2();",
             "arr2[{}] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : {}",
             "required: (number|string)"));
@@ -13739,10 +13739,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject6() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Object2();",
             "arr2[undefined] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : undefined",
             "required: (number|string)"));
@@ -13751,10 +13751,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject7() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr2 = new Object2();",
             "arr2[null] = 1;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "restricted index type",
             "found   : null",
             "required: (number|string)"));
@@ -13763,11 +13763,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject8() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr = new Object2();",
             "/** @type {boolean} */",
             "var x = arr[3];"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "initializing variable",
             "found   : number",
             "required: boolean"));
@@ -13776,7 +13776,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject9() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr = new Object2();",
             "/** @type {(number|string)} */",
             "var x = arr[3];"));
@@ -13785,7 +13785,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject10() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr = new Object3();",
             "/** @type {number} */",
             "var x = arr[3];"));
@@ -13794,11 +13794,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject11() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr = new Object3();",
             "/** @type {boolean} */",
             "var x = arr[3];"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "initializing variable",
             "found   : number",
             "required: boolean"));
@@ -13807,11 +13807,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject12() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr = new Object3();",
             "/** @type {string} */",
             "var x = arr[3];"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "initializing variable",
             "found   : number",
             "required: string"));
@@ -13820,10 +13820,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject13() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr = new Object3();",
             "arr[3] = false;"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "assignment",
             "found   : boolean",
             "required: number"));
@@ -13832,13 +13832,79 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testIObject14() throws Exception {
     testTypesWithExtraExterns(
         EXTERNS_WITH_IOBJECT_DECLS,
-        lineJoiner.join(
+        LINE_JOINER.join(
             "var arr = new Object3();",
             "arr[3] = 'value';"),
-        lineJoiner.join(
+        LINE_JOINER.join(
             "assignment",
             "found   : string",
             "required: number"));
+  }
+
+  public void testCovarianceForRecordType28() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " */",
+            "function XMLHttpRequest() {}",
+            "/**",
+            " * @return {undefined}",
+            " */",
+            "XMLHttpRequest.prototype.abort = function() {};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function XDomainRequest() {}",
+            "",
+            "XDomainRequest.prototype.abort = function() {};"),
+        LINE_JOINER.join(
+            "/**",
+            " * @typedef {{abort: !Function, close: !Function}}",
+            " */",
+            "var WritableStreamSink;",
+            "function sendCrossOrigin() {",
+            "  var xhr = new XMLHttpRequest;",
+            "  xhr = new XDomainRequest;",
+            "  return function() {",
+            "    xhr.abort();",
+            "  };",
+            "}"));
+  }
+
+  public void testCovarianceForRecordType29() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " */",
+            "function XMLHttpRequest() {}",
+            "/**",
+            " * @type {!Function}",
+            " */",
+            "XMLHttpRequest.prototype.abort = function() {};",
+            "",
+            "/**",
+            " * @constructor",
+            " */",
+            "function XDomainRequest() {}",
+            "/**",
+            " * @type {!Function}",
+            " */",
+            "XDomainRequest.prototype.abort = function() {};"),
+        LINE_JOINER.join(
+            "/**",
+            " * @typedef {{close: !Function, abort: !Function}}",
+            " */",
+            "var WritableStreamSink;",
+            "function sendCrossOrigin() {",
+            "  var xhr = new XMLHttpRequest;",
+            "  xhr = new XDomainRequest;",
+            "  return function() {",
+            "    xhr.abort();",
+            "  };",
+            "}"));
   }
 
   private void testTypes(String js) throws Exception {
