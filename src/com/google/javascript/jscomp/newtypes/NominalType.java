@@ -930,8 +930,8 @@ public final class NominalType {
       return wrappedAsJSType;
     }
 
-    public JSType getInstanceAsNullableJSType() {
-      return wrappedAsNullableJSType;
+    public JSType getInstanceWithNullability(boolean includeNull) {
+      return includeNull ? wrappedAsNullableJSType : wrappedAsJSType;
     }
 
     // equals and hashCode default to reference equality, which is what we want

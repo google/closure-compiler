@@ -103,8 +103,6 @@ public final class JSTypeCreatorFromJSDoc {
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
 
-  private final JSType objectOrNull;
-
   /** Exception for when unrecognized type names are encountered */
   public static class UnknownTypeException extends Exception {
     UnknownTypeException(String cause) {
@@ -117,21 +115,19 @@ public final class JSTypeCreatorFromJSDoc {
   private Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
 
   public JSTypeCreatorFromJSDoc(CodingConvention convention) {
-    this.objectOrNull = JSType.join(JSType.TOP_OBJECT, JSType.NULL);
     this.qmarkFunctionDeclared = new FunctionAndSlotType(
         null, FunctionTypeBuilder.qmarkFunctionBuilder().buildDeclaration());
     this.convention = convention;
   }
 
   private FunctionAndSlotType qmarkFunctionDeclared;
-  private JSType qmarkFunctionOrNull = null;
+  private static final boolean NULLABLE_TYPES_BY_DEFAULT = true;
 
-  private JSType getQmarkFunctionOrNull(JSTypes commonTypes) {
-    if (qmarkFunctionOrNull == null) {
-      qmarkFunctionOrNull =
-          JSType.join(commonTypes.qmarkFunction(), JSType.NULL);
+  public JSType maybeMakeNullable(JSType t) {
+    if (NULLABLE_TYPES_BY_DEFAULT) {
+      return JSType.join(JSType.NULL, t);
     }
-    return qmarkFunctionOrNull;
+    return t;
   }
 
   public JSType getDeclaredTypeOfNode(JSDocInfo jsdoc, RawNominalType ownerType,
@@ -300,9 +296,9 @@ public final class JSTypeCreatorFromJSDoc {
       case "void":
         return JSType.UNDEFINED;
       case "Function":
-        return getQmarkFunctionOrNull(registry.getCommonTypes());
+        return maybeMakeNullable(registry.getCommonTypes().qmarkFunction());
       case "Object":
-        return objectOrNull;
+        return maybeMakeNullable(JSType.TOP_OBJECT);
       default:
         return lookupTypeByName(typeName, n, registry, outerTypeParameters);
     }
@@ -401,7 +397,7 @@ public final class JSTypeCreatorFromJSDoc {
       throws UnknownTypeException {
     NominalType uninstantiated = rawType.getAsNominalType();
     if (!rawType.isGeneric() && !n.hasChildren()) {
-      return rawType.getInstanceAsNullableJSType();
+      return rawType.getInstanceWithNullability(NULLABLE_TYPES_BY_DEFAULT);
     }
     ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
     if (n.hasChildren()) {
@@ -426,13 +422,11 @@ public final class JSTypeCreatorFromJSDoc {
             uninstantiated.getName(), String.valueOf(typeParamsSize),
             String.valueOf(typeArgsSize)));
       }
-      return JSType.join(JSType.NULL,
-          JSType.fromObjectType(ObjectType.fromNominalType(
+      return maybeMakeNullable(JSType.fromObjectType(ObjectType.fromNominalType(
               uninstantiated.instantiateGenerics(
                   fixLengthOfTypeList(typeParameters.size(), typeArguments)))));
     }
-    return JSType.join(JSType.NULL,
-        JSType.fromObjectType(ObjectType.fromNominalType(
+    return maybeMakeNullable(JSType.fromObjectType(ObjectType.fromNominalType(
             uninstantiated.instantiateGenerics(typeArguments))));
   }
 
