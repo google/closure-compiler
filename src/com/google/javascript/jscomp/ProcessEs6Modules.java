@@ -27,6 +27,7 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -34,7 +35,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Rewrites a ES6 module into a form that can be safely concatenated.
@@ -44,10 +44,6 @@ import java.util.regex.Pattern;
  * @author moz@google.com (Michael Zhou)
  */
 public final class ProcessEs6Modules extends AbstractPostOrderCallback {
-  private static final String MODULE_SLASH = ES6ModuleLoader.MODULE_SLASH;
-
-  private static final String MODULE_NAME_SEPARATOR = "\\$";
-  private static final String MODULE_NAME_PREFIX = "module$";
   private static final String DEFAULT_EXPORT_NAME = "$jscompDefaultExport";
 
   private final ES6ModuleLoader loader;
@@ -123,15 +119,13 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
 
   private void visitImport(NodeTraversal t, Node importDecl, Node parent) {
     String importName = importDecl.getLastChild().getString();
-    String loadAddress = loader.locate(importName, t.getInput());
-    try {
-      loader.load(loadAddress);
-    } catch (ES6ModuleLoader.LoadFailedException e) {
-      compiler.report(t.makeError(
-          importDecl, ES6ModuleLoader.LOAD_ERROR, importName));
+    URI loadAddress = loader.locateEs6Module(importName, t.getInput());
+    if (loadAddress == null) {
+      compiler.report(t.makeError(importDecl, ES6ModuleLoader.LOAD_ERROR, importName));
+      return;
     }
 
-    String moduleName = toModuleName(loadAddress);
+    String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
     Set<String> namesToRequire = new LinkedHashSet<>();
     for (Node child : importDecl.children()) {
       if (child.isEmpty() || child.isString()) {
@@ -230,8 +224,14 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       parent.addChildBefore(importNode, export);
       visit(t, importNode, parent);
 
-      String loadAddress = loader.locate(moduleIdentifier.getString(), t.getInput());
-      String moduleName = toModuleName(loadAddress);
+      URI loadAddress = loader.locateEs6Module(moduleIdentifier.getString(), t.getInput());
+      if (loadAddress == null) {
+        compiler.report(
+            t.makeError(
+                moduleIdentifier, ES6ModuleLoader.LOAD_ERROR, moduleIdentifier.getString()));
+        return;
+      }
+      String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
 
       for (Node exportSpec : export.getFirstChild().children()) {
         String nameFromOtherModule = exportSpec.getFirstChild().getString();
@@ -304,7 +304,8 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     // ES6 module.
     rewriteRequires(script);
 
-    String moduleName = toModuleName(loader.getLoadAddress(t.getInput()));
+    URI normalizedAddress = loader.normalizeInputAddress(t.getInput());
+    String moduleName = ES6ModuleLoader.toModuleName(normalizedAddress);
 
     if (!exportMap.isEmpty()) {
       // Creates an export object for this module.
@@ -413,20 +414,6 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   }
 
   /**
-   * Turns a filename into a JS identifier that is used for moduleNames in
-   * rewritten code. For example, "./foo.js" transformed to "foo".
-   */
-  public static String toModuleName(String filename) {
-    return MODULE_NAME_PREFIX
-        + filename.replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
-            .replaceAll(Pattern.quote(MODULE_SLASH), MODULE_NAME_SEPARATOR)
-            .replaceAll(Pattern.quote("\\"), MODULE_NAME_SEPARATOR)
-            .replaceAll("\\.js$", "")
-            .replaceAll("-", "_")
-            .replaceAll("\\.", "");
-  }
-
-  /**
    * Traverses a node tree and
    * <ol>
    *   <li>Appends a suffix to all global variable names defined in this module.
@@ -497,18 +484,16 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           }
 
           String moduleName = name.substring(0, endIndex);
-          String loadAddress = loader.locate(moduleName, t.getInput());
+          URI loadAddress = loader.locateEs6Module(moduleName, t.getInput());
           if (loadAddress == null) {
             compiler.report(t.makeError(
                 typeNode, ES6ModuleLoader.LOAD_ERROR, moduleName));
             return;
           }
 
-          String globalModuleName = toModuleName(loadAddress);
+          String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
           typeNode.setString(
-              localTypeName == null
-                  ? globalModuleName
-                  : globalModuleName + localTypeName);
+              localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else {
           List<String> splitted = Splitter.on('.').limit(2).splitToList(name);
           String baseName = splitted.get(0);

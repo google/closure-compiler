@@ -135,8 +135,8 @@ public final class CompilerTest extends TestCase {
     assertEquals(3, graph.getModuleCount());
     List<CompilerInput> result = graph.manageDependencies(entryPoints,
         compiler.getInputsForTesting());
-    assertEquals("[module$tonic]", result.get(0).getName());
-    assertEquals("[module$gin]", result.get(1).getName());
+    assertEquals("module$tonic$fillFile", result.get(0).getName());
+    assertEquals("module$gin$fillFile", result.get(1).getName());
     assertEquals("tonic.js", result.get(2).getName());
     assertEquals("gin.js", result.get(3).getName());
     assertEquals("mix.js", result.get(4).getName());
@@ -152,8 +152,7 @@ public final class CompilerTest extends TestCase {
     String error = compiler.getErrorManager().getErrors()[0].toString();
     assertTrue(
         "Unexpected error: " + error,
-        error.contains(
-            "required entry point \"module$missing\" never provided"));
+        error.contains("Failed to load module \"missing\" at gin.js"));
   }
 
   private String normalize(String path) {

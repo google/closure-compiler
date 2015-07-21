@@ -93,7 +93,7 @@ import java.util.regex.Matcher;
  *
  */
 public class Compiler extends AbstractCompiler {
-  static final String SINGLETON_MODULE_NAME = "[singleton]";
+  static final String SINGLETON_MODULE_NAME = "$singleton$";
 
   static final DiagnosticType MODULE_DEPENDENCY_ERROR =
       DiagnosticType.error("JSC_MODULE_DEPENDENCY_ERROR",
@@ -149,7 +149,7 @@ public class Compiler extends AbstractCompiler {
   Node jsRoot;
   Node externAndJsRoot;
 
-  /** @see {@link #getLanguageMode()} */
+  /** @see #getLanguageMode() */
   private CompilerOptions.LanguageMode languageMode =
       CompilerOptions.LanguageMode.ECMASCRIPT3;
 
@@ -500,7 +500,7 @@ public class Compiler extends AbstractCompiler {
    * an empty module.
    */
   static String createFillFileName(String moduleName) {
-    return "[" + moduleName + "]";
+    return moduleName + "$fillFile";
   }
 
   /**
@@ -1507,17 +1507,14 @@ public class Compiler extends AbstractCompiler {
   }
 
   void processEs6Modules() {
+    ES6ModuleLoader loader = new ES6ModuleLoader(options.moduleRoots, inputs);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
       if (root == null) {
         continue;
       }
-      new ProcessEs6Modules(
-          this,
-          new ES6ModuleLoader(this, options.commonJSModulePathPrefix),
-          true)
-      .processFile(root);
+      new ProcessEs6Modules(this, loader, true).processFile(root);
     }
   }
 
@@ -1533,6 +1530,7 @@ public class Compiler extends AbstractCompiler {
     // with multiple ways to express dependencies. Directly support JSModules
     // that are equivalent to a single file and which express their deps
     // directly in the source.
+    ES6ModuleLoader loader = new ES6ModuleLoader(options.moduleRoots, inputs);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -1543,10 +1541,7 @@ public class Compiler extends AbstractCompiler {
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        ProcessCommonJSModules cjs = new ProcessCommonJSModules(
-            this,
-            new ES6ModuleLoader(this, options.commonJSModulePathPrefix),
-            true);
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this, loader, true);
         cjs.process(null, root);
 
         JSModule m = new JSModule(cjs.inputToModuleName(input));
