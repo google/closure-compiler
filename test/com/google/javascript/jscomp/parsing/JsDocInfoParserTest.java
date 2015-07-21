@@ -2114,6 +2114,49 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(jsdoc.isConstructor()).isTrue();
   }
 
+  /**
+   * test structural interface matching
+   */
+  public void testBadTypeDefInterfaceAndStructuralTyping1() throws Exception {
+    JSDocInfo jsdoc = parse("@constructor\n@record*/",
+        "Bad type annotation. conflicting @record tag");
+    assertThat(jsdoc.isInterface()).isFalse();
+  }
+
+  /**
+   * test structural interface matching
+   */
+  public void testBadTypeDefInterfaceAndStructuralTyping2() throws Exception {
+    JSDocInfo jsdoc = parse("@type{number}\n@record*/",
+        "Bad type annotation. conflicting @record tag");
+    assertThat(jsdoc.isInterface()).isFalse();
+  }
+
+  /**
+   * test structural interface matching
+   */
+  public void testBadTypeDefInterfaceAndStructuralTyping3() throws Exception {
+    JSDocInfo jsdoc = parse("@type{{x:number}}\n@record*/",
+        "Bad type annotation. conflicting @record tag");
+    assertThat(jsdoc.isInterface()).isFalse();
+  }
+
+  /**
+   * test structural interface matching
+   */
+  public void testBadTypeDefInterfaceAndStructuralTyping4() throws Exception {
+    JSDocInfo jsdoc = parse("@interface\n@record*/",
+        "Bad type annotation. conflicting @record tag");
+  }
+
+  /**
+   * test structural interface matching
+   */
+  public void testBadTypeDefInterfaceAndStructuralTyping5() throws Exception {
+    JSDocInfo jsdoc = parse("@record*/");
+    assertThat(jsdoc.isInterface()).isTrue();
+  }
+
   public void testDocumentationParameter() throws Exception {
     JSDocInfo jsdoc
         = parse("@param {Number} number42 This is a description.*/", true);

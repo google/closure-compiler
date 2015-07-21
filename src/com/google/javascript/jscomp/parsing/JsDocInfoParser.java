@@ -423,6 +423,13 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case RECORD:
+          if (!jsdocBuilder.recordImplicitMatch()) {
+            parser.addTypeWarning("msg.jsdoc.record",
+                stream.getLineno(), stream.getCharno());
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case DEPRECATED:
           if (!jsdocBuilder.recordDeprecated()) {
             parser.addParserWarning("msg.jsdoc.deprecated",

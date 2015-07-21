@@ -30,6 +30,7 @@ enum Annotation {
   CONSISTENTIDGENERATOR,
   CONSTANT,
   CONSTRUCTOR,
+  RECORD,
   DEFINE,
   DEPRECATED,
   DESC,
@@ -111,6 +112,7 @@ enum Annotation {
       put("implicitCast", Annotation.IMPLICIT_CAST).
       put("inheritDoc", Annotation.INHERIT_DOC).
       put("interface", Annotation.INTERFACE).
+      put("record", Annotation.RECORD).
       put("jaggerInject", Annotation.JAGGER_INJECT).
       put("jaggerModule", Annotation.JAGGER_MODULE).
       put("jaggerProvidePromise", Annotation.JAGGER_PROVIDE_PROMISE).

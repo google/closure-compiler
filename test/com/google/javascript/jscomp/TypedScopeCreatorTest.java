@@ -114,12 +114,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testPrototypePropertyMethodWithoutAnnotation() {
-    testSame("var Foo = function Foo() {};" +
-             "var proto = Foo.prototype = {" +
-             "   bar: function(a, b){}" +
-             "};" +
-             "proto.baz = function(c) {};" +
-             "(function() { proto.baz = function() {}; })();");
+    testSame("var Foo = function Foo() {};"
+        + "var proto = Foo.prototype = {"
+        + "   bar: function(a, b){}"
+        + "};"
+        + "proto.baz = function(c) {};"
+        + "(function() { proto.baz = function() {}; })();");
     ObjectType foo = (ObjectType) findNameType("Foo", globalScope);
     assertTrue(foo.hasProperty("prototype"));
 
@@ -217,8 +217,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testPrototypeInit() {
-    testSame("/** @constructor */ var Foo = function() {};" +
-        "Foo.prototype = {bar: 1}; var foo = new Foo();");
+    testSame("/** @constructor */ var Foo = function() {};"
+        + "Foo.prototype = {bar: 1}; var foo = new Foo();");
     ObjectType foo = (ObjectType) findNameType("foo", globalScope);
     assertTrue(foo.hasProperty("bar"));
     assertEquals("number", foo.getPropertyType("bar").toString());
@@ -227,14 +227,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testBogusPrototypeInit() {
     // This used to cause a compiler crash.
-    testSame("/** @const */ var goog = {}; " +
-        "goog.F = {}; /** @const */ goog.F.prototype = {};" +
-        "/** @constructor */ goog.F = function() {};");
+    testSame("/** @const */ var goog = {}; "
+        + "goog.F = {}; /** @const */ goog.F.prototype = {};"
+        + "/** @constructor */ goog.F = function() {};");
   }
 
   public void testInferredPrototypeProperty1() {
-    testSame("/** @constructor */ var Foo = function() {};" +
-        "Foo.prototype.bar = 1; var x = new Foo();");
+    testSame("/** @constructor */ var Foo = function() {};"
+        + "Foo.prototype.bar = 1; var x = new Foo();");
 
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertTrue(x.hasProperty("bar"));
@@ -243,8 +243,8 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testInferredPrototypeProperty2() {
-    testSame("/** @constructor */ var Foo = function() {};" +
-        "Foo.prototype = {bar: 1}; var x = new Foo();");
+    testSame("/** @constructor */ var Foo = function() {};"
+        + "Foo.prototype = {bar: 1}; var x = new Foo();");
 
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertTrue(x.hasProperty("bar"));
@@ -268,11 +268,11 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testNamespacedEnum() {
-    testSame("var goog = {}; goog.ui = {};" +
-        "/** @constructor */goog.ui.Zippy = function() {};" +
-        "/** @enum{string} */goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };" +
-        "var x = goog.ui.Zippy.EventType;" +
-        "var y = goog.ui.Zippy.EventType.TOGGLE;");
+    testSame("var goog = {}; goog.ui = {};"
+        + "/** @constructor */goog.ui.Zippy = function() {};"
+        + "/** @enum{string} */goog.ui.Zippy.EventType = { TOGGLE: 'toggle' };"
+        + "var x = goog.ui.Zippy.EventType;"
+        + "var y = goog.ui.Zippy.EventType.TOGGLE;");
 
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertTrue(x.isEnumType());
@@ -731,6 +731,74 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
     JSType y = findNameType("y", globalScope);
     assertEquals("(null|number)", y.toString());
+  }
+
+  public void testStructuralInterfaceMatchingOnInterface1() throws Exception {
+    testSame("/** @record */ var I = function() {};" +
+        "/** @type {number} */ I.prototype.bar;" +
+        "I.prototype.baz = function(){};");
+
+    TypedVar i = globalScope.getVar("I");
+    assertEquals("function (this:I): ?", i.getType().toString());
+    assertTrue(i.getType().isInterface());
+    assertTrue(i.getType().isFunctionType());
+    assertTrue(i.getType().toMaybeFunctionType().usesImplicitMatch());
+  }
+
+  public void testStructuralInterfaceMatchingOnInterface2() throws Exception {
+    testSame("/** @interface */ var I = function() {};" +
+        "/** @type {number} */ I.prototype.bar;" +
+        "I.prototype.baz = function(){};");
+
+    TypedVar i = globalScope.getVar("I");
+    assertEquals("function (this:I): ?", i.getType().toString());
+    assertTrue(i.getType().isInterface());
+    assertTrue(i.getType().isFunctionType());
+    assertFalse(i.getType().toMaybeFunctionType().usesImplicitMatch());
+  }
+
+  public void testStructuralInterfaceMatchingOnInterface3() throws Exception {
+    testSame("/** @interface */ var I = function() {};" +
+        "/** @type {number} */ I.prototype.bar;" +
+        "/** @record */ I.prototype.baz = function() {};");
+
+    TypedVar baz = globalScope.getVar("I.prototype.baz");
+    assertTrue(baz.getType().isInterface());
+    assertTrue(baz.getType().isFunctionType());
+    assertTrue(baz.getType().toMaybeFunctionType().usesImplicitMatch());
+  }
+
+  public void testStructuralInterfaceMatchingOnInterface4() throws Exception {
+    testSame("/** @interface */ var I = function() {};" +
+        "/** @type {number} */ I.prototype.bar;" +
+        "/** @interface */ I.prototype.baz = function() {};");
+
+    TypedVar baz = globalScope.getVar("I.prototype.baz");
+    assertTrue(baz.getType().isInterface());
+    assertTrue(baz.getType().isFunctionType());
+    assertFalse(baz.getType().toMaybeFunctionType().usesImplicitMatch());
+  }
+
+  public void testStructuralInterfaceMatchingOnInterface5() throws Exception {
+    testSame("/** @constructor */ var C = function() {};" +
+        "/** @type {number} */ C.prototype.bar;" +
+        "/** @record */ C.prototype.baz = function() {};" +
+        "var c = new C(); var cbaz = c.baz;");
+
+    TypedVar cBaz = globalScope.getVar("cbaz");
+    assertTrue(cBaz.getType().isFunctionType());
+    assertTrue(cBaz.getType().toMaybeFunctionType().usesImplicitMatch());
+  }
+
+  public void testStructuralInterfaceMatchingOnInterface6() throws Exception {
+    testSame("/** @constructor */ var C = function() {};" +
+        "/** @type {number} */ C.prototype.bar;" +
+        "/** @interface */ C.prototype.baz = function() {};" +
+        "var c = new C(); var cbaz = c.baz;");
+
+    TypedVar cBaz = globalScope.getVar("cbaz");
+    assertTrue(cBaz.getType().isFunctionType());
+    assertFalse(cBaz.getType().toMaybeFunctionType().usesImplicitMatch());
   }
 
   public void testPropertiesOnInterface() throws Exception {

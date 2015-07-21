@@ -34,8 +34,11 @@ public final class JSDocInfoPrinter {
     if (info.isConstructor()) {
       sb.append("@constructor ");
     }
-    if (info.isInterface()) {
+    if (info.isInterface() && !info.usesImplicitMatch()) {
       sb.append("@interface ");
+    }
+    if (info.isInterface() && info.usesImplicitMatch()) {
+      sb.append("@record ");
     }
     if (info.makesDicts()) {
       sb.append("@dict ");

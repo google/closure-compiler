@@ -40,7 +40,6 @@
 package com.google.javascript.rhino;
 
 import com.google.common.base.Preconditions;
-
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 
 import java.util.List;
@@ -318,8 +317,8 @@ public final class JSDocInfoBuilder {
    *     {@code false} if a parameter with the same name was already defined
    */
   public boolean recordParameter(String parameterName, JSTypeExpression type) {
-    if (!hasAnySingletonTypeTags() &&
-        currentInfo.declareParam(type, parameterName)) {
+    if (!hasAnySingletonTypeTags()
+        && currentInfo.declareParam(type, parameterName)) {
       populated = true;
       return true;
     } else {
@@ -588,8 +587,8 @@ public final class JSDocInfoBuilder {
    *     it is invalid or was already defined
    */
   public boolean recordReturnType(JSTypeExpression jsType) {
-    if (jsType != null && currentInfo.getReturnType() == null &&
-        !hasAnySingletonTypeTags()) {
+    if (jsType != null && currentInfo.getReturnType() == null
+        && !hasAnySingletonTypeTags()) {
       currentInfo.setReturnType(jsType);
       populated = true;
       return true;
@@ -846,6 +845,27 @@ public final class JSDocInfoBuilder {
     if (!hasAnySingletonTypeTags() &&
         !currentInfo.isConstructor() && !currentInfo.isInterface()) {
       currentInfo.setConstructor(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#usesImplicitMatch()} flag set to {@code true}.
+   *
+   * @return {@code true} if the {@code @record} tag was recorded and {@code false}
+   *     if it was already defined or it was incompatible with the existing
+   *     flags
+   */
+  public boolean recordImplicitMatch() {
+    if (!hasAnySingletonTypeTags() &&
+        !currentInfo.isInterface() &&
+        !currentInfo.isConstructor()) {
+      currentInfo.setInterface(true);
+      currentInfo.setImplicitMatch(true);
       populated = true;
       return true;
     } else {

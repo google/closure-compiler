@@ -83,6 +83,9 @@ class DeclaredGlobalExternsOnWindow
         if (oldJSDocInfo.isInterface()) {
           builder.recordInterface();
         }
+        if (oldJSDocInfo.usesImplicitMatch()) {
+          builder.recordImplicitMatch();
+        }
         if (oldJSDocInfo.hasEnumParameterType()) {
           builder.recordEnumParameterType(oldJSDocInfo.getEnumParameterType());
         }

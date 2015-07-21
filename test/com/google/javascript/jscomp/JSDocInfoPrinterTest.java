@@ -52,6 +52,15 @@ public final class JSDocInfoPrinterTest extends TestCase {
         JSDocInfoPrinter.print(info));
   }
 
+  /**
+   * test case for the @record tag
+   */
+  public void testRecordTag() {
+    builder.recordImplicitMatch();
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/**@record */", JSDocInfoPrinter.print(info));
+  }
+
   public void testTemplate() {
     builder.recordTemplateTypeName("T");
     builder.recordTemplateTypeName("U");

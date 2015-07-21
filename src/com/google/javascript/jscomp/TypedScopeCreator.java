@@ -981,7 +981,10 @@ final class TypedScopeCreator implements ScopeCreator {
               .buildAndRegister();
         }
       }
-
+      // set structural interface matching flag
+      if (info != null && info.isInterface() && info.usesImplicitMatch()) {
+        functionType.setImplicitMatch(true);
+      }
       // all done
       return functionType;
     }

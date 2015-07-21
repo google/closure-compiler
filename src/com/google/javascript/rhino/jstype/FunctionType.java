@@ -115,6 +115,12 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private Node source;
 
   /**
+   * if this is an interface, indicate whether or not it supports
+   * structural interface matching
+   */
+  private boolean usesImplicitMatch;
+
+  /**
    * The interfaces directly implemented by this function (for constructors)
    * It is only relevant for constructors. May not be {@code null}.
    */
@@ -158,6 +164,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
           registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
     }
     this.call = arrowType;
+    this.usesImplicitMatch = false;
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -175,6 +182,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
     this.kind = Kind.INTERFACE;
     this.typeOfThis = new InstanceObjectType(registry, this);
+    this.usesImplicitMatch = false;
   }
 
   /** Creates an instance for a function that is an interface. */
@@ -1333,5 +1341,19 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       return true;
     }
     return !super.getOwnPropertyNames().isEmpty();
+  }
+
+  /**
+   * sets the current interface type to support
+   * structural interface matching (abbr. SMI)
+   * @param flag indicates whether or not it should support SMI
+   */
+  public void setImplicitMatch(boolean flag) {
+    Preconditions.checkState(isInterface());
+    usesImplicitMatch = flag;
+  }
+
+  public boolean usesImplicitMatch() {
+    return isInterface() && usesImplicitMatch;
   }
 }
