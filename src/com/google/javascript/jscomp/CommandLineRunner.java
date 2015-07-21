@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.lang.reflect.AnnotatedElement;
+import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -416,8 +417,14 @@ public class CommandLineRunner extends
     @Option(name = "--common_js_module_path_prefix",
         hidden = true,
         usage = "Path prefix to be removed from CommonJS module names.")
-    private String commonJsPathPrefix =
-        ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
+    private List<String> commonJsPathPrefix =
+        ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+
+    @Option(name = "--js_module_root",
+        hidden = true,
+        usage = "Path prefixes to be removed from ES6 & CommonJS modules.")
+    private List<String> moduleRoot =
+        ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
     @Option(name = "--common_js_entry_module",
         hidden = true,
@@ -1004,7 +1011,7 @@ public class CommandLineRunner extends
         reportError("Please specify --common_js_entry_module.");
       }
       flags.closureEntryPoint = ImmutableList.of(
-          ProcessCommonJSModules.toModuleName(flags.commonJsEntryModule));
+          ES6ModuleLoader.toModuleName(URI.create(flags.commonJsEntryModule)));
     }
 
     if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
@@ -1045,6 +1052,10 @@ public class CommandLineRunner extends
         conv = new ClosureCodingConvention();
       }
 
+      // For backwards compatibility, allow both commonJsPathPrefix and jsModuleRoot.
+      List<String> moduleRoots = new ArrayList<>(flags.commonJsPathPrefix);
+      moduleRoots.addAll(flags.moduleRoot);
+
       getCommandLineConfig()
           .setPrintTree(flags.printTree)
           .setPrintAst(flags.printAst)
@@ -1078,7 +1089,7 @@ public class CommandLineRunner extends
           .setLanguageIn(flags.languageIn)
           .setLanguageOut(flags.languageOut)
           .setProcessCommonJSModules(flags.processCommonJsModules)
-          .setCommonJSModulePathPrefix(flags.commonJsPathPrefix)
+          .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
           .setAngularPass(flags.angularPass)

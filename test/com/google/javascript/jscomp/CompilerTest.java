@@ -153,7 +153,7 @@ public final class CompilerTest extends TestCase {
     assertTrue(
         "Unexpected error: " + error,
         error.contains(
-            "required entry point \"module$missing\" never provided"));
+            "Failed to load module \"missing\" at gin.js"));
   }
 
   private String normalize(String path) {

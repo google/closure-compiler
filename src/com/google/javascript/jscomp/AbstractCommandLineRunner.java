@@ -391,7 +391,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
     options.transformAMDToCJSModules = config.transformAMDToCJSModules;
     options.processCommonJSModules = config.processCommonJSModules;
-    options.commonJSModulePathPrefix = config.commonJSModulePathPrefix;
+    options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
     options.tracer = config.tracerMode;
     options.useNewTypeInference = config.useNewTypeInference;
@@ -2068,15 +2068,21 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private String commonJSModulePathPrefix =
-        ProcessCommonJSModules.DEFAULT_FILENAME_PREFIX;
+    private List<String> moduleRoots =
+        ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
     /**
-     * Sets the CommonJS module path prefix.
+     * Sets the CommonJS module path prefix (maps to {@link #setModuleRoots(List)}).
      */
-    CommandLineConfig setCommonJSModulePathPrefix(
-        String commonJSModulePathPrefix) {
-      this.commonJSModulePathPrefix = commonJSModulePathPrefix;
+    CommandLineConfig setCommonJSModulePathPrefix(String prefix) {
+      return setModuleRoots(ImmutableList.of(prefix));
+    }
+
+    /**
+     * Sets the module roots.
+     */
+    CommandLineConfig setModuleRoots(List<String> jsModuleRoots) {
+      this.moduleRoots = jsModuleRoots;
       return this;
     }
 
