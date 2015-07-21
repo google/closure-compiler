@@ -263,4 +263,42 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
     testFailure("function Foo() {} " +
         "Foo.prototype.setFoo = (f) => { this.foo = f; };");
   }
+
+  public void testInnerFunctionInClassMethod1() {
+    // TODO(user): It would be nice to warn for using 'this' here
+    testSame(LINE_JOINER.join(
+        "function Foo() {}",
+        "Foo.prototype.init = function() {",
+        "  button.addEventListener('click', function () {",
+        "    this.click();",
+        "  });",
+        "}",
+        "Foo.prototype.click = function() {}"));
+  }
+
+  public void testInnerFunctionInClassMethod2() {
+    // TODO(user): It would be nice to warn for using 'this' here
+    testSame(LINE_JOINER.join(
+        "function Foo() {",
+        "  var x = function() {",
+        "    button.addEventListener('click', function () {",
+        "      this.click();",
+        "    });",
+        "  }",
+        "}"));
+  }
+
+  public void testInnerFunctionInEs6ClassMethod() {
+    // TODO(user): It would be nice to warn for using 'this' here
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame(LINE_JOINER.join(
+        "class Foo {",
+        "  constructor() {",
+        "    button.addEventListener('click', function () {",
+        "      this.click();",
+        "    });",
+        "  }",
+        "  click() {}",
+        "}"));
+  }
 }
