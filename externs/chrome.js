@@ -400,14 +400,14 @@ chrome.webstore = {};
 
 
 /**
- * @param {string|function()|function(string)=}
+ * @param {string|function()|function(string, string=)=}
  *     opt_urlOrSuccessCallbackOrFailureCallback Either the URL to install or
  *     the succcess callback taking no arg or the failure callback taking an
  *     error string arg.
- * @param {function()|function(string)=} opt_successCallbackOrFailureCallback
- *     Either the succcess callback taking no arg or the failure callback
- *     taking an error string arg.
- * @param {function(string)=} opt_failureCallback The failure callback.
+ * @param {function()|function(string, string=)=}
+ *     opt_successCallbackOrFailureCallback Either the succcess callback taking
+ *     no arg or the failure callback taking an error string arg.
+ * @param {function(string, string=)=} opt_failureCallback The failure callback.
  */
 chrome.webstore.install = function(
     opt_urlOrSuccessCallbackOrFailureCallback,
