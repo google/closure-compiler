@@ -13841,6 +13841,554 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testCovarianceForRecordType1() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor ",
+            "  * @extends {C} ",
+            "  */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop: C}} */",
+            "var r1;",
+            "/** @type {{prop: C2}} */",
+            "var r2;",
+            "r1 = r2;"));
+  }
+
+  public void testCovarianceForRecordType2() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor ",
+            "  * @extends {C} ",
+            "  */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop: C, prop2: C}} */",
+            "var r1;",
+            "/** @type {{prop: C2, prop2: C}} */",
+            "var r2;",
+            "r1 = r2;"));
+  }
+
+  public void testCovarianceForRecordType3() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor @extends {C} */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop: C}} */",
+            "var r1;",
+            "/** @type {{prop: C2, prop2: C}} */",
+            "var r2;",
+            "r1 = r2;"));
+  }
+
+  public void testCovarianceForRecordType4() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor @extends {C} */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop: C, prop2: C}} */",
+            "var r1;",
+            "/** @type {{prop: C2}} */",
+            "var r2;",
+            "r1 = r2;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {prop: (C2|null)}",
+            "required: {prop: (C|null), prop2: (C|null)}"));
+  }
+
+  public void testCovarianceForRecordType5() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop: C}} */",
+            "var r1;",
+            "/** @type {{prop: C2}} */",
+            "var r2;",
+            "r1 = r2;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {prop: (C2|null)}",
+            "required: {prop: (C|null)}"));
+  }
+
+  public void testCovarianceForRecordType6() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor @extends {C} */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop: C2}} */",
+            "var r1;",
+            "/** @type {{prop: C}} */",
+            "var r2;",
+            "r1 = r2;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {prop: (C|null)}",
+            "required: {prop: (C2|null)}"));
+  }
+
+  public void testCovarianceForRecordType7() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor @extends {C} */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop: C2, prop2: C2}} */",
+            "var r1;",
+            "/** @type {{prop: C2, prop2: C}} */",
+            "var r2;",
+            "r1 = r2;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {prop: (C2|null), prop2: (C|null)}",
+            "required: {prop: (C2|null), prop2: (C2|null)}"));
+  }
+
+  public void testCovarianceForRecordType8() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo(){}",
+            "/** @type {number} */",
+            "Foo.prototype.x = 5",
+            "/** @type {string} */",
+            "Foo.prototype.y = 'str'"),
+        LINE_JOINER.join(
+            "/** @type {{x: number, y: string}} */",
+            "var r1 = {x: 1, y: 'value'};",
+            "",
+            "/** @type {!Foo} */",
+            "var f = new Foo();",
+            "r1 = f;"));
+  }
+
+  public void testCovarianceForRecordType9() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo(){}",
+            "/** @type {number} */",
+            "Foo.prototype.x1 = 5",
+            "/** @type {string} */",
+            "Foo.prototype.y = 'str'"),
+        LINE_JOINER.join(
+            "/** @type {{x: number, y: string}} */",
+            "var r1 = {x: 1, y: 'value'};",
+            "",
+            "/** @type {!Foo} */",
+            "var f = new Foo();",
+            "f = r1;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {x: number, y: string}",
+            "required: Foo"));
+  }
+
+  public void testCovarianceForRecordType10() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {{x: !Foo}} */",
+            "Foo.prototype.x = {x: new Foo()};"),
+        LINE_JOINER.join(
+            "/** @type {!Foo} */",
+            "var o = new Foo();",
+            "",
+            "/** @type {{x: !Foo}} */",
+            "var r = {x : new Foo()};",
+            "r = o;"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : Foo",
+            "required: {x: Foo}"));
+  }
+
+  public void testCovarianceForRecordType11() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function Foo() {}",
+            "/** @constructor @implements {Foo} */",
+            "function Bar1() {}",
+            "/** @return {number} */",
+            "Bar1.prototype.y = function (){return 1;};",
+            "/** @constructor @implements {Foo} */",
+            "function Bar() {}",
+            "/** @return {string} */",
+            "Bar.prototype.y = function (){return 'test';};"),
+        LINE_JOINER.join(
+            "function fun(/** Foo */f) {",
+            "  f.y();",
+            "}",
+            "fun(new Bar1())",
+            "fun(new Bar());"));
+  }
+
+  public void testCovarianceForRecordType12() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function Foo() {}",
+            "/** @constructor @implements {Foo} */",
+            "function Bar1() {}",
+            "/** @constructor @implements {Foo} */",
+            "function Bar() {}",
+            "/** @return {undefined} */",
+            "Bar.prototype.y = function (){};"),
+        LINE_JOINER.join(
+            "/** @type{Foo} */",
+            "var f = new Bar1();",
+            "f.y();"));
+  }
+
+  public void testCovarianceForRecordType13() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function I() {}",
+            "/** @constructor @implements {I} */",
+            "function C() {}",
+            "/** @return {undefined} */",
+            "C.prototype.y = function (){};"),
+        LINE_JOINER.join(
+            "/** @type{{x: {obj: I}}} */",
+            "var ri;",
+            "ri.x.obj.y();"));
+  }
+
+  public void testCovarianceForRecordType14() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function I() {}",
+            "/** @constructor */",
+            "function C() {}",
+            "/** @return {undefined} */",
+            "C.prototype.y = function (){};"),
+        LINE_JOINER.join(
+            "/** @type{({x: {obj: I}}|{x: {obj: C}})} */",
+            "var ri;",
+            "ri.x.obj.y();"));
+  }
+
+  public void testCovarianceForRecordType15() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @return {undefined} */",
+            "C.prototype.y1 = function (){};",
+            "/** @constructor */",
+            "function C1() {}",
+            "/** @return {undefined} */",
+            "C1.prototype.y = function (){};"),
+        LINE_JOINER.join(
+            "/** @type{({x: {obj: C}}|{x: {obj: C1}})} */",
+            "var ri;",
+            "ri.x.obj.y1();",
+            "ri.x.obj.y();"));
+  }
+
+  public void testCovarianceForRecordType16() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @return {number} */",
+            "C.prototype.y = function (){return 1;};",
+            "/** @constructor */",
+            "function C1() {}",
+            "/** @return {string} */",
+            "C1.prototype.y = function (){return 'test';};"),
+        LINE_JOINER.join(
+            "/** @type{({x: {obj: C}}|{x: {obj: C1}})} */",
+            "var ri;",
+            "ri.x.obj.y();"));
+  }
+
+  public void testCovarianceForRecordType17() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @interface */",
+            "function Foo() {}",
+            "/** @constructor @implements {Foo} */",
+            "function Bar1() {}",
+            "Bar1.prototype.y = function (){return {};};",
+            "/** @constructor @implements {Foo} */",
+            "function Bar() {}",
+            "/** @return {number} */",
+            "Bar.prototype.y = function (){return 1;};"),
+        LINE_JOINER.join(
+            "/** @type {Foo} */ var f;",
+            "f.y();"));
+  }
+
+  public void testCovarianceForRecordType18() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor*/",
+            "function Bar1() {}",
+            "/** @type {{x: number}} */",
+            "Bar1.prototype.prop;",
+            "/** @constructor */",
+            "function Bar() {}",
+            "/** @type {{x: number, y: number}} */",
+            "Bar.prototype.prop;"),
+        LINE_JOINER.join(
+            "/** @type {{x: number}} */ var f;",
+            "f.z;"));
+  }
+
+  public void testCovarianceForRecordType19() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Bar1() {}",
+            "/** @type {number} */",
+            "Bar1.prototype.prop;",
+            "/** @type {number} */",
+            "Bar1.prototype.prop1;",
+            "/** @constructor */",
+            "function Bar2() {}",
+            "/** @type {number} */",
+            "Bar2.prototype.prop;"),
+        LINE_JOINER.join(
+            "/** @type {(Bar1|Bar2)} */ var b;",
+            "var x = b.prop1"));
+  }
+
+  public void testCovarianceForRecordType20() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Bar1() {}",
+            "/** @type {number} */",
+            "Bar1.prototype.prop;",
+            "/** @type {number} */",
+            "Bar1.prototype.prop1;",
+            "/** @type {number} */",
+            "Bar1.prototype.prop2;"),
+        LINE_JOINER.join(
+            "/** @type {{prop2:number}} */ var c;",
+            "/** @type {(Bar1|{prop:number, prop2: number})} */ var b;",
+            // there should be no warning saying that
+            // prop2 is not defined on b;
+            "var x = b.prop2"));
+  }
+
+  public void testCovarianceForRecordType20_2() throws Exception {
+    testTypesWithExtraExterns(
+        "",
+        LINE_JOINER.join(
+            "/** @type {{prop2:number}} */ var c;",
+            "/** @type {({prop:number, prop1: number, prop2: number}|",
+            "{prop:number, prop2: number})} */ var b;",
+            // there should be no warning saying that
+            // prop2 is not defined on b;
+            "var x = b.prop2"));
+  }
+
+  public void testCovarianceForRecordType21() throws Exception {
+    testTypesWithExtraExterns(
+        "",
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Bar1() {};",
+            "/** @type {number} */",
+            "Bar1.prototype.propName;",
+            "/** @type {number} */",
+            "Bar1.prototype.propName1;",
+            "/** @type {{prop2:number}} */ var c;",
+            "/** @type {(Bar1|{propName:number, propName1: number})} */ var b;",
+            "var x = b.prop2;"),
+        "Property prop2 never defined on b");
+  }
+
+  public void testCovarianceForRecordType22() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Bar() {}",
+            "/** @type {number} */",
+            "Bar.prototype.prop2;",
+            "/** @constructor */",
+            "function Bar1() {}",
+            "/** @type {number} */",
+            "Bar1.prototype.prop;",
+            "/** @type {number} */",
+            "Bar1.prototype.prop1;",
+            "/** @type {number} */",
+            "Bar1.prototype.prop2;"),
+        LINE_JOINER.join(
+            "/** @type {(Bar1|{prop:number, prop1: number})} */ var b;",
+            // there should be no warning saying that
+            // prop2 is not defined on b;
+            "var x = b.prop2"));
+  }
+
+  public void testCovarianceForRecordType23() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "/** @constructor @extends{A} */",
+            "function B() {}",
+            "",
+            "/** @constructor */",
+            "function C() {}",
+            "/** @type {B} */",
+            "C.prototype.prop2;",
+            "/** @type {number} */",
+            "C.prototype.prop3;",
+            "",
+            "/** @constructor */",
+            "function D() {}",
+            "/** @type {number} */",
+            "D.prototype.prop;",
+            "/** @type {number} */",
+            "D.prototype.prop1;",
+            "/** @type {B} */",
+            "D.prototype.prop2;"),
+        LINE_JOINER.join(
+            "/** @type {{prop2: A}} */ var record;",
+            "var xhr = new C();",
+            "if (true) { xhr = new D(); }",
+            // there should be no warning saying that
+            // prop2 is not defined on b;
+            "var x = xhr.prop2"));
+  }
+
+  public void testCovarianceForRecordType24() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "",
+            "/** @type {!Function} */",
+            "C.prototype.abort = function() {};",
+            "",
+            "/** @type{number} */",
+            "C.prototype.test2 = 1;"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  /** @type{{abort: !Function, count: number}} */",
+            "  var x;",
+            "}",
+            "",
+            "function f2() {",
+            "  /** @type{(C|{abort: Function})} */",
+            "  var y;",
+            "  y.abort();",
+            "}"));
+  }
+
+  public void testCovarianceForRecordType25() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "",
+            "/** @type {!Function} */",
+            "C.prototype.abort = function() {};",
+            "",
+            "/** @type{number} */",
+            "C.prototype.test2 = 1;"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  /** @type{!Function} */ var f;",
+            "  var x = {abort: f, count: 1}",
+            "  return x;",
+            "}",
+            "",
+            "function f2() {",
+            "  /** @type{(C|{test2: number})} */",
+            "  var y;",
+            "  y.abort();",
+            "}"));
+  }
+
+  public void testCovarianceForRecordType26() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "",
+            "C.prototype.abort = function() {};",
+            "",
+            "/** @type{number} */",
+            "C.prototype.test2 = 1;"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  /** @type{{abort: !Function}} */",
+            "  var x;",
+            "}",
+            "",
+            "function f2() {",
+            "  /** @type{(C|{test2: number})} */",
+            "  var y;",
+            "  /** @type {C} */ (y).abort();",
+            "}"));
+  }
+
+  public void testCovarianceForRecordType26AndAHalf() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "",
+            "C.prototype.abort = function() {};",
+            "",
+            "/** @type{number} */",
+            "C.prototype.test2 = 1;",
+            "var g = function /** !C */(){};"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  /** @type{{abort: !Function}} */",
+            "  var x;",
+            "}",
+            "function f2() {",
+            "  var y = g();",
+            "  y.abort();",
+            "}"));
+  }
+
+  public void testCovarianceForRecordType27() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C(){}",
+            "/** @constructor @extends {C} */",
+            "function C2() {}"),
+        LINE_JOINER.join(
+            "/** @type {{prop2:C}} */ var c;",
+            "/** @type {({prop:number, prop1: number, prop2: C}|",
+            "{prop:number, prop1: number, prop2: number})} */ var b;",
+            "var x = b.prop2;"));
+  }
+
   public void testCovarianceForRecordType28() throws Exception {
     testTypesWithExtraExterns(
         LINE_JOINER.join(
@@ -13905,6 +14453,54 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "    xhr.abort();",
             "  };",
             "}"));
+  }
+
+  public void testCovarianceForRecordType30() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " */",
+            "function A() {}"
+            ),
+        LINE_JOINER.join(
+            "/**",
+            " * @type {{prop1: (A)}}",
+            " */",
+            "var r1;",
+            "/**",
+            " * @type {{prop1: (A|undefined)}}",
+            " */",
+            "var r2;",
+            "r1 = r2"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {prop1: (A|null|undefined)}",
+            "required: {prop1: (A|null)}"));
+  }
+
+  public void testCovarianceForRecordType31() throws Exception {
+    testTypesWithExtraExterns(
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " */",
+            "function A() {}"
+            ),
+        LINE_JOINER.join(
+            "/**",
+            " * @type {{prop1: (A|null)}}",
+            " */",
+            "var r1;",
+            "/**",
+            " * @type {{prop1: (A|null|undefined)}}",
+            " */",
+            "var r2;",
+            "r1 = r2"),
+        LINE_JOINER.join(
+            "assignment",
+            "found   : {prop1: (A|null|undefined)}",
+            "required: {prop1: (A|null)}"));
   }
 
   private void testTypes(String js) throws Exception {

@@ -148,18 +148,22 @@ public class RecordType extends PrototypeObjectType {
       RecordTypeBuilder builder = new RecordTypeBuilder(registry);
       builder.setSynthesized(true);
 
+      JSType noType = registry.getNativeObjectType(JSTypeNative.NO_TYPE);
+
       // The greatest subtype consists of those *unique* properties of both
       // record types. If any property conflicts, then the NO_TYPE type
       // is returned.
       for (String property : getOwnPropertyNames()) {
-        if (thatRecord.hasProperty(property) &&
-            !thatRecord.getPropertyType(property).isInvariant(
-                getPropertyType(property))) {
-          return registry.getNativeObjectType(JSTypeNative.NO_TYPE);
+        JSType thisPropertyType = getPropertyType(property);
+        JSType propType = null;
+        if (thatRecord.hasProperty(property)) {
+          JSType thatPropertyType = thatRecord.getPropertyType(property);
+          propType = thisPropertyType.getGreatestSubtype(thatPropertyType);
+          if (propType.isEquivalentTo(noType)) { return noType; }
+        } else {
+          propType = thisPropertyType;
         }
-
-        builder.addProperty(property, getPropertyType(property),
-            getPropertyNode(property));
+        builder.addProperty(property, propType, getPropertyNode(property));
       }
 
       for (String property : thatRecord.getOwnPropertyNames()) {
@@ -168,7 +172,6 @@ public class RecordType extends PrototypeObjectType {
               thatRecord.getPropertyNode(property));
         }
       }
-
       return builder.build();
     }
 
@@ -188,11 +191,10 @@ public class RecordType extends PrototypeObjectType {
         JSType propType = getPropertyType(propName);
         UnionTypeBuilder builder = new UnionTypeBuilder(registry);
         for (ObjectType alt :
-                 registry.getEachReferenceTypeWithProperty(propName)) {
+          registry.getEachReferenceTypeWithProperty(propName)) {
           JSType altPropType = alt.getPropertyType(propName);
-          if (altPropType != null && !alt.isEquivalentTo(this) &&
-              alt.isSubtype(that) &&
-              propType.isInvariant(altPropType)) {
+          if (altPropType != null && !alt.isEquivalentTo(this)
+              && alt.isSubtype(that) && altPropType.isSubtype(propType)) {
             builder.addAlternate(alt);
           }
         }
@@ -233,43 +235,18 @@ public class RecordType extends PrototypeObjectType {
   static boolean isSubtype(ObjectType typeA, RecordType typeB) {
     // typeA is a subtype of record type typeB iff:
     // 1) typeA has all the properties declared in typeB.
-    // 2) And for each property of typeB,
-    //    2a) if the property of typeA is declared, it must be equal
-    //        to the type of the property of typeB,
-    //    2b) otherwise, it must be a subtype of the property of typeB.
-    //
-    // To figure out why this is true, consider the following pseudo-code:
-    // /** @type {{a: (Object,null)}} */ var x;
-    // /** @type {{a: !Object}} */ var y;
-    // var z = {a: {}};
-    // x.a = null;
-    //
-    // y cannot be assigned to x, because line 4 would violate y's declared
-    // properties. But z can be assigned to x. Even though z and y are the
-    // same type, the properties of z are inferred--and so an assignment
-    // to the property of z would not violate any restrictions on it.
+    // 2) And for each property of typeB, its type must be
+    //    a super type of the corresponding property of typeA.
     for (String property : typeB.getOwnPropertyNames()) {
       if (!typeA.hasProperty(property)) {
         return false;
       }
-
       JSType propA = typeA.getPropertyType(property);
       JSType propB = typeB.getPropertyType(property);
-      if (typeA.isPropertyTypeDeclared(property)) {
-        // If one declared property isn't invariant,
-        // then the whole record isn't covariant.
-        if (!propA.isInvariant(propB)) {
-          return false;
-        }
-      } else {
-        // If one inferred property isn't a subtype,
-        // then the whole record isn't covariant.
-        if (!propA.isSubtype(propB)) {
-          return false;
-        }
+      if (!propA.isSubtype(propB)) {
+        return false;
       }
     }
-
     return true;
   }
 }

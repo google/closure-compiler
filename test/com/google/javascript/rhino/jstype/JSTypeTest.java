@@ -2775,9 +2775,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertFalse(record.isSubtype(supertypeProp));
 
     ObjectType declaredSubtypeProp = registry.createAnonymousObjectType(null);
-    declaredSubtypeProp.defineDeclaredProperty("a", googSubSubBarInst,
-        null);
-    assertFalse(declaredSubtypeProp.isSubtype(record));
+    declaredSubtypeProp.defineDeclaredProperty("a", googSubSubBarInst, null);
+    assertTrue(declaredSubtypeProp.isSubtype(record));
     assertFalse(record.isSubtype(declaredSubtypeProp));
   }
 
@@ -2939,6 +2938,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTypeEquals(NO_OBJECT_TYPE,
                  recordType.getGreatestSubtype(U2U_CONSTRUCTOR_TYPE));
   }
+
   public void testRecordTypeGreatestSubType8() {
     RecordTypeBuilder builder = new RecordTypeBuilder(registry);
     builder.addProperty("xyz", UNKNOWN_TYPE, null);
@@ -2962,6 +2962,110 @@ public class JSTypeTest extends BaseJSTypeTestCase {
                  recordType.getGreatestSubtype(googBarInst));
     assertTypeEquals(NO_OBJECT_TYPE,
                  googBarInst.getGreatestSubtype(recordType));
+  }
+
+  public void testRecordTypeGreatestSubType9() {
+    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBar.getPrototype(), null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    JSType recordType1 = builder.build();
+
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBar.getInstanceType(), null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    JSType recordType2 = builder.build();
+
+    JSType subtype = recordType1.getGreatestSubtype(recordType2);
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBar.getInstanceType(), null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    assertTypeEquals(subtype, builder.build());
+  }
+
+  public void testRecordTypeGreatestSubType10() {
+    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBar.getPrototype(), null);
+    builder.addProperty("e", STRING_TYPE, null);
+
+    JSType recordType1 = builder.build();
+
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBar.getInstanceType(), null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    JSType recordType2 = builder.build();
+
+    JSType subtype = recordType2.getGreatestSubtype(recordType1);
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBar.getInstanceType(), null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    assertTypeEquals(subtype, builder.build());
+  }
+
+  public void testRecordTypeGreatestSubType11() {
+    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", createUnionType(NUMBER_TYPE, STRING_TYPE), null);
+    builder.addProperty("e", STRING_TYPE, null);
+
+    JSType recordType1 = builder.build();
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", createUnionType(NUMBER_TYPE, BOOLEAN_TYPE), null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    JSType recordType2 = builder.build();
+
+    JSType subtype = recordType2.getGreatestSubtype(recordType1);
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", NUMBER_TYPE, null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    assertTypeEquals(subtype, builder.build());
+  }
+
+  public void testRecordTypeGreatestSubType12() {
+    RecordTypeBuilder builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBar.getPrototype(), null);
+    builder.addProperty("e", STRING_TYPE, null);
+
+    JSType recordType1 = builder.build();
+
+
+    FunctionType googBarArgConstructor = registry.createConstructorType(
+        "barArg", null, registry.createParameters(googBar), null, null);
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", googBarArgConstructor, null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    JSType recordType2 = builder.build();
+
+    JSType subtype = recordType2.getGreatestSubtype(recordType1);
+
+    builder = new RecordTypeBuilder(registry);
+    builder.addProperty("d", registry.getNativeObjectType(
+        JSTypeNative.NO_OBJECT_TYPE), null);
+    builder.addProperty("e", STRING_TYPE, null);
+    builder.addProperty("f", STRING_TYPE, null);
+
+    assertTypeEquals(subtype, builder.build());
   }
 
   /**

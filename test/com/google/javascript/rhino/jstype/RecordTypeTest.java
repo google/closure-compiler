@@ -176,6 +176,7 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     assertFalse(recordA.isSubtype(recordB));
     assertFalse(recordB.isSubtype(recordA));
     assertFalse(recordC.isSubtype(recordB));
-    assertFalse(recordB.isSubtype(recordC));
+    assertTrue(recordB.isSubtype(recordC));
+    assertTrue(recordA.isSubtype(recordC));
   }
 }
