@@ -2168,10 +2168,10 @@ google.maps.ImageMapType.prototype.getOpacity = function() {};
 google.maps.ImageMapType.prototype.getTile = function(tileCoord, zoom, ownerDocument) {};
 
 /**
- * @param {Node} tile
+ * @param {Node} tileDiv
  * @return {undefined}
  */
-google.maps.ImageMapType.prototype.releaseTile = function(tile) {};
+google.maps.ImageMapType.prototype.releaseTile = function(tileDiv) {};
 
 /**
  * @param {number} opacity
