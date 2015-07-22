@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -82,12 +83,17 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
           continue;
         }
 
-        if (!jsDoc.hasParameterType(param.getString())) {
-          t.report(param, MISSING_PARAM_JSDOC, param.getString());
-          return;
+        JSTypeExpression paramType = jsDoc.getParameterType(param.getString());
+        if (paramType == null) {
+          if (param.getJSDocInfo() != null) {
+            paramType = Preconditions.checkNotNull(param.getJSDocInfo().getType());
+          } else {
+            t.report(param, MISSING_PARAM_JSDOC, param.getString());
+            return;
+          }
         }
 
-        boolean jsDocOptional = jsDoc.getParameterType(param.getString()).isOptionalArg();
+        boolean jsDocOptional = paramType.isOptionalArg();
         if (nameOptional && !jsDocOptional) {
           t.report(param, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, param.getString());
         } else if (!nameOptional && jsDocOptional) {

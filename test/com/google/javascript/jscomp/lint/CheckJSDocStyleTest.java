@@ -41,6 +41,40 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     return new CheckJSDocStyle(compiler);
   }
 
+  public void testMissingParam_noWarning() {
+    testSame(LINE_JOINER.join(
+        "/**",
+        " * @param {string} x",
+        " * @param {string} y",
+        " */",
+        "function f(x, y) {}"));
+
+    testSame(LINE_JOINER.join(
+        "/** @override */",
+        "Foo.bar = function(x, y) {}"));
+
+    testSame(LINE_JOINER.join(
+        "/**",
+        " * @param {string=} x",
+        " */",
+        "function f(x = 1) {}"));
+
+    testSame(LINE_JOINER.join(
+        "/**",
+        " * @param {...string} args",
+        " */",
+        "function f(...args) {}"));
+
+    testSame("function f(/** string */ inlineArg) {}");
+    testSame("/** @export */ function f(/** string */ inlineArg) {}");
+
+    testSame("class Foo { constructor(/** string */ inlineArg) {} }");
+    testSame("class Foo { method(/** string */ inlineArg) {} }");
+
+    testSame("class Foo { /** @export */ constructor(/** string */ inlineArg) {} }");
+    testSame("class Foo { /** @export */ method(/** string */ inlineArg) {} }");
+  }
+
   public void testMissingParam() {
     testWarning(
         LINE_JOINER.join(
@@ -50,25 +84,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             " */",
             "function f(x, y) {}"),
         MISSING_PARAM_JSDOC);
-
-    testSame(
-        LINE_JOINER.join(
-            "/**",
-            " * @param {string} x",
-            " * @param {string} y",
-            " */",
-            "function f(x, y) {}"));
-
-    testSame(LINE_JOINER.join(
-        "/** @override */",
-        "Foo.bar = function(x, y) {}"));
-
-    testSame(
-        LINE_JOINER.join(
-            "/**",
-            " * @param {string=} x",
-            " */",
-            "function f(x = 1) {}"));
 
     testWarning(
         LINE_JOINER.join(
@@ -86,14 +101,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             " */",
             "function f(x, y = 1) {}"),
         MISSING_PARAM_JSDOC);
-
-    testSame(
-        LINE_JOINER.join(
-            "/**",
-            " * @param {...string} args",
-            " */",
-            "function f(...args) {}"));
-
   }
 
   public void testMissingParamWithDestructuringPattern() {
