@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A pass the uses a {@link DefinitionProvider} to compute a call graph for an
@@ -184,15 +185,7 @@ public final class CallGraph implements CompilerPass {
             new Predicate<Function>() {
               @Override
               public boolean apply(Function function) {
-
-                String functionName = function.getName();
-                // Anonymous functions will have null names,
-                // so it is important to handle that correctly here
-                if (functionName != null && desiredName != null) {
-                  return desiredName.equals(functionName);
-                } else {
-                  return desiredName == functionName;
-                }
+                return Objects.equals(desiredName, function.getName());
               }
             }
         );
