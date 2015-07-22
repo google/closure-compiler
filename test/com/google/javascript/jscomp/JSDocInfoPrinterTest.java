@@ -76,14 +76,20 @@ public final class JSDocInfoPrinterTest extends TestCase {
     JSDocInfo info = builder.buildAndReset();
     assertEquals("/**@param {number} foo @param {string} bar */",
         JSDocInfoPrinter.print(info));
+
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.EQUALS, IR.string("number")), ""));
     info = builder.buildAndReset();
     assertEquals("/**@param {number=} foo */", JSDocInfoPrinter.print(info));
+
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), ""));
     info = builder.buildAndReset();
     assertEquals("/**@param {...number} foo */", JSDocInfoPrinter.print(info));
+
+    builder.recordParameter("foo", null);
+    info = builder.buildAndReset();
+    assertEquals("/**@param foo */", JSDocInfoPrinter.print(info));
   }
 
   public void testRecordTypes() {

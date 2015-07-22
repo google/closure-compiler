@@ -86,9 +86,12 @@ public final class JSDocInfoPrinter {
 
     if (info.getParameterCount() > 0) {
       for (String name : info.getParameterNames()) {
-        sb.append("@param {");
-        appendTypeNode(sb, info.getParameterType(name).getRoot());
-        sb.append("} ");
+        sb.append("@param ");
+        if (info.getParameterType(name) != null) {
+          sb.append("{");
+          appendTypeNode(sb, info.getParameterType(name).getRoot());
+          sb.append("} ");
+        }
         sb.append(name);
         sb.append(' ');
       }
