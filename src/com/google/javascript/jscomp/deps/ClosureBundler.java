@@ -82,10 +82,10 @@ public final class ClosureBundler {
   private void appendTraditional(Appendable out, CharSource contents)
       throws IOException {
     if (useEval) {
-      out.append("(0,eval(\"");
+      out.append("(0,eval)(\"");
       append(out, Mode.ESCAPED, contents);
       appendSourceUrl(out, Mode.ESCAPED);
-      out.append("\"));");
+      out.append("\");");
     } else {
       out.append(contents.read());
       appendSourceUrl(out, Mode.NORMAL);
