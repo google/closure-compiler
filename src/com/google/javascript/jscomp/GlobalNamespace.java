@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -185,6 +186,20 @@ class GlobalNamespace
       this.scope = scope;
       this.node = node;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      Preconditions.checkState(obj instanceof AstChange);
+      AstChange other = (AstChange) obj;
+      return Objects.equals(this.module, other.module)
+          && Objects.equals(this.scope, other.scope)
+          && Objects.equals(this.node, other.node);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(this.module, this.scope, this.node);
+    }
   }
 
   /**
@@ -192,7 +207,7 @@ class GlobalNamespace
    * to see if they've added any references to the global namespace.
    * @param newNodes New nodes to check.
    */
-  void scanNewNodes(List<AstChange> newNodes) {
+  void scanNewNodes(Set<AstChange> newNodes) {
     BuildGlobalNamespace builder = new BuildGlobalNamespace();
 
     for (AstChange info : newNodes) {

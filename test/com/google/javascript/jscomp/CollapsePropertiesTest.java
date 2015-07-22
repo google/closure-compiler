@@ -1500,9 +1500,31 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          + "var a$d = CreateClass({c: a$b.prototype.c});");
   }
 
-  public void testCrashInCommaOperator() {
+  public void testCommaOperator() {
     test("var a = {}; a.b = function() {},a.b();",
          "var a$b; a$b=function() {},a$b();");
+
+    test(
+        "var ns = {};\n"
+        + "ns.Foo = {};\n"
+        + "var Baz = {};\n"
+        + "Baz.Foo = ns.Foo;\n"
+        + "(Baz.Foo.bar = 10, 123);",
+
+        "var Baz$Foo=null;\n"
+        + "var ns$Foo$bar;\n"
+        + "(ns$Foo$bar = 10, 123);");
+
+    test(
+        "var ns = {};\n"
+        + "ns.Foo = {};\n"
+        + "var Baz = {};\n"
+        + "Baz.Foo = ns.Foo;\n"
+        + "function f() { (Baz.Foo.bar = 10, 123); }",
+
+        "var ns$Foo$bar;\n"
+        + "var Baz$Foo=null;\n"
+        + "function f() { (ns$Foo$bar = 10, 123); }");
   }
 
   public void testCrashInNestedAssign() {
@@ -2140,18 +2162,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var $jscomp$scope$Foo$staticprop$A = 1;\n" +
         "var exports = null;\n" +
         "var y = $jscomp$scope$Foo$staticprop$A;");
-  }
-
-  public void testDontCrashAtComma() {
-    test(
-        "var ns = {};\n"
-        + "ns.Foo = {};\n"
-        + "var Baz = {};\n"
-        + "Baz.Foo = ns.Foo;\n"
-        + "(Baz.Foo.bar = 10, 123);",
-
-        "var Baz$Foo=null;\n"
-        + "(ns$Foo$bar = 10, 123);");
   }
 
   public void testInlineCtorInObjLit() {
