@@ -38,6 +38,7 @@ import java.util.List;
  */
 public final class ProcessCommonJSModules implements CompilerPass {
   private static final String EXPORTS = "exports";
+  private static final String MODULE = "module";
 
   private final Compiler compiler;
   private final ES6ModuleLoader loader;
@@ -146,7 +147,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       if (n.isGetProp() &&
           "module.exports".equals(n.getQualifiedName())) {
-        moduleExportRefs.add(n);
+        Var v = t.getScope().getVar(MODULE);
+        // only rewrite "module.exports" if "module" is a free variable,
+        // meaning it is not defined in the current scope as a local
+        // variable or function parameter
+        if (v == null) {
+          moduleExportRefs.add(n);
+        }
       }
 
       if (n.isName() && EXPORTS.equals(n.getString())) {

@@ -175,6 +175,30 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             + "var name$$module$foo$bar = module$foo$name;");
   }
 
+  public void testModuleExportsScope() {
+    setFilename("test");
+    test(
+        "var foo = function (module) {module.exports = {};};" +
+        "module.exports = foo;",
+        "goog.provide('module$test');" +
+        "var foo$$module$test=function(module){module.exports={}};" +
+        "var module$test=foo$$module$test");
+    test(
+        "var foo = function () {var module = {};module.exports = {};};" +
+        "module.exports = foo;",
+        "goog.provide('module$test');" +
+        "var foo$$module$test=function(){var module={};module.exports={}};" +
+        "var module$test=foo$$module$test");
+    test(
+        "var foo = function () {if (true) var module = {};" +
+        "module.exports = {};};" +
+        "module.exports = foo;",
+        "goog.provide('module$test');" +
+        "var foo$$module$test=function(){if(true)var module={};" +
+        "module.exports={}};" +
+        "var module$test=foo$$module$test");
+  }
+
   public void testSortInputs() throws Exception {
     SourceFile a = SourceFile.fromCode("a.js", "require('b');require('c')");
     SourceFile b = SourceFile.fromCode("b.js", "require('d')");
