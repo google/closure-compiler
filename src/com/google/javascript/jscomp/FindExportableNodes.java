@@ -107,10 +107,11 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
         case Token.ASSIGN:
           Node grandparent = parent.getParent();
-          if (parent.isExprResult() &&
-              !n.getLastChild().isAssign()) {
-            if (grandparent != null && grandparent.isScript() &&
-                n.getFirstChild().isQualifiedName()) {
+          if (parent.isExprResult()
+              && !n.getLastChild().isAssign()) {
+            if (grandparent != null
+                && grandparent.isScript()
+                && n.getFirstChild().isQualifiedName()) {
               export = n.getFirstChild().getQualifiedName();
               context = new GenerateNodeContext(n, Mode.EXPORT);
             } else if (allowLocalExports && n.getFirstChild().isGetProp()) {
