@@ -235,11 +235,15 @@ class AngularPass extends AbstractPostOrderCallback
           Node classNode = parent.getParent();
           String midPart = n.isStaticMember() ? "." : ".prototype.";
           name = NodeUtil.getClassName(classNode) + midPart + n.getString();
-          if (n.getString() == "constructor") {
+          if (n.getString().equals("constructor")) {
             name = NodeUtil.getClassName(classNode);
           }
           fn = n.getFirstChild();
-          target = classNode;
+          if (classNode.getParent().isAssign()) {
+            target = classNode.getParent().getParent();
+          } else {
+            target = classNode;
+          }
         }
         break;
     }
@@ -248,7 +252,7 @@ class AngularPass extends AbstractPostOrderCallback
       compiler.report(t.makeError(n, INJECT_NON_FUNCTION_ERROR));
       return;
     }
-    // checks that the declaration took place in a block or in a global scope.
+    // report an error if the function declaration did not take place in a block or global scope
     if (!target.getParent().isScript() && !target.getParent().isBlock()) {
       compiler.report(t.makeError(n, INJECT_IN_NON_GLOBAL_OR_BLOCK_ERROR));
       return;

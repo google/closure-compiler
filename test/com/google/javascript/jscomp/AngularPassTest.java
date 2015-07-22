@@ -176,7 +176,7 @@ public final class AngularPassTest extends CompilerTestCase {
         + "FnClass['$inject'] = ['a', 'b'];");
   }
 
-  public void testNgInjectAddsInjectToClassMethod() throws Exception {
+  public void testNgInjectAddsInjectToClassMethod1() throws Exception {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     test(
          LINE_JOINER.join(
@@ -191,6 +191,21 @@ public final class AngularPassTest extends CompilerTestCase {
              "  methodA(c, d){}",
              "}",
              "FnClass.prototype.methodA['$inject'] = ['c','d']"));
+  }
+
+  public void testNgInjectAddsInjectToClassMethod2() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+         LINE_JOINER.join(
+             "FnClass.foo = class {",
+             "  /** @ngInject */",
+             "  constructor(a, b) {}",
+             "};"),
+         LINE_JOINER.join(
+             "FnClass.foo = class {",
+             "  constructor(a, b){}",
+             "};",
+             "FnClass.foo['$inject'] = ['a','b'];"));
   }
 
   public void testNgInjectAddsInjectToStaticMethod() throws Exception {
