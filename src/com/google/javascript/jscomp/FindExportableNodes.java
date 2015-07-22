@@ -107,8 +107,7 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
         case Token.ASSIGN:
           Node grandparent = parent.getParent();
-          if (parent.isExprResult()
-              && !n.getLastChild().isAssign()) {
+          if (parent.isExprResult() && !n.getLastChild().isAssign()) {
             if (grandparent != null
                 && grandparent.isScript()
                 && n.getFirstChild().isQualifiedName()) {
