@@ -46,6 +46,8 @@ class NodeNameExtractor {
    */
   String getName(Node node) {
     switch (node.getType()) {
+      case Token.CLASS:
+        return NodeUtil.getClassName(node);
       case Token.FUNCTION:
         Node functionNameNode = node.getFirstChild();
         return functionNameNode.getString();
@@ -73,6 +75,7 @@ class NodeNameExtractor {
         return node.getString();
       case Token.STRING:
       case Token.STRING_KEY:
+      case Token.MEMBER_FUNCTION_DEF:
         return TokenStream.isJSIdentifier(node.getString()) ?
             node.getString() : ("__" + nextUniqueInt++);
       case Token.NUMBER:

@@ -103,6 +103,18 @@ class AnonymousFunctionNamingCallback
         if (rhs.isObjectLit()) {
           nameObjectLiteralMethods(rhs, namer.getName(lhs));
         }
+        break;
+      case Token.CLASS:
+        // this handle functions that are class methods.
+        // e.g. class A{
+        //        method(){}
+        //      }
+        // or (var) A = class{
+        //      method(){}
+        //    }
+        Node classMembersNode = n.getLastChild();
+        nameClassMethods(classMembersNode, namer.getName(n));
+        break;
     }
   }
 
@@ -112,9 +124,10 @@ class AnonymousFunctionNamingCallback
          keyNode = keyNode.getNext()) {
       Node valueNode = keyNode.getFirstChild();
 
-      // Object literal keys may be STRING_KEY, GETTER_DEF, SETTER_DEF.
-      // Get and Set are skipped because they can not be named.
-      if (keyNode.isStringKey()) {
+      // Object literal keys may be STRING_KEY, GETTER_DEF, SETTER_DEF,
+      // MEMBER_FUNCTION_DEF (Shorthand function definition) or COMPUTED_PROP.
+      // Get, Set and CompProp are skipped because they can not be named.
+      if (keyNode.isStringKey() || keyNode.isMemberFunctionDef()) {
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 
@@ -130,6 +143,16 @@ class AnonymousFunctionNamingCallback
           // process nested object literal
           nameObjectLiteralMethods(valueNode, name);
         }
+      }
+    }
+  }
+
+  private void nameClassMethods(Node classMembersNode, String className) {
+    for (Node methodNode : classMembersNode.children()) {
+      if (methodNode.isMemberFunctionDef()) {
+        Node valueNode = methodNode.getFirstChild();
+        String name = namer.getCombinedName(className, namer.getName(methodNode));
+        namer.setFunctionName(name, valueNode);
       }
     }
   }
