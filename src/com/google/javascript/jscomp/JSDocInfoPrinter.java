@@ -24,6 +24,8 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.util.Iterator;
+
 /**
  * Prints a JSDocInfo, used for preserving type annotations in ES6 transpilation.
  *
@@ -73,8 +75,16 @@ public final class JSDocInfoPrinter {
       sb.append("@" + info.getVisibility().toString().toLowerCase() + " ");
     }
 
-    for (String suppression : info.getSuppressions()) {
-      sb.append("@suppress {" + suppression + "} ");
+    Iterator<String> suppressions = info.getSuppressions().iterator();
+    if (suppressions.hasNext()) {
+      sb.append("@suppress {");
+      while (suppressions.hasNext()) {
+        sb.append(suppressions.next());
+        if (suppressions.hasNext()) {
+          sb.append(",");
+        }
+      }
+      sb.append("} ");
     }
 
     ImmutableList<String> names = info.getTemplateTypeNames();
