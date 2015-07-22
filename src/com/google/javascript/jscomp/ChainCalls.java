@@ -133,7 +133,10 @@ class ChainCalls implements CompilerPass {
           return;
         }
         if (!goodFunctionNodes.contains(rValue)) {
-          NodeTraversal.traverse(compiler, rValue, gatherFunctions);
+          // TODO(moz): In ES6, t.getScope() might return a scope that is not
+          // a valid cfg root, might need something like t.getCfgScope().
+          new NodeTraversal(compiler, gatherFunctions).traverseInnerNode(
+              rValue, rValue.getParent(), t.getScope());
           if (badFunctionNodes.contains(rValue)) {
             return;
           }
