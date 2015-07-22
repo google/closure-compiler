@@ -1226,7 +1226,8 @@ public final class DefaultPassConfig extends PassConfig {
       return new CompilerPass() {
         @Override
         public void process(Node externs, Node root) {
-          compiler.setLanguageMode(options.getLanguageOut());
+          LanguageMode langOut = options.getLanguageOut();
+          compiler.setLanguageMode(langOut.isEs6OrHigher() ? LanguageMode.ECMASCRIPT5 : langOut);
         }
       };
     }

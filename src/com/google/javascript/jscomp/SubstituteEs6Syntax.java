@@ -22,7 +22,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
-
 /**
  * An optimization that minimizes code by simplifying expressions that
  * can be represented more succinctly with ES6 syntax, like arrow functions,
@@ -46,6 +45,7 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     NodeTraversal.traverse(compiler, scriptRoot, this);
+    compiler.setLanguageMode(compiler.getOptions().getLanguageOut());
   }
 
   @Override

@@ -3156,6 +3156,12 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertFalse(out1.isEquivalentTo(out2));
   }
 
+  public void testEs6OutDoesntCrash() {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
