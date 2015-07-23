@@ -190,6 +190,41 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "module$test=foo$$module$test");
   }
 
+  public void testUMDPatternConversion() {
+    setFilename("test");
+    testModules(
+        "var foobar = {foo: 'bar'};" +
+        "if (typeof module === 'object' && module.exports) {" +
+        "  module.exports = foobar;" +
+        "} else if (typeof define === 'function' && define.amd) {" +
+        "  define([], function() {return foobar;});" +
+        "} else {" +
+        "  this.foobar = foobar;}",
+        "goog.provide('module$test');" +
+        "var foobar$$module$test = {foo: 'bar'};" +
+        "module$test = foobar$$module$test;");
+    testModules(
+        "var foobar = {foo: 'bar'};" +
+        "if (typeof define === 'function' && define.amd) {" +
+        "  define([], function() {return foobar;});" +
+        "} else if (typeof module === 'object' && module.exports) {" +
+        "  module.exports = foobar;" +
+        "} else {" +
+        "  this.foobar = foobar;}",
+        "goog.provide('module$test');" +
+        "var foobar$$module$test = {foo: 'bar'};" +
+        "module$test = foobar$$module$test;");
+    testModules(
+        "var foobar = {foo: 'bar'};" +
+        "if (typeof module === 'object' && module.exports) {" +
+        "  module.exports = foobar;}" +
+        "if (typeof define === 'function' && define.amd) {" +
+        "  define([], function () {return foobar;});}",
+        "goog.provide('module$test');" +
+        "var foobar$$module$test = {foo: 'bar'};" +
+        "module$test = foobar$$module$test;");
+}
+
   public void testSortInputs() throws Exception {
     SourceFile a = SourceFile.fromCode("a.js", "require('b');require('c')");
     SourceFile b = SourceFile.fromCode("b.js", "require('d')");
