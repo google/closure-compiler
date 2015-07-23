@@ -123,6 +123,54 @@ public final class ProcessCommonJSModules implements CompilerPass {
   }
 
   /**
+   * This class detects the UMD pattern by checking if a node includes
+   * a "module.exports" or "exports" statement.
+   */
+  static class FindModuleExportStatements extends AbstractPreOrderCallback {
+
+    private boolean found;
+
+    boolean isFound() {
+      return found;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      if ((n.isGetProp() &&
+           "module.exports".equals(n.getQualifiedName())) ||
+          (n.isName() &&
+           EXPORTS.equals(n.getString()))) {
+        found = true;
+      }
+
+      return true;
+    }
+  }
+
+  /**
+   * This class detects the UMD pattern by checking if a node includes
+   * a "define.amd" statement.
+   */
+  static class FindDefineAmdStatements extends AbstractPreOrderCallback {
+
+    private boolean found;
+
+    boolean isFound() {
+      return found;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      if (n.isGetProp() &&
+          "define.amd".equals(n.getQualifiedName())) {
+        found = true;
+      }
+
+      return true;
+    }
+  }
+
+  /**
    * Visits require, every "script" and special module.exports assignments.
    */
   private class ProcessCommonJsModulesCallback extends
@@ -138,6 +186,48 @@ public final class ProcessCommonJSModules implements CompilerPass {
           n.getFirstChild().matchesQualifiedName("require") &&
           n.getChildAtIndex(1).isString()) {
         visitRequireCall(t, n, parent);
+      }
+
+
+      // Detects UMD pattern, by checking for CommonJS exports and AMD define
+      // statements in if-conditions and rewrites the if-then-else block as
+      // follows to make sure the CommonJS exports can be reached:
+      // 1. When detecting a CommonJS exports statement, it removes the
+      // if-condition and the else-branch and adds the then-branch directly
+      // to the current parent node:
+      //
+      // if (typeof module == "object" && module.exports) {
+      //   module.exports = foobar;
+      // } else if (typeof define === "function" && define.amd) {...}
+      //
+      // will be rewritten to:
+      //
+      // module.exports = foobar;
+      //
+      // 2. When detecting an AMD define statement, it removes the if-condition and
+      // the then-branch and adds the else-branch directly to the current parent node:
+      //
+      // if (typeof define === "function" && define.amd) {
+      // ...} else if (typeof module == "object" && module.exports) {...}
+      //
+      // will be rewritten to:
+      //
+      // if (typeof module == "object" && module.exports) {...}
+      if (n.isIf()) {
+        FindModuleExportStatements commonjsFinder = new FindModuleExportStatements();
+        Node condition = n.getFirstChild();
+        NodeTraversal.traverse(compiler, condition, commonjsFinder);
+
+        if (commonjsFinder.isFound()) {
+          visitCommonJSIfStatement(n);
+        } else {
+          FindDefineAmdStatements amdFinder = new FindDefineAmdStatements();
+          NodeTraversal.traverse(compiler, condition, amdFinder);
+
+          if (amdFinder.isFound()) {
+            visitAMDIfStatement(n);
+          }
+        }
       }
 
       if (n.isScript()) {
@@ -222,6 +312,47 @@ public final class ProcessCommonJSModules implements CompilerPass {
       compiler.reportCodeChange();
     }
 
+    /**
+     * Rewrites CommonJS part of UMD pattern by removing the if-condition and the
+     * else-branch and adds the then-branch directly to the current parent node.
+     */
+    private void visitCommonJSIfStatement(Node n) {
+      Node p = n.getParent();
+      if (p != null) {
+        // pull out then-branch
+        replaceIfStatementWithBranch(n, n.getChildAtIndex(1));
+      }
+    }
+
+    /**
+     * Rewrites AMD part of UMD pattern by removing the if-condition and the
+     * then-branch and adds the else-branch directly to the current parent node.
+     */
+    private void visitAMDIfStatement(Node n) {
+      Node p = n.getParent();
+      if (p != null) {
+        if (n.getChildCount() == 3) {
+          // pull out else-branch
+          replaceIfStatementWithBranch(n, n.getChildAtIndex(2));
+        } else {
+          // remove entire if-statement if it doesn't have an else-branch
+          p.removeChild(n);
+        }
+      }
+    }
+
+    private void replaceIfStatementWithBranch(Node ifStatement, Node branch) {
+      Node p = ifStatement.getParent();
+      Node newNode = branch;
+      // Remove redundant block node. Not strictly necessary, but makes tests more legible.
+      if (branch.isBlock() && branch.getChildCount() == 1) {
+        newNode = branch.getFirstChild();
+        branch.detachChildren();
+      } else {
+        ifStatement.detachChildren();
+      }
+      p.replaceChild(ifStatement, newNode);
+    }
 
     /**
      * Process all references to module.exports and exports.
