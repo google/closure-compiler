@@ -218,6 +218,8 @@ class AngularPass extends AbstractPostOrderCallback
       // var a = function() {}
       // var a = b = function() {}
       case Token.VAR:
+      case Token.LET:
+      case Token.CONST:
         name = n.getFirstChild().getString();
         // looks for a function node.
         fn = getDeclarationRValue(n);
@@ -279,7 +281,7 @@ class AngularPass extends AbstractPostOrderCallback
    */
   private static Node getDeclarationRValue(Node n) {
     Preconditions.checkNotNull(n);
-    Preconditions.checkArgument(n.isVar());
+    Preconditions.checkArgument(NodeUtil.isNameDeclaration(n));
     n = n.getFirstChild().getFirstChild();
     if (n == null) {
       return null;

@@ -94,6 +94,23 @@ public final class AngularPassTest extends CompilerTestCase {
     testSame("var fn = function (a, b) {}");
   }
 
+  public void testNgInjectAddsInjectToLet() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @ngInject */ let fn = function (a, b) {}",
+         "let fn = function (a, b) {}; fn['$inject']=['a', 'b']");
+
+    testSame("let fn = function (a, b) {}");
+  }
+
+  public void testNgInjectAddsInjectToConst() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @ngInject */ const fn = function (a, b) {}",
+         "const fn = function (a, b) {}; fn['$inject']=['a', 'b']");
+
+    testSame("const fn = function (a, b) {}");
+  }
+
+
   public void testNgInjectAddsInjectToVarsWithChainedAssignment()
       throws Exception {
     test("var ns = {};\n" +
