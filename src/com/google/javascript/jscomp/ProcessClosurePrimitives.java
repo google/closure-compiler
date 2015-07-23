@@ -563,7 +563,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       return;
     }
 
-    Node enclosingFnNameNode = getEnclosingDeclNameNode(t);
+    Node enclosingFnNameNode = getEnclosingDeclNameNode(n);
     if (enclosingFnNameNode == null) {
       reportBadGoogBaseUse(t, n, "Could not find enclosing method.");
       return;
@@ -673,7 +673,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
     String baseContainer = callTarget.getFirstChild().getQualifiedName();
 
-    Node enclosingFnNameNode = getEnclosingDeclNameNode(t);
+    Node enclosingFnNameNode = getEnclosingDeclNameNode(n);
     if (enclosingFnNameNode == null
         || !enclosingFnNameNode.isUnscopedQualifiedName()) {
       // some unknown container method.
@@ -825,27 +825,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * Returns the qualified name node of the function whose scope we're in,
    * or null if it cannot be found.
    */
-  private static Node getEnclosingDeclNameNode(NodeTraversal t) {
-    Node scopeRoot = t.getScopeRoot();
-    if (NodeUtil.isFunctionDeclaration(scopeRoot)) {
-      // function x() {...}
-      return scopeRoot.getFirstChild();
-    } else {
-      Node parent = scopeRoot.getParent();
-      if (parent != null) {
-        if (parent.isAssign() ||
-            parent.getLastChild() == scopeRoot &&
-            parent.getFirstChild().isQualifiedName()) {
-          // x.y.z = function() {...};
-          return parent.getFirstChild();
-        } else if (parent.isName()) {
-          // var x = function() {...};
-          return parent;
-        }
-      }
-    }
-
-    return null;
+  private static Node getEnclosingDeclNameNode(Node n) {
+    Node fn = NodeUtil.getEnclosingFunction(n);
+    return fn == null ? null : NodeUtil.getFunctionNameNode(enclosingFunction);
   }
 
   /** Verify if goog.base call is used in a class */
