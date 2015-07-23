@@ -641,7 +641,8 @@ public class NodeTraversal {
 
   /** Examines the functions stack for the last instance of a function node. */
   public Node getEnclosingFunction() {
-    return getScopeDepth() < 2 ? null : getCfgRoot();
+    Node root = getCfgRoot();
+    return root.isFunction() ? root : null;
   }
 
   /** Creates a new scope (e.g. when entering a function). */

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.PureFunctionIdentifier.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -39,8 +40,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   boolean regExpHaveSideEffects = true;
 
   private static String kExterns =
-      CompilerTypeTestCase.DEFAULT_EXTERNS +
-      "var window; window.setTimeout;" +
+      CompilerTypeTestCase.DEFAULT_EXTERNS
+      + "var window; window.setTimeout;" +
       "/**@nosideeffects*/ function externSENone(){}\n" +
 
       "/**@modifies{this}*/ function externSEThis(){}\n" +
@@ -811,6 +812,14 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
         ImmutableList.of("A", "B"));
   }
 
+  public void testLocalizedSideEffects12() throws Exception {
+    // An array is an local object, assigning a local array is not a global
+    // side-effect. This tests the behavior if the access is in a block scope.
+    checkMarkedCalls("function f() {var x = []; { x[0] = 1; } }" +
+                     "f()",
+                     ImmutableList.of("f"));
+  }
+
   public void testUnaryOperators1() throws Exception {
     checkMarkedCalls("function f() {var x = 1; x++}" +
                      "f()",
@@ -1095,6 +1104,18 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
     checkMarkedCalls(source, ImmutableList.of("f", "g"));
   }
 
+  public void testMutatesArguments5() throws Exception {
+    String source = LINE_JOINER.join(
+        "function f(x) {",
+        "  function g() {",
+        "    x.prop = 5;",
+        "  }",
+        "  g();",
+        "}",
+        "f(window);");
+    checkMarkedCalls(source, ImmutableList.<String>of());
+  }
+
   public void testMutatesArgumentsArray1() throws Exception {
     // We could be smarter here.
     String source = "function f(x) { arguments[0] = 1; }\n" +
@@ -1256,12 +1277,24 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   void checkMarkedCalls(String source, List<String> expected) {
+    checkMarkedCalls(source, expected, LanguageMode.ECMASCRIPT6);
+    checkMarkedCalls(source, expected, LanguageMode.ECMASCRIPT5);
+  }
+
+  void checkMarkedCalls(String source, List<String> expected, LanguageMode mode) {
+    setAcceptedLanguage(mode);
     testSame(source);
     assertEquals(expected, noSideEffectCalls);
     noSideEffectCalls.clear();
   }
 
   void checkLocalityOfMarkedCalls(String source, List<String> expected) {
+    checkLocalityOfMarkedCalls(source, expected, LanguageMode.ECMASCRIPT6);
+    checkLocalityOfMarkedCalls(source, expected, LanguageMode.ECMASCRIPT5);
+  }
+
+  void checkLocalityOfMarkedCalls(String source, List<String> expected, LanguageMode mode) {
+    setAcceptedLanguage(mode);
     testSame(source);
     assertEquals(expected, localResultCalls);
     localResultCalls.clear();
