@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link ReplaceIdGenerators}.
@@ -75,44 +76,53 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   }
 
   public void testSerialization1() {
-    testMap("var x = goog.events.getUniqueId('xxx');\n" +
-            "var y = goog.events.getUniqueId('yyy');\n",
+    testMap(
+        LINE_JOINER.join(
+        "var x = goog.events.getUniqueId('xxx');",
+        "var y = goog.events.getUniqueId('yyy');"),
 
-            "var x = 'a';\n" +
-            "var y = 'b';\n",
+        LINE_JOINER.join(
+        "var x = 'a';",
+        "var y = 'b';"),
 
-            "[goog.events.getUniqueId]\n" +
-            "\n" +
-            "a:testcode:1:32\n" +
-            "b:testcode:2:32\n" +
-            "\n");
+        LINE_JOINER.join(
+        "[goog.events.getUniqueId]",
+        "",
+        "a:testcode:1:32",
+        "b:testcode:2:32",
+        "", ""));
   }
 
   public void testSerialization2() {
-    testMap("/** @consistentIdGenerator */ id = function() {};" +
-         "f1 = id('f1');" +
-         "f1 = id('f1')",
+    testMap(
+        LINE_JOINER.join(
+        "/** @consistentIdGenerator */",
+        "id = function() {};",
+        "f1 = id('f1');",
+        "f1 = id('f1')"),
 
-         "id = function() {};" +
-         "f1 = 'a';" +
-         "f1 = 'a'",
+        LINE_JOINER.join(
+        "id = function() {};",
+        "f1 = 'a';",
+        "f1 = 'a'"),
 
-         "[id]\n" +
-         "\n" +
-         "a:f1\n" +
-         "\n");
+        LINE_JOINER.join(
+        "[id]",
+        "",
+        "a:f1",
+        "", ""));
   }
 
   public void testReusePreviousSerialization1() {
     previousMappings =
-        "[goog.events.getUniqueId]\n" +
-        "\n" +
-        "previous1:testcode:1:32\n" +
-        "previous2:testcode:2:32\n" +
-        "\n" +
-        "[goog.place.getUniqueId]\n" +
-        "\n" +
-        "\n";
+        LINE_JOINER.join(
+        "[goog.events.getUniqueId]",
+        "",
+        "previous1:testcode:1:32",
+        "previous2:testcode:2:32",
+        "",
+        "[goog.place.getUniqueId]",
+        "", "");
     testMap("var x = goog.events.getUniqueId('xxx');\n" +
             "var y = goog.events.getUniqueId('yyy');\n",
 
@@ -217,6 +227,57 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "things = {}");
   }
 
+  public void testObjectLit_function() {
+    test("/** @idGenerator */ goog.xid = function() {};" +
+        "things = goog.xid({foo: function() {}})",
+
+        "goog.xid = function() {};" +
+        "things = {'a': function() {}}",
+
+        "goog.xid = function() {};" +
+        "things = {'foo$0': function() {}}");
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @idGenerator */ goog.xid = function() {};" +
+        "things = goog.xid({foo: function*() {}})",
+
+        "goog.xid = function() {};" +
+        "things = {'a': function*() {}}",
+
+        "goog.xid = function() {};" +
+        "things = {'foo$0': function*() {}}");
+  }
+
+  public void testObjectLit_ES6() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "goog.xid = function() {};",
+        "things = goog.xid({fooX() {}})"),
+        ReplaceIdGenerators.SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN);
+
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */ ",
+        "goog.xid = function() {};",
+        "things = goog.xid({shorthand})"),
+        ReplaceIdGenerators.SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN);
+
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "goog.xid = function() {};",
+        "things = goog.xid({['fooX']: 'test'})"),
+        ReplaceIdGenerators.COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN);
+  }
+
+  public void testClass() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "goog.xid = function() {};",
+        "things = goog.xid(class fooBar{})"),
+        ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER);
+  }
+
   public void testSimpleConsistent() {
     test("/** @consistentIdGenerator */ id = function() {};" +
          "foo.bar = id('foo_bar')",
@@ -288,6 +349,44 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
         "foo.bar = id('foo_bar')",
 
         "var id = function() {};" +
+        "foo.bar = '125lGg'");
+  }
+
+  public void testLet() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @consistentIdGenerator */ let id = function() {};" +
+         "foo.bar = id('foo_bar')",
+
+         "let id = function() {};" +
+         "foo.bar = 'a'",
+
+         "let id = function() {};" +
+         "foo.bar = 'foo_bar$0'");
+
+    testNonPseudoSupportingGenerator(
+        "/** @stableIdGenerator */ let id = function() {};" +
+        "foo.bar = id('foo_bar')",
+
+        "let id = function() {};" +
+        "foo.bar = '125lGg'");
+  }
+
+  public void testConst() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @consistentIdGenerator */ const id = function() {};" +
+         "foo.bar = id('foo_bar')",
+
+         "const id = function() {};" +
+         "foo.bar = 'a'",
+
+         "const id = function() {};" +
+         "foo.bar = 'foo_bar$0'");
+
+    testNonPseudoSupportingGenerator(
+        "/** @stableIdGenerator */ const id = function() {};" +
+        "foo.bar = id('foo_bar')",
+
+        "const id = function() {};" +
         "foo.bar = '125lGg'");
   }
 
@@ -432,6 +531,18 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
   }
 
   public void testConditionalCall() {
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "while(0){ id('foo');}"),
+    ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "for(;;){ id('foo');}"),
+    ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+
     testError("/** @idGenerator */ var id = function() {}; "
             + "if(x) id('foo');",
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
@@ -451,6 +562,27 @@ public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
         "var id = function() {};" +
         "function fb() {foo.bar = '125lGg'}");
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    // Due to the scope difference in ES5 and 6, these following testcases fail
+    // scope test, which comes before control structure check;
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "while(0){ id('foo');}"),
+    ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
+
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "for(;;){ id('foo');}"),
+    ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
+
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "for(x of [1, 2, 3]){ id('foo');}"),
+    ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
   public void testConflictingIdGenerator() {

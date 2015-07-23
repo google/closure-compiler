@@ -67,6 +67,25 @@ class ReplaceIdGenerators implements CompilerPass {
           "JSC_INVALID_GENERATOR_PARAMETER",
           "An id generator must be called with a literal.");
 
+  static final DiagnosticType SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN =
+      DiagnosticType.error(
+          "JSC_SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN",
+          "Object literal shorthand functions is not allowed in the "
+          + "arguments of an id generator");
+
+  static final DiagnosticType SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN =
+      DiagnosticType.error(
+          "JSC_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN",
+          "Object literal shorthand assignment is not allowed in the "
+          + "arguments of an id generator");
+
+  static final DiagnosticType COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN =
+      DiagnosticType.error(
+          "JSC_COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN",
+          "Object literal computed property name is not allowed in the "
+          + "arguments of an id generator");
+
+
   private final AbstractCompiler compiler;
   private final Map<String, NameSupplier> nameGenerators;
   private final Map<String, Map<String, String>> consistNameMap;
@@ -248,7 +267,7 @@ class ReplaceIdGenerators implements CompilerPass {
       String name = null;
       if (n.isAssign()) {
         name = n.getFirstChild().getQualifiedName();
-      } else if (n.isVar()) {
+      } else if (NodeUtil.isNameDeclaration(n)) {
         name = n.getFirstChild().getString();
       } else if (n.isFunction()){
         name = n.getFirstChild().getString();
@@ -334,6 +353,19 @@ class ReplaceIdGenerators implements CompilerPass {
         compiler.reportCodeChange();
       } else if (arg.isObjectLit()) {
         for (Node key : arg.children()) {
+          if (key.isMemberFunctionDef()) {
+            compiler.report(t.makeError(n, SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN));
+            return;
+          }
+          if (key.isStringKey() && !key.hasChildren()) {
+            compiler.report(t.makeError(n, SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN));
+            return;
+          }
+          if (key.isComputedProp()) {
+            compiler.report(t.makeError(n, COMPUTED_PROP_NOT_SUPPORTED_IN_ID_GEN));
+            return;
+          }
+
           String rename = getObfuscatedName(
               key, callName, nameGenerator, key.getString());
           key.setString(rename);
