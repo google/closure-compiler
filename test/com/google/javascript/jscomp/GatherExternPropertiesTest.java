@@ -99,9 +99,9 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "bar", "baz");
 
     // Record types in function parameters and return types.
-    assertExternProperties(
-        "/** @type {function(string, {bar: string}): {baz: string}} */\n" +
-        "var foo;",
+    assertExternProperties(LINE_JOINER.join(
+        "/** @type {function(string, {bar: string}): {baz: string}} */",
+        "var foo;"),
         "bar", "baz");
 
     // Record types as template arguments.
@@ -110,39 +110,39 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "bar", "baz");
 
     // Record types in implemented interfaces.
-    assertExternProperties(
-        "/**\n" +
-        " * @interface\n" +
-        " * @template T\n" +
-        " */\n" +
-        "var Foo;\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @implements {Foo.<{bar: string, baz: string}>}\n" +
-        " */\n" +
-        "var Bar;",
+    assertExternProperties(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "var Foo;",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo.<{bar: string, baz: string}>}",
+        " */",
+        "var Bar;"),
         "bar", "baz");
 
     // Record types in extended class.
-    assertExternProperties(
-        "/**\n" +
-        " * @constructor\n" +
-        " * @template T\n" +
-        " */\n" +
-        "var Foo = function() {};\n" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo.<{bar: string, baz: string}>}\n" +
-        " */\n" +
-        "var Bar = function() {};",
+    assertExternProperties(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "var Foo = function() {};",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo.<{bar: string, baz: string}>}",
+        " */",
+        "var Bar = function() {};"),
         "bar", "baz");
 
     // Record types in enum.
     // Note that "baz" exists only in the type of the enum,
     // but it is still picked up.
-    assertExternProperties(
-        "/** @enum {{bar: string, baz: (string|undefined)}} */\n" +
-        "var FooEnum = {VALUE: {bar: ''}};",
+    assertExternProperties(LINE_JOINER.join(
+        "/** @enum {{bar: string, baz: (string|undefined)}} */",
+        "var FooEnum = {VALUE: {bar: ''}};"),
         "VALUE", "bar", "baz");
 
     // Nested record types.
@@ -151,19 +151,19 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "bar", "baz", "foobar");
 
     // Recursive types.
-    assertExternProperties(
-        "/** @typedef {{a: D2}} */\n" +
-        "var D1;\n" +
-        "\n" +
-        "/** @typedef {{b: D1}} */\n" +
-        "var D2;",
+    assertExternProperties(LINE_JOINER.join(
+        "/** @typedef {{a: D2}} */",
+        "var D1;",
+        "",
+        "/** @typedef {{b: D1}} */",
+        "var D2;"),
         "a", "b");
-    assertExternProperties(
-        "/** @typedef {{a: function(D2)}} */\n" +
-        "var D1;\n" +
-        "\n" +
-        "/** @typedef {{b: D1}} */\n" +
-        "var D2;",
+    assertExternProperties(LINE_JOINER.join(
+        "/** @typedef {{a: function(D2)}} */",
+        "var D1;",
+        "",
+        "/** @typedef {{b: D1}} */",
+        "var D2;"),
         "a", "b");
 
     // Record types defined in normal code and referenced in externs should
