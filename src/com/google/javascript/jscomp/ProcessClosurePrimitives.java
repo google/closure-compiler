@@ -827,7 +827,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    */
   private static Node getEnclosingDeclNameNode(Node n) {
     Node fn = NodeUtil.getEnclosingFunction(n);
-    return fn == null ? null : NodeUtil.getFunctionNameNode(enclosingFunction);
+    return fn == null ? null : NodeUtil.getFunctionNameNode(fn);
   }
 
   /** Verify if goog.base call is used in a class */
