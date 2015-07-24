@@ -9352,6 +9352,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "   */",
         "  this.Bar = function() {};",
         "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @enum */",
+        "ns.e = {/** @const */ A:1};"));
   }
 
   public void testConstVarsDontReassign() {

@@ -1164,7 +1164,8 @@ class GlobalTypeInfo implements CompilerPass {
               visitNamespacePropertyDeclaration(
                   prop, maybeLvalue, prop.getString());
             }
-          } else if (!NodeUtil.isPrototypeAssignment(maybeLvalue)) {
+          } else if (!NodeUtil.isEnumDecl(maybeLvalue)
+              && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
             for (Node prop : n.children()) {
               if (prop.getJSDocInfo() != null) {
                 declaredObjLitProps.put(prop,
