@@ -44,7 +44,7 @@ public abstract class Namespace {
 
   protected String name;
   // If true, it is forbidden to add more properties to the namespace.
-  protected boolean isFinalized = false;
+  protected boolean isNamespaceFinalized = false;
   // If a namespace is finalized early b/c of a @const inference, we
   // record the @const declaration (usually an assignment node).
   protected Node constDeclNode;
@@ -53,18 +53,21 @@ public abstract class Namespace {
   // For RawNominalType, it is the constructor.
   protected JSType namespaceType;
 
-  public abstract void finalize(Node constDeclNode);
+  // Returns true iff finalization succeeds. (It may fail for nominal types.)
+  public abstract boolean finalizeNamespace(Node constDeclNode);
 
-  protected final void finalizeSubnamespaces(Node constDeclNode) {
+  protected final boolean finalizeSubnamespaces(Node constDeclNode) {
+    boolean success = true;
     for (RawNominalType rawType : nominals.values()) {
-      rawType.finalize(constDeclNode);
+      success = success && rawType.finalizeNamespace(constDeclNode);
     }
     for (EnumType et : enums.values()) {
-      et.finalize(constDeclNode);
+      success = success && et.finalizeNamespace(constDeclNode);
     }
     for (NamespaceLit ns : namespaces.values()) {
-      ns.finalize(constDeclNode);
+      success = success && ns.finalizeNamespace(constDeclNode);
     }
+    return success;
   }
 
   protected abstract JSType computeJSType(JSTypes commonTypes);
@@ -78,8 +81,8 @@ public abstract class Namespace {
     return this.constDeclNode;
   }
 
-  public final boolean isFinalized() {
-    return this.isFinalized;
+  public final boolean isNamespaceFinalized() {
+    return this.isNamespaceFinalized;
   }
 
   private boolean isDefined(String name) {
@@ -108,7 +111,7 @@ public abstract class Namespace {
   }
 
   public final void addSubnamespace(QualifiedName qname) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isNamespaceFinalized);
     Declaration d = getDeclaration(qname);
     Preconditions.checkState(d == null
         || d.getNamespace() == null && d.getFunctionScope() != null);
@@ -121,7 +124,7 @@ public abstract class Namespace {
   }
 
   public final void addScope(QualifiedName qname, DeclaredTypeRegistry scope) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isNamespaceFinalized);
     Namespace ns = getReceiverNamespace(qname);
     if (ns.scopes.isEmpty()) {
       ns.scopes = new LinkedHashMap<>();
@@ -151,7 +154,7 @@ public abstract class Namespace {
   }
 
   public final void addNominalType(QualifiedName qname, RawNominalType rawNominalType) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isNamespaceFinalized);
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.nominals.isEmpty()) {
@@ -162,7 +165,7 @@ public abstract class Namespace {
   }
 
   public final void addTypedef(QualifiedName qname, Typedef td) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isNamespaceFinalized);
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.typedefs.isEmpty()) {
@@ -173,7 +176,7 @@ public abstract class Namespace {
   }
 
   public final void addEnum(QualifiedName qname, EnumType e) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isNamespaceFinalized);
     Preconditions.checkState(!isDefined(qname));
     Namespace ns = getReceiverNamespace(qname);
     if (ns.enums.isEmpty()) {
@@ -230,7 +233,7 @@ public abstract class Namespace {
 
   /** Add a new non-optional declared property to this namespace */
   public final void addProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isNamespaceFinalized);
     if (type == null && isConstant) {
       type = JSType.UNKNOWN;
     }
@@ -242,7 +245,7 @@ public abstract class Namespace {
   /** Add a new undeclared property to this namespace */
   public final void addUndeclaredProperty(
       String pname, Node defSite, JSType t, boolean isConstant) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isNamespaceFinalized);
     if (otherProps.containsKey(pname)
         && !otherProps.get(pname).getType().isUnknown()) {
       return;
@@ -258,8 +261,8 @@ public abstract class Namespace {
   }
 
   public final JSType toJSType(JSTypes commonTypes) {
-    if (!this.isFinalized) {
-      finalize(null);
+    if (!this.isNamespaceFinalized) {
+      finalizeNamespace(null);
     }
     if (this.namespaceType == null) {
       this.namespaceType = computeJSType(commonTypes);

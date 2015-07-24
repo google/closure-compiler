@@ -389,7 +389,7 @@ class GlobalTypeInfo implements CompilerPass {
 
   private Collection<PropertyDef> getPropDefsFromInterface(
       NominalType nominalType, String pname) {
-    Preconditions.checkArgument(nominalType.isFinalized());
+    Preconditions.checkArgument(nominalType.isRawTypeFinalized());
     Preconditions.checkArgument(nominalType.isInterface());
     if (nominalType.getPropDeclaredType(pname) == null) {
       return ImmutableSet.of();
@@ -406,7 +406,7 @@ class GlobalTypeInfo implements CompilerPass {
   private PropertyDef getPropDefFromClass(
       NominalType nominalType, String pname) {
     while (nominalType.getPropDeclaredType(pname) != null) {
-      Preconditions.checkArgument(nominalType.isFinalized());
+      Preconditions.checkArgument(nominalType.isRawTypeFinalized());
       Preconditions.checkArgument(nominalType.isClass());
 
       if (propertyDefs.get(nominalType.getId(), pname) != null) {
@@ -419,16 +419,16 @@ class GlobalTypeInfo implements CompilerPass {
 
   // constDeclNode is non-null iff rawType is finalized b/c of @const inference.
   private void checkAndFinalizeNominalType(RawNominalType rawType, Node constDeclNode) {
-    if (rawType.isFinalized()) {
+    if (rawType.isRawTypeFinalized()) {
       return;
     }
     NominalType superClass = rawType.getSuperClass();
     Set<String> nonInheritedPropNames = rawType.getAllOwnProps();
-    if (superClass != null && !superClass.isFinalized()) {
+    if (superClass != null && !superClass.isRawTypeFinalized()) {
       checkAndFinalizeNominalType(superClass.getRawNominalType(), constDeclNode);
     }
     for (NominalType superInterf : rawType.getInterfaces()) {
-      if (!superInterf.isFinalized()) {
+      if (!superInterf.isRawTypeFinalized()) {
         checkAndFinalizeNominalType(superInterf.getRawNominalType(), constDeclNode);
       }
     }
@@ -438,7 +438,7 @@ class GlobalTypeInfo implements CompilerPass {
     Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
     // Collect inherited types for extended classes
     if (superClass != null) {
-      Preconditions.checkState(superClass.isFinalized());
+      Preconditions.checkState(superClass.isRawTypeFinalized());
       // TODO(blickly): Can we optimize this to skip unnecessary iterations?
       for (String pname : superClass.getAllPropsOfClass()) {
         nonInheritedPropNames.remove(pname);
@@ -449,7 +449,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     // Collect inherited types for extended/implemented interfaces
     for (NominalType superInterf : rawType.getInterfaces()) {
-      Preconditions.checkState(superInterf.isFinalized());
+      Preconditions.checkState(superInterf.isRawTypeFinalized());
       for (String pname : superInterf.getAllPropsOfInterface()) {
         nonInheritedPropNames.remove(pname);
         checkSuperProperty(rawType, superInterf, pname,
@@ -510,7 +510,7 @@ class GlobalTypeInfo implements CompilerPass {
     }
 
     // Finalize nominal type once all properties are added.
-    rawType.finalize(constDeclNode);
+    rawType.finalizeRawType();
   }
 
   private void checkSuperProperty(
@@ -615,16 +615,6 @@ class GlobalTypeInfo implements CompilerPass {
         if (!ns.isDefined(pname)) {
           ns.addScope(pname, s);
         }
-      } else if (!currentScope.isDefined(qnameNode)) {
-        Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
-        String pname = qnameNode.getLastChild().getString();
-        // A program can have an error where a namespace property is defined
-        // twice: the first time with a non-namespace type and the second time
-        // as a namespace.
-        // Adding the non-namespace property here as undeclared prevents us
-        // from mistakenly using the second definition later. We use ? for now,
-        // but may find a better type in ProcessScope.
-        ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
       }
     }
 
@@ -1265,13 +1255,6 @@ class GlobalTypeInfo implements CompilerPass {
         // We don't look at assignments to prototypes of non-constructors.
         return;
       }
-      if (rawType.isFinalized()) {
-        warnings.add(JSError.make(getProp,
-                NAMESPACE_MODIFIED_AFTER_FINALIZATION,
-                rawType.getName(),
-                rawType.getConstDeclNode().toString()));
-        return;
-      }
       if (initializer != null && initializer.isFunction()) {
         parent.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       }
@@ -1328,13 +1311,6 @@ class GlobalTypeInfo implements CompilerPass {
       QualifiedName ctorQname = QualifiedName.fromNode(getProp.getFirstChild());
       Preconditions.checkState(currentScope.isLocalFunDef(ctorName));
       RawNominalType classType = currentScope.getNominalType(ctorQname);
-      if (classType.isFinalized()) {
-        warnings.add(JSError.make(getProp,
-                NAMESPACE_MODIFIED_AFTER_FINALIZATION,
-                classType.getName(),
-                classType.getConstDeclNode().toString()));
-        return;
-      }
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
@@ -1351,12 +1327,14 @@ class GlobalTypeInfo implements CompilerPass {
         if (isConst && !mayWarnAboutNoInit(getProp) && propDeclType == null) {
           propDeclType = inferConstTypeFromRhs(getProp);
         }
-        classType.addCtorProperty(pname, getProp, propDeclType, isConst);
-        getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
-        if (isConst) {
-          getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+        if (!mayWarnAboutAddingPropToFinalizedNamespace(classType, pname, jsdoc, getProp)) {
+          classType.addCtorProperty(pname, getProp, propDeclType, isConst);
+          getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+          if (isConst) {
+            getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+          }
         }
-      } else {
+      } else if (!mayWarnAboutAddingPropToFinalizedNamespace(classType, pname, jsdoc, getProp)) {
         classType.addUndeclaredCtorProperty(pname, getProp);
       }
     }
@@ -1383,13 +1361,6 @@ class GlobalTypeInfo implements CompilerPass {
         return;
       }
       Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
-      if (ns.isFinalized()) {
-        warnings.add(JSError.make(recv,
-                NAMESPACE_MODIFIED_AFTER_FINALIZATION,
-                ns.getName(),
-                ns.getConstDeclNode().toString()));
-        return;
-      }
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
       JSType propDeclType = getDeclaredTypeOfNode(jsdoc, currentScope);
       boolean isConst = isConst(declNode);
@@ -1405,10 +1376,12 @@ class GlobalTypeInfo implements CompilerPass {
         if (isConst && !mayWarnAboutNoInit(declNode) && propDeclType == null) {
           propDeclType = inferConstTypeFromRhs(declNode);
         }
-        ns.addProperty(pname, declNode, propDeclType, isConst);
-        declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
-        if (declNode.isGetProp() && isConst) {
-          declNode.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+        if (!mayWarnAboutAddingPropToFinalizedNamespace(ns, pname, jsdoc, declNode)) {
+          ns.addProperty(pname, declNode, propDeclType, isConst);
+          declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+          if (declNode.isGetProp() && isConst) {
+            declNode.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+          }
         }
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
@@ -1418,8 +1391,25 @@ class GlobalTypeInfo implements CompilerPass {
         if (t == null) {
           t = JSType.UNKNOWN;
         }
-        ns.addUndeclaredProperty(pname, declNode, t, false);
+        if (!mayWarnAboutAddingPropToFinalizedNamespace(ns, pname, jsdoc, declNode)) {
+          ns.addUndeclaredProperty(pname, declNode, t, false);
+        }
       }
+    }
+
+    // Returns true iff the namespace is finalized, even if we don't warn
+    private boolean mayWarnAboutAddingPropToFinalizedNamespace(
+        Namespace ns, String pname, JSDocInfo jsdoc, Node declNode) {
+      if (ns.isNamespaceFinalized()) {
+        if (!ns.isDefined(new QualifiedName(pname)) || jsdoc != null) {
+          warnings.add(JSError.make(declNode,
+                  NAMESPACE_MODIFIED_AFTER_FINALIZATION,
+                  ns.getName(),
+                  ns.getConstDeclNode().toString()));
+        }
+        return true;
+      }
+      return false;
     }
 
     private void visitClassPropertyDeclaration(Node getProp) {
@@ -1678,12 +1668,10 @@ class GlobalTypeInfo implements CompilerPass {
       if (constDeclNode != null) {
         Namespace ns = decl.getNamespace();
         if (ns != null) {
-          if (ns instanceof RawNominalType) {
-            checkAndFinalizeNominalType((RawNominalType) ns, constDeclNode);
-          } else {
-            ns.finalize(constDeclNode);
+          if (ns.finalizeNamespace(constDeclNode)) {
+            return ns.toJSType(commonTypes);
           }
-          return ns.toJSType(commonTypes);
+          return null;
         }
       }
       if (decl.getTypeOfSimpleDecl() != null) {
@@ -1919,14 +1907,16 @@ class GlobalTypeInfo implements CompilerPass {
             && isConst && !mayWarnAboutNoInit(defSite)) {
           propDeclType = inferConstTypeFromRhs(defSite);
         }
-        rawType.addProtoProperty(pname, defSite, propDeclType, isConst);
-        if (defSite.isGetProp()) { // Don't bother saving for @lends
-          defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
-          if (isConst) {
-            defSite.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+        if (!mayWarnAboutAddingPropToFinalizedNamespace(rawType, pname, jsdoc, defSite)) {
+          rawType.addProtoProperty(pname, defSite, propDeclType, isConst);
+          if (defSite.isGetProp()) { // Don't bother saving for @lends
+            defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+            if (isConst) {
+              defSite.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+            }
           }
         }
-      } else {
+      } else if (!mayWarnAboutAddingPropToFinalizedNamespace(rawType, pname, jsdoc, defSite)) {
         rawType.addUndeclaredProtoProperty(pname, defSite);
       }
     }
@@ -2627,7 +2617,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       Namespace ns = props.isIdentifier()
           ? leftmost : leftmost.getSubnamespace(props.getAllButRightmost());
-      if (!ns.isFinalized()) {
+      if (!ns.isNamespaceFinalized()) {
         String pname = props.getRightmostName();
         ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
       } else {
@@ -2647,7 +2637,7 @@ class GlobalTypeInfo implements CompilerPass {
       for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {
         String name = entry.getKey();
         NamespaceLit nslit = entry.getValue();
-        nslit.finalize(null);
+        nslit.finalizeNamespace(null);
         JSType t = nslit.toJSType(commonTypes);
         // If it's a function namespace, add the function type to the result
         if (localFunDefs.containsKey(name)) {
@@ -2663,7 +2653,7 @@ class GlobalTypeInfo implements CompilerPass {
       }
       for (Map.Entry<String, EnumType> entry : localEnums.entrySet()) {
         EnumType et = entry.getValue();
-        et.finalize(null);
+        et.finalizeNamespace(null);
         locals.put(entry.getKey(), et.toJSType(commonTypes));
       }
       for (String typedefName : localTypedefs.keySet()) {

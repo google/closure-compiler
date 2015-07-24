@@ -196,7 +196,7 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType INVALID_CAST =
       DiagnosticType.warning("JSC_INVALID_CAST",
-          "invalid cast - the types don't have a common subtype\n" +
+          "invalid cast - the types do not have a common subtype\n" +
           "from: {0}\n" +
           "to  : {1}");
 

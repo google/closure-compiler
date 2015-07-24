@@ -29,13 +29,15 @@ public final class NamespaceLit extends Namespace {
   }
 
   @Override
-  public void finalize(Node constDeclNode) {
-    if (this.isFinalized) {
-      return;
+  public boolean finalizeNamespace(Node constDeclNode) {
+    if (!this.isNamespaceFinalized) {
+      this.constDeclNode = constDeclNode;
+      this.isNamespaceFinalized = true;
+      if (!finalizeSubnamespaces(constDeclNode)) {
+        return false;
+      }
     }
-    finalizeSubnamespaces(constDeclNode);
-    this.constDeclNode = constDeclNode;
-    this.isFinalized = true;
+    return true;
   }
 
   @Override

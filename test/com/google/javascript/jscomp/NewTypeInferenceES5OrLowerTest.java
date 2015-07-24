@@ -13103,7 +13103,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Bar() {}",
         "/** @const */",
         "var Baz = Bar;",
-        "Foo.prototype.prop = 123;"),
+        "Foo.prototype.prop = function() {};"),
         GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
 
     typeCheck(Joiner.on('\n').join(
@@ -13172,5 +13172,306 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {number} */",
         "e.Foo.prop = 123;"),
         GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+  }
+
+  public void testFixAdditionOfStaticCtorProps() {
+    // TODO(dimvar): The expected formal type is string if g appears before f
+    // and number o/w. Also, we allow adding named types to ctors in any scope,
+    // but other properties only in the same scope where the ctor is defined.
+    // 1) Must warn about redeclared prop.
+    // 2) Must be consistent about which scopes can add new props.
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function g() {",
+        "  /**",
+        "   * @constructor",
+        "   * @param {string} x",
+        "   */",
+        "  Foo.Bar = function(x) {};",
+        "}",
+        "function f() {",
+        "  /**",
+        "   * @constructor",
+        "   * @param {number} x",
+        "   */",
+        "  Foo.Bar = function(x) {};",
+        "}",
+        "function h() {",
+        "  return new Foo.Bar(true);",
+        "}"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testAddingPropsToNominalTypesAfterFinalization() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "}",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f() {",
+        "  var /** string */ s = (new Foo).prop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @const */",
+        "var exports = Foo;",
+        "Foo.prototype.method = function() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "};",
+        "function f() {",
+        "  var /** string */ s = (new Foo).prop;",
+        "}"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f(/** !Foo */ x) {",
+        "  /** @type {number} */",
+        "  x.prop = 123;",
+        "}",
+        "function g(/** !Foo */ x) {",
+        "  var /** string */ s = x.prop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 123;",
+        "/** @const */",
+        "var exports = Foo;",
+        "Foo.prop = 234;"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 123;",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f() {",
+        "  Foo.prop = 234;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 123;",
+        "/** @const */",
+        "var exports = Foo;",
+        "Foo.prop2 = 234;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 123;",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f() {",
+        "  /** @type {number} */",
+        "  Foo.prop = 234;",
+        "}"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @const */",
+        "var exports = Foo;",
+        "Foo.prototype.method = function() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "};",
+        "function f() {",
+        "  var /** string */ s = (new Foo).prop;",
+        "}"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testSubnamespacesNotFinalized() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor @implements {Parent} */",
+        "ns.Child = function() {}",
+        "/** @const */",
+        "var exports = ns;",
+        "/** @interface */",
+        "function Parent() {}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "ns.ns2 = {};",
+        "/** @constructor @implements {Parent} */",
+        "ns.ns2.Child = function() {}",
+        "/** @const */",
+        "var exports = ns;",
+        "/** @interface */",
+        "function Parent() {}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @enum */",
+        "ns.e = {A:1};",
+        "/** @constructor @implements {Parent} */",
+        "ns.e.Child = function() {}",
+        "/** @const */",
+        "var exports = ns;",
+        "/** @interface */",
+        "function Parent() {}"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
+
+  public void testFinalizationOfImplementedInterfaces() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function I1() {}",
+        "/** @return {number} */",
+        "I1.prototype.method = function() {};",
+        "/**",
+        " * @constructor",
+        " * @implements {I1}",
+        " */",
+        "function Foo() {}",
+        "Foo.prototype.method = function() { return 1; };",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f() {",
+        "  var /** string */ s = (new exports).method();",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @constructor",
+        " * @implements {I1}",
+        " */",
+        "function Foo() {}",
+        "Foo.prototype.method = function() { return 1; };",
+        "/** @const */",
+        "var exports = Foo;",
+        "/** @interface */",
+        "function I1() {}",
+        "/** @return {number} */",
+        "I1.prototype.method = function() {};"),
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+  }
+
+  public void testImprecisePrototypeDueToEarlyFinalization() {
+    // Can't find the type mismatch because the prototype property of
+    // exports was created before finalizing Foo.
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function Parent() {}",
+        "/** @return {number} */",
+        "Parent.prototype.method = function() {};",
+        "/** @constructor @implements {Parent} */",
+        "function Foo() {}",
+        "Foo.prototype.method = function() { return 1; };",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f() {",
+        "  var /** null */ x = exports.prototype.method.call(new Foo);",
+        "}"));
+
+    // The exports object itself does have the newest type information
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function Parent() {}",
+        "/** @return {number} */",
+        "Parent.prototype.method = function() {};",
+        "/** @constructor @implements {Parent} */",
+        "function Foo() {}",
+        "Foo.prototype.method = function() { return 1; };",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f() {",
+        "  var /** null */ x = (new exports).method();",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // The exports object itself does have the newest type information
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function Parent() {}",
+        "/** @return {number} */",
+        "Parent.prototype.method = function() {};",
+        "/** @constructor @implements {Parent} */",
+        "function Foo() {}",
+        "Foo.prototype.method = function() { return 1; };",
+        "/** @const */",
+        "var exports = new Foo;",
+        "function f() {",
+        "  var /** null */ x = exports.method();",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Can't find the type mismatch because the prototype property of
+    // exports was created before finalizing Foo.
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function I1() {}",
+        "/** @return {number|string} */",
+        "I1.prototype.method = function() {};",
+        "/** @interface */",
+        "function I2() {}",
+        "/** @return {number|boolean} */",
+        "I2.prototype.method = function() {};",
+        "/**",
+        " * @constructor",
+        " * @implements {I1}",
+        " * @implements {I2}",
+        " */",
+        "function Foo() {}",
+        "Foo.prototype.method = function() { return 1; };",
+        "/** @const */",
+        "var exports = Foo;",
+        "function f() {",
+        "  var /** null */ x = exports.prototype.method.call(new Foo);",
+        "}"));
+  }
+
+  public void testFinalizingRecursiveSubnamespaces() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "/** @const */",
+        "ns.Foo.ns2 = ns;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @const */",
+        "Foo.alias = Foo;"),
+        GlobalTypeInfo.NAMESPACE_MODIFIED_AFTER_FINALIZATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @constructor @implements {Foo} */",
+        "Foo.Bar = function() {};",
+        "/** @const */",
+        "var exports = Foo;"));
   }
 }
