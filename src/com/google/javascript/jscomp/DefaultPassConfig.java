@@ -251,6 +251,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closurePrimitives);
     }
 
+    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite and *before*
+    // the suspicious code checks. This is enforced in the assertValidOrder method.
+    if (options.polymerPass && !options.skipNonTranspilationPasses) {
+      checks.add(polymerPass);
+    }
+
     // Early ES6 transpilation.
     // Includes ES6 features that are straightforward to transpile.
     // We won't handle them natively in the rest of the compiler, so we always
@@ -260,12 +266,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
-    }
-
-    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite and *before*
-    // the suspicious code checks.
-    if (options.polymerPass && !options.skipNonTranspilationPasses) {
-      checks.add(polymerPass);
     }
 
     if ((options.checkSuspiciousCode
