@@ -61,6 +61,7 @@ class DisambiguatePrivateProperties
       case Token.STRING_KEY:
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
+      case Token.MEMBER_FUNCTION_DEF:
         maybeRename(n);
         break;
     }

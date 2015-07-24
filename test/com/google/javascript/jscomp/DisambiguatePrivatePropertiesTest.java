@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Unit test for the Compiler DisambiguatPrivateeProperties pass.
  *
@@ -65,7 +67,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     testSame("({})['prop_'];");
     testSame("({'prop_': 1});");
     testSame("({get 'prop_'(){ return 1} });");
-    testSame("({set 'prop_'(a){this.a = 1} });");
+    testSame("({set 'prop_'(a){ this.a = 1} });");
 
     useGoogleCodingConvention = false;
 
@@ -73,7 +75,10 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     testSame("({}).prop_;");
     testSame("({prop_: 1});");
     testSame("({get prop_(){ return 1} });");
-    testSame("({set prop_(a){this.a = 1} });");
+    testSame("({set prop_(a){ this.a = 1} });");
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("({prop_(){ return 1} });");
+    testSame("class A{method_(){return 1} }");
   }
 
   public void testRenaming1() {
@@ -92,8 +97,15 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
         "({get prop_$0(){ return 1} });");
 
     test(
-        "({set prop_(a){this.a = 1} });",
-        "({set prop_$0(a){this.a = 1} });");
+        "({set prop_(a){ this.a = 1} });",
+        "({set prop_$0(a){ this.a = 1} });");
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(
+        "({prop_(){ return 1} });",
+        "({prop_$0(){ return 1} });");
+    test(
+        "class A{method_(){return 1} }",
+        "class A{method_$0(){return 1} }");
   }
 
   public void testNoRenameIndirectProps() {
@@ -103,5 +115,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     testSame("({superClass_: 1});");
     testSame("({get superClass_(){ return 1} });");
     testSame("({set superClass_(a){this.a = 1} });");
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("({superClass_(){ return 1} });");
   }
 }
