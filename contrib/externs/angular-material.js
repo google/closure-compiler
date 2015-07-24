@@ -356,3 +356,9 @@ md.$mdIconProvider.prototype.defaultIconSet = function(url, iconSize) {};
  * @return {md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.defaultIconSize = function(iconSize) {};
+
+/**
+ * @param {string} name
+ * @return {md.$mdIconProvider}
+ */
+md.$mdIconProvider.prototype.defaultFontSet = function(name) {};
