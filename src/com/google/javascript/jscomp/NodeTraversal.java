@@ -773,6 +773,12 @@ public class NodeTraversal {
     return getScopeDepth() <= 1;
   }
 
+  // Not dual of inGlobalScope, because of block scoping.
+  // They both return false in an inner block at top level.
+  boolean inFunction() {
+    return getCfgRoot().isFunction();
+  }
+
   int getScopeDepth() {
     return scopes.size() + scopeRoots.size();
   }

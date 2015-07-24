@@ -312,7 +312,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         break;
 
       case Token.CLASS:
-        if (t.inGlobalScope() && !NodeUtil.isClassExpression(n)) {
+        if (!t.inFunction() && !NodeUtil.isClassExpression(n)) {
           String name = n.getFirstChild().getString();
           ProvidedName pn = providedNames.get(name);
           if (pn != null) {
@@ -324,7 +324,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       case Token.FUNCTION:
         // If this is a declaration of a provided named function, this is an
         // error. Hoisted functions will explode if they're provided.
-        if (t.inGlobalScope() &&
+        if (!t.inFunction() &&
             !NodeUtil.isFunctionExpression(n)) {
           String name = n.getFirstChild().getString();
           ProvidedName pn = providedNames.get(name);
@@ -346,7 +346,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   }
 
   private boolean validPrimitiveCall(NodeTraversal t, Node n) {
-    if (!n.getParent().isExprResult() || !t.inGlobalScope()) {
+    if (!n.getParent().isExprResult() || t.inFunction()) {
       compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_ERROR));
       return false;
     }
@@ -479,7 +479,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private void handleTypedefDefinition(
       NodeTraversal t, Node n) {
     JSDocInfo info = n.getFirstChild().getJSDocInfo();
-    if (t.inGlobalScope() && info != null && info.hasTypedefType()) {
+    if (!t.inFunction() && info != null && info.hasTypedefType()) {
       String name = n.getFirstChild().getQualifiedName();
       if (name != null) {
         ProvidedName pn = providedNames.get(name);
@@ -495,7 +495,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    */
   private void handleCandidateProvideDefinition(
       NodeTraversal t, Node n, Node parent) {
-    if (t.inGlobalScope()) {
+    if (!t.inFunction()) {
       String name = null;
       if (n.isName() && parent.isVar()) {
         name = n.getString();
