@@ -54,6 +54,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       "The argument to Polymer() is not an obj lit (perhaps because this is a pre-Polymer-1.0 "
       + "call). Ignoring this call.");
 
+  static final DiagnosticType POLYMER_INVALID_DECLARATION = DiagnosticType.error(
+      "JSC_POLYMER_INVALID_DECLARAION", "A Polymer() declaration cannot use 'let' or 'const'.");
+
   // Errors
   static final DiagnosticType POLYMER_MISSING_IS = DiagnosticType.error("JSC_POLYMER_MISSING_IS",
       "The class descriptor must include an 'is' property.");
@@ -279,6 +282,10 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   }
 
   private void rewriteClassDefinition(Node n, Node parent, NodeTraversal t) {
+    if (parent.getParent().isConst() || parent.getParent().isLet()) {
+      compiler.report(JSError.make(n, POLYMER_INVALID_DECLARATION));
+      return;
+    }
     ClassDefinition def = extractClassDefinition(n);
     if (def != null) {
       if (NodeUtil.isNameDeclaration(parent.getParent()) || parent.isAssign()) {

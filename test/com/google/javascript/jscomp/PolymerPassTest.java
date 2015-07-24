@@ -181,6 +181,26 @@ public class PolymerPassTest extends CompilerTestCase {
             "});"));
   }
 
+  public void testLetTarget() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    disableTypeCheck();
+    testError(
+        LINE_JOINER.join(
+            "let X = Polymer({",
+            "  is: 'x-element',",
+            "});"), PolymerPass.POLYMER_INVALID_DECLARATION);
+  }
+
+  public void testConstTarget() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    disableTypeCheck();
+    testError(
+        LINE_JOINER.join(
+            "const X = Polymer({",
+            "  is: 'x-element',",
+            "});"), PolymerPass.POLYMER_INVALID_DECLARATION);
+  }
+
   public void testDefaultTypeNameTarget() {
     test(
         LINE_JOINER.join(
