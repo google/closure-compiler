@@ -48,9 +48,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.TernaryValue;
-import com.google.javascript.rhino.jstype.UnionType;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -318,8 +316,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private int unknownCount = 0;
   private boolean inExterns;
 
-  private Method editDistance;
-
   private static final class SuggestionPair {
     private final String suggestion;
     final int distance;
@@ -345,16 +341,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     this.reportUnknownTypes = ((Compiler) compiler).getOptions().enables(
         DiagnosticGroups.REPORT_UNKNOWN_TYPES);
     this.inferJSDocInfo = new InferJSDocInfo(compiler);
-
-    ClassLoader classLoader = TypeCheck.class.getClassLoader();
-    try {
-      Class<?> c = classLoader.loadClass(
-          "com.google.common.string.EditDistance");
-      editDistance = c.getDeclaredMethod(
-          "getEditDistance", String.class, String.class, boolean.class);
-    } catch (Exception ignored) {
-      editDistance = null;
-    }
   }
 
   public TypeCheck(AbstractCompiler compiler,
@@ -1505,56 +1491,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   private SuggestionPair getClosestPropertySuggestion(
       JSType objectType, String propName) {
-    if (editDistance == null) {
-      return null;
-    }
-
-    String bestSoFar = null;
-    int shortest = Integer.MAX_VALUE;
-    if (objectType instanceof ObjectType) {
-      ObjectType type = (ObjectType) objectType;
-      for (String alt : type.getPropertyNames()) {
-        int distance;
-        try {
-          distance = (Integer) editDistance.invoke(null, propName, alt, false);
-        } catch (Exception e) {
-          return null;
-        }
-        if (distance <= shortest) {
-          if (distance == shortest) {
-            // To make warning determistic across runs we 'tie-break' by
-            // alphabetical order ignore-case.
-            if (bestSoFar != null && alt.compareToIgnoreCase(bestSoFar) > 0) {
-              continue;
-            }
-          }
-          shortest = distance;
-          bestSoFar = alt;
-        }
-      }
-    } else if (objectType.isUnionType()) {
-      UnionType type = (UnionType) objectType;
-      for (JSType alt : type.getAlternates()) {
-        SuggestionPair pair = getClosestPropertySuggestion(alt, propName);
-        if (pair != null) {
-          if (pair.distance <= shortest) {
-            if (pair.distance  == shortest) {
-              if (bestSoFar != null &&
-                  pair.suggestion.compareToIgnoreCase(bestSoFar) > 0) {
-                continue;
-              }
-            }
-            shortest = pair.distance;
-            bestSoFar = pair.suggestion;
-          }
-        }
-      }
-    }
-
-    if (bestSoFar != null) {
-      return new SuggestionPair(bestSoFar, shortest);
-    }
-
     return null;
   }
 
