@@ -183,7 +183,9 @@ class FunctionToBlockMutator {
                 compiler.getCodingConvention(),
                 idSupplier,
                 "inline_",
-                isCallInLoop)));
+                isCallInLoop,
+                true,
+                null)));
     // Make label names unique to this instance.
     new RenameLabels(compiler, new LabelNameSupplier(idSupplier), false)
         .process(null, fnNode);

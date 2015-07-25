@@ -1873,6 +1873,28 @@ public final class NodeUtil {
   }
 
   /**
+   * Is this node the name of a block-scoped declaration?
+   * Checks for let, const, class, or block-scoped function declarations.
+   *
+   * @param n The node
+   * @return True if {@code n} is the NAME of a block-scoped declaration.
+   */
+  static boolean isBlockScopedDeclaration(Node n) {
+    if (n.isName()) {
+      switch (n.getParent().getType()) {
+        case Token.LET:
+        case Token.CONST:
+          return true;
+        case Token.CLASS:
+          return n.getParent().getFirstChild() == n;
+        case Token.FUNCTION:
+          return isBlockScopedFunctionDeclaration(n);
+      }
+    }
+    return false;
+  }
+
+  /**
    * Is this node a name declaration?
    *
    * @param n The node
@@ -1896,14 +1918,6 @@ public final class NodeUtil {
       }
     }
     return false;
-  }
-
-  /**
-   * Is this node declaring a block-scoped variable?
-   */
-  static boolean isLexicalDeclaration(Node n) {
-    return n.isLet() || n.isConst()
-        || isFunctionDeclaration(n) || isClassDeclaration(n);
   }
 
   /**
@@ -2328,6 +2342,10 @@ public final class NodeUtil {
       }
     }
     return false;
+  }
+
+  static boolean isFunctionBlock(Node n) {
+    return n.isBlock() && n.getParent() != null && n.getParent().isFunction();
   }
 
   /**

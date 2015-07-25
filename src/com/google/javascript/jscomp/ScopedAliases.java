@@ -534,7 +534,7 @@ class ScopedAliases implements HotSwapCompilerPass {
                 new MakeDeclaredNamesUnique.ContextualRenamer(),
                 forbiddenLocals);
         for (String s : forbiddenLocals) {
-          renamer.addDeclaredName(s);
+          renamer.addDeclaredName(s, false);
         }
         MakeDeclaredNamesUnique uniquifier =
             new MakeDeclaredNamesUnique(renamer);
