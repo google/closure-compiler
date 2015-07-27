@@ -24,7 +24,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.CodingConvention.Bind;
-import com.google.javascript.jscomp.GlobalTypeInfo.Scope;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
@@ -263,10 +262,10 @@ final class NewTypeInference implements CompilerPass {
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
   private Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
-  private Map<Scope, JSType> summaries;
+  private Map<NTIScope, JSType> summaries;
   private Map<Node, DeferredCheck> deferredChecks;
   private ControlFlowGraph<Node> cfg;
-  private Scope currentScope;
+  private NTIScope currentScope;
   // This TypeEnv should be computed once per scope
   private TypeEnv typeEnvFromDeclaredTypes = null;
   private GlobalTypeInfo symbolTable;
@@ -306,7 +305,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   @VisibleForTesting // Only used from tests
-  public Scope processForTesting(Node externs, Node root) {
+  public NTIScope processForTesting(Node externs, Node root) {
     process(externs, root);
     return symbolTable.getGlobalScope();
   }
@@ -316,7 +315,7 @@ final class NewTypeInference implements CompilerPass {
     try {
       this.symbolTable = compiler.getSymbolTable();
       this.commonTypes = symbolTable.getTypesUtilObject();
-      for (Scope scope : symbolTable.getScopes()) {
+      for (NTIScope scope : symbolTable.getScopes()) {
         analyzeFunction(scope);
         envs.clear();
       }
@@ -599,7 +598,7 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private void analyzeFunction(Scope scope) {
+  private void analyzeFunction(NTIScope scope) {
     println("=== Analyzing function: ", scope.getReadableName(), " ===");
     currentScope = scope;
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
@@ -896,7 +895,7 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private void createSummary(Scope fn) {
+  private void createSummary(NTIScope fn) {
     Node fnRoot = fn.getRoot();
     Preconditions.checkArgument(!fnRoot.isFromExterns());
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
@@ -988,8 +987,9 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private JSType mayChangeSummaryForFunctionsWithProperties(Scope fnScope, JSType currentSummary) {
-    Scope enclosingScope = fnScope.getParent();
+  private JSType mayChangeSummaryForFunctionsWithProperties(
+      NTIScope fnScope, JSType currentSummary) {
+    NTIScope enclosingScope = fnScope.getParent();
     Node fnNameNode = NodeUtil.getFunctionNameNode(fnScope.getRoot());
     JSType summary = currentSummary;
     JSType namespaceType = null;
@@ -1039,7 +1039,7 @@ final class NewTypeInference implements CompilerPass {
     return typeAfterBwd;
   }
 
-  private static boolean isAllowedToNotReturn(Scope methodScope) {
+  private static boolean isAllowedToNotReturn(NTIScope methodScope) {
     Node fn = methodScope.getRoot();
     if (fn.isFromExterns()) {
       return true;
@@ -2573,7 +2573,7 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
-  private boolean mayWarnAboutGlobalThis(Node thisExpr, Scope currentScope) {
+  private boolean mayWarnAboutGlobalThis(Node thisExpr, NTIScope currentScope) {
     Preconditions.checkArgument(thisExpr.isThis());
     Preconditions.checkState(!currentScope.hasThis());
     Node parent = thisExpr.getParent();
@@ -2707,7 +2707,7 @@ final class NewTypeInference implements CompilerPass {
 
   private void collectTypesForFreeVarsFwd(Node callee, TypeEnv env) {
     Preconditions.checkArgument(callee.isName());
-    Scope calleeScope = currentScope.getScope(callee.getString());
+    NTIScope calleeScope = currentScope.getScope(callee.getString());
     for (String freeVar : calleeScope.getOuterVars()) {
       if (calleeScope.getDeclaredTypeOf(freeVar) == null) {
         FunctionType summary = summaries.get(calleeScope).getFunType();
@@ -2723,7 +2723,7 @@ final class NewTypeInference implements CompilerPass {
 
   private TypeEnv collectTypesForFreeVarsBwd(Node callee, TypeEnv env) {
     Preconditions.checkArgument(callee.isName());
-    Scope calleeScope = currentScope.getScope(callee.getString());
+    NTIScope calleeScope = currentScope.getScope(callee.getString());
     for (String freeVar : calleeScope.getOuterVars()) {
       if (!currentScope.isDefinedLocally(freeVar, false) &&
           !currentScope.isOuterVar(freeVar)) {
@@ -3210,7 +3210,7 @@ final class NewTypeInference implements CompilerPass {
     if (currentScope.isKnownFunction(calleeName)
         && !currentScope.isLocalFunDef(calleeName)
         && !currentScope.isExternalFunction(calleeName)) {
-      Scope s = currentScope.getScope(calleeName);
+      NTIScope s = currentScope.getScope(calleeName);
       JSType expectedRetType;
       if (s.getDeclaredFunctionType().getReturnType() == null) {
         expectedRetType = requiredType;
@@ -3778,8 +3778,8 @@ final class NewTypeInference implements CompilerPass {
 
   private static class DeferredCheck {
     final Node callSite;
-    final Scope callerScope;
-    final Scope calleeScope;
+    final NTIScope callerScope;
+    final NTIScope calleeScope;
     // Null types means that they were declared
     // (and should have been checked during inference)
     JSType expectedRetType;
@@ -3788,8 +3788,8 @@ final class NewTypeInference implements CompilerPass {
     DeferredCheck(
         Node callSite,
         JSType expectedRetType,
-        Scope callerScope,
-        Scope calleeScope) {
+        NTIScope callerScope,
+        NTIScope calleeScope) {
       this.callSite = callSite;
       this.expectedRetType = expectedRetType;
       this.callerScope = callerScope;
@@ -3807,7 +3807,7 @@ final class NewTypeInference implements CompilerPass {
     }
 
     private void runCheck(
-        Map<Scope, JSType> summaries, WarningReporter warnings) {
+        Map<NTIScope, JSType> summaries, WarningReporter warnings) {
       FunctionType fnSummary = summaries.get(this.calleeScope).getFunType();
       println(
           "Running deferred check of function: ", calleeScope.getReadableName(),
