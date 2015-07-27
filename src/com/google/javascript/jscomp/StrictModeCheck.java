@@ -32,6 +32,8 @@ import java.util.Set;
  * <li> No re-declarations or assignments of "eval" or arguments.
  * <li> No use of arguments.callee
  * <li> No use of arguments.caller
+ * <li> Class: Always under strict mode
+ * <li>   In addition, no duplicate class method names
  * </ol>
  *
  */
@@ -88,6 +90,10 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_DUPLICATE_OBJECT_KEY",
       "object literals cannot contain duplicate keys in ES5 strict mode");
 
+  static final DiagnosticType DUPLICATE_CLASS_METHODS = DiagnosticType.error(
+      "JSC_DUPLICATE_CLASS_METHODS",
+      "Classes cannot contain duplicate method names");
+
   static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.error(
       "JSC_BAD_FUNCTION_DECLARATION",
       "functions can only be declared at top level or immediately within " +
@@ -123,7 +129,9 @@ class StrictModeCheck extends AbstractPostOrderCallback
     } else if (n.isDelProp()) {
       checkDelete(t, n);
     } else if (n.isObjectLit()) {
-      checkObjectLiteral(t, n);
+      checkObjectLiteralOrClass(t, n);
+    } else if (n.isClass()) {
+      checkObjectLiteralOrClass(t, n.getLastChild());
     } else if (n.isWith()) {
       checkWith(t, n);
     }
@@ -152,6 +160,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
    */
   private static boolean isDeclaration(Node n) {
     switch (n.getParent().getType()) {
+      case Token.LET:
+      case Token.CONST:
       case Token.VAR:
       case Token.FUNCTION:
       case Token.CATCH:
@@ -200,8 +210,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
     }
   }
 
-  /** Checks that object literal keys are valid. */
-  private static void checkObjectLiteral(NodeTraversal t, Node n) {
+  /** Checks that object literal keys or class method names are valid. */
+  private static void checkObjectLiteralOrClass(NodeTraversal t, Node n) {
     Set<String> getters = new HashSet<>();
     Set<String> setters = new HashSet<>();
     for (Node key = n.getFirstChild();
@@ -210,13 +220,21 @@ class StrictModeCheck extends AbstractPostOrderCallback
       if (!key.isSetterDef()) {
         // normal property and getter cases
         if (!getters.add(key.getString())) {
-          t.report(key, DUPLICATE_OBJECT_KEY);
+          if (n.isClassMembers()) {
+            t.report(key, DUPLICATE_CLASS_METHODS);
+          } else {
+            t.report(key, DUPLICATE_OBJECT_KEY);
+          }
         }
       }
       if (!key.isGetterDef()) {
         // normal property and setter cases
         if (!setters.add(key.getString())) {
-          t.report(key, DUPLICATE_OBJECT_KEY);
+          if (n.isClassMembers()) {
+            t.report(key, DUPLICATE_CLASS_METHODS);
+          } else {
+            t.report(key, DUPLICATE_OBJECT_KEY);
+          }
         }
       }
     }

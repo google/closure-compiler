@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 public final class StrictModeCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var arguments; function eval(str) {}";
 
@@ -107,6 +109,13 @@ public final class StrictModeCheckTest extends CompilerTestCase {
     testSame("try {} catch (ex) { ex = 3; }");
   }
 
+  public void testUnknownVariable4() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    disableTypeCheck();
+    testSame("function foo(a) { let b; a = b; }");
+    testSame("function foo(a) { const b = 42; a = b; }");
+  }
+
   public void testArguments() {
     testSame("function foo(arguments) {}",
          StrictModeCheck.ARGUMENTS_DECLARATION);
@@ -175,6 +184,15 @@ public final class StrictModeCheckTest extends CompilerTestCase {
         StrictModeCheck.DELETE_VARIABLE);
   }
 
+  public void testValidDelete() {
+    testSame("var obj = { a: 0 }; delete obj.a;");
+    testSame("var obj = { a: function() {} }; delete obj.a;");
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    disableTypeCheck();
+    testSame("var obj = { a(){} }; delete obj.a;");
+    testSame("var obj = { a }; delete obj.a;");
+  }
+
   public void testDeleteProperty() {
     testSame("/** @suppress {checkTypes} */ function f(obj) { delete obj.a; }");
   }
@@ -203,6 +221,12 @@ public final class StrictModeCheckTest extends CompilerTestCase {
         "  get appData() { return this.appData_; },\n" +
         "  set appData(data) { this.appData_ = data; }\n" +
         "};");
+
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    disableTypeCheck();
+    testSame("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testSame("var x = {a, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
+    testSame("var x = {a(){}, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
   }
 
   public void testFunctionDecl() {
@@ -226,6 +250,111 @@ public final class StrictModeCheckTest extends CompilerTestCase {
 
   public void testFunctionDecl2() {
     testError("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
+  }
+
+  public void testClass() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    disableTypeCheck();
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method1() {}",
+        "  method2() {}",
+        "}"));
+
+    // Duplicate class methods test
+    testError(LINE_JOINER.join(
+        "class A {",
+        "  method1() {}",
+        "  method1() {}",
+        "}"), StrictModeCheck.DUPLICATE_CLASS_METHODS);
+
+    // Function declaration / call test.
+    testError(LINE_JOINER.join(
+        "class A {",
+        "  method() {",
+        "    for(;;) {",
+        "      function a(){}",
+        "    }",
+        "  }",
+        "}"), StrictModeCheck.BAD_FUNCTION_DECLARATION);
+    // The two following tests should have reported FUNCTION_CALLER_FORBIDDEN and
+    // FUNCTION_ARGUMENTS_PROP_FORBIDDEN. Typecheck needed for them to work.
+    // TODO(user): Add tests for these after typecheck supports class.
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {this.method.caller}",
+        "}"));
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {this.method.arguments}",
+        "}"));
+
+    // Duplicate obj literal key in classes
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {",
+        "    var obj = {a : 1, a : 2}",
+        "  }",
+        "}"), StrictModeCheck.DUPLICATE_OBJECT_KEY);
+
+    // Unknown variable test
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  constructor() {this.a = 1;}",
+        "  method() {this.a = b}",
+        "}"), StrictModeCheck.UNKNOWN_VARIABLE);
+
+    // Delete test. Class methods are configurable, thus deletable.
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  methodA() {}",
+        "  methodB() {delete this.methodA}",
+        "}"));
+
+    // Use of with test
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  constructor() {this.x = 1;}",
+        "  method() {",
+        "    with (this.x) {}",
+        "  }",
+        "}"), StrictModeCheck.USE_OF_WITH);
+
+    // Eval errors test
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method(eval) {}",
+        "}"), StrictModeCheck.EVAL_DECLARATION);
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {var eval = 1;}",
+        "}"), StrictModeCheck.EVAL_DECLARATION);
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {eval = 1}",
+        "}"), StrictModeCheck.EVAL_ASSIGNMENT);
+
+    // Use of 'arguments'
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method(arguments) {}",
+        "}"), StrictModeCheck.ARGUMENTS_DECLARATION);
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {var arguments = 1;}",
+        "}"), StrictModeCheck.ARGUMENTS_DECLARATION);
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {arguments = 1}",
+        "}"), StrictModeCheck.ARGUMENTS_ASSIGNMENT);
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {arguments.callee}",
+        "}"), StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
+    testSame(LINE_JOINER.join(
+        "class A {",
+        "  method() {arguments.caller}",
+        "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
   }
 
   private String inFn(String body) {
