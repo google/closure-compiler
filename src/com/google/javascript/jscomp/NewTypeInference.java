@@ -777,7 +777,12 @@ final class NewTypeInference implements CompilerPass {
           break;
         case Token.EXPR_RESULT:
           println("\tsemi ", Token.name(n.getFirstChild().getType()));
-          outEnv = analyzeExprFwd(n.getFirstChild(), inEnv, JSType.UNKNOWN).env;
+          if (n.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+            n.removeProp(Node.ANALYZED_DURING_GTI);
+            outEnv = inEnv;
+          } else {
+            outEnv = analyzeExprFwd(n.getFirstChild(), inEnv, JSType.UNKNOWN).env;
+          }
           break;
         case Token.RETURN: {
           Node retExp = n.getFirstChild();

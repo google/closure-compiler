@@ -13480,4 +13480,42 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var exports = Foo;"));
   }
+
+  public void testAddingPropsToTypedefs() {
+    typeCheckCustomExterns(
+        Joiner.on('\n').join(
+            DEFAULT_EXTERNS,
+            "/** @typedef {number} */",
+            "var num2;",
+            "/** @type {number} */",
+            "num2.prop;"),
+        "/** empty code */",
+        GlobalTypeInfo.CANNOT_ADD_PROPERTIES_TO_TYPEDEF);
+
+    typeCheckCustomExterns(
+        Joiner.on('\n').join(
+            DEFAULT_EXTERNS,
+            "/** @const */ var ns = {};",
+            "/** @typedef {number} */",
+            "ns.num2;",
+            "/** @type {number} */",
+            "ns.num2.prop;"),
+        "/** empty code */",
+        GlobalTypeInfo.CANNOT_ADD_PROPERTIES_TO_TYPEDEF);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @typedef {number} */",
+        "var num2;",
+        "/** @type {number} */",
+        "num2.prop;"),
+        GlobalTypeInfo.CANNOT_ADD_PROPERTIES_TO_TYPEDEF);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */ var ns = {};",
+        "/** @typedef {number} */",
+        "ns.num2;",
+        "/** @type {number} */",
+        "ns.num2.prop = 123;"),
+        GlobalTypeInfo.CANNOT_ADD_PROPERTIES_TO_TYPEDEF);
+  }
 }

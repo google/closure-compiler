@@ -192,8 +192,15 @@ class GlobalTypeInfo implements CompilerPass {
           "Cannot add more properties to namespace {0}."
           + " The namespace (or one of its subtypes) has been assigned to a @const name: {1}.");
 
+  static final DiagnosticType CANNOT_ADD_PROPERTIES_TO_TYPEDEF =
+      DiagnosticType.warning(
+          "JSC_CANNOT_ADD_PROPERTIES_TO_TYPEDEF",
+          "A typedef should only be used in type annotations, not as a value."
+          + " Adding properties to typedefs is not allowed.");
+
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
+      CANNOT_ADD_PROPERTIES_TO_TYPEDEF,
       CANNOT_INIT_TYPEDEF,
       CANNOT_OVERRIDE_FINAL_METHOD,
       CONST_WITHOUT_INITIALIZER,
@@ -609,12 +616,7 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (NodeUtil.isAliasedNominalTypeDecl(qnameNode)) {
         maybeRecordAliasedNominalType(qnameNode);
       } else if (isQualifiedFunctionDefinition(qnameNode)) {
-        Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(recv));
-        Scope s = currentScope.getScope(getFunInternalName(qnameNode.getParent().getLastChild()));
-        QualifiedName pname = new QualifiedName(qnameNode.getLastChild().getString());
-        if (!ns.isDefined(pname)) {
-          ns.addScope(pname, s);
-        }
+        maybeAddFunctionScopeToNamespace(qnameNode);
       }
     }
 
@@ -973,6 +975,16 @@ class GlobalTypeInfo implements CompilerPass {
       // TODO(dimvar): If init is an unknown type name, we shouldn't warn;
       // Also, associate nameNode with an unknown type name when returning early
       currentScope.addNominalType(nameNode, rawType);
+    }
+
+    private void maybeAddFunctionScopeToNamespace(Node funQname) {
+      Namespace ns = currentScope.getNamespace(QualifiedName.fromNode(funQname.getFirstChild()));
+      String internalName = getFunInternalName(funQname.getParent().getLastChild());
+      Scope s = currentScope.getScope(internalName);
+      QualifiedName pname = new QualifiedName(funQname.getLastChild().getString());
+      if (!ns.isDefined(pname)) {
+        ns.addScope(pname, s);
+      }
     }
   }
 
@@ -1455,7 +1467,15 @@ class GlobalTypeInfo implements CompilerPass {
       }
       QualifiedName recvQname = QualifiedName.fromNode(getProp.getFirstChild());
       Declaration d = this.currentScope.getDeclaration(recvQname, false);
-      JSType recvType = d == null ? null : d.getTypeOfSimpleDecl();
+      if (d == null) {
+        return;
+      }
+      if (d.getTypedef() != null) {
+        warnings.add(JSError.make(getProp, CANNOT_ADD_PROPERTIES_TO_TYPEDEF));
+        getProp.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        return;
+      }
+      JSType recvType = d.getTypeOfSimpleDecl();
       if (recvType == null) {
         return;
       }
