@@ -272,6 +272,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(polymerPass);
     }
 
+    if ((options.checkSuspiciousCode
+            || options.enables(DiagnosticGroups.GLOBAL_THIS)
+            || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT))
+        && !options.skipNonTranspilationPasses) {
+      checks.add(suspiciousCode);
+    }
+
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
@@ -299,12 +306,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
-
-    if (options.checkSuspiciousCode
-        || options.enables(DiagnosticGroups.GLOBAL_THIS)
-        || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT)) {
-      checks.add(suspiciousCode);
-    }
 
     if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
       checks.add(closureCheckGetCssName);
