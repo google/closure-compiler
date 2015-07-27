@@ -368,15 +368,14 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private boolean isGlobalFunctionDeclaration(NodeTraversal t, Node n) {
       // Make sure we're not in a function scope, or if we are then the function we're looking at
       // is defined in the global scope.
-      boolean isNotDefinedAsProperty = n.isFunction() && n.getParent().isName();
-
-      if (isNotDefinedAsProperty && n.getParent().getParent().isVar()) {
-        return t.inGlobalHoistScope();
-      } else if (NodeUtil.isFunctionDeclaration(n) || isNotDefinedAsProperty) {
-        // Function declaration and let/const declared function expression should be block scoped.
-        return t.getScopeDepth() <= 1;
+      if (!(t.inGlobalHoistScope()
+            || n.isFunction() && t.getScopeRoot() == n
+               && t.getScope().getParent().getClosestHoistScope().isGlobal())) {
+        return false;
       }
-      return false;
+
+      return NodeUtil.isFunctionDeclaration(n)
+          || n.isFunction() && n.getParent().isName();
     }
 
     /**

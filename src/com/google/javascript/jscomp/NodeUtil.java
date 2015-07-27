@@ -2140,8 +2140,7 @@ public final class NodeUtil {
         return true;
       case Token.BLOCK:
         // Only valid for top level synthetic block
-        if (n.getParent() == null
-            || n.getFirstChild() != null && n.getFirstChild().isScript()) {
+        if (n.getParent() == null || n.getParent().getParent() == null) {
           return true;
         }
       default:

@@ -659,6 +659,7 @@ public class NodeTraversal {
   /** Creates a new scope (e.g. when entering a function). */
   private void pushScope(Node node) {
     Preconditions.checkState(curNode != null);
+    Preconditions.checkState(node != null);
     compiler.setScope(node);
     scopeRoots.push(node);
     if (NodeUtil.isValidCfgRoot(node)) {
@@ -684,6 +685,7 @@ public class NodeTraversal {
     compiler.setScope(s.getRootNode());
     scopes.push(s);
     if (NodeUtil.isValidCfgRoot(s.getRootNode())) {
+      cfgRoots.push(s.getRootNode());
       cfgs.push(null);
     }
     if (!quietly && scopeCallback != null) {
@@ -710,10 +712,9 @@ public class NodeTraversal {
       scopeRoot = scopeRoots.pop();
     }
     if (NodeUtil.isValidCfgRoot(scopeRoot)) {
+      Preconditions.checkState(!cfgRoots.isEmpty());
+      Preconditions.checkState(cfgRoots.pop() == scopeRoot);
       cfgs.pop();
-      if (!cfgRoots.isEmpty()) {
-        Preconditions.checkState(cfgRoots.pop() == scopeRoot);
-      }
     }
     if (hasScope()) {
       compiler.setScope(getScopeRoot());
@@ -733,7 +734,6 @@ public class NodeTraversal {
       scopes.push(scope);
     }
     scopeRoots.clear();
-    cfgRoots.clear();
     // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
   }
@@ -773,15 +773,7 @@ public class NodeTraversal {
   }
 
   private Node getCfgRoot() {
-    if (cfgRoots.isEmpty()) {
-      Scope currScope = scopes.peek();
-      while (currScope.isBlockScope()) {
-        currScope = currScope.getParent();
-      }
-      return currScope.getRootNode();
-    } else {
-      return cfgRoots.peek();
-    }
+    return cfgRoots.peek();
   }
 
   /**
@@ -793,22 +785,10 @@ public class NodeTraversal {
   }
 
   /**
-   * Determines whether the hoist scope of the current traversal is global. Note that this returns
-   * true for the FUNCTION node of a function defined in the global scope.
+   * Determines whether the hoist scope of the current traversal is global.
    */
   boolean inGlobalHoistScope() {
-    if (curNode.isFunction() && getCfgRoot() == curNode) {
-      if (cfgRoots.isEmpty()) {  // Scopes have been created, won't scan scopes.
-        return getClosestHoistScope().isGlobal();
-      } else { // Need to see if previous cfg root is FUNCTION
-        Node temp = cfgRoots.pop();
-        boolean result = cfgRoots.isEmpty() || !cfgRoots.peek().isFunction();
-        cfgRoots.push(temp);
-        return result;
-      }
-    } else {
-      return !getCfgRoot().isFunction();
-    }
+    return !getCfgRoot().isFunction();
   }
 
   int getScopeDepth() {
