@@ -25,6 +25,14 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public abstract class Es6CompilerTestCase extends CompilerTestCase {
 
+  protected Es6CompilerTestCase() {
+    super();
+  }
+
+  protected Es6CompilerTestCase(String externs) {
+    super(externs);
+  }
+
   /**
    * Verifies that the compiler pass's JS output matches the expected output, under
    * both ES5 and ES6 modes.
@@ -50,6 +58,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   public void test(String js, String expected, LanguageMode mode) {
     setAcceptedLanguage(mode);
     super.test(js, expected);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
   /**
@@ -61,6 +70,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   public void testEs6(String js, String expected) {
     test(js, expected, LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
   /**
@@ -92,6 +102,34 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   }
 
   /**
+   * Verifies that the compiler pass's JS output is the same as its input, under
+   * just ES6. Usually this implies that the input contains ES6 features.
+   *
+   * @param js Input and output
+   */
+  public void testSameEs6(String js) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    super.test(js, js);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+  }
+
+  /**
+   * Verifies that the compiler pass's JS output is the same as its input
+   * and (optionally) that an expected warning is issued, under both ES5 and ES6 modes.
+   *
+   * @param externs Externs input
+   * @param js Input and output
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  @Override
+  public void testSame(String externs, String js, DiagnosticType warning) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    super.testSame(externs, js, warning);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    super.testSame(externs, js, warning);
+  }
+
+  /**
    * Verifies that the compiler generates the given error for the given input,
    * under both ES5 and ES6 modes.
    *
@@ -118,6 +156,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
     setAcceptedLanguage(mode);
     assertNotNull("Must assert an error", error);
     super.test(js, null, error, null);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
   /**
@@ -129,6 +168,14 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   public void testErrorEs6(String js, DiagnosticType error) {
     testError(js, error, LanguageMode.ECMASCRIPT6);
+  }
+
+  @Override
+  protected void testExternChanges(String extern, String input, String expectedExtern) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    super.testExternChanges(extern, input, expectedExtern);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    super.testExternChanges(extern, input, expectedExtern);
   }
 }
 

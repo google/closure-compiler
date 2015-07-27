@@ -27,7 +27,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  *
  */
 
-public final class MissingRequireTest extends CompilerTestCase {
+public final class MissingRequireTest extends Es6CompilerTestCase {
   public MissingRequireTest() {
     super();
     enableRewriteClosureCode();
@@ -59,15 +59,13 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   public void testPassWithNewDeclaredClass() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testSame("class C {}; var c = new C();");
+    testSameEs6("class C {}; var c = new C();");
   }
 
   public void testClassRecognizedAsConstructor() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testSame("/** @constructor */ module$test.A = function() {};"
+    testSameEs6("/** @constructor */ module$test.A = function() {};"
                 + "class C extends module$test.A {}");
-    testSame("module$test.A = class {}; class C extends module$test.A {}");
+    testSameEs6("module$test.A = class {}; class C extends module$test.A {}");
   }
 
   public void testPassWithOneNewOuterClass() {
@@ -126,14 +124,13 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   public void testPassEs6ClassExtends() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     String js =
         LINE_JOINER.join(
             "var goog = {};",
             "goog.require('goog.foo.Bar');",
             "",
             "class SubClass extends goog.foo.Bar.Inner {}");
-    testSame(js);
+    testSameEs6(js);
   }
 
   public void testFailEs6ClassExtends() {

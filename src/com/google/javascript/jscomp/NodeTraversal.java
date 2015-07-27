@@ -424,7 +424,7 @@ public class NodeTraversal {
    * @param refinedScope the refined scope of the scope currently at the top of
    *     the scope stack or in trivial cases that very scope or {@code null}
    */
-  protected void traverseInnerNode(Node node, Node parent, Scope refinedScope) {
+  void traverseInnerNode(Node node, Node parent, Scope refinedScope) {
     Preconditions.checkNotNull(parent);
     if (inputId == null) {
       inputId = NodeUtil.getInputId(node);

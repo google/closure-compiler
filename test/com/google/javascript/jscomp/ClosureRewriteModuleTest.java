@@ -20,23 +20,15 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_GET_IDEN
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_IDENTIFIER;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_IDENTIFIER;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Unit tests for ClosureRewriteModule
  * @author johnlenz@google.com (John Lenz)
  */
-public final class ClosureRewriteModuleTest extends CompilerTestCase {
+public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ClosureRewriteModule(compiler);
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
   }
 
   @Override

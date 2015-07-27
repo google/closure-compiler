@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
+public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase {
   private static final String WINDOW_DEFINITION =
       "/** @constructor */ function Window(){}\nvar /** Window */ window;";
 

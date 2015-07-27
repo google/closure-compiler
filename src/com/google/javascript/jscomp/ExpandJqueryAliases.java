@@ -305,11 +305,13 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     List<Node> keyNodeReferences = new ArrayList<>();
     List<Node> valueNodeReferences = new ArrayList<>();
 
-    NodeTraversal.traverse(compiler,
-        NodeUtil.getFunctionBody(callbackFunction),
+    new NodeTraversal(
+        compiler,
         new FindCallbackArgumentReferences(callbackFunction,
             keyNodeReferences, valueNodeReferences,
-            objectToLoopOver.isArrayLit()));
+            objectToLoopOver.isArrayLit()))
+        .traverseInnerNode(
+            NodeUtil.getFunctionBody(callbackFunction), callbackFunction, t.getScope());
 
     if (keyNodeReferences.isEmpty()) {
      // We didn't do anything useful ...
@@ -553,7 +555,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     public void visit(NodeTraversal t, Node n, Node parent) {
       // In the top scope, "this" is a reference to "value"
       boolean isThis = false;
-      if (t.getScope() == this.startingScope) {
+      if (t.getScope().getClosestHoistScope() == this.startingScope) {
         isThis = n.isThis();
       }
 

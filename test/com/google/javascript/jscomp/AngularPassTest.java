@@ -16,12 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Tests {@link AngularPass}.
  */
-public final class AngularPassTest extends CompilerTestCase {
+public final class AngularPassTest extends Es6CompilerTestCase {
 
   public AngularPassTest() {
     super();
@@ -95,19 +93,17 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectToLet() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test("/** @ngInject */ let fn = function (a, b) {}",
+    testEs6("/** @ngInject */ let fn = function (a, b) {}",
          "let fn = function (a, b) {}; fn['$inject']=['a', 'b']");
 
-    testSame("let fn = function (a, b) {}");
+    testSameEs6("let fn = function (a, b) {}");
   }
 
   public void testNgInjectAddsInjectToConst() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test("/** @ngInject */ const fn = function (a, b) {}",
+    testEs6("/** @ngInject */ const fn = function (a, b) {}",
          "const fn = function (a, b) {}; fn['$inject']=['a', 'b']");
 
-    testSame("const fn = function (a, b) {}");
+    testSameEs6("const fn = function (a, b) {}");
   }
 
 
@@ -171,31 +167,26 @@ public final class AngularPassTest extends CompilerTestCase {
     testError("/** @ngInject */ var x",
               AngularPass.INJECT_NON_FUNCTION_ERROR);
 
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-
-    testError("class FnClass {constructor(a, b) {/** @ngInject */ this.x = 42}}",
+    testErrorEs6("class FnClass {constructor(a, b) {/** @ngInject */ this.x = 42}}",
         AngularPass.INJECT_NON_FUNCTION_ERROR);
 
-    testError("class FnClass {constructor(a, b) {/** @ngInject */ this.x}}",
+    testErrorEs6("class FnClass {constructor(a, b) {/** @ngInject */ this.x}}",
         AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 
   public void testNgInjectAddsInjectToClass() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testError("/** @ngInject */ class FnClass {constructor(a, b) {}}",
+    testErrorEs6("/** @ngInject */ class FnClass {constructor(a, b) {}}",
         AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 
   public void testNgInjectAddsInjectToClassConstructor() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test("class FnClass {/** @ngInject */ constructor(a, b) {}}",
+    testEs6("class FnClass {/** @ngInject */ constructor(a, b) {}}",
         "class FnClass{constructor(a, b){}}"
         + "FnClass['$inject'] = ['a', 'b'];");
   }
 
   public void testNgInjectAddsInjectToClassMethod1() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(
+    testEs6(
          LINE_JOINER.join(
              "class FnClass {",
              "  constructor(a, b) {}",
@@ -211,8 +202,7 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectToClassMethod2() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(
+    testEs6(
          LINE_JOINER.join(
              "FnClass.foo = class {",
              "  /** @ngInject */",
@@ -226,8 +216,7 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectToStaticMethod() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(
+    testEs6(
         LINE_JOINER.join(
             "class FnClass {",
             "  constructor(a, b) {}",
@@ -243,8 +232,7 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectToClassGenerator() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(
+    testEs6(
          LINE_JOINER.join(
              "class FnClass {",
              "  constructor(a, b) {}",
@@ -260,8 +248,7 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectToClassMixOldStyle() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(
+    testEs6(
         LINE_JOINER.join(
             "class FnClass {",
             "  constructor() {",
@@ -279,8 +266,7 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectToClassArrowFunc() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(
+    testEs6(
           LINE_JOINER.join(
               "class FnClass {",
               "  constructor() {",
@@ -298,8 +284,7 @@ public final class AngularPassTest extends CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectToClassCompMethodName() throws Exception {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testError(
+    testErrorEs6(
           LINE_JOINER.join(
               "class FnClass {",
               "  constructor() {}",

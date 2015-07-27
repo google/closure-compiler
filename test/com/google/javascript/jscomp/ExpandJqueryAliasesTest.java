@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 /**
  * Tests for {@link ExpandJqueryAliases}
  */
-public final class ExpandJqueryAliasesTest extends CompilerTestCase {
+public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
   private JqueryCodingConvention conv = new JqueryCodingConvention();
 
   static final DiagnosticType NAME_ERROR =
@@ -88,7 +88,7 @@ public final class ExpandJqueryAliasesTest extends CompilerTestCase {
     // Test extend call where returned object is used
     test(setupCode + "obj2 = jQuery.extend(obj2, {a:'test', " +
         "b:'test2'});",
-        setupCode + "obj2 = function() {obj2 = obj2 || {}; " + 
+        setupCode + "obj2 = function() {obj2 = obj2 || {}; " +
         "obj2.a = 'test';obj2.b = 'test2';return obj2;}.call(this);");
   }
 

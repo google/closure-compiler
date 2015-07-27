@@ -94,13 +94,11 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
   }
 
   private void testSameWithInversionEs6(String original) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     invert = false;
-    testSame("", original, null);
+    testSameEs6(original);
     invert = true;
-    testSame("", original, null);
+    testSameEs6(original);
     invert = false;
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
   private String wrapInFunction(String s) {

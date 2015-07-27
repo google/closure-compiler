@@ -16,13 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Generate exports unit test.
  *
  */
-public final class GenerateExportsTest extends CompilerTestCase {
+public final class GenerateExportsTest extends Es6CompilerTestCase {
 
   private static final String EXTERNS =
       "function google_exportSymbol(a, b) {}; " +
@@ -63,7 +61,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   public void testExportSymbol() {
     test("/** @export */function foo() {}",
-        "function foo(){}google_exportSymbol(\"foo\",foo)");
+         "function foo(){}google_exportSymbol(\"foo\",foo)");
   }
 
   public void testExportSymbolAndProperties() {
@@ -161,46 +159,43 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   public void testExportEs6ClassSymbol() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test("/** @export */ class G {} foo();",
-         "class G {} google_exportSymbol('G', G); foo();");
+    testEs6("/** @export */ class G {} foo();",
+            "class G {} google_exportSymbol('G', G); foo();");
 
-    test("/** @export */ G = class {}; foo();",
-         "G = class {}; google_exportSymbol('G', G); foo();");
+    testEs6("/** @export */ G = class {}; foo();",
+            "G = class {}; google_exportSymbol('G', G); foo();");
   }
 
   public void testExportEs6ClassProperty() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(LINE_JOINER.join(
+    testEs6(LINE_JOINER.join(
           "/** @export */ G = class {};",
           "/** @export */ G.foo = class {};"),
-        LINE_JOINER.join(
+            LINE_JOINER.join(
           "G = class {}; google_exportSymbol('G', G);",
           "G.foo = class {};",
           "goog.exportProperty(G, 'foo', G.foo)"));
 
-    test(LINE_JOINER.join(
-           "G = class {};",
-           "/** @export */ G.prototype.foo = class {};"),
-         LINE_JOINER.join(
-           "G = class {}; G.prototype.foo = class {};",
-           "goog.exportProperty(G.prototype, 'foo', G.prototype.foo)"));
+    testEs6(LINE_JOINER.join(
+        "G = class {};",
+        "/** @export */ G.prototype.foo = class {};"),
+            LINE_JOINER.join(
+        "G = class {}; G.prototype.foo = class {};",
+        "goog.exportProperty(G.prototype, 'foo', G.prototype.foo)"));
   }
 
   public void testExportEs6ClassMembers() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(LINE_JOINER.join(
+    testEs6(LINE_JOINER.join(
           "/** @export */ class G {",
           "  /** @export */ method() {} }"),
-         LINE_JOINER.join(
+            LINE_JOINER.join(
           "class G { method() {} }",
           "google_exportSymbol('G', G);",
           "goog.exportProperty(G.prototype, 'method', G.prototype.method);"));
 
-    test(LINE_JOINER.join(
+    testEs6(LINE_JOINER.join(
           "/** @export */ class G {",
           "/** @export */ static method() {} }"),
-         LINE_JOINER.join(
+            LINE_JOINER.join(
           "class G { static method() {} }",
           "google_exportSymbol('G', G);",
           "goog.exportProperty(G, 'method', G.method);"));
@@ -214,8 +209,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   public void testGoogScopeClassOutput() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    test(
+    testEs6(
         "/** @export */ $jscomp.scope.foo = /** @export */ class {}",
         "$jscomp.scope.foo = /** @export */ class {};"
             + "google_exportSymbol('$jscomp.scope.foo', $jscomp.scope.foo);");

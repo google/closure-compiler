@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Tests for {@link CheckProvides}.
  *
  */
-public final class CheckProvidesTest extends CompilerTestCase {
+public final class CheckProvidesTest extends Es6CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckProvides(compiler, CheckLevel.WARNING);
@@ -44,10 +44,9 @@ public final class CheckProvidesTest extends CompilerTestCase {
   }
 
   public void testHarmlessEs6Class() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testSame("goog.provide('X'); var X = class {};");
-    testSame("goog.provide('X'); class X {};");
-    testSame("goog.provide('foo.bar.X'); foo.bar.X = class {};");
+    testSameEs6("goog.provide('X'); var X = class {};");
+    testSameEs6("goog.provide('X'); class X {};");
+    testSameEs6("goog.provide('foo.bar.X'); foo.bar.X = class {};");
   }
 
   public void testMissingProvideEs6Class() {

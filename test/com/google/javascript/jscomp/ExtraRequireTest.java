@@ -21,7 +21,7 @@ import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_RE
 /**
  * Tests for the "extra requires" check in {@link CheckRequiresForConstructors}.
  */
-public final class ExtraRequireTest extends CompilerTestCase {
+public final class ExtraRequireTest extends Es6CompilerTestCase {
   public ExtraRequireTest() {
     super();
     enableRewriteClosureCode();
