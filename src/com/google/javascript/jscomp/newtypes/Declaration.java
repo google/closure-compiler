@@ -18,7 +18,6 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.newtypes.NominalType.RawNominalType;
 
 /**
  * Represents a declaration of a javascript type.
