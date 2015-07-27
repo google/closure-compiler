@@ -19,9 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -34,7 +32,6 @@ import com.google.javascript.rhino.jstype.StaticTypedRef;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Builds a global namespace of all the objects and their properties in
@@ -1356,64 +1352,6 @@ class GlobalNamespace
     @Override
     public String toString() {
       return node.toString();
-    }
-  }
-
-
-  /**
-   * An experimental compiler pass for tracking what symbols were added/removed
-   * at each stage of compilation.
-   *
-   * When "global namespace tracker" mode is on, we rebuild the global namespace
-   * after each pass, and diff it against the last namespace built.
-   */
-  static class Tracker implements CompilerPass {
-    private final AbstractCompiler compiler;
-    private final PrintStream stream;
-    private final Predicate<String> isInterestingSymbol;
-
-    private Set<String> previousSymbolsInTree = ImmutableSet.of();
-
-    /**
-       @param stream The stream to print logs to.
-     * @param isInterestingSymbol A predicate to determine which symbols
-     *     we care about.
-     */
-    Tracker(AbstractCompiler compiler, PrintStream stream,
-        Predicate<String> isInterestingSymbol) {
-      this.compiler = compiler;
-      this.stream = stream;
-      this.isInterestingSymbol = isInterestingSymbol;
-    }
-
-    @Override public void process(Node externs, Node root) {
-      GlobalNamespace namespace = new GlobalNamespace(compiler, externs, root);
-
-      Set<String> currentSymbols = new TreeSet<>();
-      for (String name : namespace.getNameIndex().keySet()) {
-        if (isInterestingSymbol.apply(name)) {
-          currentSymbols.add(name);
-        }
-      }
-
-      String passName = compiler.getLastPassName();
-      if (passName == null) {
-        passName = "[Unknown pass]";
-      }
-
-      for (String sym : currentSymbols) {
-        if (!previousSymbolsInTree.contains(sym)) {
-          stream.printf("%s: Added by %s%n", sym, passName);
-        }
-      }
-
-      for (String sym : previousSymbolsInTree) {
-        if (!currentSymbols.contains(sym)) {
-          stream.printf("%s: Removed by %s%n", sym, passName);
-        }
-      }
-
-      previousSymbolsInTree = currentSymbols;
     }
   }
 }
