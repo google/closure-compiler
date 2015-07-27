@@ -62,6 +62,14 @@ class CheckMissingGetCssName
       String s = n.getString();
 
       for (blacklist.reset(s); blacklist.find();) {
+        if (parent.isTemplateLit()) {
+          if (parent.getChildCount() > 1) {
+            // Ignore template string with substitutions
+            continue;
+          } else {
+            n = parent;
+          }
+        }
         if (insideGetCssNameCall(n)) {
           continue;
         }
@@ -108,7 +116,7 @@ class CheckMissingGetCssName
       return qname != null && isIdName(qname);
     } else if (parent.isName()) {
       Node grandParent = parent.getParent();
-      if (grandParent != null && grandParent.isVar()) {
+      if (grandParent != null && NodeUtil.isNameDeclaration(grandParent)) {
         String name = parent.getString();
         return isIdName(name);
       } else {

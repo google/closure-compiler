@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * @author mkretzschmar@google.com (Martin Kretzschmar)
  */
@@ -58,6 +60,33 @@ public final class CheckMissingGetCssNameTest extends CompilerTestCase {
     testMissing("things[2].DONT_CARE_ABOUT_THIS_KIND_OF_ID = "
                 + "'goog-inline-block'");
     testMissing("objects[3].doSomething('goog-inline-block')");
+  }
+
+  public void testLetAndConstLefthandsides() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testMissing("let s = 'goog-templit-css-name'");
+    testMissing("const s = 'goog-templit-css-name'");
+    testNotMissing("let s_ID = 'goog-templit-css-name'");
+    testNotMissing("const s_ID = 'goog-templit-css-name'");
+    testNotMissing("let s_ID_ = 'goog-templit-css-name'");
+    testNotMissing("const s_ID_ = 'goog-templit-css-name'");
+  }
+
+  public void testIgnoreTemplateStrings() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+
+    testMissing("var s = `goog-templit-css-name`");
+    testNotMissing("var s = `goog-templit-css-name-${number}`");
+    testNotMissing("var s = `not-a-css-name`");
+
+    testNotMissing("var s = `not-CSS${sub}gsoog-templit`");
+
+    testNotMissing("var s = goog.events.getUniqueId(`goog-a-css-name`)");
+    testNotMissing("var s = goog.getCssName(`goog-a-css-name`)");
+
+    testMissing("let s = `goog-templit-css-name`");
+    testNotMissing("const SOME_ID = `goog-some-id`");
+    testMissing("const s = `goog-some-id`");
   }
 
   private void testMissing(String js) {
