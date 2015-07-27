@@ -266,6 +266,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closurePrimitives);
     }
 
+    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite and *before*
+    // the suspicious code checks.
+    if (options.polymerPass && !options.skipNonTranspilationPasses) {
+      checks.add(polymerPass);
+    }
+
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
@@ -293,12 +299,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
-
-    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite and *before*
-    // the suspicious code checks.
-    if (options.polymerPass) {
-      checks.add(polymerPass);
-    }
 
     if (options.checkSuspiciousCode
         || options.enables(DiagnosticGroups.GLOBAL_THIS)
