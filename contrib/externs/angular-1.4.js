@@ -455,6 +455,11 @@ angular.JQLite.prototype.data = function(opt_key, opt_value) {};
 angular.JQLite.prototype.detach = function() {};
 
 /**
+ * @return {!angular.JQLite}
+ */
+angular.JQLite.prototype.empty = function() {};
+
+/**
  * @param {number} index
  * @return {!angular.JQLite}
  */
@@ -504,6 +509,13 @@ angular.JQLite.prototype.next = function() {};
  * @return {!angular.JQLite}
  */
 angular.JQLite.prototype.on = function(type, fn) {};
+
+/**
+ * @param {string} events
+ * @param {Object|function(Event)} dataOrHandler
+ * @param {function(Event)=} opt_handler
+ */
+angular.JQLite.prototype.one = function(events, dataOrHandler, opt_handler) {};
 
 /**
  * @param {string=} opt_type
@@ -778,6 +790,13 @@ angular.Scope.prototype.$watch =
  * @return {function()}
  */
 angular.Scope.prototype.$watchCollection = function(exp, opt_listener) {};
+
+/**
+ * @param {Array<string|!Function>} exps
+ * @param {(string|Function)=} opt_listener
+ * @return {function()}
+ */
+angular.Scope.prototype.$watchGroup = function(exps, opt_listener) {};
 
 /**
  * @typedef {{
