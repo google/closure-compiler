@@ -247,6 +247,8 @@ class CollapseProperties implements CompilerPass {
               continue;
             case DIRECT_GET:
             case ALIASING_GET:
+            case PROTOTYPE_GET:
+            case CALL_GET:
               Node newNode = alias.node.cloneTree();
               Node node = ref.node;
               node.getParent().replaceChild(node, newNode);
