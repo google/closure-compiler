@@ -1373,6 +1373,16 @@ public abstract class CompilerTestCase extends TestCase {
     (getProcessor(compiler)).process(externs, root);
 
     if (compareAsTree) {
+      // Ignore and remove empty externs, so that if we start with an empty extern and only add
+      // to the synthetic externs, we can still enable compareAsTree.
+      if (externs.hasMoreThanOneChild()) {
+        for (Node c : externs.children()) {
+          if (!c.hasChildren()) {
+            c.detachFromParent();
+          }
+        }
+      }
+
       // Expected output parsed without implied block.
       Preconditions.checkState(externs.isBlock());
       Preconditions.checkState(compareJsDoc);
