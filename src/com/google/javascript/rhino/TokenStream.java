@@ -54,7 +54,7 @@ package com.google.javascript.rhino;
  */
 
 public class TokenStream {
-    public static boolean isKeyword(String name) {
+   public static boolean isKeyword(String name) {
         boolean id = false;
         String s = name;
         complete: {
@@ -188,21 +188,6 @@ public class TokenStream {
     }
 
     public static boolean isJSIdentifier(String s) {
-      int length = s.length();
-
-      if (length == 0 ||
-          Character.isIdentifierIgnorable(s.charAt(0)) ||
-          !Character.isJavaIdentifierStart(s.charAt(0))) {
-        return false;
-      }
-
-      for (int i = 1; i < length; i++) {
-        if (Character.isIdentifierIgnorable(s.charAt(i)) ||
-            !Character.isJavaIdentifierPart(s.charAt(i))) {
-          return false;
-        }
-      }
-
-      return true;
+      return TokenUtil.isJSIdentifier(s);
     }
 }

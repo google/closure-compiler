@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.SourceExcerptProvider.ExcerptFormatter;
 import com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt;
+import com.google.javascript.rhino.TokenUtil;
 
 /**
  * Lightweight message formatter. The format of messages this formatter
@@ -115,7 +116,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
           && 0 <= charno && charno <= sourceExcerpt.length()) {
         for (int i = 0; i < charno; i++) {
           char c = sourceExcerpt.charAt(i);
-          if (Character.isWhitespace(c)) {
+          if (TokenUtil.isWhitespace(c)) {
             b.append(c);
           } else {
             b.append(' ');

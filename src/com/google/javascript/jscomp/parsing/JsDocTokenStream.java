@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.rhino.TokenUtil;
 
 /**
  * This class implements the scanner for JsDoc strings.
@@ -66,7 +67,7 @@ class JsDocTokenStream {
           return JsDocToken.EOF;
         } else if (c == '\n') {
           return JsDocToken.EOL;
-        } else if (!isJSSpace(c)) {
+        } else if (!TokenUtil.isJSSpace(c)) {
           break;
         }
       }
@@ -296,25 +297,8 @@ class JsDocTokenStream {
         return false;
 
       default:
-        return !isJSSpace(c);
+        return !TokenUtil.isJSSpace(c);
     }
-  }
-
-  /* As defined in ECMA.  jsscan.c uses C isspace() (which allows
-   * \v, I think.)  note that code in getChar() implicitly accepts
-   * '\r' == \u000D as well.
-   */
-  static boolean isJSSpace(int c) {
-    if (c <= 127) {
-      return c == 0x20 || c == 0x9 || c == 0xC || c == 0xB;
-    } else {
-      return c == 0xA0
-          || Character.getType((char) c) == Character.SPACE_SEPARATOR;
-    }
-  }
-
-  private static boolean isJSFormatChar(int c) {
-    return c > 127 && Character.getType(c) == Character.FORMAT;
   }
 
   /**
@@ -369,7 +353,7 @@ class JsDocTokenStream {
           c = '\n';
         }
       } else {
-        if (isJSFormatChar(c)) {
+        if (TokenUtil.isJSFormatChar(c)) {
           continue;
         }
         if (isJSLineTerminator(c)) {
@@ -414,7 +398,7 @@ class JsDocTokenStream {
           c = '\n';
         }
       } else {
-        if (isJSFormatChar(c)) {
+        if (TokenUtil.isJSFormatChar(c)) {
           continue;
         }
         if (isJSLineTerminator(c)) {
@@ -431,7 +415,7 @@ class JsDocTokenStream {
     }
   }
 
-  public static boolean isJSLineTerminator(int c) {
+  private static boolean isJSLineTerminator(int c) {
     // Optimization for faster check for eol character:
     // they do not have 0xDFD0 bits set
     if ((c & 0xDFD0) != 0) {

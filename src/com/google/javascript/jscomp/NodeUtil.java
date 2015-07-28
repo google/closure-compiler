@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
+import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.Collection;
@@ -383,37 +384,14 @@ public final class NodeUtil {
     int start = 0;
     int end = s.length();
     while (end > 0
-        && isStrWhiteSpaceChar(s.charAt(end - 1)) == TernaryValue.TRUE) {
+        && TokenUtil.isStrWhiteSpaceChar(s.charAt(end - 1)) == TernaryValue.TRUE) {
       end--;
     }
     while (start < end
-        && isStrWhiteSpaceChar(s.charAt(start)) == TernaryValue.TRUE) {
+        && TokenUtil.isStrWhiteSpaceChar(s.charAt(start)) == TernaryValue.TRUE) {
       start++;
     }
     return s.substring(start, end);
-  }
-
-  /**
-   * Copied from Rhino's ScriptRuntime
-   */
-  public static TernaryValue isStrWhiteSpaceChar(int c) {
-    switch (c) {
-      case '\u000B': // <VT>
-        return TernaryValue.UNKNOWN;  // IE says "no", ECMAScript says "yes"
-      case ' ': // <SP>
-      case '\n': // <LF>
-      case '\r': // <CR>
-      case '\t': // <TAB>
-      case '\u00A0': // <NBSP>
-      case '\u000C': // <FF>
-      case '\u2028': // <LS>
-      case '\u2029': // <PS>
-      case '\uFEFF': // <BOM>
-        return TernaryValue.TRUE;
-      default:
-        return (Character.getType(c) == Character.SPACE_SEPARATOR)
-            ? TernaryValue.TRUE : TernaryValue.FALSE;
-    }
   }
 
   /**

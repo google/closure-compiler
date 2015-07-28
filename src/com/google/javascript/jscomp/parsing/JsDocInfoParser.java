@@ -31,6 +31,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TokenUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -1763,7 +1764,7 @@ public final class JsDocInfoParser {
   /**
    * Trim characters from only the end of a string.
    * This method will remove all whitespace characters
-   * (defined by Character.isWhitespace(char), in addition to the characters
+   * (defined by TokenUtil.isWhitespace(char), in addition to the characters
    * provided, from the end of the provided string.
    *
    * @param s String to be trimmed
@@ -1774,7 +1775,7 @@ public final class JsDocInfoParser {
     int trimCount = 0;
     while (trimCount < s.length()) {
       char ch = s.charAt(s.length() - trimCount - 1);
-      if (Character.isWhitespace(ch)) {
+      if (TokenUtil.isWhitespace(ch)) {
         trimCount++;
       } else {
         break;
