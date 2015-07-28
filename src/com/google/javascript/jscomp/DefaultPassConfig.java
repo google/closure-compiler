@@ -279,6 +279,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(suspiciousCode);
     }
 
+    if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()
+        && !options.skipNonTranspilationPasses) {
+      checks.add(closureCheckGetCssName);
+    }
+
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
@@ -306,10 +311,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
-
-    if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()) {
-      checks.add(closureCheckGetCssName);
-    }
 
     if (options.syntheticBlockStartMarker != null) {
       // This pass must run before the first fold constants pass.
