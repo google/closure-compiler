@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -44,8 +45,11 @@ import java.util.zip.GZIPOutputStream;
  * how much a pass impacts the size of the compiled output, before and after
  * gzip.
  *
+ * TODO(moz): Make this GWT compatible.
+ *
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
+@GwtIncompatible("java.io.ByteArrayOutputStream")
 public final class PerformanceTracker {
 
   private static final int DEFAULT_WHEN_SIZE_UNTRACKED = -1;

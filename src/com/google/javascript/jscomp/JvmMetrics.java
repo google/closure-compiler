@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
+
 import java.io.PrintStream;
 import java.lang.management.CompilationMXBean;
 import java.lang.management.GarbageCollectorMXBean;
@@ -31,6 +33,7 @@ import java.util.StringTokenizer;
  * Borrowed from:
  * http://code.google.com/p/dart/source/browse/trunk/dart/compiler/java/com/google/dart/compiler/metrics/JvmMetrics.java
  */
+@GwtIncompatible("Unneccesary")
 class JvmMetrics {
 
   private static final int TABULAR_COLON_POS = 40;

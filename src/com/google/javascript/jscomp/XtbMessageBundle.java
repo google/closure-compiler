@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
@@ -43,7 +44,10 @@ import javax.xml.parsers.SAXParserFactory;
  * A MessageBundle that parses messages from an XML Translation Bundle (XTB)
  * file.
  *
+ * TODO(moz): Make this GWT compatible.
+ *
  */
+@GwtIncompatible("Currently not used in GWT version")
 @SuppressWarnings("sunapi")
 public final class XtbMessageBundle implements MessageBundle {
   private static final SecureEntityResolver NOOP_RESOLVER

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -158,6 +159,7 @@ import javax.annotation.Nullable;
  * which should help track down the problem.
  *
  */
+@GwtIncompatible("java.util.concurrent")
 final class Tracer {
   // package-private for access from unit tests
   static final Logger logger =
