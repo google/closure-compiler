@@ -1446,7 +1446,7 @@ angular.$location.prototype.replace = function() {};
 /**
  * @param {(string|Object.<string, string>)=} opt_search
  * @param {?(string|Array.<string>|boolean|number)=} opt_paramValue
- * @return {(!Object|angular.$location)}
+ * @return {(!Object|!angular.$location)}
  */
 angular.$location.prototype.search = function(opt_search, opt_paramValue) {};
 
