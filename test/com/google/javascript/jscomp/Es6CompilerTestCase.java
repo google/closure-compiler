@@ -114,6 +114,18 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   }
 
   /**
+   * Verifies that the compiler pass's JS output is the same as its input, under
+   * just ES6. Usually this implies that the input contains ES6 features.
+   *
+   * @param js Input and output
+   * @param warning Expected warning, or null if no warning is expected
+   */
+  public void testSameEs6(String js, DiagnosticType warning) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test(js, js, null, warning);
+  }
+
+  /**
    * Verifies that the compiler pass's JS output is the same as its input
    * and (optionally) that an expected warning is issued, under both ES5 and ES6 modes.
    *
@@ -155,7 +167,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   public void testError(String js, DiagnosticType error, LanguageMode mode) {
     setAcceptedLanguage(mode);
     assertNotNull("Must assert an error", error);
-    super.test(js, null, error, null);
+    test(js, null, error, null);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
