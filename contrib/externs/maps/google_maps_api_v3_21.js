@@ -3429,7 +3429,7 @@ google.maps.Marker.prototype.getOpacity = function() {};
 
 /**
  * @nosideeffects
- * @return {google.maps.Place}
+ * @return {google.maps.MarkerPlace}
  */
 google.maps.Marker.prototype.getPlace = function() {};
 
@@ -3524,7 +3524,7 @@ google.maps.Marker.prototype.setOpacity = function(opacity) {};
 google.maps.Marker.prototype.setOptions = function(options) {};
 
 /**
- * @param {google.maps.Place} place
+ * @param {google.maps.MarkerPlace} place
  * @return {undefined}
  */
 google.maps.Marker.prototype.setPlace = function(place) {};
@@ -3661,7 +3661,7 @@ google.maps.MarkerOptions.prototype.opacity;
 google.maps.MarkerOptions.prototype.optimized;
 
 /**
- * @type {google.maps.Place}
+ * @type {google.maps.MarkerPlace}
  */
 google.maps.MarkerOptions.prototype.place;
 
@@ -3689,6 +3689,26 @@ google.maps.MarkerOptions.prototype.visible;
  * @type {number}
  */
 google.maps.MarkerOptions.prototype.zIndex;
+
+/**
+ * @interface
+ */
+google.maps.MarkerPlace = function() {};
+
+/**
+ * @type {google.maps.LatLng|google.maps.LatLngLiteral}
+ */
+google.maps.MarkerPlace.prototype.location;
+
+/**
+ * @type {string}
+ */
+google.maps.MarkerPlace.prototype.placeId;
+
+/**
+ * @type {string}
+ */
+google.maps.MarkerPlace.prototype.query;
 
 /**
  * @interface
@@ -4389,7 +4409,7 @@ google.maps.SaveWidget.prototype.getAttribution = function() {};
 
 /**
  * @nosideeffects
- * @return {google.maps.Place}
+ * @return {google.maps.MarkerPlace}
  */
 google.maps.SaveWidget.prototype.getPlace = function() {};
 
@@ -4406,7 +4426,7 @@ google.maps.SaveWidget.prototype.setAttribution = function(attribution) {};
 google.maps.SaveWidget.prototype.setOptions = function(opts) {};
 
 /**
- * @param {google.maps.Place} place
+ * @param {google.maps.MarkerPlace} place
  * @return {undefined}
  */
 google.maps.SaveWidget.prototype.setPlace = function(place) {};
@@ -4422,7 +4442,7 @@ google.maps.SaveWidgetOptions = function() {};
 google.maps.SaveWidgetOptions.prototype.attribution;
 
 /**
- * @type {google.maps.Place}
+ * @type {google.maps.MarkerPlace}
  */
 google.maps.SaveWidgetOptions.prototype.place;
 
