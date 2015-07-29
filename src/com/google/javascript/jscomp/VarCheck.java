@@ -281,6 +281,8 @@ class VarCheck extends AbstractPostOrderCallback implements
       if (n.isName()) {
         switch (parent.getType()) {
           case Token.VAR:
+          case Token.LET:
+          case Token.CONST:
           case Token.FUNCTION:
           case Token.CLASS:
           case Token.PARAM_LIST:

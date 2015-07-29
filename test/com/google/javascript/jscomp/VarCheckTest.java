@@ -184,6 +184,20 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
+  public void testVarDeclarationInExterns() {
+    testSame("var asdf;", "asdf;", null);
+  }
+
+  public void testLetDeclarationInExterns() {
+     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("let asdf;", "asdf;", null);
+  }
+
+  public void testConstDeclarationInExterns() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("const asdf = 1;", "asdf;", null);
+  }
+
   public void testNewInExterns() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     // Class is not hoisted.
