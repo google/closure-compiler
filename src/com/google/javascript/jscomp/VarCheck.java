@@ -120,13 +120,18 @@ class VarCheck extends AbstractPostOrderCallback implements
    */
   private ScopeCreator createScopeCreator() {
     if (compiler.getLanguageMode().isEs6OrHigher()) {
-      // Redeclaration check is handled in VariableReferenceCheck for ES6
-      return new Es6SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
-    } else if (sanityCheck) {
-      return SyntacticScopeCreator.makeUntyped(compiler);
+      if (sanityCheck) {
+        return new Es6SyntacticScopeCreator(compiler);
+      } else {
+        return new Es6SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
+      }
     } else {
-      return SyntacticScopeCreator.makeUntypedWithRedeclHandler(
-          compiler, new RedeclarationCheckHandler());
+      if (sanityCheck) {
+        return SyntacticScopeCreator.makeUntyped(compiler);
+      } else {
+        return SyntacticScopeCreator.makeUntypedWithRedeclHandler(
+            compiler, new RedeclarationCheckHandler());
+      }
     }
   }
 

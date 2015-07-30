@@ -22,7 +22,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public final class CreateSyntheticBlocksTest extends CompilerTestCase {
+public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
   private static final String START_MARKER = "startMarker";
   private static final String END_MARKER = "endMarker";
 

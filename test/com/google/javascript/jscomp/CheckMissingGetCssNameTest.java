@@ -16,12 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * @author mkretzschmar@google.com (Martin Kretzschmar)
  */
-public final class CheckMissingGetCssNameTest extends CompilerTestCase {
+public final class CheckMissingGetCssNameTest extends Es6CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CombinedCompilerPass(
@@ -63,30 +61,27 @@ public final class CheckMissingGetCssNameTest extends CompilerTestCase {
   }
 
   public void testLetAndConstLefthandsides() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testMissing("let s = 'goog-templit-css-name'");
-    testMissing("const s = 'goog-templit-css-name'");
-    testNotMissing("let s_ID = 'goog-templit-css-name'");
-    testNotMissing("const s_ID = 'goog-templit-css-name'");
-    testNotMissing("let s_ID_ = 'goog-templit-css-name'");
-    testNotMissing("const s_ID_ = 'goog-templit-css-name'");
+    testMissingEs6("let s = 'goog-templit-css-name'");
+    testMissingEs6("const s = 'goog-templit-css-name'");
+    testNotMissingEs6("let s_ID = 'goog-templit-css-name'");
+    testNotMissingEs6("const s_ID = 'goog-templit-css-name'");
+    testNotMissingEs6("let s_ID_ = 'goog-templit-css-name'");
+    testNotMissingEs6("const s_ID_ = 'goog-templit-css-name'");
   }
 
   public void testIgnoreTemplateStrings() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testMissingEs6("var s = `goog-templit-css-name`");
+    testNotMissingEs6("var s = `goog-templit-css-name-${number}`");
+    testNotMissingEs6("var s = `not-a-css-name`");
 
-    testMissing("var s = `goog-templit-css-name`");
-    testNotMissing("var s = `goog-templit-css-name-${number}`");
-    testNotMissing("var s = `not-a-css-name`");
+    testNotMissingEs6("var s = `not-CSS${sub}gsoog-templit`");
 
-    testNotMissing("var s = `not-CSS${sub}gsoog-templit`");
+    testNotMissingEs6("var s = goog.events.getUniqueId(`goog-a-css-name`)");
+    testNotMissingEs6("var s = goog.getCssName(`goog-a-css-name`)");
 
-    testNotMissing("var s = goog.events.getUniqueId(`goog-a-css-name`)");
-    testNotMissing("var s = goog.getCssName(`goog-a-css-name`)");
-
-    testMissing("let s = `goog-templit-css-name`");
-    testNotMissing("const SOME_ID = `goog-some-id`");
-    testMissing("const s = `goog-some-id`");
+    testMissingEs6("let s = `goog-templit-css-name`");
+    testNotMissingEs6("const SOME_ID = `goog-some-id`");
+    testMissingEs6("const s = `goog-some-id`");
   }
 
   private void testMissing(String js) {
@@ -95,5 +90,13 @@ public final class CheckMissingGetCssNameTest extends CompilerTestCase {
 
   private void testNotMissing(String js) {
     test(js, js);
+  }
+
+  private void testMissingEs6(String js) {
+    testErrorEs6(js, CheckMissingGetCssName.MISSING_GETCSSNAME);
+  }
+
+  private void testNotMissingEs6(String js) {
+    testEs6(js, js);
   }
 }
