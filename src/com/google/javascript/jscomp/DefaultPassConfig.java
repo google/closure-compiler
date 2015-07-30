@@ -293,7 +293,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkVars);
     }
 
-    if (options.computeFunctionSideEffects) {
+    if (options.computeFunctionSideEffects && !options.skipNonTranspilationPasses) {
       checks.add(checkRegExp);
     }
 
