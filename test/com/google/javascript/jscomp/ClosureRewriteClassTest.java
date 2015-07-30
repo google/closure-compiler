@@ -126,6 +126,30 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "var x = function() {};");
   }
 
+  public void testLet() {
+    testRewrite(
+        "let x = goog.defineClass(null, {\n"
+        + "  constructor: function(){}\n"
+        + "});",
+
+        "/** @constructor @struct */"
+        + "let x = function() {};",
+
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testConst() {
+    testRewrite(
+        "const x = goog.defineClass(null, {\n"
+        + "  constructor: function(){}\n"
+        + "});",
+
+        "/** @constructor @struct */"
+        + "const x = function() {};",
+
+        LanguageMode.ECMASCRIPT6);
+  }
+
   public void testAnnotations1() {
     // verify goog.defineClass values are constructible, by default
     enableTypeCheck(CheckLevel.WARNING);

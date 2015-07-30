@@ -147,7 +147,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
   }
 
   private void maybeRewriteClassDefinition(Node n) {
-    if (n.isVar()) {
+    if (NodeUtil.isNameDeclaration(n)) {
       Node target = n.getFirstChild();
       Node value = target.getFirstChild();
       maybeRewriteClassDefinition(n, target, value);
@@ -404,13 +404,13 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
 
     // remove the original jsdoc info if it was attached to the value.
     cls.constructor.value.setJSDocInfo(null);
-    if (exprRoot.isVar()) {
+    if (NodeUtil.isNameDeclaration(exprRoot)) {
       // example: var ctr = function(){}
-      Node var = IR.var(cls.name.cloneTree(), cls.constructor.value)
+      Node decl = IR.declaration(cls.name.cloneTree(), cls.constructor.value, exprRoot.getType())
           .srcref(exprRoot);
-      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, var);
-      var.setJSDocInfo(mergedClassInfo);
-      block.addChildToBack(var);
+      JSDocInfo mergedClassInfo = mergeJsDocFor(cls, decl);
+      decl.setJSDocInfo(mergedClassInfo);
+      block.addChildToBack(decl);
     } else {
       // example: ns.ctr = function(){}
       Node assign = IR.assign(cls.name.cloneTree(), cls.constructor.value)

@@ -153,6 +153,10 @@ public class IR {
     return declaration(lhs, value, Token.LET);
   }
 
+  public static Node constNode(Node lhs, Node value) {
+    return declaration(lhs, value, Token.CONST);
+  }
+
   public static Node var(Node lhs) {
     return declaration(lhs, Token.VAR);
   }
