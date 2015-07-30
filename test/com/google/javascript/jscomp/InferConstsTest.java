@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
@@ -56,8 +57,43 @@ public final class InferConstsTest extends TestCase {
     testNotConsts("let x = 3;  function f() {let x = 4; x++;} x++;", "x");
   }
 
+  public void testForOf() {
+    testNotConsts("var x = 0; for (x of [1, 2, 3]) {}", "x");
+    testNotConsts("var x = 0; for (x of {a, b, c}) {}", "x");
+  }
+
+  public void testForIn() {
+    testNotConsts("var x = 0; for (x in {a, b}) {}", "x");
+  }
+
+  public void testForVar() {
+    testNotConsts("for (var x = 0; x < 2; x++) {}", "x");
+    testNotConsts("for (var x in [1, 2, 3]) {}", "x");
+    testNotConsts("for (var x of {a, b, c}) {}", "x");
+  }
+
+  public void testForLet() {
+    testNotConsts("for (let x = 0; x < 2; x++) {}", "x");
+    testNotConsts("for (let x in [1, 2, 3]) {}", "x");
+    testNotConsts("for (let x of {a, b, c}) {}", "x");
+  }
+
+  public void testForConst() {
+    // Using 'const' here is not allowed, and ConstCheck should warn for this
+    testConsts("for (const x = 0; x < 2; x++) {}", "x");
+    testConsts("for (const x in [1, 2, 3]) {}", "x");
+    testConsts("for (const x of {a, b, c}) {}", "x");
+  }
+
+  public void testClass() {
+    testConsts("var Foo = class {}", "Foo");
+    testConsts("class Foo {}", "Foo");
+    testConsts("var Foo = function() {};", "Foo");
+    testConsts("function Foo() {}", "Foo");
+  }
+
   public void testArguments() {
-    testConsts("var arguments = 3;");
+    testNotConsts("var arguments = 3;", "arguments");
   }
 
   private void testConsts(String js, String... constants) {
@@ -79,8 +115,8 @@ public final class InferConstsTest extends TestCase {
 
     compiler.options.setLanguageIn(LanguageMode.ECMASCRIPT6);
     compiler.setLanguageMode(LanguageMode.ECMASCRIPT6);
-    compiler.parseInputs();
-
+    Node root = compiler.parseInputs();
+    assertNotNull("Unexpected parse error(s): " + Joiner.on('\n').join(compiler.getErrors()), root);
     CompilerPass inferConsts = new InferConsts(compiler);
     inferConsts.process(
         compiler.getRoot().getFirstChild(),

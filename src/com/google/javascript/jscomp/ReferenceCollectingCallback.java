@@ -733,12 +733,12 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return parent == null ? null : parent.getParent();
     }
 
-    private static boolean isLhsOfForInExpression(Node n) {
+    private static boolean isLhsOfEnhancedForExpression(Node n) {
       Node parent = n.getParent();
-      if (parent.isVar()) {
-        return isLhsOfForInExpression(parent);
+      if (NodeUtil.isNameDeclaration(parent)) {
+        return isLhsOfEnhancedForExpression(parent);
       }
-      return NodeUtil.isForIn(parent) && parent.getFirstChild() == n;
+      return NodeUtil.isEnhancedFor(parent) && parent.getFirstChild() == n;
     }
 
     boolean isSimpleAssignmentToName() {
@@ -756,9 +756,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
           || parentType == Token.INC
           || parentType == Token.DEC
           || parentType == Token.CATCH
-          || (NodeUtil.isAssignmentOp(parent)
-              && parent.getFirstChild() == nameNode)
-          || isLhsOfForInExpression(nameNode);
+          || (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == nameNode)
+          || isLhsOfEnhancedForExpression(nameNode);
     }
 
     Scope getScope() {
