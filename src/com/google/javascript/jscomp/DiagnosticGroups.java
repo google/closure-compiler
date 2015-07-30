@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
+import com.google.javascript.jscomp.lint.CheckForInOverArray;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
@@ -435,6 +436,7 @@ public class DiagnosticGroups {
           CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
+          CheckForInOverArray.FOR_IN_OVER_ARRAY,
           CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
           ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,

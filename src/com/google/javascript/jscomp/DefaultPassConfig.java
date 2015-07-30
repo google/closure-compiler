@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
+import com.google.javascript.jscomp.lint.CheckForInOverArray;
 import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
@@ -1570,6 +1571,7 @@ public final class DefaultPassConfig extends PassConfig {
           .add(new CheckInterfaces(compiler))
           .add(new CheckJSDocStyle(compiler))
           .add(new CheckNullableReturn(compiler))
+          .add(new CheckForInOverArray(compiler))
           .add(new CheckPrototypeProperties(compiler))
           .add(new ImplicitNullabilityCheck(compiler));
       if (options.closurePass) {
