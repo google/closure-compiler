@@ -113,11 +113,26 @@ public class UnionTypeBuilder implements Serializable {
     return Collections.unmodifiableList(alternates);
   }
 
+  private boolean isSubtype(
+      JSType rightType, JSType leftType, boolean isStructural) {
+    // if thisType or thatType is an unresolved templatized type,
+    // then there is no structural interface matching
+    boolean thisUnresolved = rightType.isTemplatizedType()
+        && !rightType.toMaybeTemplatizedType().isResolved();
+    boolean thatUnresolved = leftType.isTemplatizedType()
+        && !leftType.toMaybeTemplatizedType().isResolved();
+    if (isStructural && !thisUnresolved && !thatUnresolved) {
+      return rightType.isSubtype(leftType);
+    } else {
+      return rightType.isSubtypeWithoutStructuralTyping(leftType);
+    }
+  }
+
   /**
    * Adds an alternate to the union type under construction. Returns this
    * for easy chaining.
    */
-  public UnionTypeBuilder addAlternate(JSType alternate) {
+  public UnionTypeBuilder addAlternate(JSType alternate, boolean isStructural) {
     // build() returns the bottom type by default, so we can
     // just bail out early here.
     if (alternate.isNoType()) {
@@ -135,7 +150,7 @@ public class UnionTypeBuilder implements Serializable {
     if (!isAllType && !isNativeUnknownType) {
       if (alternate.isUnionType()) {
         UnionType union = alternate.toMaybeUnionType();
-        for (JSType unionAlt : union.getAlternates()) {
+        for (JSType unionAlt : union.getAlternatesWithoutStructuralTyping()) {
           addAlternate(unionAlt);
         }
       } else {
@@ -207,13 +222,13 @@ public class UnionTypeBuilder implements Serializable {
               //    current:Object.<string> ==> Object.<string>|Array.<string>
 
               if (!current.isTemplatizedType()) {
-                if (alternate.isSubtype(current)) {
+                if (isSubtype(alternate, current, isStructural)) {
                   // case 1, 2
                   return this;
                 }
                 // case 3: leave current, add alternate
               } else if (!alternate.isTemplatizedType()) {
-                if (current.isSubtype(alternate)) {
+                if (isSubtype(current, alternate, isStructural)) {
                   // case 4, 5
                   removeCurrent = true;
                 }
@@ -243,10 +258,10 @@ public class UnionTypeBuilder implements Serializable {
                 // case 9: leave current, add alternate
               }
               // Otherwise leave both templatized types.
-            } else if (alternate.isSubtype(current)) {
+            } else if (isSubtype(alternate, current, isStructural)) {
               // Alternate is unnecessary.
               return this;
-            } else if (current.isSubtype(alternate)) {
+            } else if (isSubtype(current, alternate, isStructural)) {
               // Alternate makes current obsolete
               removeCurrent = true;
             }
@@ -278,6 +293,14 @@ public class UnionTypeBuilder implements Serializable {
       result = null;
     }
     return this;
+  }
+
+  /**
+   * Adds an alternate to the union type under construction. Returns this
+   * for easy chaining.
+   */
+  public UnionTypeBuilder addAlternate(JSType alternate) {
+    return addAlternate(alternate, false);
   }
 
   /**

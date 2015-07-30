@@ -73,7 +73,7 @@ public class NoObjectType extends FunctionType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, new ImplCache());
+    return isSubtype(that, ImplCache.create());
   }
 
   @Override

@@ -1295,6 +1295,11 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
+  Iterable<TypeMismatch> getImplicitInterfaceUses() {
+    return getTypeValidator().getImplicitStructuralInterfaceUses();
+  }
+
+  @Override
   GlobalTypeInfo getSymbolTable() {
     GlobalTypeInfo gti = symbolTable;
     symbolTable = null; // GC this after type inference

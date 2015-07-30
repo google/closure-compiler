@@ -119,7 +119,7 @@ public final class TemplatizedType extends ProxyObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, new ImplCache());
+    return isSubtype(that, ImplCache.create());
   }
 
   @Override

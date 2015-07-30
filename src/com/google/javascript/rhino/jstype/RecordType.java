@@ -210,7 +210,7 @@ public class RecordType extends PrototypeObjectType {
 
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, new ImplCache());
+    return isSubtype(that, ImplCache.create());
   }
 
   @Override
@@ -233,12 +233,13 @@ public class RecordType extends PrototypeObjectType {
       return false;
     }
 
-    return RecordType.isSubtype(this, that.toMaybeRecordType(), implicitImplCache);
+    return RecordType.isSubtype(
+        this, that.toMaybeRecordType(), implicitImplCache);
   }
 
   /** Determines if typeA is a subtype of typeB */
   static boolean isSubtype(ObjectType typeA, RecordType typeB) {
-    return isSubtype(typeA, typeB, new ImplCache());
+    return isSubtype(typeA, typeB, ImplCache.create());
   }
 
   /** Determines if typeA is a subtype of typeB */

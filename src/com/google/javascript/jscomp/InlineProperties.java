@@ -113,7 +113,7 @@ final class InlineProperties implements CompilerPass {
   private void addInvalidatingType(JSType type) {
     type = type.restrictByNotNullOrUndefined();
     if (type.isUnionType()) {
-      for (JSType alt : type.toMaybeUnionType().getAlternates()) {
+      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
         addInvalidatingType(alt);
       }
     }
@@ -130,7 +130,7 @@ final class InlineProperties implements CompilerPass {
     if (type.isUnionType()) {
       type = type.restrictByNotNullOrUndefined();
       if (type.isUnionType()) {
-        for (JSType alt : type.toMaybeUnionType().getAlternates()) {
+        for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
           if (isInvalidatingType(alt)) {
             return true;
           }

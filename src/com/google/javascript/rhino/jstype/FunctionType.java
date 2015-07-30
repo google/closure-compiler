@@ -1071,7 +1071,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   @Override
   public boolean isSubtype(JSType that) {
-    return isSubtype(that, new ImplCache());
+    return isSubtype(that, ImplCache.create());
   }
 
   @Override

@@ -1232,6 +1232,17 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   /**
+   * the logic of this method is similar to isSubtype,
+   * except that it does not perform structural interface matching
+   *
+   * This function is added for disambiguate properties,
+   * and is deprecated for the other use cases.
+   */
+  public boolean isSubtypeWithoutStructuralTyping(JSType that) {
+    return isSubtype(that, ImplCache.createWithoutStructuralTyping());
+  }
+
+  /**
    * Checks whether {@code this} is a subtype of {@code that}.<p>
    * Note this function also returns true if this type structurally
    * matches the protocol define by that type (if that type is an
@@ -1261,7 +1272,8 @@ public abstract class JSType implements TypeI, Serializable {
    * @return <code>this &lt;: that</code>
    */
   public boolean isSubtype(JSType that) {
-    return isSubtypeHelper(this, that, new ImplCache());
+    return isSubtypeHelper(this, that,
+        ImplCache.create());
   }
 
   /**
@@ -1299,7 +1311,7 @@ public abstract class JSType implements TypeI, Serializable {
     // unions
     if (thatType.isUnionType()) {
       UnionType union = thatType.toMaybeUnionType();
-      for (JSType element : union.alternates) {
+      for (JSType element : union.alternatesWithoutStucturalTyping) {
         if (thisType.isSubtype(element, implicitImplCache)) {
           return true;
         }
@@ -1327,7 +1339,8 @@ public abstract class JSType implements TypeI, Serializable {
           thatTypeParams, EquivalenceMethod.INVARIANT);
     }
     if (!templateMatch) {
-      return implicitMatch(thisType, thatType, implicitImplCache);
+      return implicitImplCache.isStructuralTyping()
+          && implicitMatch(thisType, thatType, implicitImplCache);
     }
 
     // Templatized types. The above check guarantees TemplateTypeMap
@@ -1342,7 +1355,8 @@ public abstract class JSType implements TypeI, Serializable {
       return thisType.isSubtype(
           ((ProxyObjectType) thatType).getReferencedTypeInternal(), implicitImplCache);
     }
-    return implicitMatch(thisType, thatType, implicitImplCache);
+    return implicitImplCache.isStructuralTyping()
+        && implicitMatch(thisType, thatType, implicitImplCache);
   }
 
   /**
@@ -1709,40 +1723,43 @@ public abstract class JSType implements TypeI, Serializable {
 
   protected static class ImplCache {
     private Table<JSType, JSType, ImplStatus> implicitImplCache;
+    private boolean isStructuralTyping;
 
-    ImplCache() {
+    static ImplCache create() {
+      return new ImplCache(true);
+    }
+
+    static ImplCache createWithoutStructuralTyping() {
+      return new ImplCache(false);
+    }
+
+    private ImplCache(boolean isStructuralTyping) {
+      this.isStructuralTyping = isStructuralTyping;
       this.implicitImplCache = null;
     }
 
-    private void initTable() {
-      if (this.implicitImplCache == null) {
-        this.implicitImplCache = HashBasedTable.create();
-      }
-    }
-
-    private ImplStatus getStatus(JSType leftType, JSType rightType) {
-      return this.implicitImplCache.get(leftType, rightType);
-    }
-
-    private boolean contains(JSType leftType, JSType rightType) {
-      return this.implicitImplCache.contains(leftType, rightType);
+    boolean isStructuralTyping() {
+      return isStructuralTyping;
     }
 
     /**
      * update the status of the interface - function
      * in the implicit implementation status cache
      */
-    private void updateCache(JSType leftType,
+    void updateCache(JSType leftType,
         JSType rightType, ImplStatus isImplement) {
+      Preconditions.checkState(isStructuralTyping);
       this.implicitImplCache.put(leftType, rightType, isImplement);
     }
 
-    private ImplStatus checkCache(JSType rightType,
-        JSType leftType) {
-      this.initTable();
+    ImplStatus checkCache(JSType rightType, JSType leftType) {
+      Preconditions.checkState(isStructuralTyping);
+      if (this.implicitImplCache == null) {
+        this.implicitImplCache = HashBasedTable.create();
+      }
       // check the cache
-      if (this.contains(leftType, rightType)) {
-        return this.getStatus(leftType, rightType);
+      if (this.implicitImplCache.contains(leftType, rightType)) {
+        return this.implicitImplCache.get(leftType, rightType);
       } else {
         this.updateCache(leftType, rightType, ImplStatus.PROCESSING);
         return null;

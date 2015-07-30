@@ -70,6 +70,9 @@ class TypeValidator {
   // mismatches. For example, if we pass (Cake|null) where only Cake is
   // allowed, that doesn't mean we should invalidate all Cakes.
   private final List<TypeMismatch> mismatches = new ArrayList<>();
+  // the detection logic of this one is similar to this.mismatches
+  private final List<TypeMismatch> implicitStructuralInterfaceUses =
+      new ArrayList<>();
 
   // User warnings
   private static final String FOUND_REQUIRED =
@@ -194,6 +197,15 @@ class TypeValidator {
     return mismatches;
   }
 
+  /**
+   * all uses of implicitly implemented structural interfaces,
+   * captured during type validation and type checking
+   * (uses of explicitly @implemented structural interfaces are excluded)
+   */
+  public Iterable<TypeMismatch> getImplicitStructuralInterfaceUses() {
+    return implicitStructuralInterfaceUses;
+  }
+
   // All non-private methods should have the form:
   // expectCondition(NodeTraversal t, Node n, ...);
   // If there is a mismatch, the {@code expect} method should issue
@@ -292,9 +304,9 @@ class TypeValidator {
    */
   boolean expectNotNullOrUndefined(
       NodeTraversal t, Node n, JSType type, String msg, JSType expectedType) {
-    if (!type.isNoType() && !type.isUnknownType() &&
-        type.isSubtype(nullOrUndefined) &&
-        !containsForwardDeclaredUnresolvedName(type)) {
+    if (!type.isNoType() && !type.isUnknownType()
+        && type.isSubtype(nullOrUndefined)
+        && !containsForwardDeclaredUnresolvedName(type)) {
 
       // There's one edge case right now that we don't handle well, and
       // that we don't want to warn about.
@@ -341,10 +353,15 @@ class TypeValidator {
     // in the code base have adapted to the change in the compiler.
     if (!switchType.canTestForShallowEqualityWith(caseType) &&
         (caseType.autoboxesTo() == null ||
-            !caseType.autoboxesTo().isSubtype(switchType))) {
+        !caseType.autoboxesTo().isSubtype(switchType))) {
       mismatch(t, n.getFirstChild(),
           "case expression doesn't match switch",
           caseType, switchType);
+    } else if (!switchType.canTestForShallowEqualityWith(caseType)
+        && (caseType.autoboxesTo() == null
+        || !caseType.autoboxesTo()
+        .isSubtypeWithoutStructuralTyping(switchType))) {
+      recordStructuralInterfaceUses(caseType, switchType);
     }
   }
 
@@ -416,8 +433,8 @@ class TypeValidator {
       JSType ownerType = getJSType(owner);
       if (ownerType.isFunctionPrototypeType()) {
         FunctionType ownerFn = ownerType.toObjectType().getOwnerFunction();
-        if (ownerFn.isInterface() &&
-            rightType.isFunctionType() && leftType.isFunctionType()) {
+        if (ownerFn.isInterface()
+            && rightType.isFunctionType() && leftType.isFunctionType()) {
           return true;
         }
       }
@@ -427,6 +444,9 @@ class TypeValidator {
           typeRegistry.getReadableTypeName(owner),
           rightType, leftType);
       return false;
+    } else if (!leftType.isNoType()
+        && !rightType.isSubtypeWithoutStructuralTyping(leftType)){
+      recordStructuralInterfaceUses(rightType, leftType);
     }
     return true;
   }
@@ -447,6 +467,8 @@ class TypeValidator {
     if (!rightType.isSubtype(leftType)) {
       mismatch(t, n, msg, rightType, leftType);
       return false;
+    } else if (!rightType.isSubtypeWithoutStructuralTyping(leftType)) {
+      recordStructuralInterfaceUses(rightType, leftType);
     }
     return true;
   }
@@ -470,6 +492,8 @@ class TypeValidator {
               "formal parameter", ordinal,
               typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
           argType, paramType);
+    } else if (!argType.isSubtypeWithoutStructuralTyping(paramType)){
+      recordStructuralInterfaceUses(argType, paramType);
     }
   }
 
@@ -522,6 +546,8 @@ class TypeValidator {
     if (!type.canCastTo(castType)) {
       registerMismatch(type, castType, report(t.makeError(n, INVALID_CAST,
           type.toString(), castType.toString())));
+    } else if (!type.isSubtypeWithoutStructuralTyping(castType)){
+      recordStructuralInterfaceUses(type, castType);
     }
   }
 
@@ -719,16 +745,34 @@ class TypeValidator {
                      formatFoundRequired(msg, found, required))));
   }
 
+  private void recordStructuralInterfaceUses(JSType found, JSType required) {
+    boolean strictMismatch =
+        !found.isSubtypeWithoutStructuralTyping(required)
+        && !required.isSubtypeWithoutStructuralTyping(found);
+    boolean mismatch = !found.isSubtype(required) && !required.isSubtype(found);
+    if (strictMismatch && !mismatch) {
+      implicitStructuralInterfaceUses.add(new TypeMismatch(found, required, null));
+    }
+  }
+
   private void registerMismatch(JSType found, JSType required, JSError error) {
     // Don't register a mismatch for differences in null or undefined or if the
     // code didn't downcast.
     found = found.restrictByNotNullOrUndefined();
     required = required.restrictByNotNullOrUndefined();
+
     if (found.isSubtype(required) || required.isSubtype(found)) {
+      boolean strictMismatch =
+        !found.isSubtypeWithoutStructuralTyping(required)
+        && !required.isSubtypeWithoutStructuralTyping(found);
+      if (strictMismatch) {
+        implicitStructuralInterfaceUses.add(new TypeMismatch(found, required, error));
+      }
       return;
     }
 
     mismatches.add(new TypeMismatch(found, required, error));
+
     if (found.isFunctionType() &&
         required.isFunctionType()) {
       FunctionType fnTypeA = found.toMaybeFunctionType();
@@ -748,7 +792,7 @@ class TypeValidator {
   private void registerIfMismatch(
       JSType found, JSType required, JSError error) {
     if (found != null && required != null &&
-        !found.isSubtype(required)) {
+        !found.isSubtypeWithoutStructuralTyping(required)) {
       registerMismatch(found, required, error);
     }
   }
