@@ -552,7 +552,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testJSDocAttachment6() throws Exception {
     Node functionNode = parse(
         "var a = /** @param {number} index */5;"
-        + "/** @return boolean */function f(index){}")
+        + "/** @return {boolean} */function f(index){}")
         .getFirstChild().getNext();
 
     assertThat(functionNode.getType()).isEqualTo(Token.FUNCTION);
@@ -560,7 +560,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     assertThat(info).isNotNull();
     assertThat(info.hasParameter("index")).isFalse();
     assertThat(info.hasReturnType()).isTrue();
-    assertTypeEquals(UNKNOWN_TYPE, info.getReturnType());
+    assertTypeEquals(BOOLEAN_TYPE, info.getReturnType());
   }
 
   public void testJSDocAttachment7() {
@@ -829,14 +829,14 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testIncorrectJSDocDoesNotAlterJSParsing4() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parse("/** @return boolean */" +
+        parse("/** @return {boolean} */" +
             "C.prototype.say=function(nums) {alert(nums.join(','));};"));
   }
 
   public void testIncorrectJSDocDoesNotAlterJSParsing5() throws Exception {
     assertNodeEquality(
         parse("C.prototype.say=function(nums) {alert(nums.join(','));};"),
-        parse("/** @param boolean this is some string*/" +
+        parse("/** @param {boolean} this is some string*/" +
             "C.prototype.say=function(nums) {alert(nums.join(','));};"));
   }
 

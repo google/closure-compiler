@@ -41,6 +41,11 @@ class RhinoErrorReporter {
   static final DiagnosticType JSDOC_MISSING_BRACES_WARNING =
       DiagnosticType.disabled("JSC_JSDOC_MISSING_BRACES_WARNING", "{0}");
 
+  // This is separate from TYPE_PARSE_ERROR because there are many instances of this warning
+  // and it is unfeasible to fix them all right away.
+  static final DiagnosticType JSDOC_MISSING_TYPE_WARNING =
+      DiagnosticType.disabled("JSC_JSDOC_MISSING_TYPE_WARNING", "{0}");
+
   // Special-cased errors, so that they can be configured via the
   // warnings API.
   static final DiagnosticType TRAILING_COMMA =
@@ -108,62 +113,64 @@ class RhinoErrorReporter {
 
   private RhinoErrorReporter(AbstractCompiler compiler) {
     this.compiler = compiler;
-    typeMap = ImmutableMap.<Pattern, DiagnosticType>builder()
-        // Trailing comma
-        .put(replacePlaceHolders(
-            "Trailing comma is not legal in an ECMA-262 object initializer"),
-            TRAILING_COMMA)
+    typeMap =
+        ImmutableMap.<Pattern, DiagnosticType>builder()
+            // Trailing comma
+            .put(
+                replacePlaceHolders(
+                    "Trailing comma is not legal in an ECMA-262 object initializer"),
+                TRAILING_COMMA)
 
-        // Duplicate parameter
-        .put(replacePlaceHolders(
-            "Duplicate parameter name \"{0}\""),
-            DUPLICATE_PARAM)
+            // Duplicate parameter
+            .put(replacePlaceHolders("Duplicate parameter name \"{0}\""), DUPLICATE_PARAM)
 
-        .put(Pattern.compile("^invalid param name.*"), INVALID_PARAM)
+            .put(Pattern.compile("^invalid param name.*"), INVALID_PARAM)
 
-        // Unknown @annotations.
-        .put(replacePlaceHolders(
-            SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
-            BAD_JSDOC_ANNOTATION)
+            // Unknown @annotations.
+            .put(
+                replacePlaceHolders(SimpleErrorReporter.getMessage0("msg.bad.jsdoc.tag")),
+                BAD_JSDOC_ANNOTATION)
 
-        .put(Pattern.compile(
-            "^\\QNon-JSDoc comment has annotations. " +
-            "Did you mean to start it with '/**'?\\E"),
-            JSDOC_IN_BLOCK_COMMENT)
+            .put(
+                Pattern.compile(
+                    "^\\QNon-JSDoc comment has annotations. "
+                        + "Did you mean to start it with '/**'?\\E"),
+                JSDOC_IN_BLOCK_COMMENT)
 
-        .put(Pattern.compile("^Keywords and reserved words" +
-            " are not allowed as unquoted property.*"),
-            INVALID_ES3_PROP_NAME)
+            .put(
+                Pattern.compile(
+                    "^Keywords and reserved words" + " are not allowed as unquoted property.*"),
+                INVALID_ES3_PROP_NAME)
 
-        // Type annotation warnings.
-        .put(
-            replacePlaceHolders("Bad type annotation. Type annotations should have curly braces."),
-            JSDOC_MISSING_BRACES_WARNING)
+            // Type annotation warnings.
+            .put(
+                replacePlaceHolders(
+                    "Bad type annotation. Type annotations should have curly braces."),
+                JSDOC_MISSING_BRACES_WARNING)
 
-        // Type annotation errors.
-        .put(Pattern.compile(
-            "^Bad type annotation.*(?!Type annotations should have curly braces\\.)"),
-            TYPE_PARSE_ERROR)
+            .put(replacePlaceHolders("Missing type declaration."), JSDOC_MISSING_TYPE_WARNING)
 
-        // Parse tree too deep.
-        .put(replacePlaceHolders(
-            "Too deep recursion while parsing"),
-            PARSE_TREE_TOO_DEEP)
+            // Type annotation errors.
+            .put(
+                Pattern.compile(
+                    "^Bad type annotation.*(?!Type annotations should have curly braces\\.)"),
+                TYPE_PARSE_ERROR)
 
-        // Octal literals
-        .put(Pattern.compile("^Octal .*literal.*"),
-            INVALID_OCTAL_LITERAL)
+            // Parse tree too deep.
+            .put(replacePlaceHolders("Too deep recursion while parsing"), PARSE_TREE_TOO_DEEP)
 
-        .put(Pattern.compile("^this language feature is only supported in es6 mode.*"),
-            ES6_FEATURE)
+            // Octal literals
+            .put(Pattern.compile("^Octal .*literal.*"), INVALID_OCTAL_LITERAL)
 
-        .put(Pattern.compile("^type syntax is only supported in ES6 typed mode.*"),
-            ES6_TYPED)
+            .put(
+                Pattern.compile("^this language feature is only supported in es6 mode.*"),
+                ES6_FEATURE)
 
-        .put(Pattern.compile("^Can only have JSDoc or inline type.*"),
-            MISPLACED_TYPE_SYNTAX)
+            .put(Pattern.compile("^type syntax is only supported in ES6 typed mode.*"), ES6_TYPED)
 
-        .build();
+            .put(Pattern.compile("^Can only have JSDoc or inline type.*"), MISPLACED_TYPE_SYNTAX)
+
+            .build();
   }
 
   public static ErrorReporter forOldRhino(AbstractCompiler compiler) {

@@ -31,10 +31,12 @@ import java.util.List;
 public final class RhinoErrorReporterTest extends TestCase {
 
   private boolean reportEs3Props;
+  private boolean reportLintWarnings;
 
   @Override
   protected void setUp() throws Exception {
     reportEs3Props = true;
+    reportLintWarnings = true;
     super.setUp();
   }
 
@@ -78,6 +80,25 @@ public final class RhinoErrorReporterTest extends TestCase {
 
     assertEquals(1, error.getLineNumber());
     assertEquals(10, error.getCharno());
+  }
+
+
+  public void testMissingTypeWarnings() throws Exception {
+    reportLintWarnings = false;
+
+    assertNoWarningOrError("/** @return */ function f() {}");
+
+    reportLintWarnings = true;
+
+    String message =
+        "Missing type declaration.";
+    JSError error = assertWarning(
+        "/** @return */ function f() {}",
+        RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
+        message);
+
+    assertEquals(1, error.getLineNumber());
+    assertEquals(4, error.getCharno());
   }
 
   /**
@@ -127,6 +148,16 @@ public final class RhinoErrorReporterTest extends TestCase {
       options.setWarningLevel(
           DiagnosticGroups.ES3,
           CheckLevel.OFF);
+    }
+
+    if (!reportLintWarnings) {
+      options.setWarningLevel(
+          DiagnosticGroups.LINT_CHECKS,
+          CheckLevel.OFF);
+    } else {
+      options.setWarningLevel(
+          DiagnosticGroups.LINT_CHECKS,
+          CheckLevel.WARNING);
     }
 
     List<SourceFile> externs = ImmutableList.of();

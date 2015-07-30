@@ -52,6 +52,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   private Set<String> extraSuppressions;
   private JSDocInfoBuilder fileLevelJsDocBuilder = null;
 
+  private static final String MISSING_TYPE_DECL_WARNING_TEXT =
+      "Missing type declaration.";
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
@@ -883,7 +886,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseParam2() throws Exception {
-    JSDocInfo info = parse("@param index*/");
+    JSDocInfo info = parse("@param index*/",
+        MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertThat(info.getParameterType("index")).isNull();
   }
@@ -895,7 +899,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseParam4() throws Exception {
-    JSDocInfo info = parse("@param index useful comments*/");
+    JSDocInfo info = parse("@param index useful comments*/",
+        MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertThat(info.getParameterType("index")).isNull();
   }
@@ -1410,7 +1415,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testStackedAnnotation7() throws Exception {
-    JSDocInfo info = parse("@return @constructor */");
+    JSDocInfo info = parse("@return @constructor */", MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.hasReturnType()).isTrue();
     assertThat(info.isConstructor()).isTrue();
   }
@@ -1689,7 +1694,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         " * @protected\n" +
         " */";
 
-    JSDocInfo info = parse(comment);
+    JSDocInfo info = parse(comment, MISSING_TYPE_DECL_WARNING_TEXT);
+
     assertThat(info.getParameterCount()).isEqualTo(2);
     assertTypeEquals(NUMBER_TYPE, info.getParameterType("index"));
     assertThat(info.getParameterType("name")).isNull();
@@ -1709,7 +1715,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         " * @final\n" +
         " */";
 
-    JSDocInfo info = parse(comment);
+    JSDocInfo info = parse(comment, MISSING_TYPE_DECL_WARNING_TEXT);
     assertThat(info.getParameterCount()).isEqualTo(1);
     assertThat(info.getParameterType("mediaTag")).isNull();
     assertThat(info.getVisibility()).isEqualTo(Visibility.PUBLIC);
@@ -2539,7 +2545,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseWithMarkers5() throws Exception {
     JSDocInfo jsdoc =
         parse("@return some long \n * multiline" +
-              " \n * description */", true);
+              " \n * description */", true, MISSING_TYPE_DECL_WARNING_TEXT);
 
     assertDocumentationInMarker(
         assertAnnotationMarker(jsdoc, "return", 0, 0),
@@ -2549,7 +2555,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   public void testParseWithMarkers6() throws Exception {
     JSDocInfo jsdoc =
         parse("@param x some long \n * multiline" +
-              " \n * description */", true);
+              " \n * description */", true, MISSING_TYPE_DECL_WARNING_TEXT);
 
     assertDocumentationInMarker(
         assertAnnotationMarker(jsdoc, "param", 0, 0),
@@ -2691,7 +2697,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTypeTagConflict14() throws Exception {
-    parse("@return x \n * @return y */",
+    parse("@return {?} x \n * @return {?} y */",
         "Bad type annotation. " +
         "type annotation incompatible with other annotations");
   }
@@ -3935,8 +3941,8 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testUnsupportedJsDocSyntax2() {
     JSDocInfo info =
-        parse("@param userInfo The user info. \n"
-                  + " * @param userInfo.name The name of the user */",
+        parse("@param {?} userInfo The user info. \n"
+                  + " * @param {?} userInfo.name The name of the user */",
               true,
               "invalid param name \"userInfo.name\"");
     assertThat(info.getParameterCount()).isEqualTo(1);
@@ -4079,40 +4085,40 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseDisposes1() throws Exception {
-    assertThat(parse("@param x \n * @disposes x */").isDisposes()).isTrue();
+    assertThat(parse("@param {?} x \n * @disposes x */").isDisposes()).isTrue();
   }
 
   public void testParseDisposes2() throws Exception {
-    parse("@param x \n * @disposes */",
+    parse("@param {?} x \n * @disposes */",
         true, "Bad type annotation. @disposes tag missing parameter name");
   }
 
   public void testParseDisposes3() throws Exception {
-    assertThat(parse("@param x \n @param y\n * @disposes x, y */").isDisposes()).isTrue();
+    assertThat(parse("@param {?} x \n @param {?} y\n * @disposes x, y */").isDisposes()).isTrue();
   }
 
   public void testParseDisposesUnknown() throws Exception {
-    parse("@param x \n * @disposes x,y */",
+    parse("@param {?} x \n * @disposes x,y */",
         true,
         "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
   }
 
   public void testParseDisposesMultiple() throws Exception {
-    parse("@param x \n * @disposes x,x */",
+    parse("@param {?} x \n * @disposes x,x */",
         true,
         "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
   }
 
   public void testParseDisposesAll1() throws Exception {
-    assertThat(parse("@param x \n * @disposes * */").isDisposes()).isTrue();
+    assertThat(parse("@param {?} x \n * @disposes * */").isDisposes()).isTrue();
   }
 
   public void testParseDisposesAll2() throws Exception {
-    assertThat(parse("@param x \n * @disposes x,* */").isDisposes()).isTrue();
+    assertThat(parse("@param {?} x \n * @disposes x,* */").isDisposes()).isTrue();
   }
 
   public void testParseDisposesAll3() throws Exception {
-    parse("@param x \n * @disposes *, * */",
+    parse("@param {?} x \n * @disposes *, * */",
         true,
         "Bad type annotation. @disposes parameter unknown or parameter specified multiple times");
   }

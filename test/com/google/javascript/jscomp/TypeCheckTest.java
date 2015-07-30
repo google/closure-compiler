@@ -163,7 +163,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck14() throws Exception {
-    testTypes("/**@param opt_a*/function foo(opt_a){}");
+    testTypes("/**@param {?} opt_a*/function foo(opt_a){}");
   }
 
 
@@ -407,7 +407,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testOptionalParameterComparedToUndefined() throws Exception {
-    testTypes("/**@param opt_a {Number}*/function foo(opt_a)" +
+    testTypes("/** @param  {Number} opt_a */function foo(opt_a)" +
         "{if (opt_a==undefined) var b = 3;}");
   }
 
@@ -1705,7 +1705,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testFunctionArguments12() throws Exception {
-    testTypes("/** @param foo {String} */function bar(baz){}",
+    testTypes("/** @param {String} foo  */function bar(baz){}",
         "parameter foo does not appear in bar's parameter list");
   }
 
@@ -10548,7 +10548,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNoForwardTypeDeclarationAndNoBraces() throws Exception {
-    testTypes("/** @return The result. */ function f() {}");
+    testTypes("/** @return The result. */ function f() {}",
+        RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING);
   }
 
   public void testForwardTypeDeclaration1() throws Exception {
@@ -12373,14 +12374,23 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testMultipleExtendsInterfaceParamPass() throws Exception {
-    testTypes("/** @interface */var I1 = function() {};\n" +
-        "/** @interface */ var I2 = function() {}\n" +
-        "/** @interface\n@extends {I1}\n@extends {I2}*/" +
-        "var I3 = function() {};\n" +
-        "/** @constructor\n@implements {I3}*/var T = function() {};\n" +
-        "var t = new T();\n" +
-        "/** @param x I1 \n@param y I2\n@param z I3*/function foo(x,y,z){};\n" +
-        "foo(t,t,t)\n");
+    testTypes(LINE_JOINER.join(
+        "/** @interface */",
+        "var I1 = function() {};",
+        "/** @interface */",
+        "var I2 = function() {}",
+        "/** @interface @extends {I1} @extends {I2} */",
+        "var I3 = function() {};",
+        "/** @constructor @implements {I3} */",
+        "var T = function() {};",
+        "var t = new T();",
+        "/**",
+        " * @param {I1} x",
+        " * @param {I2} y",
+        " * @param {I3} z",
+        " */",
+        "function foo(x,y,z){};",
+        "foo(t,t,t)"));
   }
 
   public void testBadMultipleExtendsClass() throws Exception {

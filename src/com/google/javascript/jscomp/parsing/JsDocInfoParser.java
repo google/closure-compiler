@@ -100,6 +100,10 @@ public final class JsDocInfoParser {
         charno);
   }
 
+  private void addMissingTypeWarning(String annotation, int lineno, int charno) {
+    errorReporter.warning("Missing type declaration.", getSourceName(), lineno, charno);
+  }
+
   // The DocInfo with the fileoverview tag for the whole file.
   private JSDocInfo fileOverviewJSDocInfo = null;
   private State state;
@@ -713,6 +717,8 @@ public final class JsDocInfoParser {
           charno = stream.getCharno();
           type = null;
 
+          boolean hasParamType = false;
+
           if (token == JsDocToken.LEFT_CURLY) {
             type = createJSTypeExpression(
                 parseAndRecordParamTypeNode(token));
@@ -726,7 +732,9 @@ public final class JsDocInfoParser {
             token = next();
             lineno = stream.getLineno();
             charno = stream.getCharno();
+            hasParamType = true;
           }
+
 
           String name = null;
           boolean isBracketedParam = JsDocToken.LEFT_SQUARE == token;
@@ -737,6 +745,10 @@ public final class JsDocInfoParser {
           if (JsDocToken.STRING != token) {
             addTypeWarning("msg.missing.variable.name", lineno, charno);
           } else {
+            if (!hasParamType) {
+              addMissingTypeWarning(annotationName, stream.getLineno(), stream.getCharno());
+            }
+
             name = stream.getString();
 
             if (isBracketedParam) {
@@ -1017,6 +1029,11 @@ public final class JsDocInfoParser {
           boolean canSkipTypeAnnotation =
               isAlternateTypeAnnotation || annotation == Annotation.RETURN;
           type = null;
+
+          if (annotation == Annotation.RETURN && !hasType) {
+            addMissingTypeWarning(annotationName, stream.getLineno(), stream.getCharno());
+          }
+
           if (hasType || !canSkipTypeAnnotation) {
             skipEOLs();
             token = next();
