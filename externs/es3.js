@@ -780,6 +780,7 @@ Array.some = function(arr, callback, opt_context) {};
  * Introduced in 1.8.5.
  * @param {*} arr
  * @return {boolean}
+ * @nosideeffects
  * @see http://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/isArray
  */
 Array.isArray = function(arr) {};
