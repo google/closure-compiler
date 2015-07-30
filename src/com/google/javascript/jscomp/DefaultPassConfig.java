@@ -302,6 +302,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRegExp);
     }
 
+    // This pass should run before types are assigned.
+    if (options.processObjectPropertyString && !options.skipNonTranspilationPasses) {
+      checks.add(objectPropertyStringPreprocess);
+    }
+
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
@@ -329,11 +334,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
-
-    // This pass should run before types are assigned.
-    if (options.processObjectPropertyString) {
-      checks.add(objectPropertyStringPreprocess);
-    }
 
     checks.add(createEmptyPass("beforeTypeChecking"));
 
