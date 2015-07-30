@@ -122,6 +122,8 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           break;
 
         case Token.VAR:
+        case Token.LET:
+        case Token.CONST:
           if (parent.isScript()) {
             if (n.getFirstChild().hasChildren() &&
                 !n.getFirstChild().getFirstChild().isAssign()) {

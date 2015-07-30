@@ -94,7 +94,19 @@ public final class GenerateExportsTest extends Es6CompilerTestCase {
   public void testExportVars() {
     test("/** @export */var FOO = 5",
          "var FOO=5;" +
-         "google_exportSymbol(\"FOO\",FOO)");
+         "google_exportSymbol('FOO',FOO)");
+  }
+
+  public void testExportLet() {
+    testEs6("/** @export */let FOO = 5",
+         "let FOO = 5;" +
+         "google_exportSymbol('FOO', FOO)");
+  }
+
+  public void testExportConst() {
+    testEs6("/** @export */const FOO = 5",
+         "const FOO = 5;" +
+         "google_exportSymbol('FOO', FOO)");
   }
 
   public void testNoExport() {
