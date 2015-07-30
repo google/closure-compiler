@@ -293,6 +293,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkVars);
     }
 
+    if (options.computeFunctionSideEffects) {
+      checks.add(checkRegExp);
+    }
+
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
@@ -323,10 +327,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.inferConsts) {
       checks.add(inferConsts);
-    }
-
-    if (options.computeFunctionSideEffects) {
-      checks.add(checkRegExp);
     }
 
     // This pass should run before types are assigned.
