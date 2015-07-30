@@ -293,6 +293,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkVars);
     }
 
+    if (options.inferConsts && !options.skipNonTranspilationPasses) {
+      checks.add(inferConsts);
+    }
+
     if (options.computeFunctionSideEffects && !options.skipNonTranspilationPasses) {
       checks.add(checkRegExp);
     }
@@ -324,10 +328,6 @@ public final class DefaultPassConfig extends PassConfig {
     checks.add(convertStaticInheritance);
 
     // End of ES6 transpilation passes.
-
-    if (options.inferConsts) {
-      checks.add(inferConsts);
-    }
 
     // This pass should run before types are assigned.
     if (options.processObjectPropertyString) {
