@@ -336,13 +336,13 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     @Override public void remove() {
-      Node gramps = parent.getParent();
-      if (gramps.isExprResult()) {
+      Node grandparent = parent.getParent();
+      if (grandparent.isExprResult()) {
         // name.prototype.foo = function() { ... };
-        changeProxy.removeChild(gramps.getParent(), gramps);
+        changeProxy.removeChild(grandparent.getParent(), grandparent);
       } else {
         // ... name.prototype.foo = function() { ... } ...
-        changeProxy.replaceWith(gramps, parent,
+        changeProxy.replaceWith(grandparent, parent,
                                 parent.getLastChild().detachFromParent());
       }
     }
@@ -378,7 +378,7 @@ final class NameAnalyzer implements CompilerPass {
       return node.getParent();
     }
 
-    Node getGramps() {
+    Node getGrandparent() {
       return node.getParent() == null ? null : node.getParent().getParent();
     }
   }
@@ -406,7 +406,7 @@ final class NameAnalyzer implements CompilerPass {
       Preconditions.checkState(node.isCall());
       Node parent = getParent();
       if (parent.isExprResult()) {
-        changeProxy.removeChild(getGramps(), parent);
+        changeProxy.removeChild(getGrandparent(), parent);
       } else {
         changeProxy.replaceWith(parent, node, IR.voidNode(IR.number(0)));
       }
@@ -433,7 +433,7 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void remove() {
-      changeProxy.replaceWith(getGramps(), getParent(), IR.falseNode());
+      changeProxy.replaceWith(getGrandparent(), getParent(), IR.falseNode());
     }
   }
 

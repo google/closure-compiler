@@ -219,17 +219,17 @@ class StripCode implements CompilerPass {
         case Token.ASSIGN_MOD:
           if (isReferenceToRemovedVar(t, n)) {
             if (parent.getFirstChild() == n) {
-              Node gramps = parent.getParent();
-              if (gramps.isExprResult()) {
+              Node grandparent = parent.getParent();
+              if (grandparent.isExprResult()) {
                 // Remove the assignment.
-                Node greatGramps = gramps.getParent();
-                replaceWithEmpty(gramps, greatGramps);
+                Node greatGrandparent = grandparent.getParent();
+                replaceWithEmpty(grandparent, greatGrandparent);
                 compiler.reportCodeChange();
               } else {
                 // Substitute the r-value for the assignment.
                 Node rvalue = n.getNext();
                 parent.removeChild(rvalue);
-                gramps.replaceChild(parent, rvalue);
+                grandparent.replaceChild(parent, rvalue);
                 compiler.reportCodeChange();
               }
             } else {
@@ -308,8 +308,8 @@ class StripCode implements CompilerPass {
         // safe to eliminate assignment in complex expressions,
         // e.g. in ((x = 7) + 8)
         if (parent.isExprResult()) {
-          Node gramps = parent.getParent();
-          replaceWithEmpty(parent, gramps);
+          Node grandparent = parent.getParent();
+          replaceWithEmpty(parent, grandparent);
           compiler.reportCodeChange();
         } else {
           t.report(n, STRIP_ASSIGNMENT_ERROR, lvalue.getQualifiedName());
@@ -337,8 +337,8 @@ class StripCode implements CompilerPass {
       if (nameIncludesFieldNameToStrip(expression) ||
           qualifiedNameBeginsWithStripType(expression)) {
         if (parent.isExprResult()) {
-          Node gramps = parent.getParent();
-          replaceWithEmpty(parent, gramps);
+          Node grandparent = parent.getParent();
+          replaceWithEmpty(parent, grandparent);
         } else {
           replaceWithEmpty(n, parent);
         }
@@ -496,8 +496,8 @@ class StripCode implements CompilerPass {
       }
 
       if (parent != null && parent.isName()) {
-        Node gramps = parent.getParent();
-        if (gramps != null && gramps.isVar()) {
+        Node grandparent = parent.getParent();
+        if (grandparent != null && grandparent.isVar()) {
           // The call's return value is being used to initialize a newly
           // declared variable. We should leave the call intact for now.
           // That way, when the traversal reaches the variable declaration,

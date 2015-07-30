@@ -3780,9 +3780,9 @@ public final class NodeUtil {
       case Token.OR:
         return (expr == parent.getFirstChild()) || isExpressionResultUsed(parent);
       case Token.COMMA:
-        Node gramps = parent.getParent();
-        if (gramps.isCall() &&
-            parent == gramps.getFirstChild()) {
+        Node grandparent = parent.getParent();
+        if (grandparent.isCall() &&
+            parent == grandparent.getFirstChild()) {
           // Semantically, a direct call to eval is different from an indirect
           // call to an eval. See ECMA-262 S15.1.2.1. So it's OK for the first
           // expression to a comma to be a no-op if it's used to indirect

@@ -980,9 +980,9 @@ class RemoveUnusedVars
 
         parent.replaceChild(assignNode, replacement);
       } else {
-        Node gramps = parent.getParent();
+        Node grandparent = parent.getParent();
         if (parent.isExprResult()) {
-          gramps.removeChild(parent);
+          grandparent.removeChild(parent);
         } else {
           parent.replaceChild(assignNode,
               assignNode.getLastChild().detachFromParent());

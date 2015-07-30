@@ -475,9 +475,9 @@ class InlineFunctions implements CompilerPass {
          && name == parent.getFirstChild()
          && name.getNext().isString()
          && name.getNext().getString().equals("call")) {
-      Node gramps = name.getAncestor(2);
-      if (gramps.isCall()
-          && gramps.getFirstChild() == parent) {
+      Node grandparent = name.getAncestor(2);
+      if (grandparent.isCall()
+          && grandparent.getFirstChild() == parent) {
         // Yep, a ".call".
         return true;
       }

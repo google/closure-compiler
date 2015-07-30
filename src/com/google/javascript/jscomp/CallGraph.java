@@ -371,9 +371,9 @@ public final class CallGraph implements CompilerPass {
       // but we have to check for using them in .call and .apply.
 
       if (useParent.isGetProp()) {
-        Node gramps = useParent.getParent();
-        if (NodeUtil.isFunctionObjectApply(gramps) ||
-            NodeUtil.isFunctionObjectCall(gramps)) {
+        Node grandparent = useParent.getParent();
+        if (NodeUtil.isFunctionObjectApply(grandparent) ||
+            NodeUtil.isFunctionObjectCall(grandparent)) {
           function.isExposedToCallOrApply = true;
         }
       }

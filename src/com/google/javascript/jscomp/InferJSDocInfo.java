@@ -109,7 +109,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
         // /** ... */ x = function () { ... }
         // 3) A NAME parent.
         // var x, /** ... */ y = function() { ... }
-        // 4) A VAR gramps.
+        // 4) A VAR grandparent.
         // /** ... */ var x = function() { ... }
         docInfo = n.getJSDocInfo();
         if (docInfo == null &&

@@ -401,8 +401,8 @@ class ExpressionDecomposer {
       // Only conditionals that are the direct child of an expression statement
       // don't need results, for those simply replace the expression statement.
       Preconditions.checkArgument(parent.isExprResult());
-      Node gramps = parent.getParent();
-      gramps.replaceChild(parent, ifNode);
+      Node grandparent = parent.getParent();
+      grandparent.replaceChild(parent, ifNode);
     }
 
     return ifNode;

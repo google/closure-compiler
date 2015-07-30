@@ -368,7 +368,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       ReferenceCollectingCallback collector, Reference ref, NamedInfo info) {
     Node name = ref.getNode();
     Node parent = name.getParent();
-    Node gramps = parent.getParent();
+    Node grandparent = parent.getParent();
     switch (parent.getType()) {
       case Token.VAR:
         if (canMoveValue(collector, ref.getScope(), name.getFirstChild())) {
@@ -411,7 +411,7 @@ class CrossModuleCodeMotion implements CompilerPass {
         return false;
 
       case Token.CALL:
-        if (NodeUtil.isExprCall(gramps)) {
+        if (NodeUtil.isExprCall(grandparent)) {
           SubclassRelationship relationship =
               compiler.getCodingConvention().getClassesDefinedByCall(parent);
           if (relationship != null &&

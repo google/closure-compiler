@@ -542,8 +542,8 @@ class CollapseProperties implements CompilerPass {
 
     Preconditions.checkState(ref.node.getParent().isExprResult());
     Node parent = ref.node.getParent();
-    Node gramps = parent.getParent();
-    gramps.replaceChild(parent, varNode);
+    Node grandparent = parent.getParent();
+    grandparent.replaceChild(parent, varNode);
     compiler.reportCodeChange();
   }
 
@@ -737,19 +737,19 @@ class CollapseProperties implements CompilerPass {
   private void updateSimpleDeclaration(String alias, Name refName, Ref ref) {
     Node rvalue = ref.node.getNext();
     Node parent = ref.node.getParent();
-    Node gramps = parent.getParent();
-    Node greatGramps = gramps.getParent();
+    Node grandparent = parent.getParent();
+    Node greatGrandparent = grandparent.getParent();
 
     if (rvalue != null && rvalue.isFunction()) {
       checkForHosedThisReferences(rvalue, refName.docInfo, refName);
     }
 
     // Create the new alias node.
-    Node nameNode = NodeUtil.newName(compiler, alias, gramps.getFirstChild(),
+    Node nameNode = NodeUtil.newName(compiler, alias, grandparent.getFirstChild(),
         refName.getFullName());
     NodeUtil.copyNameAnnotations(ref.node.getLastChild(), nameNode);
 
-    if (gramps.isExprResult()) {
+    if (grandparent.isExprResult()) {
       // BEFORE: a.b.c = ...;
       //   exprstmt
       //     assign
@@ -769,7 +769,7 @@ class CollapseProperties implements CompilerPass {
       nameNode.addChildToFront(rvalue);
 
       Node varNode = IR.var(nameNode);
-      greatGramps.replaceChild(gramps, varNode);
+      greatGrandparent.replaceChild(grandparent, varNode);
     } else {
       // This must be a complex assignment.
       Preconditions.checkNotNull(ref.getTwin());
@@ -781,8 +781,8 @@ class CollapseProperties implements CompilerPass {
       // var x$y;
       // ... (x$y = 3);
 
-      Node current = gramps;
-      Node currentParent = gramps.getParent();
+      Node current = grandparent;
+      Node currentParent = grandparent.getParent();
       for (; !currentParent.isScript() &&
              !currentParent.isBlock();
            current = currentParent,
@@ -866,13 +866,13 @@ class CollapseProperties implements CompilerPass {
     Node rvalue = ref.node.getNext();
     Node varNode = new Node(Token.VAR);
     Node varParent = ref.node.getAncestor(3);
-    Node gramps = ref.node.getAncestor(2);
+    Node grandparent = ref.node.getAncestor(2);
     boolean isObjLit = rvalue.isObjectLit();
     boolean insertedVarNode = false;
 
     if (isObjLit && n.canEliminate()) {
       // Eliminate the object literal altogether.
-      varParent.replaceChild(gramps, varNode);
+      varParent.replaceChild(grandparent, varNode);
       ref.node = null;
       insertedVarNode = true;
 
@@ -898,7 +898,7 @@ class CollapseProperties implements CompilerPass {
       }
       varNode.addChildToBack(nameNode);
       nameNode.addChildToFront(rvalue);
-      varParent.replaceChild(gramps, varNode);
+      varParent.replaceChild(grandparent, varNode);
 
       // Update the node ancestry stored in the reference.
       ref.node = nameNode;
@@ -963,23 +963,23 @@ class CollapseProperties implements CompilerPass {
     String name = ref.node.getString();
     Node rvalue = ref.node.getFirstChild();
     Node varNode = ref.node.getParent();
-    Node gramps = varNode.getParent();
+    Node grandparent = varNode.getParent();
 
     boolean isObjLit = rvalue.isObjectLit();
     int numChanges = 0;
 
     if (isObjLit) {
       numChanges += declareVarsForObjLitValues(
-          n, name, rvalue, varNode, gramps.getChildBefore(varNode),
-          gramps);
+          n, name, rvalue, varNode, grandparent.getChildBefore(varNode),
+          grandparent);
     }
 
-    numChanges += addStubsForUndeclaredProperties(n, name, gramps, varNode);
+    numChanges += addStubsForUndeclaredProperties(n, name, grandparent, varNode);
 
     if (isObjLit && n.canEliminate()) {
       varNode.removeChild(ref.node);
       if (!varNode.hasChildren()) {
-        gramps.removeChild(varNode);
+        grandparent.removeChild(varNode);
       }
       numChanges++;
 

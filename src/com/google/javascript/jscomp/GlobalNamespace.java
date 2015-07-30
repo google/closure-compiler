@@ -363,8 +363,8 @@ class GlobalNamespace
               case Token.GETPROP:
                 return;
               case Token.FUNCTION:
-                Node gramps = parent.getParent();
-                if (gramps == null || NodeUtil.isFunctionExpression(parent)) {
+                Node grandparent = parent.getParent();
+                if (grandparent == null || NodeUtil.isFunctionExpression(parent)) {
                   return;
                 }
                 isSet = true;
@@ -461,40 +461,40 @@ class GlobalNamespace
       Node parent = n.getParent();
       Preconditions.checkState(parent.isObjectLit());
 
-      Node gramps = parent.getParent();
-      if (gramps == null) {
+      Node grandparent = parent.getParent();
+      if (grandparent == null) {
         return null;
       }
 
-      Node greatGramps = gramps.getParent();
+      Node greatGrandparent = grandparent.getParent();
       String name;
-      switch (gramps.getType()) {
+      switch (grandparent.getType()) {
         case Token.NAME:
           // VAR
-          //   NAME (gramps)
+          //   NAME (grandparent)
           //     OBJLIT (parent)
           //       STRING (n)
-          if (greatGramps == null || !NodeUtil.isNameDeclaration(greatGramps)) {
+          if (greatGrandparent == null || !NodeUtil.isNameDeclaration(greatGrandparent)) {
             return null;
           }
-          name = gramps.getString();
+          name = grandparent.getString();
           break;
         case Token.ASSIGN:
-          // ASSIGN (gramps)
+          // ASSIGN (grandparent)
           //   NAME|GETPROP
           //   OBJLIT (parent)
           //     STRING (n)
-          Node lvalue = gramps.getFirstChild();
+          Node lvalue = grandparent.getFirstChild();
           name = lvalue.getQualifiedName();
           break;
         case Token.STRING_KEY:
           // OBJLIT
-          //   STRING (gramps)
+          //   STRING (grandparent)
           //     OBJLIT (parent)
           //       STRING (n)
-          if (greatGramps != null &&
-              greatGramps.isObjectLit()) {
-            name = getNameForObjLitKey(gramps);
+          if (greatGrandparent != null &&
+              greatGrandparent.isObjectLit()) {
+            name = getNameForObjLitKey(grandparent);
           } else {
             return null;
           }

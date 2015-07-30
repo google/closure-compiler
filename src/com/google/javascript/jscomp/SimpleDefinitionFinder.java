@@ -382,7 +382,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
    */
   static boolean isSimpleFunctionDeclaration(Node fn) {
     Node parent = fn.getParent();
-    Node gramps = parent.getParent();
+    Node grandparent = parent.getParent();
 
     // Simple definition finder doesn't provide useful results in some
     // cases, specifically:
@@ -412,7 +412,7 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
     // example: a = function(){};
     // example: var a = function(){};
     return fn.getFirstChild().getString().isEmpty()
-        && (NodeUtil.isExprAssign(gramps) || parent.isName());
+        && (NodeUtil.isExprAssign(grandparent) || parent.isName());
   }
 
   /**

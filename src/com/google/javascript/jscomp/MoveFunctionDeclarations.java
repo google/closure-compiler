@@ -69,8 +69,8 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    Node gramps = n.getAncestor(2);
-    return gramps == null || !gramps.isScript();
+    Node grandparent = n.getAncestor(2);
+    return grandparent == null || !grandparent.isScript();
   }
 
   @Override
