@@ -8,6 +8,7 @@ syntax = "proto2";
 
 package sourcemap;
 
+option java_generate_equals_and_hash = true;
 option java_package = "com.google.debugging.sourcemap.proto";
 
 message OriginalMapping {
