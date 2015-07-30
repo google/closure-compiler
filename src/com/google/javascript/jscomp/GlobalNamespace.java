@@ -316,16 +316,20 @@ class GlobalNamespace
         case Token.GETTER_DEF:
         case Token.SETTER_DEF:
         case Token.STRING_KEY:
+        case Token.MEMBER_FUNCTION_DEF:
           // This may be a key in an object literal declaration.
           name = null;
           if (parent != null && parent.isObjectLit()) {
             name = getNameForObjLitKey(n);
+          } else if (parent != null && parent.isClassMembers()) {
+            name = getNameForClassMembers(n);
           }
           if (name == null) {
             return;
           }
           isSet = true;
           switch (n.getType()) {
+            case Token.MEMBER_FUNCTION_DEF:
             case Token.STRING_KEY:
               type = getValueType(n.getFirstChild());
               break;
@@ -344,6 +348,8 @@ class GlobalNamespace
           if (parent != null) {
             switch (parent.getType()) {
               case Token.VAR:
+              case Token.LET:
+              case Token.CONST:
                 isSet = true;
                 Node rvalue = n.getFirstChild();
                 type = rvalue == null ? Name.Type.OTHER : getValueType(rvalue);
@@ -369,6 +375,10 @@ class GlobalNamespace
               case Token.DEC:
                 isSet = true;
                 type = Name.Type.OTHER;
+                break;
+              case Token.CLASS:
+                isSet = true;
+                type = Name.Type.CLASS;
                 break;
               default:
                 if (NodeUtil.isAssignmentOp(parent) &&
@@ -464,7 +474,7 @@ class GlobalNamespace
           //   NAME (gramps)
           //     OBJLIT (parent)
           //       STRING (n)
-          if (greatGramps == null || !greatGramps.isVar()) {
+          if (greatGramps == null || !NodeUtil.isNameDeclaration(greatGramps)) {
             return null;
           }
           name = gramps.getString();
@@ -502,13 +512,41 @@ class GlobalNamespace
     }
 
     /**
+     * Gets the fully qualified name corresponding to an class member function,
+     * as long as it and its prefix property names are valid JavaScript
+     * identifiers.
+     *
+     * For example, if called with node {@code n} representing "y" in any of
+     * the following expressions, the result would be "x.y":
+     * <code> class x{y(){}}; </code>
+     * <code> var x = class{y(){}}; </code>
+     * <code> var x; x = class{y(){}}; </code>
+     *
+     * @param n A child of an CLASS_MEMBERS node
+     * @return The global name, or null if {@code n} doesn't correspond to
+     *   a class member function that can be named
+     */
+    String getNameForClassMembers(Node n) {
+      Node parent = n.getParent();
+      Preconditions.checkState(parent.isClassMembers());
+      String className = NodeUtil.getClassName(parent.getParent());
+      return className == null ? null : className + '.' + n.getString();
+    }
+
+    /**
      * Gets the type of a value or simple expression.
      *
      * @param n An r-value in an assignment or variable declaration (not null)
      * @return A {@link Name.Type}
      */
     Name.Type getValueType(Node n) {
+      // Shorthand assignment of extended object literal
+      if (n == null) {
+        return Name.Type.OTHER;
+      }
       switch (n.getType()) {
+        case Token.CLASS:
+          return Name.Type.CLASS;
         case Token.OBJECTLIT:
           return Name.Type.OBJECTLIT;
         case Token.FUNCTION:
@@ -727,6 +765,8 @@ class GlobalNamespace
           case Token.INSTANCEOF:
           case Token.EXPR_RESULT:
           case Token.VAR:
+          case Token.LET:
+          case Token.CONST:
           case Token.IF:
           case Token.WHILE:
           case Token.FOR:
@@ -885,6 +925,7 @@ class GlobalNamespace
    */
   static class Name implements StaticTypedSlot<TypeI> {
     enum Type {
+      CLASS,
       OBJECTLIT,
       FUNCTION,
       GET,
@@ -1219,8 +1260,11 @@ class GlobalNamespace
         switch (refParent.getType()) {
           case Token.FUNCTION:
           case Token.ASSIGN:
+          case Token.CLASS:
             return refParent.getJSDocInfo();
           case Token.VAR:
+          case Token.LET:
+          case Token.CONST:
             return ref.node == refParent.getFirstChild() ?
                 refParent.getJSDocInfo() : ref.node.getJSDocInfo();
           case Token.OBJECTLIT:

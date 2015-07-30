@@ -229,7 +229,7 @@ class CheckGlobalNames implements CompilerPass {
   }
 
   /**
-   * Checks whether the given name is a property, and whether that property
+   * The input name is a property. Check whether this property
    * must be initialized with its full qualified name.
    */
   private boolean propertyMustBeInitializedByFullName(Name name) {
@@ -275,7 +275,8 @@ class CheckGlobalNames implements CompilerPass {
       return false;
     }
 
-    if (name.parent.type == Name.Type.OBJECTLIT) {
+    if (name.parent.type == Name.Type.OBJECTLIT
+        || name.parent.type == Name.Type.CLASS) {
       return true;
     }
 
