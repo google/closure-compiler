@@ -132,6 +132,7 @@ import com.google.javascript.jscomp.parsing.parser.trees.WithStatementTree;
 import com.google.javascript.jscomp.parsing.parser.trees.YieldExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -371,7 +372,7 @@ class IRFactory {
           if (parent.isFunction() || parent.isScript()) {
             // report missing label
             errorReporter.error(
-                String.format(UNDEFINED_LABEL, labelName.getString()),
+                SimpleFormat.format(UNDEFINED_LABEL, labelName.getString()),
                 sourceName,
                 n.getLineno(), n.getCharno());
             break;
@@ -471,7 +472,7 @@ class IRFactory {
         for (; sibling != null; sibling = sibling.getNext()) {
           if (sibling.isName() && c.getString().equals(sibling.getString())) {
             errorReporter.warning(
-                String.format(DUPLICATE_PARAMETER, c.getString()),
+                SimpleFormat.format(DUPLICATE_PARAMETER, c.getString()),
                 sourceName,
                 n.getLineno(), n.getCharno());
           }

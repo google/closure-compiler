@@ -21,6 +21,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,7 +107,7 @@ public final class IdMappingUtil {
           resultMap.put(currentSection, currentSectionMap);
         } else {
           throw new IllegalArgumentException(
-              String.format("Cannot parse id map: %s\n Line: $s, lineIndex: %s",
+              SimpleFormat.format("Cannot parse id map: %s\n Line: $s, lineIndex: %s",
                   idMappings, line, lineIndex));
         }
       } else {
@@ -117,7 +118,7 @@ public final class IdMappingUtil {
           currentSectionMap.put(name, location);
         } else {
           throw new IllegalArgumentException(
-              String.format("Cannot parse id map: %s\n Line: $s, lineIndex: %s",
+              SimpleFormat.format("Cannot parse id map: %s\n Line: $s, lineIndex: %s",
                   idMappings, line, lineIndex));
         }
       }

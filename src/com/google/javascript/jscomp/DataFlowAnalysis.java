@@ -23,6 +23,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 
 import java.util.ArrayList;
@@ -365,7 +366,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     @Override
     public String toString() {
-      return String.format("IN: %s OUT: %s", in, out);
+      return SimpleFormat.format("IN: %s OUT: %s", in, out);
     }
 
     @Override
@@ -511,7 +512,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     @Override
     public String toString() {
-      return String.format("IN: %s OUT: %s", in, out);
+      return SimpleFormat.format("IN: %s OUT: %s", in, out);
     }
 
     @Override

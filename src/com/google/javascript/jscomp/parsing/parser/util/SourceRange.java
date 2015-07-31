@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser.util;
 
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+
 /**
  * A range of positions in a source string.
  * Start is inclusive.
@@ -33,6 +35,6 @@ public class SourceRange {
 
   @Override
   public String toString() {
-    return String.format("<%s - %s>", start, end);
+    return SimpleFormat.format("<%s - %s>", start, end);
   }
 }

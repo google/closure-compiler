@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -1035,7 +1036,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
    * @return The PolymerElement type string for a class definition.
    */
   private static String getPolymerElementType(final ClassDefinition cls) {
-    return String.format("Polymer%sElement", cls.nativeBaseElement == null ? ""
+    return SimpleFormat.format("Polymer%sElement", cls.nativeBaseElement == null ? ""
         : CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, cls.nativeBaseElement));
   }
 

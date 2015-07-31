@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -597,7 +598,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            String.format("%s.call", baseClassNode.getQualifiedName()),
+            SimpleFormat.format("%s.call", baseClassNode.getQualifiedName()),
             callee, "goog.base"));
       compiler.reportCodeChange();
     } else {
@@ -624,7 +625,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            String.format("%s.superClass_.%s.call",
+            SimpleFormat.format("%s.superClass_.%s.call",
                 className.getQualifiedName(), methodName),
             callee, "goog.base"));
       n.removeChild(methodNameNode);
@@ -746,7 +747,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            String.format("%s.call", baseClassNode.getQualifiedName()),
+            SimpleFormat.format("%s.call", baseClassNode.getQualifiedName()),
             callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);
       compiler.reportCodeChange();
@@ -799,7 +800,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           callee,
           NodeUtil.newQName(
             compiler,
-            String.format("%s.superClass_.%s.call",
+            SimpleFormat.format("%s.superClass_.%s.call",
                 className.getQualifiedName(), methodName),
             callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);

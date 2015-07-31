@@ -32,6 +32,7 @@ import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,7 +99,7 @@ public final class JSModuleGraph {
       for (JSModule dep : module.getDependencies()) {
         int depDepth = dep.getDepth();
         if (depDepth < 0) {
-          throw new ModuleDependenceException(String.format(
+          throw new ModuleDependenceException(SimpleFormat.format(
               "Modules not in dependency order: %s preceded %s",
               module.getName(), dep.getName()),
               module, dep);

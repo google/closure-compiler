@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -169,7 +170,7 @@ class ExportTestFunctions implements CompilerPass {
         NodeUtil.getPrototypePropertyName(node.getFirstChild());
     String objectName = fullyQualifiedFunctionName.substring(0,
         fullyQualifiedFunctionName.lastIndexOf('.'));
-    String exportCallStr = String.format("%s(%s, '%s', %s);",
+    String exportCallStr = SimpleFormat.format("%s(%s, '%s', %s);",
         exportPropertyFunction, objectName, testFunctionName,
         fullyQualifiedFunctionName);
 

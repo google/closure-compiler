@@ -20,6 +20,7 @@ import com.google.common.base.CaseFormat;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.JsMessage.Builder;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -77,7 +78,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
   static final DiagnosticType BAD_FALLBACK_SYNTAX =
       DiagnosticType.error("JSC_MSG_BAD_FALLBACK_SYNTAX",
-          String.format(
+          SimpleFormat.format(
               "Bad syntax. " +
               "Expected syntax: %s(MSG_1, MSG_2)",
               MSG_FALLBACK_FUNCTION_NAME));

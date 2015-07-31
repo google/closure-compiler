@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
@@ -1208,7 +1209,7 @@ final class UnionType extends JSType {
     this.mask = mask;
 
     if (!isValidType()) {
-      throw new IllegalStateException(String.format(
+      throw new IllegalStateException(SimpleFormat.format(
           "Cannot create type with bits <<<%x>>>, "
           + "objs <<<%s>>>, typeVar <<<%s>>>, enums <<<%s>>>",
           mask, objs, typeVar, enums));
