@@ -35,7 +35,7 @@ angular.$q;
 /**
  * @constructor
  * @template T
- * @extends {IThenable.<T>}
+ * @implements {IThenable<T>}
  */
 angular.$q.Promise;
 

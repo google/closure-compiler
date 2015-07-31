@@ -400,7 +400,7 @@ Node.prototype.lookupNamespaceURI = function(prefix) {};
 Node.prototype.lookupPrefix = function(namespaceURI) {};
 
 /**
- * @return undefined
+ * @return {undefined}
  * @see http://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-normalize
  */
 Node.prototype.normalize = function() {};
