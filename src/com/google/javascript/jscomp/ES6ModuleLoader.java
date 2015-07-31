@@ -161,7 +161,7 @@ public final class ES6ModuleLoader {
         stripJsExtension(filename.toString())
             .replaceAll("^\\." + Pattern.quote(MODULE_SLASH), "")
             .replace(MODULE_SLASH, "$")
-            .replace("\\", "$")
+            .replace('\\', '$')
             .replace('-', '_')
             .replace(':', '_')
             .replace('.', '_');
