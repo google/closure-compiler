@@ -30,14 +30,14 @@
 /**
  * @constructor
  */
-angular.$q;
+angular.$q = function() {};
 
 /**
  * @constructor
  * @template T
  * @implements {IThenable<T>}
  */
-angular.$q.Promise;
+angular.$q.Promise = function() {};
 
 /**
  * Apply Type Transformation Language to allow more accurate templated type
@@ -81,7 +81,7 @@ angular.$q.Promise.prototype.finally = function(callback) {};
  * @constructor
  * @template T
  */
-angular.$q.Deferred;
+angular.$q.Deferred = function() {};
 
 /** @param {T=} opt_value */
 angular.$q.Deferred.prototype.resolve = function(opt_value) {};

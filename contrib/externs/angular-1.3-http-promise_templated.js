@@ -33,7 +33,7 @@ angular.HttpCallback;
  * @constructor
  * @template T
  */
-angular.$http.Response;
+angular.$http.Response = function() {};
 
 /** @type {T} */
 angular.$http.Response.prototype.data;
@@ -55,7 +55,7 @@ angular.$http.Response.prototype.config;
  * @extends {angular.$q.Promise.<!angular.$http.Response.<T>>}
  * @template T
  */
-angular.$http.HttpPromise;
+angular.$http.HttpPromise = function() {};
 
 /**
  * @param {?(function(T):

@@ -1049,7 +1049,7 @@ angular.$anchorScrollProvider.disableAutoScrolling = function() {};
 /**
  * @constructor
  */
-angular.$animate;
+angular.$animate = function() {};
 
 /**
  * @param {JQLiteSelector} element
@@ -1136,7 +1136,7 @@ angular.$animate.prototype.cancel = function(animationPromise) {};
 /**
  * @constructor
  */
-angular.$animateProvider;
+angular.$animateProvider = function() {};
 
 /**
  * @param {string} name
@@ -1169,7 +1169,7 @@ angular.$compile;
 /**
  * @constructor
  */
-angular.$compileProvider;
+angular.$compileProvider = function() {};
 
 /**
  * @param {boolean=} opt_enabled

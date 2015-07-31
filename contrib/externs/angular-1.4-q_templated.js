@@ -79,7 +79,7 @@ angular.$q.Promise.prototype.finally = function(callback) {};
  * @constructor
  * @template T
  */
-angular.$q.Deferred;
+angular.$q.Deferred = function() {};
 
 /** @param {T=} opt_value */
 angular.$q.Deferred.prototype.resolve = function(opt_value) {};
