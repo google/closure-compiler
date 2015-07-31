@@ -784,6 +784,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Raise to ES6, if allowed
     if (options.getLanguageOut().isEs6OrHigher()) {
       passes.add(optimizeToEs6);
+      passes.add(objectLitAssignmentShortening);
     }
 
     return passes;
@@ -2700,6 +2701,14 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new SubstituteEs6Syntax(compiler);
+    }
+  };
+
+  private final PassFactory objectLitAssignmentShortening =
+      new PassFactory("objectLitAssignmentShortening", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new ObjectLitAssignmentShortening(compiler);
     }
   };
 }
