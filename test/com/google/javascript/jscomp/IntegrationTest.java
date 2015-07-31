@@ -160,6 +160,27 @@ public final class IntegrationTest extends IntegrationTestCase {
          TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testForwardDeclaredTypeInTemplate() {
+    CompilerOptions options = createCompilerOptions();
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    options.setClosurePass(true);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+
+    test(
+        options,
+        Joiner.on('\n').join(
+            "var goog = {};",
+            "goog.forwardDeclare = function(typeName) {};",
+            "goog.forwardDeclare('fwd.declared.Type');",
+            "",
+            "/** @type {!fwd.declared.Type<string>} */",
+            "var x;",
+            "",
+            "/** @type {!fwd.declared.Type<string, number>} */",
+            "var y;"),
+        "var goog={};goog.forwardDeclare=function(typeName){};var x;var y");
+  }
+
   public void testIssue90() {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);

@@ -46,6 +46,9 @@ class RhinoErrorReporter {
   static final DiagnosticType JSDOC_MISSING_TYPE_WARNING =
       DiagnosticType.disabled("JSC_JSDOC_MISSING_TYPE_WARNING", "{0}");
 
+  static final DiagnosticType TOO_MANY_TEMPLATE_PARAMS =
+      DiagnosticType.disabled("JSC_TOO_MANY_TEMPLATE_PARAMS", "{0}");
+
   // Special-cased errors, so that they can be configured via the
   // warnings API.
   static final DiagnosticType TRAILING_COMMA =
@@ -141,6 +144,8 @@ class RhinoErrorReporter {
                 Pattern.compile(
                     "^Keywords and reserved words" + " are not allowed as unquoted property.*"),
                 INVALID_ES3_PROP_NAME)
+
+            .put(Pattern.compile("^Too many template parameters"), TOO_MANY_TEMPLATE_PARAMS)
 
             // Type annotation warnings.
             .put(

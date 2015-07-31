@@ -1698,6 +1698,9 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
               // TODO(dimvar): Address this issue by removing bad template
               // annotations on non-templatized classes.
               if (++templateNodeIndex > nAllowedTypes) {
+                reporter.warning(
+                    "Too many template parameters",
+                    sourceName, templateNode.getLineno(), templateNode.getCharno());
                 break;
               }
               templateTypes.add(createFromTypeNodesInternal(
