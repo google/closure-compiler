@@ -2144,30 +2144,6 @@ TimeRanges.prototype.end = function(index) { return 0; };
 function WebSocket(url, opt_protocol) {}
 
 /**
- * The connection has not yet been established.
- * @type {number}
- */
-WebSocket.CONNECTING = 0;
-
-/**
- * The WebSocket connection is established and communication is possible.
- * @type {number}
- */
-WebSocket.OPEN = 1;
-
-/**
- * The connection is going through the closing handshake, or the close() method has been invoked.
- * @type {number}
- */
-WebSocket.CLOSING = 2;
-
-/**
- * The connection has been closed or could not be opened.
- * @type {number}
- */
-WebSocket.CLOSED = 3;
-
-/**
  * @param {boolean=} opt_useCapture
  * @override
  */
@@ -2188,7 +2164,25 @@ WebSocket.prototype.dispatchEvent = function(evt) {};
  * Returns the URL value that was passed to the constructor.
  * @type {string}
  */
-WebSocket.prototype.url;
+WebSocket.prototype.URL;
+
+/**
+ * The connection has not yet been established.
+ * @type {number}
+ */
+WebSocket.prototype.CONNECTING = 0;
+
+/**
+ * The Web Socket connection is established and communication is possible.
+ * @type {number}
+ */
+WebSocket.prototype.OPEN = 1;
+
+/**
+ * The connection has been closed or could not be opened.
+ * @type {number}
+ */
+WebSocket.prototype.CLOSED = 2;
 
 /**
  * Represents the state of the connection.
@@ -2230,10 +2224,8 @@ WebSocket.prototype.send = function(data) {};
 
 /**
  * Closes the Web Socket connection or connection attempt, if any.
- * @param {number=} code
- * @param {string=} reason
  */
-WebSocket.prototype.close = function(code, reason) {};
+WebSocket.prototype.close = function() {};
 
 /**
  * @type {string} Sets the type of data (blob or arraybuffer) for binary data.
