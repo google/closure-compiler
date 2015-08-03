@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.javascript.rhino.Node;
-
 /**
  *
  * @author blickly@google.com (Ben Lickly)
@@ -26,18 +24,6 @@ import com.google.javascript.rhino.Node;
 public final class NamespaceLit extends Namespace {
   public NamespaceLit(String name) {
     this.name = name;
-  }
-
-  @Override
-  public boolean finalizeNamespace(Node constDeclNode) {
-    if (!this.isNamespaceFinalized) {
-      this.constDeclNode = constDeclNode;
-      this.isNamespaceFinalized = true;
-      if (!finalizeSubnamespaces(constDeclNode)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   @Override

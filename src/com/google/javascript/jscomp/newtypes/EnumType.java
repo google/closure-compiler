@@ -21,8 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSTypeExpression;
 
-import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 
 /**
@@ -79,19 +77,6 @@ public final class EnumType extends Namespace implements TypeWithProperties {
   public JSType getPropType() {
     Preconditions.checkState(this.state == State.RESOLVED);
     return enumPropType;
-  }
-
-  @Override
-  public boolean finalizeNamespace(Node constDeclNode) {
-    if (!this.isNamespaceFinalized) {
-      Preconditions.checkState(this.state == State.RESOLVED);
-      this.constDeclNode = constDeclNode;
-      this.isNamespaceFinalized = true;
-      if (!finalizeSubnamespaces(constDeclNode)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   // Returns null iff there is a type cycle

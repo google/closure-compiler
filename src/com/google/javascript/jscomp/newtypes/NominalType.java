@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.google.javascript.rhino.Node;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -54,7 +53,7 @@ public final class NominalType {
 
   // This should only be called during GlobalTypeInfo.
   public RawNominalType getRawNominalType() {
-    Preconditions.checkState(!this.rawType.isRawTypeFinalized());
+    Preconditions.checkState(!this.rawType.isFinalized());
     return this.rawType;
   }
 
@@ -66,10 +65,6 @@ public final class NominalType {
 
   ObjectKind getObjectKind() {
     return this.rawType.getObjectKind();
-  }
-
-  Node getConstDeclNode() {
-    return this.rawType.getConstDeclNode();
   }
 
   Map<String, JSType> getTypeMap() {
@@ -102,10 +97,6 @@ public final class NominalType {
 
   public boolean isUninstantiatedGenericType() {
     return rawType.isGeneric() && typeMap.isEmpty();
-  }
-
-  boolean finalizeNamespace(Node constDeclNode) {
-    return this.rawType.finalizeNamespace(constDeclNode);
   }
 
   NominalType instantiateGenerics(List<JSType> types) {
@@ -171,8 +162,8 @@ public final class NominalType {
     return rawType.isInterface();
   }
 
-  public boolean isRawTypeFinalized() {
-    return this.rawType.isRawTypeFinalized();
+  public boolean isFinalized() {
+    return this.rawType.isFinalized();
   }
 
   boolean hasAncestorClass(RawNominalType ancestor) {
@@ -192,7 +183,7 @@ public final class NominalType {
   }
 
   public NominalType getInstantiatedSuperclass() {
-    Preconditions.checkState(rawType.isRawTypeFinalized());
+    Preconditions.checkState(rawType.isFinalized());
     if (this.rawType.getSuperClass() == null) {
       return null;
     }
@@ -200,13 +191,13 @@ public final class NominalType {
   }
 
   public JSType getPrototype() {
-    Preconditions.checkState(rawType.isRawTypeFinalized());
+    Preconditions.checkState(rawType.isFinalized());
     return rawType.getCtorPropDeclaredType("prototype")
         .substituteGenerics(typeMap);
   }
 
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
-    Preconditions.checkState(rawType.isRawTypeFinalized());
+    Preconditions.checkState(rawType.isFinalized());
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
       result.add(interf.instantiateGenerics(typeMap));

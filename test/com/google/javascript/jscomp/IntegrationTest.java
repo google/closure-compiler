@@ -3171,22 +3171,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     } catch (CompilerOptionsPreprocessor.InvalidOptionsException expected) {}
   }
 
-  public void testManyAdds() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
-    level.setOptionsForCompilationLevel(options);
-    WarningLevel warnings = WarningLevel.VERBOSE;
-    warnings.setOptionsForWarningLevel(options);
-
-    int numAdds = 4000;
-    StringBuilder original = new StringBuilder("var x = 0");
-    for (int i = 0; i < numAdds; i++) {
-      original.append(" + 1");
-    }
-    original.append(";");
-    test(options, original.toString(), "var x = " + numAdds + ";");
-  }
-
   // isEquivalentTo returns false for alpha-equivalent nodes
   public void testIsEquivalentTo() {
     String[] input1 = {"function f(z) { return z; }"};

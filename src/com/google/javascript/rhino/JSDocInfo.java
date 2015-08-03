@@ -644,6 +644,10 @@ public class JSDocInfo implements Serializable {
     return getFlag(MASK_CONSTANT) || isDefine();
   }
 
+  public boolean hasConstAnnotation() {
+    return getFlag(MASK_CONSTANT);
+  }
+
   /**
    * Returns whether the {@code @constructor} annotation is present on this
    * {@link JSDocInfo}.
@@ -739,6 +743,10 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isInterface() {
     return getFlag(MASK_INTERFACE) || getFlag(MASK_RECORD);
+  }
+
+  public boolean isConstructorOrInterface() {
+    return isConstructor() || isInterface();
   }
 
   /**
