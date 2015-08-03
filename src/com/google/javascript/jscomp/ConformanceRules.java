@@ -32,16 +32,20 @@ import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
+
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -447,9 +451,8 @@ public final class ConformanceRules {
       Iterator<Node> parameters = functionType.getParameters().iterator();
       Node parameter = null;
       Node argument = null;
-      while (arguments.hasNext() &&
-             (parameters.hasNext() ||
-              parameter != null && parameter.isVarArgs())) {
+      while (arguments.hasNext()
+          && (parameters.hasNext() || parameter != null && parameter.isVarArgs())) {
         // If there are no parameters left in the list, then the while loop
         // above implies that this must be a var_args function.
         if (parameters.hasNext()) {
@@ -835,8 +838,7 @@ public final class ConformanceRules {
         if (paramClasses.length == 2) {
           TypeToken<?> param1 = TypeToken.of(paramClasses[0]);
           TypeToken<?> param2 = TypeToken.of(paramClasses[1]);
-          if (param1.isAssignableFrom(COMPILER_TYPE)
-              && param2.isAssignableFrom(REQUIREMENT_TYPE)) {
+          if (param1.isAssignableFrom(COMPILER_TYPE) && param2.isAssignableFrom(REQUIREMENT_TYPE)) {
             return ctor;
           }
         }
@@ -863,7 +865,7 @@ public final class ConformanceRules {
         throw new InvalidRequirementSpec("JavaClass not found.");
       }
       if (RULE_TYPE.isAssignableFrom(TypeToken.of(customClass))) {
-        @SuppressWarnings("unchecked")  // Assignable to Rule;
+        @SuppressWarnings("unchecked") // Assignable to Rule;
         Class<Rule> ruleClass = (Class<Rule>) customClass;
         return ruleClass;
       }
@@ -1015,7 +1017,7 @@ public final class ConformanceRules {
           && isKnownThis(n.getFirstChild()) // not a cascading unknown
           && isUnknown(n)
           && !isTemplateType(n)
-          && isUsed(n)  // skip most assignements, etc
+          && isUsed(n) // skip most assignments, etc
           && !isWhiteListed(n)) {
         return ConformanceResult.VIOLATION;
       }
@@ -1044,9 +1046,7 @@ public final class ConformanceRules {
 
     private boolean isWhiteListed(Node n) {
       Node parent = n.getParent();
-      return n.getParent().isCast()
-          || isAssertionCall(n.getParent())
-          || (n.getParent().isAssign() && n.getFirstChild() == n);
+      return parent.isCast() || isAssertionCall(parent);
     }
 
     private boolean isAssertionCall(Node n) {
@@ -1062,6 +1062,173 @@ public final class ConformanceRules {
       return false;
     }
   }
+
+  /**
+   * Banned unknown type references of the form "instance.prop" unless
+   * (a) it is immediately cast, or
+   * (b) it is a @template type (until template type restrictions are enabled), or
+   * (c) the value is unused, or
+   * (d) the source object type is unknown (to avoid error cascades), or
+   * (e) it is a whitelisted type
+   */
+  public static final class BanUnknownTypedClassPropsReferences extends AbstractRule {
+    final JSType nativeObjectType;
+    private final ImmutableList<AssertionFunctionSpec> assertions;
+    private final JSType whitelistedTypes;
+
+    public BanUnknownTypedClassPropsReferences(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      assertions = ImmutableList.copyOf(compiler.getCodingConvention().getAssertionFunctions());
+      nativeObjectType = compiler.getTypeRegistry().getNativeType(JSTypeNative.OBJECT_TYPE);
+      List<String> whitelistedTypeNames = requirement.getValueList();
+      whitelistedTypes = union(whitelistedTypeNames);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isGetProp()
+          && isUnknown(n)
+          && isUsed(n) // skip most assignments, etc
+          && !isWhiteListed(n)
+          && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
+          && !isTemplateType(n)
+          && !isDeclaredUnknown(n)) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean isCheckablePropertySource(Node n) {
+      return isKnown(n)
+          && !isAllType(n)
+          && isClassType(n)
+          && !isNativeObjecType(n)
+          && !isWhitelistedType(n);
+    }
+
+    private JSType union(List<String> typeNames) {
+      JSTypeRegistry registry = compiler.getTypeRegistry();
+      List<JSType> types = new ArrayList<>();
+
+      for (String typeName : typeNames) {
+        JSType type = registry.getType(typeName);
+        if (type != null) {
+          types.add(type);
+        }
+      }
+      if (types.isEmpty()) {
+        return null;
+      } else {
+        JSType[] variants = types.toArray(new JSType[0]);
+        return registry.createUnionType(variants);
+      }
+    }
+
+    private boolean isClassType(Node n) {
+      ObjectType type = n.getJSType().restrictByNotNullOrUndefined().toMaybeObjectType();
+      if (type != null && type.isInstanceType()) {
+        FunctionType ctor = type.getConstructor();
+        if (ctor != null) {
+          JSDocInfo info = ctor.getJSDocInfo();
+          if (info != null && info.isConstructor()) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    private boolean isDeclaredUnknown(Node n) {
+      Node target = n.getFirstChild();
+      ObjectType targetType = target.getJSType().toObjectType();
+      if (targetType != null) {
+        Property prop = targetType.getSlot(n.getLastChild().getString());
+        if (prop != null) {
+          JSDocInfo info = prop.getJSDocInfo();
+          if (info != null && info.hasType()) {
+            JSTypeExpression expr = info.getType();
+            Node typeExprNode = expr.getRoot();
+            if (typeExprNode.getType() == Token.QMARK) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    private boolean isKnown(Node n) {
+      return !isUnknown(n)
+          && !isNoResolvedType(n)
+          && !isTemplateType(n); // TODO(johnlenz): Remove this restriction
+    }
+
+    private boolean isRecordType(Node n) {
+      JSType type = n.getJSType();
+      return (type != null && type.isRecordType());
+    }
+
+    private boolean isNativeObjecType(Node n) {
+      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      return type != null && type.isEquivalentTo(nativeObjectType);
+    }
+
+    private boolean isAllType(Node n) {
+      JSType type = n.getJSType();
+      return type != null && type.isAllType();
+    }
+
+    private boolean isUnknown(Node n) {
+      JSType type = n.getJSType();
+      return (type == null || type.isUnknownType());
+    }
+
+    private boolean isTemplateType(Node n) {
+      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      return (type != null && type.isTemplateType());
+    }
+
+    private boolean isNoResolvedType(Node n) {
+      JSType type = n.getJSType().restrictByNotNullOrUndefined();
+      return (type != null && type.isNoResolvedType());
+    }
+
+    private boolean isUsed(Node n) {
+      return (NodeUtil.isAssignmentOp(n.getParent()))
+          ? NodeUtil.isExpressionResultUsed(n.getParent())
+          : NodeUtil.isExpressionResultUsed(n);
+    }
+
+    // TODO(johnlenz): allow simple existence checks?
+    private boolean isWhiteListed(Node n) {
+      Node parent = n.getParent();
+      return parent.isCast() || isAssertionCall(parent);
+    }
+
+    private boolean isWhitelistedType(Node n) {
+      if (whitelistedTypes != null && n.getJSType() != null) {
+        JSType targetType = n.getJSType().restrictByNotNullOrUndefined();
+        if (targetType.isSubtype(whitelistedTypes)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    private boolean isAssertionCall(Node n) {
+      if (n.isCall() && n.getFirstChild().isQualifiedName()) {
+        Node target = n.getFirstChild();
+        for (int i = 0; i < assertions.size(); i++) {
+          if (target.matchesQualifiedName(assertions.get(i).getFunctionName())) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+  }
+
 
   /**
    * Banned accessing properties from objects that are unresolved
@@ -1268,8 +1435,7 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       } else if (scriptNode != null
           && scriptNode.getJSDocInfo() != null
-          && scriptNode.getJSDocInfo().getVisibility() !=
-          Visibility.INHERITED) {
+          && scriptNode.getJSDocInfo().getVisibility() != Visibility.INHERITED) {
         return ConformanceResult.CONFORMANCE;
       } else {
         return ConformanceResult.VIOLATION;
