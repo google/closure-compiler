@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -79,8 +80,9 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
             oldName, oldName + "$" + compiler.getUniqueNameIdSupplier().get());
       }
     }
-    new NodeTraversal(compiler,
-        new RenameReferences(fBlockScope, currFuncRenameMap))
+    Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
+    renameMap.put(fBlockScope.rootNode, currFuncRenameMap);
+    new NodeTraversal(compiler, new Es6RenameReferences(renameMap))
         .traverseInnerNode(block, block.getParent(), fScope);
   }
 
@@ -108,40 +110,6 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
         return;
       }
       currFuncReferences.add(n.getString());
-    }
-  }
-
-  /**
-   * Renames declarations / references when necessary.
-   *
-   * TODO(moz): See if we can just use the one in Es6RewriteLetConst.
-   */
-  private class RenameReferences extends AbstractPostOrderCallback {
-
-    private final Scope fBlockScope;
-    private final Map<String, String> currParamListMap;
-
-    private RenameReferences(Scope scope, Map<String, String> map) {
-      fBlockScope = scope;
-      currParamListMap = map;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!NodeUtil.isReferenceName(n)) {
-        return;
-      }
-
-      Scope scope = t.getScope();
-      String oldName = n.getString();
-      if (scope.getRootNode() != fBlockScope.getRootNode()
-          && scope.isDeclared(oldName, false)) {
-        return;
-      }
-      if (currParamListMap.containsKey(oldName)) {
-        n.setString(currParamListMap.get(oldName));
-        compiler.reportCodeChange();
-      }
     }
   }
 }

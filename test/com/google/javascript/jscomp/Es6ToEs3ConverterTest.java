@@ -84,7 +84,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     optimizer.addOneTimePass(
         makePassFactory("convertEs6", new Es6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(
-        makePassFactory("Es6RewriteLetConst", new Es6RewriteLetConst(compiler)));
+        makePassFactory("Es6RewriteBlockScopedDeclaration",
+            new Es6RewriteBlockScopedDeclaration(compiler)));
     return optimizer;
   }
 

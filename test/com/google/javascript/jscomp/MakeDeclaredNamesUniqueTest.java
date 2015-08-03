@@ -210,8 +210,6 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     testSame(externs, "var extern1 = extern1 || {};", null);
   }
 
-
-
   public void testMakeLocalNamesUniqueWithContext4() {
     // Set the test type
     this.useDefaultRenamer = true;

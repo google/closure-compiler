@@ -19,11 +19,11 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
- * Test case for {@link Es6RewriteLetConst}.
+ * Test case for {@link Es6RewriteBlockScopedDeclaration}.
  *
  * @author moz@google.com (Michael Zhou)
  */
-public final class Es6RewriteLetConstTest extends CompilerTestCase {
+public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase {
   @Override
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
@@ -41,7 +41,7 @@ public final class Es6RewriteLetConstTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return new Es6RewriteLetConst(compiler);
+    return new Es6RewriteBlockScopedDeclaration(compiler);
   }
 
   @Override
@@ -891,6 +891,28 @@ public final class Es6RewriteLetConstTest extends CompilerTestCase {
         "    var /** Foo$0 | Bar$1 */ f$2 = new Foo$0;",
         "    return f$2;",
         "  }",
+        "}"));
+  }
+
+  public void testCatch() {
+    test("function f(e) { try {} catch (e) { throw e; } }",
+         "function f(e) { try {} catch (e$0) { throw e$0; } }");
+
+    test(LINE_JOINER.join(
+        "function f(e) {",
+        "  try {",
+        "    function f(e) {",
+        "      try {} catch (e) { e++; }",
+        "    }",
+        "  } catch (e) { e--; }",
+        "}"),
+        LINE_JOINER.join(
+        "function f(e) {",
+        "  try {",
+        "    var f$1 = function(e) {",
+        "      try {} catch (e$0) { e$0++; }",
+        "    }",
+        "  } catch (e$2) { e$2--; }",
         "}"));
   }
 }

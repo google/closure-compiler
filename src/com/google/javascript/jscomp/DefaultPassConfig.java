@@ -314,7 +314,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       checks.add(es6ConvertSuper);
       checks.add(convertEs6ToEs3);
-      checks.add(rewriteLetConst);
+      checks.add(rewriteBlockScopedDeclaration);
       checks.add(rewriteGenerators);
       checks.add(markTranspilationDone);
     }
@@ -1188,11 +1188,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private final HotSwapPassFactory rewriteLetConst =
-      new HotSwapPassFactory("Es6RewriteLetConst", true) {
+  private final HotSwapPassFactory rewriteBlockScopedDeclaration =
+      new HotSwapPassFactory("Es6RewriteBlockScopedDeclaration", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6RewriteLetConst(compiler);
+      return new Es6RewriteBlockScopedDeclaration(compiler);
     }
   };
 

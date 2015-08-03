@@ -40,6 +40,7 @@ import java.util.Set;
  *  unique.  Specifically, it will not modify object properties.
  *  @author johnlenz@google.com (John Lenz)
  *  TODO(johnlenz): Try to merge this with the ScopeCreator.
+ *  TODO(moz): Handle more ES6 features, such as default parameters.
  */
 class MakeDeclaredNamesUnique
     implements NodeTraversal.ScopedCallback {
@@ -222,7 +223,7 @@ class MakeDeclaredNamesUnique
         || n == parent.getFirstChild()) {
       if (NodeUtil.isVarDeclaration(n)) {
         renamer.addDeclaredName(n.getString(), true);
-      } else if (NodeUtil.isBlockScopedDeclaration(n)) {
+      } else if (NodeUtil.isBlockScopedDeclaration(n) && !parent.isCatch()) {
         renamer.addDeclaredName(n.getString(), false);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
         Node nameNode = n.getFirstChild();

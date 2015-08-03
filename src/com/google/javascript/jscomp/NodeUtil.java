@@ -1862,11 +1862,12 @@ public final class NodeUtil {
       switch (n.getParent().getType()) {
         case Token.LET:
         case Token.CONST:
+        case Token.CATCH:
           return true;
         case Token.CLASS:
           return n.getParent().getFirstChild() == n;
         case Token.FUNCTION:
-          return isBlockScopedFunctionDeclaration(n);
+          return isBlockScopedFunctionDeclaration(n.getParent());
       }
     }
     return false;

@@ -36,40 +36,43 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rewrites "let"s and "const"s as "var"s, renaming declarations when necessary.
+ * Rewrite "let"s and "const"s as "var"s.
+ * Rename block-scoped declarations and their references when necessary.
+ *
+ * TODO(moz): Try to use MakeDeclaredNamesUnique
  *
  * @author moz@google.com (Michael Zhou)
  */
-public final class Es6RewriteLetConst extends AbstractPostOrderCallback
+public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
   private final Map<Node, Map<String, String>> renameMap = new LinkedHashMap<>();
-  private final Set<Node> blockScopedDeclarations = new HashSet<>();
+  private final Set<Node> letConsts = new HashSet<>();
   private final Set<String> undeclaredNames = new HashSet<>();
 
-  public Es6RewriteLetConst(AbstractCompiler compiler) {
+  public Es6RewriteBlockScopedDeclaration(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!n.isLet() && !n.isConst() && !NodeUtil.isBlockScopedFunctionDeclaration(n)
-        && !NodeUtil.isClassDeclaration(n)) {
+    if (!n.hasChildren() || !NodeUtil.isBlockScopedDeclaration(n.getFirstChild())) {
       return;
     }
 
     Scope scope = t.getScope();
     Node nameNode = n.getFirstChild();
     if (!n.isClass() && !n.isFunction() && !nameNode.hasChildren()
-        && (parent == null || !NodeUtil.isEnhancedFor(parent))) {
+        && (parent == null || !NodeUtil.isEnhancedFor(parent))
+        && !n.isCatch()) {
       nameNode.addChildToFront(
           IR.name("undefined").useSourceInfoIfMissingFrom(nameNode));
     }
 
     String oldName = nameNode.getString();
-    if (n.isLet() || n.isConst() || NodeUtil.isClassDeclaration(n)) {
-      blockScopedDeclarations.add(n);
+    if (n.isLet() || n.isConst()) {
+      letConsts.add(n);
     }
     Scope hoistScope = scope.getClosestHoistScope();
     boolean doRename = false;
@@ -101,7 +104,7 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     NodeTraversal.traverseRoots(compiler, new CollectUndeclaredNames(), externs, root);
     NodeTraversal.traverseRoots(compiler, this, externs, root);
-    NodeTraversal.traverseRoots(compiler, new RenameReferences(), externs, root);
+    NodeTraversal.traverseRoots(compiler, new Es6RenameReferences(renameMap), externs, root);
 
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseRoots(compiler, transformer, externs, root);
@@ -115,7 +118,7 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     NodeTraversal.traverse(compiler, scriptRoot, new CollectUndeclaredNames());
     NodeTraversal.traverse(compiler, scriptRoot, this);
-    NodeTraversal.traverse(compiler, scriptRoot, new RenameReferences());
+    NodeTraversal.traverse(compiler, scriptRoot, new Es6RenameReferences(renameMap));
 
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverse(compiler, scriptRoot, transformer);
@@ -125,11 +128,8 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
   }
 
   private void varify() {
-    if (!blockScopedDeclarations.isEmpty()) {
-      for (Node n : blockScopedDeclarations) {
-        if (n.isClass()) {
-          continue;
-        }
+    if (!letConsts.isEmpty()) {
+      for (Node n : letConsts) {
         if (n.isConst()) {
           JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
           builder.recordConstancy();
@@ -167,58 +167,6 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
   }
 
   /**
-   * Renames references in code and JSDoc when necessary.
-   */
-  private class RenameReferences extends AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isReferenceName(n)) {
-        renameReference(t, n);
-      }
-
-      JSDocInfo info = n.getJSDocInfo();
-      if (info != null) {
-        renameTypeNode(t, info.getTypeNodes());
-      }
-    }
-
-    private void renameTypeNode(NodeTraversal t, Iterable<Node> typeNodes) {
-      for (Node type : typeNodes) {
-        if (type.isString()) {
-          renameReference(t, type);
-        }
-        renameTypeNode(t, type.children());
-      }
-    }
-
-    private void renameReference(NodeTraversal t, Node n) {
-      Scope referencedIn = t.getScope();
-      String oldName = n.getString();
-      Scope current = referencedIn;
-      boolean doRename = false;
-      String newName = null;
-      while (current != null) {
-        Map<String, String> renamesAtCurrentLevel = renameMap.get(current.getRootNode());
-        if (current.isDeclared(oldName, false)) {
-          return;
-        } else if (renamesAtCurrentLevel != null
-            && renamesAtCurrentLevel.containsKey(oldName)) {
-          doRename = true;
-          newName = renamesAtCurrentLevel.get(oldName);
-          break;
-        } else {
-          current = current.getParent();
-        }
-      }
-      if (doRename) {
-        n.setString(newName);
-        compiler.reportCodeChange();
-      }
-    }
-  }
-
-  /**
    * Transforms let/const declarations captured by loop closures.
    */
   private class LoopClosureTransformer extends AbstractPostOrderCallback {
@@ -245,6 +193,10 @@ public final class Es6RewriteLetConst extends AbstractPostOrderCallback
 
       if (!var.isLet() && !var.isConst()) {
         return;
+      }
+
+      if (n.getParent().isLet() || n.getParent().isConst()) {
+        letConsts.add(n.getParent());
       }
 
       // Traverse nodes up from let/const declaration:
