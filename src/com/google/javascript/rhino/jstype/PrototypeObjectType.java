@@ -88,7 +88,7 @@ public class PrototypeObjectType extends ObjectType {
   // by printing all properties.
   private boolean prettyPrint = false;
 
-  private static final int MAX_PRETTY_PRINTED_PROPERTIES = 4;
+  private static final int MAX_PRETTY_PRINTED_PROPERTIES = 10;
 
   /**
    * Creates an object type.
