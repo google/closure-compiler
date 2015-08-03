@@ -923,8 +923,8 @@ final class ObjectType implements TypeWithProperties {
     if (!hasNonPrototypeProperties()) {
       if (fn != null) {
         return fn.appendTo(builder);
-      } else if (nominalType != null) {
-        return nominalType.appendTo(builder);
+      } else if (getNominalType() != null) {
+        return getNominalType().appendTo(builder);
       }
     }
     if (nominalType != null && !nominalType.getName().equals("Function")) {
