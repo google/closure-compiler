@@ -195,6 +195,9 @@ public final class JSDocInfoPrinter {
       sb.append("*");
     } else if (typeNode.getType() == Token.QMARK) {
       sb.append("?");
+      if (typeNode.hasChildren()) {
+        appendTypeNode(sb, typeNode.getFirstChild());
+      }
     } else if (typeNode.isFunction()) {
       appendFunctionNode(sb, typeNode);
     } else if (typeNode.getType() == Token.LC) {

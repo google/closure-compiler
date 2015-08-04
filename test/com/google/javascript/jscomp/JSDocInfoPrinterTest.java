@@ -152,6 +152,16 @@ public final class JSDocInfoPrinterTest extends TestCase {
     assertEquals(
         "/**@enum {{foo:(number|string)}} */", JSDocInfoPrinter.print(info));
 
+    // Nullable/non-nullable types.
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("?Object"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@type {?Object} */", JSDocInfoPrinter.print(info));
+    builder.recordType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("!Object"), ""));
+    info = builder.buildAndReset();
+    assertEquals("/**@type {!Object} */", JSDocInfoPrinter.print(info));
+
     // Array types
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("!Array<(number|string)>"), ""));
