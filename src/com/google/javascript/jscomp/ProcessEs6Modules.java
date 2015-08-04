@@ -313,6 +313,9 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       Node objectlit = IR.objectlit();
       Node varNode = IR.var(IR.name(moduleName), objectlit)
           .useSourceInfoIfMissingFromForTree(script);
+      JSDocInfoBuilder info = new JSDocInfoBuilder(true);
+      info.recordConstancy();
+      varNode.setJSDocInfo(info.build());
       script.addChildToBack(varNode);
     }
 
