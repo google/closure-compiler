@@ -403,10 +403,9 @@ public final class TypeSyntaxTest extends TestCase {
     expectErrors("Parse error. '}' expected");
     parse("if (true) { interface I {} }");
 
-    // TODO(moz): Enable these
-    //parse("interface I {\n  (p: boolean): string;\n}");
-    //parse("interface I {\n  new (p: boolean): string;\n}");
-    //parse("interface I {\n  [foo: string]: number;\n}");
+    parse("interface I {\n  (p: boolean): string;\n}");
+    parse("interface I {\n  new (p: boolean): string;\n}");
+    parse("interface I {\n  [foo: string]: number;\n}");
   }
 
   public void testInterface_notEs6Typed() {
@@ -539,6 +538,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare class Foo {\n  constructor();\n  foo();\n};");
     parse("declare class Foo {\n  static *foo(bar: string);\n};");
     parse("declare enum Foo {\n};");
+    parse("declare module foo {\n};");
 
     expectErrors("Parse error. Ambient variable declaration may not have initializer");
     parse("declare var x = 3;");
@@ -677,6 +677,18 @@ public final class TypeSyntaxTest extends TestCase {
 
     expectErrors("Parse error. Unexpected token 'string literal' in type expression");
     parse("var x: 'string'");
+  }
+
+  public void testModuleDeclaration() {
+    parse("module foo {\n}");
+    parse("module foo.bar.baz {\n}");
+
+    expectErrors("Parse error. Semi-colon expected");
+    parse("module {\n}");
+    expectErrors("Parse error. Semi-colon expected");
+    parse("module 'foo' {\n}"); // External modules are not supported
+
+    testNotEs6Typed("module foo {\n}", "module declaration");
   }
 
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {

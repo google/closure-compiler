@@ -382,14 +382,6 @@ class CodeGenerator {
         cc.endStatement();
         break;
 
-      case Token.MODULE:
-        add("module");
-        add(first);
-        add("from");
-        add(last);
-        cc.endStatement();
-        break;
-
       case Token.IMPORT:
         add("import");
 
@@ -484,6 +476,7 @@ class CodeGenerator {
 
       case Token.CLASS_MEMBERS:
       case Token.INTERFACE_MEMBERS:
+      case Token.MODULE_ELEMENTS:
         cc.beginBlock();
         for (Node c = first; c != null; c = c.getNext()) {
           add(c);
@@ -1166,6 +1159,15 @@ class CodeGenerator {
           add(members);
           break;
         }
+      case Token.MODULE: {
+        Preconditions.checkState(childCount == 2);
+        Node name = first;
+        Node elements = last;
+        add("module");
+        add(name);
+        add(elements);
+        break;
+      }
       case Token.TYPE_ALIAS:
         add("type");
         add(n.getString());

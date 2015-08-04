@@ -92,7 +92,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberVariableTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ModuleDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ModuleNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
@@ -2155,6 +2157,34 @@ class IRFactory {
       return newNode(Token.DECLARE, transform(tree.declaration));
     }
 
+    Node processModuleDeclaration(ModuleDeclarationTree tree) {
+      maybeWarnTypeSyntax(tree, "module declaration");
+      Node name = processModuleName(tree.name);
+
+      Node body = newNode(Token.MODULE_ELEMENTS);
+      setSourceInfo(body, tree);
+      for (ParseTree child : tree.elements) {
+        body.addChildToBack(transform(child));
+      }
+
+      return newNode(Token.MODULE, name, body);
+    }
+
+    Node processModuleName(ModuleNameTree name) {
+      ImmutableList<String> segments = name.segments;
+      if (segments.size() == 1) {
+        return newStringNode(Token.NAME, segments.get(0));
+      } else {
+        Iterator<String> segmentsIt = segments.iterator();
+        Node node = IR.name(segmentsIt.next());
+        while (segmentsIt.hasNext()) {
+          node = newNode(Token.GETPROP, node, newStringNode(Token.STRING, segmentsIt.next()));
+        }
+        return node;
+      }
+    }
+
+
     Node processIndexSignature(IndexSignatureTree tree) {
       maybeWarnTypeSyntax(tree, "index signature");
       Node name = transform(tree.name);
@@ -2573,6 +2603,8 @@ class IRFactory {
           return processTypeAlias(node.asTypeAlias());
         case AMBIENT_DECLARATION:
           return processAmbientDeclaration(node.asAmbientDeclaration());
+        case MODULE_DECLARATION:
+          return processModuleDeclaration(node.asModuleDeclaration());
 
         case INDEX_SIGNATURE:
           return processIndexSignature(node.asIndexSignature());

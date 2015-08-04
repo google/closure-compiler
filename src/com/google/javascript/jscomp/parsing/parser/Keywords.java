@@ -82,7 +82,8 @@ public enum Keywords {
 
     // TypeScript
     DECLARE("declare", TokenType.DECLARE),
-    TYPE("type", TokenType.TYPE);
+    TYPE("type", TokenType.TYPE),
+    MODULE("module", TokenType.MODULE);
 
   private static final Map<String, Keywords> KEYWORDS_BY_NAME;
   private static final Map<TokenType, Keywords> KEYWORDS_BY_TYPE;

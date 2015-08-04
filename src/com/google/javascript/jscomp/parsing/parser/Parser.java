@@ -75,6 +75,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberVariableTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ModuleDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.ModuleNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
@@ -510,6 +512,10 @@ public class Parser {
     return peek(TokenType.ENUM);
   }
 
+  private boolean peekModuleDeclaration() {
+    return peek(TokenType.MODULE) && !peekImplicitSemiColon(1) && peek(1, TokenType.IDENTIFIER);
+  }
+
   private ParseTree parseClassDeclaration(boolean isAmbient) {
     return parseClass(false, isAmbient);
   }
@@ -837,6 +843,21 @@ public class Parser {
     return declaration;
   }
 
+  private ModuleDeclarationTree parseModuleDeclaration() {
+    SourcePosition start = getTreeStartLocation();
+    eat(TokenType.MODULE);
+    ModuleNameTree name = parseModuleName();
+    eat(TokenType.OPEN_CURLY);
+    ImmutableList<ParseTree> elements = parseSourceElementList();
+    eat(TokenType.CLOSE_CURLY);
+    return new ModuleDeclarationTree(getTreeLocation(start), name, elements);
+  }
+
+  private ModuleNameTree parseModuleName() {
+    SourcePosition start = getTreeStartLocation();
+    IdentifierToken token = eatId();
+    return new ModuleNameTree(getTreeLocation(start), buildIdentifierPath(token));
+  }
 
   private ParseTree parseSourceElement() {
     if (peekFunction()) {
@@ -845,6 +866,10 @@ public class Parser {
 
     if (peekClassDeclaration()) {
       return parseClassDeclaration(false);
+    }
+
+    if (peekModuleDeclaration()) {
+      return parseModuleDeclaration();
     }
 
     // Harmony let block scoped bindings. let can only appear in
@@ -911,7 +936,8 @@ public class Parser {
          || peek(1, TokenType.CONST)
          || peek(1, TokenType.FUNCTION)
          || peek(1, TokenType.CLASS)
-         || peek(1, TokenType.ENUM));
+         || peek(1, TokenType.ENUM)
+         || peek(1, TokenType.MODULE));
   }
 
   private boolean peekFunction(int index) {
@@ -1249,7 +1275,10 @@ public class Parser {
   private TypeNameTree parseTypeName() {
     SourcePosition start = getTreeStartLocation();
     IdentifierToken token = eatIdOrKeywordAsId();  // for 'void'.
+    return new TypeNameTree(getTreeLocation(start), buildIdentifierPath(token));
+  }
 
+  private ImmutableList<String> buildIdentifierPath(IdentifierToken token) {
     ImmutableList.Builder<String> identifiers = ImmutableList.builder();
     identifiers.add(token != null ? token.value : "");  // null if errors while parsing
     while (peek(TokenType.PERIOD)) {
@@ -1261,7 +1290,7 @@ public class Parser {
       }
       identifiers.add(token.value);
     }
-    return new TypeNameTree(getTreeLocation(start), identifiers.build());
+    return identifiers.build();
   }
 
   private BlockTree parseFunctionBody() {
@@ -1374,6 +1403,7 @@ public class Parser {
     case IDENTIFIER:
     case TYPE:
     case DECLARE:
+    case MODULE:
     case THIS:
     case CLASS:
     case SUPER:
@@ -1896,6 +1926,7 @@ public class Parser {
     case IDENTIFIER:
     case TYPE:
     case DECLARE:
+    case MODULE:
       return parseIdentifierExpression();
     case NUMBER:
     case STRING:
@@ -2399,6 +2430,7 @@ public class Parser {
       case IDENTIFIER:
       case TYPE:
       case DECLARE:
+      case MODULE:
       case MINUS:
       case MINUS_MINUS:
       case NEW:
@@ -3185,6 +3217,9 @@ public class Parser {
       case ENUM:
         declare = parseEnumDeclaration();
         break;
+      case MODULE:
+        declare = parseModuleDeclaration();
+        break;
       default: // unreachable, parse as a var decl to get a parse error.
       case VAR:
       case LET:
@@ -3278,7 +3313,9 @@ public class Parser {
 
   private boolean peekId(int index) {
     TokenType type = peekType(index);
-    return type == TokenType.IDENTIFIER || type == TokenType.TYPE || type == TokenType.DECLARE
+    return
+        EnumSet.of(TokenType.IDENTIFIER, TokenType.TYPE, TokenType.DECLARE, TokenType.MODULE)
+            .contains(type)
         || (!inStrictContext() && Keywords.isStrictKeyword(type));
   }
 

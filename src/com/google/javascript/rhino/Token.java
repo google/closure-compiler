@@ -235,6 +235,7 @@ public class Token {
       MEMBER_VARIABLE_DEF = 319,
       INDEX_SIGNATURE = 320,
       CALL_SIGNATURE = 321,
+      MODULE_ELEMENTS = 322,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
@@ -546,6 +547,8 @@ public class Token {
         return "ENUM";
       case ENUM_MEMBERS:
         return "ENUM_MEMBERS";
+      case MODULE_ELEMENTS:
+        return "MODULE_ELEMENTS";
       case IMPLEMENTS:
         return "IMPLEMENTS";
       case TYPE_ALIAS:
@@ -796,6 +799,8 @@ public class Token {
       case INTERFACE:
         return 3;
       case ENUM:
+        return 2;
+      case MODULE:
         return 2;
       case NAMED_TYPE:
         return 1;
