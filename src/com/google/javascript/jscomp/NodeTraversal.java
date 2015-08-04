@@ -85,7 +85,7 @@ public class NodeTraversal {
 
   /** Callback for passes that iterate over a list of functions */
   public interface FunctionCallback {
-    void visit(AbstractCompiler compiler, Node fnRoot);
+    void enterFunction(AbstractCompiler compiler, Node fnRoot);
   }
 
   /**
@@ -529,7 +529,7 @@ public class NodeTraversal {
         @Override
         public final boolean shouldTraverse(NodeTraversal t, Node n, Node p) {
           if ((n == jsRoot || n.isFunction()) && comp.hasScopeChanged(n)) {
-            cb.visit(comp, n);
+            cb.enterFunction(comp, n);
           }
           return true;
         }
