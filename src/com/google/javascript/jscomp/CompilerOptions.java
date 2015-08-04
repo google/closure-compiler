@@ -2386,6 +2386,9 @@ public class CompilerOptions implements Serializable {
     }
 
     public static LanguageMode fromString(String value) {
+      if (value == null) {
+        return null;
+      }
       switch (value) {
         case "ECMASCRIPT6_STRICT":
         case "ES6_STRICT":
