@@ -785,6 +785,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageOut().isEs6OrHigher()) {
       passes.add(optimizeToEs6);
       passes.add(objectLitAssignmentShortening);
+      passes.add(rewriteBindThis);
     }
 
     return passes;
@@ -2709,6 +2710,14 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ObjectLitAssignmentShortening(compiler);
+    }
+  };
+
+  private final PassFactory rewriteBindThis =
+      new PassFactory("rewriteBindThis", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new RewriteBindThis(compiler);
     }
   };
 }
