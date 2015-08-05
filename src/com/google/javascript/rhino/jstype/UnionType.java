@@ -381,23 +381,24 @@ public class UnionType extends JSType {
    * they have the same number of alternates and all alternates are equal.
    */
   boolean checkUnionEquivalenceHelper(
-      UnionType that, EquivalenceMethod eqMethod) {
-    Collection<JSType> thatAlternates = that.getAlternates();
+      UnionType that, EquivalenceMethod eqMethod, EqCache eqCache) {
+    Collection<JSType> thatAlternates = that.getAlternatesWithoutStructuralTyping();
     if (eqMethod == EquivalenceMethod.IDENTITY
-        && getAlternates().size() != thatAlternates.size()) {
+        && getAlternatesWithoutStructuralTyping().size() != thatAlternates.size()) {
       return false;
     }
     for (JSType alternate : thatAlternates) {
-      if (!hasAlternate(alternate, eqMethod)) {
+      if (!hasAlternate(alternate, eqMethod, eqCache)) {
         return false;
       }
     }
     return true;
   }
 
-  private boolean hasAlternate(JSType type, EquivalenceMethod eqMethod) {
-    for (JSType alternate : getAlternates()) {
-      if (alternate.checkEquivalenceHelper(type, eqMethod)) {
+  private boolean hasAlternate(JSType type, EquivalenceMethod eqMethod,
+      EqCache eqCache) {
+    for (JSType alternate : getAlternatesWithoutStructuralTyping()) {
+      if (alternate.checkEquivalenceHelper(type, eqMethod, eqCache)) {
         return true;
       }
     }

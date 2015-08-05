@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -109,8 +110,13 @@ public class RecordType extends PrototypeObjectType {
     return !declared;
   }
 
-  boolean checkRecordEquivalenceHelper(
-      RecordType otherRecord, EquivalenceMethod eqMethod) {
+  boolean checkRecordEquivalenceHelper(RecordType otherRecord,
+      EquivalenceMethod eqMethod, EqCache eqCache) {
+
+    MatchStatus result = eqCache.checkCache(this, otherRecord);
+    if (result != null) {
+      return result.subtypeValue();
+    }
     Set<String> keySet = getOwnPropertyNames();
     Set<String> otherKeySet = otherRecord.getOwnPropertyNames();
     if (!otherKeySet.equals(keySet)) {
@@ -118,10 +124,12 @@ public class RecordType extends PrototypeObjectType {
     }
     for (String key : keySet) {
       if (!otherRecord.getPropertyType(key).checkEquivalenceHelper(
-              getPropertyType(key), eqMethod)) {
+              getPropertyType(key), eqMethod, eqCache)) {
+        eqCache.updateCache(this, otherRecord, MatchStatus.NOT_MATCH);
         return false;
       }
     }
+    eqCache.updateCache(this, otherRecord, MatchStatus.MATCH);
     return true;
   }
 
@@ -203,9 +211,26 @@ public class RecordType extends PrototypeObjectType {
     return greatestSubtype;
   }
 
+  /**
+   * get the map of properties to types covered in an object type
+   * @return a Map that maps the property's name to the property's type
+   */
+  public Map<String, JSType> getOwnPropertyTypeMap() {
+    Map<String, JSType> propTypeMap = new HashMap<String, JSType>();
+    for (String name : this.getOwnPropertyNames()) {
+      propTypeMap.put(name, this.getPropertyType(name));
+    }
+    return propTypeMap;
+  }
+
   @Override
   public RecordType toMaybeRecordType() {
     return this;
+  }
+
+  @Override
+  public boolean isStructuralType() {
+    return true;
   }
 
   @Override

@@ -475,6 +475,12 @@ public abstract class ObjectType
     return slot == null ? false : !slot.isTypeInferred();
   }
 
+  @Override
+  public boolean isStructuralType() {
+    FunctionType constructor = this.getConstructor();
+    return constructor != null && constructor.isStructuralType();
+  }
+
   /**
    * Whether the given property is declared on this object.
    */

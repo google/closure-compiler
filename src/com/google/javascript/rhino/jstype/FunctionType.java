@@ -951,7 +951,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * have signatures, two interfaces are equal if their names match.
    */
   boolean checkFunctionEquivalenceHelper(
-      FunctionType that, EquivalenceMethod eqMethod) {
+      FunctionType that, EquivalenceMethod eqMethod, EqCache eqCache) {
     if (isConstructor()) {
       if (that.isConstructor()) {
         return this == that;
@@ -960,7 +960,16 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
     if (isInterface()) {
       if (that.isInterface()) {
-        return getReferenceName().equals(that.getReferenceName());
+        if (getReferenceName().equals(that.getReferenceName())) {
+          return true;
+        } else {
+          if (this.isStructuralInterface()
+              && that.isStructuralInterface()) {
+            return checkStructuralInterfaceEquivalenceHelper(
+                that, eqMethod, eqCache);
+          }
+          return false;
+        }
       }
       return false;
     }
@@ -968,8 +977,45 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       return false;
     }
 
-    return typeOfThis.checkEquivalenceHelper(that.typeOfThis, eqMethod) &&
-        call.checkArrowEquivalenceHelper(that.call, eqMethod);
+    return typeOfThis.checkEquivalenceHelper(that.typeOfThis, eqMethod, eqCache) &&
+        call.checkArrowEquivalenceHelper(that.call, eqMethod, eqCache);
+  }
+
+  boolean checkStructuralInterfaceEquivalenceHelper(
+      final JSType that, EquivalenceMethod eqMethod, EqCache eqCache) {
+    Preconditions.checkState(eqCache.isStructuralTyping());
+    Preconditions.checkState(this.isStructuralInterface());
+    Preconditions.checkState(that.isRecordType() || that.isFunctionType());
+
+    MatchStatus result = eqCache.checkCache(this, that);
+    if (result != null) {
+      return result.subtypeValue();
+    }
+
+    if (this.hasAnyTemplateTypes() || that.hasAnyTemplateTypes()) {
+      return false;
+    }
+    Map<String, JSType> thisPropList = getPropertyTypeMap(this);
+    Map<String, JSType> thatPropList = that.isRecordType()
+        ? that.toMaybeRecordType().getOwnPropertyTypeMap()
+        : getPropertyTypeMap(that.toMaybeFunctionType());
+
+    if (thisPropList.size() != thatPropList.size()) {
+      eqCache.updateCache(this, that, MatchStatus.NOT_MATCH);
+      return false;
+    }
+    for (String propName : thisPropList.keySet()) {
+      JSType typeInInterface = thisPropList.get(propName);
+      JSType typeInFunction = thatPropList.get(propName);
+      if (typeInFunction == null
+          || !typeInFunction.checkEquivalenceHelper(
+              typeInInterface, eqMethod, eqCache)) {
+        eqCache.updateCache(this, that, MatchStatus.NOT_MATCH);
+        return false;
+      }
+    }
+    eqCache.updateCache(this, that, MatchStatus.MATCH);
+    return true;
   }
 
   @Override
@@ -979,7 +1025,12 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
   public boolean hasEqualCallType(FunctionType otherType) {
     return this.call.checkArrowEquivalenceHelper(
-        otherType.call, EquivalenceMethod.IDENTITY);
+        otherType.call, EquivalenceMethod.IDENTITY, EqCache.create());
+  }
+
+  public boolean hasEqualCallType(FunctionType otherType, EqCache eqCache) {
+    return this.call.checkArrowEquivalenceHelper(
+        otherType.call, EquivalenceMethod.IDENTITY, eqCache);
   }
 
   /**
@@ -1403,8 +1454,14 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     isStructuralInterface = flag;
   }
 
+  @Override
   public boolean isStructuralInterface() {
     return isInterface() && isStructuralInterface;
+  }
+
+  @Override
+  public boolean isStructuralType() {
+    return isStructuralInterface();
   }
 
   /**

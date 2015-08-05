@@ -211,9 +211,10 @@ final class ArrowType extends JSType {
   }
 
   boolean checkArrowEquivalenceHelper(
-      ArrowType that, EquivalenceMethod eqMethod) {
+      ArrowType that, EquivalenceMethod eqMethod, EqCache eqCache) {
     // Please keep this method in sync with the hashCode() method below.
-    if (!returnType.checkEquivalenceHelper(that.returnType, eqMethod)) {
+    if (!returnType.checkEquivalenceHelper(
+        that.returnType, eqMethod, eqCache)) {
       return false;
     }
     return hasEqualParameters(that, eqMethod);

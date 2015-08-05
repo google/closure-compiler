@@ -190,7 +190,7 @@ public class UnionTypeBuilder implements Serializable {
               current.isNoResolvedType() ||
               alternate.hasAnyTemplateTypes() ||
               current.hasAnyTemplateTypes()) {
-            if (alternate.isEquivalentTo(current)) {
+            if (alternate.isEquivalentTo(current, isStructural)) {
               // Alternate is unnecessary.
               return this;
             }

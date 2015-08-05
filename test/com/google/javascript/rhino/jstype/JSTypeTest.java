@@ -5535,12 +5535,33 @@ public class JSTypeTest extends BaseJSTypeTestCase {
           assertTrue("Proxy " + typeI + " should equal itself",
               proxyTypeI.isEquivalentTo(proxyTypeI));
         } else {
-          assertFalse(typeI + " should not equal " + typeJ,
-              typeI.isEquivalentTo(typeJ));
-          assertFalse("Named " + typeI + " should not equal " + typeJ,
-              namedTypeI.isEquivalentTo(namedTypeJ));
-          assertFalse("Proxy " + typeI + " should not equal " + typeJ,
-              proxyTypeI.isEquivalentTo(proxyTypeJ));
+          boolean shouldCheck = true;
+          // due to structural interface matching and its updated equivalence
+          // checking, a subtype interface could be considered as equivalent
+          // to its super type interface (if they are structurally the same)
+          // when this happens, the following checks are skipped.
+          ObjectType objectI = typeI.toObjectType();
+          ObjectType objectJ = typeJ.toObjectType();
+          if (objectI != null && objectJ != null) {
+            FunctionType constructorI = objectI.getConstructor();
+            FunctionType constructorJ = objectJ.getConstructor();
+            if (constructorI != null && constructorJ != null
+                && constructorI.isStructuralInterface()
+                && constructorJ.isStructuralInterface()) {
+              if (constructorI.checkEquivalenceHelper(constructorJ,
+                  EquivalenceMethod.IDENTITY)) {
+                shouldCheck = false;
+              }
+            }
+          }
+          if (shouldCheck) {
+            assertFalse(typeI + " should not equal " + typeJ,
+                typeI.isEquivalentTo(typeJ));
+            assertFalse("Named " + typeI + " should not equal " + typeJ,
+                namedTypeI.isEquivalentTo(namedTypeJ));
+            assertFalse("Proxy " + typeI + " should not equal " + typeJ,
+                proxyTypeI.isEquivalentTo(proxyTypeJ));
+          }
         }
 
         assertTrue(typeJ + " should be castable to " + typeI,

@@ -393,6 +393,14 @@ public abstract class JSType implements TypeI, Serializable {
     return toMaybeRecordType() != null;
   }
 
+  public boolean isStructuralInterface() {
+    return false;
+  }
+
+  public boolean isStructuralType() {
+    return false;
+  }
+
   /**
    * Downcasts this to a RecordType, or returns null if this is not
    * a RecordType.
@@ -545,8 +553,16 @@ public abstract class JSType implements TypeI, Serializable {
   /**
    * Checks if two types are equivalent.
    */
+  @Override
   public final boolean isEquivalentTo(TypeI that) {
     return checkEquivalenceHelper((JSType) that, EquivalenceMethod.IDENTITY);
+  }
+
+  public final boolean isEquivalentTo(TypeI that, boolean isStructural) {
+    EqCache eqCache = isStructural ? EqCache.create()
+        : EqCache.createWithoutStructuralTyping();
+    return checkEquivalenceHelper((JSType) that,
+        EquivalenceMethod.IDENTITY, eqCache);
   }
 
   /**
@@ -575,6 +591,11 @@ public abstract class JSType implements TypeI, Serializable {
    */
   boolean checkEquivalenceHelper(
       final JSType that, EquivalenceMethod eqMethod) {
+    return checkEquivalenceHelper(that, eqMethod, EqCache.create());
+  }
+
+  boolean checkEquivalenceHelper(final JSType that, EquivalenceMethod eqMethod,
+      EqCache eqCache) {
     if (this == that) {
       return true;
     }
@@ -601,28 +622,35 @@ public abstract class JSType implements TypeI, Serializable {
 
     if (isUnionType() && that.isUnionType()) {
       return toMaybeUnionType().checkUnionEquivalenceHelper(
-          that.toMaybeUnionType(), eqMethod);
+          that.toMaybeUnionType(), eqMethod, eqCache);
     }
 
     if (isFunctionType() && that.isFunctionType()) {
       return toMaybeFunctionType().checkFunctionEquivalenceHelper(
-          that.toMaybeFunctionType(), eqMethod);
+          that.toMaybeFunctionType(), eqMethod, eqCache);
     }
 
     if (isRecordType() && that.isRecordType()) {
       return toMaybeRecordType().checkRecordEquivalenceHelper(
-          that.toMaybeRecordType(), eqMethod);
+          that.toMaybeRecordType(), eqMethod, eqCache);
     }
 
     if (!getTemplateTypeMap().checkEquivalenceHelper(
-        that.getTemplateTypeMap(), eqMethod)) {
+        that.getTemplateTypeMap(), eqMethod, eqCache)) {
       return false;
+    }
+
+    if (eqCache.isStructuralTyping()
+        && this.isStructuralType() && that.isStructuralType()) {
+      // TODO: handle template type equivalence, see:
+      // testDuplicateVariableDefinition8_7 in TypeCheckTest.java
+      return checkStructuralEquivalenceHelper(that, eqMethod, eqCache);
     }
 
     if (isNominalType() && that.isNominalType()) {
       // TODO(johnlenz): is this valid across scopes?
-      return getConcreteNominalTypeName(this.toObjectType()).equals(
-          getConcreteNominalTypeName(that.toObjectType()));
+      return getConcreteNominalTypeName(this.toObjectType())
+          .equals(getConcreteNominalTypeName(that.toObjectType()));
     }
 
     if (isTemplateType() && that.isTemplateType()) {
@@ -635,13 +663,13 @@ public abstract class JSType implements TypeI, Serializable {
     if (this instanceof ProxyObjectType) {
       return ((ProxyObjectType) this)
           .getReferencedTypeInternal().checkEquivalenceHelper(
-              that, eqMethod);
+              that, eqMethod, eqCache);
     }
 
     if (that instanceof ProxyObjectType) {
       return checkEquivalenceHelper(
           ((ProxyObjectType) that).getReferencedTypeInternal(),
-          eqMethod);
+          eqMethod, eqCache);
     }
 
     // Relies on the fact that for the base {@link JSType}, only one
@@ -649,6 +677,46 @@ public abstract class JSType implements TypeI, Serializable {
     // there is no need to verify members. If the object pointers are not
     // identical, then the type member must be different.
     return false;
+  }
+
+  private boolean checkStructuralEquivalenceHelper(final JSType that,
+      EquivalenceMethod eqMethod, EqCache eqCache) {
+    if (this.isFunctionType() || that.isFunctionType()) {
+      return false;
+    }
+    Preconditions.checkState(eqCache.isStructuralTyping());
+    Preconditions.checkState((isRecordType() || that.isRecordType())
+        || isNominalType() && that.isNominalType());
+
+    if (isNominalType() && that.isNominalType()) {
+      if (getConcreteNominalTypeName(this.toObjectType())
+          .equals(getConcreteNominalTypeName(that.toObjectType()))) {
+        return true;
+      }
+      FunctionType thatConstructor = that.toObjectType().getConstructor();
+      FunctionType thisConstructor = this.toObjectType().getConstructor();
+      return thisConstructor.checkStructuralInterfaceEquivalenceHelper(
+          thatConstructor, eqMethod, eqCache);
+    }
+    return checkObjectRecordEquivalenceHelper(that, eqMethod, eqCache);
+  }
+
+  /**
+   * do structural equivalence check for a record type and
+   * an instance of a structural interface type
+   */
+  private boolean checkObjectRecordEquivalenceHelper(final JSType that,
+      EquivalenceMethod eqMethod, EqCache eqCache) {
+    Preconditions.checkState((isInstanceType() && that.isRecordType())
+        || (isRecordType() && that.isInstanceType()));
+
+    FunctionType constructor = isInstanceType() ?
+        toObjectType().getConstructor()
+        : that.toObjectType().getConstructor();
+    RecordType recordType = isRecordType() ? toMaybeRecordType()
+        : that.toMaybeRecordType();
+    return constructor.checkStructuralInterfaceEquivalenceHelper(
+        recordType, eqMethod, eqCache);
   }
 
   // Named types may be proxies of concrete types.
@@ -664,8 +732,8 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   public static boolean isEquivalent(JSType typeA, JSType typeB) {
-    return (typeA == null || typeB == null) ?
-        typeA == typeB : typeA.isEquivalentTo(typeB);
+    return (typeA == null || typeB == null)
+        ? typeA == typeB : typeA.isEquivalentTo(typeB);
   }
 
   @Override
@@ -1305,7 +1373,7 @@ public abstract class JSType implements TypeI, Serializable {
       return true;
     }
     // equality
-    if (thisType.isEquivalentTo(thatType)) {
+    if (thisType.isEquivalentTo(thatType, implicitImplCache.isStructuralTyping())) {
       return true;
     }
     // unions
@@ -1392,18 +1460,14 @@ public abstract class JSType implements TypeI, Serializable {
       return false;
     }
     // if both are functionTypes
-    if (leftType.isInterface() && rightType.isFunctionType()) {
-      if (leftType.toMaybeFunctionType().isStructuralInterface()) {
-        return checkConstructorImplicitMatch(rightType.toMaybeFunctionType(),
-            leftType.toMaybeFunctionType(), implicitImplCache);
-      }
+    if (leftType.isStructuralInterface() && rightType.isFunctionType()) {
+      return checkConstructorImplicitMatch(rightType.toMaybeFunctionType(),
+          leftType.toMaybeFunctionType(), implicitImplCache);
     }
     // matches a record type and an interface
-    if (leftType.isInterface() && rightType.isRecordType()) {
-      if (leftType.toMaybeFunctionType().isStructuralInterface()) {
-        return checkObjectImplicitMatch(rightType.toMaybeObjectType(),
-            leftType.toMaybeFunctionType(), implicitImplCache);
-      }
+    if (leftType.isStructuralInterface() && rightType.isRecordType()) {
+      return checkObjectImplicitMatch(rightType.toMaybeObjectType(),
+          leftType.toMaybeFunctionType(), implicitImplCache);
     }
     // then both are object instance types
     FunctionType leftConstructor = leftType.toMaybeObjectType().getConstructor();
@@ -1467,7 +1531,7 @@ public abstract class JSType implements TypeI, Serializable {
     if (rightType.explicitlyImplOrExtInterface(leftType)) {
       return true;
     }
-    ImplStatus result = implicitImplCache.checkCache(rightType, leftType);
+    MatchStatus result = implicitImplCache.checkCache(rightType, leftType);
     if (result != null) {
       return result.subtypeValue();
     }
@@ -1475,8 +1539,7 @@ public abstract class JSType implements TypeI, Serializable {
     // var1 : IArrayLike<string> = var2 : IArrayLike<number>
     // the template types mismatch
     if (leftType.hasAnyTemplateTypes()) {
-      implicitImplCache.updateCache(leftType, rightType,
-          ImplStatus.NOT_MATCH);
+      implicitImplCache.updateCache(leftType, rightType, MatchStatus.NOT_MATCH);
       return false;
     }
     Map<String, JSType> interfacePropList = getPropertyTypeMap(leftType);
@@ -1486,16 +1549,14 @@ public abstract class JSType implements TypeI, Serializable {
       JSType typeInFunction = functionPropList.get(propName);
       if (typeInFunction == null
           || !typeInFunction.isSubtype(typeInInterface, implicitImplCache)) {
-        implicitImplCache.updateCache(leftType, rightType,
-            ImplStatus.NOT_MATCH);
+        implicitImplCache.updateCache(leftType, rightType, MatchStatus.NOT_MATCH);
         return false;
       }
     }
     // if all properties required by the interface
     // have compatible property in the function,
     // consider that the function implements the interface
-    implicitImplCache.updateCache(leftType, rightType,
-        ImplStatus.MATCH);
+    implicitImplCache.updateCache(leftType, rightType, MatchStatus.MATCH);
     return true;
   }
 
@@ -1685,7 +1746,7 @@ public abstract class JSType implements TypeI, Serializable {
    * structure complies with the protocol defined
    * by the interface
    */
-  protected static enum ImplStatus {
+  protected static enum MatchStatus {
     /**
      * indicate that a function implicitly
      * implements an interface (i.e., the function
@@ -1711,7 +1772,7 @@ public abstract class JSType implements TypeI, Serializable {
      */
     PROCESSING(true);
 
-    ImplStatus(boolean isSubtype) {
+    MatchStatus(boolean isSubtype) {
       this.isSubtype = isSubtype;
     }
 
@@ -1721,10 +1782,62 @@ public abstract class JSType implements TypeI, Serializable {
     }
   }
 
-  protected static class ImplCache {
-    private Table<JSType, JSType, ImplStatus> implicitImplCache;
-    private boolean isStructuralTyping;
+  /**
+   * base cache data structure
+   */
+  protected abstract static class MatchCache {
+    protected Table<JSType, JSType, MatchStatus> matchCache;
+    protected boolean isStructuralTyping;
 
+    protected MatchCache(boolean isStructuralTyping) {
+      this.isStructuralTyping = isStructuralTyping;
+      this.matchCache = null;
+    }
+
+    protected boolean isStructuralTyping() {
+      return isStructuralTyping;
+    }
+
+    void updateCache(JSType leftType,
+        JSType rightType, MatchStatus isMatch) {
+      this.matchCache.put(leftType, rightType, isMatch);
+    }
+
+    MatchStatus checkCache(JSType rightType, JSType leftType) {
+      if (this.matchCache == null) {
+        this.matchCache = HashBasedTable.create();
+      }
+      // check the cache
+      if (this.matchCache.contains(leftType, rightType)) {
+        return this.matchCache.get(leftType, rightType);
+      } else {
+        this.updateCache(leftType, rightType, MatchStatus.PROCESSING);
+        return null;
+      }
+    }
+  }
+
+  /**
+   * cache used by equivalence check logic
+   */
+  protected static class EqCache extends MatchCache {
+    static EqCache create() {
+      return new EqCache(true);
+    }
+
+    static EqCache createWithoutStructuralTyping() {
+      return new EqCache(false);
+    }
+
+    private EqCache(boolean isStructuralTyping) {
+      super(isStructuralTyping);
+    }
+  }
+
+  /**
+   * cache used by check sub-type logic
+   */
+  protected static class ImplCache extends MatchCache {
     static ImplCache create() {
       return new ImplCache(true);
     }
@@ -1734,36 +1847,7 @@ public abstract class JSType implements TypeI, Serializable {
     }
 
     private ImplCache(boolean isStructuralTyping) {
-      this.isStructuralTyping = isStructuralTyping;
-      this.implicitImplCache = null;
-    }
-
-    boolean isStructuralTyping() {
-      return isStructuralTyping;
-    }
-
-    /**
-     * update the status of the interface - function
-     * in the implicit implementation status cache
-     */
-    void updateCache(JSType leftType,
-        JSType rightType, ImplStatus isImplement) {
-      Preconditions.checkState(isStructuralTyping);
-      this.implicitImplCache.put(leftType, rightType, isImplement);
-    }
-
-    ImplStatus checkCache(JSType rightType, JSType leftType) {
-      Preconditions.checkState(isStructuralTyping);
-      if (this.implicitImplCache == null) {
-        this.implicitImplCache = HashBasedTable.create();
-      }
-      // check the cache
-      if (this.implicitImplCache.contains(leftType, rightType)) {
-        return this.implicitImplCache.get(leftType, rightType);
-      } else {
-        this.updateCache(leftType, rightType, ImplStatus.PROCESSING);
-        return null;
-      }
+      super(isStructuralTyping);
     }
   }
 }
