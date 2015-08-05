@@ -291,9 +291,13 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
 
   @Override
   protected void testExternChanges(String extern, String input, String expectedExtern) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    super.testExternChanges(extern, input, expectedExtern);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    testExternChanges(extern, input, expectedExtern, LanguageMode.ECMASCRIPT6);
+    testExternChanges(extern, input, expectedExtern, LanguageMode.ECMASCRIPT5);
+  }
+
+  protected void testExternChanges(String extern, String input,
+      String expectedExtern, LanguageMode lang) {
+    setAcceptedLanguage(lang);
     super.testExternChanges(extern, input, expectedExtern);
   }
 }
