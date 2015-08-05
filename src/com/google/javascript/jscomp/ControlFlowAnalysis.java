@@ -78,7 +78,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   private int astPositionCounter;
   private int priorityCounter;
 
-  private final boolean shouldTraverseFunctions;
+  private final boolean shouldTraverseFunctionsAndClasses;
   private final boolean edgeAnnotations;
 
   // We need to store where we started, in case we aren't doing a flow analysis
@@ -128,15 +128,13 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * Constructor.
    *
    * @param compiler Compiler instance.
-   * @param shouldTraverseFunctions Whether functions should be traversed (true
-   *    by default).
-   * @param edgeAnnotations Whether to allow edge annotations. By default,
-   *    only node annotations are allowed.
+   * @param shouldTraverseFunctions Whether functions should be traversed
+   * @param edgeAnnotations Whether to allow edge annotations.
    */
   ControlFlowAnalysis(AbstractCompiler compiler,
-      boolean shouldTraverseFunctions, boolean edgeAnnotations) {
+      boolean shouldTraverseFunctionsAndClasses, boolean edgeAnnotations) {
     this.compiler = compiler;
-    this.shouldTraverseFunctions = shouldTraverseFunctions;
+    this.shouldTraverseFunctionsAndClasses = shouldTraverseFunctionsAndClasses;
     this.edgeAnnotations = edgeAnnotations;
   }
 
@@ -163,7 +161,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     DiGraphNode<Node, Branch> entry = cfg.getEntry();
     prioritizeFromEntryNode(entry);
 
-    if (shouldTraverseFunctions) {
+    if (shouldTraverseFunctionsAndClasses) {
       // If we're traversing inner functions, we need to rank the
       // priority of them too.
       for (DiGraphNode<Node, Branch> candidate : cfg.getDirectedGraphNodes()) {
@@ -219,8 +217,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     astPosition.put(n, astPositionCounter++);
 
     switch (n.getType()) {
+      case Token.CLASS:
+        return shouldTraverseFunctionsAndClasses;
       case Token.FUNCTION:
-        if (shouldTraverseFunctions || n == cfg.getEntry().getValue()) {
+        if (shouldTraverseFunctionsAndClasses || n == cfg.getEntry().getValue()) {
           exceptionHandler.push(n);
           return true;
         }

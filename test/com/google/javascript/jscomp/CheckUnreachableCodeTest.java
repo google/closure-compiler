@@ -297,7 +297,22 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         "}}"));
   }
 
+  public void testObjLit() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    assertUnreachable("var a = {c(){if(true){return;}x = 1;}};");
+  }
 
+  public void testClass() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame("class C{func(){}}");
+    assertUnreachable("class C{func(){if (true){return;} else {return;}}}");
+    assertUnreachable("class C{func(){if (true){return;} x = 1;}}");
+    testSame("var C = class{func(){}}");
+    testSame("let C = class{func(){}}");
+    testSame("var C; C = class{func(){}}");
+    testSame("let C; C = class{func(){}}");
+    assertUnreachable("var C = class{func(){if (true){return;} x = 1;}}");
+  }
 
   private void assertUnreachable(String js) {
     test(js, js, null, CheckUnreachableCode.UNREACHABLE_CODE);
