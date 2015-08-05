@@ -246,7 +246,9 @@ public class Compiler extends AbstractCompiler {
   private static final ExecutorService compilerExecutor =
       Executors.newCachedThreadPool(new ThreadFactory() {
     @Override public Thread newThread(Runnable r) {
-      return new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
+      Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
+      t.setDaemon(true);  // Do not prevent the JVM from exiting.
+      return t;
     }
   });
 
