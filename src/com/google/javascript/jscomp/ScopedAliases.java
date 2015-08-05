@@ -24,6 +24,7 @@ import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import com.google.javascript.rhino.Token;
@@ -413,6 +414,17 @@ class ScopedAliases implements HotSwapCompilerPass {
           Node value = v.getInitialValue();
           Node varNode = null;
 
+          // Pull out inline type declaration if present.
+          if (n.getJSDocInfo() != null) {
+            JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(parent.getJSDocInfo());
+            if (isFunctionDecl) { // Fix inline return type.
+              builder.recordReturnType(n.getJSDocInfo().getType());
+            } else {
+              builder.recordType(n.getJSDocInfo().getType());
+            }
+            parent.setJSDocInfo(builder.build());
+            n.setJSDocInfo(null);
+          }
           // Grab the docinfo before we do any AST manipulation.
           JSDocInfo varDocInfo = v.getJSDocInfo();
 

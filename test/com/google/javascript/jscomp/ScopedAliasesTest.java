@@ -724,6 +724,64 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         "/** @param {a.b.c.MyType} x */ types.expected;");
   }
 
+  public void testInlineJsDoc() {
+    enableTypeCheck(CheckLevel.WARNING);
+    runTypeCheckAfterProcessing = true;
+    test(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @constructor */ ns.A = function() {};",
+        "goog.scope(function() {",
+        "  /** @const */ var A = ns.A;",
+        "  var /** ?A */ b = null;",
+        "});"),
+         LINE_JOINER.join(
+        "/** @const */ var $jscomp = {};",
+        "/** @const */ $jscomp.scope = {};",
+        "/** @const */ var ns = {};",
+        "/** @constructor */ ns.A = function() {};",
+        "/** @type {?ns.A} */ $jscomp.scope.b = null;"));
+    verifyTypes();
+  }
+
+  public void testInlineReturn() {
+    enableTypeCheck(CheckLevel.WARNING);
+    runTypeCheckAfterProcessing = true;
+    test(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @constructor */ ns.A = function() {};",
+        "goog.scope(function() {",
+        "  /** @const */ var A = ns.A;",
+        "  function /** ?A */ b() {}",
+        "});"),
+         LINE_JOINER.join(
+        "/** @const */ var $jscomp = {};",
+        "/** @const */ $jscomp.scope = {};",
+        "/** @const */ var ns = {};",
+        "/** @constructor */ ns.A = function() {};",
+        // TODO(moz): See if we can avoid generating duplicate @return's
+        "/** @return {?ns.A} */ $jscomp.scope.b = /** @return {?ns.A} */ function() {};"));
+    verifyTypes();
+  }
+
+  public void testInlineParam() {
+    enableTypeCheck(CheckLevel.WARNING);
+    runTypeCheckAfterProcessing = true;
+    test(LINE_JOINER.join(
+        "/** @const */ var ns = {};",
+        "/** @constructor */ ns.A = function() {};",
+        "goog.scope(function() {",
+        "  /** @const */ var A = ns.A;",
+        "  function b(/** ?A */ bee) {}",
+        "});"),
+         LINE_JOINER.join(
+        "/** @const */ var $jscomp = {};",
+        "/** @const */ $jscomp.scope = {};",
+        "/** @const */ var ns = {};",
+        "/** @constructor */ ns.A = function() {};",
+        "$jscomp.scope.b = function(/** ?ns.A */ bee) {};"));
+    verifyTypes();
+  }
+
   // TODO(robbyw): What if it's recursive?  var goog = goog.dom;
 
   // FAILURE CASES
