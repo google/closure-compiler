@@ -1171,6 +1171,42 @@ CSSProperties.prototype.borderTopLeftRadius;
 CSSProperties.prototype.borderTopRightRadius;
 
 /**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-background/#the-border-image-source
+ */
+CSSProperties.prototype.borderImageSource;
+
+/**
+ * @type {string|number}
+ * @see http://www.w3.org/TR/css3-background/#the-border-image-slice
+ */
+CSSProperties.prototype.borderImageSlice;
+
+/**
+ * @type {string|number}
+ * @see http://www.w3.org/TR/css3-background/#the-border-image-width
+ */
+CSSProperties.prototype.borderImageWidth;
+
+/**
+ * @type {string|number}
+ * @see http://www.w3.org/TR/css3-background/#the-border-image-outset
+ */
+CSSProperties.prototype.borderImageOutset;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-background/#the-border-image-repeat
+ */
+CSSProperties.prototype.borderImageRepeat;
+
+/**
+ * @type {string}
+ * @see http://www.w3.org/TR/css3-background/#the-border-image
+ */
+CSSProperties.prototype.borderImage;
+
+/**
  * @type {string|number}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-bottom
  */
