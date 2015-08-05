@@ -61,6 +61,7 @@ public class Protocol {
     BUILD_DEBUG("debug"),
     CHARSET("charset"),
     LANGUAGE("language"),
+    LANGUAGE_OUT("language_out"),
     USE_TYPES_FOR_OPTIMIZATIONS("use_types_for_optimization"),
     ANGULAR_PASS("angular_pass"),
     GENERATE_EXPORTS("generate_exports"),
