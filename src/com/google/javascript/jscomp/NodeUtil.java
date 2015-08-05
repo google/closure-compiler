@@ -818,7 +818,7 @@ public final class NodeUtil {
       Node init = name.getFirstChild();
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null
-          && (jsdoc.isConstructor() || jsdoc.isInterface())
+          && jsdoc.isConstructorOrInterface()
           && init != null
           && init.isQualifiedName();
     }
@@ -827,7 +827,7 @@ public final class NodeUtil {
         && parent.isAssign() && parent.getParent().isExprResult()) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
       return jsdoc != null
-          && (jsdoc.isConstructor() || jsdoc.isInterface())
+          && jsdoc.isConstructorOrInterface()
           && parent.getLastChild().isQualifiedName();
     }
     return false;

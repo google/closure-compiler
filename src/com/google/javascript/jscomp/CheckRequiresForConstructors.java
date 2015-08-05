@@ -291,7 +291,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       JSDocInfo info = n.getJSDocInfo();
       if (info != null) {
         String ctorName = n.getFirstChild().getQualifiedName();
-        if (info.isConstructor() || info.isInterface()) {
+        if (info.isConstructorOrInterface()) {
           constructors.add(ctorName);
         } else {
           JSTypeExpression typeExpr = info.getType();

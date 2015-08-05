@@ -74,7 +74,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
    */
   private void validateClassLevelJsDoc(NodeTraversal t, Node n, JSDocInfo info) {
     if (info != null && n.isMemberFunctionDef()) {
-      if (info.isConstructor() || info.isInterface() || info.hasBaseType()
+      if (info.isConstructorOrInterface()
+          || info.hasBaseType()
           || info.getImplementedInterfaceCount() != 0
           || info.getExtendedInterfacesCount() != 0) {
         t.report(n, DISALLOWED_MEMBER_JSDOC);

@@ -874,7 +874,7 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void maybeRecordNominalType(
         Node fn, Node nameNode, JSDocInfo fnDoc, boolean isRedeclaration) {
-      if (fnDoc != null && (fnDoc.isConstructor() || fnDoc.isInterface())) {
+      if (fnDoc != null && fnDoc.isConstructorOrInterface()) {
         QualifiedName qname = QualifiedName.fromNode(nameNode);
         if (qname == null) {
           warnings.add(JSError.make(fn, ANONYMOUS_NOMINAL_TYPE));

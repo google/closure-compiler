@@ -842,8 +842,7 @@ public final class JSDocInfoBuilder {
    *     flags
    */
   public boolean recordConstructor() {
-    if (!hasAnySingletonTypeTags() &&
-        !currentInfo.isConstructor() && !currentInfo.isInterface()) {
+    if (!hasAnySingletonTypeTags() && !currentInfo.isConstructorOrInterface()) {
       currentInfo.setConstructor(true);
       populated = true;
       return true;

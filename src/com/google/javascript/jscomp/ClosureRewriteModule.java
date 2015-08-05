@@ -329,7 +329,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     // "goog.defineClass" hasn't been rewritten yet, so check for that
     // explicitly.
     JSDocInfo info = target.getJSDocInfo();
-    if ((info != null && (info.isConstructor() || info.isInterface())
+    if ((info != null && info.isConstructorOrInterface()
         || isCallTo(value, "goog.defineClass"))) {
       return;
     }

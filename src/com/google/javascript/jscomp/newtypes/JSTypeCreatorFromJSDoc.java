@@ -699,8 +699,7 @@ public final class JSTypeCreatorFromJSDoc {
         jsdoc, functionName, funNode, typeParameters, registry);
     ImmutableSet<NominalType> implementedIntfs = getImplementedInterfaces(
         jsdoc, registry, typeParameters);
-    if (constructorType == null
-        && (jsdoc.isConstructor() || jsdoc.isInterface())) {
+    if (constructorType == null && jsdoc.isConstructorOrInterface()) {
       // Anonymous type, don't register it.
       return builder.buildDeclaration();
     } else if (jsdoc.isConstructor()) {

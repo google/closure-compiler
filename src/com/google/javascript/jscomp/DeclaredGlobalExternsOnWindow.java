@@ -70,7 +70,7 @@ class DeclaredGlobalExternsOnWindow
     if (oldJSDocInfo != null) {
       JSDocInfoBuilder builder;
 
-      if (oldJSDocInfo.isConstructor() || oldJSDocInfo.isInterface()
+      if (oldJSDocInfo.isConstructorOrInterface()
           || oldJSDocInfo.hasEnumParameterType()
           || NodeUtil.isNamespaceDecl(node)) {
         Node nameNode = IR.name(name);

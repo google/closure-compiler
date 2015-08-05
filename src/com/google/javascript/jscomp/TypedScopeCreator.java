@@ -1350,7 +1350,7 @@ final class TypedScopeCreator implements ScopeCreator {
             return createEnumTypeFromNodes(
                 rValue, lValue.getQualifiedName(), info, lValue);
           }
-        } else if (info.isConstructor() || info.isInterface()) {
+        } else if (info.isConstructorOrInterface()) {
           return createFunctionTypeFromNodes(
               rValue, lValue.getQualifiedName(), info, lValue);
         }
