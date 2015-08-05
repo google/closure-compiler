@@ -1147,6 +1147,13 @@ angular.$filter;
  */
 angular.$filter.orderBy;
 
+/**
+ * @typedef {function(Array,
+ *     (string|Object|function(?):*),
+ *     (function(?):*|boolean)=): Array}
+ */
+angular.$filter.filter;
+
 /******************************************************************************
  * $filterProvider Service
  *****************************************************************************/
