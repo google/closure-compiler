@@ -51,14 +51,8 @@ final class CompilerOptionsPreprocessor {
     }
 
     if (options.useNewTypeInference) {
-      options.checkTypes = false;
-      options.inferTypes = false;
       options.checkMissingReturn = CheckLevel.OFF;
       options.checkGlobalThisLevel = CheckLevel.OFF;
-      // There is also overlap in the warnings of GlobalTypeInfo and VarCheck
-      // and VariableReferenceCheck.
-      // But VarCheck is always added in DefaultPassConfig, and
-      // VariableReferenceCheck finds warnings that we don't, so leave them on.
     }
 
     if (options.jqueryPass && options.closurePass) {

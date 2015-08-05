@@ -342,10 +342,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(newTypeInference);
     }
 
-    if (options.checkTypes || options.inferTypes) {
+    if (options.checkTypes || options.inferTypes
+        // With NTI, we still need OTI to run because the later passes that use
+        // types only understand OTI types at the moment.
+        || options.useNewTypeInference) {
       checks.add(resolveTypes);
       checks.add(inferTypes);
-      if (options.checkTypes) {
+      if (options.checkTypes || options.useNewTypeInference) {
         checks.add(checkTypes);
       } else {
         checks.add(inferJsDocInfo);
