@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * cases only by VariableReferenceCheck
  *
  */
-public final class VariableReferenceCheckTest extends CompilerTestCase {
+public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   private static final String VARIABLE_RUN =
       "var a = 1; var b = 2; var c = a + b, d = c;";
@@ -177,7 +177,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
        "var google;" +
        "/** @suppress {duplicate} */ var google";
     String code = "";
-    test(externs, code, code, null, null);
+    testSame(externs, code, null);
   }
 
   public void testNoWarnInExterns2() {
@@ -186,42 +186,36 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
        "window;" +
        "var window;";
     String code = "";
-    test(externs, code, code, null, null);
+    testSame(externs, code, null);
   }
 
   /**
    * Expects the JS to generate one bad-read error.
    */
   private void assertRedeclare(String js) {
-    testSame(js, VariableReferenceCheck.REDECLARED_VARIABLE);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testSame(js, VariableReferenceCheck.REDECLARED_VARIABLE);
+    testWarning(js, VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
   /**
    * Expects the JS to generate one bad-write warning.
    */
   private void assertUndeclared(String js) {
-    testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
+    testWarning(js, VariableReferenceCheck.EARLY_REFERENCE);
   }
 
   /**
    * Expects the JS to generate one bad-write warning.
    */
   private void assertAmbiguous(String js) {
-    testSame(js, VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    testSame(js); // In ES6, these are block scoped functions, so no ambiguity.
+    testWarning(js, VariableReferenceCheck.AMBIGUOUS_FUNCTION_DECL,
+        LanguageMode.ECMASCRIPT5);
+    testSameEs6(js); // In ES6, these are block scoped functions, so no ambiguity.
   }
 
   /**
    * Expects the JS to generate no errors or warnings.
    */
   private void assertNoWarning(String js) {
-    testSame(js);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testSame(js);
   }
 }
