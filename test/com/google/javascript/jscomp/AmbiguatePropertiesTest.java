@@ -629,4 +629,48 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
         "x.d = 3;";
     test(js, result);
   }
+
+  public void testAmbiguateWithAnAlias() {
+    String js =
+        "/** @constructor */ function Foo() { this.abc = 5; }\n" +
+        "/** @const */ var alias = Foo;\n" +
+        "/** @constructor @extends alias */\n" +
+        "function Bar() {\n" +
+        "  this.xyz = 7;\n" +
+        "}";
+    String result =
+        "/** @constructor */ function Foo() { this.a = 5; }\n" +
+        "/** @const */ var alias = Foo;\n" +
+        "/** @constructor @extends alias */\n" +
+        "function Bar() {\n" +
+        "  this.b = 7;\n" +
+        "}";
+    test(js, result);
+  }
+
+  public void testAmbiguateWithAliases() {
+    String js =
+        "/** @constructor */ function Foo() { this.abc = 5; }\n" +
+        "/** @const */ var alias = Foo;\n" +
+        "/** @constructor @extends alias */\n" +
+        "function Bar() {\n" +
+        "  this.def = 7;\n" +
+        "}\n" +
+        "/** @constructor @extends alias */\n" +
+        "function Baz() {\n" +
+        "  this.xyz = 8;\n" +
+        "}";
+    String result =
+        "/** @constructor */ function Foo() { this.a = 5; }\n" +
+        "/** @const */ var alias = Foo;\n" +
+        "/** @constructor @extends alias */\n" +
+        "function Bar() {\n" +
+        "  this.b = 7;\n" +
+        "}\n" +
+        "/** @constructor @extends alias */\n" +
+        "function Baz() {\n" +
+        "  this.b = 8;\n" +
+        "}";
+    test(js, result);
+  }
 }

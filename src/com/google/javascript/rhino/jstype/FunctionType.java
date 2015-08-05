@@ -1195,6 +1195,12 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     this.source = source;
   }
 
+  void addSubTypeIfNotPresent(FunctionType subType) {
+    if (subTypes == null || !subTypes.contains(subType)) {
+      addSubType(subType);
+    }
+  }
+
   /** Adds a type to the list of subtypes for this type. */
   private void addSubType(FunctionType subType) {
     if (subTypes == null) {
