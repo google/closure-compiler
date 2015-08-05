@@ -116,7 +116,7 @@ public class SimpleErrorReporter implements ErrorReporter {
 
     static String getMessage(String messageId, Object[] arguments) {
       final String defaultResource
-          = "rhino_ast.java.com.google.javascript.rhino.Messages";
+          = "com.google.javascript.rhino.Messages";
 
       Locale locale = Locale.getDefault();
 

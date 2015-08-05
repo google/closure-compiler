@@ -178,7 +178,7 @@
               <outputDirectory>${basedir}/target/rhino_ast</outputDirectory>
               <resources>
                 <resource>
-                  <targetPath>${basedir}/target/classes/rhino_ast/java</targetPath>
+                  <targetPath>${basedir}/target/classes</targetPath>
                   <directory>src</directory>
                   <includes>
                     <include>com/google/javascript/rhino/Messages.properties</include>

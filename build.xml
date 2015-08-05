@@ -155,7 +155,7 @@
     <!-- Move Messages.properties where ScriptRuntime.java expects it. -->
     <mkdir dir="${classes.dir}/rhino_ast/java/com/google/javascript/rhino/" />
     <copy file="${src.dir}/com/google/javascript/rhino/Messages.properties"
-          todir="${classes.dir}/rhino_ast/java/com/google/javascript/rhino/" />
+          todir="${classes.dir}/com/google/javascript/rhino/" />
 
     <!-- Move ParserConfig.properties where ParserRunner.java expects it. -->
     <copy file="${src.dir}/com/google/javascript/jscomp/parsing/ParserConfig.properties"
