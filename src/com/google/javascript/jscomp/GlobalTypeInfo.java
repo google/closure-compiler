@@ -488,7 +488,7 @@ class GlobalTypeInfo implements CompilerPass {
           // TODO(blickly): Fix this error message to include supertype names
           warnings.add(JSError.make(
               defSite, TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
-              NodeUtil.getFunctionName(defSite), pname, "", ""));
+              NodeUtil.getNearestFunctionName(defSite), pname, "", ""));
           continue add_interface_props;
         }
       }
@@ -863,9 +863,8 @@ class GlobalTypeInfo implements CompilerPass {
         for (String formalInJsdoc : fnDoc.getParameterNames()) {
           if (!formals.contains(formalInJsdoc)
               && !tmpRestFormals.contains(formalInJsdoc)) {
-            String functionName = NodeUtil.getFunctionName(fn);
-            warnings.add(JSError.make(
-                fn, INEXISTENT_PARAM, formalInJsdoc, functionName));
+            String functionName = NodeUtil.getNearestFunctionName(fn);
+            warnings.add(JSError.make(fn, INEXISTENT_PARAM, formalInJsdoc, functionName));
           }
         }
       }

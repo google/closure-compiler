@@ -192,6 +192,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     builder.recordNoAlias();
     var.setJSDocInfo(builder.build());
     CompilerInput input = compiler.getSynthesizedExternsInput();
+    name.setStaticSourceFile(input.getSourceFile());
+    var.setStaticSourceFile(input.getSourceFile());
     input.getAstRoot(compiler).addChildrenToBack(var);
     compiler.reportCodeChange();
   }

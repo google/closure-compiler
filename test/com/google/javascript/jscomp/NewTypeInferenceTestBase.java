@@ -143,7 +143,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
             new Es6ToEs3ClassSideInheritance(compiler)));
   }
 
-  protected final void parseAndTypeCheck(String externs, String js) {
+  private final void parseAndTypeCheck(String externs, String js) {
     setUp();
     final CompilerOptions options = compiler.getOptions();
     options.setClosurePass(true);
@@ -208,7 +208,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         + "================================================================\n"
         + "but found:\n"
         + "----------------------------------------------------------------\n"
-        + Arrays.toString(warnings) + "\n"
+        + Arrays.toString(errors) + Arrays.toString(warnings) + "\n"
         + "----------------------------------------------------------------\n";
     assertEquals(
         errorMessage + "Warning count", warningKinds.length, warnings.length + errors.length);

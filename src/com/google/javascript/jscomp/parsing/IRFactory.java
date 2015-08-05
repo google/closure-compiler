@@ -1503,7 +1503,7 @@ class IRFactory {
       setSourceInfo(dummyName, tree.body);
       Node paramList = IR.paramList();
       setSourceInfo(paramList, tree.body);
-      Node value = IR.function(dummyName, paramList, body);
+      Node value = newNode(Token.FUNCTION, dummyName, paramList, body);
       setSourceInfo(value, tree.body);
       key.addChildToFront(value);
       key.setStaticMember(tree.isStatic);
@@ -1519,7 +1519,7 @@ class IRFactory {
       Node paramList = IR.paramList(
           safeProcessName(tree.parameter));
       setSourceInfo(paramList, tree.parameter);
-      Node value = IR.function(dummyName, paramList, body);
+      Node value = newNode(Token.FUNCTION, dummyName, paramList, body);
       setSourceInfo(value, tree.body);
       key.addChildToFront(value);
       key.setStaticMember(tree.isStatic);
