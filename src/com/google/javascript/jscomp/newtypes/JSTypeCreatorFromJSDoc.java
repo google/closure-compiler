@@ -297,7 +297,10 @@ public final class JSTypeCreatorFromJSDoc {
       case "Function":
         return maybeMakeNullable(registry.getCommonTypes().qmarkFunction());
       case "Object":
-        return maybeMakeNullable(JSType.TOP_OBJECT);
+        // We don't generally handle parameterized Object<...>, but we want to
+        // at least not warn about inexistent properties on it, so we type it
+        // as @dict.
+        return maybeMakeNullable(n.hasChildren() ? JSType.TOP_DICT : JSType.TOP_OBJECT);
       default:
         return lookupTypeByName(typeName, n, registry, outerTypeParameters);
     }

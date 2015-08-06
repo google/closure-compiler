@@ -5562,6 +5562,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck("/** @type {Object<number>} */ var x;");
 
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** !Object<string, string> */ x) {",
+        "  return x['dont-warn-about-inexistent-property'];",
+        "}"));
+
     typeCheck(
         "/** @template T\n@param {!T} x */ function f(x) {}",
         JSTypeCreatorFromJSDoc.BAD_JSDOC_ANNOTATION);
