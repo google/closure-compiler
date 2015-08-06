@@ -1985,6 +1985,25 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var y = x;",
         "  goog.asserts.assertInstanceof(y, Foo);",
         "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** { p: (number|null) } */ x) {",
+        "  goog.asserts.assertNumber(x.p) - 1;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** function():(number|null) */ x) {",
+        "  goog.asserts.assertNumber(x()) - 1;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar(x) {}",
+        "/** @return {?Foo} */",
+        "Bar.prototype.method = function() { return null; };",
+        "var /** !Foo */ x = goog.asserts.assertInstanceOf((new Bar).method(), Foo);"));
   }
 
   public void testDontInferBottom() {
@@ -13353,5 +13372,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "ns.ns2.Foo = $jscomp.scope.Foo;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // 2 levels of aliasing
+    typeCheck(Joiner.on('\n').join(
+        "function f() { Foo.prop - 1; }",
+        "function g() { Foo2.prop - 1; }",
+        "/** @constructor */",
+        "var Foo = function() {};",
+        "/** @const */",
+        "var Foo2 = Foo;",
+        "/** @const */",
+        "var Foo3 = Foo2;",
+        "/** @type {string} */",
+        "Foo3.prop = '';"),
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 }
