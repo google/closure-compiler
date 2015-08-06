@@ -110,18 +110,17 @@ final class ObjectType implements TypeWithProperties {
     return ObjectType.makeObjectType(cl, null, null, false, cl.getObjectKind());
   }
 
-  /** Construct an object with the given declared non-optional properties. */
-  static ObjectType fromProperties(Map<String, JSType> propTypes) {
-    PersistentMap<String, Property> props = PersistentMap.create();
-    for (Map.Entry<String, JSType> propTypeEntry : propTypes.entrySet()) {
-      String propName = propTypeEntry.getKey();
-      JSType propType = propTypeEntry.getValue();
-      if (propType.isBottom()) {
+  /** Construct an object with the given declared properties. */
+  static ObjectType fromProperties(Map<String, Property> oldProps) {
+    PersistentMap<String, Property> newProps = PersistentMap.create();
+    for (Map.Entry<String, Property> entry : oldProps.entrySet()) {
+      Property prop = entry.getValue();
+      if (prop.getDeclaredType().isBottom()) {
         return BOTTOM_OBJECT;
       }
-      props = props.with(propName, Property.make(propType, propType));
+      newProps = newProps.with(entry.getKey(), prop);
     }
-    return new ObjectType(null, props, null, false, ObjectKind.UNRESTRICTED);
+    return new ObjectType(null, newProps, null, false, ObjectKind.UNRESTRICTED);
   }
 
   static void setObjectType(NominalType builtinObject) {

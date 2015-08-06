@@ -13388,4 +13388,31 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE,
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testOptionalPropertiesInRecordTypes() {
+    typeCheck("var /** { a: (number|undefined) } */ obj = {};");
+
+    typeCheck(Joiner.on('\n').join(
+        "var /** { a: (number|undefined) } */ obj;",
+        "var x;",
+        "if (1 < 2) {",
+        "  x = { a: 1 };",
+        "} else {",
+        "  x = {};",
+        "}",
+        "obj = x;"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** { a: (number|undefined) } */ x) {}",
+        "f({});"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** { a: (number|undefined) } */ x) {}",
+        "f({ a: undefined });"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** { a: (number|undefined) } */ x) {}",
+        "f({ a: 'asdf' });"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }
