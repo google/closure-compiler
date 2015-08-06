@@ -244,16 +244,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private void processExports(Node script, String moduleName) {
       if (hasOneTopLevelModuleExportAssign()) {
         // One top-level assign: transform to
-        // /** @const */ var moduleName = rhs
+        // moduleName = rhs
         Node ref = moduleExportRefs.get(0);
         Node newName = IR.name(moduleName);
         newName.putProp(Node.ORIGINALNAME_PROP, ref.getQualifiedName());
 
-        Node newVar = IR.var(newName)
-            .copyInformationFromForTree(ref.getParent());
         Node rhsValue = ref.getNext().detachFromParent();
-        newVar.getFirstChild().addChildToFront(rhsValue);
-        newVar.setJSDocInfo(NodeUtil.createConstantJsDoc());
+        Node newExprResult = IR.exprResult(IR.assign(newName, rhsValue)
+          .copyInformationFromForTree(ref.getParent()));
 
         // If the rValue is an object literal, check each property to see if
         // it's an alias, and if it is, copy the annotation over.
@@ -279,20 +277,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
         Node assign = ref.getParent();
         Node exprResult = assign.getParent();
-        script.replaceChild(exprResult, newVar);
+        script.replaceChild(exprResult, newExprResult);
         return;
       }
 
       if (!hasExportLValues()) {
         // Transform to:
         //
-        // /** @const */ var moduleName = {};
         // moduleName.prop0 = 0; // etc.
-        //
-        // We consider the 0-ref case a special case of this.
-        Node newVar = injectExportsObject(script, moduleName);
-        newVar.setJSDocInfo(NodeUtil.createConstantJsDoc());
-
         for (Node ref : Iterables.concat(moduleExportRefs, exportRefs)) {
           Node newRef = IR.name(moduleName).copyInformationFrom(ref);
           newRef.putProp(Node.ORIGINALNAME_PROP, ref.getQualifiedName());
@@ -301,40 +293,25 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-      // The general case:
-      // At the beginning, add the stanza:
-      // var moduleName = {}; var moduleName$$exports = moduleName;
       // Transform module.exports to moduleName
-      // Transform exports to moduleName$$exports
-      Node exportsNode = injectExportsObject(script, moduleName);
-
       for (Node ref : moduleExportRefs) {
         Node newRef = IR.name(moduleName).copyInformationFrom(ref);
         ref.getParent().replaceChild(ref, newRef);
       }
 
+      // Transform exports to exports$$moduleName and set to point
+      // to module namespace: exports$$moduleName = moduleName;
       if (!exportRefs.isEmpty()) {
         String aliasName = "exports$$" + moduleName;
         Node aliasNode = IR.var(IR.name(aliasName), IR.name(moduleName))
             .copyInformationFromForTree(script);
-        script.addChildAfter(aliasNode, exportsNode);
+        script.addChildToFront(aliasNode);
 
         for (Node ref : exportRefs) {
           ref.putProp(Node.ORIGINALNAME_PROP, ref.getString());
           ref.setString(aliasName);
         }
       }
-    }
-
-    /**
-     * Creates an exports object for this module.
-     * var moduleName = {};
-     */
-    private Node injectExportsObject(Node script, String moduleName) {
-      Node varNode = IR.var(IR.name(moduleName), IR.objectlit())
-          .copyInformationFromForTree(script);
-      script.addChildToFront(varNode);
-      return varNode;
     }
 
     /**
