@@ -123,8 +123,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testTypeCheck6() throws Exception {
     testTypes(
-        "/**@return {void}*/function foo(){" +
-        "/** @type {undefined|number} */var a;if (a == foo())return;}");
+        "/**@return {void}*/function foo(){"
+        + "/** @type {undefined|number} */var a;if (a == foo())return;}");
   }
 
   public void testTypeCheck8() throws Exception {
@@ -140,12 +140,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testTypeCheck11() throws Exception {
-    testTypes("/**@type {!Number} */var a;" +
-        "/**@type {!String} */var b;" +
-        "a = b;",
-        "assignment\n" +
-        "found   : String\n" +
-        "required: Number");
+    testTypes("/**@type {!Number} */var a;"
+        + "/**@type {!String} */var b;"
+        + "a = b;",
+        "assignment\n"
+        + "found   : String\n"
+        + "required: Number");
   }
 
   public void testTypeCheck12() throws Exception {
@@ -10189,6 +10189,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         suppressMissingProperty("foo") +
             "/** @interface \n * @extends {F} */var G = function() {};" +
             "/** @interface \n * @extends {G} */var F = function() {};" +
+            "/** @constructor \n * @implements {F} */var H = function() {};" +
+        "alert((new H).foo);",
+        new ArrayList<String>());
+  }
+
+  public void testInterfaceExtendsLoop2() throws Exception {
+    // This should emit a warning. This test is still
+    // useful to ensure the compiler doesn't crash.
+    testClosureTypesMultipleWarnings(
+        suppressMissingProperty("foo") +
+            "/** @record \n * @extends {F} */var G = function() {};" +
+            "/** @record \n * @extends {G} */var F = function() {};" +
             "/** @constructor \n * @implements {F} */var H = function() {};" +
         "alert((new H).foo);",
         new ArrayList<String>());

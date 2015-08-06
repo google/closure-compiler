@@ -1471,12 +1471,15 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   @Override
   public Map<String, JSType> getPropertyTypeMap() {
     Map<String, JSType> propTypeMap = new HashMap<String, JSType>();
-    updatePropertyTypeMap(this, propTypeMap);
+    updatePropertyTypeMap(this, propTypeMap, new HashSet<FunctionType>());
     return propTypeMap;
   }
 
+  // cache is added to prevent infinite recursion when retrieving
+  // the super type: see testInterfaceExtendsLoop in TypeCheckTest.java
   private static void updatePropertyTypeMap(
-      FunctionType type, Map<String, JSType> propTypeMap) {
+      FunctionType type, Map<String, JSType> propTypeMap,
+      HashSet<FunctionType> cache) {
     if (type == null) { return; }
     // retrieve all property types on the prototype of this class
     ObjectType prototype = type.getPrototype();
@@ -1493,7 +1496,12 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     Iterable<ObjectType> iterable = type.getExtendedInterfaces();
     if (iterable != null) {
       for (ObjectType interfaceType : iterable) {
-        updatePropertyTypeMap(interfaceType.getConstructor(), propTypeMap);
+        FunctionType superConstructor = interfaceType.getConstructor();
+        if (superConstructor == null
+            || cache.contains(superConstructor)) { continue; }
+        cache.add(superConstructor);
+        updatePropertyTypeMap(superConstructor, propTypeMap, cache);
+        cache.remove(superConstructor);
       }
     }
   }
