@@ -937,6 +937,26 @@ google.maps.Data.StylingFunction;
 /**
  * @interface
  */
+google.maps.DirectionsGeocodedWaypoint = function() {};
+
+/**
+ * @type {boolean}
+ */
+google.maps.DirectionsGeocodedWaypoint.prototype.partial_match;
+
+/**
+ * @type {string}
+ */
+google.maps.DirectionsGeocodedWaypoint.prototype.place_id;
+
+/**
+ * @type {Array<string>}
+ */
+google.maps.DirectionsGeocodedWaypoint.prototype.types;
+
+/**
+ * @interface
+ */
 google.maps.DirectionsLeg = function() {};
 
 /**
@@ -1206,6 +1226,11 @@ google.maps.DirectionsRequest.prototype.waypoints;
 google.maps.DirectionsResult = function() {};
 
 /**
+ * @type {Array<google.maps.DirectionsGeocodedWaypoint>}
+ */
+google.maps.DirectionsResult.prototype.geocoded_waypoints;
+
+/**
  * @type {Array<google.maps.DirectionsRoute>}
  */
 google.maps.DirectionsResult.prototype.routes;
@@ -1391,7 +1416,7 @@ google.maps.DistanceMatrixRequest.prototype.avoidHighways;
 google.maps.DistanceMatrixRequest.prototype.avoidTolls;
 
 /**
- * @type {Array<google.maps.LatLng>|Array<string>}
+ * @type {Array<google.maps.LatLng|string>}
  */
 google.maps.DistanceMatrixRequest.prototype.destinations;
 
@@ -1401,7 +1426,7 @@ google.maps.DistanceMatrixRequest.prototype.destinations;
 google.maps.DistanceMatrixRequest.prototype.durationInTraffic;
 
 /**
- * @type {Array<google.maps.LatLng>|Array<string>}
+ * @type {Array<google.maps.LatLng|string>}
  */
 google.maps.DistanceMatrixRequest.prototype.origins;
 
@@ -2269,7 +2294,7 @@ google.maps.InfoWindow.prototype.setContent = function(content) {};
 google.maps.InfoWindow.prototype.setOptions = function(options) {};
 
 /**
- * @param {google.maps.LatLng} position
+ * @param {google.maps.LatLng|google.maps.LatLngLiteral} position
  * @return {undefined}
  */
 google.maps.InfoWindow.prototype.setPosition = function(position) {};
@@ -3249,7 +3274,7 @@ google.maps.MapType.prototype.releaseTile = function(tile) {};
 google.maps.MapTypeControlOptions = function() {};
 
 /**
- * @type {Array<google.maps.MapTypeId>|Array<string>}
+ * @type {Array<google.maps.MapTypeId|string>}
  */
 google.maps.MapTypeControlOptions.prototype.mapTypeIds;
 
@@ -6223,6 +6248,11 @@ google.maps.places.PlaceResult.prototype.types;
  * @type {string}
  */
 google.maps.places.PlaceResult.prototype.url;
+
+/**
+ * @type {number}
+ */
+google.maps.places.PlaceResult.prototype.utc_offset;
 
 /**
  * @type {string}
