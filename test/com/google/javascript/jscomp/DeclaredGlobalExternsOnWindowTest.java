@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase {
   private static final String WINDOW_DEFINITION =
       "/** @constructor */ function Window(){}\nvar /** Window */ window;";
@@ -38,7 +40,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   }
 
   public void testWindowProperty1a() {
-    testExternChanges("function Window(){} var a", "",
+    testExternChanges("function Window(){} var a;", "",
         "function Window(){} var a; Window.prototype.a");
   }
 
@@ -68,6 +70,8 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   public void testWindowProperty5a() {
     testExternChanges("function Window(){} var x = function f() {}", "var b",
         "function Window(){} var x=function f(){};Window.prototype.x;");
+    testExternChanges("function Window(){} var x = function () {}", "var b",
+        "function Window(){} var x=function (){};Window.prototype.x;");
   }
 
   // No "function Window(){};" so this is a no-op.
@@ -75,48 +79,61 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
     testExternChanges("var x = function f() {}", "var b", "var x=function f(){}");
   }
 
+  public void testWindowProperty5c() {
+    testExternChanges("function Window(){} var x = ()=>{}", "var b",
+        "function Window(){} var x=()=>{};Window.prototype.x;",
+        LanguageMode.ECMASCRIPT6);
+  }
+
   public void testWindowProperty6() {
     testExternChanges("function Window(){} /** @const {number} */ var n;", "",
-        "function Window(){}\n" +
-        "/** @const {number} */ var n;\n" +
-        "/** @const {number} @suppress {duplicate} */ Window.prototype.n;");
+        LINE_JOINER.join(
+            "function Window(){}",
+            "/** @const {number} */ var n;",
+            "/** @const {number} @suppress {duplicate} */ Window.prototype.n;"));
   }
 
   public void testWindowProperty7() {
     testExternChanges("function Window(){} /** @const */ var ns = {}", "",
-        "function Window(){}\n" +
-        "/** @const */ var ns = {};\n" +
-        "/** @suppress {duplicate} */ Window.prototype.ns = ns;");
+        LINE_JOINER.join(
+            "function Window(){}",
+            "/** @const */ var ns = {};",
+            "/** @suppress {duplicate} */ Window.prototype.ns = ns;"));
   }
 
   public void testWindowProperty8() {
     testExternChanges("function Window(){} /** @constructor */ function Foo() {}", "",
-        "function Window(){}\n" +
-        "/** @constructor */ function Foo(){}\n" +
-        "/** @constructor @suppress {duplicate} */ Window.prototype.Foo = Foo;");
+        LINE_JOINER.join(
+            "function Window(){}",
+            "/** @constructor */ function Foo(){}",
+            "/** @constructor @suppress {duplicate} */ Window.prototype.Foo = Foo;"));
   }
-
 
   /**
    * Test to make sure the compiler knows the type of "Window.prototype.x"
    * is the same as that of "x".
    */
   public void testWindowPropertyWithJsDoc() {
-    testSame(
-        WINDOW_DEFINITION + "/** @type {string} */ var x;",
-        "/** @param {number} n*/\n" +
-        "function f(n) {}\n" +
-        "f(window.x);\n",
+    testSame(LINE_JOINER.join(
+        WINDOW_DEFINITION,
+        "/** @type {string} */ var x;"),
+        LINE_JOINER.join(
+            "/** @param {number} n*/",
+            "function f(n) {}",
+            "f(window.x);"),
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   public void testEnum() {
-    testSame(
-        WINDOW_DEFINITION + "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};",
-        "/** @param {Enum} e*/\n" +
-        "function f(e) {}\n" +
-        "f(window.Enum.FOO);\n" +
-        "f(7);",
+    testSame(LINE_JOINER.join(
+        WINDOW_DEFINITION,
+        "/** @enum {string} */",
+        "var Enum = {FOO: 'foo', BAR: 'bar'};"),
+        LINE_JOINER.join(
+            "/** @param {Enum} e*/",
+            "function f(e) {}",
+            "f(window.Enum.FOO);",
+            "f(7);"),
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
@@ -127,19 +144,20 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   public void testConstructorIsSameType() {
     testSame(
         WINDOW_DEFINITION + "/** @constructor */ function Foo() {}\n",
-        "/** @param {!Foo} f*/\n" +
-        "function bar(f) {}\n" +
-        "bar(new window.Foo());\n" +
-        "bar(7);",
+        LINE_JOINER.join(
+            "/** @param {!Foo} f*/",
+            "function bar(f) {}",
+            "bar(new window.Foo());",
+            "bar(7);"),
         TypeValidator.TYPE_MISMATCH_WARNING);
 
     testSame(
         WINDOW_DEFINITION + "/** @constructor */ function Foo() {}\n",
-        "/** @param {!Window.prototype.Foo} f*/\n" +
-        "function bar(f) {}\n" +
-        "bar(new Foo());\n" +
-        "bar(7);",
+        LINE_JOINER.join(
+            "/** @param {!Window.prototype.Foo} f*/",
+            "function bar(f) {}",
+            "bar(new Foo());",
+            "bar(7);"),
         TypeValidator.TYPE_MISMATCH_WARNING);
-
   }
 }
