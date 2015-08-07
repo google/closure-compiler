@@ -11616,6 +11616,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"));
   }
 
+  public void testFunctionReturnTypeSpecialization() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @return {?boolean} */",
+        "Foo.prototype.method = function() { return true; };",
+        "function f(/** !Foo */ x) {",
+        "  var /** boolean */ b = x.method() || true;",
+        "  b = x.method();",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testAutoconvertBoxedNumberToNumber() {
     typeCheck(
         "var /** !Number */ n = 123;", NewTypeInference.MISTYPED_ASSIGN_RHS);
@@ -12167,7 +12180,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    y = new Foo;",
         "    y.prop = 'asdf';",
         "  }",
-        "  y.p -123;",
+        "  y.p - 123;",
         "}"));
   }
 

@@ -1663,8 +1663,7 @@ final class NewTypeInference implements CompilerPass {
     if (assertionFunctionSpec != null) {
       return analyzeAssertionCall(expr, inEnv, assertionFunctionSpec);
     }
-    EnvTypePair calleePair =
-        analyzeCalleeFwd(callee, inEnv, requiredType, specializedType);
+    EnvTypePair calleePair = analyzeExprFwd(callee, inEnv, commonTypes.topFunction());
     calleePair = mayWarnAboutNullableReferenceAndTighten(
         callee, calleePair.type, inEnv, commonTypes.topFunction());
     JSType calleeType = calleePair.type;
@@ -1747,27 +1746,11 @@ final class NewTypeInference implements CompilerPass {
         }
       }
     }
-    JSType retType =
-        expr.isNew() ? funType.getThisType() : funType.getReturnType();
+    JSType retType = expr.isNew() ? funType.getThisType() : funType.getReturnType();
+    if (retType.isSubtypeOf(requiredType)) {
+      retType = retType.specialize(specializedType);
+    }
     return new EnvTypePair(tmpEnv, retType);
-  }
-
-  private EnvTypePair analyzeCalleeFwd(
-      Node callee, TypeEnv inEnv, JSType reqRetType, JSType specRetType) {
-    JSType requiredFun = commonTypes.topFunction();
-    JSType specializedFun = requiredFun;
-    if (reqRetType != specRetType) {
-      FunctionTypeBuilder builder = new FunctionTypeBuilder();
-      builder.addRestFormals(JSType.UNKNOWN);
-      builder.addRetType(specRetType);
-      specializedFun = commonTypes.fromFunctionType(builder.buildFunction());
-    }
-    EnvTypePair pair = analyzeExprFwd(callee, inEnv, requiredFun, specializedFun);
-    // If specialization goes to bottom, don't error.
-    if (pair.type.isBottom() && reqRetType != specRetType) {
-      pair = analyzeExprFwd(callee, inEnv, requiredFun);
-    }
-    return pair;
   }
 
   private EnvTypePair analyzeFunctionBindFwd(Node call, TypeEnv inEnv) {
