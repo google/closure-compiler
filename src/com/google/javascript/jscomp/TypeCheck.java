@@ -51,6 +51,7 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -156,6 +157,11 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       DiagnosticType.warning(
           "JSC_CONFLICTING_EXTENDED_TYPE",
           "{1} cannot extend this type; {0}s can only extend {0}s");
+
+  static final DiagnosticType INTERFACE_EXTENDS_LOOP =
+      DiagnosticType.warning(
+          "JSC_INTERFACE_EXTENDS_LOOP",
+          "extends loop involving {0}, loop: {1}");
 
   static final DiagnosticType CONFLICTING_IMPLEMENTED_TYPE =
     DiagnosticType.warning(
@@ -1677,6 +1683,17 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
               properties, currentProperties, interfaceType);
           properties.putAll(currentProperties);
         }
+      }
+
+      List<FunctionType> loopPath = functionType.checkExtendsLoop();
+      if (loopPath != null) {
+        String strPath = "";
+        for (int i = 0; i < loopPath.size() - 1; i++) {
+          strPath += loopPath.get(i).getDisplayName() + " -> ";
+        }
+        strPath += loopPath.get(loopPath.size() - 1).getDisplayName();
+        compiler.report(t.makeError(n, INTERFACE_EXTENDS_LOOP,
+            loopPath.get(0).getDisplayName(), strPath));
       }
     }
   }

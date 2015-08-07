@@ -30,7 +30,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -10183,27 +10182,31 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInterfaceExtendsLoop() throws Exception {
-    // TODO(nicksantos): This should emit a warning. This test is still
-    // useful to ensure the compiler doesn't crash.
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
             "/** @interface \n * @extends {F} */var G = function() {};" +
             "/** @interface \n * @extends {G} */var F = function() {};" +
             "/** @constructor \n * @implements {F} */var H = function() {};" +
         "alert((new H).foo);",
-        new ArrayList<String>());
+        ImmutableList.of(
+            "extends loop involving F, "
+            + "loop: F -> G -> F",
+            "extends loop involving G, "
+            + "loop: G -> F -> G"));
   }
 
   public void testInterfaceExtendsLoop2() throws Exception {
-    // This should emit a warning. This test is still
-    // useful to ensure the compiler doesn't crash.
     testClosureTypesMultipleWarnings(
         suppressMissingProperty("foo") +
             "/** @record \n * @extends {F} */var G = function() {};" +
             "/** @record \n * @extends {G} */var F = function() {};" +
             "/** @constructor \n * @implements {F} */var H = function() {};" +
         "alert((new H).foo);",
-        new ArrayList<String>());
+        ImmutableList.of(
+            "extends loop involving F, "
+            + "loop: F -> G -> F",
+            "extends loop involving G, "
+            + "loop: G -> F -> G"));
   }
 
   public void testConversionFromInterfaceToRecursiveConstructor()

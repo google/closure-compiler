@@ -1505,4 +1505,45 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       }
     }
   }
+
+  /**
+   * check if there is a loop in the type extends chain
+   * @return an array of all functions in the loop chain if
+   * a loop exists, otherwise returns null
+   */
+  public List<FunctionType> checkExtendsLoop() {
+    return checkExtendsLoop(new HashSet<FunctionType>(),
+        new ArrayList<FunctionType>());
+  }
+
+  public List<FunctionType> checkExtendsLoop(HashSet<FunctionType> cache,
+      List<FunctionType> path) {
+    Iterable<ObjectType> iterable = this.getExtendedInterfaces();
+    if (iterable != null) {
+      for (ObjectType interfaceType : iterable) {
+        FunctionType superConstructor = interfaceType.getConstructor();
+        if (superConstructor == null) { continue; }
+        if (cache.contains(superConstructor)) {
+          // after detecting a loop, prune and return the path, e.g.,:
+          // A -> B -> C -> D -> C, will be pruned into:
+          // c -> D -> C
+          path.add(superConstructor);
+          while (path.get(0) != superConstructor) {
+            path.remove(0);
+          }
+          return path;
+        }
+        cache.add(superConstructor);
+        path.add(superConstructor);
+        List<FunctionType> result =
+            superConstructor.checkExtendsLoop(cache, path);
+        if (result != null) {
+          return result;
+        }
+        cache.remove(superConstructor);
+        path.remove(path.size() - 1);
+      }
+    }
+    return null;
+  }
 }
