@@ -16,12 +16,11 @@
 package com.google.debugging.sourcemap;
 
 import java.io.IOException;
-import java.nio.charset.CharsetEncoder;
 
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-class Util {
+public class Util {
 
   private static final char[] HEX_CHARS
       = { '0', '1', '2', '3', '4', '5', '6', '7',
@@ -31,15 +30,14 @@ class Util {
    * Escapes the given string to a double quoted (") JavaScript/JSON string
    */
   static String escapeString(String s) {
-    return escapeString(s, '"',  "\\\"", "\'", "\\\\", null);
+    return escapeString(s, '"',  "\\\"", "\'", "\\\\");
   }
 
   /** Helper to escape JavaScript string as well as regular expression */
-  static String escapeString(String s, char quote,
+  private static String escapeString(String s, char quote,
                           String doublequoteEscape,
                           String singlequoteEscape,
-                          String backslashEscape,
-                          CharsetEncoder outputCharsetEncoder) {
+                          String backslashEscape) {
     StringBuilder sb = new StringBuilder(s.length() + 2);
     sb.append(quote);
     for (int i = 0; i < s.length(); i++) {
@@ -78,27 +76,16 @@ class Util {
           }
           break;
         default:
-          // If we're given an outputCharsetEncoder, then check if the
-          //  character can be represented in this character set.
-          if (outputCharsetEncoder != null) {
-            if (outputCharsetEncoder.canEncode(c)) {
-              sb.append(c);
-            } else {
-              // Unicode-escape the character.
-              appendCharAsHex(sb, c);
-            }
+          // No charsetEncoder provided - pass straight Latin characters
+          // through, and escape the rest.  Doing the explicit character
+          // check is measurably faster than using the CharsetEncoder.
+          if (c > 0x1f && c <= 0x7f) {
+            sb.append(c);
           } else {
-            // No charsetEncoder provided - pass straight Latin characters
-            // through, and escape the rest.  Doing the explicit character
-            // check is measurably faster than using the CharsetEncoder.
-            if (c > 0x1f && c <= 0x7f) {
-              sb.append(c);
-            } else {
-              // Other characters can be misinterpreted by some JS parsers,
-              // or perhaps mangled by proxies along the way,
-              // so we play it safe and Unicode escape them.
-              appendCharAsHex(sb, c);
-            }
+            // Other characters can be misinterpreted by some JS parsers,
+            // or perhaps mangled by proxies along the way,
+            // so we play it safe and Unicode escape them.
+            appendHexJavaScriptRepresentation(sb, c);
           }
       }
     }
@@ -109,11 +96,10 @@ class Util {
   /**
    * @see #appendHexJavaScriptRepresentation(Appendable, int)
    */
-  @SuppressWarnings("cast")
-  private static void appendCharAsHex(
+  public static void appendHexJavaScriptRepresentation(
       StringBuilder sb, char c) {
     try {
-      appendHexJavaScriptRepresentation(sb, (int)c);
+      appendHexJavaScriptRepresentation(c, sb);
     } catch (IOException ex) {
       // StringBuilder does not throw IOException.
       throw new RuntimeException(ex);
@@ -123,11 +109,11 @@ class Util {
   /**
    * Returns a JavaScript representation of the character in a hex escaped
    * format.
-   * @param out The buffer to which the hex representation should be appended.
    * @param codePoint The code point to append.
+   * @param out The buffer to which the hex representation should be appended.
    */
   private static void appendHexJavaScriptRepresentation(
-      Appendable out, int codePoint)
+      int codePoint, Appendable out)
       throws IOException {
     if (Character.isSupplementaryCodePoint(codePoint)) {
       // Handle supplementary Unicode values which are not representable in
@@ -135,8 +121,8 @@ class Util {
       // so that they will round-trip properly when sent from Java to JavaScript
       // and back.
       char[] surrogates = Character.toChars(codePoint);
-      appendHexJavaScriptRepresentation(out, surrogates[0]);
-      appendHexJavaScriptRepresentation(out, surrogates[1]);
+      appendHexJavaScriptRepresentation(surrogates[0], out);
+      appendHexJavaScriptRepresentation(surrogates[1], out);
       return;
     }
     out.append("\\u")
@@ -145,5 +131,4 @@ class Util {
         .append(HEX_CHARS[(codePoint >>> 4) & 0xf])
         .append(HEX_CHARS[codePoint & 0xf]);
   }
-
 }

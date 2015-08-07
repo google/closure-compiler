@@ -17,13 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.debugging.sourcemap.Util;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,10 +38,6 @@ class CodeGenerator {
 
   // A memoizer for formatting strings as JS strings.
   private final Map<String, String> escapedJsStrings = new HashMap<>();
-
-  private static final char[] HEX_CHARS
-      = { '0', '1', '2', '3', '4', '5', '6', '7',
-          '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
   private final CodeConsumer cc;
 
@@ -70,7 +66,7 @@ class CodeGenerator {
       CompilerOptions options) {
     cc = consumer;
 
-    this.outputCharsetEncoder = new OutputCharsetEncoder(options);
+    this.outputCharsetEncoder = new OutputCharsetEncoder(options.getOutputCharset());
     this.preferSingleQuotes = options.preferSingleQuotes;
     this.trustedStrings = options.trustedStrings;
     this.languageMode = options.getLanguageOut();
@@ -1799,7 +1795,7 @@ class CodeGenerator {
             // Other characters can be misinterpreted by some JS parsers,
             // or perhaps mangled by proxies along the way,
             // so we play it safe and Unicode escape them.
-            appendHexJavaScriptRepresentation(sb, c);
+            Util.appendHexJavaScriptRepresentation(sb, c);
           }
       }
     }
@@ -1823,7 +1819,7 @@ class CodeGenerator {
       if (c > 0x1F && c < 0x7F) {
         sb.append(c);
       } else {
-        appendHexJavaScriptRepresentation(sb, c);
+        Util.appendHexJavaScriptRepresentation(sb, c);
       }
     }
     return sb.toString();
@@ -1888,45 +1884,5 @@ class CodeGenerator {
   private static Context getContextForNoInOperator(Context context) {
     return (context == Context.IN_FOR_INIT_CLAUSE
         ? Context.IN_FOR_INIT_CLAUSE : Context.OTHER);
-  }
-
-  /**
-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
-   */
-  private static void appendHexJavaScriptRepresentation(
-      StringBuilder sb, char c) {
-    try {
-      appendHexJavaScriptRepresentation(c, sb);
-    } catch (IOException ex) {
-      // StringBuilder does not throw IOException.
-      throw new RuntimeException(ex);
-    }
-  }
-
-  /**
-   * Returns a JavaScript representation of the character in a hex escaped
-   * format.
-   *
-   * @param codePoint The code point to append.
-   * @param out The buffer to which the hex representation should be appended.
-   */
-  private static void appendHexJavaScriptRepresentation(
-      int codePoint, Appendable out)
-      throws IOException {
-    if (Character.isSupplementaryCodePoint(codePoint)) {
-      // Handle supplementary Unicode values which are not representable in
-      // JavaScript.  We deal with these by escaping them as two 4B sequences
-      // so that they will round-trip properly when sent from Java to JavaScript
-      // and back.
-      char[] surrogates = Character.toChars(codePoint);
-      appendHexJavaScriptRepresentation(surrogates[0], out);
-      appendHexJavaScriptRepresentation(surrogates[1], out);
-      return;
-    }
-    out.append("\\u")
-        .append(HEX_CHARS[(codePoint >>> 12) & 0xf])
-        .append(HEX_CHARS[(codePoint >>> 8) & 0xf])
-        .append(HEX_CHARS[(codePoint >>> 4) & 0xf])
-        .append(HEX_CHARS[codePoint & 0xf]);
   }
 }

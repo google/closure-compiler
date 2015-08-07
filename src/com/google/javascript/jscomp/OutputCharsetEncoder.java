@@ -34,8 +34,7 @@ final class OutputCharsetEncoder {
 
   private final CharsetEncoder encoder;
 
-  OutputCharsetEncoder(CompilerOptions options) {
-    Charset outputCharset = options.getOutputCharset();
+  OutputCharsetEncoder(Charset outputCharset) {
     if (outputCharset == null || outputCharset == US_ASCII) {
       // If we want our default (pretending to be UTF-8, but escaping anything
       // outside of straight ASCII), then don't use the encoder, but
