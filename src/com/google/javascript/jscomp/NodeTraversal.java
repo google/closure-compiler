@@ -545,6 +545,15 @@ public class NodeTraversal {
     t.traverse(root);
   }
 
+  /**
+   * Traverses using the ES6SyntacticScopeCreator
+   */
+  // TODO (stephshi): rename to "traverse" when the old traverse method is no longer used
+  public static void traverseEs6(AbstractCompiler compiler, Node root, Callback cb) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
+    t.traverse(root);
+  }
+
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverse(root);

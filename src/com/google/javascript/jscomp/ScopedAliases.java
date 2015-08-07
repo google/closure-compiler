@@ -79,9 +79,6 @@ class ScopedAliases implements HotSwapCompilerPass {
   /** Name used to denote an scoped function block used for aliasing. */
   static final String SCOPING_METHOD_NAME = "goog.scope";
 
-  // The scope depth when inside the body of the function passed to goog.scope.
-  private final int scopeFunctionDepth;
-
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final AliasTransformationHandler transformationHandler;
@@ -125,13 +122,16 @@ class ScopedAliases implements HotSwapCompilerPass {
       "JSC_GOOG_SCOPE_NON_ALIAS_LOCAL",
       "The local variable {0} is in a goog.scope and is not an alias.");
 
+  static final DiagnosticType GOOG_SCOPE_INVALID_VARIABLE = DiagnosticType.error(
+      "JSC_GOOG_SCOPE_INVALID_VARIABLE",
+      "The variable {0} cannot be declared in this scope");
+
   private Multiset<String> scopedAliasNames = HashMultiset.create();
 
   ScopedAliases(AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
       AliasTransformationHandler transformationHandler) {
     this.compiler = compiler;
-    scopeFunctionDepth = compiler.getLanguageMode().isEs6OrHigher() ? 3 : 2;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.transformationHandler = transformationHandler;
   }
@@ -144,7 +144,7 @@ class ScopedAliases implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node root, Node originalRoot) {
     Traversal traversal = new Traversal();
-    NodeTraversal.traverse(compiler, root, traversal);
+    NodeTraversal.traverseEs6(compiler, root, traversal);
 
     if (!traversal.hasErrors()) {
 
@@ -300,6 +300,10 @@ class ScopedAliases implements HotSwapCompilerPass {
 
     private AliasTransformation transformation = null;
 
+    // The body of the function that is passed to goog.scope.
+    // Set when the traversal enters the body, and set back to null when it exits.
+    private Node scopeFunctionBody = null;
+
     Collection<Node> getAliasDefinitionsInOrder() {
       return aliasDefinitionsInOrder;
     }
@@ -316,6 +320,20 @@ class ScopedAliases implements HotSwapCompilerPass {
       return hasErrors;
     }
 
+    /**
+     * Returns true if this NodeTraversal is currently within a goog.scope function body
+     */
+    private boolean inGoogScopeBody() {
+      return scopeFunctionBody != null;
+    }
+
+    /**
+     * Returns true if n is the goog.scope function body
+     */
+    private boolean isGoogScopeFunctionBody(Node n) {
+      return inGoogScopeBody() && n == scopeFunctionBody;
+    }
+
     private boolean isCallToScopeMethod(Node n) {
       return n.isCall() && n.getFirstChild().matchesQualifiedName(SCOPING_METHOD_NAME);
     }
@@ -326,14 +344,7 @@ class ScopedAliases implements HotSwapCompilerPass {
      *     in a goog.scope() call.
      */
     private Node findScopeMethodCall(Node scopeRoot) {
-      // In ES5 and below, the scope is rooted at the FUNCTION node, so if we are inside a
-      // goog.scope call, that call is the parent of the scope root.
-      Node n = scopeRoot.getParent();
-      if (compiler.getLanguageMode().isEs6OrHigher()) {
-        // But, in ES6, the scope we care about is rooted at the BLOCK node, so the
-        // goog.scope() call is the parent of the parent of the scope root.
-        n = n.getParent();
-      }
+      Node n = scopeRoot.getParent().getParent();
       if (isCallToScopeMethod(n)) {
         return n;
       }
@@ -345,27 +356,55 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (t.getScope().isGlobal()) {
         return;
       }
+      if (inGoogScopeBody()) {
+        Scope hoistedScope = t.getScope().getClosestHoistScope();
+        if (isGoogScopeFunctionBody(hoistedScope.getRootNode())) {
+          findAliases(t, hoistedScope);
+        }
+      }
       Node scopeMethodCall = findScopeMethodCall(t.getScope().getRootNode());
       if (scopeMethodCall != null) {
         transformation = transformationHandler.logAliasTransformation(
             scopeMethodCall.getSourceFileName(), getSourceRegion(scopeMethodCall));
-        findAliases(t);
+        findAliases(t, t.getScope());
+        scopeFunctionBody = scopeMethodCall.getLastChild().getLastChild();
       }
     }
 
     @Override
     public void exitScope(NodeTraversal t) {
-      if (t.getScopeDepth() > scopeFunctionDepth) {
-        findNamespaceShadows(t);
-      }
-
-      if (t.getScopeDepth() == scopeFunctionDepth) {
+      if (isGoogScopeFunctionBody(t.getScopeRoot())) {
+        scopeFunctionBody = null;
         renameNamespaceShadows(t);
         injectedDecls.clear();
         aliases.clear();
         forbiddenLocals.clear();
         transformation = null;
         hasNamespaceShadows = false;
+      } else if (inGoogScopeBody()) {
+        findNamespaceShadows(t);
+        reportInvalidVariables(t);
+      }
+    }
+
+    private void reportInvalidVariables(NodeTraversal t) {
+      Scope scope = t.getScope();
+      Node scopeRoot = scope.getRootNode();
+      Node enclosingFunctionBody = NodeUtil.getEnclosingFunction(scopeRoot).getLastChild();
+      if (isGoogScopeFunctionBody(enclosingFunctionBody) && scopeRoot.isBlock()
+          && !scope.isFunctionBlockScope()) {
+        for (Var v : scope.getVarIterable()) {
+          Node parent = v.getNameNode().getParent();
+          if (!parent.isCatch() && !parent.isLet() && !parent.isConst()) {
+            // TODO(user): Do not report this error if in Es6 mode
+            report(t, v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
+          }
+        }
+        if (scopeRoot.getFirstChild().isCatch()) {
+          for (Var v : scope.getClosestHoistScope().getVarIterable()) {
+            report(t, v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
+          }
+        }
       }
     }
 
@@ -392,8 +431,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       hasErrors = true;
     }
 
-    private void findAliases(NodeTraversal t) {
-      Scope scope = t.getScope();
+    private void findAliases(NodeTraversal t, Scope scope) {
       for (Var v : scope.getVarIterable()) {
         Node n = v.getNode();
         Node parent = n.getParent();
@@ -550,13 +588,8 @@ class ScopedAliases implements HotSwapCompilerPass {
         }
         MakeDeclaredNamesUnique uniquifier =
             new MakeDeclaredNamesUnique(renamer);
-        Node scopeRoot = t.getScopeRoot();
-        // If in ES6 mode, pass the FUNCTION node as root for traversal to meet
-        // MakeDeclaredNamesUnique's assumption.
-        if (scopeRoot.isBlock() && scopeRoot.getParent().isFunction()) {
-          scopeRoot = scopeRoot.getParent();
-        }
-        NodeTraversal.traverse(compiler, scopeRoot, uniquifier);
+        Node parent = t.getScopeRoot().getParent();
+        NodeTraversal.traverse(compiler, parent, uniquifier);
       }
     }
 
@@ -567,7 +600,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (!parent.isExprResult()) {
         report(t, n, GOOG_SCOPE_MUST_BE_ALONE);
       }
-      if (t.getScope().isLocal()) {
+      if (NodeUtil.getEnclosingFunction(t.getScope().getRootNode()) != null) {
         report(t, n, GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
       }
       if (n.getChildCount() != 2) {
@@ -592,7 +625,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         validateScopeCall(t, n, n.getParent());
       }
 
-      if (t.getScopeDepth() < scopeFunctionDepth) {
+      if (!inGoogScopeBody()) {
         return;
       }
 
@@ -607,9 +640,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         }
       }
 
-      // Validate the top-level of the goog.scope block.
-      if (t.getScopeDepth() == scopeFunctionDepth
-          && findScopeMethodCall(t.getScope().getRootNode()) != null) {
+      if (isGoogScopeFunctionBody(t.getScope().getClosestHoistScope().getRootNode())) {
         if (aliasVar != null && !isObjLitShorthand && NodeUtil.isLValue(n)) {
           if (aliasVar.getNode() == n) {
             aliasDefinitionsInOrder.add(n);
@@ -632,7 +663,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       }
 
       // Validate all descendent scopes of the goog.scope block.
-      if (t.getScopeDepth() >= scopeFunctionDepth) {
+      if (inGoogScopeBody()) {
         // Check if this name points to an alias.
         if (aliasVar != null) {
           // Note, to support the transitive case, it's important we don't

@@ -196,6 +196,8 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
         if (isNodeAtCurrentLexicalScope(n)) {
           declareLHS(scope, exception);
         }
+        // A new scope is not created for this BLOCK because there is a scope
+        // created for the BLOCK above the CATCH
         scanVars(block);
         return;  // only one child to scan
 

@@ -844,6 +844,13 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         ScopedAliases.GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
   }
 
+  public void testScopeCallInIf() {
+    test("if (true) { goog.scope(function() {});}", "if (true) {}");
+    test("if (true) { goog.scope(function()  { var x = foo; });}", "if (true) { }");
+    test("if (true) { goog.scope(function()  { var x = foo; console.log(x); });}",
+         "if (true) { console.log(foo); }");
+  }
+
   public void testBadParameters() {
     testError("goog.scope()", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
     testError("goog.scope(10)", ScopedAliases.GOOG_SCOPE_HAS_BAD_PARAMETERS);
@@ -853,10 +860,32 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testNonAliasLocal() {
-    testScopedError("try { } catch (e) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
     testScopedError("for (var k in { a: 1, b: 2 }) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     testScopedError("for (var k of [1, 2, 3]) {}", ScopedAliases.GOOG_SCOPE_NON_ALIAS_LOCAL);
+  }
+
+  public void testInvalidVariableInScope() {
+    testScopedError("try { } catch (e) {var x = foo;}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
+    testScopedError("if (true) { function f() {}}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
+    testScopedError("for (;;) { function f() {}}", ScopedAliases.GOOG_SCOPE_INVALID_VARIABLE);
+  }
+
+  public void testVariablesInCatchBlock() {
+    testScopedNoChanges("", "try {} catch (e) {}");
+    testScopedNoChanges("", "try {} catch (e) { let x = foo }", LanguageMode.ECMASCRIPT6);
+    testScopedNoChanges("", "try {} catch (e) { const x = foo }", LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testLetConstInBlock() {
+    testScopedNoChanges("", "if (true) {let x = foo;}", LanguageMode.ECMASCRIPT6);
+    testScopedNoChanges("", "if (true) {const x = foo;}", LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testHoistedAliases() {
+    testScoped("if (true) { var x = foo;}", "if (true) {}");
+    testScoped("if (true) { var x = foo; console.log(x); }",
+                "if (true) { console.log(foo); }");
   }
 
   public void testOkAliasLocal() {
@@ -879,15 +908,6 @@ public final class ScopedAliasesTest extends CompilerTestCase {
     testScoped("const x = 10;",
                SCOPE_NAMESPACE + "$jscomp.scope.x = 10",
                LanguageMode.ECMASCRIPT6);
-  }
-
-  public void testFunctionDeclaration() {
-    testScoped(
-        "if (x) { function f() {} } g(f)",
-        SCOPE_NAMESPACE
-        + "if (x) { $jscomp.scope.f = function () {}; } "
-        + "g($jscomp.scope.f); ",
-        LanguageMode.ECMASCRIPT3);
   }
 
   public void testHoistedFunctionDeclaration() {
