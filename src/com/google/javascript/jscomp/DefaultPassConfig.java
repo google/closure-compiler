@@ -213,6 +213,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
+    checks.add(checkVariableReferences);
+
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
         && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
       checks.add(convertEs6TypedToEs6);
@@ -228,8 +230,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
     }
-
-    checks.add(checkVariableReferences);
 
     if (!options.skipNonTranspilationPasses && options.closurePass) {
       checks.add(closureGoogScopeAliases);
