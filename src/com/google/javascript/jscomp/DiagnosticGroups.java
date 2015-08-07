@@ -96,10 +96,10 @@ public class DiagnosticGroups {
       + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
       + "inferredConstCheck, internetExplorerChecks, invalidCasts, "
       + "misplacedTypeAnnotation, missingGetCssName, missingProperties, "
-      + "missingProvide, missingRequire, missingReturn,"
+      + "missingProvide, missingRequire, missingReturn, "
       + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, "
       + "strictModuleDepCheck, typeInvalidation, "
-      + "undefinedNames, undefinedVars, unknownDefines, uselessCode, "
+      + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, uselessCode, "
       + "useOfGoogBase, visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
