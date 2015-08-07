@@ -458,6 +458,33 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         GOOG_CLASS_NG_INJECT_ON_CLASS);
   }
 
+  // The two following tests are just to make sure that these functionalities in
+  // Es6 does not break the compiler during this pass
+
+  public void testDestructParamOnFunction() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function({a, b, c}) {}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var FancyClass = function({a, b, c}) {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
+  public void testDefaultParamOnFunction() {
+    testRewrite(
+        LINE_JOINER.join(
+            "var FancyClass = goog.defineClass(null, {",
+            "  constructor: function(a = 1) {}",
+            "});"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var FancyClass = function(a = 1) {};"),
+        LanguageMode.ECMASCRIPT6);
+  }
+
   public void testExtendedObjLitMethodDefinition1() {
     testRewrite(
         LINE_JOINER.join(
