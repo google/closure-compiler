@@ -6011,7 +6011,16 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         "e", NUMBER_TYPE, null);
     anonymous.defineDeclaredProperty(
         "f", NUMBER_TYPE, null);
-    assertEquals("{a: number, b: number, c: number, d: number, e: number, f: number}",
+    assertEquals(
+        LINE_JOINER.join(
+            "{",
+            "  a: number, ",
+            "  b: number, ",
+            "  c: number, ",
+            "  d: number, ",
+            "  e: number, ",
+            "  f: number",
+            "}"),
         anonymous.toString());
   }
 

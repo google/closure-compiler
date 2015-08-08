@@ -296,11 +296,15 @@ public class PrototypeObjectType extends ObjectType {
 
       StringBuilder sb = new StringBuilder();
       sb.append("{");
+      boolean useNewlines = !forAnnotations && propertyNames.size() > 2;
 
       int i = 0;
       for (String property : propertyNames) {
         if (i > 0) {
           sb.append(", ");
+        }
+        if (useNewlines) {
+          sb.append("\n  ");
         }
 
         sb.append(property);
@@ -312,6 +316,9 @@ public class PrototypeObjectType extends ObjectType {
           sb.append(", ...");
           break;
         }
+      }
+      if (useNewlines) {
+        sb.append("\n");
       }
 
       sb.append("}");

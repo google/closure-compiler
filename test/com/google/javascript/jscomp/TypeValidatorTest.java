@@ -105,22 +105,55 @@ public final class TypeValidatorTest extends CompilerTestCase {
             fromNatives(STRING_TYPE, BOOLEAN_TYPE)));
   }
 
+  public void testFunctionMismatchMediumLengthTypes() throws Exception {
+    testSame("",
+        LINE_JOINER.join(
+            "/**",
+            " * @param {{a: string, b: string, c: string, d: string, e: string}} x",
+            " */",
+            "function f(x) {}",
+            "var y = {a:'',b:'',c:'',d:'',e:0};",
+            "f(y);"),
+        TYPE_MISMATCH_WARNING,
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {",
+            "  a: string, ",
+            "  b: string, ",
+            "  c: string, ",
+            "  d: string, ",
+            "  e: (number|string)",
+            "}",
+            "required: {",
+            "  a: string, ",
+            "  b: string, ",
+            "  c: string, ",
+            "  d: string, ",
+            "  e: string",
+            "}"));
+  }
+
   /**
    * Make sure the 'found' and 'required' strings are not identical when there is a mismatch.
    * See https://code.google.com/p/closure-compiler/issues/detail?id=719.
    */
   public void testFunctionMismatchLongTypes() throws Exception {
     testSame("",
-        "/**\n" +
-        " * @param {{a: string, b: string, c: string, d: string, e: string}} x\n" +
-        " */\n" +
-        "function f(x) {}\n" +
-        "var y = {a:'',b:'',c:'',d:'',e:0};" +
-        "f(y);",
+        LINE_JOINER.join(
+            "/**",
+            " * @param {{a: string, b: string, c: string, d: string, e: string,",
+            " *          f: string, g: string, h: string, i: string, j: string, k: string}} x",
+            " */",
+            "function f(x) {}",
+            "var y = {a:'',b:'',c:'',d:'',e:'',f:'',g:'',h:'',i:'',j:'',k:0};",
+            "f(y);"),
         TYPE_MISMATCH_WARNING,
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : {a: string, b: string, c: string, d: string, e: (number|string)}\n" +
-        "required: {a: string, b: string, c: string, d: string, e: string}");
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
+              + " g: string, h: string, i: string, j: string, k: (number|string)}",
+            "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
+              + " g: string, h: string, i: string, j: string, k: string}"));
   }
 
   /**
@@ -128,20 +161,25 @@ public final class TypeValidatorTest extends CompilerTestCase {
    */
   public void testFunctionMismatchTypedef() throws Exception {
     testSame("",
-        "/**\n" +
-        " * @typedef {{a: string, b: string, c: string, d: string, e: string}}\n" +
-        " */\n" +
-        "var t;\n" +
-        "/**\n" +
-        " * @param {t} x\n" +
-        " */\n" +
-        "function f(x) {}\n" +
-        "var y = {a:'',b:'',c:'',d:'',e:0};" +
-        "f(y);",
+        LINE_JOINER.join(
+            "/**",
+            " * @typedef {{a: string, b: string, c: string, d: string, e: string,",
+            " *            f: string, g: string, h: string, i: string, j: string, k: string}} x",
+            " */",
+            "var t;",
+            "/**",
+            " * @param {t} x",
+            " */",
+            "function f(x) {}",
+            "var y = {a:'',b:'',c:'',d:'',e:'',f:'',g:'',h:'',i:'',j:'',k:0};",
+            "f(y);"),
         TYPE_MISMATCH_WARNING,
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : {a: string, b: string, c: string, d: string, e: (number|string)}\n" +
-        "required: {a: string, b: string, c: string, d: string, e: string}");
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
+              + " g: string, h: string, i: string, j: string, k: (number|string)}",
+            "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
+              + " g: string, h: string, i: string, j: string, k: string}"));
   }
 
   public void testNullUndefined() {
