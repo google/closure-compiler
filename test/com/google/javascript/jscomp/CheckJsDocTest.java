@@ -17,11 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckJSDoc.ANNOTATION_DEPRECATED;
+import static com.google.javascript.jscomp.CheckJSDoc.ARROW_FUNCTION_AS_CONSTRUCTOR;
 import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
-
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link CheckJSDoc}.
@@ -29,7 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
 
-public final class CheckJsDocTest extends CompilerTestCase {
+public final class CheckJsDocTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -45,23 +44,21 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testInvalidClassJsdoc() {
-    this.setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    testSameEs6("class Foo { /** @param {number} x */ constructor(x) {}}");
 
-    testSame("class Foo { /** @param {number} x */ constructor(x) {}}");
-
-    testWarning(
+    testWarningEs6(
         "class Foo { /** @constructor */ constructor() {}}",
         DISALLOWED_MEMBER_JSDOC);
 
-    testWarning(
+    testWarningEs6(
         "class Foo { /** @interface */ constructor() {}}",
         DISALLOWED_MEMBER_JSDOC);
 
-    testWarning(
+    testWarningEs6(
         "class Foo { /** @extends {Foo} */ constructor() {}}",
         DISALLOWED_MEMBER_JSDOC);
 
-    testWarning(
+    testWarningEs6(
         "class Foo { /** @implements {Foo} */ constructor() {}}",
         DISALLOWED_MEMBER_JSDOC);
   }
@@ -158,8 +155,20 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testNocollapseInExterns() {
-    test("var foo = {}; /** @nocollapse */ foo.bar = true;",
-        "foo.bar;", "foo.bar;", null,
-        MISPLACED_ANNOTATION);
+    testSame("var foo = {}; /** @nocollapse */ foo.bar = true;",
+        "foo.bar;", MISPLACED_ANNOTATION);
+  }
+
+  public void testArrowFuncAsConstructor() {
+    testErrorEs6("/** @constructor */ var a = ()=>{}; var b = a();",
+        ARROW_FUNCTION_AS_CONSTRUCTOR);
+    testErrorEs6("var a = /** @constructor */ ()=>{}; var b = a();",
+        ARROW_FUNCTION_AS_CONSTRUCTOR);
+    testErrorEs6("/** @constructor */ let a = ()=>{}; var b = a();",
+        ARROW_FUNCTION_AS_CONSTRUCTOR);
+    testErrorEs6("/** @constructor */ const a = ()=>{}; var b = a();",
+        ARROW_FUNCTION_AS_CONSTRUCTOR);
+    testErrorEs6("var a; /** @constructor */ a = ()=>{}; var b = a();",
+        ARROW_FUNCTION_AS_CONSTRUCTOR);
   }
 }
