@@ -76,10 +76,6 @@ public final class DefaultPassConfig extends PassConfig {
           "Rename prototypes and inline variables cannot be used together.");
 
   // Miscellaneous errors.
-  static final DiagnosticType REPORT_PATH_IO_ERROR =
-      DiagnosticType.error("JSC_REPORT_PATH_IO_ERROR",
-          "Error writing compiler report to {0}");
-
   private static final DiagnosticType NAME_REF_GRAPH_FILE_ERROR =
       DiagnosticType.error("JSC_NAME_REF_GRAPH_FILE_ERROR",
           "Error \"{1}\" writing name reference graph to \"{0}\".");
@@ -501,6 +497,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inferConsts);
     }
 
+    if (options.reportPath != null && (options.extraSmartNameRemoval || options.smartNameRemoval)) {
+      passes.add(initNameAnalyzeReport);
+    }
+
     // Running this pass before disambiguate properties allow the removing
     // unused methods that share the same name as methods called from unused
     // code.
@@ -516,7 +516,7 @@ public final class DefaultPassConfig extends PassConfig {
         passes.add(earlyPeepholeOptimizations);
       }
 
-      passes.add(smartNamePass);
+      passes.add(extraSmartNamePass);
     }
 
     // Property disambiguation should only run once and needs to be done
@@ -2030,60 +2030,40 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /**
-   * Process smart name processing - removes unused classes and does referencing
-   * starting with minimum set of names.
-   */
-  private final PassFactory smartNamePass = new PassFactory("smartNamePass", true) {
-    private boolean hasWrittenFile = false;
-
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override
-        public void process(Node externs, Node root) {
-          NameAnalyzer na = new NameAnalyzer(compiler, false);
-          na.process(externs, root);
-
-          String reportPath = options.reportPath;
-          if (reportPath != null) {
-            try {
-              if (hasWrittenFile) {
-                Files.append(na.getHtmlReport(), new File(reportPath),
-                    UTF_8);
-              } else {
-                Files.write(na.getHtmlReport(), new File(reportPath),
-                    UTF_8);
-                hasWrittenFile = true;
-              }
-            } catch (IOException e) {
-              compiler.report(JSError.make(REPORT_PATH_IO_ERROR, reportPath));
-            }
-          }
-
-          if (options.smartNameRemoval) {
-            na.removeUnreferenced();
-          }
-        }
-      };
-    }
+  private final PassFactory initNameAnalyzeReport = new PassFactory("initNameAnalyzeReport", true) {
+     @Override
+     protected CompilerPass create(final AbstractCompiler compiler) {
+       return new CompilerPass() {
+         @Override
+         public void process(Node externs, Node root) {
+           NameAnalyzer.createEmptyReport(compiler, options.reportPath);
+         }
+       };
+     }
   };
 
   /**
    * Process smart name processing - removes unused classes and does referencing
    * starting with minimum set of names.
    */
+  private final PassFactory extraSmartNamePass = new PassFactory("smartNamePass", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new NameAnalyzer(compiler, true, options.reportPath);
+    }
+  };
+
+  private final PassFactory smartNamePass = new PassFactory("smartNamePass", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new NameAnalyzer(compiler, true, options.reportPath);
+    }
+  };
+
   private final PassFactory smartNamePass2 = new PassFactory("smartNamePass", true) {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override
-        public void process(Node externs, Node root) {
-          NameAnalyzer na = new NameAnalyzer(compiler, false);
-          na.process(externs, root);
-          na.removeUnreferenced();
-        }
-      };
+      return new NameAnalyzer(compiler, true, null);
     }
   };
 

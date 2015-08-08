@@ -1952,7 +1952,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     NameAnalyzer analyzer;
     MarkNoSideEffectCallsAndNameAnalyzerRunner(Compiler compiler) {
       this.markNoSideEffectCalls = new MarkNoSideEffectCalls(compiler);
-      this.analyzer = new NameAnalyzer(compiler, true);
+      this.analyzer = new NameAnalyzer(compiler, true, null);
     }
 
     @Override

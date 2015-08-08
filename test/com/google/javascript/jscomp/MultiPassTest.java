@@ -219,7 +219,7 @@ public final class MultiPassTest extends CompilerTestCase {
             return new CompilerPass() {
               @Override
               public void process(Node externs, Node root) {
-                NameAnalyzer na = new NameAnalyzer(compiler, false);
+                NameAnalyzer na = new NameAnalyzer(compiler, false, null);
                 na.process(externs, root);
                 na.removeUnreferenced();
               }

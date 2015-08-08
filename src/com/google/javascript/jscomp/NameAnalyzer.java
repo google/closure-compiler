@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -23,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.io.Files;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.GetReplacementSideEffectSubexpressions;
 import com.google.javascript.jscomp.GatherSideEffectSubexpressionsCallback.SideEffectAccumulator;
@@ -35,6 +38,8 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -120,6 +125,9 @@ final class NameAnalyzer implements CompilerPass {
   /** Whether to remove unreferenced variables in main pass */
   private final boolean removeUnreferenced;
 
+  /** The path of the report file */
+  private final String reportPath;
+
   /** Names that refer to the global scope */
   private final Set<String> globalNames;
 
@@ -137,6 +145,10 @@ final class NameAnalyzer implements CompilerPass {
    * call them aliases. Store a map from each alias name to the alias set.
    */
   private final Map<String, AliasSet> aliases = new HashMap<>();
+
+  static final DiagnosticType REPORT_PATH_IO_ERROR =
+      DiagnosticType.error("JSC_REPORT_PATH_IO_ERROR",
+          "Error writing compiler report to {0}");
 
   /**
    * All the aliases in a program form a graph, where each global name is
@@ -1090,11 +1102,24 @@ final class NameAnalyzer implements CompilerPass {
    * @param removeUnreferenced If true, remove unreferenced variables during
    *        process()
    */
-  NameAnalyzer(AbstractCompiler compiler, boolean removeUnreferenced) {
+  NameAnalyzer(
+      AbstractCompiler compiler,
+      boolean removeUnreferenced,
+      String reportPath) {
     this.compiler = compiler;
     this.removeUnreferenced = removeUnreferenced;
+    this.reportPath = reportPath;
     this.globalNames = DEFAULT_GLOBAL_NAMES;
     this.changeProxy = new AstChangeProxy();
+  }
+
+  static void createEmptyReport(AbstractCompiler compiler, String reportPath) {
+    Preconditions.checkNotNull(reportPath);
+    try {
+      Files.write("", new File(reportPath), UTF_8);
+    } catch (IOException e) {
+      compiler.report(JSError.make(REPORT_PATH_IO_ERROR, reportPath));
+    }
   }
 
   @Override
@@ -1115,6 +1140,14 @@ final class NameAnalyzer implements CompilerPass {
     referenceAliases();
 
     calculateReferences();
+
+    if (reportPath != null) {
+      try {
+        Files.append(getHtmlReport(), new File(reportPath), UTF_8);
+      } catch (IOException e) {
+        compiler.report(JSError.make(REPORT_PATH_IO_ERROR, reportPath));
+      }
+    }
 
     if (removeUnreferenced) {
       removeUnreferenced();
