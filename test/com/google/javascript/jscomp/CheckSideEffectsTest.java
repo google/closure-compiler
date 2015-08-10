@@ -16,13 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
-public final class CheckSideEffectsTest extends CompilerTestCase {
+public final class CheckSideEffectsTest extends Es6CompilerTestCase {
   public CheckSideEffectsTest() {
     this.parseTypeInfo = true;
     allowExternsChanges(true);
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
   }
 
   @Override
@@ -39,95 +36,112 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
 
   public void testUselessCode() {
     testSame("function f(x) { if(x) return; }");
-    test("function f(x) { if(x); }", "function f(x) { if(x); }", null, e);
+    testWarning("function f(x) { if(x); }", e);
+    testSameEs6("var f = x=>x");
+    testWarningEs6("var f = (x)=>{ if(x); }", e);
 
     testSame("if(x) x = y;");
-    test("if(x) x == bar();", "if(x) JSCOMPILER_PRESERVE(x == bar());", null, e);
+    testWarning("if(x) x == bar();", "if(x) JSCOMPILER_PRESERVE(x == bar());", e);
 
     testSame("x = 3;");
-    test("x == 3;", "JSCOMPILER_PRESERVE(x == 3);", null, e);
+    testWarning("x == 3;", "JSCOMPILER_PRESERVE(x == 3);", e);
 
     testSame("var x = 'test'");
-    test("var x = 'test'\n'Breakstr'",
-         "var x = 'test'\nJSCOMPILER_PRESERVE('Breakstr')", null, e);
+    testWarning("var x = 'test'\n'Breakstr'",
+         "var x = 'test'\nJSCOMPILER_PRESERVE('Breakstr')", e);
 
     testSame("");
     testSame("foo();;;;bar();;;;");
 
     testSame("var a, b; a = 5, b = 6");
-    test("var a, b; a = 5, b == 6",
-         "var a, b; a = 5, JSCOMPILER_PRESERVE(b == 6)", null, e);
-    test("var a, b; a = (5, 6)",
-         "var a, b; a = (JSCOMPILER_PRESERVE(5), 6)", null, e);
-    test("var a, b; a = (bar(), 6, 7)",
-         "var a, b; a = (bar(), JSCOMPILER_PRESERVE(6), 7)", null, e);
-    test("var a, b; a = (bar(), bar(), 7, 8)",
-         "var a, b; a = (bar(), bar(), JSCOMPILER_PRESERVE(7), 8)", null, e);
+    testWarning("var a, b; a = 5, b == 6",
+         "var a, b; a = 5, JSCOMPILER_PRESERVE(b == 6)", e);
+    testWarning("var a, b; a = (5, 6)",
+         "var a, b; a = (JSCOMPILER_PRESERVE(5), 6)", e);
+    testWarning("var a, b; a = (bar(), 6, 7)",
+         "var a, b; a = (bar(), JSCOMPILER_PRESERVE(6), 7)", e);
+    testWarning("var a, b; a = (bar(), bar(), 7, 8)",
+         "var a, b; a = (bar(), bar(), JSCOMPILER_PRESERVE(7), 8)", e);
     testSame("var a, b; a = (b = 7, 6)");
-    testSame("function x(){}\nfunction f(a, b){}\nf(1,(x(), 2));");
-    test("function x(){}\nfunction f(a, b){}\nf(1,(2, 3));",
-         "function x(){}\nfunction f(a, b){}\n" +
-         "f(1,(JSCOMPILER_PRESERVE(2), 3));", null, e);
+    testSame(
+        LINE_JOINER.join(
+            "function x(){}",
+            "function f(a, b){}",
+            "f(1,(x(), 2));"));
+    testWarning(
+        LINE_JOINER.join(
+            "function x(){}",
+            "function f(a, b){}",
+            "f(1,(2, 3));"),
+        LINE_JOINER.join(
+            "function x(){}",
+            "function f(a, b){}",
+            "f(1,(JSCOMPILER_PRESERVE(2), 3));"), e);
 
-    test("var x = `TemplateA`\n'TestB'",
-        "var x = `TemplateA`\nJSCOMPILER_PRESERVE('TestB')", null, e);
-    test("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", null, e);
-    test(
+    testWarningEs6("var x = `TemplateA`\n'TestB'",
+        "var x = `TemplateA`\nJSCOMPILER_PRESERVE('TestB')", e);
+    testWarningEs6("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", e);
+    testWarningEs6(
         LINE_JOINER.join(
             "var name = 'Bad';",
             "`${name}Template`;"),
         LINE_JOINER.join(
             "var name = 'Bad';",
-            "JSCOMPILER_PRESERVE(`${name}Template`)"), null, e);
-    test(
+            "JSCOMPILER_PRESERVE(`${name}Template`)"), e);
+    testWarningEs6(
         LINE_JOINER.join(
             "var name = 'BadTail';",
             "`Template${name}`;"),
         LINE_JOINER.join(
             "var name = 'BadTail';",
-            "JSCOMPILER_PRESERVE(`Template${name}`)"), null, e);
-    testSame(
+            "JSCOMPILER_PRESERVE(`Template${name}`)"), e);
+    testSameEs6(
         LINE_JOINER.join(
             "var name = 'Good';",
             "var templateString = `${name}Template`;"));
-    testSame("var templateString = `Template`;");
-    testSame("tagged`Template`;");
-    testSame("tagged`${name}Template`;");
+    testSameEs6("var templateString = `Template`;");
+    testSameEs6("tagged`Template`;");
+    testSameEs6("tagged`${name}Template`;");
 
-    testSame(LINE_JOINER.join(
+    testSameEs6(LINE_JOINER.join(
         "var obj = {",
         "  itm1: 1,",
         "  itm2: 2",
         "}",
         "var { itm1: de_item1, itm2: de_item2 } = obj;"));
-    testSame(LINE_JOINER.join(
+    testSameEs6(LINE_JOINER.join(
         "var obj = {",
         "  itm1: 1,",
         "  itm2: 2",
         "}",
         "var { itm1, itm2 } = obj;"));
-    testSame(LINE_JOINER.join(
+    testSameEs6(LINE_JOINER.join(
         "var arr = ['item1', 'item2', 'item3'];",
         "var [ itm1 = 1, itm2 = 2 ] = arr;"));
-    testSame(LINE_JOINER.join(
+    testSameEs6(LINE_JOINER.join(
         "var arr = ['item1', 'item2', 'item3'];",
         "var [ itm1 = 1, itm2 = 2 ] = badArr;"));
-    testSame(LINE_JOINER.join(
+    testSameEs6(LINE_JOINER.join(
         "var arr = ['item1', 'item2', 'item3'];",
         "function f(){}",
         "var [ itm1 = f(), itm2 = 2 ] = badArr;"));
+
+    testSameEs6("function c(a, b = 1) {}; c(1);");
+    testSameEs6("function c(a, b = f()) {}; c(1);");
+    testSameEs6("function c(a, {b, c}) {}; c(1);");
+    testSameEs6("function c(a, {b, c}) {}; c(1, {b: 2, c: 3});");
   }
 
   public void testUselessCodeInFor() {
     testSame("for(var x = 0; x < 100; x++) { foo(x) }");
     testSame("for(; true; ) { bar() }");
     testSame("for(foo(); true; foo()) { bar() }");
-    test("for(void 0; true; foo()) { bar() }",
-         "for(JSCOMPILER_PRESERVE(void 0); true; foo()) { bar() }", null, e);
-    test("for(foo(); true; void 0) { bar() }",
-         "for(foo(); true; JSCOMPILER_PRESERVE(void 0)) { bar() }", null, e);
-    test("for(foo(); true; (1, bar())) { bar() }",
-         "for(foo(); true; (JSCOMPILER_PRESERVE(1), bar())) { bar() }", null, e);
+    testWarning("for(void 0; true; foo()) { bar() }",
+         "for(JSCOMPILER_PRESERVE(void 0); true; foo()) { bar() }", e);
+    testWarning("for(foo(); true; void 0) { bar() }",
+         "for(foo(); true; JSCOMPILER_PRESERVE(void 0)) { bar() }", e);
+    testWarning("for(foo(); true; (1, bar())) { bar() }",
+         "for(foo(); true; (JSCOMPILER_PRESERVE(1), bar())) { bar() }", e);
 
     testSame("for(foo in bar) { foo() }");
     testSame("for (i = 0; el = el.previousSibling; i++) {}");
@@ -135,26 +149,28 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   public void testTypeAnnotations() {
-    test("x;", "JSCOMPILER_PRESERVE(x);", null, e);
-    test("a.b.c.d;", "JSCOMPILER_PRESERVE(a.b.c.d);", null, e);
+    testWarning("x;", "JSCOMPILER_PRESERVE(x);", e);
+    testWarning("a.b.c.d;", "JSCOMPILER_PRESERVE(a.b.c.d);", e);
     testSame("/** @type {Number} */ a.b.c.d;");
     testSame("if (true) { /** @type {Number} */ a.b.c.d; }");
 
-    test("function A() { this.foo; }",
-         "function A() { JSCOMPILER_PRESERVE(this.foo); }", null, e);
+    testWarning("function A() { this.foo; }",
+         "function A() { JSCOMPILER_PRESERVE(this.foo); }", e);
     testSame("function A() { /** @type {Number} */ this.foo; }");
   }
 
   public void testJSDocComments() {
     testSame("function A() { /** This is a JsDoc comment */ this.foo; }");
-    test("function A() { /* This is a normal comment */ this.foo; }",
+    testWarning("function A() { /* This is a normal comment */ this.foo; }",
          "function A() { " +
-         " /* This is a normal comment */ JSCOMPILER_PRESERVE(this.foo); }", null, e);
+         " /* This is a normal comment */ JSCOMPILER_PRESERVE(this.foo); }", e);
   }
 
   public void testIssue80() {
     testSame("(0, eval)('alert');");
-    test("(0, foo)('alert');", "(JSCOMPILER_PRESERVE(0), foo)('alert');", null, e);
+    testWarning(
+        "(0, foo)('alert');",
+        "(JSCOMPILER_PRESERVE(0), foo)('alert');", e);
   }
 
   public void testIsue504() {
@@ -163,12 +179,15 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   public void testExternFunctions() {
-    String externs = "/** @return {boolean}\n * @nosideeffects */\n" +
-        "function noSideEffectsExtern(){}\n" +
-        "/** @return {boolean}\n * @nosideeffects */\n" +
-        "var noSideEffectsExtern2 = function(){};\n" +
-        "/** @return {boolean} */ function hasSideEffectsExtern(){}\n" +
-        "/** @return {boolean} */ var hasSideEffectsExtern2 = function(){}\n";
+    String externs = LINE_JOINER.join(
+        "/** @return {boolean}",
+        "  * @nosideeffects */",
+        "function noSideEffectsExtern(){}",
+        "/** @return {boolean}",
+        "  * @nosideeffects */",
+        "var noSideEffectsExtern2 = function(){};",
+        "/** @return {boolean} */ function hasSideEffectsExtern(){}",
+        "/** @return {boolean} */ var hasSideEffectsExtern2 = function(){}");
 
     testSame(externs, "alert(noSideEffectsExtern());", null);
 
@@ -192,9 +211,11 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   public void testExternPropertyFunctions() {
-    String externs = "/** @const */ var foo = {};\n" +
-        "/** @return {boolean}\n * @nosideeffects */\n" +
-        "foo.noSideEffectsExtern = function(){}";
+    String externs = LINE_JOINER.join(
+        "/** @const */ var foo = {};",
+        "/** @return {boolean}",
+        "  * @nosideeffects */",
+        "foo.noSideEffectsExtern = function(){}");
 
     testSame(externs, "alert(foo.noSideEffectsExtern());", null);
 
