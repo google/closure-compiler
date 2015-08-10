@@ -927,6 +927,12 @@ Navigator.prototype.cookieEnabled;
 Navigator.prototype.language;
 
 /**
+ * @type {!Array<string>|undefined}
+ * @see https://developer.mozilla.org/en/Navigator.languages
+ */
+Navigator.prototype.languages;
+
+/**
  * @type {MimeTypeArray}
  * @see https://developer.mozilla.org/en/Navigator.mimeTypes
  */
