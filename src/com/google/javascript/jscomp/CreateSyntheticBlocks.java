@@ -78,7 +78,7 @@ class CreateSyntheticBlocks implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // Find and validate the markers.
-    NodeTraversal.traverse(compiler, root, new Callback());
+    NodeTraversal.traverseEs6(compiler, root, new Callback());
 
     // Complain about any unmatched markers.
     for (Node node : markerStack) {

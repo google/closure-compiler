@@ -142,7 +142,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
   public void process(Node externs, Node root) {
     logger.fine("Expanding Jquery Aliases");
 
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   private void maybeReplaceJqueryPrototypeAlias(Node n) {

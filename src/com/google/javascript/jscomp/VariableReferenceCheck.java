@@ -147,7 +147,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
     private void checkDefaultParam(Var v, Scope scope) {
       ShallowReferenceCollector check = new ShallowReferenceCollector();
-      NodeTraversal.traverse(compiler, v.getParentNode().getChildAtIndex(1), check);
+      NodeTraversal.traverseEs6(compiler, v.getParentNode().getChildAtIndex(1), check);
       for (Node ref : check.currParamReferences) {
         String refName = ref.getString();
         if (!scope.isDeclared(refName, true)) {

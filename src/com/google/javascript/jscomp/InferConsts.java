@@ -45,7 +45,7 @@ class InferConsts implements CompilerPass {
   public void process(Node externs, Node js) {
     ReferenceCollectingCallback collector = new ReferenceCollectingCallback(
         compiler, ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR);
-    NodeTraversal.traverse(compiler, js, collector);
+    NodeTraversal.traverseEs6(compiler, js, collector);
 
     for (Var v : collector.getAllSymbols()) {
       considerVar(v, collector.getReferences(v));

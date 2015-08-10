@@ -123,7 +123,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   @Override
@@ -509,10 +509,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     Preconditions.checkState(n.isCall());
     Node fn = n.getLastChild();
     Preconditions.checkState(fn.isFunction());
-    if (compiler.getLanguageMode().isEs6OrHigher()) {
-      return fn.getLastChild();
-    }
-    return fn;
+    return fn.getLastChild();
   }
 
   private Node getModuleStatementRootForLoadModuleCall(Node n) {

@@ -91,7 +91,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    new NodeTraversal(compiler, this).traverse(scriptRoot);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   // Return true if the name is a class name (starts with an uppercase

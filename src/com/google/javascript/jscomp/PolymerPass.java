@@ -111,7 +111,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
   @Override
   public void process(Node externs, Node root) {
     FindPolymerExterns externsCallback = new FindPolymerExterns();
-    NodeTraversal.traverse(compiler, externs, externsCallback);
+    NodeTraversal.traverseEs6(compiler, externs, externsCallback);
     polymerElementExterns = externsCallback.polymerElementExterns;
     polymerElementProps = externsCallback.getpolymerElementProps();
 
@@ -270,9 +270,9 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
     SuppressBehaviors suppressBehaviorsCallback = new SuppressBehaviors(compiler);
-    NodeTraversal.traverse(compiler, scriptRoot, suppressBehaviorsCallback);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, suppressBehaviorsCallback);
   }
 
   @Override

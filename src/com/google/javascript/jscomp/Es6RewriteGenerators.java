@@ -109,14 +109,14 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new DecomposeYields(compiler));
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, new DecomposeYields(compiler));
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, new DecomposeYields(compiler));
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, new DecomposeYields(compiler));
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   @Override
@@ -428,10 +428,10 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
       int finallyEndState = generatorCaseCount++;
       Node finallyEnd = makeGeneratorMarker(finallyEndState);
 
-      NodeTraversal.traverse(compiler,
+      NodeTraversal.traverseEs6(compiler,
           tryBody,
           new ControlExitsCheck(finallyName, finallyStartState));
-      NodeTraversal.traverse(compiler, catchBody,
+      NodeTraversal.traverseEs6(compiler, catchBody,
           new ControlExitsCheck(finallyName, finallyStartState));
       originalGeneratorBody.addChildToFront(tryBody.detachFromParent());
 
@@ -896,7 +896,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
 
   private boolean controlCanExit(Node n) {
     ControlExitsCheck exits = new ControlExitsCheck();
-    NodeTraversal.traverse(compiler, n, exits);
+    NodeTraversal.traverseEs6(compiler, n, exits);
     return exits.didExit();
   }
 

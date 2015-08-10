@@ -68,7 +68,7 @@ public final class ObjectPropertyStringPreprocess implements CompilerPass {
     addExternDeclaration(externs,
         IR.var(
             IR.name(EXTERN_OBJECT_PROPERTY_STRING)));
-    NodeTraversal.traverse(compiler, root, new Callback());
+    NodeTraversal.traverseEs6(compiler, root, new Callback());
   }
 
   private static void addExternDeclaration(Node externs, Node declarationStmt) {

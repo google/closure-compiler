@@ -45,7 +45,7 @@ class DeclaredGlobalExternsOnWindow
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, this);
+    NodeTraversal.traverseEs6(compiler, externs, this);
     addWindowProperties();
   }
 

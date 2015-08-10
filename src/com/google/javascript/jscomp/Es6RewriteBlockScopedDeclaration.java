@@ -116,15 +116,15 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, new CollectUndeclaredNames());
-    NodeTraversal.traverse(compiler, scriptRoot, this);
-    NodeTraversal.traverse(compiler, scriptRoot, new Es6RenameReferences(renameMap));
+    NodeTraversal.traverseEs6(compiler, scriptRoot, new CollectUndeclaredNames());
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, new Es6RenameReferences(renameMap));
 
     LoopClosureTransformer transformer = new LoopClosureTransformer();
-    NodeTraversal.traverse(compiler, scriptRoot, transformer);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
     varify();
-    NodeTraversal.traverse(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
+    NodeTraversal.traverseEs6(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
   }
 
   private void varify() {

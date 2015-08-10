@@ -43,13 +43,13 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, this);
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, externs, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   @Override
@@ -78,7 +78,7 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
     }
 
     UpdateThisAndArgumentsReferences updater = new UpdateThisAndArgumentsReferences();
-    NodeTraversal.traverse(compiler, body, updater);
+    NodeTraversal.traverseEs6(compiler, body, updater);
     addVarDecls(t, updater.changedThis, updater.changedArguments);
 
     compiler.reportCodeChange();

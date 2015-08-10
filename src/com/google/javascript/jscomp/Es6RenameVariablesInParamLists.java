@@ -50,7 +50,7 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
 
     Node paramList = n.getChildAtIndex(1);
     final CollectReferences collector = new CollectReferences();
-    NodeTraversal.traverse(compiler, paramList, new NodeTraversal.AbstractPreOrderCallback() {
+    NodeTraversal.traverseEs6(compiler, paramList, new NodeTraversal.AbstractPreOrderCallback() {
       @Override
       public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
         if (parent == null) {
@@ -59,7 +59,7 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
 
         if (parent.isDefaultValue() && n == parent.getLastChild()
             || parent.isComputedProp() && n == parent.getFirstChild()) {
-          NodeTraversal.traverse(compiler, n, collector);
+          NodeTraversal.traverseEs6(compiler, n, collector);
           return false;
         }
         return true;
@@ -88,13 +88,13 @@ public final class Es6RenameVariablesInParamLists extends AbstractPostOrderCallb
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, this);
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, externs, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   /**

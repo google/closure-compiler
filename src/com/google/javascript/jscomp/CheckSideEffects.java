@@ -67,9 +67,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, new GetNoSideEffectExterns());
+    NodeTraversal.traverseEs6(compiler, externs, new GetNoSideEffectExterns());
 
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
 
     // Code with hidden side-effect code is common, for example
     // accessing "el.offsetWidth" forces a reflow in browsers, to allow this
@@ -84,7 +84,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   @Override
@@ -211,7 +211,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverse(compiler, root, this);
+      NodeTraversal.traverseEs6(compiler, root, this);
     }
 
     @Override
