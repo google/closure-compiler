@@ -2063,14 +2063,14 @@ final class NewTypeInference implements CompilerPass {
         (comparisonOp == Token.SHNE && specializedType.isTruthy())) {
       JSType lhsType = lhsPair.type;
       JSType rhsType = rhsPair.type;
-      if (lhsType.equals(JSType.NULL) ||
-          lhsType.equals(JSType.UNDEFINED)) {
+      if (lhsType.isNullOrUndef()) {
         rhsType = rhsType.removeType(lhsType);
-      } else if (rhsType.equals(JSType.NULL) ||
-          rhsType.equals(JSType.UNDEFINED)) {
+      } else if (rhsType.isNullOrUndef()) {
         lhsType = lhsType.removeType(rhsType);
       }
-      lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, lhsType);
+      // The first analysis may tighten nullable dereferences, so we use
+      // rhsPair.env here instead of inEnv.
+      lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, lhsType);
       rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
     }
     rhsPair.type = JSType.BOOLEAN;

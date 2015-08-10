@@ -11614,6 +11614,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    return this.b.a;",
         "  }",
         "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (null | { prop: (null|number) }) */ x) {",
+        "  if (x.prop !== null) {",
+        "    return x.prop - 1;",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testFunctionReturnTypeSpecialization() {
