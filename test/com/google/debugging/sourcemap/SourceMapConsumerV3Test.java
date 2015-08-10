@@ -44,11 +44,8 @@ public final class SourceMapConsumerV3Test extends TestCase {
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
     consumer.parse(sourceMap);
 
-    String[] sources = (String[]) consumer.getOriginalSources().toArray();
-
-    assertThat(sources).hasLength(1);
+    assertThat(consumer.getOriginalSources()).containsExactly("testcode");
     assertThat(consumer.getSourceRoot()).isNull();
-    assertThat(sources[0]).isEqualTo("testcode");
   }
 
   public void testMap() throws Exception{
@@ -91,12 +88,9 @@ public final class SourceMapConsumerV3Test extends TestCase {
     SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
     consumer.parse(sourceMap);
 
-    String[] sources = (String[]) consumer.getOriginalSources().toArray();
-
-    assertThat(sources).hasLength(1);
-    assertThat(consumer.getSourceRoot()).isEqualTo("http://server/path/");
     //By default sourceRoot is not prepended
-    assertThat(sources[0]).isEqualTo("testcode");
+    assertThat(consumer.getOriginalSources()).containsExactly("testcode");
+    assertThat(consumer.getSourceRoot()).isEqualTo("http://server/path/");
   }
 
   public void testExtensions() throws Exception{
