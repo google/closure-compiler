@@ -410,6 +410,18 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSame(js);
   }
 
+  public void testLetConstConstructorName() {
+    testSameEs6("/** @type {function(new:Date)} */let bar = Date; new bar();");
+    testSameEs6("/** @type {function(new:Date)} */const bar = Date; new bar();");
+  }
+
+  public void testLetConstConstructorFunction() {
+    testSameEs6(
+        "/** @type {function(new:Date)} */let bar = function() {}; new bar();");
+    testSameEs6(
+        "/** @type {function(new:Date)} */const bar = function() {}; new bar();");
+  }
+
   public void testAssignConstructorName() {
     String js =
         LINE_JOINER.join(
@@ -597,5 +609,29 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         + "  var baz = new Atom();\n"
         + "}\n";
     test(js, null);
+  }
+
+  public void testReferenceInDestructuringParam() {
+    testSameEs6(LINE_JOINER.join(
+        "goog.require('Bar');",
+        "function func( {a} ){}",
+        "func( {a: new Bar()} );"));
+    testWarningEs6(LINE_JOINER.join(
+        "function func( {a} ){}",
+        "func( {a: new Bar()} );"), MISSING_REQUIRE_WARNING);
+    testSameEs6(LINE_JOINER.join(
+        "/** @constructor */ var Bar = function(){};",
+        "function func( {a} ){}",
+        "func( {a: new Bar()} );"));
+  }
+
+  public void testReferenceInDefaultParam() {
+    testWarningEs6(LINE_JOINER.join(
+        "function func( a = new Bar() ){}",
+        "func();"), MISSING_REQUIRE_WARNING);
+    testSameEs6(LINE_JOINER.join(
+        "/** @constructor */ var Bar = function(){};",
+        "function func( a = new Bar() ){}",
+        "func();"));
   }
 }

@@ -40,6 +40,8 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
 
   public void testNoWarning() {
     testSame("goog.require('foo.Bar'); var x = new foo.Bar();");
+    testSameEs6("goog.require('foo.Bar'); let x = new foo.Bar();");
+    testSameEs6("goog.require('foo.Bar'); const x = new foo.Bar();");
     testSame("goog.require('foo.Bar'); /** @type {foo.Bar} */ var x;");
     testSame("goog.require('foo.Bar'); /** @type {Array<foo.Bar>} */ var x;");
     testSame("goog.require('foo.Bar'); var x = new foo.Bar.Baz();");
@@ -70,6 +72,15 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
     // The local var "bar" is unused so after goog.scope rewriting, foo.bar is unused.
     testError("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; });",
         EXTRA_REQUIRE_WARNING);
+
+    testErrorEs6(LINE_JOINER.join(
+        "goog.require('Bar');",
+        "function func( {a} ){}",
+        "func( {a: 1} );"), EXTRA_REQUIRE_WARNING);
+    testErrorEs6(LINE_JOINER.join(
+        "goog.require('Bar');",
+        "function func( a = 1 ){}",
+        "func(42);"), EXTRA_REQUIRE_WARNING);
   }
 
   public void testNoWarningMultipleFiles() {

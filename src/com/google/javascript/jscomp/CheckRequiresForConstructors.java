@@ -126,6 +126,8 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       switch (n.getType()) {
         case Token.ASSIGN:
         case Token.VAR:
+        case Token.LET:
+        case Token.CONST:
           maybeAddConstructor(n);
           break;
         case Token.FUNCTION:
@@ -372,6 +374,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     private void maybeAddUsage(NodeTraversal t, Node n, final JSTypeExpression expr) {
       // Just look at the root node, don't traverse.
       Predicate<Node> pred = new Predicate<Node>() {
+        @Override
         public boolean apply(Node n) {
           return n == expr.getRoot();
         }
@@ -382,6 +385,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
     private void maybeAddUsage(final NodeTraversal t, final Node n, Node rootTypeNode,
         final Map<String, Node> usagesMap, Predicate<Node> pred) {
       Visitor visitor = new Visitor() {
+        @Override
         public void visit(Node typeNode) {
           if (typeNode.isString()) {
             String typeString = typeNode.getString();
