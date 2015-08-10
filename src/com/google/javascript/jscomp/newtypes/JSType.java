@@ -45,6 +45,10 @@ public abstract class JSType implements TypeI {
   protected static final int TYPEVAR_MASK = 0x1;
   protected static final int NON_SCALAR_MASK = 0x2;
   protected static final int ENUM_MASK = 0x4;
+  // The less important use case for TRUE_MASK and FALSE_MASK is to type the
+  // values true and false precisely. But people don't write: if (true) {...}
+  // More importantly, these masks come up as the negation of TRUTHY_MASK and
+  // FALSY_MASK when the ! operator is used.
   protected static final int TRUE_MASK = 0x8;  // These two print out
   protected static final int FALSE_MASK = 0x10; // as 'boolean'
   protected static final int NULL_MASK = 0x20;
@@ -267,8 +271,16 @@ public abstract class JSType implements TypeI {
     return TRUTHY_MASK == getMask() || TRUE_MASK == getMask();
   }
 
+  private boolean hasTruthyMask() {
+    return TRUTHY_MASK == getMask();
+  }
+
   public boolean isFalsy() {
     return FALSY_MASK == getMask() || FALSE_MASK == getMask();
+  }
+
+  private boolean hasFalsyMask() {
+    return FALSY_MASK == getMask();
   }
 
   public boolean isBoolean() {
@@ -320,6 +332,15 @@ public abstract class JSType implements TypeI {
 
   public boolean isStruct() {
     for (ObjectType objType : getObjs()) {
+      if (!objType.isStruct()) {
+        return false;
+      }
+    }
+    return !getObjs().isEmpty();
+  }
+
+  public boolean mayBeStruct() {
+    for (ObjectType objType : getObjs()) {
       if (objType.isStruct()) {
         return true;
       }
@@ -346,6 +367,15 @@ public abstract class JSType implements TypeI {
   }
 
   public boolean isDict() {
+    for (ObjectType objType : getObjs()) {
+      if (!objType.isDict()) {
+        return false;
+      }
+    }
+    return !getObjs().isEmpty();
+  }
+
+  public boolean mayBeDict() {
     for (ObjectType objType : getObjs()) {
       if (objType.isDict()) {
         return true;
@@ -437,12 +467,19 @@ public abstract class JSType implements TypeI {
     Preconditions.checkNotNull(rhs);
     if (lhs.isTop() || rhs.isTop()) {
       return TOP;
-    } else if (lhs.isUnknown() || rhs.isUnknown()) {
+    }
+    if (lhs.isUnknown() || rhs.isUnknown()) {
       return UNKNOWN;
-    } else if (lhs.isBottom()) {
+    }
+    if (lhs.isBottom()) {
       return rhs;
-    } else if (rhs.isBottom()) {
+    }
+    if (rhs.isBottom()) {
       return lhs;
+    }
+    if (lhs.hasTruthyMask() || lhs.hasFalsyMask()
+        || rhs.hasTruthyMask() || rhs.hasFalsyMask()) {
+      return UNKNOWN;
     }
     if (lhs.getTypeVar() != null && rhs.getTypeVar() != null
         && !lhs.getTypeVar().equals(rhs.getTypeVar())) {
@@ -652,18 +689,23 @@ public abstract class JSType implements TypeI {
     }
   }
 
-  // TODO(dimvar): Now that we don't have locations, we may be able to combine
-  // specialize and meet into a single function.
-  // Specialize might still not be symmetric however, b/c of truthy/falsy.
-
   public JSType specialize(JSType other) {
     if (other.isTop() || other.isUnknown() || this == other) {
       return this;
-    } else if (other.isTruthy()) {
+    }
+    if (other.hasTruthyMask()) {
       return makeTruthy();
-    } else if (other.isFalsy()) {
+    }
+    if (hasTruthyMask()) {
+      return other.makeTruthy();
+    }
+    if (other.hasFalsyMask()) {
       return makeFalsy();
-    } else if (this.isTop() || this.isUnknown()) {
+    }
+    // NOTE(dimvar): I couldn't find a case where this.hasFalsyMask(). If the
+    // preconditions check breaks, add code analogous to the hasTruthyMask case.
+    Preconditions.checkState(!hasFalsyMask());
+    if (this.isTop() || this.isUnknown()) {
       return other;
     }
     int newMask = getMask() & other.getMask();
@@ -836,10 +878,15 @@ public abstract class JSType implements TypeI {
     return isSubtypeOfHelper(true, (JSType) other);
   }
 
-  private boolean isSubtypeOfHelper(
-      boolean keepLoosenessOfThis, JSType other) {
+  private boolean isSubtypeOfHelper(boolean keepLoosenessOfThis, JSType other) {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
+    }
+    if (hasTruthyMask()) {
+      return !other.makeTruthy().isBottom();
+    }
+    if (hasFalsyMask()) {
+      return !other.makeFalsy().isBottom();
     }
     if (!EnumType.areSubtypes(this, other)) {
       return false;

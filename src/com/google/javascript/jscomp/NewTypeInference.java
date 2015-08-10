@@ -1391,19 +1391,18 @@ final class NewTypeInference implements CompilerPass {
           lhs, inEnv, JSType.UNKNOWN, specializedType.negate());
       EnvTypePair rhsPair =
           analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, specializedType);
-      return EnvTypePair.join(rhsPair, shortCircuitPair);
+      return EnvTypePair.join(shortCircuitPair, rhsPair);
     } else {
       // Independently of the specializedType, && rhs is only analyzed when
       // lhs is truthy, and || rhs is only analyzed when lhs is falsy.
-      JSType stopAfterLhsType = exprKind == Token.AND ?
-          JSType.FALSY : JSType.TRUTHY;
+      JSType stopAfterLhsType = exprKind == Token.AND ? JSType.FALSY : JSType.TRUTHY;
       EnvTypePair shortCircuitPair =
           analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, stopAfterLhsType);
       EnvTypePair lhsPair = analyzeExprFwd(
           lhs, inEnv, JSType.UNKNOWN, stopAfterLhsType.negate());
       EnvTypePair rhsPair =
           analyzeExprFwd(rhs, lhsPair.env, requiredType, specializedType);
-      return EnvTypePair.join(rhsPair, shortCircuitPair);
+      return EnvTypePair.join(shortCircuitPair, rhsPair);
     }
   }
 
@@ -1639,9 +1638,9 @@ final class NewTypeInference implements CompilerPass {
     Node thenBranch = cond.getNext();
     Node elseBranch = thenBranch.getNext();
     TypeEnv trueEnv =
-        analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.TRUE_TYPE).env;
+        analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.TRUTHY).env;
     TypeEnv falseEnv =
-        analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.FALSE_TYPE).env;
+        analyzeExprFwd(cond, inEnv, JSType.UNKNOWN, JSType.FALSY).env;
     EnvTypePair thenPair =
         analyzeExprFwd(thenBranch, trueEnv, requiredType, specializedType);
     EnvTypePair elsePair =
@@ -2512,7 +2511,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private boolean mayWarnAboutStructPropAccess(Node obj, JSType type) {
-    if (type.isStruct()) {
+    if (type.mayBeStruct()) {
       warnings.add(JSError.make(obj,
               TypeValidator.ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
       return true;
@@ -2521,7 +2520,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private boolean mayWarnAboutDictPropAccess(Node obj, JSType type) {
-    if (type.isDict()) {
+    if (type.mayBeDict()) {
       warnings.add(JSError.make(obj,
               TypeValidator.ILLEGAL_PROPERTY_ACCESS, "'.'", "dict"));
       return true;
@@ -2537,7 +2536,7 @@ final class NewTypeInference implements CompilerPass {
     // Consider: function f(obj) { obj.prop = 123; }
     // We want f to be able to take objects without prop, so we don't want to
     // require that obj be a struct that already has prop.
-    if (recvType.isStruct() && !recvType.isLooseStruct() &&
+    if (recvType.mayBeStruct() && !recvType.isLooseStruct() &&
         !recvType.hasProp(pname)) {
       warnings.add(JSError.make(getProp, TypeCheck.ILLEGAL_PROPERTY_CREATION));
       return true;
@@ -2580,8 +2579,6 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
       TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     QualifiedName propQname = new QualifiedName(pname);
@@ -2591,9 +2588,11 @@ final class NewTypeInference implements CompilerPass {
     JSType recvReqType, recvSpecType;
 
     // First, analyze the receiver object.
-    if (specializedType.isTruthy() || specializedType.isFalsy()) {
+    if (specializedType.isTruthy()) {
       recvReqType = reqObjType;
-      recvSpecType = reqObjType.withProperty(propQname, requiredType);
+      recvSpecType = reqObjType.withProperty(propQname, specializedType);
+    } else if (specializedType.isFalsy()) {
+      recvReqType = recvSpecType = reqObjType;
     } else {
       recvReqType = reqObjType.withProperty(propQname, requiredType);
       recvSpecType = reqObjType.withProperty(propQname, specializedType);
@@ -2642,7 +2641,7 @@ final class NewTypeInference implements CompilerPass {
     }
     if (!propAccessNode.getParent().isExprResult()
         && !specializedType.isTruthy() && !specializedType.isFalsy()
-        && !recvType.isDict()) {
+        && !recvType.mayBeDict()) {
       if (!recvType.mayHaveProp(propQname)) {
         // TODO(dimvar): maybe don't warn if the getprop is inside a typeof,
         // see testMissingProperty8 (who relies on that for prop checking?)
@@ -3609,7 +3608,7 @@ final class NewTypeInference implements CompilerPass {
             propAccessNode.getParent().getType() != Token.ASSIGN;
         if (warnForInexistentProp &&
             !lvalueType.isUnknown() &&
-            !lvalueType.isDict()) {
+            !lvalueType.mayBeDict()) {
           DiagnosticType dt = lvalueType.mayHaveProp(pname)
               ? POSSIBLY_INEXISTENT_PROPERTY : TypeCheck.INEXISTENT_PROPERTY;
           warnings.add(

@@ -336,8 +336,8 @@ final class ObjectType implements TypeWithProperties {
         String pname = propsEntry.getKey();
         Property nomProp = resultNominalType.getProp(pname);
         if (nomProp != null) {
-          newProps =
-              addOrRemoveProp(newProps, pname, nomProp, propsEntry.getValue());
+          newProps = addOrRemoveProp(
+              specializeProps1, newProps, pname, nomProp, propsEntry.getValue());
           if (newProps == BOTTOM_MAP) {
             return BOTTOM_MAP;
           }
@@ -362,7 +362,7 @@ final class ObjectType implements TypeWithProperties {
       if (resultNominalType != null &&
           resultNominalType.getProp(pname) != null) {
         Property nomProp = resultNominalType.getProp(pname);
-        newProps = addOrRemoveProp(newProps, pname, nomProp, newProp);
+        newProps = addOrRemoveProp(specializeProps1, newProps, pname, nomProp, newProp);
         if (newProps == BOTTOM_MAP) {
           return BOTTOM_MAP;
         }
@@ -377,17 +377,19 @@ final class ObjectType implements TypeWithProperties {
   }
 
   private static PersistentMap<String, Property> addOrRemoveProp(
-      PersistentMap<String, Property> props,
+      boolean specializeProps1, PersistentMap<String, Property> props,
       String pname, Property nomProp, Property objProp) {
-    JSType propType = objProp.getType();
     JSType nomPropType = nomProp.getType();
-    if (!propType.isUnknown() &&
-        propType.isSubtypeOf(nomPropType) && !propType.equals(nomPropType)) {
-      // We use specialize so that if nomProp is @const, we don't forget it.
-      Property newProp = nomProp.specialize(objProp);
-      if (newProp.getType().isBottom()) {
-        return BOTTOM_MAP;
-      }
+    Property newProp = specializeProps1
+        ? nomProp.specialize(objProp)
+        : Property.meet(nomProp, objProp);
+    JSType newPropType = newProp.getType();
+    if (newPropType.isBottom()) {
+      return BOTTOM_MAP;
+    }
+    if (!newPropType.isUnknown()
+        && newPropType.isSubtypeOf(nomPropType)
+        && !newPropType.equals(nomPropType)) {
       return props.with(pname, newProp);
     }
     return props.without(pname);

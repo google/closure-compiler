@@ -8888,6 +8888,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(
         "for (var x in /** @struct */ {});", TypeCheck.IN_USED_WITH_STRUCT);
+
+    // Don't warn in union, it's fine to ask about property existence of the
+    // non-struct part.
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @constructor",
+        " * @struct",
+        " */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this['asdf'] = 123;",
+        "}",
+        "function f(/** (!Foo|!Bar) */ x) {",
+        "  if ('asdf' in x) {}",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(p1, /** !Object */ obj) {",
+        "  if (p1 in obj['asdf']) {}",
+        "}"),
+        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testStructDictSubtyping() {
@@ -11622,6 +11644,34 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"),
         NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {?boolean} */",
+        "Foo.prototype.prop = true;",
+        "function f(/** !Foo */ x) {",
+        "  var /** boolean */ b = x.prop || true;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?boolean} */",
+        "  this.prop = true;",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  var /** boolean */ b = x.prop || true;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  if (x.call) {",
+        "    x.call(null);",
+        "  } else {",
+        "    x();",
+        "  }",
+        "}"));
   }
 
   public void testFunctionReturnTypeSpecialization() {
@@ -13435,5 +13485,29 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** { a: (number|undefined) } */ x) {}",
         "f({ a: 'asdf' });"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testJoinWithTruthyOrFalsy() {
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  var y;",
+        "  if (x.p) {",
+        "    y = x;",
+        "  } else {",
+        "    y = { p: 123 };",
+        "  }",
+        "  y.p - 1;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  var y;",
+        "  if (x.p) {",
+        "    y = { p: 123 };",
+        "  } else {",
+        "    y = x;",
+        "  }",
+        "  y.p - 1;",
+        "}"));
   }
 }
