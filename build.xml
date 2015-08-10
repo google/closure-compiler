@@ -173,15 +173,16 @@
     <copy todir="${classes.dir}/com/google/javascript/jscomp/js">
       <fileset dir="${src.dir}/com/google/javascript/jscomp/js" />
     </copy>
+
+    <!-- Zip the externs and move them to the classes folder -->
+    <zip destfile="${classes.dir}/externs.zip" basedir="${externs.dir}" includes="**/*.js" />
   </target>
 
   <target name="jar"
           depends="compile"
           description="package compiler as an executable jar">
-    <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
     <jar destfile="${compiler-jarfile}" update="true">
       <fileset dir="${classes.dir}" />
-      <fileset dir="${build.dir}" includes="externs.zip" />
       <zipfileset src="${lib.dir}/args4j.jar"/>
       <zipfileset src="${lib.dir}/guava.jar"/>
       <zipfileset src="${lib.dir}/gson.jar"/>
@@ -341,7 +342,6 @@
   <target name="webservice-jar"
           description="package the compiler and Webservice classes"
           depends="webservice-compile, compile">
-   <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
    <jar destfile="${webservice-jarfile}" update="true">
      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
      <fileset dir="${classes.dir}" />
@@ -379,7 +379,6 @@
   <target name="refasterjs-jar"
           description="Packages the compiler and RefasterJS classes"
           depends="refasterjs-compile, compile">
-   <zip destfile="${build.dir}/externs.zip" basedir="${externs.dir}" includes="*.js" />
    <jar destfile="${refasterjs-jarfile}" update="true">
      <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
      <fileset dir="${build.dir}" includes="externs.zip" />

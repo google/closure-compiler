@@ -900,7 +900,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testOnlyClosureDependenciesEmptyEntryPoints() throws Exception {
     // Prevents this from trying to load externs.zip
-    args.add("--use_only_custom_externs=true");
+    args.add("--env=CUSTOM");
 
     args.add("--only_closure_dependencies=true");
     try {
@@ -1007,7 +1007,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testSourceMapLocationsTranslations3() {
     // Prevents this from trying to load externs.zip
-    args.add("--use_only_custom_externs=true");
+    args.add("--env=CUSTOM");
 
     args.add("--js_output_file");
     args.add("/path/to/out.js");
@@ -1280,7 +1280,7 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testNoSrCFilesWithManifest() throws IOException {
-    args.add("--use_only_custom_externs=true");
+    args.add("--env=CUSTOM");
     args.add("--output_manifest=test.MF");
     CommandLineRunner runner = createCommandLineRunner(new String[0]);
     String expectedMessage = "";
