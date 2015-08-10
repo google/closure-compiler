@@ -2230,10 +2230,10 @@ WebSocket.prototype.send = function(data) {};
 
 /**
  * Closes the Web Socket connection or connection attempt, if any.
- * @param {number=} code
- * @param {string=} reason
+ * @param {number=} opt_code
+ * @param {string=} opt_reason
  */
-WebSocket.prototype.close = function(code, reason) {};
+WebSocket.prototype.close = function(opt_code, opt_reason) {};
 
 /**
  * @type {string} Sets the type of data (blob or arraybuffer) for binary data.
