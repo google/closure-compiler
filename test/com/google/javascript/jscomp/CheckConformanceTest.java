@@ -969,7 +969,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "/** @constructor */ function f() {};"
             + "f.prototype.method = function() { alert(this.prop); }",
         CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message");
+        "Violation: My rule message\nThe property \"prop\" on type \"f\"");
   }
 
   public void testCustomBanUnknownProp2() {
@@ -981,7 +981,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @param {ObjectWithNoProps} a */", "function f(a) { alert(a.foobar); };"),
         CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message");
+        "Violation: My rule message\nThe property \"foobar\" on type \"(ObjectWithNoProps|null)\"");
   }
 
   public void testCustomBanUnknownProp3() {

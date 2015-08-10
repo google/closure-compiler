@@ -62,8 +62,38 @@ public final class ConformanceRules {
 
   private ConformanceRules() {}
 
+  /** 
+   * Classes extending AbstractRule must return ConformanceResult
+   * from their checkConformance implementation. For simple rules, the
+   * constants CONFORMANCE, POSSIBLE_VIOLATION, VIOLATION are sufficient.
+   * However, for some rules additional clarification specific to the 
+   * violation instance is helpful, for that, an instance of this class 
+   * can be created to associate a note with the violation.
+   */
+  public static class ConformanceResult {
+    ConformanceResult(ConformanceLevel level) {
+      this(level, "");
+    }
+
+    ConformanceResult(ConformanceLevel level, String note) {
+      this.level = level;
+      this.note = note;
+    }
+
+    public final ConformanceLevel level;
+    public final String note;
+
+    // For CONFORMANCE rules that don't generate notes:
+    public static final ConformanceResult CONFORMANCE = new ConformanceResult(
+        ConformanceLevel.CONFORMANCE);
+    public static final ConformanceResult POSSIBLE_VIOLATION = new ConformanceResult(
+        ConformanceLevel.POSSIBLE_VIOLATION);
+    public static final ConformanceResult VIOLATION = new ConformanceResult(
+        ConformanceLevel.VIOLATION);
+  }
+
   /** Possible check check results */
-  public static enum ConformanceResult {
+  public static enum ConformanceLevel {
     // Nothing interesting detected.
     CONFORMANCE,
     // In the optionally typed world of the Closure Compiler type system
@@ -148,7 +178,7 @@ public final class ConformanceRules {
      * @return Whether the specified Node should be checked for conformance,
      *     according to this rule's whitelist configuration.
      */
-    private boolean shouldCheckConformance(Node n) {
+    protected final boolean shouldCheckConformance(Node n) {
       String srcfile = NodeUtil.getSourceName(n);
       if (srcfile == null) {
         return true;
@@ -172,10 +202,10 @@ public final class ConformanceRules {
 
     @Override
     public final void check(NodeTraversal t, Node n) {
-      ConformanceResult confidence = checkConformance(t, n);
-      if (confidence != ConformanceResult.CONFORMANCE
+      ConformanceResult result = checkConformance(t, n);
+      if (result.level != ConformanceLevel.CONFORMANCE
           && shouldCheckConformance(n)) {
-        report(t, n, confidence);
+        report(t, n, result);
       }
     }
 
@@ -186,10 +216,13 @@ public final class ConformanceRules {
      */
     protected void report(
         NodeTraversal t, Node n, ConformanceResult result) {
-      DiagnosticType msg = (result == ConformanceResult.VIOLATION)
+      DiagnosticType msg = (result.level == ConformanceLevel.VIOLATION)
           ? CheckConformance.CONFORMANCE_VIOLATION
           : CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION;
-      t.report(n, msg, message);
+      String seperator = (result.note.isEmpty())
+          ? ""
+          : "\n";
+      t.report(n, msg, message, seperator, result.note);
     }
   }
 
@@ -303,7 +336,7 @@ public final class ConformanceRules {
       for (int i = 0; i < props.size(); i++) {
         Property prop = props.get(i);
         ConformanceResult result = checkConformance(t, n, prop);
-        if (result != ConformanceResult.CONFORMANCE) {
+        if (result.level != ConformanceLevel.CONFORMANCE) {
           return result;
         }
       }
@@ -650,7 +683,7 @@ public final class ConformanceRules {
             result = checkConformance(t, n, r, true);
           }
           // TODO(johnlenz): should "apply" always be a possible violation?
-          if (result != ConformanceResult.CONFORMANCE) {
+          if (result.level != ConformanceLevel.CONFORMANCE) {
             return result;
           }
         }
@@ -1094,7 +1127,10 @@ public final class ConformanceRules {
           && isCheckablePropertySource(n.getFirstChild()) // not a cascading unknown
           && !isTemplateType(n)
           && !isDeclaredUnknown(n)) {
-        return ConformanceResult.VIOLATION;
+        String propName = n.getLastChild().getString();
+        String typeName = n.getFirstChild().getJSType().toString();
+        return new ConformanceResult(ConformanceLevel.VIOLATION,
+            "The property \"" + propName + "\" on type \"" + typeName + "\"");
       }
       return ConformanceResult.CONFORMANCE;
     }
@@ -1369,7 +1405,7 @@ public final class ConformanceRules {
           return ConformanceResult.CONFORMANCE;
         }
         ConformanceResult result = checkCtorProperties(instanceType);
-        if (result != ConformanceResult.CONFORMANCE) {
+        if (result.level != ConformanceLevel.CONFORMANCE) {
           return result;
         }
       }
