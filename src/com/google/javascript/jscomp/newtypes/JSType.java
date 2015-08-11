@@ -331,12 +331,16 @@ public abstract class JSType implements TypeI {
   }
 
   public boolean isStruct() {
+    if (isUnknown()) {
+      return false;
+    }
+    Preconditions.checkState(!getObjs().isEmpty());
     for (ObjectType objType : getObjs()) {
       if (!objType.isStruct()) {
         return false;
       }
     }
-    return !getObjs().isEmpty();
+    return true;
   }
 
   public boolean mayBeStruct() {
@@ -367,12 +371,16 @@ public abstract class JSType implements TypeI {
   }
 
   public boolean isDict() {
+    if (isUnknown()) {
+      return false;
+    }
+    Preconditions.checkState(!getObjs().isEmpty());
     for (ObjectType objType : getObjs()) {
       if (!objType.isDict()) {
         return false;
       }
     }
-    return !getObjs().isEmpty();
+    return true;
   }
 
   public boolean mayBeDict() {
