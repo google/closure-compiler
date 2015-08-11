@@ -66,13 +66,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -183,8 +176,6 @@ public class Compiler extends AbstractCompiler {
    */
   private int uniqueNameId = 0;
 
-  private int timeout = 0;
-
   /**
    * Whether to assume there are references to the RegExp Global object
    * properties.
@@ -231,36 +222,7 @@ public class Compiler extends AbstractCompiler {
       DiagnosticType.error("JSC_OPTIMIZE_LOOP_ERROR",
           "Exceeded max number of code motion iterations: {0}");
 
-  // We use many recursive algorithms that use O(d) memory in the depth
-  // of the tree.
-  private static final long COMPILER_STACK_SIZE = (1 << 21); // About 2MB
-
-  /**
-   * Under JRE 1.6, the JS Compiler overflows the stack when running on some
-   * large or complex JS code. When threads are available, we run all compile
-   * jobs on a separate thread with a larger stack.
-   *
-   * That way, we don't have to increase the stack size for *every* thread
-   * (which is what -Xss does).
-   */
-  private static final ExecutorService compilerExecutor =
-      Executors.newCachedThreadPool(new ThreadFactory() {
-    @Override public Thread newThread(Runnable r) {
-      Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
-      t.setDaemon(true);  // Do not prevent the JVM from exiting.
-      return t;
-    }
-  });
-
-  /**
-   * Use a dedicated compiler thread per Compiler instance.
-   */
-  private Thread compilerThread = null;
-
-  /** Whether to use threads. */
-  private boolean useThreads = true;
-
-
+  private static final CompilerExecutor compilerExecutor = new CompilerExecutor();
   /**
    * Logger for the whole com.google.javascript.jscomp domain -
    * setting configuration for this logger affects all loggers
@@ -666,7 +628,7 @@ public class Compiler extends AbstractCompiler {
    * don't have threads.
    */
   public void disableThreads() {
-    useThreads = false;
+    compilerExecutor.disableThreads();
   }
 
   /**
@@ -674,70 +636,11 @@ public class Compiler extends AbstractCompiler {
    * @param timeout seconds to wait before timeout
    */
   public void setTimeout(int timeout) {
-    this.timeout = timeout;
+    compilerExecutor.setTimeout(timeout);
   }
 
-  @SuppressWarnings("unchecked")
   <T> T runInCompilerThread(final Callable<T> callable) {
-    T result = null;
-    final Throwable[] exception = new Throwable[1];
-
-    Preconditions.checkState(
-        compilerThread == null || compilerThread == Thread.currentThread(),
-        "Please do not share the Compiler across threads");
-
-    // If the compiler thread is available, use it.
-    if (useThreads && compilerThread == null) {
-      try {
-        final boolean dumpTraceReport =
-            options != null && options.tracer.isOn();
-        Callable<T> bootCompilerThread = new Callable<T>() {
-          @Override
-          public T call() {
-            try {
-              compilerThread = Thread.currentThread();
-              if (dumpTraceReport) {
-                Tracer.initCurrentThreadTrace();
-              }
-              return callable.call();
-            } catch (Throwable e) {
-              exception[0] = e;
-            } finally {
-              compilerThread = null;
-              if (dumpTraceReport) {
-                Tracer.logCurrentThreadTrace();
-              }
-              Tracer.clearCurrentThreadTrace();
-            }
-            return null;
-          }
-        };
-
-        Future<T> future = compilerExecutor.submit(bootCompilerThread);
-        if (timeout > 0) {
-          result = future.get(timeout, TimeUnit.SECONDS);
-        } else {
-          result = future.get();
-        }
-      } catch (InterruptedException | TimeoutException | ExecutionException e) {
-        throw Throwables.propagate(e);
-      }
-    } else {
-      try {
-        result = callable.call();
-      } catch (Exception e) {
-        exception[0] = e;
-      } finally {
-        Tracer.clearCurrentThreadTrace();
-      }
-    }
-
-    // Pass on any exception caught by the runnable object.
-    if (exception[0] != null) {
-      Throwables.propagate(exception[0]);
-    }
-
-    return result;
+    return compilerExecutor.runInCompilerThread(callable, options != null && options.tracer.isOn());
   }
 
   private void compileInternal() {
