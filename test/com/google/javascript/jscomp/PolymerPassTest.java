@@ -123,8 +123,8 @@ public class PolymerPassTest extends CompilerTestCase {
               "var Polymera_BInterface = function() {};",
               "/** @type {!Array<string>} */",
               "Polymera_BInterface.prototype.pets;",
-              "/** @type {string} */",
-              "Polymera_BInterface.prototype.name;",
+              "/** @private {string} */",
+              "Polymera_BInterface.prototype.name_;",
               "/** @param {!Array<string>} pets **/",
               "Polymera_BInterface.prototype._setPets;");
 
@@ -654,7 +654,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "      type: Array,",
             "      readOnly: true,",
             "    },",
-            "    name: String,",
+            "    /** @private */",
+            "    name_: String,",
             "  },",
             "});");
 
@@ -666,8 +667,8 @@ public class PolymerPassTest extends CompilerTestCase {
             "a.B = function() {};",
             "/** @type {!Array<string>} */",
             "a.B.prototype.pets;",
-            "/** @type {string} */",
-            "a.B.prototype.name;",
+            "/** @private {string} */",
+            "a.B.prototype.name_;",
             "/** @override */",
             "a.B.prototype._setPets = function(pets) {};",
             "a.B = Polymer(/** @lends {a.B.prototype} */ {",
@@ -677,7 +678,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "      type: Array,",
             "      readOnly: true,",
             "    },",
-            "    name: String,",
+            "    name_: String,",
             "  },",
             "});"));
 

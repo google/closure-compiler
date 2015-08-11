@@ -948,6 +948,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       block.addChildToBack(newProp);
     }
 
+    block.useSourceInfoIfMissingFromForTree(polymerElementExterns);
+
     Node parent = polymerElementExterns.getParent();
     Node stmts = block.removeChildren();
     parent.addChildrenAfter(stmts, polymerElementExterns);
@@ -988,6 +990,8 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
       block.addChildToBack(setterExprNode);
     }
+
+    block.useSourceInfoIfMissingFromForTree(polymerElementExterns);
 
     Node parent = polymerElementExterns.getParent();
     Node stmts = block.removeChildren();
