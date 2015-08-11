@@ -4024,7 +4024,7 @@ public final class NodeUtil {
     d = (d >= 0) ? Math.floor(d) : Math.ceil(d);
 
     double two32 = 4294967296.0;
-    d = Math.IEEEremainder(d, two32);
+    d = d % two32;
     // (double)(long)d == d should hold here
 
     long l = (long) d;
