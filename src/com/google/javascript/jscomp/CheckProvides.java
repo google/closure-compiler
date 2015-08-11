@@ -75,7 +75,10 @@ class CheckProvides implements HotSwapCompilerPass {
           }
           break;
         case Token.FUNCTION:
-          visitFunctionNode(n, parent);
+          // Arrow function can't be constructors
+          if (!n.isArrowFunction()) {
+            visitFunctionNode(n, parent);
+          }
           break;
         case Token.CLASS:
           visitClassNode(n);

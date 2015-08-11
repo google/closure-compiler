@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckProvides.MISSING_PROVIDE_WARNING;
 
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
@@ -113,5 +112,9 @@ public final class CheckProvidesTest extends Es6CompilerTestCase {
   public void testIgnorePrivatelyAnnotatedConstructor() {
     testSame("/** @private\n@constructor */ X = function(){};");
     testSame("/** @constructor\n@private */ X = function(){};");
+  }
+
+  public void testArrowFunction() {
+    testSameEs6("/** @constructor*/ X = ()=>{};");
   }
 }
