@@ -600,6 +600,22 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  x < 'asdf';",
         "}"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (null|number) */ x, /** (null|number) */ y) {",
+        "  if (x == y) {",
+        "    return x - 1;",
+        "  }",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (null|number) */ x, /** (null|number) */ y) {",
+        "  if (x == y) {",
+        "    return y - 1;",
+        "  }",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testLoopConditionSpecialization() {
@@ -11638,14 +11654,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"));
 
     typeCheck(Joiner.on('\n').join(
-        "function f(/** (null | { prop: (null|number) }) */ x) {",
-        "  if (x.prop !== null) {",
-        "    return x.prop - 1;",
-        "  }",
-        "}"),
-        NewTypeInference.NULLABLE_DEREFERENCE);
-
-    typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
         "function Foo() {}",
         "/** @type {?boolean} */",
@@ -13509,5 +13517,40 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "  y.p - 1;",
         "}"));
+  }
+
+  public void testSpecializeTypesAfterNullableDereference() {
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (null | { prop: (null|number) }) */ x) {",
+        "  if (x.prop !== null) {",
+        "    return x.prop - 1;",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (null | { prop: (null|number) }) */ x) {",
+        "  if (x.prop === 1) {",
+        "    var /** number */ n = x.prop;",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (null | { prop: (null|number) }) */ x) {",
+        "  if (x.prop == null) {",
+        "    return;",
+        "  }",
+        "  return x.prop - 1;",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** (null | { prop: (null|number) }) */ x) {",
+        "  if (x.prop == null) {",
+        "    var /** (null|undefined) */ y = x.prop;",
+        "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 }

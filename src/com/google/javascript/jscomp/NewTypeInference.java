@@ -2052,11 +2052,13 @@ final class NewTypeInference implements CompilerPass {
 
     EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+    // This env may contain types that have been tightened after nullable deref.
+    TypeEnv preciseEnv = rhsPair.env;
 
     if ((comparisonOp == Token.SHEQ && specializedType.isTruthy()) ||
         (comparisonOp == Token.SHNE && specializedType.isFalsy())) {
       JSType meetType = JSType.meet(lhsPair.type, rhsPair.type);
-      lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, meetType);
+      lhsPair = analyzeExprFwd(lhs, preciseEnv, JSType.UNKNOWN, meetType);
       rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, meetType);
     } else if ((comparisonOp == Token.SHEQ && specializedType.isFalsy()) ||
         (comparisonOp == Token.SHNE && specializedType.isTruthy())) {
@@ -2067,9 +2069,7 @@ final class NewTypeInference implements CompilerPass {
       } else if (rhsType.isNullOrUndef()) {
         lhsType = lhsType.removeType(rhsType);
       }
-      // The first analysis may tighten nullable dereferences, so we use
-      // rhsPair.env here instead of inEnv.
-      lhsPair = analyzeExprFwd(lhs, rhsPair.env, JSType.UNKNOWN, lhsType);
+      lhsPair = analyzeExprFwd(lhs, preciseEnv, JSType.UNKNOWN, lhsType);
       rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
     }
     rhsPair.type = JSType.BOOLEAN;
@@ -2231,6 +2231,8 @@ final class NewTypeInference implements CompilerPass {
 
     EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
+    // This env may contain types that have been tightened after nullable deref.
+    TypeEnv preciseEnv = rhsPair.env;
     JSType lhsType = lhsPair.type;
     JSType rhsType = rhsPair.type;
 
@@ -2238,27 +2240,27 @@ final class NewTypeInference implements CompilerPass {
         tokenType == Token.NE && specializedType.isFalsy()) {
       if (lhsType.isNullOrUndef()) {
         rhsPair = analyzeExprFwd(
-            rhs, lhsPair.env, JSType.UNKNOWN, JSType.NULL_OR_UNDEF);
+            rhs, preciseEnv, JSType.UNKNOWN, JSType.NULL_OR_UNDEF);
       } else if (rhsType.isNullOrUndef()) {
         lhsPair = analyzeExprFwd(
-            lhs, inEnv, JSType.UNKNOWN, JSType.NULL_OR_UNDEF);
+            lhs, preciseEnv, JSType.UNKNOWN, JSType.NULL_OR_UNDEF);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env);
-      } else if (!JSType.NULL_OR_UNDEF.isSubtypeOf(lhsType)) {
+      } else if (!JSType.NULL.isSubtypeOf(lhsType) && !JSType.UNDEFINED.isSubtypeOf(lhsType)) {
         rhsType = rhsType.removeType(JSType.NULL_OR_UNDEF);
-        rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
-      } else if (!JSType.NULL_OR_UNDEF.isSubtypeOf(rhsType)) {
+        rhsPair = analyzeExprFwd(rhs, preciseEnv, JSType.UNKNOWN, rhsType);
+      } else if (!JSType.NULL.isSubtypeOf(rhsType) && !JSType.UNDEFINED.isSubtypeOf(rhsType)) {
         lhsType = lhsType.removeType(JSType.NULL_OR_UNDEF);
-        lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, lhsType);
+        lhsPair = analyzeExprFwd(lhs, preciseEnv, JSType.UNKNOWN, lhsType);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env);
       }
     } else if (tokenType == Token.EQ && specializedType.isFalsy() ||
         tokenType == Token.NE && specializedType.isTruthy()) {
       if (lhsType.isNullOrUndef()) {
         rhsType = rhsType.removeType(JSType.NULL_OR_UNDEF);
-        rhsPair = analyzeExprFwd(rhs, lhsPair.env, JSType.UNKNOWN, rhsType);
+        rhsPair = analyzeExprFwd(rhs, preciseEnv, JSType.UNKNOWN, rhsType);
       } else if (rhsType.isNullOrUndef()) {
         lhsType = lhsType.removeType(JSType.NULL_OR_UNDEF);
-        lhsPair = analyzeExprFwd(lhs, inEnv, JSType.UNKNOWN, lhsType);
+        lhsPair = analyzeExprFwd(lhs, preciseEnv, JSType.UNKNOWN, lhsType);
         rhsPair = analyzeExprFwd(rhs, lhsPair.env);
       }
     }
