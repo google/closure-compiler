@@ -96,7 +96,7 @@ public class DiagnosticGroups {
       + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
       + "inferredConstCheck, internetExplorerChecks, invalidCasts, "
       + "misplacedTypeAnnotation, missingGetCssName, missingProperties, "
-      + "missingProvide, missingRequire, missingReturn, "
+      + "missingProvide, missingRequire, missingReturn, msgDescriptions"
       + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, "
       + "strictModuleDepCheck, typeInvalidation, "
       + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, uselessCode, "
@@ -401,6 +401,10 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage",
           JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
+
+  public static final DiagnosticGroup MESSAGE_DESCRIPTIONS =
+      DiagnosticGroups.registerGroup("msgDescriptions",
+          new DiagnosticGroup(JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION));
 
   public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
