@@ -116,7 +116,7 @@ TouchList.prototype.item = function(index) {};
 /**
  * Creates a new TouchList object.
  * @see http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/DocumentAdditionsReference/DocumentAdditions/DocumentAdditions.html#//apple_ref/javascript/instm/Document/createTouchList
- * @param {Array.<Touch>} touches
+ * @param {Array<Touch>} touches
  * @return {TouchList}
  */
 Document.prototype.createTouchList = function(touches) {};

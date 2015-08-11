@@ -260,7 +260,7 @@ iframes.Iframes.prototype.getParentInfo = function(callback) {};
 
 /**
  * Export browser events to your opener.
- * @param {Array.<string>} events List of events to export. Currently only
+ * @param {Array<string>} events List of events to export. Currently only
  *     supports mouseover and mouseout.
  */
 iframes.Iframes.prototype.propagate = function(events) {};

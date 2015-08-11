@@ -129,7 +129,7 @@ Event.prototype.timeStamp;
 
 /**
  * Present for events spawned in browsers that support shadow dom.
- * @type {Array.<!Element>|undefined}
+ * @type {Array<!Element>|undefined}
  */
 Event.prototype.path;
 

@@ -44,10 +44,10 @@ MediaSource.prototype.removeEventListener = function(
 /** @override */
 MediaSource.prototype.dispatchEvent = function(evt) {};
 
-/** @type {Array.<SourceBuffer>} */
+/** @type {Array<SourceBuffer>} */
 MediaSource.prototype.sourceBuffers;
 
-/** @type {Array.<SourceBuffer>} */
+/** @type {Array<SourceBuffer>} */
 MediaSource.prototype.activeSourceBuffers;
 
 /** @type {number} */

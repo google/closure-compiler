@@ -82,7 +82,7 @@ EventSource.prototype.readyState;
 /** @type {?function(!Event)} */
 EventSource.prototype.onopen = function(e) {};
 
-/** @type {?function(!MessageEvent.<*>)} */
+/** @type {?function(!MessageEvent<*>)} */
 EventSource.prototype.onmessage = function(e) {};
 
 /** @type {?function(!Event)} */

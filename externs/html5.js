@@ -416,12 +416,12 @@ CanvasRenderingContext2D.prototype.setFillColor;
 CanvasRenderingContext2D.prototype.setStrokeColor;
 
 /**
- * @return {Array.<number>}
+ * @return {Array<number>}
  */
 CanvasRenderingContext2D.prototype.getLineDash;
 
 /**
- * @param {Array.<number>} segments
+ * @param {Array<number>} segments
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.setLineDash;
@@ -628,7 +628,7 @@ function SQLTransaction() {}
 
 /**
  * @param {string} sqlStatement
- * @param {Array.<*>=} opt_queryArgs
+ * @param {Array<*>=} opt_queryArgs
  * @param {SQLStatementCallback=} opt_callback
  * @param {(function(!SQLTransaction, !SQLError) : (boolean|void))=}
  *     opt_errorCallback
@@ -713,8 +713,8 @@ HTMLImageElement.prototype.crossOrigin;
 /**
  * This is a superposition of the Window and Worker postMessage methods.
  * @param {*} message
- * @param {(string|!Array.<!Transferable>)=} opt_targetOriginOrTransfer
- * @param {(string|!Array.<!MessagePort>|!Array.<!Transferable>)=}
+ * @param {(string|!Array<!Transferable>)=} opt_targetOriginOrTransfer
+ * @param {(string|!Array<!MessagePort>|!Array<!Transferable>)=}
  *     opt_targetOriginOrPortsOrTransfer
  * @return {void}
  */
@@ -915,7 +915,7 @@ WebWorker.prototype.postMessage = function(message) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent.<*>)}
+ * @type {?function(!MessageEvent<*>)}
  */
 WebWorker.prototype.onmessage;
 
@@ -958,20 +958,20 @@ Worker.prototype.terminate = function() {};
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array.<!Transferable>=} opt_transfer
+ * @param {Array<!Transferable>=} opt_transfer
  */
 Worker.prototype.postMessage = function(message, opt_transfer) {};
 
 /**
  * Posts a message to the worker thread.
  * @param {*} message
- * @param {Array.<!Transferable>=} opt_transfer
+ * @param {Array<!Transferable>=} opt_transfer
  */
 Worker.prototype.webkitPostMessage = function(message, opt_transfer) {};
 
 /**
  * Sent when the worker thread posts a message to its creator.
- * @type {?function(!MessageEvent.<*>)}
+ * @type {?function(!MessageEvent<*>)}
  */
 Worker.prototype.onmessage;
 
@@ -1101,7 +1101,7 @@ function DedicatedWorkerGlobalScope() {}
 /**
  * Posts a message to creator of this worker.
  * @param {*} message
- * @param {Array.<!Transferable>=} opt_transfer
+ * @param {Array<!Transferable>=} opt_transfer
  */
 DedicatedWorkerGlobalScope.prototype.postMessage =
     function(message, opt_transfer) {};
@@ -1109,14 +1109,14 @@ DedicatedWorkerGlobalScope.prototype.postMessage =
 /**
  * Posts a message to creator of this worker.
  * @param {*} message
- * @param {Array.<!Transferable>=} opt_transfer
+ * @param {Array<!Transferable>=} opt_transfer
  */
 DedicatedWorkerGlobalScope.prototype.webkitPostMessage =
     function(message, opt_transfer) {};
 
 /**
  * Sent when the creator posts a message to this worker.
- * @type {?function(!MessageEvent.<*>)}
+ * @type {?function(!MessageEvent<*>)}
  */
 DedicatedWorkerGlobalScope.prototype.onmessage;
 
@@ -1784,7 +1784,7 @@ MessagePort.prototype.dispatchEvent = function(evt) {};
  * Posts a message through the channel, optionally with the given
  * Array of Transferables.
  * @param {*} message
- * @param {Array.<!Transferable>=} opt_transfer
+ * @param {Array<!Transferable>=} opt_transfer
  */
 MessagePort.prototype.postMessage = function(message, opt_transfer) {
 };
@@ -1800,8 +1800,8 @@ MessagePort.prototype.start = function() {};
 MessagePort.prototype.close = function() {};
 
 /**
- * TODO(blickly): Change this to MessageEvent.<*> and add casts as needed
- * @type {?function(!MessageEvent.<?>)}
+ * TODO(blickly): Change this to MessageEvent<*> and add casts as needed
+ * @type {?function(!MessageEvent<?>)}
  */
 MessagePort.prototype.onmessage;
 
@@ -1842,7 +1842,7 @@ MessageEvent.prototype.source;
 /**
  * The Array of MessagePorts sent with the message, for cross-document
  * messaging and channel messaging.
- * @type {Array.<MessagePort>}
+ * @type {Array<MessagePort>}
  */
 MessageEvent.prototype.ports;
 
@@ -1856,7 +1856,7 @@ MessageEvent.prototype.ports;
  * @param {string} originArg
  * @param {string} lastEventIdArg
  * @param {Window} sourceArg
- * @param {Array.<MessagePort>} portsArg
+ * @param {Array<MessagePort>} portsArg
  */
 MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
     cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg, portsArg) {};
@@ -1872,7 +1872,7 @@ MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
  * @param {string} originArg
  * @param {string} lastEventIdArg
  * @param {Window} sourceArg
- * @param {Array.<MessagePort>} portsArg
+ * @param {Array<MessagePort>} portsArg
  */
 MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg,
@@ -1899,7 +1899,7 @@ DataTransfer.prototype.dropEffect;
 /** @type {string} */
 DataTransfer.prototype.effectAllowed;
 
-/** @type {Array.<string>} */
+/** @type {Array<string>} */
 DataTransfer.prototype.types;
 
 /** @type {FileList} */
@@ -2210,8 +2210,8 @@ WebSocket.prototype.onopen;
 
 /**
  * An event handler called on message event.
- * TODO(blickly): Change this to MessageEvent.<*> and add casts as needed
- * @type {?function(!MessageEvent.<?>)}
+ * TODO(blickly): Change this to MessageEvent<*> and add casts as needed
+ * @type {?function(!MessageEvent<?>)}
  */
 WebSocket.prototype.onmessage;
 
@@ -2888,7 +2888,7 @@ MutationRecord.prototype.oldValue;
 
 /**
  * @see http://www.w3.org/TR/domcore/#mutation-observers
- * @param {function(Array.<MutationRecord>, MutationObserver)} callback
+ * @param {function(Array<MutationRecord>, MutationObserver)} callback
  * @constructor
  */
 function MutationObserver(callback) {}
@@ -2902,12 +2902,12 @@ MutationObserver.prototype.observe = function(target, options) {};
 MutationObserver.prototype.disconnect = function() {};
 
 /**
- * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
+ * @type {function(new:MutationObserver, function(Array<MutationRecord>))}
  */
 Window.prototype.WebKitMutationObserver;
 
 /**
- * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
+ * @type {function(new:MutationObserver, function(Array<MutationRecord>))}
  */
 Window.prototype.MozMutationObserver;
 

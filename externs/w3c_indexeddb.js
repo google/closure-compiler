@@ -380,7 +380,7 @@ IDBDatabase.prototype.deleteObjectStore = function(name) {};
 IDBDatabase.prototype.setVersion = function(version) {};
 
 /**
- * @param {Array.<string>} storeNames The stores to open in this transaction.
+ * @param {Array<string>} storeNames The stores to open in this transaction.
  * @param {(number|string)=} mode The mode for opening the object stores.
  * @return {!IDBTransaction} The IDBRequest object.
  */
@@ -428,7 +428,7 @@ IDBDatabase.prototype.dispatchEvent = function(evt) {};
  * is slightly wider than what is actually allowed, as all Array elements must
  * have a valid key type.
  * @see http://www.w3.org/TR/IndexedDB/#key-construct
- * @typedef {number|string|!Date|!Array.<?>}
+ * @typedef {number|string|!Date|!Array<?>}
  */
 var IDBKeyType;
 
@@ -499,7 +499,7 @@ IDBObjectStore.prototype.openCursor = function(range, direction) {};
 
 /**
  * @param {string} name The name of the index.
- * @param {string|!Array.<string>} keyPath The path to the index key.
+ * @param {string|!Array<string>} keyPath The path to the index key.
  * @param {Object=} opt_paramters Optional parameters
  *     for the created index.
  * @return {!IDBIndex} The IDBIndex object.

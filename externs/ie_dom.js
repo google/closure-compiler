@@ -756,7 +756,7 @@ Selection.prototype.clear = function() {};
 Selection.prototype.createRange = function() {};
 
 /**
- * @return {Array.<TextRange>}
+ * @return {Array<TextRange>}
  * @see http://msdn.microsoft.com/en-us/library/ms536396(VS.85).aspx
  */
 Selection.prototype.createRangeCollection = function() {};

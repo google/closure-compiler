@@ -69,7 +69,7 @@ ScriptProfileNode.prototype.selfTime;
 /** @type {number} */
 ScriptProfileNode.prototype.numberOfCalls;
 
-/** @type {Array.<ScriptProfileNode>} */
+/** @type {Array<ScriptProfileNode>} */
 ScriptProfileNode.prototype.children;
 
 /** @type {boolean} */
@@ -167,7 +167,7 @@ Console.prototype.markTimeline = function(value) {};
  */
 Console.prototype.profile = function(opt_title) {};
 
-/** @type {Array.<ScriptProfile>} */
+/** @type {Array<ScriptProfile>} */
 Console.prototype.profiles;
 
 /**

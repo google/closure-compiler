@@ -61,7 +61,7 @@ PushSubscription.prototype.endpoint;
  */
 PushSubscription.prototype.subscriptionId;
 
-/** @return {!Promise.<boolean>} */
+/** @return {!Promise<boolean>} */
 PushSubscription.prototype.unsubscribe = function() {};
 
 /** @enum {string} */

@@ -26,7 +26,7 @@ var Intl = {};
 
 /**
  * NOTE: this API is not from ecma402 and is subject to change.
- * @param {string|Array.<string>=} opt_locales
+ * @param {string|Array<string>=} opt_locales
  * @param {{type: (string|undefined)}=}
  *         opt_options
  * @constructor
@@ -60,7 +60,7 @@ Intl.v8BreakIterator.prototype.next = function() {};
 
 /**
  * @constructor
- * @param {string|Array.<string>=} opt_locales
+ * @param {string|Array<string>=} opt_locales
  * @param {{usage: (string|undefined), localeMatcher: (string|undefined),
  *     sensitivity: (string|undefined), ignorePunctuation: (boolean|undefined),
  *     numeric: (boolean|undefined), caseFirst: (string|undefined)}=}
@@ -69,7 +69,7 @@ Intl.v8BreakIterator.prototype.next = function() {};
 Intl.Collator = function(opt_locales, opt_options) {};
 
 /**
- * @param {Array.<string>} locales
+ * @param {Array<string>} locales
  * @param {{localeMatcher: (string|undefined)}=} opt_options
  */
 Intl.Collator.supportedLocalesOf = function(locales, opt_options) {};
@@ -90,7 +90,7 @@ Intl.Collator.prototype.resolvedOptions = function() {};
 
 /**
  * @constructor
- * @param {string|Array.<string>=} opt_locales
+ * @param {string|Array<string>=} opt_locales
  * @param {{localeMatcher: (string|undefined), useGrouping: (boolean|undefined),
  *     numberingSystem: (string|undefined), style: (string|undefined),
  *     currency: (string|undefined), currencyDisplay: (string|undefined),
@@ -104,7 +104,7 @@ Intl.Collator.prototype.resolvedOptions = function() {};
 Intl.NumberFormat = function(opt_locales, opt_options) {};
 
 /**
- * @param {Array.<string>} locales
+ * @param {Array<string>} locales
  * @param {{localeMatcher: (string|undefined)}=} opt_options
  */
 Intl.NumberFormat.supportedLocalesOf = function(locales, opt_options) {};
@@ -126,7 +126,7 @@ Intl.NumberFormat.prototype.resolvedOptions = function() {};
 
 /**
  * @constructor
- * @param {string|Array.<string>=} opt_locales
+ * @param {string|Array<string>=} opt_locales
  * @param {{localeMatcher: (string|undefined),
  *    formatMatcher: (string|undefined), calendar: (string|undefined),
  *    numberingSystem: (string|undefined), tz: (string|undefined),
@@ -140,7 +140,7 @@ Intl.NumberFormat.prototype.resolvedOptions = function() {};
 Intl.DateTimeFormat = function(opt_locales, opt_options) {};
 
 /**
- * @param {Array.<string>} locales
+ * @param {Array<string>} locales
  * @param {{localeMatcher: string}=} opt_options
  */
 Intl.DateTimeFormat.supportedLocalesOf = function(locales, opt_options) {};

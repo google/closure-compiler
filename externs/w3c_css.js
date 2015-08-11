@@ -2459,7 +2459,7 @@ FontFace.prototype.featureSettings;
 FontFace.prototype.status;
 
 /**
- * @return {!Promise.<!FontFace>}
+ * @return {!Promise<!FontFace>}
  * @see http://dev.w3.org/csswg/css-font-loading/#font-face-load
  */
 FontFace.prototype.load = function() {};
@@ -2520,7 +2520,7 @@ FontFaceSet.prototype.forEach = function(cb, opt_selfObj) {};
 /**
  * @param {string} font
  * @param {string=} opt_text
- * @return {!Promise.<!Array.<!FontFace>>}
+ * @return {!Promise<!Array<!FontFace>>}
  * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-load
  */
 FontFaceSet.prototype.load = function(font, opt_text) {};
@@ -2534,7 +2534,7 @@ FontFaceSet.prototype.load = function(font, opt_text) {};
 FontFaceSet.prototype.check = function(font, opt_text) {};
 
 /**
- * @type {!Promise.<!FontFaceSet>}
+ * @type {!Promise<!FontFaceSet>}
  * @see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-ready
  */
 FontFaceSet.prototype.ready;

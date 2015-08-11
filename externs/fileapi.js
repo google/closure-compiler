@@ -27,7 +27,7 @@
 
 /**
  * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
- * @param {Array.<ArrayBufferView|Blob|string>=} opt_blobParts
+ * @param {Array<ArrayBufferView|Blob|string>=} opt_blobParts
  * @param {Object=} opt_options
  * @constructor
  * @nosideeffects
@@ -170,7 +170,7 @@ function DirectoryReader() {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryReader-readEntries
- * @param {function(!Array.<!Entry>)} successCallback
+ * @param {function(!Array<!Entry>)} successCallback
  * @param {function(!FileError)=} errorCallback
  */
 DirectoryReader.prototype.readEntries = function(successCallback,

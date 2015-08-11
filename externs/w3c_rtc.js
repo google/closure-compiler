@@ -58,7 +58,7 @@ SourceInfo.prototype.facing;
 function MediaStreamTrack() {}
 
 /**
- * @param {!function(!Array.<!SourceInfo>)} callback
+ * @param {!function(!Array<!SourceInfo>)} callback
  */
 MediaStreamTrack.getSources = function(callback) {};
 
@@ -132,7 +132,7 @@ function MediaStreamTrackEvent() {}
 MediaStreamTrackEvent.prototype.track;
 
 /**
- * @param {!MediaStream|!Array.<!MediaStreamTrack>=} streamOrTracks
+ * @param {!MediaStream|!Array<!MediaStreamTrack>=} streamOrTracks
  * @constructor
  * @implements {EventTarget}
  * @see http://www.w3.org/TR/mediacapture-streams/#mediastream
@@ -171,12 +171,12 @@ MediaStream.prototype.label;
 MediaStream.prototype.id;
 
 /**
- * @return {!Array.<!MediaStreamTrack>}
+ * @return {!Array<!MediaStreamTrack>}
  */
 MediaStream.prototype.getAudioTracks = function() {};
 
 /**
- * @return {!Array.<!MediaStreamTrack>}
+ * @return {!Array<!MediaStreamTrack>}
  */
 MediaStream.prototype.getVideoTracks = function() {};
 
@@ -225,7 +225,7 @@ MediaStream.prototype.stop = function() {};
 
 /**
  * @type {function(new: MediaStream,
- *                 (!MediaStream|!Array.<!MediaStreamTrack>)=)}
+ *                 (!MediaStream|!Array<!MediaStreamTrack>)=)}
  */
 var webkitMediaStream;
 
@@ -321,7 +321,7 @@ function MediaTrackConstraintsInterface_() {}
 MediaTrackConstraintsInterface_.prototype.mandatory;
 
 /**
- * @type {?Array.<!MediaTrackConstraintSet>}
+ * @type {?Array<!MediaTrackConstraintSet>}
  */
 MediaTrackConstraintsInterface_.prototype.optional;
 
@@ -523,7 +523,7 @@ RTCIceServerInterface_.prototype.credential;
 var RTCIceServer;
 
 /**
- * @typedef {{iceServers: !Array.<!RTCIceServer>}}
+ * @typedef {{iceServers: !Array<!RTCIceServer>}}
  * @private
  */
 var RTCConfigurationRecord_;
@@ -535,7 +535,7 @@ var RTCConfigurationRecord_;
 function RTCConfigurationInterface_() {}
 
 /**
- * @type {!Array.<!RTCIceServer>}
+ * @type {!Array<!RTCIceServer>}
  */
 RTCConfigurationInterface_.prototype.iceServers;
 
@@ -603,7 +603,7 @@ function RTCStatsReport() {}
 RTCStatsReport.prototype.timestamp;
 
 /**
- * @return {!Array.<!string>}
+ * @return {!Array<!string>}
  */
 RTCStatsReport.prototype.names = function() {};
 
@@ -653,7 +653,7 @@ var RTCStatsElement;
 function RTCStatsResponse() {}
 
 /**
- * @return {!Array.<!RTCStatsReport>}
+ * @return {!Array<!RTCStatsReport>}
  */
 RTCStatsResponse.prototype.result = function() {};
 
@@ -713,7 +713,7 @@ function MediaConstraintsInterface_() {}
 MediaConstraintsInterface_.prototype.mandatory;
 
 /**
- * @type {?Array.<!MediaConstraintSet_>}
+ * @type {?Array<!MediaConstraintSet_>}
  */
 MediaConstraintsInterface_.prototype.optional;
 
@@ -775,7 +775,7 @@ RTCDataChannel.prototype.onclose;
 RTCDataChannel.prototype.close = function() {};
 
 /**
- * @type {?function(!MessageEvent.<*>)}
+ * @type {?function(!MessageEvent<*>)}
  */
 RTCDataChannel.prototype.onmessage;
 
@@ -922,12 +922,12 @@ RTCPeerConnection.prototype.iceGatheringState;
 RTCPeerConnection.prototype.iceConnectionState;
 
 /**
- * @return {!Array.<!MediaStream>}
+ * @return {!Array<!MediaStream>}
  */
 RTCPeerConnection.prototype.getLocalStreams = function() {};
 
 /**
- * @return {!Array.<!MediaStream>}
+ * @return {!Array<!MediaStream>}
  */
 RTCPeerConnection.prototype.getRemoteStreams = function() {};
 

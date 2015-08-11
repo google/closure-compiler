@@ -36,8 +36,8 @@ shindig.random = function() {};
 /**
  * Implements a SHA1 hasher.
  * @return {{reset: function(), update:
- * function((Array.<number>|string),number=), digest:
- * function():Array.<number>, digestString: function():string}} SHA1
+ * function((Array<number>|string),number=), digest:
+ * function():Array<number>, digestString: function():string}} SHA1
  * hasher object. Methods of the returned object are: reset() which
  * resets the internal accumulator, update(bytes, opt_length) which
  * adds a byte array or string to the internal accumulator (or

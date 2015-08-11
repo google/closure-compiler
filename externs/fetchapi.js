@@ -24,7 +24,7 @@
  */
 
 /**
- * @typedef {!Headers|!Array.<!Array.<string>>}
+ * @typedef {!Headers|!Array<!Array<string>>}
  */
 var HeadersInit;
 
@@ -54,7 +54,7 @@ Headers.prototype.get = function(name) {};
 
 /**
  * @param {string} name
- * @return {!Array.<string>}
+ * @return {!Array<string>}
  */
 Headers.prototype.getAll = function(name) {};
 
@@ -86,19 +86,19 @@ function Request(input, opt_init) {}
 /** @type {boolean} */
 Request.prototype.bodyUsed;
 
-/** @return {!Promise.<!ArrayBuffer>} */
+/** @return {!Promise<!ArrayBuffer>} */
 Request.prototype.arrayBuffer = function() {};
 
-/** @return {!Promise.<!Blob>} */
+/** @return {!Promise<!Blob>} */
 Request.prototype.blob = function() {};
 
-/** @return {!Promise.<!FormData>} */
+/** @return {!Promise<!FormData>} */
 Request.prototype.formData = function() {};
 
-/** @return {!Promise.<!Object>} */
+/** @return {!Promise<!Object>} */
 Request.prototype.json = function() {};
 
-/** @return {!Promise.<string>} */
+/** @return {!Promise<string>} */
 Request.prototype.text = function() {};
 
 /** @type {string} */
@@ -236,19 +236,19 @@ Response.prototype.bodyUsed;
 /** @type {!ReadableByteStream} */
 Response.prototype.body;
 
-/** @return {!Promise.<!ArrayBuffer>} */
+/** @return {!Promise<!ArrayBuffer>} */
 Response.prototype.arrayBuffer = function() {};
 
-/** @return {!Promise.<!Blob>} */
+/** @return {!Promise<!Blob>} */
 Response.prototype.blob = function() {};
 
-/** @return {!Promise.<!FormData>} */
+/** @return {!Promise<!FormData>} */
 Response.prototype.formData = function() {};
 
-/** @return {!Promise.<!Object>} */
+/** @return {!Promise<!Object>} */
 Response.prototype.json = function() {};
 
-/** @return {!Promise.<string>} */
+/** @return {!Promise<string>} */
 Response.prototype.text = function() {};
 
 /** @type {ResponseType} */
@@ -296,7 +296,7 @@ var ResponseType = {
  * @see https://fetch.spec.whatwg.org/#dom-global-fetch
  * @param {!RequestInfo} input
  * @param {RequestInit=} opt_init
- * @return {!Promise.<!Response>}
+ * @return {!Promise<!Response>}
  */
 function fetch(input, opt_init) {}
 
@@ -304,7 +304,7 @@ function fetch(input, opt_init) {}
  * @see https://fetch.spec.whatwg.org/#dom-global-fetch
  * @param {!RequestInfo} input
  * @param {RequestInit=} opt_init
- * @return {!Promise.<!Response>}
+ * @return {!Promise<!Response>}
  */
 Window.prototype.fetch = function(input, opt_init) {};
 
@@ -313,6 +313,6 @@ Window.prototype.fetch = function(input, opt_init) {};
  * @see https://fetch.spec.whatwg.org/#dom-global-fetch
  * @param {!RequestInfo} input
  * @param {RequestInit=} opt_init
- * @return {!Promise.<!Response>}
+ * @return {!Promise<!Response>}
  */
 WorkerGlobalScope.prototype.fetch = function(input, opt_init) {};

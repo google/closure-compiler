@@ -68,7 +68,7 @@ function Iterable() {}
 
 // TODO(johnlenz): remove this when the compiler understands "symbol" natively
 /**
- * @return {Iterator.<VALUE>}
+ * @return {Iterator<VALUE>}
  * @suppress {externsValidation}
  */
 Iterable.prototype[Symbol.iterator] = function() {};
@@ -367,7 +367,7 @@ var BufferSource;
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -399,7 +399,7 @@ Int8Array.prototype.BYTES_PER_ELEMENT;
 Int8Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Int8Array.prototype.set = function(array, opt_offset) {};
@@ -414,7 +414,7 @@ Int8Array.prototype.subarray = function(begin, opt_end) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -436,7 +436,7 @@ Uint8Array.prototype.BYTES_PER_ELEMENT;
 Uint8Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Uint8Array.prototype.set = function(array, opt_offset) {};
@@ -451,7 +451,7 @@ Uint8Array.prototype.subarray = function(begin, opt_end) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -473,7 +473,7 @@ Uint8ClampedArray.prototype.BYTES_PER_ELEMENT;
 Uint8ClampedArray.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Uint8ClampedArray.prototype.set = function(array, opt_offset) {};
@@ -497,7 +497,7 @@ var CanvasPixelArray;
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -519,7 +519,7 @@ Int16Array.prototype.BYTES_PER_ELEMENT;
 Int16Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Int16Array.prototype.set = function(array, opt_offset) {};
@@ -534,7 +534,7 @@ Int16Array.prototype.subarray = function(begin, opt_end) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -556,7 +556,7 @@ Uint16Array.prototype.BYTES_PER_ELEMENT;
 Uint16Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Uint16Array.prototype.set = function(array, opt_offset) {};
@@ -571,7 +571,7 @@ Uint16Array.prototype.subarray = function(begin, opt_end) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -593,7 +593,7 @@ Int32Array.prototype.BYTES_PER_ELEMENT;
 Int32Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Int32Array.prototype.set = function(array, opt_offset) {};
@@ -608,7 +608,7 @@ Int32Array.prototype.subarray = function(begin, opt_end) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -630,7 +630,7 @@ Uint32Array.prototype.BYTES_PER_ELEMENT;
 Uint32Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Uint32Array.prototype.set = function(array, opt_offset) {};
@@ -645,7 +645,7 @@ Uint32Array.prototype.subarray = function(begin, opt_end) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -667,7 +667,7 @@ Float32Array.prototype.BYTES_PER_ELEMENT;
 Float32Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Float32Array.prototype.set = function(array, opt_offset) {};
@@ -682,7 +682,7 @@ Float32Array.prototype.subarray = function(begin, opt_end) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array.<number>|ArrayBuffer} length or array
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
@@ -704,7 +704,7 @@ Float64Array.prototype.BYTES_PER_ELEMENT;
 Float64Array.prototype.length;
 
 /**
- * @param {ArrayBufferView|Array.<number>} array
+ * @param {ArrayBufferView|Array<number>} array
  * @param {number=} opt_offset
  */
 Float64Array.prototype.set = function(array, opt_offset) {};
@@ -909,18 +909,18 @@ IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  * @param {function(
- *             function((TYPE|IThenable.<TYPE>|Thenable|null)=),
+ *             function((TYPE|IThenable<TYPE>|Thenable|null)=),
  *             function(*=))} resolver
  * @constructor
- * @implements {IThenable.<TYPE>}
+ * @implements {IThenable<TYPE>}
  * @template TYPE
  */
 function Promise(resolver) {}
 
 
 /**
- * @param {(TYPE|IThenable.<TYPE>)=} opt_value
- * @return {!Promise.<TYPE>}
+ * @param {(TYPE|IThenable<TYPE>)=} opt_value
+ * @return {!Promise<TYPE>}
  * @template TYPE
  */
 Promise.resolve = function(opt_value) {};
@@ -928,7 +928,7 @@ Promise.resolve = function(opt_value) {};
 
 /**
  * @param {*=} opt_error
- * @return {!Promise.<?>}
+ * @return {!Promise<?>}
  */
 Promise.reject = function(opt_error) {};
 
@@ -945,8 +945,8 @@ Promise.all = function(iterable) {};
 /**
  * @template T
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
- * @param {!Array.<T>} iterable
- * @return {!Promise.<T>}
+ * @param {!Array<T>} iterable
+ * @return {!Promise<T>}
  */
 Promise.race = function(iterable) {};
 
@@ -976,7 +976,7 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
 
 /**
  * @param {function(*): RESULT} onRejected
- * @return {!Promise.<RESULT>}
+ * @return {!Promise<RESULT>}
  * @template RESULT
  */
 Promise.prototype.catch = function(onRejected) {};
@@ -987,7 +987,7 @@ Array.prototype.keys;
 
 
 /**
- * @return {!Array.<!Array>} An array of [key, value] pairs.
+ * @return {!Array<!Array>} An array of [key, value] pairs.
  */
 Array.prototype.entries;
 

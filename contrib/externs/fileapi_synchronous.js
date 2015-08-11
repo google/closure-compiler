@@ -261,7 +261,7 @@ function DirectoryReaderSync() {};
 
 /**
  * @see http://www.w3.org/TR/file-system-api/#widl-DirectoryReaderSync-readEntries
- * @return {!Array.<!EntrySync>}
+ * @return {!Array<!EntrySync>}
  */
 DirectoryReaderSync.prototype.readEntries = function() {};
 

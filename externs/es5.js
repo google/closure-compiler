@@ -131,7 +131,7 @@ Object.getOwnPropertyDescriptor = function(obj, prop) {};
 
 /**
  * @param {!Object} obj
- * @return {!Array.<string>}
+ * @return {!Array<string>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/keys
  */
@@ -140,7 +140,7 @@ Object.keys = function(obj) {};
 
 /**
  * @param {!Object} obj
- * @return {!Array.<string>}
+ * @return {!Array<string>}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames
  */
@@ -253,7 +253,7 @@ JSONType.prototype.parse = function(jsonStr, opt_reviver) {};
 
 /**
  * @param {*} jsonObj Input object.
- * @param {(Array.<string>|(function(string, *) : *)|null)=} opt_replacer
+ * @param {(Array<string>|(function(string, *) : *)|null)=} opt_replacer
  * @param {(number|string)=} opt_space
  * @return {string} JSON string which represents jsonObj.
  * @throws {Error}

@@ -434,7 +434,7 @@ Function.prototype.toString = function() {};
 /**
  * @constructor
  * @param {...*} var_args
- * @return {!Array.<?>}
+ * @return {!Array<?>}
  * @nosideeffects
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array
@@ -448,7 +448,7 @@ function Array(var_args) {}
  * and/or value(s).
  *
  * @param {...*} var_args
- * @return {!Array.<?>}
+ * @return {!Array<?>}
  * @this {*}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat
@@ -472,7 +472,7 @@ Array.prototype.join = function(opt_separator) {};
  * Removes the last element from an array and returns that element.
  *
  * @return {T}
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array<T>}
  * @modifies {this}
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop
@@ -485,7 +485,7 @@ Array.prototype.pop = function() {};
  *
  * @param {...T} var_args
  * @return {number} The new length of the array.
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array<T>}
  * @template T
  * @modifies {this}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push
@@ -506,7 +506,7 @@ Array.prototype.reverse = function() {};
  * Removes the first element from an array and returns that element. This
  * method changes the length of the array.
  *
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array<T>}
  * @modifies {this}
  * @return {T}
  * @template T
@@ -521,8 +521,8 @@ Array.prototype.shift = function() {};
  *     non-number type will be auto-cast by the browser to a number.
  * @param {*=} opt_end Zero-based index at which to end extraction.  slice
  *     extracts up to but not including end.
- * @return {!Array.<T>}
- * @this {{length: number}|Array.<T>|string}
+ * @return {!Array<T>}
+ * @this {{length: number}|Array<T>|string}
  * @template T
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
@@ -534,7 +534,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  *
  * @param {function(T,T):number=} opt_compareFunction Specifies a function that
  *     defines the sort order.
- * @this {{length: number}|Array.<T>}
+ * @this {{length: number}|Array<T>}
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
  */
@@ -550,8 +550,8 @@ Array.prototype.sort = function(opt_compareFunction) {};
  * @param {*=} opt_howMany An integer indicating the number of old array elements
  *     to remove.
  * @param {...T} var_args
- * @return {!Array.<T>}
- * @this {{length: number}|Array.<T>}
+ * @return {!Array<T>}
+ * @this {{length: number}|Array<T>}
  * @modifies {this}
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
@@ -567,7 +567,7 @@ Array.prototype.splice = function(opt_index, opt_howMany, var_args) {};
 Array.prototype.toSource;
 
 /**
- * @this {Array.<?>}
+ * @this {Array<?>}
  * @return {string}
  * @nosideeffects
  * @override
@@ -590,10 +590,10 @@ Array.prototype.unshift = function(var_args) {};
  * Apply a function simultaneously against two values of the array (from
  * left-to-right) as to reduce it to a single value.
  *
- * @param {?function(?, T, number, !Array.<T>) : R} callback
+ * @param {?function(?, T, number, !Array<T>) : R} callback
  * @param {*=} opt_initialValue
  * @return {R}
- * @this {{length: number}|Array.<T>|string}
+ * @this {{length: number}|Array<T>|string}
  * @template T,R
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
  */
@@ -603,10 +603,10 @@ Array.prototype.reduce = function(callback, opt_initialValue) {};
  * Apply a function simultaneously against two values of the array (from
  * right-to-left) as to reduce it to a single value.
  *
- * @param {?function(?, T, number, !Array.<T>) : R} callback
+ * @param {?function(?, T, number, !Array<T>) : R} callback
  * @param {*=} opt_initialValue
  * @return {R}
- * @this {{length: number}|Array.<T>|string}
+ * @this {{length: number}|Array<T>|string}
  * @template T,R
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduceRight
  */
@@ -614,10 +614,10 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array.<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
- * @this {{length: number}|Array.<T>|string}
+ * @this {{length: number}|Array<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every
  */
@@ -625,10 +625,10 @@ Array.prototype.every = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array.<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
- * @return {!Array.<T>}
- * @this {{length: number}|Array.<T>|string}
+ * @return {!Array<T>}
+ * @this {{length: number}|Array<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
  */
@@ -636,9 +636,9 @@ Array.prototype.filter = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array.<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
- * @this {{length: number}|Array.<T>|string}
+ * @this {{length: number}|Array<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
  */
@@ -649,7 +649,7 @@ Array.prototype.forEach = function(callback, opt_thisobj) {};
  * @param {T} obj
  * @param {number=} opt_fromIndex
  * @return {number}
- * @this {{length: number}|Array.<T>|string}
+ * @this {{length: number}|Array<T>|string}
  * @nosideeffects
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
@@ -661,7 +661,7 @@ Array.prototype.indexOf = function(obj, opt_fromIndex) {};
  * @param {T} obj
  * @param {number=} opt_fromIndex
  * @return {number}
- * @this {{length: number}|Array.<T>|string}
+ * @this {{length: number}|Array<T>|string}
  * @nosideeffects
  * @template T
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf
@@ -670,10 +670,10 @@ Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array.<T>): R} callback
+ * @param {?function(this:S, T, number, !Array<T>): R} callback
  * @param {S=} opt_thisobj
- * @return {!Array.<R>}
- * @this {{length: number}|Array.<T>|string}
+ * @return {!Array<R>}
+ * @this {{length: number}|Array<T>|string}
  * @template T,S,R
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
  */
@@ -681,10 +681,10 @@ Array.prototype.map = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array.<T>): ?} callback
+ * @param {?function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
- * @this {{length: number}|Array.<T>|string}
+ * @this {{length: number}|Array<T>|string}
  * @template T,S
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some
  */
@@ -709,7 +709,7 @@ Array.prototype.input;
 Array.prototype.length;
 
 /**
- * @param {{length: number}|Array.<T>} arr
+ * @param {{length: number}|Array<T>} arr
  * @param {?function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @return {boolean}
@@ -718,16 +718,16 @@ Array.prototype.length;
 Array.every = function(arr, callback, opt_context) {};
 
 /**
- * @param {{length: number}|Array.<T>} arr
+ * @param {{length: number}|Array<T>} arr
  * @param {?function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
- * @return {!Array.<T>}
+ * @return {!Array<T>}
  * @template T,S
  */
 Array.filter = function(arr, callback, opt_context) {};
 
 /**
- * @param {{length: number}|Array.<T>} arr
+ * @param {{length: number}|Array<T>} arr
  * @param {?function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @template T,S
@@ -736,7 +736,7 @@ Array.forEach = function(arr, callback, opt_context) {};
 
 /**
  * Mozilla 1.6+ only.
- * @param {{length: number}|Array.<T>} arr
+ * @param {{length: number}|Array<T>} arr
  * @param {T} obj
  * @param {number=} opt_fromIndex
  * @return {number}
@@ -748,7 +748,7 @@ Array.indexOf = function(arr, obj, opt_fromIndex) {};
 
 /**
  * Mozilla 1.6+ only.
- * @param {{length: number}|Array.<T>} arr
+ * @param {{length: number}|Array<T>} arr
  * @param {T} obj
  * @param {number=} opt_fromIndex
  * @return {number}
@@ -759,16 +759,16 @@ Array.indexOf = function(arr, obj, opt_fromIndex) {};
 Array.lastIndexOf = function(arr, obj, opt_fromIndex) {};
 
 /**
- * @param {{length: number}|Array.<T>} arr
- * @param {?function(this:S, T, number, !Array.<T>): R} callback
+ * @param {{length: number}|Array<T>} arr
+ * @param {?function(this:S, T, number, !Array<T>): R} callback
  * @param {S=} opt_context
- * @return {!Array.<R>}
+ * @return {!Array<R>}
  * @template T,S,R
  */
 Array.map = function(arr, callback, opt_context) {};
 
 /**
- * @param {{length: number}|Array.<T>} arr
+ * @param {{length: number}|Array<T>} arr
  * @param {?function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @return {boolean}
@@ -1487,7 +1487,7 @@ Date.prototype.toTimeString = function() {};
 Date.prototype.toUTCString = function() {};
 
 /**
- * @param {(string|Array.<string>)=} opt_locales
+ * @param {(string|Array<string>)=} opt_locales
  * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
@@ -1504,7 +1504,7 @@ Date.prototype.toLocaleDateString = function(opt_locales, opt_options) {};
 Date.prototype.toLocaleFormat = function(formatString) {};
 
 /**
- * @param {string|Array.<string>=} opt_locales
+ * @param {string|Array<string>=} opt_locales
  * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
@@ -1515,7 +1515,7 @@ Date.prototype.toLocaleFormat = function(formatString) {};
 Date.prototype.toLocaleString = function(opt_locales, opt_options) {};
 
 /**
- * @param {(string|Array.<string>)=} opt_locales
+ * @param {(string|Array<string>)=} opt_locales
  * @param {Object=} opt_options
  * @return {string}
  * @nosideeffects
@@ -1699,7 +1699,7 @@ String.prototype.link = function(hrefAttribute) {};
  *
  * @this {*}
  * @param {?string} compareString
- * @param {string|Array.<string>=} locales
+ * @param {string|Array<string>=} locales
  * @param {Object=} options
  * @return {number}
  * @nosideeffects
@@ -1714,7 +1714,7 @@ String.prototype.localeCompare = function(compareString, locales, options) {};
  *
  * @this {String|string}
  * @param {*} regexp
- * @return {Array.<string>} This should really return an Array with a few
+ * @return {Array<string>} This should really return an Array with a few
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see Regexp.prototype.exec.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match
@@ -1777,7 +1777,7 @@ String.prototype.small = function() {};
  * @this {String|string}
  * @param {*=} opt_separator
  * @param {number=} opt_limit
- * @return {!Array.<string>}
+ * @return {!Array<string>}
  * @nosideeffects
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/split
  */
@@ -1910,7 +1910,7 @@ RegExp.prototype.compile = function(pattern, opt_flags) {};
 
 /**
  * @param {*} str The string to search.
- * @return {Array.<string>} This should really return an Array with a few
+ * @return {Array<string>} This should really return an Array with a few
  *     special properties, but we do not have a good way to model this in
  *     our type system. Also see String.prototype.match.
  * @see http://msdn.microsoft.com/en-us/library/z908hy33(VS.85).aspx

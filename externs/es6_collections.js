@@ -24,8 +24,8 @@
 
 /**
  * @constructor
- * @param {Iterable.<!Array.<KEY|VALUE>>|!Array.<!Array.<KEY|VALUE>>=} opt_iterable
- * @implements {Iterable.<!Array.<KEY|VALUE>>}
+ * @param {Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable
+ * @implements {Iterable<!Array<KEY|VALUE>>}
  * @template KEY, VALUE
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
  */
@@ -41,7 +41,7 @@ Map.prototype.clear;
 Map.prototype.delete;
 
 /**
- * @return {!Iterator.<!Array.<KEY|VALUE>>}
+ * @return {!Iterator<!Array<KEY|VALUE>>}
  * @nosideeffects
  */
 Map.prototype.entries;
@@ -69,7 +69,7 @@ Map.prototype.get;
 Map.prototype.has;
 
 /**
- * @return {!Iterator.<KEY>}
+ * @return {!Iterator<KEY>}
  */
 Map.prototype.keys;
 
@@ -89,20 +89,20 @@ Map.prototype.set;
 Map.prototype.size;
 
 /**
- * @return {!Iterator.<VALUE>}
+ * @return {!Iterator<VALUE>}
  * @nosideeffects
  */
 Map.prototype.values;
 
 /**
- * @return {!Iterator.<!Array.<KEY|VALUE>>}
+ * @return {!Iterator<!Array<KEY|VALUE>>}
  */
 Map.prototype[Symbol.iterator] = function() {};
 
 
 /**
  * @constructor
- * @param {Iterable.<!Array.<KEY|VALUE>>|!Array.<!Array.<KEY|VALUE>>=} opt_iterable
+ * @param {Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable
  * @template KEY, VALUE
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
  */
@@ -144,8 +144,8 @@ WeakMap.prototype.set;
 
 /**
  * @constructor
- * @param {Iterable.<VALUE>|Array.<VALUE>=} opt_iterable
- * @implements {Iterable.<VALUE>}
+ * @param {Iterable<VALUE>|Array<VALUE>=} opt_iterable
+ * @implements {Iterable<VALUE>}
  * @template VALUE
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
  */
@@ -171,7 +171,7 @@ Set.prototype.clear;
 Set.prototype.delete;
 
 /**
- * @return {!Iterator.<!Array.<VALUE>>} Where each array has two entries:
+ * @return {!Iterator<!Array<VALUE>>} Where each array has two entries:
  *     [value, value]
  * @nosideeffects
  */
@@ -198,19 +198,19 @@ Set.prototype.has;
 Set.prototype.size;
 
 /**
- * @return {!Iterator.<VALUE>}
+ * @return {!Iterator<VALUE>}
  * @nosideeffects
  */
 Set.prototype.keys;
 
 /**
- * @return {!Iterator.<VALUE>}
+ * @return {!Iterator<VALUE>}
  * @nosideeffects
  */
 Set.prototype.values;
 
 /**
- * @return {!Iterator.<VALUE>}
+ * @return {!Iterator<VALUE>}
  */
 Set.prototype[Symbol.iterator] = function() {};
 
@@ -218,7 +218,7 @@ Set.prototype[Symbol.iterator] = function() {};
 
 /**
  * @constructor
- * @param {Iterable.<VALUE>|Array.<VALUE>=} opt_iterable
+ * @param {Iterable<VALUE>|Array<VALUE>=} opt_iterable
  * @template VALUE
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
  */

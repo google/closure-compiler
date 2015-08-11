@@ -331,7 +331,7 @@ SpeechSynthesisVoice.prototype.default;
 
 /**
  * @constructor
- * @extends {Array.<!SpeechSynthesisVoice>}
+ * @extends {Array<!SpeechSynthesisVoice>}
  */
 function SpeechSynthesisVoiceList() {}
 

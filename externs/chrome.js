@@ -236,16 +236,16 @@ ChromeObjectEvent.prototype.hasListeners = function() {};
 function ChromeStringArrayEvent() {}
 
 
-/** @param {function(!Array.<string>): void} callback */
+/** @param {function(!Array<string>): void} callback */
 ChromeStringArrayEvent.prototype.addListener = function(callback) {};
 
 
-/** @param {function(!Array.<string>): void} callback */
+/** @param {function(!Array<string>): void} callback */
 ChromeStringArrayEvent.prototype.removeListener = function(callback) {};
 
 
 /**
- * @param {function(!Array.<string>): void} callback
+ * @param {function(!Array<string>): void} callback
  * @return {boolean}
  */
 ChromeStringArrayEvent.prototype.hasListener = function(callback) {};

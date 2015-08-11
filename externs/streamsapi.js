@@ -68,9 +68,9 @@ var TransformStream;
 
 /**
  * @typedef {undefined|{
- *     start: (undefined|function(!ReadableStreamController): (!Promise.<*>|void)),
- *     pull: (undefined|function(!ReadableStreamController): (!Promise.<*>|void)),
- *     cancel: (undefined|function(*): (!Promise.<*>|void))
+ *     start: (undefined|function(!ReadableStreamController): (!Promise<*>|void)),
+ *     pull: (undefined|function(!ReadableStreamController): (!Promise<*>|void)),
+ *     cancel: (undefined|function(*): (!Promise<*>|void))
  * }}
  */
 var ReadableStreamSource;
@@ -115,12 +115,12 @@ ReadableStream.prototype.pipeThrough = function(transform, opt_options) {};
 /**
  * @param {!WritableStream} dest
  * @param {PipeOptions=} opt_options
- * @return {!Promise.<*>}
+ * @return {!Promise<*>}
  */
 ReadableStream.prototype.pipeTo = function(dest, opt_options) {};
 
 /**
- * @return {!Array.<!ReadableStream>} Two-element array, containing resulting
+ * @return {!Array<!ReadableStream>} Two-element array, containing resulting
  *     streams.
  */
 ReadableStream.prototype.tee = function() {};
@@ -164,7 +164,7 @@ ReadableStreamReader.prototype.closed;
 ReadableStreamReader.prototype.cancel = function(reason) {};
 
 /**
- * @return {!Promise.<!IteratorResult>}
+ * @return {!Promise<!IteratorResult>}
  */
 ReadableStreamReader.prototype.read = function() {};
 
@@ -173,10 +173,10 @@ ReadableStreamReader.prototype.releaseLock = function() {};
 
 /**
  * @typedef {(undefined|{
- *     start: (undefined|function(*): (!Promise.<*>|void)),
- *     write: (undefined|function(*): (!Promise.<*>|void)),
- *     close: (undefined|function(): (!Promise.<*>|void)),
- *     abort: (undefined|function(*): (!Promise.<*>|void))
+ *     start: (undefined|function(*): (!Promise<*>|void)),
+ *     write: (undefined|function(*): (!Promise<*>|void)),
+ *     close: (undefined|function(): (!Promise<*>|void)),
+ *     abort: (undefined|function(*): (!Promise<*>|void))
  * })}
  */
 var WritableStreamSink;
@@ -189,10 +189,10 @@ var WritableStreamSink;
  */
 function WritableStream(opt_underlyingSink, opt_strategy) {}
 
-/** @type {!Promise.<*>} */
+/** @type {!Promise<*>} */
 WritableStream.prototype.closed;
 
-/** @type {!Promise.<*>} */
+/** @type {!Promise<*>} */
 WritableStream.prototype.ready;
 
 /** @type {string} */
@@ -200,17 +200,17 @@ WritableStream.prototype.state;
 
 /**
  * @param {*} reason
- * @return {!Promise.<undefined>}
+ * @return {!Promise<undefined>}
  */
 WritableStream.prototype.abort = function(reason) {};
 
 /**
- * @return {!Promise.<undefined>}
+ * @return {!Promise<undefined>}
  */
 WritableStream.prototype.close = function() {};
 
 /**
- * @return {!Promise.<*>}
+ * @return {!Promise<*>}
  */
 WritableStream.prototype.write = function(chunk) {};
 
@@ -245,12 +245,12 @@ ReadableByteStream.prototype.pipeThrough = function(transform, opt_options) {};
 /**
  * @param {!WritableStream} dest
  * @param {PipeOptions=} opt_options
- * @return {!Promise.<*>}
+ * @return {!Promise<*>}
  */
 ReadableByteStream.prototype.pipeTo = function(dest, opt_options) {};
 
 /**
- * @return {!Array.<!ReadableByteStream>} Two-element array containing resulting
+ * @return {!Array<!ReadableByteStream>} Two-element array containing resulting
  *     streams.
  */
 ReadableByteStream.prototype.tee = function() {};
@@ -294,7 +294,7 @@ ReadableByteStreamReader.prototype.closed;
 ReadableByteStreamReader.prototype.cancel = function(reason) {};
 
 /**
- * @return {!Promise.<!IteratorResult>}
+ * @return {!Promise<!IteratorResult>}
  */
 ReadableByteStreamReader.prototype.read = function() {};
 
