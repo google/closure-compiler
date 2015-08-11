@@ -2546,6 +2546,24 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
+  private boolean mayWarnAboutInexistentProp(
+      Node propAccessNode, JSType recvType, QualifiedName propQname) {
+    if (!propAccessNode.isGetProp()) {
+      return false;
+    }
+    String pname = propQname.toString();
+    if (!recvType.mayHaveProp(propQname)) {
+      warnings.add(JSError.make(propAccessNode,
+              TypeCheck.INEXISTENT_PROPERTY, pname, recvType.toString()));
+      return true;
+    } else if (!recvType.hasProp(propQname)) {
+      warnings.add(JSError.make(propAccessNode,
+              POSSIBLY_INEXISTENT_PROPERTY, pname, recvType.toString()));
+      return true;
+    }
+    return false;
+  }
+
   private boolean mayWarnAboutConst(Node n) {
     Node lhs = n.getFirstChild();
     if (lhs.isName() && currentScope.isConstVar(lhs.getString())) {
@@ -2642,33 +2660,25 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(pair.env, JSType.UNKNOWN);
     }
     if (!propAccessNode.getParent().isExprResult()
-        && !specializedType.isTruthy() && !specializedType.isFalsy()
-        && !recvType.mayBeDict()) {
-      if (!recvType.mayHaveProp(propQname)) {
-        // TODO(dimvar): maybe don't warn if the getprop is inside a typeof,
-        // see testMissingProperty8 (who relies on that for prop checking?)
-        warnings.add(JSError.make(propAccessNode, TypeCheck.INEXISTENT_PROPERTY,
-                pname, recvType.toString()));
-      } else if (!recvType.hasProp(propQname)) {
-        warnings.add(JSError.make(
-            propAccessNode, POSSIBLY_INEXISTENT_PROPERTY,
-            pname, recvType.toString()));
-      } else if (recvType.hasProp(propQname) &&
-          !resultType.isSubtypeOf(requiredType) &&
-          tightenTypeAndDontWarn(
-              receiver.isName() ? receiver.getString() : null,
-              receiver,
-              recvType.getDeclaredProp(propQname),
-              resultType, requiredType)) {
-        // Tighten the inferred type and don't warn.
-        // See analyzeNameFwd for explanation about types as lower/upper bounds.
-        resultType = resultType.specialize(requiredType);
-        LValueResultFwd lvr =
-            analyzeLValueFwd(propAccessNode, inEnv, resultType);
-        TypeEnv updatedEnv =
-            updateLvalueTypeInEnv(lvr.env, propAccessNode, lvr.ptr, resultType);
-        return new EnvTypePair(updatedEnv, resultType);
-      }
+        && !specializedType.isTruthy()
+        && !specializedType.isFalsy()
+        && !recvType.mayBeDict()
+        && !mayWarnAboutInexistentProp(propAccessNode, recvType, propQname)
+        && recvType.hasProp(propQname)
+        && !resultType.isSubtypeOf(requiredType)
+        && tightenTypeAndDontWarn(
+            receiver.isName() ? receiver.getString() : null,
+            receiver,
+            recvType.getDeclaredProp(propQname),
+            resultType, requiredType)) {
+      // Tighten the inferred type and don't warn.
+      // See analyzeNameFwd for explanation about types as lower/upper bounds.
+      resultType = resultType.specialize(requiredType);
+      LValueResultFwd lvr =
+          analyzeLValueFwd(propAccessNode, inEnv, resultType);
+      TypeEnv updatedEnv =
+          updateLvalueTypeInEnv(lvr.env, propAccessNode, lvr.ptr, resultType);
+      return new EnvTypePair(updatedEnv, resultType);
     }
     // We've already warned about missing props, and never want to return null.
     if (resultType == null) {
@@ -3608,13 +3618,10 @@ final class NewTypeInference implements CompilerPass {
         // name, or for assignment ops that won't create a new property.
         boolean warnForInexistentProp = insideQualifiedName ||
             propAccessNode.getParent().getType() != Token.ASSIGN;
-        if (warnForInexistentProp &&
-            !lvalueType.isUnknown() &&
-            !lvalueType.mayBeDict()) {
-          DiagnosticType dt = lvalueType.mayHaveProp(pname)
-              ? POSSIBLY_INEXISTENT_PROPERTY : TypeCheck.INEXISTENT_PROPERTY;
-          warnings.add(
-              JSError.make(obj, dt, pnameAsString, lvalueType.toString()));
+        if (warnForInexistentProp
+            && !lvalueType.isUnknown()
+            && !lvalueType.mayBeDict()) {
+          mayWarnAboutInexistentProp(propAccessNode, lvalueType, pname);
           return new LValueResultFwd(lvalueEnv, type, null, null);
         }
       }

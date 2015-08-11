@@ -1866,6 +1866,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck("var x = {}; var y = x.a;", TypeCheck.INEXISTENT_PROPERTY);
 
+    typeCheck("var x = {}; var y = x['a'];");
+
     typeCheck("var x = {}; x.y - 3; x.y = 5;", TypeCheck.INEXISTENT_PROPERTY);
   }
 
@@ -2943,17 +2945,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     //     "function g() { (new Foo()).bar(5); }"),
     //     NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    // TODO(blickly): Add fancier JSDoc annotation finding to jstypecreator
-    // typeCheck(Joiner.on('\n').join(
-    //     "/** @constructor */ function Foo() {};",
-    //     "/** @param {string} s */ Foo.prototype.bar = function(s) {};",
-    //     "function g() { (new Foo()).bar(5); }"),
-    //     NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // typeCheck(Joiner.on('\n').join(
-    //     "/** @constructor */ function Foo() {};",
-    //     "Foo.prototype.bar = function(/** string */ s) {};",
-    //     "function g() { (new Foo()).bar(5); }"),
-    //     NewTypeInference.INVALID_ARGUMENT_TYPE);
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ function Foo() {};",
+        "/** @param {string} s */ Foo.prototype.bar = function(s) {};",
+        "function g() { (new Foo()).bar(5); }"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ function Foo() {};",
+        "Foo.prototype.bar = function(/** string */ s) {};",
+        "function g() { (new Foo()).bar(5); }"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
     typeCheck(Joiner.on('\n').join(
         "function f() {}",
@@ -2962,15 +2964,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @param {!Function} f */",
         "function foo(f) { f.prototype.bar = function(x) {}; }"));
-
-    typeCheck(Joiner.on('\n').join(
-        "/** @constructor */",
-        "function Foo() {}",
-        "Foo.prototype.method = function() {};",
-        "/** @type {number} */",
-        "Foo.prototype.method.pnum = 123;",
-        "var /** number */ n = Foo.prototype['method.pnum'];"),
-        TypeCheck.INEXISTENT_PROPERTY);
   }
 
   public void testPrototypeAssignment() {
@@ -4633,7 +4626,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {number} */ ns.foo = 123;",
         "/** @type {string} */ ns.foo = '';"));
 
-    // TODO(dimvar): warn about redeclared property
     typeCheck(Joiner.on('\n').join(
         "/** @const */ var ns = {};",
         "ns.x = 5;",
@@ -8924,8 +8916,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "function f(p1, /** !Object */ obj) {",
         "  if (p1 in obj['asdf']) {}",
-        "}"),
-        TypeCheck.INEXISTENT_PROPERTY);
+        "}"));
   }
 
   public void testStructDictSubtyping() {
