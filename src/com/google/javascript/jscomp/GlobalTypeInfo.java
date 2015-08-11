@@ -1149,10 +1149,10 @@ class GlobalTypeInfo implements CompilerPass {
       if (parent.isCatch()) {
         this.currentScope.addLocal(name, JSType.UNKNOWN, false, false);
       } else {
-        boolean isConst = isConst(parent);
+        boolean isConst = isConst(nameNode);
         JSType declType = getVarTypeFromAnnotation(nameNode);
-        if (isConst && !mayWarnAboutNoInit(nameNode) && declType == null) {
-          declType = inferConstTypeFromRhs(nameNode);
+        if (declType == null) {
+          declType = mayInferFromRhsIfConst(nameNode);
         }
         this.currentScope.addLocal(name, declType, isConst, nameNode.isFromExterns());
       }
@@ -1328,8 +1328,8 @@ class GlobalTypeInfo implements CompilerPass {
                   pname, classType.toString()));
           return;
         }
-        if (isConst && !mayWarnAboutNoInit(getProp) && propDeclType == null) {
-          propDeclType = inferConstTypeFromRhs(getProp);
+        if (propDeclType == null) {
+          propDeclType = mayInferFromRhsIfConst(getProp);
         }
         classType.addCtorProperty(pname, getProp, propDeclType, isConst);
         getProp.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -1375,8 +1375,8 @@ class GlobalTypeInfo implements CompilerPass {
                   pname, ns.toString()));
           return;
         }
-        if (isConst && !mayWarnAboutNoInit(declNode) && propDeclType == null) {
-          propDeclType = inferConstTypeFromRhs(declNode);
+        if (propDeclType == null) {
+          propDeclType = mayInferFromRhsIfConst(declNode);
         }
         ns.addProperty(pname, declNode, propDeclType, isConst);
         declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -1413,8 +1413,8 @@ class GlobalTypeInfo implements CompilerPass {
         // Intentionally, we keep going even if we warned for redeclared prop.
         // The reason is that if a prop is defined on a class and on its proto
         // with conflicting types, we prefer the type of the class.
-        if (isConst && !mayWarnAboutNoInit(getProp) && declType == null) {
-          declType = inferConstTypeFromRhs(getProp);
+        if (declType == null) {
+          declType = mayInferFromRhsIfConst(getProp);
         }
         if (mayAddPropToType(getProp, rawNominalType)) {
           rawNominalType.addClassProperty(pname, getProp, declType, isConst);
@@ -1479,6 +1479,17 @@ class GlobalTypeInfo implements CompilerPass {
         return true;
       }
       return false;
+    }
+
+    private JSType mayInferFromRhsIfConst(Node lvalueNode) {
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(lvalueNode);
+      if (info != null && info.containsFunctionDeclaration()) {
+        return null;
+      }
+      if (isConst(lvalueNode) && !mayWarnAboutNoInit(lvalueNode)) {
+        return inferConstTypeFromRhs(lvalueNode);
+      }
+      return null;
     }
 
     // If a @const doesn't have a declared type, we use the initializer to
@@ -1880,9 +1891,8 @@ class GlobalTypeInfo implements CompilerPass {
         if (mayWarnAboutExistingProp(rawType, pname, defSite, propDeclType)) {
           return;
         }
-        if (defSite.isGetProp() && propDeclType == null
-            && isConst && !mayWarnAboutNoInit(defSite)) {
-          propDeclType = inferConstTypeFromRhs(defSite);
+        if (propDeclType == null) {
+          propDeclType = mayInferFromRhsIfConst(defSite);
         }
         rawType.addProtoProperty(pname, defSite, propDeclType, isConst);
         if (defSite.isGetProp()) { // Don't bother saving for @lends
@@ -1959,13 +1969,11 @@ class GlobalTypeInfo implements CompilerPass {
   }
 
   private static Node fromDefsiteToName(Node defSite) {
-    if (defSite.isVar()) {
-      return defSite.getFirstChild();
-    }
     if (defSite.isGetProp()) {
       return defSite.getLastChild();
     }
-    if (defSite.isStringKey() || defSite.isGetterDef() || defSite.isSetterDef()) {
+    if (defSite.isName() || defSite.isStringKey()
+        || defSite.isGetterDef() || defSite.isSetterDef()) {
       return defSite;
     }
     throw new RuntimeException("Unknown defsite: "

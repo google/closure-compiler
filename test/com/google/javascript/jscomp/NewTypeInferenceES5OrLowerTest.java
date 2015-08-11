@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
-
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 /**
@@ -4721,6 +4720,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {number} */ Foo.n = 5;",
         "/** @const */ var x = Foo.n;",
         "/** @type {string} */ Foo.s = 'str';"));
+  }
+
+  public void testDontWarnAboutInferringDeclaredFunctionTypes() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */ var ns ={};",
+        "/** @const @return {void} */",
+        "ns.f = function() {};"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ var Foo = function(){};",
+        "/** @const @return {void} */",
+        "Foo.f = function() {};"));
+
+    typeCheckCustomExterns(DEFAULT_EXTERNS + "/** @const @return {void} */ var f;", "");
   }
 
   public void testDontInferUndeclaredFunctionReturn() {
