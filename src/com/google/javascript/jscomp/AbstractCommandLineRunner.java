@@ -821,10 +821,10 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
   protected int doRun() throws FlagUsageException, IOException {
     Compiler.setLoggingLevel(Level.parse(config.loggingLevel));
 
-    List<SourceFile> externs = createExterns();
-
     compiler = createCompiler();
     B options = createOptions();
+
+    List<SourceFile> externs = createExterns(options);
 
     List<JSModule> modules = null;
     Result result = null;
@@ -1086,8 +1086,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     return UTF_8;
   }
 
-  protected List<SourceFile> createExterns() throws FlagUsageException,
-      IOException {
+  protected List<SourceFile> createExterns(CompilerOptions options)
+      throws FlagUsageException, IOException {
     return isInTestMode() ? externsSupplierForTesting.get() :
         createExternInputs(config.externs);
   }
