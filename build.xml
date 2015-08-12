@@ -54,6 +54,8 @@
   <property name="tools.dir" value="${basedir}/tools" />
   <property name="compiler-jarfile"
             value="${build.dir}/${ant.project.name}.jar" />
+  <property name="linter-jarfile"
+            value="${build.dir}/linter.jar" />
 
   <property name="webservice.dir" value="${basedir}/src/com/google/javascript/jscomp/webservice" />
   <property name="webservice-classes.dir" value = "${build.dir}/webservice-classes" />
@@ -191,6 +193,24 @@
       <manifest>
         <attribute name="Main-Class"
                    value="com.google.javascript.jscomp.CommandLineRunner" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="linter"
+          depends="compile"
+          description="package linter as an executable jar">
+    <jar destfile="${linter-jarfile}" update="true">
+      <fileset dir="${classes.dir}" />
+      <zipfileset src="${lib.dir}/args4j.jar"/>
+      <zipfileset src="${lib.dir}/guava.jar"/>
+      <zipfileset src="${lib.dir}/gson.jar"/>
+      <zipfileset src="${lib.dir}/jsr305.jar"/>
+      <zipfileset src="${lib.dir}/protobuf-java.jar"/>
+
+      <manifest>
+        <attribute name="Main-Class"
+                   value="com.google.javascript.jscomp.Linter" />
       </manifest>
     </jar>
   </target>
