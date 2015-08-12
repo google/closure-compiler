@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,13 +65,13 @@ public final class LoggerErrorManager extends BasicErrorManager {
     Level level = (getErrorCount() + getWarningCount() == 0) ?
         Level.INFO : Level.WARNING;
     if (getTypedPercent() > 0.0) {
-      logger.log(level, "{0} error(s), {1} warning(s), {2,number,#.#}% typed",
-          new Object[] {getErrorCount(), getWarningCount(), getTypedPercent()});
-    } else {
-      if (getErrorCount() + getWarningCount() > 0) {
-        logger.log(level, "{0} error(s), {1} warning(s)",
-            new Object[] {getErrorCount(), getWarningCount()});
-      }
+      logger.log(level, SimpleFormat.format(
+          "%d error(s), %d warning(s), %.1f%% typed",
+          getErrorCount(), getWarningCount(), getTypedPercent()));
+    } else if (getErrorCount() + getWarningCount() > 0) {
+      logger.log(level, SimpleFormat.format(
+          "%d error(s), %d warning(s)",
+          getErrorCount(), getWarningCount()));
     }
   }
 }
