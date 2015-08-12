@@ -404,7 +404,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup MESSAGE_DESCRIPTIONS =
       DiagnosticGroups.registerGroup("msgDescriptions",
-          new DiagnosticGroup(JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION));
+          JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
 
   public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
