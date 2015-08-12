@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
+import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -306,25 +307,29 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   @Override
   public String getSingletonGetterClassName(Node callNode) {
     Node callArg = callNode.getFirstChild();
-
     // Use both the original name and the post-CollapseProperties name.
-    if (!(callArg.matchesQualifiedName("goog.addSingletonGetter") ||
-          callArg.matchesQualifiedName("goog$addSingletonGetter")) ||
-        callNode.getChildCount() != 2) {
-      return super.getSingletonGetterClassName(callNode);
+    if (callNode.getChildCount() == 2
+        && (callArg.matchesQualifiedName("goog.addSingletonGetter")
+            || callArg.matchesQualifiedName("goog$addSingletonGetter"))) {
+      return callArg.getNext().getQualifiedName();
     }
-
-    return callArg.getNext().getQualifiedName();
+    return super.getSingletonGetterClassName(callNode);
   }
 
   @Override
-  public void applySingletonGetter(FunctionType functionType,
+  public void applySingletonGetterOld(FunctionType functionType,
       FunctionType getterType, ObjectType objectType) {
-    super.applySingletonGetter(functionType, getterType, objectType);
     functionType.defineDeclaredProperty("getInstance", getterType,
         functionType.getSource());
     functionType.defineDeclaredProperty("instance_", objectType,
         functionType.getSource());
+  }
+
+  @Override
+  public void applySingletonGetterNew(
+      RawNominalType rawType, JSType getInstanceType, JSType instanceType) {
+    rawType.addCtorProperty("getInstance", null, getInstanceType, true);
+    rawType.addCtorProperty("instance_", null, instanceType, true);
   }
 
   @Override

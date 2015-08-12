@@ -13557,4 +13557,39 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}"),
         NewTypeInference.NULLABLE_DEREFERENCE);
   }
+
+  public void testSingletonGetter() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Bar() {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "goog.addSingletonGetter(Foo);",
+        "var /** !Foo */ x = Foo.getInstance();",
+        "var /** !Bar */ b = Foo.getInstance();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Bar() {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "goog.addSingletonGetter(Foo);",
+        "var /** !Foo */ x = Foo.instance_;",
+        "var /** !Bar */ b = Foo.instance_;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Bar = function() {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "goog.addSingletonGetter(ns.Foo);",
+        "var /** !ns.Bar */ b = ns.Foo.getInstance();",
+        "b = ns.Foo.instance_;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

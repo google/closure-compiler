@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.newtypes.Declaration;
 import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
 import com.google.javascript.jscomp.newtypes.EnumType;
 import com.google.javascript.jscomp.newtypes.FunctionType;
+import com.google.javascript.jscomp.newtypes.FunctionTypeBuilder;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.FunctionAndSlotType;
@@ -1118,6 +1119,9 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.OBJECTLIT:
           visitObjectLit(n, parent);
           break;
+        case Token.CALL:
+          visitCall(n);
+          break;
       }
     }
 
@@ -1182,6 +1186,22 @@ class GlobalTypeInfo implements CompilerPass {
             warnings.add(JSError.make(prop, MISPLACED_CONST_ANNOTATION));
           }
         }
+      }
+    }
+
+    private void visitCall(Node call) {
+      String className = convention.getSingletonGetterClassName(call);
+      if (className == null) {
+        return;
+      }
+      QualifiedName qname = QualifiedName.fromQualifiedString(className);
+      RawNominalType rawType = this.currentScope.getNominalType(qname);
+      if (rawType != null) {
+        JSType instanceType = rawType.getInstanceAsJSType();
+        FunctionType getInstanceFunType =
+            (new FunctionTypeBuilder()).addRetType(instanceType).buildFunction();
+        JSType getInstanceType = commonTypes.fromFunctionType(getInstanceFunType);
+        convention.applySingletonGetterNew(rawType, getInstanceType, instanceType);
       }
     }
 

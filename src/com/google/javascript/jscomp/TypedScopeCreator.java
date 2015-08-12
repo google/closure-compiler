@@ -1516,10 +1516,8 @@ final class TypedScopeCreator implements ScopeCreator {
           FunctionType functionType = objectType.getConstructor();
 
           if (functionType != null) {
-            FunctionType getterType =
-                typeRegistry.createFunctionType(objectType);
-            codingConvention.applySingletonGetter(functionType, getterType,
-                objectType);
+            FunctionType getterType = typeRegistry.createFunctionType(objectType);
+            codingConvention.applySingletonGetterOld(functionType, getterType, objectType);
           }
         }
       }

@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
+import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -213,8 +214,11 @@ public interface CodingConvention extends Serializable {
    * In many JS libraries, the function that adds a singleton getter to a class
    * adds properties to the class.
    */
-  public void applySingletonGetter(FunctionType functionType,
+  public void applySingletonGetterOld(FunctionType functionType,
       FunctionType getterType, ObjectType objectType);
+
+  public void applySingletonGetterNew(
+      RawNominalType rawType, JSType getInstanceType, JSType instanceType);
 
   /**
    * @return Whether the function is inlinable by convention.
