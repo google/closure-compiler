@@ -53,34 +53,45 @@ public final class AngularPassTest extends Es6CompilerTestCase {
   }
 
   public void testNgInjectAddsInjectAfterGoogInherits() throws Exception {
-    test("/** @ngInject \n @constructor */ function fn(a, b) {}" +
-         "goog.inherits(fn, parent);",
-         "function fn(a, b) {}\n" +
-         "goog.inherits(fn, parent); fn['$inject']=['a', 'b']");
+    test(
+        LINE_JOINER.join(
+            "/** @ngInject @constructor */ ",
+            "function fn(a, b) {}",
+            "goog.inherits(fn, parent);"),
+        LINE_JOINER.join(
+            "function fn(a, b) {}",
+            "goog.inherits(fn, parent);",
+            "fn['$inject']=['a', 'b']"));
 
-    test("/** @ngInject \n @constructor */" +
-         "function fn(a, b) {}" +
-         "goog.inherits(fn, parent);" +
-         "var foo = 42;",
-         "function fn(a, b) {}\n" +
-         "goog.inherits(fn, parent); fn['$inject']=['a', 'b'];" +
-         "var foo = 42;");
+    test(
+        LINE_JOINER.join(
+            "/** @ngInject @constructor */",
+            "function fn(a, b) {}",
+            "goog.inherits(fn, parent);",
+            "var foo = 42;"),
+        LINE_JOINER.join(
+            "function fn(a, b) {}",
+            "goog.inherits(fn, parent);",
+            "fn['$inject']=['a', 'b'];",
+            "var foo = 42;"));
   }
 
   public void testNgInjectAddsInjectToProps() throws Exception {
-    test("var ns = {};\n" +
-         "/** @ngInject */ ns.fn = function (a, b) {}",
-         "var ns = {};\n" +
-         "ns.fn = function (a, b) {}; ns.fn['$inject']=['a', 'b']");
+    test("var ns = {}; /** @ngInject */ ns.fn = function (a, b) {}",
+         "var ns = {}; ns.fn = function (a, b) {}; ns.fn['$inject']=['a', 'b']");
 
     testSame("var ns = {}; ns.fn = function (a, b) {}");
   }
 
   public void testNgInjectAddsInjectToNestedProps() throws Exception {
-    test("var ns = {}; ns.subns = {};\n" +
-         "/** @ngInject */ ns.subns.fn = function (a, b) {}",
-         "var ns = {}; ns.subns = {};\n" +
-         "ns.subns.fn = function (a, b) {};ns.subns.fn['$inject']=['a', 'b']");
+    test(
+        LINE_JOINER.join(
+            "var ns = {}; ns.subns = {};",
+            "/** @ngInject */ ns.subns.fn = function (a, b) {}"),
+        LINE_JOINER.join(
+            "var ns = {}; ns.subns = {};",
+            "ns.subns.fn = function (a, b) {};",
+            "ns.subns.fn['$inject']=['a', 'b']"));
 
     testSame("var ns = {}; ns.fn = function (a, b) {}");
   }
@@ -109,40 +120,47 @@ public final class AngularPassTest extends Es6CompilerTestCase {
 
   public void testNgInjectAddsInjectToVarsWithChainedAssignment()
       throws Exception {
-    test("var ns = {};\n" +
-         "/** @ngInject */ var fn = ns.func = function (a, b) {}",
-         "var ns = {}; var fn = ns.func = function (a, b) {};\n" +
-         "fn['$inject']=['a', 'b']");
+    test("var ns = {}; /** @ngInject */ var fn = ns.func = function (a, b) {}",
+        LINE_JOINER.join(
+            "var ns = {}; var fn = ns.func = function (a, b) {};",
+            "fn['$inject']=['a', 'b']"));
 
     testSame("var ns = {}; var fn = ns.func = function (a, b) {}");
   }
 
   public void testNgInjectInBlock() throws Exception {
-    test("(function() {" +
-         "  var ns = {};\n" +
-         "  /** @ngInject */ var fn = ns.func = function (a, b) {}" +
-         "})()",
-         "(function() {" +
-         "  var ns = {}; var fn = ns.func = function (a, b) {};\n" +
-         "  fn['$inject']=['a', 'b']" +
-         "})()");
+    test(
+        LINE_JOINER.join(
+            "(function() {",
+            "  var ns = {};",
+            "  /** @ngInject */ var fn = ns.func = function (a, b) {}",
+            "})()"),
+        LINE_JOINER.join(
+            "(function() {",
+            "  var ns = {}; var fn = ns.func = function (a, b) {};",
+            "  fn['$inject']=['a', 'b']",
+            "})()"));
 
-    testSame("(function() {" +
-             "  var ns = {}; var fn = ns.func = function (a, b) {}" +
-             "})()");
+    testSame(LINE_JOINER.join(
+        "(function() {",
+        "  var ns = {}; var fn = ns.func = function (a, b) {}",
+        "})()"));
   }
 
   public void testNgInjectAddsToTheRightBlock() throws Exception {
-    test("var fn = 10;\n" +
-         "(function() {" +
-         "  var ns = {};\n" +
-         "  /** @ngInject */ var fn = ns.func = function (a, b) {}" +
-         "})()",
-         "var fn = 10;" +
-         "(function() {" +
-         "  var ns = {}; var fn = ns.func = function (a, b) {};\n" +
-         "  fn['$inject']=['a', 'b']" +
-         "})()");
+    test(
+        LINE_JOINER.join(
+            "var fn = 10;",
+            "(function() {",
+            "  var ns = {};",
+            "  /** @ngInject */ var fn = ns.func = function (a, b) {};",
+            "})()"),
+        LINE_JOINER.join(
+            "var fn = 10;",
+            "(function() {",
+            "  var ns = {}; var fn = ns.func = function (a, b) {};",
+            "  fn['$inject']=['a', 'b'];",
+            "})()"));
   }
 
   public void testNgInjectInNonBlock() throws Exception {
@@ -187,32 +205,32 @@ public final class AngularPassTest extends Es6CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassMethod1() throws Exception {
     testEs6(
-         LINE_JOINER.join(
-             "class FnClass {",
-             "  constructor(a, b) {}",
-             "  /** @ngInject */ ",
-             "  methodA(c, d){}",
-             "}"),
-         LINE_JOINER.join(
-             "class FnClass {",
-             "  constructor(a, b){}",
-             "  methodA(c, d){}",
-             "}",
-             "FnClass.prototype.methodA['$inject'] = ['c','d']"));
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor(a, b) {}",
+            "  /** @ngInject */ ",
+            "  methodA(c, d){}",
+            "}"),
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor(a, b){}",
+            "  methodA(c, d){}",
+            "}",
+            "FnClass.prototype.methodA['$inject'] = ['c','d']"));
   }
 
   public void testNgInjectAddsInjectToClassMethod2() throws Exception {
     testEs6(
-         LINE_JOINER.join(
-             "FnClass.foo = class {",
-             "  /** @ngInject */",
-             "  constructor(a, b) {}",
-             "};"),
-         LINE_JOINER.join(
-             "FnClass.foo = class {",
-             "  constructor(a, b){}",
-             "};",
-             "FnClass.foo['$inject'] = ['a','b'];"));
+        LINE_JOINER.join(
+            "FnClass.foo = class {",
+            "  /** @ngInject */",
+            "  constructor(a, b) {}",
+            "};"),
+        LINE_JOINER.join(
+            "FnClass.foo = class {",
+            "  constructor(a, b){}",
+            "};",
+            "FnClass.foo['$inject'] = ['a','b'];"));
   }
 
   public void testNgInjectAddsInjectToStaticMethod() throws Exception {
@@ -233,18 +251,18 @@ public final class AngularPassTest extends Es6CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassGenerator() throws Exception {
     testEs6(
-         LINE_JOINER.join(
-             "class FnClass {",
-             "  constructor(a, b) {}",
-             "  /** @ngInject */ ",
-             "  * methodA(c, d){}",
-             "}"),
-         LINE_JOINER.join(
-             "class FnClass {",
-             "  constructor(a, b){}",
-             "  *methodA(c, d){}",
-             "}",
-             "FnClass.prototype.methodA['$inject'] = ['c','d']"));
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor(a, b) {}",
+            "  /** @ngInject */ ",
+            "  * methodA(c, d){}",
+            "}"),
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor(a, b){}",
+            "  *methodA(c, d){}",
+            "}",
+            "FnClass.prototype.methodA['$inject'] = ['c','d']"));
   }
 
   public void testNgInjectAddsInjectToClassMixOldStyle() throws Exception {
@@ -267,30 +285,30 @@ public final class AngularPassTest extends Es6CompilerTestCase {
 
   public void testNgInjectAddsInjectToClassArrowFunc() throws Exception {
     testEs6(
-          LINE_JOINER.join(
-              "class FnClass {",
-              "  constructor() {",
-              "    /** @ngInject */ ",
-              "    this.someMethod = (a, b) => 42",
-              "  }",
-              "}"),
-          LINE_JOINER.join(
-              "class FnClass {",
-              "  constructor() {",
-              "    this.someMethod = (a, b) => 42",
-              "    this.someMethod['$inject'] = ['a','b']",
-              "  }",
-              "}"));
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor() {",
+            "    /** @ngInject */ ",
+            "    this.someMethod = (a, b) => 42",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor() {",
+            "    this.someMethod = (a, b) => 42",
+            "    this.someMethod['$inject'] = ['a','b']",
+            "  }",
+            "}"));
   }
 
   public void testNgInjectAddsInjectToClassCompMethodName() throws Exception {
     testErrorEs6(
-          LINE_JOINER.join(
-              "class FnClass {",
-              "  constructor() {}",
-              "    /** @ngInject */ ",
-              "  ['comp' + 'MethodName'](a, b){}",
-              "}"),
-          AngularPass.INJECT_NON_FUNCTION_ERROR);
+        LINE_JOINER.join(
+            "class FnClass {",
+            "  constructor() {}",
+            "    /** @ngInject */ ",
+            "  ['comp' + 'MethodName'](a, b){}",
+            "}"),
+        AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
 }
