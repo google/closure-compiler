@@ -223,6 +223,10 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkSideEffects);
 
+    if (options.checkProvides.isOn() || options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
+      checks.add(checkProvides);
+    }
+
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
         && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
       checks.add(convertEs6TypedToEs6);
@@ -237,10 +241,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
-    }
-
-    if (options.checkProvides.isOn() || options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
-      checks.add(checkProvides);
     }
 
     if (options.jqueryPass && !options.skipNonTranspilationPasses) {
