@@ -222,11 +222,12 @@ public class Compiler extends AbstractCompiler {
       DiagnosticType.error("JSC_OPTIMIZE_LOOP_ERROR",
           "Exceeded max number of code motion iterations: {0}");
 
-  private static final CompilerExecutor compilerExecutor = new CompilerExecutor();
+  private final CompilerExecutor compilerExecutor = new CompilerExecutor();
+
   /**
    * Logger for the whole com.google.javascript.jscomp domain -
    * setting configuration for this logger affects all loggers
-   *  in other classes within the compiler.
+   * in other classes within the compiler.
    */
   private static final Logger logger =
       Logger.getLogger("com.google.javascript.jscomp");
@@ -639,7 +640,7 @@ public class Compiler extends AbstractCompiler {
     compilerExecutor.setTimeout(timeout);
   }
 
-  <T> T runInCompilerThread(final Callable<T> callable) {
+  <T> T runInCompilerThread(Callable<T> callable) {
     return compilerExecutor.runInCompilerThread(callable, options != null && options.tracer.isOn());
   }
 
