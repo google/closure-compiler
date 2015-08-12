@@ -211,15 +211,23 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
     while (extendArg.hasChildren()) {
       Node currentProp = extendArg.removeFirstChild();
-      currentProp.setType(Token.STRING);
-
-      Node propValue = currentProp.removeFirstChild();
+      Node propValue;
+      if (currentProp.hasChildren()) {
+        propValue = currentProp.getLastChild().detachFromParent();
+      } else {
+        propValue = IR.name(currentProp.getString()).srcref(currentProp);
+      }
 
       Node newProp;
       if (currentProp.isQuotedString()) {
         newProp = IR.getelem(objectToExtend.cloneTree(),
             currentProp).srcref(currentProp);
+      } else if (currentProp.isComputedProp()) {
+        Node childOfcompProp = currentProp.removeFirstChild();
+        newProp = IR.getelem(objectToExtend.cloneTree(),
+            childOfcompProp).srcref(currentProp);
       } else {
+        currentProp.setType(Token.STRING);
         newProp = IR.getprop(objectToExtend.cloneTree(),
             currentProp).srcref(currentProp);
       }
@@ -350,6 +358,9 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
           val = IR.number(i).srcref(key);
         } else {
           val = key.getFirstChild();
+          if (val == null) {
+            val = IR.name(key.getString());
+          }
         }
       }
 
@@ -361,6 +372,10 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
 
       // Replace all of the key nodes with the prop name
       for (int j = 0; j < keyNodes.size(); j++) {
+        if (key.isComputedProp()) {
+          t.report(key, JQUERY_UNABLE_TO_EXPAND_INVALID_NAME_ERROR);
+          return null;
+        }
         Node origNode = keyNodes.get(j);
         Node ancestor = origNode.getParent();
 

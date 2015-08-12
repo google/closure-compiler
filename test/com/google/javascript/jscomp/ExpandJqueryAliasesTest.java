@@ -92,6 +92,52 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
         "obj2.a = 'test';obj2.b = 'test2';return obj2;}.call(this);");
   }
 
+  public void testJqueryExtendEs6MethodDeclarations() {
+    String setupCode = "var jQuery={},obj2={};";
+
+    testEs6(
+        setupCode + "jQuery.extend({ a(){}, b(){} })",
+        setupCode + "{jQuery.a = function(){}; jQuery.b = function(){}}");
+    testEs6(
+        setupCode + "jQuery.extend(obj2, { a(){}, b(){} })",
+        setupCode + "{obj2=obj2||{}; obj2.a = function(){}; obj2.b = function(){}}");
+  }
+
+  public void testJqueryExtendEs6Shorthand() {
+    String setupCode = "var jQuery={},obj2={};";
+
+    testEs6(
+        setupCode + "jQuery.extend({a, b})",
+        setupCode + "{jQuery.a = a; jQuery.b = b;}");
+    testEs6(
+        setupCode + "jQuery.extend(obj2, {a, b})",
+        setupCode + "{obj2=obj2||{}; obj2.a = a; obj2.b = b;}");
+  }
+
+  public void testJqueryExtendExpansionEs6ComputedProp() {
+    String setupCode = "var jQuery={},obj2={};";
+
+    testEs6(
+        setupCode + "jQuery.extend( {[comp + 'Prop']: 1} )",
+        setupCode + "{jQuery[comp + 'Prop'] = 1;}");
+    testEs6(
+        setupCode + "jQuery.extend( {[comp]: 1} )",
+        setupCode + "{jQuery[comp] = 1;}");
+    testEs6(
+        setupCode + "jQuery.extend( {[comp + 'Prop' + name]: 1} )",
+        setupCode + "{jQuery[comp + 'Prop' + name] = 1;}");
+
+    testEs6(
+        setupCode + "jQuery.extend(obj2, {[comp + 'Prop']: 1} )",
+        setupCode + "{obj2=obj2||{}; obj2[comp + 'Prop'] = 1;}");
+    testEs6(
+        setupCode + "jQuery.extend(obj2, {[comp]: 1} )",
+        setupCode + "{obj2=obj2||{}; obj2[comp] = 1;}");
+    testEs6(
+        setupCode + "jQuery.extend(obj2, {[comp + 'Prop' + name]: 1} )",
+        setupCode + "{obj2=obj2||{}; obj2[comp + 'Prop' + name] = 1;}");
+  }
+
   public void testJqueryExpandedEachExpansion() {
     String setupCode = "var jQuery={};" +
         "jQuery.expandedEach=function(vals, callback){};";
@@ -179,5 +225,46 @@ public final class ExpandJqueryAliasesTest extends Es6CompilerTestCase {
         "var obj2={}; jQuery.expandedEach(['foo','bar'], function(i, name) {" +
         "obj2[i] = 1;});";
     test(setupCode + testCode, resultCode + testCode, null, USELESS_EACH_ERROR);
+  }
+
+  public void testJqueryExpandedEachExpansionEs6MethodDeclarations() {
+    String setupCode =
+        "var jQuery={}; jQuery.expandedEach=function(vals, callback){};";
+    String resultCode =
+        "var jQuery={ expandedEach: function(vals, callback){} };";
+
+    testEs6(
+        LINE_JOINER.join(
+            setupCode,
+            "jQuery.expandedEach({ a(){}, b(){} },",
+            "function(key, val) { var a = key; jQuery[key] = val; });"),
+        LINE_JOINER.join(
+            resultCode,
+            "(function(){ var a = 'a'; jQuery.a = function(){} })();",
+            "(function(){ var a = 'b'; jQuery.b = function(){} })();"));
+  }
+
+  public void testJqueryExpandedEachExpansionEs6Shorthand() {
+    String setupCode =
+        "var jQuery={}; jQuery.expandedEach=function(vals, callback){};";
+    String resultCode =
+        "var jQuery={ expandedEach: function(vals, callback){} };";
+
+    testEs6(
+        LINE_JOINER.join(
+            setupCode,
+            "jQuery.expandedEach({a, b},",
+            "function(key, val) { var a = key; jQuery[key] = val; });"),
+        LINE_JOINER.join(
+            resultCode,
+            "(function(){ var a = 'a'; jQuery.a = a })();",
+            "(function(){ var a = 'b'; jQuery.b = b })();"));
+  }
+
+  public void testJqueryExpandedEachExpansionEs6ComputedProp() {
+    testErrorEs6(LINE_JOINER.join(
+        "var jQuery={}; jQuery.expandedEach=function(vals, callback){};",
+        "jQuery.expandedEach({ [comp + 'Prop']: 1},",
+        "function(key, val) { var a = key; jQuery[key] = val; });"), NAME_ERROR);
   }
 }
