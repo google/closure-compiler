@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -26,7 +24,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.io.CharStreams;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.JSModuleGraph.MissingModuleException;
@@ -52,7 +49,6 @@ import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.file.FileSystems;
 import java.util.ArrayList;
@@ -2521,21 +2517,12 @@ public class Compiler extends AbstractCompiler {
   /** Load a library as a resource */
   @VisibleForTesting
   Node loadLibraryCode(String resourceName, boolean normalizeAndUniquifyNames) {
-    String originalCode;
-    try {
-      originalCode = CharStreams.toString(new InputStreamReader(
-          Compiler.class.getResourceAsStream(
-              String.format("js/%s.js", resourceName)),
-          UTF_8));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    String originalCode = ResourceLoader.loadTextResource(
+        Compiler.class, "js/" + resourceName + ".js");
 
     Node ast = parseSyntheticCode(originalCode);
     if (normalizeAndUniquifyNames) {
-      Normalize.normalizeSyntheticCode(
-          this, ast,
-          String.format("jscomp_%s_", resourceName));
+      Normalize.normalizeSyntheticCode(this, ast, "jscomp_" + resourceName + "_");
     }
     return ast;
   }
