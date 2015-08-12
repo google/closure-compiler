@@ -21,7 +21,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CommandLineRunner;
-import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.SourceFile;
 
@@ -68,10 +67,9 @@ final class RefasterJs {
       usage = "Location of the JS file to use as the RefasterJS template.")
   private String refasterJsTemplate = null;
 
-  @Option(name = "--env",
-      usage = "Which set of externs to include. Defaults to BROWSER.")
-  private CompilerOptions.Environment environment =
-      CompilerOptions.Environment.BROWSER;
+  @Option(name = "--include_default_externs",
+      usage = "Whether to include the standard JavaScript externs. Defaults to true.")
+  private boolean includeDefaultExterns = true;
 
   @Option(name = "--dry_run",
       usage = "Use this to display what changes would be made without applying the changes.")
@@ -110,10 +108,9 @@ final class RefasterJs {
 
     RefasterJsScanner scanner = new RefasterJsScanner();
     scanner.loadRefasterJsTemplate(refasterJsTemplate);
-    CompilerOptions options = new CompilerOptions();
-    options.setEnvironment(environment);
     RefactoringDriver driver = new RefactoringDriver.Builder(scanner)
-        .addExterns(CommandLineRunner.getBuiltinExterns(options))
+        .addExterns(includeDefaultExterns
+            ? CommandLineRunner.getDefaultExterns() : ImmutableList.<SourceFile>of())
         .addExternsFromFile(getExterns())
         .addInputsFromFile(fileInputs)
         .build();
