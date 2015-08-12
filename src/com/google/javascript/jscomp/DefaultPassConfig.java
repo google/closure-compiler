@@ -43,7 +43,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -2484,23 +2483,8 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("instrumentFunctions", true) {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override public void process(Node externs, Node root) {
-          try {
-            FileReader templateFile =
-                new FileReader(options.instrumentationTemplate);
-            (new InstrumentFunctions(
-                compiler, functionNames,
-                options.instrumentationTemplate,
-                options.appNameStr,
-                templateFile)).process(externs, root);
-          } catch (IOException e) {
-            compiler.report(
-                JSError.make(AbstractCompiler.READ_ERROR,
-                    options.instrumentationTemplate));
-          }
-        }
-      };
+      return new InstrumentFunctions(
+          compiler, functionNames, options.instrumentationTemplate, options.appNameStr);
     }
   };
 

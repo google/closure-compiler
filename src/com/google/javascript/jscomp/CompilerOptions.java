@@ -721,7 +721,7 @@ public class CompilerOptions implements Serializable {
   public boolean moveFunctionDeclarations;
 
   /** Instrumentation template to use with #recordFunctionInformation */
-  public String instrumentationTemplate;
+  public Instrumentation instrumentationTemplate;
 
   String appNameStr;
 
@@ -2146,7 +2146,7 @@ public class CompilerOptions implements Serializable {
     this.moveFunctionDeclarations = moveFunctionDeclarations;
   }
 
-  public void setInstrumentationTemplate(String instrumentationTemplate) {
+  public void setInstrumentationTemplate(Instrumentation instrumentationTemplate) {
     this.instrumentationTemplate = instrumentationTemplate;
   }
 

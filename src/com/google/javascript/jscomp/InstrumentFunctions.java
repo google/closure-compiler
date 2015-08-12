@@ -22,10 +22,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.protobuf.TextFormat;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -58,7 +55,6 @@ class InstrumentFunctions implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final FunctionNames functionNames;
-  private final String templateFilename;
   private final String appNameStr;
   private final String initCodeSource;
   private final String definedFunctionName;
@@ -72,38 +68,16 @@ class InstrumentFunctions implements CompilerPass {
    *
    * @param compiler          The JSCompiler
    * @param functionNames     Assigned function identifiers.
-   * @param templateFilename  Template filename; for use during error
-   *                          reporting only.
+   * @param template          Instrumentation template; for use during error reporting only.
    * @param appNameStr        String to pass to appNameSetter.
-   * @param readable          Instrumentation template protobuf text.
    */
   InstrumentFunctions(AbstractCompiler compiler,
                       FunctionNames functionNames,
-                      String templateFilename,
-                      String appNameStr,
-                      Readable readable) {
+                      Instrumentation template,
+                      String appNameStr) {
     this.compiler = compiler;
     this.functionNames = functionNames;
-    this.templateFilename = templateFilename;
     this.appNameStr = appNameStr;
-
-    Instrumentation.Builder builder = Instrumentation.newBuilder();
-    try {
-      TextFormat.merge(readable, builder);
-    } catch (IOException e) {
-      compiler.report(JSError.make(RhinoErrorReporter.PARSE_ERROR,
-          "Error reading instrumentation template protobuf at " +
-          templateFilename));
-      this.initCodeSource = "";
-      this.definedFunctionName = "";
-      this.reportFunctionName = "";
-      this.reportFunctionExitName = "";
-      this.appNameSetter = "";
-      this.declarationsToRemove = new ArrayList<>();
-      return;
-    }
-
-    Instrumentation template = builder.build();
 
     StringBuilder initCodeSourceBuilder = new StringBuilder();
     for (String line : template.getInitList()) {
@@ -125,7 +99,7 @@ class InstrumentFunctions implements CompilerPass {
     Node initCode = null;
     if (!initCodeSource.isEmpty()) {
       Node initCodeRoot = compiler.parseSyntheticCode(
-          templateFilename + ":init", initCodeSource);
+          "template:init", initCodeSource);
       if (initCodeRoot != null && initCodeRoot.getFirstChild() != null) {
         initCode = initCodeRoot.removeChildren();
       } else {
