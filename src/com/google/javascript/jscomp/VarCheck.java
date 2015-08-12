@@ -119,19 +119,10 @@ class VarCheck extends AbstractPostOrderCallback implements
    * @return the SyntacticScopeCreator
    */
   private ScopeCreator createScopeCreator() {
-    if (compiler.getLanguageMode().isEs6OrHigher()) {
-      if (sanityCheck) {
-        return new Es6SyntacticScopeCreator(compiler);
-      } else {
-        return new Es6SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
-      }
+    if (sanityCheck) {
+      return new Es6SyntacticScopeCreator(compiler);
     } else {
-      if (sanityCheck) {
-        return SyntacticScopeCreator.makeUntyped(compiler);
-      } else {
-        return SyntacticScopeCreator.makeUntypedWithRedeclHandler(
-            compiler, new RedeclarationCheckHandler());
-      }
+      return new Es6SyntacticScopeCreator(compiler, new RedeclarationCheckHandler());
     }
   }
 

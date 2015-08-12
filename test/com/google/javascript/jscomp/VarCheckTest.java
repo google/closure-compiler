@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
+import static org.junit.Assert.fail;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -130,15 +131,12 @@ public final class VarCheckTest extends Es6CompilerTestCase {
   }
 
   public void testMultiplyDeclaredVars2() {
-    test("var y; try { y=1 } catch (x) {}" +
-         "try { y=1 } catch (x) {}",
-         "var y;try{y=1}catch(x){}try{y=1}catch(x){}");
+    testSame("var y; try { y=1 } catch (x) {}" +
+         "try { y=1 } catch (x) {}");
   }
 
   public void testMultiplyDeclaredVars3() {
-    testSameEs6("try { var x = 1; x *=2; } catch (x) {}");
-    testError("try { var x = 1; x *=2; } catch (x) {}",
-        VarCheck.VAR_MULTIPLY_DECLARED_ERROR, LanguageMode.ECMASCRIPT5);
+    testSame("try { var x = 1; x *=2; } catch (x) {}");
   }
 
   public void testMultiplyDeclaredVars4() {
@@ -232,6 +230,11 @@ public final class VarCheckTest extends Es6CompilerTestCase {
 
   public void testVarInWithBlock() {
     testError("var a = {b:5}; with (a){b;}", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  public void testFunctionDeclaredInBlock() {
+    testError("if (true) {function foo() {}} foo();", VarCheck.UNDEFINED_VAR_ERROR);
+    testError("foo(); if (true) {function foo() {}}", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
   public void testValidFunctionExpr() {
@@ -391,6 +394,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     sanityCheck = true;
     try {
       checkSynthesizedExtern("x", "");
+      fail("Expected RuntimeException");
     } catch (RuntimeException e) {
       assertThat(e.getMessage()).contains("Unexpected variable x");
     }
