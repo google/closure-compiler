@@ -71,7 +71,7 @@ class ExportTestFunctions implements CompilerPass {
           if (isTestFunction(functionName)) {
             exportTestFunctionAsSymbol(functionName, n, parent);
           }
-        } else if (isVarDeclaredFunction(n)) {
+        } else if (isNameDeclaredFunction(n)) {
           // Check for a test function expression.
           Node functionNode = n.getFirstChild().getFirstChild();
           String functionName = NodeUtil.getFunctionName(functionNode);
@@ -117,18 +117,18 @@ class ExportTestFunctions implements CompilerPass {
     }
 
     /**
-     * Whether node corresponds to a function expression declared with var,
-     * which is of the form:
+     * Whether node corresponds to a function expression declared with var, let
+     * or const which is of the form:
      * <pre>
-     * var functionName = function() {
+     * var/let/const functionName = function() {
      *   // Implementation
      * };
      * </pre>
-     * This has the AST structure VAR -> NAME -> FUNCTION
+     * This has the AST structure VAR/LET/CONST -> NAME -> FUNCTION
      * @param node
      */
-    private boolean isVarDeclaredFunction(Node node) {
-      if (!node.isVar()) {
+    private boolean isNameDeclaredFunction(Node node) {
+      if (!NodeUtil.isNameDeclaration(node)) {
         return false;
       }
       Node grandchild = node.getFirstChild().getFirstChild();

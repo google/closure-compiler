@@ -68,8 +68,7 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
 
   // Helper functions
   public void testBasicTestFunctionsAreExported() {
-    test("function Foo() {function testA() {}}",
-         "function Foo() {function testA(){}}");
+    testSame("function Foo() {function testA(){}}");
     test("function setUp() {}",
          "function setUp(){} google_exportSymbol('setUp',setUp)");
     test("function setUpPage() {}",
@@ -98,8 +97,7 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
    * This format should be supported in addition to function statements.
    */
   public void testFunctionExpressionsAreExported() {
-    test("var Foo = function() {var testA = function() {}}",
-         "var Foo = function() {var testA = function() {}}");
+    testSame("var Foo = function() {var testA = function() {}}");
     test("var setUp = function() {}",
          "var setUp = function() {}; " +
          "google_exportSymbol('setUp',setUp)");
@@ -120,9 +118,56 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
          "google_exportSymbol('testBar',testBar)");
   }
 
+  public void testFunctionExpressionsByLetAreExported() {
+    testSameEs6("let Foo = function() {var testA = function() {}}");
+    testEs6("let setUp = function() {}",
+        LINE_JOINER.join(
+            "let setUp = function() {}; ",
+            "google_exportSymbol('setUp', setUp)"));
+    testEs6("let testBar = function() {}",
+        LINE_JOINER.join(
+            "let testBar = function() {}; ",
+            "google_exportSymbol('testBar', testBar)"));
+    testEs6("let tearDown = function() {}",
+        LINE_JOINER.join(
+            "let tearDown = function() {}; ",
+            "google_exportSymbol('tearDown', tearDown)"));
+  }
+
+  public void testFunctionExpressionsByConstAreExported() {
+    testSameEs6("const Foo = function() {var testA = function() {}}");
+    testEs6("const setUp = function() {}",
+        LINE_JOINER.join(
+            "const setUp = function() {}; ",
+            "google_exportSymbol('setUp', setUp)"));
+    testEs6("const testBar = function() {}",
+        LINE_JOINER.join(
+            "const testBar = function() {}; ",
+            "google_exportSymbol('testBar', testBar)"));
+    testEs6("const tearDown = function() {}",
+        LINE_JOINER.join(
+            "const tearDown = function() {}; ",
+            "google_exportSymbol('tearDown', tearDown)"));
+  }
+
+  public void testArrowFunctionExpressionsAreExported() {
+    testSameEs6("var Foo = ()=>{var testA = function() {}}");
+    testEs6("var setUp = ()=>{}",
+        LINE_JOINER.join(
+            "var setUp = ()=>{}; ",
+            "google_exportSymbol('setUp', setUp)"));
+    testEs6("var testBar = ()=>{}",
+        LINE_JOINER.join(
+            "var testBar = ()=>{}; ",
+            "google_exportSymbol('testBar', testBar)"));
+    testEs6("var tearDown = ()=>{}",
+        LINE_JOINER.join(
+            "var tearDown = ()=>{}; ",
+            "google_exportSymbol('tearDown', tearDown)"));
+  }
+
   public void testFunctionAssignmentsAreExported() {
-    test("Foo = {}; Foo.prototype.bar = function() {};",
-         "Foo = {}; Foo.prototype.bar = function() {};");
+    testSame("Foo = {}; Foo.prototype.bar = function() {};");
 
     test("Foo = {}; Foo.prototype.setUpPage = function() {};",
          "Foo = {}; Foo.prototype.setUpPage = function() {};"
