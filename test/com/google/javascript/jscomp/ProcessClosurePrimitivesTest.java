@@ -170,12 +170,23 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
          "var foo = {a: 0};");
     test("goog.provide('foo'); foo = function(){};",
          "var foo = function(){};");
+    testEs6("goog.provide('foo'); foo = ()=>{};",
+            "var foo = ()=>{};");
+
     test("goog.provide('foo'); var foo = 0;",
          "var foo = 0;");
+    testEs6("goog.provide('foo'); let foo = 0;",
+            "let foo = 0;");
+    testEs6("goog.provide('foo'); const foo = 0;",
+            "const foo = 0;");
+
     test("goog.provide('foo'); var foo = {a: 0};",
          "var foo = {a: 0};");
     test("goog.provide('foo'); var foo = function(){};",
          "var foo = function(){};");
+    testEs6("goog.provide('foo'); var foo = ()=>{};",
+            "var foo = ()=>{};");
+
     test("goog.provide('foo.bar.Baz'); foo.bar.Baz=function(){};",
          "var foo={}; foo.bar={}; foo.bar.Baz=function(){};");
     test("goog.provide('foo.bar.moo'); foo.bar.moo={E:1,S:2};",
@@ -202,11 +213,15 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   public void testRemovalMultipleAssignment2() {
     test("goog.provide('foo'); var foo = 0; foo = 1",
          "var foo = 0; foo = 1;");
+    testEs6("goog.provide('foo'); let foo = 0; let foo = 1",
+        "let foo = 0; let foo = 1;");
   }
 
   public void testRemovalMultipleAssignment3() {
     test("goog.provide('foo'); foo = 0; var foo = 1",
          "foo = 0; var foo = 1;");
+    testEs6("goog.provide('foo'); foo = 0; let foo = 1",
+        "foo = 0; let foo = 1;");
   }
 
   public void testRemovalMultipleAssignment4() {
@@ -222,6 +237,11 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   public void testNoRemovalFunction2() {
     test("goog.provide('foo'); function f(){var foo = 0}",
          "var foo = {}; function f(){var foo = 0}");
+  }
+
+  public void testNoRemovalFunction3() {
+    testEs6("goog.provide('foo'); function f(foo = 0){}",
+         "var foo = {}; function f(foo = 0){}");
   }
 
   public void testRemovalMultipleAssignmentInIf1() {

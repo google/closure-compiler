@@ -498,7 +498,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       NodeTraversal t, Node n, Node parent) {
     if (!t.inFunction()) {
       String name = null;
-      if (n.isName() && parent.isVar()) {
+      if (n.isName() && NodeUtil.isNameDeclaration(parent)) {
         name = n.getString();
       } else if (n.isAssign() &&
           parent.isExprResult()) {
@@ -1274,7 +1274,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     void addDefinition(Node node, JSModule module) {
       Preconditions.checkArgument(node.isExprResult() || // assign
                                   node.isFunction() ||
-                                  node.isVar());
+                                  NodeUtil.isNameDeclaration(node));
       Preconditions.checkArgument(explicitNode != node);
       if ((candidateDefinition == null) || !node.isExprResult()) {
         candidateDefinition = node;
