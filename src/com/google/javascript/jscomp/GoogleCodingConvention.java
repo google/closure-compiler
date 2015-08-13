@@ -22,6 +22,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -159,6 +160,9 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
   @Override
   public String getPackageName(StaticSourceFile source) {
     String name = source.getName();
+    if (File.separatorChar == '\\') {
+      name = name.replace('\\', '/');
+    }
     Matcher m = PACKAGE_WITH_TEST_DIR.matcher(name);
     if (m.find()) {
       return m.group(1);
