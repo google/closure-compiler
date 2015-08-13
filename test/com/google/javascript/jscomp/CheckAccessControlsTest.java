@@ -698,26 +698,25 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testPackagePrivateAccessForNamesWithWindowsFilePaths() {
-    test(
-        ImmutableList.of(
-            SourceFile.fromCode(
-                "foo\\bar.js",
-                "/** @constructor */\n"
-                    + "function Parent() {\n"
-                    + "/** @package */\n"
-                    + "this.prop = 'foo';\n"
-                    + "}\n;"),
-            SourceFile.fromCode(
-                "baz\\quux.js",
-                "/**"
-                    + " * @constructor\n"
-                    + " * @extends {Parent}\n"
-                    + " */\n"
-                    + "function Child() {\n"
-                    + "  this.prop = 'asdf';\n"
-                    + "}\n"
-                    + "Child.prototype = new Parent();")),
-        null, BAD_PACKAGE_PROPERTY_ACCESS);
+    ImmutableList<SourceFile> js = ImmutableList.of(
+        SourceFile.fromCode(
+            "foo\\bar.js",
+            "/** @constructor */\n"
+            + "function Parent() {\n"
+            + "/** @package */\n"
+            + "this.prop = 'foo';\n"
+            + "}\n;"),
+        SourceFile.fromCode(
+            "baz\\quux.js",
+            "/**"
+            + " * @constructor\n"
+            + " * @extends {Parent}\n"
+            + " */\n"
+            + "function Child() {\n"
+            + "  this.prop = 'asdf';\n"
+            + "}\n"
+            + "Child.prototype = new Parent();"));
+      test(js, null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testPackagePrivateAccessForProperties1() {
