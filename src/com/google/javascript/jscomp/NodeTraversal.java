@@ -533,7 +533,8 @@ public class NodeTraversal {
           }
           return true;
         }
-      });
+      },
+      new Es6SyntacticScopeCreator(compiler));
     t.traverse(jsRoot);
   }
 

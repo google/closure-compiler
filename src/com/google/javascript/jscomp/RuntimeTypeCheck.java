@@ -78,8 +78,8 @@ class RuntimeTypeCheck implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new AddMarkers(compiler));
-    NodeTraversal.traverse(compiler, root, new AddChecks());
+    NodeTraversal.traverseEs6(compiler, root, new AddMarkers(compiler));
+    NodeTraversal.traverseEs6(compiler, root, new AddChecks());
     addBoilerplateCode();
     new Normalize(compiler, false).process(externs, root);
   }

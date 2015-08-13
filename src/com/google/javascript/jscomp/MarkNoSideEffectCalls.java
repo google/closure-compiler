@@ -61,12 +61,12 @@ class MarkNoSideEffectCalls implements CompilerPass {
 
     // Gather the list of function nodes that have @nosideeffects annotations.
     // For use by SetNoSideEffectCallProperty.
-    NodeTraversal.traverse(
+    NodeTraversal.traverseEs6(
         compiler, externs, new GatherNoSideEffectFunctions(true));
-    NodeTraversal.traverse(
+    NodeTraversal.traverseEs6(
         compiler, root, new GatherNoSideEffectFunctions(false));
 
-    NodeTraversal.traverse(compiler, root,
+    NodeTraversal.traverseEs6(compiler, root,
                            new SetNoSideEffectCallProperty(defFinder));
   }
 

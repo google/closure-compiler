@@ -103,11 +103,11 @@ class SimpleDefinitionFinder implements CompilerPass, DefinitionProvider {
 
   @Override
   public void process(Node externs, Node source) {
-    NodeTraversal.traverse(
+    NodeTraversal.traverseEs6(
         compiler, externs, new DefinitionGatheringCallback(true));
-    NodeTraversal.traverse(
+    NodeTraversal.traverseEs6(
         compiler, source, new DefinitionGatheringCallback(false));
-    NodeTraversal.traverse(
+    NodeTraversal.traverseEs6(
         compiler, source, new UseSiteGatheringCallback());
   }
 

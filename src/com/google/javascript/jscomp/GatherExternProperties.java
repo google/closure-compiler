@@ -53,7 +53,7 @@ class GatherExternProperties extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, this);
+    NodeTraversal.traverseEs6(compiler, externs, this);
     compiler.setExternProperties(ImmutableSet.copyOf(externProperties));
   }
 

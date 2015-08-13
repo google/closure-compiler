@@ -86,7 +86,7 @@ class CoverageInstrumentationPass implements CompilerPass {
   @Override
   public void process(Node externsNode, Node rootNode) {
     if (rootNode.hasChildren()) {
-      NodeTraversal.traverse(compiler, rootNode,
+      NodeTraversal.traverseEs6(compiler, rootNode,
           new CoverageInstrumentationCallback(instrumentationData, reach));
 
       Node firstScript = rootNode.getFirstChild();

@@ -318,10 +318,10 @@ class DisambiguateProperties<T> implements CompilerPass {
       addInvalidatingType(mis.typeB, mis.src);
     }
     // Gather names of properties in externs; these properties can't be renamed.
-    NodeTraversal.traverse(compiler, externs, new FindExternProperties());
+    NodeTraversal.traverseEs6(compiler, externs, new FindExternProperties());
     // Look at each unquoted property access and decide if that property will
     // be renamed.
-    NodeTraversal.traverse(compiler, root, new FindRenameableProperties());
+    NodeTraversal.traverseEs6(compiler, root, new FindRenameableProperties());
     // Do the actual renaming.
     renameProperties();
   }

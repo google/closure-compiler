@@ -63,7 +63,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     FindObjectCreateCalls pass = new FindObjectCreateCalls();
-    NodeTraversal.traverse(compiler, root, pass);
+    NodeTraversal.traverseEs6(compiler, root, pass);
   }
 
   /**
