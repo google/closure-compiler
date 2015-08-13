@@ -162,18 +162,19 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testVarSourceLocations() {
     isIdeMode = true;
 
-    Node n = parse("var x, y = 1;");
+    Node n = parse("var x, yy = 1;");
     Node var = n.getFirstChild();
     assertNode(var).hasType(Token.VAR);
 
     Node x = var.getFirstChild();
     assertNode(x).hasType(Token.NAME);
     assertNode(x).hasCharno("var ".length());
+    assertNode(x).hasLength("x".length());
 
     Node y = x.getNext();
     assertNode(y).hasType(Token.NAME);
     assertNode(y).hasCharno("var x, ".length());
-    assertNode(y).hasLength("y = 1".length());
+    assertNode(y).hasLength("yy".length());
   }
 
   public void testReturn() {
