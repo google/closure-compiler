@@ -260,7 +260,7 @@ class CrossModuleCodeMotion implements CompilerPass {
     // Recursive definition should not block movement.
     String name = ref.getNode().getString();
     boolean recursive = false;
-    Node rootNode = ref.getScope().getRootNode();
+    Node rootNode = ref.getScope().getRootNode().getParent();
     if (rootNode.isFunction()) {
 
       // CASE #1:
@@ -308,7 +308,7 @@ class CrossModuleCodeMotion implements CompilerPass {
                 !compiler.getCodingConvention().isExported(var.getName());
           }
         });
-    NodeTraversal.traverse(compiler, root, collector);
+    NodeTraversal.traverseEs6(compiler, root, collector);
 
     for (Var v : collector.getAllSymbols()) {
       ReferenceCollection refCollection = collector.getReferences(v);

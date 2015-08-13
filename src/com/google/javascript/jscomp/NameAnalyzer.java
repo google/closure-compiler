@@ -493,7 +493,7 @@ final class NameAnalyzer implements CompilerPass {
   private class FindDependencyScopes extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!t.inGlobalScope()) {
+      if (!t.getScope().getClosestHoistScope().isGlobal()) {
         return;
       }
 
@@ -625,7 +625,7 @@ final class NameAnalyzer implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
 
       // Record global variable and function declarations
-      if (t.inGlobalScope()) {
+      if (t.getScope().getClosestHoistScope().isGlobal()) {
         if (NodeUtil.isVarDeclaration(n)) {
           NameInformation ns = createNameInformation(t, n);
           Preconditions.checkNotNull(ns);
@@ -765,10 +765,8 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     private void addSimplifiedChildren(Node n) {
-      NodeTraversal.traverse(
-          compiler, n,
-          new GatherSideEffectSubexpressionsCallback(
-              compiler, new NodeAccumulator()));
+      NodeTraversal.traverseEs6(
+          compiler, n, new GatherSideEffectSubexpressionsCallback(compiler, new NodeAccumulator()));
     }
 
     private void addSimplifiedExpression(Node n, Node parent) {
@@ -1124,12 +1122,11 @@ final class NameAnalyzer implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, externs, new ProcessExternals());
-    NodeTraversal.traverse(compiler, root, new FindDependencyScopes());
-    NodeTraversal.traverse(
-        compiler, root, new HoistVariableAndFunctionDeclarations());
-    NodeTraversal.traverse(compiler, root, new FindDeclarationsAndSetters());
-    NodeTraversal.traverse(compiler, root, new FindReferences());
+    NodeTraversal.traverseEs6(compiler, externs, new ProcessExternals());
+    NodeTraversal.traverseEs6(compiler, root, new FindDependencyScopes());
+    NodeTraversal.traverseEs6(compiler, root, new HoistVariableAndFunctionDeclarations());
+    NodeTraversal.traverseEs6(compiler, root, new FindDeclarationsAndSetters());
+    NodeTraversal.traverseEs6(compiler, root, new FindReferences());
 
     // Create bi-directional references between parent names and their
     // descendants. This may create new names.
@@ -1762,12 +1759,11 @@ final class NameAnalyzer implements CompilerPass {
    */
   private List<Node> getSideEffectNodes(Node n) {
     List<Node> subexpressions = new ArrayList<>();
-    NodeTraversal.traverse(
-        compiler, n,
+    NodeTraversal.traverseEs6(
+        compiler,
+        n,
         new GatherSideEffectSubexpressionsCallback(
-            compiler,
-            new GetReplacementSideEffectSubexpressions(
-                compiler, subexpressions)));
+            compiler, new GetReplacementSideEffectSubexpressions(compiler, subexpressions)));
 
     List<Node> replacements = new ArrayList<>(subexpressions.size());
     for (Node subexpression : subexpressions) {

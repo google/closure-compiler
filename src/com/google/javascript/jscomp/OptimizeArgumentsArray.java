@@ -89,7 +89,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, Preconditions.checkNotNull(root), this);
+    NodeTraversal.traverseEs6(compiler, Preconditions.checkNotNull(root), this);
   }
 
   @Override
@@ -119,6 +119,11 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     // collected argument access list. Since we do not perform this optimization
     // for the global scope, we will skip this exit point.
     if (currentArgumentsAccess == null) {
+      return;
+    }
+
+    Node function = traversal.getScopeRoot();
+    if (!function.isFunction()) {
       return;
     }
 
