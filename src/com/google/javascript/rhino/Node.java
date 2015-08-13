@@ -1579,8 +1579,8 @@ public class Node implements Serializable {
         return "Node tree inequality:" +
             "\nTree1:\n" + toStringTree() +
             "\n\nTree2:\n" + actual.toStringTree() +
-            "\n\nSubtree1: " + diff.nodeA.toStringTree() +
-            "\n\nSubtree2: " + diff.nodeB.toStringTree();
+            "\n\nSubtree1: " + diff.nodeActual.toStringTree() +
+            "\n\nSubtree2: " + diff.nodeExpected.toStringTree();
       }
       return null;
   }
@@ -1598,28 +1598,28 @@ public class Node implements Serializable {
   public String checkTreeEqualsIncludingJsDoc(Node actual) {
       NodeMismatch diff = checkTreeEqualsImpl(actual, true);
       if (diff != null) {
-        if (diff.nodeA.isEquivalentTo(diff.nodeB, false, true, false)) {
+        if (diff.nodeActual.isEquivalentTo(diff.nodeExpected, false, true, false)) {
           // The only difference is that the JSDoc is different on
           // the subtree.
-          String jsDoc1 = diff.nodeA.getJSDocInfo() == null ?
+          String jsDocActual = diff.nodeActual.getJSDocInfo() == null ?
               "(none)" :
-              diff.nodeA.getJSDocInfo().toStringVerbose();
+              diff.nodeActual.getJSDocInfo().toStringVerbose();
 
-          String jsDoc2 = diff.nodeB.getJSDocInfo() == null ?
+          String jsDocExpected = diff.nodeExpected.getJSDocInfo() == null ?
               "(none)" :
-              diff.nodeB.getJSDocInfo().toStringVerbose();
+              diff.nodeExpected.getJSDocInfo().toStringVerbose();
 
           return "Node tree inequality:" +
               "\nTree:\n" + toStringTree() +
-              "\n\nJSDoc differs on subtree: " + diff.nodeA +
-              "\nExpected JSDoc: " + jsDoc1 +
-              "\nActual JSDoc  : " + jsDoc2;
+              "\n\nJSDoc differs on subtree: " + diff.nodeActual +
+              "\nExpected JSDoc: " + jsDocExpected +
+              "\nActual JSDoc  : " + jsDocActual;
         }
         return "Node tree inequality:" +
             "\nExpected tree:\n" + toStringTree() +
             "\n\nActual tree:\n" + actual.toStringTree() +
-            "\n\nExpected subtree: " + diff.nodeA.toStringTree() +
-            "\n\nActual subtree: " + diff.nodeB.toStringTree();
+            "\n\nExpected subtree: " + diff.nodeExpected.toStringTree() +
+            "\n\nActual subtree: " + diff.nodeActual.toStringTree();
       }
       return null;
   }
@@ -2521,26 +2521,27 @@ public class Node implements Serializable {
   }
 
   static class NodeMismatch {
-    final Node nodeA;
-    final Node nodeB;
+    final Node nodeActual;
+    final Node nodeExpected;
 
-    NodeMismatch(Node nodeA, Node nodeB) {
-      this.nodeA = nodeA;
-      this.nodeB = nodeB;
+    NodeMismatch(Node nodeActual, Node nodeExpected) {
+      this.nodeActual = nodeActual;
+      this.nodeExpected = nodeExpected;
     }
 
     @Override
     public boolean equals(Object object) {
       if (object instanceof NodeMismatch) {
         NodeMismatch that = (NodeMismatch) object;
-        return that.nodeA.equals(this.nodeA) && that.nodeB.equals(this.nodeB);
+        return that.nodeActual.equals(this.nodeActual)
+            && that.nodeExpected.equals(this.nodeExpected);
       }
       return false;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(nodeA, nodeB);
+      return Objects.hashCode(nodeActual, nodeExpected);
     }
   }
 
