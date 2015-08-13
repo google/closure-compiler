@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -48,6 +49,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileSystems;
@@ -236,6 +238,8 @@ public class Compiler extends AbstractCompiler {
   private String lastPassName;
 
   private Set<String> externProperties = null;
+
+  private static final Joiner pathJoiner = Joiner.on(File.separator);
 
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
@@ -465,6 +469,13 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
+   * Creates an OS specific path string from parts
+   */
+  public static String joinPathParts(String... pathParts) {
+    return pathJoiner.join(pathParts);
+  }
+
+  /**
    * Fill any empty modules with a place holder file. It makes any cross module
    * motion easier.
    */
@@ -524,7 +535,8 @@ public class Compiler extends AbstractCompiler {
     return FileSystems.getDefault().getPath(base)
         .resolveSibling(relative)
         .normalize()
-        .toString();
+        .toString()
+        .replace(File.separator, "/");
   }
 
   /**

@@ -156,7 +156,7 @@ public final class CompilerTest extends TestCase {
   }
 
   private String normalize(String path) {
-    return path.replace("/", File.separator);
+    return path.replace(File.separator, "/");
   }
 
   public void testInputSourceMaps() throws Exception {

@@ -139,11 +139,6 @@ public final class SourceMap {
    * @return a remapped source file.
    */
   private String fixupSourceLocation(String sourceFile) {
-    // Replace backslashes (the file separator used on Windows systems).
-    if (File.separatorChar == '\\') {
-      sourceFile = sourceFile.replace('\\', '/');
-    }
-
     if (prefixMappings.isEmpty()) {
       return sourceFile;
     }
