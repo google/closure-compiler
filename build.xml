@@ -140,7 +140,8 @@
            excludes=".svn,.git"
            debug="${javac.debug}"
            deprecation="on"
-           includeantruntime="false">
+           includeantruntime="false"
+           encoding="utf-8">
       <classpath refid="srcclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
     </javac>
@@ -149,7 +150,8 @@
            excludes=".svn,.git,**/refactoring/**,**/webservice/**,**/testing/**"
            debug="${javac.debug}"
            deprecation="on"
-           includeantruntime="true">
+           includeantruntime="true"
+           encoding="utf-8">
       <classpath refid="srcclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
     </javac>
@@ -224,7 +226,8 @@
            excludes=".svn,.git"
            debug="on"
            deprecation="on"
-           includeantruntime="false">
+           includeantruntime="false"
+           encoding="utf-8">
       <classpath refid="allclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
     </javac>
@@ -233,7 +236,8 @@
            excludes=".svn,.git"
            debug="on"
            deprecation="on"
-           includeantruntime="false">
+           includeantruntime="false"
+           encoding="utf-8">
       <classpath refid="allclasspath.path" />
       <compilerarg value="-Xlint:unchecked"/>
     </javac>
@@ -353,7 +357,8 @@
            destdir="${webservice-classes.dir}"
            excludes=".svn,.git"
            debug="${javac.debug}"
-           deprecation="on">
+           deprecation="on"
+           encoding="utf-8">
       <classpath refid="webservice-classpath.path" />
     </javac>
   </target>
@@ -391,7 +396,8 @@
            destdir="${refasterjs-classes.dir}"
            excludes=".svn,.git"
            debug="${javac.debug}"
-           deprecation="on">
+           deprecation="on"
+           encoding="utf-8">
       <classpath refid="refasterjs-classpath.path" />
     </javac>
   </target>
