@@ -114,12 +114,12 @@ public final class CompileTask
     this.forceRecompile = false;
     this.angularPass = false;
     this.replacePropertiesPrefix = "closure.define.";
-    this.defineParams = new LinkedList();
-    this.entryPointParams = new LinkedList();
-    this.externFileLists = new LinkedList();
-    this.sourceFileLists = new LinkedList();
-    this.sourcePaths = new LinkedList();
-    this.warnings = new LinkedList();
+    this.defineParams = new LinkedList<>();
+    this.entryPointParams = new LinkedList<>();
+    this.externFileLists = new LinkedList<>();
+    this.sourceFileLists = new LinkedList<>();
+    this.sourcePaths = new LinkedList<>();
+    this.warnings = new LinkedList<>();
   }
 
   /**
@@ -513,7 +513,7 @@ public final class CompileTask
    * replacements.
    */
   private void convertEntryPointParameters(CompilerOptions options) {
-    List<String> entryPoints = new LinkedList();
+    List<String> entryPoints = new LinkedList<>();
     for (Parameter p : entryPointParams) {
       String key = p.getName();
       entryPoints.add(key);
@@ -598,7 +598,7 @@ public final class CompileTask
   }
 
   private List<SourceFile> findExternFiles() {
-    List<SourceFile> files = new LinkedList();
+    List<SourceFile> files = new LinkedList<>();
     if (!this.customExternsOnly) {
       files.addAll(getDefaultExterns());
     }
@@ -611,7 +611,7 @@ public final class CompileTask
   }
 
   private List<SourceFile> findSourceFiles() {
-    List<SourceFile> files = new LinkedList();
+    List<SourceFile> files = new LinkedList<>();
 
     for (FileList list : this.sourceFileLists) {
       files.addAll(findJavaScriptFiles(list));
@@ -629,7 +629,7 @@ public final class CompileTask
    * the compiler expects.
    */
   private List<SourceFile> findJavaScriptFiles(ResourceCollection rc) {
-    List<SourceFile> files = new LinkedList();
+    List<SourceFile> files = new LinkedList<>();
     Iterator<Resource> iter = rc.iterator();
     while (iter.hasNext()) {
       FileResource fr = (FileResource) iter.next();
