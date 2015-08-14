@@ -81,6 +81,19 @@ public final class ConstParamCheckTest extends CompilerTestCase {
         ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
+  public void testNotStringLiteralArgumentAliasedAfterCollapse() {
+    testError(
+        CLOSURE_DEFS
+            + "var myFunction = function() {};"
+            + "var mkConst = goog$string$Const$from;"
+            + "mkConst(myFunction());",
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+  }
+
+  public void testNotStringLiteralArgumentOnCollapsedProperties() {
+    testError("goog$string$Const$from(null);", ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
+  }
+
   // Tests for string literal constant arguments.
 
   public void testStringLiteralConstantArgument() {

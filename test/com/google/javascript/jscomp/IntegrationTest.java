@@ -112,6 +112,54 @@ public final class IntegrationTest extends IntegrationTestCase {
         "(function() {})('goog.CONSTANT', 1);");
   }
 
+  /**
+   * Tests that calls to goog.string.Const.from() with non-constant arguments
+   * are detected with and without collapsed properties.
+   */
+  public void testBug22684459() {
+    String source =
+        ""
+            + "var goog = {};"
+            + "goog.string = {};"
+            + "goog.string.Const = {};"
+            + "goog.string.Const.from = function(x) {};"
+            + "var x = window.document.location;"
+            + "goog.string.Const.from(x);";
+
+    // Without collapsed properties.
+    CompilerOptions options = createCompilerOptions();
+    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+
+    // With collapsed properties.
+    options.setCollapseProperties(true);
+    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+  }
+
+  /**
+   * Tests that calls to goog.string.Const.from() with non-constant arguments
+   * are detected with and without collapsed properties, even when
+   * goog.string.Const.from has been aliased.
+   */
+  public void testBug22684459_aliased() {
+    String source =
+        ""
+            + "var goog = {};"
+            + "goog.string = {};"
+            + "goog.string.Const = {};"
+            + "goog.string.Const.from = function(x) {};"
+            + "var mkConst = goog.string.Const.from;"
+            + "var x = window.document.location;"
+            + "mkConst(x);";
+
+    // Without collapsed properties.
+    CompilerOptions options = createCompilerOptions();
+    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+
+    // With collapsed properties.
+    options.setCollapseProperties(true);
+    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+  }
+
   public void testBug2410122() {
     CompilerOptions options = createCompilerOptions();
     options.setGenerateExports(true);

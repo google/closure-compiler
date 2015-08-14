@@ -40,6 +40,7 @@ class ConstParamCheck extends AbstractPostOrderCallback
     implements CompilerPass {
 
   private static final String CONST_FUNCTION_NAME = "goog.string.Const.from";
+  private static final String CONST_FUNCTION_NAME_COLLAPSED = "goog$string$Const$from";
 
   @VisibleForTesting
   static final DiagnosticType CONST_NOT_STRING_LITERAL_ERROR =
@@ -83,7 +84,8 @@ class ConstParamCheck extends AbstractPostOrderCallback
         return;
       }
 
-      if (name.isName()) {
+      // Detect calls to an aliased goog.string.Const.
+      if (name.isName() && !name.matchesQualifiedName(CONST_FUNCTION_NAME_COLLAPSED)) {
         Scope scope = traversal.getScope();
         Var var = scope.getVar(name.getString());
         if (var == null) {
@@ -95,8 +97,8 @@ class ConstParamCheck extends AbstractPostOrderCallback
         }
       }
 
-      // goog.string.Const.from('constant')
-      if (name.matchesQualifiedName(CONST_FUNCTION_NAME)) {
+      if (name.matchesQualifiedName(CONST_FUNCTION_NAME)
+          || name.matchesQualifiedName(CONST_FUNCTION_NAME_COLLAPSED)) {
         checkArgumentConstant(traversal, argument);
       }
     }
