@@ -276,7 +276,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       // Rewrite require("name").
       script.addChildToFront(IR.exprResult(
           IR.call(IR.getprop(IR.name("goog"), IR.string("require")),
-              IR.string(moduleName))).copyInformationFromForTree(require));
+              IR.string(moduleName))).useSourceInfoIfMissingFromForTree(require));
       compiler.reportCodeChange();
     }
 
@@ -307,7 +307,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
       script.addChildToFront(IR.exprResult(
           IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
-              IR.string(moduleName))).copyInformationFromForTree(script));
+              IR.string(moduleName))).useSourceInfoIfMissingFromForTree(script));
 
       compiler.reportCodeChange();
     }
@@ -382,7 +382,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
         Node rhsValue = ref.getNext().detachFromParent();
         Node newExprResult = IR.exprResult(IR.assign(newName, rhsValue)
-          .copyInformationFromForTree(ref.getParent()));
+          .useSourceInfoIfMissingFromForTree(ref.getParent()));
 
         // If the rValue is an object literal, check each property to see if
         // it's an alias, and if it is, copy the annotation over.
@@ -417,7 +417,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         //
         // moduleName.prop0 = 0; // etc.
         for (Node ref : Iterables.concat(moduleExportRefs, exportRefs)) {
-          Node newRef = IR.name(moduleName).copyInformationFrom(ref);
+          Node newRef = IR.name(moduleName).useSourceInfoIfMissingFrom(ref);
           newRef.putProp(Node.ORIGINALNAME_PROP, ref.getQualifiedName());
           ref.getParent().replaceChild(ref, newRef);
         }
@@ -426,7 +426,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       // Transform module.exports to moduleName
       for (Node ref : moduleExportRefs) {
-        Node newRef = IR.name(moduleName).copyInformationFrom(ref);
+        Node newRef = IR.name(moduleName).useSourceInfoIfMissingFrom(ref);
         ref.getParent().replaceChild(ref, newRef);
       }
 
@@ -435,7 +435,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (!exportRefs.isEmpty()) {
         String aliasName = "exports$$" + moduleName;
         Node aliasNode = IR.var(IR.name(aliasName), IR.name(moduleName))
-            .copyInformationFromForTree(script);
+            .useSourceInfoIfMissingFromForTree(script);
         script.addChildToFront(aliasNode);
 
         for (Node ref : exportRefs) {

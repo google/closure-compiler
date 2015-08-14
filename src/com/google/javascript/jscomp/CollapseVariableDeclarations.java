@@ -221,7 +221,7 @@ class CollapseVariableDeclarations implements CompilerPass {
     for (Collapse collapse : collapses) {
 
       Node var = new Node(Token.VAR);
-      var.copyInformationFrom(collapse.startNode);
+      var.useSourceInfoIfMissingFrom(collapse.startNode);
       collapse.parent.addChildBefore(var, collapse.startNode);
 
       boolean redeclaration = false;

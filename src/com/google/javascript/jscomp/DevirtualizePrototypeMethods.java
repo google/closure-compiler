@@ -343,8 +343,8 @@ class DevirtualizePrototypeMethods
     Node parent = node.getParent();
 
     Node refNode = isObjLitDefKey ? node : parent.getFirstChild();
-    Node newNameNode = IR.name(newMethodName).copyInformationFrom(refNode);
-    Node newVarNode = IR.var(newNameNode).copyInformationFrom(refNode);
+    Node newNameNode = IR.name(newMethodName).useSourceInfoIfMissingFrom(refNode);
+    Node newVarNode = IR.var(newNameNode).useSourceInfoIfMissingFrom(refNode);
 
     Node functionNode;
     if (!isObjLitDefKey) {
@@ -372,7 +372,7 @@ class DevirtualizePrototypeMethods
     String self = newMethodName + "$self";
     Node argList = functionNode.getFirstChild().getNext();
     argList.addChildToFront(IR.name(self)
-        .copyInformationFrom(functionNode));
+        .useSourceInfoIfMissingFrom(functionNode));
 
     // rewrite body
     Node body = functionNode.getLastChild();

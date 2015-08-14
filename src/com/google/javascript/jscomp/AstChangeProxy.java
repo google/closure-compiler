@@ -112,13 +112,13 @@ class AstChangeProxy {
     if (parentType == Token.LABEL && size != 1) {
       Node block = IR.block();
       for (Node newChild : replacements) {
-        newChild.copyInformationFrom(node);
+        newChild.useSourceInfoIfMissingFrom(node);
         block.addChildToBack(newChild);
       }
       parent.replaceChild(node, block);
     } else {
       for (Node newChild : replacements) {
-        newChild.copyInformationFrom(node);
+        newChild.useSourceInfoIfMissingFrom(node);
         parent.addChildBefore(newChild, node);
       }
       parent.removeChild(node);

@@ -145,7 +145,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
               IR.assign(
                   NodeUtil.newQName(compiler, "module.exports"),
                   onlyExport))
-          .copyInformationFromForTree(onlyExport));
+          .useSourceInfoIfMissingFromForTree(onlyExport));
       compiler.reportCodeChange();
     }
 
@@ -202,10 +202,10 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         call.putBooleanProp(Node.FREE_CALL, true);
         if (aliasName != null) {
           requireNode = IR.var(IR.name(aliasName), call)
-              .copyInformationFromForTree(aliasNode);
+              .useSourceInfoIfMissingFromForTree(aliasNode);
         } else {
           requireNode = IR.exprResult(call).
-              copyInformationFromForTree(modNode);
+              useSourceInfoIfMissingFromForTree(modNode);
         }
       } else {
         // ignore exports, require and module (because they are implicit
@@ -214,7 +214,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
           return;
         }
         requireNode = IR.var(IR.name(aliasName), IR.nullNode())
-            .copyInformationFromForTree(aliasNode);
+            .useSourceInfoIfMissingFromForTree(aliasNode);
       }
 
       script.addChildBefore(requireNode,

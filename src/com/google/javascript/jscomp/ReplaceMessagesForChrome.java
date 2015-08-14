@@ -53,7 +53,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
     try {
       Node msgNode = definition.getMessageNode();
       Node newValue = getNewValueNode(msgNode, message);
-      newValue.copyInformationFromForTree(msgNode);
+      newValue.useSourceInfoIfMissingFromForTree(msgNode);
 
       msgNode.getParent().replaceChild(msgNode, newValue);
       compiler.reportCodeChange();
@@ -88,7 +88,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       newValueNode.addChildToBack(placeholderValueArray);
     }
 
-    newValueNode.copyInformationFromForTree(origNode);
+    newValueNode.useSourceInfoIfMissingFromForTree(origNode);
     return newValueNode;
   }
 

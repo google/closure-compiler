@@ -382,7 +382,7 @@ class InlineObjectLiterals implements CompilerPass {
       }
 
       Node replace = ref.getParent();
-      replacement.copyInformationFromForTree(replace);
+      replacement.useSourceInfoIfMissingFromForTree(replace);
 
       if (replace.isVar()) {
         replace.getParent().replaceChild(
@@ -423,7 +423,7 @@ class InlineObjectLiterals implements CompilerPass {
         Node varnode = NodeUtil.newVarNode(entry.getValue(), val);
         if (val == null) {
           // is this right?
-          varnode.copyInformationFromForTree(vnode);
+          varnode.useSourceInfoIfMissingFromForTree(vnode);
         } else {
           blacklistVarReferencesInTree(val, v.scope);
         }
@@ -464,7 +464,7 @@ class InlineObjectLiterals implements CompilerPass {
 
           // Replace the GETPROP node with a NAME.
           Node replacement = IR.name(varmap.get(var));
-          replacement.copyInformationFrom(getprop);
+          replacement.useSourceInfoIfMissingFrom(getprop);
           ref.getGrandparent().replaceChild(ref.getParent(), replacement);
         }
       }

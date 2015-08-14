@@ -379,7 +379,7 @@ class Normalize implements CompilerPass {
             Node expr = n.getFirstChild();
             n.setType(Token.FOR);
             Node empty = IR.empty();
-            empty.copyInformationFrom(n);
+            empty.useSourceInfoIfMissingFrom(n);
             n.addChildBefore(empty, expr);
             n.addChildAfter(empty.cloneNode(), expr);
             reportCodeChange("WHILE node");
@@ -550,7 +550,7 @@ class Normalize implements CompilerPass {
           return;
         default:
           Node block = IR.block();
-          block.copyInformationFrom(last);
+          block.useSourceInfoIfMissingFrom(last);
           n.replaceChild(last, block);
           block.addChildToFront(last);
           reportCodeChange("LABEL normalization");
@@ -598,7 +598,7 @@ class Normalize implements CompilerPass {
             } else if (!c.getFirstChild().isEmpty()) {
               Node init = c.getFirstChild();
               Node empty = IR.empty();
-              empty.copyInformationFrom(c);
+              empty.useSourceInfoIfMissingFrom(c);
               c.replaceChild(init, empty);
 
               Node newStatement;
@@ -799,7 +799,7 @@ class Normalize implements CompilerPass {
         n.removeChild(value);
         Node replacement = IR.assign(n, value);
         replacement.setJSDocInfo(parent.getJSDocInfo());
-        replacement.copyInformationFrom(parent);
+        replacement.useSourceInfoIfMissingFrom(parent);
         grandparent.replaceChild(parent, NodeUtil.newExpr(replacement));
       } else {
         // It is an empty reference remove it.

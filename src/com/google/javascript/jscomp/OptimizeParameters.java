@@ -502,7 +502,7 @@ class OptimizeParameters
       // Keep the args in the same order, do the last first.
       eliminateParamsAfter(fnNode, argNode.getNext());
       argNode.detachFromParent();
-      Node var = IR.var(argNode).copyInformationFrom(argNode);
+      Node var = IR.var(argNode).useSourceInfoIfMissingFrom(argNode);
       fnNode.getLastChild().addChildrenToFront(var);
       compiler.reportCodeChange();
       return true;

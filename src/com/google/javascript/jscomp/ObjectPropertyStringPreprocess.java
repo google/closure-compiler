@@ -85,7 +85,7 @@ public final class ObjectPropertyStringPreprocess implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.matchesQualifiedName(OBJECT_PROPERTY_STRING)) {
         Node newName = IR.name(EXTERN_OBJECT_PROPERTY_STRING);
-        newName.copyInformationFrom(n);
+        newName.useSourceInfoIfMissingFrom(n);
         parent.replaceChild(n, newName);
         compiler.reportCodeChange();
         return;

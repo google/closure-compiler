@@ -490,7 +490,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       Node comma = commas.get(0);
       for (int i = 1; i < commas.size(); i++) {
         Node nextComma = IR.comma(comma, commas.get(i));
-        nextComma.copyInformationFrom(source);
+        nextComma.useSourceInfoIfMissingFrom(source);
         comma = nextComma;
       }
       return comma;

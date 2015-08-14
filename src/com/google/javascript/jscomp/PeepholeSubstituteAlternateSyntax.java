@@ -128,9 +128,9 @@ class PeepholeSubstituteAlternateSyntax
       Node second = rhs.getFirstChild().detachFromParent();
       Node third = rhs.getLastChild().detachFromParent();
       Node newLhs = new Node(n.getType(), first, second)
-          .copyInformationFrom(n);
+          .useSourceInfoIfMissingFrom(n);
       Node newRoot = new Node(rhs.getType(), newLhs, third)
-          .copyInformationFrom(rhs);
+          .useSourceInfoIfMissingFrom(rhs);
       n.getParent().replaceChild(n, newRoot);
       reportCodeChange();
       return newRoot;
@@ -236,7 +236,7 @@ class PeepholeSubstituteAlternateSyntax
       parent.replaceChild(n, left);
       // Add the right expression afterward.
       Node newStatement = IR.exprResult(right);
-      newStatement.copyInformationFrom(n);
+      newStatement.useSourceInfoIfMissingFrom(n);
 
       //This modifies outside the subtree, which is not
       //desirable in a peephole optimization.
@@ -522,7 +522,7 @@ class PeepholeSubstituteAlternateSyntax
       }
 
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));
-      not.copyInformationFromForTree(n);
+      not.useSourceInfoIfMissingFromForTree(n);
       n.getParent().replaceChild(n, not);
       reportCodeChange();
       return not;
@@ -573,7 +573,7 @@ class PeepholeSubstituteAlternateSyntax
               IR.string(template),
               IR.string("split")),
           IR.string("" + delimiter));
-      call.copyInformationFromForTree(n);
+      call.useSourceInfoIfMissingFromForTree(n);
       n.getParent().replaceChild(n, call);
       reportCodeChange();
       return call;

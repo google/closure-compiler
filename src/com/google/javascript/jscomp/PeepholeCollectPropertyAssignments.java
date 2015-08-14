@@ -242,7 +242,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     }
 
     Node newProperty = IR.stringKey(propertyName)
-        .copyInformationFrom(property);
+        .useSourceInfoIfMissingFrom(property);
     // Preserve the quotedness of a property reference
     if (lhs.isGetElem()) {
       newProperty.setQuotedString();

@@ -538,7 +538,7 @@ class CollapseProperties implements CompilerPass {
     Node nameNode = NodeUtil.newName(
         compiler, alias, ref.node,
         name.getFullName());
-    Node varNode = IR.var(nameNode).copyInformationFrom(nameNode);
+    Node varNode = IR.var(nameNode).useSourceInfoIfMissingFrom(nameNode);
 
     Preconditions.checkState(ref.node.getParent().isExprResult());
     Node parent = ref.node.getParent();
@@ -791,7 +791,7 @@ class CollapseProperties implements CompilerPass {
       // Create a stub variable declaration right
       // before the current statement.
       Node stubVar = IR.var(nameNode.cloneTree())
-          .copyInformationFrom(nameNode);
+          .useSourceInfoIfMissingFrom(nameNode);
       currentParent.addChildBefore(stubVar, current);
 
       parent.replaceChild(ref.node, nameNode);
@@ -1080,7 +1080,7 @@ class CollapseProperties implements CompilerPass {
       if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
         nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
       }
-      Node newVar = IR.var(nameNode).copyInformationFromForTree(key);
+      Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(key);
       if (nameToAddAfter != null) {
         varParent.addChildAfter(newVar, nameToAddAfter);
       } else {
@@ -1138,7 +1138,7 @@ class CollapseProperties implements CompilerPass {
       if (p.needsToBeStubbed()) {
         String propAlias = appendPropForAlias(alias, p.getBaseName());
         Node nameNode = IR.name(propAlias);
-        Node newVar = IR.var(nameNode).copyInformationFromForTree(addAfter);
+        Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(addAfter);
         parent.addChildAfter(newVar, addAfter);
         addAfter = newVar;
         numStubs++;

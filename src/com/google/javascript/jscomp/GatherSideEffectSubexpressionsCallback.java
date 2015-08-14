@@ -151,7 +151,7 @@ class GatherSideEffectSubexpressionsCallback implements Callback {
         Node simplified = new Node(
             type, condition.detachFromParent(),
             simplifyShortCircuitBranch(body))
-            .copyInformationFrom(hook);
+            .useSourceInfoIfMissingFrom(hook);
         keepSubTree(simplified);
       } else {
         throw new IllegalArgumentException(

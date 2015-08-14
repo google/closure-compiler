@@ -169,7 +169,7 @@ class CrossModuleMethodMotion implements CompilerPass {
             Node stubCall = IR.call(
                 IR.name(STUB_METHOD_NAME),
                 IR.number(stubId))
-                .copyInformationFromForTree(value);
+                .useSourceInfoIfMissingFromForTree(value);
             stubCall.putBooleanProp(Node.FREE_CALL, true);
 
             // stub out the method in the original module
@@ -192,7 +192,7 @@ class CrossModuleMethodMotion implements CompilerPass {
                             proto.cloneTree(),
                             IR.string(nameInfo.name)),
                         unstubCall))
-                    .copyInformationFromForTree(value));
+                    .useSourceInfoIfMissingFromForTree(value));
 
             compiler.reportCodeChange();
           } else {
@@ -211,7 +211,7 @@ class CrossModuleMethodMotion implements CompilerPass {
                             proto.cloneTree(),
                             IR.string(nameInfo.name)),
                         value))
-                    .copyInformationFromForTree(value));
+                    .useSourceInfoIfMissingFromForTree(value));
             compiler.reportCodeChange();
           }
         }

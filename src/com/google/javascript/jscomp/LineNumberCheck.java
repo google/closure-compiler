@@ -32,7 +32,7 @@ class LineNumberCheck implements Callback, CompilerPass {
       "No source location information associated with {0}.\n" +
       "Most likely a Node has been created with settings the source file " +
       "and line/column location.  Usually this is done using " +
-      "Node.copyInformationFrom and supplying a Node from the source AST.");
+      "Node.useSourceInfoIfMissingFrom and supplying a Node from the source AST.");
 
   private final AbstractCompiler compiler;
   private boolean requiresLineNumbers = false;

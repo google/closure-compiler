@@ -175,7 +175,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       if (child.isStringKey()) {
         if (!child.hasChildren()) { // converting shorthand
           Node name = IR.name(child.getString());
-          name.copyInformationFrom(child);
+          name.useSourceInfoIfMissingFrom(child);
           child.addChildToBack(name);
         }
         Node getprop =

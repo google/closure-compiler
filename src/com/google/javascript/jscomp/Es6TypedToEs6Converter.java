@@ -347,7 +347,7 @@ public final class Es6TypedToEs6Converter
           if (member.isMemberFunctionDef()) {
             Node function = member.getFirstChild();
             function.replaceChild(
-                function.getLastChild(), IR.block().copyInformationFrom(function));
+                function.getLastChild(), IR.block().useSourceInfoIfMissingFrom(function));
           }
         }
         break;
@@ -371,7 +371,7 @@ public final class Es6TypedToEs6Converter
   }
 
   private Node maybeCreateAnyType(Node n, Node type) {
-    return type == null ? TypeDeclarationsIR.anyType().copyInformationFrom(n) : type;
+    return type == null ? TypeDeclarationsIR.anyType().useSourceInfoIfMissingFrom(n) : type;
   }
 
   private Node maybeProcessOptionalParameter(Node n, Node type) {
@@ -385,7 +385,7 @@ public final class Es6TypedToEs6Converter
   }
 
   private Node convertWithLocation(Node type) {
-    return convertDeclaredTypeToJSDoc(type).copyInformationFrom(type);
+    return convertDeclaredTypeToJSDoc(type).useSourceInfoIfMissingFrom(type);
   }
 
   private Node convertDeclaredTypeToJSDoc(Node type) {
@@ -408,7 +408,8 @@ public final class Es6TypedToEs6Converter
       case Token.ARRAY_TYPE: {
         Node arrayType = IR.string("Array");
         Node memberType = convertWithLocation(type.getFirstChild());
-        arrayType.addChildToFront(new Node(Token.BLOCK, memberType).copyInformationFrom(type));
+        arrayType.addChildToFront(
+            new Node(Token.BLOCK, memberType).useSourceInfoIfMissingFrom(type));
         return new Node(Token.BANG, arrayType);
       }
       case Token.PARAMETERIZED_TYPE: {
@@ -416,7 +417,7 @@ public final class Es6TypedToEs6Converter
         Node result = convertWithLocation(namedType);
         Node typeParameterTarget =
             result.getType() == Token.BANG ? result.getFirstChild() : result;
-        Node parameters = IR.block().copyInformationFrom(type);
+        Node parameters = IR.block().useSourceInfoIfMissingFrom(type);
         typeParameterTarget.addChildToFront(parameters);
         for (Node param = namedType.getNext(); param != null; param = param.getNext()) {
           parameters.addChildToBack(convertWithLocation(param));

@@ -974,7 +974,7 @@ class RemoveUnusedVars
           if (current.isGetElem()) {
             replacement = IR.comma(
                 current.getLastChild().detachFromParent(), replacement);
-            replacement.copyInformationFrom(current);
+            replacement.useSourceInfoIfMissingFrom(current);
           }
         }
 

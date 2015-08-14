@@ -435,7 +435,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
           // + 2 for the quotes.
           foldedSize += sb.length() + 2;
           arrayFoldedChildren.add(
-              IR.string(sb.toString()).copyInformationFrom(prev));
+              IR.string(sb.toString()).useSourceInfoIfMissingFrom(prev));
           sb = null;
         }
         foldedSize += InlineCostEstimator.getCost(elem);
@@ -450,7 +450,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
       // + 2 for the quotes.
       foldedSize += sb.length() + 2;
       arrayFoldedChildren.add(
-          IR.string(sb.toString()).copyInformationFrom(prev));
+          IR.string(sb.toString()).useSourceInfoIfMissingFrom(prev));
     }
     // one for each comma.
     foldedSize += arrayFoldedChildren.size() - 1;
