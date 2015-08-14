@@ -124,8 +124,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "var a$$module$testcode = 1, b$$module$testcode = 2;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.a = a$$module$testcode;",
             "module$testcode.b = b$$module$testcode;"));
 
@@ -134,8 +132,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "var a$$module$testcode; var b$$module$testcode;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.a = a$$module$testcode;",
             "module$testcode.b = b$$module$testcode;"));
 
@@ -144,8 +140,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "function f$$module$testcode() {}",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.f = f$$module$testcode;"));
 
     testModules(
@@ -154,8 +148,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "function f$$module$testcode() {}",
             "function g$$module$testcode() { f$$module$testcode(); }",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.f = f$$module$testcode;"));
 
     testModules(
@@ -164,8 +156,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "function MyClass$$module$testcode() {}",
             "MyClass$$module$testcode.prototype.foo = function() {};",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.MyClass = MyClass$$module$testcode;"));
 
     testModules(
@@ -174,8 +164,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "var f$$module$testcode = 1;",
             "var b$$module$testcode = 2;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.foo = f$$module$testcode;",
             "module$testcode.bar = b$$module$testcode;"));
   }
@@ -187,8 +175,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "/** @constructor */",
             "function F$$module$testcode() { return ''; }",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.F = F$$module$testcode"));
 
     testModules(
@@ -197,8 +183,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "/** @return {string} */",
             "function f$$module$testcode() { return ''; }",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.f = f$$module$testcode"));
 
     testModules(
@@ -207,8 +191,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "/** @return {string} */",
             "var f$$module$testcode = function() { return ''; }",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.f = f$$module$testcode"));
 
     testModules(
@@ -217,8 +199,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "/** @type {number} */",
             "var x$$module$testcode = 3;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.x = x$$module$testcode"));
   }
 
@@ -229,8 +209,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
             "use(module$other.name);",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.name = module$other.name;"));
   }
 
@@ -240,8 +218,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.name = module$other.name;"));
 
     testModules(
@@ -249,8 +225,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.a = module$other.a;",
             "module$testcode.c = module$other.b;",
             "module$testcode.d = module$other.d;"));
@@ -262,8 +236,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "var $jscompDefaultExport$$module$testcode = 'someString';",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
     testModules(
@@ -272,8 +244,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "var x$$module$testcode = 5;",
             "var $jscompDefaultExport$$module$testcode = x$$module$testcode;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
     testModules(
@@ -282,8 +252,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "function f$$module$testcode() {}",
             "var x$$module$testcode = f$$module$testcode();",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.default = f$$module$testcode;"));
 
     testModules(
@@ -292,8 +260,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "class Foo$$module$testcode {}",
             "var x$$module$testcode = new Foo$$module$testcode;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.default = Foo$$module$testcode;"));
   }
 
@@ -303,8 +269,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "var $jscompDefaultExport$$module$testcode = class {};",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
     testModules(
@@ -312,8 +276,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "var $jscompDefaultExport$$module$testcode = function() {}",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
   }
 
@@ -360,8 +322,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "  /** @param {Parent$$module$other} parent */",
             "  useParent(parent) {}",
             "}",
-            "/** @const */",
-            "var module$testcode = {};",
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
 
@@ -375,8 +335,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "  /** @param {Child$$module$testcode} child */",
             "  useChild(child) {}",
             "}",
-            "/** @const */",
-            "var module$testcode = {};",
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
 
     testModules(
@@ -391,8 +349,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
             "  useBaz(baz) {}",
             "}",
-            "/** @const */",
-            "var module$testcode = {};",
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
   }
 
@@ -406,8 +362,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "  /** @param {module$other.Baz} baz */",
             "  useBaz(baz) {}",
             "}",
-            "/** @const */",
-            "var module$testcode = {};",
             "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
   }
 
@@ -420,8 +374,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.require('module$other');",
             "/** @typedef {string|!Object} */",
             "var UnionType$$module$testcode;",
-            "/** @const */",
-            "var module$testcode = {};",
             "/** @typedef {UnionType$$module$testcode} */",
             "module$testcode.UnionType;"));
   }
@@ -463,8 +415,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "goog.require('foo.bar');",
             "var x$$module$testcode;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.x = x$$module$testcode"));
 
     testModules(
@@ -473,8 +423,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.provide('module$testcode');",
             "var x$$module$testcode;",
             "goog.require('foo.bar');",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.x = x$$module$testcode"));
 
     testModules(
@@ -494,8 +442,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "goog.require('foo.bar');",
             "var bar$$module$testcode = foo.bar;",
             "var x$$module$testcode;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.x = x$$module$testcode"));
 
     testModules(
@@ -505,8 +451,6 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "var x$$module$testcode;",
             "goog.require('foo.bar');",
             "var bar$$module$testcode = foo.bar;",
-            "/** @const */",
-            "var module$testcode = {};",
             "module$testcode.x = x$$module$testcode"));
 
     testModules(

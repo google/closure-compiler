@@ -307,18 +307,6 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     URI normalizedAddress = loader.normalizeInputAddress(t.getInput());
     String moduleName = ES6ModuleLoader.toModuleName(normalizedAddress);
 
-    if (!exportMap.isEmpty()) {
-      // Creates an export object for this module.
-      // var moduleName = {};
-      Node objectlit = IR.objectlit();
-      Node varNode = IR.var(IR.name(moduleName), objectlit)
-          .useSourceInfoIfMissingFromForTree(script);
-      JSDocInfoBuilder info = new JSDocInfoBuilder(true);
-      info.recordConstancy();
-      varNode.setJSDocInfo(info.build());
-      script.addChildToBack(varNode);
-    }
-
     for (Map.Entry<String, NameNodePair> entry : exportMap.entrySet()) {
       String exportedName = entry.getKey();
       String withSuffix = entry.getValue().name;
