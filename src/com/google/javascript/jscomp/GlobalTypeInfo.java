@@ -2002,8 +2002,13 @@ class GlobalTypeInfo implements CompilerPass {
 
   private boolean isConst(Node defSite) {
     return isAnnotatedAsConst(defSite)
-        || NodeUtil.isConstantByConvention(
-            this.convention, fromDefsiteToName(defSite));
+        // Don't consider an all-caps variable in externs to be constant.
+        // 1) External code may not follow the coding convention.
+        // 2) We generate synthetic externs to export local properties,
+        //    which may be in all caps.
+        || (!defSite.isFromExterns()
+            && NodeUtil.isConstantByConvention(
+                this.convention, fromDefsiteToName(defSite)));
   }
 
   private static class PropertyDef {

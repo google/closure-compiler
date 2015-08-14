@@ -9686,13 +9686,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function g() { s - 5; }"),
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    // TODO(dimvar): must fix externs initialization
-    // typeCheck(Joiner.on('\n').join(
-    //     "var /** string */ x;",
-    //     "/** @const */",
-    //     "var s = x;",
-    //     "function g() { s - 5; }"),
-    //     NewTypeInference.INVALID_OPERAND_TYPE);
+    typeCheck(Joiner.on('\n').join(
+        "var /** string */ x;",
+        "/** @const */",
+        "var s = x;",
+        "function g() { s - 5; }"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
@@ -9861,6 +9861,10 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */",
         "var x = whatever.prop;"),
         GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "var NOT_A_CONST_DONT_WARN;",
+        "");
   }
 
   public void testSuppressions() {
