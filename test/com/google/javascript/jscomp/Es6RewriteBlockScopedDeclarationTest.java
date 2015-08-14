@@ -915,4 +915,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "  } catch (e$2) { e$2--; }",
         "}"));
   }
+
+  public void testExterns() {
+    testExternChanges("let x;", "", "var x;");
+  }
 }

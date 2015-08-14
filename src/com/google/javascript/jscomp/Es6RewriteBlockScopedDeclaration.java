@@ -65,7 +65,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     Node nameNode = n.getFirstChild();
     if (!n.isClass() && !n.isFunction() && !nameNode.hasChildren()
         && (parent == null || !NodeUtil.isEnhancedFor(parent))
-        && !n.isCatch()) {
+        && !n.isCatch()
+        && !n.isFromExterns()) {
       nameNode.addChildToFront(
           IR.name("undefined").useSourceInfoIfMissingFrom(nameNode));
     }
