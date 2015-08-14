@@ -311,4 +311,29 @@ public final class AngularPassTest extends Es6CompilerTestCase {
             "}"),
         AngularPass.INJECT_NON_FUNCTION_ERROR);
   }
+
+  public void testNgInjectToArrowFunctions() {
+    testEs6("/** @ngInject */ var fn = (a, b, c)=>{};",
+        "var fn = (a, b, c)=>{}; fn['$inject']=['a', 'b', 'c'];");
+    testEs6("/** @ngInject */ var fn = ()=>{}",
+            "var fn = ()=>{}");
+  }
+
+  public void testNgInjectToFunctionsWithDestructuredParam() {
+    testErrorEs6("/** @ngInject */ function fn(a, {b, c}){}",
+        AngularPass.INJECTED_FUNCTION_HAS_DESTRUCTURED_PARAM);
+    testErrorEs6("/** @ngInject */ function fn(a, [b, c]){}",
+        AngularPass.INJECTED_FUNCTION_HAS_DESTRUCTURED_PARAM);
+    testErrorEs6("/** @ngInject */ function fn(a, {b, c}, d){}",
+        AngularPass.INJECTED_FUNCTION_HAS_DESTRUCTURED_PARAM);
+  }
+
+  public void testNgInjectToFunctionsWithDefaultValue() {
+    testErrorEs6("/** @ngInject */ function fn(a, b = 1){}",
+        AngularPass.INJECTED_FUNCTION_HAS_DEFAULT_VALUE);
+    testErrorEs6("/** @ngInject */ function fn(a, {b, c} = {b: 1, c: 2}){}",
+        AngularPass.INJECTED_FUNCTION_HAS_DEFAULT_VALUE);
+    testErrorEs6("/** @ngInject */ function fn(a, [b, c] = [1, 2]){}",
+        AngularPass.INJECTED_FUNCTION_HAS_DEFAULT_VALUE);
+  }
 }
