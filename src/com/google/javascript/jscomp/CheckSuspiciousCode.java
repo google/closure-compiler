@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeUtil.ValueType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -131,7 +132,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
 
   private static boolean reportIfNonObject(
       NodeTraversal t, Node n, DiagnosticType diagnosticType) {
-    if (NodeUtil.isImmutableResult(n) || n.getType() == Token.NOT) {
+    if (n.isAdd() || NodeUtil.getKnownValueType(n) != ValueType.UNDETERMINED) {
       t.getCompiler().report(
           t.makeError(n.getParent(), diagnosticType));
       return true;

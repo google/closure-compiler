@@ -159,6 +159,17 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
         "/** @constructor */ function Foo() {}; var foo = new Foo();"
         + "!foo", "Foo");
 
+    testReportInstanceOf("(4 + 5)", "Number");
+    testReportInstanceOf("('a' + 'b')", "String");
+    testReportInstanceOf("('a' + 5)", "String");
+
+    // The following five are from "Wat — Destroy All Software Talks"
+    testReportInstanceOf("([] + [])", "String");
+    testReportInstanceOf("([] + {})", "String");
+    testReportInstanceOf("({} + [])", "String");
+    testReportInstanceOf("({c:1} + [])", "String");
+    testReportInstanceOf("({} + {})", "Number"); // NaN
+
     testReportInstanceOf("!''", "String");
     testReportInstanceOf("!4", "Number");
     testReportInstanceOf("!(new Boolean(true))", "Boolean");
@@ -173,6 +184,7 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
 
     testSame("new String('') instanceof String");
     testSame("new Number(4) instanceof Number");
+    testSame("var a = new Number(4); a instanceof Number");
     testSame("new Boolean(true) instanceof Boolean");
     testSame("new Object() instanceof Object");
     testSame("Object.prototype instanceof Object");
@@ -181,9 +193,6 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
     testSame("({}) instanceof Object");
     testSame("/** @constructor */ function Foo() {"
         + " var a = this instanceof Foo; }");
-
-    // TODO(apavlov): It would be nice to have this report, too.
-    testSame("(4 + 5) instanceof Number");
 
     testSameEs6("(()=>42) instanceof Function");
     testSameEs6("class Person{} Person instanceof Function");
