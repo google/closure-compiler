@@ -36,7 +36,6 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     this.late = false;
-    enableLineNumberCheck(true);
 
     // TODO(nicksantos): Turn this on. There are some normalizations
     // that cause weirdness here.

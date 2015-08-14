@@ -31,11 +31,6 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
-    enableLineNumberCheck(true);
-  }
-
-  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass = new PeepholeOptimizationsPass(compiler,
           new PeepholeReplaceKnownMethods(late));

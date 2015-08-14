@@ -27,7 +27,6 @@ public final class StatementFusionTest extends CompilerTestCase  {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    enableLineNumberCheck(true);
     favorsCommas = false;
   }
 

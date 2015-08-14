@@ -42,7 +42,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    enableLineNumberCheck(true);
     enableNormalize(true);
     compareJsDoc = false;
   }

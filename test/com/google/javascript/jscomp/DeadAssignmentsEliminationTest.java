@@ -29,11 +29,6 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
-    super.enableLineNumberCheck(true);
-  }
-
-  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override

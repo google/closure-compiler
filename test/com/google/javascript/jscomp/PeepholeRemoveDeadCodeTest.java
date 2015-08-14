@@ -35,12 +35,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    enableLineNumberCheck(true);
-  }
-
-  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override

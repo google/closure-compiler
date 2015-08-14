@@ -38,7 +38,6 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   public void setUp() throws Exception {
     late = true;
     super.setUp();
-    enableLineNumberCheck(true);
     disableNormalize();
   }
 

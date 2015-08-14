@@ -36,12 +36,6 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
   private ImmutableList<AbstractPeepholeOptimization> currentPeepholePasses;
 
   @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    super.enableLineNumberCheck(true);
-  }
-
-  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(compiler,
         currentPeepholePasses.toArray(

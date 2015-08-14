@@ -25,11 +25,6 @@ import com.google.javascript.rhino.Node;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class PrepareAstTest extends CompilerTestCase {
-
-  public PrepareAstTest() {
-    super.enableLineNumberCheck(true);
-  }
-
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return null; // unused

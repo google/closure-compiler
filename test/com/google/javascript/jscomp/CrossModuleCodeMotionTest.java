@@ -32,7 +32,6 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
   @Override
   public void setUp() {
     parentModuleCanSeeSymbolsDeclaredInChildren = false;
-    super.enableLineNumberCheck(true);
   }
 
   @Override

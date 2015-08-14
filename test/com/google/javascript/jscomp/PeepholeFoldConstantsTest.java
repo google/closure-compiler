@@ -48,7 +48,6 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
   @Override
   public void setUp() {
     late = false;
-    enableLineNumberCheck(true);
   }
 
   @Override

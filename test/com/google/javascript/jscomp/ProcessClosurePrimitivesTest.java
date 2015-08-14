@@ -53,10 +53,6 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   private boolean preserveGoogRequires;
   private boolean banGoogBase;
 
-  public ProcessClosurePrimitivesTest() {
-    enableLineNumberCheck(true);
-  }
-
   @Override protected void setUp() {
     additionalCode = null;
     additionalEndCode = null;

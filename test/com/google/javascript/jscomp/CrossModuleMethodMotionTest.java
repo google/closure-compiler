@@ -43,7 +43,6 @@ public final class CrossModuleMethodMotionTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    super.enableLineNumberCheck(true);
     canMoveExterns = false;
     noStubs = false;
   }

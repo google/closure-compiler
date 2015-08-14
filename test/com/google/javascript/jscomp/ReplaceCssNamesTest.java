@@ -94,7 +94,6 @@ public final class ReplaceCssNamesTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableLineNumberCheck(true);
     cssNames = new HashMap<>();
     useReplacementMap = true;
     renamingMap = getPartialMap();

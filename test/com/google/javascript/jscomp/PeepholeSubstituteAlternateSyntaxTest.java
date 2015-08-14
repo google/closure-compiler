@@ -48,7 +48,6 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   public void setUp() throws Exception {
     late = true;
     super.setUp();
-    enableLineNumberCheck(true);
     disableNormalize();
   }
 

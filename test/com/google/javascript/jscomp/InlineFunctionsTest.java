@@ -44,7 +44,6 @@ public final class InlineFunctionsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableLineNumberCheck(true);
     enableInferConsts(true);
     allowGlobalFunctionInlining = true;
     allowBlockInlining = true;
@@ -2065,7 +2064,6 @@ public final class InlineFunctionsTest extends CompilerTestCase {
     @Override
     public void setUp() throws Exception {
       super.setUp();
-      super.enableLineNumberCheck(true);
       allowGlobalFunctionInlining = true;
     }
 

@@ -28,7 +28,6 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
 
   @Override
   protected void setUp() {
-    super.enableLineNumberCheck(true);
     enableNormalize();
     pattern = Pattern.USE_GLOBAL_TEMP;
   }
