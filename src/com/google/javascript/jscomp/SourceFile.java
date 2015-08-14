@@ -83,7 +83,12 @@ public class SourceFile implements StaticSourceFile, Serializable {
     if (fileName == null || fileName.isEmpty()) {
       throw new IllegalArgumentException("a source must have a name");
     }
-    this.fileName = fileName;
+
+    if (!"/".equals(File.separator)) {
+      this.fileName = fileName.replace(File.separator, "/");
+    } else {
+      this.fileName = fileName;
+    }
   }
 
   @Override

@@ -678,14 +678,14 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */\n"
                 + "function Parent() {\n"
                 + "/** @package */\n"
                 + "this.prop = 'foo';\n"
                 + "}\n;"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "/**"
                 + " * @constructor\n"
                 + " * @extends {Parent}\n"
@@ -705,9 +705,10 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testPackagePrivateAccessForProperties2() {
     testSame(ImmutableList.of(
-        SourceFile.fromCode("foo/bar.js", "/** @constructor */ function Foo() {}"),
+        SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
+            "/** @constructor */ function Foo() {}"),
         SourceFile.fromCode(
-            "baz/quux.js",
+            Compiler.joinPathParts("baz", "quux.js"),
             "/** @package */ Foo.prototype.bar = function() {};"
             + "Foo.prototype.baz = function() { this.bar(); }; (new Foo).bar();")));
   }
@@ -715,34 +716,36 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testPackagePrivateAccessForProperties3() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
-            "foo/bar.js",
+            Compiler.joinPathParts("foo", "bar.js"),
             "/** @constructor */ function Foo() {}"
             + "/** @package */ Foo.prototype.bar = function() {}; (new Foo).bar();"),
-        SourceFile.fromCode("foo/baz.js", "Foo.prototype.baz = function() { this.bar(); };")));
+        SourceFile.fromCode(Compiler.joinPathParts("foo", "baz.js"),
+            "Foo.prototype.baz = function() { this.bar(); };")));
   }
 
   public void testPackagePrivateAccessForProperties4() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
-            "foo/bar.js",
+            Compiler.joinPathParts("foo", "bar.js"),
             "/** @constructor */ function Foo() {}"
             + "/** @package */ Foo.prototype.bar = function() {};"),
         SourceFile.fromCode(
-            "foo/baz.js", "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
+            Compiler.joinPathParts("foo", "baz.js"),
+            "Foo.prototype['baz'] = function() { (new Foo()).bar(); };")));
   }
 
   public void testPackagePrivateAccessForProperties5() {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */\n"
                 + "function Parent () {\n"
                 + "  /** @package */\n"
                 + "  this.prop = 'foo';\n"
                 + "};"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "/**\n"
                 + " * @constructor\n"
                 + " * @extends {Parent}\n"
@@ -758,9 +761,10 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js", "/** @constructor */ function Foo() {} (new Foo).bar();"),
+                Compiler.joinPathParts("foo", "bar.js"),
+                "/** @constructor */ function Foo() {} (new Foo).bar();"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "/** @package */ Foo.prototype.bar = function() {};"
                 + "Foo.prototype.baz = function() { this.bar(); };")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
@@ -770,11 +774,11 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
                 + "/** @package */ Foo.prototype.bar = function() {};"
                 + "Foo.prototype.baz = function() { this.bar(); };"),
-            SourceFile.fromCode("baz/quux.js", "(new Foo).bar();")),
+            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "(new Foo).bar();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -782,11 +786,12 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
                 + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
-                "baz/quux.js", "/** @constructor */ function OtherFoo() { (new Foo).bar(); }")),
+                Compiler.joinPathParts("baz", "quux.js"),
+                "/** @constructor */ function OtherFoo() { (new Foo).bar(); }")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -794,11 +799,11 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
                 + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "/** @constructor \n * @extends {Foo} */ "
                 + "function SubFoo() { this.bar(); }")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
@@ -808,10 +813,10 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @const */ var foo = {};\n"
                 + "/** @package */ foo.bar = function() {};"),
-            SourceFile.fromCode("baz/quux.js", "foo.bar();")),
+            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "foo.bar();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -819,11 +824,11 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
                 + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "/** @constructor \n * @extends {Foo} */ "
                 + "function SubFoo() {};"
                 + "SubFoo.prototype.baz = function() { this.bar(); }")),
@@ -836,11 +841,11 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
                 + "/** @package */ Foo.prototype.bar = function() {};"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "/** @constructor \n * @extends {Foo} */ "
                 + "function SubFoo() {};"
                 + "SubFoo.prototype.bar = function() {};")),
@@ -854,14 +859,15 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/** @constructor */ function Foo() {} "
                 + "/** @package */ Foo.prototype.bar = function() {};"
                 + "/** @constructor \n * @extends {Foo} */ "
                 + "function SubFoo() {};"
                 + "SubFoo.prototype.bar = function() {};"),
             SourceFile.fromCode(
-                "baz/quux.js", "SubFoo.prototype.baz = function() { this.bar(); }")),
+                Compiler.joinPathParts("baz", "quux.js"),
+                "SubFoo.prototype.baz = function() { this.bar(); }")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -970,40 +976,40 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @public\n"
                 + " */\n"
                 + "/** @constructor @package */ function Foo() {};"),
-            SourceFile.fromCode("baz/quux.js", "new Foo();")),
+            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
   public void testPackageFileOverviewVisibilityDoesNotApplyToNameWithExplicitPublicVisibility() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
-            "foo/bar.js",
+            Compiler.joinPathParts("foo", "bar.js"),
             "/**\n"
             + " * @fileoverview\n"
             + " * @package\n"
             + " */\n"
             + "/** @constructor @public */ function Foo() {};"),
-        SourceFile.fromCode("baz/quux.js", "new Foo();")));
+        SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")));
   }
 
   public void testPackageFileOverviewVisibilityAppliesToNameWithoutExplicitVisibility() {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @package\n"
                 + " */\n"
                 + "/** @constructor */\n"
                 + "var Foo = function() {};\n"),
-            SourceFile.fromCode("baz/quux.js", "new Foo();")),
+            SourceFile.fromCode(Compiler.joinPathParts("baz", "quux.js"), "new Foo();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
   }
 
@@ -1011,7 +1017,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
       testPackageFileOverviewVisibilityDoesNotApplyToPropertyWithExplicitPublicVisibility() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
-            "foo/bar.js",
+            Compiler.joinPathParts("foo", "bar.js"),
             "/**\n"
             + " * @fileoverview\n"
             + " * @package\n"
@@ -1021,7 +1027,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             + "/** @public */\n"
             + "Foo.prototype.bar = function() {};\n"),
         SourceFile.fromCode(
-            "baz/quux.js",
+            Compiler.joinPathParts("baz", "quux.js"),
             "var foo = new Foo();\n"
             + "foo.bar();")));
   }
@@ -1035,7 +1041,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + "  * @fileoverview\n"
                 + "  * @package\n"
@@ -1043,7 +1049,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 + "goog.provide('foo.bar');"),
             SourceFile.fromCode("bar.js", "goog.require('foo')")),
         ImmutableList.of(SourceFile.fromCode("foo.js", "var foo={};"),
-            SourceFile.fromCode("foo/bar.js", "foo.bar={};"), SourceFile.fromCode("bar.js", "")),
+            SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"), "foo.bar={};"),
+            SourceFile.fromCode("bar.js", "")),
         null, null);
 
     compareJsDoc = true;
@@ -1057,7 +1064,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + "  * @fileoverview\n"
                 + "  * @package\n"
@@ -1068,7 +1075,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "bar.js",
                 "goog.require('foo');\n"
                 + "var x = foo;")),
-        ImmutableList.of(SourceFile.fromCode("foo/bar.js", "var foo={};foo.bar={};"),
+        ImmutableList.of(SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
+                "var foo={};foo.bar={};"),
             SourceFile.fromCode("foo.js", ""), SourceFile.fromCode("bar.js", "var x=foo")),
         null, null);
 
@@ -1083,7 +1091,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @package\n"
@@ -1095,7 +1103,8 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 "goog.require('one.two');\n"
                 + "var x = one.two;")),
         ImmutableList.of(
-            SourceFile.fromCode("foo/bar.js", "var one={};one.two={};one.two.three=function(){};"),
+            SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
+                "var one={};one.two={};one.two.three=function(){};"),
             SourceFile.fromCode("baz.js", "var x=one.two")),
         null, null);
 
@@ -1106,7 +1115,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @package\n"
@@ -1125,7 +1134,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @public\n"
@@ -1135,7 +1144,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 + "/** @package */\n"
                 + "Foo.prototype.bar = function() {};\n"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "var foo = new Foo();\n"
                 + "foo.bar();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
@@ -1144,7 +1153,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   public void testPublicFileOverviewVisibilityAppliesToPropertyWithoutExplicitVisibility() {
     testSame(ImmutableList.of(
         SourceFile.fromCode(
-            "foo/bar.js",
+            Compiler.joinPathParts("foo", "bar.js"),
             "/**\n"
             + " * @fileoverview\n"
             + " * @public\n"
@@ -1153,7 +1162,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
             + "Foo = function() {};\n"
             + "Foo.prototype.bar = function() {};\n"),
         SourceFile.fromCode(
-            "baz/quux.js",
+            Compiler.joinPathParts("baz", "quux.js"),
             "var foo = new Foo();\n"
             + "foo.bar();")));
   }
@@ -1162,7 +1171,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @package\n"
@@ -1171,7 +1180,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 + "Foo = function() {};\n"
                 + "Foo.prototype.bar = function() {};\n"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "var foo = new Foo();\n"
                 + "foo.bar();")),
         null, BAD_PACKAGE_PROPERTY_ACCESS);
@@ -1181,7 +1190,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     test(
         ImmutableList.of(
             SourceFile.fromCode(
-                "foo/bar.js",
+                Compiler.joinPathParts("foo", "bar.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @package\n"
@@ -1190,7 +1199,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
                 + "Foo = function() {};\n"
                 + "Foo.prototype.bar = function() {};\n"),
             SourceFile.fromCode(
-                "baz/quux.js",
+                Compiler.joinPathParts("baz", "quux.js"),
                 "/**\n"
                 + " * @fileoverview\n"
                 + " * @public\n"
@@ -1351,7 +1360,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testDeclarationAndConventionConflict1() {
     testError(
-        "/** @constructor */ function Foo() {}" + "/** @protected */ Foo.prototype.length_;",
+        "/** @constructor */ function Foo() {} /** @protected */ Foo.prototype.length_;",
         CONVENTION_MISMATCH);
   }
 
@@ -1364,7 +1373,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
 
   public void testDeclarationAndConventionConflict3() {
     testError(
-        "/** @constructor */ function Foo() {" + "  /** @protected */ this.length_ = 1;\n" + "}\n",
+        "/** @constructor */ function Foo() {  /** @protected */ this.length_ = 1;\n}\n",
         CONVENTION_MISMATCH);
   }
 

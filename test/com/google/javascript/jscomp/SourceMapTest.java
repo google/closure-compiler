@@ -40,7 +40,8 @@ public final class SourceMapTest extends SourceMapTestCase {
   public void testPrefixReplacement1() throws IOException {
     // mapping can be used to remove a prefix
     mappings = ImmutableList.of(new SourceMap.LocationMapping("pre/", ""));
-    checkSourceMap2("alert(1);", "pre/file1", "alert(2);", "pre/file2" , "{\n" +
+    checkSourceMap2("alert(1);", Compiler.joinPathParts("pre", "file1"), "alert(2);",
+        Compiler.joinPathParts("pre", "file2") , "{\n" +
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
@@ -52,8 +53,10 @@ public final class SourceMapTest extends SourceMapTestCase {
 
   public void testPrefixReplacement2() throws IOException {
     // mapping can be used to replace a prefix
-    mappings = ImmutableList.of(new SourceMap.LocationMapping("pre/file", "src"));
-    checkSourceMap2("alert(1);", "pre/file1", "alert(2);", "pre/file2" , "{\n" +
+    mappings = ImmutableList.of(
+        new SourceMap.LocationMapping("pre/file", "src"));
+    checkSourceMap2("alert(1);", Compiler.joinPathParts("pre", "file1"), "alert(2);",
+        "pre/file2" , "{\n" +
         "\"version\":3,\n" +
         "\"file\":\"testcode\",\n" +
         "\"lineCount\":1,\n" +
