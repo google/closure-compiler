@@ -230,6 +230,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(jqueryAliases);
     }
 
+    if (options.angularPass && !options.skipNonTranspilationPasses) {
+      checks.add(angularPass);
+    }
+
     if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
         && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
       checks.add(convertEs6TypedToEs6);
@@ -244,10 +248,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
-    }
-
-    if (options.angularPass && !options.skipNonTranspilationPasses) {
-      checks.add(angularPass);
     }
 
     if (options.generateExports && !options.skipNonTranspilationPasses) {
