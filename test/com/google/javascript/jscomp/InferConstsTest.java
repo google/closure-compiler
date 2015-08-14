@@ -85,6 +85,16 @@ public final class InferConstsTest extends TestCase {
     testConsts("for (const x of {a, b, c}) {}", "x");
   }
 
+  public void testFunctionParam() {
+    testConsts("var x = function(){};", "x");
+    testConsts("var x = ()=>{};", "x");
+    testConsts("function fn(a){var b = a + 1}; ", "a", "b");
+    testConsts("function fn(a = 1){var b = a + 1}; ", "a", "b");
+    testConsts("function fn(a, {b, c}){var d = a + 1}; ", "a", "d");
+    // TODO(user): Infer b and c to be const
+    testNotConsts("function fn(a, {b, c}){var d = a + 1}; ", "b", "c");
+  }
+
   public void testClass() {
     testConsts("var Foo = class {}", "Foo");
     testConsts("class Foo {}", "Foo");
