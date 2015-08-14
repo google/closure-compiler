@@ -114,13 +114,14 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       }
       return;
     }
-    JSDocInfo bestInfo = NodeUtil.getBestJSDocInfo(n);
-    if (bestInfo != null && bestInfo.isNoCollapse()
-        && (n.getType() == Token.GETELEM || n.getType() == Token.GETPROP)
-        && NodeUtil.isPrototypeProperty(n)) {
-      t.getCompiler().report(t.makeError(n, MISPLACED_ANNOTATION,
-          "@nocollapse", "This JSDoc has no effect on prototype"
-              + "properties."));
+    if (!NodeUtil.isPrototypePropertyDeclaration(n.getParent())) {
+      return;
+    }
+    JSDocInfo jsdoc = n.getJSDocInfo();
+    if (jsdoc != null && jsdoc.isNoCollapse()) {
+      t.getCompiler().report(
+          t.makeError(n, MISPLACED_ANNOTATION, "@nocollapse",
+              "This JSDoc has no effect on prototype properties."));
     }
   }
 

@@ -143,8 +143,15 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         MISPLACED_ANNOTATION);
   }
 
-  public void testAllowedNocollapseAnnotation() {
+  public void testAllowedNocollapseAnnotation1() {
     testSame("var foo = {}; /** @nocollapse */ foo.bar = true;");
+  }
+
+  public void testAllowedNocollapseAnnotation2() {
+    testSame(
+        "/** @constructor */ function Foo() {};\n"
+        + "var ns = {};\n"
+        + "/** @nocollapse */ ns.bar = Foo.prototype.blah;");
   }
 
   public void testMisplacedNocollapseAnnotation1() {
