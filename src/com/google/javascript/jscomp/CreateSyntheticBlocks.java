@@ -34,13 +34,13 @@ import javax.annotation.Nullable;
  * @author johnlenz@google.com (John Lenz)
  */
 class CreateSyntheticBlocks implements CompilerPass {
-  static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.warning(
+  static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.error(
       "JSC_UNMATCHED_START_MARKER", "Unmatched {0}");
 
-  static final DiagnosticType UNMATCHED_END_MARKER = DiagnosticType.warning(
+  static final DiagnosticType UNMATCHED_END_MARKER = DiagnosticType.error(
       "JSC_UNMATCHED_END_MARKER", "Unmatched {1} - {0} not in the same block");
 
-  static final DiagnosticType INVALID_MARKER_USAGE = DiagnosticType.warning(
+  static final DiagnosticType INVALID_MARKER_USAGE = DiagnosticType.error(
       "JSC_INVALID_MARKER_USAGE", "Marker {0} can only be used in a simple "
            + "call expression");
 

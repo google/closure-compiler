@@ -89,28 +89,25 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
   }
 
   public void testUnmatchedStartMarker() {
-    testSame("startMarker()", CreateSyntheticBlocks.UNMATCHED_START_MARKER);
+    testError("startMarker()", CreateSyntheticBlocks.UNMATCHED_START_MARKER);
   }
 
   public void testUnmatchedEndMarker1() {
-    testSame("endMarker()", CreateSyntheticBlocks.UNMATCHED_END_MARKER);
+    testError("endMarker()", CreateSyntheticBlocks.UNMATCHED_END_MARKER);
   }
 
   public void testUnmatchedEndMarker2() {
-    test("if(y){startMarker();x()}endMarker()",
-        "if(y){startMarker();x()}endMarker()", null,
-         CreateSyntheticBlocks.UNMATCHED_END_MARKER);
+    testError("if(y){startMarker();x()}endMarker()",
+        CreateSyntheticBlocks.UNMATCHED_END_MARKER);
   }
 
   public void testInvalid1() {
-    test("startMarker() && true",
-        "startMarker()", null,
-         CreateSyntheticBlocks.INVALID_MARKER_USAGE);
+    testError("startMarker() && true",
+        CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
 
   public void testInvalid2() {
-    test("false && endMarker()",
-        "", null,
+    testError("false && endMarker()",
          CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
 
@@ -126,5 +123,15 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
 
   public void testContainingBlockPreservation() {
     testSame("if(y){startMarker();x();endMarker()}");
+  }
+
+  public void testArrowFunction() {
+    testSameEs6("var y=()=>{startMarker();x();endMarker()}");
+    testErrorEs6(
+        "var y=()=>{startMarker();x();};endMarker()",
+        CreateSyntheticBlocks.UNMATCHED_END_MARKER);
+    testErrorEs6(
+        "var y=()=>startMarker();",
+        CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }
 }
