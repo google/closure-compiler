@@ -142,8 +142,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
 
     // Using the forward reaching definition search to find all the inline
     // candidates
-    new NodeTraversal(compiler, new GatherCandiates()).traverse(
-        t.getScopeRoot().getLastChild());
+    NodeTraversal.traverseEs6(compiler, t.getScopeRoot().getLastChild(), new GatherCandiates());
 
     // Compute the backward reaching use. The CFG can be reused.
     reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler);
@@ -235,7 +234,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         }
       };
 
-      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+      NodeTraversal.traverseEs6(compiler, cfgNode, gatherCb);
     }
   }
 
@@ -463,7 +462,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
           }
         }
       };
-      NodeTraversal.traverse(compiler, n, gatherCb);
+      NodeTraversal.traverseEs6(compiler, n, gatherCb);
     }
 
     /**
@@ -504,7 +503,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
         }
       };
 
-      NodeTraversal.traverse(compiler, cfgNode, gatherCb);
+      NodeTraversal.traverseEs6(compiler, cfgNode, gatherCb);
     }
   }
 
