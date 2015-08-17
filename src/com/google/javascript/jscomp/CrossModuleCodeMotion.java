@@ -260,9 +260,9 @@ class CrossModuleCodeMotion implements CompilerPass {
     // Recursive definition should not block movement.
     String name = ref.getNode().getString();
     boolean recursive = false;
-    Node rootNode = ref.getScope().getRootNode().getParent();
-    if (rootNode.isFunction()) {
-
+    Scope hoistTarget = ref.getScope().getClosestHoistScope();
+    if (hoistTarget.isFunctionBlockScope()) {
+      Node rootNode = hoistTarget.getRootNode().getParent();
       // CASE #1:
       String scopeFuncName = rootNode.getFirstChild().getString();
       Node scopeFuncParent = rootNode.getParent();

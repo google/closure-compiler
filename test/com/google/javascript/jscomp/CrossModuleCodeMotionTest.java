@@ -169,6 +169,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     });
   }
 
+  public void testFunctionMovement5c() {
+    // Try moving a recursive function declared differently, in a nested block scope.
+    JSModule[] modules = createModuleStar(
+      // m1
+      "var f = function(n){if(true){if(true){return (n<1)?1:f(n-1)}}};",
+      // m2
+      "var a = f(4);"
+    );
+
+    test(modules, new String[] {
+      // m1
+      "",
+      // m2
+      LINE_JOINER.join(
+          "var f = function(n){if(true){if(true){return (n<1)?1:f(n-1)}}};",
+          "var a = f(4);")
+    });
+  }
+
   public void testFunctionMovement6() {
     // Try out moving to the common ancestor
     JSModule[] modules = createModuleChain(
