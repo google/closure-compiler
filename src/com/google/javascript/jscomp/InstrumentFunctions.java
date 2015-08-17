@@ -119,7 +119,7 @@ class InstrumentFunctions implements CompilerPass {
       Node expr = IR.exprResult(call);
 
       Node addingRoot = compiler.getNodeForCodeInsertion(null);
-      addingRoot.addChildrenToFront(expr);
+      addingRoot.addChildrenToFront(expr.useSourceInfoIfMissingFromForTree(addingRoot));
       compiler.reportCodeChange();
     }
 
@@ -201,8 +201,8 @@ class InstrumentFunctions implements CompilerPass {
       NodeTraversal.traverse(compiler, body, this);
 
       if (!allPathsReturn(function)) {
-        Node call = newReportFunctionExitNode();
-        Node expr = IR.exprResult(call);
+        Node call = newReportFunctionExitNode(function);
+        Node expr = IR.exprResult(call).useSourceInfoIfMissingFromForTree(function);
         body.addChildToBack(expr);
         compiler.reportCodeChange();
       }
@@ -219,7 +219,7 @@ class InstrumentFunctions implements CompilerPass {
         return;
       }
 
-      Node call = newReportFunctionExitNode();
+      Node call = newReportFunctionExitNode(n);
       Node returnRhs = n.removeFirstChild();
       if (returnRhs != null) {
         call.addChildToBack(returnRhs);
@@ -228,11 +228,12 @@ class InstrumentFunctions implements CompilerPass {
       compiler.reportCodeChange();
     }
 
-    private Node newReportFunctionExitNode() {
+    private Node newReportFunctionExitNode(Node infoNode) {
       Node call = IR.call(
           IR.name(reportFunctionExitName),
           IR.number(functionId));
       call.putBooleanProp(Node.FREE_CALL, true);
+      call.useSourceInfoFromForTree(infoNode);
       return call;
     }
 
@@ -278,6 +279,7 @@ class InstrumentFunctions implements CompilerPass {
             IR.number(id));
         call.putBooleanProp(Node.FREE_CALL, true);
         Node expr = IR.exprResult(call);
+        expr.useSourceInfoFromForTree(n);
         body.addChildToFront(expr);
         compiler.reportCodeChange();
       }
@@ -291,6 +293,7 @@ class InstrumentFunctions implements CompilerPass {
             IR.name(definedFunctionName),
             IR.number(id));
         call.putBooleanProp(Node.FREE_CALL, true);
+        call.useSourceInfoFromForTree(n);
         Node expr = NodeUtil.newExpr(call);
 
         Node addingRoot = null;

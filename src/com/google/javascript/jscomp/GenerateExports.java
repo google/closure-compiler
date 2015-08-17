@@ -151,7 +151,7 @@ class GenerateExports implements CompilerPass {
               context.getNode(), exportPropertyFunction));
     }
 
-    Node expression = IR.exprResult(call);
+    Node expression = IR.exprResult(call).useSourceInfoIfMissingFromForTree(node);
     annotate(expression);
 
     addStatement(context, expression);

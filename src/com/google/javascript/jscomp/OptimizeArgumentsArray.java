@@ -256,7 +256,8 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     for (int i = 0; i < numExtraArgs; i++) {
       String name = getNewName();
       argNames[i] = name;
-      parametersList.addChildrenToBack(IR.name(name));
+      parametersList.addChildToBack(
+          IR.name(name).useSourceInfoIfMissingFrom(parametersList));
       changed = true;
     }
 

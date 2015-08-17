@@ -34,11 +34,6 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
-    super.enableLineNumberCheck(false);
-  }
-
-  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new OptimizeArgumentsArray(compiler, "p");
   }

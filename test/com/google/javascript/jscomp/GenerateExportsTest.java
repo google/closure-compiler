@@ -48,8 +48,6 @@ public final class GenerateExportsTest extends Es6CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    super.enableLineNumberCheck(false);
-
     this.allowNonGlobalExports  = true;
   }
 
