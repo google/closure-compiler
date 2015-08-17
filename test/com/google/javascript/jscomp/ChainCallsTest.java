@@ -64,6 +64,24 @@ public final class ChainCallsTest extends CompilerTestCase {
         + "f.bar().baz();\n");
   }
 
+  public void testCallInIfInFunction() {
+    test(
+        LINE_JOINER.join(
+            "function blah() {",
+            "  /** @constructor */ function Foo() {}",
+            "  Foo.prototype.bar = function() { return this; };",
+            "  var f = new Foo();",
+            "  if (true) {f.bar(); f.bar()}",
+            "}"),
+        LINE_JOINER.join(
+            "function blah() {",
+            "  /** @constructor */ function Foo() {}",
+            "  Foo.prototype.bar = function() { return this; };",
+            "  var f = new Foo();",
+            "  if (true) {f.bar().bar()}",
+            "}"));
+  }
+
   public void testDifferentInstance() {
     testSame(
         ""

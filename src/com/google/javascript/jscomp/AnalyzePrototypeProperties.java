@@ -144,11 +144,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
   @Override
   public void process(Node externRoot, Node root) {
     if (!canModifyExterns) {
-      NodeTraversal.traverse(compiler, externRoot,
+      NodeTraversal.traverseEs6(compiler, externRoot,
           new ProcessExternProperties());
     }
 
-    NodeTraversal.traverse(compiler, root, new ProcessProperties());
+    NodeTraversal.traverseEs6(compiler, root, new ProcessProperties());
 
     FixedPointGraphTraversal<NameInfo, JSModule> t =
         FixedPointGraphTraversal.newTraversal(new PropagateReferences());
@@ -199,38 +199,41 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
-      Node n = t.getCurrentNode();
-      if (n.isFunction()) {
+      Scope scope = t.getScope();
+      if (scope.isFunctionBlockScope()) {
+        Node n = scope.getRootNode().getParent();
         String propName = getPrototypePropertyNameFromRValue(n);
         if (propName != null) {
           symbolStack.push(
               new NameContext(
                   getNameInfoForName(propName, PROPERTY),
-                  t.getScope()));
+                  scope));
         } else if (isGlobalFunctionDeclaration(t, n)) {
           Node parent = n.getParent();
           String name = parent.isName() ?
               parent.getString() /* VAR */ :
               n.getFirstChild().getString() /* named function */;
           symbolStack.push(
-              new NameContext(getNameInfoForName(name, VAR), t.getScope()));
+              new NameContext(getNameInfoForName(name, VAR), scope));
         } else {
           // NOTE(nicksantos): We use the same anonymous node for all
           // functions that do not have reasonable names. I can't remember
           // at the moment why we do this. I think it's because anonymous
           // nodes can never have in-edges. They're just there as a placeholder
           // for scope information, and do not matter in the edge propagation.
-          symbolStack.push(new NameContext(anonymousNode, t.getScope()));
+          symbolStack.push(new NameContext(anonymousNode, scope));
         }
-      } else {
-        Preconditions.checkState(t.inGlobalScope());
-        symbolStack.push(new NameContext(globalNode, t.getScope()));
+      } else if (scope.isGlobal()) {
+        symbolStack.push(new NameContext(globalNode, scope));
       }
     }
 
     @Override
     public void exitScope(NodeTraversal t) {
-      symbolStack.pop();
+      Scope scope = t.getScope();
+      if (scope.isGlobal() || scope.isFunctionBlockScope()) {
+        symbolStack.pop();
+      }
     }
 
     @Override
@@ -364,7 +367,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       // we're looking at is the root of the current local scope.
       Scope s = t.getScope();
       if (!(s.isGlobal() ||
-            s.getDepth() == 1 && s.getRootNode() == n)) {
+            s.getDepth() == 2 && s.getRootNode().getParent() == n)) {
         return false;
       }
 
