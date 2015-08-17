@@ -22,6 +22,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
+import javax.annotation.Nullable;
+
 /**
  * Enforces that invocations of the method {@code goog.string.Const.from} are
  * done with an argument which is a string literal.
@@ -36,8 +38,7 @@ import com.google.javascript.rhino.Token;
  * literal or concatenation thereof.
  * </ol>
  */
-class ConstParamCheck extends AbstractPostOrderCallback
-    implements CompilerPass {
+class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass {
 
   private static final String CONST_FUNCTION_NAME = "goog.string.Const.from";
   private static final String CONST_FUNCTION_NAME_COLLAPSED = "goog$string$Const$from";
@@ -148,7 +149,10 @@ class ConstParamCheck extends AbstractPostOrderCallback
    * Returns true iff the value associated with the node is a JS string literal,
    * or a concatenation thereof.
    */
-  private static boolean isStringLiteralValue(Node node) {
+  private static boolean isStringLiteralValue(@Nullable Node node) {
+    if (node == null) {
+      return false;
+    }
     if (node.getType() == Token.STRING) {
       return true;
     } else if (node.getType() == Token.ADD) {
