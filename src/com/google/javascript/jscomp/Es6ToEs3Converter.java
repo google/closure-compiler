@@ -532,6 +532,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
             jsDoc.recordExport();
           }
+          if (member.isStaticMember()) {
+            jsDoc.recordNoCollapse();
+          }
           membersToDeclare.put(member.getString(), jsDoc.build());
         }
       } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {

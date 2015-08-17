@@ -995,7 +995,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct */",
             "var C = function() {};",
-            "/** @type {?} */",
+            "/** @nocollapse @type {?} */",
             "C.foo;",
             "Object.defineProperties(C, {",
             "  foo: {",
@@ -1011,7 +1011,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct */",
             "var C = function() {};",
-            "/** @type {?} */",
+            "/** @nocollapse @type {?} */",
             "C.foo;",
             "Object.defineProperties(C, {",
             "  foo: {",
@@ -1036,7 +1036,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct */",
             "var C = function() {};",
-            "/** @type {?} */",
+            "/** @nocollapse @type {?} */",
             "C.foo;",
             "Object.defineProperties(C, {",
             "  foo: {",
