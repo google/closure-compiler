@@ -429,6 +429,73 @@ public final class SuggestedFix {
     }
 
     /**
+     * Deletes an argument from an existing function call, including any JS doc that precedes it.
+     * WARNING: If jsdoc erroneously follows the argument, it will not be removed as the parser
+     *     considers the comment to belong to the next argument.
+     */
+    public Builder deleteArgument(Node n, int position) {
+      Preconditions.checkArgument(
+          n.isCall(), "deleteArgument is only applicable to function call nodes.");
+
+      // A CALL node's first child is the name of the function being called, and subsequent children
+      // are the arguments being passed to that function.
+      int numArguments = n.getChildCount() - 1;
+      Preconditions.checkState(numArguments > 0,
+          "deleteArgument() cannot be used on a function call with no arguments");
+      Preconditions.checkArgument(position >= 0 && position < numArguments,
+          "The specified position must be less than the number of arguments.");
+      Node argument = n.getFirstChild().getNext();
+
+      // Points at the first position in the code we will remove.
+      int startOfArgumentToRemove = -1;
+      // Points one past the last position in the code we will remove.
+      int endOfArgumentToRemove = -1;
+      int i = 0;
+      while (argument != null) {
+        // If we are removing the first argument, we remove from the start of it (including any
+        // jsdoc).  Otherwise, we remove from the end of the previous argument (to remove the comma
+        // and any whitespace).
+
+        // If we are removing the first argument and it's not the only argument, we remove to the
+        // beginning of the next argument (to remove the comma and any whitespace).  Otherwise we
+        // remove to the end of the argument.
+        if (i < position) {
+          startOfArgumentToRemove = argument.getSourceOffset() + argument.getLength();
+        } else if (i == position) {
+          if (position == 0) {
+            startOfArgumentToRemove = argument.getSourceOffset();
+
+            // If we have a prefix jsdoc, back up further and remove that too.
+            JSDocInfo jsDoc = argument.getJSDocInfo();
+            if (jsDoc != null) {
+              int jsDocPosition = jsDoc.getOriginalCommentPosition();
+              if (jsDocPosition < startOfArgumentToRemove) {
+                startOfArgumentToRemove = jsDocPosition;
+              }
+            }
+          }
+
+          endOfArgumentToRemove = argument.getSourceOffset() + argument.getLength();
+        } else if (i > position) {
+          if (position == 0) {
+            endOfArgumentToRemove = argument.getSourceOffset();
+          }
+          // We have all the information we need to remove the argument, break early.
+          break;
+        }
+
+        argument = argument.getNext();
+        i++;
+      }
+
+      // Remove the argument by replacing it with an empty string.
+      int lengthOfArgumentToRemove = endOfArgumentToRemove - startOfArgumentToRemove;
+      replacements.put(n.getSourceFileName(),
+          new CodeReplacement(startOfArgumentToRemove, lengthOfArgumentToRemove, ""));
+      return this;
+    }
+
+    /**
      * Adds a goog.require for the given namespace to the file if it does not
      * already exist.
      */
