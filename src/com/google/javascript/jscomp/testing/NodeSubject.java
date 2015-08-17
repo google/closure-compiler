@@ -58,6 +58,10 @@ public final class NodeSubject extends Subject<NodeSubject, Node> {
     assertEquals(charno, getSubject().getCharno());
   }
 
+  public void hasLineno(int lineno) {
+    assertEquals(lineno, getSubject().getLineno());
+  }
+
   public void hasLength(int length) {
     assertEquals(length, getSubject().getLength());
   }
