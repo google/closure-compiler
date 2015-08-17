@@ -43,7 +43,9 @@ class CheckUnreachableCode implements ScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal t) {
-    initScope(t.getControlFlowGraph());
+    if (NodeUtil.isValidCfgRoot(t.getScopeRoot())) {
+      initScope(t.getControlFlowGraph());
+    }
   }
 
   @Override
