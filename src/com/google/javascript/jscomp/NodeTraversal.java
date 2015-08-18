@@ -780,7 +780,7 @@ public class NodeTraversal {
    * Determines whether the traversal is currently in the global scope.
    */
   boolean inGlobalScope() {
-    return getScopeDepth() == 1;
+    return getScopeDepth() == 0;
   }
 
   // Not dual of inGlobalScope, because of block scoping.
@@ -790,7 +790,9 @@ public class NodeTraversal {
   }
 
   int getScopeDepth() {
-    return scopes.size() + scopeRoots.size();
+    int sum = scopes.size() + scopeRoots.size();
+    Preconditions.checkState(sum > 0);
+    return sum - 1; // Use 0-based scope depth to be consistent within the compiler
   }
 
   public boolean hasScope() {
