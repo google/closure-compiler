@@ -669,6 +669,11 @@ public final class JSTypeCreatorFromJSDoc {
 
     if (jsdoc != null) {
       typeParameters = jsdoc.getTemplateTypeNames();
+      // We don't properly support the type transformation language; we treat
+      // its type variables as ordinary type variables.
+      if (typeParameters.isEmpty()) {
+        typeParameters = jsdoc.getTypeTransformations().keySet().asList();
+      }
       if (!typeParameters.isEmpty()) {
         if (parent.isSetterDef() || parent.isGetterDef()) {
           ignoreJsdoc = true;

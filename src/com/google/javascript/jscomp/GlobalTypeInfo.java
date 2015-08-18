@@ -1077,7 +1077,8 @@ class GlobalTypeInfo implements CompilerPass {
           Node grandparent = parent.getParent();
           if (grandparent == null
               || !isPrototypePropertyDeclaration(grandparent)) {
-            visitFunctionLate(n, null);
+            RawNominalType ownerType = maybeGetOwnerType(n, parent);
+            visitFunctionLate(n, ownerType);
           }
           break;
         case Token.NAME: {
@@ -1924,6 +1925,23 @@ class GlobalTypeInfo implements CompilerPass {
       } else {
         rawType.addUndeclaredProtoProperty(pname, defSite);
       }
+    }
+
+    // TODO(dimvar): This method is used to avoid a spurious warning in ES6
+    // externs, where a prototype property is declared using GETELEM.
+    // We'll remove this when we properly handle ES6.
+    private RawNominalType maybeGetOwnerType(Node funNode, Node parent) {
+      Preconditions.checkArgument(funNode.isFunction());
+      if (parent.isAssign() && parent.getFirstChild().isGetElem()) {
+        Node recv = parent.getFirstChild().getFirstChild();
+        if (recv.isGetProp() && recv.getLastChild().getString().equals("prototype")) {
+          QualifiedName qname = QualifiedName.fromNode(recv.getFirstChild());
+          if (qname != null) {
+            return this.currentScope.getNominalType(qname);
+          }
+        }
+      }
+      return null;
     }
 
     private boolean isNamedType(Node getProp) {

@@ -13596,4 +13596,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testNoSpuriousWarningsInES6externs() {
+    typeCheckCustomExterns(Joiner.on('\n').join(
+        DEFAULT_EXTERNS,
+        "/**",
+        " * @interface",
+        " * @template VALUE",
+        " */",
+        "function I() {}",
+        "/** @return {VALUE} */",
+        "I.prototype['some-es6-symbol'] = function() {};"),
+        "");
+
+    typeCheckCustomExterns(Joiner.on('\n').join(
+        DEFAULT_EXTERNS,
+        "/**",
+        " * @return {T}",
+        " * @template T := number =:",
+        " */",
+        "function usesTTL() {}"),
+        "");
+  }
 }
