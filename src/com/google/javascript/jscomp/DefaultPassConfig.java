@@ -2377,22 +2377,12 @@ public final class DefaultPassConfig extends PassConfig {
     char[] reservedChars = options.anonymousFunctionNaming.getReservedCharacters();
     switch (options.propertyRenaming) {
       case HEURISTIC:
+      case AGGRESSIVE_HEURISTIC:
+      case PRIVATE:
         RenamePrototypes rproto =
             new RenamePrototypes(compiler, options.propertyRenaming, reservedChars, prevPropertyMap);
         rproto.process(externs, root);
         return rproto.getPropertyMap();
-
-      case AGGRESSIVE_HEURISTIC:
-        RenamePrototypes rproto2 =
-            new RenamePrototypes(compiler, options.propertyRenaming, reservedChars, prevPropertyMap);
-        rproto2.process(externs, root);
-        return rproto2.getPropertyMap();
-
-      case PRIVATE:
-          RenamePrototypes rproto3 =
-              new RenamePrototypes(compiler, options.propertyRenaming, reservedChars, prevPropertyMap);
-          rproto3.process(externs, root);
-          return rproto3.getPropertyMap();
 
       case ALL_UNQUOTED:
         RenameProperties rprop =
