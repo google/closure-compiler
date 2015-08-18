@@ -705,10 +705,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(aliasStrings);
     }
 
-    if (options.aliasExternals) {
-      passes.add(aliasExternals);
-    }
-
     // Passes after this point can no longer depend on normalized AST
     // assumptions.
     passes.add(markUnnormalized);
@@ -2273,15 +2269,6 @@ public final class DefaultPassConfig extends PassConfig {
           anonymousFunctionNameMap = naf.getFunctionMap();
         }
       };
-    }
-  };
-
-  /** Alias external symbols. */
-  private final PassFactory aliasExternals = new PassFactory("aliasExternals", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new AliasExternals(compiler, compiler.getModuleGraph(),
-          options.unaliasableGlobals, options.aliasableGlobals);
     }
   };
 

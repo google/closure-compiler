@@ -1670,18 +1670,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, expected);
   }
 
-  public void testAliasExterns() {
-    CompilerOptions options = createCompilerOptions();
-    String code = "function f() { return window + window + window + window; }";
-    String expected = "var GLOBAL_window = window;" +
-        "function f() { return GLOBAL_window + GLOBAL_window + " +
-        "               GLOBAL_window + GLOBAL_window; }";
-    testSame(options, code);
-
-    options.setAliasExternals(true);
-    test(options, code, expected);
-  }
-
   public void testRenameVars1() {
     CompilerOptions options = createCompilerOptions();
     String code =
@@ -1970,7 +1958,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     // are de-duped before that happens.
     CompilerOptions options = createCompilerOptions();
 
-    options.setAliasExternals(true);
     externs = ImmutableList.of(SourceFile.fromCode("externs", "extern.foo"));
 
     test(options,
@@ -2684,7 +2671,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
-    options.setAliasExternals(true);
     String code =
         "window.offsetWidth;";
     String result =
