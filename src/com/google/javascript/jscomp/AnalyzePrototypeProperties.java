@@ -199,9 +199,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
-      Scope scope = t.getScope();
-      if (scope.isFunctionBlockScope()) {
-        Node n = scope.getRootNode().getParent();
+      Node scopeRoot = t.getScopeRoot();
+      if (NodeUtil.isFunctionBlock(scopeRoot)) {
+        Node n = scopeRoot.getParent();
+        Scope scope = t.getScope();
         String propName = getPrototypePropertyNameFromRValue(n);
         if (propName != null) {
           symbolStack.push(
@@ -223,15 +224,14 @@ class AnalyzePrototypeProperties implements CompilerPass {
           // for scope information, and do not matter in the edge propagation.
           symbolStack.push(new NameContext(anonymousNode, scope));
         }
-      } else if (scope.isGlobal()) {
-        symbolStack.push(new NameContext(globalNode, scope));
+      } else if (t.inGlobalScope()) {
+        symbolStack.push(new NameContext(globalNode, t.getScope()));
       }
     }
 
     @Override
     public void exitScope(NodeTraversal t) {
-      Scope scope = t.getScope();
-      if (scope.isGlobal() || scope.isFunctionBlockScope()) {
+      if (t.inGlobalScope() || NodeUtil.isFunctionBlock(t.getScopeRoot())) {
         symbolStack.pop();
       }
     }
@@ -313,7 +313,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           // If it is not a global, it might be accessing a local of the outer
           // scope. If that's the case the functions between the variable's
           // declaring scope and the variable reference scope cannot be moved.
-          } else if (var.getScope() != t.getScope()){
+          } else if (var.getScope() != t.getScope()) {
             for (int i = symbolStack.size() - 1; i >= 0; i--) {
               NameContext context = symbolStack.get(i);
               if (context.scope == var.getScope()) {
@@ -365,14 +365,12 @@ class AnalyzePrototypeProperties implements CompilerPass {
     private boolean isGlobalFunctionDeclaration(NodeTraversal t, Node n) {
       // Make sure we're either in the global scope, or the function
       // we're looking at is the root of the current local scope.
-      Scope s = t.getScope();
-      if (!(s.isGlobal() ||
-            s.getDepth() == 2 && s.getRootNode().getParent() == n)) {
-        return false;
+      if (t.inGlobalScope()
+          || t.getScopeDepth() == 2 && t.getScopeRoot().getParent() == n) {
+        return NodeUtil.isFunctionDeclaration(n) ||
+            n.isFunction() && n.getParent().isName();
       }
-
-      return NodeUtil.isFunctionDeclaration(n) ||
-          n.isFunction() && n.getParent().isName();
+      return false;
     }
 
     /**
