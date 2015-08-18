@@ -521,7 +521,7 @@ class CollapseProperties implements CompilerPass {
 
       if (p.canCollapse()) {
         flattenReferencesTo(p, propAlias);
-      } else if (p.isSimpleStubDeclaration()) {
+      } else if (p.isSimpleStubDeclaration() && !p.isCollapsingExplicitlyDenied()) {
         flattenSimpleStubDeclaration(p, propAlias);
       }
 

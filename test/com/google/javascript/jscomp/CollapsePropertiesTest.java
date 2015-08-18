@@ -53,6 +53,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testCollapse() {
     test("var a = {}; a.b = {}; var c = a.b;",
          "var a$b = {}; var c = a$b");
+
+    testSame("var a = {}; /** @nocollapse */ a.b;");
   }
 
   public void testMultiLevelCollapse() {

@@ -1003,7 +1003,6 @@ class GlobalNamespace
 
     void addRef(Ref ref) {
       addRefInternal(ref);
-      JSDocInfo info;
       switch (ref.type) {
         case SET_FROM_GLOBAL:
           if (declaration == null) {
@@ -1014,7 +1013,7 @@ class GlobalNamespace
           break;
         case SET_FROM_LOCAL:
           localSets++;
-          info = ref.getNode() == null ? null :
+          JSDocInfo info = ref.getNode() == null ? null :
               NodeUtil.getBestJSDocInfo(ref.getNode());
           if (info != null && info.isNoCollapse()) {
             localSetsWithNoCollapse++;
@@ -1022,6 +1021,10 @@ class GlobalNamespace
           break;
         case PROTOTYPE_GET:
         case DIRECT_GET:
+          Node node = ref.getNode();
+          if (node != null && node.isGetProp() && node.getParent().isExprResult()) {
+            docInfo = node.getJSDocInfo();
+          }
           totalGets++;
           break;
         case ALIASING_GET:
