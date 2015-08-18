@@ -60,7 +60,7 @@ import javax.annotation.Nullable;
 class RenamePrototypes implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private final boolean aggressiveRenaming;
+  private final PropertyRenamingPolicy propertyRenamingPolicy;
   private final char[] reservedCharacters;
 
   /** Previously used prototype renaming map. */
@@ -114,17 +114,26 @@ class RenamePrototypes implements CompilerPass {
         return true;
       }
 
-      if (aggressiveRenaming) {
+      if (propertyRenamingPolicy == PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC) {
         return true;
       }
 
-      for (int i = 0, n = oldName.length(); i < n; i++) {
-        char ch = oldName.charAt(i);
+      if ((propertyRenamingPolicy == PropertyRenamingPolicy.HEURISTIC) && matchesHeuristic(oldName)) {
+        return true;
+      }
+
+      return false;
+    }
+
+    private boolean matchesHeuristic(String name) {
+      for (int i = 0, n = name.length(); i < n; i++) {
+        char ch = name.charAt(i);
 
         if (Character.isUpperCase(ch) || !Character.isLetter(ch)) {
           return true;
         }
       }
+
       return false;
     }
 
@@ -179,18 +188,18 @@ class RenamePrototypes implements CompilerPass {
    * Creates an instance.
    *
    * @param compiler The JSCompiler
-   * @param aggressiveRenaming Whether to rename aggressively
+   * @param propertyRenamingPolicy Whether to rename aggressively
    * @param reservedCharacters If specified these characters won't be used in
    *   generated names
    * @param prevUsedRenameMap The rename map used in the previous compilation
    */
   RenamePrototypes(
       AbstractCompiler compiler,
-      boolean aggressiveRenaming,
+      PropertyRenamingPolicy propertyRenamingPolicy,
       @Nullable char[] reservedCharacters,
       @Nullable VariableMap prevUsedRenameMap) {
     this.compiler = compiler;
-    this.aggressiveRenaming = aggressiveRenaming;
+    this.propertyRenamingPolicy = propertyRenamingPolicy;
     this.reservedCharacters = reservedCharacters;
     this.prevUsedRenameMap = prevUsedRenameMap;
   }

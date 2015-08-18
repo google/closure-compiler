@@ -29,7 +29,7 @@ public final class RenamePrototypesTest extends CompilerTestCase {
 
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
-    return renamePrototypes = new RenamePrototypes(compiler, true, null, prevUsedRenameMap);
+    return renamePrototypes = new RenamePrototypes(compiler, PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC, null, prevUsedRenameMap);
   }
 
   @Override

@@ -1610,26 +1610,32 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     String code =
         "function f() { return this.foo + this['bar'] + this.Baz; }" +
-        "f.prototype.bar = 3; f.prototype.Baz = 3;";
+        "f.prototype.bar = 3; f.prototype.bar_ = 3; f.prototype.Baz = 3;";
     String heuristic =
         "function f() { return this.foo + this['bar'] + this.a; }"
-            + "f.prototype.bar = 3; f.prototype.a = 3;";
-    String aggHeuristic =
+            + "f.prototype.bar = 3; f.prototype.b = 3; f.prototype.a = 3;";
+    String aggressiveHeuristic =
         "function f() { return this.foo + this['b'] + this.a; } "
-            + "f.prototype.b = 3; f.prototype.a = 3;";
-    String all =
-        "function f() { return this.c + this['bar'] + this.a; }"
-            + "f.prototype.b = 3; f.prototype.a = 3;";
+            + "f.prototype.b = 3; f.prototype.c = 3; f.prototype.a = 3;";
+    String privateOnly =
+         "function f() { return this.foo + this['bar'] + this.Baz; }"
+            + "f.prototype.bar = 3; f.prototype.a = 3; f.prototype.Baz = 3;";
+    String allUnquoted =
+        "function f() { return this.d + this['bar'] + this.a; }"
+            + "f.prototype.b = 3; f.prototype.c = 3; f.prototype.a = 3;";
     testSame(options, code);
 
     options.setPropertyRenaming(PropertyRenamingPolicy.HEURISTIC);
     test(options, code, heuristic);
 
     options.setPropertyRenaming(PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC);
-    test(options, code, aggHeuristic);
+    test(options, code, aggressiveHeuristic);
+
+    options.setPropertyRenaming(PropertyRenamingPolicy.PRIVATE);
+    test(options, code, privateOnly);
 
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
-    test(options, code, all);
+    test(options, code, allUnquoted);
   }
 
   public void testConvertToDottedProperties() {
