@@ -107,6 +107,8 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_POSSIBLY_INEXISTENT_PROPERTY",
           "Property {0} may not be present on {1}.");
 
+  // Not part of ALL_DIAGNOSTICS because it should not be enabled with
+  // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
   static final DiagnosticType NULLABLE_DEREFERENCE =
       DiagnosticType.disabled(
           "JSC_NTI_NULLABLE_DEREFERENCE",
@@ -287,7 +289,6 @@ final class NewTypeInference implements CompilerPass {
       NOT_A_CONSTRUCTOR,
       NOT_CALLABLE,
       NOT_UNIQUE_INSTANTIATION,
-      NULLABLE_DEREFERENCE,
       POSSIBLY_INEXISTENT_PROPERTY,
       PROPERTY_ACCESS_ON_NONOBJECT,
       RETURN_NONDECLARED_TYPE,

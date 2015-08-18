@@ -100,10 +100,11 @@ public class DiagnosticGroups {
       + "inferredConstCheck, internetExplorerChecks, invalidCasts, "
       + "misplacedTypeAnnotation, missingGetCssName, missingProperties, "
       + "missingProvide, missingRequire, missingReturn, msgDescriptions"
-      + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, "
-      + "strictModuleDepCheck, typeInvalidation, "
-      + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, unusedLocalVariables, "
-      + "unusedPrivateMembers, uselessCode, useOfGoogBase, visibility";
+      + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, "
+      + "suspiciousCode, strictModuleDepCheck, typeInvalidation, "
+      + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, "
+      + "unusedLocalVariables, unusedPrivateMembers, uselessCode, "
+      + "useOfGoogBase, visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -217,8 +218,8 @@ public class DiagnosticGroups {
   // NOTE(dimvar): it'd be nice to add TypedScopeCreator.ALL_DIAGNOSTICS here,
   // but we would first need to cleanup projects that would break because
   // they set --jscomp_error=checkTypes.
-  public static final DiagnosticGroup CHECK_TYPES =
-      DiagnosticGroups.registerGroup("checkTypes",
+  public static final DiagnosticGroup OLD_CHECK_TYPES =
+      DiagnosticGroups.registerGroup("oldCheckTypes",  // undocumented
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
 
@@ -228,6 +229,11 @@ public class DiagnosticGroups {
           JSTypeCreatorFromJSDoc.ALL_DIAGNOSTICS,
           GlobalTypeInfo.ALL_DIAGNOSTICS,
           NewTypeInference.ALL_DIAGNOSTICS);
+
+  public static final DiagnosticGroup CHECK_TYPES =
+      DiagnosticGroups.registerGroup("checkTypes",
+          OLD_CHECK_TYPES,
+          NEW_CHECK_TYPES);
 
   public static final DiagnosticGroup NEW_CHECK_TYPES_ALL_CHECKS =
       DiagnosticGroups.registerGroup("newCheckTypesAllChecks",

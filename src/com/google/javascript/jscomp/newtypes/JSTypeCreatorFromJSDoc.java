@@ -72,6 +72,8 @@ public final class JSTypeCreatorFromJSDoc {
           "JSC_NTI_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
           "@implements used without @constructor or @interface for {0}");
 
+  // Not part of ALL_DIAGNOSTICS because it should not be enabled with
+  // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
   public static final DiagnosticType CONFLICTING_SHAPE_TYPE =
       DiagnosticType.disabled(
           "JSC_NTI_CONFLICTING_SHAPE_TYPE",
@@ -176,7 +178,6 @@ public final class JSTypeCreatorFromJSDoc {
       CIRCULAR_TYPEDEF_ENUM,
       CONFLICTING_EXTENDED_TYPE,
       CONFLICTING_IMPLEMENTED_TYPE,
-      CONFLICTING_SHAPE_TYPE,
       DICT_IMPLEMENTS_INTERF,
       ENUM_IS_TOP,
       ENUM_IS_UNION,
