@@ -386,8 +386,8 @@ public final class SimpleDefinitionFinderTest extends CompilerTestCase {
     @Override
     public void process(Node externs, Node root) {
       passUnderTest.process(externs, root);
-      NodeTraversal.traverse(compiler, externs, this);
-      NodeTraversal.traverse(compiler, root, this);
+      NodeTraversal.traverseEs6(compiler, externs, this);
+      NodeTraversal.traverseEs6(compiler, root, this);
 
       for (DefinitionSite defSite : passUnderTest.getDefinitionSites()) {
         Node node = defSite.node;

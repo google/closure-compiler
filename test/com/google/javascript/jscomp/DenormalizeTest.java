@@ -120,8 +120,8 @@ public final class DenormalizeTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverse(compiler, root, normalizePass);
-      NodeTraversal.traverse(compiler, root, denormalizePass);
+      NodeTraversal.traverseEs6(compiler, root, normalizePass);
+      NodeTraversal.traverseEs6(compiler, root, denormalizePass);
     }
   }
 

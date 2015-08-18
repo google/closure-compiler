@@ -112,7 +112,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia =
               new SourceInformationAnnotator("test", false /* doSanityChecks */);
-          NodeTraversal.traverse(compiler, js, sia);
+          NodeTraversal.traverseEs6(compiler, js, sia);
 
           DisambiguateProperties.forJSTypeSystem(compiler, propertiesToErrorFor)
               .process(externs, js);

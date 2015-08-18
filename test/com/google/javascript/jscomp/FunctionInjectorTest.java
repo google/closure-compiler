@@ -1409,7 +1409,7 @@ public final class FunctionInjectorTest extends TestCase {
 
     compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
-    NodeTraversal.traverse(compiler, tree, test);
+    NodeTraversal.traverseEs6(compiler, tree, test);
   }
 
   public void helperInlineReferenceToFunction(
@@ -1506,7 +1506,7 @@ public final class FunctionInjectorTest extends TestCase {
 
     compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
-    NodeTraversal.traverse(compiler, tree, test);
+    NodeTraversal.traverseEs6(compiler, tree, test);
   }
 
   interface Method {

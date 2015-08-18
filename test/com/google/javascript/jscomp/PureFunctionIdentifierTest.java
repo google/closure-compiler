@@ -1329,8 +1329,8 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
       // Ensure that debug report computation doesn't crash.
       passUnderTest.getDebugReport();
 
-      NodeTraversal.traverse(compiler, externs, this);
-      NodeTraversal.traverse(compiler, root, this);
+      NodeTraversal.traverseEs6(compiler, externs, this);
+      NodeTraversal.traverseEs6(compiler, root, this);
     }
 
     @Override

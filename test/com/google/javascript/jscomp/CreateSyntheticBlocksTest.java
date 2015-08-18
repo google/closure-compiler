@@ -43,7 +43,7 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
       public void process(Node externs, Node js) {
         new CreateSyntheticBlocks(compiler, START_MARKER, END_MARKER).process(
             externs, js);
-        NodeTraversal.traverse(compiler, js, new MinimizeExitPoints(compiler));
+        NodeTraversal.traverseEs6(compiler, js, new MinimizeExitPoints(compiler));
 
         new PeepholeOptimizationsPass(compiler,
             new PeepholeRemoveDeadCode(),

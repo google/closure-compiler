@@ -118,7 +118,6 @@ public final class InferConstsTest extends TestCase {
       String js, String... constants) {
     Compiler compiler = new Compiler();
 
-    SourceFile extern = SourceFile.fromCode("extern", "");
     SourceFile input = SourceFile.fromCode("js", js);
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(input),
         new CompilerOptions());
@@ -135,7 +134,7 @@ public final class InferConstsTest extends TestCase {
     Node n = compiler.getRoot().getLastChild();
 
     FindConstants constFinder = new FindConstants(constants);
-    NodeTraversal.traverse(compiler, n, constFinder);
+    NodeTraversal.traverseEs6(compiler, n, constFinder);
 
     for (String name : constants) {
       if (constExpected) {

@@ -653,8 +653,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     @Override
     public void process(Node externs, Node root) {
       passUnderTest.process(externs, root);
-      NodeTraversal.traverse(compiler, externs, new GatherCallback());
-      NodeTraversal.traverse(compiler, root, new GatherCallback());
+      NodeTraversal.traverseEs6(compiler, externs, new GatherCallback());
+      NodeTraversal.traverseEs6(compiler, root, new GatherCallback());
     }
 
     public String getNameString(Node n) {

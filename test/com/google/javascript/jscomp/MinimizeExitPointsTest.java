@@ -27,7 +27,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node js) {
-        NodeTraversal.traverse(compiler, js, new MinimizeExitPoints(compiler));
+        NodeTraversal.traverseEs6(compiler, js, new MinimizeExitPoints(compiler));
       }
     };
   }
