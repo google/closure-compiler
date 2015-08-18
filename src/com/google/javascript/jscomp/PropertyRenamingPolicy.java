@@ -26,13 +26,17 @@ public enum PropertyRenamingPolicy {
   OFF,
 
   /**
-   * Rename properties heuristically.
+   * Rename properties that contain any non lower-case characters
+   * or that are private (as defined by the coding conventions),
+   * provided they aren't externally defined (i.e. declared in an
+   * externs file).
    * @see RenamePrototypes
    */
   HEURISTIC,
 
   /**
-   * Rename properties more heuristically.
+   * Rename all properties that would be considered for renaming when
+   * using the HEURISTIC mode.
    * @see RenamePrototypes
    */
   AGGRESSIVE_HEURISTIC,

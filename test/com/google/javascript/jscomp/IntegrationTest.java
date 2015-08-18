@@ -1614,10 +1614,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     String heuristic =
         "function f() { return this.foo + this['bar'] + this.a; }"
             + "f.prototype.bar = 3; f.prototype.a = 3;";
-    String aggHeuristic =
+    String all =
         "function f() { return this.foo + this['b'] + this.a; } "
             + "f.prototype.b = 3; f.prototype.a = 3;";
-    String all =
+    String allUnquoted =
         "function f() { return this.c + this['bar'] + this.a; }"
             + "f.prototype.b = 3; f.prototype.a = 3;";
     testSame(options, code);
@@ -1626,10 +1626,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, heuristic);
 
     options.setPropertyRenaming(PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC);
-    test(options, code, aggHeuristic);
+    test(options, code, all);
 
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
-    test(options, code, all);
+    test(options, code, allUnquoted);
   }
 
   public void testConvertToDottedProperties() {
