@@ -243,6 +243,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(generateExports);
     }
 
+    if (options.exportTestFunctions && !options.skipNonTranspilationPasses) {
+      checks.add(exportTestFunctions);
+    }
+
     // Early ES6 transpilation.
     // Includes ES6 features that are straightforward to transpile.
     // We won't handle them natively in the rest of the compiler, so we always
@@ -252,10 +256,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
-    }
-
-    if (options.exportTestFunctions && !options.skipNonTranspilationPasses) {
-      checks.add(exportTestFunctions);
     }
 
     if (options.closurePass && !options.skipNonTranspilationPasses) {
