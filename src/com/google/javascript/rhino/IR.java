@@ -500,9 +500,11 @@ public class IR {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
       Preconditions.checkState(
-          propdef.isStringKey() ||
+          propdef.isStringKey() || propdef.isMemberFunctionDef() ||
           propdef.isGetterDef() || propdef.isSetterDef());
-      Preconditions.checkState(propdef.hasOneChild());
+      if (!propdef.isStringKey()) {
+        Preconditions.checkState(propdef.hasOneChild());
+      }
       objectlit.addChildToBack(propdef);
     }
     return objectlit;
