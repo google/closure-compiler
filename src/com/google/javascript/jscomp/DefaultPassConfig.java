@@ -2378,15 +2378,21 @@ public final class DefaultPassConfig extends PassConfig {
     switch (options.propertyRenaming) {
       case HEURISTIC:
         RenamePrototypes rproto =
-            new RenamePrototypes(compiler, false, reservedChars, prevPropertyMap);
+            new RenamePrototypes(compiler, options.propertyRenaming, reservedChars, prevPropertyMap);
         rproto.process(externs, root);
         return rproto.getPropertyMap();
 
       case AGGRESSIVE_HEURISTIC:
         RenamePrototypes rproto2 =
-            new RenamePrototypes(compiler, true, reservedChars, prevPropertyMap);
+            new RenamePrototypes(compiler, options.propertyRenaming, reservedChars, prevPropertyMap);
         rproto2.process(externs, root);
         return rproto2.getPropertyMap();
+
+      case PRIVATE:
+          RenamePrototypes rproto3 =
+              new RenamePrototypes(compiler, options.propertyRenaming, reservedChars, prevPropertyMap);
+          rproto3.process(externs, root);
+          return rproto3.getPropertyMap();
 
       case ALL_UNQUOTED:
         RenameProperties rprop =
@@ -2533,12 +2539,13 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   /**
-   * All inlining is forbidden in heuristic renaming mode, because inlining
-   * will ruin the invariants that it depends on.
+   * All inlining is forbidden in heuristic and private renaming modes,
+   * because inlining will ruin the invariants that it depends on.
    */
   private boolean isInliningForbidden() {
     return options.propertyRenaming == PropertyRenamingPolicy.HEURISTIC
-        || options.propertyRenaming == PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC;
+        || options.propertyRenaming == PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC
+        || options.propertyRenaming == PropertyRenamingPolicy.PRIVATE;
   }
 
   /** Create a compiler pass that runs the given passes in serial. */

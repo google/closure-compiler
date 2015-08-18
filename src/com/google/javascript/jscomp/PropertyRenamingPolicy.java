@@ -42,6 +42,14 @@ public enum PropertyRenamingPolicy {
   AGGRESSIVE_HEURISTIC,
 
   /**
+   * Rename all private properties (as defined by the coding conventions),
+   * provided they aren't externally defined (i.e. declared in an
+   * externs file).
+   * @see RenamePrototypes
+   */
+  PRIVATE,
+
+  /**
    * Rename all properties that aren't explicitly quoted and aren't
    * externally defined (i.e. declared in an externs file). This policy
    * achieves better compaction than the others.
