@@ -118,13 +118,22 @@ class RenamePrototypes implements CompilerPass {
         return true;
       }
 
-      for (int i = 0, n = oldName.length(); i < n; i++) {
-        char ch = oldName.charAt(i);
+      if(matchesHeuristic(oldName)) {
+        return true;
+      }
+
+      return false;
+    }
+
+    private boolean matchesHeuristic(String name) {
+      for (int i = 0, n = name.length(); i < n; i++) {
+        char ch = name.charAt(i);
 
         if (Character.isUpperCase(ch) || !Character.isLetter(ch)) {
           return true;
         }
       }
+
       return false;
     }
 
