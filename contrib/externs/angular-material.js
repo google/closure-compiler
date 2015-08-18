@@ -226,6 +226,7 @@ md.$toast.prototype.simple = function() {};
 
 /**
  * @typedef {{
+ *   isLockedOpen: function():boolean,
  *   isOpen: function():boolean,
  *   toggle: function(),
  *   open: function(),
