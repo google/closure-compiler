@@ -100,7 +100,7 @@ public final class ParserRunner {
     // TODO(johnlenz): unify "SourceFile", "Es6ErrorReporter" and "Config"
     SourceFile file = new SourceFile(sourceFile.getName(), sourceString);
     Es6ErrorReporter es6ErrorReporter =
-        new Es6ErrorReporter(errorReporter, file, config);
+        new Es6ErrorReporter(errorReporter, config.isIdeMode);
     com.google.javascript.jscomp.parsing.parser.Parser.Config es6config =
         new com.google.javascript.jscomp.parsing.parser.Parser.Config(mode(
             config.languageMode));
@@ -124,19 +124,20 @@ public final class ParserRunner {
       extends com.google.javascript.jscomp.parsing.parser.util.ErrorReporter {
     private ErrorReporter reporter;
     private boolean errorSeen = false;
-    private boolean isIdeMode;
+    private final boolean reportAllErrors;
 
     Es6ErrorReporter(
         ErrorReporter reporter,
-        SourceFile source,
-        Config config) {
+        boolean reportAllErrors) {
       this.reporter = reporter;
-      this.isIdeMode = config.isIdeMode;
+      this.reportAllErrors = reportAllErrors;
     }
 
     @Override
     protected void reportError(SourcePosition location, String message) {
-      if (isIdeMode || !errorSeen) {
+      // In normal usage, only the first parse error should be reported, but
+      // sometimes it is useful to keep going.
+      if (reportAllErrors || !errorSeen) {
         errorSeen = true;
         this.reporter.error(
             message, location.source.name,

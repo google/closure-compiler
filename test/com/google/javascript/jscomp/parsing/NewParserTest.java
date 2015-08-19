@@ -2680,6 +2680,13 @@ public final class NewParserTest extends BaseJSTypeTestCase {
         + "");
   }
 
+  public void testUtf8() {
+    mode = LanguageMode.ECMASCRIPT5;
+    Node n = parse("\uFEFFfunction f() {}\n");
+    Node fn = n.getFirstChild();
+    assertNode(fn).hasType(Token.FUNCTION);
+  }
+
   private Node script(Node stmt) {
     Node n = new Node(Token.SCRIPT, stmt);
     n.setIsSyntheticBlock(true);
