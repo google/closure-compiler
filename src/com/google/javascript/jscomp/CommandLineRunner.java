@@ -1293,11 +1293,28 @@ public class CommandLineRunner extends
     final String envPrefix = options.getEnvironment().toString().toLowerCase()
         + "/";
 
-    Map<String, SourceFile> externsMap = new HashMap<>();
+    ImmutableList.Builder<ZipEntry> builder = ImmutableList.builder();
     for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
-      // Only load externs in the root folder or in a subfolder matching
-      // the specified environment
+      builder.add(entry);
+    }
+    ImmutableList<ZipEntry> zipEntries = builder.build();
+
+    boolean flatExternStructure = true;
+    String browserEnv = CompilerOptions.Environment.BROWSER.toString().toLowerCase();
+    for (ZipEntry entry : zipEntries) {
+      if (entry.getName().contains(browserEnv)) {
+        flatExternStructure = false;
+        break;
+      }
+    }
+
+    Map<String, SourceFile> externsMap = new HashMap<>();
+    for (ZipEntry entry : zipEntries) {
+      // Always load externs in the root folder.
+      // If the non-core-JS externs are organized in subfolders, only load
+      // the ones in a subfolder matching the specified environment.
       if (entry.getName().indexOf('/') < 0
+          || flatExternStructure
           || (entry.getName().indexOf(envPrefix) == 0
               && entry.getName().length() > envPrefix.length())) {
         BufferedInputStream entryStream = new BufferedInputStream(
