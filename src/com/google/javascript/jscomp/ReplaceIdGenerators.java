@@ -307,9 +307,9 @@ class ReplaceIdGenerators implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, new GatherGenerators());
+    NodeTraversal.traverse(compiler, root, new GatherGenerators());
     if (!nameGenerators.isEmpty()) {
-      NodeTraversal.traverseEs6(compiler, root, new ReplaceGenerators());
+      NodeTraversal.traverse(compiler, root, new ReplaceGenerators());
     }
   }
 
@@ -326,7 +326,7 @@ class ReplaceIdGenerators implements CompilerPass {
         return;
       }
 
-      if (!t.getScope().getClosestHoistScope().isGlobal()
+      if (!t.inGlobalScope()
           && nameGenerator.getRenameStrategy() == RenameStrategy.INCONSISTENT) {
         // Warn about calls not in the global scope.
         compiler.report(t.makeError(n, NON_GLOBAL_ID_GENERATOR_CALL));

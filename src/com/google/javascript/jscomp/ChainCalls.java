@@ -49,7 +49,7 @@ class ChainCalls implements CompilerPass {
     defFinder = new SimpleDefinitionFinder(compiler);
     defFinder.process(externs, root);
 
-    NodeTraversal.traverseEs6(compiler, root, new GatherCallSites());
+    NodeTraversal.traverse(compiler, root, new GatherCallSites());
 
     for (CallSite callSite : callSites) {
       callSite.parent.removeChild(callSite.n);
@@ -133,9 +133,10 @@ class ChainCalls implements CompilerPass {
           return;
         }
         if (!goodFunctionNodes.contains(rValue)) {
-          new NodeTraversal(compiler, gatherFunctions, new Es6SyntacticScopeCreator(compiler))
-              .traverseInnerNode(
-                  rValue, rValue.getParent(), t.getScope().getClosestHoistScope().getParent());
+          // TODO(moz): In ES6, t.getScope() might return a scope that is not
+          // a valid cfg root, might need something like t.getCfgScope().
+          new NodeTraversal(compiler, gatherFunctions).traverseInnerNode(
+              rValue, rValue.getParent(), t.getScope());
           if (badFunctionNodes.contains(rValue)) {
             return;
           }

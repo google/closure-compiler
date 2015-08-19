@@ -19,12 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link ReplaceIdGenerators}.
  *
  */
-public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
+public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private boolean generatePseudoNames = false;
   private ReplaceIdGenerators lastPass = null;
@@ -236,9 +237,9 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         "goog.xid = function() {};" +
         "things = {'foo$0': function() {}}");
 
-    testEs6(
-        "/** @idGenerator */ goog.xid = function() {};"
-            + "things = goog.xid({foo: function*() {}})",
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @idGenerator */ goog.xid = function() {};" +
+        "things = goog.xid({foo: function*() {}})",
 
         "goog.xid = function() {};" +
         "things = {'a': function*() {}}",
@@ -248,19 +249,20 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testObjectLit_ES6() {
-    testErrorEs6(LINE_JOINER.join(
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testError(LINE_JOINER.join(
         "/** @idGenerator */",
         "goog.xid = function() {};",
         "things = goog.xid({fooX() {}})"),
         ReplaceIdGenerators.SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN);
 
-    testErrorEs6(LINE_JOINER.join(
+    testError(LINE_JOINER.join(
         "/** @idGenerator */ ",
         "goog.xid = function() {};",
         "things = goog.xid({shorthand})"),
         ReplaceIdGenerators.SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN);
 
-    testErrorEs6(LINE_JOINER.join(
+    testError(LINE_JOINER.join(
         "/** @idGenerator */",
         "goog.xid = function() {};",
         "things = goog.xid({['fooX']: 'test'})"),
@@ -268,7 +270,8 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testClass() {
-    testSameEs6("", LINE_JOINER.join(
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    testSame(LINE_JOINER.join(
         "/** @idGenerator */",
         "goog.xid = function() {};",
         "things = goog.xid(class fooBar{})"),
@@ -350,17 +353,17 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testLet() {
-    testEs6(
-        "/** @consistentIdGenerator */ let id = function() {};" +
-        "foo.bar = id('foo_bar')",
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @consistentIdGenerator */ let id = function() {};" +
+         "foo.bar = id('foo_bar')",
 
-        "let id = function() {};" +
-        "foo.bar = 'a'",
+         "let id = function() {};" +
+         "foo.bar = 'a'",
 
-        "let id = function() {};" +
-        "foo.bar = 'foo_bar$0'");
+         "let id = function() {};" +
+         "foo.bar = 'foo_bar$0'");
 
-    testNonPseudoSupportingGeneratorEs6(
+    testNonPseudoSupportingGenerator(
         "/** @stableIdGenerator */ let id = function() {};" +
         "foo.bar = id('foo_bar')",
 
@@ -369,17 +372,17 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testConst() {
-    testEs6(
-        "/** @consistentIdGenerator */ const id = function() {};" +
-        "foo.bar = id('foo_bar')",
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    test("/** @consistentIdGenerator */ const id = function() {};" +
+         "foo.bar = id('foo_bar')",
 
-        "const id = function() {};" +
-        "foo.bar = 'a'",
+         "const id = function() {};" +
+         "foo.bar = 'a'",
 
-        "const id = function() {};" +
-        "foo.bar = 'foo_bar$0'");
+         "const id = function() {};" +
+         "foo.bar = 'foo_bar$0'");
 
-    testNonPseudoSupportingGeneratorEs6(
+    testNonPseudoSupportingGenerator(
         "/** @stableIdGenerator */ const id = function() {};" +
         "foo.bar = id('foo_bar')",
 
@@ -560,12 +563,26 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         "var id = function() {};" +
         "function fb() {foo.bar = '125lGg'}");
 
-    testErrorEs6(
-        LINE_JOINER.join(
-            "/** @idGenerator */",
-            "var id = function() {}; ",
-            "for(x of [1, 2, 3]){ id('foo');}"),
-        ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    // Due to the scope difference in ES5 and 6, these following testcases fail
+    // scope test, which comes before control structure check;
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "while(0){ id('foo');}"),
+    ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
+
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "for(;;){ id('foo');}"),
+    ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
+
+    testError(LINE_JOINER.join(
+        "/** @idGenerator */",
+        "var id = function() {}; ",
+        "for(x of [1, 2, 3]){ id('foo');}"),
+    ReplaceIdGenerators.NON_GLOBAL_ID_GENERATOR_CALL);
   }
 
   public void testConflictingIdGenerator() {
@@ -607,8 +624,8 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testBadGenerator2() {
-    testSame("/** @consistentIdGenerator */ id = function() {};" +
-         "foo.bar = id()",
+    testSame("/** @consistentIdGenerator */ id = function() {};"
+          + "foo.bar = id()",
          INVALID_GENERATOR_PARAMETER);
   }
 
@@ -624,24 +641,10 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
     test(code, expectedPseudo);
   }
 
-  private void testEs6(String code, String expected, String expectedPseudo) {
-    generatePseudoNames = false;
-    testEs6(code, expected);
-    generatePseudoNames = true;
-    testEs6(code, expectedPseudo);
-  }
-
   private void testNonPseudoSupportingGenerator(String code, String expected) {
     generatePseudoNames = false;
     test(code, expected);
     generatePseudoNames = true;
     test(code, expected);
-  }
-
-  private void testNonPseudoSupportingGeneratorEs6(String code, String expected) {
-    generatePseudoNames = false;
-    testEs6(code, expected);
-    generatePseudoNames = true;
-    testEs6(code, expected);
   }
 }
