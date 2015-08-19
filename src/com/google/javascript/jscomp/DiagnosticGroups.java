@@ -90,7 +90,7 @@ public class DiagnosticGroups {
   // to parser/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, ambiguousFunctionDecl, checkEventfulObjectDisposal, "
-      + "checkRegExp, checkStructDictInheritance, checkTypes, checkVars, "
+      + "checkRegExp, checkTypes, checkVars, "
       + "conformanceViolations, const, constantProperty, deprecated, "
       + "deprecatedAnnotations, duplicateMessage, es3, "
       + "es5Strict, externsValidation, fileoverviewTags, globalThis, "
