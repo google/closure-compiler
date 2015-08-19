@@ -257,6 +257,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(polymerPass);
     }
 
+    if ((options.checkSuspiciousCode
+            || options.enables(DiagnosticGroups.GLOBAL_THIS)
+            || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT))
+        && !options.skipNonTranspilationPasses) {
+      checks.add(suspiciousCode);
+    }
+
     // Early ES6 transpilation.
     // Includes ES6 features that are straightforward to transpile.
     // We won't handle them natively in the rest of the compiler, so we always
@@ -266,13 +273,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
-    }
-
-    if ((options.checkSuspiciousCode
-            || options.enables(DiagnosticGroups.GLOBAL_THIS)
-            || options.enables(DiagnosticGroups.DEBUGGER_STATEMENT_PRESENT))
-        && !options.skipNonTranspilationPasses) {
-      checks.add(suspiciousCode);
     }
 
     if (options.closurePass && options.checkMissingGetCssNameLevel.isOn()
