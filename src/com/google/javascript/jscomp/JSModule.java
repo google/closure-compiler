@@ -18,14 +18,14 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.deps.ClosureSortedDependencies;
 import com.google.javascript.jscomp.deps.DependencyInfo;
-import com.google.javascript.jscomp.deps.SortedDependencies;
+import com.google.javascript.jscomp.deps.Es6SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -260,31 +260,15 @@ public final class JSModule implements DependencyInfo, Serializable {
     // Sort the JSModule in this order.
     try {
       List<CompilerInput> sortedList =
-          (new SortedDependencies<>(
-              Collections.unmodifiableList(inputs)))
-          .getSortedList();
+          (compiler.getOptions().getDependencyOptions().isEs6ModuleOrder()
+                  ? new Es6SortedDependencies<>(inputs)
+                  : new ClosureSortedDependencies<>(inputs)).getSortedList();
       inputs.clear();
       inputs.addAll(sortedList);
     } catch (CircularDependencyException e) {
       compiler.report(
           JSError.make(CIRCULAR_DEPENDENCY_ERROR, e.getMessage()));
     }
-  }
-
-  /**
-   * Returns the given collection of modules in topological order.
-   *
-   * Note that this will return the modules in the same order if they are
-   * already sorted, and in general, will only change the order as necessary to
-   * satisfy the ordering dependencies.  This can be important for cases where
-   * the modules do not properly specify all dependencies.
-   */
-  public static JSModule[] sortJsModules(Collection<JSModule> modules)
-      throws CircularDependencyException {
-    // Sort the JSModule in this order.
-    List<JSModule> sortedList = (new SortedDependencies<>(
-            new ArrayList<>(modules))).getSortedList();
-    return sortedList.toArray(new JSModule[sortedList.size()]);
   }
 
   /**

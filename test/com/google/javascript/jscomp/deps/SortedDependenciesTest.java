@@ -29,7 +29,7 @@ import java.util.List;
  * Tests for {@link SortedDependencies}
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class SortedDependenciesTest extends TestCase {
+public abstract class SortedDependenciesTest extends TestCase {
 
   public void testSort() throws Exception {
     SimpleDependencyInfo a = new SimpleDependencyInfo(
@@ -114,13 +114,8 @@ public final class SortedDependenciesTest extends TestCase {
     SimpleDependencyInfo c = new SimpleDependencyInfo(
         "c", "c", provides("c"), requires("b"), false);
 
-    try {
-      new SortedDependencies<>(
-          ImmutableList.of(a, b, c));
-      fail("expected exception");
-    } catch (CircularDependencyException e) {
-      assertThat(e.getMessage()).isEqualTo("c -> b -> a -> c");
-    }
+    assertOrderOrException(
+        ImmutableList.of(a, b, c), ImmutableList.of(b, c, a), "c -> b -> a -> c");
   }
 
   public void testSort4() throws Exception {
@@ -159,13 +154,8 @@ public final class SortedDependenciesTest extends TestCase {
     SimpleDependencyInfo d = new SimpleDependencyInfo(
         "gin3", "gin3", provides("gin3"), requires("gin"), false);
 
-    try {
-      new SortedDependencies<>(
-          ImmutableList.of(a, b, c, d));
-      fail("expected exception");
-    } catch (CircularDependencyException e) {
-      assertThat(e.getMessage()).isEqualTo("tonic -> gin2 -> gin -> tonic");
-    }
+    assertOrderOrException(ImmutableList.of(a, b, c, d), ImmutableList.of(c, b, a, d),
+        "tonic -> gin2 -> gin -> tonic");
   }
 
   public void testSort7() {
@@ -178,13 +168,8 @@ public final class SortedDependenciesTest extends TestCase {
     SimpleDependencyInfo d = new SimpleDependencyInfo(
         "gin3", "gin3", provides("gin3"), requires("gin"), false);
 
-    try {
-      new SortedDependencies<>(
-          ImmutableList.of(a, b, c, d));
-      fail("expected exception");
-    } catch (CircularDependencyException e) {
-      assertThat(e.getMessage()).isEqualTo("tonic -> gin -> tonic");
-    }
+    assertOrderOrException(
+        ImmutableList.of(a, b, c, d), ImmutableList.of(b, a, c, d), "tonic -> gin -> tonic");
   }
 
   public void testSort8() {
@@ -197,13 +182,8 @@ public final class SortedDependenciesTest extends TestCase {
     SimpleDependencyInfo d = new SimpleDependencyInfo(
         "D", "D", provides("D"), requires("A"), false);
 
-    try {
-      new SortedDependencies<>(
-          ImmutableList.of(a, b, c, d));
-      fail("expected exception");
-    } catch (CircularDependencyException e) {
-      assertThat(e.getMessage()).isEqualTo("B -> C -> D -> A -> B");
-    }
+    assertOrderOrException(
+        ImmutableList.of(a, b, c, d), ImmutableList.of(d, c, b, a), "B -> C -> D -> A -> B");
   }
 
   public void testSort9() {
@@ -224,20 +204,31 @@ public final class SortedDependenciesTest extends TestCase {
     SimpleDependencyInfo g = new SimpleDependencyInfo(
         "D1", "D1", provides("D1"), requires("A"), false);
 
-    try {
-      new SortedDependencies<>(
-          ImmutableList.of(a, a2, b, c, d, e, f, g));
-      fail("expected exception");
-    } catch (CircularDependencyException ex) {
-      assertThat(ex.getMessage()).isEqualTo("B1 -> C1 -> D1 -> A -> B1");
+    assertOrderOrException(ImmutableList.of(a, a2, b, c, d, e, f, g),
+        ImmutableList.of(c, b, a, g, f, e, a2, d), "B1 -> C1 -> D1 -> A -> B1");
+  }
+
+  public void testSort10() throws Exception {
+    SimpleDependencyInfo a =
+        new SimpleDependencyInfo("A", "A", provides("A"), requires("C"), false);
+    SimpleDependencyInfo b = new SimpleDependencyInfo("B", "B", provides("B"), requires(), false);
+    SimpleDependencyInfo c = new SimpleDependencyInfo("C", "C", provides("C"), requires(), false);
+
+    SortedDependencies<SimpleDependencyInfo> sorted =
+        createSortedDependencies(ImmutableList.of(a, b, c));
+
+    // The dependency sorting implementations have different results for this input.
+    if (handlesCycles()) {
+      assertThat(sorted.getSortedList()).isEqualTo(ImmutableList.of(c, a, b));
+    } else {
+      assertThat(sorted.getSortedList()).isEqualTo(ImmutableList.of(b, c, a));
     }
   }
 
   private void assertSortedInputs(
       List<SimpleDependencyInfo> expected,
       List<SimpleDependencyInfo> shuffled) throws Exception {
-    SortedDependencies<SimpleDependencyInfo> sorted =
-        new SortedDependencies<>(shuffled);
+    SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
     assertThat(sorted.getSortedList()).isEqualTo(expected);
   }
 
@@ -245,9 +236,26 @@ public final class SortedDependenciesTest extends TestCase {
       List<SimpleDependencyInfo> expected,
       List<SimpleDependencyInfo> shuffled,
       List<SimpleDependencyInfo> roots) throws Exception {
-    SortedDependencies<SimpleDependencyInfo> sorted =
-        new SortedDependencies<>(shuffled);
+    SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffled);
     assertThat(sorted.getSortedDependenciesOf(roots)).isEqualTo(expected);
+  }
+
+  private void assertOrderOrException(ImmutableList<SimpleDependencyInfo> shuffle,
+      ImmutableList<SimpleDependencyInfo> expected, String failMessage) {
+    try {
+      SortedDependencies<SimpleDependencyInfo> sorted = createSortedDependencies(shuffle);
+      if (handlesCycles()) {
+        assertThat(sorted.getSortedList()).isEqualTo(expected);
+      } else {
+        fail("expected exception");
+      }
+    } catch (CircularDependencyException e) {
+      if (handlesCycles()) {
+        fail("expected no exception");
+      } else {
+        assertThat(e.getMessage()).isEqualTo(failMessage);
+      }
+    }
   }
 
   private List<String> requires(String ... strings) {
@@ -257,4 +265,9 @@ public final class SortedDependenciesTest extends TestCase {
   private List<String> provides(String ... strings) {
     return ImmutableList.copyOf(strings);
   }
+
+  public abstract SortedDependencies<SimpleDependencyInfo> createSortedDependencies(
+      List<SimpleDependencyInfo> shuffled) throws CircularDependencyException;
+
+  public abstract boolean handlesCycles();
 }

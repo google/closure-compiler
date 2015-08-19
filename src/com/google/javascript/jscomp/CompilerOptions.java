@@ -1513,6 +1513,10 @@ public class CompilerOptions implements Serializable {
     this.dependencyOptions = options;
   }
 
+  public DependencyOptions getDependencyOptions() {
+    return dependencyOptions;
+  }
+
   /**
    * Sort inputs by their goog.provide/goog.require calls, and prune inputs
    * whose symbols are not required.
@@ -1608,7 +1612,9 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguageIn(LanguageMode languageIn) {
     Preconditions.checkState(languageIn != LanguageMode.NO_TRANSPILE);
+    Preconditions.checkNotNull(dependencyOptions);
     this.languageIn = languageIn;
+    dependencyOptions.setEs6ModuleOrder(languageIn.isEs6OrHigher());
   }
 
   public LanguageMode getLanguageIn() {

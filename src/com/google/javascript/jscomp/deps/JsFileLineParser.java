@@ -39,7 +39,7 @@ public abstract class JsFileLineParser {
 
   static final DiagnosticType PARSE_WARNING = DiagnosticType.warning(
       "DEPS_PARSE_WARNING", "{0}\n{1}");
-  static final DiagnosticType PARSE_ERROR = DiagnosticType.error(
+  public static final DiagnosticType PARSE_ERROR = DiagnosticType.error(
       "DEPS_PARSE_ERROR", "{0}\n{1}");
 
   boolean shortcutMode = false;

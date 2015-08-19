@@ -30,6 +30,8 @@ import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.JSModuleGraph.MissingModuleException;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
+import com.google.javascript.jscomp.deps.ClosureSortedDependencies;
+import com.google.javascript.jscomp.deps.Es6SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.CircularDependencyException;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
@@ -1516,7 +1518,8 @@ public class Compiler extends AbstractCompiler {
     }
 
     SortedDependencies<JSModule> sorter =
-        new SortedDependencies<>(modules);
+        depOptions.isEs6ModuleOrder()
+            ? new Es6SortedDependencies<>(modules) : new ClosureSortedDependencies<>(modules);
     modules = sorter.getDependenciesOf(modules, true);
 
     // The compiler expects a module tree, so add a dependency of all modules on

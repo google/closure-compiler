@@ -137,32 +137,4 @@ public final class JSModuleTest extends TestCase {
 
     assertEquals(expected, mod.getInputs());
   }
-
-  public void testSortJsModules() throws Exception {
-    // already in order:
-    assertThat(JSModule.sortJsModules(ImmutableList.of(mod1, mod2, mod3, mod4)))
-        .asList()
-        .containsExactly(mod1, mod2, mod3, mod4)
-        .inOrder();
-    assertThat(JSModule.sortJsModules(ImmutableList.of(mod1, mod3, mod2, mod4)))
-        .asList()
-        .containsExactly(mod1, mod3, mod2, mod4)
-        .inOrder();
-
-    // one out of order:
-    assertThat(JSModule.sortJsModules(ImmutableList.of(mod4, mod3, mod2, mod1)))
-        .asList()
-        .containsExactly(mod1, mod3, mod2, mod4)
-        .inOrder();
-    assertThat(JSModule.sortJsModules(ImmutableList.of(mod3, mod1, mod2, mod4)))
-        .asList()
-        .containsExactly(mod1, mod3, mod2, mod4)
-        .inOrder();
-
-    // more out of order:
-    assertThat(JSModule.sortJsModules(ImmutableList.of(mod4, mod3, mod1, mod2)))
-        .asList()
-        .containsExactly(mod1, mod3, mod2, mod4)
-        .inOrder();
-  }
 }

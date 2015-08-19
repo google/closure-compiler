@@ -212,6 +212,21 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   }
 
   /**
+   * Verifies that the compiler generates the given errors for the given input,
+   * under both ES5 and ES6 modes.
+   *
+   * @param js Input
+   * @param es5Error Expected error in es5
+   * @param es6Error Expected error in es6
+   */
+  public void testError(String js, DiagnosticType es5Error, DiagnosticType es6Error) {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    super.testError(js, es6Error);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    super.testError(js, es5Error);
+  }
+
+  /**
    * Verifies that the compiler generates the given error for the given input,
    * under a specific language mode.
    *
