@@ -2482,26 +2482,27 @@ public final class NodeUtil {
    * Determines whether this node is used as an L-value. Notice that sometimes
    * names are used as both L-values and R-values.
    *
-   * <p>We treat "var x;" as a pseudo-L-value, which kind of makes sense if you
-   * treat it as "assignment to 'undefined' at the top of the scope". But if
-   * we're honest with ourselves, it doesn't make sense, and we only do this
-   * because it makes sense to treat this as syntactically similar to
-   * "var x = 0;".
+   * <p>We treat "var x;" and "let x;" as an L-value because it's syntactically similar to
+   * "var x = undefined", even though it's technically not an L-value. But it kind of makes
+   * sense if you treat it as "assignment to 'undefined' at the top of the scope".
    *
    * @param n The node
    * @return True if n is an L-value.
    */
   public static boolean isLValue(Node n) {
-    Preconditions.checkArgument(n.isName() || n.isGetProp() ||
-        n.isGetElem());
+    Preconditions.checkArgument(
+        n.isName() || n.isGetProp() || n.isGetElem() || n.isStringKey() || n.isRest(),
+        n);
     Node parent = n.getParent();
     if (parent == null) {
       return false;
     }
-    return (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n)
-        || (NodeUtil.isForIn(parent) && parent.getFirstChild() == n)
-        || parent.isVar() || parent.isLet() || parent.isConst()
+    return (isAssignmentOp(parent) && parent.getFirstChild() == n)
+        || (isForIn(parent) && parent.getFirstChild() == n)
+        || isNameDeclaration(parent)
         || (parent.isFunction() && parent.getFirstChild() == n)
+        || parent.isRest()
+        || (parent.isDefaultValue() && parent.getFirstChild() == n)
         || parent.isDec()
         || parent.isInc()
         || parent.isParamList()

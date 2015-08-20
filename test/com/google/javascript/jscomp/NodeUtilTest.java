@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -1747,6 +1748,55 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(executedOnceTestCase("try {} finally {x}"));
 
     assertFalse(executedOnceTestCase("if (1) { try {} finally {x} }"));
+  }
+
+  private void assertLValueNamedX(Node n) {
+    assertThat(n.getString()).isEqualTo("x");
+    assertWithMessage("Should be an lvalue: %s", n).that(NodeUtil.isLValue(n)).isTrue();
+  }
+
+  public void testIsLValue() {
+    assertLValueNamedX(parse("var x;").getFirstChild().getFirstChild());
+    assertLValueNamedX(parse("var w, x;").getFirstChild().getLastChild());
+    assertLValueNamedX(parse("var [...x] = y;").getFirstChild().getFirstChild().getFirstChild());
+    assertLValueNamedX(parse("var x = y;").getFirstChild().getFirstChild());
+    assertLValueNamedX(parse("x++;").getFirstChild().getFirstChild().getFirstChild());
+    assertLValueNamedX(
+       NodeUtil.getFunctionParameters(parse("function f(x) {}").getFirstChild()).getFirstChild());
+
+    Node x = NodeUtil.getFunctionParameters(parse("function f(x = 3) {}").getFirstChild())
+        .getFirstChild()  // x = 3
+        .getFirstChild();  // x
+    assertLValueNamedX(x);
+
+    assertLValueNamedX(
+        parse("({x} = obj)").getFirstChild().getFirstChild().getFirstChild().getFirstChild());
+    assertLValueNamedX(
+        parse("([x] = obj)").getFirstChild().getFirstChild().getFirstChild().getFirstChild());
+  }
+
+  private void assertNotLValueNamedX(Node n) {
+    assertThat(n.getString()).isEqualTo("x");
+    assertWithMessage("Should not be an lvalue: %s", n).that(NodeUtil.isLValue(n)).isFalse();
+  }
+
+  public void testIsNotLValue() {
+    assertNotLValueNamedX(parse("var a = x;").getFirstChild().getFirstChild().getFirstChild());
+
+    Node x = parse("f(...x);")  // script
+        .getFirstChild()  // expr result
+        .getFirstChild()  // call
+        .getLastChild()  // spread
+        .getFirstChild();  // x
+    assertNotLValueNamedX(x);
+
+    x = parse("var a = [...x];")  // script
+        .getFirstChild()  // var
+        .getFirstChild()  // a
+        .getFirstChild()  // array
+        .getFirstChild()  // spread
+        .getFirstChild();  // x
+    assertNotLValueNamedX(x);
   }
 
   public void testLhsByDestructuring1() {
