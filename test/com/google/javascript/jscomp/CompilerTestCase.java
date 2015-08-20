@@ -1048,18 +1048,18 @@ public abstract class CompilerTestCase extends TestCase {
         errorManagers[i] = new BlackHoleErrorManager();
         compiler.setErrorManager(errorManagers[i]);
 
-        if (rewriteClosureCode && i == 0) {
-          new ClosureRewriteClass(compiler).process(null, mainRoot);
-          new ClosureRewriteModule(compiler).process(null, mainRoot);
-          new ScopedAliases(compiler, null, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
-              .process(null, mainRoot);
-          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
-        }
-
         // Only run process closure primitives once, if asked.
         if (closurePassEnabled && i == 0) {
           recentChange.reset();
           new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false)
+              .process(null, mainRoot);
+          hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
+        }
+
+        if (rewriteClosureCode && i == 0) {
+          new ClosureRewriteClass(compiler).process(null, mainRoot);
+          new ClosureRewriteModule(compiler).process(null, mainRoot);
+          new ScopedAliases(compiler, null, CompilerOptions.NULL_ALIAS_TRANSFORMATION_HANDLER)
               .process(null, mainRoot);
           hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();
         }
