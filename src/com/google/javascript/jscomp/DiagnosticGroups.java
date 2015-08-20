@@ -477,6 +477,9 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup("invalidProvide",
         ProcessClosurePrimitives.INVALID_PROVIDE_ERROR);
 
+    DiagnosticGroups.registerGroup("lateProvide",
+        ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+
     DiagnosticGroups.registerGroup("es6Typed",
         RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
   }
