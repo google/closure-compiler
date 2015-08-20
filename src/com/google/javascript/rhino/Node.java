@@ -1595,8 +1595,8 @@ public class Node implements Serializable {
    * @see JSDocInfo#equals(Object)
    */
   @VisibleForTesting
-  public String checkTreeEqualsIncludingJsDoc(Node actual) {
-      NodeMismatch diff = checkTreeEqualsImpl(actual, true);
+  public String checkTreeEqualsIncludingJsDoc(Node expected) {
+      NodeMismatch diff = checkTreeEqualsImpl(expected, true);
       if (diff != null) {
         if (diff.nodeActual.isEquivalentTo(diff.nodeExpected, false, true, false)) {
           // The only difference is that the JSDoc is different on
@@ -1616,8 +1616,8 @@ public class Node implements Serializable {
               "\nActual JSDoc  : " + jsDocActual;
         }
         return "Node tree inequality:" +
-            "\nExpected tree:\n" + toStringTree() +
-            "\n\nActual tree:\n" + actual.toStringTree() +
+            "\nExpected tree:\n" + expected.toStringTree() +
+            "\n\nActual tree:\n" + toStringTree() +
             "\n\nExpected subtree: " + diff.nodeExpected.toStringTree() +
             "\n\nActual subtree: " + diff.nodeActual.toStringTree();
       }
@@ -1625,27 +1625,27 @@ public class Node implements Serializable {
   }
 
   /**
-   * Compare this node to node2 recursively and return the first pair of nodes
+   * Compare this node to the expected node recursively and return the first pair of nodes
    * that differs doing a preorder depth-first traversal. Package private for
    * testing. Returns null if the nodes are equivalent.
    */
-  NodeMismatch checkTreeEqualsImpl(Node node2) {
-    return checkTreeEqualsImpl(node2, false);
+  NodeMismatch checkTreeEqualsImpl(Node expected) {
+    return checkTreeEqualsImpl(expected, false);
   }
 
   /**
-   * Compare this node to node2 recursively and return the first pair of nodes
+   * Compare this node to the expected node recursively and return the first pair of nodes
    * that differs doing a preorder depth-first traversal.
    * @param jsDoc Whether to check for differences in JSDoc.
    */
-  private NodeMismatch checkTreeEqualsImpl(Node node2, boolean jsDoc) {
-    if (!isEquivalentTo(node2, false, false, jsDoc)) {
-      return new NodeMismatch(this, node2);
+  private NodeMismatch checkTreeEqualsImpl(Node expected, boolean jsDoc) {
+    if (!isEquivalentTo(expected, false, false, jsDoc)) {
+      return new NodeMismatch(this, expected);
     }
 
     NodeMismatch res = null;
     Node n, n2;
-    for (n = first, n2 = node2.first;
+    for (n = first, n2 = expected.first;
          n != null;
          n = n.next, n2 = n2.next) {
       res = n.checkTreeEqualsImpl(n2, jsDoc);

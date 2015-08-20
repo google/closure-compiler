@@ -1379,7 +1379,7 @@ public abstract class CompilerTestCase extends TestCase {
       Preconditions.checkState(
           externs.hasOneChild(), "Compare as tree only works when output has a single script.");
       externs = externs.getFirstChild();
-      String explanation = expected.checkTreeEqualsIncludingJsDoc(externs);
+      String explanation = externs.checkTreeEqualsIncludingJsDoc(expected);
       assertNull(
           "\nExpected: " + compiler.toSource(expected) +
           "\nResult:   " + compiler.toSource(externs) +
