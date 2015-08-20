@@ -659,8 +659,12 @@ class ReferenceCollectingCallback implements ScopedCallback,
 
       if (NodeUtil.isNameDeclaration(parent.getParent())
           && node == parent.getLastChild()) {
-        // This is the RHS of a var/let/const, so not a declaration.
-        return false;
+        // Unless it is something like "for (var/let/const a of x){}",
+        // this is the RHS of a var/let/const and thus not a declaration.
+        if (parent.getParent().getParent() == null
+            || !parent.getParent().getParent().isForOf()) {
+          return false;
+        }
       }
 
       // Special cases for destructuring patterns.
@@ -753,11 +757,13 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return (parentType == Token.VAR && nameNode.getFirstChild() != null)
           || (parentType == Token.LET && nameNode.getFirstChild() != null)
           || (parentType == Token.CONST && nameNode.getFirstChild() != null)
+          || (parentType == Token.DEFAULT_VALUE && parent.getFirstChild() == nameNode)
           || parentType == Token.INC
           || parentType == Token.DEC
           || parentType == Token.CATCH
           || (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == nameNode)
-          || isLhsOfEnhancedForExpression(nameNode);
+          || isLhsOfEnhancedForExpression(nameNode)
+          || NodeUtil.isLhsByDestructuring(nameNode);
     }
 
     Scope getScope() {

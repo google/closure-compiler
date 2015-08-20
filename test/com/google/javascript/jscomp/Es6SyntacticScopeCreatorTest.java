@@ -241,6 +241,19 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(functionBlockScope.isDeclared("a", false));
   }
 
+  public void testObjectDestructuringInForOfParam() {
+    String js = "{for (let {length: x} of gen()) {}}";
+    Node root = getRoot(js);
+
+    Scope globalScope = scopeCreator.createScope(root, null);
+    Node block = root.getFirstChild();
+    Scope blockScope = scopeCreator.createScope(block, globalScope);
+    Node forOf = block.getFirstChild();
+    Scope forOfScope = scopeCreator.createScope(forOf, blockScope);
+
+    assertTrue(forOfScope.isDeclared("x", false));
+  }
+
   public void testFunctionScope() {
     Scope scope = getScope("function foo() {}\n"
                          + "var x = function bar(a1) {};"

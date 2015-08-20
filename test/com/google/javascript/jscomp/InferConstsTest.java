@@ -90,9 +90,7 @@ public final class InferConstsTest extends TestCase {
     testConsts("var x = ()=>{};", "x");
     testConsts("function fn(a){var b = a + 1}; ", "a", "b");
     testConsts("function fn(a = 1){var b = a + 1}; ", "a", "b");
-    testConsts("function fn(a, {b, c}){var d = a + 1}; ", "a", "d");
-    // TODO(user): Infer b and c to be const
-    testNotConsts("function fn(a, {b, c}){var d = a + 1}; ", "b", "c");
+    testConsts("function fn(a, {b, c}){var d = a + 1}; ", "a", "b", "c", "d");
   }
 
   public void testClass() {
@@ -104,6 +102,37 @@ public final class InferConstsTest extends TestCase {
 
   public void testArguments() {
     testNotConsts("var arguments = 3;", "arguments");
+  }
+
+  public void testDestructuring() {
+    testConsts("var [a, b, c] = [1, 2, 3];", "a", "b", "c");
+    testNotConsts("var [a, b, c] = obj;", "obj");
+    testNotConsts(""
+        + "var [a, b, c] = [1, 2, 3];"
+        + "[a, b, c] = [1, 2, 3];", "a", "b", "c");
+    testConsts(""
+        + "var [a, b, c] = [1, 2, 3];"
+        + "[a, b]= [1, 2];", "c");
+
+    testConsts("var {a: b} = {a: 1}", "b");
+    testNotConsts("var {a: b} = {a: 1}", "a");
+    // Note that this "a" looks for the destructured "a"
+    testConsts("var obj = {a: 1}; var {a} = obj", "a");
+
+    testNotConsts(""
+        + "var [{a: x} = {a: 'y'}] = [{a: 'x'}];"
+        + "[{a: x} = {a: 'x'}] = {};", "x");
+    testNotConsts(""
+        + "let fg = '', bg = '';"
+        + "({fg, bg}) = pal[val - 1];", "fg", "bg");
+  }
+
+  public void testDefaultValue() {
+    testConsts("function fn(a = 1){}", "a");
+    testNotConsts("function fn(a = 1){a = 2}", "a");
+
+    testConsts("function fn({b, c} = {b:1, c:2}){}", "b", "c");
+    testNotConsts("function fn({b, c} = {b:1, c:2}){c = 1}", "c");
   }
 
   private void testConsts(String js, String... constants) {
@@ -159,7 +188,9 @@ public final class InferConstsTest extends TestCase {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       for (String name : names) {
-        if (n.matchesQualifiedName(name)
+        if ((n.matchesQualifiedName(name)
+                || ((n.isStringKey() || n.isMemberFunctionDef())
+                    && n.getString().equals(name)))
             && n.getBooleanProp(Node.IS_CONSTANT_VAR)) {
           foundNodes.put(name, n);
         }

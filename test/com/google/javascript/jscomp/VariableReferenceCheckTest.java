@@ -171,6 +171,15 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertNoWarning("function g() { if (false) { function f() { f(); g(); }}}");
   }
 
+  public void testDestructuringInFor() {
+    testSameEs6("for (let [key, val] of X){}");
+    testSameEs6("for (let [key, [nestKey, nestVal], val] of X){}");
+
+    testSameEs6("var {x: a, y: b} = {x: 1, y: 2}; a++; b++;");
+    testWarningEs6("a++; var {x: a} = {x: 1};",
+        VariableReferenceCheck.EARLY_REFERENCE);
+  }
+
   public void testNoWarnInExterns1() {
     // Verify duplicate suppressions are properly recognized.
     String externs =

@@ -2505,7 +2505,43 @@ public final class NodeUtil {
         || parent.isDec()
         || parent.isInc()
         || parent.isParamList()
-        || parent.isCatch();
+        || parent.isCatch()
+        || isLhsByDestructuring(n);
+  }
+
+  public static boolean isLhsByDestructuring(Node n) {
+    Node parent = n.getParent();
+
+    if (parent.isDestructuringPattern()
+        || (parent.isStringKey() && parent.getParent().isObjectPattern())) {
+      if (n.isStringKey() && n.hasChildren()) {
+        return false;
+      }
+      Node childNode = n;
+      boolean isLastChildOfHighestPattern = false;
+
+      // The AST structure for destructuring patterns are a little bit complicated.
+      // The last child of a destructuring pattern is NOT the left hand side UNLESS
+      // the destructuring pattern is:
+      //   1) the variable for for-of loop;
+      //   2) within the first child of ASSIGN
+      //   3) within the first child of DEFAULT_VALUE (default parameter)
+      // Also, in nested destructuring only the last child of the highest pattern
+      // and its descendants are NOT lhs.
+      for (Node currAncestor : n.getAncestors()) {
+        if (currAncestor.isForOf() || currAncestor.isFor()
+            || currAncestor.isAssign()
+            || currAncestor.isDefaultValue()) {
+          return currAncestor.getFirstChild() == childNode;
+        }
+        if (currAncestor.isDestructuringPattern()) {
+          isLastChildOfHighestPattern = currAncestor.getLastChild() == childNode;
+        }
+        childNode = currAncestor;
+      }
+      return !isLastChildOfHighestPattern;
+    }
+    return false;
   }
 
   /**
