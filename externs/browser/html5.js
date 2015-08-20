@@ -2363,6 +2363,12 @@ FileList.prototype.item = function(i) { return null; };
 XMLHttpRequest.prototype.withCredentials;
 
 /**
+ * @type {?function(!ProgressEvent): void}
+ * @see https://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#handler-xhr-onprogress
+ */
+XMLHttpRequest.prototype.onprogress;
+
+/**
  * @type {XMLHttpRequestUpload}
  * @see http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-upload-attribute
  */
@@ -2428,6 +2434,12 @@ XMLHttpRequestEventTarget.prototype.dispatchEvent = function(evt) {};
  * @extends {XMLHttpRequestEventTarget}
  */
 function XMLHttpRequestUpload() {}
+
+/**
+ * @type {?function(!ProgressEvent): void}
+ * @see https://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#handler-xhr-onprogress
+ */
+XMLHttpRequestUpload.prototype.onprogress;
 
 /**
  * @param {number=} opt_width
