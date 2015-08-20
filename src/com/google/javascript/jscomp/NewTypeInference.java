@@ -2548,20 +2548,27 @@ final class NewTypeInference implements CompilerPass {
 
   private boolean mayWarnAboutInexistentProp(
       Node propAccessNode, JSType recvType, QualifiedName propQname) {
-    if (!propAccessNode.isGetProp()) {
+    if (!propAccessNode.isGetProp() || recvType.hasProp(propQname)) {
       return false;
     }
+    // To avoid giant types in the error message, we use a heuristic:
+    // if the receiver is a qualified name whose type is too long, we print
+    // the qualified name instead.
+    Node recv = propAccessNode.getFirstChild();
+    String recvTypeAsString = recvType.toString();
     String pname = propQname.toString();
-    if (!recvType.mayHaveProp(propQname)) {
-      warnings.add(JSError.make(propAccessNode,
-              TypeCheck.INEXISTENT_PROPERTY, pname, recvType.toString()));
-      return true;
-    } else if (!recvType.hasProp(propQname)) {
-      warnings.add(JSError.make(propAccessNode,
-              POSSIBLY_INEXISTENT_PROPERTY, pname, recvType.toString()));
-      return true;
+    String errorMsg;
+    if (!recv.isQualifiedName()) {
+      errorMsg = recvTypeAsString;
+    } else if (recvTypeAsString.length() > 100) {
+      errorMsg = recv.getQualifiedName();
+    } else {
+      errorMsg = recv.getQualifiedName() + " of type " + recvTypeAsString;
     }
-    return false;
+    DiagnosticType warningType = recvType.mayHaveProp(propQname)
+        ? POSSIBLY_INEXISTENT_PROPERTY : TypeCheck.INEXISTENT_PROPERTY;
+    warnings.add(JSError.make(propAccessNode, warningType, pname, errorMsg));
+    return true;
   }
 
   private boolean mayWarnAboutConst(Node n) {
