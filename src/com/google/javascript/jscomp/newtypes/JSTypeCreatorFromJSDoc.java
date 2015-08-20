@@ -660,6 +660,7 @@ public final class JSTypeCreatorFromJSDoc {
       boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
     Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);
     Preconditions.checkArgument(!ignoreJsdoc || funNode.isFunction());
+    ImmutableList.Builder<String> typeParamsBuilder = new ImmutableList.Builder<>();;
     ImmutableList<String> typeParameters = ImmutableList.of();
     Node parent = funNode.getParent();
 
@@ -668,12 +669,11 @@ public final class JSTypeCreatorFromJSDoc {
     // - warn for @template annotation w/out usage
 
     if (jsdoc != null) {
-      typeParameters = jsdoc.getTemplateTypeNames();
+      typeParamsBuilder.addAll(jsdoc.getTemplateTypeNames());
       // We don't properly support the type transformation language; we treat
       // its type variables as ordinary type variables.
-      if (typeParameters.isEmpty()) {
-        typeParameters = jsdoc.getTypeTransformations().keySet().asList();
-      }
+      typeParamsBuilder.addAll(jsdoc.getTypeTransformations().keySet());
+      typeParameters = typeParamsBuilder.build();
       if (!typeParameters.isEmpty()) {
         if (parent.isSetterDef() || parent.isGetterDef()) {
           ignoreJsdoc = true;
@@ -685,11 +685,8 @@ public final class JSTypeCreatorFromJSDoc {
       }
     }
     if (ownerType != null) {
-      ImmutableList.Builder<String> paramsBuilder =
-          new ImmutableList.Builder<>();
-      paramsBuilder.addAll(typeParameters);
-      paramsBuilder.addAll(ownerType.getTypeParameters());
-      typeParameters = paramsBuilder.build();
+      typeParamsBuilder.addAll(ownerType.getTypeParameters());
+      typeParameters = typeParamsBuilder.build();
     }
 
     fillInFormalParameterTypes(

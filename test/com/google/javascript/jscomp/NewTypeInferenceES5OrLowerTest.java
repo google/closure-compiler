@@ -13617,5 +13617,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function usesTTL() {}"),
         "");
+
+    typeCheckCustomExterns(Joiner.on('\n').join(
+        DEFAULT_EXTERNS,
+        "/**",
+        " * @param {VALUE} x",
+        " * @return {RESULT}",
+        " * @template VALUE",
+        " * @template RESULT := number =:",
+        " */",
+        "function usesTTL(x) {}"),
+        "");
   }
 }
