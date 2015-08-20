@@ -269,6 +269,15 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureCheckGetCssName);
     }
 
+    if (options.syntheticBlockStartMarker != null && !options.skipNonTranspilationPasses) {
+      // This pass must run before the first fold constants pass.
+      checks.add(createSyntheticBlocks);
+    }
+
+    if (!options.skipNonTranspilationPasses) {
+      checks.add(checkVars);
+    }
+
     // Early ES6 transpilation.
     // Includes ES6 features that are straightforward to transpile.
     // We won't handle them natively in the rest of the compiler, so we always
@@ -278,15 +287,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
-    }
-
-    if (options.syntheticBlockStartMarker != null && !options.skipNonTranspilationPasses) {
-      // This pass must run before the first fold constants pass.
-      checks.add(createSyntheticBlocks);
-    }
-
-    if (!options.skipNonTranspilationPasses) {
-      checks.add(checkVars);
     }
 
     if (options.inferConsts && !options.skipNonTranspilationPasses) {
