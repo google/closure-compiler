@@ -1400,7 +1400,7 @@ HTMLMediaElement.prototype.onemptied;
 /** @type {?function(!Event)} */
 HTMLMediaElement.prototype.onended;
 
-/** @type {?function(!Event)} */
+/** @type {?function(Event)} */
 HTMLMediaElement.prototype.onerror;
 
 /** @type {?function(!Event)} */
@@ -1448,10 +1448,10 @@ HTMLMediaElement.prototype.onvolumechange;
 /** @type {?function(!Event)} */
 HTMLMediaElement.prototype.onwaiting;
 
-/** @type {?function(!Event)} */
+/** @type {?function(Event)} */
 HTMLImageElement.prototype.onload;
 
-/** @type {?function(!Event)} */
+/** @type {?function(Event)} */
 HTMLImageElement.prototype.onerror;
 
 /** @type {number} */

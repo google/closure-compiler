@@ -43,7 +43,7 @@
 /** @type {EventTarget} */ Event.prototype.originalTarget;
 /** @type {number} */ Event.prototype.pageX;
 /** @type {number} */ Event.prototype.pageY;
-/** @type {EventTarget} */ Event.prototype.relatedTarget;
+/** @type {EventTarget|undefined} */ Event.prototype.relatedTarget;
 /** @type {number} */ Event.prototype.screenX;
 /** @type {number} */ Event.prototype.screenY;
 /** @type {boolean} */ Event.prototype.shiftKey;
