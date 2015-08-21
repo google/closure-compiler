@@ -23,10 +23,11 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
-    languageOut = LanguageMode.ECMASCRIPT6_STRICT;
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    languageOut = LanguageMode.ECMASCRIPT6;
     disableTypeCheck();
     enableLineNumberCheck(false);
+    enableCompareAsTree(false); // otherwise the "use strict" pops to the top and breaks the test
   }
   
   @Override
@@ -52,13 +53,12 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
             "goog.module('test');",
             "var f = 5;",
             "exports = f;"),
-        LINE_JOINER.join(
-            "goog.loadModule(function(exports) {",
-            "  \"use strict\";",
-            "  goog.module('test');",
-            "  var f = 5;",
-            "  exports = f;",
-            "  return exports;",
-            "});"));
+        "goog.loadModule(function(exports){"+
+            "\"use strict\";"+
+            "goog.module(\"test\");"+
+            "var f=5;"+
+            "exports=f;"+
+            "return exports"+
+        "})");
   }
 }
