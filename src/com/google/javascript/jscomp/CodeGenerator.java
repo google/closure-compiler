@@ -362,7 +362,7 @@ class CodeGenerator {
           add("from");
           add(last);
         }
-        cc.endStatement();
+        cc.maybeEndStatement();
         break;
 
       case Token.IMPORT:
@@ -463,6 +463,9 @@ class CodeGenerator {
         cc.beginBlock();
         for (Node c = first; c != null; c = c.getNext()) {
           add(c);
+          if (needsSemiColon(c)) {
+            cc.endStatement(true);
+          }
           cc.endLine();
         }
         cc.endBlock(false);
@@ -524,10 +527,6 @@ class CodeGenerator {
             add(n.getString());
             maybeAddOptional(n);
             maybeAddTypeDecl(n);
-            if (!n.getParent().isRecordType()
-                && !n.getParent().isIndexSignature()) {
-              add(";");
-            }
           } else {
             Preconditions.checkState(childCount == 1);
             Preconditions.checkState(first.isFunction());
@@ -560,11 +559,7 @@ class CodeGenerator {
             maybeAddOptional(fn);
             add(parameters);
             maybeAddTypeDecl(fn);
-            if (body.isEmpty()) {
-              add(";");
-            } else {
-              add(body, Context.PRESERVE_BLOCK);
-            }
+            add(body, Context.PRESERVE_BLOCK);
           }
           break;
         }
@@ -975,9 +970,6 @@ class CodeGenerator {
             // properties that exist for their type declaration.
             Preconditions.checkState(n.getBooleanProp(Node.COMPUTED_PROP_VARIABLE));
           }
-          if (isInClass) {
-            add(";");
-          }
         }
         break;
 
@@ -1156,19 +1148,21 @@ class CodeGenerator {
         add(n.getString());
         cc.addOp("=", true);
         add(last);
-        cc.endStatement();
+        cc.endStatement(true);
         break;
       case Token.DECLARE:
         add("declare");
         add(first);
-        cc.endStatement();
+        if (needsSemiColon(first)) {
+          cc.endStatement(true);
+        }
         break;
       case Token.INDEX_SIGNATURE:
         add("[");
         add(first);
         add("]");
         maybeAddTypeDecl(n);
-        add(";");
+        cc.endStatement(true);
         break;
       case Token.CALL_SIGNATURE:
         if (n.getBooleanProp(Node.CONSTRUCT_SIGNATURE)) {
@@ -1177,7 +1171,7 @@ class CodeGenerator {
         maybeAddGenericTypes(n);
         add(first);
         maybeAddTypeDecl(n);
-        add(";");
+        cc.endStatement(true);
         break;
       default:
         throw new RuntimeException("Unknown type " + Token.name(type) + "\n" + n.toStringTree());
@@ -1884,5 +1878,31 @@ class CodeGenerator {
   private static Context getContextForNoInOperator(Context context) {
     return (context == Context.IN_FOR_INIT_CLAUSE
         ? Context.IN_FOR_INIT_CLAUSE : Context.OTHER);
+  }
+
+  private static boolean needsSemiColon(Node n) {
+    switch (n.getType()) {
+      case Token.CLASS:
+      case Token.INTERFACE:
+      case Token.ENUM:
+      case Token.MODULE:
+      case Token.CALL_SIGNATURE:
+      case Token.INDEX_SIGNATURE:
+      case Token.TYPE_ALIAS:
+      case Token.DECLARE:
+        return false;
+      case Token.EXPORT:
+        return needsSemiColon(n.getFirstChild());
+      case Token.MEMBER_FUNCTION_DEF:
+      case Token.GETTER_DEF:
+      case Token.SETTER_DEF:
+        return n.getFirstChild().getLastChild().isEmpty();
+      case Token.COMPUTED_PROP:
+        return n.hasOneChild();
+      case Token.FUNCTION:
+        return n.getLastChild().isEmpty();
+      default:
+        return true;
+    }
   }
 }

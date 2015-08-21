@@ -270,6 +270,26 @@ public class Parser {
     return result.build();
   }
 
+  private ImmutableList<ParseTree> parseModuleElements() {
+    ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
+
+    while (!peek(TokenType.CLOSE_CURLY) && !peek(TokenType.END_OF_FILE)) {
+      result.add(parseScriptElement());
+    }
+
+    return result.build();
+  }
+
+  private ImmutableList<ParseTree> parseAmbientModuleElements() {
+    ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
+
+    while (peekAmbientModuleElement()) {
+      result.add(parseAmbientModuleElement());
+    }
+
+    return result.build();
+  }
+
   // ImportDeclaration
   // ExportDeclaration
   // TypeScript InterfaceDeclaration
@@ -283,7 +303,7 @@ public class Parser {
     }
 
     if (peekExportDeclaration()) {
-      return parseExportDeclaration();
+      return parseExportDeclaration(false);
     }
 
     if (peekInterfaceDeclaration()) {
@@ -302,7 +322,23 @@ public class Parser {
       return parseAmbientDeclaration();
     }
 
+    if (peekModuleDeclaration()) {
+      return parseModuleDeclaration(false);
+    }
+
     return parseSourceElement();
+  }
+
+  private ParseTree parseAmbientModuleElement() {
+    if (peekInterfaceDeclaration()) {
+      return parseInterfaceDeclaration();
+    }
+
+    if (peekExportDeclaration()) {
+      return parseExportDeclaration(true);
+    }
+
+    return parseAmbientDeclarationHelper();
   }
 
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-imports
@@ -422,7 +458,7 @@ public class Parser {
     [+NoReference] IdentifierName
     [+NoReference] IdentifierName as IdentifierName
    */
-  private ParseTree parseExportDeclaration() {
+  private ParseTree parseExportDeclaration(boolean isAmbient) {
     SourcePosition start = getTreeStartLocation();
     boolean isDefault = false;
     boolean isExportAll = false;
@@ -436,10 +472,22 @@ public class Parser {
         nextToken();
         break;
       case FUNCTION:
-        export = parseFunctionDeclaration();
+        export = isAmbient ? parseAmbientFunctionDeclaration() : parseFunctionDeclaration();
         break;
       case CLASS:
-        export = parseClassDeclaration(false);
+        export = parseClassDeclaration(isAmbient);
+        break;
+      case INTERFACE:
+        export = parseInterfaceDeclaration();
+        break;
+      case ENUM:
+        export = parseEnumDeclaration();
+        break;
+      case MODULE:
+        export = parseModuleDeclaration(isAmbient);
+        break;
+      case DECLARE:
+        export = parseAmbientDeclaration();
         break;
       case DEFAULT:
         isDefault = true;
@@ -450,11 +498,14 @@ public class Parser {
         isExportSpecifier = true;
         exportSpecifierList = parseExportSpecifierSet();
         break;
+      case TYPE:
+        export = parseTypeAlias();
+        break;
       default: // unreachable, parse as a var decl to get a parse error.
       case VAR:
       case LET:
       case CONST:
-        export = parseVariableDeclarationList();
+        export = isAmbient ? parseAmbientVariableDeclarationList() : parseVariableDeclarationList();
         break;
     }
 
@@ -843,12 +894,13 @@ public class Parser {
     return declaration;
   }
 
-  private ModuleDeclarationTree parseModuleDeclaration() {
+  private ModuleDeclarationTree parseModuleDeclaration(boolean isAmbient) {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.MODULE);
     ModuleNameTree name = parseModuleName();
     eat(TokenType.OPEN_CURLY);
-    ImmutableList<ParseTree> elements = parseSourceElementList();
+    ImmutableList<ParseTree> elements = isAmbient
+        ? parseAmbientModuleElements() : parseModuleElements();
     eat(TokenType.CLOSE_CURLY);
     return new ModuleDeclarationTree(getTreeLocation(start), name, elements);
   }
@@ -866,10 +918,6 @@ public class Parser {
 
     if (peekClassDeclaration()) {
       return parseClassDeclaration(false);
-    }
-
-    if (peekModuleDeclaration()) {
-      return parseModuleDeclaration();
     }
 
     // Harmony let block scoped bindings. let can only appear in
@@ -929,7 +977,7 @@ public class Parser {
     return new CallSignatureTree(getTreeLocation(start), isNew, generics, params, returnType);
   }
 
-  private boolean peekAmbientDeclaration() { // AmbientModuleDeclaration not supported
+  private boolean peekAmbientDeclaration() {
     return peek(TokenType.DECLARE) && !peekImplicitSemiColon(1)
         && (peek(1, TokenType.VAR)
          || peek(1, TokenType.LET)
@@ -938,6 +986,18 @@ public class Parser {
          || peek(1, TokenType.CLASS)
          || peek(1, TokenType.ENUM)
          || peek(1, TokenType.MODULE));
+  }
+
+  private boolean peekAmbientModuleElement() {
+    return peek(TokenType.VAR)
+        || peek(TokenType.LET)
+        || peek(TokenType.CONST)
+        || peek(TokenType.FUNCTION)
+        || peek(TokenType.CLASS)
+        || peek(TokenType.INTERFACE)
+        || peek(TokenType.ENUM)
+        || peek(TokenType.MODULE)
+        || peek(TokenType.EXPORT);
   }
 
   private boolean peekFunction(int index) {
@@ -1466,6 +1526,17 @@ public class Parser {
 
   private VariableDeclarationListTree parseVariableDeclarationListNoIn() {
     return parseVariableDeclarationList(Expression.NO_IN);
+  }
+
+  private VariableDeclarationListTree parseAmbientVariableDeclarationList() {
+    VariableDeclarationListTree declare = parseVariableDeclarationList(Expression.NO_IN);
+    // AmbientVariebleDeclaration may not have initializer
+    for (VariableDeclarationTree tree : declare.asVariableDeclarationList().declarations) {
+      if (tree.initializer != null) {
+        reportError("Ambient variable declaration may not have initializer");
+      }
+    }
+    return declare;
   }
 
   private VariableDeclarationListTree parseVariableDeclarationList(
@@ -3206,6 +3277,11 @@ public class Parser {
   private ParseTree parseAmbientDeclaration() {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.DECLARE);
+    ParseTree declare = parseAmbientDeclarationHelper();
+    return new AmbientDeclarationTree(getTreeLocation(start), declare);
+  }
+
+  private ParseTree parseAmbientDeclarationHelper() {
     ParseTree declare;
     switch (peekType()) {
       case FUNCTION:
@@ -3218,24 +3294,18 @@ public class Parser {
         declare = parseEnumDeclaration();
         break;
       case MODULE:
-        declare = parseModuleDeclaration();
+        declare = parseModuleDeclaration(true);
         break;
       default: // unreachable, parse as a var decl to get a parse error.
       case VAR:
       case LET:
       case CONST:
-        declare = parseVariableDeclarationListNoIn();
-        // AmbientVariebleDeclaration may not have initializer
-        for (VariableDeclarationTree tree : declare.asVariableDeclarationList().declarations) {
-          if (tree.initializer != null) {
-            reportError("Ambient variable declaration may not have initializer");
-          }
-        }
+        declare = parseAmbientVariableDeclarationList();
         break;
     }
 
     eatPossibleImplicitSemiColon();
-    return new AmbientDeclarationTree(getTreeLocation(start), declare);
+    return declare;
   }
 
   /**

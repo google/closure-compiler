@@ -2173,17 +2173,22 @@ class IRFactory {
     Node processModuleName(ModuleNameTree name) {
       ImmutableList<String> segments = name.segments;
       if (segments.size() == 1) {
-        return newStringNode(Token.NAME, segments.get(0));
+        Node moduleName = newStringNode(Token.NAME, segments.get(0));
+        setSourceInfo(moduleName, name);
+        return moduleName;
       } else {
         Iterator<String> segmentsIt = segments.iterator();
         Node node = IR.name(segmentsIt.next());
+        setSourceInfo(node, name);
         while (segmentsIt.hasNext()) {
-          node = newNode(Token.GETPROP, node, newStringNode(Token.STRING, segmentsIt.next()));
+          Node string = newStringNode(Token.STRING, segmentsIt.next());
+          setSourceInfo(string, name);
+          node = newNode(Token.GETPROP, node, string);
+          setSourceInfo(node, name);
         }
         return node;
       }
     }
-
 
     Node processIndexSignature(IndexSignatureTree tree) {
       maybeWarnTypeSyntax(tree, "index signature");
