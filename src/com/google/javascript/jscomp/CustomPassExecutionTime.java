@@ -21,8 +21,6 @@ package com.google.javascript.jscomp;
  * custom pass executes.
  */
 public enum CustomPassExecutionTime {
-  /** Unlike other passes, this is always included, even in whitespace only mode */
-  BEFORE_ALWAYS,
   BEFORE_CHECKS,
   BEFORE_OPTIMIZATIONS,
   BEFORE_OPTIMIZATION_LOOP,
