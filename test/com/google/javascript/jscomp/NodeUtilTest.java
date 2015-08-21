@@ -1752,7 +1752,8 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertLValueNamedX(Node n) {
     assertThat(n.getString()).isEqualTo("x");
-    assertWithMessage("Should be an lvalue: %s", n).that(NodeUtil.isLValue(n)).isTrue();
+    assertWithMessage(
+        String.format("Should be an lvalue: %s", n)).that(NodeUtil.isLValue(n)).isTrue();
   }
 
   public void testIsLValue() {
@@ -1777,7 +1778,8 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertNotLValueNamedX(Node n) {
     assertThat(n.getString()).isEqualTo("x");
-    assertWithMessage("Should not be an lvalue: %s", n).that(NodeUtil.isLValue(n)).isFalse();
+    assertWithMessage(
+        String.format("Should not be an lvalue: %s", n)).that(NodeUtil.isLValue(n)).isFalse();
   }
 
   public void testIsNotLValue() {
