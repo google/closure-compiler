@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link RemoveUnusedPrototypeProperties}.
  *
@@ -40,6 +42,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
 
   @Override
   public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     anchorUnusedVars = false;
     canRemoveExterns = false;
   }
@@ -193,10 +196,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
   }
 
   public void testStatementRestriction() {
-    test("function e(){}" +
-           "var x = e.prototype.method1 = function(){};" +
-           "var y = new e; x()",
-         "function e(){}" +
+    testSame("function e(){}" +
            "var x = e.prototype.method1 = function(){};" +
            "var y = new e; x()");
   }
@@ -510,4 +510,19 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
         "(new Foo()).method1();");
   }
 
+  public void testRemoveInBlock() {
+    test(LINE_JOINER.join(
+        "if (true) {",
+        "  if (true) {",
+        "    var foo = function() {};",
+        "  }",
+        "}"),
+         LINE_JOINER.join(
+        "if (true) {",
+        "  if (true) {",
+        "  }",
+        "}"));
+
+    testSame("if (true) { let foo = function() {} }");
+  }
 }
