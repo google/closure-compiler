@@ -10817,6 +10817,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  y = x;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "/** @param {number=} x */",
@@ -10825,6 +10826,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** undefined */ u = x;",
         "  }",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "/** @constructor */",
@@ -10835,6 +10837,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** (null|undefined) */ y = x;",
         "  }",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "function f(/** (number|string) */ x) {",
@@ -10842,6 +10845,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    x - 5;",
         "  }",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "function f(/** (number|string) */ x) {",
@@ -10849,6 +10853,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    x < 'str';",
         "  }",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "function f(/** (number|boolean) */ x) {",

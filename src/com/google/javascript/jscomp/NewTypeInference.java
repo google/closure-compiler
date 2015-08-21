@@ -274,21 +274,19 @@ final class NewTypeInference implements CompilerPass {
   private final String ABSTRACT_METHOD_NAME;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
   private static final QualifiedName NUMERIC_INDEX = new QualifiedName("0");
-  private final boolean isClosurePassOn;
 
   // Used only for development
   private static boolean showDebuggingPrints = false;
   static boolean measureMem = false;
   private static long peakMem = 0;
 
-  NewTypeInference(AbstractCompiler compiler, boolean isClosurePassOn) {
+  NewTypeInference(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
     this.compiler = compiler;
     this.convention = compiler.getCodingConvention();
     this.envs = new LinkedHashMap<>();
     this.summaries = new LinkedHashMap<>();
     this.deferredChecks = new LinkedHashMap<>();
-    this.isClosurePassOn = isClosurePassOn;
     this.ABSTRACT_METHOD_NAME = convention.getAbstractMethodName();
     assertionFunctionsMap = new LinkedHashMap<>();
     for (AssertionFunctionSpec assertionFunction : convention.getAssertionFunctions()) {
@@ -3306,7 +3304,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private boolean isClosureSpecificCall(Node expr) {
-    if (!isClosurePassOn || !expr.isCall()) {
+    if (!expr.isCall()) {
       return false;
     }
     return expr.getFirstChild().isQualifiedName()
