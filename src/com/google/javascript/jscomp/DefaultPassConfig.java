@@ -337,6 +337,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(newTypeInference);
     }
 
+    checks.add(inlineTypeAliases);
+
     if (options.checkTypes || options.inferTypes
         // With NTI, we still need OTI to run because the later passes that use
         // types only understand OTI types at the moment.
@@ -1219,6 +1221,14 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new Es6ToEs3ClassSideInheritance(compiler);
+    }
+  };
+
+  private final PassFactory inlineTypeAliases =
+      new PassFactory("inlineTypeAliases", true) {
+    @Override
+    CompilerPass create(AbstractCompiler compiler) {
+      return new InlineAliases(compiler);
     }
   };
 

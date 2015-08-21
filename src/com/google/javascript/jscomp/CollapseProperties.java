@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * Flattens global objects/namespaces by replacing each '.' with '$' in
  * their names. This reduces the number of property lookups the browser has
@@ -230,7 +229,7 @@ class CollapseProperties implements CompilerPass {
         return false;
       }
       name = namespace.getSlot(lvalue.getQualifiedName());
-      if (name != null && isInlinableGlobalAlias(name)) {
+      if (name != null && name.isInlinableGlobalAlias()) {
         Set<AstChange> newNodes = new LinkedHashSet<>();
 
         List<Ref> refs = new ArrayList<>(name.getRefs());
@@ -308,35 +307,6 @@ class CollapseProperties implements CompilerPass {
         newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
       }
     }
-  }
-
-  private static boolean isInlinableGlobalAlias(Name name) {
-    // Only simple aliases with direct usage are inlinable.
-    if (name.inExterns || name.globalSets != 1 || name.localSets != 0
-        || !name.canCollapse()) {
-      return false;
-    }
-
-    // Only allow inlining of simple references.
-    for (Ref ref : name.getRefs()) {
-      switch (ref.type) {
-        case SET_FROM_GLOBAL:
-          // Expect one global set
-          continue;
-        case SET_FROM_LOCAL:
-          throw new IllegalStateException();
-        case ALIASING_GET:
-        case DIRECT_GET:
-          continue;
-        case PROTOTYPE_GET:
-        case CALL_GET:
-        case DELETE_PROP:
-          return false;
-        default:
-          throw new IllegalStateException();
-      }
-    }
-    return true;
   }
 
   private boolean inlineAliasIfPossible(

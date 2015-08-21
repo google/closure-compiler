@@ -1139,6 +1139,34 @@ class GlobalNamespace
       return docInfo != null && docInfo.isNoCollapse();
     }
 
+    boolean isInlinableGlobalAlias() {
+      // Only simple aliases with direct usage are inlinable.
+      if (inExterns || globalSets != 1 || localSets != 0 || !canCollapse()) {
+        return false;
+      }
+
+      // Only allow inlining of simple references.
+      for (Ref ref : getRefs()) {
+        switch (ref.type) {
+          case SET_FROM_GLOBAL:
+            // Expect one global set
+            continue;
+          case SET_FROM_LOCAL:
+            throw new IllegalStateException();
+          case ALIASING_GET:
+          case DIRECT_GET:
+            continue;
+          case PROTOTYPE_GET:
+          case CALL_GET:
+          case DELETE_PROP:
+            return false;
+          default:
+            throw new IllegalStateException();
+        }
+      }
+      return true;
+    }
+
     boolean canCollapse() {
       return !inExterns && !isGetOrSetDefinition() &&
           !isCollapsingExplicitlyDenied() &&
