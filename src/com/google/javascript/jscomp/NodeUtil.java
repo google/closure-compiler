@@ -3684,11 +3684,14 @@ public final class NodeUtil {
   /**
    * Returns whether this is a target of a call or new.
    */
-  static boolean isCallOrNewTarget(Node target) {
-    Node parent = target.getParent();
-    return parent != null
-        && NodeUtil.isCallOrNew(parent)
-        && parent.getFirstChild() == target;
+  static boolean isCallOrNewTarget(Node n) {
+    Node parent = n.getParent();
+    return parent != null && isCallOrNew(parent) && parent.getFirstChild() == n;
+  }
+
+  static boolean isCallOrNewArgument(Node n) {
+    Node parent = n.getParent();
+    return parent != null && isCallOrNew(parent) && parent.getFirstChild() != n;
   }
 
   private static boolean isToStringMethodCall(Node call) {

@@ -2592,12 +2592,11 @@ final class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(thisExpr.isThis());
     Preconditions.checkState(!currentScope.hasThis());
     Node parent = thisExpr.getParent();
-    Node scopeParent = currentScope.getRoot().getParent();
     if ((parent.isGetProp() || parent.isGetElem())
         // Don't warn for callbacks. Most of them are not annotated but THIS is
         // bound to a legitimate object at runtime. They do lose typechecking
         // for THIS however, but we won't warn.
-        && !scopeParent.isCall() && !scopeParent.isNew()) {
+        && !NodeUtil.isCallOrNewArgument(currentScope.getRoot())) {
       warnings.add(JSError.make(thisExpr, CheckGlobalThis.GLOBAL_THIS));
       return true;
     }

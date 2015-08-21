@@ -273,6 +273,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck("function f() { this['p']; }", CheckGlobalThis.GLOBAL_THIS);
 
+    typeCheck("(function() { this.p; })();", CheckGlobalThis.GLOBAL_THIS);
+
     typeCheck(Joiner.on('\n').join(
         "function g(x) {}",
         "g(function() { return this.p; })"));
