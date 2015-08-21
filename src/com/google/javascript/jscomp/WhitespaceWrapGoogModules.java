@@ -1,7 +1,5 @@
 package com.google.javascript.jscomp;
 
-import java.util.Collections;
-
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -41,11 +39,11 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
      */
 
     Node block = IR.block();
+    block.addChildToBack(IR.exprResult(IR.string("use strict"))); // needs to be explicit, to match ClosureBundler
     for (Node c = scriptRoot.getFirstChild(); c != null; c = c.getNext()) {
       block.addChildToBack(c.cloneTree());
     }
     block.addChildToBack(IR.returnNode(IR.name("exports")));
-    block.getFirstChild().setDirectives(Collections.singleton("use strict"));
 
     Node loadMod = IR.exprResult(IR.call(
         IR.getprop(IR.name("goog"), IR.string("loadModule")),
