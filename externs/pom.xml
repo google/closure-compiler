@@ -48,7 +48,8 @@
             <phase>generate-sources</phase>
             <configuration>
               <tasks>
-                <zip destfile="target/generated-resources/externs.zip" basedir="." includes="*.js"/>
+                <zip destfile="../target/classes/externs.zip" basedir="." includes="**/*.js"/>
+                <zip destfile="target/classes/externs.zip" basedir="." includes="**/*.js"/>
               </tasks>
             </configuration>
             <goals>

@@ -109,6 +109,12 @@
       <name>Paul Lindner</name>
       <email>lindner@inuus.com</email>
     </developer>
+
+    <developer>
+      <id>ckillingsworth</id>
+      <name>Chad Killingsworth</name>
+      <email>chadkillingsworth@gmail.com</email>
+    </developer>
   </developers>
 
   <properties>
