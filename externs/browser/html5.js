@@ -1382,7 +1382,7 @@ HTMLMediaElement.prototype.canPlayType = function(type) {};
 
 /** Event handlers */
 
-/** @type {?function(!Event)} */
+/** @type {?function(Event)} */
 HTMLMediaElement.prototype.onabort;
 
 /** @type {?function(!Event)} */
