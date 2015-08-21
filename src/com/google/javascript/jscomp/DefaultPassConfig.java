@@ -189,6 +189,17 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
   }
+  
+  @Override
+  protected List<PassFactory> getAlwaysPreChecks() {
+    List<PassFactory> preChecks = new ArrayList<>();
+    
+    if (options.wrapGoogModulesForWhitespaceOnly) {
+      preChecks.add(whitespaceWrapGoogModules);
+    }
+    
+    return preChecks;
+  }
 
   @Override
   protected List<PassFactory> getChecks() {
@@ -2674,4 +2685,14 @@ public final class DefaultPassConfig extends PassConfig {
       return new RewriteBindThis(compiler);
     }
   };
+
+  /** Rewrites goog.module in whitespace only mode */
+  private final HotSwapPassFactory whitespaceWrapGoogModules =
+      new HotSwapPassFactory("whitespaceWrapGoogModules", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new WhitespaceWrapGoogModules(compiler);
+    }
+  };
+
 }

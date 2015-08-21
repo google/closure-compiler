@@ -930,6 +930,19 @@ public class CompilerOptions implements Serializable {
 
   /** List of conformance configs to use in CheckConformance */
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
+  
+  /**
+   * For use in {@value CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module;
+   * without this, goog.module cannot work in whitespace only mode.
+   * Currently must be explicitly opted-in. 
+   * TODO add to {@link CompilationLevel#setOptionsForCompilationLevel(CompilerOptions)}.
+   */
+  boolean wrapGoogModulesForWhitespaceOnly = false;
+  
+  public void setWrapGoogModulesForWhitespaceOnly(boolean enable) {
+    this.wrapGoogModulesForWhitespaceOnly = enable;
+  }
+  
 
   /**
    * Initializes compiler options. All options are disabled by default.
