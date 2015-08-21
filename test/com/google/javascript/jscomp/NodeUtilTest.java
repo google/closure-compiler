@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -1752,7 +1751,7 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertLValueNamedX(Node n) {
     assertThat(n.getString()).isEqualTo("x");
-    assertWithMessage("Should be an lvalue: %s", n).that(NodeUtil.isLValue(n)).isTrue();
+    assertThat(NodeUtil.isLValue(n)).isTrue();
   }
 
   public void testIsLValue() {
@@ -1777,7 +1776,7 @@ public final class NodeUtilTest extends TestCase {
 
   private void assertNotLValueNamedX(Node n) {
     assertThat(n.getString()).isEqualTo("x");
-    assertWithMessage("Should not be an lvalue: %s", n).that(NodeUtil.isLValue(n)).isFalse();
+    assertThat(NodeUtil.isLValue(n)).isFalse();
   }
 
   public void testIsNotLValue() {
