@@ -672,6 +672,8 @@ public class Compiler extends AbstractCompiler {
     if (!precheck()) {
       return;
     }
+    
+    alwaysPreChecks(); // even in whitespace only mode
 
     if (!options.skipNonTranspilationPasses || options.lowerFromEs6()) {
       check();
@@ -744,6 +746,17 @@ public class Compiler extends AbstractCompiler {
     return true;
   }
 
+  public void alwaysPreChecks() {
+    Tracer t = newTracer("runAlwaysPreCheckPasses");
+    try {
+      for (PassFactory pf : getPassConfig().getAlwaysPreChecks()) {
+        pf.create(this).process(externsRoot, jsRoot);
+      }
+    } finally {
+      stopTracer(t, "runAlwaysPreCheckPasses");
+    }
+  }
+  
   public void check() {
     runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
 
