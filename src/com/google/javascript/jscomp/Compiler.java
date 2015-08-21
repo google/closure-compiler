@@ -669,8 +669,6 @@ public class Compiler extends AbstractCompiler {
       return;
     }
 
-    runCustomPasses(CustomPassExecutionTime.BEFORE_ALWAYS);
-    
     if (!options.skipNonTranspilationPasses || options.lowerFromEs6()) {
       check();
       if (hasErrors()) {
