@@ -1615,7 +1615,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.moveFunctionDeclarations = true;
-    test(options, code, "function f() { return 3; } var x = f();");
+    test(options, code, "var f = function() { return 3; }; var x = f();");
   }
 
   public void testNameAnonymousFunctions() {

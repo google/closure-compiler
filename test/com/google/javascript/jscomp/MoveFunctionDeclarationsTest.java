@@ -28,12 +28,12 @@ public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
   }
 
   public void testFunctionDeclarations() {
-    test("a; function f(){} function g(){}", "function f(){} function g(){} a");
+    test("a; function f(){} function g(){}", "var f = function(){}; var g = function(){}; a;");
   }
 
   public void testFunctionDeclarationsInModule() {
     test(createModules("a; function f(){} function g(){}"),
-         new String[] { "function f(){} function g(){} a" });
+         new String[] { "var f = function(){}; var g = function(){}; a" });
   }
 
   public void testFunctionsExpression() {
