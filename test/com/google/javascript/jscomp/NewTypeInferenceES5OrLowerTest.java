@@ -3828,6 +3828,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "Bar.prototype.method2 = function(x, y) {};",
         "Bar.prototype.method = Bar.prototype.method2;"),
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @type {string} */",
+        "Foo.prototype.prop;",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo}",
+        " */",
+        "function Bar() {",
+        "  /** @type {?string} */",
+        "  this.prop = null;",
+        "}",
+        "Bar.prototype.method = function() {",
+        "  this.prop = null;",
+        "};"),
+        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
   }
 
   public void testInheritingTheParentClassInterfaces() {

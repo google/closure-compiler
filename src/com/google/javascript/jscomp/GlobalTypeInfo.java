@@ -1454,8 +1454,11 @@ class GlobalTypeInfo implements CompilerPass {
       } else if (mayAddPropToType(getProp, rawNominalType)) {
         rawNominalType.addUndeclaredClassProperty(pname, getProp);
       }
-      propertyDefs.put(rawNominalType, pname,
-          new PropertyDef(getProp, null, null));
+      // Only add the definition node if the property is not already defined.
+      if (!propertyDefs.contains(rawNominalType, pname)) {
+        propertyDefs.put(rawNominalType, pname,
+            new PropertyDef(getProp, null, null));
+      }
     }
 
     private void visitOtherPropertyDeclaration(Node getProp) {
