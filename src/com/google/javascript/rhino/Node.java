@@ -1579,8 +1579,8 @@ public class Node implements Serializable {
         return "Node tree inequality:" +
             "\nTree1:\n" + toStringTree() +
             "\n\nTree2:\n" + actual.toStringTree() +
-            "\n\nSubtree1: " + diff.nodeActual.toStringTree() +
-            "\n\nSubtree2: " + diff.nodeExpected.toStringTree();
+            "\n\nSubtree1: " + diff.nodeExpected.toStringTree() +
+            "\n\nSubtree2: " + diff.nodeActual.toStringTree();
       }
       return null;
   }
@@ -1595,8 +1595,8 @@ public class Node implements Serializable {
    * @see JSDocInfo#equals(Object)
    */
   @VisibleForTesting
-  public String checkTreeEqualsIncludingJsDoc(Node expected) {
-      NodeMismatch diff = checkTreeEqualsImpl(expected, true);
+  public String checkTreeEqualsIncludingJsDoc(Node actual) {
+      NodeMismatch diff = checkTreeEqualsImpl(actual, true);
       if (diff != null) {
         if (diff.nodeActual.isEquivalentTo(diff.nodeExpected, false, true, false)) {
           // The only difference is that the JSDoc is different on
@@ -1616,8 +1616,8 @@ public class Node implements Serializable {
               "\nActual JSDoc  : " + jsDocActual;
         }
         return "Node tree inequality:" +
-            "\nExpected tree:\n" + expected.toStringTree() +
-            "\n\nActual tree:\n" + toStringTree() +
+            "\nExpected tree:\n" + toStringTree() +
+            "\n\nActual tree:\n" + actual.toStringTree() +
             "\n\nExpected subtree: " + diff.nodeExpected.toStringTree() +
             "\n\nActual subtree: " + diff.nodeActual.toStringTree();
       }
@@ -1625,30 +1625,31 @@ public class Node implements Serializable {
   }
 
   /**
-   * Compare this node to the expected node recursively and return the first pair of nodes
+   * Compare this node to the given node recursively and return the first pair of nodes
    * that differs doing a preorder depth-first traversal. Package private for
-   * testing. Returns null if the nodes are equivalent.
+   * testing. Returns null if the nodes are equivalent. Should be called with {@code this} as the
+   * "expected" node and {@code actual} as the "actual" node.
    */
-  NodeMismatch checkTreeEqualsImpl(Node expected) {
-    return checkTreeEqualsImpl(expected, false);
+  NodeMismatch checkTreeEqualsImpl(Node actual) {
+    return checkTreeEqualsImpl(actual, false);
   }
 
   /**
-   * Compare this node to the expected node recursively and return the first pair of nodes
-   * that differs doing a preorder depth-first traversal.
+   * Compare this node to the given node recursively and return the first pair of nodes
+   * that differs doing a preorder depth-first traversal. Should be called with {@code this} as the
+   * "expected" node and {@code actual} as the "actual" node.
    * @param jsDoc Whether to check for differences in JSDoc.
    */
-  private NodeMismatch checkTreeEqualsImpl(Node expected, boolean jsDoc) {
-    if (!isEquivalentTo(expected, false, false, jsDoc)) {
-      return new NodeMismatch(this, expected);
+  private NodeMismatch checkTreeEqualsImpl(Node actual, boolean jsDoc) {
+    if (!isEquivalentTo(actual, false, false, jsDoc)) {
+      return new NodeMismatch(this, actual);
     }
 
     NodeMismatch res = null;
-    Node n, n2;
-    for (n = first, n2 = expected.first;
-         n != null;
-         n = n.next, n2 = n2.next) {
-      res = n.checkTreeEqualsImpl(n2, jsDoc);
+    for (Node expectedChild = first, actualChild = actual.first;
+         expectedChild != null;
+         expectedChild = expectedChild.next, actualChild = actualChild.next) {
+      res = expectedChild.checkTreeEqualsImpl(actualChild, jsDoc);
       if (res != null) {
         return res;
       }
@@ -1736,8 +1737,7 @@ public class Node implements Serializable {
     }
 
     if (recurse) {
-      Node n, n2;
-      for (n = first, n2 = node.first;
+      for (Node n = first, n2 = node.first;
            n != null;
            n = n.next, n2 = n2.next) {
         if (!n.isEquivalentTo(n2, compareType, recurse, jsDoc)) {
@@ -2521,27 +2521,27 @@ public class Node implements Serializable {
   }
 
   static class NodeMismatch {
-    final Node nodeActual;
     final Node nodeExpected;
+    final Node nodeActual;
 
-    NodeMismatch(Node nodeActual, Node nodeExpected) {
-      this.nodeActual = nodeActual;
+    NodeMismatch(Node nodeExpected, Node nodeActual) {
       this.nodeExpected = nodeExpected;
+      this.nodeActual = nodeActual;
     }
 
     @Override
     public boolean equals(Object object) {
       if (object instanceof NodeMismatch) {
         NodeMismatch that = (NodeMismatch) object;
-        return that.nodeActual.equals(this.nodeActual)
-            && that.nodeExpected.equals(this.nodeExpected);
+        return that.nodeExpected.equals(this.nodeExpected)
+            && that.nodeActual.equals(this.nodeActual);
       }
       return false;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(nodeActual, nodeExpected);
+      return Objects.hashCode(nodeExpected, nodeActual);
     }
   }
 
