@@ -219,6 +219,17 @@ public final class JSDocInfoPrinterTest extends TestCase {
         JSDocInfoPrinter.print(info));
   }
 
+  public void testInterfaceInheritance() {
+    builder.recordInterface();
+    builder.recordExtendedInterface(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), ""));
+     builder.recordExtendedInterface(
+        new JSTypeExpression(JsDocInfoParser.parseTypeString("Bar"), ""));
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/**@interface @extends {Foo} @extends {Bar} */",
+        JSDocInfoPrinter.print(info));
+  }
+
   public void testFunctions() {
     builder.recordType(new JSTypeExpression(
         JsDocInfoParser.parseTypeString("function()"), ""));
