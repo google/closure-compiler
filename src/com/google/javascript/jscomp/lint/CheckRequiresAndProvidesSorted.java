@@ -17,8 +17,8 @@ package com.google.javascript.jscomp.lint;
 
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
-import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.DiagnosticType;
+import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.Node;
@@ -32,7 +32,7 @@ import java.util.List;
  * TODO(tbreisacher): Add automatic fixes for these.
  */
 public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallback
-    implements CompilerPass {
+    implements HotSwapCompilerPass {
   public static final DiagnosticType REQUIRES_NOT_SORTED =
       DiagnosticType.warning(
           "JSC_REQUIRES_NOT_SORTED", "goog.require() statements are not sorted.");
@@ -71,6 +71,11 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   @Override

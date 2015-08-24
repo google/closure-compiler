@@ -199,6 +199,11 @@ public final class DefaultPassConfig extends PassConfig {
     // Verify JsDoc annotations
     checks.add(checkJsDoc);
 
+    if (!options.skipNonTranspilationPasses && options.closurePass
+        && options.enables(DiagnosticGroups.LINT_CHECKS)) {
+      checks.add(checkRequiresAndProvidesSorted);
+    }
+
     // goog.module rewrite must happen even if options.skipNonTranspilationPasses is set.
     if (options.closurePass) {
       checks.add(closureRewriteModule);
@@ -1584,11 +1589,15 @@ public final class DefaultPassConfig extends PassConfig {
           .add(new CheckForInOverArray(compiler))
           .add(new CheckPrototypeProperties(compiler))
           .add(new ImplicitNullabilityCheck(compiler));
-      if (options.closurePass) {
-        callbacks.add(new CheckRequiresAndProvidesSorted(compiler));
-      }
-
       return combineChecks(compiler, callbacks.build());
+    }
+  };
+
+  private final HotSwapPassFactory checkRequiresAndProvidesSorted =
+      new HotSwapPassFactory("checkRequiresAndProvidesSorted", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new CheckRequiresAndProvidesSorted(compiler);
     }
   };
 
