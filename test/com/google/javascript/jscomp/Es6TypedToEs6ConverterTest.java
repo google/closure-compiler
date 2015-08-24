@@ -256,13 +256,13 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     enableCompareAsTree(false);
     testExternChanges(
         "declare var x: number;",
-        "/** @suppress {duplicate} */ var /** number */ x;");
+        "var /** number */ x;");
     testExternChanges("declare let x;", "var x;");
     testExternChanges("declare const x;", "/** @const */ var x;");
     testExternChanges("declare function f(): number;", "/** @return {number} */ function f() {}");
     testExternChanges(
         "declare enum Foo {}",
-        "/** @suppress {duplicate} @enum {number} */ var Foo = {}");
+        "/** @enum {number} */ var Foo = {}");
     testExternChanges("declare class C { constructor(); };", "class C { constructor() {} }");
   }
 

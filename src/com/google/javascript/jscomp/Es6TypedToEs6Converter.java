@@ -351,10 +351,6 @@ public final class Es6TypedToEs6Converter
           }
         }
         break;
-      case Token.ENUM:
-      case Token.VAR:
-        builder.addSuppression("duplicate");
-        break;
       case Token.LET:
         child.setType(Token.VAR);
         break;
