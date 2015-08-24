@@ -310,9 +310,6 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("reportUnknownTypes",
           TypeCheck.UNKNOWN_EXPR_TYPE);
 
-  public static final DiagnosticGroup CHECK_STRUCT_DICT_INHERITANCE =
-      DiagnosticGroups.registerDeprecatedGroup("checkStructDictInheritance");
-
   public static final DiagnosticGroup CHECK_VARIABLES =
       DiagnosticGroups.registerGroup("checkVars",
           VarCheck.UNDEFINED_VAR_ERROR,
