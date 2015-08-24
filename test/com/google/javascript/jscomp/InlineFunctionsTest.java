@@ -112,6 +112,11 @@ public final class InlineFunctionsTest extends CompilerTestCase {
         "foo(x());");
   }
 
+  public void testInlineEmptyFunction6() {
+    test("if (window) { f(); function f() {} }",
+        "if (window) { void 0; }");
+  }
+
   public void testInlineFunctions1() {
     // As simple a test as we can get.
     test("function foo(){ return 4 }" +
@@ -2211,7 +2216,15 @@ public final class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testAnonymous2() {
-    testSame("(function(){eval();(function(){var b=a;a++;alert(b)})()})();");
+    testSame(LINE_JOINER.join(
+        "(function(){",
+        "  eval();",
+        "  (function(){",
+        "    var b=a;",
+        "    a++;",
+        "    alert(b)",
+        "  })()",
+        "})();"));
   }
 
   public void testAnonymous3() {

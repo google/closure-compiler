@@ -661,8 +661,11 @@ class FunctionInjector {
         new NodeUtil.MatchShallowStatement());
     boolean forbidTemps = false;
     if (!ref.scope.isGlobal()) {
-      Node fnCaller = ref.scope.getRootNode();
-      Node fnCallerBody = fnCaller.getLastChild();
+      Node blockScopeRoot =
+          ref.scope.isBlockScope()
+              ? ref.scope.getRootNode()
+              : ref.scope.getRootNode().getLastChild();
+      Preconditions.checkState(blockScopeRoot.isBlock());
 
       // Don't allow any new vars into a scope that contains eval or one
       // that contains functions (excluding the function being inlined).
@@ -678,8 +681,7 @@ class FunctionInjector {
           return false;
         }
       };
-      forbidTemps = NodeUtil.has(fnCallerBody,
-          match, NodeUtil.MATCH_NOT_FUNCTION);
+      forbidTemps = NodeUtil.has(blockScopeRoot, match, NodeUtil.MATCH_NOT_FUNCTION);
     }
 
     if (fnContainsVars && forbidTemps) {

@@ -112,11 +112,11 @@ class InlineFunctions implements CompilerPass {
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
-    NodeTraversal.traverse(compiler, root, new FindCandidateFunctions());
+    NodeTraversal.traverseEs6(compiler, root, new FindCandidateFunctions());
     if (fns.isEmpty()) {
       return;  // Nothing left to do.
     }
-    NodeTraversal.traverse(compiler, root,
+    NodeTraversal.traverseEs6(compiler, root,
        new FindCandidatesReferences(fns, anonFns));
     trimCandidatesNotMeetingMinimumRequirements();
     if (fns.isEmpty()) {
@@ -140,7 +140,7 @@ class InlineFunctions implements CompilerPass {
     }
     resolveInlineConflicts();
     decomposeExpressions();
-    NodeTraversal.traverse(compiler, root,
+    NodeTraversal.traverseEs6(compiler, root,
         new CallVisitor(fns, anonFns, new Inline(injector)));
 
     removeInlinedFunctions();
