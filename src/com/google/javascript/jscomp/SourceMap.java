@@ -41,6 +41,9 @@ import java.util.Map;
  */
 public final class SourceMap {
 
+  /**
+   * An enumeration of available source map formats
+   */
   public static enum Format {
      DEFAULT {
        @Override SourceMap getInstance() {
@@ -84,6 +87,10 @@ public final class SourceMap {
     }
   }
 
+  /**
+   * A simple pair of path prefixes to the desired "destination" location to use within the
+   * source map.
+   */
   public static class LocationMapping {
     final String prefix;
     final String replacement;
