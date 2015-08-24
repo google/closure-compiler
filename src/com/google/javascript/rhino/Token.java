@@ -178,7 +178,7 @@ public class Token {
       EXPORT = 169,
       EXPORT_SPECS = 170,
       EXPORT_SPEC = 171,
-      MODULE = 172,
+      NAMESPACE = 172,
 
       REST = 173, // "..." in formal parameters, or an array pattern.
       SPREAD = 174, // "..." in a call expression, or an array literal.
@@ -235,7 +235,7 @@ public class Token {
       MEMBER_VARIABLE_DEF = 319,
       INDEX_SIGNATURE = 320,
       CALL_SIGNATURE = 321,
-      MODULE_ELEMENTS = 322,
+      NAMESPACE_ELEMENTS = 322,
 
       // Token Types to use for internal bookkeeping,
       // an AST is invalid while these are present.
@@ -519,8 +519,8 @@ public class Token {
         return "EXPORT_SPECS";
       case EXPORT_SPEC:
         return "EXPORT_SPEC";
-      case MODULE:
-        return "MODULE";
+      case NAMESPACE:
+        return "NAMESPACE";
       case REST:
         return "REST";
       case SPREAD:
@@ -547,8 +547,8 @@ public class Token {
         return "ENUM";
       case ENUM_MEMBERS:
         return "ENUM_MEMBERS";
-      case MODULE_ELEMENTS:
-        return "MODULE_ELEMENTS";
+      case NAMESPACE_ELEMENTS:
+        return "NAMESPACE_ELEMENTS";
       case IMPLEMENTS:
         return "IMPLEMENTS";
       case TYPE_ALIAS:
@@ -800,7 +800,7 @@ public class Token {
         return 3;
       case ENUM:
         return 2;
-      case MODULE:
+      case NAMESPACE:
         return 2;
       case NAMED_TYPE:
         return 1;

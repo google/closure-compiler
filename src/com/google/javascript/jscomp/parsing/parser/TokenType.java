@@ -148,7 +148,8 @@ public enum TokenType {
   // TypeScript
   TYPE,
   DECLARE,
-  MODULE
+  MODULE,
+  NAMESPACE
   ;
 
   public final String value;

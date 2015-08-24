@@ -183,8 +183,8 @@ public final class AstValidator implements CompilerPass {
       case Token.DECLARE:
         validateAmbientDeclaration(n);
         return;
-      case Token.MODULE:
-        validateModule(n, isAmbient);
+      case Token.NAMESPACE:
+        validateNamespace(n, isAmbient);
         return;
       default:
         violation("Expected statement but was " + Token.name(n.getType()) + ".", n);
@@ -1323,8 +1323,8 @@ public final class AstValidator implements CompilerPass {
       case Token.ENUM:
         validateEnum(n);
         break;
-      case Token.MODULE:
-        validateModule(n, true);
+      case Token.NAMESPACE:
+        validateNamespace(n, true);
         break;
       case Token.TYPE_ALIAS:
         validateTypeAlias(n);
@@ -1335,15 +1335,15 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateModule(Node n, boolean isAmbient) {
-    validateEs6TypedFeature("module", n);
-    validateNodeType(Token.MODULE, n);
+  private void validateNamespace(Node n, boolean isAmbient) {
+    validateEs6TypedFeature("namespace", n);
+    validateNodeType(Token.NAMESPACE, n);
     validateChildCount(n);
-    validateModuleName(n.getFirstChild());
-    validateModuleElements(n.getLastChild(), isAmbient);
+    validateNamespaceName(n.getFirstChild());
+    validateNamespaceElements(n.getLastChild(), isAmbient);
   }
 
-  private void validateModuleName(Node n) {
+  private void validateNamespaceName(Node n) {
     switch (n.getType()) {
       case Token.NAME:
         validateName(n);
@@ -1354,8 +1354,8 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateModuleElements(Node n, boolean isAmbient) {
-    validateNodeType(Token.MODULE_ELEMENTS, n);
+  private void validateNamespaceElements(Node n, boolean isAmbient) {
+    validateNodeType(Token.NAMESPACE_ELEMENTS, n);
     for (Node child : n.children()) {
       if (isAmbient) {
         validateAmbientDeclarationHelper(child);

@@ -538,7 +538,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare class Foo {\n  constructor();\n  foo();\n}");
     parse("declare class Foo {\n  static *foo(bar: string);\n}");
     parse("declare enum Foo {\n}");
-    parse("declare module foo {\n}");
+    parse("declare namespace foo {\n}");
 
     expectErrors("Parse error. Ambient variable declaration may not have initializer");
     parse("declare var x = 3;");
@@ -679,67 +679,67 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var x: 'string'");
   }
 
-  public void testModuleDeclaration() {
-    parse("module foo {\n}");
-    parse("module foo.bar.baz {\n}");
+  public void testNamespace() {
+    parse("namespace foo {\n}");
+    parse("namespace foo.bar.baz {\n}");
 
-    parse("module foo {\n  interface I {\n  }\n}");
-    parse("module foo {\n  class C {\n  }\n}");
-    parse("module foo {\n  enum E {\n  }\n}");
-    parse("module foo {\n  function f() {\n  }\n}");
-    parse("module foo {\n  declare var foo;\n}");
-    parse("module foo {\n  module bar {\n  }\n}");
-    parse("module foo {\n  interface I {\n  }\n  class C {\n  }\n}");
-    parse("module foo {\n  type Foo = number;\n}");
+    parse("namespace foo {\n  interface I {\n  }\n}");
+    parse("namespace foo {\n  class C {\n  }\n}");
+    parse("namespace foo {\n  enum E {\n  }\n}");
+    parse("namespace foo {\n  function f() {\n  }\n}");
+    parse("namespace foo {\n  declare var foo;\n}");
+    parse("namespace foo {\n  namespace bar {\n  }\n}");
+    parse("namespace foo {\n  interface I {\n  }\n  class C {\n  }\n}");
+    parse("namespace foo {\n  type Foo = number;\n}");
 
-    parse("module foo {\n  export interface I {\n  }\n}");
-    parse("module foo {\n  export class C {\n  }\n}");
-    parse("module foo {\n  export enum E {\n  }\n}");
-    parse("module foo {\n  export function f() {\n  }\n}");
-    parse("module foo {\n  export declare var foo;\n}");
-    parse("module foo {\n  export module bar {\n  }\n}");
-    parse("module foo {\n  export type Foo = number;\n}");
+    parse("namespace foo {\n  export interface I {\n  }\n}");
+    parse("namespace foo {\n  export class C {\n  }\n}");
+    parse("namespace foo {\n  export enum E {\n  }\n}");
+    parse("namespace foo {\n  export function f() {\n  }\n}");
+    parse("namespace foo {\n  export declare var foo;\n}");
+    parse("namespace foo {\n  export namespace bar {\n  }\n}");
+    parse("namespace foo {\n  export type Foo = number;\n}");
 
     expectErrors("Parse error. Semi-colon expected");
-    parse("module {}");
+    parse("namespace {}");
     expectErrors("Parse error. Semi-colon expected");
-    parse("module 'foo' {}"); // External modules are not supported
+    parse("namespace 'foo' {}"); // External modules are not supported
 
-    testNotEs6Typed("module foo {}", "module declaration");
+    testNotEs6Typed("namespace foo {}", "namespace declaration");
   }
 
-  public void testAmbientModuleDeclaration() {
-    parse("declare module foo {\n}");
-    parse("declare module foo.bar.baz {\n}");
+  public void testAmbientNameSpace() {
+    parse("declare namespace foo {\n}");
+    parse("declare namespace foo.bar.baz {\n}");
 
-    parse("declare module foo {\n  interface I {\n  }\n}");
-    parse("declare module foo {\n  class I {\n    bar();\n  }\n}");
-    parse("declare module foo {\n  enum E {\n  }\n}");
-    parse("declare module foo {\n  function f();\n}");
-    parse("declare module foo {\n  var foo;\n}");
-    parse("declare module foo {\n  module bar {\n  }\n}");
-    parse("declare module foo {\n  interface I {\n  }\n  class C {\n  }\n}");
+    parse("declare namespace foo {\n  interface I {\n  }\n}");
+    parse("declare namespace foo {\n  class I {\n    bar();\n  }\n}");
+    parse("declare namespace foo {\n  enum E {\n  }\n}");
+    parse("declare namespace foo {\n  function f();\n}");
+    parse("declare namespace foo {\n  var foo;\n}");
+    parse("declare namespace foo {\n  namespace bar {\n  }\n}");
+    parse("declare namespace foo {\n  interface I {\n  }\n  class C {\n  }\n}");
 
-    parse("declare module foo {\n  export interface I {\n  }\n}");
-    parse("declare module foo {\n  export class I {\n    bar();\n  }\n}");
-    parse("declare module foo {\n  export enum E {\n  }\n}");
-    parse("declare module foo {\n  export function f();\n}");
-    parse("declare module foo {\n  export var foo;\n}");
-    parse("declare module foo {\n  export module bar {\n  }\n}");
-    parse("declare module foo {\n  export interface I {\n  }\n  export class C {\n  }\n}");
+    parse("declare namespace foo {\n  export interface I {\n  }\n}");
+    parse("declare namespace foo {\n  export class I {\n    bar();\n  }\n}");
+    parse("declare namespace foo {\n  export enum E {\n  }\n}");
+    parse("declare namespace foo {\n  export function f();\n}");
+    parse("declare namespace foo {\n  export var foo;\n}");
+    parse("declare namespace foo {\n  export namespace bar {\n  }\n}");
+    parse("declare namespace foo {\n  export interface I {\n  }\n  export class C {\n  }\n}");
 
     expectErrors("Parse error. Semi-colon expected");
-    parse("declare module foo { class C { bar() {} }}");
+    parse("declare namespace foo { class C { bar() {} }}");
     expectErrors("Parse error. Ambient variable declaration may not have initializer");
-    parse("declare module foo { var a = 3; }");
+    parse("declare namespace foo { var a = 3; }");
     expectErrors("Parse error. Ambient variable declaration may not have initializer");
-    parse("declare module foo { export var a = 3; }");
+    parse("declare namespace foo { export var a = 3; }");
     expectErrors("Parse error. Semi-colon expected");
-    parse("declare module foo { function bar() {} }");
+    parse("declare namespace foo { function bar() {} }");
     expectErrors("Parse error. '}' expected");
-    parse("declare module foo { type Foo = number; }");
+    parse("declare namespace foo { type Foo = number; }");
 
-    testNotEs6Typed("declare module foo {}", "ambient declaration", "module declaration");
+    testNotEs6Typed("declare namespace foo {}", "ambient declaration", "namespace declaration");
   }
 
   private void assertVarType(String message, TypeDeclarationNode expectedType, String source) {

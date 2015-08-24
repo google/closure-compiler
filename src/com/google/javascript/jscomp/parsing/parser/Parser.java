@@ -75,8 +75,8 @@ import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberVariableTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ModuleDeclarationTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ModuleNameTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NamespaceDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NamespaceNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
@@ -270,7 +270,7 @@ public class Parser {
     return result.build();
   }
 
-  private ImmutableList<ParseTree> parseModuleElements() {
+  private ImmutableList<ParseTree> parseNamespaceElements() {
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
 
     while (!peek(TokenType.CLOSE_CURLY) && !peek(TokenType.END_OF_FILE)) {
@@ -280,11 +280,11 @@ public class Parser {
     return result.build();
   }
 
-  private ImmutableList<ParseTree> parseAmbientModuleElements() {
+  private ImmutableList<ParseTree> parseAmbientNamespaceElements() {
     ImmutableList.Builder<ParseTree> result = ImmutableList.builder();
 
-    while (peekAmbientModuleElement()) {
-      result.add(parseAmbientModuleElement());
+    while (peekAmbientNamespaceElement()) {
+      result.add(parseAmbientNamespaceElement());
     }
 
     return result.build();
@@ -322,14 +322,14 @@ public class Parser {
       return parseAmbientDeclaration();
     }
 
-    if (peekModuleDeclaration()) {
-      return parseModuleDeclaration(false);
+    if (peekNamespaceDeclaration()) {
+      return parseNamespaceDeclaration(false);
     }
 
     return parseSourceElement();
   }
 
-  private ParseTree parseAmbientModuleElement() {
+  private ParseTree parseAmbientNamespaceElement() {
     if (peekInterfaceDeclaration()) {
       return parseInterfaceDeclaration();
     }
@@ -484,7 +484,8 @@ public class Parser {
         export = parseEnumDeclaration();
         break;
       case MODULE:
-        export = parseModuleDeclaration(isAmbient);
+      case NAMESPACE:
+        export = parseNamespaceDeclaration(isAmbient);
         break;
       case DECLARE:
         export = parseAmbientDeclaration();
@@ -563,8 +564,9 @@ public class Parser {
     return peek(TokenType.ENUM);
   }
 
-  private boolean peekModuleDeclaration() {
-    return peek(TokenType.MODULE) && !peekImplicitSemiColon(1) && peek(1, TokenType.IDENTIFIER);
+  private boolean peekNamespaceDeclaration() {
+    return (peek(TokenType.MODULE) || peek(TokenType.NAMESPACE))
+        && !peekImplicitSemiColon(1) && peek(1, TokenType.IDENTIFIER);
   }
 
   private ParseTree parseClassDeclaration(boolean isAmbient) {
@@ -894,21 +896,23 @@ public class Parser {
     return declaration;
   }
 
-  private ModuleDeclarationTree parseModuleDeclaration(boolean isAmbient) {
+  private NamespaceDeclarationTree parseNamespaceDeclaration(boolean isAmbient) {
     SourcePosition start = getTreeStartLocation();
-    eat(TokenType.MODULE);
-    ModuleNameTree name = parseModuleName();
+    if (eatOpt(TokenType.MODULE) == null) { // Accept "module" or "namespace"
+      eat(TokenType.NAMESPACE);
+    }
+    NamespaceNameTree name = parseNamespaceName();
     eat(TokenType.OPEN_CURLY);
     ImmutableList<ParseTree> elements = isAmbient
-        ? parseAmbientModuleElements() : parseModuleElements();
+        ? parseAmbientNamespaceElements() : parseNamespaceElements();
     eat(TokenType.CLOSE_CURLY);
-    return new ModuleDeclarationTree(getTreeLocation(start), name, elements);
+    return new NamespaceDeclarationTree(getTreeLocation(start), name, elements);
   }
 
-  private ModuleNameTree parseModuleName() {
+  private NamespaceNameTree parseNamespaceName() {
     SourcePosition start = getTreeStartLocation();
     IdentifierToken token = eatId();
-    return new ModuleNameTree(getTreeLocation(start), buildIdentifierPath(token));
+    return new NamespaceNameTree(getTreeLocation(start), buildIdentifierPath(token));
   }
 
   private ParseTree parseSourceElement() {
@@ -985,10 +989,12 @@ public class Parser {
          || peek(1, TokenType.FUNCTION)
          || peek(1, TokenType.CLASS)
          || peek(1, TokenType.ENUM)
-         || peek(1, TokenType.MODULE));
+         || peek(1, TokenType.MODULE)
+         || peek(1, TokenType.NAMESPACE));
+
   }
 
-  private boolean peekAmbientModuleElement() {
+  private boolean peekAmbientNamespaceElement() {
     return peek(TokenType.VAR)
         || peek(TokenType.LET)
         || peek(TokenType.CONST)
@@ -997,6 +1003,7 @@ public class Parser {
         || peek(TokenType.INTERFACE)
         || peek(TokenType.ENUM)
         || peek(TokenType.MODULE)
+        || peek(TokenType.NAMESPACE)
         || peek(TokenType.EXPORT);
   }
 
@@ -1342,7 +1349,7 @@ public class Parser {
     ImmutableList.Builder<String> identifiers = ImmutableList.builder();
     identifiers.add(token != null ? token.value : "");  // null if errors while parsing
     while (peek(TokenType.PERIOD)) {
-      // ModuleName . Identifier
+      // Namespace . Identifier
       eat(TokenType.PERIOD);
       token = eatId();
       if (token == null) {
@@ -1464,6 +1471,7 @@ public class Parser {
     case TYPE:
     case DECLARE:
     case MODULE:
+    case NAMESPACE:
     case THIS:
     case CLASS:
     case SUPER:
@@ -1998,6 +2006,7 @@ public class Parser {
     case TYPE:
     case DECLARE:
     case MODULE:
+    case NAMESPACE:
       return parseIdentifierExpression();
     case NUMBER:
     case STRING:
@@ -2502,6 +2511,7 @@ public class Parser {
       case TYPE:
       case DECLARE:
       case MODULE:
+      case NAMESPACE:
       case MINUS:
       case MINUS_MINUS:
       case NEW:
@@ -3294,7 +3304,8 @@ public class Parser {
         declare = parseEnumDeclaration();
         break;
       case MODULE:
-        declare = parseModuleDeclaration(true);
+      case NAMESPACE:
+        declare = parseNamespaceDeclaration(true);
         break;
       default: // unreachable, parse as a var decl to get a parse error.
       case VAR:
@@ -3383,8 +3394,12 @@ public class Parser {
 
   private boolean peekId(int index) {
     TokenType type = peekType(index);
-    return
-        EnumSet.of(TokenType.IDENTIFIER, TokenType.TYPE, TokenType.DECLARE, TokenType.MODULE)
+    return EnumSet.of(
+        TokenType.IDENTIFIER,
+        TokenType.TYPE,
+        TokenType.DECLARE,
+        TokenType.MODULE,
+        TokenType.NAMESPACE)
             .contains(type)
         || (!inStrictContext() && Keywords.isStrictKeyword(type));
   }

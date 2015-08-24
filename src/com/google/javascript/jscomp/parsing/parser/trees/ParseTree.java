@@ -151,7 +151,9 @@ public class ParseTree {
   public EnumDeclarationTree asEnumDeclaration() { return (EnumDeclarationTree) this; }
   public TypeAliasTree asTypeAlias() { return (TypeAliasTree) this; }
   public AmbientDeclarationTree asAmbientDeclaration() { return (AmbientDeclarationTree) this; }
-  public ModuleDeclarationTree asModuleDeclaration() { return (ModuleDeclarationTree) this; }
+  public NamespaceDeclarationTree asNamespaceDeclaration() {
+    return (NamespaceDeclarationTree) this;
+  }
   public IndexSignatureTree asIndexSignature() { return (IndexSignatureTree) this; }
   public CallSignatureTree asCallSignature() { return (CallSignatureTree) this; }
 

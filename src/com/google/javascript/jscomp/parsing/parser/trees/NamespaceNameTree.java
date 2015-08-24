@@ -19,15 +19,15 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
-public class ModuleDeclarationTree extends ParseTree {
-  public final ModuleNameTree name;
-  public final ImmutableList<ParseTree> elements;
+/**
+ * Parse tree node representing a namespace name (of the form {@code foo.bar.Baz})
+ */
+public class NamespaceNameTree extends ParseTree {
 
-  public ModuleDeclarationTree(SourceRange location, ModuleNameTree name,
-      ImmutableList<ParseTree> elements) {
-    super(ParseTreeType.MODULE_DECLARATION, location);
+  public final ImmutableList<String> segments;
 
-    this.name = name;
-    this.elements = elements;
+  public NamespaceNameTree(SourceRange location, ImmutableList<String> segments) {
+    super(ParseTreeType.NAMESPACE_NAME, location);
+    this.segments = segments;
   }
 }

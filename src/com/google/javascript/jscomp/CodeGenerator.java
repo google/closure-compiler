@@ -459,7 +459,7 @@ class CodeGenerator {
 
       case Token.CLASS_MEMBERS:
       case Token.INTERFACE_MEMBERS:
-      case Token.MODULE_ELEMENTS:
+      case Token.NAMESPACE_ELEMENTS:
         cc.beginBlock();
         for (Node c = first; c != null; c = c.getNext()) {
           add(c);
@@ -1134,11 +1134,11 @@ class CodeGenerator {
           add(members);
           break;
         }
-      case Token.MODULE: {
+      case Token.NAMESPACE: {
         Preconditions.checkState(childCount == 2);
         Node name = first;
         Node elements = last;
-        add("module");
+        add("namespace");
         add(name);
         add(elements);
         break;
@@ -1885,7 +1885,7 @@ class CodeGenerator {
       case Token.CLASS:
       case Token.INTERFACE:
       case Token.ENUM:
-      case Token.MODULE:
+      case Token.NAMESPACE:
       case Token.CALL_SIGNATURE:
       case Token.INDEX_SIGNATURE:
       case Token.TYPE_ALIAS:

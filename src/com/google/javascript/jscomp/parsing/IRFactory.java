@@ -92,9 +92,9 @@ import com.google.javascript.jscomp.parsing.parser.trees.MemberExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberLookupExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MemberVariableTree;
 import com.google.javascript.jscomp.parsing.parser.trees.MissingPrimaryExpressionTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ModuleDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ModuleImportTree;
-import com.google.javascript.jscomp.parsing.parser.trees.ModuleNameTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NamespaceDeclarationTree;
+import com.google.javascript.jscomp.parsing.parser.trees.NamespaceNameTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NewExpressionTree;
 import com.google.javascript.jscomp.parsing.parser.trees.NullTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ObjectLiteralExpressionTree;
@@ -2039,7 +2039,7 @@ class IRFactory {
 
     Node processModuleImport(ModuleImportTree tree) {
       maybeWarnEs6Feature(tree, "modules");
-      Node module = newNode(Token.MODULE,
+      Node module = newNode(Token.NAMESPACE,
           processName(tree.name),
           processString(tree.from));
       return module;
@@ -2157,25 +2157,25 @@ class IRFactory {
       return newNode(Token.DECLARE, transform(tree.declaration));
     }
 
-    Node processModuleDeclaration(ModuleDeclarationTree tree) {
-      maybeWarnTypeSyntax(tree, "module declaration");
-      Node name = processModuleName(tree.name);
+    Node processNamespaceDeclaration(NamespaceDeclarationTree tree) {
+      maybeWarnTypeSyntax(tree, "namespace declaration");
+      Node name = processNamespaceName(tree.name);
 
-      Node body = newNode(Token.MODULE_ELEMENTS);
+      Node body = newNode(Token.NAMESPACE_ELEMENTS);
       setSourceInfo(body, tree);
       for (ParseTree child : tree.elements) {
         body.addChildToBack(transform(child));
       }
 
-      return newNode(Token.MODULE, name, body);
+      return newNode(Token.NAMESPACE, name, body);
     }
 
-    Node processModuleName(ModuleNameTree name) {
+    Node processNamespaceName(NamespaceNameTree name) {
       ImmutableList<String> segments = name.segments;
       if (segments.size() == 1) {
-        Node moduleName = newStringNode(Token.NAME, segments.get(0));
-        setSourceInfo(moduleName, name);
-        return moduleName;
+        Node namespaceName = newStringNode(Token.NAME, segments.get(0));
+        setSourceInfo(namespaceName, name);
+        return namespaceName;
       } else {
         Iterator<String> segmentsIt = segments.iterator();
         Node node = IR.name(segmentsIt.next());
@@ -2608,8 +2608,8 @@ class IRFactory {
           return processTypeAlias(node.asTypeAlias());
         case AMBIENT_DECLARATION:
           return processAmbientDeclaration(node.asAmbientDeclaration());
-        case MODULE_DECLARATION:
-          return processModuleDeclaration(node.asModuleDeclaration());
+        case NAMESPACE_DECLARATION:
+          return processNamespaceDeclaration(node.asNamespaceDeclaration());
 
         case INDEX_SIGNATURE:
           return processIndexSignature(node.asIndexSignature());

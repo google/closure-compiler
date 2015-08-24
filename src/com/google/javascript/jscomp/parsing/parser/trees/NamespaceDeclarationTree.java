@@ -20,14 +20,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 /**
- * Parse tree node representing a module name (of the form {@code foo.bar.Baz})
+ * TypeScript namespace declaration (eg. "namespace foo {}")
  */
-public class ModuleNameTree extends ParseTree {
+public class NamespaceDeclarationTree extends ParseTree {
+  public final NamespaceNameTree name;
+  public final ImmutableList<ParseTree> elements;
 
-  public final ImmutableList<String> segments;
+  public NamespaceDeclarationTree(SourceRange location, NamespaceNameTree name,
+      ImmutableList<ParseTree> elements) {
+    super(ParseTreeType.NAMESPACE_DECLARATION, location);
 
-  public ModuleNameTree(SourceRange location, ImmutableList<String> segments) {
-    super(ParseTreeType.MODULE_NAME, location);
-    this.segments = segments;
+    this.name = name;
+    this.elements = elements;
   }
 }
