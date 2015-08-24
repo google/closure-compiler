@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Tests for {@link Es6SortedDependencies}
  */
-public class Es6SortedDependenciesTest extends SortedDependenciesTest {
+public class Es6SortedDependenciesTest extends SortedDependenciesTestHelper {
 
   @Override
   public SortedDependencies<SimpleDependencyInfo> createSortedDependencies(

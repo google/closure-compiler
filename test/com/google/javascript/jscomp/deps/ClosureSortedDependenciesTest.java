@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Tests for {@link ClosureSortedDependencies}
  */
-public class ClosureSortedDependenciesTest extends SortedDependenciesTest {
+public class ClosureSortedDependenciesTest extends SortedDependenciesTestHelper {
 
   @Override
   public SortedDependencies<SimpleDependencyInfo> createSortedDependencies(

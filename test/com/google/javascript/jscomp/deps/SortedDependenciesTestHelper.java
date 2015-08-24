@@ -29,7 +29,7 @@ import java.util.List;
  * Tests for {@link SortedDependencies}
  * @author nicksantos@google.com (Nick Santos)
  */
-public abstract class SortedDependenciesTest extends TestCase {
+public abstract class SortedDependenciesTestHelper extends TestCase {
 
   public void testSort() throws Exception {
     SimpleDependencyInfo a = new SimpleDependencyInfo(
