@@ -47,6 +47,7 @@ public class Scope implements StaticScope {
    */
   Scope(Scope parent, Node rootNode) {
     Preconditions.checkNotNull(parent);
+    Preconditions.checkNotNull(rootNode);
     Preconditions.checkArgument(
         rootNode != parent.rootNode,
         "Root node: %s\nParent's root node: %s", rootNode, parent.rootNode);
@@ -57,6 +58,7 @@ public class Scope implements StaticScope {
   }
 
   protected Scope(Node rootNode) {
+    Preconditions.checkNotNull(rootNode);
     this.parent = null;
     this.rootNode = rootNode;
     this.depth = 0;
@@ -258,6 +260,10 @@ public class Scope implements StaticScope {
 
   public boolean isFunctionBlockScope() {
     return isBlockScope() && parent != null && parent.getRootNode().isFunction();
+  }
+
+  public boolean isFunctionScope() {
+    return getRootNode().isFunction();
   }
 
   public Scope getClosestHoistScope() {
