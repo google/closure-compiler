@@ -382,7 +382,7 @@ function describe(description, handler) {}
  * @param {string} description
  * @param {function(this:jasmine.Suite)} handler
  */
-function ddescribe(description, handler) {}
+function fdescribe(description, handler) {}
 
 
 /**
@@ -403,7 +403,7 @@ function it(description, handler) {}
  * @param {string} description
  * @param {function(this:jasmine.Spec, function()=)} handler
  */
-function iit(description, handler) {}
+function fit(description, handler) {}
 
 
 /**
