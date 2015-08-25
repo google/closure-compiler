@@ -1440,6 +1440,18 @@ public final class IntegrationTest extends IntegrationTestCase {
         });
   }
 
+  public void testCrossModuleDepCheck() {
+    CompilerOptions options = createCompilerOptions();
+    String[] code = new String[] {
+      "var goog = {}; new goog.Foo();",
+      "/** @constructor */ goog.Foo = function() {};",
+    };
+    testSame(options, code);
+
+    WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
+    test(options, code, code, CheckGlobalNames.STRICT_MODULE_DEP_QNAME);
+  }
+
   public void testFlowSensitiveInlineVariables1() {
     CompilerOptions options = createCompilerOptions();
     String code = "function f() { var x = 3; x = 5; return x; }";
