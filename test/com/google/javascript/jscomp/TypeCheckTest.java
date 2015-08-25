@@ -15370,6 +15370,27 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: (I7|null)"));
   }
 
+  public void testStructuralInterfaceCycleDoesntCrash() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/**  @record */ function Foo() {};",
+            "/**  @return {MutableFoo} */ Foo.prototype.toMutable;",
+            "/**  @record */ function MutableFoo() {};",
+            "/**  @param {Foo} from */ MutableFoo.prototype.copyFrom;",
+            "",
+            "/**  @record */ function Bar() {};",
+            "/**  @return {MutableBar} */ Bar.prototype.toMutable;",
+            "/**  @record */ function MutableBar() {};",
+            "/**  @param {Bar} from */ MutableBar.prototype.copyFrom;",
+            "",
+            "/** @constructor @implements {MutableBar} */ function MutableBarImpl() {};",
+            "/** @override */ MutableBarImpl.prototype.copyFrom = function(from) {};",
+            "/** @constructor  @implements {MutableFoo} */ function MutableFooImpl() {};",
+            "/** @override */ MutableFooImpl.prototype.copyFrom = function(from) {};"));
+  }
+
+
+
   public void testCovarianceForRecordType1() throws Exception {
     testTypesWithExtraExterns(
         LINE_JOINER.join(
@@ -16065,8 +16086,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypesWithExtraExterns(
         LINE_JOINER.join(
             "var ns = {};",
-            "/** @type {{x:number}} @suppress {duplicate} */ ns.x;",
-            "/** @type {{x:number}} @suppress {duplicate} */ ns.x;"),
+            "/** @type {{x:number}} */ ns.x;",
+            "/** @type {{x:number}} */ ns.x;"),
         "");
   }
 
@@ -16074,8 +16095,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypesWithExtraExterns(
         LINE_JOINER.join(
             "var ns = {};",
-            "/** @type {{x:number}} @suppress {duplicate} */ ns.x;",
-            "/** @type {{x:string}} @suppress {duplicate} */ ns.x;"),
+            "/** @type {{x:number}} */ ns.x;",
+            "/** @type {{x:string}} */ ns.x;"),
         "",
         "variable ns.x redefined with type {x: string}, original definition "
         + "at [externs]:69 with type {x: number}");
@@ -16085,8 +16106,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypesWithExtraExterns(
         LINE_JOINER.join(
             "var ns = {};",
-            "/** @type {{x:number}} @suppress {duplicate} */ ns.x;",
-            "/** @type {{x:number, y:boolean}} @suppress {duplicate} */ ns.x;"),
+            "/** @type {{x:number}} */ ns.x;",
+            "/** @type {{x:number, y:boolean}} */ ns.x;"),
         "",
         "variable ns.x redefined with type {x: number, y: boolean}, "
         + "original definition at [externs]:69 with type {x: number}");
@@ -16098,8 +16119,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "var ns = {};",
             "/** @record */ var rec3;",
             "/** @record */ var rec4;",
-            "/** @type {!rec3} @suppress {duplicate} */ ns.x;",
-            "/** @type {!rec4} @suppress {duplicate} */ ns.x;"),
+            "/** @type {!rec3} */ ns.x;",
+            "/** @type {!rec4} */ ns.x;"),
         "");
   }
 
@@ -16110,8 +16131,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec3;",
             "/** @record */ var rec4;",
             "/** @type {number} */ rec4.prototype.prop;",
-            "/** @type {!rec3} @suppress {duplicate} */ ns.x;",
-            "/** @type {!rec4} @suppress {duplicate} */ ns.x;"),
+            "/** @type {!rec3} */ ns.x;",
+            "/** @type {!rec4} */ ns.x;"),
         "",
         "variable ns.x redefined with type rec4, original definition at "
         + "[externs]:72 with type rec3");
@@ -16124,8 +16145,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec3;",
             "/** @type {number} */ rec3.prototype.prop;",
             "/** @record */ var rec4;",
-            "/** @type {!rec3} @suppress {duplicate} */ ns.x;",
-            "/** @type {!rec4} @suppress {duplicate} */ ns.x;"),
+            "/** @type {!rec3} */ ns.x;",
+            "/** @type {!rec4} */ ns.x;"),
         "",
         "variable ns.x redefined with type rec4, original definition at "
         + "[externs]:72 with type rec3");
@@ -16157,11 +16178,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec;",
             "/** @type {number} */ rec.prototype.prop;",
             "",
-            "/** @type {!rec} @suppress {duplicate} */ ns.x;",
-            "/** @type {{prop:number}} @suppress {duplicate} */ ns.x;",
+            "/** @type {!rec} */ ns.x;",
+            "/** @type {{prop:number}} */ ns.x;",
             "",
-            "/** @type {{prop:number}} @suppress {duplicate} */ ns.y;",
-            "/** @type {!rec} @suppress {duplicate} */ ns.y;"),
+            "/** @type {{prop:number}} */ ns.y;",
+            "/** @type {!rec} */ ns.y;"),
         "");
   }
 
@@ -16172,11 +16193,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec;",
             "/** @type {number} */ rec.prototype.prop;",
             "",
-            "/** @type {!rec} @suppress {duplicate} */ ns.x;",
-            "/** @type {{prop:string}} @suppress {duplicate} */ ns.x;",
+            "/** @type {!rec} */ ns.x;",
+            "/** @type {{prop:string}} */ ns.x;",
             "",
-            "/** @type {{prop:number}} @suppress {duplicate} */ ns.y;",
-            "/** @type {!rec} @suppress {duplicate} */ ns.y;"),
+            "/** @type {{prop:number}} */ ns.y;",
+            "/** @type {!rec} */ ns.y;"),
         "",
         "variable ns.x redefined with type {prop: string}, original "
         + "definition at [externs]:72 with type rec");
@@ -16189,11 +16210,11 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec;",
             "/** @type {string} */ rec.prototype.prop;",
             "",
-            "/** @type {!rec} @suppress {duplicate} */ ns.x;",
-            "/** @type {{prop:string}} @suppress {duplicate} */ ns.x;",
+            "/** @type {!rec} */ ns.x;",
+            "/** @type {{prop:string}} */ ns.x;",
             "",
-            "/** @type {{prop:number}} @suppress {duplicate} */ ns.y;",
-            "/** @type {!rec} @suppress {duplicate} */ ns.y;"),
+            "/** @type {{prop:number}} */ ns.y;",
+            "/** @type {!rec} */ ns.y;"),
         "",
         "variable ns.y redefined with type rec, original definition at "
         + "[externs]:75 with type {prop: number}");
@@ -16208,8 +16229,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec;",
             "/** @type {I} */ rec.prototype.prop;",
             "",
-            "/** @type {!rec} @suppress {duplicate} */ ns.x;",
-            "/** @type {{prop:I}} @suppress {duplicate} */ ns.x;"),
+            "/** @type {!rec} */ ns.x;",
+            "/** @type {{prop:I}} */ ns.x;"),
         "");
   }
 
@@ -16222,8 +16243,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec;",
             "/** @type {I<number>} */ rec.prototype.prop;",
             "",
-            "/** @type {!rec} @suppress {duplicate} */ ns.x;",
-            "/** @type {{prop:I<number>}} @suppress {duplicate} */ ns.x;"),
+            "/** @type {!rec} */ ns.x;",
+            "/** @type {{prop:I<number>}} */ ns.x;"),
         "");
   }
 
@@ -16236,8 +16257,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ var rec;",
             "/** @type {I<number>} */ rec.prototype.prop;",
             "",
-            "/** @type {!rec} @suppress {duplicate} */ ns.x;",
-            "/** @type {{prop:I<string>}} @suppress {duplicate} */ ns.x;"),
+            "/** @type {!rec} */ ns.x;",
+            "/** @type {{prop:I<string>}} */ ns.x;"),
         "",
         "variable ns.x redefined with type {prop: (I<string>|null)}, "
         + "original definition at [externs]:74 with type rec");
@@ -16252,8 +16273,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "function rec(){}",
             "/** @type {T} */ rec.prototype.value;",
             "",
-            "/** @type {rec<string>} @suppress {duplicate} */ ns.x;",
-            "/** @type {{value: string}} @suppress {duplicate} */ ns.x;"),
+            "/** @type {rec<string>} */ ns.x;",
+            "/** @type {{value: string}} */ ns.x;"),
         "",
         "variable ns.x redefined with type {value: string}, "
         + "original definition at [externs]:72 with type (null|rec<string>)");

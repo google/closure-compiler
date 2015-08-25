@@ -859,7 +859,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   private FunctionType tryMergeFunctionPiecewise(
       FunctionType other, boolean leastSuper) {
     Node newParamsNode = null;
-    if (call.hasEqualParameters(other.call, EquivalenceMethod.IDENTITY)) {
+    if (call.hasEqualParameters(other.call, EquivalenceMethod.IDENTITY, EqCache.create())) {
       newParamsNode = call.parameters;
     } else {
       // If the parameters are not equal, don't try to merge them.
