@@ -118,6 +118,8 @@ public enum WarningLevel {
         DiagnosticGroups.CONST, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.CHECK_REGEXP, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.STRICT_MODULE_DEP_CHECK, CheckLevel.WARNING);
 
     // Kindly tell the user that they have JsDocs that we don't understand.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,
