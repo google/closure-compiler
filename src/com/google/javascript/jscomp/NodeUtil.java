@@ -2838,7 +2838,7 @@ public final class NodeUtil {
     Node result;
     Node nameNode = newQName(compiler, name);
     if (nameNode.isName()) {
-      result = IR.var(nameNode, value);
+      result = value == null ? IR.var(nameNode) : IR.var(nameNode, value);
       result.setJSDocInfo(info);
     } else if (value != null) {
       result = IR.exprResult(IR.assign(nameNode, value));

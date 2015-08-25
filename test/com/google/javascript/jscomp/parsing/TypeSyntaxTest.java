@@ -539,6 +539,7 @@ public final class TypeSyntaxTest extends TestCase {
     parse("declare class Foo {\n  static *foo(bar: string);\n}");
     parse("declare enum Foo {\n}");
     parse("declare namespace foo {\n}");
+    parse("declare namespace foo {\n  class A {\n  }\n  class B extends A {\n  }\n}");
 
     expectErrors("Parse error. Ambient variable declaration may not have initializer");
     parse("declare var x = 3;");

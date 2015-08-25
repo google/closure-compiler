@@ -3296,6 +3296,7 @@ public class Parser {
     switch (peekType()) {
       case FUNCTION:
         declare = parseAmbientFunctionDeclaration();
+        eatPossibleImplicitSemiColon();
         break;
       case CLASS:
         declare = parseClassDeclaration(true);
@@ -3312,10 +3313,10 @@ public class Parser {
       case LET:
       case CONST:
         declare = parseAmbientVariableDeclarationList();
+        eatPossibleImplicitSemiColon();
         break;
     }
 
-    eatPossibleImplicitSemiColon();
     return declare;
   }
 
