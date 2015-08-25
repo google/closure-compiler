@@ -547,7 +547,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
       return;
     }
 
-    new NodeTraversal(compiler, new AbstractPostOrderCallback() {
+    NodeTraversal.traverseEs6(compiler, s.getRootNode(), new AbstractPostOrderCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
         if (n.isName()) {
@@ -557,7 +557,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
           }
         }
       }
-    }).traverseAtScope(s);
+    });
   }
 
   private Node getModuleScopeRootForLoadModuleCall(Node n) {
