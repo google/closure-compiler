@@ -617,6 +617,21 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck("var /** boolean */ x = true || 123;");
+
+    typeCheck("var /** number */ x = undefined || 123;");
+
+    typeCheck("var /** null */ x = null && 123;");
+
+    typeCheck("var /** number */ x = { a: 1 } && 123;");
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** Object|undefined */ opt_obj) {",
+        "  var x = opt_obj && 'asdf';",
+        "  if (opt_obj && x in opt_obj) {}",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testLoopConditionSpecialization() {
@@ -8295,7 +8310,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "ns.fun.get = function(/** string */ name) {};",
         "/** @const */ ns.fun = ns.fun || {};",
         "ns.fun(123);"),
-        TypeCheck.NOT_CALLABLE);
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testInvalidEnumDoesntCrash() {

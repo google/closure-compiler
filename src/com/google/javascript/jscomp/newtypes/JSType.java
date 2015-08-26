@@ -267,7 +267,7 @@ public abstract class JSType implements TypeI {
     return UNKNOWN_MASK == getMask();
   }
 
-  public boolean isTruthy() {
+  public boolean isTrueOrTruthy() {
     return TRUTHY_MASK == getMask() || TRUE_MASK == getMask();
   }
 
@@ -275,8 +275,22 @@ public abstract class JSType implements TypeI {
     return TRUTHY_MASK == getMask();
   }
 
-  public boolean isFalsy() {
+  public boolean isFalseOrFalsy() {
     return FALSY_MASK == getMask() || FALSE_MASK == getMask();
+  }
+
+  // Ignoring enums for simplicity
+  public boolean isAnyTruthyType() {
+    int mask = getMask();
+    int truthyMask = TRUTHY_MASK | TRUE_MASK | NON_SCALAR_MASK;
+    return mask != BOTTOM_MASK && (mask | truthyMask) == truthyMask;
+  }
+
+  // Ignoring enums for simplicity
+  public boolean isAnyFalsyType() {
+    int mask = getMask();
+    int falsyMask = FALSY_MASK | FALSE_MASK | NULL_MASK | UNDEFINED_MASK;
+    return mask != BOTTOM_MASK && (mask | falsyMask) == falsyMask;
   }
 
   private boolean hasFalsyMask() {
@@ -334,7 +348,8 @@ public abstract class JSType implements TypeI {
     if (isUnknown()) {
       return false;
     }
-    Preconditions.checkState(!getObjs().isEmpty());
+    Preconditions.checkState(!getObjs().isEmpty(),
+        "Expected object type but found %s", this);
     for (ObjectType objType : getObjs()) {
       if (!objType.isStruct()) {
         return false;
@@ -860,18 +875,18 @@ public abstract class JSType implements TypeI {
     if (isTop() || isUnknown()) {
       return this;
     }
-    if (isTruthy()) {
+    if (isTrueOrTruthy()) {
       return FALSY;
-    } else if (isFalsy()) {
+    } else if (isFalseOrFalsy()) {
       return TRUTHY;
     }
     return UNKNOWN;
   }
 
   public JSType toBoolean() {
-    if (isTruthy()) {
+    if (isTrueOrTruthy()) {
       return TRUE_TYPE;
-    } else if (isFalsy()) {
+    } else if (isFalseOrFalsy()) {
       return FALSE_TYPE;
     }
     return BOOLEAN;
