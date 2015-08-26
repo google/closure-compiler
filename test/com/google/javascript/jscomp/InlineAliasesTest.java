@@ -194,12 +194,23 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
             "var x = new ns.Foo.Bar;"));
   }
 
+  public void testAliasedEnums() {
+    test(
+        "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; alias;",
+        "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; E.A;");
+  }
+
   public void testRedefinedAliasesNotRenamed() {
     testSame("var x = 0; var /** @const */ alias = x; x = 5; use(alias);");
   }
 
   public void testDefinesAreNotInlined() {
     testSame("var /** @define {boolean} */ alias = ns.Foo; var x = new alias;");
+  }
+
+  public void testPrivateVariablesAreNotInlined() {
+    testSame("/** @private */ var x = 0; var /** @const */ alias = x; var y = alias;");
+    testSame("var x_ = 0; var /** @const */ alias = x_; var y = alias;");
   }
 
   public void testShadowedAliasesNotRenamed() {

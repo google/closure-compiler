@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -60,12 +61,22 @@ final class InlineAliases extends AbstractPostOrderCallback implements CompilerP
     if (info != null && info.hasConstAnnotation() && lhs.isQualifiedName()) {
       Node rhs = NodeUtil.getRValueOfLValue(lhs);
       if (rhs != null && rhs.isQualifiedName()) {
-        GlobalNamespace.Name name = namespace.getOwnSlot(rhs.getQualifiedName());
-        if (name != null && name.isInlinableGlobalAlias()) {
+        GlobalNamespace.Name rhsName = namespace.getOwnSlot(rhs.getQualifiedName());
+        if (rhsName != null && rhsName.isInlinableGlobalAlias()
+            && !isPrivate(rhsName.getDeclaration().getNode())) {
           aliases.put(lhs.getQualifiedName(), rhs.getQualifiedName());
         }
       }
     }
+  }
+
+  private boolean isPrivate(Node nameNode) {
+    if (nameNode.isQualifiedName()
+        && compiler.getCodingConvention().isPrivate(nameNode.getQualifiedName())) {
+      return true;
+    }
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(nameNode);
+    return info != null && info.getVisibility().equals(Visibility.PRIVATE);
   }
 
   @Override
