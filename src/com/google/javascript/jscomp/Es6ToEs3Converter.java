@@ -150,15 +150,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         visitStringKey(n);
         break;
       case Token.CLASS:
-        for (Node member = n.getLastChild().getFirstChild();
-            member != null;
-            member = member.getNext()) {
-          if (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
-              || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
-            cannotConvert(member, "computed getter or setter in class definition");
-            return;
-          }
-        }
         visitClass(n, parent);
         break;
       case Token.ARRAYLIT:
@@ -516,7 +507,11 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
               || (member.isComputedProp() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)),
           "Member variables should have been transpiled earlier: ", member);
 
-      if (member.isGetterDef() || member.isSetterDef()) {
+      if (member.isComputedProp()
+          && (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
+              || member.getBooleanProp(Node.COMPUTED_PROP_SETTER))) {
+        cannotConvertYet(member, "computed getter or setter in classes");
+      } else if (member.isGetterDef() || member.isSetterDef()) {
         JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).clone();
         addToDefinePropertiesObject(metadata, member);
 

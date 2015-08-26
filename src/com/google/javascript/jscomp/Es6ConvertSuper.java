@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Joiner;
@@ -53,12 +52,6 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       for (Node member = n.getLastChild().getFirstChild();
           member != null;
           member = member.getNext()) {
-        if (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
-            || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {
-          compiler.report(JSError.make(member, CANNOT_CONVERT,
-              "computed getter or setter in class definition"));
-          return false;
-        }
         if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
           hasConstructor = true;
         }

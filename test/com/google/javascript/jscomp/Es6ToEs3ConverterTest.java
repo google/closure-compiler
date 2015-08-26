@@ -1054,8 +1054,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testClassComputedPropGetterSetter() {
     languageOut = LanguageMode.ECMASCRIPT5;
 
-    testError("class C { get [foo]() {}}", Es6ToEs3Converter.CANNOT_CONVERT);
-    testError("class C { set [foo](val) {}}", Es6ToEs3Converter.CANNOT_CONVERT);
+    testError("class C { get [foo]() {}}", Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    testError("class C { set [foo](val) {}}", Es6ToEs3Converter.CANNOT_CONVERT_YET);
   }
 
   /**
