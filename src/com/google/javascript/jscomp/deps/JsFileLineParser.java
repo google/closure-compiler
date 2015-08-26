@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorManager;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
+@GwtIncompatible("java.io")
 public abstract class JsFileLineParser {
 
   static final DiagnosticType PARSE_WARNING = DiagnosticType.warning(

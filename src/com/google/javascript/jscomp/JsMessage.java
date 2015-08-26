@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
@@ -295,6 +296,7 @@ public final class JsMessage {
    * This implementation correctly processes unnamed messages and creates a key
    * for them that looks like MSG_<fingerprint value>.
    */
+  @GwtIncompatible("java.util.regex")
   public static class Builder {
 
     private static final Pattern MSG_EXTERNAL_PATTERN =

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -2534,7 +2535,6 @@ public class Compiler extends AbstractCompiler {
   Node loadLibraryCode(String resourceName, boolean normalizeAndUniquifyNames) {
     String originalCode = ResourceLoader.loadTextResource(
         Compiler.class, "js/" + resourceName + ".js");
-
     Node ast = parseSyntheticCode(originalCode);
     if (normalizeAndUniquifyNames) {
       Normalize.normalizeSyntheticCode(this, ast, "jscomp_" + resourceName + "_");
@@ -2543,12 +2543,14 @@ public class Compiler extends AbstractCompiler {
   }
 
   /** Returns the compiler version baked into the jar. */
+  @GwtIncompatible("java.util.ResourceBundle")
   public static String getReleaseVersion() {
     ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
     return config.getString("compiler.version");
   }
 
   /** Returns the compiler date baked into the jar. */
+  @GwtIncompatible("java.util.ResourceBundle")
   public static String getReleaseDate() {
     ResourceBundle config = ResourceBundle.getBundle(CONFIG_RESOURCE);
     return config.getString("compiler.date");

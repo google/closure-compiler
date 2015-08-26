@@ -509,7 +509,7 @@ class IRFactory {
            parent != null && !parent.isFunction(); parent = parent.getParent()) {
         if (parent.isLabel() && labelsMatch(parent, labelName)) {
           errorReporter.error(
-              String.format(DUPLICATE_LABEL, labelName.getString()),
+              SimpleFormat.format(DUPLICATE_LABEL, labelName.getString()),
               sourceName,
               n.getLineno(), n.getCharno());
           break;

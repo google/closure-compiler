@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.primitives.UnsignedBytes;
@@ -28,6 +29,7 @@ import java.util.BitSet;
  * instrumented (in encoded form).
  * @author praveenk@google.com (Praveen Kumashi)
  */
+@GwtIncompatible("com.google.common.primitives.UnsignedBytes")
 class FileInstrumentationData {
   private final BitSet instrumentedBits;
   private final String arrayName;

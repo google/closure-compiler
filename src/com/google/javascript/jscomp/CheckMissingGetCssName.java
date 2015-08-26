@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
  *
  * @author mkretzschmar@google.com (Martin Kretzschmar)
  */
+@GwtIncompatible("java.util.regex")
 class CheckMissingGetCssName
     extends AbstractPostOrderCallback implements CompilerPass {
   private final AbstractCompiler compiler;

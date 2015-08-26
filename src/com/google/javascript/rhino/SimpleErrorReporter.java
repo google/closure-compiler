@@ -125,7 +125,7 @@ public class SimpleErrorReporter implements ErrorReporter {
 
       String formatString;
       try {
-          formatString = rb.getString(messageId);
+        formatString = rb.getString(messageId);
       } catch (java.util.MissingResourceException mre) {
           throw new RuntimeException
               ("no message resource found for message property " + messageId);

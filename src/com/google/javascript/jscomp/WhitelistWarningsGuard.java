@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -49,6 +50,7 @@ import java.util.regex.Pattern;
  * @author anatol@google.com (Anatol Pomazau)
  * @author bashir@google.com (Bashir Sadjad)
  */
+@GwtIncompatible("java.io, java.util.regex")
 public class WhitelistWarningsGuard extends WarningsGuard {
   private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 

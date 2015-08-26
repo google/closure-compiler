@@ -16,10 +16,13 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.annotations.GwtIncompatible;
+
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Set;
 
+@GwtIncompatible("java.lang.reflect")
 /** A persistent set that simply wraps Clojure's implementation */
 final class ClojurePersistentHashSet<K> extends PersistentSet<K> {
   private static Method cons;

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -31,6 +32,7 @@ import javax.annotation.Nullable;
  *
  * @author anatol@google.com (Anatol Pomazau)
  */
+@GwtIncompatible("JsMessage")
 final class ReplaceMessages extends JsMessageVisitor {
   private final MessageBundle bundle;
   private final boolean strictReplacement;

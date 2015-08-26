@@ -16,11 +16,14 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.annotations.GwtIncompatible;
+
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
 /** A persistent map that simply wraps Clojure's implementation */
+@GwtIncompatible("java.lang.reflect")
 final class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
   private static Method assoc;
   private static Method without;

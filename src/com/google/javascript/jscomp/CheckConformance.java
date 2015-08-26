@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -38,6 +39,7 @@ import java.util.Set;
  * custom rules than specify
  *
  */
+@GwtIncompatible("com.google.protobuf")
 public final class CheckConformance extends AbstractPostOrderCallback
     implements CompilerPass {
 

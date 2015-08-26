@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -58,6 +59,7 @@ import javax.annotation.Nullable;
  * Standard conformance rules. See
  * third_party/java_src/jscomp/java/com/google/javascript/jscomp/conformance.proto
  */
+@GwtIncompatible("java.lang.reflect, java.util.regex")
 public final class ConformanceRules {
 
   private ConformanceRules() {}

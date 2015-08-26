@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -158,6 +159,7 @@ public final class JSModuleGraph {
    * - "inputs" (list of file names)
    * @return List of module JSONObjects.
    */
+  @GwtIncompatible("com.google.gson")
   JsonArray toJson() {
     JsonArray modules = new JsonArray();
     for (JSModule module : getAllModules()) {

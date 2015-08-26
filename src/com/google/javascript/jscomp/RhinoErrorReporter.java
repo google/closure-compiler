@@ -135,9 +135,9 @@ class RhinoErrorReporter {
                 BAD_JSDOC_ANNOTATION)
 
             .put(
-                Pattern.compile(
-                    "^\\QNon-JSDoc comment has annotations. "
-                        + "Did you mean to start it with '/**'?\\E"),
+                Pattern.compile("^" + Pattern.quote(
+                    "Non-JSDoc comment has annotations. "
+                        + "Did you mean to start it with '/**'?")),
                 JSDOC_IN_BLOCK_COMMENT)
 
             .put(

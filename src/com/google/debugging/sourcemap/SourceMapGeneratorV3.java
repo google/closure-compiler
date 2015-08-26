@@ -16,6 +16,7 @@
 
 package com.google.debugging.sourcemap;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
 import com.google.gson.Gson;
@@ -40,6 +41,7 @@ import javax.annotation.Nullable;
  *
  * @author johnlenz@google.com (John Lenz)
  */
+@GwtIncompatible("com.google.gson")
 public final class SourceMapGeneratorV3 implements SourceMapGenerator {
 
   /**

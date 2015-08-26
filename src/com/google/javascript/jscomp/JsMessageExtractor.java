@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import java.util.List;
  * across all JS files.
  *
  */
+@GwtIncompatible("JsMessage.Builder")
 public final class JsMessageExtractor {
 
   private final JsMessage.Style style;

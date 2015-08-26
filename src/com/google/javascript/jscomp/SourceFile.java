@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
@@ -141,6 +142,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   /**
    * Gets a reader for the code in this source file.
    */
+  @GwtIncompatible("java.io.Reader")
   public Reader getCodeReader() throws IOException {
     return new StringReader(getCode());
   }
@@ -309,6 +311,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return fileName;
   }
 
+  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName, Charset c) {
     return builder().withCharset(c).buildFromFile(fileName);
   }
@@ -317,10 +320,12 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return builder().buildFromFile(fileName);
   }
 
+  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(File file, Charset c) {
     return builder().withCharset(c).buildFromFile(file);
   }
 
+  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(File file) {
     return builder().buildFromFile(file);
   }
@@ -333,16 +338,19 @@ public class SourceFile implements StaticSourceFile, Serializable {
    * @deprecated Use {@link #fromInputStream(String, InputStream, Charset)}
    */
   @Deprecated
+  @GwtIncompatible("java.io.InputStream")
   public static SourceFile fromInputStream(String fileName, InputStream s)
       throws IOException {
     return builder().buildFromInputStream(fileName, s);
   }
 
+  @GwtIncompatible("java.io.InputStream")
   public static SourceFile fromInputStream(String fileName, InputStream s,
       Charset charset) throws IOException {
     return builder().withCharset(charset).buildFromInputStream(fileName, s);
   }
 
+  @GwtIncompatible("java.io.Reader")
   public static SourceFile fromReader(String fileName, Reader r)
       throws IOException {
     return builder().buildFromReader(fileName, r);
@@ -388,12 +396,14 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return new Preloaded(fileName, originalPath, code);
     }
 
+    @GwtIncompatible("java.io.InputStream")
     public SourceFile buildFromInputStream(String fileName, InputStream s)
         throws IOException {
       return buildFromCode(fileName,
           CharStreams.toString(new InputStreamReader(s, charset)));
     }
 
+    @GwtIncompatible("java.io.Reader")
     public SourceFile buildFromReader(String fileName, Reader r)
         throws IOException {
       return buildFromCode(fileName, CharStreams.toString(r));
@@ -494,6 +504,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
      * Gets a reader for the code in this source file.
      */
     @Override
+    @GwtIncompatible("java.io.Reader")
     public Reader getCodeReader() throws IOException {
       if (hasSourceInMemory()) {
         return super.getCodeReader();

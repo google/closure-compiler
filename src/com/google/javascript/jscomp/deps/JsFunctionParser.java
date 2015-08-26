@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.deps;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
 import com.google.javascript.jscomp.ErrorManager;
 
@@ -32,6 +33,7 @@ import java.util.regex.Pattern;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
+@GwtIncompatible("java.util.regex")
 public final class JsFunctionParser extends JsFileLineParser {
 
   public static class SymbolInfo {

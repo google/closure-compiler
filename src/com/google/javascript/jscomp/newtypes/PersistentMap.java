@@ -16,9 +16,12 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.annotations.GwtIncompatible;
+
 import java.util.AbstractMap;
 import java.util.Map;
 
+@GwtIncompatible("Class.forName")
 /** A persistent map with non-destructive additions and removals  */
 abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
 

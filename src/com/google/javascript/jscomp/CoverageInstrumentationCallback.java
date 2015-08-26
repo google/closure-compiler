@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.rhino.IR;
@@ -28,6 +29,7 @@ import java.util.Map;
  * @author praveenk@google.com (Praveen Kumashi)
  *
  */
+@GwtIncompatible("FileInstrumentationData")
 class CoverageInstrumentationCallback extends
     NodeTraversal.AbstractPostOrderCallback {
 

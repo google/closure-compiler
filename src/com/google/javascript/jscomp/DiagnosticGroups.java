@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -391,14 +392,17 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("extraRequire",
           CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
 
+  @GwtIncompatible("java.util.regex")
   public static final DiagnosticGroup MISSING_GETCSSNAME =
       DiagnosticGroups.registerGroup("missingGetCssName",
           CheckMissingGetCssName.MISSING_GETCSSNAME);
 
+  @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup DUPLICATE_MESSAGE =
       DiagnosticGroups.registerGroup("duplicateMessage",
           JsMessageVisitor.MESSAGE_DUPLICATE_KEY);
 
+  @GwtIncompatible("JsMessage")
   public static final DiagnosticGroup MESSAGE_DESCRIPTIONS =
       DiagnosticGroups.registerGroup("msgDescriptions",
           JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
@@ -464,6 +468,7 @@ public class DiagnosticGroups {
         PeepholeFoldConstants.FRACTIONAL_BITWISE_OPERAND);
   }
 
+  @GwtIncompatible("Conformance")
   public static final DiagnosticGroup CONFORMANCE_VIOLATIONS =
       DiagnosticGroups.registerGroup("conformanceViolations",
           CheckConformance.CONFORMANCE_VIOLATION,

@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -2236,14 +2237,17 @@ public class CompilerOptions implements Serializable {
     this.sourceMapOutputPath = sourceMapOutputPath;
   }
 
+  @GwtIncompatible("SourceMap")
   public void setSourceMapDetailLevel(SourceMap.DetailLevel sourceMapDetailLevel) {
     this.sourceMapDetailLevel = sourceMapDetailLevel;
   }
 
+  @GwtIncompatible("SourceMap")
   public void setSourceMapFormat(SourceMap.Format sourceMapFormat) {
     this.sourceMapFormat = sourceMapFormat;
   }
 
+  @GwtIncompatible("SourceMap")
   public void setSourceMapLocationMappings(
       List<SourceMap.LocationMapping> sourceMapLocationMappings) {
     this.sourceMapLocationMappings = sourceMapLocationMappings;
@@ -2293,6 +2297,7 @@ public class CompilerOptions implements Serializable {
   /**
    * Both enable and configure conformance checks, if non-null.
    */
+  @GwtIncompatible("Conformance")
   public void setConformanceConfig(ConformanceConfig conformanceConfig) {
     this.conformanceConfigs = ImmutableList.of(conformanceConfig);
   }
@@ -2300,6 +2305,7 @@ public class CompilerOptions implements Serializable {
   /**
    * Both enable and configure conformance checks, if non-null.
    */
+  @GwtIncompatible("Conformance")
   public void setConformanceConfigs(List<ConformanceConfig> configs) {
     this.conformanceConfigs = ImmutableList.copyOf(configs);
   }

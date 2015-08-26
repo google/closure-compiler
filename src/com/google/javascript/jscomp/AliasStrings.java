@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -44,6 +45,7 @@ import java.util.zip.CRC32;
  * or occur on codepaths that get executed frequently.
  *
  */
+@GwtIncompatible("java.util.regex")
 class AliasStrings extends AbstractPostOrderCallback
     implements CompilerPass {
 

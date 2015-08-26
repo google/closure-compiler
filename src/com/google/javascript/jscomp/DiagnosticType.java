@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
+
 import java.io.Serializable;
 import java.text.MessageFormat;
 
@@ -125,6 +127,7 @@ public final class DiagnosticType
   }
 
   @Override
+  @GwtIncompatible("java.text.MessageFormat.toPattern()")
   public String toString() {
     return key + ": " + format.toPattern();
   }
