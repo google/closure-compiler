@@ -256,8 +256,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closurePrimitives);
     }
 
-    // It's important that the PolymerPass run *after* the ClosurePrimitives rewrite and *before*
-    // the suspicious code checks. This is enforced in the assertValidOrder method.
+    // It's important that the PolymerPass run *after* the ClosurePrimitives
+    // rewrite and *before* the suspicious code checks.
+    // This is enforced in the assertValidOrder method.
     if (options.polymerPass && !options.skipNonTranspilationPasses) {
       checks.add(polymerPass);
     }
@@ -287,6 +288,15 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(inferConsts);
     }
 
+    if (options.computeFunctionSideEffects && !options.skipNonTranspilationPasses) {
+      checks.add(checkRegExp);
+    }
+
+    // This pass should run before types are assigned.
+    if (options.processObjectPropertyString && !options.skipNonTranspilationPasses) {
+      checks.add(objectPropertyStringPreprocess);
+    }
+
     // Early ES6 transpilation.
     // Includes ES6 features that are straightforward to transpile.
     // We won't handle them natively in the rest of the compiler, so we always
@@ -296,15 +306,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RenameVariablesInParamLists);
       checks.add(es6SplitVariableDeclarations);
       checks.add(es6RewriteDestructuring);
-    }
-
-    if (options.computeFunctionSideEffects && !options.skipNonTranspilationPasses) {
-      checks.add(checkRegExp);
-    }
-
-    // This pass should run before types are assigned.
-    if (options.processObjectPropertyString && !options.skipNonTranspilationPasses) {
-      checks.add(objectPropertyStringPreprocess);
     }
 
     // Late ES6 transpilation.
