@@ -446,7 +446,8 @@ public class DiagnosticGroups {
           ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
           RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
-          RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+          RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS,
+          VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
 
   public static final DiagnosticGroup USE_OF_GOOG_BASE =
       DiagnosticGroups.registerGroup("useOfGoogBase",
