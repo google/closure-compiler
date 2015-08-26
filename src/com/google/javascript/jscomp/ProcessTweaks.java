@@ -383,7 +383,7 @@ class ProcessTweaks implements CompilerPass {
           }
 
           // Ensure tweaks are registered in the global scope.
-          if (!t.getScope().getClosestHoistScope().isGlobal()) {
+          if (!t.getClosestHoistScope().isGlobal()) {
             compiler.report(
                 t.makeError(n, NON_GLOBAL_TWEAK_INIT_ERROR, tweakId));
             break;

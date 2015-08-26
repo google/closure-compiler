@@ -357,7 +357,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         return;
       }
       if (inGoogScopeBody()) {
-        Scope hoistedScope = t.getScope().getClosestHoistScope();
+        Scope hoistedScope = t.getClosestHoistScope();
         if (isGoogScopeFunctionBody(hoistedScope.getRootNode())) {
           findAliases(t, hoistedScope);
         }
@@ -640,7 +640,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         }
       }
 
-      if (isGoogScopeFunctionBody(t.getScope().getClosestHoistScope().getRootNode())) {
+      if (isGoogScopeFunctionBody(t.getClosestHoistScope().getRootNode())) {
         if (aliasVar != null && !isObjLitShorthand && NodeUtil.isLValue(n)) {
           if (aliasVar.getNode() == n) {
             aliasDefinitionsInOrder.add(n);

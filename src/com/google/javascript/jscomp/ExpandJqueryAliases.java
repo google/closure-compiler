@@ -570,7 +570,7 @@ class ExpandJqueryAliases extends AbstractPostOrderCallback
     public void visit(NodeTraversal t, Node n, Node parent) {
       // In the top scope, "this" is a reference to "value"
       boolean isThis = false;
-      if (t.getScope().getClosestHoistScope() == this.startingScope) {
+      if (t.getClosestHoistScope() == this.startingScope) {
         isThis = n.isThis();
       }
 

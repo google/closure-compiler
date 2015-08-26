@@ -135,7 +135,7 @@ class ChainCalls implements CompilerPass {
         if (!goodFunctionNodes.contains(rValue)) {
           new NodeTraversal(compiler, gatherFunctions, new Es6SyntacticScopeCreator(compiler))
               .traverseInnerNode(
-                  rValue, rValue.getParent(), t.getScope().getClosestHoistScope().getParent());
+                  rValue, rValue.getParent(), t.getClosestHoistScope().getParent());
           if (badFunctionNodes.contains(rValue)) {
             return;
           }

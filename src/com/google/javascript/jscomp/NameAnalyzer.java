@@ -493,7 +493,7 @@ final class NameAnalyzer implements CompilerPass {
   private class FindDependencyScopes extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!t.getScope().getClosestHoistScope().isGlobal()) {
+      if (!t.getClosestHoistScope().isGlobal()) {
         return;
       }
 
@@ -625,7 +625,7 @@ final class NameAnalyzer implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
 
       // Record global variable and function declarations
-      if (t.getScope().getClosestHoistScope().isGlobal()) {
+      if (t.getClosestHoistScope().isGlobal()) {
         if (NodeUtil.isVarDeclaration(n)) {
           NameInformation ns = createNameInformation(t, n);
           Preconditions.checkNotNull(ns);

@@ -304,7 +304,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           if (var.isGlobal()) {
             if (var.getInitialValue() != null &&
                 var.getInitialValue().isFunction()) {
-              if (t.getScope().getClosestHoistScope().isGlobal()) {
+              if (t.getClosestHoistScope().isGlobal()) {
                 if (!processGlobalFunctionDeclaration(t, n, var)) {
                   addGlobalUseOfSymbol(name, t.getModule(), VAR);
                 }
@@ -372,7 +372,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       boolean lookingAtScopeRoot = t.getScopeRoot() == n && t.getScopeDepth() == 1;
 
       if (isNotDefinedAsProperty && n.getParent().getParent().isVar()) {
-        return t.getScope().getClosestHoistScope().isGlobal() || lookingAtScopeRoot;
+        return t.getClosestHoistScope().isGlobal() || lookingAtScopeRoot;
       } else if (NodeUtil.isFunctionDeclaration(n) || isNotDefinedAsProperty) {
         // Function declaration and let/const declared function expression should be block scoped.
         return t.inGlobalScope() || lookingAtScopeRoot;

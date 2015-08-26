@@ -737,6 +737,10 @@ public class NodeTraversal {
     return scope;
   }
 
+  public Scope getClosestHoistScope() {
+    return getScope().getClosestHoistScope();
+  }
+
   public TypedScope getTypedScope() {
     Scope s = getScope();
     Preconditions.checkState(s instanceof TypedScope,
