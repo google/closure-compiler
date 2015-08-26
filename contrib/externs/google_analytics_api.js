@@ -15,8 +15,8 @@
  */
 
 /**
- * @fileoverview Externs for the Google Analytics API.
- * @see http://code.google.com/intl/en/apis/analytics/docs/gaJS/gaJSApi.html
+ * @fileoverview Externs for the Google Classic Analytics API (ga.js).
+ * @see https://developers.google.com/analytics/devguides/collection/gajs/gaTrackingOverview
  * @externs
  */
 
