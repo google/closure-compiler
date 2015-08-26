@@ -75,7 +75,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
   public void process(Node externs, Node root) {
     AnonymousFunctionNamingCallback namingCallback =
         new AnonymousFunctionNamingCallback(new MappedFunctionNamer());
-    NodeTraversal.traverse(compiler, root, namingCallback);
+    NodeTraversal.traverseEs6(compiler, root, namingCallback);
     logger.fine("Named " + namedCount + " anon functions using " +
         bytesUsed + " bytes");
     if (namedCount > 0) {

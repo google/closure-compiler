@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+
 import junit.framework.TestCase;
 
 /**
@@ -179,7 +180,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     defUse.analyze();
     def = null;
     use = null;
-    new NodeTraversal(compiler,new LabelFinder()).traverse(root);
+    NodeTraversal.traverseEs6(compiler, root, new LabelFinder());
     assertNotNull("Code should have an instruction labeled D", def);
     assertNotNull("Code should have an instruction labeled U", use);
   }

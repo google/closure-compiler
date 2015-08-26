@@ -58,7 +58,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new TransformAMDModulesCallback());
+    NodeTraversal.traverseEs6(compiler, root, new TransformAMDModulesCallback());
   }
 
   private static void unsupportedDefineError(NodeTraversal t, Node n) {
@@ -125,7 +125,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         handleRequiresAndParamList(t, n, script, requiresNode, callback);
 
         Node callbackBlock = callback.getChildAtIndex(2);
-        NodeTraversal.traverse(compiler, callbackBlock,
+        NodeTraversal.traverseEs6(compiler, callbackBlock,
             new DefineCallbackReturnCallback());
 
         moveCallbackContentToTopLevel(parent, script, callbackBlock);
@@ -187,7 +187,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         while (true) {
           String renamed = aliasName + VAR_RENAME_SUFFIX + renameIndex;
           if (!globalScope.isDeclared(renamed, true)) {
-            NodeTraversal.traverse(compiler, callback,
+            NodeTraversal.traverseEs6(compiler, callback,
                 new RenameCallback(aliasName, renamed));
             aliasName = renamed;
             break;

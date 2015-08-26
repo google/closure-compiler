@@ -187,7 +187,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
 
     for (Node msgNode : googMsgNodes) {
       compiler.report(JSError.make(msgNode,

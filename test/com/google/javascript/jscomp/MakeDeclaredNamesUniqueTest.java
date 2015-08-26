@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.Node;
 
@@ -107,10 +106,6 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
   private void testInFunction(String original, String expected) {
     test(wrapInFunction(original), wrapInFunction(expected));
-  }
-
-  private void testInFunctionEs5(String original, String expected) {
-    test(wrapInFunction(original), wrapInFunction(expected), LanguageMode.ECMASCRIPT5);
   }
 
   private void testInFunctionEs6(String original, String expected) {
@@ -229,19 +224,6 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
         "try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} } var e;");
 
     invert = true;
-
-    testInFunctionEs5(
-        "var e; try { } catch(e$$0) {e$$0;}; try { } catch(e$$1) {e$$1;}",
-        "var e; try { } catch(e$$2) {e$$2;}; try { } catch(e$$0) {e$$0;}");
-    testInFunctionEs5(
-        "var e; try { } catch(e$$1) {e$$1; try { } catch(e$$2) {e$$2;} };",
-        "var e; try { } catch(e$$0) {e$$0; try { } catch(e$$1) {e$$1;} };");
-    testInFunctionEs5(
-        "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;};var e$$2;",
-        "try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;};var e$$1;");
-    testInFunctionEs5(
-        "try { } catch(e) {e; try { } catch(e$$1) {e$$1;} };var e$$2",
-        "try { } catch(e) {e; try { } catch(e$$0) {e$$0;} };var e$$1");
 
     testInFunctionEs6(
         "var e; try { } catch(e$$0) {e$$0;}; try { } catch(e$$1) {e$$1;}",
@@ -377,9 +359,6 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
          "function f(a, b) {}");
     test("function f(a$$1, a$$2) {}",
          "function f(a, a$$0) {}");
-    test("try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}",
-         "try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}",
-         LanguageMode.ECMASCRIPT5);
     testEs6("try { } catch(e) {e; try { } catch(e$$1) {e$$1;} }; ",
             "try { } catch(e) {e; try { } catch(e) {e;} }; ");
     testSame("var a$$1;");
@@ -392,9 +371,6 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
   public void testOnlyInversion2() {
     invert = true;
-    test("function f() {try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;}}",
-         "function f() {try { } catch(e) {e;}; try { } catch(e$$1) {e$$1;}}",
-         LanguageMode.ECMASCRIPT5);
     testEs6("function f() {try { } catch(e) {e;}; try { } catch(e$$0) {e$$0;}}",
             "function f() {try { } catch(e) {e;}; try { } catch(e) {e;}}");
   }

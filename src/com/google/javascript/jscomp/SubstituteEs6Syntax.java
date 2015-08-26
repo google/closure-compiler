@@ -44,7 +44,7 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
     compiler.setLanguageMode(compiler.getOptions().getLanguageOut());
   }
 

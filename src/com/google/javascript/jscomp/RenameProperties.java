@@ -21,7 +21,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -173,7 +172,7 @@ class RenameProperties implements CompilerPass {
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
-    NodeTraversal.traverse(compiler, root, new ProcessProperties());
+    NodeTraversal.traverseEs6(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
         new HashSet<>(externedNames.size() + quotedNames.size());
@@ -306,8 +305,7 @@ class RenameProperties implements CompilerPass {
    * A traversal callback that collects property names and counts how
    * frequently each property name occurs.
    */
-  private class ProcessProperties extends AbstractPostOrderCallback implements
-      ScopedCallback {
+  private class ProcessProperties extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -427,14 +425,6 @@ class RenameProperties implements CompilerPass {
         propertyMap.put(name, prop);
       }
       prop.numOccurrences++;
-    }
-
-    @Override
-    public void enterScope(NodeTraversal t) {
-    }
-
-    @Override
-    public void exitScope(NodeTraversal t) {
     }
   }
 

@@ -69,10 +69,10 @@ class InferJSDocInfo extends AbstractPostOrderCallback
   @Override
   public void process(Node externs, Node root) {
     if (externs != null) {
-      NodeTraversal.traverse(compiler, externs, this);
+      NodeTraversal.traverseEs6(compiler, externs, this);
     }
     if (root != null) {
-      NodeTraversal.traverse(compiler, root, this);
+      NodeTraversal.traverseEs6(compiler, root, this);
     }
   }
 
@@ -80,7 +80,7 @@ class InferJSDocInfo extends AbstractPostOrderCallback
   public void hotSwapScript(Node root, Node originalRoot) {
     Preconditions.checkNotNull(root);
     Preconditions.checkState(root.isScript());
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override

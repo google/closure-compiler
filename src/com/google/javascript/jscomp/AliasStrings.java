@@ -117,7 +117,7 @@ class AliasStrings extends AbstractPostOrderCallback
     logger.fine("Aliasing common strings");
 
     // Traverse the tree and collect strings
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
 
     // 1st edit pass: replace some strings with aliases
     replaceStringsWithAliases();
@@ -156,7 +156,8 @@ class AliasStrings extends AbstractPostOrderCallback
         info.occurrences.add(occurrence);
         info.numOccurrences++;
 
-        if (t.inGlobalScope() || isInThrowExpression(n)) {
+        if (t.getScope().getClosestHoistScope().isGlobal()
+            || isInThrowExpression(n)) {
           info.numOccurrencesInfrequentlyExecuted++;
         }
 

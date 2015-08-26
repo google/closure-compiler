@@ -61,11 +61,11 @@ class PrepareAst implements CompilerPass {
       // they DIRECT_EVAL shouldn't be applied after inlining has been
       // performed.
       if (externs != null) {
-        NodeTraversal.traverse(
+        NodeTraversal.traverseEs6(
             compiler, externs, new PrepareAnnotations());
       }
       if (root != null) {
-        NodeTraversal.traverse(
+        NodeTraversal.traverseEs6(
             compiler, root, new PrepareAnnotations());
       }
     }

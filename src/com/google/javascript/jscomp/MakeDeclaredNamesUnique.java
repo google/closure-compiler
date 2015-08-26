@@ -290,7 +290,7 @@ class MakeDeclaredNamesUnique
 
     @Override
     public void process(Node externs, Node js) {
-      NodeTraversal.traverse(compiler, js, this);
+      NodeTraversal.traverseEs6(compiler, js, this);
     }
 
     public static String getOriginalName(String name) {

@@ -77,12 +77,12 @@ public final class ProcessCommonJSModules implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
-    NodeTraversal.traverse(compiler, root, finder);
+    NodeTraversal.traverseEs6(compiler, root, finder);
     if (finder.found) {
       return;
     }
     NodeTraversal
-        .traverse(compiler, root, new ProcessCommonJsModulesCallback());
+        .traverseEs6(compiler, root, new ProcessCommonJsModulesCallback());
   }
 
   String inputToModuleName(CompilerInput input) {
@@ -216,13 +216,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (n.isIf()) {
         FindModuleExportStatements commonjsFinder = new FindModuleExportStatements();
         Node condition = n.getFirstChild();
-        NodeTraversal.traverse(compiler, condition, commonjsFinder);
+        NodeTraversal.traverseEs6(compiler, condition, commonjsFinder);
 
         if (commonjsFinder.isFound()) {
           visitCommonJSIfStatement(n);
         } else {
           FindDefineAmdStatements amdFinder = new FindDefineAmdStatements();
-          NodeTraversal.traverse(compiler, condition, amdFinder);
+          NodeTraversal.traverseEs6(compiler, condition, amdFinder);
 
           if (amdFinder.isFound()) {
             visitAMDIfStatement(n);
@@ -292,7 +292,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       String moduleName = inputToModuleName(t.getInput());
 
       // Rename vars to not conflict in global scope.
-      NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
+      NodeTraversal.traverseEs6(compiler, script, new SuffixVarsCallback(
           moduleName));
 
       // Replace all refs to module.exports and exports

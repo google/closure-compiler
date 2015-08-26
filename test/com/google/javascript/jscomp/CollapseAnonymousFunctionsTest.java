@@ -87,6 +87,11 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
          "if (x) var f = function(){ function g(){} }");
   }
 
+  public void testLocalScopeOnly3() {
+    test("if (x){ var f = function(){ var g = function(){} };}",
+         "if (x){ var f = function(){ function g(){} }}");
+  }
+
   public void testReturn() {
     test("var f = function(x){return 2*x}; var g = f(2);",
          "function f(x){return 2*x} var g = f(2)");

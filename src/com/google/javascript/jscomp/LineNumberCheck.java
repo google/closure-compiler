@@ -44,14 +44,14 @@ class LineNumberCheck implements Callback, CompilerPass {
   public void setCheckSubTree(Node root) {
     requiresLineNumbers = true;
 
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void process(Node externs, Node root) {
     requiresLineNumbers = false;
 
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override

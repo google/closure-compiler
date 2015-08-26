@@ -205,8 +205,8 @@ class RenamePrototypes implements CompilerPass {
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
 
-    NodeTraversal.traverse(compiler, externs, new ProcessExternedProperties());
-    NodeTraversal.traverse(compiler, root, new ProcessProperties());
+    NodeTraversal.traverseEs6(compiler, externs, new ProcessExternedProperties());
+    NodeTraversal.traverseEs6(compiler, root, new ProcessProperties());
 
     // Gather the properties to rename, sorted by count.
     SortedSet<Property> propsByFrequency = new TreeSet<>(FREQUENCY_COMPARATOR);

@@ -97,7 +97,7 @@ class StripCode implements CompilerPass {
       stripTypePrefixes.add(type + ".");
     }
 
-    NodeTraversal.traverse(compiler, root, new Strip());
+    NodeTraversal.traverseEs6(compiler, root, new Strip());
   }
 
   // -------------------------------------------------------------------------

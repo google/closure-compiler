@@ -46,7 +46,7 @@ public final class FieldCleanupPass implements HotSwapCompilerPass {
     String srcName = originalRoot.getSourceFileName();
     Callback cb =
         new QualifiedNameSearchTraversal(compiler.getTypeRegistry(), srcName);
-    new NodeTraversal(compiler, cb).traverse(originalRoot);
+    NodeTraversal.traverseEs6(compiler, originalRoot, cb);
   }
 
   @Override

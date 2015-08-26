@@ -45,7 +45,7 @@ class CollapseAnonymousFunctions implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, new Callback());
+    NodeTraversal.traverseEs6(compiler, root, new Callback());
   }
 
   private class Callback extends AbstractPostOrderCallback {

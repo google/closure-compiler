@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
 
-import java.util.*;
+import java.util.Set;
 
 /**
  * Tests for {@link AliasStrings}.
@@ -56,6 +56,7 @@ public final class AliasStringsTest extends CompilerTestCase {
 
     // Strings not in alias list
     testSame("var foo='foo'");
+    testSame("if(true) {myStr='width'}");
     testSame("a='titanium',b='titanium',c='titanium',d='titanium'");
 
     // Not worth aliasing:
@@ -65,6 +66,9 @@ public final class AliasStringsTest extends CompilerTestCase {
     test("a='overimaginative';b='overimaginative'",
          "var $$S_overimaginative='overimaginative';" +
          "a=$$S_overimaginative;b=$$S_overimaginative");
+    test("if(true) {a='overimaginative';b='overimaginative'}",
+        "var $$S_overimaginative='overimaginative';" +
+        "if(true) {a=$$S_overimaginative;b=$$S_overimaginative }");
 
     testSame("var width=1234");
     testSame("width=1234;width=10000;width=9900;width=17;");
@@ -316,11 +320,13 @@ public final class AliasStringsTest extends CompilerTestCase {
     test(modules,
          new String[] {
              // m1
-             "var $$S_ciao = 'ciao';" +
-             "function g() { alert($$S_ciao); }",
+             LINE_JOINER.join(
+             "var $$S_ciao = 'ciao';" ,
+             "function g() { alert($$S_ciao); }"),
              // m2
-             "var $$S_h$3a = 'h:';" +
-             "function h(a) { alert($$S_h$3a + a); }",
+             LINE_JOINER.join(
+             "var $$S_h$3a = 'h:';",
+             "function h(a) { alert($$S_h$3a + a); }"),
              // m3
              "h($$S_ciao + 'adios');",
              // m4

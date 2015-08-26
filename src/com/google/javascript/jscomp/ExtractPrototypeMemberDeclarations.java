@@ -136,7 +136,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     GatherExtractionInfo extractionInfo = new GatherExtractionInfo();
-    NodeTraversal.traverse(compiler, root, extractionInfo);
+    NodeTraversal.traverseEs6(compiler, root, extractionInfo);
     if (extractionInfo.shouldExtract()) {
       doExtraction(extractionInfo);
       compiler.reportCodeChange();

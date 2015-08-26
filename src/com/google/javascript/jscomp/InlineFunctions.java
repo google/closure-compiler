@@ -184,7 +184,8 @@ class InlineFunctions implements CompilerPass {
         NodeTraversal nodeTraversal, Node n, Node parent) {
       // Don't traverse into function bodies
       // if we aren't inlining local functions.
-      return inlineLocalFunctions || nodeTraversal.inGlobalScope();
+      return inlineLocalFunctions
+          || nodeTraversal.getScope().getClosestHoistScope().isGlobal();
     }
 
     @Override
@@ -355,7 +356,8 @@ class InlineFunctions implements CompilerPass {
    * if in the global scope.
    */
   private static Node getContainingFunction(NodeTraversal t) {
-    return (t.inGlobalScope()) ? null : t.getScopeRoot();
+    Scope hoistScope = t.getScope().getClosestHoistScope();
+    return hoistScope.isGlobal() ? null : t.getScopeRoot().getParent();
   }
 
   /**
