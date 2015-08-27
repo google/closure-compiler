@@ -381,7 +381,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
    * Expects the JS to generate one bad-read error.
    */
   private void assertParameterShadowed(String js) {
-    testError(js, VariableReferenceCheck.PARAMETER_SHADOWED_ERROR);
+    testError(js, VariableReferenceCheck.REDECLARED_VARIABLE_ERROR);
   }
 
   /**
