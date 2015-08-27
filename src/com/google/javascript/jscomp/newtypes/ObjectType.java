@@ -636,6 +636,9 @@ final class ObjectType implements TypeWithProperties {
   }
 
   static ObjectType join(ObjectType obj1, ObjectType obj2) {
+    if (obj1 == TOP_OBJECT || obj2 == TOP_OBJECT) {
+      return TOP_OBJECT;
+    }
     NominalType nom1 = obj1.nominalType;
     NominalType nom2 = obj2.nominalType;
     Preconditions.checkState(areRelatedClasses(nom1, nom2));

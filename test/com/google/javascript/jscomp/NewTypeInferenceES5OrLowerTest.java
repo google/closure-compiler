@@ -8838,7 +8838,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    x = /** @struct */ { a: 1 };",
         "  }",
         "  else {",
-        "    x = {};",
+        "    x = { b: 2 };",
         "  }",
         "  x['random' + 'propname'] = 123;",
         "}"),
@@ -12278,6 +12278,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "  y.p - 123;",
         "}"));
+  }
+
+  public void testJoinWithTopObject() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @param {!Function|!Object} x */",
+        "function f(x) {}",
+        "f({ a: 1, b: 2 });"));
   }
 
   public void testUnificationWithSubtyping() {
