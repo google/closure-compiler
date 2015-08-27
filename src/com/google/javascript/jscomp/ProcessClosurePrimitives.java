@@ -112,8 +112,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   static final DiagnosticType XMODULE_REQUIRE_ERROR = DiagnosticType.warning(
       "JSC_XMODULE_REQUIRE_ERROR",
-      "namespace \"{0}\" provided in module {1} " +
-      "but required in module {2}");
+      "namespace \"{0}\" is required in module {2} but provided in module {1}. " +
+      "Is module {2} missing a dependency on module {1}?");
 
   static final DiagnosticType INVALID_CLOSURE_CALL_ERROR = DiagnosticType.error(
       "JSC_INVALID_CLOSURE_CALL_ERROR",
