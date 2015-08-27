@@ -260,7 +260,7 @@ class AngularPass extends AbstractPostOrderCallback
             name = NodeUtil.getClassName(classNode);
           }
           fn = n.getFirstChild();
-          if (classNode.getParent().isAssign()) {
+          if (classNode.getParent().isAssign() || classNode.getParent().isName()) {
             target = classNode.getParent().getParent();
           } else {
             target = classNode;
