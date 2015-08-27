@@ -1776,7 +1776,7 @@ class IRFactory {
     }
 
     Node processVariableStatement(VariableStatementTree stmt) {
-      // skip the special handling so the doc is attached in the right place.
+      // TODO(moz): Figure out why we still need the special handling
       return justTransform(stmt.declarations);
     }
 

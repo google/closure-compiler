@@ -1549,6 +1549,7 @@ public class Parser {
 
   private VariableDeclarationListTree parseVariableDeclarationList(
       Expression expressionIn) {
+    SourcePosition start = getTreeStartLocation();
     TokenType token = peekType();
 
     switch (token) {
@@ -1562,7 +1563,6 @@ public class Parser {
       return null;
     }
 
-    SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<VariableDeclarationTree> declarations =
         ImmutableList.builder();
 

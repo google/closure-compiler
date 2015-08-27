@@ -780,6 +780,20 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
     assertThat(info.getOriginalCommentString()).isEqualTo("/** bar */");
   }
 
+  public void testInlineInExport() {
+    mode = LanguageMode.ECMASCRIPT6;
+    Node root = parse("export var /** number */ x;");
+    assertThat(root.getFirstChild().getFirstChild().getFirstChild().getJSDocInfo()).isNotNull();
+  }
+
+  public void testRegularAndInlineInExport() {
+    mode = LanguageMode.ECMASCRIPT6;
+    Node root = parse("/** attach */ export /** @const */ var /** number */ x;");
+    assertThat(root.getFirstChild().getJSDocInfo()).isNotNull();
+    assertThat(root.getFirstChild().getFirstChild().getJSDocInfo()).isNotNull();
+    assertThat(root.getFirstChild().getFirstChild().getFirstChild().getJSDocInfo()).isNotNull();
+  }
+
   private Node parse(String source, String... warnings) {
     TestErrorReporter testErrorReporter = new TestErrorReporter(null, warnings);
     Node script = ParserRunner.parse(
