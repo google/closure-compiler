@@ -2123,7 +2123,7 @@ chrome.runtime.getURL = function(path) {};
  * @param {string} url This may be used to clean up server-side data, do
  *     analytics, and implement surveys. Maximum 255 characters.
  */
-chrome.runtime.setUninstallUrl = function(url) {};
+chrome.runtime.setUninstallURL = function(url) {};
 
 
 /**
