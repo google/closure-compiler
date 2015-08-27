@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.IR;
@@ -101,6 +102,9 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   // Whether extern checks emit error.
   private final boolean strictExternCheck;
+
+  private final Set allowedExternAssignmentTypes = ImmutableSet.of(
+      Token.VAR, Token.CONST, Token.LET);
 
   VarCheck(AbstractCompiler compiler) {
     this(compiler, false);
@@ -306,7 +310,7 @@ class VarCheck extends AbstractPostOrderCallback implements
             // Don't warn for simple var assignments "/** @const */ var foo = bar;"
             // They are used to infer the types of namespace aliases.
             if (parent.getType() != Token.NAME || parent.getParent() == null ||
-                parent.getParent().getType() != Token.VAR) {
+                !allowedExternAssignmentTypes.contains(parent.getParent().getType())) {
               t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
             }
 
