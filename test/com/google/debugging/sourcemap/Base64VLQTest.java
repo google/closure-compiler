@@ -82,26 +82,6 @@ public final class Base64VLQTest extends TestCase {
     }
   }
 
-  // Disable this test if it is flaky.
-  public void testSpeed() {
-    long start = System.currentTimeMillis();
-    CharIteratorImpl ci = new CharIteratorImpl();
-    try {
-      StringBuilder sb = new StringBuilder();
-      for (int i = 0; i < 1000000; i++) {
-        Base64VLQ.encode(sb, i);
-        ci.set(sb);
-        int result = Base64VLQ.decode(ci);
-        assertThat(result).isEqualTo(i);
-        sb.setLength(0);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("failed.", e);
-    }
-    long end = System.currentTimeMillis();
-    // Was 200ms or less, use a larger number to prevent flakiness
-    assertThat(end - start).named("encode+decode time").isLessThan(1000L);
-  }
 
   private void testValue(int value) {
     try {
