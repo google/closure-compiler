@@ -110,8 +110,8 @@ class PureFunctionIdentifier implements CompilerPass {
     externs = externsAst;
     root = srcAst;
 
-    NodeTraversal.traverse(compiler, externs, new FunctionAnalyzer(true));
-    NodeTraversal.traverse(compiler, root, new FunctionAnalyzer(false));
+    NodeTraversal.traverseEs6(compiler, externs, new FunctionAnalyzer(true));
+    NodeTraversal.traverseEs6(compiler, root, new FunctionAnalyzer(false));
 
     propagateSideEffects();
 
@@ -480,7 +480,8 @@ class PureFunctionIdentifier implements CompilerPass {
 
     @Override
     public void exitScope(NodeTraversal t) {
-      if (t.inGlobalScope()) {
+      if (!(t.getScope().isFunctionBlockScope()
+          || t.getScope().isFunctionScope())) {
         return;
       }
 

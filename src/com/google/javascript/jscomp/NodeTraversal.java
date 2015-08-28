@@ -525,17 +525,16 @@ public class NodeTraversal {
     final AbstractCompiler comp = compiler;
     final FunctionCallback cb = callback;
     final Node jsRoot = comp.getJsRoot();
-    NodeTraversal t = new NodeTraversal(comp, new AbstractPreOrderCallback() {
-        @Override
-        public final boolean shouldTraverse(NodeTraversal t, Node n, Node p) {
-          if ((n == jsRoot || n.isFunction()) && comp.hasScopeChanged(n)) {
-            cb.enterFunction(comp, n);
+    NodeTraversal.traverseEs6(comp, jsRoot,
+        new AbstractPreOrderCallback() {
+          @Override
+          public final boolean shouldTraverse(NodeTraversal t, Node n, Node p) {
+            if ((n == jsRoot || n.isFunction()) && comp.hasScopeChanged(n)) {
+              cb.enterFunction(comp, n);
+            }
+            return true;
           }
-          return true;
-        }
-      },
-      new Es6SyntacticScopeCreator(compiler));
-    t.traverse(jsRoot);
+        });
   }
 
   /**

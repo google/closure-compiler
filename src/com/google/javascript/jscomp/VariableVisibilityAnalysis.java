@@ -112,7 +112,7 @@ class VariableVisibilityAnalysis implements CompilerPass {
       new ReferenceCollectingCallback(compiler,
           ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR);
 
-    NodeTraversal.traverse(compiler, root, callback);
+    NodeTraversal.traverseEs6(compiler, root, callback);
 
     for (Var variable : callback.getAllSymbols()) {
       ReferenceCollection referenceCollection =

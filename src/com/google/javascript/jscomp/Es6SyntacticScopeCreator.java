@@ -101,6 +101,9 @@ class Es6SyntacticScopeCreator implements ScopeCreator {
 
       // Since we create a separate scope for body, stop scanning here
     } else if (n.isBlock() || n.isFor() || n.isForOf()) {
+      if (scope.getParent() != null) {
+        inputId = NodeUtil.getInputId(n);
+      }
       scanVars(n);
     } else {
       // It's the global block
