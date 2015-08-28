@@ -44,9 +44,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_USE_OF_WITH",
       "The 'with' statement cannot be used in ES5 strict mode.");
 
-  static final DiagnosticType UNKNOWN_VARIABLE = DiagnosticType.warning(
-      "JSC_UNKNOWN_VARIABLE", "unknown variable {0}");
-
   static final DiagnosticType EVAL_DECLARATION = DiagnosticType.warning(
       "JSC_EVAL_DECLARATION",
       "\"eval\" cannot be redeclared in ES5 strict mode");
@@ -120,10 +117,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
   @Override public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isFunction()) {
       checkFunctionUse(t, n);
-    } else if (n.isName()) {
-      if (!isDeclaration(n)) {
-        checkNameUse(t, n);
-      }
     } else if (n.isAssign()) {
       checkAssignment(t, n);
     } else if (n.isDelProp()) {
@@ -172,18 +165,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
       default:
         return false;
-    }
-  }
-
-  /** Checks that the given name is used legally. */
-  private void checkNameUse(NodeTraversal t, Node n) {
-    Var v = t.getScope().getVar(n.getString());
-    if (v == null) {
-      // In particular, this prevents creating a global variable by assigning
-      // to it without a declaration.
-      if (!noVarCheck) {
-        t.report(n, UNKNOWN_VARIABLE, n.getString());
-      }
     }
   }
 

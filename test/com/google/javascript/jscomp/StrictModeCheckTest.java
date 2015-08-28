@@ -102,14 +102,6 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
     testSame("var a; eval: while (true) { a = 3; }");
   }
 
-  public void testUnknownVariable() {
-    testSame("function foo(a) { a = b; }", StrictModeCheck.UNKNOWN_VARIABLE);
-  }
-
-  public void testUnknownVariable2() {
-    testSame("a: while (true) { a = 3; }", StrictModeCheck.UNKNOWN_VARIABLE);
-  }
-
   public void testUnknownVariable3() {
     testSame("try {} catch (ex) { ex = 3; }");
   }
@@ -297,13 +289,6 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
         "    var obj = {a : 1, a : 2}",
         "  }",
         "}"), StrictModeCheck.DUPLICATE_OBJECT_KEY);
-
-    // Unknown variable test
-    testWarningEs6(LINE_JOINER.join(
-        "class A {",
-        "  constructor() {this.a = 1;}",
-        "  method() {this.a = b}",
-        "}"), StrictModeCheck.UNKNOWN_VARIABLE);
 
     // Delete test. Class methods are configurable, thus deletable.
     testSameEs6(LINE_JOINER.join(
