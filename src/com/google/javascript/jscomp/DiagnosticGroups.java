@@ -27,6 +27,7 @@ import com.google.javascript.jscomp.lint.CheckInterfaces;
 import com.google.javascript.jscomp.lint.CheckJSDocStyle;
 import com.google.javascript.jscomp.lint.CheckNullableReturn;
 import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
+import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 import java.util.HashMap;
@@ -443,6 +444,11 @@ public class DiagnosticGroups {
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
           CheckForInOverArray.FOR_IN_OVER_ARRAY,
           CheckPrototypeProperties.ILLEGAL_PROTOTYPE_MEMBER,
+          CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED,
+          CheckRequiresAndProvidesSorted.PROVIDES_NOT_SORTED,
+          CheckRequiresAndProvidesSorted.PROVIDES_AFTER_REQUIRES,
+          CheckRequiresAndProvidesSorted.MULTIPLE_MODULES_IN_FILE,
+          CheckRequiresAndProvidesSorted.MODULE_AND_PROVIDES,
           ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
           RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
           RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING,
