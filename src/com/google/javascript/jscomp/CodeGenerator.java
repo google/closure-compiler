@@ -362,7 +362,7 @@ class CodeGenerator {
           add("from");
           add(last);
         }
-        cc.maybeEndStatement();
+        processEnd(first, context);
         break;
 
       case Token.IMPORT:
@@ -463,9 +463,7 @@ class CodeGenerator {
         cc.beginBlock();
         for (Node c = first; c != null; c = c.getNext()) {
           add(c);
-          if (needsSemiColon(c)) {
-            cc.endStatement(true);
-          }
+          processEnd(c, context);
           cc.endLine();
         }
         cc.endBlock(false);
@@ -1153,9 +1151,7 @@ class CodeGenerator {
       case Token.DECLARE:
         add("declare");
         add(first);
-        if (needsSemiColon(first)) {
-          cc.endStatement(true);
-        }
+        processEnd(n, context);
         break;
       case Token.INDEX_SIGNATURE:
         add("[");
@@ -1880,29 +1876,51 @@ class CodeGenerator {
         ? Context.IN_FOR_INIT_CLAUSE : Context.OTHER);
   }
 
-  private static boolean needsSemiColon(Node n) {
+  private void processEnd(Node n, Context context) {
     switch (n.getType()) {
       case Token.CLASS:
       case Token.INTERFACE:
       case Token.ENUM:
       case Token.NAMESPACE:
-      case Token.CALL_SIGNATURE:
-      case Token.INDEX_SIGNATURE:
-      case Token.TYPE_ALIAS:
+        cc.endClass(context == Context.STATEMENT);
+        break;
+      case Token.FUNCTION:
+        if (n.getLastChild().isEmpty()) {
+          cc.endStatement(true);
+        } else {
+          cc.endFunction(context == Context.STATEMENT);
+        }
+        break;
       case Token.DECLARE:
-        return false;
+        if (n.getParent().getType() != Token.NAMESPACE_ELEMENTS) {
+          processEnd(n.getFirstChild(), context);
+        }
+        break;
       case Token.EXPORT:
-        return needsSemiColon(n.getFirstChild());
+        if (n.getParent().getType() != Token.NAMESPACE_ELEMENTS
+            && n.getFirstChild().getType() != Token.DECLARE) {
+          processEnd(n.getFirstChild(), context);
+        }
+        break;
+      case Token.COMPUTED_PROP:
+        if (n.hasOneChild()) {
+          cc.endStatement(true);
+        }
+        break;
       case Token.MEMBER_FUNCTION_DEF:
       case Token.GETTER_DEF:
       case Token.SETTER_DEF:
-        return n.getFirstChild().getLastChild().isEmpty();
-      case Token.COMPUTED_PROP:
-        return n.hasOneChild();
-      case Token.FUNCTION:
-        return n.getLastChild().isEmpty();
+        if (n.getFirstChild().getLastChild().isEmpty()) {
+          cc.endStatement(true);
+        }
+        break;
+      case Token.MEMBER_VARIABLE_DEF:
+        cc.endStatement(true);
+        break;
       default:
-        return true;
+        if (context == Context.STATEMENT) {
+          cc.endStatement();
+        }
     }
   }
 }

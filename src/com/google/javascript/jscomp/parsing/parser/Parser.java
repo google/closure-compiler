@@ -463,6 +463,7 @@ public class Parser {
     boolean isDefault = false;
     boolean isExportAll = false;
     boolean isExportSpecifier = false;
+    boolean needsSemiColon = true;
     eat(TokenType.EXPORT);
     ParseTree export = null;
     ImmutableList<ParseTree> exportSpecifierList = null;
@@ -473,27 +474,34 @@ public class Parser {
         break;
       case FUNCTION:
         export = isAmbient ? parseAmbientFunctionDeclaration() : parseFunctionDeclaration();
+        needsSemiColon = isAmbient;
         break;
       case CLASS:
         export = parseClassDeclaration(isAmbient);
+        needsSemiColon = false;
         break;
       case INTERFACE:
         export = parseInterfaceDeclaration();
+        needsSemiColon = false;
         break;
       case ENUM:
         export = parseEnumDeclaration();
+        needsSemiColon = false;
         break;
       case MODULE:
       case NAMESPACE:
         export = parseNamespaceDeclaration(isAmbient);
+        needsSemiColon = false;
         break;
       case DECLARE:
         export = parseAmbientDeclaration();
+        needsSemiColon = false;
         break;
       case DEFAULT:
         isDefault = true;
         nextToken();
         export = parseExpression();
+        needsSemiColon = false;
         break;
       case OPEN_CURLY:
         isExportSpecifier = true;
@@ -517,7 +525,9 @@ public class Parser {
       moduleSpecifier = eat(TokenType.STRING).asLiteral();
     }
 
-    eatPossibleImplicitSemiColon();
+    if (needsSemiColon || peekImplicitSemiColon()) {
+      eatPossibleImplicitSemiColon();
+    }
 
     return new ExportDeclarationTree(
         getTreeLocation(start), isDefault, isExportAll,
