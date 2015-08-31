@@ -1210,6 +1210,9 @@ HTMLElement.prototype.attachedCallback;
 HTMLElement.prototype.detachedCallback;
 
 /** @type {string} */
+HTMLAnchorElement.prototype.download;
+
+/** @type {string} */
 HTMLAnchorElement.prototype.hash;
 
 /** @type {string} */
@@ -1239,6 +1242,9 @@ HTMLAnchorElement.prototype.protocol;
 
 /** @type {string} */
 HTMLAnchorElement.prototype.search;
+
+/** @type {string} */
+HTMLAreaElement.prototype.download;
 
 /**
  * @type {string}
