@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.InlineAliases.ALIAS_CYCLE;
+
 import com.google.common.collect.ImmutableList;
 
 /** Unit tests for {@link InlineAliases}. */
@@ -251,6 +253,40 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
             "var x = new ns.Foo.Subfoo;"));
   }
 
+  public void testHoistedAliasesInCode() {
+    // Unqualified
+    test(
+        LINE_JOINER.join(
+            "function Foo(){};",
+            "function Bar(){ var x = alias; };",
+            "var /** @const */ alias = Foo;"),
+        LINE_JOINER.join(
+            "function Foo(){};",
+            "function Bar(){ var x = Foo; };",
+            "var /** @const */ alias = Foo;"));
+
+    // Qualified
+    test(
+        LINE_JOINER.join(
+            "var ns = {};",
+            "ns.Foo = function(){};",
+            "function Bar(){ var x = ns.alias; };",
+            "/** @const */ ns.alias = ns.Foo;"),
+        LINE_JOINER.join(
+            "var ns = {};",
+            "ns.Foo = function(){};",
+            "function Bar(){ var x = ns.Foo; };",
+            "/** @const */ ns.alias = ns.Foo;"));
+  }
+
+  public void testAliasCycleError() {
+    testError(
+        LINE_JOINER.join(
+            "/** @const */ var x = y;",
+            "/** @const */ var y = x;"),
+        ALIAS_CYCLE);
+  }
+
   public void testTransitiveAliases() {
     test(
         LINE_JOINER.join(
@@ -269,13 +305,43 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
             "var x = new ns.Foo.Bar;"));
   }
 
+  public void testAliasChains() {
+    // Unqualified
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ var Foo = function() {};",
+            "var /** @const */ alias1 = Foo;",
+            "var /** @const */ alias2 = alias1;",
+            "var x = new alias2"),
+        LINE_JOINER.join(
+            "/** @constructor */ var Foo = function() {};",
+            "var /** @const */ alias1 = Foo;",
+            "var /** @const */ alias2 = Foo;",
+            "var x = new Foo;"));
+
+    // Qualified
+    test(
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @constructor */ ns.Foo = function() {};",
+            "var /** @const */ alias1 = ns.Foo;",
+            "var /** @const */ alias2 = alias1;",
+            "var x = new alias2"),
+        LINE_JOINER.join(
+            "/** @const */ var ns = {};",
+            "/** @constructor */ ns.Foo = function() {};",
+            "var /** @const */ alias1 = ns.Foo;",
+            "var /** @const */ alias2 = ns.Foo;",
+            "var x = new ns.Foo;"));
+}
+
   public void testAliasedEnums() {
     test(
         "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; alias;",
         "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; E.A;");
   }
 
-  public void testIncorrectConstAnnoataionDoesntCrash() {
+  public void testIncorrectConstAnnotationDoesntCrash() {
     testSame("var x = 0; var /** @const */ alias = x; alias = 5; use(alias);");
     testSame("var x = 0; var ns={}; /** @const */ ns.alias = x; ns.alias = 5; use(ns.alias);");
   }

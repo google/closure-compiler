@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -25,7 +24,9 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Inline aliases created by exports of modules before type checking.
@@ -36,7 +37,10 @@ import java.util.Map;
  *
  * @author blickly@gmail.com (Ben Lickly)
  */
-final class InlineAliases extends AbstractPostOrderCallback implements CompilerPass {
+final class InlineAliases implements CompilerPass {
+
+  static final DiagnosticType ALIAS_CYCLE =
+      DiagnosticType.error("JSC_ALIAS_CYCLE", "Alias path contains a cycle: {0} to {1}");
 
   private final AbstractCompiler compiler;
   private final Map<String, String> aliases = new LinkedHashMap<>();
@@ -49,95 +53,140 @@ final class InlineAliases extends AbstractPostOrderCallback implements CompilerP
   @Override
   public void process(Node externs, Node root) {
     namespace = new GlobalNamespace(compiler, root);
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, new AliasesCollector());
+    NodeTraversal.traverseEs6(compiler, root, new AliasesInliner());
   }
 
-  /**
-    * Maybe record that given lvalue is an alias of the qualified name on its rhs.
-    * Note that since we are doing a post-order traversal, any previous aliases contained in
-    * the rhs will have already been substituted by the time we record the new alias.
-    */
-  private void visitAliasDefinition(Node lhs, JSDocInfo info) {
-    if (info != null && info.hasConstAnnotation() && lhs.isQualifiedName()) {
-      Node rhs = NodeUtil.getRValueOfLValue(lhs);
-      if (rhs != null && rhs.isQualifiedName()) {
-        GlobalNamespace.Name lhsName = namespace.getOwnSlot(lhs.getQualifiedName());
-        GlobalNamespace.Name rhsName = namespace.getOwnSlot(rhs.getQualifiedName());
-        if (lhsName != null && lhsName.isInlinableGlobalAlias()
-            && rhsName != null && rhsName.isInlinableGlobalAlias()
-            && !isPrivate(rhsName.getDeclaration().getNode())) {
-          aliases.put(lhs.getQualifiedName(), rhs.getQualifiedName());
+  private class AliasesCollector extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.VAR:
+          if (n.getChildCount() == 1 && t.inGlobalScope()) {
+            visitAliasDefinition(n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
+          }
+          break;
+        case Token.ASSIGN:
+          if (parent != null && parent.isExprResult() && t.inGlobalScope()) {
+            visitAliasDefinition(n.getFirstChild(), n.getJSDocInfo());
+          }
+          break;
+      }
+    }
+
+    /**
+     * Maybe record that given lvalue is an alias of the qualified name on its rhs.
+     * Note that since we are doing a post-order traversal, any previous aliases contained in
+     * the rhs will have already been substituted by the time we record the new alias.
+     */
+    private void visitAliasDefinition(Node lhs, JSDocInfo info) {
+      if (info != null && info.hasConstAnnotation() && lhs.isQualifiedName()) {
+        Node rhs = NodeUtil.getRValueOfLValue(lhs);
+        if (rhs != null && rhs.isQualifiedName()) {
+          GlobalNamespace.Name lhsName = namespace.getOwnSlot(lhs.getQualifiedName());
+          GlobalNamespace.Name rhsName = namespace.getOwnSlot(rhs.getQualifiedName());
+          if (lhsName != null
+              && lhsName.isInlinableGlobalAlias()
+              && rhsName != null
+              && rhsName.isInlinableGlobalAlias()
+              && !isPrivate(rhsName.getDeclaration().getNode())) {
+            aliases.put(lhs.getQualifiedName(), rhs.getQualifiedName());
+          }
         }
       }
     }
-  }
 
-  private boolean isPrivate(Node nameNode) {
-    if (nameNode.isQualifiedName()
-        && compiler.getCodingConvention().isPrivate(nameNode.getQualifiedName())) {
-      return true;
+    private boolean isPrivate(Node nameNode) {
+      if (nameNode.isQualifiedName()
+          && compiler.getCodingConvention().isPrivate(nameNode.getQualifiedName())) {
+        return true;
+      }
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(nameNode);
+      return info != null && info.getVisibility().equals(Visibility.PRIVATE);
     }
-    JSDocInfo info = NodeUtil.getBestJSDocInfo(nameNode);
-    return info != null && info.getVisibility().equals(Visibility.PRIVATE);
   }
 
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getType()) {
-      case Token.VAR:
-        if (n.getChildCount() == 1 && t.inGlobalScope()) {
-          visitAliasDefinition(n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
-        }
-        break;
-      case Token.ASSIGN:
-        if (parent != null && parent.isExprResult() && t.inGlobalScope()) {
-          visitAliasDefinition(n.getFirstChild(), n.getJSDocInfo());
-        }
-        break;
-      case Token.NAME:
-      case Token.GETPROP:
-        if (n.isQualifiedName() && aliases.containsKey(n.getQualifiedName())) {
-          String leftmostName = NodeUtil.getRootOfQualifiedName(n).getString();
-          Var v = t.getScope().getVar(leftmostName);
-          if (v != null && v.isLocal()) {
-            // Shadow of alias. Don't rewrite
-            return;
+  private class AliasesInliner extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getType()) {
+        case Token.NAME:
+        case Token.GETPROP:
+          if (n.isQualifiedName() && aliases.containsKey(n.getQualifiedName())) {
+            String leftmostName = NodeUtil.getRootOfQualifiedName(n).getString();
+            Var v = t.getScope().getVar(leftmostName);
+            if (v != null && v.isLocal()) {
+              // Shadow of alias. Don't rewrite
+              return;
+            }
+            if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+              // Alias definition. Don't rewrite
+              return;
+            }
+
+            parent.replaceChild(
+                n,
+                NodeUtil.newQName(compiler, resolveAlias(n.getQualifiedName(), n))
+                    .copyInformationFromForTree(n));
+            compiler.reportCodeChange();
           }
-          Preconditions.checkState(!NodeUtil.isVarOrSimpleAssignLhs(n, parent));
-          parent.replaceChild(n, NodeUtil.newQName(compiler,
-                aliases.get(n.getQualifiedName())).copyInformationFromForTree(n));
-          compiler.reportCodeChange();
+          break;
+      }
+      maybeRewriteJsdoc(n.getJSDocInfo());
+    }
+
+    /**
+     * Use the alias table to look up the resolved name of the given alias. If the result is also an
+     * alias repeat until the real name is resolved.
+     * @param n
+     */
+    private String resolveAlias(String name, Node n) {
+      Set<String> aliasPath = new LinkedHashSet<>();
+      while (aliases.containsKey(name)) {
+        if (!aliasPath.add(name)) {
+          compiler.report(JSError.make(n, ALIAS_CYCLE, aliasPath.toString(), name));
+
+          // Cut the cycle so that it doesn't get reported more than once.
+          aliases.remove(name);
+          break;
         }
-        break;
-    }
-    maybeRewriteJsdoc(n.getJSDocInfo());
-  }
 
-  private void maybeRewriteJsdoc(JSDocInfo info) {
-    if (info == null) {
-      return;
+        name = aliases.get(name);
+      }
+      return name;
     }
-    for (Node typeNode : info.getTypeNodes()) {
-      NodeUtil.visitPreOrder(typeNode, fixJsdocTypeNodes, Predicates.<Node>alwaysTrue());
-    }
-  }
 
-  private final NodeUtil.Visitor fixJsdocTypeNodes = new NodeUtil.Visitor() {
-    public void visit(Node aliasReference) {
-      if (!aliasReference.isString()) {
+    private void maybeRewriteJsdoc(JSDocInfo info) {
+      if (info == null) {
         return;
       }
-      String fullTypeName = aliasReference.getString();
-      int dotIndex = 0;
-      do {
-        dotIndex = fullTypeName.indexOf('.', dotIndex + 1);
-        String aliasName = dotIndex == -1 ? fullTypeName : fullTypeName.substring(0, dotIndex);
-        if (aliases.containsKey(aliasName)) {
-          String replacement = aliases.get(aliasName) + fullTypeName.substring(aliasName.length());
-          aliasReference.setString(replacement);
-          return;
-        }
-      } while (dotIndex != -1);
+      for (Node typeNode : info.getTypeNodes()) {
+        NodeUtil.visitPreOrder(typeNode, fixJsdocTypeNodes, Predicates.<Node>alwaysTrue());
+      }
     }
-  };
+
+    private final NodeUtil.Visitor fixJsdocTypeNodes =
+        new NodeUtil.Visitor() {
+          @Override
+          public void visit(Node aliasReference) {
+            if (!aliasReference.isString()) {
+              return;
+            }
+            String fullTypeName = aliasReference.getString();
+            int dotIndex = 0;
+            do {
+              dotIndex = fullTypeName.indexOf('.', dotIndex + 1);
+              String aliasName =
+                  dotIndex == -1 ? fullTypeName : fullTypeName.substring(0, dotIndex);
+              if (aliases.containsKey(aliasName)) {
+                String replacement =
+                    resolveAlias(aliasName, aliasReference)
+                        + fullTypeName.substring(aliasName.length());
+                aliasReference.setString(replacement);
+                return;
+              }
+            } while (dotIndex != -1);
+          }
+        };
+  }
 }
