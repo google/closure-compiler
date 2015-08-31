@@ -125,12 +125,16 @@ final class RenameLabels implements CompilerPass {
     @Override
     public void enterScope(NodeTraversal nodeTraversal) {
       // Start a new namespace for label names.
-      namespaceStack.push(new LabelNamespace());
+      if (nodeTraversal.getScopeRoot().isFunction()) {
+        namespaceStack.push(new LabelNamespace());
+      }
     }
 
     @Override
     public void exitScope(NodeTraversal nodeTraversal) {
-      namespaceStack.pop();
+      if (nodeTraversal.getScopeRoot().isFunction()) {
+        namespaceStack.pop();
+      }
     }
 
     /**
@@ -263,7 +267,7 @@ final class RenameLabels implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // Do variable reference counting.
-    NodeTraversal.traverse(compiler, root, new ProcessLabels());
+    NodeTraversal.traverseEs6(compiler, root, new ProcessLabels());
   }
 
 
