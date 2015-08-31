@@ -833,7 +833,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       // If this is a class statement, or a class expression in a simple
       // assignment or var statement, convert it. In any other case, the
       // code is too dynamic, so return null.
-      if (NodeUtil.isStatement(classNode)) {
+      if (NodeUtil.isClassDeclaration(classNode)) {
         return new ClassDeclarationMetadata(classNode, classNameNode.getString(), false,
             classNameNode, superClassNameNode);
       } else if (parent.isAssign() && parent.getParent().isExprResult()) {

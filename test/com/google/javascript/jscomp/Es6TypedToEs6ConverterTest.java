@@ -70,6 +70,18 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
         "class C {}",
         "/** @type {{p: string}} */ C.prototype.on;"));
+
+    test(
+        "export class C { foo: number; }",
+        "export class C {} /** @type {number} */ C.prototype.foo;");
+
+    testExternChanges(
+        "declare class C { foo: number; }",
+        "class C {} /** @type {number} */ C.prototype.foo;");
+
+    testExternChanges(
+        "export declare class C { foo: number; }",
+        "export class C {} /** @type {number} */ C.prototype.foo;");
   }
 
   public void testMemberVariable_noCtor() {
@@ -237,10 +249,24 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   public void testInterface() {
     test("interface I { foo: string; }",
          "/** @interface */ class I {} /** @type {string} */ I.prototype.foo;");
+
     test("interface Foo extends Bar, Baz {}",
          "/** @interface @extends {Bar} @extends {Baz} */ class Foo {}");
+
     test("interface I { foo(p: string): boolean; }",
          "/** @interface */ class I { /** @return {boolean} */ foo(/** string */ p) {} }");
+
+    testExternChanges(
+        "declare namespace foo.bar { interface J extends foo.I {} }",
+        LINE_JOINER.join(
+        "/** @const */ var foo = {}; /** @const */ foo.bar = {}",
+        "/** @interface @extends {foo.I} */ foo.bar.J = class {};"));
+
+    testExternChanges(
+        "declare namespace foo { interface I { bar: number; } }",
+        LINE_JOINER.join(
+        "/** @const */ var foo = {};",
+        "/** @interface */ foo.I = class {}; /** @type {number} */ foo.I.prototype.bar;"));
   }
 
   public void testTypeAlias() {

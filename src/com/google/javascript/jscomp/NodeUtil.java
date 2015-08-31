@@ -2157,6 +2157,16 @@ public final class NodeUtil {
     }
   }
 
+  private static boolean isDeclarationParent(Node parent) {
+    switch (parent.getType()) {
+      case Token.DECLARE:
+      case Token.EXPORT:
+        return true;
+      default:
+        return isStatementParent(parent);
+    }
+  }
+
   /** Whether the node is part of a switch statement. */
   static boolean isSwitchCase(Node n) {
     return n.isCase() || n.isDefaultCase();
@@ -2293,14 +2303,14 @@ public final class NodeUtil {
    * is not part of a expression; see {@link #isFunctionExpression}).
    */
   static boolean isFunctionDeclaration(Node n) {
-    return n.isFunction() && isStatement(n);
+    return n.isFunction() && isDeclarationParent(n.getParent());
   }
 
   /**
    * see {@link #isClassDeclaration}
    */
   static boolean isClassDeclaration(Node n) {
-    return n.isClass() && isStatement(n);
+    return n.isClass() && isDeclarationParent(n.getParent());
   }
 
   /**
@@ -2320,13 +2330,17 @@ public final class NodeUtil {
     }
     Node current = n.getParent();
     while (current != null) {
-      if (current.isBlock()) {
-        return !current.getParent().isFunction();
-      } else if (current.isFunction() || current.isScript()) {
-        return false;
-      } else {
-        Preconditions.checkArgument(current.isLabel());
-        current = current.getParent();
+      switch (current.getType()) {
+        case Token.BLOCK:
+          return !current.getParent().isFunction();
+        case Token.FUNCTION:
+        case Token.SCRIPT:
+        case Token.DECLARE:
+        case Token.EXPORT:
+          return false;
+        default:
+          Preconditions.checkState(current.isLabel());
+          current = current.getParent();
       }
     }
     return false;

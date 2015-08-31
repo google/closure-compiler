@@ -248,15 +248,13 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       if (member.isMemberFunctionDef()) {
         Node function = member.getFirstChild();
         function.getLastChild().setType(Token.BLOCK);
-        continue;
-      }
-      if (member.isIndexSignature()) {
+      } else if (member.isIndexSignature()) {
         doc.recordExtendedInterface(createIObject(member));
-        continue;
+      } else {
+        Node newNode = createPropertyDefinition(member, name.getString());
+        insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
+        insertionPoint = newNode;
       }
-      Node newNode = createPropertyDefinition(member, name.getString());
-      insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
-      insertionPoint = newNode;
     }
     n.setJSDocInfo(doc.build());
 
@@ -284,9 +282,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     return bang;
   }
 
-  private Node createPropertyDefinition(Node member, String name) {
+  private Node createPropertyDefinition(Node member, String className) {
     member.detachFromParent();
-    Node nameAccess = NodeUtil.newQName(compiler, name);
+    className = maybePrependCurrNamespace(className);
+    Node nameAccess = NodeUtil.newQName(compiler, className);
     Node prototypeAcess = NodeUtil.newPropertyAccess(compiler, nameAccess, "prototype");
     Node qualifiedMemberAccess =
         Es6ToEs3Converter.getQualifiedMemberAccess(compiler, member, nameAccess,
@@ -442,16 +441,19 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
   private void visitExport(Node n, Node parent) {
     if (currNamespace != null) {
-      // The node can have multiple children if transformed from a declaration of the form
-      // export var i, j, k within a namespace.
       replaceWithNodes(n, n.children());
     } else if (n.hasMoreThanOneChild()) {
       Node insertPoint = n;
       for (Node c = n.getFirstChild().getNext(); c != null; c = c.getNext()) {
-        Node extraExport = n.cloneNode();
-        extraExport.addChildToFront(c.detachFromParent());
-        parent.addChildAfter(extraExport, insertPoint);
-        insertPoint = extraExport;
+        Node toAdd;
+        if (!c.isExprResult()) {
+          toAdd = n.cloneNode();
+          toAdd.addChildToFront(c.detachFromParent());
+        } else {
+          toAdd = c.detachFromParent();
+        }
+        parent.addChildAfter(toAdd, insertPoint);
+        insertPoint = toAdd;
       }
       compiler.reportCodeChange();
     }
