@@ -132,22 +132,40 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
     test("function Foo(){}; var /** @const */ alias = Foo; /** @type {alias} */ var x;",
          "function Foo(){}; var /** @const */ alias = Foo; /** @type {Foo} */ var x;");
 
-    test("function Foo(){}; /** @const */ mod.alias = Foo; /** @type {mod.alias} */ var x;",
-         "function Foo(){}; /** @const */ mod.alias = Foo; /** @type {Foo} */ var x;");
+    test(
+        LINE_JOINER.join(
+            "var ns={};",
+            "function Foo(){};",
+            "/** @const */ ns.alias = Foo;",
+            "/** @type {ns.alias} */ var x;"),
+        LINE_JOINER.join(
+            "var ns={};",
+            "function Foo(){};",
+            "/** @const */ ns.alias = Foo;",
+            "/** @type {Foo} */ var x;"));
 
-    test("function Foo(){}; /** @const */ mod.alias = Foo; /** @type {mod.alias.Subfoo} */ var x;",
-         "function Foo(){}; /** @const */ mod.alias = Foo; /** @type {Foo.Subfoo} */ var x;");
+    test(
+        LINE_JOINER.join(
+            "var ns={};",
+            "function Foo(){};",
+            "/** @const */ ns.alias = Foo;",
+            "/** @type {ns.alias.Subfoo} */ var x;"),
+        LINE_JOINER.join(
+            "var ns={};",
+            "function Foo(){};",
+            "/** @const */ ns.alias = Foo;",
+            "/** @type {Foo.Subfoo} */ var x;"));
   }
 
   public void testSimpleAliasInCode() {
     test("function Foo(){}; var /** @const */ alias = Foo; var x = new alias;",
          "function Foo(){}; var /** @const */ alias = Foo; var x = new Foo;");
 
-    test("function Foo(){}; /** @const */ mod.alias = Foo; var x = new mod.alias;",
-         "function Foo(){}; /** @const */ mod.alias = Foo; var x = new Foo;");
+    test("var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new ns.alias;",
+         "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo;");
 
-    test("function Foo(){}; /** @const */ mod.alias = Foo; var x = new mod.alias.Subfoo;",
-         "function Foo(){}; /** @const */ mod.alias = Foo; var x = new Foo.Subfoo;");
+    test("var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new ns.alias.Subfoo;",
+         "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo.Subfoo;");
   }
 
   public void testAliasQualifiedName() {
@@ -155,24 +173,24 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
         LINE_JOINER.join(
             "var ns = {};",
             "ns.Foo = function(){};",
-            "/** @const */ mod.alias = ns.Foo;",
-            "/** @type {mod.alias.Subfoo} */ var x;"),
+            "/** @const */ ns.alias = ns.Foo;",
+            "/** @type {ns.alias.Subfoo} */ var x;"),
         LINE_JOINER.join(
             "var ns = {};",
             "ns.Foo = function(){};",
-            "/** @const */ mod.alias = ns.Foo;",
+            "/** @const */ ns.alias = ns.Foo;",
             "/** @type {ns.Foo.Subfoo} */ var x;"));
 
     test(
         LINE_JOINER.join(
             "var ns = {};",
             "ns.Foo = function(){};",
-            "/** @const */ mod.alias = ns.Foo;",
-            "var x = new mod.alias.Subfoo;"),
+            "/** @const */ ns.alias = ns.Foo;",
+            "var x = new ns.alias.Subfoo;"),
         LINE_JOINER.join(
             "var ns = {};",
             "ns.Foo = function(){};",
-            "/** @const */ mod.alias = ns.Foo;",
+            "/** @const */ ns.alias = ns.Foo;",
             "var x = new ns.Foo.Subfoo;"));
   }
 
@@ -200,12 +218,17 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
         "/** @enum {number} */ var E = { A : 1 }; var /** @const */ alias = E.A; E.A;");
   }
 
+  public void testIncorrectConstAnnoataionDoesntCrash() {
+    testSame("var x = 0; var /** @const */ alias = x; alias = 5; use(alias);");
+    testSame("var x = 0; var ns={}; /** @const */ ns.alias = x; ns.alias = 5; use(ns.alias);");
+  }
+
   public void testRedefinedAliasesNotRenamed() {
     testSame("var x = 0; var /** @const */ alias = x; x = 5; use(alias);");
   }
 
   public void testDefinesAreNotInlined() {
-    testSame("var /** @define {boolean} */ alias = ns.Foo; var x = new alias;");
+    testSame("var ns = {}; var /** @define {boolean} */ alias = ns.Foo; var x = new alias;");
   }
 
   public void testPrivateVariablesAreNotInlined() {
@@ -216,6 +239,8 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
   public void testShadowedAliasesNotRenamed() {
     testSame(
         LINE_JOINER.join(
+            "var ns = {};",
+            "ns.Foo = function(){};",
             "var /** @const */ alias = ns.Foo;",
             "function f(alias) {",
             "  var x = alias",
@@ -223,6 +248,8 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
 
     testSame(
         LINE_JOINER.join(
+            "var ns = {};",
+            "ns.Foo = function(){};",
             "var /** @const */ alias = ns.Foo;",
             "function f() {",
             "  var /** @const */ alias = 5;",

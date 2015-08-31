@@ -61,8 +61,10 @@ final class InlineAliases extends AbstractPostOrderCallback implements CompilerP
     if (info != null && info.hasConstAnnotation() && lhs.isQualifiedName()) {
       Node rhs = NodeUtil.getRValueOfLValue(lhs);
       if (rhs != null && rhs.isQualifiedName()) {
+        GlobalNamespace.Name lhsName = namespace.getOwnSlot(lhs.getQualifiedName());
         GlobalNamespace.Name rhsName = namespace.getOwnSlot(rhs.getQualifiedName());
-        if (rhsName != null && rhsName.isInlinableGlobalAlias()
+        if (lhsName != null && lhsName.isInlinableGlobalAlias()
+            && rhsName != null && rhsName.isInlinableGlobalAlias()
             && !isPrivate(rhsName.getDeclaration().getNode())) {
           aliases.put(lhs.getQualifiedName(), rhs.getQualifiedName());
         }
