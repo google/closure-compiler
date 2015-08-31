@@ -648,7 +648,9 @@ public class NodeTraversal {
     popScope();
   }
 
-  /** Examines the functions stack for the last instance of a function node. */
+  /** Examines the functions stack for the last instance of a function node. When possible, prefer
+   *  this method over NodeUtil.getEnclosingFunction() because this in general looks at less nodes.
+   */
   public Node getEnclosingFunction() {
     Node root = getCfgRoot();
     return root.isFunction() ? root : null;
@@ -737,6 +739,9 @@ public class NodeTraversal {
   }
 
   public Scope getClosestHoistScope() {
+    // TODO(moz): This should not call getScope(). We should find the root of the closest hoist
+    // scope and effectively getScope() from there, which avoids scanning inner scopes that might
+    // not be needed.
     return getScope().getClosestHoistScope();
   }
 
@@ -780,16 +785,30 @@ public class NodeTraversal {
   }
 
   /**
-   * Determines whether the traversal is currently in the global scope.
+   * Determines whether the traversal is currently in the global scope. Note that this returns false
+   * in a global block scope.
    */
   boolean inGlobalScope() {
     return getScopeDepth() == 0;
   }
 
-  // Not dual of inGlobalScope, because of block scoping.
-  // They both return false in an inner block at top level.
-  boolean inFunction() {
-    return getCfgRoot().isFunction();
+  /**
+   * Determines whether the hoist scope of the current traversal is global. Note that this returns
+   * true for the FUNCTION node of a function defined in the global scope.
+   */
+  boolean inGlobalHoistScope() {
+    if (curNode.isFunction() && getCfgRoot() == curNode) {
+      if (cfgRoots.isEmpty()) {  // Scopes have been created, won't scan scopes.
+        return getClosestHoistScope().isGlobal();
+      } else { // Need to see if previous cfg root is FUNCTION
+        Node temp = cfgRoots.pop();
+        boolean result = cfgRoots.isEmpty() || !cfgRoots.peek().isFunction();
+        cfgRoots.push(temp);
+        return result;
+      }
+    } else {
+      return !getCfgRoot().isFunction();
+    }
   }
 
   int getScopeDepth() {

@@ -156,8 +156,7 @@ class AliasStrings extends AbstractPostOrderCallback
         info.occurrences.add(occurrence);
         info.numOccurrences++;
 
-        if (t.getScope().getClosestHoistScope().isGlobal()
-            || isInThrowExpression(n)) {
+        if (t.inGlobalHoistScope() || isInThrowExpression(n)) {
           info.numOccurrencesInfrequentlyExecuted++;
         }
 

@@ -326,7 +326,7 @@ class ReplaceIdGenerators implements CompilerPass {
         return;
       }
 
-      if (!t.getClosestHoistScope().isGlobal()
+      if (!t.inGlobalHoistScope()
           && nameGenerator.getRenameStrategy() == RenameStrategy.INCONSISTENT) {
         // Warn about calls not in the global scope.
         compiler.report(t.makeError(n, NON_GLOBAL_ID_GENERATOR_CALL));

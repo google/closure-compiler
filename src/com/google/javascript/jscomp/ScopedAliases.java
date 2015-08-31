@@ -353,7 +353,7 @@ class ScopedAliases implements HotSwapCompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
-      if (t.getScope().isGlobal()) {
+      if (t.inGlobalHoistScope()) {
         return;
       }
       if (inGoogScopeBody()) {
@@ -388,20 +388,23 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     private void reportInvalidVariables(NodeTraversal t) {
-      Scope scope = t.getScope();
-      Node scopeRoot = scope.getRootNode();
-      Node enclosingFunctionBody = NodeUtil.getEnclosingFunction(scopeRoot).getLastChild();
+      Node scopeRoot = t.getScopeRoot();
+      Node enclosingFunctionBody = t.getEnclosingFunction().getLastChild();
       if (isGoogScopeFunctionBody(enclosingFunctionBody) && scopeRoot.isBlock()
-          && !scope.isFunctionBlockScope()) {
-        for (Var v : scope.getVarIterable()) {
+          && !scopeRoot.getParent().isFunction()) {
+        for (Var v : t.getScope().getVarIterable()) {
           Node parent = v.getNameNode().getParent();
-          if (!parent.isCatch() && !parent.isLet() && !parent.isConst()) {
-            // TODO(user): Do not report this error if in Es6 mode
+          if (NodeUtil.isFunctionDeclaration(parent)) {
+            // Disallow block-scoped function declarations that leak into the goog.scope
+            // function body. Technically they shouldn't leak in ES6 but the browsers don't agree
+            // on that yet.
             report(t, v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
           }
         }
-        if (scopeRoot.getFirstChild().isCatch()) {
-          for (Var v : scope.getClosestHoistScope().getVarIterable()) {
+        if (scopeRoot.hasChildren() && scopeRoot.getFirstChild().isCatch()) {
+          for (Var v : t.getClosestHoistScope().getVarIterable()) {
+            // Disallow variables declared in catch blocks that leak into the goog.scope
+            // function body.
             report(t, v.getNode(), GOOG_SCOPE_INVALID_VARIABLE, v.getName());
           }
         }
@@ -600,7 +603,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (!parent.isExprResult()) {
         report(t, n, GOOG_SCOPE_MUST_BE_ALONE);
       }
-      if (NodeUtil.getEnclosingFunction(t.getScope().getRootNode()) != null) {
+      if (t.getEnclosingFunction() != null) {
         report(t, n, GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
       }
       if (n.getChildCount() != 2) {
@@ -640,7 +643,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         }
       }
 
-      if (isGoogScopeFunctionBody(t.getClosestHoistScope().getRootNode())) {
+      if (isGoogScopeFunctionBody(t.getEnclosingFunction().getLastChild())) {
         if (aliasVar != null && !isObjLitShorthand && NodeUtil.isLValue(n)) {
           if (aliasVar.getNode() == n) {
             aliasDefinitionsInOrder.add(n);

@@ -106,6 +106,13 @@ public final class GatherRawExportsTest extends CompilerTestCase {
     assertExported("var a = window; a['b']");
   }
 
+  public void testExportsFound17() {
+    // Gather "this" reference in a global if block.
+    assertExported("if (true) { this.a }", "a");
+    // Does not gather "this" reference in a local if block.
+    assertExported("function f() { if (true) { this.a } }");
+  }
+
   public void testExportOnTopFound1() {
     assertExported("top['a']", "a");
   }

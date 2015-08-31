@@ -493,7 +493,7 @@ final class NameAnalyzer implements CompilerPass {
   private class FindDependencyScopes extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!t.getClosestHoistScope().isGlobal()) {
+      if (!t.inGlobalHoistScope()) {
         return;
       }
 
@@ -505,7 +505,7 @@ final class NameAnalyzer implements CompilerPass {
       } else if (NodeUtil.isVarDeclaration(n)) {
         NameInformation ns = createNameInformation(t, n);
         recordDepScope(n, ns);
-      } else if (NodeUtil.isFunctionDeclaration(n)) {
+      } else if (NodeUtil.isFunctionDeclaration(n) && t.inGlobalScope()) {
         NameInformation ns = createNameInformation(t, n.getFirstChild());
         recordDepScope(n, ns);
       } else if (NodeUtil.isExprCall(n)) {
@@ -625,12 +625,12 @@ final class NameAnalyzer implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
 
       // Record global variable and function declarations
-      if (t.getClosestHoistScope().isGlobal()) {
+      if (t.inGlobalHoistScope()) {
         if (NodeUtil.isVarDeclaration(n)) {
           NameInformation ns = createNameInformation(t, n);
           Preconditions.checkNotNull(ns);
           recordSet(ns.name, n);
-        } else if (NodeUtil.isFunctionDeclaration(n)) {
+        } else if (NodeUtil.isFunctionDeclaration(n) && t.inGlobalScope()) {
           Node nameNode = n.getFirstChild();
           NameInformation ns = createNameInformation(t, nameNode);
           if (ns != null) {
@@ -1506,7 +1506,7 @@ final class NameAnalyzer implements CompilerPass {
 
     // Check whether this is a class-defining call. Classes may only be defined
     // in the global scope.
-    if (parent.isCall() && t.inGlobalScope()) {
+    if (parent.isCall() && t.inGlobalHoistScope()) {
       CodingConvention convention = compiler.getCodingConvention();
       SubclassRelationship classes = convention.getClassesDefinedByCall(parent);
       if (classes != null) {
@@ -1548,7 +1548,7 @@ final class NameAnalyzer implements CompilerPass {
         return createNameInformation(
             rootNameNode.getString() + name, t.getScope(), rootNameNode);
       case Token.THIS:
-        if (t.inGlobalScope()) {
+        if (t.inGlobalHoistScope()) {
           NameInformation nameInfo = new NameInformation();
           if (name.indexOf('.') == 0) {
             nameInfo.name = name.substring(1);  // strip leading "."

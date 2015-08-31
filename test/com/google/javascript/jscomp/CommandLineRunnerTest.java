@@ -630,7 +630,8 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testHoistedFunction2() {
-    test("if (window) { f(); function f() {} }", "");
+    test("if (window) { f(); function f() {} }",
+         "if (window) { var f = function() {}; f(); }");
   }
 
   public void testExternsLifting1() throws Exception{

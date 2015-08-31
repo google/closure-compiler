@@ -221,7 +221,7 @@ final class InlineProperties implements CompilerPass {
           isCandidate = maybeStoreCandidateValue(
               getJSType(src), propName, value);
         }
-      } else if (t.inGlobalScope()
+      } else if (t.inGlobalHoistScope()
           && src.isGetProp()
           && src.getLastChild().getString().equals("prototype")) {
         // This is a prototype assignment like:
@@ -262,7 +262,7 @@ final class InlineProperties implements CompilerPass {
     }
 
     private boolean inConstructor(NodeTraversal t) {
-      Node root = t.getScopeRoot();
+      Node root = t.getEnclosingFunction();
       JSDocInfo info = NodeUtil.getBestJSDocInfo(root);
       return info != null && info.isConstructor();
     }

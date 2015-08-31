@@ -156,7 +156,7 @@ class InlineFunctions implements CompilerPass {
 
   private boolean targetSizeAfterInlineExceedsLimit(
       NodeTraversal t, FunctionState fs) {
-    Node containingFunction = getContainingFunction(t);
+    Node containingFunction = t.getEnclosingFunction();
     // Always inline at the top level,
     // unless maybeAddFunction has marked fs as not inlinable.
     if (containingFunction == null) {
@@ -184,14 +184,13 @@ class InlineFunctions implements CompilerPass {
         NodeTraversal nodeTraversal, Node n, Node parent) {
       // Don't traverse into function bodies
       // if we aren't inlining local functions.
-      return inlineLocalFunctions
-          || nodeTraversal.getScope().getClosestHoistScope().isGlobal();
+      return inlineLocalFunctions || nodeTraversal.inGlobalHoistScope();
     }
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if ((t.inGlobalScope() && inlineGlobalFunctions)
-          || (!t.inGlobalScope() && inlineLocalFunctions)) {
+      if ((t.inGlobalHoistScope() && inlineGlobalFunctions)
+          || (!t.inGlobalHoistScope() && inlineLocalFunctions)) {
         findNamedFunctions(t, n, parent);
 
         findFunctionExpressions(t, n);
@@ -349,15 +348,6 @@ class InlineFunctions implements CompilerPass {
              block,
              new NodeUtil.MatchDeclaration(),
              new NodeUtil.MatchShallowStatement());
-  }
-
-  /**
-   * Returns the function the traversal is currently traversing, or null
-   * if in the global scope.
-   */
-  private static Node getContainingFunction(NodeTraversal t) {
-    Scope hoistScope = t.getScope().getClosestHoistScope();
-    return hoistScope.isGlobal() ? null : t.getScopeRoot().getParent();
   }
 
   /**
