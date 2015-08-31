@@ -175,8 +175,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
       }
     };
 
-    new NodeTraversal(lastCompiler, findParameter)
-        .traverse(lastCompiler.jsRoot);
+    NodeTraversal.traverseEs6(lastCompiler, lastCompiler.jsRoot, findParameter);
 
     return foundNode[0];
   }
@@ -203,8 +202,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
       }
     };
 
-    new NodeTraversal(lastCompiler, findFunction)
-        .traverse(lastCompiler.jsRoot);
+    NodeTraversal.traverseEs6(lastCompiler, lastCompiler.jsRoot, findFunction);
 
     return foundNode[0];
   }
@@ -213,7 +211,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
   private Node searchLabel(String label) {
     LabeledVariableSearcher s = new LabeledVariableSearcher(label);
 
-    new NodeTraversal(lastCompiler, s).traverse(lastCompiler.jsRoot);
+    NodeTraversal.traverseEs6(lastCompiler, lastCompiler.jsRoot, s);
     assertNotNull("Label " + label + " should be in the source code", s.found);
 
     return s.found;

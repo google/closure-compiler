@@ -59,7 +59,7 @@ public final class RefactoringDriver {
    */
   public List<SuggestedFix> drive() {
     JsFlumeCallback callback = new JsFlumeCallback(scanner, null);
-    NodeTraversal.traverse(compiler, rootNode, callback);
+    NodeTraversal.traverseEs6(compiler, rootNode, callback);
     List<SuggestedFix> fixes = callback.getFixes();
     fixes.addAll(scanner.processAllMatches(callback.getMatches()));
     return fixes;

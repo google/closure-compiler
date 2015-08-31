@@ -71,7 +71,7 @@ abstract class MethodCompilerPass implements CompilerPass {
     methodDefinitions.clear();
 
     if (externs != null) {
-      NodeTraversal.traverse(compiler, externs, new GetExternMethods());
+      NodeTraversal.traverseEs6(compiler, externs, new GetExternMethods());
     }
 
     NodeTraversal.traverseRoots(compiler, new GatherSignatures(), externs, root);

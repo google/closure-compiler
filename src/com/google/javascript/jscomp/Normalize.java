@@ -84,9 +84,9 @@ class Normalize implements CompilerPass {
 
   static void normalizeSyntheticCode(
       AbstractCompiler compiler, Node js, String prefix) {
-    NodeTraversal.traverse(compiler, js,
+    NodeTraversal.traverseEs6(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
-    NodeTraversal.traverse(
+    NodeTraversal.traverseEs6(
         compiler, js,
         new MakeDeclaredNamesUnique(
             new BoilerplateRenamer(
@@ -98,7 +98,7 @@ class Normalize implements CompilerPass {
   static Node parseAndNormalizeTestCode(
       AbstractCompiler compiler, String code) {
     Node js = compiler.parseTestCode(code);
-    NodeTraversal.traverse(compiler, js,
+    NodeTraversal.traverseEs6(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
     return js;
   }
@@ -140,9 +140,9 @@ class Normalize implements CompilerPass {
         .process(externs, root);
 
     FindExposeAnnotations findExposeAnnotations = new FindExposeAnnotations();
-    NodeTraversal.traverse(compiler, root, findExposeAnnotations);
+    NodeTraversal.traverseEs6(compiler, root, findExposeAnnotations);
     if (!findExposeAnnotations.exposedProperties.isEmpty()) {
-      NodeTraversal.traverse(compiler, root,
+      NodeTraversal.traverseEs6(compiler, root,
           new RewriteExposedProperties(
               findExposeAnnotations.exposedProperties));
     }

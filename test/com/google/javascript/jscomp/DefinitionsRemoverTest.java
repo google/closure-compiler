@@ -67,7 +67,7 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
       @Override
       public void process(Node externs, Node root) {
         DefinitionsGatherer g = new DefinitionsGatherer();
-        (new NodeTraversal(compiler, g)).traverse(root);
+        NodeTraversal.traverseEs6(compiler, root, g);
         for (Definition def : g.definitions) {
           def.remove();
           compiler.reportCodeChange();

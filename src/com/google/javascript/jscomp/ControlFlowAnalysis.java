@@ -152,7 +152,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     nodePriorities = new HashMap<>();
     cfg = new AstControlFlowGraph(computeFallThrough(root), nodePriorities,
                                   edgeAnnotations);
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
     astPosition.put(null, ++astPositionCounter); // the implicit return is last.
 
     // Now, generate the priority of nodes by doing a depth-first
