@@ -2151,6 +2151,7 @@ public final class NodeUtil {
       case Token.SCRIPT:
       case Token.BLOCK:
       case Token.LABEL:
+      case Token.NAMESPACE_ELEMENTS: // The body of TypeScript namespace is also a statement parent
         return true;
       default:
         return false;

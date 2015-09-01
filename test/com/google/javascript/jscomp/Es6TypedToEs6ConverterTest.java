@@ -334,6 +334,16 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     testExternChanges("declare namespace foo { interface I {} }",
          "/** @const */ var foo = {}; /** @interface */ foo.I = class {};");
 
+    testExternChanges("declare namespace foo { interface I { bar: number; } }",
+        LINE_JOINER.join(
+         "/** @const */ var foo = {}; /** @interface */ foo.I = class {};",
+         "/** @type {number} */ foo.I.prototype.bar;"));
+
+    testExternChanges("declare namespace foo { class C { bar: number; } }",
+        LINE_JOINER.join(
+         "/** @const */ var foo = {}; foo.C = class {};",
+         "/** @type {number} */ foo.C.prototype.bar;"));
+
     testExternChanges("declare namespace foo { interface I {} class C implements I {} }",
         LINE_JOINER.join(
             "/** @const */ var foo = {};",
