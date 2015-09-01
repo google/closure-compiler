@@ -133,7 +133,9 @@ class VarCheck extends AbstractPostOrderCallback implements
     // remove duplicate VAR declarations, which will make
     // externs look like they have assigns.
     if (!sanityCheck) {
-      NodeTraversal.traverseEs6(compiler, externs, new NameRefInExternsCheck());
+      NodeTraversal traversal = new NodeTraversal(
+          compiler, new NameRefInExternsCheck(), scopeCreator);
+      traversal.traverse(externs);
     }
 
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);

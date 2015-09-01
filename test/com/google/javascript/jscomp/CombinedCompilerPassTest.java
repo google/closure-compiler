@@ -257,6 +257,6 @@ public final class CombinedCompilerPassTest extends TestCase  {
 
     assertThat(c1.getVisitedScopes()).hasSize(1);
     assertThat(c2.getVisitedScopes()).hasSize(3);
-    assertThat(c3.getVisitedScopes()).hasSize(4);
+    assertThat(c3.getVisitedScopes()).hasSize(5);
   }
 }
