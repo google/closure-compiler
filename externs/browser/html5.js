@@ -2014,7 +2014,6 @@ DataTransferItem.prototype.type;
 
 /**
  * @param {function(string)} callback
- * @nosideeffects
  */
 DataTransferItem.prototype.getAsString = function(callback) {};
 
