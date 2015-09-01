@@ -20,8 +20,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import com.google.common.io.Resources;
 import com.google.javascript.rhino.StaticSourceFile;
 
 import java.io.File;
@@ -31,9 +33,15 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * An abstract representation of a source file that provides access to
@@ -137,6 +145,13 @@ public class SourceFile implements StaticSourceFile, Serializable {
    */
   public String getCode() throws IOException {
     return code;
+  }
+
+  /**
+   * Gets a char source for the code in this source file.
+   */
+  public CharSource getCodeCharSource() {
+    return CharSource.wrap(code);
   }
 
   /**
@@ -311,6 +326,24 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return fileName;
   }
 
+  @GwtIncompatible("java.util.zip.ZipFile")
+  public static List<SourceFile> fromZipFile(String zipName, Charset inputCharset)
+      throws IOException {
+    final String absoluteZipPath = new File(zipName).getAbsolutePath();
+    List<SourceFile> sourceFiles = new ArrayList<>();
+
+    try (ZipFile zipFile = new ZipFile(absoluteZipPath)) {
+      Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+
+      while (zipEntries.hasMoreElements()) {
+        ZipEntry zipEntry = zipEntries.nextElement();
+        URL zipEntryUrl = new URL("jar:file:" + absoluteZipPath + "!/" + zipEntry.getName());
+        sourceFiles.add(builder().withCharset(inputCharset).buildFromUrl(zipEntryUrl));
+      }
+    }
+    return sourceFiles;
+  }
+
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName, Charset c) {
     return builder().withCharset(c).buildFromFile(fileName);
@@ -374,7 +407,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
    */
   public static class Builder {
     private Charset charset = UTF_8;
-    private String originalPath = null;
 
     public Builder() {}
 
@@ -389,11 +421,15 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
 
     public SourceFile buildFromFile(File file) {
-      return new OnDisk(file, originalPath, charset);
+      return new OnDisk(file, null /** originalPath */, charset);
+    }
+
+    public SourceFile buildFromUrl(URL url) {
+      return new AtUrl(url, null /** originalPath */, charset);
     }
 
     public SourceFile buildFromCode(String fileName, String code) {
-      return new Preloaded(fileName, originalPath, code);
+      return new Preloaded(fileName, null /** originalPath */, code);
     }
 
     @GwtIncompatible("java.io.InputStream")
@@ -411,7 +447,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     public SourceFile buildFromGenerator(String fileName,
         Generator generator) {
-      return new Generated(fileName, originalPath, generator);
+      return new Generated(fileName, null /** originalPath */, generator);
     }
   }
 
@@ -477,7 +513,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     // This is stored as a String, but passed in and out as a Charset so that
     // we can serialize the class.
-    // Default input file format for JSCompiler has always been UTF_8.
+    // Default input file format for the compiler has always been UTF_8.
     private String inputCharset = UTF_8.name();
 
     OnDisk(File file, String originalPath, Charset c) {
@@ -498,6 +534,19 @@ public class SourceFile implements StaticSourceFile, Serializable {
         super.setCode(cachedCode);
       }
       return cachedCode;
+    }
+
+    /**
+     * Gets a char source for the code in this source file.
+     */
+    @Override
+    public CharSource getCodeCharSource() {
+      if (hasSourceInMemory()) {
+        return super.getCodeCharSource();
+      } else {
+        // If we haven't pulled the code into memory yet, don't.
+        return Files.asCharSource(file, StandardCharsets.UTF_8);
+      }
     }
 
     /**
@@ -535,6 +584,97 @@ public class SourceFile implements StaticSourceFile, Serializable {
      * Get the Charset specifying how we're supposed to read the file
      * in off disk and into UTF-16.  This is stored as a strong to allow
      * SourceFile to be serialized.
+     * @return Charset object representing charset to use.
+     */
+    public Charset getCharset() {
+      return Charset.forName(inputCharset);
+    }
+  }
+
+  /**
+   * A source file at a URL where the code is only read into memory if absolutely
+   * necessary. We will try to delay loading the code into memory as long as
+   * possible.
+   * <p>
+   * In practice this is used to load code in entries inside of zip files.
+   */
+  static class AtUrl extends SourceFile {
+    private static final long serialVersionUID = 1L;
+    private final URL url;
+
+    // This is stored as a String, but passed in and out as a Charset so that
+    // we can serialize the class.
+    // Default input file format for the compiler has always been UTF_8.
+    private String inputCharset = UTF_8.name();
+
+    AtUrl(URL url, String originalPath, Charset c) {
+      super(url.getPath());
+      this.url = url;
+      super.setOriginalPath(originalPath);
+      if (c != null) {
+        this.setCharset(c);
+      }
+    }
+
+    @Override
+    public synchronized String getCode() throws IOException {
+      String cachedCode = super.getCode();
+
+      if (cachedCode == null) {
+        cachedCode = Resources.toString(url, this.getCharset());
+        super.setCode(cachedCode);
+      }
+      return cachedCode;
+    }
+
+    /**
+     * Gets a char source for the code at this URL.
+     */
+    @Override
+    public CharSource getCodeCharSource() {
+      if (hasSourceInMemory()) {
+        return super.getCodeCharSource();
+      } else {
+        // If we haven't pulled the code into memory yet, don't.
+        return Resources.asCharSource(url, StandardCharsets.UTF_8);
+      }
+    }
+
+    /**
+     * Gets a reader for the code at this URL.
+     */
+    @Override
+    @GwtIncompatible("java.io.Reader")
+    public Reader getCodeReader() throws IOException {
+      if (hasSourceInMemory()) {
+        return super.getCodeReader();
+      } else {
+        // If we haven't pulled the code into memory yet, don't.
+        return getCodeCharSource().openStream();
+      }
+    }
+
+    // Flush the cached code after the compile; we can read it from the URL
+    // if we need it again.
+    @Override
+    public void clearCachedSource() {
+      super.setCode(null);
+    }
+
+    /**
+     * Store the Charset specification as the string version of the name,
+     * rather than the Charset itself.  This allows us to serialize the
+     * SourceFile class.
+     * @param c charset to use when reading the input.
+     */
+    public void setCharset(Charset c) {
+      inputCharset = c.name();
+    }
+
+    /**
+     * Get the Charset specifying how we're supposed to read the URL
+     * into UTF-16.  This is stored as a string to allow SourceFile to be
+     * serialized.
      * @return Charset object representing charset to use.
      */
     public Charset getCharset() {

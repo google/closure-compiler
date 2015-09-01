@@ -195,6 +195,10 @@ public class CommandLineRunner extends
             "js files that do not end in _test.js")
     private List<String> js = new ArrayList<>();
 
+    @Option(name = "--jszip",
+        usage = "The JavaScript zip filename. You may specify multiple.")
+    private List<String> jszip = new ArrayList<>();
+
     @Option(name = "--js_output_file",
         usage = "Primary output filename. If not specified, output is " +
         "written to stdout")
@@ -686,7 +690,7 @@ public class CommandLineRunner extends
 
     private ImmutableMap<String, String> splitPipeParts(Iterable<String> input,
         String flagName) throws CmdLineException {
-      ImmutableMap.Builder<String, String> result = new ImmutableMap.Builder<>();;
+      ImmutableMap.Builder<String, String> result = new ImmutableMap.Builder<>();
 
       Splitter splitter = Splitter.on('|').limit(2);
       for (String inputSourceMap : input) {
@@ -1069,6 +1073,7 @@ public class CommandLineRunner extends
           .setLoggingLevel(flags.loggingLevel)
           .setExterns(flags.externs)
           .setJs(jsFiles)
+          .setJsZip(flags.jszip)
           .setJsOutputFile(flags.jsOutputFile)
           .setModule(flags.module)
           .setVariableMapOutputFile(flags.variableMapOutputFile)

@@ -68,7 +68,7 @@ public final class ClosureBundler {
   }
 
   /** Append the contents of the CharSource to the supplied appendable. */
-  private void appendTo(
+  public void appendTo(
       Appendable out,
       DependencyInfo info,
       CharSource content) throws IOException {

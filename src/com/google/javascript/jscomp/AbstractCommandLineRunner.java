@@ -461,6 +461,23 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   protected List<SourceFile> createInputs(List<String> files,
       boolean allowStdIn) throws FlagUsageException, IOException {
+    return createInputs(files, new ArrayList<String>() /* zips */, allowStdIn);
+  }
+
+  /**
+   * Creates inputs from a list of source files and zips.
+   *
+   * Can be overridden by subclasses who want to pull files from different
+   * places.
+   *
+   * @param files A list of filenames.
+   * @param zips A list of zip filenames.
+   * @param allowStdIn Whether '-' is allowed appear as a filename to represent
+   *        stdin. If true, '-' is only allowed to appear once.
+   * @return An array of inputs
+   */
+  protected List<SourceFile> createInputs(List<String> files,
+      List<String> zips, boolean allowStdIn) throws FlagUsageException, IOException {
     List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
     for (String filename : files) {
@@ -489,22 +506,29 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         usingStdin = true;
       }
     }
+    for (String zipName : zips) {
+      if (!"-".equals(zipName)) {
+        List<SourceFile> newFiles = SourceFile.fromZipFile(zipName, inputCharset);
+        inputs.addAll(newFiles);
+      }
+    }
     return inputs;
   }
 
   /**
    * Creates JS source code inputs from a list of files.
    */
-  private List<SourceFile> createSourceInputs(List<String> files)
+  private List<SourceFile> createSourceInputs(List<String> files, List<String> zips)
       throws FlagUsageException, IOException {
     if (isInTestMode()) {
       return inputsSupplierForTesting.get();
     }
-    if (files.isEmpty()) {
+    if (files.isEmpty() && zips.isEmpty()) {
+      // Request to read from stdin.
       files = Collections.singletonList("-");
     }
     try {
-      return createInputs(files, true);
+      return createInputs(files, zips, true);
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --js flag. " + e.getMessage());
     }
@@ -653,7 +677,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
       List<String> moduleJsFiles =
           jsFiles.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
-      for (SourceFile input : createInputs(moduleJsFiles, false)) {
+      for (SourceFile input :
+          createInputs(moduleJsFiles, false)) {
         module.add(input);
       }
       numJsFilesLeft -= numJsFiles;
@@ -858,7 +883,7 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
         result = compiler.compileModules(externs, modules, options);
       }
     } else {
-      List<SourceFile> inputs = createSourceInputs(jsFiles);
+      List<SourceFile> inputs = createSourceInputs(jsFiles, config.jsZip);
       if (config.skipNormalOutputs) {
         compiler.init(externs, inputs, options);
         compiler.hoistExterns();
@@ -1575,12 +1600,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
       String displayName = rootRelativePath != null
           ? rootRelativePath
           : input.getName();
-      File file = new File(input.getName());
       out.append("//");
       out.append(displayName);
       out.append("\n");
 
-      bundler.appendTo(out, input, file, inputCharset);
+      bundler.appendTo(out, input, input.getSourceFile().getCodeCharSource());
 
       out.append("\n");
     }
@@ -1678,6 +1702,17 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
     CommandLineConfig setJs(List<String> js) {
       this.js.clear();
       this.js.addAll(js);
+      return this;
+    }
+
+    private final List<String> jsZip = new ArrayList<>();
+
+    /**
+     * The JavaScript zip filename. You may specify multiple.
+     */
+    CommandLineConfig setJsZip(List<String> zip) {
+      this.jsZip.clear();
+      this.jsZip.addAll(zip);
       return this;
     }
 

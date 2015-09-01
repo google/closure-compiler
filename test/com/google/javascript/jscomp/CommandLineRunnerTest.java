@@ -34,12 +34,18 @@ import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Tests for {@link CommandLineRunner}.
@@ -1020,6 +1026,50 @@ public final class CommandLineRunnerTest extends TestCase {
         .contains("Bad value for --source_map_location_mapping");
   }
 
+  public void testInputOneZip() throws IOException {
+    try {
+      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+      zip1Contents.put("run.js", "console.log(\"Hello World\");");
+      String zipFile1 = createZipFile(zip1Contents);
+
+      compileZipFiles("console.log(\"Hello World\");", zipFile1);
+    } catch (FlagUsageException e) {
+      fail("Unexpected exception" + e);
+    }
+  }
+
+  public void testInputMultipleZips() throws IOException {
+    try {
+      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+      zip1Contents.put("run.js", "console.log(\"Hello World\");");
+      String zipFile1 = createZipFile(zip1Contents);
+
+      LinkedHashMap<String, String> zip2Contents = new LinkedHashMap<>();
+      zip2Contents.put("run.js", "window.alert(\"Hi Browser\");");
+      String zipFile2 = createZipFile(zip2Contents);
+
+      compileZipFiles(
+          "console.log(\"Hello World\");window.alert(\"Hi Browser\");", zipFile1, zipFile2);
+    } catch (FlagUsageException e) {
+      fail("Unexpected exception" + e);
+    }
+  }
+
+  public void testInputMultipleContents() throws IOException {
+    try {
+      LinkedHashMap<String, String> zip1Contents = new LinkedHashMap<>();
+      zip1Contents.put("a.js", "console.log(\"File A\");");
+      zip1Contents.put("b.js", "console.log(\"File B\");");
+      zip1Contents.put("c.js", "console.log(\"File C\");");
+      String zipFile1 = createZipFile(zip1Contents);
+
+      compileZipFiles(
+          "console.log(\"File A\");console.log(\"File B\");console.log(\"File C\");", zipFile1);
+    } catch (FlagUsageException e) {
+      fail("Unexpected exception" + e);
+    }
+  }
+
   public void testSourceMapInputs() throws Exception {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
@@ -1538,6 +1588,45 @@ public final class CommandLineRunnerTest extends TestCase {
         argStrings,
         new PrintStream(outReader),
         new PrintStream(errReader));
+  }
+
+  private String createZipFile(Map<String, String> entryContentsByName) throws IOException {
+    File tempZipFile = File.createTempFile("testdata", ".js.zip");
+
+    try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(tempZipFile))) {
+      for (Entry<String, String> entry : entryContentsByName.entrySet()) {
+        zipOutputStream.putNextEntry(new ZipEntry(entry.getKey()));
+        zipOutputStream.write(entry.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      }
+    }
+
+    return tempZipFile.getAbsolutePath();
+  }
+
+  /**
+   * Helper for compiling from a zip file and checking output string.
+   * @param expectedOutput string representation of expected output.
+   * @param filenames filenames of zip containing source to compile.
+   */
+  private void compileZipFiles(String expectedOutput, String... filenames)
+      throws FlagUsageException {
+    for (String filename : filenames) {
+      args.add("--jszip=" + filename);
+    }
+
+    String[] argStrings = args.toArray(new String[] {});
+
+    CommandLineRunner runner =
+        new CommandLineRunner(argStrings, new PrintStream(outReader), new PrintStream(errReader));
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    String output = runner.getCompiler().toSource();
+    assertThat(output).isEqualTo(expectedOutput);
   }
 
   private Compiler compile(String[] original) {
