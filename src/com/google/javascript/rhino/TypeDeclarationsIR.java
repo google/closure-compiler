@@ -189,7 +189,7 @@ public class TypeDeclarationsIR {
    *   STRING_KEY p1 [declared_type_expr: STRING_TYPE]
    *   STRING_KEY p2 [declared_type_expr: BOOLEAN_TYPE]
    * </pre>
-   * @param returnType the type returned by the function, possibly UNKNOWN_TYPE
+   * @param returnType the type returned by the function, possibly ANY_TYPE
    * @param requiredParams the names and types of the required parameters.
    * @param optionalParams the names and types of the optional parameters.
    * @param restName the name of the rest parameter, if any.

@@ -188,8 +188,11 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "};"),
         "var /** {p: string} */ x;");
 
-    testError("var x: {constructor(); q: number};",
-        Es6TypedToEs6Converter.UNSUPPORTED_RECORD_TYPE);
+    test("var x: {foo(p1: number, p2?, ...p3: string[]): string;};",
+         "var /** {foo: function(number, ?=, ...string): string} */ x;");
+
+    test("var x: {constructor(); q: number};",
+         "var /** {constructor: function(): ?, q: number} */ x;");
   }
 
   public void testParameterizedType() {

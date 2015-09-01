@@ -29,6 +29,7 @@ import com.google.javascript.rhino.TypeDeclarationsIR;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -552,7 +553,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         return result;
       }
       // Composite types.
-      case Token.FUNCTION_TYPE:
+      case Token.FUNCTION_TYPE: {
         Node returnType = type.getFirstChild();
         Node paramList = new Node(Token.PARAM_LIST);
         for (Node param = returnType.getNext(); param != null; param = param.getNext()) {
@@ -571,32 +572,39 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
           paramList.addChildToBack(paramType);
         }
         Node function = new Node(Token.FUNCTION);
-        function.addChildToBack(paramList);
+        // TODO(moz): We should always add a PARAM_LIST in JsDocInfoParser
+        if (paramList.hasChildren()) {
+          function.addChildToBack(paramList);
+        }
         function.addChildToBack(convertWithLocation(returnType));
         return function;
+      }
       case Token.UNION_TYPE:
         Node pipe = new Node(Token.PIPE);
         for (Node child : type.children()) {
           pipe.addChildToBack(convertWithLocation(child));
         }
         return pipe;
-      case Token.RECORD_TYPE:
+      case Token.RECORD_TYPE: {
         Node lb = new Node(Token.LB);
-        for (Node memberVar : type.children()) {
-          if (!memberVar.isMemberVariableDef()) {
+        for (Node member : type.children()) {
+          if (member.isMemberFunctionDef()) {
+            member = convertMemberFunctionToMemberVariable(member);
+          } else if (!member.isMemberVariableDef()) {
             compiler.report(JSError.make(type, UNSUPPORTED_RECORD_TYPE));
             continue;
           }
           Node colon = new Node(Token.COLON);
-          memberVar.setType(Token.STRING_KEY);
+          member.setType(Token.STRING_KEY);
           Node memberType = convertWithLocation(
-              maybeCreateAnyType(memberVar, memberVar.getDeclaredTypeExpression()));
-          memberVar.setDeclaredTypeExpression(null);
-          colon.addChildToBack(memberVar.detachFromParent());
+              maybeCreateAnyType(member, member.getDeclaredTypeExpression()));
+          member.setDeclaredTypeExpression(null);
+          colon.addChildToBack(member.detachFromParent());
           colon.addChildToBack(memberType);
           lb.addChildrenToBack(colon);
         }
         return new Node(Token.LC, lb);
+      }
       case Token.TYPEOF:
         // Currently, TypeQuery is not supported in Closure's type system.
         compiler.report(JSError.make(type, TYPE_QUERY_NOT_SUPPORTED));
@@ -646,6 +654,37 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       parent.replaceChild(placeHolder, newDec);
       compiler.reportCodeChange();
     }
+  }
+
+  private Node convertMemberFunctionToMemberVariable(Node member) {
+    Node function = member.getFirstChild();
+    Node returnType = maybeCreateAnyType(function, function.getDeclaredTypeExpression());
+    LinkedHashMap<String, TypeDeclarationNode> required = new LinkedHashMap<>();
+    LinkedHashMap<String, TypeDeclarationNode> optional = new LinkedHashMap<>();
+    String restName = null;
+    TypeDeclarationNode restType = null;
+
+    for (Node param : function.getFirstChild().getNext().children()) {
+      if (param.isName()) {
+        if (param.getBooleanProp(Node.OPT_ES6_TYPED)) {
+          optional.put(param.getString(), param.getDeclaredTypeExpression());
+        } else {
+          required.put(param.getString(), param.getDeclaredTypeExpression());
+        }
+      } else if (param.isRest()) {
+        restName = param.getString();
+        restType = param.getDeclaredTypeExpression();
+      }
+    }
+
+    TypeDeclarationNode type =
+        TypeDeclarationsIR.functionType(returnType, required, optional, restName, restType);
+    Node memberVariable = Node.newString(Token.MEMBER_VARIABLE_DEF, member.getString());
+    memberVariable.useSourceInfoFrom(member);
+    memberVariable.setDeclaredTypeExpression(type);
+    memberVariable.putBooleanProp(Node.OPT_ES6_TYPED, member.getBooleanProp(Node.OPT_ES6_TYPED));
+    member.getParent().replaceChild(member, memberVariable);
+    return memberVariable;
   }
 
   private Node maybeGetQualifiedNameNode(Node oldNameNode) {
