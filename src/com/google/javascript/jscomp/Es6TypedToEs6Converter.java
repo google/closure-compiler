@@ -335,15 +335,16 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   private void visitFunction(Node n, Node parent) {
     // For member functions (eg. class Foo<T> { f() {} }), the JSDocInfo
     // needs to go on the synthetic MEMBER_FUNCTION_DEF node.
-    Node jsDocNode = parent.getType() == Token.MEMBER_FUNCTION_DEF
-        ? parent
-        : n;
+    boolean isMemberFunctionDef = parent.getType() == Token.MEMBER_FUNCTION_DEF;
+    Node jsDocNode = isMemberFunctionDef ? parent : n;
     maybeAddGenerics(n, jsDocNode);
     maybeVisitColonType(n, jsDocNode); // Return types are colon types on the function node
     if (n.getLastChild().isEmpty()) {
       n.replaceChild(n.getLastChild(), IR.block().useSourceInfoFrom(n));
     }
-    maybeCreateQualifiedDeclaration(n, parent);
+    if (!isMemberFunctionDef) {
+      maybeCreateQualifiedDeclaration(n, parent);
+    }
   }
 
   private void maybeAddVisibility(Node n) {

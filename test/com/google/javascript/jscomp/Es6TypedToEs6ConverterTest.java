@@ -288,6 +288,9 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "declare enum Foo {}",
         "/** @enum {number} */ var Foo = {}");
     testExternChanges("declare class C { constructor(); };", "class C { constructor() {} }");
+    testExternChanges(
+        "declare class C { foo(): number; };",
+        "class C { /** @return {number} */ foo() {} }");
     testExternChanges("declare module foo {}", "/** @const */ var foo = {};"); // Accept "module"
     testExternChanges("declare namespace foo {}", "/** @const */ var foo = {};");
   }
@@ -343,6 +346,11 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
          "/** @const */ var foo = {}; foo.C = class {};",
          "/** @type {number} */ foo.C.prototype.bar;"));
+
+    testExternChanges("declare namespace foo.bar { class C { baz(): number; } }",
+        LINE_JOINER.join(
+         "/** @const */ var foo = {}; /** @const */ foo.bar = {};",
+         "foo.bar.C = class { /** @return {number} */ baz() {}};"));
 
     testExternChanges("declare namespace foo { interface I {} class C implements I {} }",
         LINE_JOINER.join(
