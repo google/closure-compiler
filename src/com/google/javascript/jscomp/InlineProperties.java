@@ -263,6 +263,9 @@ final class InlineProperties implements CompilerPass {
 
     private boolean inConstructor(NodeTraversal t) {
       Node root = t.getEnclosingFunction();
+      if (root == null) {
+        return false;
+      }
       JSDocInfo info = NodeUtil.getBestJSDocInfo(root);
       return info != null && info.isConstructor();
     }

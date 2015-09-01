@@ -233,4 +233,13 @@ public final class InlinePropertiesTest extends CompilerTestCase {
         "var x = new C();",
         "1;"));
   }
+
+  public void testGlobalThisNotInlined() {
+    testSame(LINE_JOINER.join(
+        "this.foo = 1;",
+        "/** @constructor */",
+        "function C() {",
+        "  foo;",
+        "}"));
+  }
 }
