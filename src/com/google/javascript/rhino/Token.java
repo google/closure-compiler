@@ -808,6 +808,8 @@ public class Token {
         return 1;
       case INDEX_SIGNATURE:
         return 1;
+      case CALL_SIGNATURE:
+        return 1;
       case MEMBER_VARIABLE_DEF:
         return 0;
     }

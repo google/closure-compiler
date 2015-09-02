@@ -2179,6 +2179,13 @@ public class Node implements Serializable {
   }
 
   /**
+   * Returns whether this node is an optional node in the ES6 Typed syntax.
+   */
+  public boolean isOptionalEs6Typed() {
+    return getBooleanProp(OPT_ES6_TYPED);
+  }
+
+  /**
    * Sets whether this is a synthetic block that should not be considered
    * a real source block.
    */
@@ -2718,6 +2725,10 @@ public class Node implements Serializable {
 
   public boolean isRecordType() {
     return this.getType() == Token.RECORD_TYPE;
+  }
+
+  public boolean isCallSignature() {
+    return this.getType() == Token.CALL_SIGNATURE;
   }
 
   public boolean isIndexSignature() {

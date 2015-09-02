@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.Es6ToEs3Converter.ClassDeclarationMetadata;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -67,6 +68,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   static final DiagnosticType NON_AMBIENT_NAMESPACE_NOT_SUPPORTED = DiagnosticType.error(
       "JSC_NON_AMBIENT_NAMESPACE_NOT_SUPPORTED",
       "Non-ambient namespaces are not supported");
+
+  static final DiagnosticType CALL_SIGNATURE_NOT_SUPPORTED = DiagnosticType.error(
+      "JSC_CALL_SIGNATURE_NOT_SUPPORTED",
+      "Call signature and construct signatures are not supported yet");
 
   private final AbstractCompiler compiler;
   private final Map<Node, Namespace> nodeNamespaceMap;
@@ -205,6 +210,11 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(n, parent);
 
     for (Node member : classMembers.children()) {
+      if (member.isCallSignature()) {
+        compiler.report(JSError.make(n, CALL_SIGNATURE_NOT_SUPPORTED));
+        continue;
+      }
+
       if (member.isIndexSignature()) {
         doc.recordImplementedInterface(createIObject(member));
         continue;
@@ -245,13 +255,25 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     Node insertionPoint = n;
     Node members = n.getLastChild();
     for (Node member : members.children()) {
-      // Synthesize a block for method signatures.
+      if (member.isCallSignature()) {
+        compiler.report(JSError.make(n, CALL_SIGNATURE_NOT_SUPPORTED));
+      }
+
+      if (member.isIndexSignature()) {
+        doc.recordExtendedInterface(createIObject(member));
+      }
+
+      // Synthesize a block for method signatures, or convert it to a member variable if optional.
       if (member.isMemberFunctionDef()) {
         Node function = member.getFirstChild();
-        function.getLastChild().setType(Token.BLOCK);
-      } else if (member.isIndexSignature()) {
-        doc.recordExtendedInterface(createIObject(member));
-      } else {
+        if (function.isOptionalEs6Typed()) {
+          member = convertMemberFunctionToMemberVariable(member);
+        } else {
+          function.getLastChild().setType(Token.BLOCK);
+        }
+      }
+
+      if (member.isMemberVariableDef()) {
         Node newNode = createPropertyDefinition(member, name.getString());
         insertionPoint.getParent().addChildAfter(newNode, insertionPoint);
         insertionPoint = newNode;
@@ -339,7 +361,11 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     boolean isMemberFunctionDef = parent.getType() == Token.MEMBER_FUNCTION_DEF;
     Node jsDocNode = isMemberFunctionDef ? parent : n;
     maybeAddGenerics(n, jsDocNode);
-    maybeVisitColonType(n, jsDocNode); // Return types are colon types on the function node
+    // Return types are colon types on the function node. Optional member functions are handled
+    // separately.
+    if (!(isMemberFunctionDef && n.isOptionalEs6Typed())) {
+      maybeVisitColonType(n, jsDocNode);
+    }
     if (n.getLastChild().isEmpty()) {
       n.replaceChild(n.getLastChild(), IR.block().useSourceInfoFrom(n));
     }
@@ -366,6 +392,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     boolean hasColonType = type != null;
     if (n.isRest() && hasColonType) {
       type = new Node(Token.ELLIPSIS, convertWithLocation(type.removeFirstChild()));
+    } else if (n.isMemberVariableDef()) {
+      if (type != null) {
+        type = maybeProcessOptionalProperty(n, type);
+      }
     } else {
       type = maybeProcessOptionalParameter(n, type);
     }
@@ -503,13 +533,27 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   }
 
   private Node maybeProcessOptionalParameter(Node n, Node type) {
-    if (n.getBooleanProp(Node.OPT_ES6_TYPED)) {
+    if (n.isOptionalEs6Typed()) {
       n.putBooleanProp(Node.OPT_ES6_TYPED, false);
       type = maybeCreateAnyType(n, type);
       return new Node(Token.EQUALS, convertWithLocation(type));
     } else {
       return type == null ? null : convertWithLocation(type);
     }
+  }
+
+  private Node maybeProcessOptionalProperty(Node n, Node type) {
+    if (n.isOptionalEs6Typed()) {
+      n.putBooleanProp(Node.OPT_ES6_TYPED, false);
+      TypeDeclarationNode baseType = (TypeDeclarationNode) maybeCreateAnyType(n, type);
+      type = TypeDeclarationsIR.unionType(
+          ImmutableList.of(baseType, TypeDeclarationsIR.undefinedType()));
+      type.useSourceInfoIfMissingFromForTree(baseType);
+    } else {
+      type = maybeCreateAnyType(n, type);
+    }
+
+    return convertWithLocation(type);
   }
 
   private Node convertWithLocation(Node type) {
@@ -528,6 +572,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
         return IR.string("number");
       case Token.VOID_TYPE:
         return IR.string("void");
+      case Token.UNDEFINED_TYPE:
+        return IR.string("undefined");
       case Token.ANY_TYPE:
         return new Node(Token.QMARK);
         // Named types.
@@ -596,8 +642,8 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
           }
           Node colon = new Node(Token.COLON);
           member.setType(Token.STRING_KEY);
-          Node memberType = convertWithLocation(
-              maybeCreateAnyType(member, member.getDeclaredTypeExpression()));
+          Node memberType =
+              maybeProcessOptionalProperty(member, member.getDeclaredTypeExpression());
           member.setDeclaredTypeExpression(null);
           colon.addChildToBack(member.detachFromParent());
           colon.addChildToBack(memberType);
@@ -666,7 +712,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
     for (Node param : function.getFirstChild().getNext().children()) {
       if (param.isName()) {
-        if (param.getBooleanProp(Node.OPT_ES6_TYPED)) {
+        if (param.isOptionalEs6Typed()) {
           optional.put(param.getString(), param.getDeclaredTypeExpression());
         } else {
           required.put(param.getString(), param.getDeclaredTypeExpression());
@@ -682,7 +728,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     Node memberVariable = Node.newString(Token.MEMBER_VARIABLE_DEF, member.getString());
     memberVariable.useSourceInfoFrom(member);
     memberVariable.setDeclaredTypeExpression(type);
-    memberVariable.putBooleanProp(Node.OPT_ES6_TYPED, member.getBooleanProp(Node.OPT_ES6_TYPED));
+    memberVariable.putBooleanProp(Node.OPT_ES6_TYPED, function.isOptionalEs6Typed());
     member.getParent().replaceChild(member, memberVariable);
     return memberVariable;
   }

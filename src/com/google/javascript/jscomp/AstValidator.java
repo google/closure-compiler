@@ -493,6 +493,9 @@ public final class AstValidator implements CompilerPass {
         validateChildCount(n);
         validateChildless(n.getFirstChild());
         break;
+      case Token.CALL_SIGNATURE:
+        validateChildCount(n);
+        break;
       default:
         violation("Interface contained member of invalid type " + Token.name(n.getType()), n);
     }
@@ -575,6 +578,9 @@ public final class AstValidator implements CompilerPass {
       case Token.INDEX_SIGNATURE:
         validateChildCount(n);
         validateChildless(n.getFirstChild());
+        break;
+      case Token.CALL_SIGNATURE:
+        validateChildCount(n);
         break;
       case Token.EMPTY: // Empty is allowed too.
         break;

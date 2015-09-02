@@ -146,6 +146,21 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("function f(p1?) {}", "function f(/** ?= */ p1) {}");
   }
 
+  public void testOptionalProperty() {
+    test("var x: {foo?};", "var /** {foo: (? | undefined)} */ x;");
+    test("var x: {foo?: string};", "var /** {foo: (string | undefined)} */ x;");
+    test("var x: {foo?: string | number};", "var /** {foo: ((string | number) | undefined)} */ x;");
+    test("var x: {foo?(): string};", "var /** {foo: ((function(): string) | undefined)} */ x;");
+
+    test("interface I {foo?: string}",
+         "/** @interface */ class I {} /** @type {string | undefined} */ I.prototype.foo;");
+
+    test("interface I {foo?(): string}",
+        LINE_JOINER.join(
+         "/** @interface */ class I {}",
+         "/** @type {(function(): string) | undefined} */ I.prototype.foo;"));
+  }
+
   public void testRestParameter() {
     test("function f(...p1: number[]) {}", "function f(/** ...number */ ...p1) {}");
     test("function f(...p1) {}", "function f(...p1) {}");
@@ -177,6 +192,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   }
 
   public void testRecordType() {
+    test("var x: {p; q};", "var /** {p: ?, q: ?} */ x;");
     test("var x: {p: string; q: number};", "var /** {p: string, q: number} */ x;");
     test("var x: {p: string, q: number};", "var /** {p: string, q: number} */ x;");
     test("var x: {p: string; q: {p: string; q: number}};",
@@ -308,6 +324,12 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
     testError("var x: { [foo: string]: number; };",
         Es6TypedToEs6Converter.UNSUPPORTED_RECORD_TYPE);
+  }
+
+  public void testCallSignature() {
+    testError("interface I { (): string }", Es6TypedToEs6Converter.CALL_SIGNATURE_NOT_SUPPORTED);
+    testError("interface I { new (): string }",
+        Es6TypedToEs6Converter.CALL_SIGNATURE_NOT_SUPPORTED);
   }
 
   public void testAccessibilityModifier() {
