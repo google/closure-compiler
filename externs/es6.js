@@ -412,6 +412,15 @@ Int8Array.prototype.set = function(array, opt_offset) {};
  */
 Int8Array.prototype.subarray = function(begin, opt_end) {};
 
+/**
+ * @param {number} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Int8Array.prototype.fill = function(value, opt_begin, opt_end) {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
@@ -449,6 +458,15 @@ Uint8Array.prototype.set = function(array, opt_offset) {};
  */
 Uint8Array.prototype.subarray = function(begin, opt_end) {};
 
+/**
+ * @param {number} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Uint8Array.prototype.fill = function(value, opt_begin, opt_end) {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
@@ -485,6 +503,16 @@ Uint8ClampedArray.prototype.set = function(array, opt_offset) {};
  * @nosideeffects
  */
 Uint8ClampedArray.prototype.subarray = function(begin, opt_end) {};
+
+
+/**
+ * @param {number} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Uint8ClampedArray.prototype.fill = function(value, opt_begin, opt_end) {};
 
 
 /**
@@ -532,6 +560,15 @@ Int16Array.prototype.set = function(array, opt_offset) {};
  */
 Int16Array.prototype.subarray = function(begin, opt_end) {};
 
+/**
+ * @param {number} value Int16 value to fill the array.
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Int16Array.prototype.fill = function(value, opt_begin, opt_end) {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
@@ -568,6 +605,15 @@ Uint16Array.prototype.set = function(array, opt_offset) {};
  * @nosideeffects
  */
 Uint16Array.prototype.subarray = function(begin, opt_end) {};
+
+/**
+ * @param {number} value Uint16 value to fill the array.
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Uint16Array.prototype.fill = function(value, opt_begin, opt_end) {};
 
 
 /**
@@ -606,6 +652,15 @@ Int32Array.prototype.set = function(array, opt_offset) {};
  */
 Int32Array.prototype.subarray = function(begin, opt_end) {};
 
+/**
+ * @param {number} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Int32Array.prototype.fill = function(value, opt_begin, opt_end) {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
@@ -642,6 +697,15 @@ Uint32Array.prototype.set = function(array, opt_offset) {};
  * @nosideeffects
  */
 Uint32Array.prototype.subarray = function(begin, opt_end) {};
+
+/**
+ * @param {number} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Uint32Array.prototype.fill = function(value, opt_begin, opt_end) {};
 
 
 /**
@@ -680,6 +744,15 @@ Float32Array.prototype.set = function(array, opt_offset) {};
  */
 Float32Array.prototype.subarray = function(begin, opt_end) {};
 
+/**
+ * @param {number} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Float32Array.prototype.fill = function(value, opt_begin, opt_end) {};
+
 
 /**
  * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
@@ -716,6 +789,15 @@ Float64Array.prototype.set = function(array, opt_offset) {};
  * @nosideeffects
  */
 Float64Array.prototype.subarray = function(begin, opt_end) {};
+
+/**
+ * @param {number} value
+ * @param {number=} opt_begin
+ * @param {number=} opt_end
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/fill
+ */
+Float64Array.prototype.fill = function(value, opt_begin, opt_end) {};
 
 
 /**
