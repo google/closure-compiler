@@ -259,7 +259,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    * Expects the JS to generate one bad-read error.
    */
   private void assertRedeclare(String js) {
-    testWarning(js, VariableReferenceCheck.REDECLARED_VARIABLE);
+    testError(js, VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
   /**

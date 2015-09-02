@@ -44,7 +44,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       "JSC_REFERENCE_BEFORE_DECLARE",
       "Variable referenced before declaration: {0}");
 
-  static final DiagnosticType REDECLARED_VARIABLE = DiagnosticType.warning(
+  static final DiagnosticType REDECLARED_VARIABLE = DiagnosticType.error(
       "JSC_REDECLARED_VARIABLE",
       "Redeclared variable: {0}");
 
