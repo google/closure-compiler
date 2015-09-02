@@ -510,6 +510,12 @@ public class IR {
     return objectlit;
   }
 
+  public static Node computedProp(Node key, Node value) {
+    Preconditions.checkState(mayBeExpression(key), key);
+    Preconditions.checkState(mayBeExpression(value), value);
+    return new Node(Token.COMPUTED_PROP, key, value);
+  }
+
   // TODO(johnlenz): quoted props
 
   public static Node propdef(Node string, Node value) {

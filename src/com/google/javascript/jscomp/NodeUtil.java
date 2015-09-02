@@ -1817,6 +1817,20 @@ public final class NodeUtil {
   }
 
   /**
+   * @return The first computed property in the objlit whose key matches {@code key}.
+   */
+  @Nullable
+  static Node getFirstComputedPropMatchingKey(Node objlit, Node key) {
+    Preconditions.checkState(objlit.isObjectLit());
+    for (Node child : objlit.children()) {
+      if (child.isComputedProp() && child.getFirstChild().isEquivalentTo(key)) {
+        return child.getLastChild();
+      }
+    }
+    return null;
+  }
+
+  /**
    * Returns true if the shallow scope contains references to 'this' keyword
    */
   static boolean referencesThis(Node n) {
