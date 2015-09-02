@@ -2615,7 +2615,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
         options);
     options.setRenamePrefixNamespace("_");
-    test(options, code, "_.x = null; try { +_.x.FOO; } catch (e) {}");
+    test(options, code, "_.x = null; try { +_.x.FOO; } catch (a) {}");
   }
 
   public void testRenameCollision() {
