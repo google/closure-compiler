@@ -385,7 +385,11 @@ public class NodeTraversal {
       sourceName = getSourceName(n);
       curNode = n;
       pushScope(s);
-      traverseBranch(n, n.getParent());
+      for (Node child = n.getFirstChild(); child != null; ) {
+        Node next = child.getNext();
+        traverseBranch(child, n);
+        child = next;
+      }
 
       popScope();
     } else {
