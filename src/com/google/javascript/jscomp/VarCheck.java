@@ -303,7 +303,12 @@ class VarCheck extends AbstractPostOrderCallback implements
             }
             // fall through
           default:
-            t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
+            // Don't warn for simple var assignments "/** @const */ var foo = bar;"
+            // They are used to infer the types of namespace aliases.
+            if (parent.getType() != Token.NAME || parent.getParent() == null ||
+                !NodeUtil.isNameDeclaration(parent.getParent())) {
+              t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
+            }
 
             Scope scope = t.getScope();
             Var var = scope.getVar(n.getString());
