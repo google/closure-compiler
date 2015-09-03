@@ -79,6 +79,10 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       "JSC_OVERLOAD_NOT_SUPPORTED",
       "Function and method overloads are not supported and type information might be lost");
 
+  static final DiagnosticType SPECIALIZED_SIGNATURE_NOT_SUPPORTED = DiagnosticType.warning(
+      "JSC_SPECIALIZED_SIGNATURE_NOT_SUPPORTED",
+      "Specialized signatures are not supported and type information might be lost");
+
   private final AbstractCompiler compiler;
   private final Map<Node, Namespace> nodeNamespaceMap;
   private final Set<String> convertedNamespaces;
@@ -709,6 +713,9 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       case Token.TYPEOF:
         // Currently, TypeQuery is not supported in Closure's type system.
         compiler.report(JSError.make(type, TYPE_QUERY_NOT_SUPPORTED));
+        return new Node(Token.QMARK);
+      case Token.STRING:
+        compiler.report(JSError.make(type, SPECIALIZED_SIGNATURE_NOT_SUPPORTED));
         return new Node(Token.QMARK);
       default:
         // TODO(moz): Implement.

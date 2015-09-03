@@ -1417,8 +1417,9 @@ public abstract class CompilerTestCase extends TestCase {
       }
       assertEquals("There should be " + warnings.length + " warnings. " + warningMessage,
           warnings.length, compiler.getWarningCount());
-      for (DiagnosticType warning : warnings) {
-        assertEquals(warningMessage, warning, compiler.getWarnings()[0].getType());
+      for (int i = 0; i < warnings.length; i++) {
+        DiagnosticType warning = warnings[i];
+        assertEquals(warningMessage, warning, compiler.getWarnings()[i].getType());
       }
     }
   }

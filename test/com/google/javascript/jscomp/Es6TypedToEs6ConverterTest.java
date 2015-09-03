@@ -622,4 +622,13 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED,
         Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
   }
+
+  public void testSpecializedSignature() {
+    testExternChanges(LINE_JOINER.join(
+        "declare function foo(p1: number): number;",
+        "declare function foo(p1: 'random'): string"),
+        "/** @type {!Function} */ function foo() {}",
+            Es6TypedToEs6Converter.SPECIALIZED_SIGNATURE_NOT_SUPPORTED,
+            Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
+  }
 }
