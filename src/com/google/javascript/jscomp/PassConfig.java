@@ -232,12 +232,6 @@ public abstract class PassConfig {
   protected abstract State getIntermediateState();
 
   /**
-   * Set the intermediate state for a pass config, to restart
-   * a compilation process that had been previously paused.
-   */
-  protected abstract void setIntermediateState(State state);
-
-  /**
    * An implementation of PassConfig that just proxies all its method calls
    * into an inner class.
    */
@@ -268,10 +262,6 @@ public abstract class PassConfig {
 
     @Override protected State getIntermediateState() {
       return delegate.getIntermediateState();
-    }
-
-    @Override protected void setIntermediateState(State state) {
-      delegate.setIntermediateState(state);
     }
   }
 

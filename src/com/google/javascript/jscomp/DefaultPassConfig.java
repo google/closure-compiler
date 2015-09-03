@@ -157,21 +157,6 @@ public final class DefaultPassConfig extends PassConfig {
         anonymousFunctionNameMap, stringMap, functionNames, idGeneratorMap);
   }
 
-  @Override
-  protected void setIntermediateState(State state) {
-    this.cssNames = state.cssNames == null ? null :
-         new HashMap<>(state.cssNames);
-    this.exportedNames = state.exportedNames == null ? null :
-         new HashSet<>(state.exportedNames);
-    this.crossModuleIdGenerator = state.crossModuleIdGenerator;
-    this.variableMap = state.variableMap;
-    this.propertyMap = state.propertyMap;
-    this.anonymousFunctionNameMap = state.anonymousFunctionNameMap;
-    this.stringMap = state.stringMap;
-    this.functionNames = state.functionNames;
-    this.idGeneratorMap = state.idGeneratorMap;
-  }
-
   GlobalNamespace getGlobalNamespace() {
     return namespaceForChecks;
   }

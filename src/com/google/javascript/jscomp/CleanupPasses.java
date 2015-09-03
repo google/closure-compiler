@@ -58,11 +58,6 @@ class CleanupPasses extends PassConfig {
     return ImmutableList.of();
   }
 
-  @Override
-  protected void setIntermediateState(State state) {
-    this.state = state;
-  }
-
   final PassFactory fieldCleanupPassFactory =
       new HotSwapPassFactory("FieldCleaupPassFactory", false) {
         @Override
