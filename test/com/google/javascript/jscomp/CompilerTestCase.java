@@ -1353,6 +1353,16 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   protected void testExternChanges(String extern, String input, String expectedExtern) {
+    testExternChanges(extern, input, expectedExtern, (DiagnosticType[]) null);
+  }
+
+  protected void testExternChanges(String input, String expectedExtern,
+      DiagnosticType... warnings) {
+    testExternChanges("", input, expectedExtern, warnings);
+  }
+
+  protected void testExternChanges(String extern, String input, String expectedExtern,
+      DiagnosticType... warnings) {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.init(
@@ -1398,6 +1408,18 @@ public abstract class CompilerTestCase extends TestCase {
       String externsCode = compiler.toSource(externs);
       String expectedCode = compiler.toSource(expected);
       assertThat(externsCode).isEqualTo(expectedCode);
+    }
+
+    if (warnings != null) {
+      String warningMessage = "";
+      for (JSError actualWarning : compiler.getWarnings()) {
+        warningMessage += actualWarning.description + "\n";
+      }
+      assertEquals("There should be " + warnings.length + " warnings. " + warningMessage,
+          warnings.length, compiler.getWarningCount());
+      for (DiagnosticType warning : warnings) {
+        assertEquals(warningMessage, warning, compiler.getWarnings()[0].getType());
+      }
     }
   }
 
