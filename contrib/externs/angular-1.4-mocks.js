@@ -26,7 +26,6 @@
  *     angular.mock.TzDate
  *     angular.mock.animate
  *     angular.mock.dump
- *     $TimeoutDecorator
  *     $RAFDecorator
  *     $AsyncCallbackDecorator
  *     $RootElementProvider
@@ -225,3 +224,14 @@ angular.mock.$httpBackend.prototype.verifyNoOutstandingRequest = function() {};
 
 /** @return {void} */
 angular.mock.$httpBackend.prototype.resetExpectations = function() {};
+
+
+/** @constructor */
+angular.mock.$TimeoutDecorator = function() {};
+
+
+/** @param {number=} opt_delay */
+angular.mock.$TimeoutDecorator.prototype.flush = function(opt_delay) {};
+
+
+angular.mock.$TimeoutDecorator.prototype.verifyNoPendingTasks = function() {};
