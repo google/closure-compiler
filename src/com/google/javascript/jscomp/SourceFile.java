@@ -150,6 +150,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   /**
    * Gets a char source for the code in this source file.
    */
+  @GwtIncompatible("com.google.common.io.CharSource")
   public CharSource getCodeCharSource() {
     return CharSource.wrap(code);
   }
@@ -424,6 +425,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return new OnDisk(file, null /** originalPath */, charset);
     }
 
+    @GwtIncompatible("java.net.URL")
     public SourceFile buildFromUrl(URL url) {
       return new AtUrl(url, null /** originalPath */, charset);
     }
@@ -540,6 +542,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
      * Gets a char source for the code in this source file.
      */
     @Override
+    @GwtIncompatible("Files.asCharSource()")
     public CharSource getCodeCharSource() {
       if (hasSourceInMemory()) {
         return super.getCodeCharSource();
@@ -598,6 +601,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
    * <p>
    * In practice this is used to load code in entries inside of zip files.
    */
+  @GwtIncompatible("java.net.URL")
   static class AtUrl extends SourceFile {
     private static final long serialVersionUID = 1L;
     private final URL url;
@@ -644,7 +648,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
      * Gets a reader for the code at this URL.
      */
     @Override
-    @GwtIncompatible("java.io.Reader")
     public Reader getCodeReader() throws IOException {
       if (hasSourceInMemory()) {
         return super.getCodeReader();
