@@ -110,12 +110,11 @@ public final class NodeTraversalTest extends TestCase {
     };
 
     Compiler compiler = new Compiler();
-    NodeTraversal t = new NodeTraversal(compiler, cb);
-    String code = "function foo() {}";
-    Node tree = parse(compiler, code);
 
     try {
-      t.traverse(tree);
+      String code = "function foo() {}";
+      Node tree = parse(compiler, code);
+      NodeTraversal.traverseEs6(compiler, tree, cb);
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
       assertThat(e.getMessage())
@@ -128,7 +127,13 @@ public final class NodeTraversalTest extends TestCase {
 
   public void testGetScopeRoot() {
     Compiler compiler = new Compiler();
-    NodeTraversal t = new NodeTraversal(compiler,
+    String code = Joiner.on('\n').join(
+        "var a;",
+        "function foo() {",
+        "  var b",
+        "}");
+    Node tree = parse(compiler, code);
+    NodeTraversal.traverseEs6(compiler, tree,
         new NodeTraversal.ScopedCallback() {
 
           @Override
@@ -152,20 +157,19 @@ public final class NodeTraversalTest extends TestCase {
           }
         }
     );
-
-    String code = Joiner.on('\n').join(
-        "var a;",
-        "function foo() {",
-        "  var b",
-        "}");
-    Node tree = parse(compiler, code);
-    t.traverse(tree);
   }
 
   public void testGetLineNoAndGetCharno() {
     Compiler compiler = new Compiler();
+    String code = ""
+        + "var a; \n"
+        + "function foo() {\n"
+        + "  var b;\n"
+        + "  if (a) { var c;}\n"
+        + "}";
+    Node tree = parse(compiler, code);
     final StringBuilder builder = new StringBuilder();
-    NodeTraversal t = new NodeTraversal(compiler,
+    NodeTraversal.traverseEs6(compiler, tree,
         new NodeTraversal.ScopedCallback() {
 
           @Override
@@ -193,15 +197,6 @@ public final class NodeTraversalTest extends TestCase {
           }
         }
     );
-
-    String code = ""
-        + "var a; \n"
-        + "function foo() {\n"
-        + "  var b;\n"
-        + "  if (a) { var c;}\n"
-        + "}";
-    Node tree = parse(compiler, code);
-    t.traverse(tree);
 
     // Note the char numbers are 0-indexed but the line numbers are 1-indexed.
     String expectedResult = ""
