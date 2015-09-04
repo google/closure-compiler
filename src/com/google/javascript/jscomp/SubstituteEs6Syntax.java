@@ -23,9 +23,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * An optimization that minimizes code by simplifying expressions that
- * can be represented more succinctly with ES6 syntax, like arrow functions,
- * classes, etc.
+ * An optimization that does peephole optimizations of ES6 code.
  *
  */
 class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCompilerPass {
@@ -33,7 +31,6 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
   private final AbstractCompiler compiler;
 
   public SubstituteEs6Syntax(AbstractCompiler compiler) {
-    Preconditions.checkState(compiler.getOptions().getLanguageOut().isEs6OrHigher());
     this.compiler = compiler;
   }
 
@@ -45,24 +42,12 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
-    compiler.setLanguageMode(compiler.getOptions().getLanguageOut());
   }
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch(n.getType()) {
       case Token.FUNCTION:
-        if (n.getFirstChild().getString().isEmpty() && !n.isArrowFunction()) {
-          if (parent.isStringKey()) {
-            parent.setType(Token.MEMBER_FUNCTION_DEF);
-            compiler.reportCodeChange();
-          } else if (!NodeUtil.isVarArgsFunction(n) // i.e. doesn't reference arguments
-              && !NodeUtil.referencesThis(n.getLastChild())) {
-            // When possible, change regular function to arrow functions
-            n.setIsArrowFunction(true);
-            compiler.reportCodeChange();
-          }
-        }
         if (n.isArrowFunction()) {
           maybeSimplifyArrowFunctionBody(n, n.getLastChild());
         }

@@ -31,27 +31,16 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
     return new SubstituteEs6Syntax(compiler);
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   public void testArrowFunctions() {
     testSame("function f() {}");
     testSame("(function() { this.x = 5; })");
     testSame("(function() { return arguments[0]; })");
     testSame("(function() { return ()=>this; })");
     testSame("(function() { return ()=>arguments[0]; })");
-    test("(function() { x++; return 5; })", "()=>{x++;return 5}");
-    test("(function() { return 5; })", "()=>5");
+    testSame("(function() { x++; return 5; })");
     test("()=>{ return 5; }", "()=>5");
-    test("(function() { return; })", "()=>undefined");
-    test("(function(x) { return x+1 })", "(x) => x+1");
-  }
-
-  public void testMemberFunctions() {
-    test("({ method : function(){} });", "({ method(){} });");
-    test("({ method : function(){ return this; } });", "({ method(){ return this; } });");
-    testSame("({ method: ()=>this })");
+    test("()=>{ return; }", "()=>undefined");
+    test("(x)=>{ return x+1 }", "(x) => x+1");
+    test("(x)=>{ return x++,5; }", "(x) => (x++,5)");
   }
 }
