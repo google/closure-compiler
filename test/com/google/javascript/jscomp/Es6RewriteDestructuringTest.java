@@ -393,7 +393,16 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
     test(
         "function f(zero, one = 1, ...two) {}",
         LINE_JOINER.join(
-            "function f(zero, one, ...two) {", "  one = (one === undefined) ? 1 : one;", "}"));
+            "function f(zero, one, ...two) {",
+            "  one = (one === undefined) ? 1 : one;",
+            "}"));
+
+    test(
+        "function f(/** number= */ x = 5) {}",
+        LINE_JOINER.join(
+            "function f(/** number= */ x) {",
+            "  x = (x === undefined) ? 5 : x;",
+            "}"));
   }
 
   public void testDefaultUndefinedParameters() {

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -49,6 +50,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       "JSC_ARROW_FUNCTION_AS_CONSTRUCTOR",
       "Arrow functions cannot be used as constructors");
 
+  static final DiagnosticType DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL = DiagnosticType.error(
+      "JSC_DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL",
+      "Inline JSDoc on default parameters must be marked as optional");
+
   private final AbstractCompiler compiler;
 
   CheckJSDoc(AbstractCompiler compiler) {
@@ -71,6 +76,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
     validateNoCollapse(t, n, info);
     validateClassLevelJsDoc(t, n, info);
     validateArrowFunction(n);
+    validateDefaultValue(n, info);
   }
 
 
@@ -281,6 +287,22 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
       JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
       if (info != null && info.isConstructorOrInterface()) {
         compiler.report(JSError.make(n, ARROW_FUNCTION_AS_CONSTRUCTOR));
+      }
+    }
+  }
+
+  /**
+   * Check that an arrow function is not annotated with {@constructor}.
+   */
+  private void validateDefaultValue(Node n, JSDocInfo info) {
+    if (n.isDefaultValue() && n.getParent().isParamList() && info != null) {
+      JSTypeExpression typeExpr = info.getType();
+      if (typeExpr == null) {
+        return;
+      }
+      Node typeNode = typeExpr.getRoot();
+      if (typeNode.getType() != Token.EQUALS) {
+        compiler.report(JSError.make(typeNode, DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL));
       }
     }
   }

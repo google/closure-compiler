@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CheckJSDoc.ANNOTATION_DEPRECATED;
 import static com.google.javascript.jscomp.CheckJSDoc.ARROW_FUNCTION_AS_CONSTRUCTOR;
+import static com.google.javascript.jscomp.CheckJSDoc.DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_MSG_ANNOTATION;
@@ -177,5 +178,10 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         ARROW_FUNCTION_AS_CONSTRUCTOR);
     testErrorEs6("var a; /** @constructor */ a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
+  }
+
+  public void testDefaultParam() {
+    testErrorEs6("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
+    testSameEs6("function f(/** number= */ x=0) {}");
   }
 }

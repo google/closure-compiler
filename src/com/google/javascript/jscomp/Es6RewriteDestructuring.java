@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -79,6 +80,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     for (int i = 0; i < paramList.getChildCount(); i++) {
       Node param = paramList.getChildAtIndex(i);
       if (param.isDefaultValue()) {
+        JSDocInfo jsDoc = param.getJSDocInfo();
         Node nameOrPattern = param.removeFirstChild();
         Node defaultValue = param.removeFirstChild();
         Node newParam;
@@ -118,6 +120,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
         paramList.replaceChild(param, newParam);
         newParam.setOptionalArg(true);
+        newParam.setJSDocInfo(jsDoc);
 
         compiler.reportCodeChange();
       } else if (param.isDestructuringPattern()) {
