@@ -63,48 +63,57 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
   public void process(Node externs, Node root) {
     Preconditions.checkNotNull(externs);
     Preconditions.checkNotNull(root);
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   @Override
   public void enterScope(NodeTraversal t) {
-    Scope scope = t.getScope();
-    // Global scope _SHOULD_ work, however, liveness won't finish without
-    // -Xmx1024 in closure. We might have to look at coding conventions for
-    // exported variables as well.
-    if (scope.isGlobal()) {
-      return;
-    }
-
-    if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE <
-        t.getScope().getVarCount()) {
-      return;
-    }
-
-    // We are not going to do any dead assignment elimination in when there is
-    // at least one inner function because in most browsers, when there is a
-    // closure, ALL the variables are saved (escaped).
-    Node fnBlock = t.getScopeRoot().getLastChild();
-    if (NodeUtil.containsFunction(fnBlock)) {
-      return;
-    }
-
-    // We don't do any dead assignment elimination if there are no assigns
-    // to eliminate. :)
-    if (!NodeUtil.has(fnBlock, matchRemovableAssigns,
-            Predicates.<Node>alwaysTrue())) {
-      return;
-    }
-
-    // Computes liveness information first.
-    ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
-    liveness = new LiveVariablesAnalysis(cfg, scope, compiler);
-    liveness.analyze();
-    tryRemoveDeadAssignments(t, cfg);
   }
 
   @Override
   public void exitScope(NodeTraversal t) {
+    // Do nothing on global scope / global blocks
+    if (t.inGlobalHoistScope()) {
+      return;
+    }
+
+    Scope scope = t.getScope();
+    // Elevate all variable declarations up till the enclosing function scope
+    // so the liveness analysis has all variables for the process.
+    if (!scope.isFunctionScope()) {
+      for (Var var : scope.getVarIterable()) {
+        Preconditions.checkArgument(
+            !var.isClass() && !var.isLet() && !var.isConst());
+        scope.getParent().declare(
+            var.getName(), var.getNameNode(), var.getInput());
+      }
+    } else {
+      if (LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE <
+          scope.getVarCount()) {
+        return;
+      }
+
+      // We are not going to do any dead assignment elimination in when there is
+      // at least one inner function because in most browsers, when there is a
+      // closure, ALL the variables are saved (escaped).
+      Node fnBlock = t.getScopeRoot().getLastChild();
+      if (NodeUtil.containsFunction(fnBlock)) {
+        return;
+      }
+
+      // We don't do any dead assignment elimination if there are no assigns
+      // to eliminate. :)
+      if (!NodeUtil.has(fnBlock, matchRemovableAssigns,
+              Predicates.<Node>alwaysTrue())) {
+        return;
+      }
+
+      // Computes liveness information first.
+      ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
+      liveness = new LiveVariablesAnalysis(cfg, scope, compiler);
+      liveness.analyze();
+      tryRemoveDeadAssignments(t, cfg);
+    }
   }
 
   @Override
