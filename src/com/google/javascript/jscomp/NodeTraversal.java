@@ -385,6 +385,8 @@ public class NodeTraversal {
       sourceName = getSourceName(n);
       curNode = n;
       pushScope(s);
+
+      // traverseBranch is not called here to avoid re-creating the block scope.
       for (Node child = n.getFirstChild(); child != null; ) {
         Node next = child.getNext();
         traverseBranch(child, n);
