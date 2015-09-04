@@ -25,13 +25,22 @@
 /** The global object. */
 $jscomp.global = this;
 
+/**
+ * This is needed to make things work in IE11. Otherwise we get an error:
+ * "Variable undefined in strict mode"
+ * TODO(tbreisacher): Investigate.
+ * @suppress {duplicate}
+ */
+var Symbol;
 
 /**
  * Initializes the Symbol function.
  * @suppress {reportUnknownTypes}
  */
 $jscomp.initSymbol = function() {
-  Symbol = $jscomp.global.Symbol || $jscomp.Symbol;
+  if (!$jscomp.global.Symbol) {
+    Symbol = $jscomp.Symbol;
+  }
 
   // Only need to do this once. All future calls are no-ops.
   $jscomp.initSymbol = function() {};
@@ -59,7 +68,9 @@ $jscomp.Symbol = function(description) {
  */
 $jscomp.initSymbolIterator = function() {
   $jscomp.initSymbol();
-  Symbol.iterator = Symbol.iterator || Symbol('iterator');
+  if (!Symbol.iterator) {
+    Symbol.iterator = Symbol('iterator');
+  }
 
   // Only need to do this once. All future calls are no-ops.
   $jscomp.initSymbolIterator = function() {};
