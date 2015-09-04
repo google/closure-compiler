@@ -83,10 +83,14 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
         // This will be reported as an error in Es6ToEs3Converter.
         return;
       }
-      Node body = IR.block(IR.exprResult(IR.call(
-              IR.getprop(superClass.cloneTree(), IR.string("apply")),
-              IR.thisNode(),
-              IR.name("arguments"))));
+      Node body = IR.block();
+      if (!classNode.isFromExterns()) {
+        Node exprResult = IR.exprResult(IR.call(
+            IR.getprop(superClass.cloneTree(), IR.string("apply")),
+            IR.thisNode(),
+            IR.name("arguments")));
+        body.addChildrenToFront(exprResult);
+      }
       Node constructor = IR.function(
           IR.name(""),
           IR.paramList(IR.name("var_args")),

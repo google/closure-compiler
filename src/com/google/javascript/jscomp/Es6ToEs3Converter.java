@@ -684,16 +684,18 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
             IR.string(superClassString)),
             metadata.superClassNameNode.getSourceFileName()));
       } else {
-        Node inherits = IR.call(
-            NodeUtil.newQName(compiler, INHERITS),
-            NodeUtil.newQName(compiler, metadata.fullClassName),
-            NodeUtil.newQName(compiler, superClassString));
-        Node inheritsCall = IR.exprResult(inherits);
-        compiler.needsEs6Runtime = true;
+        if (!classNode.isFromExterns()) {
+          Node inherits = IR.call(
+              NodeUtil.newQName(compiler, INHERITS),
+              NodeUtil.newQName(compiler, metadata.fullClassName),
+              NodeUtil.newQName(compiler, superClassString));
+          Node inheritsCall = IR.exprResult(inherits);
+          compiler.needsEs6Runtime = true;
 
-        inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
-        Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
-        enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
+          inheritsCall.useSourceInfoIfMissingFromForTree(classNode);
+          Node enclosingStatement = NodeUtil.getEnclosingStatement(classNode);
+          enclosingStatement.getParent().addChildAfter(inheritsCall, enclosingStatement);
+        }
         newInfo.recordBaseType(new JSTypeExpression(new Node(Token.BANG,
             IR.string(superClassString)),
             metadata.superClassNameNode.getSourceFileName()));

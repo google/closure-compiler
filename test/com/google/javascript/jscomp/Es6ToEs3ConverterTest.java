@@ -51,8 +51,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     languageOut = LanguageMode.ECMASCRIPT3;
-    enableAstValidation(true);
-    disableTypeCheck();
     runTypeCheckAfterProcessing = true;
   }
 
@@ -314,8 +312,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
    * will be very difficult to typecheck.
    */
   public void testClassExpression() {
-    enableAstValidation(false);
-
     testError("var C = new (class {})();",
         Es6ToEs3Converter.CANNOT_CONVERT);
 
@@ -364,6 +360,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct @extends {ns.D} */",
             "var C = function(var_args) { ns.D.apply(this, arguments); };",
             "$jscomp.inherits(C, ns.D);"));
+
+    // Don't inject $jscomp.inherits() or apply() for externs
+    testExternChanges(
+        "class D {} class C extends D {}", "",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/** @constructor @struct @extends {D} */",
+            "var C = function(var_args) {};"));
   }
 
   public void testInvalidExtends() {
@@ -1097,6 +1102,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    alert(Symbol.ism)",
             "  }",
             "}"));
+    // No $jscomp.initSymbol in externs
+    testExternChanges(
+        "alert(Symbol.thimble);", "",
+        "alert(Symbol.thimble)");
   }
 
   public void testInitSymbolIterator() {
