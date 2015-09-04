@@ -229,11 +229,11 @@ class GlobalNamespace
   private void process() {
     if (externsRoot != null) {
       inExterns = true;
-      NodeTraversal.traverse(compiler, externsRoot, new BuildGlobalNamespace());
+      NodeTraversal.traverseEs6(compiler, externsRoot, new BuildGlobalNamespace());
     }
     inExterns = false;
 
-    NodeTraversal.traverse(compiler, root, new BuildGlobalNamespace());
+    NodeTraversal.traverseEs6(compiler, root, new BuildGlobalNamespace());
     generated = true;
   }
 
@@ -430,6 +430,7 @@ class GlobalNamespace
         return;
       }
 
+      scope = scope.getClosestHoistScope();
       if (isSet) {
         if (scope.isGlobal()) {
           handleSetFromGlobal(module, scope, n, parent, name, isPropAssign, type);

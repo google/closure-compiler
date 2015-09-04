@@ -109,19 +109,22 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       // all global variables. This should be fixed.
 
       // Check all vars after finishing a scope
-      Scope scope = t.getScope();
-      for (Iterator<Var> it = scope.getVars(); it.hasNext();) {
-        Var v = it.next();
-        ReferenceCollection referenceCollection = referenceMap.getReferences(v);
-        // TODO(moz): Figure out why this could be null
-        if (referenceCollection != null) {
-          if (scope.getRootNode().isFunction() && v.isDefaultParam()) {
-            checkDefaultParam(v, scope);
+      if (!t.getScopeRoot().isFunction()) {
+        Scope scope = t.getScope();
+        for (Iterator<Var> it = scope.getFunctionVars(); it.hasNext();) {
+          Var v = it.next();
+          ReferenceCollection referenceCollection = referenceMap.getReferences(v);
+          // TODO(moz): Figure out why this could be null
+          if (referenceCollection != null) {
+            boolean isParameter = v.getScope().getRootNode().isFunction();
+            if (isParameter && v.isDefaultParam()) {
+              checkDefaultParam(v, v.getScope());
+            }
+            if (isParameter) {
+              checkShadowParam(v, scope, referenceCollection.references);
+            }
+            checkVar(v, referenceCollection.references);
           }
-          if (scope.getRootNode().isFunction()) {
-            checkShadowParam(v, scope, referenceCollection.references);
-          }
-          checkVar(v, referenceCollection.references);
         }
       }
     }

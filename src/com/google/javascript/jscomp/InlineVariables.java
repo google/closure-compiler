@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
@@ -155,8 +156,14 @@ class InlineVariables implements CompilerPass {
 
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
-      collectAliasCandidates(t, referenceMap);
-      doInlinesForScope(t, referenceMap);
+      if (NodeUtil.isFunctionBlock(t.getScopeRoot())
+          || t.inGlobalScope()
+          // Since the catch variable is scoped to the catch block, this special
+          // case is needed to inline a catch alias
+          || NodeUtil.isTryCatchNodeContainer(t.getScopeRoot())) {
+        collectAliasCandidates(t, referenceMap);
+        doInlinesForScope(t, referenceMap);
+      }
     }
 
     /**
@@ -166,7 +173,8 @@ class InlineVariables implements CompilerPass {
     private void collectAliasCandidates(NodeTraversal t,
         ReferenceMap referenceMap) {
       if (mode != Mode.CONSTANTS_ONLY) {
-        for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
+        for (Iterator<Var> it = t.getScope().getClosestHoistScope().getFunctionVars();
+              it.hasNext();) {
           Var v = it.next();
           ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
@@ -195,9 +203,10 @@ class InlineVariables implements CompilerPass {
 
       boolean maybeModifiedArguments =
           maybeEscapedOrModifiedArguments(t.getScope(), referenceMap);
-      for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
-        Var v = it.next();
 
+      // TODO(user): fix removing from Iterator issue so we don't have to copy to a List
+      List<Var> vars = ImmutableList.copyOf(t.getScope().getFunctionVars());
+      for (Var v : vars) {
         ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
         // referenceInfo will be null if we're in constants-only mode
@@ -414,6 +423,9 @@ class InlineVariables implements CompilerPass {
       Node grandparent = decl.getGrandparent();
 
       compiler.reportChangeToEnclosingScope(decl.getNode());
+      if (!NodeUtil.isBlockScopedDeclaration(decl.getNode())) {
+        decl.getScope().getClosestHoistScope().undeclare(decl.getSymbol());
+      }
       varNode.removeChild(decl.getNode());
       // Remove var node if empty
       if (!varNode.hasChildren()) {

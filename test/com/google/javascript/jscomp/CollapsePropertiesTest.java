@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -42,6 +43,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     enableNormalize(true);
     compareJsDoc = false;
   }
@@ -74,6 +76,16 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   public void testIncrement() {
     test("var a = {}; a.b = 5; a.b++; a.b = 5",
          "var a$b = 5; a$b++; a$b = 5");
+  }
+
+  public void testInBlock() {
+    test("if (true) {var a = {}; a.b = {}; var c = a.b;}",
+        "if (true) {var a$b = {}; var c = a$b}");
+
+    // TODO(user): enable Normalize once it uses the Es6SyntacticScopeCreator
+    disableNormalize();
+    test("if (true) {let a = {}; a.b = {}; let c = a.b;}",
+        "if (true) {let a = {}; a.b = {}; let c = a.b;}");
   }
 
   public void testObjLitDeclaration() {
@@ -1252,6 +1264,15 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          + "function() { a.b.superClass_.c.call(this); }",
          "var a$b = function(){}; a$b.prototype.c ="
          + "function() { a$b.superClass_.c.call(this); }");
+  }
+
+  public void testLocalAliasInBlock() {
+    test("if (true) {var a = {b: 3}; function f() { var x = a; f(x.b); }}",
+         "if (true) {var a$b = 3; function f() { var x = null; f(a$b); }}");
+
+    // TODO(user): enable normalize once it uses the Es6SyntacticScopeCreator
+    disableNormalize();
+    testSame("if (true) {let a = {b: 3}; function f() { let x = a; f(x.b); }}");
   }
 
   public void testLocalAlias1() {

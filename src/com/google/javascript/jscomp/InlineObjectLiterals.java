@@ -83,25 +83,27 @@ class InlineObjectLiterals implements CompilerPass {
 
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
-      for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
-        Var v = it.next();
+      if (NodeUtil.isFunctionBlock(t.getScopeRoot())) {
+        for (Iterator<Var> it = t.getScope().getVars(); it.hasNext();) {
+          Var v = it.next();
 
-        if (isVarInlineForbidden(v)) {
-          continue;
-        }
+          if (isVarInlineForbidden(v)) {
+            continue;
+          }
 
-        ReferenceCollection referenceInfo = referenceMap.getReferences(v);
+          ReferenceCollection referenceInfo = referenceMap.getReferences(v);
 
-        if (isInlinableObject(referenceInfo.references)) {
-          // Blacklist the object itself, as well as any other values
-          // that it refers to, since they will have been moved around.
-          staleVars.add(v);
+          if (isInlinableObject(referenceInfo.references)) {
+            // Blacklist the object itself, as well as any other values
+            // that it refers to, since they will have been moved around.
+            staleVars.add(v);
 
-          Reference init = referenceInfo.getInitializingReference();
+            Reference init = referenceInfo.getInitializingReference();
 
-          // Split up the object into individual variables if the object
-          // is never referenced directly in full.
-          splitObject(v, init, referenceInfo);
+            // Split up the object into individual variables if the object
+            // is never referenced directly in full.
+            splitObject(v, init, referenceInfo);
+          }
         }
       }
     }
@@ -415,7 +417,7 @@ class InlineObjectLiterals implements CompilerPass {
       } else {
         // TODO(user): More test / rewrite this part.
         // Find the beginning of the function / script.
-        vnode = v.getScope().getRootNode().getLastChild().getFirstChild();
+        vnode = v.getScope().getRootNode().getParent().getLastChild().getFirstChild();
       }
 
       for (Map.Entry<String, String> entry : varmap.entrySet()) {
