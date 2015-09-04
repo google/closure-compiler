@@ -7044,14 +7044,63 @@ chrome.alarms.AlarmCreateInfo;
 chrome.hid = {};
 
 
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/hid#type-DeviceFilter
+ */
+chrome.hid.DeviceFilter = function() {};
+
+
+/**
+ * Device vendor ID.
+ * @type {number|undefined}
+ */
+chrome.hid.DeviceFilter.prototype.vendorId;
+
+
+/**
+ * Device product ID, only checked if the vendor ID matches.
+ * @type {number|undefined}
+ */
+chrome.hid.DeviceFilter.prototype.productId;
+
+
+/**
+ * HID usage page identifier.
+ * @type {number|undefined}
+ */
+chrome.hid.DeviceFilter.prototype.usagePage;
+
+
+/**
+ * HID usage identifier, checked only if the HID usage page matches.
+ * @type {number|undefined}
+ */
+chrome.hid.DeviceFilter.prototype.usage;
+
+
 /**
  * @typedef {?{
- *   vendorId: number,
- *   productId: number
+ *   vendorId: (number|undefined),
+ *   productId: (number|undefined),
+ *   filters: (!Array<!chrome.hid.DeviceFilter>|undefined)
  * }}
+ * Deprecated since Chrome 39: vendorId, productId
+ * Since Chrome 39: filters
  * @see https://developer.chrome.com/apps/hid#method-getDevices
  */
 chrome.hid.HidGetDevicesOptions;
+
+
+/**
+ * @typedef {?{
+ *   multiple: (boolean|undefined),
+ *   filters: (!Array<!chrome.hid.DeviceFilter>|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/hid#method-getUserSelectedDevices
+ */
+chrome.hid.HidGetUserSelectedDevicesOptions;
 
 
 /**
@@ -7065,19 +7114,85 @@ chrome.hid.HidGetDevicesOptions;
 chrome.hid.HidDeviceUsage;
 
 
+
 /**
- * @typedef {?{
- *   deviceId: number,
- *   vendorId: number,
- *   productId: number,
- *   collections: !Array<!chrome.hid.HidDeviceUsage>,
- *   maxInputReportSize: number,
- *   maxOutputReportSize: number,
- *   maxFeatureReportSize: number
- * }}
-* @see https://developer.chrome.com/apps/hid#method-getDevices
-*/
-chrome.hid.HidDeviceInfo;
+ * @constructor
+ * @see https://developer.chrome.com/apps/hid#type-HidDeviceInfo
+ */
+chrome.hid.HidDeviceInfo = function() {};
+
+
+/**
+ * Opaque device ID.
+ * @type {number}
+ */
+chrome.hid.HidDeviceInfo.prototype.deviceId;
+
+
+/**
+ * Vendor ID.
+ * @type {number}
+ */
+chrome.hid.HidDeviceInfo.prototype.vendorId;
+
+
+/**
+ * Product ID.
+ * @type {number}
+ */
+chrome.hid.HidDeviceInfo.prototype.productId;
+
+
+/**
+ * The product name read from the device, if available.
+ * Since Chrome 46.
+ * @type {string}
+ */
+chrome.hid.HidDeviceInfo.prototype.productName;
+
+
+/**
+ * The serial number read from the device, if available.
+ * Since Chrome 46.
+ * @type {string}
+ */
+chrome.hid.HidDeviceInfo.prototype.serialNumber;
+
+
+/**
+ * Top-level collections from this device's report descriptors.
+ * @type {!Array<!chrome.hid.HidDeviceUsage>}
+ */
+chrome.hid.HidDeviceInfo.prototype.collections;
+
+
+/**
+ * Top-level collection's maximum input report size.
+ * @type {number}
+ */
+chrome.hid.HidDeviceInfo.prototype.maxInputReportSize;
+
+
+/**
+ * Top-level collection's maximum output report size.
+ * @type {number}
+ */
+chrome.hid.HidDeviceInfo.prototype.maxOutputReportSize;
+
+
+/**
+ * Top-level collection's maximum feature report size.
+ * @type {number}
+ */
+chrome.hid.HidDeviceInfo.prototype.maxFeatureReportSize;
+
+
+/**
+ * Raw device report descriptor (not available on Windows).
+ * Since Chrome 42.
+ * @type {!ArrayBuffer}
+ */
+chrome.hid.HidDeviceInfo.prototype.reportDescriptor;
 
 
 /**
@@ -7095,10 +7210,24 @@ chrome.hid.HidConnectInfo;
  * vendorId/productId/interfaceId tuple.
  * @param {!chrome.hid.HidGetDevicesOptions} options The properties to search
  *     for on target devices.
- * @param {function(!Array<!Object>)} callback Invoked with a list of
- *     |HidDeviceInfo|s on complete.
+ * @param {function(!Array<!chrome.hid.HidDeviceInfo>)} callback Invoked with a
+ *     list of |HidDeviceInfo|s on complete.
  */
 chrome.hid.getDevices = function(options, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/apps/hid#method-getUserSelectedDevices
+ * Presents a device picker to the user and returns HidDeviceInfo objects for
+ * the devices selected. If the user cancels the picker devices will be empty. A
+ * user gesture is required for the dialog to display. Without a user gesture,
+ * the callback will run as though the user cancelled. If multiple filters are
+ * provided devices matching any filter will be displayed.
+ * @param {!chrome.hid.HidGetUserSelectedDevicesOptions} options
+ * @param {function(!Array<!chrome.hid.HidDeviceInfo>)} callback Invoked with a
+ *     list of |HidDeviceInfo|s on complete.
+ */
+chrome.hid.getUserSelectedDevices = function(options, callback) {};
 
 
 /**
@@ -7169,6 +7298,50 @@ chrome.hid.receiveFeatureReport =
  */
 chrome.hid.sendFeatureReport =
     function(connectionId, reportId, data, callback) {};
+
+
+
+/**
+ * Event whose listeners take an HidDeviceInfo parameter.
+ * @constructor
+ */
+chrome.hid.DeviceAddedEvent = function() {};
+
+
+/** @param {function(!chrome.hid.HidDeviceInfo): void} callback */
+chrome.hid.DeviceAddedEvent.prototype.addListener =
+    function(callback) {};
+
+
+/** @param {function(!chrome.hid.HidDeviceInfo): void} callback */
+chrome.hid.DeviceAddedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.hid.HidDeviceInfo): void} callback
+ * @return {boolean}
+ */
+chrome.hid.DeviceAddedEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.hid.DeviceAddedEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.hid.DeviceAddedEvent}
+ * @see https://developer.chrome.com/apps/hid#event-onDeviceAdded
+ */
+chrome.hid.onDeviceAdded;
+
+
+/**
+ * @type {!ChromeNumberEvent}
+ * @see https://developer.chrome.com/apps/hid#event-onDeviceRemoved
+ */
+chrome.hid.onDeviceRemoved;
 
 
 /**
