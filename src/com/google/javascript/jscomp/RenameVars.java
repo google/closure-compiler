@@ -215,11 +215,11 @@ final class RenameVars implements CompilerPass {
 
     @Override
     public void enterScope(NodeTraversal t) {
-      Scope scope = t.getScope();
       if (t.inGlobalHoistScope() ||
-          !shouldTemporarilyRenameLocalsInScope(scope)) {
+          !shouldTemporarilyRenameLocalsInScope(t.getScope())) {
         return;
       }
+      Scope scope = t.getScope();
       Iterator<Var> it = scope.getVars();
       while (it.hasNext()) {
         Var current = it.next();
