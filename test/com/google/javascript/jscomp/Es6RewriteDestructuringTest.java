@@ -204,6 +204,17 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testObjectDestructuringFunctionJsDoc() {
+    test(
+        "function f(/** {x: number, y: number} */ {x, y}) {}",
+        LINE_JOINER.join(
+            "function f(/** {x: number, y: number} */ $jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x;",
+            "  var y = $jscomp$destructuring$var1.y;",
+            "}"));
+  }
+
   public void testDefaultParametersDestructuring() {
     test(
         "function f({a,b} = foo()) {}",
