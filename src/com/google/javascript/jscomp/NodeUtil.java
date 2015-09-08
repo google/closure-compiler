@@ -1169,12 +1169,44 @@ public final class NodeUtil {
         return false;
       }
 
-      // Math.floor has no side-effects.
+      // Many common Math functions have no side-effects.
       // TODO(nicksantos): This is a terrible terrible hack, until
       // I create a definitionProvider that understands namespacing.
-      if (nameNode.getFirstChild().isName()) {
-        if ("Math.floor".equals(nameNode.getQualifiedName())) {
-          return false;
+      if (nameNode.getFirstChild().isName() && nameNode.isQualifiedName()
+          && nameNode.getFirstChild().getString().equals("Math")) {
+        switch(nameNode.getLastChild().getString()) {
+          case "abs":
+          case "acos":
+          case "acosh":
+          case "asin":
+          case "asinh":
+          case "atan":
+          case "atanh":
+          case "atan2":
+          case "cbrt":
+          case "ceil":
+          case "cos":
+          case "cosh":
+          case "exp":
+          case "expm1":
+          case "floor":
+          case "hypot":
+          case "log":
+          case "log10":
+          case "log1p":
+          case "log2":
+          case "max":
+          case "min":
+          case "pow":
+          case "round":
+          case "sign":
+          case "sin":
+          case "sinh":
+          case "sqrt":
+          case "tan":
+          case "tanh":
+          case "trunc":
+            return false;
         }
       }
 
