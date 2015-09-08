@@ -436,6 +436,15 @@ public class DepsGenerator {
     return files;
   }
 
+  static List<SourceFile> createSourceFilesFromZipPaths(
+      Collection<String> paths) throws IOException {
+    List<SourceFile> zipSourceFiles = new ArrayList<>();
+    for (String path : paths) {
+      zipSourceFiles.addAll(SourceFile.fromZipFile(path, UTF_8));
+    }
+    return zipSourceFiles;
+  }
+
   static List<SourceFile> createSourceFilesFromPaths(
       String ... paths) {
     return createSourceFilesFromPaths(Arrays.asList(paths));

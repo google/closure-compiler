@@ -339,7 +339,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
       while (zipEntries.hasMoreElements()) {
         ZipEntry zipEntry = zipEntries.nextElement();
         URL zipEntryUrl = new URL("jar:file:" + absoluteZipPath + "!/" + zipEntry.getName());
-        sourceFiles.add(builder().withCharset(inputCharset).buildFromUrl(zipEntryUrl));
+        sourceFiles.add(
+            builder()
+                .withCharset(inputCharset)
+                .withOriginalPath(zipName + "!/" + zipEntry.getName())
+                .buildFromUrl(zipEntryUrl));
       }
     }
     return sourceFiles;
@@ -408,6 +412,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
    */
   public static class Builder {
     private Charset charset = UTF_8;
+    private String originalPath = null;
 
     public Builder() {}
 
@@ -417,21 +422,26 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return this;
     }
 
+    public Builder withOriginalPath(String originalPath) {
+      this.originalPath = originalPath;
+      return this;
+    }
+
     public SourceFile buildFromFile(String fileName) {
       return buildFromFile(new File(fileName));
     }
 
     public SourceFile buildFromFile(File file) {
-      return new OnDisk(file, null /** originalPath */, charset);
+      return new OnDisk(file, originalPath, charset);
     }
 
     @GwtIncompatible("java.net.URL")
     public SourceFile buildFromUrl(URL url) {
-      return new AtUrl(url, null /** originalPath */, charset);
+      return new AtUrl(url, originalPath, charset);
     }
 
     public SourceFile buildFromCode(String fileName, String code) {
-      return new Preloaded(fileName, null /** originalPath */, code);
+      return new Preloaded(fileName, originalPath, code);
     }
 
     @GwtIncompatible("java.io.InputStream")
@@ -449,7 +459,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     public SourceFile buildFromGenerator(String fileName,
         Generator generator) {
-      return new Generated(fileName, null /** originalPath */, generator);
+      return new Generated(fileName, originalPath, generator);
     }
   }
 
@@ -612,7 +622,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private String inputCharset = UTF_8.name();
 
     AtUrl(URL url, String originalPath, Charset c) {
-      super(url.getPath());
+      super(originalPath);
       this.url = url;
       super.setOriginalPath(originalPath);
       if (c != null) {
