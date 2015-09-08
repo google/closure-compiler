@@ -227,6 +227,7 @@ Math.hypot = function(value1, var_args) {};
  * @param {*} a
  * @param {*} b
  * @return {boolean}
+ * @nosideeffects
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
  */
 Object.is;
