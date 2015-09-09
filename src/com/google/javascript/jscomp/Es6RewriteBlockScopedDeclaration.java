@@ -304,19 +304,18 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // accordingly.
         for (Var var : object.vars) {
           for (Node reference : referenceMap.get(var)) {
-            Node referenceParent = reference.getParent();
             // For-of and for-in declarations are not altered, since they are
             // used as temporary variables for assignment.
             if (NodeUtil.isEnhancedFor(loopNode)
-                && loopNode.getFirstChild() == referenceParent) {
+                && loopNode.getFirstChild() == reference.getParent()) {
               loopNode.getLastChild().addChildToFront(
                   IR.exprResult(IR.assign(
                       IR.getprop(IR.name(object.name), IR.string(var.name)),
                       IR.name(var.name)))
                       .useSourceInfoIfMissingFromForTree(reference));
             } else {
-              if (NodeUtil.isNameDeclaration(referenceParent)) {
-                Node declaration = referenceParent;
+              if (NodeUtil.isNameDeclaration(reference.getParent())) {
+                Node declaration = reference.getParent();
                 Node grandParent = declaration.getParent();
                 // Normalize: "let i = 0, j = 0;" becomes "let i = 0; let j = 0;"
                 while (declaration.getChildCount() > 1) {
@@ -331,7 +330,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 // Change declaration to assignment, or just drop it if there's
                 // no initial value.
                 if (reference.hasChildren()) {
-                  declaration = referenceParent; // Might have changed now
+                  declaration = reference.getParent(); // Might have changed now
                   Node newReference = IR.name(var.name);
                   Node replacement = IR.exprResult(
                       IR.assign(newReference, reference.removeFirstChild()))
@@ -344,8 +343,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
               }
 
               // Change reference to GETPROP.
-              if (referenceParent.isCall()) {
-                referenceParent.putBooleanProp(Node.FREE_CALL, false);
+              if (reference.getParent().isCall()
+                  && reference.getParent().getFirstChild() == reference) {
+                reference.getParent().putBooleanProp(Node.FREE_CALL, false);
               }
               reference.getParent().replaceChild(
                   reference,

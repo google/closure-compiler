@@ -746,6 +746,25 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "  }($jscomp$loop$0);",
         "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
         "}"));
+
+    test(LINE_JOINER.join(
+        "while (true) {",
+        "  let x = null;",
+        "  (function() {",
+        "    x();",
+        "  })();",
+        "}"),
+        LINE_JOINER.join(
+        "var $jscomp$loop$0 = {x:undefined};",
+        "while (true) {",
+        "  $jscomp$loop$0.x = null;",
+        "  (function($jscomp$loop$0) {",
+        "    return function () {",
+        "      ($jscomp$loop$0.x)();",
+        "    };",
+        "  })($jscomp$loop$0)();",
+        "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
+        "}"));
   }
 
   public void testDoWhileForOfCapturedLetAnnotated() {
