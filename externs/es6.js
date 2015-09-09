@@ -372,8 +372,9 @@ var BufferSource;
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments} If the user passes a backing array, then indexed
@@ -428,8 +429,9 @@ Int8Array.prototype.fill = function(value, opt_begin, opt_end) {};
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -474,8 +476,9 @@ Uint8Array.prototype.fill = function(value, opt_begin, opt_end) {};
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -530,8 +533,9 @@ var CanvasPixelArray;
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -576,8 +580,9 @@ Int16Array.prototype.fill = function(value, opt_begin, opt_end) {};
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -622,8 +627,9 @@ Uint16Array.prototype.fill = function(value, opt_begin, opt_end) {};
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -668,8 +674,9 @@ Int32Array.prototype.fill = function(value, opt_begin, opt_end) {};
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -714,8 +721,9 @@ Uint32Array.prototype.fill = function(value, opt_begin, opt_end) {};
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -760,8 +768,9 @@ Float32Array.prototype.fill = function(value, opt_begin, opt_end) {};
  *     or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @modifies {arguments}
@@ -805,8 +814,9 @@ Float64Array.prototype.fill = function(value, opt_begin, opt_end) {};
  * @param {ArrayBuffer} buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_byteLength
- * @extends {ArrayBufferView}
  * @constructor
+ * @extends {ArrayBufferView}
+ * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @nosideeffects
