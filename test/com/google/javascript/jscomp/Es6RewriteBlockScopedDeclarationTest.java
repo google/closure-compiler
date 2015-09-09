@@ -708,7 +708,8 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "} while (false);"));
   }
 
-  public void testIssue1124() {
+  // https://github.com/google/closure-compiler/issues/1124
+  public void testGithubIssue1124() {
     test(LINE_JOINER.join(
         "while (true) {",
         "  let x = null;",
