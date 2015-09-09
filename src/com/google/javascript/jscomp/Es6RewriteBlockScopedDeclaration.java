@@ -342,11 +342,11 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 }
               }
 
-              // Change reference to GETPROP.
               if (reference.getParent().isCall()
                   && reference.getParent().getFirstChild() == reference) {
                 reference.getParent().putBooleanProp(Node.FREE_CALL, false);
               }
+              // Change reference to GETPROP.
               reference.getParent().replaceChild(
                   reference,
                   IR.getprop(IR.name(object.name), IR.string(var.name))
