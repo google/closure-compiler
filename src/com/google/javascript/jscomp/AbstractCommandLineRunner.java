@@ -28,6 +28,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.io.ByteStreams;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
@@ -35,12 +36,14 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -56,6 +59,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nullable;
 
@@ -107,6 +112,36 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   static final String WAITING_FOR_INPUT_WARNING =
       "The compiler is waiting for input via stdin.";
+
+  // The core language externs expected in externs.zip, in sorted order.
+  private static final List<String> BUILTIN_LANG_EXTERNS = ImmutableList.of(
+      "es3.js",
+      "es5.js",
+      "es6.js",
+      "es6_collections.js");
+
+  // Externs expected in externs.zip, in sorted order.
+  // Externs not included in this list will be added last
+  private static final List<String> BUILTIN_EXTERN_DEP_ORDER = ImmutableList.of(
+    //-- browser externs --
+    "browser/intl.js",
+    "browser/w3c_event.js",
+    "browser/w3c_event3.js",
+    "browser/gecko_event.js",
+    "browser/ie_event.js",
+    "browser/webkit_event.js",
+    "browser/w3c_device_sensor_event.js",
+    "browser/w3c_dom1.js",
+    "browser/w3c_dom2.js",
+    "browser/w3c_dom3.js",
+    "browser/gecko_dom.js",
+    "browser/ie_dom.js",
+    "browser/webkit_dom.js",
+    "browser/w3c_css.js",
+    "browser/gecko_css.js",
+    "browser/ie_css.js",
+    "browser/webkit_css.js"
+  );
 
   private final CommandLineConfig config;
 
@@ -401,6 +436,75 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
 
   protected final A getCompiler() {
     return compiler;
+  }
+
+  /**
+   * @return a mutable list
+   * @throws IOException
+   */
+  public static List<SourceFile> getBuiltinExterns(CompilerOptions options)
+      throws IOException {
+    InputStream input = AbstractCommandLineRunner.class.getResourceAsStream(
+        "/externs.zip");
+    if (input == null) {
+      // In some environments, the externs.zip is relative to this class.
+      input = AbstractCommandLineRunner.class.getResourceAsStream("externs.zip");
+    }
+    Preconditions.checkNotNull(input);
+
+    ZipInputStream zip = new ZipInputStream(input);
+    CompilerOptions.Environment env = options.getEnvironment();
+    String envPrefix = env.toString().toLowerCase() + "/";
+    String browserEnv = CompilerOptions.Environment.BROWSER.toString().toLowerCase();
+    boolean flatExternStructure = true;
+    Map<String, SourceFile> mapFromExternsZip = new HashMap<>();
+    for (ZipEntry entry = null; (entry = zip.getNextEntry()) != null; ) {
+      String filename = entry.getName();
+      if (filename.contains(browserEnv)) {
+        flatExternStructure = false;
+      }
+      // Always load externs in the root folder.
+      // If the non-core-JS externs are organized in subfolders, only load
+      // the ones in a subfolder matching the specified environment.
+      if (!filename.contains("/")
+          || (filename.indexOf(envPrefix) == 0
+              && filename.length() > envPrefix.length())) {
+        BufferedInputStream entryStream = new BufferedInputStream(
+            ByteStreams.limit(zip, entry.getSize()));
+        mapFromExternsZip.put(filename,
+            SourceFile.fromInputStream(
+                // Give the files an odd prefix, so that they do not conflict
+                // with the user's files.
+                "externs.zip//" + filename,
+                entryStream,
+                UTF_8));
+      }
+    }
+
+    List<SourceFile> externs = new ArrayList<>();
+    // The externs for core JS objects are loaded in all environments.
+    for (String key : BUILTIN_LANG_EXTERNS) {
+      Preconditions.checkState(
+          mapFromExternsZip.containsKey(key),
+          "Externs zip must contain %s.", key);
+      externs.add(mapFromExternsZip.remove(key));
+    }
+    // Order matters, so extern resources which have dependencies must be added
+    // to the result list in the expected order.
+    for (String key : BUILTIN_EXTERN_DEP_ORDER) {
+      if (!flatExternStructure && !key.contains(envPrefix)) {
+        continue;
+      }
+      if (flatExternStructure) {
+        key = key.substring(key.indexOf('/') + 1);
+      }
+      Preconditions.checkState(
+          mapFromExternsZip.containsKey(key),
+          "Externs zip must contain %s when environment is %s.", key, env);
+      externs.add(mapFromExternsZip.remove(key));
+    }
+    externs.addAll(mapFromExternsZip.values());
+    return externs;
   }
 
   /**
