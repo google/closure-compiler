@@ -48,10 +48,10 @@ angular.$q.all = function(promises) {};
 angular.$q.defer = function() {};
 
 /**
- * @param {*} reason
+ * @param {*=} opt_reason
  * @return {!angular.$q.Promise}
  */
-angular.$q.reject = function(reason) {};
+angular.$q.reject = function(opt_reason) {};
 
 /**
  * @param {*} value

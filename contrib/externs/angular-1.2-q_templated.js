@@ -93,10 +93,10 @@ angular.$q.prototype.all = function(promises) {};
 angular.$q.prototype.defer = function() {};
 
 /**
- * @param {*} reason
+ * @param {*=} opt_reason
  * @return {!angular.$q.Promise}
  */
-angular.$q.prototype.reject = function(reason) {};
+angular.$q.prototype.reject = function(opt_reason) {};
 
 /**
  * @param {RESULT} value
