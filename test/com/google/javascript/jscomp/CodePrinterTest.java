@@ -325,29 +325,29 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testPrintObjectPatternAssign() {
     languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrintSame("({a})=foo()");
-    assertPrintSame("({a,b})=foo()");
-    assertPrintSame("({a:a,b:b})=foo()");
+    assertPrintSame("({a}=foo())");
+    assertPrintSame("({a,b}=foo())");
+    assertPrintSame("({a:a,b:b}=foo())");
   }
 
   public void testPrintNestedObjectPattern() {
     languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrintSame("({a:{b,c}})=foo()");
-    assertPrintSame("({a:{b:{c:{d}}}})=foo()");
+    assertPrintSame("({a:{b,c}}=foo())");
+    assertPrintSame("({a:{b:{c:{d}}}}=foo())");
   }
 
   public void testPrintObjectPatternInitializer() {
     languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrintSame("({a=1})=foo()");
-    assertPrintSame("({a:{b=2}})=foo()");
-    assertPrintSame("({a:b=2})=foo()");
-    assertPrintSame("({a,b:{c=2}})=foo()");
-    assertPrintSame("({a:{b=2},c})=foo()");
+    assertPrintSame("({a=1}=foo())");
+    assertPrintSame("({a:{b=2}}=foo())");
+    assertPrintSame("({a:b=2}=foo())");
+    assertPrintSame("({a,b:{c=2}}=foo())");
+    assertPrintSame("({a:{b=2},c}=foo())");
   }
 
   public void testPrintMixedDestructuring() {
     languageMode = LanguageMode.ECMASCRIPT6;
-    assertPrintSame("({a:[b,c]})=foo()");
+    assertPrintSame("({a:[b,c]}=foo())");
     assertPrintSame("[a,{b,c}]=foo()");
   }
 

@@ -119,6 +119,11 @@ class CodeGenerator {
       // the IN_FOR_INIT_CLAUSE one.
       Context rhsContext = getContextForNoInOperator(context);
 
+      boolean needsParens = (context == Context.START_OF_EXPR) && first.isObjectPattern();
+      if (n.isAssign() && needsParens) {
+        add("(");
+      }
+
       if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
         // Assignments are the only right-associative binary operators
         addExpr(first, p, context);
@@ -126,6 +131,10 @@ class CodeGenerator {
         addExpr(last, p, rhsContext);
       } else {
         unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p + 1);
+      }
+
+      if (n.isAssign() && needsParens) {
+        add(")");
       }
       return;
     }
@@ -972,7 +981,7 @@ class CodeGenerator {
         break;
 
       case Token.OBJECT_PATTERN:
-        addObjectPattern(n, context);
+        addObjectPattern(n);
         maybeAddTypeDecl(n);
         break;
 
@@ -1555,12 +1564,8 @@ class CodeGenerator {
     }
   }
 
-  void addObjectPattern(Node n, Context context) {
+  void addObjectPattern(Node n) {
     boolean hasInitializer = false;
-    boolean needsParens = (context == Context.START_OF_EXPR);
-    if (needsParens) {
-      add("(");
-    }
 
     add("{");
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
@@ -1576,10 +1581,6 @@ class CodeGenerator {
     }
     if (!hasInitializer) {
       add("}");
-    }
-
-    if (needsParens) {
-      add(")");
     }
   }
 
