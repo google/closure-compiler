@@ -64,6 +64,22 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         DISALLOWED_MEMBER_JSDOC);
   }
 
+  public void testFunctionJSDocOnMethods() {
+    testSameEs6("class Foo { /** @return {?} */ bar() {} }");
+    testSameEs6("class Foo { /** @return {?} */ get bar() {} }");
+    testSameEs6("class Foo { /** @param {?} x */ set bar(x) {} }");
+
+    testSameEs6("class Foo { /** @return {?} */ [bar]() {} }");
+    testSameEs6("class Foo { /** @return {?} */ get [bar]() {} }");
+    testSameEs6("class Foo { /** @return {?} x */ set [bar](x) {} }");
+  }
+
+  public void testMethodsOnObjectLiterals() {
+    testSameEs6("var x = { /** @return {?} */ foo() {} };");
+    testSameEs6("var x = { /** @return {?} */ [foo]() {} };");
+    testSameEs6("var x = { /** @return {?} */ foo: someFn };");
+    testSameEs6("var x = { /** @return {?} */ [foo]: someFn };");
+  }
 
   public void testExposeDeprecated() {
     testWarning("/** @expose */ var x = 0;", ANNOTATION_DEPRECATED);

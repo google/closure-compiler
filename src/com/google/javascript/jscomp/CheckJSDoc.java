@@ -152,6 +152,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         case Token.SETTER_DEF:
         case Token.MEMBER_FUNCTION_DEF:
         case Token.STRING_KEY:
+        case Token.COMPUTED_PROP:
         case Token.EXPORT:
           return;
         case Token.GETELEM:
