@@ -16,6 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -26,14 +34,6 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Rewrite "let"s and "const"s as "var"s.
@@ -304,18 +304,19 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         // accordingly.
         for (Var var : object.vars) {
           for (Node reference : referenceMap.get(var)) {
+            Node referenceParent = reference.getParent();
             // For-of and for-in declarations are not altered, since they are
             // used as temporary variables for assignment.
             if (NodeUtil.isEnhancedFor(loopNode)
-                && loopNode.getFirstChild() == reference.getParent()) {
+                && loopNode.getFirstChild() == referenceParent) {
               loopNode.getLastChild().addChildToFront(
                   IR.exprResult(IR.assign(
                       IR.getprop(IR.name(object.name), IR.string(var.name)),
                       IR.name(var.name)))
                       .useSourceInfoIfMissingFromForTree(reference));
             } else {
-              if (NodeUtil.isNameDeclaration(reference.getParent())) {
-                Node declaration = reference.getParent();
+              if (NodeUtil.isNameDeclaration(referenceParent)) {
+                Node declaration = referenceParent;
                 Node grandParent = declaration.getParent();
                 // Normalize: "let i = 0, j = 0;" becomes "let i = 0; let j = 0;"
                 while (declaration.getChildCount() > 1) {
@@ -330,7 +331,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 // Change declaration to assignment, or just drop it if there's
                 // no initial value.
                 if (reference.hasChildren()) {
-                  declaration = reference.getParent(); // Might have changed now
+                  declaration = referenceParent; // Might have changed now
                   Node newReference = IR.name(var.name);
                   Node replacement = IR.exprResult(
                       IR.assign(newReference, reference.removeFirstChild()))
@@ -343,6 +344,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
               }
 
               // Change reference to GETPROP.
+              if (referenceParent.isCall()) {
+                referenceParent.putBooleanProp(Node.FREE_CALL, false);
+              }
               reference.getParent().replaceChild(
                   reference,
                   IR.getprop(IR.name(object.name), IR.string(var.name))
@@ -366,11 +370,19 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         }
 
         Node iife = IR.function(
-            IR.name(""), IR.paramList(objectNames), IR.block(returnNode));
+            IR.name(""),
+            IR.paramList(objectNames),
+            IR.block(returnNode));
         Node call = IR.call(iife, objectNamesForCall);
         call.putBooleanProp(Node.FREE_CALL, true);
-        function.getParent().replaceChild(
-            function, call.useSourceInfoIfMissingFromForTree(function));
+        Node replacement;
+        if (NodeUtil.isFunctionDeclaration(function)) {
+          replacement = IR.var(IR.name(function.getFirstChild().getString()), call)
+              .useSourceInfoIfMissingFromForTree(function);
+        } else {
+          replacement = call.useSourceInfoIfMissingFromForTree(function);
+        }
+        function.getParent().replaceChild(function, replacement);
         returnNode.addChildToFront(function);
       }
     }
