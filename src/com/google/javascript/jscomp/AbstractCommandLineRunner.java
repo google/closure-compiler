@@ -101,7 +101,7 @@ import javax.annotation.Nullable;
  * @author bolinfest@google.com (Michael Bolin)
  */
 @GwtIncompatible("Unnecessary")
-abstract class AbstractCommandLineRunner<A extends Compiler,
+public abstract class AbstractCommandLineRunner<A extends Compiler,
     B extends CompilerOptions> {
   static final DiagnosticType OUTPUT_SAME_AS_INPUT_ERROR = DiagnosticType.error(
       "JSC_OUTPUT_SAME_AS_INPUT_ERROR",
