@@ -708,6 +708,66 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
             "} while (false);"));
   }
 
+  // https://github.com/google/closure-compiler/issues/1124
+  public void testGithubIssue1124() {
+    test(LINE_JOINER.join(
+        "while (true) {",
+        "  let x = null;",
+        "  var f = function() {",
+        "    x();",
+        "  }",
+        "}"),
+        LINE_JOINER.join(
+        "var $jscomp$loop$0 = {x:undefined};",
+        "while (true) {",
+        "  $jscomp$loop$0.x = null;",
+        "  var f = function($jscomp$loop$0) {",
+        "    return function() {",
+        "      ($jscomp$loop$0.x)();",
+        "    };",
+        "  }($jscomp$loop$0);",
+        "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
+        "}"));
+
+    test(LINE_JOINER.join(
+        "while (true) {",
+        "  let x = null;",
+        "  function f() {",
+        "    x();",
+        "  }",
+        "}"),
+        LINE_JOINER.join(
+        "var $jscomp$loop$0 = {x:undefined};",
+        "while (true) {",
+        "  $jscomp$loop$0.x = null;",
+        "  var f = function($jscomp$loop$0) {",
+        "    return function f() {",
+        "      ($jscomp$loop$0.x)();",
+        "    };",
+        "  }($jscomp$loop$0);",
+        "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
+        "}"));
+
+    test(LINE_JOINER.join(
+        "while (true) {",
+        "  let x = null;",
+        "  (function() {",
+        "    x();",
+        "  })();",
+        "}"),
+        LINE_JOINER.join(
+        "var $jscomp$loop$0 = {x:undefined};",
+        "while (true) {",
+        "  $jscomp$loop$0.x = null;",
+        "  (function($jscomp$loop$0) {",
+        "    return function () {",
+        "      ($jscomp$loop$0.x)();",
+        "    };",
+        "  })($jscomp$loop$0)();",
+        "  $jscomp$loop$0 = {x:$jscomp$loop$0.x};",
+        "}"));
+  }
+
   public void testDoWhileForOfCapturedLetAnnotated() {
     enableTypeCheck(CheckLevel.WARNING);
 

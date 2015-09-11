@@ -342,6 +342,10 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 }
               }
 
+              if (reference.getParent().isCall()
+                  && reference.getParent().getFirstChild() == reference) {
+                reference.getParent().putBooleanProp(Node.FREE_CALL, false);
+              }
               // Change reference to GETPROP.
               reference.getParent().replaceChild(
                   reference,
@@ -366,11 +370,19 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         }
 
         Node iife = IR.function(
-            IR.name(""), IR.paramList(objectNames), IR.block(returnNode));
+            IR.name(""),
+            IR.paramList(objectNames),
+            IR.block(returnNode));
         Node call = IR.call(iife, objectNamesForCall);
         call.putBooleanProp(Node.FREE_CALL, true);
-        function.getParent().replaceChild(
-            function, call.useSourceInfoIfMissingFromForTree(function));
+        Node replacement;
+        if (NodeUtil.isFunctionDeclaration(function)) {
+          replacement = IR.var(IR.name(function.getFirstChild().getString()), call)
+              .useSourceInfoIfMissingFromForTree(function);
+        } else {
+          replacement = call.useSourceInfoIfMissingFromForTree(function);
+        }
+        function.getParent().replaceChild(function, replacement);
         returnNode.addChildToFront(function);
       }
     }
