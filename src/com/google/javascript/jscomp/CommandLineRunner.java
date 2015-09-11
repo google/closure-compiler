@@ -411,15 +411,14 @@ public class CommandLineRunner extends
       hidden = true,
       usage = "Path prefix to be removed from CommonJS module names."
     )
-    private List<String> commonJsPathPrefix =
-        ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+    private List<String> commonJsPathPrefix = new ArrayList<>();
 
     @Option(
       name = "--js_module_root",
       hidden = true,
       usage = "Path prefixes to be removed from ES6 & CommonJS modules."
     )
-    private List<String> moduleRoot = ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+    private List<String> moduleRoot = new ArrayList<>();
 
     @Option(name = "--common_js_entry_module",
         hidden = true,
@@ -1056,7 +1055,11 @@ public class CommandLineRunner extends
 
       // For backwards compatibility, allow both commonJsPathPrefix and jsModuleRoot.
       List<String> moduleRoots = new ArrayList<>(flags.commonJsPathPrefix);
-      moduleRoots.addAll(flags.moduleRoot);
+      if (!flags.moduleRoot.isEmpty()) {
+        moduleRoots.addAll(flags.moduleRoot);
+      } else {
+        moduleRoots.add(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+      }
 
       getCommandLineConfig()
           .setPrintTree(flags.printTree)
