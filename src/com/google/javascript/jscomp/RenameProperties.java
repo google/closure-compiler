@@ -272,6 +272,9 @@ class RenameProperties implements CompilerPass {
   private void generateNames(Set<Property> props, Set<String> reservedNames) {
     NameGenerator nameGen = new NameGenerator(
         reservedNames, "", reservedCharacters);
+    if (!renamePublicProperties) {
+      reservePublicPropertyNames(props, reservedNames);
+    }
     for (Property p : props) {
       if (!renamePublicProperties && !compiler.getCodingConvention().isPrivate(p.oldName)) {
         p.newName = p.oldName;
@@ -286,6 +289,22 @@ class RenameProperties implements CompilerPass {
       }
       reservedNames.add(p.newName);
       compiler.addToDebugLog(p.oldName + " => " + p.newName);
+    }
+  }
+
+  /**
+   * Reserve public property names to prevent accidental collisions when
+   * renaming private property names.
+   *
+   * @param props Properties to generate new names for
+   * @param reservedNames A set of names to which properties should not be
+   *     renamed
+   */
+  private void reservePublicPropertyNames(Set<Property> props, Set<String> reservedNames) {
+    for (Property p : props) {
+      if (!compiler.getCodingConvention().isPrivate(p.oldName)) {
+        reservedNames.add(p.oldName);
+      }
     }
   }
 

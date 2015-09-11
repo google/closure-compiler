@@ -216,6 +216,13 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     renamePublicProperties = true;
   }
 
+  public void testRenamePublicPropertiesHandlesRenameCollisions() {
+    renamePublicProperties = false;
+    test("var foo={}; foo.a=1; foo.a_=2; foo.b=3",
+         "var foo={}; foo.a=1; foo.c=2; foo.b=3");
+    renamePublicProperties = true;
+  }
+
   public void testModules() {
     String module1Js = "function Bar(){} Bar.prototype.getA=function(x){};" +
                        "var foo;foo.getA(foo);foo.doo=foo;foo.bloo=foo;";
