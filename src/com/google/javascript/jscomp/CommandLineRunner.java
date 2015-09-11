@@ -1055,8 +1055,11 @@ public class CommandLineRunner extends
 
       // For backwards compatibility, allow both commonJsPathPrefix and jsModuleRoot.
       List<String> moduleRoots = new ArrayList<>(flags.commonJsPathPrefix);
-      moduleRoots.addAll(flags.moduleRoot);
-      moduleRoots.add(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+      if (!flags.moduleRoot.isEmpty()) {
+        moduleRoots.addAll(flags.moduleRoot);
+      } else {
+        moduleRoots.add(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
+      }
 
       getCommandLineConfig()
           .setPrintTree(flags.printTree)
