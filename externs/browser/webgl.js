@@ -1899,7 +1899,7 @@ WebGLRenderingContext.prototype.bindTexture = function(target, texture) {};
  * @param {number} alpha
  */
 WebGLRenderingContext.prototype.blendColor = function(
-    red, blue, green, alpha) {};
+    red, green, blue, alpha) {};
 
 /**
  * @param {number} mode
@@ -2585,13 +2585,13 @@ WebGLRenderingContext.prototype.uniform1fv = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {number} value
+ * @param {number|boolean} value
  */
 WebGLRenderingContext.prototype.uniform1i = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {Int32Array|Array<number>} value
+ * @param {Int32Array|Array<number>|Array<boolean>} value
  */
 WebGLRenderingContext.prototype.uniform1iv = function(location, value) {};
 
@@ -2611,15 +2611,15 @@ WebGLRenderingContext.prototype.uniform2fv = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {number} value1
- * @param {number} value2
+ * @param {number|boolean} value1
+ * @param {number|boolean} value2
  */
 WebGLRenderingContext.prototype.uniform2i = function(
     location, value1, value2) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {Int32Array|Array<number>} value
+ * @param {Int32Array|Array<number>|Array<boolean>} value
  */
 WebGLRenderingContext.prototype.uniform2iv = function(location, value) {};
 
@@ -2640,16 +2640,16 @@ WebGLRenderingContext.prototype.uniform3fv = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {number} value1
- * @param {number} value2
- * @param {number} value3
+ * @param {number|boolean} value1
+ * @param {number|boolean} value2
+ * @param {number|boolean} value3
  */
 WebGLRenderingContext.prototype.uniform3i = function(
     location, value1, value2, value3) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {Int32Array|Array<number>} value
+ * @param {Int32Array|Array<number>|Array<boolean>} value
  */
 WebGLRenderingContext.prototype.uniform3iv = function(location, value) {};
 
@@ -2671,17 +2671,17 @@ WebGLRenderingContext.prototype.uniform4fv = function(location, value) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {number} value1
- * @param {number} value2
- * @param {number} value3
- * @param {number} value4
+ * @param {number|boolean} value1
+ * @param {number|boolean} value2
+ * @param {number|boolean} value3
+ * @param {number|boolean} value4
  */
 WebGLRenderingContext.prototype.uniform4i = function(
     location, value1, value2, value3, value4) {};
 
 /**
  * @param {WebGLUniformLocation} location
- * @param {Int32Array|Array<number>} value
+ * @param {Int32Array|Array<number>|Array<boolean>} value
  */
 WebGLRenderingContext.prototype.uniform4iv = function(location, value) {};
 
