@@ -34,6 +34,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
 
   private static boolean generatePseudoNames = false;
 
+  private static boolean renamePublicProperties = true;
+
   private VariableMap prevUsedPropertyMap = null;
 
 
@@ -205,6 +207,13 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     test("var foo={}; foo.bar=1; foo['abc']=2",
          "var foo={}; foo.$bar$=1; foo['abc']=2");
     generatePseudoNames = false;
+  }
+
+  public void testRenamePublicProperties() {
+    renamePublicProperties = false;
+    test("var foo={}; foo.publicProperty=1; foo.privateProperty1_=2; foo['privateProperty2_']=3;",
+         "var foo={}; foo.publicProperty=1; foo.a=2; foo['privateProperty2_']=3;");
+    renamePublicProperties = true;
   }
 
   public void testModules() {
@@ -385,6 +394,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return renameProperties =
-        new RenameProperties(compiler, generatePseudoNames, prevUsedPropertyMap);
+        new RenameProperties(compiler, generatePseudoNames, renamePublicProperties, prevUsedPropertyMap);
   }
 }

@@ -554,6 +554,12 @@ public class CompilerOptions implements Serializable {
   String debugFunctionSideEffectsPath;
 
   /**
+   * Whether to skip the renaming of public properties as determined by the
+   * coding convention.
+   */
+  boolean renamePublicProperties = true;
+
+  /**
    * Rename private properties to disambiguate between unrelated fields based on
    * the coding convention.
    */
@@ -2018,6 +2024,21 @@ public class CompilerOptions implements Serializable {
 
   public void setDebugFunctionSideEffectsPath(String debugFunctionSideEffectsPath) {
     this.debugFunctionSideEffectsPath = debugFunctionSideEffectsPath;
+  }
+
+  /**
+   * @return Whether rename public properties is enabled.
+   */
+  public boolean isRenamePublicProperties() {
+    return renamePublicProperties;
+  }
+
+  /**
+   * @param value Whether to rename public properties based on
+   * the coding convention.
+   */
+  public void setRenamePublicProperties(boolean value) {
+    this.renamePublicProperties = value;
   }
 
   /**
