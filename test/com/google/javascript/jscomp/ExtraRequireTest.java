@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CheckRequiresForConstructors.DUPLICATE_REQUIRE_WARNING;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
 
 /**
@@ -81,6 +82,13 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
         "goog.require('Bar');",
         "function func( a = 1 ){}",
         "func(42);"), EXTRA_REQUIRE_WARNING);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.require('Bar');",
+            "goog.require('Bar');",
+            "var b = new Bar();"),
+        DUPLICATE_REQUIRE_WARNING);
   }
 
   public void testNoWarningMultipleFiles() {

@@ -72,6 +72,10 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       "JSC_EXTRA_REQUIRE_WARNING",
       "''{0}'' goog.require''d but not used");
 
+  static final DiagnosticType DUPLICATE_REQUIRE_WARNING = DiagnosticType.disabled(
+      "JSC_DUPLICATE_REQUIRE_WARNING",
+      "''{0}'' goog.require''d more than once.");
+
   private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
     "goog.testing.asserts", "goog.testing.jsunit");
 
@@ -225,10 +229,18 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       compiler.report(JSError.make(call, EXTRA_REQUIRE_WARNING, require));
     }
 
+    private void reportDuplicateRequireWarning(Node call, String require) {
+      compiler.report(JSError.make(call, DUPLICATE_REQUIRE_WARNING, require));
+    }
+
     private void visitCallNode(Node call, Node parent) {
       String required = codingConvention.extractClassNameIfRequire(call, parent);
       if (required != null) {
-        requires.put(required, call);
+        if (requires.containsKey(required)) {
+          reportDuplicateRequireWarning(call, required);
+        } else {
+          requires.put(required, call);
+        }
       }
 
       Node callee = call.getFirstChild();

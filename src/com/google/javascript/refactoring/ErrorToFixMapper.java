@@ -57,6 +57,7 @@ public final class ErrorToFixMapper {
         return getFixForInexistentProperty(error);
       case "JSC_MISSING_REQUIRE_WARNING":
         return getFixForMissingRequire(error, compiler);
+      case "JSC_DUPLICATE_REQUIRE_WARNING":
       case "JSC_EXTRA_REQUIRE_WARNING":
         return getFixForExtraRequire(error, compiler);
       case "JSC_UNNECESSARY_CAST":

@@ -390,6 +390,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
       DiagnosticGroups.registerGroup("extraRequire",
+          CheckRequiresForConstructors.DUPLICATE_REQUIRE_WARNING,
           CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
 
   @GwtIncompatible("java.util.regex")
