@@ -38,6 +38,9 @@
   <inceptionYear>2009</inceptionYear>
 
   <properties>
+    <protobuf.version>2.5.0</protobuf.version>
+    <protoc.executable>protoc</protoc.executable>
+    <protoc.generatedSources>${project.basedir}/gen</protoc.generatedSources>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <jdk.version>1.7</jdk.version>
@@ -76,7 +79,7 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>2.5.0</version>
+      <version>${protobuf.version}</version>
     </dependency>
 
     <dependency>
@@ -143,7 +146,7 @@
             <goals><goal>add-source</goal></goals>
             <configuration>
               <sources>
-                <source>gen</source>
+                <source>${protoc.generatedSources}</source>
               </sources>
             </configuration>
           </execution>
@@ -240,7 +243,6 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
@@ -265,6 +267,43 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>protobuf-gen</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>protobuf-gen</id>
+                <phase>generate-sources</phase>
+                <configuration>
+                  <tasks>
+                    <mkdir dir="${protoc.generatedSources}" />
+                    <fileset dir="${project.basedir}/src" id="proto.classpath">
+                      <include name="**/*.proto"/>
+                    </fileset>
+                    <pathconvert property="protofiles" pathsep=" " refid="proto.classpath"/>
+                    <echo message="${protoc.executable} -I ${src.dir} --java_out=${gen.dir} ${protofiles}"/>
+                    <exec executable="${protoc.executable}" searchpath="true">
+                      <arg line="-I ${project.basedir}/src"/>
+                      <arg line="--java_out=${protoc.generatedSources}"/>
+                      <arg line="${protofiles}"/>
+                    </exec>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <!-- reporting -->
   <reporting>

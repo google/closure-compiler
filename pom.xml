@@ -193,6 +193,9 @@
 
   <profiles>
     <profile>
+      <id>protobuf-gen</id>
+    </profile>
+    <profile>
       <id>parallel-test</id>
       <build>
         <plugins>

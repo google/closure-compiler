@@ -6,3 +6,15 @@ sudo: false
 
 notifications:
   email: false
+
+cache:
+  directories:
+    # Cache Maven repository.
+    - $HOME/.m2
+    # Cache prebuilt protoc binaries.
+    - $HOME/.protobuf
+
+# By default, install runs `mvn install -DskipTests=true` and test runs `mvn test`.
+# In our case though, it would be very inefficient as we re-do lots of work.
+install: ./get-protoc.sh
+test: mvn install -Pprotobuf-gen -Dprotoc.executable=`./get-protoc.sh`
