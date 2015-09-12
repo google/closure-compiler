@@ -907,6 +907,24 @@ public final class NodeUtil {
   }
 
   /**
+   * Returns true if this node is or is enclosed by a static member definition (static method,
+   * getter or setter).
+   */
+  static boolean isEnclosedByStaticMember(Node n) {
+    while (n != null) {
+      if (n.isMemberFunctionDef() && n.isStaticMember()) {
+        return true;
+      }
+      if (n.isClass()) {
+        // Stop at the first enclosing class.
+        return false;
+      }
+      n = n.getParent();
+    }
+    return false;
+  }
+
+  /**
    * Returns true if the node may create new mutable state, or change existing
    * state.
    *

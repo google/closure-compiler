@@ -62,7 +62,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       }
       checkClassSuperReferences(n);
     } else if (isSuperGet(n)) {
-      if (isInsideStaticMember(n)) {
+      if (NodeUtil.isEnclosedByStaticMember(n)) {
         compiler.report(JSError.make(n, CANNOT_CONVERT_YET,
             "Super calls in static members are not allowed."));
       }
@@ -77,16 +77,6 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     if (n.isSuper()) {
       visitSuper(n, parent);
     }
-  }
-
-  private boolean isInsideStaticMember(Node n) {
-    while (n != null) {
-      if (n.isMemberFunctionDef() && n.isStaticMember()) {
-        return true;
-      }
-      n = n.getParent();
-    }
-    return false;
   }
 
   private boolean isSuperGet(Node n) {

@@ -166,20 +166,22 @@ $jscomp.inherits = function(childCtor, parentCtor) {
  * Gets a property descriptor for a target instance, skipping its class
  * and walking up the super-classes hierarchy.
  *
- * @param {*} target
- * @param {!string} propertyName
+ * @param {!Object} target
+ * @param {!string} name
+ * @return {!Object.<ObjectPropertyDescriptor>}
+ * @throws If there is no such a property on the super class.
  */
-$jscomp.getSuperPropertyDescriptor = function(target, propertyName) {
+$jscomp.getSuperPropertyDescriptor = function(target, name) {
   var getPrototypeOf = $jscomp.global.Object.getPrototypeOf;
   var cls = getPrototypeOf(target);
   while (cls != null) {
     cls = getPrototypeOf(cls);
-    var desc = $jscomp.global.Object.getOwnPropertyDescriptor(cls, propertyName);
+    var desc = $jscomp.global.Object.getOwnPropertyDescriptor(cls, name);
     if (desc != null) {
       return desc;
     }
   }
-  throw new Error('No property ' + propertyName + ' defined in super class(es)');
+  throw new Error('No property ' + name + ' in super class(es)');
 };
 
 /**
@@ -190,11 +192,11 @@ $jscomp.getSuperPropertyDescriptor = function(target, propertyName) {
  *
  * TODO(ochafik): Do the same for setters.
  *
- * @param {*} target
- * @param {!string} propertyName
+ * @param {!Object} target
+ * @param {!string} name
+ * @return {*}
  */
-$jscomp.callSuperGetter = function(target, propertyName) {
-  var desc = $jscomp.getSuperPropertyDescriptor(target, propertyName);
-  var getter = desc['get'];
-  return getter != null ? getter.call(target) : desc['value'];
+$jscomp.callSuperGetter = function(target, name) {
+  var desc = $jscomp.getSuperPropertyDescriptor(target, name);
+  return desc.get != null ? desc.get.call(target) : desc.value;
 };
