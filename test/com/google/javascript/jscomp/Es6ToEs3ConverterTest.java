@@ -542,24 +542,30 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperGet() {
-    testError("class D {} class C extends D { f() {var i = super.c;} }",
-              Es6ToEs3Converter.CANNOT_CONVERT_YET);
+    test("class D {} class C extends D { f() { var i = super.c; i = super.foo.bar(); } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/** @constructor @struct @extends {D} */",
+            "var C = function(var_args) { D.apply(this, arguments); };",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  var i = $jscomp.callSuperGetter(this, JSCompiler_renameProperty('c'));",
+            "  i = $jscomp.callSuperGetter(this, JSCompiler_renameProperty('foo')).bar();",
+            "};"));
+    test("class D {} class C extends D { f() { var i = super['s']; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/** @constructor @struct @extends {D} */",
+            "var C = function(var_args) { D.apply(this, arguments); };",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  var i = $jscomp.callSuperGetter(this, 's');",
+            "};"));
 
     testError("class D {} class C extends D { static f() {var i = super.c;} }",
               Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    testError("class D {} class C extends D { f() {var i; i = super[s];} }",
-              Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    testError("class D {} class C extends D { f() {return super.s;} }",
-              Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    testError("class D {} class C extends D { f() {m(super.s);} }",
-              Es6ToEs3Converter.CANNOT_CONVERT_YET);
-
-    testError(
-        "class D {} class C extends D { foo() { return super.m.foo(); } }",
-        Es6ToEs3Converter.CANNOT_CONVERT_YET);
 
     testError(
         "class D {} class C extends D { static foo() { return super.m.foo(); } }",

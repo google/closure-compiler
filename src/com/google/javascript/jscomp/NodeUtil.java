@@ -895,6 +895,18 @@ public final class NodeUtil {
   }
 
   /**
+   * Wraps a property string in a JSCompiler_renameProperty call.
+   *
+   * <p>Should only be called in phases running before {@link RenameProperties}.
+   */
+  static Node renameProperty(Node name) {
+    Preconditions.checkArgument(name.isString());
+    Node call = IR.call(IR.name(JSC_PROPERTY_NAME_FN), name).srcrefTree(name);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    return call;
+  }
+
+  /**
    * Returns true if the node may create new mutable state, or change existing
    * state.
    *

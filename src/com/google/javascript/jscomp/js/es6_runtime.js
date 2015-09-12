@@ -161,3 +161,40 @@ $jscomp.inherits = function(childCtor, parentCtor) {
     }
   }
 };
+
+/**
+ * Gets a property descriptor for a target instance, skipping its class
+ * and walking up the super-classes hierarchy.
+ *
+ * @param {*} target
+ * @param {!string} propertyName
+ */
+$jscomp.getSuperPropertyDescriptor = function(target, propertyName) {
+  var getPrototypeOf = $jscomp.global.Object.getPrototypeOf;
+  var cls = getPrototypeOf(target);
+  while (cls != null) {
+    cls = getPrototypeOf(cls);
+    var desc = $jscomp.global.Object.getOwnPropertyDescriptor(cls, propertyName);
+    if (desc != null) {
+      return desc;
+    }
+  }
+  throw new Error('No property ' + propertyName + ' defined in super class(es)');
+};
+
+/**
+ * Calls a property getter from the target instance's super class.
+ *
+ * Note that callers may want to use JSCompiler_renameProperty to
+ * play nicely with property renaming.
+ *
+ * TODO(ochafik): Do the same for setters.
+ *
+ * @param {*} target
+ * @param {!string} propertyName
+ */
+$jscomp.callSuperGetter = function(target, propertyName) {
+  var desc = $jscomp.getSuperPropertyDescriptor(target, propertyName);
+  var getter = desc['get'];
+  return getter != null ? getter.call(target) : desc['value'];
+};
