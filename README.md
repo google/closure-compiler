@@ -342,7 +342,7 @@ options/arguments in your CUI application.</td>
 
   <tr>
     <td>URL</td>
-    <td>http://code.google.com/p/protobuf/</td>
+    <td>https://github.com/google/protobuf</td>
   </tr>
 
   <tr>
@@ -448,7 +448,7 @@ without make's wrinkles and with the full portability of pure java code.</td>
 
   <tr>
     <td>URL</td>
-    <td>https://code.google.com/p/google-gson/</td>
+    <td>https://github.com/google/gson</td>
   </tr>
 
   <tr>
