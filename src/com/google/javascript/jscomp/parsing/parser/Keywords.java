@@ -120,6 +120,18 @@ public enum Keywords {
   public static boolean isKeyword(TokenType token) {
     return get(token) != null;
   }
+  
+  public static boolean isTypeScriptSpecificKeyword(String value) {
+    switch (value) {
+      case "declare":
+      case "type":
+      case "module":
+      case "namespace":
+        return true;
+      default:
+        return false;
+    }
+  }
 
   /**
    * Returns true if {@code token} is a "future reserved word" which can

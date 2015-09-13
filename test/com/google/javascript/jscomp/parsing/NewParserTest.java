@@ -1006,7 +1006,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testMethodInObjectLiteral() {
     testMethodInObjectLiteral("var a = {b() {}};");
     testMethodInObjectLiteral("var a = {b() { alert('b'); }};");
-
+    
     // Static methods not allowed in object literals.
     parseError("var a = {static b() { alert('b'); }};",
         "Cannot use keyword in short object literal");
@@ -1025,7 +1025,11 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     testExtendedObjectLiteral("var a = {b};");
     testExtendedObjectLiteral("var a = {b, c};");
     testExtendedObjectLiteral("var a = {b, c: d, e};");
-
+    testExtendedObjectLiteral("var a = {type};");
+    testExtendedObjectLiteral("var a = {declare};");
+    testExtendedObjectLiteral("var a = {namespace};");
+    testExtendedObjectLiteral("var a = {module};");
+    
     parseError("var a = { '!@#$%' };", "':' expected");
     parseError("var a = { 123 };", "':' expected");
     parseError("var a = { let };", "Cannot use keyword in short object literal");
@@ -1368,6 +1372,11 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     parse("var {if: x, else: y} = foo();");
     parse("var {while: x=1, for: y} = foo();");
+    parse("var {type} = foo();");
+    parse("var {declare} = foo();");
+    parse("var {module} = foo();");
+    parse("var {namespace} = foo();");
+
     parseError("var {while} = foo();", "cannot use keyword 'while' here.");
     parseError("var {implements} = foo();", "cannot use keyword 'implements' here.");
   }
