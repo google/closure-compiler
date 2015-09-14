@@ -1625,28 +1625,28 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "tag``",
         LINE_JOINER.join(
             "var $jscomp$templatelit$0 = [''];",
-            "$jscomp$templatelit$0['raw'] = [''];",
+            "$jscomp$templatelit$0.raw = [''];",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag`${hello} world`",
         LINE_JOINER.join(
             "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0['raw'] = ['', ' world'];",
+            "$jscomp$templatelit$0.raw = ['', ' world'];",
             "tag($jscomp$templatelit$0, hello);"));
 
     test(
         "tag`${hello} ${world}`",
         LINE_JOINER.join(
             "var $jscomp$templatelit$0 = ['', ' ', ''];",
-            "$jscomp$templatelit$0['raw'] = ['', ' ', ''];",
+            "$jscomp$templatelit$0.raw = ['', ' ', ''];",
             "tag($jscomp$templatelit$0, hello, world);"));
 
     test(
         "tag`\"`",
         LINE_JOINER.join(
             "var $jscomp$templatelit$0 = ['\\\"'];",
-            "$jscomp$templatelit$0['raw'] = ['\\\"'];",
+            "$jscomp$templatelit$0.raw = ['\\\"'];",
             "tag($jscomp$templatelit$0);"));
 
     // The cooked string and the raw string are different.
@@ -1654,21 +1654,21 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "tag`a\tb`",
         LINE_JOINER.join(
             "var $jscomp$templatelit$0 = ['a\tb'];",
-            "$jscomp$templatelit$0['raw'] = ['a\\tb'];",
+            "$jscomp$templatelit$0.raw = ['a\\tb'];",
             "tag($jscomp$templatelit$0);"));
 
     test(
         "tag()`${hello} world`",
         LINE_JOINER.join(
             "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0['raw'] = ['', ' world'];",
+            "$jscomp$templatelit$0.raw = ['', ' world'];",
             "tag()($jscomp$templatelit$0, hello);"));
 
     test(
         "a.b`${hello} world`",
         LINE_JOINER.join(
             "var $jscomp$templatelit$0 = ['', ' world'];",
-            "$jscomp$templatelit$0['raw'] = ['', ' world'];",
+            "$jscomp$templatelit$0.raw = ['', ' world'];",
             "a.b($jscomp$templatelit$0, hello);"));
   }
 

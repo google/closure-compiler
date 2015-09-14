@@ -68,8 +68,8 @@ class Es6TemplateLiterals {
   /**
    * Converts tag`a\tb${bar}` to:
    *   // A global (module) scoped variable
-   *   var $jscomp$templatelit$0 = ["a\tb"];    // cooked string array
-   *   $jscomp$templatelit$0["raw"] = ["a\\tb"]; // raw string array
+   *   var $jscomp$templatelit$0 = ["a\tb"];   // cooked string array
+   *   $jscomp$templatelit$0.raw = ["a\\tb"];  // raw string array
    *   ...
    *   // A call to the tagging function
    *   tag($jscomp$templatelit$0, bar);
@@ -92,7 +92,7 @@ class Es6TemplateLiterals {
     script.addChildrenToFront(var);
 
     // Define the "raw" property on the introduced variable.
-    Node defineRaw = IR.exprResult(IR.assign(IR.getelem(
+    Node defineRaw = IR.exprResult(IR.assign(IR.getprop(
         callsiteId.cloneNode(), IR.string("raw")), raw))
             .useSourceInfoIfMissingFromForTree(n);
     script.addChildAfter(defineRaw, var);
