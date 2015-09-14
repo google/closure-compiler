@@ -22,10 +22,14 @@
  *
  */
 
-// Do we need an opera.js?
 var opera;
 Window.prototype.opera;
 Window.prototype.opera.postError;
+
+/**
+ * @nosideeffects
+ */
+Window.prototype.opera.version = function() {}
 
 /** @constructor */ function XSLTProcessor() {}
 /**
