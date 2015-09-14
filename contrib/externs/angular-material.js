@@ -169,6 +169,7 @@ md.$toast = function() {};
  *   position: (string|undefined),
  *   controller: (Function|string|undefined),
  *   locals: (Object|undefined),
+ *   bindToController: (boolean|undefined),
  *   resolve: (Object|undefined),
  *   controllerAs: (string|undefined)
  * }}
