@@ -1574,6 +1574,7 @@ public final class DefaultPassConfig extends PassConfig {
           .add(new CheckNullableReturn(compiler))
           .add(new CheckForInOverArray(compiler))
           .add(new CheckPrototypeProperties(compiler))
+          .add(new CheckUnusedPrivateProperties(compiler))
           .add(new ImplicitNullabilityCheck(compiler));
       return combineChecks(compiler, callbacks.build());
     }
