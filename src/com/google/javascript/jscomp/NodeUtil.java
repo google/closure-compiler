@@ -940,10 +940,11 @@ public final class NodeUtil {
         if (checkForNewObjects) {
           return true;
         }
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-          if (checkForStateChangeHelper(
-                  c.getFirstChild(), checkForNewObjects, compiler)) {
-            return true;
+        for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+          for (Node c = key.getFirstChild(); c != null; c = c.getNext()) {
+            if (checkForStateChangeHelper(c, checkForNewObjects, compiler)) {
+              return true;
+            }
           }
         }
         return false;
