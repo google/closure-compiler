@@ -2431,7 +2431,8 @@ public class Parser {
     if (colon == null) {
       if (name.type != TokenType.IDENTIFIER) {
         reportExpectedError(peekToken(), TokenType.COLON);
-      } else if (Keywords.isKeyword(name.asIdentifier().value)) {
+      } else if (Keywords.isKeyword(name.asIdentifier().value)
+          && !Keywords.isTypeScriptSpecificKeyword(name.asIdentifier().value)) {
         reportError(name, "Cannot use keyword in short object literal");
       }
     }
@@ -3239,7 +3240,8 @@ public class Parser {
       name = eatIdOrKeywordAsId();
       if (!peek(TokenType.COLON)) {
         IdentifierToken idToken = (IdentifierToken) name;
-        if (Keywords.isKeyword(idToken.value)) {
+        if (Keywords.isKeyword(idToken.value)
+            && !Keywords.isTypeScriptSpecificKeyword(idToken.value)) {
           reportError("cannot use keyword '" + name + "' here.");
         }
         if (peek(TokenType.EQUAL)) {
