@@ -62,7 +62,7 @@ class RenameProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final boolean generatePseudoNames;
-  private final boolean renamePublicProperties;
+  private final boolean renamePrivatePropertiesOnly;
 
   /** Property renaming map from a previous compilation. */
   private final VariableMap prevUsedPropertyMap;
@@ -129,8 +129,8 @@ class RenameProperties implements CompilerPass {
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
    */
-  RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames, boolean renamePublicProperties) {
-    this(compiler, generatePseudoNames, renamePublicProperties, null, null);
+  RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames, boolean renamePrivatePropertiesOnly) {
+    this(compiler, generatePseudoNames, renamePrivatePropertiesOnly, null, null);
   }
 
   /**
@@ -143,8 +143,8 @@ class RenameProperties implements CompilerPass {
    *        compilation.
    */
   RenameProperties(AbstractCompiler compiler,
-      boolean generatePseudoNames, boolean renamePublicProperties, VariableMap prevUsedPropertyMap) {
-    this(compiler, generatePseudoNames, renamePublicProperties, prevUsedPropertyMap, null);
+      boolean generatePseudoNames, boolean renamePrivatePropertiesOnly, VariableMap prevUsedPropertyMap) {
+    this(compiler, generatePseudoNames, renamePrivatePropertiesOnly, prevUsedPropertyMap, null);
   }
 
   /**
@@ -160,12 +160,12 @@ class RenameProperties implements CompilerPass {
    */
   RenameProperties(AbstractCompiler compiler,
       boolean generatePseudoNames,
-      boolean renamePublicProperties,
+      boolean renamePrivatePropertiesOnly,
       VariableMap prevUsedPropertyMap,
       @Nullable char[] reservedCharacters) {
     this.compiler = compiler;
     this.generatePseudoNames = generatePseudoNames;
-    this.renamePublicProperties = renamePublicProperties;
+    this.renamePrivatePropertiesOnly = renamePrivatePropertiesOnly;
     this.prevUsedPropertyMap = prevUsedPropertyMap;
     this.reservedCharacters = reservedCharacters;
     externedNames.addAll(compiler.getExternProperties());
@@ -272,11 +272,11 @@ class RenameProperties implements CompilerPass {
   private void generateNames(Set<Property> props, Set<String> reservedNames) {
     NameGenerator nameGen = new NameGenerator(
         reservedNames, "", reservedCharacters);
-    if (!renamePublicProperties) {
+    if (renamePrivatePropertiesOnly) {
       reservePublicPropertyNames(props, reservedNames);
     }
     for (Property p : props) {
-      if (!renamePublicProperties && !compiler.getCodingConvention().isPrivate(p.oldName)) {
+      if (renamePrivatePropertiesOnly && !compiler.getCodingConvention().isPrivate(p.oldName)) {
         p.newName = p.oldName;
       }
       else if (generatePseudoNames) {
