@@ -28,7 +28,21 @@
 // These built-ins are still needed for compilation.
 
 /**
+ * @interface
+ * @template KEY1, VALUE1
+ */
+function IObject() {}
+
+/**
+ * @interface
+ * @extends {IObject<number, VALUE2>}
+ * @template VALUE2
+ */
+function IArrayLike() {}
+
+/**
  * @constructor
+ * @implements {IArrayLike<?>}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions_and_function_scope/arguments
  */
 function Arguments() {}
@@ -171,18 +185,7 @@ function parseInt(num, base) {}
  */
 function eval(code) {}
 
-/**
- * @interface
- * @template KEY1, VALUE1
- */
-function IObject() {}
 
-/**
- * @interface
- * @extends {IObject<number, VALUE2>}
- * @template VALUE2
- */
-function IArrayLike() {}
 
 /**
  * @constructor
