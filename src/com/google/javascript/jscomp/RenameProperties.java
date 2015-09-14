@@ -128,6 +128,8 @@ class RenameProperties implements CompilerPass {
    * @param compiler The JSCompiler
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
+   * @param renamePrivatePropertiesOnly Only rename properties considered by the
+   *        coding conventions as being private.
    */
   RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames, boolean renamePrivatePropertiesOnly) {
     this(compiler, generatePseudoNames, renamePrivatePropertiesOnly, null, null);
@@ -139,6 +141,8 @@ class RenameProperties implements CompilerPass {
    * @param compiler The JSCompiler.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
+   * @param renamePrivatePropertiesOnly Only rename properties considered by the
+   *        coding conventions as being private.
    * @param prevUsedPropertyMap The property renaming map used in a previous
    *        compilation.
    */
@@ -153,6 +157,8 @@ class RenameProperties implements CompilerPass {
    * @param compiler The JSCompiler.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
+   * @param renamePrivatePropertiesOnly Only rename properties considered by the
+   *        coding conventions as being private.
    * @param prevUsedPropertyMap The property renaming map used in a previous
    *        compilation.
    * @param reservedCharacters If specified these characters won't be used in
