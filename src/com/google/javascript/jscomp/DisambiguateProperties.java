@@ -908,6 +908,13 @@ class DisambiguateProperties<T> implements CompilerPass {
         foundType = foundType.toMaybeTemplatizedType().getReferencedType();
       }
 
+      // Since disambiguation just looks at names, we must return a uniquely named type rather
+      // than an "equivalent" type. In particular, we must manually unwrap named types
+      // so that the returned type has the correct name.
+      if (foundType != null && foundType.isNamedType()) {
+        foundType = foundType.toMaybeNamedType().getReferencedType().toMaybeObjectType();
+      }
+
       return foundType;
     }
 

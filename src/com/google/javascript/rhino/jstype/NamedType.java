@@ -163,8 +163,8 @@ public class NamedType extends ProxyObjectType {
   }
 
   @Override
-  boolean isNamedType() {
-    return true;
+  public NamedType toMaybeNamedType() {
+    return this;
   }
 
   @Override

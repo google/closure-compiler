@@ -385,8 +385,12 @@ public abstract class JSType implements TypeI, Serializable {
     return null;
   }
 
-  boolean isNamedType() {
-    return false;
+  public boolean isNamedType() {
+    return toMaybeNamedType() != null;
+  }
+
+  public NamedType toMaybeNamedType() {
+    return null;
   }
 
   public boolean isRecordType() {
