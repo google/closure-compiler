@@ -1995,6 +1995,10 @@ public final class NodeUtil {
         && n.getFirstChild().isCall();
   }
 
+  static boolean isVanillaFunction(Node n) {
+    return n.isFunction() && !n.isArrowFunction();
+  }
+
   static boolean isVanillaFor(Node n) {
     return n.isFor() && n.getChildCount() == 4;
   }
@@ -3319,7 +3323,7 @@ public final class NodeUtil {
   static final Predicate<Node> MATCH_NOT_THIS_BINDING = new Predicate<Node>() {
     @Override
     public boolean apply(Node n) {
-      return !n.isFunction() || n.isArrowFunction();
+      return !NodeUtil.isVanillaFunction(n);
     }
   };
 
