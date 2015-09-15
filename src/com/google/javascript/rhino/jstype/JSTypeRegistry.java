@@ -79,35 +79,22 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
   /**
    * The name associated with the template variable corresponding to the
-   * property key type of the built-in Javascript object.
+   * property key type for IObject<KEY, VALUE>, and the builtin Javascript Object.
    */
-  private static final String OBJECT_INDEX_TEMPLATE = "Object#Key";
+  private static final String I_OBJECT_INDEX_TEMPLATE = "IObject#KEY1";
 
-  private TemplateType objectIndexTemplateKey;
+  private TemplateType iobjectIndexTemplateKey;
 
   /**
    * The name associated with the template variable corresponding to the
-   * property value type for Javascript Objects and Arrays.
+   * property value type for IObject<KEY, VALUE>, as well as Javascript Objects and Arrays.
    */
-  public static final String OBJECT_ELEMENT_TEMPLATE = "Object#Element";
+  public static final String I_OBJECT_ELEMENT_TEMPLATE = "IObject#VALUE1";
 
-  private TemplateType objectElementTemplateKey;
+  private TemplateType iobjectElementTemplateKey;
 
-  /**
-   * The name associated with the template variable corresponding to the
-   * property key type for IObject<KEY, VALUE>.
-   */
-  private static final String I_OBJECT_KEY_TEMPLATE = "IObject#KEY1";
-
-  private TemplateType iobjectKeyTemplateKey;
-
-  /**
-   * The name associated with the template variable corresponding to the
-   * property value type for IObject<KEY, VALUE>.
-   */
-  public static final String I_OBJECT_VALUE_TEMPLATE = "IObject#VALUE1";
-
-  private TemplateType iobjectValueTemplateKey;
+  @Deprecated
+  public static final String OBJECT_ELEMENT_TEMPLATE = I_OBJECT_ELEMENT_TEMPLATE;
 
   /**
    * The UnionTypeBuilder caps the maximum number of alternate types it
@@ -214,7 +201,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * Javascript Objects and Arrays.
    */
   public TemplateType getObjectElementKey() {
-    return this.objectElementTemplateKey;
+    return this.iobjectElementTemplateKey;
   }
 
   /**
@@ -222,8 +209,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * property key type of the built-in Javascript object.
    */
   public TemplateType getObjectIndexKey() {
-    Preconditions.checkNotNull(objectIndexTemplateKey);
-    return this.objectIndexTemplateKey;
+    Preconditions.checkNotNull(iobjectIndexTemplateKey);
+    return this.iobjectIndexTemplateKey;
   }
 
   /**
@@ -239,14 +226,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * @return The template variable corresponding to the property value type for
-   * <VALUE> in IObject<KEY, VALUE>.
-   */
-  public TemplateType getIObjectValueKey() {
-    return iobjectValueTemplateKey;
-  }
-
-  /**
    * check if FunName<TEMP1, ...> matches IObject<KEY1, ...>
    * @param fnName is the function's name
    * @param templateParamName is the name of the
@@ -256,15 +235,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   public boolean isIObjectKeyKey(String fnName, String templateParamName) {
     return I_OBJECT_INTERFACE_NAME.equals(fnName)
         && I_OBJECT_KEY_NAME.equals(templateParamName);
-  }
-
-  /**
-   * @return The template variable corresponding to the
-   * property key type of the IObject<KEY, VALUE> interface.
-   */
-  public TemplateType getIObjectKeyKey() {
-    Preconditions.checkNotNull(iobjectKeyTemplateKey);
-    return iobjectKeyTemplateKey;
   }
 
   /**
@@ -290,29 +260,13 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * check if an object type is an instance of a function that
-   * implements the IObject interface
-   * @param type the object instance type
-   * @return true if it is, otherwise false
-   */
-  public boolean isInstanceOfIObject(JSType type) {
-    Preconditions.checkNotNull(type);
-    TemplateTypeMap typeMap = type.getTemplateTypeMap();
-    if (typeMap == null) {
-      return false;
-    }
-    // check the template key for IObject
-    return typeMap.hasTemplateType(getIObjectKeyKey());
-  }
-
-  /**
    * @return return an immutable list of template types of IObject,
    * i.e., [KEY1, VALUE1]
    */
   public ImmutableList<TemplateType> getIObjectTemplateTypeNames() {
     ImmutableList.Builder<TemplateType> builder = ImmutableList.builder();
-    builder.add(getIObjectKeyKey());
-    builder.add(getIObjectValueKey());
+    builder.add(iobjectIndexTemplateKey);
+    builder.add(iobjectElementTemplateKey);
     ImmutableList<TemplateType> templateTypeNames = builder.build();
     return templateTypeNames;
   }
@@ -333,10 +287,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   private void initializeBuiltInTypes() {
-    objectIndexTemplateKey = new TemplateType(this, OBJECT_INDEX_TEMPLATE);
-    objectElementTemplateKey = new TemplateType(this, OBJECT_ELEMENT_TEMPLATE);
-    iobjectKeyTemplateKey = new TemplateType(this, I_OBJECT_KEY_TEMPLATE);
-    iobjectValueTemplateKey = new TemplateType(this, I_OBJECT_VALUE_TEMPLATE);
+    iobjectIndexTemplateKey = new TemplateType(this, I_OBJECT_INDEX_TEMPLATE);
+    iobjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
 
     // These locals shouldn't be all caps.
     BooleanType BOOLEAN_TYPE = new BooleanType(this);
@@ -377,7 +329,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             createArrowType(createOptionalParameters(ALL_TYPE), null),
             null,
             createTemplateTypeMap(ImmutableList.of(
-                objectIndexTemplateKey, objectElementTemplateKey), null),
+                iobjectIndexTemplateKey, iobjectElementTemplateKey), null),
             true, true);
     OBJECT_FUNCTION_TYPE.getInternalArrowType().returnType =
         OBJECT_FUNCTION_TYPE.getInstanceType();
@@ -419,7 +371,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
           createArrowType(createParametersWithVarArgs(ALL_TYPE), null),
           null,
           createTemplateTypeMap(ImmutableList.of(
-              objectElementTemplateKey), null),
+              iobjectElementTemplateKey), null),
           true, true);
     ARRAY_FUNCTION_TYPE.getInternalArrowType().returnType =
         ARRAY_FUNCTION_TYPE.getInstanceType();

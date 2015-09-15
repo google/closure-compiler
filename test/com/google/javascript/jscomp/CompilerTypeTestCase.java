@@ -67,26 +67,25 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
 
   /** A default set of externs for testing structural interface matching*/
   private static final Joiner lineJoiner = Joiner.on("\n");
-  private static final String INTERFACE_DEFAULT_EXTERNS = lineJoiner.join(
-      "/**",
-      " * @interface",
-      " * @template KEY1, VALUE1",
-      " */",
-      "function IObject() {};",
-      "/**",
-      " * @interface",
-      " * @extends IObject<number, VALUE2>",
-      " * @template VALUE2",
-      " */",
-      "function IArrayLike() {};",
-      "/**",
-      " * @type{number}",
-      " */",
-      "IArrayLike.prototype.length;");
 
   /** A default set of externs for testing. */
   static final String DEFAULT_EXTERNS =
       lineJoiner.join(
+          "/**",
+          " * @interface",
+          " * @template KEY1, VALUE1",
+          " */",
+          "function IObject() {};",
+          "/**",
+          " * @interface",
+          " * @extends IObject<number, VALUE2>",
+          " * @template VALUE2",
+          " */",
+          "function IArrayLike() {};",
+          "/**",
+          " * @type{number}",
+          " */",
+          "IArrayLike.prototype.length;",
           "/**",
           " * @constructor",
           " * @param {*=} opt_value",
@@ -109,7 +108,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
           "/** @type {number} */ String.prototype.length;",
           "/**",
           " * @template T",
-          " * @constructor",
+          " * @constructor @implements {IArrayLike<T>}",
           " * @param {*} var_args",
           " * @return {!Array.<?>}",
           " */",
@@ -130,9 +129,8 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
           "/** @type {!Arguments} */",
           "var arguments;",
           "",
-          ACTIVE_X_OBJECT_DEF,
           "/** @type {?} */ var unknown;", // For producing unknowns in tests.
-          INTERFACE_DEFAULT_EXTERNS);
+          ACTIVE_X_OBJECT_DEF);
 
   protected Compiler compiler;
 

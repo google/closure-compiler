@@ -4720,12 +4720,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testArrayAccess1() throws Exception {
-    testTypes("var a = []; var b = a['hi'];");
+    testTypes("var a = []; var b = a['hi'];",
+        "restricted index type\n" +
+        "found   : string\n" +
+        "required: number");
   }
 
   public void testArrayAccess2() throws Exception {
     testTypes("var a = []; var b = a[[1,2]];",
-        "array access\n" +
+        "restricted index type\n" +
         "found   : Array\n" +
         "required: number");
   }
@@ -4734,14 +4737,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("var bar = [];" +
         "/** @return {void} */function baz(){};" +
         "var foo = bar[baz()];",
-        "array access\n" +
+        "restricted index type\n" +
         "found   : undefined\n" +
         "required: number");
   }
 
   public void testArrayAccess4() throws Exception {
     testTypes("/**@return {!Array}*/function foo(){};var bar = foo()[foo()];",
-        "array access\n" +
+        "restricted index type\n" +
         "found   : Array\n" +
         "required: number");
   }
@@ -4750,14 +4753,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("var bar = null[1];",
         "only arrays or objects can be accessed\n" +
         "found   : null\n" +
-        "required: Object");
+        "required: (Array|Object)");
   }
 
   public void testArrayAccess7() throws Exception {
     testTypes("var bar = void 0; bar[0];",
         "only arrays or objects can be accessed\n" +
         "found   : undefined\n" +
-        "required: Object");
+        "required: (Array|Object)");
   }
 
   public void testArrayAccess8() throws Exception {
@@ -4766,13 +4769,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     testTypes("var bar = void 0; bar[0]; bar[1];",
         "only arrays or objects can be accessed\n" +
         "found   : undefined\n" +
-        "required: Object");
+        "required: (Array|Object)");
   }
 
   public void testArrayAccess9() throws Exception {
     testTypes("/** @return {?Array} */ function f() { return []; }" +
         "f()[{}]",
-        "array access\n" +
+        "restricted index type\n" +
         "found   : {}\n" +
         "required: number");
   }
@@ -13563,6 +13566,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       + "function BooleanArray5(length) {};\n"
       + "/** @type {number} */\n"
       + "BooleanArray5.prototype.length;";
+
+  public void testArrayImplementsIArrayLike() throws Exception {
+    testTypes(
+        "/** @type {!Array<number>} */ var arr = [];\n"
+        + "var /** null */ n = arr[0];\n",
+        "initializing variable\n"
+        + "found   : number\n"
+        + "required: null");
+  }
 
   public void testIArrayLike1() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,

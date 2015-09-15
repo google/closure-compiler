@@ -597,11 +597,7 @@ final class FunctionTypeBuilder {
           info.getTypeTransformations();
       if (!infoTemplateTypeNames.isEmpty()) {
         for (String key : infoTemplateTypeNames) {
-          if (typeRegistry.isIObjectValueKey(fnName, key)) {
-            builder.add(typeRegistry.getIObjectValueKey());
-          } else {
-            builder.add(typeRegistry.createTemplateType(key));
-          }
+          builder.add(typeRegistry.createTemplateType(key));
         }
       }
       if (!infoTypeTransformations.isEmpty()) {

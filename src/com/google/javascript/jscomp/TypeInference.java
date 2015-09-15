@@ -1459,11 +1459,8 @@ class TypeInference
     scope = traverseChildren(n, scope);
     JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
     TemplateTypeMap typeMap = type.getTemplateTypeMap();
-    // check the template value for IObject
-    if (typeMap.hasTemplateType(registry.getIObjectValueKey())) {
-      n.setJSType(typeMap.getConcreteTypeOfTemplateType(registry.getIObjectValueKey()));
-    } else if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
-      n.setJSType(typeMap.getTemplateType(registry.getObjectElementKey()));
+    if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
+      n.setJSType(typeMap.getConcreteTypeOfTemplateType(registry.getObjectElementKey()));
     }
     return dereferencePointer(n.getFirstChild(), scope);
   }
