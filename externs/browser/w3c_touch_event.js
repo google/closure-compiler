@@ -129,7 +129,7 @@ TouchList.prototype.length;
 /**
  * Returns the Touch object at the given index.
  * @param {number} index
- * @return {!Touch}
+ * @return {?Touch}
  */
 TouchList.prototype.item = function(index) {};
 
