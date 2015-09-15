@@ -23,6 +23,21 @@
 
 
 /**
+ * @type {number}
+ */
+Touch.prototype.webkitForce;
+
+/**
+ * @type {number}
+ */
+Touch.prototype.webkitRadiusX;
+
+/**
+ * @type {number}
+ */
+Touch.prototype.webkitRadiusY;
+
+/**
  * The distance between two fingers since the start of an event as a multiplier
  * of the initial distance. The initial value is 1.0. If less than 1.0, the
  * gesture is pinch close (to zoom out). If greater than 1.0, the gesture is
