@@ -83,6 +83,11 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
           "JSC_GOOG_MODULE_INVALID_GET_ALIAS",
           "goog.module.get should not be aliased.");
 
+  static final DiagnosticType INVALID_EXPORT_COMPUTED_PROPERTY =
+      DiagnosticType.error(
+          "JSC_GOOG_MODULE_INVALID_EXPORT_COMPUTED_PROPERTY",
+          "Computed properties are not yet supported in goog.module exports.");
+
   private final AbstractCompiler compiler;
 
   private class ModuleDescription {
@@ -348,7 +353,9 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
     if (rhs.isObjectLit()) {
       for (Node c = rhs.getFirstChild(); c != null; c = c.getNext()) {
-        if (c.isStringKey()) {
+        if (c.isComputedProp()) {
+          t.report(c, INVALID_EXPORT_COMPUTED_PROPERTY);
+        } else if (c.isStringKey()) {
           Node value = c.hasChildren() ? c.getFirstChild() : IR.name(c.getString());
           maybeUpdateExportDeclToNode(t, c, value);
         }

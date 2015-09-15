@@ -405,6 +405,11 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         "goog.scope(function(){" +
         "  /** @const */ ns.a = { /** @const */ something };" +
         "});");
+
+    testErrorEs6(
+        "goog.module('ns.a');" +
+        "exports = { [something]: 3 };",
+        ClosureRewriteModule.INVALID_EXPORT_COMPUTED_PROPERTY);
   }
 
   public void testRequiresRetainOrder() {
