@@ -396,6 +396,17 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         + "});");
   }
 
+  public void testExportEnhancedObjectLiteral() {
+    testEs6(
+        "goog.module('ns.a');" +
+        "exports = { something };",
+
+        "goog.provide('ns.a');" +
+        "goog.scope(function(){" +
+        "  /** @const */ ns.a = { /** @const */ something };" +
+        "});");
+  }
+
   public void testRequiresRetainOrder() {
     test(
         "goog.module('ns.a');" +

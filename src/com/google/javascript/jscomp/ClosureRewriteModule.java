@@ -349,7 +349,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     if (rhs.isObjectLit()) {
       for (Node c = rhs.getFirstChild(); c != null; c = c.getNext()) {
         if (c.isStringKey()) {
-          Node value = c.getFirstChild();
+          Node value = c.hasChildren() ? c.getFirstChild() : IR.name(c.getString());
           maybeUpdateExportDeclToNode(t, c, value);
         }
       }
