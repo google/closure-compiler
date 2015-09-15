@@ -140,7 +140,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     "browser/w3c_css.js",
     "browser/gecko_css.js",
     "browser/ie_css.js",
-    "browser/webkit_css.js"
+    "browser/webkit_css.js",
+    "browser/w3c_touch_event.js"
   );
 
   private final CommandLineConfig config;
