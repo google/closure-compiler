@@ -432,8 +432,10 @@ Document.prototype.createTextNode = function(data) {};
  */
 Document.prototype.getElementsByTagName = function(tagname) {};
 
+// TODO(johnlenz): NodeList should be IArrayLike<Node>
 /**
  * @constructor
+ * @implements {IArrayLike<?>}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-536297177
  */
 function NodeList() {}
