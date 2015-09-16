@@ -15,30 +15,27 @@
  */
 
 /**
- * @fileoverview JavaScript Built-Ins that are not
- * part of any specifications but are
- * still needed in some project's build.
+ * @fileoverview JavaScript Built-Ins that are not part of any specifications
+ * but are still needed in some project's build.
  * @externs
- *
  */
 
-var opera;
-Window.prototype.opera;
-Window.prototype.opera.postError;
+var opera = {};
+
+opera.postError;
+
+/** @nosideeffects */
+opera.version = function() {};
+
+/** @constructor */
+function XSLTProcessor() {}
 
 /**
- * @nosideeffects
- */
-Window.prototype.opera.version = function() {}
-
-/** @constructor */ function XSLTProcessor() {}
-/**
+ * @constructor @extends {Element}
  * @param {*=} opt_text
  * @param {*=} opt_value
  * @param {*=} opt_defaultSelected
  * @param {*=} opt_selected
- * @constructor
- * @extends {Element}
  */
 function Option(opt_text, opt_value, opt_defaultSelected, opt_selected) {}
 
