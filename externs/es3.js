@@ -40,6 +40,9 @@ function IObject() {}
  */
 function IArrayLike() {}
 
+/** @type {number} */
+IArrayLike.prototype.length;
+
 /**
  * @constructor
  * @implements {IArrayLike<?>}

@@ -816,7 +816,6 @@ Float64Array.prototype.fill = function(value, opt_begin, opt_end) {};
  * @param {number=} opt_byteLength
  * @constructor
  * @extends {ArrayBufferView}
- * @implements {IArrayLike<number>}
  * @noalias
  * @throws {Error}
  * @nosideeffects
