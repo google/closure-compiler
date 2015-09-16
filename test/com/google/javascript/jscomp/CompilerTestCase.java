@@ -1220,14 +1220,18 @@ public abstract class CompilerTestCase extends TestCase {
           } else {
             explanation = expectedRoot.checkTreeEquals(mainRoot);
           }
-          assertNull(
-              "\nExpected: "
-                  + compiler.toSource(expectedRoot)
+          if (explanation != null) {
+            String expectedAsSource = compiler.toSource(expectedRoot);
+            String mainAsSource = compiler.toSource(mainRoot);
+            if (expectedAsSource.equals(mainAsSource)) {
+              fail("In: " + expectedAsSource + "\n" + explanation);
+            } else {
+              fail("\nExpected: "
+                  + expectedAsSource
                   + "\nResult:   "
-                  + compiler.toSource(mainRoot)
-                  + "\n"
-                  + explanation,
-              explanation);
+                  + mainAsSource);
+            }
+          }
         } else if (expected != null) {
           String[] expectedSources = new String[expected.size()];
           for (int i = 0; i < expected.size(); ++i) {
