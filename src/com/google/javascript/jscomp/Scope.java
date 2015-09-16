@@ -150,6 +150,9 @@ public class Scope implements StaticScope {
       if (var != null) {
         return var;
       }
+      if ("arguments".equals(name) && NodeUtil.isVanillaFunction(scope.getRootNode())) {
+        return scope.getArgumentsVar();
+      }
       // Recurse up the parent Scope
       scope = scope.parent;
     }
@@ -210,7 +213,8 @@ public class Scope implements StaticScope {
   }
 
   /**
-   * Return an iterable over all of the variables declared in this scope.
+   * Return an iterable over all of the variables declared in this scope
+   * (except the special 'arguments' variable).
    */
   Iterable<Var> getVarIterable() {
     return vars.values();
@@ -221,7 +225,7 @@ public class Scope implements StaticScope {
   }
 
   /**
-   * Returns number of variables in this scope
+   * Returns number of variables in this scope (excluding the special 'arguments' variable)
    */
   public int getVarCount() {
     return vars.size();

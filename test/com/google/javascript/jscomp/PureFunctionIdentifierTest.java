@@ -1117,10 +1117,9 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
   }
 
   public void testMutatesArgumentsArray1() throws Exception {
-    // We could be smarter here.
     String source = "function f(x) { arguments[0] = 1; }\n" +
         "f({});";
-    checkMarkedCalls(source, ImmutableList.<String>of());
+    checkMarkedCalls(source, ImmutableList.<String>of("f"));
   }
 
   public void testMutatesArgumentsArray2() throws Exception {

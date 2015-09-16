@@ -256,6 +256,12 @@ final class RenameVars implements CompilerPass {
           (!var.scope.getParent().isGlobal() ||
            !var.isBleedingFunction());
 
+      // Never rename references to the arguments array
+      if (var != null && var.isArguments()) {
+        reservedNames.add(name);
+        return;
+      }
+
       // Are we renaming global variables?
       if (!local && localRenamingOnly) {
         reservedNames.add(name);

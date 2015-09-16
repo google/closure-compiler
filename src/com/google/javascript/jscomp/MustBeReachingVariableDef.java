@@ -394,7 +394,7 @@ final class MustBeReachingVariableDef extends
   }
 
   private static boolean isParameter(Var v) {
-    return v.getParentNode().isParamList();
+    return v.isParam();
   }
 
   /**

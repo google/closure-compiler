@@ -177,6 +177,10 @@ public class Var implements StaticSlot, StaticRef {
     return declarationType() == Token.VAR;
   }
 
+  boolean isCatch() {
+    return declarationType() == Token.CATCH;
+  }
+
   boolean isLet() {
     return declarationType() == Token.LET;
   }
@@ -199,7 +203,11 @@ public class Var implements StaticSlot, StaticRef {
         && parent.getFirstChild() == nameNode;
   }
 
-  private int declarationType() {
+  boolean isArguments() {
+    return false;
+  }
+
+  protected int declarationType() {
     final Set<Integer> types = ImmutableSet.of(
         Token.VAR,
         Token.LET,
@@ -223,7 +231,6 @@ public class Var implements StaticSlot, StaticRef {
    * A special subclass of Var used to distinguish "arguments" in the current
    * scope.
    */
-  // TODO(johnlenz): Include this the list of Vars for the scope.
   private static class Arguments extends Var {
     Arguments(Scope scope) {
       super(
@@ -233,6 +240,26 @@ public class Var implements StaticSlot, StaticRef {
           -1,    // no variable index
           null   // input
       );
+    }
+
+    @Override
+    boolean isArguments() {
+      return true;
+    }
+
+    @Override
+    public StaticSourceFile getSourceFile() {
+      return scope.getRootNode().getStaticSourceFile();
+    }
+
+    @Override
+    public boolean isBleedingFunction() {
+      return false;
+    }
+
+    @Override
+    protected int declarationType() {
+      return -1;
     }
 
     @Override

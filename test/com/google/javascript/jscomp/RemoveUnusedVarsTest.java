@@ -185,7 +185,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testFunctionsDeadButEscaped() {
     testSame("function b(a) { a = 1; print(arguments[0]) }; b(6)");
-    testSame("function b(a) { a = 1; arguments=1; }; b(6)");
     testSame("function b(a) { var c = 2; a = c; print(arguments[0]) }; b(6)");
   }
 
@@ -342,6 +341,11 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var a = 3; for (var i in {}) { i = a; } alert(a);",
          // TODO(johnlenz): "i = a" should be removed here.
          "var a = 3; var i; for (i in {}) {i = a} alert(a);");
+  }
+
+  public void testUnusedAssign9() {
+    test("function b(a) { a = 1; arguments=1; }; b(6)",
+         "function b() { arguments=1; }; b(6)");
   }
 
   public void testUnusedPropAssign1() {

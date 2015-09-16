@@ -728,7 +728,7 @@ class Normalize implements CompilerPass {
       Node parent = n.getParent();
       Var v = s.getVar(name);
 
-      if (v != null && s.isGlobal()) {
+      if (s.isGlobal()) {
         // We allow variables to be duplicate declared if one
         // declaration appears in source and the other in externs.
         // This deals with issues where a browser built-in is declared
@@ -740,8 +740,7 @@ class Normalize implements CompilerPass {
         }
       }
 
-      // If name is "arguments", Var maybe null.
-      if (v != null && v.getParentNode().isCatch()) {
+      if (v.isCatch()) {
         // Redeclaration of a catch expression variable is hard to model
         // without support for "with" expressions.
         // The ECMAScript spec (section 12.14), declares that a catch
@@ -760,7 +759,7 @@ class Normalize implements CompilerPass {
         name = MakeDeclaredNamesUnique.ContextualRenameInverter.getOriginalName(
             name);
         compiler.report(JSError.make(n, CATCH_BLOCK_VAR_ERROR, name));
-      } else if (v != null && parent.isFunction()) {
+      } else if (parent.isFunction()) {
         if (v.getParentNode().isVar()) {
           s.undeclare(v);
           s.declare(name, n, v.input);

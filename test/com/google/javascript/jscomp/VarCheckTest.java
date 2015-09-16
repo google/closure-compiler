@@ -498,6 +498,9 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testError("var f = function arguments() {}", VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
     testError("var f = function (arguments) {}", VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
     testError("function f() {try {} catch(arguments) {}}", VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
+
+    sanityCheck = true;
+    testSame("function f() {var arguments}");
   }
 
   public void testNoUndeclaredVarWhenUsingClosurePass() {

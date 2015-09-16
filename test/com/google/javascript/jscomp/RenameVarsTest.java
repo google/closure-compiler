@@ -244,6 +244,10 @@ public final class RenameVarsTest extends CompilerTestCase {
     test("_foo()", "_foo()");
   }
 
+  public void testDoNotRenameArguments() {
+    testSame("function a() { arguments; }");
+  }
+
   public void testRenameWithNameOverlap() {
     test("var a = 1; var b = 2; b + b;",
          "var a = 1; var b = 2; b + b;");
