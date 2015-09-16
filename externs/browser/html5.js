@@ -2467,6 +2467,7 @@ HTMLElement.prototype.dataset;
 
 /**
  * @constructor
+ * @implements {IArrayLike<string>}
  * @see https://dom.spec.whatwg.org/#interface-domtokenlist
  */
 function DOMTokenList() {}
