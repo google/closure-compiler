@@ -94,13 +94,6 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
   /**
    * Parses the given contents containing a source map.
    */
-  public void parse(JsonObject sourceMapRoot) throws SourceMapParseException {
-    parse(sourceMapRoot, null);
-  }
-
-  /**
-   * Parses the given contents containing a source map.
-   */
   public void parse(JsonObject sourceMapRoot, SourceMapSupplier sectionSupplier)
       throws SourceMapParseException {
     try {

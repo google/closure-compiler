@@ -696,10 +696,6 @@ class ReferenceCollectingCallback implements ScopedCallback,
       return getParent().isConst();
     }
 
-    boolean isClassDeclaration() {
-      return getParent().isClass() && getNode() == getParent().getFirstChild();
-    }
-
     boolean isHoistedFunction() {
       return NodeUtil.isHoistedFunctionDeclaration(getParent());
     }

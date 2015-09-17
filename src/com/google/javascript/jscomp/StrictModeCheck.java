@@ -97,7 +97,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "another function in ES5 strict mode");
 
   private final AbstractCompiler compiler;
-  private final boolean noVarCheck;
 
   StrictModeCheck(AbstractCompiler compiler) {
     this(compiler, false);
@@ -106,7 +105,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
   StrictModeCheck(
       AbstractCompiler compiler, boolean noVarCheck) {
     this.compiler = compiler;
-    this.noVarCheck = noVarCheck;
   }
 
   @Override public void process(Node externs, Node root) {

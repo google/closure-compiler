@@ -1141,7 +1141,7 @@ public final class ConformanceRules {
       return isKnown(n)
           && !isAllType(n)
           && isClassType(n)
-          && !isNativeObjecType(n)
+          && !isNativeObjectType(n)
           && !isWhitelistedType(n);
     }
 
@@ -1202,12 +1202,7 @@ public final class ConformanceRules {
           && !isTemplateType(n); // TODO(johnlenz): Remove this restriction
     }
 
-    private boolean isRecordType(Node n) {
-      JSType type = n.getJSType();
-      return (type != null && type.isRecordType());
-    }
-
-    private boolean isNativeObjecType(Node n) {
+    private boolean isNativeObjectType(Node n) {
       JSType type = n.getJSType().restrictByNotNullOrUndefined();
       return type != null && type.isEquivalentTo(nativeObjectType);
     }

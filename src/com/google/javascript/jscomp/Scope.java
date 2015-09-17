@@ -190,18 +190,6 @@ public class Scope implements StaticScope {
     }
   }
 
-  public boolean isDeclaredInFunction(String name) {
-    if (vars.containsKey(name)) {
-      return true;
-    }
-    Scope parent = getParent();
-    if (parent != null && parent.getRootNode().isFunction()
-        && parent.isDeclared(name, false)) {
-      return true;
-    }
-    return false;
-  }
-
   /**
    * Return an iterator over all of the variables declared in this scope.
    */

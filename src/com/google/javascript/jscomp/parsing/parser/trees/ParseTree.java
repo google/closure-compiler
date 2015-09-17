@@ -41,8 +41,6 @@ public class ParseTree {
     this.type = type;
     this.location = location;
   }
-
-  public ArgumentListTree asArgumentList() { return (ArgumentListTree) this; }
   public ArrayLiteralExpressionTree asArrayLiteralExpression() {
     return (ArrayLiteralExpressionTree) this; }
   public ArrayPatternTree asArrayPattern() { return (ArrayPatternTree) this; }
@@ -191,33 +189,6 @@ public class ParseTree {
     }
   }
 
-  // TODO: enable classes and traits
-  public boolean isAssignmentExpression() {
-    switch (this.type) {
-    case FUNCTION_DECLARATION:
-    case BINARY_OPERATOR:
-    case THIS_EXPRESSION:
-    case IDENTIFIER_EXPRESSION:
-    case LITERAL_EXPRESSION:
-    case ARRAY_LITERAL_EXPRESSION:
-    case OBJECT_LITERAL_EXPRESSION:
-    case MISSING_PRIMARY_EXPRESSION:
-    case CONDITIONAL_EXPRESSION:
-    case UNARY_EXPRESSION:
-    case POSTFIX_EXPRESSION:
-    case MEMBER_EXPRESSION:
-    case NEW_EXPRESSION:
-    case CALL_EXPRESSION:
-    case MEMBER_LOOKUP_EXPRESSION:
-    case PAREN_EXPRESSION:
-    case SUPER_EXPRESSION:
-    case TEMPLATE_LITERAL_EXPRESSION:
-      return true;
-    default:
-      return false;
-    }
-  }
-
   public boolean isRestParameter() {
     return this.type == ParseTreeType.REST_PARAMETER;
   }
@@ -257,10 +228,6 @@ public class ParseTree {
     default:
       return false;
     }
-  }
-
-  public boolean isSourceElement() {
-    return isStatementStandard() || this.type == ParseTreeType.FUNCTION_DECLARATION;
   }
 
   @Override public String toString() {

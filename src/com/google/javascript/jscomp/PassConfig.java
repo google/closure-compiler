@@ -272,8 +272,6 @@ public abstract class PassConfig {
     private static final long serialVersionUID = 1L;
 
     final Map<String, Integer> cssNames;
-    final Set<String> exportedNames;
-    final CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator;
     final VariableMap variableMap;
     final VariableMap propertyMap;
     final VariableMap anonymousFunctionNameMap;
@@ -288,8 +286,6 @@ public abstract class PassConfig {
         VariableMap stringMap, FunctionNames functionNames,
         String idGeneratorMap) {
       this.cssNames = cssNames;
-      this.exportedNames = exportedNames;
-      this.crossModuleIdGenerator = crossModuleIdGenerator;
       this.variableMap = variableMap;
       this.propertyMap = propertyMap;
       this.anonymousFunctionNameMap = anonymousFunctionNameMap;

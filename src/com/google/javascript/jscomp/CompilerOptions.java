@@ -182,13 +182,6 @@ public class CompilerOptions implements Serializable {
   /** Checks that all symbols are defined */
   public boolean checkSymbols;
 
-  /**
-   * Deprecated. The checks that used to be controlled by this flag are now on by default,
-   * and this setter is a no-op. You can safely remove this call from your code.
-   */
-  @Deprecated
-  public void setAggressiveVarCheck(CheckLevel level) {}
-
   /** Checks for suspicious statements that have no effect */
   public boolean checkSuspiciousCode;
 
