@@ -2264,4 +2264,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         + "var Bar = null;\n"
         + "var ns$Foo$prop$A = 1");
   }
+
+  public void testDontCrashNamespaceAliasAcrossScopes() {
+    test(
+        "var ns = {};\n"
+        + "ns.VALUE = 0.01;\n"
+        + "function f() {\n"
+        + "    var constants = ns;\n"
+        + "    (function() {\n"
+        + "       var x = constants.VALUE;\n"
+        + "    })();\n"
+        + "}",
+        null);
+  }
 }
