@@ -27,7 +27,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +39,7 @@ import java.util.Set;
  * Compiler options
  * @author nicksantos@google.com (Nick Santos)
  */
-public class CompilerOptions implements Serializable {
+public class CompilerOptions {
 
   // Unused. For people using reflection to circumvent access control.
   @SuppressWarnings("unused")
@@ -57,8 +56,6 @@ public class CompilerOptions implements Serializable {
 
   // TODO(nicksantos): All public properties of this class should be made
   // package-private, and have a public setter.
-
-  private static final long serialVersionUID = 7L;
 
   /**
    * The warning classes that are available.
@@ -172,8 +169,7 @@ public class CompilerOptions implements Serializable {
   DependencyOptions dependencyOptions = new DependencyOptions();
 
   /** Returns localized replacement for MSG_* variables */
-  // Transient so that clients don't have to implement Serializable.
-  public transient MessageBundle messageBundle = null;
+  public MessageBundle messageBundle = null;
 
   //--------------------------------
   // Checks
@@ -886,7 +882,8 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Charset to use when generating code.  If null, then output ASCII.
-   * This needs to be a string because CompilerOptions is serializable.
+   * This is a string because CompilerOptions used to be serializable.
+   * TODO(tbreisacher): Switch to java.nio.Charset.
    */
   String outputCharset;
 
@@ -2523,10 +2520,7 @@ public class CompilerOptions implements Serializable {
   static final AliasTransformationHandler NULL_ALIAS_TRANSFORMATION_HANDLER =
       new NullAliasTransformationHandler();
 
-  private static class NullAliasTransformationHandler
-      implements AliasTransformationHandler, Serializable {
-    private static final long serialVersionUID = 0L;
-
+  private static class NullAliasTransformationHandler implements AliasTransformationHandler {
     private static final AliasTransformation NULL_ALIAS_TRANSFORMATION =
         new NullAliasTransformation();
 
@@ -2537,10 +2531,7 @@ public class CompilerOptions implements Serializable {
       return NULL_ALIAS_TRANSFORMATION;
     }
 
-    private static class NullAliasTransformation
-        implements AliasTransformation, Serializable {
-      private static final long serialVersionUID = 0L;
-
+    private static class NullAliasTransformation implements AliasTransformation {
       @Override
       public void addAlias(String alias, String definition) {
       }
