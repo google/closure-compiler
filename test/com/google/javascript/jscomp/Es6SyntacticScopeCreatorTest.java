@@ -299,13 +299,13 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Scope globalScope = scopeCreator.createScope(root, null);
     assertEquals(root, globalScope.getRootNode());
     assertFalse(globalScope.isBlockScope());
-    assertTrue(globalScope.isHoistScope());
+    assertEquals(globalScope, globalScope.getClosestHoistScope());
 
     Node fooBlockNode = root.getFirstChild().getLastChild();
     Scope fooScope = scopeCreator.createScope(fooBlockNode, null);
     assertEquals(fooBlockNode, fooScope.getRootNode());
     assertTrue(fooScope.isBlockScope());
-    assertTrue(fooScope.isHoistScope());
+    assertEquals(fooScope, fooScope.getClosestHoistScope());
     assertTrue(fooScope.isDeclared("x", false));
   }
 

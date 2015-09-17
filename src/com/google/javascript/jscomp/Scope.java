@@ -237,19 +237,6 @@ public class Scope implements StaticScope {
     return NodeUtil.createsBlockScope(rootNode);
   }
 
-  /**
-   * A hoist scope is the hoist target for enclosing var declarations. It is
-   * either the top-level block of a function, a global scope, or a module scope.
-   *
-   * TODO(moz): Module scopes are not global, but are also hoist targets.
-   * Support them once module is implemented.
-   *
-   * @return Whether the scope is a hoist target for var declarations.
-   */
-  public boolean isHoistScope() {
-    return isFunctionBlockScope() || isGlobal();
-  }
-
   public boolean isFunctionBlockScope() {
     return isBlockScope() && parent != null && parent.getRootNode().isFunction();
   }
@@ -258,10 +245,17 @@ public class Scope implements StaticScope {
     return getRootNode().isFunction();
   }
 
+  /**
+   * If a var were declared in this scope, return the scope it would be hoisted to.
+   *
+   * For function scopes, we return back the scope itself, since even though there is no way
+   * to declare a var inside function parameters, it would make even less sense to say that
+   * such declarations would be "hoisted" somewhere else.
+   */
   public Scope getClosestHoistScope() {
     Scope current = this;
     while (current != null) {
-      if (current.isHoistScope()) {
+      if (current.isFunctionScope() || current.isFunctionBlockScope() || current.isGlobal()) {
         return current;
       }
       current = current.parent;
