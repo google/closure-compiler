@@ -200,4 +200,44 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
     testErrorEs6("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
     testSameEs6("function f(/** number= */ x=0) {}");
   }
+
+  private void testBadTemplate(String code) {
+    testWarning(code, MISPLACED_ANNOTATION);
+  }
+
+  public void testGoodTemplate1() {
+    testSameEs6("/** @template T */ class C {}");
+    testSameEs6("class C { /** @template T \n @param {T} a\n @param {T} b \n */ "
+        + "constructor(a,b){} }");
+    testSameEs6("class C {/** @template T \n @param {T} a\n @param {T} b \n */ method(a,b){} }");
+    testSame("/** @template T \n @param {T} a\n @param {T} b\n */ var x = function(a, b){};");
+    testSame("/** @constructor @template T */ var x = function(){};");
+    testSame("/** @interface @template T */ var x = function(){};");
+  }
+
+  public void testGoodTemplate2() {
+    testSame("/** @template T */ x.y.z = goog.defineClass(null, {constructor: function() {}});");
+  }
+
+  public void testGoodTemplate3() {
+    testSame("var /** @template T */ x = goog.defineClass(null, {constructor: function() {}});");
+  }
+
+  public void testGoodTemplate4() {
+    testSame("x.y.z = goog.defineClass(null, {/** @return T @template T */ m: function() {}});");
+  }
+  public void testBadTemplate1() {
+    testBadTemplate("/** @type {!Function} @template T */ var x = function(){};");
+  }
+
+  public void testBadTemplate2() {
+    testBadTemplate("/** @template T */ foo();");
+  }
+
+  public void testBadTemplate3() {
+    testBadTemplate(LINE_JOINER.join(
+        "x.y.z = goog.defineClass(null, {",
+        "  /** @template T */ constructor: function() {}",
+        "});"));
+  }
 }

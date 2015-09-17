@@ -118,6 +118,11 @@ public final class CodingConventions {
     }
 
     @Override
+    public boolean isClassFactoryCall(Node callNode) {
+      return nextConvention.isClassFactoryCall(callNode);
+    }
+
+    @Override
     public boolean isSuperClassReference(String propertyName) {
       return nextConvention.isSuperClassReference(propertyName);
     }
@@ -346,6 +351,11 @@ public final class CodingConventions {
       } else {
         return null;
       }
+    }
+
+    @Override
+    public boolean isClassFactoryCall(Node callNode) {
+      return false;
     }
 
     @Override
