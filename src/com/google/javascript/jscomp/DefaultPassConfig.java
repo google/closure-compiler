@@ -1649,8 +1649,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("checkStrictMode", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new StrictModeCheck(compiler,
-          !options.checkSymbols);  // don't check variables twice
+      return new StrictModeCheck(compiler);
     }
   };
 

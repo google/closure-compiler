@@ -176,6 +176,7 @@ public class CompilerOptions {
   //--------------------------------
 
   /** Checks that all symbols are defined */
+  // TODO(tbreisacher): Remove this and deprecate the corresponding setter.
   public boolean checkSymbols;
 
   /** Checks for suspicious statements that have no effect */

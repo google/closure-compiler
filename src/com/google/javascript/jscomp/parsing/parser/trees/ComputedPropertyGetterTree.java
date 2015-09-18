@@ -23,6 +23,8 @@ import javax.annotation.Nullable;
 
 public class ComputedPropertyGetterTree extends ParseTree {
   public final ParseTree property;
+  public final boolean isStatic;
+  @Nullable public final TokenType access;
   public final BlockTree body;
 
   public ComputedPropertyGetterTree(
@@ -31,6 +33,8 @@ public class ComputedPropertyGetterTree extends ParseTree {
     super(ParseTreeType.COMPUTED_PROPERTY_GETTER, location);
 
     this.property = property;
+    this.isStatic = isStatic;
+    this.access = access;
     this.body = body;
   }
 }

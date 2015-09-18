@@ -21,8 +21,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class StrictModeCheckTest extends Es6CompilerTestCase {
   private static final String EXTERNS = "var arguments; function eval(str) {}";
 
-  private boolean noVarCheck;
-
   public StrictModeCheckTest() {
     super(EXTERNS);
   }
@@ -31,12 +29,11 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableTypeCheck(CheckLevel.OFF);
-    noVarCheck = false;
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new StrictModeCheck(compiler, noVarCheck);
+    return new StrictModeCheck(compiler);
   }
 
   @Override
