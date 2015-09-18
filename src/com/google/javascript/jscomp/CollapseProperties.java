@@ -218,13 +218,11 @@ class CollapseProperties implements CompilerPass {
     // Ensure that the alias is assigned to global name at that the
     // declaration.
     Node aliasParent = alias.node.getParent();
-    if ((aliasParent.isAssign() || aliasParent.isName())
-        && NodeUtil.isExecutedExactlyOnce(aliasParent)
+    if (aliasParent.isAssign() && NodeUtil.isExecutedExactlyOnce(aliasParent)
         // We special-case for constructors here, to inline constructor aliases
         // more aggressively in global scope.
         // We do this because constructor properties are always collapsed,
         // so we want to inline the aliases also to avoid breakages.
-        // TODO(tbreisacher): Do we still need this special case?
         || aliasParent.isName() && name.isConstructor()) {
       Node lvalue = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
       if (!lvalue.isQualifiedName()) {
