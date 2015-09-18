@@ -66,7 +66,7 @@ public class Node implements Serializable {
       JSDOC_INFO_PROP   = 29,     // contains a TokenStream.JSDocInfo object
       VAR_ARGS_NAME     = 30,     // the name node is a variable length
                                   // argument placeholder.
-      INCRDECR_PROP      = 32,    // pre or post type of increment/decrement
+      INCRDECR_PROP      = 32,    // whether incrdecr is pre (false) or post (true)
       QUOTED_PROP        = 36,    // set to indicate a quoted object lit key
       OPT_ARG_NAME       = 37,    // The name node is an optional argument.
       SYNTHETIC_BLOCK_PROP = 38,  // A synthetic block. Used to make
@@ -138,10 +138,6 @@ public class Node implements Serializable {
       IMPLEMENTS = 82,            // "implements" clause in ES6 typed syntax.
       CONSTRUCT_SIGNATURE = 83,   // This node is a TypeScript ConstructSignature
       ACCESS_MODIFIER = 84;       // TypeScript accessibility modifiers (public, protected, private)
-
-  public static final int   // flags for INCRDECR_PROP
-      DECR_FLAG = 0x1,
-      POST_FLAG = 0x2;
 
   private static final String propToString(int propType) {
       switch (propType) {

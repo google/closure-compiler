@@ -125,7 +125,7 @@ public class NodeTest extends TestCase {
 
   public void testCheckTreeEqualsImplDifferentIncProp() {
     Node node1 = new Node(Token.INC);
-    node1.putIntProp(Node.INCRDECR_PROP, 1);
+    node1.putBooleanProp(Node.INCRDECR_PROP, true);
     Node node2 = new Node(Token.INC);
     assertNotNull(node1.checkTreeEqualsImpl(node2));
   }
@@ -401,7 +401,7 @@ public class NodeTest extends TestCase {
   public void testSharedProps3() {
     Node n = getVarRef("A");
     n.putIntProp(Node.SIDE_EFFECT_FLAGS, 2);
-    n.putIntProp(Node.INCRDECR_PROP, 3);
+    n.putBooleanProp(Node.INCRDECR_PROP, true);
     Node m = new Node(Token.TRUE);
     m.clonePropsFrom(n);
 
