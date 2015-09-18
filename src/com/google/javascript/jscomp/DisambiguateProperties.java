@@ -355,6 +355,9 @@ class DisambiguateProperties<T> implements CompilerPass {
         typeSystem.addInvalidatingType(objType.getImplicitPrototype());
         recordInvalidationError(objType.getImplicitPrototype(), error);
       }
+      if (objType != null && objType.isConstructor() && objType.isFunctionType()) {
+        typeSystem.addInvalidatingType(objType.toMaybeFunctionType().getInstanceType());
+      }
     }
   }
 
