@@ -402,7 +402,7 @@ public class Parser {
     ImmutableList.Builder<ParseTree> elements;
     elements = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
-    while (peekId()) {
+    while (peekIdOrKeyword()) {
       elements.add(parseImportSpecifier());
       if (!peek(TokenType.CLOSE_CURLY)) {
         eat(TokenType.COMMA);
@@ -415,9 +415,10 @@ public class Parser {
   //  ImportSpecifier ::= Identifier ('as' Identifier)?
   private ParseTree parseImportSpecifier() {
     SourcePosition start = getTreeStartLocation();
-    IdentifierToken importedName = eatId();
+    boolean isKeyword = Keywords.isKeyword(peekType());
+    IdentifierToken importedName = eatIdOrKeywordAsId();
     IdentifierToken destinationName = null;
-    if (peekPredefinedString(PredefinedName.AS)) {
+    if (isKeyword || peekPredefinedString(PredefinedName.AS)) {
       eatPredefinedString(PredefinedName.AS);
       destinationName = eatId();
     }
@@ -537,7 +538,7 @@ public class Parser {
     ImmutableList.Builder<ParseTree> elements;
     elements = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
-    while (peekId()) {
+    while (peekIdOrKeyword()) {
       elements.add(parseExportSpecifier());
       if (!peek(TokenType.CLOSE_CURLY)) {
         eat(TokenType.COMMA);
@@ -550,11 +551,11 @@ public class Parser {
   //  ExportSpecifier ::= Identifier ('as' Identifier)?
   private ParseTree parseExportSpecifier() {
     SourcePosition start = getTreeStartLocation();
-    IdentifierToken importedName = eatId();
+    IdentifierToken importedName = eatIdOrKeywordAsId();
     IdentifierToken destinationName = null;
     if (peekPredefinedString(PredefinedName.AS)) {
       eatPredefinedString(PredefinedName.AS);
-      destinationName = eatId();
+      destinationName = eatIdOrKeywordAsId();
     }
     return new ExportSpecifierTree(
         getTreeLocation(start), importedName, destinationName);
@@ -796,8 +797,7 @@ public class Parser {
 
     ParseTree nameExpr;
     IdentifierToken name;
-    TokenType type = peekType();
-    if (type == TokenType.IDENTIFIER || Keywords.isKeyword(type)) {
+    if (peekIdOrKeyword()) {
       nameExpr = null;
       name = eatIdOrKeywordAsId();
     } else {
@@ -3233,7 +3233,7 @@ public class Parser {
     }
 
     Token name;
-    if (peekId() || Keywords.isKeyword(peekType())) {
+    if (peekIdOrKeyword()) {
       name = eatIdOrKeywordAsId();
       if (!peek(TokenType.COLON)) {
         IdentifierToken idToken = (IdentifierToken) name;
@@ -3412,6 +3412,15 @@ public class Parser {
         TokenType.NAMESPACE)
             .contains(type)
         || (!inStrictContext() && Keywords.isStrictKeyword(type));
+  }
+
+  private boolean peekIdOrKeyword() {
+    return peekIdOrKeyword(0);
+  }
+
+  private boolean peekIdOrKeyword(int index) {
+    TokenType type = peekType(index);
+    return TokenType.IDENTIFIER == type || Keywords.isKeyword(type);
   }
 
   private boolean peekAccessibilityModifier() {

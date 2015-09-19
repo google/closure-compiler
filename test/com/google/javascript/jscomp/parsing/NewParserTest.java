@@ -2657,7 +2657,28 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("import {x, y} from './someModule'");
     parse("import {x as x1, y as y1} from './someModule'");
     parse("import {x as x1, y as y1, } from './someModule'");
+    parse("import {default as d} from './someModule'");
+    parse("import d, {x as x1, y as y1} from './someModule'");
     parse("import * as sm from './someModule'");
+  }
+
+  public void testExport() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("export const x = 1");
+    parse("export var x = 1");
+    parse("export function f() {}");
+    parse("export class c {}");
+    parse("export {x, y}");
+    parse("export {x as x1}");
+    parse("export {x as default, y as y1}");
+
+    parse("export {x as x1, y as y1} from './someModule'");
+    parse("export {x as x1, y as y1, } from './someModule'");
+    parse("export {default as d} from './someModule'");
+    parse("export {x as default, y as y1} from './someModule'");
+    parse("export {default as default, y as y1} from './someModule'");
+    parse("export * from './someModule'");
   }
 
   public void testShebang() {
