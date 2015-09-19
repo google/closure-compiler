@@ -89,6 +89,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   // These functions are defined in js/es6_runtime.js
   static final String INHERITS = "$jscomp.inherits";
   static final String MAKE_ITER = "$jscomp.makeIterator";
+  static final String CALL_SUPER_GETTER = "$jscomp.callSuperGetter";
 
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;

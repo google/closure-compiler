@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CALL_SUPER_GETTER;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Joiner;
@@ -60,6 +61,13 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
         addSyntheticConstructor(n);
       }
       checkClassSuperReferences(n);
+    } else if (isSuperGet(n)) {
+      if (NodeUtil.isEnclosedByStaticMember(n)) {
+        compiler.report(JSError.make(n, CANNOT_CONVERT_YET,
+            "Super calls in static members are not allowed."));
+      }
+      visitSuperGet(n);
+      return false; // Don't visit the super we've just removed.
     }
     return true;
   }
@@ -69,6 +77,27 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     if (n.isSuper()) {
       visitSuper(n, parent);
     }
+  }
+
+  private boolean isSuperGet(Node n) {
+    return (n.isGetProp() || n.isGetElem())
+        && !n.getParent().isCall()
+        && n.getFirstChild().isSuper();
+  }
+
+  private void visitSuperGet(Node n) {
+    Preconditions.checkArgument(isSuperGet(n));
+
+    Node name = n.getLastChild().cloneTree();
+    Node callSuperGetter = IR.call(
+        NodeUtil.newQName(compiler, CALL_SUPER_GETTER),
+        IR.thisNode(),
+        n.isGetProp() ? NodeUtil.renameProperty(name) : name).srcrefTree(n);
+
+    n.getParent().replaceChild(n, callSuperGetter);
+
+    compiler.needsEs6Runtime = true;
+    compiler.reportCodeChange();
   }
 
   private void addSyntheticConstructor(Node classNode) {
@@ -110,7 +139,7 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
     }
     if (!enclosingCall.isCall() || enclosingCall.getFirstChild() != potentialCallee) {
       compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
-          "Only calls to super or to a method of super are supported."));
+          "Only calls to super or to a method/getter of super are supported."));
       return;
     }
     Node clazz = NodeUtil.getEnclosingClass(node);
