@@ -522,6 +522,13 @@ public class Parser {
         (isExportSpecifier && peekPredefinedString(PredefinedName.FROM))) {
       eatPredefinedString(PredefinedName.FROM);
       moduleSpecifier = eat(TokenType.STRING).asLiteral();
+    } else if (isExportSpecifier) {
+      for (ParseTree tree : exportSpecifierList) {
+        IdentifierToken importedName = tree.asExportSpecifier().importedName;
+        if (Keywords.isKeyword(importedName.value)) {
+          reportError(importedName, "cannot use keyword '%s' here.", importedName.value);
+        }
+      }
     }
 
     if (needsSemiColon || peekImplicitSemiColon()) {

@@ -2672,6 +2672,10 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("export {x, y}");
     parse("export {x as x1}");
     parse("export {x as default, y as y1}");
+    parseError("export {default as x}",
+        "cannot use keyword 'default' here.");
+    parseError("export {package as x}",
+        "cannot use keyword 'package' here.");
 
     parse("export {x as x1, y as y1} from './someModule'");
     parse("export {x as x1, y as y1, } from './someModule'");
