@@ -886,6 +886,8 @@ public final class NodeUtil {
 
   /**
    * Returns true if the node which may have side effects when executed.
+   * This version default to the "safe" assumptions when the compiler object is not
+   * provided (RegExp have side-effects, etc).
    */
   public static boolean mayHaveSideEffects(Node n) {
     return mayHaveSideEffects(n, null);
@@ -968,7 +970,7 @@ public final class NodeUtil {
         return true;
 
       case Token.TAGGED_TEMPLATELIT:
-        return functionCallHasSideEffects(n);
+        return functionCallHasSideEffects(n, compiler);
 
       case Token.CAST:
       case Token.AND:
@@ -1121,8 +1123,8 @@ public final class NodeUtil {
       return false;
     }
 
-    if (callNode.isOnlyModifiesArgumentsCall() &&
-        allArgsUnescapedLocal(callNode)) {
+    if (callNode.isOnlyModifiesArgumentsCall()
+        && allArgsUnescapedLocal(callNode)) {
       return false;
     }
 
