@@ -1906,6 +1906,18 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("var x=class C{}");
   }
 
+  public void testClassComputedProperties() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+
+    assertPrintSame("class C{[x](){}}");
+    assertPrintSame("class C{get [x](){}}");
+    assertPrintSame("class C{set [x](val){}}");
+
+    assertPrintSame("class C{static [x](){}}");
+    assertPrintSame("class C{static get [x](){}}");
+    assertPrintSame("class C{static set [x](val){}}");
+  }
+
   public void testClassPretty() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrettyPrint(

@@ -939,6 +939,10 @@ class CodeGenerator {
 
       case Token.COMPUTED_PROP:
         maybeAddAccessibilityModifier(n);
+        if (n.getBooleanProp(Node.STATIC_MEMBER)) {
+          add("static ");
+        }
+
         if (n.getBooleanProp(Node.COMPUTED_PROP_GETTER)) {
           add("get ");
         } else if (n.getBooleanProp(Node.COMPUTED_PROP_SETTER)) {

@@ -1479,6 +1479,7 @@ class IRFactory {
       function.useSourceInfoIfMissingFromForTree(body);
       Node n = newNode(Token.COMPUTED_PROP, key, function);
       n.putBooleanProp(Node.COMPUTED_PROP_GETTER, true);
+      n.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
       return n;
     }
 
@@ -1492,6 +1493,7 @@ class IRFactory {
       function.useSourceInfoIfMissingFromForTree(body);
       Node n = newNode(Token.COMPUTED_PROP, key, function);
       n.putBooleanProp(Node.COMPUTED_PROP_SETTER, true);
+      n.putBooleanProp(Node.STATIC_MEMBER, tree.isStatic);
       return n;
     }
 

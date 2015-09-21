@@ -562,6 +562,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
           || (member.isGetterDef() || member.isSetterDef())) {
 
+        if (member.isComputedProp() && member.isStaticMember()) {
+          cannotConvertYet(member, "Static computed property");
+        }
         if (member.isComputedProp() && !member.getFirstChild().isQualifiedName()) {
           cannotConvert(member.getFirstChild(), "Computed property with non-qualified-name key");
         }
