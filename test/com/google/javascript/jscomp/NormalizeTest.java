@@ -501,25 +501,25 @@ public final class NormalizeTest extends CompilerTestCase {
     }
 
     private void testConstantProperties() {
-      test("var a={}; a.ACONST = 4;var b = a.ACONST;",
-           "var a$ACONST = 4; var b = a$ACONST;");
+      test("var a={}; a.ACONST = 4;var b = 1; b = a.ACONST;",
+          "var a$ACONST = 4; var b = 1; b = a$ACONST;");
 
-      test("var a={b:{}}; a.b.ACONST = 4;var b = a.b.ACONST;",
-           "var a$b$ACONST = 4;var b = a$b$ACONST;");
+      test("var a={b:{}}; a.b.ACONST = 4;var b = 1; b = a.b.ACONST;",
+          "var a$b$ACONST = 4;var b = 1; b = a$b$ACONST;");
 
-      test("var a = {FOO: 1};var b = a.FOO;",
-           "var a$FOO = 1; var b = a$FOO;");
+      test("var a = {FOO: 1};var b = 1; b = a.FOO;",
+          "var a$FOO = 1; var b = 1; b = a$FOO;");
 
       testSame("var EXTERN; var ext; ext.FOO;", "var b = EXTERN; var c = ext.FOO", null);
 
-      test("var a={}; a.ACONST = 4; var b = a.ACONST;",
-           "var a$ACONST = 4; var b = a$ACONST;");
+      test("var a={}; a.ACONST = 4; var b = 1; b = a.ACONST;",
+          "var a$ACONST = 4; var b = 1; b = a$ACONST;");
 
-      test("var a = {}; function foo() { var d = a.CONST; }; (function() { a.CONST = 4; })();",
-           "var a$CONST; function foo() { var d = a$CONST; }; (function() { a$CONST = 4; })();");
+      test("var a = {}; function foo() { var d = a.CONST; }; (function(){a.CONST=4})();",
+          "var a$CONST;function foo(){var d = a$CONST;}; (function(){a$CONST = 4})();");
 
-      test("var a = {}; a.ACONST = new Foo(); var b = a.ACONST;",
-           "var a$ACONST = new Foo(); var b = a$ACONST;");
+      test("var a = {}; a.ACONST = new Foo(); var b = 1; b = a.ACONST;",
+          "var a$ACONST = new Foo(); var b = 1; b = a$ACONST;");
     }
 
     @Override
