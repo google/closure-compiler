@@ -64,12 +64,12 @@ public final class ConformanceRules {
 
   private ConformanceRules() {}
 
-  /** 
+  /**
    * Classes extending AbstractRule must return ConformanceResult
    * from their checkConformance implementation. For simple rules, the
    * constants CONFORMANCE, POSSIBLE_VIOLATION, VIOLATION are sufficient.
-   * However, for some rules additional clarification specific to the 
-   * violation instance is helpful, for that, an instance of this class 
+   * However, for some rules additional clarification specific to the
+   * violation instance is helpful, for that, an instance of this class
    * can be created to associate a note with the violation.
    */
   public static class ConformanceResult {
@@ -90,6 +90,11 @@ public final class ConformanceRules {
         ConformanceLevel.CONFORMANCE);
     public static final ConformanceResult POSSIBLE_VIOLATION = new ConformanceResult(
         ConformanceLevel.POSSIBLE_VIOLATION);
+    private static final ConformanceResult POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES =
+        new ConformanceResult(
+            ConformanceLevel.POSSIBLE_VIOLATION,
+            "The type information available for this expression is too loose "
+            + "ensure conformance.");
     public static final ConformanceResult VIOLATION = new ConformanceResult(
         ConformanceLevel.VIOLATION);
   }
@@ -357,7 +362,7 @@ public final class ConformanceRules {
              || targetType.isAllType()
              || targetType.isEquivalentTo(
                  registry.getNativeType(JSTypeNative.OBJECT_TYPE))) {
-            return ConformanceResult.POSSIBLE_VIOLATION;
+            return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
           } else if (targetType.isSubtype(methodClassType)) {
             return ConformanceResult.VIOLATION;
           }
@@ -714,7 +719,7 @@ public final class ConformanceRules {
           if (!ConformanceUtil.validateCall(
               compiler, n.getParent(), r.restrictedCallType,
               isCallInvocation)) {
-            return ConformanceResult.POSSIBLE_VIOLATION;
+            return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
           }
         } else if (targetType.isSubtype(methodClassType)) {
           if (!ConformanceUtil.validateCall(
@@ -820,7 +825,7 @@ public final class ConformanceRules {
         }
       }
       return possibleViolation
-          ? ConformanceResult.POSSIBLE_VIOLATION
+          ? ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES
           : ConformanceResult.CONFORMANCE;
     }
   }

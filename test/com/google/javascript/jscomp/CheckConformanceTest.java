@@ -325,7 +325,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
         EXTERNS,
         "foo.blink();",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
-        "Possible violation: blink is annoying");
+        "Possible violation: blink is annoying\n"
+        + "The type information available for this expression is too loose ensure conformance.");
   }
 
   public void testBannedDep1() {
