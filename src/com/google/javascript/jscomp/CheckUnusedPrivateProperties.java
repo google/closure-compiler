@@ -66,7 +66,7 @@ class CheckUnusedPrivateProperties
     for (Node n : candidates) {
       String propName = getPropName(n);
       if (!used.contains(propName)) {
-        t.report(n, UNUSED_PRIVATE_PROPERTY);
+        t.report(n, UNUSED_PRIVATE_PROPERTY, propName);
       }
     }
   }
