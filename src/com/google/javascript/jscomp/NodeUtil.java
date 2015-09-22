@@ -1186,6 +1186,8 @@ public final class NodeUtil {
           case "tanh":
           case "trunc":
             return false;
+          case "random":
+            return !callNode.hasOneChild(); // no parameters
         }
       }
 
