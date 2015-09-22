@@ -454,8 +454,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
   }
 
   private void updateRequire(Node call) {
-    Node idNode = call.getLastChild();
-    String namespace = idNode.getString();
+    String namespace = call.getLastChild().getString();
     if (current.requireInsertNode == null) {
       current.requireInsertNode = getInsertRoot(call);
     }
@@ -466,8 +465,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     //   goog.require('foo');
     //   var foo = ns.foo;
 
-    // replace the goog.require statementment with a reference to the
-    // namespace.
+    // replace the goog.require statement with a reference to the namespace.
     Node replacement = NodeUtil.newQName(compiler, namespace).srcrefTree(call);
     call.getParent().replaceChild(call, replacement);
 
