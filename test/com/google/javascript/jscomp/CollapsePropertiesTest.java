@@ -39,7 +39,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Override public CompilerPass getProcessor(Compiler compiler) {
-    System.err.println(compiler.getCodingConvention());
     return new CollapseProperties(compiler, true);
   }
 
