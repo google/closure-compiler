@@ -1407,6 +1407,14 @@ class IRFactory {
       Node node = newNode(Token.OBJECTLIT);
       boolean maybeWarn = false;
       for (ParseTree el : objTree.propertyNameAndValues) {
+        if (el.type == ParseTreeType.DEFAULT_PARAMETER) {
+          // (e.g. var o = { x=4 };) This is only parsed for compatibility with object patterns.
+          errorReporter.error(
+              "Default value cannot appear at top level of an object literal.",
+              sourceName,
+              lineno(el), 0);
+          continue;
+        }
         if (config.languageMode == LanguageMode.ECMASCRIPT3) {
           if (el.type == ParseTreeType.GET_ACCESSOR) {
             reportGetter(el);

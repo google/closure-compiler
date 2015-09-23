@@ -1307,31 +1307,23 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringAssign() {
     mode = LanguageMode.ECMASCRIPT6;
-    parse("({x, y}) = foo();");
+    parseError("({x, y}) = foo();", "invalid assignment target");
     parse("({x, y} = foo());");
-    parse("({x: x, y: y}) = foo();");
     parse("({x: x, y: y} = foo());");
-    parse("({x: {y, z}}) = foo();");
     parse("({x: {y, z}} = foo());");
-    parse("({k1: {k2 : x} = bar(), k3: y}) = foo();");
     parse("({k1: {k2 : x} = bar(), k3: y} = foo());");
 
     // Useless, but legal.
-    parse("({}) = foo();");
     parse("({} = foo());");
   }
 
   public void testObjectDestructuringAssignWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
-    parse("({x = 1}) = foo();");
+    parseError("({x = 1}) = foo();", "invalid assignment target");
     parse("({x = 1} = foo());");
-    parse("({x: {y = 1}}) = foo();");
     parse("({x: {y = 1}} = foo());");
-    parse("({x: y = 1}) = foo();");
     parse("({x: y = 1} = foo());");
-    parse("({x: v1 = 5, y: v2 = 'str'}) = foo();");
     parse("({x: v1 = 5, y: v2 = 'str'} = foo());");
-    parse("({k1: {k2 : x} = bar(), k3: y}) = foo();");
     parse("({k1: {k2 : x} = bar(), k3: y} = foo());");
   }
 
@@ -1394,14 +1386,20 @@ public final class NewParserTest extends BaseJSTypeTestCase {
 
   public void testObjectDestructuringExtraParens() {
     mode = LanguageMode.ECMASCRIPT6;
-    parse("({x}) = y;");
-    parse("(({x})) = y;");
-    parse("((({x}))) = y;");
+    parse("({x: y} = z);");
+    parse("({x: (y)} = z);");
+    parse("({x: ((y))} = z);");
 
-    parse("([x]) = y;");
+    parse("([x] = y);");
+    parse("[(x), y] = z;");
     parse("[x, (y)] = z;");
     parse("[x, ([y])] = z;");
     parse("[x, (([y]))] = z;");
+  }
+
+  public void testObjectLiteralCannotUseDestructuring() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("var o = {x = 5}", "Default value cannot appear at top level of an object literal.");
   }
 
   public void testMixedDestructuring() {
@@ -2584,8 +2582,8 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
 
     // {x: 5} and {x: 'str'} are valid object literals but not valid patterns.
-    parseError("for ({x: 5} in foo()) {}", "Invalid LHS for a for-in loop");
-    parseError("for ({x: 'str'} in foo()) {}", "Invalid LHS for a for-in loop");
+    parseError("for ({x: 5} in foo()) {}", "invalid assignment target");
+    parseError("for ({x: 'str'} in foo()) {}", "invalid assignment target");
     parseError("var {x: 5} = foo();", "'identifier' expected");
     parseError("var {x: 'str'} = foo();", "'identifier' expected");
     parseError("({x: 5} = foo());", "invalid assignment target");

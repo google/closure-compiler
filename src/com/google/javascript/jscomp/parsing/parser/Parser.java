@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
@@ -1073,7 +1071,7 @@ public class Parser {
 
   private boolean peekArrowFunctionWithParenthesizedParameterList(ParamContext context) {
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
-      // TODO(johnlenz): determine if we can parse this without the
+      // TODO(blickly): determine if we can parse this without the
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
       try {
@@ -1728,17 +1726,10 @@ public class Parser {
       return parseForStatement(start, null);
     }
 
-    Predicate<Token> followPred = new Predicate<Token>() {
-      @Override
-      public boolean apply(Token t) {
-        return EnumSet.of(TokenType.IN, TokenType.EQUAL).contains(t.type)
-            || (t.type == TokenType.IDENTIFIER
-                && t.asIdentifier().value.equals(PredefinedName.OF));
-      }
-    };
-    ParseTree initializer = peekPattern(PatternKind.ANY, followPred)
-        ? parsePattern(PatternKind.ANY)
-        : parseExpressionNoIn();
+    ParseTree initializer = parseExpressionNoIn();
+    if (peek(TokenType.IN) || peek(TokenType.EQUAL) || peekPredefinedString(PredefinedName.OF)) {
+      initializer = transformLeftHandSideExpression(initializer);
+    }
 
     if (peek(TokenType.IN) || peekPredefinedString(PredefinedName.OF)) {
       if (initializer.type != ParseTreeType.BINARY_OPERATOR
@@ -2434,6 +2425,12 @@ public class Parser {
       } else if (Keywords.isKeyword(name.asIdentifier().value)
           && !Keywords.isTypeScriptSpecificKeyword(name.asIdentifier().value)) {
         reportError(name, "Cannot use keyword in short object literal");
+      } else if (peek(TokenType.EQUAL)) {
+        IdentifierExpressionTree idTree = new IdentifierExpressionTree(
+            getTreeLocation(start), (IdentifierToken) name);
+        eat(TokenType.EQUAL);
+        ParseTree defaultValue = parseAssignmentExpression();
+        return new DefaultParameterTree(getTreeLocation(start), idTree, defaultValue);
       }
     }
     ParseTree value = colon == null ? null : parseAssignmentExpression();
@@ -2585,11 +2582,10 @@ public class Parser {
     }
 
     SourcePosition start = getTreeStartLocation();
-    ParseTree left = peekParenPatternAssignment()
-        ? parseParenPattern()
-        : parseConditional(expressionIn);
+    ParseTree left = parseConditional(expressionIn);
 
     if (peekAssignmentOperator()) {
+      left = transformLeftHandSideExpression(left);
       if (!left.isValidAssignmentTarget()) {
         reportError("invalid assignment target");
       }
@@ -2598,6 +2594,32 @@ public class Parser {
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
     }
     return left;
+  }
+
+  /**
+   * Transforms a LeftHandSideExpression into a LeftHandSidePattern if possible.
+   * This returns the transformed tree if it parses as a LeftHandSidePattern,
+   * otherwise it returns the original tree.
+   */
+  private ParseTree transformLeftHandSideExpression(ParseTree tree) {
+    switch (tree.type) {
+      case ARRAY_LITERAL_EXPRESSION:
+      case OBJECT_LITERAL_EXPRESSION:
+        resetScanner(tree);
+        // If we fail to parse as an LeftHandSidePattern then
+        // parseLeftHandSidePattern will take care reporting errors.
+        return parseLeftHandSidePattern();
+      default:
+        return tree;
+    }
+  }
+
+  private ParseTree parseLeftHandSidePattern() {
+    return parsePattern(PatternKind.ANY);
+  }
+
+  private void resetScanner(ParseTree tree) {
+    scanner.setOffset(tree.location.start.offset);
   }
 
   private boolean peekAssignmentOperator() {
@@ -3047,70 +3069,8 @@ public class Parser {
     ANY,
   }
 
-  private boolean peekParenPatternAssignment() {
-    return peekParenPattern(PatternKind.ANY, assignmentFollowSet);
-  }
-
-  private boolean peekParenPatternStart() {
-    int index = 0;
-    while (peek(index, TokenType.OPEN_PAREN)) {
-      index++;
-    }
-    return peekPatternStart(index);
-  }
-
   private boolean peekPatternStart() {
-    return peekPatternStart(0);
-  }
-
-  private boolean peekPatternStart(int index) {
-    return peek(index, TokenType.OPEN_SQUARE) || peek(index, TokenType.OPEN_CURLY);
-  }
-
-  private ParseTree parseParenPattern() {
-    return parseParenPattern(PatternKind.ANY);
-  }
-
-  private ParseTree parseParenPattern(PatternKind kind) {
-    if (peek(TokenType.OPEN_PAREN)) {
-      SourcePosition start = getTreeStartLocation();
-      eat(TokenType.OPEN_PAREN);
-      ParseTree result = parseParenPattern(kind);
-      eat(TokenType.CLOSE_PAREN);
-      return new ParenExpressionTree(this.getTreeLocation(start), result);
-    } else {
-      return parsePattern(kind);
-    }
-  }
-
-  private boolean peekPattern(PatternKind kind) {
-    return peekPattern(kind, Predicates.<Token>alwaysTrue());
-  }
-
-  private boolean peekPattern(PatternKind kind, Predicate<Token> follow) {
-    if (!peekPatternStart()) {
-      return false;
-    }
-    Parser p = createLookaheadParser();
-    try {
-      p.parsePattern(kind);
-      return follow.apply(p.peekToken());
-    } catch (ParseException e) {
-      return false;
-    }
-  }
-
-  private boolean peekParenPattern(PatternKind kind, EnumSet<TokenType> follow) {
-    if (!peekParenPatternStart()) {
-      return false;
-    }
-    Parser p = createLookaheadParser();
-    try {
-      p.parseParenPattern(kind);
-      return follow.contains(p.peekType());
-    } catch (ParseException e) {
-      return false;
-    }
+    return peek(TokenType.OPEN_SQUARE) || peek(TokenType.OPEN_CURLY);
   }
 
   private ParseTree parsePattern(PatternKind kind) {
@@ -3127,9 +3087,6 @@ public class Parser {
     return peekExpression() || peek(TokenType.SPREAD);
   }
 
-  private static final EnumSet<TokenType> assignmentFollowSet =
-      EnumSet.of(TokenType.EQUAL);
-
   // Element ::= Pattern | LValue | ... LValue
   private ParseTree parseArrayPatternElement(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
@@ -3137,8 +3094,8 @@ public class Parser {
     boolean rest = false;
 
     // [ or { are preferably the start of a sub-pattern
-    if (peekParenPatternStart()) {
-      lvalue = parseParenPattern(kind);
+    if (peekPatternStart()) {
+      lvalue = parsePattern(kind);
     } else {
       // An element that's not a sub-pattern
 
@@ -3268,7 +3225,7 @@ public class Parser {
   private ParseTree parseObjectPatternFieldTail(PatternKind kind) {
     SourcePosition start = getTreeStartLocation();
     ParseTree value;
-    if (peekPattern(kind)) {
+    if (peekPatternStart()) {
       value = parsePattern(kind);
     } else {
       value = (kind == PatternKind.ANY)

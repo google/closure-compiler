@@ -124,7 +124,7 @@ public final class InferConstsTest extends TestCase {
         + "[{a: x} = {a: 'x'}] = {};", "x");
     testNotConsts(""
         + "let fg = '', bg = '';"
-        + "({fg, bg}) = pal[val - 1];", "fg", "bg");
+        + "({fg, bg} = pal[val - 1]);", "fg", "bg");
   }
 
   public void testDefaultValue() {

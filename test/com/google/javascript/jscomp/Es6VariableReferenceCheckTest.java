@@ -294,7 +294,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
     assertEarlyReference("alert(b); var {a: b} = {a: 1};");
     assertEarlyReference("alert(a); var {a} = {a: 1};");
 
-    assertEarlyReference("({a: b}) = {}; var a, b;");
+    assertEarlyReference("({a: b} = {}); var a, b;");
   }
 
   public void testObjectPattern_defaultValue() {

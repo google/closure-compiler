@@ -60,7 +60,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "var b = $jscomp$destructuring$var0.b;"));
 
     test(
-        "var x; ({a: x}) = foo();",
+        "var x; ({a: x} = foo());",
         LINE_JOINER.join(
             "var x;",
             "var $jscomp$destructuring$var0 = foo();",
@@ -100,7 +100,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         "var $jscomp$destructuring$var0 = foo(); var b = $jscomp$destructuring$var0[a];");
 
     test(
-        "({[a]: b}) = foo();",
+        "({[a]: b} = foo());",
         "var $jscomp$destructuring$var0 = foo(); b = $jscomp$destructuring$var0[a];");
 
     test(

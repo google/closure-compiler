@@ -70,6 +70,11 @@ public class Scanner {
         : peekToken().location.start.offset;
   }
 
+  public void setOffset(int index) {
+    currentTokens.clear();
+    this.index = index;
+  }
+
   public SourcePosition getPosition() {
     return getPosition(getOffset());
   }
