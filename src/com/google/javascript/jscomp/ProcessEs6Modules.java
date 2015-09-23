@@ -46,6 +46,11 @@ import java.util.Set;
 public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   private static final String DEFAULT_EXPORT_NAME = "$jscompDefaultExport";
 
+  static final DiagnosticType LHS_OF_GOOG_REQUIRE_MUST_BE_CONST =
+      DiagnosticType.error(
+          "JSC_LHS_OF_GOOG_REQUIRE_MUST_BE_CONST",
+          "The left side of a goog.require() must use ''const'' (not ''let'' or ''var'')");
+
   private final ES6ModuleLoader loader;
 
   private final Compiler compiler;
@@ -372,36 +377,53 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   }
 
   private void rewriteRequires(Node script) {
-    NodeTraversal.traverseEs6(compiler, script, new NodeTraversal.AbstractShallowCallback() {
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.isCall()
-            && n.getFirstChild().matchesQualifiedName("goog.require")
-            && parent.isName()) {
-          visitRequire(n, parent);
-        }
-      }
+    NodeTraversal.traverseEs6(
+        compiler,
+        script,
+        new NodeTraversal.AbstractShallowCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isCall()
+                && n.getFirstChild().matchesQualifiedName("goog.require")
+                && NodeUtil.isNameDeclaration(parent.getParent())) {
+              visitRequire(n, parent);
+            }
+          }
 
-      private void visitRequire(Node requireCall, Node parent) {
-        // Rewrite
-        //
-        //   var foo = goog.require('bar.foo');
-        //
-        // to
-        //
-        //   goog.require('bar.foo');
-        //   var foo = bar.foo;
+          /**
+           * Rewrites
+           *   const foo = goog.require('bar.foo');
+           * to
+           *   goog.require('bar.foo');
+           *   const foo = bar.foo;
+           */
+          private void visitRequire(Node requireCall, Node parent) {
+            String namespace = requireCall.getLastChild().getString();
+            if (!parent.getParent().isConst()) {
+              compiler.report(JSError.make(parent.getParent(), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST));
+            }
 
-        String namespace = requireCall.getLastChild().getString();
+            // If the LHS is a destructuring pattern with the "shorthand" syntax,
+            // desugar it because otherwise the renaming will not be done correctly.
+            //   const {x} = goog.require('y')
+            // becomes
+            //   const {x: x} = goog.require('y');
+            if (parent.isObjectPattern()) {
+              for (Node key = parent.getFirstChild(); key != null; key = key.getNext()) {
+                if (!key.hasChildren()) {
+                  key.addChildToBack(IR.name(key.getString()).useSourceInfoFrom(key));
+                }
+              }
+            }
 
-        Node replacement = NodeUtil.newQName(compiler, namespace).srcrefTree(requireCall);
-        parent.replaceChild(requireCall, replacement);
-        Node varNode = parent.getParent();
-        varNode.getParent().addChildBefore(
-            IR.exprResult(requireCall).srcrefTree(requireCall),
-            varNode);
-      }
-    });
+            Node replacement = NodeUtil.newQName(compiler, namespace).srcrefTree(requireCall);
+            parent.replaceChild(requireCall, replacement);
+            Node varNode = parent.getParent();
+            varNode.getParent().addChildBefore(
+                IR.exprResult(requireCall).srcrefTree(requireCall),
+                varNode);
+          }
+        });
   }
 
   /**

@@ -86,7 +86,7 @@ final class InlineAliases extends AbstractPostOrderCallback implements CompilerP
     switch (n.getType()) {
       case Token.VAR:
         if (n.getChildCount() == 1 && t.inGlobalScope()) {
-          visitAliasDefinition(n.getFirstChild(), n.getFirstChild().getJSDocInfo());
+          visitAliasDefinition(n.getFirstChild(), NodeUtil.getBestJSDocInfo(n.getFirstChild()));
         }
         break;
       case Token.ASSIGN:

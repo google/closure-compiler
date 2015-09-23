@@ -49,9 +49,9 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
             SourceFile.fromCode("A", LINE_JOINER.join(
                 "/** @const */ var $jscomp={}; /** @const */ $jscomp.scope={};",
                 "/** @constructor */ $jscomp.scope.Base = function(){};",
-                "var /** @const */ base = $jscomp.scope.Base;")),
+                "/** @const */ var base = $jscomp.scope.Base;")),
             SourceFile.fromCode("B", LINE_JOINER.join(
-                "var /** @const */ leaf =",
+                "/** @const */ var leaf =",
                 "  /** @constructor @extends {$jscomp.scope.Base} */ function Foo(){}"))));
   }
 
@@ -71,11 +71,11 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode("A", LINE_JOINER.join(
                 "/** @const */ var $jscomp={}; /** @const */ $jscomp.scope={};",
-                "var /** @const */ ns={}; ",
+                " /** @const */ var ns = {}; ",
                 "/** @constructor */ $jscomp.scope.Base = function(){};",
                 "/** @const */ ns.base = $jscomp.scope.Base;")),
             SourceFile.fromCode("B", LINE_JOINER.join(
-                "var /** @const */ leaf =",
+                "/** @const */ var leaf =",
                 "  /** @constructor @extends {$jscomp.scope.Base} */function Foo(){}"))));
   }
 
@@ -96,12 +96,12 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode("A", LINE_JOINER.join(
                 "/** @const */ var $jscomp={}; /** @const */ $jscomp.scope={};",
-                "var /** @const */ ns={}; ",
+                "/** @const */ var ns = {}; ",
                 "/** @constructor */ $jscomp.scope.Base = function(){}",
                 "/** @constructor */ $jscomp.scope.Base.Foo = function(){};",
                 "/** @const */ ns.base = $jscomp.scope.Base;")),
             SourceFile.fromCode("B", LINE_JOINER.join(
-                "var /**@const*/ leaf =",
+                " /**@const*/ var leaf =",
                 "  /**@constructor @extends {$jscomp.scope.Base.Foo}*/function Foo(){}"))));
   }
 
@@ -121,11 +121,11 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode("A", LINE_JOINER.join(
                 "/** @const */ var $jscomp={}; /** @const */ $jscomp.scope={};",
-                "var /** @const */ ns={}; ",
+                "/** @const */ var ns = {}; ",
                 "/** @constructor */ $jscomp.scope.Base = function(){};",
                 "/** @const */ ns.base = $jscomp.scope.Base;")),
             SourceFile.fromCode("B",
-                "var /** @const */ leaf = new $jscomp.scope.Base;")));
+                "/** @const */ var leaf = new $jscomp.scope.Base;")));
   }
 
   public void testSimpleAliasInJSDoc() {
