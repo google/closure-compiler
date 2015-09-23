@@ -180,7 +180,7 @@ class RemoveUnusedClassProperties
         // if the property is never otherwise read we can consider it simply
         // a write.
         // However if the assign expression is used as part of a larger
-        // expression, we much consider it a read. For example:
+        // expression, we must consider it a read. For example:
         //    x = (y.a += 1);
         return NodeUtil.isExpressionResultUsed(parent);
       }
