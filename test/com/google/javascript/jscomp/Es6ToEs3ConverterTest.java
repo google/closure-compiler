@@ -99,6 +99,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("var x = {a, b};", "var x = {a: a, b: b};");
   }
 
+  public void testObjectLiteralMemberFunctionDef() {
+    test(
+        "var x = {/** @return {number} */ a() { return 0; } };",
+        "var x = {/** @return {number} */ a: function() { return 0; } };");
+  }
+
   public void testClassGenerator() {
     test(
         "class C { *foo() { yield 1; } }",

@@ -145,7 +145,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         break;
       case Token.MEMBER_FUNCTION_DEF:
         if (parent.isObjectLit()) {
-          visitMemberDefInObjectLit(n, parent);
+          visitMemberFunctionDefInObjectLit(n, parent);
         }
         break;
       case Token.FOR_OF:
@@ -218,9 +218,10 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    * Converts a member definition in an object literal to an ES3 key/value pair.
    * Member definitions in classes are handled in {@link #visitClass}.
    */
-  private void visitMemberDefInObjectLit(Node n, Node parent) {
+  private void visitMemberFunctionDefInObjectLit(Node n, Node parent) {
     String name = n.getString();
     Node stringKey = IR.stringKey(name, n.getFirstChild().detachFromParent());
+    stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
     compiler.reportCodeChange();
   }
