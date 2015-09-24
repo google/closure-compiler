@@ -2945,6 +2945,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setSkipTranspilationAndCrash(true);
     CompilationLevel.SIMPLE_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
     String code = "f = function(c) { for (var i = 0; i < c.length; i++) {} };";
@@ -3219,6 +3220,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testEs6OutDoesntCrash() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setSkipTranspilationAndCrash(true);
     test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
   }
 

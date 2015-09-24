@@ -42,6 +42,13 @@ final class CompilerOptionsPreprocessor {
           + "remove_unused_prototype_properties to be turned on.");
     }
 
+    if (options.getLanguageOut().isEs6OrHigher()
+        && !options.skipNonTranspilationPasses && !options.skipTranspilationAndCrash) {
+      throw new InvalidOptionsException(
+          "ES6 is only supported for transpilation to a lower ECMAScript"
+          + " version. Set --language_out to ES3, ES5, or ES5_STRICT.");
+    }
+
     if (!options.inlineFunctions
         && options.maxFunctionSizeAfterInlining
         != CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING) {
