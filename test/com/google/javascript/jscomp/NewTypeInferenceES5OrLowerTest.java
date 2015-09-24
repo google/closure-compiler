@@ -7519,6 +7519,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  s - 1;",
         "}"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @return {string} */",
+        "Foo.prototype.method = function() { return 'asdf'; };",
+        "function f(/** !Foo */ obj) {",
+        "  /** @const */",
+        "  var x = obj.method();",
+        "}"));
   }
 
   public void testInferConstTypeFromGenerics() {

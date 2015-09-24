@@ -1536,7 +1536,12 @@ class GlobalTypeInfo implements CompilerPass {
     private FunctionType simpleInferFunctionType(Node n) {
       if (n.isQualifiedName()) {
         Declaration decl = currentScope.getDeclaration(QualifiedName.fromNode(n), false);
-        if (decl != null && decl.getFunctionScope() != null) {
+        if (decl == null) {
+          JSType t = simpleInferExprType(n);
+          if (t != null) {
+            return t.getFunTypeIfSingletonObj();
+          }
+        } else if (decl.getFunctionScope() != null) {
           DeclaredFunctionType funType = decl.getFunctionScope().getDeclaredFunctionType();
           if (funType != null) {
             return funType.toFunctionType();
@@ -1544,6 +1549,37 @@ class GlobalTypeInfo implements CompilerPass {
         }
       }
       return null;
+    }
+
+    private JSType simpleInferCallNewType(Node n) {
+      Node callee = n.getFirstChild();
+      // We special-case the function goog.getMsg, which is used by the
+      // compiler for i18n.
+      if (callee.matchesQualifiedName("goog.getMsg")) {
+        return JSType.STRING;
+      }
+      FunctionType funType = simpleInferFunctionType(callee);
+      if (funType == null) {
+        return null;
+      }
+      if (funType.isGeneric()) {
+        ImmutableList.Builder<JSType> argTypes = ImmutableList.builder();
+        for (Node argNode = n.getFirstChild().getNext();
+             argNode != null;
+             argNode = argNode.getNext()) {
+          JSType t = simpleInferExprType(argNode);
+          if (t == null) {
+            return null;
+          }
+          argTypes.add(t);
+        }
+        funType = funType.instantiateGenericsFromArgumentTypes(argTypes.build());
+        if (funType == null) {
+          return null;
+        }
+      }
+      JSType retType = n.isNew() ? funType.getThisType() : funType.getReturnType();
+      return retType;
     }
 
     private JSType simpleInferExprType(Node n) {
@@ -1594,38 +1630,8 @@ class GlobalTypeInfo implements CompilerPass {
         case Token.ASSIGN:
           return simpleInferExprType(n.getLastChild());
         case Token.CALL:
-        case Token.NEW: {
-          Node callee = n.getFirstChild();
-          // We special-case the function goog.getMsg, which is used by the
-          // compiler for i18n.
-          if (callee.matchesQualifiedName("goog.getMsg")) {
-            return JSType.STRING;
-          }
-          FunctionType funType = simpleInferFunctionType(callee);
-          if (funType == null) {
-            return null;
-          }
-          if (funType.isGeneric()) {
-            ImmutableList.Builder<JSType> argTypes = ImmutableList.builder();
-            for (Node argNode = n.getFirstChild().getNext();
-                 argNode != null;
-                 argNode = argNode.getNext()) {
-              JSType t = simpleInferExprType(argNode);
-              if (t == null) {
-                return null;
-              }
-              argTypes.add(t);
-            }
-            funType = funType
-                .instantiateGenericsFromArgumentTypes(argTypes.build());
-            if (funType == null) {
-              return null;
-            }
-          }
-          JSType retType =
-              n.isNew() ? funType.getThisType() : funType.getReturnType();
-          return retType;
-        }
+        case Token.NEW:
+          return simpleInferCallNewType(n);
         default:
           switch (NodeUtil.getKnownValueType(n)) {
             case NULL:
