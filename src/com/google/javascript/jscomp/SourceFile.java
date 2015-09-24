@@ -522,6 +522,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   static class OnDisk extends SourceFile {
     private static final long serialVersionUID = 1L;
     private final File file;
+    private static final String UTF8_BOM = String.format("%c", CommandLineRunner.UTF8_BOM_CODE);
 
     // This is stored as a String, but passed in and out as a Charset so that
     // we can serialize the class.
@@ -543,6 +544,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
       if (cachedCode == null) {
         cachedCode = Files.toString(file, this.getCharset());
+        if (cachedCode != null && this.getCharset() == StandardCharsets.UTF_8 &&
+            cachedCode.startsWith(UTF8_BOM)) {
+          cachedCode = cachedCode.substring(UTF8_BOM.length());
+        }
+
         super.setCode(cachedCode);
       }
       return cachedCode;
