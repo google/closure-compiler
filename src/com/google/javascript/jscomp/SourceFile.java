@@ -52,7 +52,6 @@ import java.util.zip.ZipFile;
  */
 public class SourceFile implements StaticSourceFile, Serializable {
   private static final long serialVersionUID = 1L;
-  private static final String UTF8_BOM = String.format("%c", CommandLineRunner.UTF8_BOM_CODE);
 
   /** A JavaScript source code provider.  The value should
    * be cached so that the source text stays consistent throughout a single
@@ -170,15 +169,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   private void setCode(String sourceCode) {
-    this.setCode(sourceCode, false);
-  }
-
-  private void setCode(String sourceCode, boolean removeUtf8Bom) {
-    if (removeUtf8Bom && sourceCode != null && sourceCode.startsWith(UTF8_BOM)) {
-      code = sourceCode.substring(UTF8_BOM.length());
-    } else {
-      code = sourceCode;
-    }
+    code = sourceCode;
   }
 
   public String getOriginalPath() {
@@ -552,7 +543,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
       if (cachedCode == null) {
         cachedCode = Files.toString(file, this.getCharset());
-        super.setCode(cachedCode, this.getCharset() == StandardCharsets.UTF_8);
+        super.setCode(cachedCode);
       }
       return cachedCode;
     }
@@ -645,7 +636,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
       if (cachedCode == null) {
         cachedCode = Resources.toString(url, this.getCharset());
-        super.setCode(cachedCode, this.getCharset() == StandardCharsets.UTF_8);
+        super.setCode(cachedCode);
       }
       return cachedCode;
     }
