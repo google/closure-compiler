@@ -1069,11 +1069,18 @@ angular.$compileProvider = function() {};
 angular.$compileProvider.prototype.debugInfoEnabled = function(opt_enabled) {};
 
 /**
- * @param {!Array.<!RegExp>=} opt_expressions
+ * @param {!RegExp=} opt_expression
  * @return {!RegExp|!angular.$compileProvider}
  */
 angular.$compileProvider.prototype.aHrefSanitizationWhitelist = function(
-    opt_expressions) {};
+    opt_expression) {};
+
+/**
+ * @param {!RegExp=} opt_expression
+ * @return {!RegExp|!angular.$compileProvider}
+ */
+angular.$compileProvider.prototype.imgSrcSanitizationWhitelist = function(
+    opt_expression) {};
 
 /******************************************************************************
  * $cacheFactory Service
