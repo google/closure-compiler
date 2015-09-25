@@ -644,18 +644,24 @@ angular.Module.prototype.config = function(configFn) {};
 angular.Module.prototype.constant = function(name, object) {};
 
 /**
- * @param {string} name
- * @param {angular.Injectable} constructor
+ * Intended to be called with either a name string and a constructor, or an
+ * Object with names as keys and constructors as values.
+ *
+ * @param {string|!Object.<angular.Injectable>} name
+ * @param {angular.Injectable=} opt_constructor
  * @return {!angular.Module}
  */
-angular.Module.prototype.controller = function(name, constructor) {};
+angular.Module.prototype.controller = function(name, opt_constructor) {};
 
 /**
- * @param {string} name
- * @param {angular.Injectable} directiveFactory
+ * Intended to be called with either a name string and a directive factory, or
+ * an Object with names as keys and directive factories as values.
+ *
+ * @param {string|!Object.<angular.Injectable>} name
+ * @param {angular.Injectable=} opt_directiveFactory
  * @return {!angular.Module}
  */
-angular.Module.prototype.directive = function(name, directiveFactory) {};
+angular.Module.prototype.directive = function(name, opt_directiveFactory) {};
 
 /**
  * @param {string} name
