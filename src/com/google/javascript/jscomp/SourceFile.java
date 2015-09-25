@@ -553,6 +553,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
       if (cachedCode == null) {
         cachedCode = Files.toString(file, this.getCharset());
         super.setCode(cachedCode, this.getCharset() == StandardCharsets.UTF_8);
+        // Byte Order Mark can be removed by setCode
+        cachedCode = super.getCode();
       }
       return cachedCode;
     }
@@ -646,6 +648,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
       if (cachedCode == null) {
         cachedCode = Resources.toString(url, this.getCharset());
         super.setCode(cachedCode, this.getCharset() == StandardCharsets.UTF_8);
+        // Byte Order Mark can be removed by setCode
+        cachedCode = super.getCode();
       }
       return cachedCode;
     }
