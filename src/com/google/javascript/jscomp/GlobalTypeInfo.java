@@ -1546,6 +1546,8 @@ class GlobalTypeInfo implements CompilerPass {
           if (funType != null) {
             return funType.toFunctionType();
           }
+        } else if (decl.getTypeOfSimpleDecl() != null) {
+          return decl.getTypeOfSimpleDecl().getFunTypeIfSingletonObj();
         }
       }
       return null;

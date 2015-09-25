@@ -7510,7 +7510,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
-  public void testInferConstTypeFromQualifiedName() {
+  public void testInferConstTypeForMethods() {
     typeCheck(Joiner.on('\n').join(
         "/** @const */ var ns = {}",
         "/** @return {string} */ ns.f = function() { return 'str'; };",
@@ -7529,6 +7529,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  /** @const */",
         "  var x = obj.method();",
         "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function foo(bar) {",
+        "  /** @const */",
+        "  var ns = {};",
+        "  /** @type {function():number} */",
+        "  ns.f = bar;",
+        "  /** @const */",
+        "  var x = ns.f();",
+        "};"));
   }
 
   public void testInferConstTypeFromGenerics() {
