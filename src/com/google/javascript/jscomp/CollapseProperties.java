@@ -287,7 +287,9 @@ class CollapseProperties implements CompilerPass {
     if (name.props == null) {
       return;
     }
-    Preconditions.checkState(!value.matchesQualifiedName(name.getFullName()));
+    Preconditions.checkState(
+        !value.matchesQualifiedName(name.getFullName()),
+        "%s should not match name %s", value, name.getFullName());
     for (Name prop : name.props) {
       rewriteAliasProps(prop, value, depth + 1, newNodes);
       List<Ref> refs = new ArrayList<>(prop.getRefs());
