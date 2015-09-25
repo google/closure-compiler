@@ -2810,6 +2810,14 @@ chrome.i18n.getUILanguage = function() {};
 
 
 /**
+ * @param {string} text User input string to be detected.
+ * @param {function(!Object)} callback The callback for passing back the
+ *     language detection result.
+ */
+chrome.i18n.detectLanguage = function(text, callback) {};
+
+
+/**
  * @const
  * @see https://developer.chrome.com/extensions/pageAction.html
  */
