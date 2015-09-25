@@ -12459,8 +12459,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testArgumentsArray() {
-    typeCheck("arguments = 123;",
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+    typeCheck("function f() { arguments = 123; }");
 
     typeCheck(
         "function f(x, i) { return arguments[i]; }");
