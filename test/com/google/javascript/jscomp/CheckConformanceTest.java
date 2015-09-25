@@ -996,6 +996,37 @@ public final class CheckConformanceTest extends CompilerTestCase {
         null);
   }
 
+  public void testCustomBanUnknownInterfaceProp1() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testSame(
+        EXTERNS,
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "I.prototype.method = function() {};",
+            "/** @param {!I} a */ function f(a) {",
+            "  a.gak();",
+            "}"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message\nThe property \"gak\" on type \"I\"");
+  }
+
+  public void testCustomBanUnknownInterfaceProp2() {
+    configuration =
+        config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
+
+    testSame(
+        EXTERNS,
+        LINE_JOINER.join(
+            "/** @interface */ function I() {}",
+            "I.prototype.method = function() {};",
+            "/** @param {I} a */ function f(a) {",
+            "  a.method();",
+            "}"),
+        null);
+  }
+
   public void testCustomBanGlobalVars1() {
     configuration =
         "requirement: {\n" +

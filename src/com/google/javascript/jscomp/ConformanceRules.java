@@ -1174,7 +1174,7 @@ public final class ConformanceRules {
         FunctionType ctor = type.getConstructor();
         if (ctor != null) {
           JSDocInfo info = ctor.getJSDocInfo();
-          if (info != null && info.isConstructor()) {
+          if (info != null && info.isConstructorOrInterface()) {
             return true;
           }
         }
