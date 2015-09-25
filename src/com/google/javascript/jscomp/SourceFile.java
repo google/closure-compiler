@@ -52,7 +52,7 @@ import java.util.zip.ZipFile;
  */
 public class SourceFile implements StaticSourceFile, Serializable {
   private static final long serialVersionUID = 1L;
-  private static final String UTF8_BOM = String.format("%c", CommandLineRunner.UTF8_BOM_CODE);
+  private static final String UTF8_BOM = "\uFEFF";
 
   /** A JavaScript source code provider.  The value should
    * be cached so that the source text stays consistent throughout a single
