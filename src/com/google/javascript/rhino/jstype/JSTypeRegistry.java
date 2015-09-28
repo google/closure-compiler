@@ -1624,9 +1624,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
             !(namedType instanceof NamespaceType) &&
             !(nonNullableTypeNames.contains(n.getString()))) {
           Node typeList = n.getFirstChild();
-          int nAllowedTypes =
-              namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
-          if (typeList != null && nAllowedTypes > 0) {
+          int nAllowedTypes = namedType.getTemplateTypeMap().numUnfilledTemplateKeys();
+          if (!namedType.isUnknownType() && typeList != null) {
             // Templatized types.
             ImmutableList.Builder<JSType> templateTypes =
                 ImmutableList.builder();
