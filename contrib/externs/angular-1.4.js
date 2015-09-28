@@ -19,7 +19,6 @@
  *
  * TODO: Mocks.
  * TODO: Remaining Services:
- *     $cookies
  *     $cookieStore
  *     $document
  *     $httpBackend
@@ -1161,6 +1160,74 @@ angular.$controller;
  *   }}
  */
 angular.$controllerProvider;
+
+/******************************************************************************
+ * $cookies Service
+ *****************************************************************************/
+
+/**
+ * @constructor
+ */
+angular.$cookies = function() {};
+
+/**
+ * @param {string} key
+ * @return {string|undefined}
+ */
+angular.$cookies.prototype.get = function(key) {};
+
+/**
+ * @param {string} key
+ * @return {?Object|undefined}
+ */
+angular.$cookies.prototype.getObject = function(key) {};
+
+/**
+ * @return {!Object<string, string>}
+ */
+angular.$cookies.prototype.getAll = function() {};
+
+/**
+ * @param {string} key
+ * @param {string} value
+ * @param {!angular.$cookies.Config=} opt_options
+ */
+angular.$cookies.prototype.put = function(key, value, opt_options) {};
+
+/**
+ * @param {string} key
+ * @param {?Object} value
+ * @param {!angular.$cookies.Config=} opt_options
+ */
+angular.$cookies.prototype.putObject = function(key, value, opt_options) {};
+
+/**
+ * @param {string} key
+ * @param {!angular.$cookies.Config=} opt_options
+ */
+angular.$cookies.prototype.remove = function(key, opt_options) {};
+
+/**
+ * See:
+ * https://docs.angularjs.org/api/ngCookies/provider/$cookiesProvider#defaults
+ * @typedef {{
+ *   path: (string|undefined),
+ *   domain: (string|undefined),
+ *   date: (string|!Date|undefined),
+ *   secure: (boolean|undefined)
+ * }}
+ */
+angular.$cookies.Config;
+
+/**
+ * @constructor
+ */
+angular.$cookiesProvider = function() {};
+
+/**
+ * @type {angular.$cookies.Config}
+ */
+angular.$cookiesProvider.prototype.defaults;
 
 /******************************************************************************
  * $exceptionHandler Service
