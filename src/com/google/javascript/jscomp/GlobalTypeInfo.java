@@ -66,58 +66,58 @@ import java.util.Set;
 class GlobalTypeInfo implements CompilerPass {
 
   static final DiagnosticType DUPLICATE_JSDOC = DiagnosticType.warning(
-      "JSC_DUPLICATE_JSDOC",
+      "JSC_NTI_DUPLICATE_JSDOC",
       "Found two JsDoc comments for variable: {0}.\n");
 
   static final DiagnosticType REDECLARED_PROPERTY = DiagnosticType.warning(
-      "JSC_REDECLARED_PROPERTY",
+      "JSC_NTI_REDECLARED_PROPERTY",
       "Found two declarations for property {0} on type {1}.\n");
 
   static final DiagnosticType INVALID_PROP_OVERRIDE = DiagnosticType.warning(
-      "JSC_INVALID_PROP_OVERRIDE",
+      "JSC_NTI_INVALID_PROP_OVERRIDE",
       "Invalid redeclaration of property {0}.\n"
       + "inherited type  : {1}\n"
       + "overriding type : {2}\n");
 
   static final DiagnosticType CTOR_IN_DIFFERENT_SCOPE = DiagnosticType.warning(
-      "JSC_CTOR_IN_DIFFERENT_SCOPE",
+      "JSC_NTI_CTOR_IN_DIFFERENT_SCOPE",
       "Modifying the prototype is only allowed if the constructor is "
       + "in the same scope\n");
 
   static final DiagnosticType UNRECOGNIZED_TYPE_NAME = DiagnosticType.warning(
-      "JSC_UNRECOGNIZED_TYPE_NAME",
+      "JSC_NTI_UNRECOGNIZED_TYPE_NAME",
       "Type annotation references non-existent type {0}.");
 
   static final DiagnosticType STRUCTDICT_WITHOUT_CTOR = DiagnosticType.warning(
-      "JSC_STRUCTDICT_WITHOUT_CTOR",
+      "JSC_NTI_STRUCTDICT_WITHOUT_CTOR",
       "{0} used without @constructor.");
 
   static final DiagnosticType EXPECTED_CONSTRUCTOR = DiagnosticType.warning(
-      "JSC_EXPECTED_CONSTRUCTOR",
+      "JSC_NTI_EXPECTED_CONSTRUCTOR",
       "Expected constructor name but found {0}.");
 
   static final DiagnosticType EXPECTED_INTERFACE = DiagnosticType.warning(
-      "JSC_EXPECTED_INTERFACE",
+      "JSC_NTI_EXPECTED_INTERFACE",
       "Expected interface name but found {0}.");
 
   static final DiagnosticType INEXISTENT_PARAM = DiagnosticType.warning(
-      "JSC_INEXISTENT_PARAM",
+      "JSC_NTI_INEXISTENT_PARAM",
       "parameter {0} does not appear in {1}''s parameter list");
 
   static final DiagnosticType CONST_WITHOUT_INITIALIZER =
       DiagnosticType.warning(
-          "JSC_CONST_WITHOUT_INITIALIZER",
+          "JSC_NTI_CONST_WITHOUT_INITIALIZER",
           "Constants must be initialized when they are defined.");
 
   static final DiagnosticType COULD_NOT_INFER_CONST_TYPE =
       DiagnosticType.warning(
-          "JSC_COULD_NOT_INFER_CONST_TYPE",
+          "JSC_NTI_COULD_NOT_INFER_CONST_TYPE",
           "All constants must be typed. The compiler could not infer the type "
           + "of this constant. Please use an explicit type annotation.");
 
   static final DiagnosticType MISPLACED_CONST_ANNOTATION =
       DiagnosticType.warning(
-          "JSC_MISPLACED_CONST_ANNOTATION",
+          "JSC_NTI_MISPLACED_CONST_ANNOTATION",
           "This property cannot be @const. "
           + "The @const annotation is only allowed for "
           + "properties of namespaces, prototype properties, "
@@ -126,67 +126,98 @@ class GlobalTypeInfo implements CompilerPass {
 
   static final DiagnosticType CANNOT_OVERRIDE_FINAL_METHOD =
       DiagnosticType.warning(
-      "JSC_CANNOT_OVERRIDE_FINAL_METHOD",
+      "JSC_NTI_CANNOT_OVERRIDE_FINAL_METHOD",
       "Final method {0} cannot be overriden.");
 
   static final DiagnosticType CANNOT_INIT_TYPEDEF =
       DiagnosticType.warning(
-      "JSC_CANNOT_INIT_TYPEDEF",
+      "JSC_NTI_CANNOT_INIT_TYPEDEF",
       "A typedef variable represents a type name; it cannot be assigned a value.");
 
   static final DiagnosticType ANONYMOUS_NOMINAL_TYPE =
       DiagnosticType.warning(
-          "JSC_ANONYMOUS_NOMINAL_TYPE",
+          "JSC_NTI_ANONYMOUS_NOMINAL_TYPE",
           "Must specify a name when defining a class or interface.");
 
   static final DiagnosticType MALFORMED_ENUM =
       DiagnosticType.warning(
-          "JSC_MALFORMED_ENUM",
+          "JSC_NTI_MALFORMED_ENUM",
           "An enum must be initialized to a non-empty object literal.");
 
   static final DiagnosticType DUPLICATE_PROP_IN_ENUM =
       DiagnosticType.warning(
-          "JSC_DUPLICATE_PROP_IN_ENUM",
+          "JSC_NTI_DUPLICATE_PROP_IN_ENUM",
           "Property {0} appears twice in the enum declaration.");
 
   static final DiagnosticType UNDECLARED_NAMESPACE =
       DiagnosticType.warning(
-          "JSC_UNDECLARED_NAMESPACE",
+          "JSC_NTI_UNDECLARED_NAMESPACE",
           "Undeclared reference to {0}.");
 
   static final DiagnosticType LENDS_ON_BAD_TYPE =
       DiagnosticType.warning(
-          "JSC_LENDS_ON_BAD_TYPE",
+          "JSC_NTI_LENDS_ON_BAD_TYPE",
           "May only lend properties to namespaces, constructors and their"
           + " prototypes. Found {0}.");
 
   static final DiagnosticType FUNCTION_CONSTRUCTOR_NOT_DEFINED =
       DiagnosticType.error(
-          "JSC_FUNCTION_CONSTRUCTOR_NOT_DEFINED",
+          "JSC_NTI_FUNCTION_CONSTRUCTOR_NOT_DEFINED",
           "You must provide externs that define the built-in Function constructor.");
 
   static final DiagnosticType INVALID_INTERFACE_PROP_INITIALIZER =
       DiagnosticType.warning(
-          "JSC_INVALID_INTERFACE_PROP_INITIALIZER",
+          "JSC_NTI_INVALID_INTERFACE_PROP_INITIALIZER",
           "Invalid initialization of interface property.");
 
   static final DiagnosticType SETTER_WITH_RETURN =
       DiagnosticType.warning(
-          "JSC_SETTER_WITH_RETURN",
+          "JSC_NTI_SETTER_WITH_RETURN",
           "Cannot declare a return type on a setter.");
 
   static final DiagnosticType WRONG_PARAMETER_COUNT =
       DiagnosticType.warning(
-          "JSC_WRONG_PARAMETER_COUNT",
+          "JSC_NTI_WRONG_PARAMETER_COUNT",
           "Function definition does not have the declared number of parameters.\n"
           + "Expected: {0}\n"
           + "Found: {1}");
 
   static final DiagnosticType CANNOT_ADD_PROPERTIES_TO_TYPEDEF =
       DiagnosticType.warning(
-          "JSC_CANNOT_ADD_PROPERTIES_TO_TYPEDEF",
+          "JSC_NTI_CANNOT_ADD_PROPERTIES_TO_TYPEDEF",
           "A typedef should only be used in type annotations, not as a value."
           + " Adding properties to typedefs is not allowed.");
+
+  static final DiagnosticType ENUM_PROP_NOT_CONSTANT =
+      DiagnosticType.warning("JSC_NTI_ENUM_PROP_NOT_CONSTANT",
+          "enum key {0} must be in ALL_CAPS");
+
+  static final DiagnosticType SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES =
+      DiagnosticType.warning(
+          "JSC_NTI_SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES",
+          "Interface {0} has a property {1} with incompatible types in "
+          + "its super interfaces\n"
+          + "Inherited type 1: {2}\n"
+          + "Inherited type 2: {3}\n");
+
+  static final DiagnosticType ONE_TYPE_FOR_MANY_VARS = DiagnosticType.warning(
+      "JSC_NTI_ONE_TYPE_FOR_MANY_VARS",
+      "Having one type annotation for multiple variables is not allowed.");
+
+  static final DiagnosticType UNKNOWN_OVERRIDE =
+      DiagnosticType.warning(
+          "JSC_NTI_UNKNOWN_OVERRIDE",
+          "property {0} not defined on any supertype of {1}");
+
+  static final DiagnosticType INTERFACE_METHOD_NOT_IMPLEMENTED =
+      DiagnosticType.warning(
+          "JSC_NTI_INTERFACE_METHOD_NOT_IMPLEMENTED",
+          "property {0} on interface {1} is not implemented by type {2}");
+
+  static final DiagnosticType INTERFACE_METHOD_NOT_EMPTY =
+      DiagnosticType.warning(
+          "JSC_NTI_INTERFACE_METHOD_NOT_EMPTY",
+          "interface member functions must have an empty body");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ANONYMOUS_NOMINAL_TYPE,
@@ -198,27 +229,27 @@ class GlobalTypeInfo implements CompilerPass {
       CTOR_IN_DIFFERENT_SCOPE,
       DUPLICATE_JSDOC,
       DUPLICATE_PROP_IN_ENUM,
+      ENUM_PROP_NOT_CONSTANT,
       EXPECTED_CONSTRUCTOR,
       EXPECTED_INTERFACE,
       FUNCTION_CONSTRUCTOR_NOT_DEFINED,
       INEXISTENT_PARAM,
+      INTERFACE_METHOD_NOT_EMPTY,
+      INTERFACE_METHOD_NOT_IMPLEMENTED,
       INVALID_INTERFACE_PROP_INITIALIZER,
       INVALID_PROP_OVERRIDE,
       LENDS_ON_BAD_TYPE,
       MALFORMED_ENUM,
       MISPLACED_CONST_ANNOTATION,
+      ONE_TYPE_FOR_MANY_VARS,
       REDECLARED_PROPERTY,
       SETTER_WITH_RETURN,
       STRUCTDICT_WITHOUT_CTOR,
+      SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
       UNDECLARED_NAMESPACE,
+      UNKNOWN_OVERRIDE,
       UNRECOGNIZED_TYPE_NAME,
-      WRONG_PARAMETER_COUNT,
-      TypeCheck.CONFLICTING_EXTENDED_TYPE,
-      TypeCheck.ENUM_NOT_CONSTANT,
-      TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
-      TypeCheck.MULTIPLE_VAR_DEF,
-      TypeCheck.UNKNOWN_OVERRIDE,
-      TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED //,
+      WRONG_PARAMETER_COUNT//,
       // VarCheck.UNDEFINED_VAR_ERROR,
       // VariableReferenceCheck.REDECLARED_VARIABLE,
       // VariableReferenceCheck.EARLY_REFERENCE
@@ -485,11 +516,11 @@ class GlobalTypeInfo implements CompilerPass {
         if (!resultType.isBottom()) {
           resultType = inheritedType;
         } else {
-          Node defSite = rawType.getDefSite();
-          // TODO(blickly): Fix this error message to include supertype names
           warnings.add(JSError.make(
-              defSite, TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE,
-              NodeUtil.getNearestFunctionName(defSite), pname, "", ""));
+              rawType.getDefSite(),
+              SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+              rawType.getName(), pname,
+              inheritedType.toString(), resultType.toString()));
           continue add_interface_props;
         }
       }
@@ -502,7 +533,7 @@ class GlobalTypeInfo implements CompilerPass {
       Node propDefsite = propertyDefs.get(rawType, pname).defSite;
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propDefsite);
       if (jsdoc != null && jsdoc.isOverride()) {
-        warnings.add(JSError.make(propDefsite, TypeCheck.UNKNOWN_OVERRIDE,
+        warnings.add(JSError.make(propDefsite, UNKNOWN_OVERRIDE,
                 pname, rawType.getName()));
       }
     }
@@ -531,7 +562,7 @@ class GlobalTypeInfo implements CompilerPass {
         && !current.mayHaveProp(pname)) {
       warnings.add(JSError.make(
           inheritedPropDefs.iterator().next().defSite,
-          TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED,
+          INTERFACE_METHOD_NOT_IMPLEMENTED,
           pname, superType.toString(), current.toString()));
       return;
     }
@@ -781,8 +812,7 @@ class GlobalTypeInfo implements CompilerPass {
           warnings.add(JSError.make(qnameNode, DUPLICATE_PROP_IN_ENUM, pname));
         }
         if (!convention.isValidEnumKey(pname)) {
-          warnings.add(
-              JSError.make(prop, TypeCheck.ENUM_NOT_CONSTANT, pname));
+          warnings.add(JSError.make(prop, ENUM_PROP_NOT_CONSTANT, pname));
         }
         propNames.add(pname);
       }
@@ -1303,7 +1333,7 @@ class GlobalTypeInfo implements CompilerPass {
         String abstractMethodName = convention.getAbstractMethodName();
         if (initializer.isFunction()
             && !NodeUtil.isEmptyFunctionExpression(initializer)) {
-          warnings.add(JSError.make(initializer, TypeCheck.INTERFACE_METHOD_NOT_EMPTY));
+          warnings.add(JSError.make(initializer, INTERFACE_METHOD_NOT_EMPTY));
         } else if (!initializer.isFunction()
             && !initializer.matchesQualifiedName(abstractMethodName)) {
           warnings.add(JSError.make(initializer, INVALID_INTERFACE_PROP_INITIALIZER));
@@ -1872,7 +1902,7 @@ class GlobalTypeInfo implements CompilerPass {
       JSType varType =
           getDeclaredTypeOfNode(varNode.getJSDocInfo(), currentScope);
       if (varNode.getChildCount() > 1 && varType != null) {
-        warnings.add(JSError.make(varNode, TypeCheck.MULTIPLE_VAR_DEF));
+        warnings.add(JSError.make(varNode, ONE_TYPE_FOR_MANY_VARS));
       }
       String varName = nameNode.getString();
       JSType nameNodeType =

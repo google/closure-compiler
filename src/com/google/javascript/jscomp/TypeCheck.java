@@ -245,7 +245,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   static final DiagnosticType ILLEGAL_OBJLIT_KEY =
       DiagnosticType.warning(
-          "ILLEGAL_OBJLIT_KEY",
+          "JSC_ILLEGAL_OBJLIT_KEY",
           "Illegal key, the object literal is a {0}");
 
   static final DiagnosticType NON_STRINGIFIABLE_OBJECT_KEY =

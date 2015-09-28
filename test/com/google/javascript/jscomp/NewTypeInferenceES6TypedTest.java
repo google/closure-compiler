@@ -126,7 +126,7 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         "  ['prop']: string;",
         "}",
         "(new Foo).prop - 5;"),
-        TypeCheck.INEXISTENT_PROPERTY);
+        NewTypeInference.INEXISTENT_PROPERTY);
   }
 
   public void testOptionalParameter() {
@@ -175,7 +175,7 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
     typeCheck(LINE_JOINER.join(
         "interface Foo {}",
         "(new Foo);"),
-        TypeCheck.NOT_A_CONSTRUCTOR);
+        NewTypeInference.NOT_A_CONSTRUCTOR);
 
     typeCheck(LINE_JOINER.join(
         "interface Foo {",
@@ -183,7 +183,7 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         "}",
         "class Bar implements Foo {",
         "}"),
-        TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED);
+        GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED);
 
     typeCheck(LINE_JOINER.join(
         "interface Foo {",
@@ -191,7 +191,7 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         "}",
         "class Bar extends Foo {",
         "}"),
-        TypeCheck.CONFLICTING_EXTENDED_TYPE);
+        JSTypeCreatorFromJSDoc.CONFLICTING_EXTENDED_TYPE);
 
     typeCheck("interface Foo extends Foo {}",
         JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
@@ -204,7 +204,7 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         "  prop: string;",
         "}",
         "interface Baz extends Foo, Bar {}"),
-        TypeCheck.INCOMPATIBLE_EXTENDED_PROPERTY_TYPE);
+        GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
   public void testAmbientDeclaration() {

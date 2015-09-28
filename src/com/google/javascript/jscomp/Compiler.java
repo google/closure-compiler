@@ -294,8 +294,8 @@ public class Compiler extends AbstractCompiler {
   }
 
   /**
-   * Initialize the compiler options. Only necessary if you're not doing
-   * a normal compile() job.
+   * Initializes the compiler options. It's called as part of a normal compile() job.
+   * Public for the callers that are not doing a normal compile() job.
    */
   public void initOptions(CompilerOptions options) {
     this.options = options;

@@ -61,38 +61,38 @@ import java.util.Set;
 final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType MISTYPED_ASSIGN_RHS = DiagnosticType.warning(
-      "JSC_MISTYPED_ASSIGN_RHS",
-      "The right side in the assignment is not a subtype of the left side.\n" +
-      "left side  : {0}\n" +
-      "right side : {1}\n");
+      "JSC_NTI_MISTYPED_ASSIGN_RHS",
+      "The right side in the assignment is not a subtype of the left side.\n"
+      + "left side  : {0}\n"
+      + "right side : {1}\n");
 
   static final DiagnosticType INVALID_OPERAND_TYPE = DiagnosticType.warning(
-      "JSC_INVALID_OPERAND_TYPE",
+      "JSC_NTI_INVALID_OPERAND_TYPE",
       "Invalid type(s) for operator {0}.\n" +
       "expected : {1}\n" +
       "found    : {2}\n");
 
   static final DiagnosticType RETURN_NONDECLARED_TYPE = DiagnosticType.warning(
-      "JSC_RETURN_NONDECLARED_TYPE",
+      "JSC_NTI_RETURN_NONDECLARED_TYPE",
       "Returned type does not match declared return type.\n" +
       "declared : {0}\n" +
       "found    : {1}\n");
 
   static final DiagnosticType INVALID_INFERRED_RETURN_TYPE =
       DiagnosticType.warning(
-          "JSC_INVALID_INFERRED_RETURN_TYPE",
+          "JSC_NTI_INVALID_INFERRED_RETURN_TYPE",
           "Function called in context that expects incompatible type.\n" +
           "expected : {0}\n" +
           "found    : {1}\n");
 
   static final DiagnosticType INVALID_ARGUMENT_TYPE = DiagnosticType.warning(
-      "JSC_INVALID_ARGUMENT_TYPE",
+      "JSC_NTI_INVALID_ARGUMENT_TYPE",
       "Invalid type for parameter {0} of function {1}.\n" +
       "expected : {2}\n" +
       "found    : {3}\n");
 
   static final DiagnosticType CROSS_SCOPE_GOTCHA = DiagnosticType.warning(
-      "JSC_CROSS_SCOPE_GOTCHA",
+      "JSC_NTI_CROSS_SCOPE_GOTCHA",
       "You thought we weren't going to notice? Guess again.\n" +
       "Variable {0} typed inconsistently across scopes.\n" +
       "In outer scope : {1}\n" +
@@ -100,103 +100,158 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType POSSIBLY_INEXISTENT_PROPERTY =
       DiagnosticType.warning(
-          "JSC_POSSIBLY_INEXISTENT_PROPERTY",
+          "JSC_NTI_POSSIBLY_INEXISTENT_PROPERTY",
           "Property {0} may not be present on {1}.");
 
   static final DiagnosticType NULLABLE_DEREFERENCE =
       DiagnosticType.disabled(
-          "JSC_NULLABLE_DEREFERENCE",
+          "JSC_NTI_NULLABLE_DEREFERENCE",
           "Attempt to use nullable type {0}.");
 
   static final DiagnosticType PROPERTY_ACCESS_ON_NONOBJECT =
       DiagnosticType.warning(
-          "JSC_PROPERTY_ACCESS_ON_NONOBJECT",
+          "JSC_NTI_PROPERTY_ACCESS_ON_NONOBJECT",
           "Cannot access property {0} of non-object type {1}.");
 
   static final DiagnosticType NOT_UNIQUE_INSTANTIATION =
       DiagnosticType.warning(
-          "JSC_NOT_UNIQUE_INSTANTIATION",
+          "JSC_NTI_NOT_UNIQUE_INSTANTIATION",
           "Illegal instantiation for type variable {0}.\n" +
           "You can only specify one type. Found {1}.");
 
   static final DiagnosticType FAILED_TO_UNIFY =
       DiagnosticType.warning(
-          "JSC_FAILED_TO_UNIFY",
+          "JSC_NTI_FAILED_TO_UNIFY",
           "Could not instantiate type {0} with {1}.");
 
   static final DiagnosticType NON_NUMERIC_ARRAY_INDEX =
       DiagnosticType.warning(
-          "JSC_NON_NUMERIC_ARRAY_INDEX",
+          "JSC_NTI_NON_NUMERIC_ARRAY_INDEX",
           "Expected numeric array index but found {0}.");
 
   static final DiagnosticType INVALID_OBJLIT_PROPERTY_TYPE =
       DiagnosticType.warning(
-          "JSC_INVALID_OBJLIT_PROPERTY_TYPE",
+          "JSC_NTI_INVALID_OBJLIT_PROPERTY_TYPE",
           "Object-literal property declared as {0} but has type {1}.");
 
   static final DiagnosticType FORIN_EXPECTS_OBJECT =
       DiagnosticType.warning(
-          "JSC_FORIN_EXPECTS_OBJECT",
+          "JSC_NTI_FORIN_EXPECTS_OBJECT",
           "For/in expects an object, found type {0}.");
 
   static final DiagnosticType FORIN_EXPECTS_STRING_KEY =
       DiagnosticType.warning(
-          "JSC_FORIN_EXPECTS_STRING_KEY",
+          "JSC_NTI_FORIN_EXPECTS_STRING_KEY",
           "For/in creates string keys, but variable has declared type {1}.");
 
   static final DiagnosticType CONST_REASSIGNED =
       DiagnosticType.warning(
-          "JSC_CONST_REASSIGNED",
+          "JSC_NTI_CONST_REASSIGNED",
           "Cannot change the value of a constant.");
 
   static final DiagnosticType CONST_PROPERTY_REASSIGNED =
       DiagnosticType.warning(
-          "JSC_CONST_PROPERTY_REASSIGNED",
+          "JSC_NTI_CONST_PROPERTY_REASSIGNED",
           "Cannot change the value of a constant property.");
 
   static final DiagnosticType NOT_A_CONSTRUCTOR =
       DiagnosticType.warning(
-          "JSC_NOT_A_CONSTRUCTOR",
+          "JSC_NTI_NOT_A_CONSTRUCTOR",
           "Expected a constructor but found type {0}.");
 
   static final DiagnosticType ASSERT_FALSE =
       DiagnosticType.warning(
-          "JSC_ASSERT_FALSE",
+          "JSC_NTI_ASSERT_FALSE",
           "Assertion is always false. Please use a throw or fail() instead.");
 
   static final DiagnosticType UNKNOWN_ASSERTION_TYPE =
       DiagnosticType.warning(
-          "JSC_UNKNOWN_ASSERTION_TYPE",
+          "JSC_NTI_UNKNOWN_ASSERTION_TYPE",
           "Assert with unknown asserted type.");
 
   static final DiagnosticType INVALID_THIS_TYPE_IN_BIND =
       DiagnosticType.warning(
-          "JSC_INVALID_THIS_TYPE_IN_BIND",
+          "JSC_NTI_INVALID_THIS_TYPE_IN_BIND",
           "The first argument to bind has type {0} which is not a subtype of"
           + " {1}.");
 
   static final DiagnosticType CANNOT_BIND_CTOR =
       DiagnosticType.warning(
-          "JSC_CANNOT_BIND_CTOR",
+          "JSC_NTI_CANNOT_BIND_CTOR",
           "We do not support using .bind on constructor functions.");
 
   static final DiagnosticType GOOG_BIND_EXPECTS_FUNCTION =
       DiagnosticType.warning(
-          "JSC_GOOG_BIND_EXPECTS_FUNCTION",
+          "JSC_NTI_GOOG_BIND_EXPECTS_FUNCTION",
           "The first argument to goog.bind/goog.partial must be a function,"
           + " found: {0}");
 
   static final DiagnosticType BOTTOM_PROP =
       DiagnosticType.warning(
-          "JSC_BOTTOM_PROP",
+          "JSC_NTI_BOTTOM_PROP",
           "Property {0} of {1} cannot have a valid type."
           + "Maybe the result of a union of incompatible types?");
 
   static final DiagnosticType INVALID_CAST =
-      DiagnosticType.warning("JSC_INVALID_CAST",
+      DiagnosticType.warning("JSC_NTI_INVALID_CAST",
           "invalid cast - the types do not have a common subtype\n" +
           "from: {0}\n" +
           "to  : {1}");
+
+  static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(
+      "JSC_NTI_USED_GLOBAL_THIS",
+      "Dangerous use of the global 'this' object");
+
+  static final DiagnosticType MISSING_RETURN_STATEMENT =
+      DiagnosticType.warning(
+          "JSC_NTI_MISSING_RETURN_STATEMENT",
+          "Missing return statement. Function expected to return {0}.");
+
+  static final DiagnosticType CONSTRUCTOR_NOT_CALLABLE =
+      DiagnosticType.warning(
+          "JSC_NTI_CONSTRUCTOR_NOT_CALLABLE",
+          "Constructor {0} should be called with the \"new\" keyword");
+
+  static final DiagnosticType ILLEGAL_OBJLIT_KEY =
+      DiagnosticType.warning(
+          "JSC_NTI_ILLEGAL_OBJLIT_KEY",
+          "Illegal key, the object literal is a {0}");
+
+  static final DiagnosticType ILLEGAL_PROPERTY_CREATION =
+      DiagnosticType.warning(
+          "JSC_NTI_ILLEGAL_PROPERTY_CREATION",
+          "Cannot add a property to a struct instance after it is constructed.");
+
+  static final DiagnosticType IN_USED_WITH_STRUCT =
+      DiagnosticType.warning(
+          "JSC_NTI_IN_USED_WITH_STRUCT",
+          "Cannot use the IN operator with structs");
+
+  public static final DiagnosticType INEXISTENT_PROPERTY =
+      DiagnosticType.warning(
+          "JSC_NTI_INEXISTENT_PROPERTY",
+          "Property {0} never defined on {1}");
+
+  static final DiagnosticType NOT_CALLABLE =
+      DiagnosticType.warning(
+          "JSC_NTI_NOT_FUNCTION_TYPE",
+          "{0} expressions are not callable");
+
+  static final DiagnosticType WRONG_ARGUMENT_COUNT =
+      DiagnosticType.warning(
+          "JSC_NTI_WRONG_ARGUMENT_COUNT",
+          "Function {0}: called with {1} argument(s). " +
+          "Function requires at least {2} argument(s){3}.");
+
+  static final DiagnosticType ILLEGAL_PROPERTY_ACCESS =
+      DiagnosticType.warning(
+          "JSC_NTI_ILLEGAL_PROPERTY_ACCESS",
+          "Cannot do {0} access on a {1}");
+
+  static final DiagnosticType UNKNOWN_TYPEOF_VALUE =
+      DiagnosticType.warning(
+          "JSC_NTI_UNKNOWN_TYPEOF_VALUE",
+          "unknown type: {0}");
 
   static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
       ASSERT_FALSE,
@@ -204,37 +259,37 @@ final class NewTypeInference implements CompilerPass {
       CANNOT_BIND_CTOR,
       CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
+      CONSTRUCTOR_NOT_CALLABLE,
       CROSS_SCOPE_GOTCHA,
       FAILED_TO_UNIFY,
       FORIN_EXPECTS_OBJECT,
       FORIN_EXPECTS_STRING_KEY,
+      GLOBAL_THIS,
       GOOG_BIND_EXPECTS_FUNCTION,
+      ILLEGAL_OBJLIT_KEY,
+      ILLEGAL_PROPERTY_ACCESS,
+      ILLEGAL_PROPERTY_CREATION,
+      IN_USED_WITH_STRUCT,
+      INEXISTENT_PROPERTY,
       INVALID_ARGUMENT_TYPE,
       INVALID_CAST,
       INVALID_INFERRED_RETURN_TYPE,
       INVALID_OBJLIT_PROPERTY_TYPE,
       INVALID_OPERAND_TYPE,
       INVALID_THIS_TYPE_IN_BIND,
+      MISSING_RETURN_STATEMENT,
       MISTYPED_ASSIGN_RHS,
       NON_NUMERIC_ARRAY_INDEX,
       NOT_A_CONSTRUCTOR,
+      NOT_CALLABLE,
       NOT_UNIQUE_INSTANTIATION,
       NULLABLE_DEREFERENCE,
       POSSIBLY_INEXISTENT_PROPERTY,
       PROPERTY_ACCESS_ON_NONOBJECT,
       RETURN_NONDECLARED_TYPE,
       UNKNOWN_ASSERTION_TYPE,
-      CheckGlobalThis.GLOBAL_THIS,
-      CheckMissingReturn.MISSING_RETURN_STATEMENT,
-      TypeCheck.CONSTRUCTOR_NOT_CALLABLE,
-      TypeCheck.ILLEGAL_OBJLIT_KEY,
-      TypeCheck.ILLEGAL_PROPERTY_CREATION,
-      TypeCheck.IN_USED_WITH_STRUCT,
-      TypeCheck.INEXISTENT_PROPERTY,
-      TypeCheck.NOT_CALLABLE,
-      TypeCheck.WRONG_ARGUMENT_COUNT,
-      TypeValidator.ILLEGAL_PROPERTY_ACCESS,
-      TypeValidator.UNKNOWN_TYPEOF_VALUE);
+      UNKNOWN_TYPEOF_VALUE,
+      WRONG_ARGUMENT_COUNT);
 
   public static class WarningReporter {
     AbstractCompiler compiler;
@@ -808,7 +863,7 @@ final class NewTypeInference implements CompilerPass {
               warnings.add(JSError.make(
                   obj, FORIN_EXPECTS_OBJECT, objType.toString()));
             } else if (objType.isStruct()) {
-              warnings.add(JSError.make(obj, TypeCheck.IN_USED_WITH_STRUCT));
+              warnings.add(JSError.make(obj, IN_USED_WITH_STRUCT));
             }
             Node lhs = n.getFirstChild();
             LValueResultFwd lval = analyzeLValueFwd(lhs, inEnv, JSType.STRING);
@@ -956,9 +1011,8 @@ final class NewTypeInference implements CompilerPass {
       if (!isAllowedToNotReturn(fn) &&
           !JSType.UNDEFINED.isSubtypeOf(declRetType) &&
           hasPathWithNoReturn(cfg)) {
-        warnings.add(JSError.make(fnRoot,
-                CheckMissingReturn.MISSING_RETURN_STATEMENT,
-                declRetType.toString()));
+        warnings.add(JSError.make(
+            fnRoot, MISSING_RETURN_STATEMENT, declRetType.toString()));
       }
     } else if (declType.getNominalType() == null) {
       // If someone uses the result of a function that doesn't return, they get a warning.
@@ -1690,7 +1744,7 @@ final class NewTypeInference implements CompilerPass {
     JSType calleeType = calleePair.type;
     if (calleeType.isBottom() || !calleeType.isSubtypeOf(commonTypes.topFunction())) {
       warnings.add(JSError.make(
-          expr, TypeCheck.NOT_CALLABLE, calleeType.toString()));
+          expr, NOT_CALLABLE, calleeType.toString()));
     }
     FunctionType funType = calleeType.getFunTypeIfSingletonObj();
     if (funType == null
@@ -1700,8 +1754,7 @@ final class NewTypeInference implements CompilerPass {
       return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
     } else if (expr.isCall() && funType.isConstructor()
         && funType.getReturnType().isUnknown()) {
-      warnings.add(JSError.make(
-          expr, TypeCheck.CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
+      warnings.add(JSError.make(expr, CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
       return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
     } else if (expr.isNew() && !funType.isConstructor()) {
       warnings.add(JSError.make(
@@ -1713,7 +1766,7 @@ final class NewTypeInference implements CompilerPass {
     int numArgs = expr.getChildCount() - 1;
     if (numArgs < minArity || numArgs > maxArity) {
       warnings.add(JSError.make(
-          expr, TypeCheck.WRONG_ARGUMENT_COUNT,
+          expr, WRONG_ARGUMENT_COUNT,
           getReadableCalleeName(callee),
           Integer.toString(numArgs), Integer.toString(minArity),
           " and at most " + maxArity));
@@ -1799,7 +1852,7 @@ final class NewTypeInference implements CompilerPass {
     if (NodeUtil.isGoogBind(call.getFirstChild()) && call.getChildCount() <= 2
         || !NodeUtil.isGoogPartial(call.getFirstChild()) && call.getChildCount() == 1) {
       warnings.add(JSError.make(
-          call, TypeCheck.WRONG_ARGUMENT_COUNT,
+          call, WRONG_ARGUMENT_COUNT,
           getReadableCalleeName(call.getFirstChild()),
           "0", "1", ""));
     }
@@ -1809,7 +1862,7 @@ final class NewTypeInference implements CompilerPass {
     int numArgs = bindComponents.getBoundParameterCount();
     if (numArgs > maxArity) {
       warnings.add(JSError.make(
-          call, TypeCheck.WRONG_ARGUMENT_COUNT,
+          call, WRONG_ARGUMENT_COUNT,
           getReadableCalleeName(call.getFirstChild()),
           Integer.toString(numArgs), "0",
           " and at most " + maxArity));
@@ -1991,7 +2044,7 @@ final class NewTypeInference implements CompilerPass {
       return pair;
     }
     if (pair.type.isStruct()) {
-      warnings.add(JSError.make(rhs, TypeCheck.IN_USED_WITH_STRUCT));
+      warnings.add(JSError.make(rhs, IN_USED_WITH_STRUCT));
       pair.type = JSType.BOOLEAN;
       return pair;
     }
@@ -2158,8 +2211,7 @@ final class NewTypeInference implements CompilerPass {
       case "unknown": // IE-specific type name
         break;
       default:
-        warnings.add(JSError.make(
-            typeString, TypeValidator.UNKNOWN_TYPEOF_VALUE, typeName));
+        warnings.add(JSError.make(typeString, UNKNOWN_TYPEOF_VALUE, typeName));
     }
   }
 
@@ -2302,9 +2354,9 @@ final class NewTypeInference implements CompilerPass {
     JSType result = pickReqObjType(objLit);
     for (Node prop : objLit.children()) {
       if (isStruct && prop.isQuotedString()) {
-        warnings.add(JSError.make(prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "struct"));
+        warnings.add(JSError.make(prop, ILLEGAL_OBJLIT_KEY, "struct"));
       } else if (isDict && !prop.isQuotedString()) {
-        warnings.add(JSError.make(prop, TypeCheck.ILLEGAL_OBJLIT_KEY, "dict"));
+        warnings.add(JSError.make(prop, ILLEGAL_OBJLIT_KEY, "dict"));
       }
       String pname = NodeUtil.getObjectLitKeyName(prop);
       // We can't assign to a getter to change its value.
@@ -2391,7 +2443,7 @@ final class NewTypeInference implements CompilerPass {
       Node call, String typeHint, TypeEnv inEnv, JSType specializedType) {
     int numArgs = call.getChildCount() - 1;
     if (numArgs != 1) {
-      warnings.add(JSError.make(call, TypeCheck.WRONG_ARGUMENT_COUNT,
+      warnings.add(JSError.make(call, WRONG_ARGUMENT_COUNT,
               call.getFirstChild().getQualifiedName(),
               Integer.toString(numArgs), "1", "1"));
       return analyzeCallNodeArgsFwdWhenError(call, inEnv);
@@ -2537,7 +2589,7 @@ final class NewTypeInference implements CompilerPass {
   private boolean mayWarnAboutStructPropAccess(Node obj, JSType type) {
     if (type.mayBeStruct()) {
       warnings.add(JSError.make(obj,
-              TypeValidator.ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
+              NewTypeInference.ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
       return true;
     }
     return false;
@@ -2546,7 +2598,7 @@ final class NewTypeInference implements CompilerPass {
   private boolean mayWarnAboutDictPropAccess(Node obj, JSType type) {
     if (type.mayBeDict()) {
       warnings.add(JSError.make(obj,
-              TypeValidator.ILLEGAL_PROPERTY_ACCESS, "'.'", "dict"));
+              NewTypeInference.ILLEGAL_PROPERTY_ACCESS, "'.'", "dict"));
       return true;
     }
     return false;
@@ -2562,7 +2614,7 @@ final class NewTypeInference implements CompilerPass {
     // require that obj be a struct that already has prop.
     if (recvType.mayBeStruct() && !recvType.isLooseStruct() &&
         !recvType.hasProp(pname)) {
-      warnings.add(JSError.make(getProp, TypeCheck.ILLEGAL_PROPERTY_CREATION));
+      warnings.add(JSError.make(getProp, ILLEGAL_PROPERTY_CREATION));
       return true;
     }
     return false;
@@ -2588,7 +2640,7 @@ final class NewTypeInference implements CompilerPass {
       errorMsg = recv.getQualifiedName() + " of type " + recvTypeAsString;
     }
     DiagnosticType warningType = recvType.mayHaveProp(propQname)
-        ? POSSIBLY_INEXISTENT_PROPERTY : TypeCheck.INEXISTENT_PROPERTY;
+        ? POSSIBLY_INEXISTENT_PROPERTY : INEXISTENT_PROPERTY;
     warnings.add(JSError.make(propAccessNode, warningType, pname, errorMsg));
     return true;
   }
@@ -2621,7 +2673,7 @@ final class NewTypeInference implements CompilerPass {
         // bound to a legitimate object at runtime. They do lose typechecking
         // for THIS however, but we won't warn.
         && !NodeUtil.isCallOrNewArgument(currentScope.getRoot())) {
-      warnings.add(JSError.make(thisExpr, CheckGlobalThis.GLOBAL_THIS));
+      warnings.add(JSError.make(thisExpr, GLOBAL_THIS));
       return true;
     }
     return false;

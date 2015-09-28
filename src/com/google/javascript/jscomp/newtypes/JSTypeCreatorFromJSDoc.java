@@ -42,59 +42,59 @@ import java.util.Set;
 public final class JSTypeCreatorFromJSDoc {
   public static final DiagnosticType INVALID_GENERICS_INSTANTIATION =
       DiagnosticType.warning(
-        "JSC_INVALID_GENERICS_INSTANTIATION",
+        "JSC_NTI_INVALID_GENERICS_INSTANTIATION",
         "Invalid generics instantiation for {0}.\n"
         + "Expected {1} type argument(s), but found {2}.");
 
   public static final DiagnosticType BAD_JSDOC_ANNOTATION =
       DiagnosticType.warning(
-        "JSC_BAD_JSDOC_ANNOTATION",
+        "JSC_NTI_BAD_JSDOC_ANNOTATION",
         "Bad JSDoc annotation. {0}");
 
   public static final DiagnosticType EXTENDS_NON_OBJECT =
       DiagnosticType.warning(
-          "JSC_EXTENDS_NON_OBJECT",
+          "JSC_NTI_EXTENDS_NON_OBJECT",
           "{0} extends non-object type {1}.\n");
 
   public static final DiagnosticType EXTENDS_NOT_ON_CTOR_OR_INTERF =
       DiagnosticType.warning(
-          "JSC_EXTENDS_NOT_ON_CTOR_OR_INTERF",
+          "JSC_NTI_EXTENDS_NOT_ON_CTOR_OR_INTERF",
           "@extends used without @constructor or @interface for {0}.\n");
 
   public static final DiagnosticType INHERITANCE_CYCLE =
       DiagnosticType.warning(
-          "JSC_INHERITANCE_CYCLE",
+          "JSC_NTI_INHERITANCE_CYCLE",
           "Cycle detected in inheritance chain of type {0}");
 
   public static final DiagnosticType DICT_IMPLEMENTS_INTERF =
       DiagnosticType.warning(
-          "JSC_DICT_IMPLEMENTS_INTERF",
+          "JSC_NTI_DICT_IMPLEMENTS_INTERF",
           "Class {0} is a dict. Dicts can't implement interfaces.");
 
   public static final DiagnosticType IMPLEMENTS_WITHOUT_CONSTRUCTOR =
       DiagnosticType.warning(
-          "JSC_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
+          "JSC_NTI_IMPLEMENTS_WITHOUT_CONSTRUCTOR",
           "@implements used without @constructor or @interface for {0}");
 
   public static final DiagnosticType CONFLICTING_SHAPE_TYPE =
       DiagnosticType.disabled(
-          "JSC_CONFLICTING_SHAPE_TYPE",
+          "JSC_NTI_CONFLICTING_SHAPE_TYPE",
           "{1} cannot extend this type; {0}s can only extend {0}s");
 
   public static final DiagnosticType CONFLICTING_EXTENDED_TYPE =
       DiagnosticType.warning(
-          "JSC_CONFLICTING_EXTENDED_TYPE",
+          "JSC_NTI_CONFLICTING_EXTENDED_TYPE",
           "{1} cannot extend this type; {0}s can only extend {0}s");
 
   public static final DiagnosticType CONFLICTING_IMPLEMENTED_TYPE =
     DiagnosticType.warning(
-        "JSC_CONFLICTING_IMPLEMENTED_TYPE",
+        "JSC_NTI_CONFLICTING_IMPLEMENTED_TYPE",
         "{0} cannot implement this type; "
         + "an interface can only extend, but not implement interfaces");
 
   public static final DiagnosticType UNION_IS_UNINHABITABLE =
     DiagnosticType.warning(
-        "JSC_UNION_IS_UNINHABITABLE",
+        "JSC_NTI_UNION_IS_UNINHABITABLE",
         "Union of {0} with {1} would create an impossible type.");
 
   private final CodingConvention convention;
