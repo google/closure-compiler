@@ -565,7 +565,7 @@ public class CommandLineRunner extends
 
     @Option(name = "--new_type_inf",
         hidden = true,
-        usage = "In development new type inference pass. DO NOT USE!")
+        usage = "Checks for type errors using the new type inference algorithm.")
     private boolean useNewTypeInference = false;
 
     @Option(name = "--rename_prefix_namespace",

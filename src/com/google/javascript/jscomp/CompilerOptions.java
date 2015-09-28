@@ -141,7 +141,6 @@ public class CompilerOptions {
    */
   boolean inferTypes;
 
-  // The new type inference is a work in progress. Don't use.
   boolean useNewTypeInference;
 
   /**

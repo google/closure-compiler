@@ -52,7 +52,12 @@ import java.util.Set;
 /**
  * New type inference algorithm.
  *
- * Under development. Use cautiously.
+ * Main differences from the old type checker:
+ * - Infers types for unannotated functions
+ * - Stricter with missing-property warnings
+ * - Stricter when checking the operands of primitive operators
+ * - Requires constants to be typed
+ * - Tries to warn about misplaced annotations, rather than silently ignore them
  *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)

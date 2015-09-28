@@ -218,7 +218,7 @@ public class DiagnosticGroups {
           TypeValidator.ALL_DIAGNOSTICS,
           TypeCheck.ALL_DIAGNOSTICS);
 
-  // Part of the new type inference (under development)
+  // Part of the new type inference
   public static final DiagnosticGroup NEW_CHECK_TYPES =
       DiagnosticGroups.registerGroup("newCheckTypes",
           GlobalTypeInfo.ALL_DIAGNOSTICS,
