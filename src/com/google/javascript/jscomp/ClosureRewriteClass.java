@@ -596,6 +596,15 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       mergedInfo.recordNgInject(true);
     }
 
+    if (classInfo.makesUnrestricted() || ctorInfo.makesUnrestricted()) {
+      mergedInfo.recordUnrestricted();
+    } else if (classInfo.makesDicts() || ctorInfo.makesDicts()) {
+      mergedInfo.recordDict();
+    } else {
+      // @struct by default
+      mergedInfo.recordStruct();
+    }
+
     // @constructor is implied, @interface must be explicit
     boolean isInterface = classInfo.isInterface() || ctorInfo.isInterface();
     if (isInterface) {
@@ -618,15 +627,6 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     } else {
       // @constructor by default
       mergedInfo.recordConstructor();
-      if (classInfo.makesUnrestricted() || ctorInfo.makesUnrestricted()) {
-        mergedInfo.recordUnrestricted();
-      } else if (classInfo.makesDicts() || ctorInfo.makesDicts()) {
-        mergedInfo.recordDict();
-      } else {
-        // @struct by default
-        mergedInfo.recordStruct();
-      }
-
 
       if (classInfo.getBaseType() != null) {
         mergedInfo.recordBaseType(classInfo.getBaseType());

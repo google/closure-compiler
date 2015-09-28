@@ -13147,6 +13147,53 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property bar never defined on A", false);
   }
 
+  public void testNonexistentPropertyAccessStructInterfaceSubtype() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @struct",
+        " */",
+        "var A = function() {};",
+        "",
+        "/**",
+        " * @interface",
+        " * @struct",
+        " * @extends {A}",
+        " */",
+        "var B = function() {};",
+        "/** @return {void} */ B.prototype.bar = function(){};",
+        "",
+        "/** @param {A} a */",
+        "function foo(a) {",
+        "  if (a.bar) { a.bar(); }",
+        "}"),
+        "Property bar never defined on A", false);
+  }
+
+  public void testNonexistentPropertyAccessStructRecordSubtype() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/**",
+        " * @record",
+        " * @struct",
+        " */",
+        "var A = function() {};",
+        "",
+        "/**",
+        " * @record",
+        " * @struct",
+        " * @extends {A}",
+        " */",
+        "var B = function() {};",
+        "/** @return {void} */ B.prototype.bar = function(){};",
+        "",
+        "/** @param {A} a */",
+        "function foo(a) {",
+        "  if (a.bar) { a.bar(); }",
+        "}"),
+        "Property bar never defined on A", false);
+  }
+
+
   public void testNonexistentPropertyAccessStructSubtype2() throws Exception {
     testTypes(
         "/**\n" +

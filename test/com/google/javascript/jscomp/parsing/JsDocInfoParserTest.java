@@ -2717,9 +2717,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           " * @struct\n" +
           " * @interface\n" +
           " */\n" +
-          "function StrIntf() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+          "function StrIntf() {}");
   }
 
   public void testTypeTagConflict17() throws Exception {
@@ -2727,9 +2725,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           " * @interface\n" +
           " * @struct\n" +
           " */\n" +
-          "function StrIntf() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+          "function StrIntf() {}");
   }
 
   public void testTypeTagConflict18() throws Exception {
@@ -2747,9 +2743,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           " * @dict\n" +
           " * @interface\n" +
           " */\n" +
-          "function DictDict() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+          "function DictDict() {}");
   }
 
   public void testTypeTagConflict20() throws Exception {
@@ -2757,9 +2751,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
           " * @interface\n" +
           " * @dict\n" +
           " */\n" +
-          "function DictDict() {}",
-          "Bad type annotation. " +
-          "type annotation incompatible with other annotations");
+          "function DictDict() {}");
   }
 
   public void testTypeTagConflict21() throws Exception {

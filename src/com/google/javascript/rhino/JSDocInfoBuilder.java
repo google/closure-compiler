@@ -910,9 +910,9 @@ public final class JSDocInfoBuilder {
    * if it was already defined or it was incompatible with the existing flags
    */
   public boolean recordStruct() {
-    if (hasAnySingletonTypeTags() || currentInfo.isInterface() ||
-        currentInfo.makesDicts() || currentInfo.makesStructs() ||
-        currentInfo.makesUnrestricted()) {
+    if (hasAnySingletonTypeTags()
+        || currentInfo.makesDicts() || currentInfo.makesStructs()
+        || currentInfo.makesUnrestricted()) {
       return false;
     }
     currentInfo.setStruct();
@@ -932,9 +932,9 @@ public final class JSDocInfoBuilder {
    * if it was already defined or it was incompatible with the existing flags
    */
   public boolean recordDict() {
-    if (hasAnySingletonTypeTags() || currentInfo.isInterface() ||
-        currentInfo.makesDicts() || currentInfo.makesStructs() ||
-        currentInfo.makesUnrestricted()) {
+    if (hasAnySingletonTypeTags()
+        || currentInfo.makesDicts() || currentInfo.makesStructs()
+        || currentInfo.makesUnrestricted()) {
       return false;
     }
     currentInfo.setDict();
@@ -1011,7 +1011,6 @@ public final class JSDocInfoBuilder {
    */
   public boolean recordInterface() {
     if (hasAnySingletonTypeTags() ||
-        currentInfo.makesStructs() || currentInfo.makesDicts() ||
         currentInfo.isConstructor() || currentInfo.isInterface()) {
       return false;
     }

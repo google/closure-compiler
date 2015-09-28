@@ -1450,9 +1450,13 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param templateKeys the templatized types for the interface.
    */
   public FunctionType createInterfaceType(String name, Node source,
-      ImmutableList<TemplateType> templateKeys) {
-    return FunctionType.forInterface(this, name, source,
+      ImmutableList<TemplateType> templateKeys, boolean struct) {
+    FunctionType fn = FunctionType.forInterface(this, name, source,
         createTemplateTypeMap(templateKeys, null));
+    if (struct) {
+      fn.setStruct();
+    }
+    return fn;
   }
 
   public TemplateType createTemplateType(String name) {

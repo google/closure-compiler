@@ -222,7 +222,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * explicitly annotated.
    */
   public boolean makesStructs() {
-    if (!isConstructor()) {
+    if (!hasInstanceType()) {
       return false;
     }
     if (propAccess == PropAccess.STRUCT) {

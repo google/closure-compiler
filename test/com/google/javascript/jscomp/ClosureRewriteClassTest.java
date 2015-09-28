@@ -174,7 +174,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});"
         + "new x();",
 
-        "/** @interface */\n"
+        "/** @struct @interface */\n"
         + "var x = function() {};"
         + "new x();",
         TypeCheck.NOT_A_CONSTRUCTOR);
@@ -188,7 +188,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "var x = goog.defineClass(null, {});"
         + "new x();",
 
-        "/** @interface */\n"
+        "/** @struct @interface */\n"
         + "var x = function() {};"
         + "new x();",
         TypeCheck.NOT_A_CONSTRUCTOR);

@@ -227,7 +227,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/**",
             " * Converts Xs to Ys.",
-            " * @interface",
+            " * @struct @interface",
             " */",
             "var Converter = function() { };",
             "",
@@ -394,10 +394,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  g() {}",
             "}"),
         LINE_JOINER.join(
-            "/** @interface */",
+            "/** @struct @interface */",
             "var D = function() {};",
             "D.prototype.f = function() {};",
-            "/** @interface @extends{D} */",
+            "/** @struct @interface @extends{D} */",
             "var C = function(var_args) { D.apply(this, arguments); };",
             "C.prototype.g = function() {};"));
   }
@@ -414,7 +414,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  f() {console.log('hi');}",
             "}"),
         LINE_JOINER.join(
-            "/** @interface */",
+            "/** @struct @interface */",
             "var D = function() {};",
             "D.prototype.f = function() {};",
             "/** @constructor @struct @implements{D} */",
