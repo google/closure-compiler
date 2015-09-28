@@ -364,3 +364,41 @@ md.$mdIconProvider.prototype.defaultIconSize = function(iconSize) {};
  * @return {md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.defaultFontSet = function(name) {};
+
+
+/******************************************************************************
+ * $mdUtil Service
+ *****************************************************************************/
+
+/**
+ * @typedef {{
+ *   dom: Object,
+ *   now: number,
+ *   clientRect: function(!Element, Element, boolean),
+ *   offsetRect: function(!Element, !Element),
+ *   nodesToArray: function(Array),
+ *   scrollTop: function(!Element),
+ *   findFocusTarget: function(!Element, string),
+ *   disableScrollAround: function(!Element, !Element),
+ *   enableScrollAround: function(),
+ *   floatingScrollbars: function(),
+ *   forceFocus: function(!Element),
+ *   createBackdrop: function(angular.Scope, string),
+ *   supplant: function(string, !Array.<string>, RegExp),
+ *   fakeNgModel: function(),
+ *   debounce: function(!Function, number, !angular.Scope, boolean),
+ *   throttle: function(!Function, number),
+ *   time: function(!Function),
+ *   valueOnUse: function(!angular.Scope, string, !Function),
+ *   nextUid: function(),
+ *   disconnectScope: function(!angular.Scope),
+ *   reconnectScope: function(!angular.Scope),
+ *   getClosest: function getClosest(!Element, string, boolean),
+ *   elementContains: function(!Element, !Element),
+ *   extractElementByName: function(!Element, string),
+ *   initOptionalProperties: function(!angular.Scope, !Object, Object),
+ *   nextTick: function(!Function, boolean),
+ *   processTemplate: function(string)
+ * }}
+ */
+md.$mdUtil;
