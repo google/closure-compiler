@@ -1144,7 +1144,7 @@ class CollapseProperties implements CompilerPass {
       prop = prop.replace("$", "$0");
     }
     String result = root + '$' + prop;
-    int id = 0;
+    int id = 1;
     while (nameMap.containsKey(result)) {
       result = root + '$' + prop + '$' + id;
       id++;
