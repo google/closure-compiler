@@ -2298,7 +2298,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor */ function Funny$Name(){};",
             "function Funny(){};",
-            "var Funny$Name$0 = 5;",
+            "var Funny$Name$1 = 5;",
             "var x = new Funny$Name();"));
 
     test("var ns$x = 0; var ns$x$0 = 1; var ns = {}; ns.x = 8;",
@@ -2308,6 +2308,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          "var ns$x = 0; var ns$x$0 = 1; var ns$x$1 = 2; var ns$x$2 = 8;");
 
     test("var ns$x = {}; ns$x.y = 2; var ns = {}; ns.x = {}; ns.x.y = 8;",
-         "var ns$x$y = 2; var ns$x$0$y = 8;");
+         "var ns$x$y = 2; var ns$x$1$y = 8;");
+
+    test("var ns$x = {}; ns$x.y = 1; var ns = {}; ns.x$ = {}; ns.x$.y = 2; ns.x = {}; ns.x.y = 3;",
+         "var ns$x$y = 1; var ns$x$0$y = 2; var ns$x$1$y = 3;");
   }
 }
