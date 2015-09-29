@@ -215,7 +215,7 @@ class CollapseVariableDeclarations implements CompilerPass {
   }
 
   private static boolean isNamedParameter(Var v) {
-    return v.getParentNode().isParamList();
+    return v.isParam();
   }
 
   private void applyCollapses() {
