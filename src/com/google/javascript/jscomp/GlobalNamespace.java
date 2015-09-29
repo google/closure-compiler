@@ -1156,9 +1156,9 @@ class GlobalNamespace
             throw new IllegalStateException();
           case ALIASING_GET:
           case DIRECT_GET:
-            continue;
           case PROTOTYPE_GET:
           case CALL_GET:
+            continue;
           case DELETE_PROP:
             return false;
           default:
