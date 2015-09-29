@@ -62,7 +62,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertPrettyPrintSame("function foo(x: string = 'hello') {\n}");
   }
 
-  public void testFunctionParamDeclaration_arrow() {
+  public void disabled_testFunctionParamDeclaration_arrow() {
     assertPrettyPrintSame("(x: string) => 'hello' + x;");
   }
 
@@ -70,7 +70,7 @@ public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
     assertPrettyPrintSame("function foo(): string {\n  return 'hello';\n}");
   }
 
-  public void testFunctionReturn_arrow() {
+  public void disabled_testFunctionReturn_arrow() {
     assertPrettyPrintSame("(): string => 'hello';");
   }
 

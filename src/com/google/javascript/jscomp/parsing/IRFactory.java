@@ -1553,7 +1553,22 @@ class IRFactory {
       }
     }
 
+    private void checkParenthesizedExpression(ParenExpressionTree exprNode) {
+      if (exprNode.expression.type == ParseTreeType.COMMA_EXPRESSION) {
+        List<ParseTree> commaNodes = exprNode.expression.asCommaExpression().expressions;
+        ParseTree lastChild = commaNodes.get(commaNodes.size() - 1);
+        if (lastChild.type == ParseTreeType.REST_PARAMETER) {
+          errorReporter.error(
+              "A rest parameter must be in a parameter list.",
+              sourceName,
+              lineno(lastChild),
+              charno(lastChild));
+        }
+      }
+    }
+
     Node processParenthesizedExpression(ParenExpressionTree exprNode) {
+      checkParenthesizedExpression(exprNode);
       return transform(exprNode.expression);
     }
 

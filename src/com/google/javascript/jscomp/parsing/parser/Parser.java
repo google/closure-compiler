@@ -1016,24 +1016,16 @@ public class Parser {
   }
 
   private boolean peekFunction(int index) {
-    // TODO(johnlenz): short function syntax
     return peek(index, TokenType.FUNCTION);
   }
 
-  private ParseTree parseArrowFunction(Expression expressionIn) {
-    SourcePosition start = getTreeStartLocation();
+  private ParseTree parseArrowFunctionTail(
+      SourcePosition start,
+      GenericTypeListTree generics,
+      FormalParameterListTree formalParameterList,
+      Expression expressionIn) {
 
     inGeneratorContext.addLast(false);
-
-    GenericTypeListTree generics = maybeParseGenericTypes();
-    FormalParameterListTree formalParameterList;
-    if (peekId()) {
-      ParseTree param = parseIdentifierExpression();
-      formalParameterList = new FormalParameterListTree(getTreeLocation(start),
-          ImmutableList.of(param));
-    } else {
-      formalParameterList = parseFormalParameterList(ParamContext.IMPLEMENTATION);
-    }
 
     ParseTree returnType = null;
     if (peek(TokenType.COLON)) {
@@ -1061,15 +1053,7 @@ public class Parser {
     return declaration;
   }
 
-  private boolean peekArrowFunction() {
-    if (peekId() && peekType(1) == TokenType.ARROW) {
-      return true;
-    } else {
-      return peekArrowFunctionWithParenthesizedParameterList(ParamContext.IMPLEMENTATION);
-    }
-  }
-
-  private boolean peekArrowFunctionWithParenthesizedParameterList(ParamContext context) {
+  private boolean peekFunctionTypeExpression(ParamContext context) {
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // TODO(blickly): determine if we can parse this without the
       // overhead of forking the parser.
@@ -1240,7 +1224,7 @@ public class Parser {
   private ParseTree parseFunctionTypeExpression() {
     SourcePosition start = getTreeStartLocation();
     ParseTree typeExpression = null;
-    if (peekArrowFunctionWithParenthesizedParameterList(ParamContext.TYPE_EXPRESSION)) {
+    if (peekFunctionTypeExpression(ParamContext.TYPE_EXPRESSION)) {
       FormalParameterListTree formalParameterList;
       formalParameterList = parseFormalParameterList(ParamContext.IMPLEMENTATION);
       eat(TokenType.ARROW);
@@ -2023,7 +2007,7 @@ public class Parser {
     case OPEN_CURLY:
       return parseObjectLiteral();
     case OPEN_PAREN:
-      return parseParenExpression();
+      return parseCoverParenthesizedExpressionAndArrowParameterList();
     case SLASH:
     case SLASH_EQUAL:
       return parseRegularExpressionLiteral();
@@ -2437,14 +2421,47 @@ public class Parser {
     return new PropertyNameAssignmentTree(getTreeLocation(start), name, value);
   }
 
-  private ParseTree parseParenExpression() {
+  // 12.2 Primary Expression
+  //   CoverParenthesizedExpressionAndArrowParameterList ::=
+  //     ( Expression )
+  //     ( )
+  //     ( ... BindingIdentifier )
+  //     ( Expression , ... BindingIdentifier )
+  private ParseTree parseCoverParenthesizedExpressionAndArrowParameterList() {
     if (peekType(1) == TokenType.FOR) {
       return parseGeneratorComprehension();
     }
 
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.OPEN_PAREN);
+    // Case ( )
+    if (peek(TokenType.CLOSE_PAREN)) {
+      eat(TokenType.CLOSE_PAREN);
+      return new FormalParameterListTree(getTreeLocation(start), ImmutableList.<ParseTree>of());
+    }
+    // Case ( ... BindingIdentifier )
+    if (peek(TokenType.SPREAD)) {
+      ParseTree result = new FormalParameterListTree(
+          getTreeLocation(start), ImmutableList.of(parseParameter(ParamContext.IMPLEMENTATION)));
+      eat(TokenType.CLOSE_PAREN);
+      return result;
+    }
+    // For either of the two remaining cases:
+    //     ( Expression )
+    //     ( Expression , ... BindingIdentifier )
+    // we can parse as an expression.
     ParseTree result = parseExpression();
+    // If it follows witha comma, we must be in the
+    //     ( Expression , ... BindingIdentifier )
+    // case.
+    if (peek(TokenType.COMMA)) {
+      eat(TokenType.COMMA);
+      // Since we already parsed as an expression, we will guaranteed reparse this expression
+      // as an arrow function parameter list, but just leave it as a comma expression for now.
+      result = new CommaExpressionTree(
+          getTreeLocation(start),
+          ImmutableList.of(result, parseParameter(ParamContext.IMPLEMENTATION)));
+    }
     eat(TokenType.CLOSE_PAREN);
     return new ParenExpressionTree(getTreeLocation(start), result);
   }
@@ -2551,10 +2568,10 @@ public class Parser {
   private ParseTree parse(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     ParseTree result = parseAssignment(expressionIn);
-    if (peek(TokenType.COMMA)) {
+    if (peek(TokenType.COMMA) && !peek(1, TokenType.SPREAD)) {
       ImmutableList.Builder<ParseTree> exprs = ImmutableList.builder();
       exprs.add(result);
-      while (peek(TokenType.COMMA)) {
+      while (peek(TokenType.COMMA) && !peek(1, TokenType.SPREAD)) {
         eat(TokenType.COMMA);
         exprs.add(parseAssignment(expressionIn));
       }
@@ -2563,7 +2580,7 @@ public class Parser {
     return result;
   }
 
-  // 11.13 Assignment expressions
+  // 12.14 Assignment operators
   private ParseTree parseAssignmentExpression() {
     return parseAssignment(Expression.NORMAL);
   }
@@ -2577,12 +2594,16 @@ public class Parser {
       return parseYield(expressionIn);
     }
 
-    if (peekArrowFunction()) {
-      return parseArrowFunction(expressionIn);
-    }
-
     SourcePosition start = getTreeStartLocation();
+    // TODO(blickly): Allow TypeScript syntax in arrow function parameters
     ParseTree left = parseConditional(expressionIn);
+    if (peek(TokenType.ARROW)) {
+      FormalParameterListTree params = transformArrowFunctionParameters(start, left);
+      return parseArrowFunctionTail(start, null, params, expressionIn);
+    }
+    if (left.type == ParseTreeType.FORMAL_PARAMETER_LIST) {
+      reportError("invalid paren expression");
+    }
 
     if (peekAssignmentOperator()) {
       left = transformLeftHandSideExpression(left);
@@ -2594,6 +2615,25 @@ public class Parser {
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
     }
     return left;
+  }
+
+  private FormalParameterListTree transformArrowFunctionParameters(
+      SourcePosition start, ParseTree tree) {
+    switch (tree.type) {
+      case IDENTIFIER_EXPRESSION:
+        return new FormalParameterListTree(
+            getTreeLocation(start), ImmutableList.<ParseTree>of(tree));
+      case PAREN_EXPRESSION:
+        resetScanner(tree);
+        // If we fail to parse as an ArrowFunction paramater list then
+        // parseFormalParameterList will take care reporting errors.
+        return parseFormalParameterList(ParamContext.IMPLEMENTATION);
+      case FORMAL_PARAMETER_LIST:
+        return tree.asFormalParameterList();
+      default:
+        reportError("invalid arrow function parameters");
+        return null;
+    }
   }
 
   /**
@@ -3563,7 +3603,11 @@ public class Parser {
   /**
    * Forks the parser at the current point and returns a new
    * parser for speculative parsing.
+   *
+   * @deprecated Creating a lookahead parser often leads to exponential parse times
+   *   (see issues #1049, #1115, and #1148 on github) so avoid using this if possible.
    */
+  @Deprecated
   private Parser createLookaheadParser() {
     return new Parser(config,
         new LookaheadErrorReporter(),

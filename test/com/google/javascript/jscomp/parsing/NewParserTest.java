@@ -2300,11 +2300,22 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   public void testRestParameters() {
     mode = LanguageMode.ECMASCRIPT6;
     parse("function f(...b) {}");
-    parseError("f = (...xs, x) => xs", "A rest parameter must be last in a parameter list.");
+    parse("(...xs) => xs");
+    parse("(x, ...xs) => xs");
+    parse("(x, y, ...xs) => xs");
+    parseError("(...xs, x) => xs", "')' expected");
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("function f(...b) {}",
         "this language feature is only supported in es6 mode: rest parameters");
+  }
+
+  public void testExpressionsThatLookLikeParameters() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parseError("();", "invalid paren expression");
+    parseError("(...xs);", "invalid paren expression");
+    parseError("(x, ...xs);", "A rest parameter must be in a parameter list.");
+    parseError("(a, b, c, ...xs);", "A rest parameter must be in a parameter list.");
   }
 
   public void testDefaultParametersWithRestParameters() {
