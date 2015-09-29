@@ -534,11 +534,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       return;
     }
 
-    boolean useUnique = NodeUtil.isStatement(classNode) && !NodeUtil.isInFunction(classNode);
-    String uniqueFullClassName =
-        useUnique ? getUniqueClassName(metadata.fullClassName) : metadata.fullClassName;
-    Node classNameAccess = NodeUtil.newQName(compiler, uniqueFullClassName);
-    Node prototypeAccess = NodeUtil.newPropertyAccess(compiler, classNameAccess, "prototype");
+    Node prototypeAccess = NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype");
 
     Preconditions.checkState(NodeUtil.isStatement(metadata.insertionPoint),
         "insertion point must be a statement: %s", metadata.insertionPoint);
@@ -620,8 +616,8 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
               constructor.getFirstChild(), metadata.classNameNode.cloneNode());
         }
       } else {
-        Node qualifiedMemberAccess =
-            getQualifiedMemberAccess(compiler, member, classNameAccess, prototypeAccess);
+        Node qualifiedMemberAccess = getQualifiedMemberAccess(
+            compiler, member, NodeUtil.newQName(compiler, metadata.fullClassName), prototypeAccess);
         Node method = member.getLastChild().detachFromParent();
 
         Node assign = IR.assign(qualifiedMemberAccess, method);
@@ -657,7 +653,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
     for (Map.Entry<String, JSDocInfo> entry : classMembersToDeclare.entrySet()) {
       String declaredMember = entry.getKey();
-      Node declaration = IR.getprop(classNameAccess.cloneTree(), IR.string(declaredMember));
+      Node declaration = IR.getprop(
+          NodeUtil.newQName(compiler, metadata.fullClassName),
+          IR.string(declaredMember));
       declaration.setJSDocInfo(entry.getValue());
       metadata.insertNodeAndAdvance(
           IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
@@ -689,7 +687,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           IR.exprResult(
               IR.call(
                   NodeUtil.newQName(compiler, "Object.defineProperties"),
-                  classNameAccess.cloneTree(),
+                  NodeUtil.newQName(compiler, metadata.fullClassName),
                   metadata.definePropertiesObjForClass));
       definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
       metadata.insertNodeAndAdvance(definePropsCall);
@@ -851,10 +849,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     } else {
       return NodeUtil.newPropertyAccess(compiler, context, member.getString());
     }
-  }
-
-  private static String getUniqueClassName(String qualifiedName) {
-    return qualifiedName;
   }
 
   private class CheckClassAssignments extends NodeTraversal.AbstractPostOrderCallback {
