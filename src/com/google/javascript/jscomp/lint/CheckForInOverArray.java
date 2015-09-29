@@ -78,7 +78,7 @@ public final class CheckForInOverArray
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (isForInOverArray(n)) {
-      compiler.report(t.makeError(parent, FOR_IN_OVER_ARRAY));
+      compiler.report(t.makeError(n, FOR_IN_OVER_ARRAY));
     }
   }
 
