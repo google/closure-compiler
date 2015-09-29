@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.AstValidator.ViolationHandler;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleSourceFile;
@@ -108,6 +109,13 @@ public final class AstValidatorTest extends CompilerTestCase {
     Node n = new Node(Token.EMPTY, new Node(Token.TRUE));
     expectInvalid(n, Check.STATEMENT);
     n.detachChildren();
+    expectValid(n, Check.STATEMENT);
+  }
+
+  public void testInvalidNumberStatement() {
+    Node n = IR.number(1);
+    expectInvalid(n, Check.STATEMENT);
+    n = IR.exprResult(n);
     expectValid(n, Check.STATEMENT);
   }
 
