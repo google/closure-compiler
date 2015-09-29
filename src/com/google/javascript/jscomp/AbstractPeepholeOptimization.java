@@ -128,13 +128,12 @@ abstract class AbstractPeepholeOptimization {
   }
 
   /**
-   * @return Whether the source code version is ECMAScript 5 or later.
+   * @return Whether the output language is ECMAScript 5 or later.
    *     Workarounds for quirks in browsers that do not support ES5 can be
    *     ignored when this is true.
    */
   boolean isEcmaScript5OrGreater() {
-    return compiler != null
-        && compiler.acceptEcmaScript5();
+    return compiler != null && compiler.getOptions().getLanguageOut().isEs5OrHigher();
   }
 
   /**

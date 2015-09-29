@@ -2027,23 +2027,6 @@ public class Compiler extends AbstractCompiler {
     return options.ideMode;
   }
 
-  @Override
-  public boolean acceptEcmaScript5() {
-    switch (options.getLanguageIn()) {
-      case ECMASCRIPT5:
-      case ECMASCRIPT5_STRICT:
-      case ECMASCRIPT6:
-      case ECMASCRIPT6_STRICT:
-      case ECMASCRIPT6_TYPED:
-        return true;
-      case ECMASCRIPT3:
-        return false;
-      default:
-        throw new IllegalStateException(
-            "unexpected language mode: " + options.getLanguageIn());
-    }
-  }
-  @Override
   Config getParserConfig(ConfigContext context) {
     if (parserConfig == null) {
       switch (options.getLanguageIn()) {
