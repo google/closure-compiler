@@ -87,6 +87,10 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
          "var a = 1, x, y = 3; x = 5;");
   }
 
+  public void testArgumentsAssignment() {
+    testSame("function f() {arguments = 1;}");
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CollapseVariableDeclarations(compiler);
