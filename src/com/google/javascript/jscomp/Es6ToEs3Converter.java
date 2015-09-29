@@ -547,8 +547,16 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     JSDocInfo ctorJSDocInfo = null;
     // Process all members of the class
     Node classMembers = classNode.getLastChild();
+
+    // Normal declarations to be added to the prototype: Foo.prototype.bar
     Map<String, JSDocInfo> prototypeMembersToDeclare = new LinkedHashMap<>();
+
+    // Computed property declarations to be added to the prototype: Foo.prototype[bar]
+    Map<String, JSDocInfo> prototypeComputedPropsToDeclare = new LinkedHashMap<>();
+
+    // Normal declarations to be added to the class: Foo.bar
     Map<String, JSDocInfo> classMembersToDeclare = new LinkedHashMap<>();
+
     for (Node member : classMembers.children()) {
       if (member.isEmpty()) {
         continue;
@@ -565,42 +573,49 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
         if (member.isComputedProp() && member.isStaticMember()) {
           cannotConvertYet(member, "Static computed property");
+          continue;
         }
         if (member.isComputedProp() && !member.getFirstChild().isQualifiedName()) {
           cannotConvert(member.getFirstChild(), "Computed property with non-qualified-name key");
+          continue;
         }
 
         JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).clone();
         addToDefinePropertiesObject(metadata, member);
 
-        // TODO(tbreisacher): Also add type information for computed properties.
-        if (!member.isComputedProp()) {
-          Map<String, JSDocInfo> membersToDeclare =
-              member.isStaticMember() ? classMembersToDeclare : prototypeMembersToDeclare;
-          JSDocInfo existingJSDoc = membersToDeclare.get(member.getString());
-          JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
-          if (existingType != null && !existingType.equals(typeExpr)) {
-            compiler.report(
-                JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, member.getString()));
-          } else {
-            JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-            jsDoc.recordType(typeExpr);
-            if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
-              jsDoc.recordExport();
-            }
-            if (member.isStaticMember()) {
-              jsDoc.recordNoCollapse();
-            }
-            membersToDeclare.put(member.getString(), jsDoc.build());
-          }
+        Map<String, JSDocInfo> membersToDeclare;
+        String memberName;
+        if (member.isComputedProp()) {
+          Preconditions.checkState(!member.isStaticMember());
+          membersToDeclare = prototypeComputedPropsToDeclare;
+          memberName = member.getFirstChild().getQualifiedName();
+        } else {
+          membersToDeclare = member.isStaticMember()
+              ? classMembersToDeclare
+              : prototypeMembersToDeclare;
+          memberName = member.getString();
         }
-
+        JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
+        JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
+        if (existingType != null && !existingType.equals(typeExpr)) {
+          compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, memberName));
+        } else {
+          JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+          jsDoc.recordType(typeExpr);
+          if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
+            jsDoc.recordExport();
+          }
+          if (member.isStaticMember() && !member.isComputedProp()) {
+            jsDoc.recordNoCollapse();
+          }
+          membersToDeclare.put(memberName, jsDoc.build());
+        }
       } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
         if (!metadata.anonymous) {
           // Turns class Foo { constructor: function() {} } into function Foo() {},
-          // i.e. attaches the name the ctor function.
+          // i.e. attaches the name to the ctor function.
           constructor.replaceChild(
               constructor.getFirstChild(), metadata.classNameNode.cloneNode());
         }
@@ -643,6 +658,14 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     for (Map.Entry<String, JSDocInfo> entry : classMembersToDeclare.entrySet()) {
       String declaredMember = entry.getKey();
       Node declaration = IR.getprop(classNameAccess.cloneTree(), IR.string(declaredMember));
+      declaration.setJSDocInfo(entry.getValue());
+      metadata.insertNodeAndAdvance(
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
+    }
+    for (Map.Entry<String, JSDocInfo> entry : prototypeComputedPropsToDeclare.entrySet()) {
+      String declaredMember = entry.getKey();
+      Node declaration = IR.getelem(prototypeAccess.cloneTree(),
+          NodeUtil.newQName(compiler, declaredMember));
       declaration.setJSDocInfo(entry.getValue());
       metadata.insertNodeAndAdvance(
           IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
@@ -756,9 +779,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    */
   private JSTypeExpression getTypeFromGetterOrSetter(Node node) {
     JSDocInfo info = node.getJSDocInfo();
-
     if (info != null) {
-      if (node.isGetterDef() && info.getReturnType() != null) {
+      boolean getter = node.isGetterDef() || node.getBooleanProp(Node.COMPUTED_PROP_GETTER);
+      if (getter && info.getReturnType() != null) {
         return info.getReturnType();
       } else {
         Set<String> paramNames = info.getParameterNames();

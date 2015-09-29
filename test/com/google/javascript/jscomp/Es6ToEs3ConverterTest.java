@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CONFLICTING_GETTER_SETTER_TYPE;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
@@ -945,7 +946,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  /** @param {number} v */",
             "  set value(v) { }",
             "}"),
-        Es6ToEs3Converter.CONFLICTING_GETTER_SETTER_TYPE);
+        CONFLICTING_GETTER_SETTER_TYPE);
   }
 
   public void testClassEs5GetterSetterIncorrectTypes() {
@@ -1127,10 +1128,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     languageOut = LanguageMode.ECMASCRIPT5;
 
     test(
-        "/** @unrestricted */ class C { get [foo]() { return 4; }}",
+        "/** @unrestricted */ class C { /** @return {number} */ get [foo]() { return 4; }}",
         LINE_JOINER.join(
             "/** @constructor @unrestricted */",
             "var C = function() {};",
+            "/** @type {number} */",
+            "C.prototype[foo];",
             "var $jscomp$compprop0 = {};",
             "Object.defineProperties(",
             "  C.prototype,",
@@ -1148,10 +1151,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     languageOut = LanguageMode.ECMASCRIPT5;
 
     test(
-        "/** @unrestricted */ class C { set [foo](val) {}}",
+        "/** @unrestricted */ class C { /** @param {string} val */ set [foo](val) {}}",
         LINE_JOINER.join(
             "/** @constructor @unrestricted */",
             "var C = function() {};",
+            "/** @type {string} */",
+            "C.prototype[foo];",
             "var $jscomp$compprop0={};",
             "Object.defineProperties(",
             "  C.prototype,",
@@ -1179,12 +1184,16 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @unrestricted */",
             "class C {",
+            "  /** @return {boolean} */",
             "  get [foo]() {}",
+            "  /** @param {boolean} val */",
             "  set [foo](val) {}",
             "}"),
         LINE_JOINER.join(
             "/** @constructor @unrestricted */",
             "var C = function() {};",
+            "/** @type {boolean} */",
+            "C.prototype[foo];",
             "var $jscomp$compprop0={};",
             "Object.defineProperties(",
             "  C.prototype,",
@@ -1196,6 +1205,17 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    /** @this {C} */",
             "    set: function(val) {},",
             "  }, $jscomp$compprop0));"));
+
+    testError(
+        LINE_JOINER.join(
+            "/** @unrestricted */",
+            "class C {",
+            "  /** @return {boolean} */",
+            "  get [foo]() {}",
+            "  /** @param {string} val */",
+            "  set [foo](val) {}",
+            "}"),
+        CONFLICTING_GETTER_SETTER_TYPE);
   }
 
   /**
