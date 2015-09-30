@@ -271,12 +271,14 @@ public final class PerformanceTracker {
 
       ArrayList<Entry<String, Stats>> statEntries = new ArrayList<>();
       statEntries.addAll(summary.entrySet());
-      Collections.sort(statEntries, new Comparator<Entry<String, Stats>>() {
-        @Override
-        public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
-          return (int) (e1.getValue().runtime - e2.getValue().runtime);
-        }
-      });
+      Collections.sort(
+          statEntries,
+          new Comparator<Entry<String, Stats>>() {
+            @Override
+            public int compare(Entry<String, Stats> e1, Entry<String, Stats> e2) {
+              return Long.compare(e1.getValue().runtime, e2.getValue().runtime);
+            }
+          });
 
       output.write("Summary:\n" +
           "pass,runtime,runs,changingRuns,reduction,gzReduction\n");
