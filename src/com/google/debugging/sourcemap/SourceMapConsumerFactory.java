@@ -16,15 +16,17 @@
 
 package com.google.debugging.sourcemap;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 
 /**
  * Detect and parse the provided source map.
  * @author johnlenz@google.com (John Lenz)
  */
 public final class SourceMapConsumerFactory {
+  private static final JsonParser PARSER = new JsonParser();
 
   /** not constructible */
   private SourceMapConsumerFactory() {}
@@ -54,7 +56,12 @@ public final class SourceMapConsumerFactory {
     } else if (contents.startsWith("{")){
       try {
         // Revision 2 and 3, are JSON Objects
-        JsonObject sourceMapRoot = new Gson().fromJson(contents, JsonObject.class);
+        JsonElement jsonElement = PARSER.parse(contents);
+        if (!jsonElement.isJsonObject()) {
+          throw new SourceMapParseException("Expected a JSON Object.");
+        }
+        JsonObject sourceMapRoot = jsonElement.getAsJsonObject();
+
         // Check basic assertions about the format.
         int version = sourceMapRoot.get("version").getAsInt();
         switch (version) {
