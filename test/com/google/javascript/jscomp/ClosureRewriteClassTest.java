@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_MISSING;
+import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_DESCRIPTOR_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED;
@@ -436,6 +438,14 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     testRewriteError("var x = goog.defineClass() || null;", GOOG_CLASS_TARGET_INVALID);
 
     testRewriteError("({foo: goog.defineClass()});", GOOG_CLASS_TARGET_INVALID);
+  }
+
+  public void testInvalid7() {
+    testRewriteError(LINE_JOINER.join(
+        "var x = goog.defineClass(null, {",
+        "  constructor: foo",
+        "});"),
+        GOOG_CLASS_CONSTRUCTOR_NOT_VALID);
   }
 
   public void testNgInject() {
