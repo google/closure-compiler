@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for v1_3 ngMock angular-mocks.js.
+ * @fileoverview Externs for v1_4 ngMock angular-mocks.js.
  * @externs
  *
  * TODO: Remaining Mocks:
