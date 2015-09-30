@@ -534,8 +534,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       return;
     }
 
-    Node prototypeAccess = NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype");
-
     Preconditions.checkState(NodeUtil.isStatement(metadata.insertionPoint),
         "insertion point must be a statement: %s", metadata.insertionPoint);
 
@@ -543,69 +541,12 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     JSDocInfo ctorJSDocInfo = null;
     // Process all members of the class
     Node classMembers = classNode.getLastChild();
-
-    // Normal declarations to be added to the prototype: Foo.prototype.bar
-    Map<String, JSDocInfo> prototypeMembersToDeclare = new LinkedHashMap<>();
-
-    // Computed property declarations to be added to the prototype: Foo.prototype[bar]
-    Map<String, JSDocInfo> prototypeComputedPropsToDeclare = new LinkedHashMap<>();
-
-    // Normal declarations to be added to the class: Foo.bar
-    Map<String, JSDocInfo> classMembersToDeclare = new LinkedHashMap<>();
-
     for (Node member : classMembers.children()) {
-      if (member.isEmpty()) {
-        continue;
-      }
-      Preconditions.checkState(
-          member.isMemberFunctionDef() || member.isGetterDef() || member.isSetterDef()
-              || (member.isComputedProp() && !member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE)),
-          "Member variables should have been transpiled earlier: ", member);
-
       if ((member.isComputedProp()
               && (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
           || (member.isGetterDef() || member.isSetterDef())) {
-
-        if (member.isComputedProp() && member.isStaticMember()) {
-          cannotConvertYet(member, "Static computed property");
-          continue;
-        }
-        if (member.isComputedProp() && !member.getFirstChild().isQualifiedName()) {
-          cannotConvert(member.getFirstChild(), "Computed property with non-qualified-name key");
-          continue;
-        }
-
-        JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).clone();
-        addToDefinePropertiesObject(metadata, member);
-
-        Map<String, JSDocInfo> membersToDeclare;
-        String memberName;
-        if (member.isComputedProp()) {
-          Preconditions.checkState(!member.isStaticMember());
-          membersToDeclare = prototypeComputedPropsToDeclare;
-          memberName = member.getFirstChild().getQualifiedName();
-        } else {
-          membersToDeclare = member.isStaticMember()
-              ? classMembersToDeclare
-              : prototypeMembersToDeclare;
-          memberName = member.getString();
-        }
-        JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
-        JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
-        if (existingType != null && !existingType.equals(typeExpr)) {
-          compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, memberName));
-        } else {
-          JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-          jsDoc.recordType(typeExpr);
-          if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
-            jsDoc.recordExport();
-          }
-          if (member.isStaticMember() && !member.isComputedProp()) {
-            jsDoc.recordNoCollapse();
-          }
-          membersToDeclare.put(memberName, jsDoc.build());
-        }
+        visitComputedPropInClass(member, metadata);
       } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detachFromParent();
@@ -615,66 +556,25 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           constructor.replaceChild(
               constructor.getFirstChild(), metadata.classNameNode.cloneNode());
         }
+      } else if (member.isEmpty()) {
+        // Do nothing.
       } else {
-        Node qualifiedMemberAccess = getQualifiedMemberAccess(
-            compiler, member, NodeUtil.newQName(compiler, metadata.fullClassName), prototypeAccess);
-        Node method = member.getLastChild().detachFromParent();
-
-        Node assign = IR.assign(qualifiedMemberAccess, method);
-        assign.useSourceInfoIfMissingFromForTree(member);
-
-        JSDocInfo info = member.getJSDocInfo();
-        if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
-          JSDocInfoBuilder memberDoc = JSDocInfoBuilder.maybeCopyFrom(info);
-          memberDoc.recordThisType(
-              new JSTypeExpression(new Node(Token.BANG, new Node(Token.QMARK)),
-              member.getSourceFileName()));
-          info = memberDoc.build();
-        }
-        if (info != null) {
-          assign.setJSDocInfo(info);
-        }
-
-        Node newNode = NodeUtil.newExpr(assign);
-        metadata.insertNodeAndAdvance(newNode);
+        Preconditions.checkState(member.isMemberFunctionDef() || member.isComputedProp(),
+            "Unexpected class member:", member);
+        Preconditions.checkState(!member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE),
+            "Member variables should have been transpiled earlier:", member);
+        visitClassMember(member, metadata);
       }
     }
 
-    // Add declarations for properties that were defined with a getter and/or setter,
-    // so that the typechecker knows those properties exist on the class.
-    // This is a temporary solution. Eventually, the type checker should understand
-    // Object.defineProperties calls directly.
-    for (Map.Entry<String, JSDocInfo> entry : prototypeMembersToDeclare.entrySet()) {
-      String declaredMember = entry.getKey();
-      Node declaration = IR.getprop(prototypeAccess.cloneTree(), IR.string(declaredMember));
-      declaration.setJSDocInfo(entry.getValue());
-      metadata.insertNodeAndAdvance(
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
-    }
-    for (Map.Entry<String, JSDocInfo> entry : classMembersToDeclare.entrySet()) {
-      String declaredMember = entry.getKey();
-      Node declaration = IR.getprop(
-          NodeUtil.newQName(compiler, metadata.fullClassName),
-          IR.string(declaredMember));
-      declaration.setJSDocInfo(entry.getValue());
-      metadata.insertNodeAndAdvance(
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
-    }
-    for (Map.Entry<String, JSDocInfo> entry : prototypeComputedPropsToDeclare.entrySet()) {
-      String declaredMember = entry.getKey();
-      Node declaration = IR.getelem(prototypeAccess.cloneTree(),
-          NodeUtil.newQName(compiler, declaredMember));
-      declaration.setJSDocInfo(entry.getValue());
-      metadata.insertNodeAndAdvance(
-          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(classNode));
-    }
+    addDeclarations(metadata);
 
     if (metadata.definePropertiesObjForPrototype.hasChildren()) {
       Node definePropsCall =
           IR.exprResult(
               IR.call(
                   NodeUtil.newQName(compiler, "Object.defineProperties"),
-                  prototypeAccess.cloneTree(),
+                  NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"),
                   metadata.definePropertiesObjForPrototype));
       definePropsCall.useSourceInfoIfMissingFromForTree(classNode);
       metadata.insertNodeAndAdvance(definePropsCall);
@@ -833,6 +733,115 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     prop.useSourceInfoIfMissingFromForTree(member);
   }
 
+  private void visitComputedPropInClass(Node member, ClassDeclarationMetadata metadata) {
+    if (member.isComputedProp() && member.isStaticMember()) {
+      cannotConvertYet(member, "Static computed property");
+      return;
+    }
+    if (member.isComputedProp() && !member.getFirstChild().isQualifiedName()) {
+      cannotConvert(member.getFirstChild(), "Computed property with non-qualified-name key");
+      return;
+    }
+
+    JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).clone();
+    addToDefinePropertiesObject(metadata, member);
+
+    Map<String, JSDocInfo> membersToDeclare;
+    String memberName;
+    if (member.isComputedProp()) {
+      Preconditions.checkState(!member.isStaticMember());
+      membersToDeclare = metadata.prototypeComputedPropsToDeclare;
+      memberName = member.getFirstChild().getQualifiedName();
+    } else {
+      membersToDeclare = member.isStaticMember()
+          ? metadata.classMembersToDeclare
+          : metadata.prototypeMembersToDeclare;
+      memberName = member.getString();
+    }
+    JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
+    JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
+    if (existingType != null && !existingType.equals(typeExpr)) {
+      compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, memberName));
+    } else {
+      JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
+      jsDoc.recordType(typeExpr);
+      if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
+        jsDoc.recordExport();
+      }
+      if (member.isStaticMember() && !member.isComputedProp()) {
+        jsDoc.recordNoCollapse();
+      }
+      membersToDeclare.put(memberName, jsDoc.build());
+    }
+  }
+
+  /**
+   * Handles transpilation of a standard class member function. Getters, setters, and the
+   * constructor are not handled here.
+   */
+  private void visitClassMember(
+      Node member, ClassDeclarationMetadata metadata) {
+    Node qualifiedMemberAccess = getQualifiedMemberAccess(
+        compiler, member,
+        NodeUtil.newQName(compiler, metadata.fullClassName),
+        NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"));
+    Node method = member.getLastChild().detachFromParent();
+
+    Node assign = IR.assign(qualifiedMemberAccess, method);
+    assign.useSourceInfoIfMissingFromForTree(member);
+
+    JSDocInfo info = member.getJSDocInfo();
+    if (member.isStaticMember() && NodeUtil.referencesThis(assign.getLastChild())) {
+      JSDocInfoBuilder memberDoc = JSDocInfoBuilder.maybeCopyFrom(info);
+      memberDoc.recordThisType(
+          new JSTypeExpression(new Node(Token.BANG, new Node(Token.QMARK)),
+          member.getSourceFileName()));
+      info = memberDoc.build();
+    }
+    if (info != null) {
+      assign.setJSDocInfo(info);
+    }
+
+    Node newNode = NodeUtil.newExpr(assign);
+    metadata.insertNodeAndAdvance(newNode);
+  }
+
+  /**
+   * Add declarations for properties that were defined with a getter and/or setter,
+   * so that the typechecker knows those properties exist on the class.
+   * This is a temporary solution. Eventually, the type checker should understand
+   * Object.defineProperties calls directly.
+   */
+  private void addDeclarations(ClassDeclarationMetadata metadata) {
+    for (Map.Entry<String, JSDocInfo> entry : metadata.prototypeMembersToDeclare.entrySet()) {
+      String declaredMember = entry.getKey();
+      Node declaration = IR.getprop(
+          NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"),
+          IR.string(declaredMember));
+      declaration.setJSDocInfo(entry.getValue());
+      metadata.insertNodeAndAdvance(
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode));
+    }
+    for (Map.Entry<String, JSDocInfo> entry : metadata.classMembersToDeclare.entrySet()) {
+      String declaredMember = entry.getKey();
+      Node declaration = IR.getprop(
+          NodeUtil.newQName(compiler, metadata.fullClassName),
+          IR.string(declaredMember));
+      declaration.setJSDocInfo(entry.getValue());
+      metadata.insertNodeAndAdvance(
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode));
+    }
+    for (Map.Entry<String, JSDocInfo> entry : metadata.prototypeComputedPropsToDeclare.entrySet()) {
+      String declaredMember = entry.getKey();
+      Node declaration = IR.getelem(
+          NodeUtil.newQName(compiler, metadata.fullClassName + ".prototype"),
+          NodeUtil.newQName(compiler, declaredMember));
+      declaration.setJSDocInfo(entry.getValue());
+      metadata.insertNodeAndAdvance(
+          IR.exprResult(declaration).useSourceInfoIfMissingFromForTree(metadata.classNameNode));
+    }
+  }
+
   /**
    * Constructs a Node that represents an access to the given class member, qualified by either the
    * static or the instance access context, depending on whether the member is static.
@@ -904,6 +913,15 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
      */
     private final Node definePropertiesObjForClass;
 
+    // Normal declarations to be added to the prototype: Foo.prototype.bar
+    private final Map<String, JSDocInfo> prototypeMembersToDeclare;
+
+    // Computed property declarations to be added to the prototype: Foo.prototype[bar]
+    private final Map<String, JSDocInfo> prototypeComputedPropsToDeclare;
+
+    // Normal declarations to be added to the class: Foo.bar
+    private final Map<String, JSDocInfo> classMembersToDeclare;
+
     /**
      * The fully qualified name of the class, which will be used in the output. May come from the
      * class itself or the LHS of an assignment.
@@ -919,6 +937,9 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       this.insertionPoint = insertionPoint;
       this.definePropertiesObjForClass = IR.objectlit();
       this.definePropertiesObjForPrototype = IR.objectlit();
+      this.prototypeMembersToDeclare = new LinkedHashMap<>();
+      this.prototypeComputedPropsToDeclare = new LinkedHashMap<>();
+      this.classMembersToDeclare = new LinkedHashMap<>();
       this.fullClassName = fullClassName;
       this.anonymous = anonymous;
       this.classNameNode = classNameNode;
