@@ -828,14 +828,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Sets whether this is the last generation. In the last generation,
-   * {@link NamedType} warns about unresolved types.
-   */
-  public void setLastGeneration(boolean lastGeneration) {
-    this.lastGeneration = lastGeneration;
-  }
-
-  /**
    * Tells the type system that {@code type} implements interface {@code
    * interfaceInstance}.
    * {@code inter} must be an ObjectType for the instance of the interface as it
@@ -1242,20 +1234,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Creates a function type which can act as a constructor. The last
-   * parameter type of the constructor is considered a variable length argument.
-   *
-   * @param returnType the function's return type
-   * @param parameterTypes the parameters' types
-   */
-  private FunctionType createConstructorTypeWithVarArgs(
-      JSType returnType, JSType... parameterTypes) {
-    return createConstructorType(
-        null, null, createParametersWithVarArgs(parameterTypes), returnType,
-        null);
-  }
-
-  /**
    * Creates a function type in which {@code this} refers to an object instance.
    *
    * @param instanceType the type of {@code this}
@@ -1270,19 +1248,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         .withReturnType(returnType)
         .withTypeOfThis(instanceType)
         .build();
-  }
-
-  /**
-   * Creates a tree hierarchy representing a typed argument list. The last
-   * parameter type is considered a variable length argument.
-   *
-   * @param parameterTypes the parameter types. The last element of this array
-   *     is considered a variable length argument.
-   * @return a tree hierarchy representing a typed argument list.
-   */
-  public Node createParametersWithVarArgs(List<JSType> parameterTypes) {
-    return createParametersWithVarArgs(
-        parameterTypes.toArray(new JSType[parameterTypes.size()]));
   }
 
   /**

@@ -134,10 +134,6 @@ public final class TemplatizedType extends ProxyObjectType {
             that.toMaybeTemplatizedType().getReferencedTypeInternal());
   }
 
-  boolean wrapsRawType(JSType that) {
-    return this.getReferencedTypeInternal().isEquivalentTo(that);
-  }
-
   /**
    * Computes the greatest subtype of two related templatized types.
    * @return The greatest subtype.

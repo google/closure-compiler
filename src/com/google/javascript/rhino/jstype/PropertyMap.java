@@ -158,14 +158,6 @@ class PropertyMap implements Serializable {
     return props.size();
   }
 
-  boolean hasOwnProperty(String propertyName) {
-    return properties.get(propertyName) != null;
-  }
-
-  boolean hasProperty(String propertyName) {
-    return getSlot(propertyName) != null;
-  }
-
   Set<String> getOwnPropertyNames() {
     return properties.keySet();
   }

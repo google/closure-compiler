@@ -595,22 +595,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  /**
-   * Returns all extended interfaces declared by an interfaces or its super-
-   * interfaces. If this is called before all types are resolved, it may return
-   * an incomplete set.
-   */
-  public Iterable<ObjectType> getAllExtendedInterfaces() {
-    // Store them in a linked hash set, so that the compile job is
-    // deterministic.
-    Set<ObjectType> extendedInterfaces = new LinkedHashSet<>();
-
-    for (ObjectType interfaceType : getExtendedInterfaces()) {
-      addRelatedExtendedInterfaces(interfaceType, extendedInterfaces);
-    }
-    return extendedInterfaces;
-  }
-
   private void addRelatedExtendedInterfaces(ObjectType instance,
       Set<ObjectType> set) {
     FunctionType constructor = instance.getConstructor();
@@ -1026,11 +1010,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   public boolean hasEqualCallType(FunctionType otherType) {
     return this.call.checkArrowEquivalenceHelper(
         otherType.call, EquivalenceMethod.IDENTITY, EqCache.create());
-  }
-
-  public boolean hasEqualCallType(FunctionType otherType, EqCache eqCache) {
-    return this.call.checkArrowEquivalenceHelper(
-        otherType.call, EquivalenceMethod.IDENTITY, eqCache);
   }
 
   /**

@@ -263,11 +263,6 @@ public class RecordType extends PrototypeObjectType {
   }
 
   /** Determines if typeA is a subtype of typeB */
-  static boolean isSubtype(ObjectType typeA, RecordType typeB) {
-    return isSubtype(typeA, typeB, ImplCache.create());
-  }
-
-  /** Determines if typeA is a subtype of typeB */
   static boolean isSubtype(ObjectType typeA, RecordType typeB,
       ImplCache implicitImplCache) {
     // typeA is a subtype of record type typeB iff:

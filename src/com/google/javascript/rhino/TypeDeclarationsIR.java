@@ -77,17 +77,6 @@ public class TypeDeclarationsIR {
   }
 
   /**
-   * We assume that types are non-nullable by default. Wrap a type in nullable
-   * to indicate that it should be allowed to take a null value.
-   * NB: this is not currently supported in TypeScript so it is not printed
-   * in the CodeGenerator for ES6_TYPED.
-   * @return a new node indicating that the nested type is nullable
-   */
-  public static TypeDeclarationNode nullable(TypeDeclarationNode type) {
-    return new TypeDeclarationNode(Token.NULLABLE_TYPE, type);
-  }
-
-  /**
    * Equivalent to the UNKNOWN type in Closure, expressed with {@code {?}}
    * @return a new node representing any type, without type checking.
    */

@@ -56,12 +56,6 @@ import java.util.Set;
 public class EnumType extends PrototypeObjectType {
   private static final long serialVersionUID = 1L;
 
-  /**
-   * The object literal or alias which this type represents.
-   * It may be {@code null}.
-   */
-  private final Node source;
-
   // the type of the individual elements
   private EnumElementType elementsType;
   // the elements' names (they all have the same type)
@@ -76,15 +70,7 @@ public class EnumType extends PrototypeObjectType {
   EnumType(JSTypeRegistry registry, String name, Node source,
       JSType elementsType) {
     super(registry, "enum{" + name + "}", null);
-    this.source = source;
     this.elementsType = new EnumElementType(registry, elementsType, name);
-  }
-
-  /**
-   * Gets the source node or null if this is an unknown enum.
-   */
-  public Node getSource() {
-    return source;
   }
 
   @Override

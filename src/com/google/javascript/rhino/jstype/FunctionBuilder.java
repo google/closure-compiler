@@ -119,12 +119,6 @@ public final class FunctionBuilder {
     return this;
   }
 
-  /** Make this a constructor. */
-  public FunctionBuilder forConstructor() {
-    this.isConstructor = true;
-    return this;
-  }
-
   /** Set whether this is a constructor. */
   public FunctionBuilder setIsConstructor(boolean isConstructor) {
     this.isConstructor = isConstructor;

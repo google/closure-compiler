@@ -80,18 +80,6 @@ public abstract class JSType implements TypeI, Serializable {
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
       new CanCastToVisitor();
 
-  public static final String UNKNOWN_NAME =
-      "Unknown class name";
-
-  public static final String NOT_A_CLASS =
-      "Not declared as a constructor";
-
-  public static final String NOT_A_TYPE =
-      "Not declared as a type name";
-
-  public static final String EMPTY_TYPE_COMPONENT =
-      "Named type with empty name component";
-
   /**
    * Total ordering on types based on their textual representation.
    * This is used to have a deterministic output of the toString
@@ -103,10 +91,6 @@ public abstract class JSType implements TypeI, Serializable {
       return t1.toString().compareTo(t2.toString());
     }
   };
-
-  // A flag set on enum definition tree nodes
-  public static final int ENUMDECL = 1;
-  public static final int NOT_ENUMDECL = 0;
 
   final JSTypeRegistry registry;
 
@@ -425,13 +409,6 @@ public abstract class JSType implements TypeI, Serializable {
     return null;
   }
 
-  /**
-   * Null-safe version of toMaybeTemplatizedType().
-   */
-  public static TemplatizedType toMaybeTemplatizedType(JSType type) {
-    return type == null ? null : type.toMaybeTemplatizedType();
-  }
-
   public final boolean isTemplateType() {
     return toMaybeTemplateType() != null;
   }
@@ -442,13 +419,6 @@ public abstract class JSType implements TypeI, Serializable {
    */
   public TemplateType toMaybeTemplateType() {
     return null;
-  }
-
-  /**
-   * Null-safe version of toMaybeTemplateType().
-   */
-  public static TemplateType toMaybeTemplateType(JSType type) {
-    return type == null ? null : type.toMaybeTemplateType();
   }
 
   public boolean hasAnyTemplateTypes() {
@@ -567,14 +537,6 @@ public abstract class JSType implements TypeI, Serializable {
         : EqCache.createWithoutStructuralTyping();
     return checkEquivalenceHelper((JSType) that,
         EquivalenceMethod.IDENTITY, eqCache);
-  }
-
-  /**
-   * Checks if two types are invariant.
-   * @see EquivalenceMethod
-   */
-  public final boolean isInvariant(JSType that) {
-    return checkEquivalenceHelper(that, EquivalenceMethod.INVARIANT);
   }
 
   /**
@@ -1640,12 +1602,6 @@ public abstract class JSType implements TypeI, Serializable {
   /** Whether the type has been resolved. */
   public final boolean isResolved() {
     return resolved;
-  }
-
-  /** Clears the resolved field. */
-  public final void clearResolved() {
-    resolved = false;
-    resolveResult = null;
   }
 
   /**

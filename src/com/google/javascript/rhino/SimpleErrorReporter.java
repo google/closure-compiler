@@ -72,20 +72,6 @@ public class SimpleErrorReporter implements ErrorReporter {
         errors.add(formatDetailedMessage(message, sourceName, line));
     }
 
-    /**
-     * Returns the list of errors, or {@code null} if there were none.
-     */
-    public List<String> errors() {
-        return errors;
-    }
-
-    /**
-     * Returns the list of warnings, or {@code null} if there were none.
-     */
-    public List<String> warnings() {
-        return warnings;
-    }
-
     private String formatDetailedMessage(
         String message, String sourceName, int lineNumber) {
       String details = message;

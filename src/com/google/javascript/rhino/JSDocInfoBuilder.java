@@ -1288,13 +1288,6 @@ public final class JSDocInfoBuilder {
   }
 
   /**
-   * Returns whether current JSDoc is annotated with {@code @disposes}.
-   */
-  public boolean isDisposesRecorded() {
-    return currentInfo.isDisposes();
-  }
-
-  /**
    * Records a parameter that gets disposed.
    *
    * @return {@code true} if all the parameters was recorded and
