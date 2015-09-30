@@ -28,7 +28,4 @@ public class FormalParameterListTree extends ParseTree {
     this.parameters = parameters;
   }
 
-  private ParseTree getLastParameter() {
-    return parameters.get(parameters.size() - 1);
-  }
 }
