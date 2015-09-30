@@ -1063,7 +1063,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     // as we migrate users to explicit goog.forwardDeclare() calls.
     if (typeDecls != null) {
       for (String typeDecl : typeDecls) {
-        compiler.getTypeRegistry().forwardDeclareType(typeDecl);
+        compiler.forwardDeclareType(typeDecl);
       }
     }
 
@@ -1093,8 +1093,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     if (typeDeclaration != null) {
-      compiler.getTypeRegistry().forwardDeclareType(typeDeclaration);
-
+      compiler.forwardDeclareType(typeDeclaration);
       // Forward declaration was recorded and we can remove the call.
       parent.detachFromParent();
       compiler.reportCodeChange();

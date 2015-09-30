@@ -11625,6 +11625,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "/** @constructor */",
             "function Foo() {}",
             "var x = new Foo.Bar()"));
+
+    typeCheckCustomExterns(Joiner.on('\n').join(
+        DEFAULT_EXTERNS,
+        "/** @constructor */",
+        "function Document() {}"),
+        "goog.forwardDeclare('Document')");
   }
 
   public void testDontLookupInParentScopeForNamesWithoutDeclaredType() {

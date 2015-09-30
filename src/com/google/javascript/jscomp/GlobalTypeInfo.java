@@ -277,6 +277,7 @@ class GlobalTypeInfo implements CompilerPass {
   private Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();
 
   private JSTypes commonTypes;
+  private List<String> unknownTypeNames = new ArrayList<>();
 
   GlobalTypeInfo(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
@@ -308,6 +309,10 @@ class GlobalTypeInfo implements CompilerPass {
     return declaredObjLitProps.get(n);
   }
 
+  void addUnknownTypeName(String name) {
+    this.unknownTypeNames.add(name);
+  }
+
   // Differs from the similar method in NTIScope class on how it treats qnames.
   String getFunInternalName(Node n) {
     Preconditions.checkArgument(n.isFunction());
@@ -327,6 +332,7 @@ class GlobalTypeInfo implements CompilerPass {
     Preconditions.checkArgument(externs == null || externs.isSyntheticBlock());
     Preconditions.checkArgument(root.isSyntheticBlock());
     globalScope = new NTIScope(root, null, ImmutableList.<String>of(), commonTypes);
+    globalScope.addUnknownTypeNames(this.unknownTypeNames);
     scopes.add(globalScope);
 
     // Processing of a scope is split into many separate phases, and it's not
@@ -408,7 +414,6 @@ class GlobalTypeInfo implements CompilerPass {
       warnings.add(warning);
     }
     typeParser = null;
-    compiler.setSymbolTable(this);
     warnings = null;
 
     // If a scope s1 contains a scope s2, then s2 must be before s1 in scopes.
@@ -660,14 +665,6 @@ class GlobalTypeInfo implements CompilerPass {
               }
               processQualifiedDefinition(expr);
               break;
-            case Token.CALL: {
-              List<String> decls = convention.identifyTypeDeclarationCall(expr);
-              if (decls == null || decls.isEmpty()) {
-                return;
-              }
-              currentScope.addUnknownTypeNames(decls);
-              break;
-            }
           }
           break;
         }

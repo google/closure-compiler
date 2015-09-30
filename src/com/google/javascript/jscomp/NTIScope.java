@@ -631,11 +631,8 @@ final class NTIScope implements DeclaredTypeRegistry {
 
   void mayDeclareUnknownType(QualifiedName qname) {
     if (qname.isIdentifier() || null == getNamespace(qname.getLeftmostName())) {
-      // TODO(dimvar): If the code before the return is deleted, no unit tests fail.
-      // That's because we consider the unknown type a global variable, which we type ?.
-      // Any reason to keep this code, or just delete it?
       String name = qname.getLeftmostName();
-      if (!locals.containsKey(name)) {
+      if (!isDefinedLocally(name, false)) {
         externs.put(name, JSType.UNKNOWN);
       }
       return;

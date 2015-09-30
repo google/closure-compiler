@@ -109,6 +109,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   public abstract TypeIRegistry getTypeIRegistry();
 
+  abstract void forwardDeclareType(String typeName);
+
   /**
    * Gets a memoized scope creator with type information. Only used by jsdev.
    */

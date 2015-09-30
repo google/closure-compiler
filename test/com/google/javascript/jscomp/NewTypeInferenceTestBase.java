@@ -147,6 +147,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     setUp();
     final CompilerOptions options = compiler.getOptions();
     options.setClosurePass(true);
+    options.setNewTypeInference(true);
     options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
@@ -176,9 +177,10 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     // Run ASTValidator
     (new AstValidator(compiler)).validateRoot(block);
 
-    GlobalTypeInfo symbolTable = new GlobalTypeInfo(compiler);
-    passes.add(makePassFactory("GlobalTypeInfo", symbolTable));
-    compiler.setSymbolTable(symbolTable);
+    ProcessClosurePrimitives closurePass =
+        new ProcessClosurePrimitives(compiler, null, CheckLevel.ERROR, false);
+    passes.add(makePassFactory("ProcessClosurePrimitives", closurePass));
+    passes.add(makePassFactory("GlobalTypeInfo", compiler.getSymbolTable()));
     passes.add(makePassFactory("NewTypeInference", new NewTypeInference(compiler)));
 
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);

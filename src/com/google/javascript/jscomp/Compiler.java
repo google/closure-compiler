@@ -1126,6 +1126,17 @@ public class Compiler extends AbstractCompiler {
   }
 
   @Override
+  void forwardDeclareType(String typeName) {
+    // Always add it to the old type registry, since OTI runs after NTI to
+    // provide types for the remaining passes.
+    // TODO(dimvar): change this when we stop running OTI after NTI.
+    getTypeRegistry().forwardDeclareType(typeName);
+    if (this.options.useNewTypeInference) {
+      getSymbolTable().addUnknownTypeName(typeName);
+    }
+  }
+
+  @Override
   // Only used by jsdev
   public MemoizedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
@@ -1218,9 +1229,10 @@ public class Compiler extends AbstractCompiler {
 
   @Override
   GlobalTypeInfo getSymbolTable() {
-    GlobalTypeInfo gti = symbolTable;
-    symbolTable = null; // GC this after type inference
-    return gti;
+    if (this.symbolTable == null) {
+      this.symbolTable = new GlobalTypeInfo(this);
+    }
+    return this.symbolTable;
   }
 
   @Override

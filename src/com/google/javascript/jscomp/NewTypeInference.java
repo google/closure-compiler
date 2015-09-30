@@ -374,6 +374,7 @@ final class NewTypeInference implements CompilerPass {
       for (DeferredCheck check : deferredChecks.values()) {
         check.runCheck(summaries, warnings);
       }
+      compiler.setSymbolTable(null);
       if (measureMem) {
         System.out.println("Peak mem: " + peakMem + "MB");
       }
@@ -556,6 +557,8 @@ final class NewTypeInference implements CompilerPass {
     if (summaryType == null) {
       // Functions defined in externs have no summary, so use the declared type
       summaryType = currentScope.getDeclaredTypeOf(name);
+      Preconditions.checkState(summaryType.getFunType() != null,
+          "Needed function but found %s", summaryType);
     }
     return summaryType;
   }
