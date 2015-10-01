@@ -7342,8 +7342,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testInferredArrayGenerics() {
-    typeCheck(
-        "/** @const */ var x = [];", GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
+    typeCheck("/** @const */ var x = [];");
 
     typeCheck(
         "/** @const */ var x = [1, 'str'];",
@@ -7395,6 +7394,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @const */ var x = [new Foo, new Foo];",
         "function g() { var /** Array<Bar> */ a = x; }"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // [] is inferred as Array<?>, so we miss the warning here
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var x = [];",
+        "function f() {",
+        "  x[0] = 'asdf';",
+        "}",
+        "function g() {",
+        "  return x[0] - 5;",
+        "}"));
   }
 
   public void testSpecializedInstanceofCantGoToBottom() {

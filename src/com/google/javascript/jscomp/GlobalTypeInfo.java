@@ -1617,7 +1617,7 @@ class GlobalTypeInfo implements CompilerPass {
           return commonTypes.getRegexpType();
         case Token.ARRAYLIT: {
           if (!n.hasChildren()) {
-            return null;
+            return commonTypes.getArrayInstance();
           }
           Node child = n.getFirstChild();
           JSType arrayType = simpleInferExprType(child);

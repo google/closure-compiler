@@ -63,4 +63,8 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
   public void testTaggedTemplateLitGlobalThisRef() {
     typeCheck("taggedTemp`${this.a}TaggedTemp`", NewTypeInference.GLOBAL_THIS);
   }
+
+  public void testConstEmptyArrayNoWarning() {
+    typeCheck("const x = [];");
+  }
 }
