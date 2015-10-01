@@ -270,11 +270,9 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
-  boolean defineProperty(String propertyName, JSType type,
-      boolean inferred, Node propertyNode) {
-    return referencedObjType == null ? true :
-        referencedObjType.defineProperty(
-            propertyName, type, inferred, propertyNode);
+  boolean defineProperty(String propertyName, JSType type, boolean inferred, Node propertyNode) {
+    return referencedObjType == null
+        || referencedObjType.defineProperty(propertyName, type, inferred, propertyNode);
   }
 
   @Override

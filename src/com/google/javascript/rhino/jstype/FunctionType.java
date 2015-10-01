@@ -1449,7 +1449,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   @Override
   public Map<String, JSType> getPropertyTypeMap() {
-    Map<String, JSType> propTypeMap = new HashMap<String, JSType>();
+    Map<String, JSType> propTypeMap = new HashMap<>();
     updatePropertyTypeMap(this, propTypeMap, new HashSet<FunctionType>());
     return propTypeMap;
   }

@@ -1131,13 +1131,11 @@ public class Node implements Serializable {
       }
     }
 
-    if (printType) {
-      if (typei != null) {
-        String typeString = typei.toString();
-        if (typeString != null) {
-          sb.append(" : ");
-          sb.append(typeString);
-        }
+    if (printType && typei != null) {
+      String typeString = typei.toString();
+      if (typeString != null) {
+        sb.append(" : ");
+        sb.append(typeString);
       }
     }
   }
@@ -1836,7 +1834,6 @@ public class Node implements Serializable {
       case Token.NAME:
         return !getString().isEmpty() && getString().equals(n.getString());
       case Token.THIS:
-        return true;
       case Token.SUPER:
         return true;
       case Token.GETPROP:

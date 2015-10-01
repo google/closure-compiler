@@ -650,7 +650,7 @@ public abstract class ObjectType
    * @return a Map that maps the property's name to the property's type
    */
   public Map<String, JSType> getPropertyTypeMap() {
-    Map<String, JSType> propTypeMap = new HashMap<String, JSType>();
+    Map<String, JSType> propTypeMap = new HashMap<>();
     for (String name : this.getPropertyNames()) {
       propTypeMap.put(name, this.getPropertyType(name));
     }
