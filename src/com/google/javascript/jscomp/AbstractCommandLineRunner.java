@@ -2213,13 +2213,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     private List<String> moduleRoots = ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
     /**
-     * Sets the CommonJS module path prefix (maps to {@link #setModuleRoots(List)}).
-     */
-    CommandLineConfig setCommonJSModulePathPrefix(String prefix) {
-      return setModuleRoots(ImmutableList.of(prefix));
-    }
-
-    /**
      * Sets the module roots.
      */
     CommandLineConfig setModuleRoots(List<String> jsModuleRoots) {
