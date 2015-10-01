@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfoBuilder;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -108,6 +110,11 @@ public class Es6RewriteArrowFunction extends NodeTraversal.AbstractPreOrderCallb
     if (addArguments) {
       Node name = IR.name(ARGUMENTS_VAR);
       Node argumentsVar = IR.declaration(name, IR.name("arguments"), Token.CONST);
+      JSDocInfoBuilder jsdoc = new JSDocInfoBuilder(false);
+      jsdoc.recordType(
+          new JSTypeExpression(
+              new Node(Token.BANG, IR.string("Arguments")), "<Es6RewriteArrowFunction>"));
+      argumentsVar.setJSDocInfo(jsdoc.build());
       argumentsVar.useSourceInfoIfMissingFromForTree(parent);
       parent.addChildToFront(argumentsVar);
       scope.declare(ARGUMENTS_VAR, name, input);

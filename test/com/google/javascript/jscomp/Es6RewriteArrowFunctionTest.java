@@ -90,6 +90,20 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testArguments() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var x = () => arguments;",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  /** @type {!Arguments} */",
+            "  const $jscomp$arguments = arguments;",
+            "  var x = function() { return $jscomp$arguments; };",
+            "}"));
+  }
+
   public void testArrowFunctionInObject() {
     test("var obj = { f: () => 'bar' };",
          "var obj = { f: function() { return 'bar'; } };");
