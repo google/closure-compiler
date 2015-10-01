@@ -126,9 +126,6 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
           "function Arguments() {}",
           "/** @type {number} */",
           "Arguments.prototype.length;",
-          "", // TODO(blickly): Fix brittle @record test cases that depend on externs length
-          "",
-          "",
           "/** @type {?} */ var unknown;", // For producing unknowns in tests.
           ACTIVE_X_OBJECT_DEF);
 
