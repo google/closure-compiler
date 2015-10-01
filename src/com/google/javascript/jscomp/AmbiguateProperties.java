@@ -429,9 +429,8 @@ class AmbiguateProperties implements CompilerPass {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <A extends Annotation> A getAnnotation() {
-      return (A) annotation;
+    public Annotation getAnnotation() {
+      return annotation;
     }
 
     @Override
