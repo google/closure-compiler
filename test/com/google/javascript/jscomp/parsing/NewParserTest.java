@@ -2660,6 +2660,15 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("import {default as d} from './someModule'");
     parse("import d, {x as x1, y as y1} from './someModule'");
     parse("import * as sm from './someModule'");
+
+    parseError("import class from './someModule'",
+            "cannot use keyword 'class' here.");
+    parseError("import * as class from './someModule'",
+            "'identifier' expected");
+    parseError("import {a as class} from './someModule'",
+            "'identifier' expected");
+    parseError("import {class} from './someModule'",
+            "'as' expected");
   }
 
   public void testExport() {
@@ -2672,9 +2681,12 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("export {x, y}");
     parse("export {x as x1}");
     parse("export {x as default, y as y1}");
+
     parseError("export {default as x}",
         "cannot use keyword 'default' here.");
     parseError("export {package as x}",
+        "cannot use keyword 'package' here.");
+    parseError("export {package}",
         "cannot use keyword 'package' here.");
 
     parse("export {x as x1, y as y1} from './someModule'");

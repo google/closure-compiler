@@ -374,6 +374,9 @@ public class Parser {
       } else {
         parseExplicitNames = false;
       }
+    } else if (Keywords.isKeyword(peekType())) {
+        Token keyword = nextToken();
+        reportError(keyword, "cannot use keyword '%s' here.", keyword);
     }
 
     if (parseExplicitNames) {
@@ -415,12 +418,13 @@ public class Parser {
   //  ImportSpecifier ::= Identifier ('as' Identifier)?
   private ParseTree parseImportSpecifier() {
     SourcePosition start = getTreeStartLocation();
-    boolean isKeyword = Keywords.isKeyword(peekType());
     IdentifierToken importedName = eatIdOrKeywordAsId();
     IdentifierToken destinationName = null;
-    if (isKeyword || peekPredefinedString(PredefinedName.AS)) {
+    if (peekPredefinedString(PredefinedName.AS)) {
       eatPredefinedString(PredefinedName.AS);
       destinationName = eatId();
+    } else if (Keywords.isKeyword(importedName.value)) {
+      reportExpectedError(null, PredefinedName.AS);
     }
     return new ImportSpecifierTree(
         getTreeLocation(start), importedName, destinationName);
