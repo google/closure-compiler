@@ -135,7 +135,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
 
   public void testRewritePrototypeMethods2() throws Exception {
     // type checking on
-    enableTypeCheck(CheckLevel.ERROR);
+    enableTypeCheck();
     checkTypes(RewritePrototypeMethodTestInput.INPUT,
                RewritePrototypeMethodTestInput.EXPECTED,
                RewritePrototypeMethodTestInput.EXPECTED_TYPE_CHECKING_ON);

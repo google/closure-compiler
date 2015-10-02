@@ -89,7 +89,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableTypeCheck(CheckLevel.OFF);
+    super.enableTypeCheck();
     super.enableClosurePass();
     configuration = DEFAULT_CONFORMANCE;
   }

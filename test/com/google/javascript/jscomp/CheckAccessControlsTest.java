@@ -47,7 +47,7 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
     parseTypeInfo = true;
     enableClosurePass();
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
   }
 
   @Override

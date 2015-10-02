@@ -22,7 +22,7 @@ public final class ImplicitNullabilityCheckTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableTypeCheck(CheckLevel.WARNING);
+    super.enableTypeCheck();
   }
 
   @Override

@@ -42,8 +42,6 @@ import java.util.Set;
 
 public final class TypeCheckTest extends CompilerTypeTestCase {
 
-  private CheckLevel reportMissingOverrides = CheckLevel.WARNING;
-
   private static final Joiner LINE_JOINER = Joiner.on("\n");
   private static final String SUGGESTION_CLASS =
       "/** @constructor\n */\n"
@@ -55,7 +53,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   @Override
   public void setUp() {
     super.setUp();
-    reportMissingOverrides = CheckLevel.WARNING;
   }
 
   public void testInitialTypingScope() {
@@ -5535,16 +5532,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInferredReturn8() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "/** @constructor */ function Foo() {}" +
-        "/** @param {number} x */ Foo.prototype.bar = function(x) {};" +
-        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-        "/** @param {number} x */ SubFoo.prototype.bar = " +
-        "    function(x) { return 3; }",
-        "inconsistent return type\n" +
-        "found   : number\n" +
-        "required: undefined");
+        "/** @constructor */ function Foo() {}"
+            + "/** @param {number} x */ Foo.prototype.bar = function(x) {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @override @param {number} x */ SubFoo.prototype.bar = "
+            + "    function(x) { return 3; }",
+        "inconsistent return type\n" + "found   : number\n" + "required: undefined");
   }
 
   public void testInferredParam1() throws Exception {
@@ -5559,75 +5553,70 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testInferredParam2() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "/** @param {string} x */ function f(x) {}" +
-        "/** @constructor */ function Foo() {}" +
-        "/** @param {number} x */ Foo.prototype.bar = function(x) {};" +
-        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-        "/** @return {void} */ SubFoo.prototype.bar = " +
-        "    function(x) { f(x); }",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : number\n" +
-        "required: string");
+        "/** @param {string} x */ function f(x) {}"
+            + "/** @constructor */ function Foo() {}"
+            + "/** @param {number} x */ Foo.prototype.bar = function(x) {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @override @return {void} */ SubFoo.prototype.bar = "
+            + "    function(x) { f(x); }",
+        "actual parameter 1 of f does not match formal parameter\n"
+            + "found   : number\n"
+            + "required: string");
   }
 
   public void testInferredParam3() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "/** @param {string} x */ function f(x) {}" +
-        "/** @constructor */ function Foo() {}" +
-        "/** @param {number=} x */ Foo.prototype.bar = function(x) {};" +
-        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-        "/** @return {void} */ SubFoo.prototype.bar = " +
-        "    function(x) { f(x); }; (new SubFoo()).bar();",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : (number|undefined)\n" +
-        "required: string");
+        "/** @param {string} x */ function f(x) {}"
+            + "/** @constructor */ function Foo() {}"
+            + "/** @param {number=} x */ Foo.prototype.bar = function(x) {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @override @return {void} */ SubFoo.prototype.bar = "
+            + "    function(x) { f(x); }; (new SubFoo()).bar();",
+        "actual parameter 1 of f does not match formal parameter\n"
+            + "found   : (number|undefined)\n"
+            + "required: string");
   }
 
   public void testInferredParam4() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "/** @param {string} x */ function f(x) {}" +
-        "/** @constructor */ function Foo() {}" +
-        "/** @param {...number} x */ Foo.prototype.bar = function(x) {};" +
-        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-        "/** @return {void} */ SubFoo.prototype.bar = " +
-        "    function(x) { f(x); }; (new SubFoo()).bar();",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : (number|undefined)\n" +
-        "required: string");
+        "/** @param {string} x */ function f(x) {}"
+            + "/** @constructor */ function Foo() {}"
+            + "/** @param {...number} x */ Foo.prototype.bar = function(x) {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @override @return {void} */ SubFoo.prototype.bar = "
+            + "    function(x) { f(x); }; (new SubFoo()).bar();",
+        "actual parameter 1 of f does not match formal parameter\n"
+            + "found   : (number|undefined)\n"
+            + "required: string");
   }
 
   public void testInferredParam5() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "/** @param {string} x */ function f(x) {}" +
-        "/** @constructor */ function Foo() {}" +
-        "/** @param {...number} x */ Foo.prototype.bar = function(x) {};" +
-        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-        "/** @param {number=} x \n * @param {...number} y  */ " +
-        "SubFoo.prototype.bar = " +
-        "    function(x, y) { f(x); }; (new SubFoo()).bar();",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : (number|undefined)\n" +
-        "required: string");
+        "/** @param {string} x */ function f(x) {}"
+            + "/** @constructor */ function Foo() {}"
+            + "/** @param {...number} x */ Foo.prototype.bar = function(x) {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @override @param {number=} x \n * @param {...number} y  */ "
+            + "SubFoo.prototype.bar = "
+            + "    function(x, y) { f(x); }; (new SubFoo()).bar();",
+        "actual parameter 1 of f does not match formal parameter\n"
+            + "found   : (number|undefined)\n"
+            + "required: string");
   }
 
   public void testInferredParam6() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "/** @param {string} x */ function f(x) {}" +
-        "/** @constructor */ function Foo() {}" +
-        "/** @param {number=} x */ Foo.prototype.bar = function(x) {};" +
-        "/** @constructor \n * @extends {Foo} */ function SubFoo() {}" +
-        "/** @param {number=} x \n * @param {number=} y */ " +
-        "SubFoo.prototype.bar = " +
-        "    function(x, y) { f(y); };",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : (number|undefined)\n" +
-        "required: string");
+        "/** @param {string} x */ function f(x) {}"
+            + "/** @constructor */ function Foo() {}"
+            + "/** @param {number=} x */ Foo.prototype.bar = function(x) {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @override @param {number=} x \n * @param {number=} y */ "
+            + "SubFoo.prototype.bar = "
+            + "    function(x, y) { f(y); };",
+        "actual parameter 1 of f does not match formal parameter\n"
+            + "found   : (number|undefined)\n"
+            + "required: string");
   }
 
   public void testInferredParam7() throws Exception {
@@ -6785,27 +6774,26 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testIssue537d() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype = {" +
-        "  /** @return {Bar} */ x: function() { new Bar(); }," +
-        "  /** @return {Foo} */ y: function() { new Bar(); }" +
-        "};" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo}\n" +
-        " */\n" +
-        "function Bar() {" +
-        "  this.xy = 3;" +
-        "}" +
-        "/** @return {Bar} */ function f() { return new Bar(); }" +
-        "/** @return {Foo} */ function g() { return new Bar(); }" +
-        "Bar.prototype = {" +
-        "  /** @return {Bar} */ x: function() { new Bar(); }," +
-        "  /** @return {Foo} */ y: function() { new Bar(); }" +
-        "};" +
-        "Bar.prototype.__proto__ = Foo.prototype;");
+        "/** @constructor */ function Foo() {}"
+            + "Foo.prototype = {"
+            + "  /** @return {Bar} */ x: function() { new Bar(); },"
+            + "  /** @return {Foo} */ y: function() { new Bar(); }"
+            + "};"
+            + "/**\n"
+            + " * @constructor\n"
+            + " * @extends {Foo}\n"
+            + " */\n"
+            + "function Bar() {"
+            + "  this.xy = 3;"
+            + "}"
+            + "/** @return {Bar} */ function f() { return new Bar(); }"
+            + "/** @return {Foo} */ function g() { return new Bar(); }"
+            + "Bar.prototype = {"
+            + "  /** @override @return {Bar} */ x: function() { new Bar(); },"
+            + "  /** @override @return {Foo} */ y: function() { new Bar(); }"
+            + "};"
+            + "Bar.prototype.__proto__ = Foo.prototype;");
   }
 
   public void testIssue586() throws Exception {
@@ -9523,17 +9511,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testInheritanceCheck17() throws Exception {
     // Make sure this warning still works, even when there's no
     // @override tag.
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "var goog = {};" +
-        "/** @constructor */goog.Super = function() {};" +
-        "/** @param {number} x */ goog.Super.prototype.foo = function(x) {};" +
-        "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};" +
-        "/** @param {string} x */ goog.Sub.prototype.foo = function(x) {};",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from superclass goog.Super\n" +
-        "original: function (this:goog.Super, number): undefined\n" +
-        "override: function (this:goog.Sub, string): undefined");
+        "var goog = {};"
+            + "/** @constructor */goog.Super = function() {};"
+            + "/** @param {number} x */ goog.Super.prototype.foo = function(x) {};"
+            + "/** @constructor\n @extends {goog.Super} */goog.Sub = function() {};"
+            + "/** @override @param {string} x */ goog.Sub.prototype.foo = function(x) {};",
+        "mismatch of the foo property type and the type of the property it "
+            + "overrides from superclass goog.Super\n"
+            + "original: function (this:goog.Super, number): undefined\n"
+            + "override: function (this:goog.Sub, string): undefined");
   }
 
   public void testInterfacePropertyOverride1() throws Exception {
@@ -10019,18 +10006,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testDataPropertyOnInterface2() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
-    testTypes("/** @interface */ function T() {};\n" +
-        "/** @type {number} */T.prototype.x;\n" +
-        "/** @constructor \n" +
-        " *  @implements {T} \n" +
-        " */\n" +
-        "function C() {}\n" +
-        "C.prototype.x = 'foo';",
-        "mismatch of the x property type and the type of the property it " +
-        "overrides from interface T\n" +
-        "original: number\n" +
-        "override: string");
+    testTypes(
+        "/** @interface */ function T() {};\n"
+            + "/** @type {number} */T.prototype.x;\n"
+            + "/** @constructor \n"
+            + " *  @implements {T} \n"
+            + " */\n"
+            + "function C() {}\n"
+            + "/** @override */\n"
+            + "C.prototype.x = 'foo';",
+        "mismatch of the x property type and the type of the property it "
+            + "overrides from interface T\n"
+            + "original: number\n"
+            + "override: string");
   }
 
   public void testDataPropertyOnInterface3() throws Exception {
@@ -11311,23 +11299,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testLends11() throws Exception {
-    reportMissingOverrides = CheckLevel.OFF;
     testTypes(
-        "function defineClass(x, y) { return function() {}; } " +
-        "/** @constructor */" +
-        "var Foo = function() {};" +
-        "/** @return {*} */ Foo.prototype.bar = function() { return 3; };" +
-        "/**\n" +
-        " * @constructor\n" +
-        " * @extends {Foo}\n" +
-        " */\n" +
-        "var SubFoo = defineClass(Foo, " +
-        "    /** @lends {SubFoo.prototype} */ ({\n" +
-        "      /** @return {number} */ bar: function() { return 3; }}));" +
-        "/** @return {string} */ function f() { return (new SubFoo()).bar(); }",
-        "inconsistent return type\n" +
-        "found   : number\n" +
-        "required: string");
+        "function defineClass(x, y) { return function() {}; } "
+            + "/** @constructor */"
+            + "var Foo = function() {};"
+            + "/** @return {*} */ Foo.prototype.bar = function() { return 3; };"
+            + "/**\n"
+            + " * @constructor\n"
+            + " * @extends {Foo}\n"
+            + " */\n"
+            + "var SubFoo = defineClass(Foo, "
+            + "    /** @lends {SubFoo.prototype} */ ({\n"
+            + "      /** @override @return {number} */ bar: function() { return 3; }}));"
+            + "/** @return {string} */ function f() { return (new SubFoo()).bar(); }",
+        "inconsistent return type\n" + "found   : number\n" + "required: string");
   }
 
   public void testDeclaredNativeTypeEquality() throws Exception {
@@ -16389,11 +16374,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   private TypeCheck makeTypeCheck() {
-    return new TypeCheck(
-        compiler,
-        new SemanticReverseAbstractInterpreter(registry),
-        registry,
-        reportMissingOverrides);
+    return new TypeCheck(compiler, new SemanticReverseAbstractInterpreter(registry), registry);
   }
 
   void testTypes(String js, String[] warnings) throws Exception {

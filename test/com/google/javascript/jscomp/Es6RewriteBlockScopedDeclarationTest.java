@@ -769,7 +769,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   public void testDoWhileForOfCapturedLetAnnotated() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
 
     testWarning("/** @type {number} */ let x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
 

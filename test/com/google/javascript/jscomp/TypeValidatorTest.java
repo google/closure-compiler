@@ -22,7 +22,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -41,7 +40,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
   private Compiler compiler = null;
 
   public TypeValidatorTest() {
-    enableTypeCheck(CheckLevel.ERROR);
+    enableTypeCheck();
   }
 
   @Override

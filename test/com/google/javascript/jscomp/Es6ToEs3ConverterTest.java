@@ -726,7 +726,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testInvalidClassUse() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
 
     test(
         EXTERNS_BASE,
@@ -950,7 +950,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testClassEs5GetterSetterIncorrectTypes() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     languageOut = LanguageMode.ECMASCRIPT5;
 
     // Using @type instead of @return on a getter.
@@ -1406,7 +1406,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
             "    [].concat(b));"));
 
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
 
     test(
         EXTERNS_BASE,

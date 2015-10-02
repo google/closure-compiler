@@ -33,7 +33,7 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
 
   @Override
   public void setUp() throws IOException {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
   }
 
   @Override

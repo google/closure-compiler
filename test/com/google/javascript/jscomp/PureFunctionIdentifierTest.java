@@ -172,7 +172,7 @@ public final class PureFunctionIdentifierTest extends CompilerTestCase {
 
   public PureFunctionIdentifierTest() {
     super(kExterns);
-    enableTypeCheck(CheckLevel.ERROR);
+    enableTypeCheck();
   }
 
   @Override

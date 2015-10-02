@@ -35,7 +35,7 @@ public final class CheckNullableReturnTest extends CompilerTestCase {
 
   @Override
   public void setUp() throws IOException {
-    enableTypeCheck(CheckLevel.ERROR);
+    enableTypeCheck();
   }
 
   @Override

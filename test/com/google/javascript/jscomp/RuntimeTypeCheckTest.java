@@ -28,7 +28,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public RuntimeTypeCheckTest() {
     super("/** @const */ var undefined;");
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
   }
 
   @Override

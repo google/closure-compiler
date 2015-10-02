@@ -424,7 +424,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testJsDocNotIgnored() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
 
     String externs =
@@ -597,7 +597,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testJsDocRecord() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
     test(
         LINE_JOINER.join(
@@ -725,7 +725,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testInlineJsDoc() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
     test(LINE_JOINER.join(
         "/** @const */ var ns = {};",
@@ -744,7 +744,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testInlineReturn() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
     test(LINE_JOINER.join(
         "/** @const */ var ns = {};",
@@ -764,7 +764,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testInlineParam() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
     test(LINE_JOINER.join(
         "/** @const */ var ns = {};",
@@ -967,7 +967,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   public void testTypeCheck() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
 
     test(

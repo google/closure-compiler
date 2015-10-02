@@ -30,7 +30,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   @Override
   protected void setUp() {
     allowExternsChanges(true);
-    enableTypeCheck(CheckLevel.ERROR);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
   }
 

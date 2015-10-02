@@ -56,7 +56,7 @@ public final class CheckEventfulObjectDisposalTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 

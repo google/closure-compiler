@@ -153,7 +153,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     allowExternsChanges(true);
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     runTypeCheckAfterProcessing = true;
     parseTypeInfo = true;
   }

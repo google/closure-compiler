@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.lint;
 
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
@@ -31,7 +30,7 @@ public final class CheckInterfacesTest extends CompilerTestCase {
   }
 
   public void setUp() {
-    enableTypeCheck(CheckLevel.ERROR);
+    enableTypeCheck();
   }
 
   public void testInterfaceArgs() throws Exception {

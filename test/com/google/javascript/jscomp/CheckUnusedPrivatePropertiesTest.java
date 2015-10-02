@@ -50,7 +50,7 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
 
   @Override
   protected void setUp() {
-    this.enableTypeCheck(CheckLevel.OFF);
+    this.enableTypeCheck();
   }
 
   private void unused(String code) {

@@ -28,7 +28,7 @@ import java.io.IOException;
 public final class CheckTemplateParamsTest extends CompilerTestCase {
   @Override
   public void setUp() throws IOException {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
   }
 
   @Override

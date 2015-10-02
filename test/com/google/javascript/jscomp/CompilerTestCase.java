@@ -78,8 +78,7 @@ public abstract class CompilerTestCase extends TestCase {
   /** True iff type checking pass runs before pass being tested. */
   private boolean typeCheckEnabled = false;
 
-  /** Error level reported by type checker. */
-  private CheckLevel typeCheckLevel;
+  @Deprecated private CheckLevel reportMissingOverrideCheckLevel = CheckLevel.WARNING;
 
   /** Whether to the test compiler pass before the type check. */
   protected boolean runTypeCheckAfterProcessing = false;
@@ -275,11 +274,23 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @param level the level of severity to report for type errors
    *
+   * @deprecated Use enableTypeCheck()
    * @see TypeCheck
    */
+  @Deprecated
   public void enableTypeCheck(CheckLevel level) {
+    enableTypeCheck();
+    reportMissingOverrideCheckLevel = level;
+  }
+
+  /**
+   * Perform type checking before running the test pass. This will check
+   * for type errors and annotate nodes with type information.
+   *
+   * @see TypeCheck
+   */
+  public void enableTypeCheck() {
     typeCheckEnabled = true;
-    typeCheckLevel = level;
   }
 
   /**
@@ -1069,7 +1080,7 @@ public abstract class CompilerTestCase extends TestCase {
         // objects for the same type are created, and the type system
         // uses reference equality to compare many types.
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
-          TypeCheck check = createTypeCheck(compiler, typeCheckLevel);
+          TypeCheck check = createTypeCheck(compiler, reportMissingOverrideCheckLevel);
           check.processForTesting(externsRoot, mainRoot);
         }
 
@@ -1108,7 +1119,7 @@ public abstract class CompilerTestCase extends TestCase {
         }
 
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
-          TypeCheck check = createTypeCheck(compiler, typeCheckLevel);
+          TypeCheck check = createTypeCheck(compiler, reportMissingOverrideCheckLevel);
           check.processForTesting(externsRoot, mainRoot);
         }
 

@@ -379,7 +379,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     test(
         "function f(zero, one = 1, two = 2) {}; f(1); f(1,2,3);",
         LINE_JOINER.join(
@@ -417,7 +417,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   public void testDefaultUndefinedParameters() {
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
 
     test("function f(zero, one=undefined) {}", "function f(zero, one) {}");
 

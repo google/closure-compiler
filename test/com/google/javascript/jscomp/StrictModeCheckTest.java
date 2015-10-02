@@ -28,7 +28,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck(CheckLevel.OFF);
+    enableTypeCheck();
   }
 
   @Override

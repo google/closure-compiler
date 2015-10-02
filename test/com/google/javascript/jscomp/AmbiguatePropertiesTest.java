@@ -39,7 +39,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   public AmbiguatePropertiesTest() {
     super(EXTERNS);
     enableNormalize();
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     enableClosurePass();
     enableGatherExternProperties();
     compareJsDoc = false;

@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
 public final class GatherExternPropertiesTest extends CompilerTestCase {
   public GatherExternPropertiesTest() {
     super();
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
   }
 
   @Override

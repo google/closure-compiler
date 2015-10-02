@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.rhino.testing.BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES;
 
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -33,7 +32,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
 
   public FunctionTypeBuilderTest() {
     parseTypeInfo = true;
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
   }
 
   @Override

@@ -154,7 +154,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAnnotations1() {
     // verify goog.defineClass values are constructible, by default
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     testRewrite(
         "var x = goog.defineClass(Object, {\n"
         + "  constructor: function(){}\n"
@@ -168,7 +168,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAnnotations2a() {
     // @interface is preserved
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     testRewriteWarning(
         "var x = goog.defineClass(null, {\n"
         + "  /** @interface */\n"
@@ -184,7 +184,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAnnotations2b() {
     // @interface is preserved, at the class level too
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     testRewriteWarning(
         "/** @interface */\n"
         + "var x = goog.defineClass(null, {});"
@@ -198,7 +198,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAnnotations3a() {
     // verify goog.defineClass is a @struct by default
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     testRewriteWarning(
         "var y = goog.defineClass(null, {\n"
         + "  constructor: function(){}\n"
@@ -219,7 +219,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAnnotations3b() {
     // verify goog.defineClass is a @struct by default, but can be overridden
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     testRewrite(
         "/** @unrestricted */"
         + "var y = goog.defineClass(null, {\n"

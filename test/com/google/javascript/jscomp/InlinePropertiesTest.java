@@ -31,7 +31,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
   public InlinePropertiesTest() {
     super(EXTERNS);
     enableNormalize();
-    enableTypeCheck(CheckLevel.WARNING);
+    enableTypeCheck();
     enableClosurePass();
     enableGatherExternProperties();
     compareJsDoc = false;

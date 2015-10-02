@@ -47,7 +47,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableNormalize(true);
-    super.enableTypeCheck(CheckLevel.WARNING);
+    super.enableTypeCheck();
   }
 
   @Override

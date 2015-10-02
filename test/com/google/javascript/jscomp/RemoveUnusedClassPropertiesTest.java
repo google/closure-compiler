@@ -207,7 +207,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testConstructorProperty1() {
-    enableTypeCheck(CheckLevel.OFF);
+    enableTypeCheck();
 
     test(
         "/** @constructor */ function C() {} C.prop = 1;",
@@ -215,7 +215,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testConstructorProperty2() {
-    enableTypeCheck(CheckLevel.OFF);
+    enableTypeCheck();
 
     testSame(
         "/** @constructor */ function C() {} "
