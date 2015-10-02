@@ -3200,6 +3200,35 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** number */ n = x;",
         "  }",
         "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " */",
+        "function f(x) {",
+        "  if (x instanceof Foo) {",
+        "    var /** !Foo */ y = x;",
+        "  }",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " */",
+        "function f(x) {",
+        "  if (x instanceof Foo) {",
+        "    var /** !Bar */ z = x;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testFunctionsExtendFunction() {
