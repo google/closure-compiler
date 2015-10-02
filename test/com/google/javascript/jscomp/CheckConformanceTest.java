@@ -1242,6 +1242,12 @@ public final class CheckConformanceTest extends CompilerTestCase {
 
     testSame(
         EXTERNS,
+        "/** @param {string|null} n */ function f(n) { alert('prop' in n); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+
+    testSame(
+        EXTERNS,
         "/** @param {string|undefined} n */ function f(n) { alert(n.prop); }",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message");

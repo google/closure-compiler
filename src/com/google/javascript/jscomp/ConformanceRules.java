@@ -973,16 +973,33 @@ public final class ConformanceRules {
 
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
-      if (n.isGetProp() || n.isGetElem() || n.isNew() || n.isCall()) {
-        JSType targetType = n.getFirstChild().getJSType();
-        if (targetType != null
-            && !(targetType.isUnknownType()
-                || targetType.isEmptyType())
-            && (targetType.isNullable() || targetType.isVoidable())) {
-          return ConformanceResult.VIOLATION;
-        }
+      boolean valid;
+
+      switch (n.getType()) {
+          case Token.GETPROP:
+          case Token.GETELEM:
+          case Token.NEW:
+          case Token.CALL:
+             valid = maybeValidDerefType(n.getFirstChild());
+             break;
+          case Token.IN:
+             valid = maybeValidDerefType(n.getLastChild());
+             break;
+          default:
+             valid = true;
+             break;
       }
-      return ConformanceResult.CONFORMANCE;
+
+      return valid ? ConformanceResult.CONFORMANCE : ConformanceResult.VIOLATION;
+    }
+
+    // Whether the type is known to be valid.
+    private boolean maybeValidDerefType(Node n) {
+      JSType type = n.getJSType();
+      return type == null
+          || type.isUnknownType()
+          || type.isEmptyType()
+          || (!type.isNullable() && !type.isVoidable());
     }
   }
 
