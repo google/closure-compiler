@@ -489,6 +489,12 @@ public class CommandLineRunner extends
         usage = "Rewrite Polymer classes to be compiler-friendly.")
     private boolean polymerPass = false;
 
+    @Option(name = "--dart_pass",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Rewrite Dart Dev Compiler output to be compiler-friendly.")
+    private boolean dartPass = false;
+
     @Option(name = "--output_manifest",
         hidden = true,
         usage = "Prints out a list of all the files in the compilation. "
@@ -1159,6 +1165,8 @@ public class CommandLineRunner extends
     options.angularPass = flags.angularPass;
 
     options.polymerPass = flags.polymerPass;
+
+    options.setDartPass(flags.dartPass);
 
     options.renamePrefixNamespace = flags.renamePrefixNamespace;
 

@@ -31,6 +31,9 @@ class InjectEs6RuntimeLibrary implements CompilerPass {
     if (compiler.needsEs6Runtime) {
       compiler.ensureLibraryInjected("es6_runtime", false);
     }
+    if (compiler.needsEs6DartRuntime) {
+      compiler.ensureLibraryInjected("es6_dart_runtime", false);
+    }
   }
 }
 

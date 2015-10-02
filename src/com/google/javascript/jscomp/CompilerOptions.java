@@ -651,6 +651,9 @@ public class CompilerOptions {
   /** Processes Polymer calls */
   boolean polymerPass;
 
+  /** Processes the output of the Dart Dev Compiler */
+  boolean dartPass;
+
   /** Remove goog.abstractMethod assignments. */
   boolean removeAbstractMethods;
 
@@ -1027,6 +1030,7 @@ public class CompilerOptions {
     jqueryPass = false;
     angularPass = false;
     polymerPass = false;
+    dartPass = false;
     removeAbstractMethods = true;
     removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
@@ -1485,6 +1489,10 @@ public class CompilerOptions {
 
   public void setPolymerPass(boolean polymerPass) {
     this.polymerPass = polymerPass;
+  }
+
+  public void setDartPass(boolean dartPass) {
+    this.dartPass = dartPass;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {

@@ -67,6 +67,15 @@ final class CompilerOptionsPreprocessor {
           "The jQuery pass and the Closure pass cannot both be enabled.");
     }
 
+    if (options.dartPass) {
+      if (!options.getLanguageOut().isEs5OrHigher()) {
+        throw new InvalidOptionsException("Dart requires --language_out=ES5 or higher.");
+      }
+      // --dart_pass does not support type-aware property renaming yet.
+      options.setAmbiguateProperties(false);
+      options.setDisambiguateProperties(false);
+    }
+
     if (options.removeUnusedPrototypePropertiesInExterns
         && options.exportLocalPropertyDefinitions) {
       throw new InvalidOptionsException(

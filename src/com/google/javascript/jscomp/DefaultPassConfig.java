@@ -293,6 +293,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(es6RewriteDestructuring);
     }
 
+    // It's important that the Dart super accessors pass run *before*
+    // es6ConvertSuper. This is enforced in the assertValidOrder method.
+    if (options.dartPass && !options.getLanguageOut().isEs6OrHigher()) {
+      checks.add(dartSuperAccessorsPass);
+    }
+
     // Late ES6 transpilation.
     // Includes ES6 features that are best handled natively by the compiler.
     // As we convert more passes to handle these features, we will be moving the transpilation
@@ -924,6 +930,8 @@ public final class DefaultPassConfig extends PassConfig {
    */
   private void assertValidOrder(List<PassFactory> checks) {
     int polymerIndex = checks.indexOf(polymerPass);
+    int dartSuperAccessorsIndex = checks.indexOf(dartSuperAccessorsPass);
+    int es6ConvertSuperIndex = checks.indexOf(es6ConvertSuper);
     int closureIndex = checks.indexOf(closurePrimitives);
     int suspiciousCodeIndex = checks.indexOf(suspiciousCode);
     int checkVarsIndex = checks.indexOf(checkVariableReferences);
@@ -935,7 +943,11 @@ public final class DefaultPassConfig extends PassConfig {
     }
     if (polymerIndex != -1 && suspiciousCodeIndex != -1) {
       Preconditions.checkState(polymerIndex < suspiciousCodeIndex,
-          "The Polymer pass must run befor suspiciousCode processing.");
+          "The Polymer pass must run before suspiciousCode processing.");
+    }
+    if (dartSuperAccessorsIndex != -1 && es6ConvertSuperIndex != -1) {
+      Preconditions.checkState(dartSuperAccessorsIndex < es6ConvertSuperIndex,
+          "The Dart super accessors pass must run before ES6->ES3 super lowering.");
     }
     if (googScopeIndex != -1) {
       Preconditions.checkState(checkVarsIndex != -1,
@@ -2626,6 +2638,15 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new PolymerPass(compiler);
+    }
+  };
+
+  /** Rewrites the super accessors calls to support Dart Dev Compiler output. */
+  private final HotSwapPassFactory dartSuperAccessorsPass =
+      new HotSwapPassFactory("dartSuperAccessorsPass", true) {
+    @Override
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+      return new DartSuperAccessorsPass(compiler);
     }
   };
 
