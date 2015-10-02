@@ -787,6 +787,13 @@ angular.Module.prototype.service = function(name, constructor) {};
 angular.Module.prototype.value = function(name, object) {};
 
 /**
+ * @param {string} name
+ * @param {!angular.Injectable} decorator
+ * @return {!angular.Module}
+ */
+angular.Module.prototype.decorator = function(name, decorator) {};
+
+/**
  * @type {string}
  */
 angular.Module.prototype.name = '';
@@ -1999,7 +2006,7 @@ angular.$provide.prototype.constant = function(name, object) {};
 
 /**
  * @param {string} name
- * @param {angular.Injectable} decorator
+ * @param {!angular.Injectable} decorator
  */
 angular.$provide.prototype.decorator = function(name, decorator) {};
 
