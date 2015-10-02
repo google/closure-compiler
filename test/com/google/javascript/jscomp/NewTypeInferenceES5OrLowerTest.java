@@ -7802,6 +7802,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.INVALID_CAST);
 
     typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " */",
+        "function f(x) {",
+        "  /** @type{!Object} */ (x);",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T|string} x",
+        " */",
+        "function f(x) {",
+        "  /** @type{!Object} */ (x);",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
         "function f(/** (number|string) */ x) {",
         "  var y = /** @type {number} */ (x);",
         "}"));

@@ -341,7 +341,11 @@ public abstract class JSType implements TypeI {
   }
 
   public boolean isTypeVariable() {
-    return (getMask() & TYPEVAR_MASK) != 0 && (getMask() & ~TYPEVAR_MASK) == 0;
+    return getMask() == TYPEVAR_MASK;
+  }
+
+  public boolean hasTypeVariable() {
+    return (getMask() & TYPEVAR_MASK) != 0;
   }
 
   public boolean isStruct() {

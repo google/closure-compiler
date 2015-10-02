@@ -2099,9 +2099,8 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair pair = analyzeExprFwd(expr.getFirstChild(), inEnv);
     JSType fromType = pair.type;
     JSType toType = symbolTable.getCastType(expr);
-    if (!JSType.haveCommonSubtype(fromType, toType)) {
-      warnings.add(JSError.make(
-          expr, INVALID_CAST, fromType.toString(), toType.toString()));
+    if (!JSType.haveCommonSubtype(fromType, toType) && !fromType.hasTypeVariable()) {
+      warnings.add(JSError.make(expr, INVALID_CAST, fromType.toString(), toType.toString()));
     }
     pair.type = toType;
     return pair;
