@@ -231,18 +231,21 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
   public void testGoodTemplate4() {
     testSame("x.y.z = goog.defineClass(null, {/** @return T @template T */ m: function() {}});");
   }
-  public void testBadTemplate1() {
-    testBadTemplate("/** @type {!Function} @template T */ var x = function(){};");
-  }
 
-  public void testBadTemplate2() {
+  public void testBadTemplate1() {
     testBadTemplate("/** @template T */ foo();");
   }
 
-  public void testBadTemplate3() {
+  public void testBadTemplate2() {
     testBadTemplate(LINE_JOINER.join(
         "x.y.z = goog.defineClass(null, {",
         "  /** @template T */ constructor: function() {}",
         "});"));
+  }
+
+  public void testBadTemplate3() {
+    testBadTemplate("/** @template T */ function f() {}");
+    testBadTemplate("/** @template T */ var f = function() {};");
+    testBadTemplate("/** @template T */ Foo.prototype.f = function() {};");
   }
 }

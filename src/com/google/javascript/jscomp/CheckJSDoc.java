@@ -85,11 +85,24 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         && !info.getTemplateTypeNames().isEmpty()
         && !info.isConstructorOrInterface()
         && !isClassDecl(n)
-        && !(info.containsFunctionDeclaration())) {
-      reportMisplaced(n, "template",
-          "@template is only allowed in class, constructor, interface, function "
-          + "or method declarations");
+        && !info.containsFunctionDeclaration()) {
+      if (isFunctionDecl(n)) {
+        reportMisplaced(n, "template",
+            "The template variable is unused."
+            + " Please remove the @template annotation.");
+      } else {
+        reportMisplaced(n, "template",
+            "@template is only allowed in class, constructor, interface, function "
+            + "or method declarations");
+      }
     }
+  }
+
+  private boolean isFunctionDecl(Node n) {
+    return n.isFunction()
+        || (n.isVar() && n.getFirstChild().getFirstChild() != null
+            && n.getFirstChild().getFirstChild().isFunction())
+        || n.isAssign() && n.getFirstChild().isQualifiedName() && n.getLastChild().isFunction();
   }
 
   private boolean isClassDecl(Node n) {
