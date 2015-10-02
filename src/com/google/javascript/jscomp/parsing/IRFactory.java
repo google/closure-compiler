@@ -711,18 +711,16 @@ class IRFactory {
   }
 
   /**
-   * NAMEs in parameters or variable declarations are special, because they can
-   * have inline type docs attached.
+   * Names and destructuring patterns, in parameters or variable declarations are special,
+   * because they can have inline type docs attached.
    *
-   * function f(/** string &#42;/ x) {}
-   * annotates 'x' as a string.
+   * <pre>function f(/** string &#42;/ x) {}</pre> annotates 'x' as a string.
    *
    * @see <a href="http://code.google.com/p/jsdoc-toolkit/wiki/InlineDocs">
    *   Using Inline Doc Comments</a>
    */
-  private Node transformNodeWithInlineJsDoc(
-      ParseTree node, boolean optionalInline) {
-    JSDocInfo info = handleInlineJsDoc(node, optionalInline);
+  private Node transformNodeWithInlineJsDoc(ParseTree node) {
+    JSDocInfo info = handleInlineJsDoc(node);
     Node irNode = justTransform(node);
     if (info != null) {
       irNode.setJSDocInfo(info);
@@ -731,21 +729,18 @@ class IRFactory {
     return irNode;
   }
 
-  private JSDocInfo handleInlineJsDoc(ParseTree node, boolean optional) {
-    return handleInlineJsDoc(node.location, optional);
+  private JSDocInfo handleInlineJsDoc(ParseTree node) {
+    return handleInlineJsDoc(node.location);
   }
 
   private JSDocInfo handleInlineJsDoc(
-      com.google.javascript.jscomp.parsing.parser.Token token,
-      boolean optional) {
-    return handleInlineJsDoc(token.location, optional);
+      com.google.javascript.jscomp.parsing.parser.Token token) {
+    return handleInlineJsDoc(token.location);
   }
 
-  private JSDocInfo handleInlineJsDoc(
-      SourceRange location,
-      boolean optional) {
+  private JSDocInfo handleInlineJsDoc(SourceRange location) {
     Comment comment = getJsDoc(location);
-    if (comment != null && (!optional || !comment.value.contains("@"))) {
+    if (comment != null && !comment.value.contains("@")) {
       return recordJsDoc(location, parseInlineTypeDoc(comment));
     } else {
       return handleJsDoc(comment);
@@ -1239,7 +1234,7 @@ class IRFactory {
       Node params = newNode(Token.PARAM_LIST);
       if (checkParameters(tree.parameters)) {
         for (ParseTree param : tree.parameters) {
-          Node paramNode = transformNodeWithInlineJsDoc(param, false);
+          Node paramNode = transformNodeWithInlineJsDoc(param);
           // Children must be simple names, default parameters, rest
           // parameters, or destructuring patterns.
           Preconditions.checkState(paramNode.isName() || paramNode.isRest()
@@ -1354,7 +1349,7 @@ class IRFactory {
     }
 
     Node processNameWithInlineJSDoc(IdentifierToken identifierToken) {
-      JSDocInfo info = handleInlineJsDoc(identifierToken, true);
+      JSDocInfo info = handleInlineJsDoc(identifierToken);
       if (isReservedKeyword(identifierToken.toString())) {
         errorReporter.error(
           "identifier is a reserved word",
@@ -1825,14 +1820,13 @@ class IRFactory {
 
       Node node = newNode(declType);
       for (VariableDeclarationTree child : decl.declarations) {
-        node.addChildToBack(
-            transformNodeWithInlineJsDoc(child, true));
+        node.addChildToBack(transformNodeWithInlineJsDoc(child));
       }
       return node;
     }
 
     Node processVariableDeclaration(VariableDeclarationTree decl) {
-      Node node = transformNodeWithInlineJsDoc(decl.lvalue, true);
+      Node node = transformNodeWithInlineJsDoc(decl.lvalue);
       if (decl.initializer != null) {
         Node initializer = transform(decl.initializer);
         node.addChildToBack(initializer);

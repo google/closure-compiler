@@ -64,6 +64,16 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         DISALLOWED_MEMBER_JSDOC);
   }
 
+  public void testInlineJSDoc() {
+    testSame("function f(/** string */ x) {}");
+    testSame("function f(/** @type {string} */ x) {}");
+
+    testSame("var /** string */ x = 'x';");
+    testSame("var /** @type {string} */ x = 'x';");
+    testSame("var /** string */ x, /** number */ y;");
+    testSame("var /** @type {string} */ x, /** @type {number} */ y;");
+  }
+
   public void testFunctionJSDocOnMethods() {
     testSameEs6("class Foo { /** @return {?} */ bar() {} }");
     testSameEs6("class Foo { /** @return {?} */ get bar() {} }");

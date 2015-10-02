@@ -757,17 +757,14 @@ public final class NewParserTest extends BaseJSTypeTestCase {
   }
 
   public void testInlineJSDocAttachment3() {
-    parseWarning(
-        "function f(/** @type {string} */ x) {}",
-        "Bad type annotation. type not recognized due to syntax error");
+    parse("function f(/** @type {string} */ x) {}");
   }
 
   public void testInlineJSDocAttachment4() {
-    parseWarning(
+    parse(
         "function f(/**\n" +
         " * @type {string}\n" +
-        " */ x) {}",
-        "Bad type annotation. type not recognized due to syntax error");
+        " */ x) {}");
   }
 
   public void testInlineJSDocAttachment5() {
