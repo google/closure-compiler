@@ -262,7 +262,6 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         case Token.DEFAULT_VALUE:
           Node parent = n.getParent();
           switch (parent.getType()) {
-            case Token.STRING_KEY:
             case Token.GETTER_DEF:
             case Token.SETTER_DEF:
             case Token.CATCH:

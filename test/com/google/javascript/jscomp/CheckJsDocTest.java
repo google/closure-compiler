@@ -74,6 +74,11 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
     testSameEs6("class Foo { /** @return {?} x */ set [bar](x) {} }");
   }
 
+  public void testObjectLiterals() {
+    testSame("var o = { /** @type {?} */ x: y };");
+    testWarning("var o = { x: /** @type {?} */ y };", MISPLACED_ANNOTATION);
+  }
+
   public void testMethodsOnObjectLiterals() {
     testSameEs6("var x = { /** @return {?} */ foo() {} };");
     testSameEs6("var x = { /** @return {?} */ [foo]() {} };");
