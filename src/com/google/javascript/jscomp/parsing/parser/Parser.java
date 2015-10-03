@@ -3426,11 +3426,7 @@ public class Parser {
   }
 
   private boolean peekIdOrKeyword() {
-    return peekIdOrKeyword(0);
-  }
-
-  private boolean peekIdOrKeyword(int index) {
-    TokenType type = peekType(index);
+    TokenType type = peekType();
     return TokenType.IDENTIFIER == type || Keywords.isKeyword(type);
   }
 

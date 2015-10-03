@@ -2657,7 +2657,7 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("import {x, y} from './someModule'");
     parse("import {x as x1, y as y1} from './someModule'");
     parse("import {x as x1, y as y1, } from './someModule'");
-    parse("import {default as d} from './someModule'");
+    parse("import {default as d, class as c} from './someModule'");
     parse("import d, {x as x1, y as y1} from './someModule'");
     parse("import * as sm from './someModule'");
 
@@ -2680,7 +2680,8 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("export class c {}");
     parse("export {x, y}");
     parse("export {x as x1}");
-    parse("export {x as default, y as y1}");
+    parse("export {x as x1, y as x2}");
+    parse("export {x as default, y as class}");
 
     parseError("export {default as x}",
         "cannot use keyword 'default' here.");
@@ -2692,8 +2693,9 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("export {x as x1, y as y1} from './someModule'");
     parse("export {x as x1, y as y1, } from './someModule'");
     parse("export {default as d} from './someModule'");
-    parse("export {x as default, y as y1} from './someModule'");
-    parse("export {default as default, y as y1} from './someModule'");
+    parse("export {d as default, c as class} from './someModule'");
+    parse("export {default as default, class as class} from './someModule'");
+    parse("export {class} from './someModule'");
     parse("export * from './someModule'");
   }
 
