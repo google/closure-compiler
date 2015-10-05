@@ -176,18 +176,10 @@ public class TemplateTypeMap implements Serializable {
     return -1;
   }
 
-  private JSType getResolvedTemplateType(TemplateType key) {
+  public JSType getResolvedTemplateType(TemplateType key) {
     int index = getTemplateTypeIndex(key);
     return (index == -1) ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) :
          resolvedTemplateValues.get(index);
-  }
-
-  public JSType getConcreteTypeOfTemplateType(TemplateType key) {
-    JSType result = getTemplateType(key);
-    while (result.isTemplateType()) {
-      result = getTemplateType(result.toMaybeTemplateType());
-    }
-    return result;
   }
 
   /**

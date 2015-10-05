@@ -1460,7 +1460,7 @@ class TypeInference
     JSType type = getJSType(n.getFirstChild()).restrictByNotNullOrUndefined();
     TemplateTypeMap typeMap = type.getTemplateTypeMap();
     if (typeMap.hasTemplateType(registry.getObjectElementKey())) {
-      n.setJSType(typeMap.getConcreteTypeOfTemplateType(registry.getObjectElementKey()));
+      n.setJSType(typeMap.getResolvedTemplateType(registry.getObjectElementKey()));
     }
     return dereferencePointer(n.getFirstChild(), scope);
   }
