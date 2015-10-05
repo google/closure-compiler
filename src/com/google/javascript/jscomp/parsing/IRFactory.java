@@ -2027,10 +2027,13 @@ class IRFactory {
     }
 
     Node processExportSpec(ExportSpecifierTree tree) {
-      Node exportSpec = newNode(Token.EXPORT_SPEC,
-          processName(tree.importedName));
+      Node importedName = processName(tree.importedName, true);
+      importedName.setType(Token.NAME);
+      Node exportSpec = newNode(Token.EXPORT_SPEC, importedName);
       if (tree.destinationName != null) {
-        exportSpec.addChildToBack(processName(tree.destinationName));
+        Node destinationName = processName(tree.destinationName, true);
+        destinationName.setType(Token.NAME);
+        exportSpec.addChildToBack(destinationName);
       }
       return exportSpec;
     }
@@ -2048,8 +2051,9 @@ class IRFactory {
     }
 
     Node processImportSpec(ImportSpecifierTree tree) {
-      Node importSpec = newNode(Token.IMPORT_SPEC,
-          processName(tree.importedName));
+      Node importedName = processName(tree.importedName, true);
+      importedName.setType(Token.NAME);
+      Node importSpec = newNode(Token.IMPORT_SPEC, importedName);
       if (tree.destinationName != null) {
         importSpec.addChildToBack(processName(tree.destinationName));
       }

@@ -2654,7 +2654,46 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     parse("import {x, y} from './someModule'");
     parse("import {x as x1, y as y1} from './someModule'");
     parse("import {x as x1, y as y1, } from './someModule'");
+    parse("import {default as d, class as c} from './someModule'");
+    parse("import d, {x as x1, y as y1} from './someModule'");
     parse("import * as sm from './someModule'");
+
+    parseError("import class from './someModule'",
+            "cannot use keyword 'class' here.");
+    parseError("import * as class from './someModule'",
+            "'identifier' expected");
+    parseError("import {a as class} from './someModule'",
+            "'identifier' expected");
+    parseError("import {class} from './someModule'",
+            "'as' expected");
+  }
+
+  public void testExport() {
+    mode = LanguageMode.ECMASCRIPT6;
+
+    parse("export const x = 1");
+    parse("export var x = 1");
+    parse("export function f() {}");
+    parse("export class c {}");
+    parse("export {x, y}");
+    parse("export {x as x1}");
+    parse("export {x as x1, y as x2}");
+    parse("export {x as default, y as class}");
+
+    parseError("export {default as x}",
+        "cannot use keyword 'default' here.");
+    parseError("export {package as x}",
+        "cannot use keyword 'package' here.");
+    parseError("export {package}",
+        "cannot use keyword 'package' here.");
+
+    parse("export {x as x1, y as y1} from './someModule'");
+    parse("export {x as x1, y as y1, } from './someModule'");
+    parse("export {default as d} from './someModule'");
+    parse("export {d as default, c as class} from './someModule'");
+    parse("export {default as default, class as class} from './someModule'");
+    parse("export {class} from './someModule'");
+    parse("export * from './someModule'");
   }
 
   public void testShebang() {

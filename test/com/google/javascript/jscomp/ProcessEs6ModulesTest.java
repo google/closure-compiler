@@ -101,13 +101,21 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   public void testImport() {
     testModules(
         "import name from 'other'; use(name);",
-        LINE_JOINER.join("goog.require('module$other');", "use(module$other.default);"));
+        "goog.require('module$other'); use(module$other.default);");
 
     testModules("import {n as name} from 'other';", "goog.require('module$other');");
 
     testModules(
         "import x, {f as foo, b as bar} from 'other'; use(x);",
-        LINE_JOINER.join("goog.require('module$other');", "use(module$other.default);"));
+        "goog.require('module$other'); use(module$other.default);");
+
+    testModules(
+        "import {default as name} from 'other'; use(name);",
+        "goog.require('module$other'); use(module$other.default);");
+
+    testModules(
+        "import {class as name} from 'other'; use(name);",
+        "goog.require('module$other'); use(module$other.class);");
   }
 
   public void testImport_missing() {
@@ -179,6 +187,20 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "var b$$module$testcode = 2;",
             "module$testcode.foo = f$$module$testcode;",
             "module$testcode.bar = b$$module$testcode;"));
+
+    testModules(
+        "var f = 1; export {f as default};",
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "var f$$module$testcode = 1;",
+            "module$testcode.default = f$$module$testcode;"));
+
+    testModules(
+        "var f = 1; export {f as class};",
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "var f$$module$testcode = 1;",
+            "module$testcode.class = f$$module$testcode;"));
   }
 
   public void testExportWithJsDoc() {
@@ -227,11 +249,16 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
 
   public void testExportFrom() {
     testModules(
-        "export {name} from 'other';",
+        LINE_JOINER.join(
+            "export {name} from 'other';",
+            "export {default} from 'other';",
+            "export {class} from 'other';"),
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
-            "module$testcode.name = module$other.name;"));
+            "module$testcode.name = module$other.name;",
+            "module$testcode.default = module$other.default;",
+            "module$testcode.class = module$other.class;"));
 
     testModules(
         "export {a, b as c, d} from 'other';",
@@ -241,6 +268,27 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "module$testcode.a = module$other.a;",
             "module$testcode.c = module$other.b;",
             "module$testcode.d = module$other.d;"));
+
+    testModules(
+        "export {a as b, b as a} from 'other';",
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "goog.require('module$other');",
+            "module$testcode.b = module$other.a;",
+            "module$testcode.a = module$other.b;"));
+
+    testModules(
+        LINE_JOINER.join(
+            "export {default as a} from 'other';",
+            "export {a as a2, default as b} from 'other';",
+            "export {class as switch} from 'other';"),
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "goog.require('module$other');",
+            "module$testcode.a = module$other.default;",
+            "module$testcode.a2 = module$other.a;",
+            "module$testcode.b = module$other.default;",
+            "module$testcode.switch = module$other.class;"));
   }
 
   public void testExportDefault() {
