@@ -922,6 +922,8 @@ public class CompilerOptions {
    */
   public boolean instrumentForCoverage;
 
+  String instrumentationTemplateFile;
+
   /** List of conformance configs to use in CheckConformance */
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
@@ -1061,6 +1063,7 @@ public class CompilerOptions {
     // Instrumentation
     instrumentationTemplate = null;  // instrument functions
     instrumentForCoverage = false;  // instrument lines
+    instrumentationTemplateFile = "";
 
     // Output
     preserveTypeAnnotations = false;
@@ -2143,6 +2146,10 @@ public class CompilerOptions {
 
   public void setInstrumentationTemplate(Instrumentation instrumentationTemplate) {
     this.instrumentationTemplate = instrumentationTemplate;
+  }
+
+  public void setInstrumentationTemplateFile(String filename){
+	  this.instrumentationTemplateFile = filename;
   }
 
   public void setRecordFunctionInformation(boolean recordFunctionInformation) {

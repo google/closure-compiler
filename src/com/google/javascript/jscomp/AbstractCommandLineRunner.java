@@ -433,6 +433,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.angularPass = config.angularPass;
     options.tracer = config.tracerMode;
     options.useNewTypeInference = config.useNewTypeInference;
+    options.instrumentationTemplateFile = config.instrumentationTemplateFile;
   }
 
   protected final A getCompiler() {
@@ -2254,6 +2255,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       this.useNewTypeInference = useNewTypeInference;
       return this;
     }
+
+    private String instrumentationTemplateFile = "";
+
+    CommandLineConfig setInstrumentationTemplateFile(String fileName) {
+        this.instrumentationTemplateFile = fileName;
+        return this;
+    }
+
   }
 
   /**
