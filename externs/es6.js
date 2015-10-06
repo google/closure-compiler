@@ -1103,6 +1103,16 @@ Array.prototype.entries;
 Array.prototype.find = function(predicate, opt_this) {};
 
 
+/**
+ * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
+ * @param {S=} opt_this
+ * @return {number}
+ * @template T,S
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
+ */
+Array.prototype.findIndex = function(predicate, opt_this) {};
+
+
 /** @return {!Array<symbol>} */
 Object.getOwnPropertySymbols;
 
