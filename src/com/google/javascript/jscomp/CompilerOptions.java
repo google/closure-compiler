@@ -2149,7 +2149,7 @@ public class CompilerOptions {
   }
 
   public void setInstrumentationTemplateFile(String filename){
-	  this.instrumentationTemplateFile = filename;
+    this.instrumentationTemplateFile = filename;
   }
 
   public void setRecordFunctionInformation(boolean recordFunctionInformation) {
