@@ -3646,12 +3646,12 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair mayWarnAboutNullableReferenceAndTighten(
       Node obj, JSType recvType, TypeEnv inEnv, JSType requiredType) {
     if (!recvType.isUnknown()
+        && !recvType.isTop()
         && (JSType.NULL.isSubtypeOf(recvType)
             || JSType.UNDEFINED.isSubtypeOf(recvType))) {
       JSType minusNull = recvType.removeType(JSType.NULL_OR_UNDEF);
-      if (!minusNull.isBottom() && minusNull.isSubtypeOf(requiredType)) {
-        warnings.add(JSError.make(
-            obj, NULLABLE_DEREFERENCE, recvType.toString()));
+      if (!minusNull.isBottom()) {
+        warnings.add(JSError.make(obj, NULLABLE_DEREFERENCE, recvType.toString()));
         TypeEnv outEnv = inEnv;
         if (obj.isQualifiedName()) {
           QualifiedName qname = QualifiedName.fromNode(obj);

@@ -1836,19 +1836,19 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(/** (number|null) */ n) {",
         "  n.foo;",
         "}"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(Joiner.on('\n').join(
         "function f(/** (number|null|undefined) */ n) {",
         "  n.foo;",
         "}"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(Joiner.on('\n').join(
         "function f(/** (!Object|number|null|undefined) */ n) {",
         "  n.foo;",
         "}"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */ function Foo(){}",
@@ -1978,6 +1978,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  goog.asserts.assertInstanceof(o, Bar);",
         "}"),
         NewTypeInference.UNKNOWN_ASSERTION_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @param {Foo} x */",
+        "function f(x) {}",
+        "f(new Foo);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */ function Foo(){ this.prop = 123; }",
+        "function f(/** Foo */ obj) { obj.prop; }"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function I() {}",
+        "I.prototype.method = function() {};",
+        "/** @param {I} x */",
+        "function foo(x) { x.method(); }"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testAsserts() {
@@ -4514,28 +4534,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  if (!obj) { obj.prop; }",
         "}"),
         NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
-  }
-
-  public void testNullability() {
-    typeCheck(Joiner.on('\n').join(
-        "/** @constructor */",
-        "function Foo() {}",
-        "/** @param {Foo} x */",
-        "function f(x) {}",
-        "f(new Foo);"));
-
-    typeCheck(Joiner.on('\n').join(
-        "/** @constructor */ function Foo(){ this.prop = 123; }",
-        "function f(/** Foo */ obj) { obj.prop; }"),
-        NewTypeInference.NULLABLE_DEREFERENCE);
-
-    typeCheck(Joiner.on('\n').join(
-        "/** @interface */",
-        "function I() {}",
-        "I.prototype.method = function() {};",
-        "/** @param {I} x */",
-        "function foo(x) { x.method(); }"),
-        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testGetElem() {
@@ -13648,6 +13646,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  if (x.prop == null) {",
         "    var /** (null|undefined) */ y = x.prop;",
         "  }",
+        "}"),
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** ?String|string */ x) {",
+        "  return x.length - 1;",
         "}"),
         NewTypeInference.NULLABLE_DEREFERENCE);
   }
