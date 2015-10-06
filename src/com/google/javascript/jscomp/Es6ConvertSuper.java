@@ -108,7 +108,9 @@ public final class Es6ConvertSuper implements NodeTraversal.Callback, HotSwapCom
       enclosingCall = parent.getParent();
       potentialCallee = parent;
     }
-    if (!enclosingCall.isCall() || enclosingCall.getFirstChild() != potentialCallee) {
+    if (!enclosingCall.isCall()
+        || enclosingCall.getFirstChild() != potentialCallee
+        || enclosingCall.getFirstChild().isGetElem()) {
       compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
           "Only calls to super or to a method of super are supported."));
       return;

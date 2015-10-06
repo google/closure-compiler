@@ -515,6 +515,21 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testComputedSuper() {
+    testError(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  ['m']() { return 1; }",
+            "}",
+            "",
+            "class Bar extends Foo {",
+            "  ['m']() {",
+            "    return super['m']() + 1;",
+            "  }",
+            "}"),
+        CANNOT_CONVERT_YET);
+  }
+
   public void testMultiNameClass() {
     test("var F = class G {}",
         "/** @constructor @struct */ var F = function() {};");
