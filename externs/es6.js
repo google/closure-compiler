@@ -1053,8 +1053,8 @@ Promise.race = function(iterable) {};
 
 
 /**
- * @param {?(function(TYPE):VALUE)=} opt_onFulfilled
- * @param {?(function(*): *)=} opt_onRejected
+ * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled
+ * @param {?(function(this:void, *): *)=} opt_onRejected
  * @return {RESULT}
  * @template VALUE
  *
