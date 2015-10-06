@@ -1064,14 +1064,14 @@ public class Parser {
     return declaration;
   }
 
-  private boolean peekFunctionTypeExpression(ParamContext context) {
+  private boolean peekFunctionTypeExpression() {
     if (peek(TokenType.OPEN_PAREN) || peek(TokenType.OPEN_ANGLE)) {
       // TODO(blickly): determine if we can parse this without the
       // overhead of forking the parser.
       Parser p = createLookaheadParser();
       try {
         p.maybeParseGenericTypes();
-        p.parseFormalParameterList(context);
+        p.parseFormalParameterList(ParamContext.TYPE_EXPRESSION);
         if (p.peek(TokenType.COLON)) {
           p.parseTypeAnnotation();
         }
@@ -1235,7 +1235,7 @@ public class Parser {
   private ParseTree parseFunctionTypeExpression() {
     SourcePosition start = getTreeStartLocation();
     ParseTree typeExpression = null;
-    if (peekFunctionTypeExpression(ParamContext.TYPE_EXPRESSION)) {
+    if (peekFunctionTypeExpression()) {
       FormalParameterListTree formalParameterList;
       formalParameterList = parseFormalParameterList(ParamContext.IMPLEMENTATION);
       eat(TokenType.ARROW);
