@@ -948,7 +948,7 @@ class IRFactory {
 
       Node node = newNode(Token.ARRAY_PATTERN);
       for (ParseTree child : tree.elements) {
-        node.addChildToBack(transform(child));
+        node.addChildToBack(transformNodeWithInlineJsDoc(child));
       }
       return node;
     }
@@ -958,7 +958,7 @@ class IRFactory {
 
       Node node = newNode(Token.OBJECT_PATTERN);
       for (ParseTree child : tree.fields) {
-        node.addChildToBack(transform(child));
+        node.addChildToBack(transformNodeWithInlineJsDoc(child));
       }
       return node;
     }
@@ -1532,6 +1532,9 @@ class IRFactory {
     }
 
     Node processPropertyNameAssignment(PropertyNameAssignmentTree tree) {
+      // TODO(tbreisacher): Allow inline JSDoc here (but then forbid it in CheckJSDoc)
+      // so that it's clear we don't support annotations like
+      //   function f({x: /** string */ y}) {}
       Node key = processObjectLitKeyAsString(tree.name);
       key.setType(Token.STRING_KEY);
       if (tree.value != null) {

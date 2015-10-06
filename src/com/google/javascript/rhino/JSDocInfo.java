@@ -207,7 +207,7 @@ public class JSDocInfo implements Serializable {
     String sourceComment = null;
     List<Marker> markers = null;
 
-    Map<String, String> parameters = null;
+    LinkedHashMap<String, String> parameters = null;
     Map<JSTypeExpression, String> throwsDescriptions = null;
     String blockDescription = null;
     String fileOverview = null;
@@ -1215,7 +1215,7 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
-   * Gets the parameter type.
+   * Gets the type of a given named parameter.
    * @param parameter the parameter's name
    * @return the parameter's type or {@code null} if this parameter is not
    *     defined or has a {@code null} type
@@ -1225,6 +1225,15 @@ public class JSDocInfo implements Serializable {
       return null;
     }
     return info.parameters.get(parameter);
+  }
+
+  /**
+   * Gets the type of the nth {@code @param} annotation. The iteration order
+   * is the order in which parameters are defined in the JSDoc, rather
+   * than the order in which the function declares them.
+   */
+  public JSTypeExpression getParameterType(int index) {
+    return info.parameters.get(getParameterNameAt(index));
   }
 
   /**
@@ -1260,6 +1269,18 @@ public class JSDocInfo implements Serializable {
       return ImmutableSet.of();
     }
     return ImmutableSet.copyOf(info.parameters.keySet());
+  }
+
+  /**
+   * Returns the nth name in the defined parameters. The iteration order
+   * is the order in which parameters are defined in the JSDoc, rather
+   * than the order in which the function declares them.
+   */
+  public String getParameterNameAt(int index) {
+    if (info == null || info.parameters == null) {
+      return null;
+    }
+    return ImmutableList.copyOf(info.parameters.keySet()).get(index);
   }
 
   /**

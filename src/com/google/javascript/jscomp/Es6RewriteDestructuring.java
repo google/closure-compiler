@@ -124,7 +124,14 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
         compiler.reportCodeChange();
       } else if (param.isDestructuringPattern()) {
-        String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+        String tempVarName;
+        JSDocInfo fnJSDoc = function.getJSDocInfo();
+        if (fnJSDoc != null && fnJSDoc.getParameterNameAt(i) != null) {
+          tempVarName = fnJSDoc.getParameterNameAt(i);
+        } else {
+          tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+        }
+
         Node newParam = IR.name(tempVarName);
         newParam.setJSDocInfo(param.getJSDocInfo());
         paramList.replaceChild(param, newParam);

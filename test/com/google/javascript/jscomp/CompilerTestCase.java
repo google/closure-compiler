@@ -429,7 +429,7 @@ public abstract class CompilerTestCase extends TestCase {
    * @param error Expected error
    */
   public void testError(String js, DiagnosticType error) {
-    assertNotNull("Must assert an error", error);
+    assertNotNull(error);
     test(js, null, error, null);
   }
 
@@ -440,7 +440,7 @@ public abstract class CompilerTestCase extends TestCase {
    * @param warning Expected warning
    */
   public void testWarning(String js, DiagnosticType warning) {
-    assertNotNull("Must assert an warning", warning);
+    assertNotNull(warning);
     test(js, null, null, warning);
   }
 

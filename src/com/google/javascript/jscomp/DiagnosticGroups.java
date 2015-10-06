@@ -435,10 +435,12 @@ public class DiagnosticGroups {
           // checkTypes DiagnosticGroup
           CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY,
           CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS,
-          CheckJSDocStyle.MISSING_PARAM_JSDOC,
+          CheckJSDocStyle.INCORRECT_PARAM_NAME,
+          CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES,
           CheckJSDocStyle.MUST_BE_PRIVATE,
           CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL,
           CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME,
+          CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
           CheckForInOverArray.FOR_IN_OVER_ARRAY,

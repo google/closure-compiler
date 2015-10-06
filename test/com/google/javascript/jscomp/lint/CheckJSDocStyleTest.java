@@ -15,10 +15,12 @@
  */
 package com.google.javascript.jscomp.lint;
 
-import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MISSING_PARAM_JSDOC;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_PARAM_NOT_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME;
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.WRONG_NUMBER_OF_PARAMS;
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -83,7 +85,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             // No @param for y.
             " */",
             "function f(x, y) {}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
 
     testWarning(
         LINE_JOINER.join(
@@ -100,71 +102,80 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             // No @param for y.
             " */",
             "function f(x, y = 1) {}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
   }
 
   public void testMissingParamWithDestructuringPattern() {
     testWarning(
         LINE_JOINER.join(
             "/**",
+            " * @param {string} namedParam",
             " * @return {void}",
             " */",
             "function f(namedParam, {destructuring:pattern}) {",
             "}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
 
     testWarning(
         LINE_JOINER.join(
             "/**",
+            " * @param {string} namedParam",
             " * @return {void}",
             " */",
             "function f({destructuring:pattern}, namedParam) {",
             "}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
 
     testWarning(
         LINE_JOINER.join(
             "/**",
+            " * @param {string} namedParam",
             " * @return {void}",
             " */",
             "function f(namedParam, [pattern]) {",
             "}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
 
     testWarning(
         LINE_JOINER.join(
             "/**",
+            " * @param {string} namedParam",
             " * @return {void}",
             " */",
             "function f([pattern], namedParam) {",
             "}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
   }
 
   public void testMissingParamWithDestructuringPatternWithDefault() {
     testWarning(
         LINE_JOINER.join(
             "/**",
+            " * @param {string} namedParam",
             " * @return {void}",
             " */",
             "function f(namedParam, {destructuring:pattern} = defaultValue) {",
             "}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
 
     testWarning(
         LINE_JOINER.join(
             "/**",
+            " * @param {string} namedParam",
             " * @return {void}",
             " */",
             "function f(namedParam, [pattern] = defaultValue) {",
             "}"),
-        MISSING_PARAM_JSDOC);
+        WRONG_NUMBER_OF_PARAMS);
   }
 
   public void testMissingPrivate() {
     testSame(
         LINE_JOINER.join(
-            "/**", " * @return {number}", " */", "X.prototype.foo_ = function() { return 0; }"),
+            "/**",
+            " * @return {number}",
+            " */",
+            "X.prototype.foo_ = function() { return 0; }"),
         MUST_BE_PRIVATE);
 
     testSame(
@@ -178,13 +189,58 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   public void testOptionalArgs() {
     testSame(
-        LINE_JOINER.join("/**", " * @param {number=} n", " */", "function f(n) {}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {number=} n",
+            " */",
+            "function f(n) {}"),
         OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME);
 
     testSame(
-        LINE_JOINER.join("/**", " * @param {number} opt_n", " */", "function f(opt_n) {}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {number} opt_n",
+            " */",
+            "function f(opt_n) {}"),
         OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
 
-    testSame(LINE_JOINER.join("/**", " * @param {number=} opt_n", " */", "function f(opt_n) {}"));
+    testSame(LINE_JOINER.join(
+        "/**",
+        " * @param {number=} opt_n",
+        " */",
+        "function f(opt_n) {}"));
+  }
+
+  public void testParamsOutOfOrder() {
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {?} second",
+            " * @param {?} first",
+            " */",
+            "function f(first, second) {}"),
+        INCORRECT_PARAM_NAME);
+  }
+
+  public void testMixedStyles() {
+    testWarning(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {?} first",
+            " * @param {string} second",
+            " */",
+            "function f(first, /** string */ second) {}"),
+        MIXED_PARAM_JSDOC_STYLES);
+  }
+
+  public void testDestructuring() {
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @param {{x: number, y: number}} point",
+            " */",
+            "function getDistanceFromZero({x, y}) {}"));
+
+    testSame("function getDistanceFromZero(/** {x: number, y: number} */ {x, y}) {}");
   }
 }

@@ -44,6 +44,23 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
     return options;
   }
 
+  public void testInlineJsDoc_ES6() {
+    testSame("function f(/** string */ x) {}");
+    testSameEs6("function f(/** number= */ x=3) {}");
+    testSameEs6("function f(/** !Object */ {x}) {}");
+    testSameEs6("function f(/** !Array */ [x]) {}");
+
+    testWarningEs6("function f([/** number */ x]) {}", MISPLACED_ANNOTATION);
+  }
+
+  // TODO(tbreisacher): These should be a MISPLACED_ANNOTATION warning instead of silently failing.
+  public void testInlineJsDocInsideObjectParams() {
+    testSameEs6("function f({ prop: {/** string */ x} }) {}");
+    testSameEs6("function f({ prop: {x: /** string */ y} }) {}");
+    testSameEs6("function f({ /** number */ x }) {}");
+    testSameEs6("function f({ prop: /** number */ x }) {}");
+  }
+
   public void testInvalidClassJsdoc() {
     testSameEs6("class Foo { /** @param {number} x */ constructor(x) {}}");
 

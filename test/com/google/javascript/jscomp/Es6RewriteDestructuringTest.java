@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public class Es6RewriteDestructuringTest extends CompilerTestCase {
@@ -435,4 +437,43 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         "function f(zero, one=void g()) {}",
         "function f(zero, one) {   one = (one === undefined) ? void g() : one; }");
   }
+
+  public void testTypeCheck() {
+    enableTypeCheck();
+
+    test(
+        "/** @param {{x: number}} obj */ function f({x}) {}",
+        LINE_JOINER.join(
+            "/** @param {{x: number}} obj */",
+            "function f(obj) {",
+            "  var $jscomp$destructuring$var0 = obj;",
+            "  var x = $jscomp$destructuring$var0.x;",
+            "}"));
+
+    testWarning(
+        LINE_JOINER.join(
+            "/** @param {{x: number}} obj */",
+            "function f({x}) {}",
+          "f({ x: 'str'});"),
+        TYPE_MISMATCH_WARNING);
+  }
+
+  public void testTypeCheck_inlineAnnotations() {
+    enableTypeCheck();
+
+    test(
+        "function f(/** {x: number} */ {x}) {}",
+        LINE_JOINER.join(
+            "function f(/** {x: number} */ $jscomp$destructuring$var0) {",
+            "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "  var x = $jscomp$destructuring$var1.x;",
+            "}"));
+
+    testWarning(
+        LINE_JOINER.join(
+            "function f(/** {x: number} */ {x}) {}",
+            "f({ x: 'str'});"),
+        TYPE_MISMATCH_WARNING);
+  }
+
 }

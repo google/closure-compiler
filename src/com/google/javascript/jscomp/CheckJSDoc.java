@@ -273,6 +273,8 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
         // initializers are valid.
         case Token.NAME:
         case Token.DEFAULT_VALUE:
+        case Token.ARRAY_PATTERN:
+        case Token.OBJECT_PATTERN:
           Node parent = n.getParent();
           switch (parent.getType()) {
             case Token.GETTER_DEF:
