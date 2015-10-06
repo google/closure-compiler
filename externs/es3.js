@@ -596,7 +596,7 @@ Array.prototype.unshift = function(var_args) {};
  * Apply a function simultaneously against two values of the array (from
  * left-to-right) as to reduce it to a single value.
  *
- * @param {?function(?, T, number, !Array<T>) : R} callback
+ * @param {!function(?, T, number, !Array<T>) : R} callback
  * @param {*=} opt_initialValue
  * @return {R}
  * @this {{length: number}|Array<T>|string}
@@ -609,7 +609,7 @@ Array.prototype.reduce = function(callback, opt_initialValue) {};
  * Apply a function simultaneously against two values of the array (from
  * right-to-left) as to reduce it to a single value.
  *
- * @param {?function(?, T, number, !Array<T>) : R} callback
+ * @param {!function(?, T, number, !Array<T>) : R} callback
  * @param {*=} opt_initialValue
  * @return {R}
  * @this {{length: number}|Array<T>|string}
@@ -620,7 +620,7 @@ Array.prototype.reduceRight = function(callback, opt_initialValue) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {!function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {{length: number}|Array<T>|string}
@@ -631,7 +631,7 @@ Array.prototype.every = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {!function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {!Array<T>}
  * @this {{length: number}|Array<T>|string}
@@ -642,7 +642,7 @@ Array.prototype.filter = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {!function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
  * @this {{length: number}|Array<T>|string}
  * @template T,S
@@ -676,7 +676,7 @@ Array.prototype.lastIndexOf = function(obj, opt_fromIndex) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): R} callback
+ * @param {!function(this:S, T, number, !Array<T>): R} callback
  * @param {S=} opt_thisobj
  * @return {!Array<R>}
  * @this {{length: number}|Array<T>|string}
@@ -687,7 +687,7 @@ Array.prototype.map = function(callback, opt_thisobj) {};
 
 /**
  * Available in ECMAScript 5, Mozilla 1.6+.
- * @param {?function(this:S, T, number, !Array<T>): ?} callback
+ * @param {!function(this:S, T, number, !Array<T>): ?} callback
  * @param {S=} opt_thisobj
  * @return {boolean}
  * @this {{length: number}|Array<T>|string}
@@ -716,7 +716,7 @@ Array.prototype.length;
 
 /**
  * @param {{length: number}|Array<T>} arr
- * @param {?function(this:S, T, number, ?) : ?} callback
+ * @param {!function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @return {boolean}
  * @template T,S
@@ -725,7 +725,7 @@ Array.every = function(arr, callback, opt_context) {};
 
 /**
  * @param {{length: number}|Array<T>} arr
- * @param {?function(this:S, T, number, ?) : ?} callback
+ * @param {!function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @return {!Array<T>}
  * @template T,S
@@ -734,7 +734,7 @@ Array.filter = function(arr, callback, opt_context) {};
 
 /**
  * @param {{length: number}|Array<T>} arr
- * @param {?function(this:S, T, number, ?) : ?} callback
+ * @param {!function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @template T,S
  */
@@ -766,7 +766,7 @@ Array.lastIndexOf = function(arr, obj, opt_fromIndex) {};
 
 /**
  * @param {{length: number}|Array<T>} arr
- * @param {?function(this:S, T, number, !Array<T>): R} callback
+ * @param {!function(this:S, T, number, !Array<T>): R} callback
  * @param {S=} opt_context
  * @return {!Array<R>}
  * @template T,S,R
@@ -775,7 +775,7 @@ Array.map = function(arr, callback, opt_context) {};
 
 /**
  * @param {{length: number}|Array<T>} arr
- * @param {?function(this:S, T, number, ?) : ?} callback
+ * @param {!function(this:S, T, number, ?) : ?} callback
  * @param {S=} opt_context
  * @return {boolean}
  * @template T,S
