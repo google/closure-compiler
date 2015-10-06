@@ -447,7 +447,7 @@ public abstract class JSType implements TypeI {
       return this;
     }
     int mask = getMask();
-    if ((mask & (NUMBER_MASK | STRING_MASK | BOOLEAN_MASK)) == BOTTOM_MASK) {
+    if ((mask & (NUMBER_MASK | STRING_MASK | BOOLEAN_MASK | ENUM_MASK)) == BOTTOM_MASK) {
       return this;
     }
     switch (mask) {
@@ -474,9 +474,13 @@ public abstract class JSType implements TypeI {
     if ((mask & BOOLEAN_MASK) != 0) { // may have truthy or falsy
       builder.add(commonTypes.getBooleanInstanceObjType());
     }
-    return makeType(
+    JSType result = makeType(
         mask & ~(NUMBER_MASK | STRING_MASK | BOOLEAN_MASK),
-        builder.build(), getTypeVar(), getEnums());
+        builder.build(), getTypeVar(), ImmutableSet.<EnumType>of());
+    for (EnumType e : getEnums()) {
+      result = join(result, e.getEnumeratedType().autobox(commonTypes));
+    }
+    return result;
   }
 
   static JSType nullAcceptingJoin(JSType t1, JSType t2) {

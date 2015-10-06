@@ -11895,12 +11895,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "(new Foo).prop.newprop = 5;"));
 
     typeCheck(Joiner.on('\n').join(
-        "/** @enum */",
+        "/** @enum {number} */",
         "var E = { A: 1 };",
         "function f(/** E */ x) {",
         "  return x.toString();",
-        "}"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        "}"));
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
