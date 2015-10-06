@@ -12496,6 +12496,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "}",
         "f(new Low('asdf')) - 5;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {function(function(T=))} y",
+        " */",
+        "function googPromiseReject(x, y) {}",
+        "googPromiseReject(123, function(x) { x(123); } )"));
   }
 
   public void testArgumentsArray() {

@@ -689,7 +689,7 @@ public final class FunctionType {
     Preconditions.checkState(this.outerVarPreconditions.isEmpty());
     Preconditions.checkState(this != TOP_FUNCTION);
 
-    if (this == LOOSE_TOP_FUNCTION || other.isTopFunction()) {
+    if (this == LOOSE_TOP_FUNCTION || other.isTopFunction() || other.isLoose()) {
       return true;
     }
     if (other.requiredFormals.size() > this.requiredFormals.size()) {
