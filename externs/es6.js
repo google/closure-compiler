@@ -1093,6 +1093,16 @@ Array.prototype.keys;
 Array.prototype.entries;
 
 
+/**
+ * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
+ * @param {S=} opt_this
+ * @return {T|undefined}
+ * @template T,S
+ * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.find
+ */
+Array.prototype.find = function(predicate, opt_this) {};
+
+
 /** @return {!Array<symbol>} */
 Object.getOwnPropertySymbols;
 
