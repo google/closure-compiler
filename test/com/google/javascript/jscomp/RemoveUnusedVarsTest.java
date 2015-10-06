@@ -38,6 +38,10 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
+    if (this.modifyCallSites) {
+      SimpleDefinitionFinder defFinder = new SimpleDefinitionFinder(compiler);
+      compiler.setSimpleDefinitionFinder(defFinder);
+    }
     return new RemoveUnusedVars(
         compiler, removeGlobal, preserveFunctionExpressionNames,
         modifyCallSites);

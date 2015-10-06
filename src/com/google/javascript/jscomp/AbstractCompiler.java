@@ -198,6 +198,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract void setSymbolTable(GlobalTypeInfo symbolTable);
 
   /**
+   * Used by three passes that run in sequence (optimize-returns,
+   * optimize-parameters, remove-unused-variables), to avoid having them
+   * recompute it independently.
+   */
+  abstract SimpleDefinitionFinder getSimpleDefinitionFinder();
+
+  abstract void setSimpleDefinitionFinder(SimpleDefinitionFinder defFinder);
+
+  /**
    * Parses code for injecting.
    */
   abstract Node parseSyntheticCode(String code);

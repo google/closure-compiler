@@ -122,6 +122,7 @@ class RemoveUnusedVars
       ArrayListMultimap.create();
 
   private boolean modifyCallSites;
+  private boolean mustResetModifyCallSites;
 
   private CallSiteOptimizer callSiteOptimizer;
 
@@ -135,6 +136,7 @@ class RemoveUnusedVars
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     this.modifyCallSites = modifyCallSites;
+    this.mustResetModifyCallSites = false;
   }
 
   /**
@@ -144,14 +146,29 @@ class RemoveUnusedVars
   @Override
   public void process(Node externs, Node root) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
-    SimpleDefinitionFinder defFinder = null;
-
-    if (modifyCallSites) {
-      // For testing, allow the SimpleDefinitionFinder to be build now.
-      defFinder = new SimpleDefinitionFinder(compiler);
-      defFinder.process(externs, root);
+    SimpleDefinitionFinder defFinder = compiler.getSimpleDefinitionFinder();
+    if (this.modifyCallSites) {
+      // When RemoveUnusedVars is run after OptimizeCalls, this.modifyCallSites
+      // is true. But if OptimizeCalls stops making changes, PhaseOptimizer
+      // stops running it, so we come to RemoveUnusedVars and the defFinder is
+      // null. In this case, we temporarily set this.modifyCallSites to false
+      // for this run, and then reset it back to true at the end, for
+      // subsequent runs.
+      if (defFinder == null) {
+        this.modifyCallSites = false;
+        this.mustResetModifyCallSites = true;
+      } else {
+        defFinder.process(externs, root);
+      }
     }
     process(externs, root, defFinder);
+    // When doing OptimizeCalls, RemoveUnusedVars is the last pass in the
+    // sequence, so the def finder must not be used by any subsequent passes.
+    compiler.setSimpleDefinitionFinder(null);
+    if (this.mustResetModifyCallSites) {
+      this.modifyCallSites = true;
+      this.mustResetModifyCallSites = false;
+    }
   }
 
   @Override

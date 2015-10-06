@@ -631,7 +631,7 @@ public final class DefaultPassConfig extends PassConfig {
       // After inlining some of the variable uses, some variables are unused.
       // Re-run remove unused vars to clean it up.
       if (options.removeUnusedVars || options.removeUnusedLocalVars) {
-        passes.add(removeUnusedVars);
+        passes.add(getRemoveUnusedVars("removeUnusedVars", false));
       }
     }
 
@@ -814,12 +814,21 @@ public final class DefaultPassConfig extends PassConfig {
         passes.add(deadAssignmentsElimination);
       }
       if (!runOptimizeCalls) {
-        passes.add(removeUnusedVars);
+        passes.add(getRemoveUnusedVars("removeUnusedVars", false));
       }
     }
+
     if (runOptimizeCalls) {
-      passes.add(optimizeCallsAndRemoveUnusedVars);
+      passes.add(optimizeCalls);
+      // RemoveUnusedVars cleans up after optimizeCalls, so we run it here.
+      // It has a special name because otherwise PhaseOptimizer would change its
+      // position in the optimization loop.
+      if (options.optimizeCalls) {
+        passes.add(
+            getRemoveUnusedVars("removeUnusedVars_afterOptimizeCalls", true));
+      }
     }
+
     assertAllLoopablePasses(passes);
     return passes;
   }
@@ -1906,8 +1915,8 @@ public final class DefaultPassConfig extends PassConfig {
    * Optimizes unused function arguments, unused return values, and inlines
    * constant parameters. Also runs RemoveUnusedVars.
    */
-  private final PassFactory optimizeCallsAndRemoveUnusedVars =
-      new PassFactory("optimizeCalls_and_removeUnusedVars", false) {
+  private final PassFactory optimizeCalls =
+      new PassFactory("optimizeCalls", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       OptimizeCalls passes = new OptimizeCalls(compiler);
@@ -1915,21 +1924,9 @@ public final class DefaultPassConfig extends PassConfig {
         // Remove unused return values.
         passes.addPass(new OptimizeReturns(compiler));
       }
-
       if (options.optimizeParameters) {
         // Remove all parameters that are constants or unused.
         passes.addPass(new OptimizeParameters(compiler));
-      }
-
-      if (options.optimizeCalls) {
-        boolean removeOnlyLocals = options.removeUnusedLocalVars
-            && !options.removeUnusedVars;
-        boolean preserveAnonymousFunctionNames =
-            options.anonymousFunctionNaming !=
-            AnonymousFunctionNamingPolicy.OFF;
-        passes.addPass(
-            new RemoveUnusedVars(compiler, !removeOnlyLocals,
-                preserveAnonymousFunctionNames, true));
       }
       return passes;
     }
@@ -2125,22 +2122,24 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /** Removes variables that are never used. */
-  private final PassFactory removeUnusedVars =
-      new PassFactory("removeUnusedVars", false) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      boolean removeOnlyLocals = options.removeUnusedLocalVars
-          && !options.removeUnusedVars;
-      boolean preserveAnonymousFunctionNames =
-          options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
-      return new RemoveUnusedVars(
-          compiler,
-          !removeOnlyLocals,
-          preserveAnonymousFunctionNames,
-          false);
-    }
-  };
+  private PassFactory getRemoveUnusedVars(
+      String name, final boolean modifyCallSites) {
+    /** Removes variables that are never used. */
+    return new PassFactory(name, false) {
+      @Override
+      protected CompilerPass create(AbstractCompiler compiler) {
+        boolean removeOnlyLocals = options.removeUnusedLocalVars
+            && !options.removeUnusedVars;
+        boolean preserveAnonymousFunctionNames =
+            options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
+        return new RemoveUnusedVars(
+            compiler,
+            !removeOnlyLocals,
+            preserveAnonymousFunctionNames,
+            modifyCallSites);
+      }
+    };
+  }
 
   /**
    * Move global symbols to a deeper common module

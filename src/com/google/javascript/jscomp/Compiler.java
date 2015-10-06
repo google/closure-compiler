@@ -204,6 +204,9 @@ public class Compiler extends AbstractCompiler {
 
   public PerformanceTracker tracker;
 
+  // Used by optimize-returns, optimize-parameters and remove-unused-variables
+  private SimpleDefinitionFinder defFinder = null;
+
   // For use by the new type inference
   private GlobalTypeInfo symbolTable;
 
@@ -1238,6 +1241,16 @@ public class Compiler extends AbstractCompiler {
   @Override
   void setSymbolTable(GlobalTypeInfo symbolTable) {
     this.symbolTable = symbolTable;
+  }
+
+  @Override
+  SimpleDefinitionFinder getSimpleDefinitionFinder() {
+    return this.defFinder;
+  }
+
+  @Override
+  void setSimpleDefinitionFinder(SimpleDefinitionFinder defFinder) {
+    this.defFinder = defFinder;
   }
 
   //------------------------------------------------------------------------
