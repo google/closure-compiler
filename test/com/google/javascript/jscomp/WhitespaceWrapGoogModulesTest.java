@@ -27,7 +27,7 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
     languageOut = LanguageMode.ECMASCRIPT6;
     disableTypeCheck();
     
-    //enableCompareAsTree(false); 
+    enableCompareAsTree(false); 
     // otherwise "use strict" in the expected output moves,
     // from where it should be (deliberately to match ClosureBundler),
     // to the top of the AST and breaks the comparison.
