@@ -55,6 +55,7 @@ $jscomp.symbolCounter_ = 0;
  * Produces "symbols" (actually just unique strings).
  * @param {string} description
  * @return {symbol}
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.Symbol = function(description) {
   return /** @type {symbol} */ (
