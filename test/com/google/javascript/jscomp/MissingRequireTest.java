@@ -19,6 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
@@ -140,7 +142,31 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     String warning = "'goog.foo.Bar.Inner' used but not goog.require'd";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
-
+  
+  public void testFailEs6ClassExtendsSomethingWithoutNS() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    String js = "var goog = {}; class SubClass extends SomethingWithoutNS {}";
+    String warning = "'SomethingWithoutNS' used but not goog.require'd";
+    test(js, js, null, MISSING_REQUIRE_WARNING, warning);
+  }
+  
+  public void testEs6ClassExtendsSomethingInExterns() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    String js = "var goog = {}; class SubClass extends SomethingInExterns {}";
+    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs", 
+        "/** @constructor */ var SomethingInExterns;")); 
+    test(externs, js, js, null, null, null);
+  }
+  
+  public void testEs6ClassExtendsSomethingInExternsWithNS() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    String js = "var goog = {}; class SubClass extends MyExterns.SomethingInExterns {}";
+    List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs", 
+        "var MyExterns;\n" +
+        "/** @constructor */ MyExterns.SomethingInExterns;")); 
+    test(externs, js, js, null, null, null);
+  }
+  
   public void testFailWithNestedNewNodes() {
     String[] js =
         new String[] {"var goog = {}; goog.require('goog.foo.Bar'); "
