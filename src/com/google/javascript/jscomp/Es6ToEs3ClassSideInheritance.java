@@ -38,26 +38,26 @@ import java.util.Set;
  * <p>For example, {@link Es6ToEs3Converter} will convert
  *
  * <pre>
- * class Foo { static f() {} }
- * class Bar extends Foo {}
+ *   class Foo { static f() {} }
+ *   class Bar extends Foo {}
  * </pre>
  * to
  *
  * <pre>
- * function Foo() {}
- * Foo.f = function() {};
- * function Bar() {}
- * $jscomp.inherits(Foo, Bar);
+ *   function Foo() {}
+ *   Foo.f = function() {};
+ *   function Bar() {}
+ *   $jscomp.inherits(Foo, Bar);
  * </pre>
  *
  * and then this class will convert that to
  *
  * <pre>
- * function Foo() {}
- * Foo.f = function() {};
- * function Bar() {}
- * $jscomp.inherits(Foo, Bar);
- * Bar.f = Foo.f;
+ *   function Foo() {}
+ *   Foo.f = function() {};
+ *   function Bar() {}
+ *   $jscomp.inherits(Foo, Bar);
+ *   Bar.f = Foo.f;
  * </pre>
  *
  * @author mattloring@google.com (Matthew Loring)

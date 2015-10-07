@@ -210,4 +210,26 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @type {?} @suppress {visibility} */",
             "Subclass.property;"));
   }
+
+  public void testInheritFromExterns() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function ExternsClass() {}",
+            "ExternsClass.m = function() {};"),
+        LINE_JOINER.join(
+            "/** @constructor @struct @extends {ExternsClass} */",
+            "var CodeClass = function(var_args) {",
+            "  ExternsClass.apply(this,arguments)",
+            "};",
+            "$jscomp.inherits(CodeClass,ExternsClass)"),
+        LINE_JOINER.join(
+            "/** @constructor @struct @extends {ExternsClass} */",
+            "var CodeClass = function(var_args) {",
+            "  ExternsClass.apply(this,arguments)",
+            "};",
+            "$jscomp.inherits(CodeClass,ExternsClass);",
+            "/** @suppress {visibility} */",
+            "CodeClass.m = ExternsClass.m;"),
+        null, null);
+  }
 }

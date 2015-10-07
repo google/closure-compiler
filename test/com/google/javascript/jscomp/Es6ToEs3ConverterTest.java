@@ -725,6 +725,21 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.g = function() {};"));
   }
 
+  public void testInheritFromExterns() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */ function ExternsClass() {}",
+            "ExternsClass.m = function() {};"),
+        "class CodeClass extends ExternsClass {}",
+        LINE_JOINER.join(
+            "/** @constructor @struct @extends {ExternsClass} */",
+            "var CodeClass = function(var_args) {",
+            "  ExternsClass.apply(this,arguments)",
+            "};",
+            "$jscomp.inherits(CodeClass,ExternsClass)"),
+        null, null);
+  }
+
   public void testMockingInFunction() {
     // Classes cannot be reassigned in function scope.
     testError("function f() { class C {} C = function() {};}",
