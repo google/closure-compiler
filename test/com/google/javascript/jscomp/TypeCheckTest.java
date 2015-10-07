@@ -11872,6 +11872,32 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "var x = new Foo();\n");
   }
 
+  public void testSubtypeNotTemplated1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @interface @template T */ function A() {}",
+            "/** @constructor @implements {A<U>} @template U */ function Foo() {}",
+            "function f(/** (!Object|!Foo<string>) */ x) {",
+            "  var /** null */ n = x;",
+            "}"),
+        "initializing variable\n"
+        + "found   : Object\n"
+        + "required: null");
+  }
+
+  public void testSubtypeNotTemplated2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @interface @template T */ function A() {}",
+            "/** @constructor @implements {A<U>} @template U */ function Foo() {}",
+            "function f(/** (!Object|!Foo) */ x) {",
+            "  var /** null */ n = x;",
+            "}"),
+        "initializing variable\n"
+        + "found   : Object\n"
+        + "required: null");
+  }
+
   public void testTemplateTypeWithUnresolvedType() throws Exception {
     testClosureTypes(
         "var goog = {};\n" +

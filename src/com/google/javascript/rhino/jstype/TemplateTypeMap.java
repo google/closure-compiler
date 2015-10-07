@@ -329,7 +329,7 @@ public class TemplateTypeMap implements Serializable {
   }
 
   boolean hasAnyTemplateTypesInternal() {
-    for (JSType templateValue : templateValues) {
+    for (JSType templateValue : addUnknownValues().resolvedTemplateValues) {
       if (templateValue.hasAnyTemplateTypes()) {
         return true;
       }
