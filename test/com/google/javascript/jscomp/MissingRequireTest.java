@@ -19,10 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
+import java.util.List;
 
 /**
  * Tests for the "missing requires" check in {@link CheckRequiresForConstructors}.

@@ -183,7 +183,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
             (requires == null || (!requires.containsKey(className)
                                   && !requires.containsKey(outermostClassName)
                                   && !requires.containsKey(parentNamespace)));
-        boolean notProvidedByExterns = scopeVar==null || !scopeVar.isExtern();
+        boolean notProvidedByExterns = scopeVar == null || !scopeVar.isExtern();
         if (notProvidedByConstructors && notProvidedByRequires && notProvidedByExterns
             && !classNames.contains(className)) {
           // TODO(mknichel): If the symbol is not explicitly provided, find the next best
