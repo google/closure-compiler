@@ -1097,6 +1097,7 @@ Array.prototype.entries;
  * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
  * @param {S=} opt_this
  * @return {T|undefined}
+ * @this {IArrayLike<T>|Array<T>|string}
  * @template T,S
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.find
  */
@@ -1107,6 +1108,7 @@ Array.prototype.find = function(predicate, opt_this) {};
  * @param {!function(this:S, T, number, !Array<T>): boolean} predicate
  * @param {S=} opt_this
  * @return {number}
+ * @this {IArrayLike<T>|Array<T>|string}
  * @template T,S
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.findindex
  */
