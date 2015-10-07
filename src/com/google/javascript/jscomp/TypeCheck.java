@@ -205,7 +205,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   static final DiagnosticType UNKNOWN_EXPR_TYPE =
       DiagnosticType.disabled("JSC_UNKNOWN_EXPR_TYPE",
-          "could not determine the type of this expression");
+          "could not determine the type of expression: {0}");
 
   static final DiagnosticType UNRESOLVED_TYPE =
       DiagnosticType.warning("JSC_UNRESOLVED_TYPE",
@@ -851,12 +851,32 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       nullCount++;
     } else if (type.isUnknownType()) {
       if (reportUnknownTypes) {
-        compiler.report(t.makeError(n, UNKNOWN_EXPR_TYPE));
+        compiler.report(t.makeError(n, UNKNOWN_EXPR_TYPE, getShortSource(n)));
       }
       unknownCount++;
     } else {
       typedCount++;
     }
+  }
+
+  /** 
+   * Formats the node as source code flattened on a single line, truncated in the middle
+   * if over 100 chars. For identifying an expression precisely, 
+   * where the error might only have a line number and no precise char offset, 
+   * and where multiple expressions might be present.
+   */
+  private String getShortSource(Node n) {
+    CompilerOptions compilerOptions = new CompilerOptions();
+    compilerOptions.setLineLengthThreshold(Integer.MAX_VALUE);
+    String src = new CodePrinter.Builder(n)
+        .setCompilerOptions(compilerOptions)
+        .setTypeRegistry(compiler.getTypeRegistry())
+        .setPrettyPrint(false)
+        .setLineBreak(false)
+        .setOutputTypes(false)
+        .build();
+    if (src.length() > 100) src = src.substring(0, 50)+" ... "+src.substring(src.length()-50);
+    return src;
   }
 
   /**
