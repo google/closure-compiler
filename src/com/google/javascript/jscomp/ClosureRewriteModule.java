@@ -138,7 +138,7 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (isModuleFile(n) || isLoadModuleCall(n)) {
+    if (NodeUtil.isModuleFile(n) || isLoadModuleCall(n)) {
       enterModule(n);
     }
     if (isGetModuleCall(n)) {
@@ -245,25 +245,12 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
   }
 
 
-  private static boolean isModuleFile(Node n) {
-    return n.isScript() && n.hasChildren()
-        && isGoogModuleCall(n.getFirstChild());
-  }
-
   private void enterModule(Node n) {
     current = new ModuleDescription(n);
   }
 
   private boolean inModule() {
     return current != null;
-  }
-
-  private static boolean isGoogModuleCall(Node n) {
-    if (NodeUtil.isExprCall(n)) {
-      Node target = n.getFirstChild().getFirstChild();
-      return (target.matchesQualifiedName("goog.module"));
-    }
-    return false;
   }
 
   private static boolean isGetModuleCallAlias(Node n) {
