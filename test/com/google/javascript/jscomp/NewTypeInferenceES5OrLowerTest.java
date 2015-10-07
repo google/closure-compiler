@@ -8996,6 +8996,20 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheck(
         "(/** @dict */ {}).toString();", NewTypeInference.ILLEGAL_PROPERTY_ACCESS);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** !Object */ o) {",
+        "  if ('num' in o) {",
+        "    o.num++;",
+        "  }",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** !Object */ x, y) {",
+        "  if ((y in x) && x.otherProp) {",
+        "    x.otherProp++;",
+        "  }",
+        "}"));
   }
 
   public void testStructWithIn() {

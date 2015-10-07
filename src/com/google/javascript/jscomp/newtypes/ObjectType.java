@@ -43,6 +43,13 @@ final class ObjectType implements TypeWithProperties {
   private final PersistentMap<String, Property> props;
   private final ObjectKind objectKind;
 
+  // Currently, TOP_OBJECT has two conflicting roles: the supertype of all
+  // object types, and the type of an empty object literal.
+  // In particular, its kind is UNRESTRICTED, which is confusing, because this
+  // kind is a subkind of STRUCT and DICT.
+  // We take that into account in the specialize method, but not yet in meet
+  // and join.
+  // TODO(dimvar): Find a clean way to split the two types & avoid the confusion
   static final ObjectType TOP_OBJECT = ObjectType.makeObjectType(
       null, null, null, false, ObjectKind.UNRESTRICTED);
   static final ObjectType TOP_STRUCT = ObjectType.makeObjectType(
@@ -571,7 +578,7 @@ final class ObjectType implements TypeWithProperties {
   ObjectType specialize(ObjectType other) {
     Preconditions.checkState(
         areRelatedClasses(this.nominalType, other.nominalType));
-    if (this == TOP_OBJECT) {
+    if (this == TOP_OBJECT && other.objectKind.isUnrestricted()) {
       return other;
     }
     NominalType resultNomType =

@@ -54,15 +54,19 @@ class ObjectKind {
     return vals[ok1.mask | ok2.mask];
   }
 
+  boolean isUnrestricted() {
+    return this.mask == UNRESTRICTED_MASK;
+  }
+
   boolean isStruct() {
-    return (mask & STRUCT_MASK) != 0;
+    return (this.mask & STRUCT_MASK) != 0;
   }
 
   boolean isDict() {
-    return (mask & DICT_MASK) != 0;
+    return (this.mask & DICT_MASK) != 0;
   }
 
   boolean isSubtypeOf(ObjectKind other) {
-    return mask == (mask & other.mask);
+    return this.mask == (this.mask & other.mask);
   }
 }
