@@ -176,14 +176,10 @@ public final class DefaultPassConfig extends PassConfig {
   }
   
   @Override
-  protected List<PassFactory> getAlwaysPreChecks() {
-    List<PassFactory> preChecks = new ArrayList<>();
-    
-    if (options.wrapGoogModulesForWhitespaceOnly) {
-      preChecks.add(whitespaceWrapGoogModules);
-    }
-    
-    return preChecks;
+  protected List<PassFactory> getWhitespaceOnlyPasses() {
+    List<PassFactory> passes = new ArrayList<>();
+    passes.add(whitespaceWrapGoogModules);
+    return passes;
   }
 
   @Override

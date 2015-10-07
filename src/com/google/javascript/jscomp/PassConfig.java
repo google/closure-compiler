@@ -106,7 +106,7 @@ public abstract class PassConfig {
    * For very specific cases where processing is required even in a mode which is intended 
    * not to have any processing - specifically introduced to support goog.module() usage.
    */
-  protected List<PassFactory> getAlwaysPreChecks() {
+  protected List<PassFactory> getWhitespaceOnlyPasses() {
     return Collections.emptyList();
   }
 
@@ -254,8 +254,8 @@ public abstract class PassConfig {
       this.delegate = delegate;
     }
     
-    @Override protected List<PassFactory> getAlwaysPreChecks() {
-      return delegate.getAlwaysPreChecks();
+    @Override protected List<PassFactory> getWhitespaceOnlyPasses() {
+      return delegate.getWhitespaceOnlyPasses();
     }
 
     @Override protected List<PassFactory> getChecks() {
