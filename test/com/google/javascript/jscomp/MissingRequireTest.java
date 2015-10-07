@@ -162,8 +162,8 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     String js = "var goog = {}; class SubClass extends MyExterns.SomethingInExterns {}";
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs", 
-        "var MyExterns;\n" +
-        "/** @constructor */ MyExterns.SomethingInExterns;")); 
+        "var MyExterns;\n"
+        + "/** @constructor */ MyExterns.SomethingInExterns;")); 
     test(externs, js, js, null, null, null);
   }
   
