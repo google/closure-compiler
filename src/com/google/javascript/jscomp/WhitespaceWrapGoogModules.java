@@ -22,52 +22,37 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    if (!isModuleFile(scriptRoot)) return;
+    if (!NodeUtil.isModuleFile(scriptRoot)) return;
 
     // As per ClosureBundler:
     /*
-	      // add the prefix on the first line so the line numbers aren't affected.
-	      out.append(
-	          "goog.loadModule(function(exports) {"
-	          + "'use strict';");
-	      append(out, Mode.NORMAL, contents);
-	      out.append(
-	          "\n" // terminate any trailing single line comment.
-	          + ";" // terminate any trailing expression.
-	          + "return exports;});\n");
-	      appendSourceUrl(out, Mode.NORMAL);
+      // add the prefix on the first line so the line numbers aren't affected.
+      out.append(
+          "goog.loadModule(function(exports) {"
+          + "'use strict';");
+      append(out, Mode.NORMAL, contents);
+      out.append(
+          "\n" // terminate any trailing single line comment.
+          + ";" // terminate any trailing expression.
+          + "return exports;});\n");
+      appendSourceUrl(out, Mode.NORMAL);
      */
 
     Node block = IR.block();
     block.addChildToBack(IR.exprResult(IR.string("use strict"))); // needs to be explicit, to match ClosureBundler
-    for (Node c = scriptRoot.getFirstChild(); c != null; c = c.getNext()) {
-      block.addChildToBack(c.cloneTree());
+    if (scriptRoot.hasChildren()) {
+      block.addChildrenToBack(scriptRoot.removeChildren());
     }
     block.addChildToBack(IR.returnNode(IR.name("exports")));
 
     Node loadMod = IR.exprResult(IR.call(
         IR.getprop(IR.name("goog"), IR.string("loadModule")),
-        IR.function(IR.name(""), IR.paramList(IR.name("exports")), block)));
-    // ? .srcrefTree(srcref);
+        IR.function(IR.name(""), IR.paramList(IR.name("exports")), block)))
+        .srcrefTree(scriptRoot);
 
     scriptRoot.removeChildren();
     scriptRoot.addChildToBack(loadMod);
     compiler.reportCodeChange();
-  }
-
-  // from ClosureRewriteModule, TODO move to common area
-
-  private static boolean isModuleFile(Node n) {
-    return n.isScript() && n.hasChildren()
-        && isGoogModuleCall(n.getFirstChild());
-  }
-
-  private static boolean isGoogModuleCall(Node n) {
-    if (NodeUtil.isExprCall(n)) {
-      Node target = n.getFirstChild().getFirstChild();
-      return (target.matchesQualifiedName("goog.module"));
-    }
-    return false;
   }
 
 }
