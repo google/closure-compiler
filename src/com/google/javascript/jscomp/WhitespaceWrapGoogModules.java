@@ -70,7 +70,6 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
     }
     block.addChildToBack(IR.returnNode(IR.name("exports")).srcrefTree(scriptRoot));
     
-    scriptRoot.removeChildren();
     scriptRoot.addChildToBack(loadMod);
     compiler.reportCodeChange();
   }
