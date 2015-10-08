@@ -2362,7 +2362,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   public void testFileOverviewMultiLine() throws Exception {
     JSDocInfo jsdoc = parseFileOverview("@fileoverview Pie is \n * good! */");
-    assertThat(jsdoc.getFileOverview()).isEqualTo("Pie is\n good!");
+    assertThat(jsdoc.getFileOverview()).isEqualTo("Pie is\ngood!");
   }
 
   public void testFileOverviewDuplicate() throws Exception {
@@ -4125,6 +4125,97 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "extra @nocollapse tag");
   }
 
+  public void testPreserveWhitespace1() {
+    JSDocInfo jsdoc = preserveWhitespaceParse(
+        "this is a nice comment\n"
+            + " * that spans multiple lines\n"
+            + " *     with custom\n"
+            + " *     formatting\n"
+            + " * @author abc@google.com */");
+
+    assertThat(jsdoc.getBlockDescription()).isEqualTo(
+        "this is a nice comment\n that spans multiple lines\n"
+            + "     with custom\n"
+            + "     formatting\n"
+            + " ");
+
+    assertDocumentationInMarker(
+        assertAnnotationMarker(jsdoc, "author", 4, 3), "abc@google.com", 10, 4, 24);
+  }
+
+  public void testPreserveWhitespace2() {
+    JSDocInfo jsdoc = preserveWhitespaceParse(
+        "@param {string} x this is a nice comment\n"
+            + " * that spans multiple lines\n"
+            + " *     with custom\n"
+            + " *     formatting\n"
+            + " * @param {string} y */");
+
+    assertThat(jsdoc.getDescriptionForParameter("x")).isEqualTo(
+        " this is a nice comment\n that spans multiple lines\n"
+            + "     with custom\n"
+            + "     formatting\n"
+            + " ");
+  }
+
+  public void testPreserveWhitespace3() {
+    JSDocInfo jsdoc = preserveWhitespaceParse(
+        "@return {string} this is a nice comment\n"
+            + " * that spans multiple lines\n"
+            + " *     with custom\n"
+            + " *     formatting\n"
+            + " * @param {string} y */");
+
+    assertThat(jsdoc.getReturnDescription()).isEqualTo(
+        "this is a nice comment\n that spans multiple lines\n"
+            + "     with custom\n"
+            + "     formatting\n"
+            + " ");
+  }
+
+  public void testPreserveWhitespace4() {
+    JSDocInfo jsdoc = preserveWhitespaceParse(
+        "@throws {string} this is a nice comment\n"
+            + " * that spans multiple lines\n"
+            + " *     with custom\n"
+            + " *     formatting\n"
+            + " * @param {string} y */");
+
+    assertThat(jsdoc.getMarkers().iterator().next().getDescription().getItem())
+        .isEqualTo("this is a nice comment\n that spans multiple lines\n"
+              + "     with custom\n"
+              + "     formatting\n"
+              + " ");
+  }
+
+  public void testPreserveWhitespace5() {
+    JSDocInfo jsdoc = preserveWhitespaceParse(
+        "@desc this is a nice comment\n"
+            + " * that spans multiple lines\n"
+            + " *     with custom\n"
+            + " *     formatting\n"
+            + " */");
+
+    assertThat(jsdoc.getDescription()).isEqualTo(
+        " this is a nice comment\n"
+            + " that spans multiple lines\n"
+            + "     with custom\n"
+            + "     formatting\n");
+  }
+
+  public void testPreserveWhitespace6() throws Exception {
+    JSDocInfo info = preserveWhitespaceParse(
+        "This is the typedef description\n"
+            + " *     with multiple lines\n"
+            + " * @typedef \n {string}*/");
+    assertThat(info.getBlockDescription()).isEqualTo(
+        "This is the typedef description\n"
+            + "     with multiple lines\n"
+            + " ");
+    assertThat(info.hasTypedefType()).isTrue();
+    assertTypeEquals(STRING_TYPE, info.getTypedefType());
+  }
+
   /**
    * Asserts that a documentation field exists on the given marker.
    *
@@ -4290,28 +4381,33 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   @SuppressWarnings("unused")
   private JSDocInfo parseFileOverviewWithoutDoc(String comment,
                                                 String... warnings) {
-    return parse(comment, false, true, warnings);
+    return parse(comment, false, true, false, warnings);
   }
 
   private JSDocInfo parseFileOverview(String comment, String... warnings) {
-    return parse(comment, true, true, warnings);
+    return parse(comment, true, true, false, warnings);
+  }
+
+  private JSDocInfo preserveWhitespaceParse(String comment, String... warnings) {
+    return parse(comment, true, false, true, warnings);
   }
 
   private JSDocInfo parse(String comment, String... warnings) {
-    return parse(comment, false, warnings);
+    return parse(comment, false, false, false, warnings);
   }
 
   private JSDocInfo parse(String comment, boolean parseDocumentation,
                           String... warnings) {
-    return parse(comment, parseDocumentation, false, warnings);
+    return parse(comment, parseDocumentation, false, false, warnings);
   }
 
   private JSDocInfo parse(String comment, boolean parseDocumentation,
-      boolean parseFileOverview, String... warnings) {
+      boolean parseFileOverview, boolean preserveWhitespace, String... warnings) {
     TestErrorReporter errorReporter = new TestErrorReporter(null, warnings);
 
+    boolean isIdeMode = parseDocumentation;
     Config config = new Config(extraAnnotations, extraSuppressions,
-        parseDocumentation, LanguageMode.ECMASCRIPT3);
+        isIdeMode, parseDocumentation, preserveWhitespace, LanguageMode.ECMASCRIPT3);
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
     Node associatedNode = new Node(Token.SCRIPT);
     associatedNode.setInputId(new InputId(file.getName()));

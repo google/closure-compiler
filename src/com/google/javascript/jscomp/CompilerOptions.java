@@ -134,6 +134,7 @@ public class CompilerOptions {
   public boolean ideMode;
 
   private boolean parseJsDocDocumentation = false;
+  private boolean preserveJsDocWhitespace = false;
 
   /**
    * Even if checkTypes is disabled, clients might want to still infer types.
@@ -1777,6 +1778,28 @@ public class CompilerOptions {
    */
   public boolean isParseJsDocDocumentation() {
     return this.ideMode || this.parseJsDocDocumentation;
+  }
+
+  /**
+   * Enables or disables the preservation of all whitespace and formatting within a JSDoc
+   * comment. By default, whitespace is collapsed for all comments except @license and
+   * @preserve blocks,
+   *
+   * <p>Setting this option has no effect if {@link #isParseJsDocDocumentation()}
+   * returns false.
+   *
+   * @param preserveJsDocWhitespace
+   *           True to preserve whitespace in text extracted from JSDoc comments.
+   */
+  public void setPreserveJsDocWhitespace(boolean preserveJsDocWhitespace) {
+    this.preserveJsDocWhitespace = preserveJsDocWhitespace;
+  }
+
+  /**
+   * @return Whether to preserve whitespace in all text extracted from JSDoc comments.
+   */
+  public boolean isPreserveJsDocWhitespace() {
+    return preserveJsDocWhitespace;
   }
 
   /**

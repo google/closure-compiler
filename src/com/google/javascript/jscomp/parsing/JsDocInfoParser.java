@@ -110,6 +110,7 @@ public final class JsDocInfoParser {
 
   private final Map<String, Annotation> annotationNames;
   private final Set<String> suppressionNames;
+  private final boolean preserveWhitespace;
   private static final Set<String> modifiesAnnotationKeywords =
       ImmutableSet.of("this", "arguments");
   private static final Set<String> idGeneratorAnnotationKeywords =
@@ -161,6 +162,7 @@ public final class JsDocInfoParser {
     }
     this.annotationNames = config.annotationNames;
     this.suppressionNames = config.suppressionNames;
+    this.preserveWhitespace = config.preserveJsDocWhitespace;
 
     this.errorReporter = errorReporter;
     this.templateNode = this.createTemplateNode();
@@ -476,9 +478,8 @@ public final class JsDocInfoParser {
         case FILE_OVERVIEW:
           String fileOverview = "";
           if (jsdocBuilder.shouldParseDocumentation() && !lookAheadForAnnotation()) {
-            ExtractionInfo fileOverviewInfo =
-                extractMultilineTextualBlock(token,
-                    WhitespaceOption.TRIM);
+            ExtractionInfo fileOverviewInfo = extractMultilineTextualBlock(
+                token, getWhitespaceOption(WhitespaceOption.TRIM), false);
 
             fileOverview = fileOverviewInfo.string;
 
@@ -494,8 +495,9 @@ public final class JsDocInfoParser {
 
         case LICENSE:
         case PRESERVE:
-          ExtractionInfo preserveInfo =
-              extractMultilineTextualBlock(token, WhitespaceOption.PRESERVE);
+          // Always use PRESERVE for @license and @preserve blocks.
+          ExtractionInfo preserveInfo = extractMultilineTextualBlock(
+              token, WhitespaceOption.PRESERVE, true);
 
           String preserve = preserveInfo.string;
 
@@ -867,8 +869,9 @@ public final class JsDocInfoParser {
         case TEMPLATE: {
           int templateLineno = stream.getLineno();
           int templateCharno = stream.getCharno();
+          // Always use TRIM for template TTL expressions.
           ExtractionInfo templateInfo =
-              extractMultilineTextualBlock(token, WhitespaceOption.TRIM);
+              extractMultilineTextualBlock(token, WhitespaceOption.TRIM, false);
           String templateString = templateInfo.string;
           // TTL stands for type transformation language
           // TODO(lpino): This delimiter needs to be further discussed
@@ -1574,7 +1577,12 @@ public final class JsDocInfoParser {
   }
 
   private ExtractionInfo extractMultilineTextualBlock(JsDocToken token) {
-    return extractMultilineTextualBlock(token, WhitespaceOption.SINGLE_LINE);
+    return extractMultilineTextualBlock(
+        token, getWhitespaceOption(WhitespaceOption.SINGLE_LINE), false);
+  }
+
+  private WhitespaceOption getWhitespaceOption(WhitespaceOption defaultValue) {
+    return preserveWhitespace ? WhitespaceOption.PRESERVE : defaultValue;
   }
 
   private enum WhitespaceOption {
@@ -1601,33 +1609,75 @@ public final class JsDocInfoParser {
    *
    * @param token The start token.
    * @param option How to handle whitespace.
+   * @param includeAnnotations Whether the extracted text may include
+   *     annotations. If set to false, text extraction will stop on the first
+   *     encountered annotation token.
    *
    * @return The extraction information.
    */
-  @SuppressWarnings("fallthrough")
   private ExtractionInfo extractMultilineTextualBlock(JsDocToken token,
-                                                      WhitespaceOption option) {
-
+                                                      WhitespaceOption option,
+                                                      boolean includeAnnotations) {
     if (token == JsDocToken.EOC || token == JsDocToken.EOL ||
         token == JsDocToken.EOF) {
       return new ExtractionInfo("", token);
     }
+    return extractMultilineComment(token, option, true, includeAnnotations);
+  }
 
-    stream.update();
-    int startLineno = stream.getLineno();
-    int startCharno = stream.getCharno() + 1;
 
-    // Read the content from the first line.
-    String line = getRemainingJSDocLine();
-    if (option != WhitespaceOption.PRESERVE) {
-      line = line.trim();
-    }
+  /**
+   * Extracts the top-level block comment from the JsDoc comment, if any.
+   * This method differs from the extractMultilineTextualBlock in that it
+   * terminates under different conditions (it doesn't have the same
+   * prechecks), it does not first read in the remaining of the current
+   * line and its conditions for ignoring the "*" (STAR) are different.
+   *
+   * @param token The starting token.
+   *
+   * @return The extraction information.
+   */
+  private ExtractionInfo extractBlockComment(JsDocToken token) {
+    return extractMultilineComment(token, getWhitespaceOption(WhitespaceOption.TRIM), false, false);
+  }
+
+  /**
+   * Extracts text from the stream until the end of the comment, end of the
+   * file, or an annotation token is encountered. If the text is being
+   * extracted for a JSDoc marker, the first line in the stream will always be
+   * included in the extract text.
+   *
+   * @param token The starting token.
+   * @param option How to handle whitespace.
+   * @param isMarker Whether the extracted text is for a JSDoc marker or a
+   *     block comment.
+   * @param includeAnnotations Whether the extracted text may include
+   *     annotations. If set to false, text extraction will stop on the first
+   *     encountered annotation token.
+   *
+   * @return The extraction information.
+   */
+  private ExtractionInfo extractMultilineComment(
+      JsDocToken token, WhitespaceOption option, boolean isMarker, boolean includeAnnotations) {
 
     StringBuilder builder = new StringBuilder();
-    builder.append(line);
+    int startLineno = -1;
+    int startCharno = -1;
 
-    state = State.SEARCHING_ANNOTATION;
-    token = next();
+    if (isMarker) {
+      stream.update();
+      startLineno = stream.getLineno();
+      startCharno = stream.getCharno() + 1;
+
+      String line = getRemainingJSDocLine();
+      if (option != WhitespaceOption.PRESERVE) {
+        line = line.trim();
+      }
+      builder.append(line);
+
+      state = State.SEARCHING_ANNOTATION;
+      token = next();
+    }
 
     boolean ignoreStar = false;
 
@@ -1656,7 +1706,7 @@ public final class JsDocInfoParser {
 
         case EOL:
           if (option != WhitespaceOption.SINGLE_LINE) {
-            builder.append("\n");
+            builder.append('\n');
           }
 
           ignoreStar = true;
@@ -1676,7 +1726,8 @@ public final class JsDocInfoParser {
                 builder.append(' ');
               }
               lineStartChar = -1;
-            } else if (builder.length() > 0) {
+            } else if (builder.length() > 0
+                && builder.charAt(builder.length() - 1) != '\n') {
               // All tokens must be separated by a space.
               builder.append(' ');
             }
@@ -1686,18 +1737,16 @@ public final class JsDocInfoParser {
               token == JsDocToken.EOF ||
               // When we're capturing a license block, annotations
               // in the block are OK.
-              (token == JsDocToken.ANNOTATION &&
-               option != WhitespaceOption.PRESERVE)) {
+              (token == JsDocToken.ANNOTATION && !includeAnnotations)) {
             String multilineText = builder.toString();
 
             if (option != WhitespaceOption.PRESERVE) {
               multilineText = multilineText.trim();
             }
 
-            int endLineno = stream.getLineno();
-            int endCharno = stream.getCharno();
-
-            if (multilineText.length() > 0) {
+            if (isMarker && !multilineText.isEmpty()) {
+              int endLineno = stream.getLineno();
+              int endCharno = stream.getCharno();
               jsdocBuilder.markText(multilineText, startLineno, startCharno,
                   endLineno, endCharno);
             }
@@ -1707,71 +1756,12 @@ public final class JsDocInfoParser {
 
           builder.append(toString(token));
 
-          line = getRemainingJSDocLine();
+          String line = getRemainingJSDocLine();
 
           if (option != WhitespaceOption.PRESERVE) {
             line = trimEnd(line);
           }
 
-          builder.append(line);
-          token = next();
-      }
-    } while (true);
-  }
-
-
-  /**
-   * Extracts the top-level block comment from the JsDoc comment, if any.
-   * This method differs from the extractMultilineTextualBlock in that it
-   * terminates under different conditions (it doesn't have the same
-   * prechecks), it does not first read in the remaining of the current
-   * line and its conditions for ignoring the "*" (STAR) are different.
-   *
-   * @param token The starting token.
-   *
-   * @return The extraction information.
-   */
-  private ExtractionInfo extractBlockComment(JsDocToken token) {
-    StringBuilder builder = new StringBuilder();
-
-    boolean ignoreStar = true;
-
-    do {
-      switch (token) {
-        case ANNOTATION:
-        case EOC:
-        case EOF:
-          return new ExtractionInfo(builder.toString().trim(), token);
-
-        case STAR:
-          if (!ignoreStar) {
-            if (builder.length() > 0) {
-              builder.append(' ');
-            }
-
-            builder.append('*');
-          }
-
-          token = next();
-          continue;
-
-        case EOL:
-          ignoreStar = true;
-          builder.append('\n');
-          token = next();
-          continue;
-
-        default:
-          if (!ignoreStar && builder.length() > 0) {
-            builder.append(' ');
-          }
-
-          ignoreStar = false;
-
-          builder.append(toString(token));
-
-          String line = getRemainingJSDocLine();
-          line = trimEnd(line);
           builder.append(line);
           token = next();
       }

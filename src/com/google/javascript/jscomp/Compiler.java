@@ -2096,6 +2096,7 @@ public class Compiler extends AbstractCompiler {
     return ParserRunner.createConfig(
         isIdeMode(),
         options.isParseJsDocDocumentation(),
+        options.isPreserveJsDocWhitespace(),
         mode,
         options.extraAnnotationNames);
   }

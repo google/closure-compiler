@@ -53,11 +53,12 @@ public final class ParserRunner {
                                     LanguageMode languageMode,
                                     Set<String> extraAnnotationNames) {
     return createConfig(
-        isIdeMode, isIdeMode, languageMode, extraAnnotationNames);
+        isIdeMode, isIdeMode, false, languageMode, extraAnnotationNames);
   }
 
   public static Config createConfig(boolean isIdeMode,
                                     boolean parseJsDocDocumentation,
+                                    boolean preserveJsDocWhitespace,
                                     LanguageMode languageMode,
                                     Set<String> extraAnnotationNames) {
     initResourceConfig();
@@ -69,7 +70,7 @@ public final class ParserRunner {
       effectiveAnnotationNames.addAll(extraAnnotationNames);
     }
     return new Config(effectiveAnnotationNames, suppressionNames,
-        isIdeMode, parseJsDocDocumentation, languageMode);
+        isIdeMode, parseJsDocDocumentation, preserveJsDocWhitespace, languageMode);
   }
 
   public static Set<String> getReservedVars() {
