@@ -279,7 +279,7 @@ function webkitSpeechRecognition() {}
  * @type {SpeechSynthesis}
  * @see https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html#tts-section
  */
-window.speechSynthesis;
+var speechSynthesis;
 
 
 /**

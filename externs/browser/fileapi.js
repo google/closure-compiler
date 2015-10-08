@@ -890,9 +890,6 @@ URL.revokeObjectURL = function(url) {};
  */
 function webkitURL(urlString, opt_base) {}
 
-/** @constructor */
-window.webkitURL = webkitURL;
-
 /**
  * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
  * @param {!Object} obj

@@ -156,20 +156,7 @@ Notification.prototype.onshow;
  */
 Notification.prototype.onclick;
 
-/**
- * @constructor
- */
-window.Notification = Notification;
 
-/**
- * @type {string}
- */
-window.Notification.permission;
-
-/**
- * @param {NotificationPermissionCallback=} opt_callback
- */
-window.Notification.requestPermission = function(opt_callback) {};
 
 /**
  * @typedef {function(string)}
