@@ -45,11 +45,6 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
     return options;
   }
 
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
-  }
-
   public void testGoogModuleRewrite() {
     test(
         LINE_JOINER.join(
