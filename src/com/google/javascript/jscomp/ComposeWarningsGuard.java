@@ -68,8 +68,7 @@ public class ComposeWarningsGuard extends WarningsGuard {
 
       // If the warnings guards have the same priority, the one that
       // was added last wins.
-      return orderOfAddition.get(b).intValue() -
-          orderOfAddition.get(a).intValue();
+      return orderOfAddition.get(b).intValue() - orderOfAddition.get(a).intValue();
     }
   }
 
