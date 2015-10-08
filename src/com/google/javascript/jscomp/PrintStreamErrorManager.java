@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
+
 import java.io.PrintStream;
 
 /**

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;

@@ -31,7 +31,6 @@ import com.google.javascript.rhino.jstype.ObjectType;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -56,12 +55,13 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   public ClosureCodingConvention(CodingConvention wrapped) {
     super(wrapped);
 
-    Set<String> props = new HashSet<>(ImmutableSet.of(
+    ImmutableSet.Builder<String> props = ImmutableSet.builder();
+    props.add(
         "superClass_",
         "instance_",
-        "getInstance"));
+        "getInstance");
     props.addAll(wrapped.getIndirectlyDeclaredProperties());
-    indirectlyDeclaredProperties = ImmutableSet.copyOf(props);
+    indirectlyDeclaredProperties = props.build();
   }
 
   /**

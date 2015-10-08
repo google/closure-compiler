@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-
 /**
  * Gives anonymous function names that are optimized to be small and provides a
  * mapping back to the original names. This makes it way easier to debug because

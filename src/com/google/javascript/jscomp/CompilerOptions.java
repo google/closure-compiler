@@ -1135,7 +1135,7 @@ public class CompilerOptions {
    */
   private static Map<String, Node> getReplacementsHelper(
       Map<String, Object> source) {
-    Map<String, Node> map = new HashMap<>();
+    ImmutableMap.Builder<String, Node> map = ImmutableMap.builder();
     for (Map.Entry<String, Object> entry : source.entrySet()) {
       String name = entry.getKey();
       Object value = entry.getValue();
@@ -1150,7 +1150,7 @@ public class CompilerOptions {
         map.put(name, IR.string((String) value));
       }
     }
-    return map;
+    return map.build();
   }
 
   /**
@@ -1752,7 +1752,7 @@ public class CompilerOptions {
   public void setPropertyInvalidationErrors(
       Map<String, CheckLevel> propertyInvalidationErrors) {
     this.propertyInvalidationErrors =
-         new HashMap<>(propertyInvalidationErrors);
+         ImmutableMap.copyOf(propertyInvalidationErrors);
   }
 
   public void setIdeMode(boolean ideMode) {

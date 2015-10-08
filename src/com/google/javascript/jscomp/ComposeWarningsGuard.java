@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;

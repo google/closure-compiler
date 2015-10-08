@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * Garbage collection for variable and function definitions. Basically performs
  * a mark-and-sweep type algorithm over the JavaScript parse tree.

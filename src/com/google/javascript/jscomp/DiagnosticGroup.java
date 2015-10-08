@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -85,14 +84,14 @@ public class DiagnosticGroup implements Serializable {
    * Create a composite group.
    */
   public DiagnosticGroup(String name, DiagnosticGroup ...groups) {
-    Set<DiagnosticType> set = new HashSet<>();
+    ImmutableSet.Builder<DiagnosticType> set = ImmutableSet.builder();
 
     for (DiagnosticGroup group : groups) {
       set.addAll(group.types);
     }
 
     this.name = name;
-    this.types = ImmutableSet.copyOf(set);
+    this.types = set.build();
   }
 
   /**
