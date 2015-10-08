@@ -111,6 +111,25 @@ $jscomp.makeIterator = function(iterable) {
 };
 
 /**
+ * @param {string|!Array<T>|!Iterable<T>} iterable
+ * @return {!Array<T>}
+ * @template T
+ */
+$jscomp.arrayFromIterable = function(iterable) {
+  if (iterable instanceof Array) {
+    return iterable;
+  }
+
+  var arr = [];
+  var iterator = $jscomp.makeIterator(iterable);
+  var i;
+  while (!(i = iterator.next()).done) {
+    arr.push(i.value);
+  }
+  return arr;
+};
+
+/**
  * Inherit the prototype methods and static methods from one constructor
  * into another.
  *

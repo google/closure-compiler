@@ -47,7 +47,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
           // Stub out just enough of es6_runtime.js to satisfy the typechecker.
           // In a real compilation, the entire library will be loaded by
           // the InjectEs6RuntimeLibrary pass.
-          "$jscomp.inherits = function(x,y) {};");
+          "$jscomp.inherits = function(x,y) {};",
+          "$jscomp.arrayFromIterable = function(x) {};");
 
   private LanguageMode languageOut;
 
@@ -608,7 +609,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var D = function(){};",
             "/** @constructor @struct @extends {D} */",
             "var C=function(args) {",
-            "  D.call.apply(D, [].concat([this], args));",
+            "  D.call.apply(D, [].concat([this], $jscomp.arrayFromIterable(args)));",
             "};",
             "$jscomp.inherits(C,D);"));
   }
@@ -1390,51 +1391,58 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   public void testSpreadArray() {
     test("var arr = [1, 2, ...mid, 4, 5];",
-        "var arr = [].concat([1, 2], mid, [4, 5]);");
+        "var arr = [].concat([1, 2], $jscomp.arrayFromIterable(mid), [4, 5]);");
     test("var arr = [1, 2, ...mid(), 4, 5];",
-        "var arr = [].concat([1, 2], mid(), [4, 5]);");
+        "var arr = [].concat([1, 2], $jscomp.arrayFromIterable(mid()), [4, 5]);");
     test("var arr = [1, 2, ...mid, ...mid2(), 4, 5];",
-        "var arr = [].concat([1, 2], mid, mid2(), [4, 5]);");
+        "var arr = [].concat([1, 2], $jscomp.arrayFromIterable(mid),"
+        + " $jscomp.arrayFromIterable(mid2()), [4, 5]);");
     test("var arr = [...mid()];",
-        "var arr = [].concat(mid());");
+        "var arr = [].concat($jscomp.arrayFromIterable(mid()));");
     test("f(1, [2, ...mid, 4], 5);",
-        "f(1, [].concat([2], mid, [4]), 5);");
+        "f(1, [].concat([2], $jscomp.arrayFromIterable(mid), [4]), 5);");
     test("function f() { return [...arguments]; };",
-        "function f() { return [].concat(arguments); };");
+        "function f() { return [].concat($jscomp.arrayFromIterable(arguments)); };");
     test("function f() { return [...arguments, 2]; };",
-        "function f() { return [].concat(arguments, [2]); };");
+        "function f() { return [].concat($jscomp.arrayFromIterable(arguments), [2]); };");
   }
 
   public void testSpreadCall() {
-    test("f(...arr);", "f.apply(null, [].concat(arr));");
-    test("f(0, ...g());", "f.apply(null, [].concat([0], g()));");
-    test("f(...arr, 1);", "f.apply(null, [].concat(arr, [1]));");
-    test("f(0, ...g(), 2);", "f.apply(null, [].concat([0], g(), [2]));");
-    test("obj.m(...arr);", "obj.m.apply(obj, [].concat(arr));");
-    test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, [].concat(arr));");
-    test("f(a, ...b, c, ...d, e);", "f.apply(null, [].concat([a], b, [c], d, [e]));");
-    test("new F(...args);", "new Function.prototype.bind.apply(F, [].concat(args));");
+    test("f(...arr);", "f.apply(null, [].concat($jscomp.arrayFromIterable(arr)));");
+    test("f(0, ...g());", "f.apply(null, [].concat([0], $jscomp.arrayFromIterable(g())));");
+    test("f(...arr, 1);", "f.apply(null, [].concat($jscomp.arrayFromIterable(arr), [1]));");
+    test("f(0, ...g(), 2);", "f.apply(null, [].concat([0], $jscomp.arrayFromIterable(g()), [2]));");
+    test("obj.m(...arr);", "obj.m.apply(obj, [].concat($jscomp.arrayFromIterable(arr)));");
+    test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, [].concat($jscomp.arrayFromIterable(arr)));");
+    test("f(a, ...b, c, ...d, e);",
+        "f.apply(null, [].concat([a], $jscomp.arrayFromIterable(b),"
+        + " [c], $jscomp.arrayFromIterable(d), [e]));");
+    test("new F(...args);",
+        "new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)));");
 
     test("Factory.create().m(...arr);",
         LINE_JOINER.join(
         "var $jscomp$spread$args0;",
-        "($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, [].concat(arr));"
+        "($jscomp$spread$args0 = Factory.create()).m.apply("
+            + "$jscomp$spread$args0, [].concat($jscomp.arrayFromIterable(arr)));"
     ));
+
     test("var x = b ? Factory.create().m(...arr) : null;",
         LINE_JOINER.join(
             "var $jscomp$spread$args0;",
             "var x = b ? ($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, ",
-            "    [].concat(arr)) : null;"));
-    test("getF()(...args);", "getF().apply(null, [].concat(args));");
+            "    [].concat($jscomp.arrayFromIterable(arr))) : null;"));
+
+    test("getF()(...args);", "getF().apply(null, [].concat($jscomp.arrayFromIterable(args)));");
     test(
         "F.c().m(...a); G.d().n(...b);",
         LINE_JOINER.join(
             "var $jscomp$spread$args0;",
             "($jscomp$spread$args0 = F.c()).m.apply($jscomp$spread$args0,",
-            "    [].concat(a));",
+            "    [].concat($jscomp.arrayFromIterable(a)));",
             "var $jscomp$spread$args1;",
             "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
-            "    [].concat(b));"));
+            "    [].concat($jscomp.arrayFromIterable(b)));"));
 
     enableTypeCheck();
 
@@ -1470,7 +1478,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "Factory.create = function() {return new C()};",
         "var arr = [1,2]",
         "var $jscomp$spread$args0;",
-        "($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, [].concat(arr));"
+        "($jscomp$spread$args0 = Factory.create()).m.apply(",
+        "    $jscomp$spread$args0, [].concat($jscomp.arrayFromIterable(arr)));"
     ), null, null);
   }
 

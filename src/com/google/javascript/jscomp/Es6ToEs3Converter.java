@@ -377,10 +377,13 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   }
 
   /**
-   * Processes array literals or calls containing spreads.
-   * Eg.: [1, 2, ...x, 4, 5] => [1, 2].concat(x, [4, 5]);
-   * Eg.: f(...arr) => f.apply(null, arr)
-   * Eg.: new F(...args) => new Function.prototype.bind.apply(F, [].concat(args))
+   * Processes array literals or calls containing spreads. Examples:
+   * [1, 2, ...x, 4, 5] => [].concat([1, 2], $jscomp.arrayFromIterable(x), [4, 5])
+   *
+   * f(...arr) => f.apply(null, [].concat($jscomp.arrayFromIterable(arr)))
+   *
+   * new F(...args) =>
+   *     new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)))
    */
   private void visitArrayLitOrCallWithSpread(Node node, Node parent) {
     Preconditions.checkArgument(node.isCall() || node.isArrayLit() || node.isNew());
@@ -394,7 +397,11 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           groups.add(currGroup);
           currGroup = null;
         }
-        groups.add(currElement.removeFirstChild());
+        compiler.needsEs6Runtime = true;
+        groups.add(
+            IR.call(
+                NodeUtil.newQName(compiler, "$jscomp.arrayFromIterable"),
+                currElement.removeFirstChild()));
       } else {
         if (currGroup == null) {
           currGroup = IR.arraylit();
