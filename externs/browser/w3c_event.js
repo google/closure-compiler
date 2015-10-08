@@ -370,3 +370,30 @@ KeyboardEvent.prototype.metaKey;
  * @return {boolean}
  */
 KeyboardEvent.prototype.getModifierState = function(keyIdentifierArg) {};
+
+/**
+ * @typedef {{
+ *   bubbles: (boolean|undefined),
+ *   cancelable: (boolean|undefined),
+ *   view: (Window|undefined),
+ *   detail: (number|undefined),
+ *   relatedTarget: (EventTarget|undefined)
+ * }}
+ */
+var FocusEventInit;
+
+
+/**
+ * The FocusEvent interface provides specific contextual information associated
+ * with Focus events.
+ * http://www.w3.org/TR/DOM-Level-3-Events/#events-focusevent
+ *
+ * @constructor
+ * @extends {UIEvent}
+ * @param {string} type
+ * @param {FocusEventInit=} opt_eventInitDict
+ */
+function FocusEvent(type, opt_eventInitDict) {}
+
+/** @type {EventTarget} */
+FocusEvent.prototype.relatedTarget;
