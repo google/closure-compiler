@@ -735,6 +735,13 @@ Document.prototype.postMessage = function(message) {};
 Document.prototype.head;
 
 /**
+ * Describes the loading state of the document.
+ * @see https://html.spec.whatwg.org/multipage/dom.html#current-document-readiness
+ * @type {string}
+ */
+Document.prototype.readyState;
+
+/**
  * @see https://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/DOMApplicationCache/DOMApplicationCache.html
  * @constructor
  * @implements {EventTarget}
