@@ -689,7 +689,7 @@ public class Compiler extends AbstractCompiler {
       return;
     }
     
-    if (options.skipNonTranspilationPasses) { // TODO: add clause "|| options.closurePass"?
+    if (options.skipNonTranspilationPasses) {
       // I.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
     }
