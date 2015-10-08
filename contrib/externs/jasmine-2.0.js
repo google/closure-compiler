@@ -363,12 +363,12 @@ jasmine.Env.prototype.beforeEach = function(handler) {};
 jasmine.getEnv = function() {};
 
 
-/** @param {function(this:jasmine.Spec)} handler */
+/** @param {function(this:jasmine.Spec, function())} handler */
 function afterEach(handler) {}
 
 
-/** @param {function(this:jasmine.Spec, function()=)} handler */
-function beforeEach(handler, opt_done) {}
+/** @param {function(this:jasmine.Spec, function())} handler */
+function beforeEach(handler) {}
 
 
 /**
@@ -394,14 +394,14 @@ function expect(expectedValue) {}
 
 /**
  * @param {string} description
- * @param {function(this:jasmine.Spec, function()=)} handler
+ * @param {function(this:jasmine.Spec, function())} handler
  */
 function it(description, handler) {}
 
 
 /**
  * @param {string} description
- * @param {function(this:jasmine.Spec, function()=)} handler
+ * @param {function(this:jasmine.Spec, function())} handler
  */
 function fit(description, handler) {}
 
