@@ -834,6 +834,12 @@ Document.prototype.parentWindow;
 Document.prototype.protocol;
 
 /**
+ * @type {string}
+ * @see http://msdn.microsoft.com/en-us/library/ms534359(VS.85).aspx
+ */
+HTMLDocument.prototype.readyState;
+
+/**
  * @type {Selection}
  * @see http://msdn.microsoft.com/en-us/library/ms535869(VS.85).aspx
  */
