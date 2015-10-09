@@ -1040,6 +1040,18 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "a.Foo.prototype.bar = \"\";\n");
   }
 
+  public void testTypeAnnotationsMemberStub() {
+    // TODO(blickly): Investigate why the method's type isn't preserved.
+    assertTypeAnnotations("/** @interface */ function I(){};"
+        + "/** @return {undefined} @param {number} x */ I.prototype.method;",
+        "/**\n"
+        + " * @interface\n"
+        + " */\n"
+        + "function I() {\n"
+        + "}\n"
+        + "I.prototype.method;\n");
+  }
+
   public void testTypeAnnotationsImplements() {
     assertTypeAnnotations("var a = {};"
         + "/** @constructor */ a.Foo = function(){};\n"

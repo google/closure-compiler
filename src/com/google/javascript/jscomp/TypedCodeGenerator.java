@@ -93,8 +93,8 @@ class TypedCodeGenerator extends CodeGenerator {
    * @param fnNode A node for a function for which to generate a type annotation
    */
   private String getFunctionAnnotation(Node fnNode) {
-    Preconditions.checkState(fnNode.isFunction());
     JSType type = fnNode.getJSType();
+    Preconditions.checkState(fnNode.isFunction() || type.isFunctionType());
 
     if (type == null || type.isUnknownType()) {
       return "";
