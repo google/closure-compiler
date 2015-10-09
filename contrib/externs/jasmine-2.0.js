@@ -77,7 +77,7 @@ jasmine.Clock.prototype.mockDate = function(date) {};
 
 
 
-/** @constructor */
+/** @constructor @template T */
 jasmine.Matchers = function() {};
 
 
@@ -85,7 +85,7 @@ jasmine.Matchers = function() {};
 jasmine.Matchers.prototype.not;
 
 
-/** @type {*} */
+/** @type {T} */
 jasmine.Matchers.prototype.actual;
 
 
