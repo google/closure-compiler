@@ -1140,9 +1140,19 @@ angular.$ariaProvider.prototype.config = function(config) {};
  *       (JQLiteSelector|Object),
  *       function(!angular.Scope, Function=)=, number=):
  *           function(!angular.Scope,
- *               function(!angular.JQLite, !angular.Scope=)=): !angular.JQLite}
+ *               function(!angular.JQLite, !angular.Scope=)=,
+ *                   angular.$compile.LinkOptions=): !angular.JQLite}
  */
 angular.$compile;
+
+/**
+ * @typedef {{
+ *   parentBoundTranscludeFn: (Function|undefined),
+ *   transcludeControllers: (Object|undefined),
+ *   futureParentElement: (angular.JQLite|undefined)
+ * }}
+ */
+angular.$compile.LinkOptions;
 
 // TODO(martinprobst): remaining $compileProvider methods.
 
