@@ -23,6 +23,7 @@ public final class AngularPassTest extends Es6CompilerTestCase {
 
   public AngularPassTest() {
     super();
+    compareJsDoc = false;
   }
 
   @Override
@@ -41,7 +42,6 @@ public final class AngularPassTest extends Es6CompilerTestCase {
     CompilerOptions options = super.getOptions();
     // enables angularPass.
     options.angularPass = true;
-    compareJsDoc = false;
     return options;
   }
 
@@ -50,6 +50,12 @@ public final class AngularPassTest extends Es6CompilerTestCase {
         "function fn(a, b) {} fn['$inject']=['a', 'b']");
 
     testSame("function fn(a, b) {}");
+  }
+
+  public void testNgInjectSetVisibility() throws Exception {
+    compareJsDoc = true;
+    test("/** @ngInject */ function fn(a, b) {}",
+        "/** @ngInject */ function fn(a, b) {} /** @public */ fn['$inject']=['a', 'b']");
   }
 
   public void testNgInjectAddsInjectAfterGoogInherits() throws Exception {

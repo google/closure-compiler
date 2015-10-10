@@ -20,6 +20,8 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -132,6 +134,10 @@ class AngularPass extends AbstractPostOrderCallback
           )
       );
       NodeUtil.setDebugInformation(statement, entry.getNode(), name);
+      // Set the visibility of the newly created property.
+      JSDocInfoBuilder newPropertyDoc = new JSDocInfoBuilder(false);
+      newPropertyDoc.recordVisibility(Visibility.PUBLIC);
+      statement.getFirstChild().setJSDocInfo(newPropertyDoc.build());
 
       // adds `something.$inject = [...]` node after the annotated node or the following
       // goog.inherits call.
