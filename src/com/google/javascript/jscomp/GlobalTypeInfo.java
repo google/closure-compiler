@@ -401,7 +401,7 @@ class GlobalTypeInfo implements CompilerPass {
     nominaltypesByNode = null;
     propertyDefs = null;
     for (NTIScope s : scopes) {
-      s.removeTmpData();
+      s.finalizeScope();
     }
     Map<Node, String> unknownTypes = typeParser.getUnknownTypesMap();
     for (Map.Entry<Node, String> unknownTypeEntry : unknownTypes.entrySet()) {

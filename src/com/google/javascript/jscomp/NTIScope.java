@@ -652,7 +652,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     ns.addUndeclaredProperty(pname, null, JSType.UNKNOWN, /* isConst */ false);
   }
 
-  void removeTmpData() {
+  void finalizeScope() {
     unknownTypeNames = ImmutableSet.of();
     JSTypes commonTypes = getCommonTypes();
     // For now, we put types of namespaces directly into the locals.
@@ -687,11 +687,37 @@ final class NTIScope implements DeclaredTypeRegistry {
         locals.put(name, entry.getValue().toJSType(commonTypes));
       }
     }
+    copyOuterVarsTransitively(this);
+
     localNamespaces = ImmutableMap.of();
     localClassDefs = ImmutableMap.of();
     localTypedefs = ImmutableMap.of();
     localEnums = ImmutableMap.of();
     isFinalized = true;
+  }
+
+  // A scope must know about the free variables used in enclosing scopes,
+  // otherwise we end up with invalid type envs.
+  private static void copyOuterVarsTransitively(NTIScope s) {
+    if (s.isTopLevel()) {
+      return;
+    }
+    NTIScope parent = s.parent;
+    Set<String> outerVars = s.outerVars;
+    while (parent.isFunction()) {
+      boolean copiedOneVar = false;
+      for (String v : outerVars) {
+        if (!parent.isDefinedLocally(v, false)) {
+          copiedOneVar = true;
+          parent.addOuterVar(v);
+        }
+      }
+      if (!copiedOneVar) {
+        break;
+      }
+      outerVars = parent.outerVars;
+      parent = parent.parent;
+    }
   }
 
   @Override

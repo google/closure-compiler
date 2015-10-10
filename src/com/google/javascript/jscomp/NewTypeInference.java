@@ -98,7 +98,6 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType CROSS_SCOPE_GOTCHA = DiagnosticType.warning(
       "JSC_NTI_CROSS_SCOPE_GOTCHA",
-      "You thought we weren't going to notice? Guess again.\n" +
       "Variable {0} typed inconsistently across scopes.\n" +
       "In outer scope : {1}\n" +
       "In inner scope : {2}\n");
@@ -205,7 +204,7 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(
       "JSC_NTI_USED_GLOBAL_THIS",
-      "Dangerous use of the global 'this' object");
+      "Dangerous use of the global THIS object");
 
   static final DiagnosticType MISSING_RETURN_STATEMENT =
       DiagnosticType.warning(
@@ -864,8 +863,7 @@ final class NewTypeInference implements CompilerPass {
           if (NodeUtil.isForIn(n)) {
             Node obj = n.getChildAtIndex(1);
             EnvTypePair pair = analyzeExprFwd(obj, inEnv, pickReqObjType(n));
-            pair = mayWarnAboutNullableReferenceAndTighten(
-                n, pair.type, inEnv, JSType.TOP_OBJECT);
+            pair = mayWarnAboutNullableReferenceAndTighten(n, pair.type, inEnv);
             JSType objType = pair.type;
             if (!objType.isSubtypeOf(JSType.TOP_OBJECT)) {
               warnings.add(JSError.make(
@@ -881,8 +879,7 @@ final class NewTypeInference implements CompilerPass {
                   lval.declType.toString()));
               outEnv = lval.env;
             } else {
-              outEnv = updateLvalueTypeInEnv(
-                 lval.env, lhs, lval.ptr, JSType.STRING);
+              outEnv = updateLvalueTypeInEnv(lval.env, lhs, lval.ptr, JSType.STRING);
             }
             break;
           }
@@ -1005,8 +1002,7 @@ final class NewTypeInference implements CompilerPass {
 
     for (String outer : fn.getOuterVars()) {
       println("Free var ", outer, " going in summary");
-      builder.addOuterVarPrecondition(
-          outer, getTypeAfterFwd(outer, entryEnv, exitEnv));
+      builder.addOuterVarPrecondition(outer, envGetType(entryEnv, outer));
     }
 
     builder.addNominalType(declType.getNominalType());
@@ -1192,9 +1188,9 @@ final class NewTypeInference implements CompilerPass {
       case Token.FUNCTION: {
         String fnName = symbolTable.getFunInternalName(expr);
         JSType fnType = envGetType(inEnv, fnName);
-        Preconditions.checkState(fnType != null,
-            "Could not find type for %s", fnName);
-        resultPair = new EnvTypePair(inEnv, fnType);
+        Preconditions.checkState(fnType != null, "Could not find type for %s", fnName);
+        TypeEnv outEnv = collectTypesForFreeVarsFwd(expr, inEnv);
+        resultPair = new EnvTypePair(outEnv, fnType);
         break;
       }
       case Token.FALSE:
@@ -1639,8 +1635,7 @@ final class NewTypeInference implements CompilerPass {
       warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
               declType.toString(), rhsPair.type.toString()));
     } else {
-      rhsPair.env = updateLvalueTypeInEnv(
-          rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
+      rhsPair.env = updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
     }
     return rhsPair;
   }
@@ -1682,8 +1677,7 @@ final class NewTypeInference implements CompilerPass {
       warnInvalidOperand(rhs, expr.getType(), JSType.NUMBER, pair.type);
     }
     if (!lhsWarned) {
-      pair.env =
-          updateLvalueTypeInEnv(pair.env, lhs, lvalue.ptr, JSType.NUMBER);
+      pair.env = updateLvalueTypeInEnv(pair.env, lhs, lvalue.ptr, JSType.NUMBER);
     }
     pair.type = JSType.NUMBER;
     return pair;
@@ -1748,8 +1742,7 @@ final class NewTypeInference implements CompilerPass {
       return analyzeAssertionCall(expr, inEnv, assertionFunctionSpec);
     }
     EnvTypePair calleePair = analyzeExprFwd(callee, inEnv, commonTypes.topFunction());
-    calleePair = mayWarnAboutNullableReferenceAndTighten(
-        callee, calleePair.type, inEnv, commonTypes.topFunction());
+    calleePair = mayWarnAboutNullableReferenceAndTighten(callee, calleePair.type, inEnv);
     JSType calleeType = calleePair.type;
     if (calleeType.isBottom() || !calleeType.isSubtypeOf(commonTypes.topFunction())) {
       warnings.add(JSError.make(
@@ -1799,7 +1792,7 @@ final class NewTypeInference implements CompilerPass {
         // Local function definitions will be type-checked more
         // exactly using their summaries, and don't need deferred checks
         if (currentScope.isLocalFunDef(calleeName)) {
-          collectTypesForFreeVarsFwd(callee, tmpEnv);
+          tmpEnv = collectTypesForFreeVarsFwd(callee, tmpEnv);
         } else if (!origFunType.isGeneric()) {
           JSType expectedRetType = requiredType;
           println("Updating deferred check with ret: ", expectedRetType,
@@ -2005,8 +1998,7 @@ final class NewTypeInference implements CompilerPass {
     Node index = expr.getLastChild();
     JSType reqObjType = pickReqObjType(expr);
     EnvTypePair pair = analyzeExprFwd(receiver, inEnv, reqObjType);
-    pair = mayWarnAboutNullableReferenceAndTighten(
-        receiver, pair.type, pair.env, JSType.TOP_OBJECT);
+    pair = mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, pair.env);
     JSType recvType = pair.type.autobox(commonTypes);
     if (!mayWarnAboutNonObject(receiver, recvType, specializedType)
         && !mayWarnAboutStructPropAccess(receiver, recvType)) {
@@ -2706,8 +2698,7 @@ final class NewTypeInference implements CompilerPass {
       recvSpecType = reqObjType.withProperty(propQname, specializedType);
     }
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
-    pair = mayWarnAboutNullableReferenceAndTighten(
-        receiver, pair.type, pair.env, JSType.TOP_OBJECT);
+    pair = mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, pair.env);
     JSType recvType = pair.type.autobox(commonTypes);
     if (recvType.isUnknown()
         || mayWarnAboutNonObject(receiver, recvType, specializedType)) {
@@ -2785,7 +2776,8 @@ final class NewTypeInference implements CompilerPass {
       Preconditions.checkState(NodeUtil.isForIn(lvalue.getParent()));
       return envPutType(env, lvalue.getFirstChild().getString(), type);
     }
-    Preconditions.checkState(lvalue.isGetProp() || lvalue.isGetElem());
+    Preconditions.checkState(lvalue.isGetProp() || lvalue.isGetElem(),
+        "Expected getprop/getelem but found: %s", lvalue);
     if (qname != null) {
       String objName = qname.getLeftmostName();
       QualifiedName props = qname.getAllButLeftmost();
@@ -2795,38 +2787,35 @@ final class NewTypeInference implements CompilerPass {
     return env;
   }
 
-  private void collectTypesForFreeVarsFwd(Node callee, TypeEnv env) {
-    Preconditions.checkArgument(callee.isName());
-    NTIScope calleeScope = currentScope.getScope(callee.getString());
-    for (String freeVar : calleeScope.getOuterVars()) {
-      if (calleeScope.getDeclaredTypeOf(freeVar) == null) {
-        FunctionType summary = summaries.get(calleeScope).getFunType();
+  private TypeEnv collectTypesForFreeVarsFwd(Node n, TypeEnv env) {
+    Preconditions.checkArgument(n.isFunction()
+        || n.isName() && NodeUtil.isCallOrNewTarget(n));
+    String fnName = n.isFunction() ? symbolTable.getFunInternalName(n) : n.getString();
+    NTIScope innerScope = currentScope.getScope(fnName);
+    for (String freeVar : innerScope.getOuterVars()) {
+      if (innerScope.getDeclaredTypeOf(freeVar) == null) {
+        FunctionType summary = summaries.get(innerScope).getFunType();
         JSType outerType = envGetType(env, freeVar);
+        if (outerType == null) {
+          outerType = JSType.UNKNOWN;
+        }
         JSType innerType = summary.getOuterVarPrecondition(freeVar);
-        if (outerType != null && !JSType.haveCommonSubtype(outerType, innerType)) {
-          warnings.add(JSError.make(callee, CROSS_SCOPE_GOTCHA,
+        if (// We don't warn if the innerType is a loose object, because we
+            // haven't found an easy way to avoid false positives.
+            !innerType.isLoose()
+            // If n is a function expression, we don't know where it's called,
+            // so we don't warn for uninitialized variables.
+            && (n.isName() || n.isFunction() && !outerType.isUndefined())
+            && !JSType.haveCommonSubtype(outerType, innerType)) {
+          warnings.add(JSError.make(n, CROSS_SCOPE_GOTCHA,
                   freeVar, outerType.toString(), innerType.toString()));
         }
+        // If n is a callee node, we only want to keep the type in the callee.
+        // If n is a function expression, we're not sure if it gets called,
+        // so we join the types.
+        env = envPutType(env, freeVar,
+            n.isFunction() ? JSType.join(innerType, outerType) : innerType);
       }
-    }
-  }
-
-  private TypeEnv collectTypesForFreeVarsBwd(Node callee, TypeEnv env) {
-    Preconditions.checkArgument(callee.isName());
-    NTIScope calleeScope = currentScope.getScope(callee.getString());
-    for (String freeVar : calleeScope.getOuterVars()) {
-      if (!currentScope.isDefinedLocally(freeVar, false) &&
-          !currentScope.isOuterVar(freeVar)) {
-        continue;
-      }
-      // Practice will inform what the right decision here is.
-      //   * We could ignore the call, giving poor inference around closures.
-      //   * We could use info from the call, giving possibly strange errors.
-      //   * Or we could just throw up our hands and give a very general type.
-      // For now, we do option 3, but this is open to change.
-      JSType declType = currentScope.getDeclaredTypeOf(freeVar);
-      env = envPutType(env, freeVar,
-          declType != null ? declType : JSType.UNKNOWN);
     }
     return env;
   }
@@ -3217,9 +3206,6 @@ final class NewTypeInference implements CompilerPass {
       tmpEnv = analyzeExprBwd(arg, tmpEnv, formalType).env;
       // We don't need deferred checks for args in BWD
     }
-    if (callee.isName() && currentScope.isLocalFunDef(callee.getString())) {
-      tmpEnv = collectTypesForFreeVarsBwd(callee, tmpEnv);
-    }
     JSType retType =
         expr.isNew() ? funType.getThisType() : funType.getReturnType();
     return new EnvTypePair(tmpEnv, retType);
@@ -3576,8 +3562,7 @@ final class NewTypeInference implements CompilerPass {
       }
       case Token.GETPROP: {
         Node obj = expr.getFirstChild();
-        QualifiedName pname =
-            new QualifiedName(expr.getLastChild().getString());
+        QualifiedName pname = new QualifiedName(expr.getLastChild().getString());
         lvalResult = analyzePropLValFwd(obj, pname, inEnv, type, insideQualifiedName);
         break;
       }
@@ -3608,8 +3593,7 @@ final class NewTypeInference implements CompilerPass {
         String name = vdecl.getString();
         // For/in can never have rhs of its VAR
         Preconditions.checkState(!vdecl.hasChildren());
-        return new LValueResultFwd(
-            inEnv, JSType.STRING, null, new QualifiedName(name));
+        return new LValueResultFwd(inEnv, JSType.STRING, null, new QualifiedName(name));
       }
       default: {
         // Expressions that aren't lvalues should be handled because they may
@@ -3644,7 +3628,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private EnvTypePair mayWarnAboutNullableReferenceAndTighten(
-      Node obj, JSType recvType, TypeEnv inEnv, JSType requiredType) {
+      Node obj, JSType recvType, TypeEnv inEnv) {
     if (!recvType.isUnknown()
         && !recvType.isTop()
         && (JSType.NULL.isSubtypeOf(recvType)
@@ -3670,8 +3654,8 @@ final class NewTypeInference implements CompilerPass {
     JSType reqObjType =
         pickReqObjType(obj.getParent()).withLoose().withProperty(pname, type);
     LValueResultFwd lvalue = analyzeLValueFwd(obj, inEnv, reqObjType, true);
-    EnvTypePair pair = mayWarnAboutNullableReferenceAndTighten(
-        obj, lvalue.type, lvalue.env, JSType.TOP_OBJECT);
+    EnvTypePair pair =
+        mayWarnAboutNullableReferenceAndTighten(obj, lvalue.type, lvalue.env);
     TypeEnv lvalueEnv = pair.env;
     JSType lvalueType = pair.type.autobox(commonTypes);
     if (!lvalueType.isSubtypeOf(JSType.TOP_OBJECT)) {
@@ -3685,22 +3669,23 @@ final class NewTypeInference implements CompilerPass {
         mayWarnAboutPropCreation(pname, propAccessNode, lvalueType)) {
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
-    if (!insideQualifiedName &&
-        mayWarnAboutConstProp(propAccessNode, lvalueType, pname)) {
+    if (!insideQualifiedName
+        && mayWarnAboutConstProp(propAccessNode, lvalueType, pname)) {
+      return new LValueResultFwd(lvalueEnv, type, null, null);
+    }
+    if (lvalueType.isUnknown()) {
       return new LValueResultFwd(lvalueEnv, type, null, null);
     }
     if (!lvalueType.hasProp(pname)) {
       if (insideQualifiedName && lvalueType.isLoose()) {
         // For loose objects, create the inner property if it doesn't exist.
-        lvalueType = lvalueType.withProperty(
-            pname, JSType.TOP_OBJECT.withLoose());
+        lvalueType = lvalueType.withProperty(pname, JSType.TOP_OBJECT.withLoose());
         if (lvalueType.isDict() && propAccessNode.isGetProp()) {
           lvalueType = lvalueType.specialize(JSType.TOP_STRUCT);
         } else if (lvalueType.isStruct() && propAccessNode.isGetElem()) {
           lvalueType = lvalueType.specialize(JSType.TOP_DICT);
         }
-        lvalueEnv = updateLvalueTypeInEnv(
-            lvalueEnv, obj, lvalue.ptr, lvalueType);
+        lvalueEnv = updateLvalueTypeInEnv(lvalueEnv, obj, lvalue.ptr, lvalueType);
       } else {
         // Warn for inexistent prop either on the non-top-level of a qualified
         // name, or for assignment ops that won't create a new property.

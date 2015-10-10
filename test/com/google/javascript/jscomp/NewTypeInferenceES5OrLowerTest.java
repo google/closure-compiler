@@ -1301,6 +1301,45 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "f()"),
         NewTypeInference.CROSS_SCOPE_GOTCHA);
 
+    typeCheck(Joiner.on('\n').join(
+        "var x;",
+        "function f() {",
+        "  return x - 1;",
+        "}",
+        "f()"),
+        NewTypeInference.CROSS_SCOPE_GOTCHA);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(y) {",
+        "  var x;",
+        "  y(function() { return x - 1; });",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  x = 'str';",
+        "}",
+        "var x = 5;",
+        "f()"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  var x;",
+        "  function g() { x = 123; }",
+        "  g();",
+        "  return x - 1;",
+        "}"));
+
+    // Missing the warning because x is used in g, even though g doesn't change
+    // its type.
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  function g() { return x; }",
+        "  var /** number */ n = x;",
+        "  g();",
+        "  var /** string */ s = x;",
+        "}"));
+
     // CROSS_SCOPE_GOTCHA is only for undeclared variables
     typeCheck(Joiner.on('\n').join(
         "/** @type {string} */ var s;",
@@ -1311,12 +1350,95 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(Joiner.on('\n').join(
+        "function f(g) {",
+        "  var x;",
+        "  g(function() { return x - 123; });",
+        "  return /** @type {number} */ (x) - 1;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  function g(y) {",
+        "    y(function() { return x - 1; });",
+        "  }",
+        "}"));
+
+    // Spurious warning because we only know the type of x at the beginning of
+    // f, which is string. This is a contrived example though; not sure how
+    // important it is in practice to record postconditions in FunctionType.
+    typeCheck(Joiner.on('\n').join(
         "function g(x) {",
-        "  function f() { x < 'str'; z < 'str'; x = 5; }",
+        "  function f() {",
+        "    var /** string */ s = x;",
+        "    x = 5;",
+        "  }",
+        "  f();",
+        "  x - 5;",
+        "}"),
+        NewTypeInference.CROSS_SCOPE_GOTCHA,
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // Spurious warning, for the same reason as the previous test.
+    // This test is trickier, so it avoids the CROSS_SCOPE_GOTCHA warning.
+    typeCheck(Joiner.on('\n').join(
+        "function g(x) {",
+        "  function f() {",
+        "    var /** string */ s = x;",
+        "    x = 5;",
+        "  }",
         "  var z = x;",
         "  f();",
         "  x - 5;",
-        "  z < 'str';",
+        "  var /** string */ y = z;",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {string} */",
+        "Foo.prototype.prefix;",
+        "Foo.prototype.method = function() {",
+        "  var x = this;",
+        "  return function() {",
+        "    if (x.prefix.length) {",
+        "      return 123;",
+        "    }",
+        "  };",
+        "};"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  function g(condition) {",
+        "    if (condition) {",
+        "      return 'early';",
+        "    }",
+        "    return function() { return x.prop; };",
+        "  }",
+        "}"));
+
+    // TODO(dimvar): it'd be nice to catch this warning
+    typeCheck(Joiner.on('\n').join(
+        "function f(x) {",
+        "  function g(condition) {",
+        "    if (condition) {",
+        "      return 'early';",
+        "    }",
+        "    (function() { return x - 1; })();",
+        "  }",
+        "  g(false);",
+        "  var /** string */ s = x;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "var x;",
+        "function f(cond) {",
+        "  if (cond) {",
+        "    return;",
+        "  }",
+        "  return function g() {",
+        "    return function w() { x };",
+        "  };",
         "}"));
 
     // TODO(dimvar): we can't do this yet; requires more info in the summary
@@ -13744,5 +13866,35 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function usesTTL(x) {}"),
         "");
+  }
+
+  public void testCreatingPropsOnLooseOrUnknownObjects() {
+    typeCheck(Joiner.on('\n').join(
+        "var goog = {};", // @const missing on purpose
+        "goog.inherits = function(childCtor, parentCtor) {};",
+        "  /**",
+        "   * @constructor",
+        "   * @extends {goog.Plugin}",
+        "   */",
+        "  goog.Emoticons = function() { goog.Plugin.call(this); };",
+        "  goog.inherits(goog.Emoticons, goog.Plugin);",
+        "  goog.Emoticons.COMMAND = '+emoticon';",
+        "  goog.Emoticons.prototype.getTrogClassId = goog.Emoticons.COMMAND;"),
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  this.asdf.qwer = 123;",
+        "}"),
+        NewTypeInference.GLOBAL_THIS);
+
+    // TODO(dimvar): catch the mistyped assign RHS here.
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  this.asdf.qwer = 123;",
+        "  var /** string */ s = this.asdf.qwer;",
+        "}"),
+        NewTypeInference.GLOBAL_THIS,
+        NewTypeInference.GLOBAL_THIS);
   }
 }

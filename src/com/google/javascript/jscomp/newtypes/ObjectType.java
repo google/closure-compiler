@@ -274,7 +274,9 @@ final class ObjectType implements TypeWithProperties {
       String objName = qname.getLeftmostName();
       QualifiedName objQname = new QualifiedName(objName);
       if (!mayHaveProp(objQname)) {
-        Preconditions.checkState(type == null);
+        Preconditions.checkState(type == null,
+            "Trying to update property %s on type %s, but sub-property %s does"
+            + " not exist", qname, this, objName);
         return this;
       }
       QualifiedName innerProps = qname.getAllButLeftmost();
