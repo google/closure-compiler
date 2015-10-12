@@ -1363,8 +1363,8 @@ public abstract class JSType implements TypeI, Serializable {
       // template types maps are considered a match only if the ObjectElementKey
       // values are subtypes/supertypes of one another.
       TemplateType key = thisType.registry.getObjectElementKey();
-      JSType thisElement = thisTypeParams.getTemplateType(key);
-      JSType thatElement = thatTypeParams.getTemplateType(key);
+      JSType thisElement = thisTypeParams.getResolvedTemplateType(key);
+      JSType thatElement = thatTypeParams.getResolvedTemplateType(key);
 
       templateMatch = thisElement.isSubtype(thatElement, implicitImplCache)
           || thatElement.isSubtype(thisElement, implicitImplCache);

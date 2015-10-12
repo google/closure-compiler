@@ -250,9 +250,6 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   private void initializeBuiltInTypes() {
-    iObjectIndexTemplateKey = new TemplateType(this, I_OBJECT_INDEX_TEMPLATE);
-    iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
-
     // These locals shouldn't be all caps.
     BooleanType BOOLEAN_TYPE = new BooleanType(this);
     registerNativeType(JSTypeNative.BOOLEAN_TYPE, BOOLEAN_TYPE);
@@ -277,6 +274,10 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
 
     AllType ALL_TYPE = new AllType(this);
     registerNativeType(JSTypeNative.ALL_TYPE, ALL_TYPE);
+
+    // Template Types
+    iObjectIndexTemplateKey = new TemplateType(this, I_OBJECT_INDEX_TEMPLATE);
+    iObjectElementTemplateKey = new TemplateType(this, I_OBJECT_ELEMENT_TEMPLATE);
 
     // Top Level Prototype (the One)
     // The initializations of TOP_LEVEL_PROTOTYPE and OBJECT_FUNCTION_TYPE
