@@ -93,7 +93,7 @@ public final class ConformanceRules {
         new ConformanceResult(
             ConformanceLevel.POSSIBLE_VIOLATION,
             "The type information available for this expression is too loose "
-            + "ensure conformance.");
+            + "to ensure conformance.");
     public static final ConformanceResult VIOLATION = new ConformanceResult(
         ConformanceLevel.VIOLATION);
   }
@@ -364,10 +364,28 @@ public final class ConformanceRules {
             return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
           } else if (targetType.isSubtype(methodClassType)) {
             return ConformanceResult.VIOLATION;
+          } else if (methodClassType.isSubtype(targetType)) {
+            if (matchesPrototype(methodClassType, targetType)) {
+              return ConformanceResult.VIOLATION;
+            } else {
+              // Access of a banned property through a super class may be a violation
+              return ConformanceResult.POSSIBLE_VIOLATION_DUE_TO_LOOSE_TYPES;
+            }
           }
         }
       }
       return ConformanceResult.CONFORMANCE;
+    }
+
+    private boolean matchesPrototype(JSType type, JSType maybePrototype) {
+      ObjectType methodClassObjectType = type.toMaybeObjectType();
+      if (methodClassObjectType != null) {
+        if (methodClassObjectType.getImplicitPrototype().isEquivalentTo(
+            maybePrototype)) {
+          return true;
+        }
+      }
+      return false;
     }
 
     /**
@@ -877,7 +895,8 @@ public final class ConformanceRules {
         if (paramClasses.length == 2) {
           TypeToken<?> param1 = TypeToken.of(paramClasses[0]);
           TypeToken<?> param2 = TypeToken.of(paramClasses[1]);
-          if (param1.isAssignableFrom(COMPILER_TYPE) && param2.isAssignableFrom(REQUIREMENT_TYPE)) {
+          if (param1.isAssignableFrom(COMPILER_TYPE)
+              && param2.isAssignableFrom(REQUIREMENT_TYPE)) {
             return ctor;
           }
         }

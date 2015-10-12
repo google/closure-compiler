@@ -326,7 +326,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "foo.blink();",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
         "Possible violation: blink is annoying\n"
-        + "The type information available for this expression is too loose ensure conformance.");
+        + "The type information available for this expression is too loose to ensure conformance.");
   }
 
   public void testBannedDep1() {
@@ -344,39 +344,99 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "Violation: testcode is not allowed");
   }
 
-  public void testBannedProperty() {
-    configuration =
-        "requirement: {\n" +
-        "  type: BANNED_PROPERTY\n" +
-        "  value: 'C.prototype.p'\n" +
-        "  error_message: 'C.p is not allowed'\n" +
-        "}";
+  private void testConformance(String src1, String src2) {
+    testConformance(src1, src2, null);
+  }
 
-    String declarations =
-        "/** @constructor */ function C() {}\n" +
-        "/** @type {string} */\n" +
-        "C.prototype.p;\n" +
-        "/** @constructor */ function D() {}\n" +
-        "/** @type {string} */\n" +
-        "D.prototype.p;\n";
+  private void testConformance(String src1, String src2, DiagnosticType warning) {
+    ImmutableList<SourceFile> input = ImmutableList.of(
+            SourceFile.fromCode("SRC1", src1),
+            SourceFile.fromCode("SRC2", src2));
+    test(input, input, null, warning);
+  }
 
-    testSame(
-        declarations + "var d = new D(); d.p = 'boo';");
+  public void testBannedProperty0() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'C.prototype.p'",
+        "  error_message: 'C.p is not allowed'",
+        "  whitelist: 'SRC1'",
+        "}");
 
-    testSame(
-        declarations + "var c = new C(); c.p = 'boo';",
+    String cDecl = LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {}",
+        "/** @type {string} */",
+        "C.prototype.p;");
+
+    String dDecl = LINE_JOINER.join(
+        "/** @constructor */ function D() {}",
+        "/** @type {string} */",
+        "D.prototype.p;");
+
+    testConformance(cDecl, dDecl);
+  }
+
+  public void testBannedProperty1() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'C.prototype.p'",
+        "  error_message: 'C.p is not allowed'",
+        "  whitelist: 'SRC1'",
+        "}");
+
+    String cDecl = LINE_JOINER.join(
+        "/** @constructor */",
+        "function C() {",
+        "  this.p = 'str';",
+        "}");
+
+    String dDecl = LINE_JOINER.join(
+        "/** @constructor */",
+        "function D() {",
+        "  this.p = 'str';",
+        "}");
+
+    testConformance(cDecl, dDecl);
+  }
+
+  public void testBannedProperty2() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'C.prototype.p'",
+        "  error_message: 'C.p is not allowed'",
+        "  whitelist: 'SRC1'",
+        "}");
+
+    String declarations = LINE_JOINER.join(
+        "/** @constructor */ function SC() {}",
+        "/** @constructor @extends {SC} */",
+        "function C() {}",
+        "/** @type {string} */",
+        "C.prototype.p;",
+        "/** @constructor */ function D() {}",
+        "/** @type {string} */",
+        "D.prototype.p;");
+
+    testConformance(declarations, "var d = new D(); d.p = 'boo';");
+
+    testConformance(declarations, "var c = new C(); c.p = 'boo';",
         CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
-        declarations + "var c = new C(); var foo = c.p;",
+    // Accessing property through a super type is possibily a violation.
+    testConformance(declarations, "var sc = new SC(); sc.p = 'boo';",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+
+    testConformance(declarations, "var c = new C(); var foo = c.p;",
         CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
-        declarations + "var c = new C(); var foo = 'x' + c.p;",
+    testConformance(declarations, "var c = new C(); var foo = 'x' + c.p;",
         CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
-        declarations + "var c = new C(); c['p'] = 'boo';",
+    testConformance(declarations, "var c = new C(); c['p'] = 'boo';",
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
