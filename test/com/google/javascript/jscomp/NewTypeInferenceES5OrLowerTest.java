@@ -4087,13 +4087,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testRecordtypeSubtyping() {
-    // TODO(dimvar): fix
-    // typeCheck(Joiner.on('\n').join(
-    //     "/** @interface */ function I() {}",
-    //     "/** @type {number} */ I.prototype.prop;",
-    //     "function f(/** !I */ x) {",
-    //     "  var /** { prop: number} */ y = x;",
-    //     "}"));
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */ function I() {}",
+        "/** @type {number} */ I.prototype.prop;",
+        "function f(/** !I */ x) {",
+        "  var /** { prop: number} */ y = x;",
+        "}"));
   }
 
   public void testWarnAboutOverridesNotVisibleDuringGlobalTypeInfo() {
@@ -4135,16 +4134,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {number} */ Child.prototype.y = 9;"),
         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
 
-    // TODO(dimvar): fix
-    // typeCheck(Joiner.on('\n').join(
-    //     "/** @constructor */",
-    //     "function Foo() {}",
-    //     "Foo.prototype.f = function(/** number */ x, /** number */ y) {};",
-    //     "/** @constructor @extends {Foo} */",
-    //     "function Bar() {}",
-    //     "/** @override */",
-    //     "Bar.prototype.f = function(x) {};"),
-    //     GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.f = function(/** number */ x, /** number */ y) {};",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @override */",
+        "Bar.prototype.f = function(x) {};"));
   }
 
   public void testMultipleObjects() {
@@ -9580,14 +9577,21 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
   }
 
   public void testConstMissingInitializer() {
-    typeCheck("/** @const */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+    typeCheck(
+        "/** @const */ var x;",
+        GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
 
-    typeCheck("/** @final */ var x;", GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
+    typeCheck(
+        "/** @final */ var x;",
+        GlobalTypeInfo.CONST_WITHOUT_INITIALIZER);
 
-    typeCheckCustomExterns(DEFAULT_EXTERNS + "/** @const {number} */ var x;", "");
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "/** @const {number} */ var x;",
+        "");
 
-    // TODO(dimvar): must fix externs initialization
-    // typeCheck("/** @const {number} */ var x;", "x - 5;");
+    typeCheckCustomExterns(
+        DEFAULT_EXTERNS + "/** @const {number} */ var x;",
+        "x - 5;");
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
@@ -13906,5 +13910,25 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
+  public void testStructuralInterfaces() {
+    // NOTE(dimvar): This test will fail when we switch to structural
+    // interfaces; remove the warning then.
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.p1;",
+        "/** @interface */",
+        "function Bar() {}",
+        "/** @type {number} */",
+        "Bar.prototype.p1;",
+        "/** @type {number} */",
+        "Bar.prototype.p2;",
+        "function f(/** !Bar */ x) {",
+        "  var /** !Foo */ y = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }

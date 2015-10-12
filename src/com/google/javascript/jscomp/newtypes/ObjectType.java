@@ -167,6 +167,10 @@ final class ObjectType implements TypeWithProperties {
     return this.fn != null && hasNonPrototypeProperties();
   }
 
+  boolean isInterface() {
+    return this.nominalType != null && this.nominalType.isInterface();
+  }
+
   private boolean hasNonPrototypeProperties() {
     for (String pname : this.props.keySet()) {
       if (!pname.equals("prototype")) {
@@ -508,7 +512,12 @@ final class ObjectType implements TypeWithProperties {
       return false;
     }
 
-    if (otherNt == null && !this.objectKind.isSubtypeOf(other.objectKind)) {
+    if (otherNt == null
+        && !this.objectKind.isSubtypeOf(other.objectKind)
+        // Interfaces are structs but we allow them to be used in a context that
+        // expects a record type, even though it is unsound.
+        // TODO(dimvar): Remove this when we switch to structural interfaces.
+        && !(this.isInterface() && other.objectKind.isUnrestricted())) {
       return false;
     }
 
