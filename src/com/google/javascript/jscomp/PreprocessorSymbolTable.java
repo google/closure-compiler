@@ -27,7 +27,7 @@ import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -44,7 +44,7 @@ final class PreprocessorSymbolTable
   /**
    * All preprocessor symbols are globals.
    */
-  private final Map<String, SimpleSlot> symbols = new HashMap<>();
+  private final Map<String, SimpleSlot> symbols = new LinkedHashMap<>();
 
   private final Multimap<String, Reference> refs =
       ArrayListMultimap.create();

@@ -51,7 +51,9 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -1583,8 +1585,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * @param interfaceType The super interface that is being visited
    */
   private void checkInterfaceConflictProperties(NodeTraversal t, Node n,
-      String functionName, HashMap<String, ObjectType> properties,
-      HashMap<String, ObjectType> currentProperties,
+      String functionName, Map<String, ObjectType> properties,
+      Map<String, ObjectType> currentProperties,
       ObjectType interfaceType) {
     ObjectType implicitProto = interfaceType.getImplicitPrototype();
     Set<String> currentPropertyNames;
@@ -1675,8 +1677,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         // Only check when extending more than one interfaces
         HashMap<String, ObjectType> properties
             = new HashMap<>();
-        HashMap<String, ObjectType> currentProperties
-            = new HashMap<>();
+        LinkedHashMap<String, ObjectType> currentProperties
+            = new LinkedHashMap<>();
         for (ObjectType interfaceType : functionType.getExtendedInterfaces()) {
           currentProperties.clear();
           checkInterfaceConflictProperties(t, n, functionPrivateName,

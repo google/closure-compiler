@@ -43,13 +43,13 @@ import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -647,13 +647,12 @@ public abstract class ObjectType
 
   /**
    * get the map of properties to types covered in an object type
-   * @return a Map that maps the property's name to the property's type
-   */
+   * @return a Map that maps the property's name to the property's type */
   public Map<String, JSType> getPropertyTypeMap() {
-    Map<String, JSType> propTypeMap = new HashMap<>();
+    ImmutableMap.Builder<String, JSType> propTypeMap = ImmutableMap.builder();
     for (String name : this.getPropertyNames()) {
       propTypeMap.put(name, this.getPropertyType(name));
     }
-    return propTypeMap;
+    return propTypeMap.build();
   }
 }

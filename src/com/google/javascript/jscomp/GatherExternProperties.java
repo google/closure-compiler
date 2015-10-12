@@ -34,7 +34,7 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -42,7 +42,7 @@ import java.util.Set;
  */
 class GatherExternProperties extends AbstractPostOrderCallback
     implements CompilerPass {
-  private final Set<String> externProperties = new HashSet<>();
+  private final Set<String> externProperties = new LinkedHashSet<>();
   private final AbstractCompiler compiler;
   private final ExtractRecordTypePropertyNames typeVisitor =
       new ExtractRecordTypePropertyNames();

@@ -77,6 +77,7 @@ import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -154,7 +155,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
   // Simple properties inferred about functions.
   private final Map<Node, AstFunctionContents> functionAnalysisResults =
-       new HashMap<>();
+       new LinkedHashMap<>();
 
   // For convenience
   private final ObjectType unknownType;

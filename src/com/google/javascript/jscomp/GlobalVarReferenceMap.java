@@ -25,6 +25,7 @@ import com.google.javascript.rhino.Node;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -77,7 +78,7 @@ class GlobalVarReferenceMap implements ReferenceMap {
    */
   private void resetGlobalVarReferences(
       Map<Var, ReferenceCollection> globalRefMap) {
-    refMap = new HashMap<>();
+    refMap = new LinkedHashMap<>();
     for (Entry<Var, ReferenceCollection> entry : globalRefMap.entrySet()) {
       Var var = entry.getKey();
       if (var.isGlobal()) {
