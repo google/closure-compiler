@@ -13897,4 +13897,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.GLOBAL_THIS,
         NewTypeInference.GLOBAL_THIS);
   }
+
+  public void testTypeofIsPropertyExistenceCheck() {
+    typeCheck(Joiner.on('\n').join(
+        "function f(/** { prop: number } */ x) {",
+        "  if (typeof x.newprop === 'string') {",
+        "    return x.newprop - 1;",
+        "  }",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

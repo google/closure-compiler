@@ -2688,7 +2688,8 @@ final class NewTypeInference implements CompilerPass {
     JSType recvReqType, recvSpecType;
 
     // First, analyze the receiver object.
-    if (specializedType.isTrueOrTruthy()) {
+    if (specializedType.isTrueOrTruthy()
+        || propAccessNode.getParent().isTypeOf()) {
       recvReqType = reqObjType;
       recvSpecType = reqObjType.withProperty(propQname, specializedType);
     } else if (specializedType.isFalseOrFalsy()) {
