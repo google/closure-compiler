@@ -390,8 +390,8 @@ public class IR {
   }
 
   public static Node assign(Node target, Node expr) {
-    Preconditions.checkState(target.isValidAssignmentTarget());
-    Preconditions.checkState(mayBeExpression(expr));
+    Preconditions.checkState(target.isValidAssignmentTarget(), target);
+    Preconditions.checkState(mayBeExpression(expr), expr);
     return new Node(Token.ASSIGN, target, expr);
   }
 

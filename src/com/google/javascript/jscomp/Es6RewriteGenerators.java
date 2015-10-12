@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -185,9 +187,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
 
     Node generator = IR.var(
         IR.name(GENERATOR_YIELD_ALL_NAME),
-        IR.call(
-            NodeUtil.newQName(compiler, Es6ToEs3Converter.MAKE_ITER),
-            n.removeFirstChild()));
+        makeIterator(compiler, n.removeFirstChild()));
     Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
 
     Node assignIterResult = IR.assign(
@@ -1184,5 +1184,4 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
       this.catchBlock = catchBlock;
     }
   }
-
 }

@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
+
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -279,42 +281,65 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
 
     // Convert 'var [x, y] = rhs' to:
-    // var temp = rhs;
-    // var x = temp[0];
-    // var y = temp[1];
+    // var temp = $jscomp.makeIterator(rhs);
+    // var x = temp.next().value;
+    // var y = temp.next().value;
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
-    Node tempDecl = IR.var(IR.name(tempVarName), rhs.detachFromParent())
-        .useSourceInfoIfMissingFromForTree(arrayPattern);
+    Node tempDecl = IR.var(
+        IR.name(tempVarName),
+        makeIterator(compiler, rhs.detachFromParent()));
+    tempDecl.useSourceInfoIfMissingFromForTree(arrayPattern);
     nodeToDetach.getParent().addChildBefore(tempDecl, nodeToDetach);
 
-    int i = 0;
-    for (Node child = arrayPattern.getFirstChild(), next; child != null; child = next, i++) {
+    for (Node child = arrayPattern.getFirstChild(), next; child != null; child = next) {
       next = child.getNext();
       if (child.isEmpty()) {
+        // Just call the next() method to advance the iterator, but throw away the value.
+        Node nextCall = IR.exprResult(IR.call(IR.getprop(IR.name(tempVarName), IR.string("next"))));
+        nextCall.useSourceInfoIfMissingFromForTree(child);
+        nodeToDetach.getParent().addChildBefore(nextCall, nodeToDetach);
         continue;
       }
 
       Node newLHS, newRHS;
       if (child.isDefaultValue()) {
-        Node getElem = IR.getelem(IR.name(tempVarName), IR.number(i));
         //   [x = defaultValue] = rhs;
         // becomes
-        //   var temp = rhs;
-        //   x = (temp[0] === undefined) ? defaultValue : temp[0];
+        //   var temp0 = $jscomp.makeIterator(rhs);
+        //   var temp1 = temp.next().value
+        //   x = (temp1 === undefined) ? defaultValue : temp1;
+        String nextVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+        Node var = IR.var(
+            IR.name(nextVarName),
+            IR.getprop(
+                IR.call(IR.getprop(IR.name(tempVarName), IR.string("next"))),
+                IR.string("value")));
+        var.useSourceInfoIfMissingFromForTree(child);
+        nodeToDetach.getParent().addChildBefore(var, nodeToDetach);
+
         newLHS = child.getFirstChild().detachFromParent();
-        newRHS = defaultValueHook(getElem, child.getLastChild().detachFromParent());
+        newRHS = defaultValueHook(IR.name(nextVarName), child.getLastChild().detachFromParent());
       } else if (child.isRest()) {
+        //   [...x] = rhs;
+        // becomes
+        //   var temp = $jscomp.makeIterator(rhs);
+        //   x = $jscomp.arrayFromIterator(temp);
         newLHS = child.detachFromParent();
         newLHS.setType(Token.NAME);
-        // [].slice.call(temp, i)
         newRHS =
             IR.call(
-                IR.getprop(IR.getprop(IR.arraylit(), IR.string("slice")), IR.string("call")),
-                IR.name(tempVarName),
-                IR.number(i));
+                NodeUtil.newQName(compiler, "$jscomp.arrayFromIterator"),
+                IR.name(tempVarName));
       } else {
+        // LHS is just a name (or a nested pattern).
+        //   var [x] = rhs;
+        // becomes
+        //   var temp = $jscomp.makeIterator(rhs);
+        //   var x = temp.next().value;
         newLHS = child.detachFromParent();
-        newRHS = IR.getelem(IR.name(tempVarName), IR.number(i));
+        newRHS = IR.getprop(
+            IR.call(IR.getprop(IR.name(tempVarName), IR.string("next"))),
+            IR.string("value"));
       }
       Node newNode;
       if (parent.isAssign()) {

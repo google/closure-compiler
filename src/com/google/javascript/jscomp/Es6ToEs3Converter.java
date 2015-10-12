@@ -88,7 +88,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
   // These functions are defined in js/es6_runtime.js
   static final String INHERITS = "$jscomp.inherits";
-  static final String MAKE_ITER = "$jscomp.makeIterator";
 
   public Es6ToEs3Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -258,13 +257,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
     Node iterResult = IR.name(ITER_RESULT + variableName);
 
-    Node makeIter = IR.call(
-        NodeUtil.newQName(
-            compiler, MAKE_ITER),
-        iterable);
-    compiler.needsEs6Runtime = true;
-
-    Node init = IR.var(iterName.cloneTree(), makeIter);
+    Node init = IR.var(iterName.cloneTree(), makeIterator(compiler, iterable));
     Node initIterResult = iterResult.cloneTree();
     initIterResult.addChildToFront(getNext.cloneTree());
     init.addChildToBack(initIterResult);
@@ -897,6 +890,16 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    */
   private void cannotConvertYet(Node n, String feature) {
     compiler.report(JSError.make(n, CANNOT_CONVERT_YET, feature));
+  }
+
+  /**
+   * Returns a call to $jscomp.makeIterator with {@code iterable} as its argument.
+   */
+  static Node makeIterator(AbstractCompiler compiler, Node iterable) {
+    compiler.needsEs6Runtime = true;
+    return IR.call(
+        NodeUtil.newQName(compiler, "$jscomp.makeIterator"),
+        iterable);
   }
 
   /**
