@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.lint.CheckArguments;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckForInOverArray;
@@ -1588,6 +1589,7 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       ImmutableList.Builder<Callback> callbacks = ImmutableList.<Callback>builder()
+          .add(new CheckArguments(compiler))
           .add(new CheckEmptyStatements(compiler))
           .add(new CheckEnums(compiler))
           .add(new CheckInterfaces(compiler))

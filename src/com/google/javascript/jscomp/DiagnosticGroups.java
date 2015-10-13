@@ -20,6 +20,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.lint.CheckArguments;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
 import com.google.javascript.jscomp.lint.CheckEnums;
 import com.google.javascript.jscomp.lint.CheckForInOverArray;
@@ -429,6 +430,7 @@ public class DiagnosticGroups {
   // provide optional suggestions.
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup("lintChecks", // undocumented
+          CheckArguments.BAD_ARGUMENTS_USAGE,
           CheckEmptyStatements.USELESS_EMPTY_STATEMENT,
           CheckEnums.DUPLICATE_ENUM_VALUE,
           // TODO(tbreisacher): Consider moving the CheckInterfaces warnings into the

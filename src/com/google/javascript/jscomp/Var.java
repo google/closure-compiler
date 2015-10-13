@@ -203,7 +203,7 @@ public class Var implements StaticSlot, StaticRef {
         && parent.getFirstChild() == nameNode;
   }
 
-  boolean isArguments() {
+  public boolean isArguments() {
     return false;
   }
 
@@ -243,7 +243,7 @@ public class Var implements StaticSlot, StaticRef {
     }
 
     @Override
-    boolean isArguments() {
+    public boolean isArguments() {
       return true;
     }
 
