@@ -111,20 +111,6 @@ $jscomp.makeIterator = function(iterable) {
   });
 };
 
-/**
- * Copies the values from an Iterable into an Array.
- * @param {string|!Array<T>|!Iterable<T>} iterable
- * @return {!Array<T>}
- * @template T
- */
-$jscomp.arrayFromIterable = function(iterable) {
-  if (iterable instanceof Array) {
-    return iterable;
-  } else {
-    return $jscomp.arrayFromIterator($jscomp.makeIterator(iterable));
-  }
-};
-
 
 /**
  * Copies the values from an Iterator into an Array. The important difference
@@ -142,6 +128,36 @@ $jscomp.arrayFromIterator = function(iterator) {
   }
   return arr;
 };
+
+
+/**
+ * Copies the values from an Iterable into an Array.
+ * @param {string|!Array<T>|!Iterable<T>} iterable
+ * @return {!Array<T>}
+ * @template T
+ */
+$jscomp.arrayFromIterable = function(iterable) {
+  if (iterable instanceof Array) {
+    return iterable;
+  } else {
+    return $jscomp.arrayFromIterator($jscomp.makeIterator(iterable));
+  }
+};
+
+
+/**
+ * Copies the values from an Arguments object into an Array.
+ * @param {!Arguments} args
+ * @return {!Array}
+ */
+$jscomp.arrayFromArguments = function(args) {
+  var result = [];
+  for (var i = 0; i < args.length; i++) {
+    result.push(args[i]);
+  }
+  return result;
+};
+
 
 /**
  * Inherit the prototype methods and static methods from one constructor

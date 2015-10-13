@@ -332,13 +332,10 @@ public class IR {
     return new Node(Token.CONTINUE, name);
   }
 
-
-  //
-
   public static Node call(Node target, Node ... args) {
     Node call = new Node(Token.CALL, target);
     for (Node arg : args) {
-      Preconditions.checkState(mayBeExpression(arg));
+      Preconditions.checkState(mayBeExpression(arg), arg);
       call.addChildToBack(arg);
     }
     return call;

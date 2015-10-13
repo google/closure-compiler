@@ -145,7 +145,7 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
         break;
       case Token.YIELD:
         if (n.isYieldFor()) {
-          visitYieldFor(n, parent);
+          visitYieldFor(t, n, parent);
         } else if (!parent.isExprResult()) {
           visitYieldExpr(n, parent);
         } else {
@@ -182,12 +182,12 @@ public final class Es6RewriteGenerators extends NodeTraversal.AbstractPostOrderC
    * var i = $jscomp$generator$yield$entry.value;
    * </code>
    */
-  private void visitYieldFor(Node n, Node parent) {
+  private void visitYieldFor(NodeTraversal t, Node n, Node parent) {
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
 
     Node generator = IR.var(
         IR.name(GENERATOR_YIELD_ALL_NAME),
-        makeIterator(compiler, n.removeFirstChild()));
+        makeIterator(t, compiler, n.removeFirstChild()));
     Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
 
     Node assignIterResult = IR.assign(

@@ -1401,10 +1401,39 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "var arr = [].concat($jscomp.arrayFromIterable(mid()));");
     test("f(1, [2, ...mid, 4], 5);",
         "f(1, [].concat([2], $jscomp.arrayFromIterable(mid), [4]), 5);");
-    test("function f() { return [...arguments]; };",
-        "function f() { return [].concat($jscomp.arrayFromIterable(arguments)); };");
-    test("function f() { return [...arguments, 2]; };",
-        "function f() { return [].concat($jscomp.arrayFromIterable(arguments), [2]); };");
+    test(
+        "function f() { return [...arguments]; };",
+        LINE_JOINER.join(
+            "function f() {",
+            "  return [].concat($jscomp.arrayFromArguments(arguments));",
+            "};"));
+    test(
+        "function f() { return [...arguments, 2]; };",
+        LINE_JOINER.join(
+            "function f() {",
+            "  return [].concat($jscomp.arrayFromArguments(arguments), [2]);",
+            "};"));
+  }
+
+  public void testUnsupportedUsesOfArguments() {
+    // In this case, we don't recognize that 'x' is be an 'Arguments' object, so we produce
+    // code that will ultimately fail with a TypeError at runtime. However, this code fails the
+    // CheckArguments lint check so it should happen rarely.
+    test(
+        LINE_JOINER.join(
+            "function g(x) {",
+            "  return [...x];",
+            "}",
+            "function f() {",
+            "  return g(arguments);",
+            "}"),
+        LINE_JOINER.join(
+            "function g(x) {",
+            "  return [].concat($jscomp.arrayFromIterable(x));",
+            "}",
+            "function f() {",
+            "  return g(arguments);",
+            "}"));
   }
 
   public void testSpreadCall() {

@@ -344,6 +344,18 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testArrayDestructuringArguments() {
+    test(
+    "function f() { var [x, y] = arguments; }",
+    LINE_JOINER.join(
+        "function f() {",
+        "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(",
+        "      $jscomp.arrayFromArguments(arguments));",
+        "  var x = $jscomp$destructuring$var0.next().value;",
+        "  var y = $jscomp$destructuring$var0.next().value;",
+        "}"));
+  }
+
   public void testMixedDestructuring() {
     test(
         "var [a,{b,c}] = foo();",
