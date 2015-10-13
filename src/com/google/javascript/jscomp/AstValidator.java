@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -612,7 +614,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateHasSourceName(Node n) {
     String sourceName = n.getSourceFileName();
-    if (sourceName == null || sourceName.isEmpty()) {
+    if (isNullOrEmpty(sourceName)) {
       violation("Missing 'source name' annotation.", n);
     }
   }

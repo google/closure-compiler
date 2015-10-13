@@ -183,11 +183,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
   private Node tryReduceVoid(Node n) {
     Node child = n.getFirstChild();
-    if (!child.isNumber() || child.getDouble() != 0.0) {
-      if (!mayHaveSideEffects(n)) {
-        n.replaceChild(child, IR.number(0));
-        reportCodeChange();
-      }
+    if ((!child.isNumber() || child.getDouble() != 0.0) && !mayHaveSideEffects(n)) {
+      n.replaceChild(child, IR.number(0));
+      reportCodeChange();
     }
     return n;
   }

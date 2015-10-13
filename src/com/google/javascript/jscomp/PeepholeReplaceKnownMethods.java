@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -185,7 +187,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
    * @return string with leading and trailing zeros removed
    */
   private static String normalizeNumericString(String input) {
-    if (input == null || input.isEmpty()) {
+    if (isNullOrEmpty(input)) {
       return input;
     }
 

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -162,7 +164,7 @@ final class RenameVars implements CompilerPass {
       @Nullable Set<String> reservedNames,
       @Nullable NameGenerator nameGenerator) {
     this.compiler = compiler;
-    this.prefix = prefix == null ? "" : prefix;
+    this.prefix = nullToEmpty(prefix);
     this.localRenamingOnly = localRenamingOnly;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     if (generatePseudoNames) {

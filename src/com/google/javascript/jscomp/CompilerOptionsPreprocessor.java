@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 /**
@@ -29,8 +31,7 @@ final class CompilerOptionsPreprocessor {
 
   static void preprocess(CompilerOptions options) {
     if (options.checkMissingGetCssNameLevel.isOn()
-        && (options.checkMissingGetCssNameBlacklist == null
-            || options.checkMissingGetCssNameBlacklist.isEmpty())) {
+        && (isNullOrEmpty(options.checkMissingGetCssNameBlacklist))) {
       throw new InvalidOptionsException(
           "Cannot check use of goog.getCssName because of empty blacklist.");
     }

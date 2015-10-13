@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
@@ -683,11 +684,17 @@ class TypeValidator {
     if (propSlot == null) {
       // Not implemented
       String sourceName = n.getSourceFileName();
-      sourceName = sourceName == null ? "" : sourceName;
-      registerMismatch(instance, implementedInterface,
-          report(JSError.make(n,
-          INTERFACE_METHOD_NOT_IMPLEMENTED,
-          prop, implementedInterface.toString(), instance.toString())));
+      sourceName = nullToEmpty(sourceName);
+      registerMismatch(
+          instance,
+          implementedInterface,
+          report(
+              JSError.make(
+                  n,
+                  INTERFACE_METHOD_NOT_IMPLEMENTED,
+                  prop,
+                  implementedInterface.toString(),
+                  instance.toString())));
     } else {
       Node propNode = propSlot.getDeclaration() == null ?
           null : propSlot.getDeclaration().getNode();

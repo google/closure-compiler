@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -175,7 +176,7 @@ class RenameProperties implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, new ProcessProperties());
 
     Set<String> reservedNames =
-        new HashSet<>(externedNames.size() + quotedNames.size());
+        Sets.newHashSetWithExpectedSize(externedNames.size() + quotedNames.size());
     reservedNames.addAll(externedNames);
     reservedNames.addAll(quotedNames);
 

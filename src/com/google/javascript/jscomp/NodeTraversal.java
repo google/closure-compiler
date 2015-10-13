@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -816,7 +818,7 @@ public class NodeTraversal {
 
   private static String getSourceName(Node n) {
     String name = n.getSourceFileName();
-    return name == null ? "" : name;
+    return nullToEmpty(name);
   }
 
   InputId getInputId() {

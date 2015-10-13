@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
@@ -90,7 +91,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
    *     appear in warning messages emitted by the compiler.
    */
   public SourceFile(String fileName) {
-    if (fileName == null || fileName.isEmpty()) {
+    if (isNullOrEmpty(fileName)) {
       throw new IllegalArgumentException("a source must have a name");
     }
 

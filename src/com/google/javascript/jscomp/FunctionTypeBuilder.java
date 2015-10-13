@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
@@ -209,7 +210,7 @@ final class FunctionTypeBuilder {
       Node errorRoot, TypedScope scope) {
     Preconditions.checkNotNull(errorRoot);
 
-    this.fnName = fnName == null ? "" : fnName;
+    this.fnName = nullToEmpty(fnName);
     this.codingConvention = compiler.getCodingConvention();
     this.typeRegistry = compiler.getTypeRegistry();
     this.errorRoot = errorRoot;
