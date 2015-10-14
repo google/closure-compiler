@@ -76,6 +76,13 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  public void testVariableDeclaredBeforePassVaraiableReferenceCheck() {
+    test(createCompilerOptions(),
+        "enum A { B, C }\n"
+        + "function b(a:A = A.B) {}\n"
+        + "b();", "");
+  }
+
   @Override
   CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
