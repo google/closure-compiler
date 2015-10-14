@@ -42,7 +42,8 @@ public class Linter {
     SourceFile file = SourceFile.fromFile(path.toString());
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
