@@ -199,6 +199,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
+    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
+            && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
+      checks.add(convertEs6TypedToEs6);
+    }
+
     checks.add(checkVariableReferences);
 
     if (!options.skipNonTranspilationPasses && options.closurePass) {
@@ -223,11 +228,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.angularPass && !options.skipNonTranspilationPasses) {
       checks.add(angularPass);
-    }
-
-    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
-        && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
-      checks.add(convertEs6TypedToEs6);
     }
 
     if (options.generateExports && !options.skipNonTranspilationPasses) {
