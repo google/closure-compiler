@@ -47,9 +47,9 @@ public final class FunctionTypeBuilder {
   private JSType restFormals = null;
   private JSType returnType = null;
   private boolean loose = false;
-  private NominalType nominalType;
+  private JSType nominalType;
   // Only used to build DeclaredFunctionType for prototype methods
-  private NominalType receiverType;
+  private JSType receiverType;
   // Non-empty iff this function has an @template annotation
   private ImmutableList<String> typeParameters = ImmutableList.of();
 
@@ -121,9 +121,9 @@ public final class FunctionTypeBuilder {
     return this;
   }
 
-  public FunctionTypeBuilder addNominalType(NominalType cl) {
-    Preconditions.checkState(nominalType == null);
-    nominalType = cl;
+  public FunctionTypeBuilder addNominalType(JSType t) {
+    Preconditions.checkState(this.nominalType == null);
+    this.nominalType = t;
     return this;
   }
 
@@ -135,9 +135,9 @@ public final class FunctionTypeBuilder {
     return this;
   }
 
-  public FunctionTypeBuilder addReceiverType(NominalType cl) {
-    Preconditions.checkState(receiverType == null);
-    receiverType = cl;
+  public FunctionTypeBuilder addReceiverType(JSType t) {
+    Preconditions.checkState(this.receiverType == null);
+    this.receiverType = t;
     return this;
   }
 
@@ -150,6 +150,18 @@ public final class FunctionTypeBuilder {
   }
 
   public FunctionType buildFunction() {
+    // qmarkFunctionBuilder().buildDeclaration creates a non-loose function,
+    // we change that here to have a unique representation in FunctionType.
+    if (this.requiredFormals.isEmpty()
+        && this.optionalFormals.isEmpty()
+        && this.restFormals != null && this.restFormals.isUnknown()
+        && this.returnType != null && this.returnType.isUnknown()
+        && this.nominalType == null
+        && this.receiverType == null
+        && this.typeParameters.isEmpty()
+        && this.outerVars.isEmpty()) {
+      return FunctionType.QMARK_FUNCTION;
+    }
     FunctionType result = FunctionType.normalized(
         requiredFormals, optionalFormals, restFormals, returnType,
         nominalType, receiverType, outerVars, typeParameters, loose);

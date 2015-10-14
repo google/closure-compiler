@@ -40,10 +40,12 @@ public final class FunctionType {
   private final JSType returnType;
   private final boolean isLoose;
   private final ImmutableMap<String, JSType> outerVarPreconditions;
-  // non-null iff this is a constructor/interface
-  final NominalType nominalType;
-  // non-null iff this is a prototype method
-  private final NominalType receiverType;
+  // If this FunctionType is a constructor/interface, this field stores the
+  // type of the instance.
+  private final JSType nominalType;
+  // If this FunctionType is a prototype method, this field stores the
+  // type of the instance.
+  private final JSType receiverType;
   // non-empty iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
   private static final boolean DEBUGGING = false;
@@ -53,8 +55,8 @@ public final class FunctionType {
       ImmutableList<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType nominalType,
-      NominalType receiverType,
+      JSType nominalType,
+      JSType receiverType,
       ImmutableMap<String, JSType> outerVars,
       ImmutableList<String> typeParameters,
       boolean isLoose) {
@@ -126,8 +128,8 @@ public final class FunctionType {
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType nominalType,
-      NominalType receiverType,
+      JSType nominalType,
+      JSType receiverType,
       Map<String, JSType> outerVars,
       ImmutableList<String> typeParameters,
       boolean isLoose) {
@@ -190,17 +192,30 @@ public final class FunctionType {
     return this == TOP_FUNCTION || this == LOOSE_TOP_FUNCTION;
   }
 
-  public boolean isConstructor() {
-    return nominalType != null && !nominalType.isInterface();
+  private static NominalType getNominalTypeIfSingletonObj(JSType t) {
+    return t == null ? null : t.getNominalTypeIfSingletonObj();
+  }
+
+  // Looser than the next two methods; also true for types like:
+  // function(new:T) and function(new:(Foo|Bar))
+  public boolean isSomeConstructorOrInterface() {
+    return this.nominalType != null;
+  }
+
+  public boolean isUniqueConstructor() {
+    NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
+    return nt != null && nt.isClass();
   }
 
   public boolean isInterfaceDefinition() {
-    return nominalType != null && nominalType.isInterface();
+    NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
+    return nt != null && nt.isInterface();
   }
 
   public JSType getSuperPrototype() {
-    Preconditions.checkState(isConstructor());
-    NominalType superClass = nominalType.getInstantiatedSuperclass();
+    Preconditions.checkState(isUniqueConstructor());
+    NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
+    NominalType superClass = nt.getInstantiatedSuperclass();
     return superClass == null ? null : superClass.getPrototype();
   }
 
@@ -277,29 +292,19 @@ public final class FunctionType {
 
   public JSType getInstanceTypeOfCtor() {
     if (!isGeneric()) {
-      return nominalType.getInstanceAsJSType();
+      return this.nominalType;
     }
-    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-    for (String typeVar : getTypeParameters()) {
-      builder.put(typeVar, JSType.UNKNOWN);
-    }
-    return instantiateGenerics(builder.build())
-        .nominalType.getInstanceAsJSType();
+    return getNominalTypeIfSingletonObj(this.nominalType)
+        .instantiateGenerics(JSType.MAP_TO_UNKNOWN).getInstanceAsJSType();
   }
 
   public JSType getThisType() {
-    if (receiverType != null) {
-      return receiverType.getInstanceAsJSType();
-    }
-    if (nominalType != null) {
-      return nominalType.getInstanceAsJSType();
-    }
-    return null;
+    return this.receiverType != null ? this.receiverType : this.nominalType;
   }
 
   public JSType getConstructorObject() {
-    Preconditions.checkState(nominalType != null);
-    return NominalType.getConstructorObject(this);
+    NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
+    return Preconditions.checkNotNull(nt).getConstructorObject(this);
   }
 
   public FunctionType transformByCallProperty() {
@@ -307,16 +312,16 @@ public final class FunctionType {
       return QMARK_FUNCTION;
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    builder.addReqFormal(receiverCallApply(receiverType));
-    for (JSType type : requiredFormals) {
+    builder.addReqFormal(fromReceiverToFirstFormal());
+    for (JSType type : this.requiredFormals) {
       builder.addReqFormal(type);
     }
-    for (JSType type : optionalFormals) {
+    for (JSType type : this.optionalFormals) {
       builder.addOptFormal(type);
     }
-    builder.addRestFormals(restFormals);
-    builder.addRetType(returnType);
-    builder.addTypeParameters(typeParameters);
+    builder.addRestFormals(this.restFormals);
+    builder.addRetType(this.returnType);
+    builder.addTypeParameters(this.typeParameters);
     return builder.buildFunction();
   }
 
@@ -331,21 +336,25 @@ public final class FunctionType {
       return instantiateGenericsWithUnknown(this).transformByApplyProperty(commonTypes);
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    builder.addReqFormal(receiverCallApply(receiverType));
+    builder.addReqFormal(fromReceiverToFirstFormal());
     builder.addOptFormal(JSType.join(
         commonTypes.getArrayInstance(), commonTypes.getArgumentsArrayType()));
-    builder.addRetType(returnType);
+    builder.addRetType(this.returnType);
     return builder.buildFunction();
   }
 
-  private static JSType receiverCallApply(NominalType receiverType) {
-    if (receiverType == null) {
+  private JSType fromReceiverToFirstFormal() {
+    if (this.receiverType == null) {
       return JSType.UNKNOWN;
     }
-    if (receiverType.isGeneric()) {
-      return receiverType.instantiateGenerics(JSType.MAP_TO_UNKNOWN).getInstanceAsJSType();
+    NominalType nt = this.receiverType.getNominalTypeIfSingletonObj();
+    if (nt == null) {
+      return this.receiverType;
     }
-    return receiverType.getInstanceAsJSType();
+    if (nt.isGeneric()) {
+      return nt.instantiateGenerics(JSType.MAP_TO_UNKNOWN).getInstanceAsJSType();
+    }
+    return nt.getInstanceAsJSType();
   }
 
   // Used to get a declared type for an unannotated function that appears in
@@ -358,28 +367,28 @@ public final class FunctionType {
     Preconditions.checkState(!isLoose(), "Loose function: %s", this);
     Preconditions.checkState(!isGeneric(), "Generic function: %s", this);
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    for (JSType type : requiredFormals) {
+    for (JSType type : this.requiredFormals) {
       builder.addReqFormal(type);
     }
-    for (JSType type : optionalFormals) {
+    for (JSType type : this.optionalFormals) {
       builder.addOptFormal(type);
     }
-    builder.addRestFormals(restFormals);
-    builder.addRetType(returnType);
-    builder.addNominalType(nominalType);
-    builder.addReceiverType(receiverType);
+    builder.addRestFormals(this.restFormals);
+    builder.addRetType(this.returnType);
+    builder.addNominalType(this.nominalType);
+    builder.addReceiverType(this.receiverType);
     return builder.buildDeclaration();
   }
 
-  // Returns non-null JSType
   private static JSType nullAcceptingMeet(JSType t1, JSType t2) {
-    Preconditions.checkArgument(t1 != null || t2 != null);
     if (t1 == null) {
       return t2;
-    } else if (t2 == null) {
+    }
+    if (t2 == null) {
       return t1;
     }
-    return JSType.meet(t1, t2);
+    JSType tmp = JSType.meet(t1, t2);
+    return tmp.isBottom() ? null : tmp;
   }
 
   // TODO(dimvar): we need to clean up the combination of loose functions with
@@ -469,20 +478,17 @@ public final class FunctionType {
     }
 
     // covariance for the new: type
-    if (nominalType == null && other.nominalType != null
-        || nominalType != null && other.nominalType == null
-        || nominalType != null && other.nominalType != null
-           && !nominalType.isSubtypeOf(other.nominalType)) {
+    if (this.nominalType == null && other.nominalType != null
+        || this.nominalType != null && other.nominalType == null
+        || this.nominalType != null && other.nominalType != null
+           && !this.nominalType.isSubtypeOf(other.nominalType)) {
       return false;
     }
 
-    // The correct behavior is covariance for the @this type.
-    // However, we allow a function with @this to be a subtype of a
-    // function without @this, to avoid some false positives.
-    // See: testFunctionSubtypingWithReceiverTypes
-    // TODO(dimvar): revisit this after we allow any JSType for the receiverType
-    if (receiverType != null && other.receiverType != null
-        && !receiverType.isSubtypeOf(other.receiverType)) {
+    // A function without @this can be a subtype of a function with @this.
+    if (this.receiverType != null && other.receiverType == null
+        || this.receiverType != null && other.receiverType != null
+           && !this.receiverType.isSubtypeOf(other.receiverType)) {
       return false;
     }
 
@@ -491,13 +497,48 @@ public final class FunctionType {
         || returnType.isSubtypeOf(other.returnType);
   }
 
+  // Avoid using JSType#join if possible, to avoid creating new types
+  private static JSType joinNominalTypes(JSType nt1, JSType nt2) {
+    if (nt1 == null || nt2 == null) {
+      return null;
+    }
+    NominalType n1 = getNominalTypeIfSingletonObj(nt1);
+    NominalType n2 = getNominalTypeIfSingletonObj(nt2);
+    if (n1 != null && n2 != null) {
+      NominalType tmp = NominalType.pickSuperclass(n1, n2);
+      return tmp == null ? null : tmp.getInstanceAsJSType();
+    }
+    // One of the nominal types is non-standard; can't avoid the join
+    return JSType.join(nt1, nt2);
+  }
+
+  // Avoid using JSType#meet if possible, to avoid creating new types
+  private static JSType meetNominalTypes(JSType nt1, JSType nt2) {
+    if (nt1 == null) {
+      return nt2;
+    }
+    if (nt2 == null) {
+      return nt1;
+    }
+    NominalType n1 = getNominalTypeIfSingletonObj(nt1);
+    NominalType n2 = getNominalTypeIfSingletonObj(nt2);
+    if (n1 != null && n2 != null) {
+      NominalType tmp = NominalType.pickSubclass(n1, n2);
+      return tmp == null ? null : tmp.getInstanceAsJSType();
+    }
+    // One of the nominal types is non-standard; can't avoid the meet
+    return JSType.meet(nt1, nt2);
+  }
+
   static FunctionType join(FunctionType f1, FunctionType f2) {
     if (f1 == null) {
       return f2;
     } else if (f2 == null || f1.equals(f2)) {
       return f1;
-    } else if (f1.isQmarkFunction() || f2.isQmarkFunction()) {
-      return QMARK_FUNCTION;
+    } else if (f1.isQmarkFunction()) {
+      return f2 == QMARK_FUNCTION ? QMARK_FUNCTION : f1;
+    } else if (f2.isQmarkFunction()) {
+      return f2;
     } else if (f1.isTopFunction() || f2.isTopFunction()) {
       return TOP_FUNCTION;
     }
@@ -525,7 +566,7 @@ public final class FunctionType {
         f1.requiredFormals.size(), f2.requiredFormals.size());
     for (int i = 0; i < maxRequiredArity; i++) {
       JSType reqFormal = nullAcceptingMeet(f1.getFormalType(i), f2.getFormalType(i));
-      if (reqFormal.isBottom()) {
+      if (reqFormal == null) {
         return BOTTOM_FUNCTION;
       }
       builder.addReqFormal(reqFormal);
@@ -535,23 +576,21 @@ public final class FunctionType {
         f2.requiredFormals.size() + f2.optionalFormals.size());
     for (int i = maxRequiredArity; i < maxTotalArity; i++) {
       JSType optFormal = nullAcceptingMeet(f1.getFormalType(i), f2.getFormalType(i));
-      if (optFormal.isBottom()) {
+      if (optFormal == null) {
         return BOTTOM_FUNCTION;
       }
       builder.addOptFormal(optFormal);
     }
     if (f1.restFormals != null && f2.restFormals != null) {
       JSType newRestFormals = nullAcceptingMeet(f1.restFormals, f2.restFormals);
-      if (newRestFormals.isBottom()) {
+      if (newRestFormals == null) {
         return BOTTOM_FUNCTION;
       }
       builder.addRestFormals(newRestFormals);
     }
     builder.addRetType(JSType.join(f1.returnType, f2.returnType));
-    builder.addNominalType(
-        NominalType.pickSuperclass(f1.nominalType, f2.nominalType));
-    builder.addReceiverType(
-        NominalType.pickSuperclass(f1.receiverType, f2.receiverType));
+    builder.addNominalType(joinNominalTypes(f1.nominalType, f2.nominalType));
+    builder.addReceiverType(joinNominalTypes(f1.receiverType, f2.receiverType));
     return builder.buildFunction();
   }
 
@@ -589,8 +628,8 @@ public final class FunctionType {
       return BOTTOM_FUNCTION;
     }
     builder.addRetType(retType);
-    builder.addNominalType(NominalType.pickSubclass(this.nominalType, other.nominalType));
-    builder.addReceiverType(NominalType.pickSubclass(this.receiverType, other.receiverType));
+    builder.addNominalType(meetNominalTypes(this.nominalType, other.nominalType));
+    builder.addReceiverType(meetNominalTypes(this.receiverType, other.receiverType));
     return builder.buildFunction();
   }
 
@@ -645,15 +684,13 @@ public final class FunctionType {
       return BOTTOM_FUNCTION;
     }
     builder.addRetType(retType);
-    // TODO(dimvar): these two are not correct. We should be picking the
+    // NOTE(dimvar): these two are not correct. We should be picking the
     // greatest lower bound of the types if they are incomparable.
     // Eg, this case arises when an interface extends multiple interfaces.
     // OTOH, it may be enough to detect that during GTI, and not implement the
-    // more expensive methods in NominalType.
-    builder.addNominalType(
-        NominalType.pickSubclass(f1.nominalType, f2.nominalType));
-    builder.addReceiverType(
-        NominalType.pickSubclass(f1.receiverType, f2.receiverType));
+    // more expensive methods (in NominalType or ObjectType).
+    builder.addNominalType(meetNominalTypes(f1.nominalType, f2.nominalType));
+    builder.addReceiverType(meetNominalTypes(f1.receiverType, f2.receiverType));
     return builder.buildFunction();
   }
 
@@ -819,13 +856,32 @@ public final class FunctionType {
     return builder.buildFunction();
   }
 
+  // Avoid JSType#substituteGenerics if possible, to avoid creating new types.
+  private static JSType substGenericsInNomType(JSType nt, Map<String, JSType> typeMap) {
+    if (nt == null) {
+      return null;
+    }
+    NominalType tmp = nt.getNominalTypeIfSingletonObj();
+    if (tmp == null) {
+      return nt.substituteGenerics(typeMap);
+    }
+    if (!tmp.isGeneric()) {
+      return tmp.getInstanceAsJSType();
+    }
+    if (typeMap.isEmpty()) {
+      return nt;
+    }
+    return JSType.fromObjectType(ObjectType.fromNominalType(
+        tmp.instantiateGenerics(typeMap)));
+  }
+
   private FunctionType substituteNominalGenerics(Map<String, JSType> typeMap) {
     if (typeMap.isEmpty()) {
       return this;
     }
     Map<String, JSType> reducedMap = typeMap;
     boolean foundShadowedTypeParam = false;
-    for (String typeParam : typeParameters) {
+    for (String typeParam : this.typeParameters) {
       if (typeMap.containsKey(typeParam)) {
         foundShadowedTypeParam = true;
         break;
@@ -841,28 +897,24 @@ public final class FunctionType {
       reducedMap = builder.build();
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    for (JSType reqFormal : requiredFormals) {
+    for (JSType reqFormal : this.requiredFormals) {
       builder.addReqFormal(reqFormal.substituteGenerics(reducedMap));
     }
-    for (JSType optFormal : optionalFormals) {
+    for (JSType optFormal : this.optionalFormals) {
       builder.addOptFormal(optFormal.substituteGenerics(reducedMap));
     }
-    if (restFormals != null) {
+    if (this.restFormals != null) {
       builder.addRestFormals(restFormals.substituteGenerics(reducedMap));
     }
-    builder.addRetType(returnType.substituteGenerics(reducedMap));
+    builder.addRetType(this.returnType.substituteGenerics(reducedMap));
     if (isLoose()) {
       builder.addLoose();
     }
-    if (nominalType != null) {
-      builder.addNominalType(nominalType.instantiateGenerics(typeMap));
-    }
-    if (receiverType != null) {
-      builder.addReceiverType(receiverType.instantiateGenerics(typeMap));
-    }
+    builder.addNominalType(substGenericsInNomType(this.nominalType, typeMap));
+    builder.addReceiverType(substGenericsInNomType(this.receiverType, typeMap));
     // TODO(blickly): Do we need instatiation here?
-    for (String var : outerVarPreconditions.keySet()) {
-      builder.addOuterVarPrecondition(var, outerVarPreconditions.get(var));
+    for (String var : this.outerVarPreconditions.keySet()) {
+      builder.addOuterVarPrecondition(var, this.outerVarPreconditions.get(var));
     }
     builder.addTypeParameters(this.typeParameters);
     return builder.buildFunction();
@@ -874,23 +926,21 @@ public final class FunctionType {
       return this;
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    for (JSType reqFormal : requiredFormals) {
+    for (JSType reqFormal : this.requiredFormals) {
       builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
     }
-    for (JSType optFormal : optionalFormals) {
+    for (JSType optFormal : this.optionalFormals) {
       builder.addOptFormal(optFormal.substituteGenerics(typeMap));
     }
-    if (restFormals != null) {
+    if (this.restFormals != null) {
       builder.addRestFormals(restFormals.substituteGenerics(typeMap));
     }
-    builder.addRetType(returnType.substituteGenerics(typeMap));
+    builder.addRetType(this.returnType.substituteGenerics(typeMap));
     if (isLoose()) {
       builder.addLoose();
     }
-    if (nominalType != null) {
-      builder.addNominalType(nominalType.instantiateGenerics(typeMap));
-    }
-    if (receiverType != null) {
+    builder.addNominalType(substGenericsInNomType(this.nominalType, typeMap));
+    if (this.receiverType != null) {
       // NOTE(dimvar):
       // We have no way of knowing if receiverType comes from an @this
       // annotation, or because this type represents a method.
@@ -902,10 +952,11 @@ public final class FunctionType {
       // In the else branch, we are substituting incorrectly when receiverType
       // comes from a method declaration, but I have not been able to find a
       // test that exposes the bug.
-      if (receiverType.isUninstantiatedGenericType()) {
-        builder.addReceiverType(receiverType);
+      NominalType recvType = getNominalTypeIfSingletonObj(this.receiverType);
+      if (recvType.isUninstantiatedGenericType()) {
+        builder.addReceiverType(this.receiverType);
       } else {
-        builder.addReceiverType(receiverType.instantiateGenerics(typeMap));
+        builder.addReceiverType(substGenericsInNomType(this.receiverType, typeMap));
       }
     }
     // TODO(blickly): Do we need instatiation here?

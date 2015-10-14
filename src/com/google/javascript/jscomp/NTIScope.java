@@ -319,7 +319,7 @@ final class NTIScope implements DeclaredTypeRegistry {
       if (!hasThis()) {
         return null;
       }
-      return getDeclaredFunctionType().getThisType().getInstanceAsJSType();
+      return getDeclaredFunctionType().getThisType();
     }
     Declaration decl = getLocalDeclaration(name, false);
     if (decl != null) {

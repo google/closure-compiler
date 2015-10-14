@@ -167,7 +167,7 @@ final class ObjectType implements TypeWithProperties {
     return this.fn != null && hasNonPrototypeProperties();
   }
 
-  boolean isInterface() {
+  boolean isInterfaceInstance() {
     return this.nominalType != null && this.nominalType.isInterface();
   }
 
@@ -517,7 +517,7 @@ final class ObjectType implements TypeWithProperties {
         // Interfaces are structs but we allow them to be used in a context that
         // expects a record type, even though it is unsound.
         // TODO(dimvar): Remove this when we switch to structural interfaces.
-        && !(this.isInterface() && other.objectKind.isUnrestricted())) {
+        && !(this.isInterfaceInstance() && other.objectKind.isUnrestricted())) {
       return false;
     }
 
@@ -916,12 +916,13 @@ final class ObjectType implements TypeWithProperties {
           propsEntry.getValue().substituteGenerics(concreteTypes);
       newProps = newProps.with(pname, newProp);
     }
+    FunctionType newFn = fn == null ? null : fn.substituteGenerics(concreteTypes);
     return makeObjectType(
         nominalType == null ? null :
         nominalType.instantiateGenerics(concreteTypes),
         newProps,
-        fn == null ? null : fn.substituteGenerics(concreteTypes),
-        isLoose,
+        newFn,
+        newFn != null && newFn.isQmarkFunction() || isLoose,
         objectKind);
   }
 

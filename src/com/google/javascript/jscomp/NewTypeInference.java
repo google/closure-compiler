@@ -501,7 +501,7 @@ final class NewTypeInference implements CompilerPass {
     for (String fnName : currentScope.getLocalFunDefs()) {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
-      if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
+      if (fnType.isUniqueConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.getConstructorObject();
       }
       entryEnv = envPutType(entryEnv, fnName, summaryType);
@@ -543,7 +543,7 @@ final class NewTypeInference implements CompilerPass {
     for (String fnName : currentScope.getLocalFunDefs()) {
       JSType summaryType = getSummaryOfLocalFunDef(fnName);
       FunctionType fnType = summaryType.getFunType();
-      if (fnType.isConstructor() || fnType.isInterfaceDefinition()) {
+      if (fnType.isUniqueConstructor() || fnType.isInterfaceDefinition()) {
         summaryType = fnType.getConstructorObject();
       }
       env = envPutType(env, fnName, summaryType);
@@ -567,7 +567,8 @@ final class NewTypeInference implements CompilerPass {
     FunctionType funType = declType.getFunTypeIfSingletonObj();
     if (funType == null) {
       return declType;
-    } else if (funType.isConstructor() || funType.isInterfaceDefinition()) {
+    } else if (funType.isUniqueConstructor()
+        || funType.isInterfaceDefinition()) {
       // TODO(dimvar): when declType is a union, consider also creating
       // appropriate ctor objs. (This is going to be rare.)
       return funType.getConstructorObject();
@@ -1541,14 +1542,17 @@ final class NewTypeInference implements CompilerPass {
     ctorPair = analyzeExprFwd(ctor, objPair.env, commonTypes.topFunction());
     JSType ctorType = ctorPair.type;
     FunctionType ctorFunType = ctorType.getFunType();
-    if (!ctorType.isUnknown() &&
-        (!ctorType.isSubtypeOf(commonTypes.topFunction()) ||
-            !ctorFunType.isQmarkFunction() && !ctorFunType.isConstructor())) {
+    if (!ctorType.isUnknown()
+        && (!ctorType.isSubtypeOf(commonTypes.topFunction())
+            || (!ctorFunType.isQmarkFunction()
+                && !ctorFunType.isSomeConstructorOrInterface()))) {
       warnInvalidOperand(
           ctor, Token.INSTANCEOF, "a constructor function", ctorType);
     }
-    if (ctorFunType == null || !ctorFunType.isConstructor() ||
-        (!specializedType.isTrueOrTruthy() && !specializedType.isFalseOrFalsy())) {
+    if (ctorFunType == null
+        || !ctorFunType.isUniqueConstructor()
+        || (!specializedType.isTrueOrTruthy()
+            && !specializedType.isFalseOrFalsy())) {
       ctorPair.type = JSType.BOOLEAN;
       return ctorPair;
     }
@@ -1754,13 +1758,15 @@ final class NewTypeInference implements CompilerPass {
       return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
     } else if (funType.isLoose()) {
       return analyzeLooseCallNodeFwd(expr, inEnv, requiredType);
-    } else if (expr.isCall() && funType.isConstructor()
+    } else if (expr.isCall()
+        && funType.isSomeConstructorOrInterface()
         && funType.getReturnType().isUnknown()) {
       warnings.add(JSError.make(expr, CONSTRUCTOR_NOT_CALLABLE, funType.toString()));
       return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
-    } else if (expr.isNew() && !funType.isConstructor()) {
-      warnings.add(JSError.make(
-          expr, NOT_A_CONSTRUCTOR, funType.toString()));
+    } else if (expr.isNew()
+        && (!funType.isSomeConstructorOrInterface()
+            || funType.isInterfaceDefinition())) {
+      warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
       return analyzeCallNodeArgsFwdWhenError(expr, inEnv);
     }
     int maxArity = funType.getMaxArity();
@@ -1846,7 +1852,7 @@ final class NewTypeInference implements CompilerPass {
         || boundFunType.isLoose()) {
       return analyzeCallNodeArgsFwdWhenError(call, env);
     }
-    if (boundFunType.isConstructor()) {
+    if (boundFunType.isSomeConstructorOrInterface()) {
       warnings.add(JSError.make(call, CANNOT_BIND_CTOR));
       return new EnvTypePair(env, JSType.UNKNOWN);
     }
@@ -1905,7 +1911,7 @@ final class NewTypeInference implements CompilerPass {
     Node receiver = bindComponents.thisValue;
     if (receiver != null) {// receiver is null for goog.partial
       JSType reqThisType = boundFunType.getThisType();
-      if (reqThisType == null || boundFunType.isConstructor()) {
+      if (reqThisType == null || boundFunType.isSomeConstructorOrInterface()) {
         reqThisType = JSType.join(JSType.NULL, JSType.TOP_OBJECT);
       }
       pair = analyzeExprFwd(receiver, env, reqThisType);
@@ -2715,7 +2721,7 @@ final class NewTypeInference implements CompilerPass {
           commonTypes.fromFunctionType(ft.transformByApplyProperty(commonTypes)));
     }
     if (convention.isSuperClassReference(pname)) {
-      if (ft != null && ft.isConstructor()) {
+      if (ft != null && ft.isUniqueConstructor()) {
         JSType result = ft.getSuperPrototype();
         pair.type = result != null ? result : JSType.UNDEFINED;
         return pair;
@@ -3176,8 +3182,8 @@ final class NewTypeInference implements CompilerPass {
       return analyzeCallNodeArgumentsBwd(expr, outEnv);
     } else if (funType.isLoose()) {
       return analyzeLooseCallNodeBwd(expr, outEnv, requiredType);
-    } else if (expr.isCall() && funType.isConstructor() ||
-        expr.isNew() && !funType.isConstructor()) {
+    } else if (expr.isCall() && funType.isSomeConstructorOrInterface()
+        || expr.isNew() && !funType.isSomeConstructorOrInterface()) {
       return analyzeCallNodeArgumentsBwd(expr, outEnv);
     } else if (funType.isTopFunction()) {
       return analyzeCallNodeArgumentsBwd(expr, outEnv);

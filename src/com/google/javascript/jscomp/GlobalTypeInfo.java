@@ -1445,7 +1445,8 @@ class GlobalTypeInfo implements CompilerPass {
 
     private void visitClassPropertyDeclaration(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
-      NominalType thisType = currentScope.getDeclaredFunctionType().getThisType();
+      JSType t = currentScope.getDeclaredFunctionType().getThisType();
+      NominalType thisType = t == null ? null : t.getNominalTypeIfSingletonObj();
       if (thisType == null) {
         // This will get caught in NewTypeInference
         return;
@@ -1832,7 +1833,9 @@ class GlobalTypeInfo implements CompilerPass {
       Preconditions.checkNotNull(declaredTypeAsJSType);
 
       FunctionType funType = declaredTypeAsJSType.getFunType();
-      if (funType == null || funType.isConstructor() || funType.isInterfaceDefinition()) {
+      if (funType == null
+          || funType.isUniqueConstructor()
+          || funType.isInterfaceDefinition()) {
         return null;
       }
       DeclaredFunctionType declType = funType.toDeclaredFunctionType();

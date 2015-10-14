@@ -42,10 +42,12 @@ public final class DeclaredFunctionType {
   private final List<JSType> optionalFormals;
   private final JSType restFormals;
   private final JSType returnType;
-  // Non-null iff this is a constructor/interface
-  private final NominalType nominalType;
-  // Non-null iff this is a prototype method
-  private final NominalType receiverType;
+  // If this DeclaredFunctionType is a constructor/interface, this field stores
+  // the type of the instance.
+  private final JSType nominalType;
+  // If this DeclaredFunctionType is a prototype method, this field stores the
+  // type of the instance.
+  private final JSType receiverType;
   // Non-empty iff this function has an @template annotation
   private final ImmutableList<String> typeParameters;
 
@@ -54,8 +56,8 @@ public final class DeclaredFunctionType {
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType nominalType,
-      NominalType receiverType,
+      JSType nominalType,
+      JSType receiverType,
       ImmutableList<String> typeParameters) {
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
@@ -68,17 +70,17 @@ public final class DeclaredFunctionType {
 
   public FunctionType toFunctionType() {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
-    for (JSType formal : requiredFormals) {
+    for (JSType formal : this.requiredFormals) {
       builder.addReqFormal(formal == null ? JSType.UNKNOWN : formal);
     }
-    for (JSType formal : optionalFormals) {
+    for (JSType formal : this.optionalFormals) {
       builder.addOptFormal(formal == null ? JSType.UNKNOWN : formal);
     }
-    builder.addRestFormals(restFormals);
-    builder.addRetType(returnType == null ? JSType.UNKNOWN : returnType);
-    builder.addNominalType(nominalType);
-    builder.addReceiverType(receiverType);
-    builder.addTypeParameters(typeParameters);
+    builder.addRestFormals(this.restFormals);
+    builder.addRetType(this.returnType == null ? JSType.UNKNOWN : this.returnType);
+    builder.addNominalType(this.nominalType);
+    builder.addReceiverType(this.receiverType);
+    builder.addTypeParameters(this.typeParameters);
     return builder.buildFunction();
   }
 
@@ -87,8 +89,8 @@ public final class DeclaredFunctionType {
       List<JSType> optionalFormals,
       JSType restFormals,
       JSType retType,
-      NominalType nominalType,
-      NominalType receiverType,
+      JSType nominalType,
+      JSType receiverType,
       ImmutableList<String> typeParameters) {
     if (requiredFormals == null) {
       requiredFormals = new ArrayList<>();
@@ -138,20 +140,20 @@ public final class DeclaredFunctionType {
     return returnType;
   }
 
-  public NominalType getThisType() {
-    if (nominalType != null) {
-      return nominalType;
+  public JSType getThisType() {
+    if (this.nominalType != null) {
+      return this.nominalType;
     } else {
-      return receiverType;
+      return this.receiverType;
     }
   }
 
-  public NominalType getNominalType() {
-    return nominalType;
+  public JSType getNominalType() {
+    return this.nominalType;
   }
 
-  public NominalType getReceiverType() {
-    return receiverType;
+  public JSType getReceiverType() {
+    return this.receiverType;
   }
 
   public boolean isGeneric() {
@@ -163,15 +165,18 @@ public final class DeclaredFunctionType {
   }
 
   public boolean isTypeVariableDefinedLocally(String tvar) {
-    if (typeParameters.contains(tvar)) {
+    if (this.typeParameters.contains(tvar)) {
       return true;
     }
     // We don't look at this.nominalType, b/c if this function is a generic
     // constructor, then typeParameters contains the relevant type variables.
-    if (receiverType != null && receiverType.isUninstantiatedGenericType()) {
-      RawNominalType rawType = receiverType.getRawNominalType();
-      if (rawType.getTypeParameters().contains(tvar)) {
-        return true;
+    if (this.receiverType != null) {
+      NominalType recvType = this.receiverType.getNominalTypeIfSingletonObj();
+      if (recvType != null && recvType.isUninstantiatedGenericType()) {
+        RawNominalType rawType = recvType.getRawNominalType();
+        if (rawType.getTypeParameters().contains(tvar)) {
+          return true;
+        }
       }
     }
     return false;
@@ -181,20 +186,26 @@ public final class DeclaredFunctionType {
     return new DeclaredFunctionType(
         this.requiredFormals, this.optionalFormals,
         this.restFormals, this.returnType, this.nominalType,
-        newReceiver,
+        newReceiver == null ? null : newReceiver.getInstanceAsJSType(),
         this.typeParameters);
   }
 
   public DeclaredFunctionType withTypeInfoFromSuper(
       DeclaredFunctionType superType, boolean getsTypeInfoFromParentMethod) {
-    // getsTypeInfoFromParentMethod is true when a method without jsdoc overrides
+    // getsTypeInfoFromParentMethod is true when a method w/out jsdoc overrides
     // a parent method. In this case, the parent may be declaring some formals
     // as optional and we want to preserve that type information here.
     if (getsTypeInfoFromParentMethod) {
+      NominalType nt = superType.nominalType == null
+          ? null : superType.nominalType.getNominalTypeIfSingletonObj();
+      // Only keep this.receiverType from the current type
+      NominalType rt = this.receiverType == null
+          ? null : this.receiverType.getNominalTypeIfSingletonObj();
       return new DeclaredFunctionType(
           superType.requiredFormals, superType.optionalFormals,
-          superType.restFormals, superType.returnType, superType.nominalType,
-          this.receiverType, // only keep this from the current type
+          superType.restFormals, superType.returnType,
+          nt == null ? null : nt.getInstanceAsJSType(),
+          rt == null ? null : rt.getInstanceAsJSType(),
           superType.typeParameters);
     }
 

@@ -282,7 +282,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */ function Foo(x) {}",
         "new Foo(function() { return this.p; })"));
+  }
 
+  public void testUnusualThisReference() {
     typeCheck(Joiner.on('\n').join(
         "/**",
         " * @template T",
@@ -291,13 +293,25 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function f(x) {",
         "  this.p = 123;",
-        "}"));
+        "}"),
+        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
 
     typeCheck(Joiner.on('\n').join(
         "/** @this {Object} */",
         "function f(pname) {",
         "  var x = this[pname];",
         "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @template T",
+        " * @this {T}",
+        " * @return {T}",
+        " */",
+        "function f() { return this; }",
+        "var /** !Foo */ x = f.call(new Foo);"));
   }
 
   public void testSuperClassWithUndeclaredProps() {
@@ -3371,6 +3385,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @param {function(new:T)} x",
+        " */",
+        "function f(x, y) {",
+        "  if (y instanceof x) {}",
+        "}"));
   }
 
   public void testFunctionsExtendFunction() {
@@ -11353,9 +11376,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {!Function} */",
         "var abstractMethod = function(){};",
         "/** @constructor */ function Foo(){};",
-        "/** @constructor @extends {Foo} */ function Bar(){};",
         "/** @param {number} index */",
         "Foo.prototype.m = abstractMethod;",
+        "/** @constructor @extends {Foo} */ function Bar(){};",
         "/** @override */",
         "Bar.prototype.m = function(index) {};"));
 
@@ -13091,7 +13114,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Foo() {}",
         "f(/** @this{Foo} */ function () {});"));
 
-    // We don't catch the NOT_UNIQUE_INSTANTIATION warning
     typeCheck(Joiner.on('\n').join(
         "/**",
         " * @template T",
@@ -13103,9 +13125,9 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Foo() {}",
         "/** @constructor */",
         "function Bar() {}",
-        "f(new Bar, /** @this{Foo} */function () {});"));
+        "f(new Bar, /** @this{Foo} */function () {});"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
 
-    // Sets Bar#p to a number but we don't catch it
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
         "function Foo() {}",
@@ -13120,7 +13142,25 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x) { this.p = x; }",
         "/** @param {function(number)} x */",
         "function g(x) { x.call(new Bar, 123); }",
-        "g(f);"));
+        // Passing a fun w/ @this to a context that expects a fun w/out @this.
+        "g(f);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // Sets Bar#p to a number. We could maybe find this, non trivial though.
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  /** @type {string} */ this.p = 'asdf';",
+        "}",
+        "/**",
+        " * @this {Foo}",
+        " * @param {number} x",
+        " */",
+        "function f(x) { this.p = x; }",
+        "/** @param {function(number)} x */",
+        "f.call(new Bar, 123);"));
   }
 
   public void testBadWorksetConstruction() {
@@ -13930,5 +13970,104 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var /** !Foo */ y = x;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testWarnAboutBadThisOrNewType() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @this {number} */",
+        "function f() {}"),
+        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {function(this:number)} */",
+        "function f() {}"),
+        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {function(new:number)} */",
+        "function f() {}"),
+        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @this {T}",
+        " */",
+        "function f() {}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @param {function(this:void)} x",
+        " */",
+        "function f(x) {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.method = function() {};",
+        "f(Foo.prototype.method);",
+        "function g() {}",
+        "f(g);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
+  public void testThisOrNewWithUnions() {
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @this {T|number}",
+        " */",
+        "function f() {}"),
+        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @this {T|!Object}",
+        " */",
+        "function f() {}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.p = 123;",
+        "}",
+        "/** @interface */",
+        "function Bar() {}",
+        "Bar.prototype.p;",
+        "/** @this {Foo|Bar} */",
+        "function f() {",
+        "  return this.p - 1;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.p = 123;",
+        "}",
+        "/** @interface */",
+        "function Bar() {}",
+        "/** @type {number} */",
+        "Bar.prototype.p;",
+        "/** @this {Foo|Bar} */",
+        "function f() {",
+        "  var /** string */ n = this.p;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testCreatingSeveralQmarkFunInstances() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {!Function} */",
+        "function qmarkFunDeclared() {}",
+        "/** @type {function(new:Object)} */",
+        "var x = qmarkFunDeclared;"));
+  }
+
+  public void testNotAConstructor() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @interface */",
+        "function Foo() {}",
+        "(new Foo);"),
+        NewTypeInference.NOT_A_CONSTRUCTOR);
   }
 }

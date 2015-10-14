@@ -97,6 +97,12 @@ public final class JSTypeCreatorFromJSDoc {
         "JSC_NTI_UNION_IS_UNINHABITABLE",
         "Union of {0} with {1} would create an impossible type.");
 
+  public static final DiagnosticType THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR =
+    DiagnosticType.warning(
+        "JSC_NTI_THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR",
+        "@this and @new only accept object types, void and type variables; "
+        + "found {0}.");
+
   private final CodingConvention convention;
 
   // Used to communicate state between methods when resolving enum types
@@ -463,16 +469,15 @@ public final class JSTypeCreatorFromJSDoc {
       ImmutableList<String> typeParameters, FunctionTypeBuilder builder)
       throws UnknownTypeException {
     Node child = jsdocNode.getFirstChild();
-    NominalType builtinObject = registry.getCommonTypes().getObjectType();
     if (child.getType() == Token.THIS) {
       if (ownerType == null) {
-        NominalType nt = getNominalType(child.getFirstChild(), registry, typeParameters);
-        builder.addReceiverType(nt == null ? builtinObject : nt);
+        JSType t = getThisOrNewType(child.getFirstChild(), registry, typeParameters);
+        builder.addReceiverType(t == null ? JSType.TOP_OBJECT : t);
       }
       child = child.getNext();
     } else if (child.getType() == Token.NEW) {
-      NominalType nt = getNominalType(child.getFirstChild(), registry, typeParameters);
-      builder.addNominalType(nt == null ? builtinObject : nt);
+      JSType t = getThisOrNewType(child.getFirstChild(), registry, typeParameters);
+      builder.addNominalType(t == null ? JSType.TOP_OBJECT : t);
       child = child.getNext();
     }
     if (child.getType() == Token.PARAM_LIST) {
@@ -506,10 +511,15 @@ public final class JSTypeCreatorFromJSDoc {
   }
 
   // May return null;
-  private NominalType getNominalType(Node n,
+  private JSType getThisOrNewType(Node n,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
-    return getTypeFromComment(n, registry, typeParameters)
-        .removeType(JSType.NULL).getNominalTypeIfSingletonObj();
+    JSType t = getTypeFromComment(n, registry, typeParameters).removeType(JSType.NULL);
+    if (!t.isSubtypeOf(JSType.TOP_OBJECT)
+        && !t.isUndefined()
+        && (!t.hasTypeVariable() || t.hasScalar())) {
+      warnings.add(JSError.make(n, THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR, t.toString()));
+    }
+    return t;
   }
 
   private ImmutableSet<NominalType> getImplementedInterfaces(
@@ -574,7 +584,7 @@ public final class JSTypeCreatorFromJSDoc {
       DeclaredTypeRegistry registry) {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     if (ownerType != null) {
-      builder.addReceiverType(ownerType.getAsNominalType());
+      builder.addReceiverType(ownerType.getInstanceAsJSType());
     }
     try {
       if (jsdoc != null && jsdoc.getType() != null) {
@@ -719,22 +729,8 @@ public final class JSTypeCreatorFromJSDoc {
     if (jsdoc.hasThisType() && ownerType == null) {
       Node thisRoot = jsdoc.getThisType().getRoot();
       Preconditions.checkState(thisRoot.getType() == Token.BANG);
-      Node thisNode = thisRoot.getFirstChild();
-      // JsDocInfoParser wraps @this types with !. But we warn when we see !T,
-      // and we don't want to warn for a ! that was automatically inserted.
-      // So, we bypass the ! here.
-      JSType thisType = getMaybeTypeFromComment(thisNode, registry, typeParameters);
-      if (thisType != null) {
-        thisType = thisType.removeType(JSType.NULL);
-      }
-      // TODO(dimvar): thisType may be non-null but have a null
-      // thisTypeAsNominal.
-      // We currently only support nominal types for the receiver type, but
-      // people use other types as well: unions, records, etc.
-      // For now, we just use the generic Object for these.
-      NominalType nt = thisType == null ? null : thisType.getNominalTypeIfSingletonObj();
-      NominalType builtinObject = registry.getCommonTypes().getObjectType();
-      builder.addReceiverType(nt == null ? builtinObject : nt);
+      JSType t = getThisOrNewType(thisRoot.getFirstChild(), registry, typeParameters);
+      builder.addReceiverType(t == null ? JSType.TOP_OBJECT : t);
     }
 
     return builder.buildDeclaration();
@@ -869,7 +865,7 @@ public final class JSTypeCreatorFromJSDoc {
     }
     boolean noCycles = constructorType.addInterfaces(implementedIntfs);
     Preconditions.checkState(noCycles);
-    builder.addNominalType(constructorType.getAsNominalType());
+    builder.addNominalType(constructorType.getInstanceAsJSType());
   }
 
   private void handleInterfaceAnnotation(
@@ -888,7 +884,7 @@ public final class JSTypeCreatorFromJSDoc {
       warnings.add(JSError.make(
           funNode, INHERITANCE_CYCLE, constructorType.toString()));
     }
-    builder.addNominalType(constructorType.getAsNominalType());
+    builder.addNominalType(constructorType.getInstanceAsJSType());
   }
 
   // /** @param {...?} var_args */ function f(var_args) { ... }

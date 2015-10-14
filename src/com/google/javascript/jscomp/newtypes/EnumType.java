@@ -156,6 +156,15 @@ public final class EnumType extends Namespace implements TypeWithProperties {
     return props.contains(name);
   }
 
+  static boolean hasScalar(ImmutableSet<EnumType> enums) {
+    for (EnumType e : enums) {
+      if (e.declaredType.hasScalar()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static boolean hasNonScalar(ImmutableSet<EnumType> enums) {
     for (EnumType e : enums) {
       if (e.declaredType.hasNonScalar()) {

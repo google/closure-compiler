@@ -332,6 +332,10 @@ public abstract class JSType implements TypeI {
     return true;
   }
 
+  boolean hasScalar() {
+    return (getMask() & TOP_SCALAR_MASK) != 0 || EnumType.hasScalar(getEnums());
+  }
+
   public boolean hasNonScalar() {
     return !getObjs().isEmpty() || EnumType.hasNonScalar(getEnums());
   }
@@ -942,7 +946,8 @@ public abstract class JSType implements TypeI {
     int otherMask = other.getMask();
     Preconditions.checkState(
         !other.isTop() && !other.isUnknown()
-        && (otherMask & TYPEVAR_MASK) == 0 && (otherMask & ENUM_MASK) == 0);
+        && (otherMask & TYPEVAR_MASK) == 0 && (otherMask & ENUM_MASK) == 0,
+        "Requested invalid type to remove: %s", other);
     if (isUnknown()) {
       return this;
     }
@@ -1206,7 +1211,7 @@ public abstract class JSType implements TypeI {
   @Override
   public boolean isConstructor() {
     FunctionType ft = getFunTypeIfSingletonObj();
-    return ft != null && ft.isConstructor();
+    return ft != null && ft.isUniqueConstructor();
   }
 
   @Override
