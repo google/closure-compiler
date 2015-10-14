@@ -227,23 +227,25 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           for (BasicBlock declaredBlock : blocksWithDeclarations) {
             if (declaredBlock.provablyExecutesBefore(basicBlock)) {
               shadowDetected = true;
-              // TODO(johnlenz): Fix AST generating clients that so they would
-              // have property StaticSourceFile attached at each node. Or
-              // better yet, make sure the generated code never violates
-              // the requirement to pass aggressive var check!
               DiagnosticType diagnosticType;
               if (v.isLet() || v.isConst() || v.isClass()
                   || letConstShadowsVar || shadowCatchVar || shadowParam) {
+                // These cases are all hard errors that violate ES6 semantics
                 diagnosticType = REDECLARED_VARIABLE_ERROR;
               } else if (reference.getNode().getParent().isCatch() || allowDupe) {
                 return;
               } else {
-                diagnosticType = REDECLARED_VARIABLE;
+                // These diagnostics are for valid, but suspicious, code, and are suppressible.
+                // For vars defined in the global scope, give the same error as VarCheck
+                diagnosticType = v.getScope().isGlobal()
+                    ? VarCheck.VAR_MULTIPLY_DECLARED_ERROR : REDECLARED_VARIABLE;
               }
               compiler.report(
                   JSError.make(
                       referenceNode,
-                      diagnosticType, v.name));
+                      diagnosticType,
+                      v.name,
+                      (v.input != null ? v.input.getName() : "??")));
               hasErrors = true;
               break;
             }
