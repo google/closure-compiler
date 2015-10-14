@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import static com.google.javascript.jscomp.lint.CheckJSDocStyle.EXTERNS_FILES_SHOULD_BE_ANNOTATED;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.INCORRECT_PARAM_NAME;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MIXED_PARAM_JSDOC_STYLES;
 import static com.google.javascript.jscomp.lint.CheckJSDocStyle.MUST_BE_PRIVATE;
@@ -31,6 +32,9 @@ import com.google.javascript.jscomp.CompilerTestCase;
  * Test case for {@link CheckJSDocStyle}.
  */
 public final class CheckJSDocStyleTest extends CompilerTestCase {
+  public CheckJSDocStyleTest() {
+    super("/** @fileoverview\n * @externs\n */");
+  }
 
   @Override
   public void setUp() throws Exception {
@@ -242,5 +246,33 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "function getDistanceFromZero({x, y}) {}"));
 
     testSame("function getDistanceFromZero(/** {x: number, y: number} */ {x, y}) {}");
+  }
+
+  public void testExternsAnnotation() {
+    testSame(
+        "function Example() {}",
+        "",
+        EXTERNS_FILES_SHOULD_BE_ANNOTATED);
+
+    testSame(
+        "/** @fileoverview Some super cool externs.\n * @externs\n */ function Example() {}",
+        "",
+        null);
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @fileoverview Some super cool externs.\n * @externs\n */",
+            "/** @constructor */ function Example() {}",
+            "/** @param {number} x */ function example2(x) {}"),
+        "",
+        null);
+
+    test(
+        new String[] {
+            "/** @fileoverview Some externs.\n * @externs\n */ /** @const */ var example;",
+            "/** @fileoverview Some more.\n * @externs\n */ /** @const */ var example2;",
+        },
+        new String[] {},
+        null);
   }
 }
