@@ -511,13 +511,14 @@ public class CommandLineRunner extends
         usage = "Prints out a JSON file of dependencies between modules.")
     private String outputModuleDependencies = "";
 
-    // TODO(tbreisacher): Remove the "(experimental)" for ES6 when it's stable enough.
-    @Option(name = "--language_in",
-        hidden = true,
-        usage = "Sets what language spec that input sources conform. "
-        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-        + "ECMASCRIPT6 (experimental), ECMASCRIPT6_STRICT (experimental), "
-        + "ECMASCRIPT6_TYPED (experimental)")
+    @Option(
+      name = "--language_in",
+      hidden = true,
+      usage =
+          "Sets what language spec that input sources conform. "
+              + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+              + "ECMASCRIPT6, ECMASCRIPT6_STRICT, ECMASCRIPT6_TYPED (experimental)"
+    )
     private String languageIn = "ECMASCRIPT3";
 
     @Option(name = "--language_out",
