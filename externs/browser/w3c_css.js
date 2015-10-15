@@ -2119,7 +2119,7 @@ Element.prototype.getClientRects = function() {};
 Element.prototype.getBoundingClientRect = function() {};
 
 /**
- * @param {boolean=} opt_top
+ * @param {(boolean|{behavior: string, block: string})=} opt_top
  * @see http://www.w3.org/TR/cssom-view/#dom-element-scrollintoview
  */
 Element.prototype.scrollIntoView = function(opt_top) {};
