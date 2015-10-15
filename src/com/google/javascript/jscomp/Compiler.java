@@ -332,7 +332,8 @@ public class Compiler extends AbstractCompiler {
     // DiagnosticGroups override the plain checkTypes option.
     if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
       options.checkTypes = true;
-    } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
+    } else if (options.disables(DiagnosticGroups.CHECK_TYPES)
+        && !options.getNewTypeInference()) {
       options.checkTypes = false;
     } else if (!options.checkTypes) {
       // If DiagnosticGroups did not override the plain checkTypes
@@ -1134,7 +1135,7 @@ public class Compiler extends AbstractCompiler {
     // provide types for the remaining passes.
     // TODO(dimvar): change this when we stop running OTI after NTI.
     getTypeRegistry().forwardDeclareType(typeName);
-    if (this.options.useNewTypeInference) {
+    if (this.options.getNewTypeInference()) {
       getSymbolTable().addUnknownTypeName(typeName);
     }
   }

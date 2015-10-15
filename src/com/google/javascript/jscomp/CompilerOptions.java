@@ -142,7 +142,7 @@ public class CompilerOptions {
    */
   boolean inferTypes;
 
-  boolean useNewTypeInference;
+  private boolean useNewTypeInference;
 
   /**
    * Configures the compiler to skip as many passes as possible.
@@ -1710,11 +1710,18 @@ public class CompilerOptions {
   }
 
   public boolean getNewTypeInference() {
-    return useNewTypeInference;
+    return this.useNewTypeInference;
   }
 
   public void setNewTypeInference(boolean enable) {
-    useNewTypeInference = enable;
+    this.useNewTypeInference = enable;
+    if (enable) {
+      // With NTI, we still need OTI to run because the later passes that use
+      // types only understand OTI types at the moment.
+      // But we don't want to see the warnings.
+      this.checkTypes = true;
+      setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
+    }
   }
 
   /**

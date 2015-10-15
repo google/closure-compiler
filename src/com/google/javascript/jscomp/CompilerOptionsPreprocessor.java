@@ -23,6 +23,10 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
  * Checks for combinations of options that are incompatible, i.e. will produce
  * incorrect code.
  *
+ * This is run by Compiler#compileInternal, which is not run during unit tests.
+ * The catch is that it's run after Compiler#initOptions, so if for example
+ * you want to change the warningsGuard, you can't do it here.
+ *
  * <p>Also, turns off options if the provided options don't make sense together.
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
@@ -58,7 +62,7 @@ final class CompilerOptionsPreprocessor {
           + " disabled.");
     }
 
-    if (options.useNewTypeInference) {
+    if (options.getNewTypeInference()) {
       options.checkMissingReturn = CheckLevel.OFF;
       options.checkGlobalThisLevel = CheckLevel.OFF;
     }

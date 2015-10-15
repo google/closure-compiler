@@ -582,6 +582,18 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "var x = x || {}; x.f = function() {}; x.f(3);", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
+  public void testBothTypeCheckersRun() {
+    CompilerOptions options = createCompilerOptions();
+    options.setNewTypeInference(true);
+    test(
+        options,
+        "/** @return {number} */\n"
+        + "function f() {\n"
+        + "  return 'asdf';\n"
+        + "}",
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+  }
+
   public void testReplaceCssNames() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

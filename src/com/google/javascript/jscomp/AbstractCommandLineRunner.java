@@ -433,7 +433,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
     options.tracer = config.tracerMode;
-    options.useNewTypeInference = config.useNewTypeInference;
+    options.setNewTypeInference(config.useNewTypeInference);
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
   }
 
