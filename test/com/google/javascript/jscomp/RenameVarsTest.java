@@ -599,7 +599,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testBias() {
-    nameGenerator = new NameGenerator(new HashSet<String>(0), "", null);
+    nameGenerator = new NameGenerator(new HashSet<String>(), "", null);
     nameGenerator.favors("AAAAAAAAHH");
     test("var x, y", "var A, H");
   }

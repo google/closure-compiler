@@ -126,13 +126,13 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   }
 
   public void testBias() {
-    nameGenerator = new NameGenerator(new HashSet<String>(0), "", null);
+    nameGenerator = new NameGenerator(new HashSet<String>(), "", null);
     nameGenerator.favors("AAAAAAAAHH");
     test("function foo(x,y){}", "function foo(A,H){}");
   }
 
   public void testBias2() {
-    nameGenerator = new NameGenerator(new HashSet<String>(0), "", null);
+    nameGenerator = new NameGenerator(new HashSet<String>(), "", null);
     nameGenerator.favors("AAAAAAAAHH");
     test("function foo(x,y){ var z = z + z + z}",
          "function foo(H,a){ var A = A + A + A}");
