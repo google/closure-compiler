@@ -139,7 +139,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testVarShadowing() {
-    assertRedeclareGlobal("if (a) { var x; var x;}");
+    assertRedeclare("if (a) { var x; var x;}");
     assertRedeclareError("if (a) { var x; let x;}");
 
     assertRedeclare("function f() { var x; if (a) { var x; }}");
@@ -356,30 +356,44 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
         "}"));
   }
 
+  /**
+   * Expects the JS to generate one bad-read error.
+   */
   private void assertReassign(String js) {
     testError(js, VariableReferenceCheck.REASSIGNED_CONSTANT);
   }
 
+  /**
+   * Expects the JS to generate one bad-read warning.
+   */
   private void assertRedeclare(String js) {
     testWarning(js, VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
-  private void assertRedeclareGlobal(String js) {
-    testError(js, VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
-  }
-
+  /**
+   * Expects the JS to generate one bad-read error.
+   */
   private void assertRedeclareError(String js) {
     testError(js, VariableReferenceCheck.REDECLARED_VARIABLE_ERROR);
   }
 
+  /**
+   * Expects the JS to generate one bad-read error.
+   */
   private void assertParameterShadowed(String js) {
     testError(js, VariableReferenceCheck.REDECLARED_VARIABLE_ERROR);
   }
 
+  /**
+   * Expects the JS to generate one bad-write warning.
+   */
   private void assertEarlyReference(String js) {
     testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
   }
 
+  /**
+   * Expects the JS to generate one bad-write error.
+   */
   private void assertEarlyReferenceError(String js) {
     testError(js, VariableReferenceCheck.EARLY_REFERENCE_ERROR);
   }
