@@ -97,10 +97,10 @@ public final class JSTypeCreatorFromJSDoc {
         "JSC_NTI_UNION_IS_UNINHABITABLE",
         "Union of {0} with {1} would create an impossible type.");
 
-  public static final DiagnosticType THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR =
+  public static final DiagnosticType NEW_EXPECTS_OBJECT_OR_TYPEVAR =
     DiagnosticType.warning(
-        "JSC_NTI_THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR",
-        "@this and @new only accept object types, void and type variables; "
+        "JSC_NTI_NEW_EXPECTS_OBJECT_OR_TYPEVAR",
+        "The \"new:\" annotation only accepts object types and type variables; "
         + "found {0}.");
 
   private final CodingConvention convention;
@@ -455,8 +455,8 @@ public final class JSTypeCreatorFromJSDoc {
     return builder.build();
   }
 
-  // Don't confuse with getFunTypeFromAtTypeJsdoc; the function below computes a
-  // type that doesn't have an associated AST node.
+  // Computes a type from a jsdoc that includes a function type, rather than
+  // one that includes @param, @return, etc.
   private JSType getFunTypeHelper(Node jsdocNode, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters) throws UnknownTypeException {
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
@@ -471,13 +471,19 @@ public final class JSTypeCreatorFromJSDoc {
     Node child = jsdocNode.getFirstChild();
     if (child.getType() == Token.THIS) {
       if (ownerType == null) {
-        JSType t = getThisOrNewType(child.getFirstChild(), registry, typeParameters);
-        builder.addReceiverType(t == null ? JSType.TOP_OBJECT : t);
+        builder.addReceiverType(
+            getThisOrNewType(child.getFirstChild(), registry, typeParameters));
       }
       child = child.getNext();
     } else if (child.getType() == Token.NEW) {
-      JSType t = getThisOrNewType(child.getFirstChild(), registry, typeParameters);
-      builder.addNominalType(t == null ? JSType.TOP_OBJECT : t);
+      Node newTypeNode = child.getFirstChild();
+      JSType t = getThisOrNewType(newTypeNode, registry, typeParameters);
+      if (!t.isSubtypeOf(JSType.TOP_OBJECT)
+          && (!t.hasTypeVariable() || t.hasScalar())) {
+        warnings.add(JSError.make(
+            newTypeNode, NEW_EXPECTS_OBJECT_OR_TYPEVAR, t.toString()));
+      }
+      builder.addNominalType(t);
       child = child.getNext();
     }
     if (child.getType() == Token.PARAM_LIST) {
@@ -510,16 +516,9 @@ public final class JSTypeCreatorFromJSDoc {
         getTypeFromCommentHelper(child, registry, typeParameters));
   }
 
-  // May return null;
   private JSType getThisOrNewType(Node n,
       DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
-    JSType t = getTypeFromComment(n, registry, typeParameters).removeType(JSType.NULL);
-    if (!t.isSubtypeOf(JSType.TOP_OBJECT)
-        && !t.isUndefined()
-        && (!t.hasTypeVariable() || t.hasScalar())) {
-      warnings.add(JSError.make(n, THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR, t.toString()));
-    }
-    return t;
+    return getTypeFromComment(n, registry, typeParameters).removeType(JSType.NULL);
   }
 
   private ImmutableSet<NominalType> getImplementedInterfaces(
@@ -596,8 +595,8 @@ public final class JSTypeCreatorFromJSDoc {
         if (funType != null) {
           JSType slotType = simpleType.isFunctionType() ? null : simpleType;
           DeclaredFunctionType declType = funType.toDeclaredFunctionType();
-          if (ownerType != null) {
-            declType = declType.withReceiverType(ownerType.getAsNominalType());
+          if (ownerType != null && funType.getThisType() == null) {
+            declType = declType.withReceiverType(ownerType.getInstanceAsJSType());
           }
           return new FunctionAndSlotType(slotType, declType);
         } else {
@@ -726,11 +725,11 @@ public final class JSTypeCreatorFromJSDoc {
           funNode, IMPLEMENTS_WITHOUT_CONSTRUCTOR, functionName));
     }
 
-    if (jsdoc.hasThisType() && ownerType == null) {
+    if (jsdoc.hasThisType()) {
       Node thisRoot = jsdoc.getThisType().getRoot();
       Preconditions.checkState(thisRoot.getType() == Token.BANG);
-      JSType t = getThisOrNewType(thisRoot.getFirstChild(), registry, typeParameters);
-      builder.addReceiverType(t == null ? JSType.TOP_OBJECT : t);
+      builder.addReceiverType(
+          getThisOrNewType(thisRoot.getFirstChild(), registry, typeParameters));
     }
 
     return builder.buildDeclaration();

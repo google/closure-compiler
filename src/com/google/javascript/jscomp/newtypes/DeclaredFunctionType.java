@@ -182,12 +182,11 @@ public final class DeclaredFunctionType {
     return false;
   }
 
-  public DeclaredFunctionType withReceiverType(NominalType newReceiver) {
+  public DeclaredFunctionType withReceiverType(JSType newReceiverType) {
     return new DeclaredFunctionType(
         this.requiredFormals, this.optionalFormals,
         this.restFormals, this.returnType, this.nominalType,
-        newReceiver == null ? null : newReceiver.getInstanceAsJSType(),
-        this.typeParameters);
+        newReceiverType, this.typeParameters);
   }
 
   public DeclaredFunctionType withTypeInfoFromSuper(
@@ -211,24 +210,25 @@ public final class DeclaredFunctionType {
 
     FunctionTypeBuilder builder = new FunctionTypeBuilder();
     int i = 0;
-    for (JSType formal : requiredFormals) {
+    for (JSType formal : this.requiredFormals) {
       builder.addReqFormal(formal != null ? formal : superType.getFormalType(i));
       i++;
     }
-    for (JSType formal : optionalFormals) {
+    for (JSType formal : this.optionalFormals) {
       builder.addOptFormal(formal != null ? formal : superType.getFormalType(i));
       i++;
     }
-    if (restFormals != null) {
-      builder.addRestFormals(restFormals);
+    if (this.restFormals != null) {
+      builder.addRestFormals(this.restFormals);
     } else if (superType.hasRestFormals()) {
       builder.addRestFormals(superType.restFormals);
     }
-    builder.addRetType(returnType != null ? returnType : superType.returnType);
-    builder.addNominalType(nominalType);
-    builder.addReceiverType(receiverType);
-    if (!typeParameters.isEmpty()) {
-      builder.addTypeParameters(typeParameters);
+    builder.addRetType(
+        this.returnType != null ? this.returnType : superType.returnType);
+    builder.addNominalType(this.nominalType);
+    builder.addReceiverType(this.receiverType);
+    if (!this.typeParameters.isEmpty()) {
+      builder.addTypeParameters(this.typeParameters);
     } else if (!superType.typeParameters.isEmpty()) {
       builder.addTypeParameters(superType.typeParameters);
     }

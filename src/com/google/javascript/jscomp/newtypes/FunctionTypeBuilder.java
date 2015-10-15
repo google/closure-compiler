@@ -136,7 +136,8 @@ public final class FunctionTypeBuilder {
   }
 
   public FunctionTypeBuilder addReceiverType(JSType t) {
-    Preconditions.checkState(this.receiverType == null);
+    // this.receiverType is not always null here, because of prototype methods
+    // with an explicit @this annotation
     this.receiverType = t;
     return this;
   }

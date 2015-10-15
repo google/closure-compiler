@@ -13972,29 +13972,21 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
-  public void testWarnAboutBadThisOrNewType() {
-    typeCheck(Joiner.on('\n').join(
-        "/** @this {number} */",
-        "function f() {}"),
-        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
-
-    typeCheck(Joiner.on('\n').join(
-        "/** @type {function(this:number)} */",
-        "function f() {}"),
-        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
-
+  public void testWarnAboutBadNewType() {
     typeCheck(Joiner.on('\n').join(
         "/** @type {function(new:number)} */",
         "function f() {}"),
-        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
+        JSTypeCreatorFromJSDoc.NEW_EXPECTS_OBJECT_OR_TYPEVAR);
 
     typeCheck(Joiner.on('\n').join(
         "/**",
         " * @template T",
-        " * @this {T}",
+        " * @param {function(new:T)} x",
         " */",
-        "function f() {}"));
+        "function f(x) {}"));
+  }
 
+  public void testThisVoid() {
     typeCheck(Joiner.on('\n').join(
         "/**",
         " * @param {function(this:void)} x",
@@ -14013,15 +14005,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "/**",
         " * @template T",
-        " * @this {T|number}",
+        " * @param {function(new:(T|number))} x",
         " */",
-        "function f() {}"),
-        JSTypeCreatorFromJSDoc.THIS_NEW_EXPECT_OBJECT_OR_TYPEVAR);
+        "function f(x) {}"),
+        JSTypeCreatorFromJSDoc.NEW_EXPECTS_OBJECT_OR_TYPEVAR);
 
     typeCheck(Joiner.on('\n').join(
         "/**",
         " * @template T",
-        " * @this {T|!Object}",
+        " * @this {T|Object}",
         " */",
         "function f() {}"));
 
@@ -14053,6 +14045,72 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  var /** string */ n = this.p;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testThisOverridesPrototype() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "}",
+        "/** @type {function(this:{prop:number})} */",
+        "Foo.prototype.method = function() {};",
+        "Foo.prototype.method.call({prop:234});"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {number} */",
+        "  this.prop = 123;",
+        "}",
+        "/** @this {{prop:number}} */",
+        "Foo.prototype.method = function() {};",
+        "Foo.prototype.method.call({prop:234});"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Obj() {}",
+        "/** @this {?} */",
+        "Obj.prototype.toString = function() { return ''; };",
+        // ? is specialized to Object here b/c @this has a more precise type
+        // on Object#toString. Can't do much about this.
+        "Obj.prototype.toString.call(123);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Obj() {}",
+        "/** @this {?} */",
+        "Obj.prototype.toString1 = function() { return ''; };",
+        "Obj.prototype.toString1.call(123);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Arr() {}",
+        "/** @this {{length: number}|string} // same as {length: number} */",
+        "Arr.prototype.join = function() {};",
+        "Arr.prototype.join.call('asdf');"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @this {!Array|{length:number}} */",
+        "Array.prototype.method = function() {};",
+        "function f() {",
+        "  Array.prototype.method.call(arguments);",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/**",
+        " * @template T",
+        " * @this {T}",
+        " * @param {T} x",
+        " */",
+        "Foo.prototype.f = function(x) {};",
+        "(new Foo).f(new Foo);"));
   }
 
   public void testCreatingSeveralQmarkFunInstances() {

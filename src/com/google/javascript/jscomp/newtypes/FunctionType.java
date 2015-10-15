@@ -357,8 +357,6 @@ public final class FunctionType {
     return nt.getInstanceAsJSType();
   }
 
-  // Used to get a declared type for an unannotated function that appears in
-  // argument position.
   // Should only be used during GlobalTypeInfo.
   public DeclaredFunctionType toDeclaredFunctionType() {
     if (isQmarkFunction()) {
@@ -920,8 +918,7 @@ public final class FunctionType {
     return builder.buildFunction();
   }
 
-  private FunctionType substituteParametricGenerics(
-      Map<String, JSType> typeMap) {
+  private FunctionType substituteParametricGenerics(Map<String, JSType> typeMap) {
     if (typeMap.isEmpty()) {
       return this;
     }
@@ -953,7 +950,7 @@ public final class FunctionType {
       // comes from a method declaration, but I have not been able to find a
       // test that exposes the bug.
       NominalType recvType = getNominalTypeIfSingletonObj(this.receiverType);
-      if (recvType.isUninstantiatedGenericType()) {
+      if (recvType != null && recvType.isUninstantiatedGenericType()) {
         builder.addReceiverType(this.receiverType);
       } else {
         builder.addReceiverType(substGenericsInNomType(this.receiverType, typeMap));

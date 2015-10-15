@@ -1796,7 +1796,8 @@ class GlobalTypeInfo implements CompilerPass {
           declNode.isFunction() ? nominaltypesByNode.get(declNode) : null;
       FunctionAndSlotType result = typeParser.getFunctionType(
           fnDoc, functionName, declNode, ctorType, ownerType, parentScope);
-      Node qnameNode = declNode.isGetProp() ? declNode : NodeUtil.getFunctionNameNode(declNode);
+      Node qnameNode = declNode.isGetProp()
+          ? declNode : NodeUtil.getFunctionNameNode(declNode);
       if (result.slotType != null && qnameNode != null && qnameNode.isName()) {
         parentScope.addSimpleType(qnameNode, result.slotType);
       }
@@ -1873,7 +1874,7 @@ class GlobalTypeInfo implements CompilerPass {
         // Use typeParser for the formals, and only add the receiver type here.
         DeclaredFunctionType allButRecvType = typeParser.getFunctionType(
             null, functionName, declNode, null, null, parentScope).functionType;
-        return allButRecvType.withReceiverType(recvType.getNominalTypeIfSingletonObj());
+        return allButRecvType.withReceiverType(recvType);
       }
 
       // The function literal is an argument at a call
