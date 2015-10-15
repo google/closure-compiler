@@ -251,7 +251,7 @@ class ReplaceCssNames implements CompilerPass {
         for (String element : parts) {
           Integer count = cssNames.get(element);
           if (count == null) {
-            count = Integer.valueOf(0);
+            count = 0;
           }
           cssNames.put(element, count.intValue() + 1);
         }

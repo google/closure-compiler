@@ -281,7 +281,7 @@ class IRFactory {
       if (charNo == -1) {
         break;
       }
-      newlines.add(Integer.valueOf(charNo));
+      newlines.add(charNo);
     }
 
     // Sometimes this will be null in tests.

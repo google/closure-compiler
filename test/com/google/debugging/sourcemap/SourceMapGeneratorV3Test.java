@@ -499,7 +499,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     mapper.addExtension("x_google_foo", new JsonObject());
     mapper.addExtension("x_google_test", parseJsonObject("{\"number\" : 1}"));
     mapper.addExtension("x_google_array", new JsonArray());
-    mapper.addExtension("x_google_int", new Integer(2));
+    mapper.addExtension("x_google_int", 2);
     mapper.addExtension("x_google_str", "Some text");
 
     mapper.removeExtension("x_google_foo");
@@ -535,7 +535,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
 
     assertThat(mapper.hasExtension("x_company_foo")).isFalse();
 
-    mapper.addExtension("x_company_baz", new Integer(2));
+    mapper.addExtension("x_company_baz", 2);
 
     mapper.mergeMapSection(0, 0,
         "{\n" +
