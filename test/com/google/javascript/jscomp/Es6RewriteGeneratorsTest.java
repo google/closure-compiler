@@ -1602,6 +1602,4 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
             "  return iterator;",
             "}"));
   }
-
-
 }
