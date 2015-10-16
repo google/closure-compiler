@@ -344,6 +344,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
       // TODO(tbreisacher): Consider moving UNUSED_LOCAL_ASSIGNMENT into its own check pass, so
       // that we can run it after goog.scope processing, and get rid of the inGoogScope check.
       if (unusedAssignment != null && !isRead && !hasErrors) {
+        boolean inGoogScope = false;
         Scope s = v.getScope();
         Node function = null;
         if (s.isFunctionBlockScope()) {
@@ -353,9 +354,11 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           // Es6SyntacticScopeCreator.
           function = s.getRootNode();
         }
-        boolean inGoogScope = function != null
-            && function.getPrevious() != null
-            && function.getPrevious().matchesQualifiedName("goog.scope");
+        if (function != null) {
+          Node callee = function.getParent().getChildBefore(function);
+          inGoogScope = callee != null && callee.matchesQualifiedName("goog.scope");
+        }
+
         if (!inGoogScope) {
           compiler.report(
               JSError.make(unusedAssignment.getNode(), UNUSED_LOCAL_ASSIGNMENT, v.name));
