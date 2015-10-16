@@ -68,8 +68,10 @@ public final class CheckForInOverArray
     }
     if (type.isUnionType()) {
       JSType arrayType = typeRegistry.getNativeType(ARRAY_TYPE);
-      if (arrayType.isSubtype(type)) {
-        return true;
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
+        if (alternate.isSubtype(arrayType)) {
+          return true;
+        }
       }
     }
     return false;

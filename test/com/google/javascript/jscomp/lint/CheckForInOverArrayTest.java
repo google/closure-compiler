@@ -112,6 +112,34 @@ public final class CheckForInOverArrayTest extends CompilerTestCase {
         "}"));
   }
 
+  public void testForInOverArray8() {
+    testPass(LINE_JOINER.join(
+        "function f(/** !Object */ o) {",
+        "  for (var i in o) {}",
+        "}"));
+  }
+
+  public void testForInOverArray9() {
+    testPass(LINE_JOINER.join(
+        "function f(/** ?Object */ o) {",
+        "  for (var i in o) {}",
+        "}"));
+  }
+
+  public void testForInOverArray10() {
+    testPass(LINE_JOINER.join(
+        "function f(/** (Object|string) */ o) {",
+        "  for (var i in o) {}",
+        "}"));
+  }
+
+  public void testForInOverArray11() {
+    testWarning(LINE_JOINER.join(
+        "function f(/** Array<string> */ o) {",
+        "  for (var i in o) {}",
+        "}"));
+  }
+
   private void testPass(String js) {
     testSame("", js, null);
   }
