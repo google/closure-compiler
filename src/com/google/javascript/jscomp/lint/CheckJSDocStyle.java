@@ -141,7 +141,8 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       // can have any param name.
 
       JSTypeExpression paramType = jsDoc.getParameterType(paramsFromJsDoc.get(i));
-      boolean jsDocOptional = paramType.isOptionalArg();
+      // TODO(tbreisacher): Do we want to warn if there is a @param with no type information?
+      boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
       if (nameOptional && !jsDocOptional) {
         t.report(param, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, param.getString());
       } else if (!nameOptional && jsDocOptional) {

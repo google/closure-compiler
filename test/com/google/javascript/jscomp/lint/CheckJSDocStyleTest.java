@@ -173,6 +173,16 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
         WRONG_NUMBER_OF_PARAMS);
   }
 
+  public void testParamWithNoTypeInfo() {
+    testSame(
+        LINE_JOINER.join(
+            "/**",
+            " * @param x A param with no type information.",
+            " */",
+            "function f(x) { }"));
+
+  }
+
   public void testMissingPrivate() {
     testSame(
         LINE_JOINER.join(
