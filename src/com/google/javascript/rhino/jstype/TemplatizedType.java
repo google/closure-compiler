@@ -68,7 +68,7 @@ public final class TemplatizedType extends ProxyObjectType {
         objectType.getTemplateTypeMap().getUnfilledTemplateKeys();
     ImmutableList.Builder<JSType> builder = ImmutableList.builder();
     for (TemplateType filledTemplateKey : filledTemplateKeys) {
-      builder.add(getTemplateTypeMap().getTemplateType(filledTemplateKey));
+      builder.add(getTemplateTypeMap().getResolvedTemplateType(filledTemplateKey));
     }
     this.templateTypes = builder.build();
 

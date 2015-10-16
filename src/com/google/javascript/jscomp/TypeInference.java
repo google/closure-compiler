@@ -228,7 +228,7 @@ class TypeInference
               JSType iterKeyType = getNativeType(STRING_TYPE);
               ObjectType objType = getJSType(obj).dereference();
               JSType objIndexType = objType == null ?
-                  null : objType.getTemplateTypeMap().getTemplateType(
+                  null : objType.getTemplateTypeMap().getResolvedTemplateType(
                       registry.getObjectIndexKey());
               if (objIndexType != null && !objIndexType.isUnknownType()) {
                 JSType narrowedKeyType =
@@ -1237,8 +1237,8 @@ class TypeInference
         TemplateTypeMap argTypeMap = argObjectType.getTemplateTypeMap();
         for (TemplateType key : paramTypeMap.getTemplateKeys()) {
           maybeResolveTemplatedType(
-              paramTypeMap.getTemplateType(key),
-              argTypeMap.getTemplateType(key),
+              paramTypeMap.getResolvedTemplateType(key),
+              argTypeMap.getResolvedTemplateType(key),
               resolvedTypes, seenTypes);
         }
       }

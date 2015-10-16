@@ -4446,6 +4446,6 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
 
   private void assertTemplatizedTypeEquals(TemplateType key, JSType expected,
                                            JSTypeExpression te) {
-    assertThat(resolve(te).getTemplateTypeMap().getTemplateType(key)).isEqualTo(expected);
+    assertThat(resolve(te).getTemplateTypeMap().getResolvedTemplateType(key)).isEqualTo(expected);
   }
 }

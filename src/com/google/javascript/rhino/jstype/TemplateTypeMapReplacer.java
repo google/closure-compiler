@@ -73,7 +73,7 @@ public class TemplateTypeMapReplacer extends ModificationVisitor {
         // for the TemplateType, return the TemplateType type itself.
         return type;
       } else {
-        JSType replacement = replacements.getTemplateType(type);
+        JSType replacement = replacements.getUnresolvedOriginalTemplateType(type);
 
         visitedTypes.push(type);
         JSType visitedReplacement = replacement.visit(this);
