@@ -652,6 +652,10 @@ public class Node implements Serializable {
     return next;
   }
 
+  public Node getPrevious() {
+    return parent.getChildBefore(this);
+  }
+
   public Node getChildBefore(Node child) {
     if (child == first) {
       return null;

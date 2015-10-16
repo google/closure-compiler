@@ -168,18 +168,14 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testNoWarnInExterns1() {
     // Verify duplicate suppressions are properly recognized.
-    String externs =
-       "var google;" +
-       "/** @suppress {duplicate} */ var google";
+    String externs = "var google; /** @suppress {duplicate} */ var google";
     String code = "";
     testSame(externs, code, null);
   }
 
   public void testNoWarnInExterns2() {
     // Verify we don't complain about early references in externs
-    String externs =
-       "window;" +
-       "var window;";
+    String externs = "window; var window;";
     String code = "";
     testSame(externs, code, null);
   }
@@ -189,6 +185,16 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertUnused("function f() { var a; }");
     assertUnused("function f() { var a = 2; }");
     assertUnused("function f() { var a; a = 2; }");
+  }
+
+  /**
+   * Inside a goog.scope, don't warn because the alias might be used in a type annotation.
+   */
+  public void testUnusedLocalVarInGoogScope() {
+    enableUnusedLocalAssignmentCheck = true;
+    testSame("goog.scope(function f() { var a; });");
+    testSame("goog.scope(function f() { /** @typedef {some.long.name} */ var a; });");
+    testSame("goog.scope(function f() { var a = some.long.name; });");
   }
 
   public void testUnusedLocalLet() {
