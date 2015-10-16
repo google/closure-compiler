@@ -222,6 +222,7 @@ public class DiagnosticGroups {
   // Part of the new type inference
   public static final DiagnosticGroup NEW_CHECK_TYPES =
       DiagnosticGroups.registerGroup("newCheckTypes",
+          JSTypeCreatorFromJSDoc.ALL_DIAGNOSTICS,
           GlobalTypeInfo.ALL_DIAGNOSTICS,
           NewTypeInference.ALL_DIAGNOSTICS);
 

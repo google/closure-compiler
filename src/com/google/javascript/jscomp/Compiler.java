@@ -332,8 +332,7 @@ public class Compiler extends AbstractCompiler {
     // DiagnosticGroups override the plain checkTypes option.
     if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
       options.checkTypes = true;
-    } else if (options.disables(DiagnosticGroups.CHECK_TYPES)
-        && !options.getNewTypeInference()) {
+    } else if (options.disables(DiagnosticGroups.CHECK_TYPES)) {
       options.checkTypes = false;
     } else if (!options.checkTypes) {
       // If DiagnosticGroups did not override the plain checkTypes
@@ -343,6 +342,13 @@ public class Compiler extends AbstractCompiler {
           DiagnosticGroup.forType(
               RhinoErrorReporter.TYPE_PARSE_ERROR),
           CheckLevel.OFF);
+    }
+    // With NTI, we still need OTI to run because the later passes that use
+    // types only understand OTI types at the moment.
+    // But we do not want to see the warnings from OTI.
+    if (options.getNewTypeInference()) {
+      options.checkTypes = true;
+      options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
     }
 
     if (options.checkGlobalThisLevel.isOn() &&

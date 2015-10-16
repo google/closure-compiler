@@ -1715,13 +1715,6 @@ public class CompilerOptions {
 
   public void setNewTypeInference(boolean enable) {
     this.useNewTypeInference = enable;
-    if (enable) {
-      // With NTI, we still need OTI to run because the later passes that use
-      // types only understand OTI types at the moment.
-      // But we don't want to see the warnings.
-      this.checkTypes = true;
-      setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
-    }
   }
 
   /**
