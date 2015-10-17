@@ -213,4 +213,10 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
     typeCheck("declare class C { constructor(); }");
     typeCheck("declare enum Foo { BAR }");
   }
+
+  public void testGetterReturnNonDeclaredType() {
+    typeCheck(
+        "var x = {get a(): number { return 'str'; }}",
+        NewTypeInference.RETURN_NONDECLARED_TYPE);
+  }
 }

@@ -121,6 +121,11 @@ public final class TypeSyntaxTest extends TestCase {
             .getFirstChild());
   }
 
+  public void testSetterDeclarationWithReturnType() {
+    expectErrors("Parse error. setter should not have any returns");
+    parse("var x = {set a(x): number {\n}};", LanguageMode.ECMASCRIPT6_TYPED);
+  }
+
   public void testFunctionParamDeclaration() {
     Node fn = parse("function foo(x: string) {\n}").getFirstChild();
     Node param = fn.getFirstChild().getNext().getFirstChild();

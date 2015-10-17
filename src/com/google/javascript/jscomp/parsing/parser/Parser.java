@@ -2399,6 +2399,10 @@ public class Parser {
       IdentifierToken parameter = eatId();
       ParseTree type = maybeParseColonType();
       eat(TokenType.CLOSE_PAREN);
+      ParseTree returnType = maybeParseColonType();
+      if (returnType != null) {
+        reportError(scanner.peekToken(), "setter should not have any returns");
+      }
       BlockTree body = parseFunctionBody();
       return new SetAccessorTree(
           getTreeLocation(start), propertyName, isStatic, parameter, type, body);
