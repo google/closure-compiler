@@ -48,6 +48,7 @@ abstract class IntegrationTestCase extends TestCase {
         + "function alert(message) {}"
         + "function Object() {}"
         + "Object.seal;"
+        + "Object.defineProperties;"
         + "/**\n"
         + " * @param {...*} var_args\n"
         + " * @constructor\n"
