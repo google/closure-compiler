@@ -233,7 +233,7 @@ public final class ConformanceRules {
   }
 
   /**
-   * Banned name rule
+   * Banned dependency rule
    */
   static class BannedDependency extends AbstractRule {
     private final List<String> paths;
@@ -945,6 +945,31 @@ public final class ConformanceRules {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null && info.isExpose()) {
         return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
+    }
+  }
+
+  /**
+   * Require "use strict" rule
+   */
+  public static class RequireUseStrict extends AbstractRule {
+
+    public RequireUseStrict(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      if (!requirement.getValueList().isEmpty()) {
+        throw new InvalidRequirementSpec("invalid value");
+      }
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (n.isScript()) {
+        Set<String> directives = n.getDirectives();
+        if (directives == null || !directives.contains("use strict")) {
+          return ConformanceResult.VIOLATION;
+        }
       }
       return ConformanceResult.CONFORMANCE;
     }

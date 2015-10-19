@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
 import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
@@ -75,6 +76,8 @@ public final class CheckConformanceTest extends CompilerTestCase {
     enableNormalize();
     enableClosurePass();
     enableClosurePassForExpected();
+    enableRewriteClosureCode();
+    setLanguage(LanguageMode.ECMASCRIPT6_STRICT, LanguageMode.ECMASCRIPT5_STRICT);
   }
 
   @Override
@@ -1331,5 +1334,51 @@ public final class CheckConformanceTest extends CompilerTestCase {
     testSame(
         EXTERNS,
         "/** @param {?} n */ function f(n) { alert(n.prop); }", null);
+  }
+
+  public void testRequireUseStrict0() {
+    configuration = config(rule("RequireUseStrict"), "My rule message");
+
+    testSame(
+        EXTERNS,
+        "anything;",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: My rule message");
+  }
+
+  public void testRequireUseStrict1() {
+    configuration = config(rule("RequireUseStrict"), "My rule message");
+
+    testSame(
+        EXTERNS,
+        "'use strict';",
+        null);
+  }
+
+  public void testRequireUseStrict2() {
+    configuration = config(rule("RequireUseStrict"), "My rule message");
+
+    test(
+        EXTERNS,
+        "goog.module('foo');",
+        "'use strict'; /** @const */ var foo={};",
+        null, null);
+  }
+
+  public void testRequireUseStrict3() {
+    configuration = config(rule("RequireUseStrict"), "My rule message");
+
+    test(
+        EXTERNS,
+        "export var x = 2;",
+        "/** \n"
+        + "* @fileoverview \n"
+        + "* @suppress {missingProvide,missingRequire}\n"
+        + "*/\n"
+        + ""
+        + "'use strict';"
+        + " /** @const */ var module$testcode={};"
+        + "var x$$module$testcode=2;module$testcode.x=x$$module$testcode;",
+        null, null);
   }
 }

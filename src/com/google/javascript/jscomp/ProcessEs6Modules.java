@@ -51,6 +51,13 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           "JSC_LHS_OF_GOOG_REQUIRE_MUST_BE_CONST",
           "The left side of a goog.require() must use ''const'' (not ''let'' or ''var'')");
 
+  static final DiagnosticType USELESS_USE_STRICT_DIRECTIVE =
+      DiagnosticType.warning(
+          "JSC_USELESS_USE_STRICT_DIRECTIVE",
+          "'use strict' is unnecessary in goog.module files.");
+
+  private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
+
   private final ES6ModuleLoader loader;
 
   private final Compiler compiler;
@@ -300,6 +307,9 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     if (!isEs6Module) {
       return;
     }
+
+    checkStrictModeDirective(t, script);
+
     Preconditions.checkArgument(scriptNodeCount == 1,
         "ProcessEs6Modules supports only one invocation per "
         + "CompilerInput / script node");
@@ -374,6 +384,22 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
 
     exportMap.clear();
     compiler.reportCodeChange();
+  }
+
+  private static void checkStrictModeDirective(NodeTraversal t, Node n) {
+    Preconditions.checkState(n.isScript());
+    Set<String> directives = n.getDirectives();
+    if (directives != null && directives.contains("use strict")) {
+      t.report(n, USELESS_USE_STRICT_DIRECTIVE);
+    } else {
+      if (directives == null) {
+        n.setDirectives(USE_STRICT_ONLY);
+      } else {
+        ImmutableSet.Builder<String> builder = new ImmutableSet.Builder<String>().add("use strict");
+        builder.addAll(directives);
+        n.setDirectives(builder.build());
+      }
+    }
   }
 
   private void rewriteRequires(Node script) {

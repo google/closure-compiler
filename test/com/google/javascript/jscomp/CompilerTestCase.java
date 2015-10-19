@@ -125,6 +125,8 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private LanguageMode acceptedLanguage = LanguageMode.ECMASCRIPT5;
 
+  private LanguageMode languageOut = LanguageMode.ECMASCRIPT5;
+
   /**
    * Whether externs changes should be allowed for this pass.
    */
@@ -248,10 +250,22 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
-   * What language to allow in source parsing.
+   * What language to allow in source parsing. Also sets the output language.
    */
-  protected void setAcceptedLanguage(LanguageMode acceptedLanguage) {
-    this.acceptedLanguage = acceptedLanguage;
+  protected void setAcceptedLanguage(LanguageMode lang) {
+    setLanguage(lang, lang);
+  }
+
+  /**
+   * Sets the input and output language modes..
+   */
+  protected void setLanguage(LanguageMode langIn, LanguageMode langOut) {
+    this.acceptedLanguage = langIn;
+    setLanguageOut(langOut);
+  }
+
+  protected void setLanguageOut(LanguageMode acceptedLanguage) {
+    this.languageOut = acceptedLanguage;
   }
 
   /**
@@ -577,6 +591,8 @@ public abstract class CompilerTestCase extends TestCase {
     CompilerOptions options = getOptions();
 
     options.setLanguageIn(acceptedLanguage);
+    options.setLanguageOut(languageOut);
+
     // Note that in this context, turning on the checkTypes option won't
     // actually cause the type check to run.
     options.setCheckTypes(parseTypeInfo);

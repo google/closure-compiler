@@ -34,7 +34,8 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    // ECMASCRIPT5 to trigger module processing after parsing.
+    setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
     enableAstValidation(true);
     runTypeCheckAfterProcessing = true;
   }
@@ -42,7 +43,8 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5); // Trigger module processing after parsing.
+    // ECMASCRIPT5 to Trigger module processing after parsing.
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     return options;
   }
 

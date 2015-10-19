@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Process aliases in goog.modules.
@@ -88,6 +89,13 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
           "JSC_GOOG_MODULE_INVALID_EXPORT_COMPUTED_PROPERTY",
           "Computed properties are not yet supported in goog.module exports.");
 
+  static final DiagnosticType USELESS_USE_STRICT_DIRECTIVE =
+      DiagnosticType.warning(
+          "JSC_USELESS_USE_STRICT_DIRECTIVE",
+          "'use strict' is unnecessary in goog.module files.");
+
+  private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
+
   private final AbstractCompiler compiler;
 
   private class ModuleDescription {
@@ -138,7 +146,11 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    if (isModuleFile(n) || isLoadModuleCall(n)) {
+    boolean isModuleFile = isModuleFile(n);
+    if (isModuleFile) {
+      checkStrictModeDirective(t, n);
+    }
+    if (isModuleFile || isLoadModuleCall(n)) {
       enterModule(n);
     }
     if (isGetModuleCall(n)) {
@@ -169,6 +181,22 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
     }
 
     return true;
+  }
+
+  private static void checkStrictModeDirective(NodeTraversal t, Node n) {
+    Preconditions.checkState(n.isScript());
+    Set<String> directives = n.getDirectives();
+    if (directives != null && directives.contains("use strict")) {
+      t.report(n, USELESS_USE_STRICT_DIRECTIVE);
+    } else {
+      if (directives == null) {
+        n.setDirectives(USE_STRICT_ONLY);
+      } else {
+        ImmutableSet.Builder<String> builder = new ImmutableSet.Builder<String>().add("use strict");
+        builder.addAll(directives);
+        n.setDirectives(builder.build());
+      }
+    }
   }
 
   private static boolean isCallTo(Node n, String qname) {

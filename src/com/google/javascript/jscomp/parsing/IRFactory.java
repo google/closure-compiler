@@ -228,8 +228,10 @@ class IRFactory {
   private final ErrorReporter errorReporter;
   private final TransformDispatcher transformDispatcher;
 
+  private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
+
   private static final ImmutableSet<String> ALLOWED_DIRECTIVES =
-      ImmutableSet.of("use strict");
+      USE_STRICT_ONLY;
 
   private static final ImmutableSet<String> ES5_RESERVED_KEYWORDS =
       ImmutableSet.of(
@@ -987,17 +989,22 @@ class IRFactory {
      */
     private void parseDirectives(Node node) {
       // Remove all the directives, and encode them in the AST.
-      Set<String> directives = null;
+      ImmutableSet.Builder<String> directives = null;
       while (isDirective(node.getFirstChild())) {
         String directive = node.removeFirstChild().getFirstChild().getString();
         if (directives == null) {
-          directives = new HashSet<>();
+          directives = new ImmutableSet.Builder<>();
         }
         directives.add(directive);
       }
 
       if (directives != null) {
-        node.setDirectives(directives);
+        ImmutableSet<String> result = directives.build();
+        if (result.size() == 1 && result.contains("use strict")) {
+          // Use a shared set.
+          result = USE_STRICT_ONLY;
+        }
+        node.setDirectives(result);
       }
     }
 
@@ -2048,6 +2055,7 @@ class IRFactory {
       Node secondChild = (tree.nameSpaceImportIdentifier != null)
           ? newStringNode(Token.IMPORT_STAR, tree.nameSpaceImportIdentifier.value)
           : transformListOrEmpty(Token.IMPORT_SPECS, tree.importSpecifierList);
+      setSourceInfo(secondChild, tree);
       Node thirdChild = processString(tree.moduleSpecifier);
 
       return newNode(Token.IMPORT, firstChild, secondChild, thirdChild);
