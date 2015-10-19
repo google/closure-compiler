@@ -24,7 +24,6 @@
  * Object.getOwnPropertyDescriptor are undefined (unlike helpers in
  * es6_runtime.js).
  *
- * @author ochafik@google.com (Olivier Chafik)
  */
 
 

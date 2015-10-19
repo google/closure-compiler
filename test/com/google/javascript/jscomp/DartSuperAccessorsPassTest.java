@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 /**
  * Test case for {@link DartSuperAccessorsPass}.
  *
- * @author ochafik@google.com (Olivier Chafik)
  */
 public final class DartSuperAccessorsPassTest extends CompilerTestCase {
 
