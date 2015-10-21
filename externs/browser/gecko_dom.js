@@ -106,7 +106,7 @@ Window.prototype.globalStorage;
  * @type {!History}
  * @see https://developer.mozilla.org/en/DOM/window.history
  */
-var history;
+Window.prototype.history;
 
 /**
  * Returns the number of frames (either frame or iframe elements) in the
@@ -116,6 +116,13 @@ var history;
  * @see https://developer.mozilla.org/en/DOM/window.length
  */
 Window.prototype.length;
+
+/**
+ * @type {!Location}
+ * @implicitCast
+ * @see https://developer.mozilla.org/en/DOM/window.location
+ */
+Window.prototype.location;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.locationbar
