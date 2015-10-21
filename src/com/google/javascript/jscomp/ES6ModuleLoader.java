@@ -136,7 +136,8 @@ public final class ES6ModuleLoader {
 
   private static URI createUri(String input) {
     // Colons might cause URI.create() to fail
-    String forwardSlashes = input.replace(':', '-').replace("\\", MODULE_SLASH);
+    String forwardSlashes =
+        input.replace(':', '-').replace("\\", MODULE_SLASH).replace(" ", "%20");
     return URI.create(forwardSlashes).normalize();
   }
 
@@ -165,7 +166,8 @@ public final class ES6ModuleLoader {
             .replace('\\', '$')
             .replace('-', '_')
             .replace(':', '_')
-            .replace('.', '_');
+            .replace('.', '_')
+            .replace("%20", "_");
     return "module$" + moduleName;
   }
 }
