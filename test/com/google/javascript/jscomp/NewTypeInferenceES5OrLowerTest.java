@@ -8762,8 +8762,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    return assertInstanceof(obj, ctor);",
         "  }",
         "}"),
-        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
-        NewTypeInference.INVALID_OPERAND_TYPE);
+        GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE);
   }
 
   public void testGetpropOnPossiblyInexistentPropertyDoesntCrash() {
@@ -11864,20 +11863,18 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testSpecializationInPropertyAccesses() {
     typeCheck(Joiner.on('\n').join(
-        "/** @const */",
-        "var ns = {};",
-        "/** @type {?number} */ ns.n = 123;",
-        "if (ns.n === null) {",
+        "var obj = {};",
+        "/** @type {?number} */ obj.n = 123;",
+        "if (obj.n === null) {",
         "} else {",
-        "  ns.n - 5;",
+        "  obj.n - 5;",
         "}"));
 
     typeCheck(Joiner.on('\n').join(
-        "/** @const */",
-        "var ns = {};",
-        "/** @type {?number} */ ns.n = 123;",
-        "if (ns.n !== null) {",
-        "  ns.n - 5;",
+        "var obj = {};",
+        "/** @type {?number} */ obj.n = 123;",
+        "if (obj.n !== null) {",
+        "  obj.n - 5;",
         "}"));
 
     typeCheck(Joiner.on('\n').join(
@@ -14075,10 +14072,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Obj() {}",
         "/** @this {?} */",
         "Obj.prototype.toString = function() { return ''; };",
-        // ? is specialized to Object here b/c @this has a more precise type
-        // on Object#toString. Can't do much about this.
-        "Obj.prototype.toString.call(123);"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "Obj.prototype.toString.call(123);"));
 
     typeCheck(Joiner.on('\n').join(
         "/** @constructor */",
@@ -14129,5 +14123,35 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Foo() {}",
         "(new Foo);"),
         NewTypeInference.NOT_A_CONSTRUCTOR);
+  }
+
+  public void testDontSpecializeKnownFunctions() {
+    typeCheck(Joiner.on('\n').join(
+        "function g(x) { return x; }",
+        "/** @type {function(?):number} */",
+        "var z = g;",
+        "/** @type {function(?):string} */",
+        "var w = g;"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "ns.g = function(x) { return x; }",
+        "/** @type {function(?):number} */",
+        "var z = ns.g;",
+        "/** @type {function(?):string} */",
+        "var w = ns.g;"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @return {void} */",
+        "ns.nullFunction = function() {};",
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.m = ns.nullFunction;",
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.m = ns.nullFunction;"));
   }
 }

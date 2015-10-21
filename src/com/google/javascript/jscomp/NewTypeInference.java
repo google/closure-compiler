@@ -1390,6 +1390,20 @@ final class NewTypeInference implements CompilerPass {
       // For now, we don't warn for global variables
       return new EnvTypePair(inEnv, JSType.UNKNOWN);
     }
+
+    // For known functions, we want to use the summary type, if any.
+    // It is wrong to use the context to specialize the type;
+    // a function can correctly be used in two contexts whose types
+    // are incompatible.
+    // NOTE(dimvar): To stop specialization of known functions declared as
+    // properties, we end up stopping specialization of all namespace props.
+    // This reduces precision but it helps performance; namespaces have a lot of
+    // properties, so type operations on them are expensive.
+    if (currentScope.isKnownFunction(varName)
+        || maybeIsNamespace(varName, inferredType)) {
+      return new EnvTypePair(inEnv, inferredType);
+    }
+
     println(varName, "'s inferredType: ", inferredType,
         " requiredType:  ", requiredType,
         " specializedType:  ", specializedType);
@@ -1426,6 +1440,14 @@ final class NewTypeInference implements CompilerPass {
       preciseType = preciseType.withLoose();
     }
     return EnvTypePair.addBinding(inEnv, varName, preciseType);
+  }
+
+  // A heuristic to detect if a variable is a namespace during NTI.
+  // NOTE(dimvar): consider keeping around Namespace.java instances during NTI.
+  // (But if we keep them around, they need to be finalized during GTI.)
+  private boolean maybeIsNamespace(String varName, JSType inferredType) {
+    return currentScope.isConstVar(varName)
+        && inferredType.isSubtypeOf(JSType.TOP_OBJECT);
   }
 
   private EnvTypePair analyzeLogicalOpFwd(
@@ -3040,6 +3062,10 @@ final class NewTypeInference implements CompilerPass {
         " requiredType:  ", requiredType);
     if (inferredType == null) {
       return new EnvTypePair(outEnv, JSType.UNKNOWN);
+    }
+    if (currentScope.isKnownFunction(varName)
+        || maybeIsNamespace(varName, inferredType)) {
+      return new EnvTypePair(outEnv, inferredType);
     }
     JSType preciseType = inferredType.specialize(requiredType);
     if (currentScope.isUndeclaredFormal(varName)

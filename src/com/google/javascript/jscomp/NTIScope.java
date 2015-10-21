@@ -667,6 +667,7 @@ final class NTIScope implements DeclaredTypeRegistry {
             localFunDefs.get(name).getDeclaredFunctionType().toFunctionType(),
             commonTypes.getFunctionType());
       }
+      constVars.add(name);
       if (externs.containsKey(name)) {
         externs.put(name, t);
       } else {
