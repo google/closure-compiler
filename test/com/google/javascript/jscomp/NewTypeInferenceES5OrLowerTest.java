@@ -14107,6 +14107,15 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "Foo.prototype.f = function(x) {};",
         "(new Foo).f(new Foo);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @this {{length:number}|Array<T>}",
+        " */",
+        "Array.prototype.g = function(x) {};",
+        "Array.prototype.g.call({}, 2);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testCreatingSeveralQmarkFunInstances() {

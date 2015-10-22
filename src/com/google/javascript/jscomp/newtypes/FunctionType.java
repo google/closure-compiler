@@ -348,7 +348,7 @@ public final class FunctionType {
       return JSType.UNKNOWN;
     }
     NominalType nt = this.receiverType.getNominalTypeIfSingletonObj();
-    if (nt == null) {
+    if (nt == null || nt.isBuiltinObject()) {
       return this.receiverType;
     }
     if (nt.isGeneric()) {

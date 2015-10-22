@@ -72,14 +72,14 @@ public final class NominalType {
   }
 
   boolean isClassy() {
-    return !isFunction() && !isObject();
+    return !isFunction() && !isBuiltinObject();
   }
 
   boolean isFunction() {
     return "Function".equals(rawType.name);
   }
 
-  private boolean isObject() {
+  boolean isBuiltinObject() {
     return "Object".equals(rawType.name);
   }
 
