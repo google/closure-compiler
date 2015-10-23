@@ -4447,6 +4447,7 @@ google.maps.RotateControlOptions.prototype.position;
 /**
  * @param {Node} container
  * @param {(google.maps.SaveWidgetOptions|Object.<string>)=} opt_opts
+ * @extends {google.maps.MVCObject}
  * @constructor
  */
 google.maps.SaveWidget = function(container, opt_opts) {};
