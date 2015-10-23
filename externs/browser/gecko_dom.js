@@ -118,6 +118,10 @@ Window.prototype.history;
 Window.prototype.length;
 
 /**
+ * Location has an exception in the DeclaredGlobalExternsOnWindow pass
+ * so we have to manually include it:
+ * https://github.com/google/closure-compiler/blob/master/src/com/google/javascript/jscomp/DeclaredGlobalExternsOnWindow.java#L116
+ *
  * @type {!Location}
  * @implicitCast
  * @see https://developer.mozilla.org/en/DOM/window.location
