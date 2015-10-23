@@ -3846,10 +3846,6 @@ final class NewTypeInference implements CompilerPass {
       case Token.GETPROP:
         return JSType.TOP_STRUCT;
       case Token.GETELEM:
-      case Token.IN:
-        return JSType.TOP_DICT;
-      case Token.FOR:
-        Preconditions.checkState(NodeUtil.isForIn(expr));
         return JSType.TOP_DICT;
       case Token.OBJECTLIT: {
         JSDocInfo jsdoc = expr.getJSDocInfo();
@@ -3861,6 +3857,11 @@ final class NewTypeInference implements CompilerPass {
         }
         return JSType.TOP_OBJECT;
       }
+      case Token.FOR:
+        Preconditions.checkState(NodeUtil.isForIn(expr));
+        return JSType.TOP_OBJECT;
+      case Token.IN:
+        return JSType.TOP_OBJECT;
       default:
         throw new RuntimeException(
             "Unhandled node for pickReqObjType: " + Token.name(exprKind));

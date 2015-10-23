@@ -14163,4 +14163,13 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function Bar() {}",
         "Bar.prototype.m = ns.nullFunction;"));
   }
+
+  public void testDontSpecializeInToDict() {
+    typeCheck(Joiner.on('\n').join(
+        "var obj = {};",
+        "function f(x) {",
+        "  var z = x || obj;",
+        "  if (('asdf' in z) && z.prop) {}",
+        "}"));
+  }
 }
