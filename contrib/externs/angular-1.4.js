@@ -2108,30 +2108,21 @@ angular.$routeParams;
  * $routeProvider Service
  *****************************************************************************/
 
-/**
- * @typedef {{
- *   otherwise:
- *       function(
- *           (string|!angular.$routeProvider.Params)): !angular.$routeProvider,
- *   when:
- *       function(
- *           string, angular.$routeProvider.Params): !angular.$routeProvider
- *   }}
- */
-angular.$routeProvider;
+/** @constructor */
+angular.$routeProvider = function() {};
 
 /**
  * @param {(string|!angular.$routeProvider.Params)} params
  * @return {!angular.$routeProvider}
  */
-angular.$routeProvider.otherwise = function(params) {};
+angular.$routeProvider.prototype.otherwise = function(params) {};
 
 /**
  * @param {string} path
  * @param {angular.$routeProvider.Params} route
  * @return {!angular.$routeProvider}
  */
-angular.$routeProvider.when = function(path, route) {};
+angular.$routeProvider.prototype.when = function(path, route) {};
 
 /**
  * @typedef {{
