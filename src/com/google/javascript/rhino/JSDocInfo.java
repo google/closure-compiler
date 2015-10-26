@@ -1338,6 +1338,17 @@ public class JSDocInfo implements Serializable {
   }
 
   /**
+   * Get the message for a given thrown type.
+   */
+  public String getThrowsDescriptionForType(JSTypeExpression type) {
+    if (info == null || documentation.throwsDescriptions == null) {
+      return null;
+    }
+
+    return documentation.throwsDescriptions.get(type);
+  }
+
+  /**
    * Returns whether a type, specified using the {@code @type} annotation, is
    * present on this JSDoc.
    */

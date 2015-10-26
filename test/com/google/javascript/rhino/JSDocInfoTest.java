@@ -489,6 +489,21 @@ public class JSDocInfoTest extends TestCase {
     assertFalse(info.declareTemplateTypeName("T"));
   }
 
+  public void testGetThrowsDescription() {
+    JSDocInfo info = new JSDocInfo(true);
+
+    // Set a description so that info is initialized.
+    info.setDescription("Lorem");
+
+    JSTypeExpression errorType = fromString("Error");
+    JSTypeExpression otherType = fromString("Other");
+    info.documentThrows(errorType, "Because it does.");
+    info.documentThrows(otherType, "");
+    assertEquals("Because it does.", info.getThrowsDescriptionForType(errorType));
+    assertEquals("", info.getThrowsDescriptionForType(otherType));
+    assertNull(info.getThrowsDescriptionForType(fromString("NeverSeen")));
+  }
+
   /** Gets the type expression for a simple type name. */
   private JSTypeExpression fromString(String s) {
     return new JSTypeExpression(Node.newString(s), "");
