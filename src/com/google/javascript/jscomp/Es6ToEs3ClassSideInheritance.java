@@ -27,6 +27,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -67,10 +69,10 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   final AbstractCompiler compiler;
 
   // Map from class names to the static members in each class.
-  private final Multimap<String, Node> staticMethods = ArrayListMultimap.create();
+  private final LinkedHashMap<String, LinkedHashSet<Node>> staticMethods = new LinkedHashMap<>();
 
   // Map from class names to static properties (getters/setters) in each class.
-  private final Multimap<String, Node> staticProperties = ArrayListMultimap.create();
+  private final LinkedHashMap<String, LinkedHashSet<Node>> staticProperties = new LinkedHashMap<>();
 
   static final DiagnosticType DUPLICATE_CLASS = DiagnosticType.error(
       "DUPLICATE_CLASS",
@@ -80,6 +82,15 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
   public Es6ToEs3ClassSideInheritance(AbstractCompiler compiler) {
     this.compiler = compiler;
+  }
+
+  private LinkedHashSet<Node> getSet(LinkedHashMap<String, LinkedHashSet<Node>> map, String key) {
+    LinkedHashSet<Node> s = map.get(key);
+    if (s == null) {
+      s = new LinkedHashSet<Node>();
+      map.put(key, s);
+    }
+    return s;
   }
 
   @Override
@@ -101,43 +112,28 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     for (Node n : inheritsCalls) {
       Node parent = n.getParent();
       Node superclassNameNode = n.getLastChild();
+      String superclassQname = superclassNameNode.getQualifiedName();
       Node subclassNameNode = n.getChildBefore(superclassNameNode);
-      if (multiplyDefinedClasses.contains(superclassNameNode.getQualifiedName())) {
+      String subclassQname = subclassNameNode.getQualifiedName();
+      if (multiplyDefinedClasses.contains(superclassQname)) {
         compiler.report(JSError.make(n, DUPLICATE_CLASS));
         return;
       }
-      for (Node staticMethod : staticMethods.get(superclassNameNode.getQualifiedName())) {
-        copyStaticMethod(staticMethod, superclassNameNode, subclassNameNode, parent);
+      for (Node staticMethod : getSet(staticMethods, superclassQname)) {
+        copyStaticMethod(staticMethod, superclassNameNode, subclassNameNode, subclassQname, parent);
       }
-
-      for (Node staticProperty : staticProperties.get(superclassNameNode.getQualifiedName())) {
-        Preconditions.checkState(staticProperty.isGetProp(), staticProperty);
-        String memberName = staticProperty.getLastChild().getString();
-        // Add a declaration. Assuming getters are side-effect free,
-        // this is a no-op statement, but it lets the typechecker know about the property.
-        Node getprop = IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName));
-
-        JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticProperty.getJSDocInfo());
-        JSTypeExpression unknown = new JSTypeExpression(new Node(Token.QMARK), "<synthetic>");
-        info.recordType(unknown); // In case there wasn't a type specified on the base class.
-        info.addSuppression("visibility");
-        getprop.setJSDocInfo(info.build());
-
-        Node declaration = IR.exprResult(getprop);
-        declaration.useSourceInfoIfMissingFromForTree(n);
-        parent.getParent().addChildAfter(declaration, parent);
-        staticProperties.put(subclassNameNode.getQualifiedName(), staticProperty);
-        compiler.reportCodeChange();
+      for (Node staticProperty : getSet(staticProperties, superclassQname)) {
+        copyStaticProperty(staticProperty, subclassNameNode, subclassQname, n);
       }
     }
   }
 
-  private void copyStaticMethod(
-      Node staticMember, Node superclassNameNode, Node subclassNameNode, Node insertionPoint) {
+  private void copyStaticMethod(Node staticMember, Node superclassNameNode,
+      Node subclassNameNode, String subclassQname, Node insertionPoint) {
     Preconditions.checkState(staticMember.isAssign(), staticMember);
     String memberName = staticMember.getFirstChild().getLastChild().getString();
-
-    for (Node subclassMember : staticMethods.get(subclassNameNode.getQualifiedName())) {
+    LinkedHashSet<Node>  subclassMethods = getSet(staticMethods, subclassQname);
+    for (Node subclassMember : subclassMethods) {
       Preconditions.checkState(subclassMember.isAssign(), subclassMember);
       if (subclassMember.getFirstChild().getLastChild().getString().equals(memberName)) {
         // This subclass overrides the static method, so there is no need to copy the
@@ -156,7 +152,35 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     Node exprResult = IR.exprResult(assign);
     exprResult.useSourceInfoIfMissingFromForTree(superclassNameNode);
     insertionPoint.getParent().addChildAfter(exprResult, insertionPoint);
-    staticMethods.put(subclassNameNode.getQualifiedName(), assign);
+    subclassMethods.add(assign);
+    compiler.reportCodeChange();
+  }
+
+  private void copyStaticProperty(Node staticProperty, Node subclassNameNode,
+      String subclassQname, Node inheritsCall) {
+    Preconditions.checkState(staticProperty.isGetProp(), staticProperty);
+    String memberName = staticProperty.getLastChild().getString();
+    LinkedHashSet<Node>  subclassProps = getSet(staticProperties, subclassQname);
+    for (Node subclassMember : getSet(staticProperties, subclassQname)) {
+      Preconditions.checkState(subclassMember.isGetProp());
+      if (subclassMember.getLastChild().getString().equals(memberName)) {
+        return;
+      }
+    }
+    // Add a declaration. Assuming getters are side-effect free,
+    // this is a no-op statement, but it lets the typechecker know about the property.
+    Node getprop = IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName));
+    JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticProperty.getJSDocInfo());
+    JSTypeExpression unknown = new JSTypeExpression(new Node(Token.QMARK), "<synthetic>");
+    info.recordType(unknown); // In case there wasn't a type specified on the base class.
+    info.addSuppression("visibility");
+    getprop.setJSDocInfo(info.build());
+
+    Node declaration = IR.exprResult(getprop);
+    declaration.useSourceInfoIfMissingFromForTree(inheritsCall);
+    Node parent = inheritsCall.getParent();
+    parent.getParent().addChildAfter(declaration, parent);
+    subclassProps.add(staticProperty);
     compiler.reportCodeChange();
   }
 
@@ -204,24 +228,25 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     private void visitGetProp(Node n) {
       String className = n.getFirstChild().getQualifiedName();
       if (classNames.contains(className)) {
-        staticProperties.put(className, n);
+        getSet(staticProperties, className).add(n);
       }
     }
 
     private void visitAssign(Node n) {
       // Alias for classes. We assume that the alias appears after the class
       // declaration.
-      if (classNames.contains(n.getLastChild().getQualifiedName())) {
+      String existingClassQname = n.getLastChild().getQualifiedName();
+      if (classNames.contains(existingClassQname)) {
         String maybeAlias = n.getFirstChild().getQualifiedName();
         if (maybeAlias != null) {
           classNames.add(maybeAlias);
-          staticMethods.putAll(maybeAlias, staticMethods.get(n.getLastChild().getQualifiedName()));
+          staticMethods.put(maybeAlias, getSet(staticMethods, existingClassQname));
         }
       } else if (n.getFirstChild().isGetProp()) {
         Node getProp = n.getFirstChild();
         String maybeClassName = getProp.getFirstChild().getQualifiedName();
         if (classNames.contains(maybeClassName)) {
-          staticMethods.put(maybeClassName, n);
+          getSet(staticMethods, maybeClassName).add(n);
         }
       }
     }
@@ -236,7 +261,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         String maybeAlias = child.getQualifiedName();
         if (maybeAlias != null) {
           classNames.add(maybeAlias);
-          staticMethods.putAll(maybeAlias, staticMethods.get(maybeOriginalName));
+          staticMethods.put(maybeAlias, getSet(staticMethods, maybeOriginalName));
         }
       }
     }

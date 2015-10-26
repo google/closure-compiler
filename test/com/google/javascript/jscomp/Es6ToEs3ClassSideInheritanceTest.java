@@ -87,7 +87,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
   }
 
   public void testOverride() {
-    test(
+    testSame(
         LINE_JOINER.join(
             "/** @constructor */",
             "function Example() {}",
@@ -99,20 +99,17 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "function Subclass() {}",
             "$jscomp.inherits(Subclass, Example);",
             "",
-            "Subclass.staticMethod = function() { return 5; };"),
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Example() {}",
-            "",
-            "/** @return {string} */",
-            "Example.staticMethod = function() { return ''; }",
-            "",
-            "/** @constructor @extends {Example} */",
-            "function Subclass() {}",
-            "$jscomp.inherits(Subclass, Example);",
-            "",
-            "// This should be a type error, but currently we don't catch it.",
             "Subclass.staticMethod = function() { return 5; };"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Example() {}",
+            "Example.staticProp = 5;",
+            "/** @constructor @extends {Example} */",
+            "function Subclass() {}",
+            "$jscomp.inherits(Subclass, Example);",
+            "Subclass.staticProp = 6;"));
   }
 
   /**
@@ -231,5 +228,74 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "/** @suppress {visibility} */",
             "CodeClass.m = ExternsClass.m;"),
         null, null);
+  }
+
+  public void testAliasing() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prop = 123;",
+            "var aliasFoo = Foo;",
+            "/** @constructor @extends {aliasFoo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, aliasFoo);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prop = 123;",
+            "var aliasFoo = Foo;",
+            "/** @constructor @extends {aliasFoo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, aliasFoo);",
+            "/** @suppress {visibility} */",
+            "Bar.prop = aliasFoo.prop;"));
+
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "var aliasFoo = Foo;",
+            "aliasFoo.prop = 123;",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, Foo);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "var aliasFoo = Foo;",
+            "aliasFoo.prop = 123;",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, Foo);",
+            "/** @suppress {visibility} */",
+            "Bar.prop = Foo.prop;"));
+  }
+
+  // TODO(tbreisacher): the correct output should be the same as the input
+  public void testIncorrectScopeHandling() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "function f() {",
+            "  var Foo = {};",
+            "  Foo.prop = 123;",
+            "}",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, Foo);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "function f() {",
+            "  var Foo = {};",
+            "  Foo.prop = 123;",
+            "}",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, Foo);",
+            "/** @suppress {visibility} */",
+            "Bar.prop = Foo.prop;"));
   }
 }
