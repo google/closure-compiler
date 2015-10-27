@@ -216,7 +216,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
       // We have something like arguments[x] where x is not a constant. That
       // means at least one of the access is not known.
-      if (!index.isNumber()) {
+      if (!index.isNumber() || index.getDouble() < 0) {
         // TODO(user): Its possible not to give up just yet. The type
         // inference did a 'semi value propagation'. If we know that string
         // is never a subclass of the type of the index. We'd know that

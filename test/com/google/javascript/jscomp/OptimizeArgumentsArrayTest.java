@@ -162,4 +162,8 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
   public void testUnusualArgumentsUsage() {
     testSame("function f(x) { x[arguments]; }");
   }
+
+  public void testNegativeIndexNoCrash() {
+    testSame("function badFunction() { arguments[-1]; }");
+  }
 }
