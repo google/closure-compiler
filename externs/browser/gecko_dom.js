@@ -477,7 +477,7 @@ Document.prototype.execCommand;
 
 /**
  * @param {string} s id.
- * @return {HTMLElement}
+ * @return {Element}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/DOM/document.getElementById
  */

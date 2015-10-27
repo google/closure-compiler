@@ -2522,11 +2522,11 @@ DOMTokenList.prototype.toString = function() {};
 
 /**
  * A better interface to CSS classes than className.
- * @type {DOMTokenList}
- * @see http://www.w3.org/TR/html5/elements.html#dom-classlist
+ * @type {!DOMTokenList}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/classList
  * @const
  */
-HTMLElement.prototype.classList;
+Element.prototype.classList;
 
 /**
  * Constraint Validation API properties and methods
