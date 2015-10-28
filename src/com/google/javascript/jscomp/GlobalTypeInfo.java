@@ -277,7 +277,7 @@ class GlobalTypeInfo implements CompilerPass {
   private Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();
 
   private JSTypes commonTypes;
-  private List<String> unknownTypeNames = new ArrayList<>();
+  private Set<String> unknownTypeNames = new LinkedHashSet<>();
 
   GlobalTypeInfo(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
@@ -333,6 +333,7 @@ class GlobalTypeInfo implements CompilerPass {
     Preconditions.checkArgument(root.isSyntheticBlock());
     globalScope = new NTIScope(root, null, ImmutableList.<String>of(), commonTypes);
     globalScope.addUnknownTypeNames(this.unknownTypeNames);
+    this.unknownTypeNames = null; // Don't retain the LinkedHashSet
     scopes.add(globalScope);
 
     // Processing of a scope is split into many separate phases, and it's not
@@ -377,9 +378,6 @@ class GlobalTypeInfo implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, rootPs);
     // (5) Things that must happen after the traversal of the scope
     rootPs.finishProcessingScope();
-    for (String name : globalScope.getUnknownTypeNames()) {
-      globalScope.mayDeclareUnknownType(QualifiedName.fromQualifiedString(name));
-    }
 
     // (6) Repeat steps 4-5 for all the other scopes (outer-to-inner)
     for (int i = 1; i < scopes.size(); i++) {

@@ -11737,6 +11737,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "goog.addDependency = function(file, provides, requires){};",
         "goog.forwardDeclare = function(name){};");
 
+  // A forward declaration for a name A.B allows the name to appear only in
+  // types, not in code. Also, only A.B may appear in the type, not A or A.B.C.
   public void testForwardDeclarations() {
     typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.addDependency('', ['Foo'], []);",
@@ -11756,37 +11758,6 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "goog.forwardDeclare('ns.Bar');",
         "function f(/** !ns.Baz */ x) {}"),
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
-
-    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
-        "goog.addDependency('', ['Foo'], []);",
-        "goog.forwardDeclare('Bar');",
-        "var f = new Foo;",
-        "var b = new Bar;"));
-
-    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
-        "/** @const */ var ns = {};",
-        "goog.addDependency('', ['ns.Foo'], []);",
-        "goog.forwardDeclare('ns.Bar');",
-        "var f = new ns.Foo;",
-        "var b = new ns.Bar;"));
-
-    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
-        "/** @const */ var ns = {};",
-        "goog.addDependency('', ['ns.subns.Foo'], []);",
-        "goog.forwardDeclare('ns.subns.Bar');",
-        "var f = new ns.subns.Foo;",
-        "var b = new ns.subns.Bar;"));
-
-    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
-        "goog.addDependency('', ['ns.subns.Foo'], []);",
-        "goog.forwardDeclare('ns.subns.Bar');",
-        "var f = new ns.subns.Foo;",
-        "var b = new ns.subns.Bar;"));
-
-    typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
-        "goog.forwardDeclare('ns.subns');",
-        "goog.forwardDeclare('ns.subns.Bar');",
-        "var b = new ns.subns.Bar;"));
 
     typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
         "goog.forwardDeclare('num');",
@@ -11837,19 +11808,38 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "ns.ns2 = {};",
             "/** @const */",
             "var c = ns;",
-            "var x = new ns.ns2.Foo();"));
+            "var x = new ns.ns2.Foo();"),
+        NewTypeInference.INEXISTENT_PROPERTY);
 
     typeCheck(Joiner.on('\n').join(FORWARD_DECLARATION_DEFINITIONS,
             "goog.forwardDeclare('Foo.Bar');",
             "/** @constructor */",
             "function Foo() {}",
-            "var x = new Foo.Bar()"));
+            "var x = new Foo.Bar()"),
+        NewTypeInference.INEXISTENT_PROPERTY);
 
     typeCheckCustomExterns(Joiner.on('\n').join(
         DEFAULT_EXTERNS,
         "/** @constructor */",
         "function Document() {}"),
         "goog.forwardDeclare('Document')");
+
+    typeCheck(Joiner.on('\n').join(
+        "goog.forwardDeclare('a.b');",
+        "/** @type {a.b} */",
+        "var x;"));
+
+    typeCheck(Joiner.on('\n').join(
+        "goog.forwardDeclare('a');",
+        "/** @type {a.b.c} */",
+        "var x;"),
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    typeCheck(Joiner.on('\n').join(
+        "goog.forwardDeclare('a.b');",
+        "/** @type {a} */",
+        "var x;"),
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }
 
   public void testDontLookupInParentScopeForNamesWithoutDeclaredType() {
