@@ -364,3 +364,53 @@ md.$mdIconProvider.prototype.defaultIconSize = function(iconSize) {};
  * @return {md.$mdIconProvider}
  */
 md.$mdIconProvider.prototype.defaultFontSet = function(name) {};
+
+
+/******************************************************************************
+ * $mdDateLocaleProvider
+ *****************************************************************************/
+
+/** @constructor */
+md.$mdDateLocaleProvider = function() {};
+
+/** @type {Array<string>} */
+md.$mdDateLocaleProvider.prototype.months = [];
+
+/** @type {Array<string>} */
+md.$mdDateLocaleProvider.prototype.shortMonths = [];
+
+/** @type {Array<string>} */
+md.$mdDateLocaleProvider.prototype.days = [];
+
+/** @type {Array<string>} */
+md.$mdDateLocaleProvider.prototype.shortDays = [];
+
+/** @type {number} */
+md.$mdDateLocaleProvider.prototype.firstDayOfWeek = 1;
+
+/** @type {Array<string|number>} */
+md.$mdDateLocaleProvider.prototype.dates = [];
+
+/** @type {string} */
+md.$mdDateLocaleProvider.prototype.msgCalendar = '';
+
+/** @type {string} */
+md.$mdDateLocaleProvider.prototype.msgOpenCalendar = '';
+
+// The functions on $mdDateLocaleProvider are defined as fields because
+// they are meant to be directly set by consuming code.
+
+/** @type {function(string): Date} */
+md.$mdDateLocaleProvider.prototype.parseDate = function(dateString) {};
+
+/** @type {function(Date): string} */
+md.$mdDateLocaleProvider.prototype.formatDate = function(date) {};
+
+/** @type {function(Date): string} */
+md.$mdDateLocaleProvider.prototype.monthHeaderFormatter = function(date) {};
+
+/** @type {function(number): string} */
+md.$mdDateLocaleProvider.prototype.weekNumberFormatter = function(weekNum) {};
+
+/** @type {function(Date): string} */
+md.$mdDateLocaleProvider.prototype.longDateFormatter = function(date) {};
