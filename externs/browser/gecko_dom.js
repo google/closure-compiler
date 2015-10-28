@@ -104,9 +104,10 @@ Window.prototype.globalStorage;
 
 /**
  * @type {!History}
+ * @suppress {duplicate}
  * @see https://developer.mozilla.org/en/DOM/window.history
  */
-Window.prototype.history;
+var history;
 
 /**
  * Returns the number of frames (either frame or iframe elements) in the
