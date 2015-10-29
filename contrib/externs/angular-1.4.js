@@ -192,6 +192,12 @@ angular.isUndefined = function(value) {};
  */
 angular.lowercase = function(s) {};
 
+/**
+ * @param {Object} dest
+ * @param {...Object} srcs
+ */
+angular.merge = function(dest, srcs) {};
+
 angular.mock = {};
 
 /**
