@@ -1147,6 +1147,10 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parseFull("/** @param {{x : function(), 'y'}|function()} n\n*/");
   }
 
+  public void testParseRecordType24() throws Exception {
+    parseFull("/** @param {{a : b, c,}} n\n*/");
+  }
+
   public void testParseParamError1() throws Exception {
     parseFull("/** @param\n*/",
         "Bad type annotation. expecting a variable name in a @param tag");
