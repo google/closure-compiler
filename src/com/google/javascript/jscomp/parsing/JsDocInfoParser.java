@@ -2381,8 +2381,14 @@ public final class JsDocInfoParser {
       // Move to the comma token.
       next();
 
-      // Move to the token passed the comma.
+      // Move to the token past the comma
       skipEOLs();
+
+      if (match(JsDocToken.RIGHT_CURLY)) {
+        // Allow trailing comma (ie, right curly following the comma)
+        break;
+      }
+
       token = next();
     } while (true);
 
