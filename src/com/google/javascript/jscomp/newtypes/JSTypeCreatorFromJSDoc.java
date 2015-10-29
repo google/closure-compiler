@@ -310,7 +310,12 @@ public final class JSTypeCreatorFromJSDoc {
           JSType nextType =
               getTypeFromCommentHelper(child, registry, typeParameters);
           if (nextType.isUnknown()) {
-            warnings.add(JSError.make(n, UNION_WITH_UNKNOWN));
+            if (child.getType() == Token.QMARK
+                && child.getFirstChild() == null) {
+              // Only warn for explicit ?, not for other unknowns such as
+              // forward-declared types.
+              warnings.add(JSError.make(n, UNION_WITH_UNKNOWN));
+            }
             return JSType.UNKNOWN;
           }
           JSType nextUnion = JSType.join(union, nextType);

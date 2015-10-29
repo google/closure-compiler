@@ -5748,6 +5748,11 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         JSTypeCreatorFromJSDoc.UNION_WITH_UNKNOWN);
 
     typeCheck(Joiner.on('\n').join(
+        "goog.forwardDeclare('a');",
+        "/** @type {a|number} */",
+        "var x;"));
+
+    typeCheck(Joiner.on('\n').join(
         "",
         "/**",
         " * @return {T|S}",
