@@ -146,7 +146,7 @@ Intl.DateTimeFormat = function(opt_locales, opt_options) {};
 Intl.DateTimeFormat.supportedLocalesOf = function(locales, opt_options) {};
 
 /**
- * @param {number} date
+ * @param {(!Date|number)=} date
  * @return {string}
  */
 Intl.DateTimeFormat.prototype.format = function(date) {};
