@@ -586,11 +586,7 @@ final class NTIScope implements DeclaredTypeRegistry {
       return maybeGetForwardDeclaration(qname.toString());
     }
     Declaration decl = ns.getDeclaration(qname.getAllButLeftmost());
-    if (decl == null && unknownTypeNames.contains(qname.toString())) {
-      return new Declaration(
-          JSType.UNKNOWN, null, null, null, null, null, false, false, true);
-    }
-    return decl;
+    return decl != null ? decl : maybeGetForwardDeclaration(qname.toString());
   }
 
   private Declaration maybeGetForwardDeclaration(String qname) {

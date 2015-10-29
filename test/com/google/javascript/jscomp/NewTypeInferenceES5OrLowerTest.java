@@ -11845,6 +11845,12 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "/** @type {a} */",
         "var x;"),
         GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+
+    typeCheck(Joiner.on('\n').join(
+        "goog.forwardDeclare('a.b');",
+        "/** @const */",
+        "var a = {};",
+        "function f() { /** @type {a.b} */ var x; }"));
   }
 
   public void testDontLookupInParentScopeForNamesWithoutDeclaredType() {
