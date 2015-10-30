@@ -22,7 +22,9 @@ import com.google.javascript.jscomp.FindExportableNodes.Mode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Generates goog.exportSymbol/goog.exportProperty for the @export annotation.
@@ -39,6 +41,8 @@ class GenerateExports implements CompilerPass {
   private final String exportPropertyFunction;
 
   private final boolean allowNonGlobalExports;
+
+  private final Set<String> exportedVariables = new HashSet<>();
 
   /**
    * Creates a new generate exports compiler pass.
@@ -59,6 +63,10 @@ class GenerateExports implements CompilerPass {
     this.allowNonGlobalExports = allowNonGlobalExports;
     this.exportSymbolFunction = exportSymbolFunction;
     this.exportPropertyFunction = exportPropertyFunction;
+  }
+
+  Set<String> getExportedVariableNames() {
+    return exportedVariables;
   }
 
   @Override
@@ -87,6 +95,15 @@ class GenerateExports implements CompilerPass {
     NodeUtil.setDebugInformation(propstmt, getSynthesizedExternsRoot(), export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);
     compiler.reportCodeChange();
+  }
+
+  private void recordExportSymbol(String qname) {
+    int dot = qname.indexOf('.');
+    if (dot == -1) {
+      exportedVariables.add(qname);
+    } else {
+      exportedVariables.add(qname.substring(0, dot));
+    }
   }
 
   private void addExportMethod(Map<String, GenerateNodeContext> exports,
@@ -126,6 +143,8 @@ class GenerateExports implements CompilerPass {
 
     Node call;
     if (useExportSymbol) {
+      recordExportSymbol(export);
+
       // exportSymbol(publicPath, object);
       call = IR.call(
           NodeUtil.newQName(

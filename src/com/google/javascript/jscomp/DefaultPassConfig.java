@@ -230,10 +230,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
-    if (options.generateExports && !options.skipNonTranspilationPasses) {
-      checks.add(generateExports);
-    }
-
     if (options.exportTestFunctions && !options.skipNonTranspilationPasses) {
       checks.add(exportTestFunctions);
     }
@@ -351,6 +347,10 @@ public final class DefaultPassConfig extends PassConfig {
       if (!options.ideMode) {
         checks.add(clearTypedScopePass);
       }
+    }
+
+    if (options.generateExports) {
+      checks.add(generateExports);
     }
 
     if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE) ||
@@ -1003,10 +1003,21 @@ public final class DefaultPassConfig extends PassConfig {
       CodingConvention convention = compiler.getCodingConvention();
       if (convention.getExportSymbolFunction() != null &&
           convention.getExportPropertyFunction() != null) {
-        return new GenerateExports(compiler,
+        final GenerateExports pass = new GenerateExports(compiler,
             options.exportLocalPropertyDefinitions,
             convention.getExportSymbolFunction(),
             convention.getExportPropertyFunction());
+        return new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            pass.process(externs, root);
+            if (exportedNames == null) {
+              exportedNames = new HashSet<>();
+            }
+
+            exportedNames.addAll(pass.getExportedVariableNames());
+          }
+        };
       } else {
         return new ErrorPass(compiler, GENERATE_EXPORTS_ERROR);
       }
