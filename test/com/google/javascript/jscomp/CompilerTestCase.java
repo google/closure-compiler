@@ -1256,7 +1256,8 @@ public abstract class CompilerTestCase extends TestCase {
               fail("\nExpected: "
                   + expectedAsSource
                   + "\nResult:   "
-                  + mainAsSource);
+                  + mainAsSource
+                  + "\n" + explanation);
             }
           }
         } else if (expected != null) {
