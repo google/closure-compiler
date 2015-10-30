@@ -246,23 +246,55 @@ md.$sidenav;
 
 
 /******************************************************************************
- * $mdThemingProvider Service
+ * $mdThemingProvider
  *****************************************************************************/
 
-/**
- * @typedef {{
- *   alwaysWatchTheme: function(boolean),
- *   definePalette:
- *       function(string, !Object<string,string>) : md.$mdThemingProvider,
- *   extendPalette:
- *       function(string, !Object<string,string>) : !Object<string,string>,
- *   setDefaultTheme: function(string),
- *   theme: function(string,string=) : md.$mdThemingProvider.Theme
- * }}
- */
-md.$mdThemingProvider;
+/** @constructor */
+md.$mdThemingProvider = function() {};
 
-/*****************************************************************************/
+/** @param {boolean} alwaysWatch */
+md.$mdThemingProvider.prototype.alwaysWatchTheme = function(alwaysWatch) {};
+
+/** @param {boolean} onDemand */
+md.$mdThemingProvider.prototype.generateThemesOnDemand = function(onDemand) {};
+
+/**
+ * @param {string} name
+ * @param {!Object<string,string>} palette
+ * @return {md.$mdThemingProvider}
+ */
+md.$mdThemingProvider.prototype.definePalette = function(name, palette) {};
+
+/**
+ * @param {string} name
+ * @param {!Object<string,string>} extension
+ * @return {!Object<string,string>}
+ */
+md.$mdThemingProvider.prototype.extendPalette = function(name, extension) {};
+
+/** @param {string} name */
+md.$mdThemingProvider.prototype.setDefaultTheme = function(name) {};
+
+/**
+ * @param {string} name
+ * @param {string=} opt_parentTheme
+ * @return {md.$mdThemingProvider.Theme}
+ */
+md.$mdThemingProvider.prototype.theme = function(name, opt_parentTheme) {};
+
+/******************************************************************************
+ * $mdTheming service
+ *****************************************************************************/
+
+/** @constructor */
+md.$mdTheming = function() {};
+
+
+/** @param {string} name */
+md.$mdTheming.prototype.generateTheme = function(name) {}
+
+/******************************************************************************/
+
 
 /**
  * @param {string} name
@@ -311,16 +343,6 @@ md.$mdThemingProvider.Theme.prototype.warnPalette = function(warnPalette) {};
  * @return {md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.Theme.prototype.dark = function(isDark) {};
-
-/*****************************************************************************/
-
-
-/**
- * @param {string} themeName
- * @param {string=} opt_inheritFrom
- * @return {md.$mdThemingProvider.Theme}
- */
-md.$mdThemingProvider.prototype.theme = function(themeName, opt_inheritFrom) {};
 
 
 /******************************************************************************
