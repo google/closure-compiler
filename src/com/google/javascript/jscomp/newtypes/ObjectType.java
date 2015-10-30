@@ -73,7 +73,8 @@ final class ObjectType implements TypeWithProperties {
   private ObjectType(NominalType nominalType,
       PersistentMap<String, Property> props, FunctionType fn, boolean isLoose,
       ObjectKind objectKind) {
-    Preconditions.checkArgument(fn == null || fn.isLoose() == isLoose,
+    Preconditions.checkArgument(
+        fn == null || fn.isQmarkFunction() || fn.isLoose() == isLoose,
         "isLoose: %s, fn: %s", isLoose, fn);
     Preconditions.checkArgument(FunctionType.isInhabitable(fn));
     Preconditions.checkArgument(fn == null || nominalType != null,
@@ -223,7 +224,7 @@ final class ObjectType implements TypeWithProperties {
 
   ObjectType withFunction(FunctionType ft, NominalType fnNominal) {
     Preconditions.checkState(!this.isLoose);
-    Preconditions.checkState(!ft.isLoose());
+    Preconditions.checkState(!ft.isLoose() || ft.isQmarkFunction());
     return makeObjectType(fnNominal, this.props, ft, false, this.objectKind);
   }
 

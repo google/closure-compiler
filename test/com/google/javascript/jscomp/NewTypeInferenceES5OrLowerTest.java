@@ -14173,4 +14173,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  if (('asdf' in z) && z.prop) {}",
         "}"));
   }
+
+  public void testQmarkFunctionAsNamespace() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {!Function} */",
+        "var a = function() {};",
+        "a.b = {};"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {(function(number)|function(string))} */",
+        "var a = function() {};",
+        "a.b = {};"),
+        JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE);
+  }
 }
