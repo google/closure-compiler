@@ -20,6 +20,13 @@
  * @externs
  */
 
+/**
+ * @const
+ * @suppress {const|duplicate}
+ */
+var google = {};
+
+/** @const */
 google.maps = {};
 
 /**
@@ -5438,7 +5445,7 @@ google.maps.ZoomControlStyle = {
   SMALL: ''
 };
 
-// Namespace
+/** @const */
 google.maps.adsense = {};
 
 /**
@@ -5648,7 +5655,7 @@ google.maps.adsense.AdUnitOptions.prototype.titleColor;
  */
 google.maps.adsense.AdUnitOptions.prototype.urlColor;
 
-// Namespace
+/** @const */
 google.maps.drawing = {};
 
 /**
@@ -5779,7 +5786,7 @@ google.maps.drawing.OverlayType = {
   RECTANGLE: ''
 };
 
-// Namespace
+/** @const */
 google.maps.event = {};
 
 /**
@@ -5843,10 +5850,10 @@ google.maps.event.removeListener = function(listener) {};
  */
 google.maps.event.trigger = function(instance, eventName, var_args) {};
 
-// Namespace
+/** @const */
 google.maps.geometry = {};
 
-// Namespace
+/** @const */
 google.maps.geometry.encoding = {};
 
 /**
@@ -5861,7 +5868,7 @@ google.maps.geometry.encoding.decodePath = function(encodedPath) {};
  */
 google.maps.geometry.encoding.encodePath = function(path) {};
 
-// Namespace
+/** @const */
 google.maps.geometry.poly = {};
 
 /**
@@ -5879,7 +5886,7 @@ google.maps.geometry.poly.containsLocation = function(point, polygon) {};
  */
 google.maps.geometry.poly.isLocationOnEdge = function(point, poly, opt_tolerance) {};
 
-// Namespace
+/** @const */
 google.maps.geometry.spherical = {};
 
 /**
@@ -5944,7 +5951,7 @@ google.maps.geometry.spherical.computeSignedArea = function(loop, opt_radius) {}
  */
 google.maps.geometry.spherical.interpolate = function(from, to, fraction) {};
 
-// Namespace
+/** @const */
 google.maps.places = {};
 
 /**
@@ -6632,7 +6639,7 @@ google.maps.places.TextSearchRequest.prototype.radius;
  */
 google.maps.places.TextSearchRequest.prototype.types;
 
-// Namespace
+/** @const */
 google.maps.visualization = {};
 
 /**
@@ -7145,4 +7152,3 @@ google.maps.visualization.WeightedLocation.prototype.location;
  * @type {number}
  */
 google.maps.visualization.WeightedLocation.prototype.weight;
-

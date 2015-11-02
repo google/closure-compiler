@@ -20,6 +20,13 @@
  * @externs
  */
 
+/**
+ * @const
+ * @suppress {const|duplicate}
+ */
+var google = {};
+
+/** @const */
 google.maps = {};
 
 /**
@@ -7119,4 +7126,3 @@ google.maps.visualization.WeightedLocation.prototype.location;
  * @type {number}
  */
 google.maps.visualization.WeightedLocation.prototype.weight;
-
