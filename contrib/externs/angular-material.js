@@ -436,3 +436,16 @@ md.$mdDateLocaleProvider.prototype.weekNumberFormatter = function(weekNum) {};
 
 /** @type {function(Date): string} */
 md.$mdDateLocaleProvider.prototype.longDateFormatter = function(date) {};
+
+
+/******************************************************************************
+ * $mdGestureProvider
+ *****************************************************************************/
+
+/** @constructor */
+md.$mdGestureProvider = function() {};
+
+/**
+ * @return {boolean}
+ */
+md.$mdGestureProvider.prototype.skipClickHijack = function() {};
