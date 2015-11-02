@@ -103,15 +103,15 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(compiler, new CollectUndeclaredNames(), externs, root);
-    NodeTraversal.traverseRoots(compiler, this, externs, root);
-    NodeTraversal.traverseRoots(compiler, new Es6RenameReferences(renameMap), externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, new CollectUndeclaredNames(), externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, new Es6RenameReferences(renameMap), externs, root);
 
     LoopClosureTransformer transformer = new LoopClosureTransformer();
-    NodeTraversal.traverseRoots(compiler, transformer, externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, transformer, externs, root);
     transformer.transformLoopClosure();
     varify();
-    NodeTraversal.traverseRoots(
+    NodeTraversal.traverseRootsEs6(
         compiler, new RewriteBlockScopedFunctionDeclaration(), externs, root);
   }
 

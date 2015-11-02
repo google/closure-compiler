@@ -90,7 +90,7 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
    */
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseRoots(compiler, this, externs, root);
+    NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
   }
 
   @Override

@@ -43,7 +43,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
             renamer = new MakeDeclaredNamesUnique(new InlineRenamer(compiler.getCodingConvention(),
                 compiler.getUniqueNameIdSupplier(), localNamePrefix, removeConst, true, null));
           }
-          NodeTraversal.traverseRoots(compiler, renamer, externs, root);
+          NodeTraversal.traverseRootsEs6(compiler, renamer, externs, root);
         }
       };
     } else {

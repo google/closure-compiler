@@ -547,7 +547,9 @@ public class NodeTraversal {
 
   /**
    * Traverses a node recursively.
+   * @deprecated Use traverseEs6 whenever possible.
    */
+  @Deprecated
   public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb);
     t.traverse(root);
@@ -567,9 +569,16 @@ public class NodeTraversal {
     t.traverse(root);
   }
 
+  @Deprecated
   public static void traverseRoots(
       AbstractCompiler compiler, Callback cb, Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, cb);
+    t.traverseRoots(externs, root);
+  }
+
+  public static void traverseRootsEs6(
+      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
     t.traverseRoots(externs, root);
   }
 

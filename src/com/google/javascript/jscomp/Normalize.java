@@ -281,7 +281,7 @@ class Normalize implements CompilerPass {
       Node externsAndJs = root.getParent();
       Preconditions.checkState(externsAndJs != null);
       Preconditions.checkState(externsAndJs.hasChild(externs));
-      NodeTraversal.traverseRoots(compiler, this, externs, root);
+      NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
     }
 
     private Map<String, Boolean> constantMap = new HashMap<>();

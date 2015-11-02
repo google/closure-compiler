@@ -519,7 +519,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRoots(compiler,
+      NodeTraversal.traverseRootsEs6(compiler,
           new AbstractPostOrderCallback() {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
