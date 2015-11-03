@@ -530,8 +530,8 @@ class ReferenceCollectingCallback implements ScopedCallback,
     }
 
     /**
-     * @return The one and only assignment. Returns if there are 0 or 2+
-     *    assignments.
+     * @return The one and only assignment. Returns null if the number of assignments is not
+     *     exactly one.
      */
     private Reference getOneAndOnlyAssignment() {
       Reference assignment = null;
@@ -715,9 +715,7 @@ class ReferenceCollectingCallback implements ScopedCallback,
     * return the assigned value, otherwise null.
     */
     Node getAssignedValue() {
-      Node parent = getParent();
-      return (parent.isFunction())
-          ? parent : NodeUtil.getAssignedValue(nameNode);
+      return NodeUtil.getRValueOfLValue(nameNode);
     }
 
     BasicBlock getBasicBlock() {
@@ -747,6 +745,11 @@ class ReferenceCollectingCallback implements ScopedCallback,
           && parent.getFirstChild() == nameNode;
     }
 
+    /**
+     * Returns whether the name node for this reference is an lvalue.
+     * TODO(tbreisacher): This method disagrees with NodeUtil#isLValue for
+     * "var x;" and "let x;". Consider updating it to match.
+     */
     boolean isLvalue() {
       Node parent = getParent();
       int parentType = parent.getType();

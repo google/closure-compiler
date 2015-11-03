@@ -204,7 +204,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertUnusedEs6("function f() { let a; a = 2; }");
   }
 
-  public void xtestUnusedLocalConst() {
+  public void testUnusedLocalConst() {
     enableUnusedLocalAssignmentCheck = true;
     assertUnusedEs6("function f() { const a = 2; }");
   }
@@ -222,6 +222,14 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   public void testUnusedAssignedInInnerFunction() {
     enableUnusedLocalAssignmentCheck = true;
     assertUnused("function f() { var x = 1; function g() { x = 2; } }");
+  }
+
+  public void testIncrementDecrementResultUsed() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("function f() { var x = 5; while (x-- > 0) {} }");
+    assertNoWarning("function f() { var x = -5; while (x++ < 0) {} }");
+    assertNoWarning("function f() { var x = 5; while (--x > 0) {} }");
+    assertNoWarning("function f() { var x = -5; while (++x < 0) {} }");
   }
 
   public void testUsedInInnerFunction() {
