@@ -939,6 +939,43 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     }
   }
 
+  public void testPostfixExpression() {
+    parse("a++");
+    parse("a.b--");
+    parse("a[0]++");
+
+    parseError("a()++", "Invalid postfix increment operand.");
+    parseError("(new C)--", "Invalid postfix decrement operand.");
+    parseError("this++", "Invalid postfix increment operand.");
+    parseError("(a--)++", "Invalid postfix increment operand.");
+    parseError("(+a)++", "Invalid postfix increment operand.");
+    parseError("[1,2]++", "Invalid postfix increment operand.");
+    parseError("'literal'++", "Invalid postfix increment operand.");
+  }
+
+  public void testUnaryExpression() {
+    mode = LanguageMode.ECMASCRIPT6;
+    parse("delete a.b");
+    parse("delete a[0]");
+    parse("void f()");
+    parse("typeof new C");
+    parse("++a[0]");
+    parse("--a.b");
+    parse("+{a: 1}");
+    parse("-[1,2]");
+    parse("~'42'");
+    parse("!super.a");
+
+    parseError("delete f()", "Invalid delete operand. Only properties can be deleted.");
+    parseError("++a++", "Invalid prefix increment operand.");
+    parseError("--{a: 1}", "Invalid prefix decrement operand.");
+    parseError("++this", "Invalid prefix increment operand.");
+    parseError("++(-a)", "Invalid prefix increment operand.");
+    parseError("++{a: 1}", "Invalid prefix increment operand.");
+    parseError("++'literal'", "Invalid prefix increment operand.");
+    parseError("++delete a.b", "Invalid prefix increment operand.");
+  }
+
   public void testAutomaticSemicolonInsertion() {
     // var statements
     assertNodeEquality(

@@ -1792,6 +1792,8 @@ class IRFactory {
               msg,
               sourceName,
               operand.getLineno(), 0);
+        } else if (type == Token.INC || type == Token.DEC) {
+          return createIncrDecrNode(type, false, operand);
         }
 
         return newNode(type, operand);
@@ -1800,8 +1802,26 @@ class IRFactory {
 
     Node processPostfixExpression(PostfixExpressionTree exprNode) {
       int type = transformPostfixTokenType(exprNode.operator.type);
-      Node node = newNode(type, transform(exprNode.operand));
-      node.putBooleanProp(Node.INCRDECR_PROP, true);
+      Node operand = transform(exprNode.operand);
+      if (type == Token.INC || type == Token.DEC) {
+        return createIncrDecrNode(type, true, operand);
+      }
+      Node node = newNode(type, operand);
+      return node;
+    }
+
+    private Node createIncrDecrNode(int type, boolean postfix, Node operand) {
+      if (!operand.isValidAssignmentTarget()) {
+        errorReporter.error(
+            SimpleFormat.format("Invalid %s %s operand.",
+                (postfix ? "postfix" : "prefix"),
+                (type == Token.INC ? "increment" : "decrement")),
+            sourceName,
+            operand.getLineno(),
+            operand.getCharno());
+      }
+      Node node = newNode(type, operand);
+      node.putBooleanProp(Node.INCRDECR_PROP, postfix);
       return node;
     }
 
