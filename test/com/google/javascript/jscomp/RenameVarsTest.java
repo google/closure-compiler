@@ -44,7 +44,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   private boolean shouldShadow = false;
   private boolean preferStableNames = false;
   private boolean withNormalize = false;
-  private NameGenerator nameGenerator = null;
+  private DefaultNameGenerator nameGenerator = null;
 
   @Override
   protected CodingConvention getCodingConvention() {
@@ -599,7 +599,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testBias() {
-    nameGenerator = new NameGenerator(new HashSet<String>(), "", null);
+    nameGenerator = new DefaultNameGenerator(new HashSet<String>(), "", null);
     nameGenerator.favors("AAAAAAAAHH");
     test("var x, y", "var A, H");
   }

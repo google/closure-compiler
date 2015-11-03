@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * <p>This class is not thread safe.
  *
  */
-final class NameGenerator {
+final class DefaultNameGenerator {
 
   /**
    * Represents a char that can be used in renaming as well as how often
@@ -95,7 +95,7 @@ final class NameGenerator {
   private final CharPriority[] nonFirstChars;
 
   /**
-   * Creates a NameGenerator.
+   * Creates a DefaultNameGenerator.
    *
    * @param reservedNames set of names that are reserved; generated names will
    *   not include these names. This set is referenced rather than copied,
@@ -104,7 +104,7 @@ final class NameGenerator {
    * @param reservedCharacters If specified these characters won't be used in
    *   generated names
    */
-  NameGenerator(Set<String> reservedNames, String prefix,
+  DefaultNameGenerator(Set<String> reservedNames, String prefix,
       @Nullable char[] reservedCharacters) {
     this.reservedNames = reservedNames;
     this.prefix = prefix;
@@ -186,8 +186,8 @@ final class NameGenerator {
         for (int i = 0; i < chars.length; i++) {
           chars[i] = firstChars[i].name;
         }
-        throw new IllegalArgumentException("prefix must start with one of: " +
-                                           Arrays.toString(chars));
+        throw new IllegalArgumentException(
+            "prefix must start with one of: " + Arrays.toString(chars));
       }
       for (int pos = 1; pos < prefix.length(); ++pos) {
         char[] chars = new char[nonFirstChars.length];
@@ -195,9 +195,9 @@ final class NameGenerator {
           chars[i] = nonFirstChars[i].name;
         }
         if (!contains(nonFirstChars, prefix.charAt(pos))) {
-          throw new IllegalArgumentException("prefix has invalid characters, " +
-                                             "must be one of: " +
-                                             Arrays.toString(chars));
+          throw new IllegalArgumentException(
+              "prefix has invalid characters, must be one of: "
+              + Arrays.toString(chars));
         }
       }
     }

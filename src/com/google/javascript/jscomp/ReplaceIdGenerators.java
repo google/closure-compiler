@@ -147,7 +147,7 @@ class ReplaceIdGenerators implements CompilerPass {
   }
 
   private static class ObfuscatedNameSuppier implements NameSupplier {
-    private final NameGenerator generator;
+    private final DefaultNameGenerator generator;
     private final Map<String, String> previousMappings;
     private RenameStrategy renameStrategy;
 
@@ -155,7 +155,7 @@ class ReplaceIdGenerators implements CompilerPass {
         RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
       this.previousMappings = previousMappings.inverse();
       this.generator =
-          new NameGenerator(previousMappings.keySet(), "", null);
+          new DefaultNameGenerator(previousMappings.keySet(), "", null);
       this.renameStrategy = renameStrategy;
     }
 

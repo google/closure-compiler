@@ -144,7 +144,7 @@ final class RenameVars implements CompilerPass {
 
   // TODO(user): Temporary. To make checking in / merging DefaultPassConfig
   // easier.
-  private final NameGenerator nameGeneratorGiven;
+  private final DefaultNameGenerator nameGeneratorGiven;
   RenameVars(AbstractCompiler compiler, String prefix,
       boolean localRenamingOnly, boolean preserveFunctionExpressionNames,
       boolean generatePseudoNames, boolean shouldShadow,
@@ -162,7 +162,7 @@ final class RenameVars implements CompilerPass {
       boolean preferStableNames, VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
       @Nullable Set<String> reservedNames,
-      @Nullable NameGenerator nameGenerator) {
+      @Nullable DefaultNameGenerator nameGenerator) {
     this.compiler = compiler;
     this.prefix = nullToEmpty(prefix);
     this.localRenamingOnly = localRenamingOnly;
@@ -477,19 +477,19 @@ final class RenameVars implements CompilerPass {
    * Determines which new names to substitute for the original names.
    */
   private void assignNames(SortedSet<Assignment> varsToRename) {
-    NameGenerator globalNameGenerator = null;
-    NameGenerator localNameGenerator = null;
+    DefaultNameGenerator globalNameGenerator = null;
+    DefaultNameGenerator localNameGenerator = null;
 
     if (nameGeneratorGiven != null) {
       globalNameGenerator = localNameGenerator = nameGeneratorGiven;
       nameGeneratorGiven.restartNaming();
     } else {
       globalNameGenerator =
-          new NameGenerator(reservedNames, prefix, reservedCharacters);
+          new DefaultNameGenerator(reservedNames, prefix, reservedCharacters);
 
       // Local variables never need a prefix.
       localNameGenerator =
-          prefix.isEmpty() ? globalNameGenerator : new NameGenerator(
+          prefix.isEmpty() ? globalNameGenerator : new DefaultNameGenerator(
               reservedNames, "", reservedCharacters);
     }
 

@@ -232,7 +232,8 @@ class RenamePrototypes implements CompilerPass {
     }
 
     // Generate new names.
-    NameGenerator nameGen = new NameGenerator(reservedNames, "", reservedCharacters);
+    DefaultNameGenerator nameGen = new DefaultNameGenerator(
+        reservedNames, "", reservedCharacters);
     StringBuilder debug = new StringBuilder();
     for (Property a : propsByFrequency) {
       if (a.newName == null) {

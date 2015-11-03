@@ -268,7 +268,7 @@ class RenameProperties implements CompilerPass {
    *     renamed
    */
   private void generateNames(Set<Property> props, Set<String> reservedNames) {
-    NameGenerator nameGen = new NameGenerator(
+    DefaultNameGenerator nameGen = new DefaultNameGenerator(
         reservedNames, "", reservedCharacters);
     for (Property p : props) {
       if (generatePseudoNames) {

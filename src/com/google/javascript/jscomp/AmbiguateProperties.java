@@ -226,7 +226,7 @@ class AmbiguateProperties implements CompilerPass {
     int numNewPropertyNames = coloring.color();
 
     // Generate new names for the properties that will be renamed.
-    NameGenerator nameGen = new NameGenerator(
+    DefaultNameGenerator nameGen = new DefaultNameGenerator(
         reservedNames.build(), "", reservedCharacters);
     String[] colorMap = new String[numNewPropertyNames];
     for (int i = 0; i < numNewPropertyNames; ++i) {
