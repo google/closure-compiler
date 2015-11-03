@@ -349,6 +349,9 @@ public class Compiler extends AbstractCompiler {
     if (options.getNewTypeInference()) {
       options.checkTypes = true;
       options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
+      options.setWarningLevel(
+          DiagnosticGroup.forType(RhinoErrorReporter.TYPE_PARSE_ERROR),
+          CheckLevel.WARNING);
     }
 
     if (options.checkGlobalThisLevel.isOn() &&

@@ -582,8 +582,9 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "var x = x || {}; x.f = function() {}; x.f(3);", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
-  public void testBothTypeCheckersRun() {
+  public void testBothTypeCheckersRunNoDupWarning() {
     CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
     options.setNewTypeInference(true);
     test(
         options,
@@ -592,6 +593,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "  return 'asdf';\n"
         + "}",
         NewTypeInference.RETURN_NONDECLARED_TYPE);
+  }
+
+  public void testNTInoMaskTypeParseError() {
+    CompilerOptions options = createCompilerOptions();
+    options.setCheckTypes(true);
+    options.setNewTypeInference(true);
+    test(options, Joiner.on('\n').join(
+        "/** @param {(boolean|number} x */",
+        "function f(x) {}"),
+        RhinoErrorReporter.TYPE_PARSE_ERROR);
   }
 
   public void testReplaceCssNames() {
