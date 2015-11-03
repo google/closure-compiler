@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.primitives.Booleans;
 import com.google.debugging.sourcemap.Base64;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -254,10 +255,11 @@ class ReplaceIdGenerators implements CompilerPass {
       }
 
       int numGeneratorAnnotations =
-          (doc.isConsistentIdGenerator() ? 1 : 0) +
-          (doc.isIdGenerator() ? 1 : 0) +
-          (doc.isStableIdGenerator() ? 1 : 0) +
-          (doc.isMappedIdGenerator() ? 1 : 0);
+          Booleans.countTrue(
+              doc.isConsistentIdGenerator(),
+              doc.isIdGenerator(),
+              doc.isStableIdGenerator(),
+              doc.isMappedIdGenerator());
       if (numGeneratorAnnotations == 0) {
         return;
       } else if (numGeneratorAnnotations > 1) {

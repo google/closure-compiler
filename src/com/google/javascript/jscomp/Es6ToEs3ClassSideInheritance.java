@@ -17,8 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -87,7 +85,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   private LinkedHashSet<Node> getSet(LinkedHashMap<String, LinkedHashSet<Node>> map, String key) {
     LinkedHashSet<Node> s = map.get(key);
     if (s == null) {
-      s = new LinkedHashSet<Node>();
+      s = new LinkedHashSet<>();
       map.put(key, s);
     }
     return s;
