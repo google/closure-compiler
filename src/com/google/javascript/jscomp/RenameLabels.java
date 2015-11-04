@@ -87,9 +87,9 @@ final class RenameLabels implements CompilerPass {
 
   static class DefaultNameSupplier implements Supplier<String> {
     // DefaultNameGenerator is used to create safe label names.
-    private final DefaultNameGenerator nameGenerator;
+    private final NameGenerator nameGenerator;
 
-    private DefaultNameSupplier(final DefaultNameGenerator nameGen) {
+    private DefaultNameSupplier(final NameGenerator nameGen) {
       this.nameGenerator = nameGen;
     }
 

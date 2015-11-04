@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * <p>This class is not thread safe.
  *
  */
-final class DefaultNameGenerator {
+final class DefaultNameGenerator implements NameGenerator {
 
   /**
    * Represents a char that can be used in renaming as well as how often
@@ -71,7 +71,7 @@ final class DefaultNameGenerator {
   // have O(1) favors() and O(1) restartNaming() but the code gotten very messy.
   // Lets start with a logical implementation first until performance becomes
   // a problem.
-  private final Map<Character, CharPriority> priorityLookupMap;
+  private Map<Character, CharPriority> priorityLookupMap;
 
   // It is important that the ordering of FIRST_CHAR is as close to NONFIRT_CHAR
   // as possible. Using the ASCII ordering is not a good idea. The reason
@@ -87,12 +87,12 @@ final class DefaultNameGenerator {
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789$"
         .toCharArray();
 
-  private final Set<String> reservedNames;
-  private final String prefix;
+  private Set<String> reservedNames;
+  private String prefix;
   private int nameCount;
 
-  private final CharPriority[] firstChars;
-  private final CharPriority[] nonFirstChars;
+  private CharPriority[] firstChars;
+  private CharPriority[] nonFirstChars;
 
   /**
    * Creates a DefaultNameGenerator.
@@ -104,11 +104,8 @@ final class DefaultNameGenerator {
    * @param reservedCharacters If specified these characters won't be used in
    *   generated names
    */
-  DefaultNameGenerator(Set<String> reservedNames, String prefix,
+  public DefaultNameGenerator(Set<String> reservedNames, String prefix,
       @Nullable char[] reservedCharacters) {
-    this.reservedNames = reservedNames;
-    this.prefix = prefix;
-
     this.priorityLookupMap = Maps.newHashMapWithExpectedSize(NONFIRST_CHAR.length);
 
     int order = 0;
@@ -117,17 +114,40 @@ final class DefaultNameGenerator {
       order++;
     }
 
+    reset(reservedNames, prefix, reservedCharacters);
+  }
+
+  @Override
+  public void reset(
+      Set<String> reservedNames,
+      String prefix,
+      @Nullable char[] reservedCharacters) {
+
+    this.reservedNames = reservedNames;
+    this.prefix = prefix;
+    this.nameCount = 0;
+
     // build the character arrays to use
     this.firstChars = reserveCharacters(FIRST_CHAR, reservedCharacters);
     this.nonFirstChars = reserveCharacters(NONFIRST_CHAR, reservedCharacters);
 
     checkPrefix(prefix);
+
+  }
+
+  @Override
+  public NameGenerator clone(
+      Set<String> reservedNames,
+      String prefix,
+      @Nullable char[] reservedCharacters) {
+    return new DefaultNameGenerator(reservedNames, prefix, reservedCharacters);
   }
 
   /**
    * Restart the name generation. Re-calculate how characters are prioritized
    * based on how often the they appear in the final output.
    */
+  @Override
   public void restartNaming() {
     Arrays.sort(firstChars);
     Arrays.sort(nonFirstChars);
@@ -140,7 +160,7 @@ final class DefaultNameGenerator {
    * able to generate names while changing the prioritization of the name
    * generator for the <b>next</b> pass.
    */
-  public void favors(CharSequence sequence) {
+  void favors(CharSequence sequence) {
     for (int i = 0; i < sequence.length(); i++) {
       CharPriority c = priorityLookupMap.get(sequence.charAt(i));
       if (c != null) {
@@ -215,7 +235,8 @@ final class DefaultNameGenerator {
   /**
    * Generates the next short name.
    */
-  String generateNextName() {
+  @Override
+  public String generateNextName() {
     while (true) {
       String name = prefix;
 

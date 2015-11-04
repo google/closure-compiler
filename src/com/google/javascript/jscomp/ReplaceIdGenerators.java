@@ -147,7 +147,7 @@ class ReplaceIdGenerators implements CompilerPass {
   }
 
   private static class ObfuscatedNameSuppier implements NameSupplier {
-    private final DefaultNameGenerator generator;
+    private final NameGenerator generator;
     private final Map<String, String> previousMappings;
     private RenameStrategy renameStrategy;
 

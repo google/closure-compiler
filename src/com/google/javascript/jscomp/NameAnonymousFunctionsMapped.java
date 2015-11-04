@@ -51,7 +51,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
   static final String PREFIX_STRING = "$";
 
   private final AbstractCompiler compiler;
-  private final DefaultNameGenerator nameGenerator;
+  private final NameGenerator nameGenerator;
   private final VariableMap previousMap;
   private final Map<String, String> renameMap;
 
