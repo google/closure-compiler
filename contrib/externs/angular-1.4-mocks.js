@@ -241,3 +241,7 @@ angular.mock.animate = function() {};
 
 
 angular.mock.animate.prototype.flush = function() {};
+
+
+/** @typedef {function((!Function|string), !Object, Object=): !Object} */
+angular.mock.$controller;
