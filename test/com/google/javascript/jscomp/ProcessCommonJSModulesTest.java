@@ -225,7 +225,32 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "goog.provide('module$test');" +
         "var foobar$$module$test = {foo: 'bar'};" +
         "module$test = foobar$$module$test;");
-}
+  }
+
+  public void testEs6ObjectShorthand() {
+    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6,
+        CompilerOptions.LanguageMode.ECMASCRIPT5);
+    setFilename("test");
+    testModules(
+        "function foo() {}"
+            + "module.exports = {"
+            + "  prop: 'value',"
+            + "  foo"
+            + "}",
+        "goog.provide('module$test');"
+            + "function foo$$module$test() {}"
+            + "module$test = { prop: 'value', foo }");
+
+    testModules(
+        "module.exports = {\n"
+            + "  prop: 'value',\n"
+            + "  foo() {\n"
+            + "    console.log('bar');\n"
+            + "  }\n"
+            + "};",
+        "goog.provide('module$test');"
+            + "module$test = { prop: 'value', foo() { console.log('bar'); }}" );
+  }
 
   public void testSortInputs() throws Exception {
     SourceFile a = SourceFile.fromCode("a.js", "require('b');require('c')");
