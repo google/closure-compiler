@@ -144,7 +144,7 @@ final class DefaultNameGenerator implements NameGenerator {
   }
 
   /**
-   * Restart the name generation. Re-calculate how characters are prioritized
+   * Restarts the name generation. Re-calculate how characters are prioritized
    * based on how often the they appear in the final output.
    */
   @Override
