@@ -66,10 +66,13 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
   final AbstractCompiler compiler;
 
-  // Map from class names to the static members in each class.
+  // Map from class names to the static members in each class. This is not a SetMultiMap because
+  // when we find an alias A for a class C, we copy the *set* of C's static methods
+  // so that adding a method to C automatically causes it to be added to A, and vice versa.
   private final LinkedHashMap<String, LinkedHashSet<Node>> staticMethods = new LinkedHashMap<>();
 
-  // Map from class names to static properties (getters/setters) in each class.
+  // Map from class names to static properties (getters/setters) in each class. This could be a
+  // SetMultimap but it is not, to be consistent with {@code staticMethods}.
   private final LinkedHashMap<String, LinkedHashSet<Node>> staticProperties = new LinkedHashMap<>();
 
   static final DiagnosticType DUPLICATE_CLASS = DiagnosticType.error(
