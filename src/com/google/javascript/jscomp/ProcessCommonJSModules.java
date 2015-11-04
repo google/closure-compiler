@@ -392,10 +392,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
               .createScope(script, null);
           for (Node key = rhsValue.getFirstChild();
                key != null; key = key.getNext()) {
-            if (key.getJSDocInfo() == null
-                && key.getFirstChild().isName()) {
-              Var aliasedVar =
-                  globalScope.getVar(key.getFirstChild().getString());
+            if (key.getJSDocInfo() == null &&
+                (key.getFirstChild() == null || key.getFirstChild().isName())) {
+              String aliasedVarName = key.getFirstChild() == null ?
+                  key.getString() : key.getFirstChild().getString();
+              Var aliasedVar = globalScope.getVar(aliasedVarName);
               JSDocInfo info =
                   aliasedVar == null ? null : aliasedVar.getJSDocInfo();
               if (info != null &&
