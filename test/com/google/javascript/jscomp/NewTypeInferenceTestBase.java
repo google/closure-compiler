@@ -106,7 +106,13 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           " */",
           "function Error(opt_message, opt_file, opt_line) {}",
           "/** @type {string} */",
-          "Error.prototype.stack;");
+          "Error.prototype.stack;",
+          "/** @constructor */",
+          "function Window() {}",
+          "/** @type {boolean} */",
+          "Window.prototype.closed;",
+          "/** @type {!Window} */",
+          "var window;");
 
   @Override
   protected void setUp() {

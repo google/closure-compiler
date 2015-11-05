@@ -453,10 +453,12 @@ public final class NodeUtil {
         // var name2 = function name1() ...
         return parent;
 
-      case Token.ASSIGN:
+      case Token.ASSIGN: {
         // qualified.name = function() ...
         // qualified.name2 = function name1() ...
-        return parent.getFirstChild();
+        Node firstChild = parent.getFirstChild();
+        return firstChild.isQualifiedName() ? firstChild : null;
+      }
 
       default:
         // function name() ...

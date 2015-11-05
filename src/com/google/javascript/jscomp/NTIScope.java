@@ -269,6 +269,17 @@ final class NTIScope implements DeclaredTypeRegistry {
         && parent != null && parent.isVisibleInScope(name);
   }
 
+  boolean isGlobalVar(String varName) {
+    NTIScope s = this;
+    while (s.parent != null) {
+      if (isDefinedLocally(varName, false)) {
+        return false;
+      }
+      s = s.parent;
+    }
+    return true;
+  }
+
   boolean isUndeclaredFormal(String name) {
     Preconditions.checkArgument(!name.contains("."));
     return formals.contains(name) && getDeclaredTypeOf(name) == null;
@@ -428,7 +439,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     if (qnameNode.isName()) {
       String varName = qnameNode.getString();
       localNamespaces.put(varName, nslit);
-      if (qnameNode.isFromExterns()) {
+      if (qnameNode.isFromExterns() && !externs.containsKey(varName)) {
         // We don't know the full type of a namespace until after we see all
         // its properties. But we want to add it to the externs, otherwise it
         // is treated as a local and initialized to the wrong thing in NTI.
@@ -640,13 +651,17 @@ final class NTIScope implements DeclaredTypeRegistry {
     for (Map.Entry<String, NamespaceLit> entry : localNamespaces.entrySet()) {
       String name = entry.getKey();
       NamespaceLit nslit = entry.getValue();
-      JSType t = nslit.toJSType(commonTypes);
+      JSType objToInclude = null;
       // If it's a function namespace, add the function type to the result
       if (localFunDefs.containsKey(name)) {
-        t = t.withFunction(
-            localFunDefs.get(name).getDeclaredFunctionType().toFunctionType(),
-            commonTypes.getFunctionType());
+        objToInclude = commonTypes.fromFunctionType(
+            localFunDefs.get(name).getDeclaredFunctionType().toFunctionType());
+      } else {
+        // Should only be non-null for window, but we don't check here to avoid
+        // hard-coding the name. Enforced in GlobalTypeInfo.
+        objToInclude = externs.get(name);
       }
+      JSType t = nslit.toJSTypeIncludingObject(commonTypes, objToInclude);
       constVars.add(name);
       if (externs.containsKey(name)) {
         externs.put(name, t);

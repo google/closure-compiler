@@ -237,6 +237,10 @@ public abstract class Namespace {
     return this.namespaceType;
   }
 
+  // TODO(dimvar): namespaces can have many properties, and here we create a new
+  // object type every time we add a property, and we discard them all except
+  // the last one. Is it a perf win to have a method in ObjectType that adds all
+  // properties to obj at once?
   protected final JSType withNamedTypes(JSTypes commonTypes, ObjectType obj) {
     if (this.duringComputeJSType) {
       this.namespaceType = JSType.fromObjectType(obj);
@@ -260,14 +264,15 @@ public abstract class Namespace {
     if (namespaces != null) {
       for (Map.Entry<String, NamespaceLit> entry : namespaces.entrySet()) {
         String name = entry.getKey();
-        JSType t = entry.getValue().toJSType(commonTypes);
+        JSType objToInclude = null;
         // If it's a function namespace, add the function type to the result
         if (scopes.containsKey(name)) {
-          t = t.withFunction(
-              scopes.get(name).getDeclaredFunctionType().toFunctionType(),
-              commonTypes.getFunctionType());
+          objToInclude = commonTypes.fromFunctionType(
+              scopes.get(name).getDeclaredFunctionType().toFunctionType());
         }
-        obj = obj.withProperty(new QualifiedName(name), t);
+        obj = obj.withProperty(
+            new QualifiedName(name),
+            entry.getValue().toJSTypeIncludingObject(commonTypes, objToInclude));
       }
     }
     this.duringComputeJSType = false;

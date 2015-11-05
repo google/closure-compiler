@@ -26,10 +26,26 @@ public final class NamespaceLit extends Namespace {
     this.name = name;
   }
 
+  // For function namespaces and when window is used as a namespace
+  public JSType toJSTypeIncludingObject(JSTypes commonTypes, JSType obj) {
+    if (obj == null) {
+      return toJSType(commonTypes);
+    }
+    if (this.namespaceType == null) {
+      ObjectType ot = obj.getObjTypeIfSingletonObj();
+      this.namespaceType = computeJSType(commonTypes, ot.getNominalType(), ot.getFunType());
+    }
+    return this.namespaceType;
+  }
+
+  private JSType computeJSType(JSTypes commonTypes, NominalType nt, FunctionType ft) {
+    ObjectType obj = ObjectType.makeObjectType(
+        nt, otherProps, ft, false, ObjectKind.UNRESTRICTED);
+    return withNamedTypes(commonTypes, obj);
+  }
+
   @Override
   protected JSType computeJSType(JSTypes commonTypes) {
-    ObjectType obj = ObjectType.makeObjectType(
-        null, otherProps, null, false, ObjectKind.UNRESTRICTED);
-    return withNamedTypes(commonTypes, obj);
+    return computeJSType(commonTypes, null, null);
   }
 }

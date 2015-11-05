@@ -14186,4 +14186,61 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "a.b = {};"),
         JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE);
   }
+
+  public void testWindowAsNamespace() {
+    typeCheckCustomExterns(Joiner.on('\n').join(
+        DEFAULT_EXTERNS,
+        "/** @type {string} */",
+        "window.prop;"),
+        "123 - window.prop;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheckCustomExterns(Joiner.on('\n').join(
+        DEFAULT_EXTERNS,
+        "var window;",
+        "/** @type {string} */",
+        "window.prop;"),
+        "123 - window.prop;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "function f() {",
+        "  /** @type {string} */",
+        "  window.prop = 'asdf';",
+        "}",
+        "function g() {",
+        "  window.prop - 123;",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheckCustomExterns(
+        Joiner.on('\n').join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */",
+            "window.Foo = function() {};",
+            "/** @constructor */",
+            "window.Bar = function() {};"),
+        Joiner.on('\n').join(
+            "/** @type {window.Foo} */",
+            "var x = new window.Bar;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @type {string} */",
+        "var x = window.closed;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        Joiner.on('\n').join(
+            DEFAULT_EXTERNS,
+            "/** @type {number} */",
+            "window.n;"),
+        Joiner.on('\n').join(
+            "/** @type {string} */",
+            "var x;",
+            "x = window.n;",
+            "x = window.closed;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
