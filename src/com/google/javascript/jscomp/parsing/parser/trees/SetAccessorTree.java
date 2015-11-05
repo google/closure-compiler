@@ -20,11 +20,14 @@ import com.google.javascript.jscomp.parsing.parser.IdentifierToken;
 import com.google.javascript.jscomp.parsing.parser.Token;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
+import javax.annotation.Nullable;
+
 public class SetAccessorTree extends ParseTree {
 
   public final Token propertyName;
   public final IdentifierToken parameter;
   public final boolean isStatic;
+  @Nullable public final ParseTree type;
   public final BlockTree body;
 
   public SetAccessorTree(
@@ -32,12 +35,14 @@ public class SetAccessorTree extends ParseTree {
       Token propertyName,
       boolean isStatic,
       IdentifierToken parameter,
+      @Nullable ParseTree type,
       BlockTree body) {
     super(ParseTreeType.SET_ACCESSOR, location);
 
     this.propertyName = propertyName;
     this.isStatic = isStatic;
     this.parameter = parameter;
+    this.type = type;
     this.body = body;
   }
 }

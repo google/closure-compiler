@@ -111,6 +111,21 @@ public final class TypeSyntaxTest extends TestCase {
     parse("var /** string */ foo: string = 'hello';");
   }
 
+  public void testTypedGetterSetterDeclaration() {
+    Node n = parse("var x = {get a(): number {\n}};", LanguageMode.ECMASCRIPT6_TYPED);
+    assertDeclaredType("number type", numberType(),
+        n.getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild());
+    n = parse("var x = {set a(v: number) {\n}};", LanguageMode.ECMASCRIPT6_TYPED);
+    assertDeclaredType("number type", numberType(),
+        n.getFirstChild().getFirstChild().getFirstChild().getFirstChild().getFirstChild().getChildAtIndex(1)
+            .getFirstChild());
+  }
+
+  public void testSetterDeclarationWithReturnType() {
+    expectErrors("Parse error. setter should not have any returns");
+    parse("var x = {set a(x): number {\n}};", LanguageMode.ECMASCRIPT6_TYPED);
+  }
+
   public void testFunctionParamDeclaration() {
     Node fn = parse("function foo(x: string) {\n}").getFirstChild();
     Node param = fn.getFirstChild().getNext().getFirstChild();

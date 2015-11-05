@@ -19,18 +19,23 @@ package com.google.javascript.jscomp.parsing.parser.trees;
 import com.google.javascript.jscomp.parsing.parser.Token;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
+import javax.annotation.Nullable;
+
 public class GetAccessorTree extends ParseTree {
 
   public final Token propertyName;
   public final boolean isStatic;
   public final BlockTree body;
+  @Nullable public final ParseTree returnType;
 
   public GetAccessorTree(
-      SourceRange location, Token propertyName, boolean isStatic, BlockTree body) {
+      SourceRange location, Token propertyName, boolean isStatic,
+      @Nullable ParseTree returnType, BlockTree body) {
     super(ParseTreeType.GET_ACCESSOR, location);
 
     this.propertyName = propertyName;
     this.isStatic = isStatic;
+    this.returnType = returnType;
     this.body = body;
   }
 

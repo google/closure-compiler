@@ -2369,15 +2369,17 @@ public class Parser {
       Token propertyName = eatObjectLiteralPropertyName();
       eat(TokenType.OPEN_PAREN);
       eat(TokenType.CLOSE_PAREN);
+      ParseTree returnType = maybeParseColonType();
       BlockTree body = parseFunctionBody();
-      return new GetAccessorTree(getTreeLocation(start), propertyName, isStatic, body);
+      return new GetAccessorTree(getTreeLocation(start), propertyName, isStatic, returnType, body);
     } else {
       ParseTree property = parseComputedPropertyName();
       eat(TokenType.OPEN_PAREN);
       eat(TokenType.CLOSE_PAREN);
+      ParseTree returnType = maybeParseColonType();
       BlockTree body = parseFunctionBody();
       return new ComputedPropertyGetterTree(
-          getTreeLocation(start), property, isStatic, access, body);
+          getTreeLocation(start), property, isStatic, access, returnType, body);
     }
   }
 
@@ -2395,18 +2397,24 @@ public class Parser {
       Token propertyName = eatObjectLiteralPropertyName();
       eat(TokenType.OPEN_PAREN);
       IdentifierToken parameter = eatId();
+      ParseTree type = maybeParseColonType();
       eat(TokenType.CLOSE_PAREN);
+      ParseTree returnType = maybeParseColonType();
+      if (returnType != null) {
+        reportError(scanner.peekToken(), "setter should not have any returns");
+      }
       BlockTree body = parseFunctionBody();
       return new SetAccessorTree(
-          getTreeLocation(start), propertyName, isStatic, parameter, body);
+          getTreeLocation(start), propertyName, isStatic, parameter, type, body);
     } else {
       ParseTree property = parseComputedPropertyName();
       eat(TokenType.OPEN_PAREN);
       IdentifierToken parameter = eatId();
+      ParseTree type = maybeParseColonType();
       eat(TokenType.CLOSE_PAREN);
       BlockTree body = parseFunctionBody();
       return new ComputedPropertySetterTree(
-          getTreeLocation(start), property, isStatic, access, parameter, body);
+          getTreeLocation(start), property, isStatic, access, parameter, type, body);
     }
   }
 
