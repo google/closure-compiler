@@ -76,16 +76,6 @@ public final class Es6TypedIntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
-  public void testClassGetterSetter() throws Exception {
-    CompilerOptions co = createCompilerOptions();
-    co.setPropertyRenaming(PropertyRenamingPolicy.OFF);
-    test(co,
-        "class C {" +
-            " get x(): number {return 1;}" +
-            " set x(n: number) {} }",
-        "Object.defineProperties(function(){}.prototype,{x:{configurable:!0,enumerable:!0,/**@return {number} @this {C} */get:/**@return {number} */function(){return 1},/**@this {C} */set:function(){}}})");
-  }
-
   @Override
   CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
