@@ -220,8 +220,7 @@ abstract class CodeConsumer {
       // This is not pretty printing. This is to prevent misparsing of
       // things like "x + ++y" or "x++ + ++y"
       append(" ");
-    } else if (Character.isLetter(first) &&
-               isWordChar(prev)) {
+    } else if (Character.isLetter(first) && isWordChar(prev)) {
       // Make sure there is a space after e.g. instanceof , typeof
       append(" ");
     } else if (prev == '-' && first == '>' || prev == '<' && first == '!') {

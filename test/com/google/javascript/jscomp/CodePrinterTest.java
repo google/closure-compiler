@@ -1984,6 +1984,20 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("()=>(a,b)");
     assertPrint("(()=>a),b", "()=>a,b");
     assertPrint("()=>(a=b)", "()=>a=b");
+    assertPrintSame("[1,2].forEach((x)=>y)");
+  }
+
+  public void testPrettyArrowFunction() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrettyPrint("if (x) {var f = ()=>{alert(1); alert(2)}}",
+        Joiner.on('\n').join(
+            "if (x) {",
+            "  var f = () => {",
+            "    alert(1);",
+            "    alert(2);",
+            "  }",
+            "}",
+            ""));
   }
 
   public void testDeclarations() {

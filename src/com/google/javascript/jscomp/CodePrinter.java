@@ -298,7 +298,8 @@ public final class CodePrinter {
 
     @Override
     void appendBlockStart() {
-      append(" {");
+      maybeInsertSpace();
+      append("{");
       indent++;
     }
 
@@ -364,7 +365,9 @@ public final class CodePrinter {
 
     @Override
     void maybeInsertSpace() {
-      add(" ");
+      if (getLastChar() != ' ') {
+        add(" ");
+      }
     }
 
     /**
