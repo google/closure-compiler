@@ -41,7 +41,8 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckRequiresForConstructors(compiler);
+    return new CheckRequiresForConstructors(compiler,
+        CheckRequiresForConstructors.Mode.FULL_COMPILE);
   }
 
   public void testPassWithNoNewNodes() {

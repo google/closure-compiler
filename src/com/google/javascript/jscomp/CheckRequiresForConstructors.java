@@ -52,6 +52,14 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   private final AbstractCompiler compiler;
   private final CodingConvention codingConvention;
 
+  public static enum Mode {
+    // Looking at a single file. Externs are not present.
+    SINGLE_FILE,
+    // Used during a normal compilation. The entire program + externs are available.
+    FULL_COMPILE
+  };
+  private final Mode mode;
+
   private final Set<String> constructors = new HashSet<>();
   private final Map<String, Node> requires = new HashMap<>();
 
@@ -79,8 +87,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
     "goog.testing.asserts", "goog.testing.jsunit");
 
-  CheckRequiresForConstructors(AbstractCompiler compiler) {
+  CheckRequiresForConstructors(AbstractCompiler compiler, Mode mode) {
     this.compiler = compiler;
+    this.mode = mode;
     this.codingConvention = compiler.getCodingConvention();
   }
 
@@ -260,6 +269,13 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
 
     private void visitNewNode(NodeTraversal t, Node newNode) {
       Node qNameNode = newNode.getFirstChild();
+
+      // Single names are likely external, but if this is running in single-file mode, they
+      // will not be in the externs, so add a weak usage.
+      if (mode == Mode.SINGLE_FILE && qNameNode.isName()) {
+        weakUsages.put(qNameNode.getString(), qNameNode);
+        return;
+      }
 
       // If the ctor is something other than a qualified name, ignore it.
       if (!qNameNode.isQualifiedName()) {

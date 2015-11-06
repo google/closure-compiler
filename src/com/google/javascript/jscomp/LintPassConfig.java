@@ -55,7 +55,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckJSDocStyle(compiler),
                   new CheckJSDoc(compiler),
                   new CheckPrototypeProperties(compiler),
-                  new CheckRequiresForConstructors(compiler),
+                  new CheckRequiresForConstructors(compiler,
+                      CheckRequiresForConstructors.Mode.SINGLE_FILE),
                   new CheckRequiresAndProvidesSorted(compiler)));
         }
       };

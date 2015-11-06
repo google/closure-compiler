@@ -974,7 +974,8 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkRequires", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new CheckRequiresForConstructors(compiler);
+      return new CheckRequiresForConstructors(compiler,
+          CheckRequiresForConstructors.Mode.FULL_COMPILE);
     }
   };
 

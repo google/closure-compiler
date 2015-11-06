@@ -36,7 +36,8 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckRequiresForConstructors(compiler);
+    return new CheckRequiresForConstructors(compiler,
+        CheckRequiresForConstructors.Mode.FULL_COMPILE);
   }
 
   public void testNoWarning() {
@@ -54,6 +55,7 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
     test("goog.require('foo.bar'); goog.scope(function() { var bar = foo.bar; alert(bar); });",
         "goog.require('foo.bar'); alert(foo.bar);");
     testSame("goog.require('foo'); foo();");
+    testSame("goog.require('foo'); new foo();");
     testSame("/** @suppress {extraRequire} */ var bar = goog.require('foo.bar');");
   }
 
