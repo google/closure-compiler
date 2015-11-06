@@ -578,4 +578,33 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "use(foo, bar);"),
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
   }
+
+  public void testNamespaceImports() {
+    testModules(
+        LINE_JOINER.join(
+            "import Foo from 'goog:other.Foo';",
+            "use(Foo);"),
+        LINE_JOINER.join(
+            "goog.require('other.Foo');",
+            "use(other.Foo)"));
+    testModules(
+        LINE_JOINER.join(
+            "import {x, y} from 'goog:other.Foo';",
+            "use(x);",
+            "use(y);"),
+        LINE_JOINER.join(
+            "goog.require('other.Foo');",
+            "use(other.Foo.x); use(other.Foo.y);"));
+    testModules(
+        LINE_JOINER.join(
+            "import Foo from 'goog:other.Foo';",
+            "/** @type {Foo} */ var foo = new Foo();"),
+        LINE_JOINER.join(
+            "goog.require('other.Foo');",
+            "/** @type {other.Foo} */",
+            "var foo$$module$testcode = new other.Foo();"));
+
+    testModules("import * as Foo from 'goog:other.Foo';",
+        ProcessEs6Modules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
+  }
 }

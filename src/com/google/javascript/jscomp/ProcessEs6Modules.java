@@ -31,7 +31,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +54,12 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       DiagnosticType.warning(
           "JSC_USELESS_USE_STRICT_DIRECTIVE",
           "'use strict' is unnecessary in goog.module files.");
+
+  static final DiagnosticType NAMESPACE_IMPORT_CANNOT_USE_STAR =
+      DiagnosticType.error(
+          "JSC_NAMESPACE_IMPORT_CANNOT_USE_STAR",
+          "Namespace imports ('goog:some.Namespace') cannot use import * as. "
+              + "Did you mean to import {0} from '{1}';?");
 
   private static final ImmutableSet<String> USE_STRICT_ONLY = ImmutableSet.of("use strict");
 
@@ -130,26 +135,33 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   }
 
   private void visitImport(NodeTraversal t, Node importDecl, Node parent) {
+    String moduleName;
     String importName = importDecl.getLastChild().getString();
-    URI loadAddress = loader.locateEs6Module(importName, t.getInput());
-    if (loadAddress == null) {
-      compiler.report(t.makeError(importDecl, ES6ModuleLoader.LOAD_ERROR, importName));
-      return;
+    boolean isNamespaceImport = importName.startsWith("goog:");
+    if (isNamespaceImport) {
+      // Allow importing Closure namespace objects (e.g. from goog.provide or goog.module) as
+      //   import ... from 'goog:my.ns.Object'.
+      // These are rewritten to plain namespace object accesses.
+      moduleName = importName.substring("goog:".length());
+    } else {
+      URI loadAddress = loader.locateEs6Module(importName, t.getInput());
+      if (loadAddress == null) {
+        compiler.report(t.makeError(importDecl, ES6ModuleLoader.LOAD_ERROR, importName));
+        return;
+      }
+      moduleName = ES6ModuleLoader.toModuleName(loadAddress);
     }
 
-    String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
-    Set<String> namesToRequire = new LinkedHashSet<>();
     for (Node child : importDecl.children()) {
       if (child.isEmpty() || child.isString()) {
         continue;
       } else if (child.isName()) { // import a from "mod"
-        importMap.put(child.getString(),
-            new ModuleOriginalNamePair(moduleName, "default"));
-        namesToRequire.add("default");
+        // Namespace imports' default export is the namespace itself.
+        String name = isNamespaceImport ? "" : "default";
+        importMap.put(child.getString(), new ModuleOriginalNamePair(moduleName, name));
       } else if (child.getType() == Token.IMPORT_SPECS) {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
-          namesToRequire.add(origName);
           if (grandChild.getChildCount() == 2) { // import {a as foo} from "mod"
             importMap.put(
                 grandChild.getLastChild().getString(),
@@ -164,6 +176,11 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         // import * as ns from "mod"
         Preconditions.checkState(child.getType() == Token.IMPORT_STAR,
             "Expected an IMPORT_STAR node, but was: %s", child);
+        // Namespace imports cannot be imported "as *".
+        if (isNamespaceImport) {
+          compiler.report(t.makeError(importDecl, NAMESPACE_IMPORT_CANNOT_USE_STAR,
+              child.getString(), moduleName));
+        }
         importMap.put(
             child.getString(),
             new ModuleOriginalNamePair(moduleName, ""));
@@ -492,14 +509,16 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
           if (parent.isCall() && parent.getFirstChild() == n) {
             parent.putBooleanProp(Node.FREE_CALL, false);
           }
+
           ModuleOriginalNamePair pair = importMap.get(name);
+          Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
           if (pair.originalName.isEmpty()) {
             n.getParent().replaceChild(
-                n, IR.name(pair.module).useSourceInfoIfMissingFromForTree(n));
+                n, moduleAccess.useSourceInfoIfMissingFromForTree(n));
           } else {
             n.getParent().replaceChild(n,
-                IR.getprop(IR.name(pair.module), IR.string(pair.originalName))
-                .useSourceInfoIfMissingFromForTree(n));
+                IR.getprop(moduleAccess, IR.string(pair.originalName))
+                    .useSourceInfoIfMissingFromForTree(n));
           }
         }
       }
