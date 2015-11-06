@@ -482,6 +482,11 @@ final class ClosureRewriteModule implements NodeTraversal.Callback, HotSwapCompi
   }
 
   private void updateRequire(Node call) {
+    if (call.getParent().isExprResult()) {
+      // The goog.require is the entire statement. There is no var, so there's nothing to do.
+      return;
+    }
+
     String namespace = call.getLastChild().getString();
     if (current.requireInsertNode == null) {
       current.requireInsertNode = getInsertRoot(call);

@@ -224,20 +224,24 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
     // If locals shadow globals they need to be renamed.
     test(
         "goog.module('a'); goog.require('b'); var a,b,c;",
-
-        "goog.provide('a');"
-        + "goog.require('b');"
-        + "goog.scope(function(){b;var a_module,b_module,c});");
+        LINE_JOINER.join(
+            "goog.provide('a');",
+            "goog.require('b');",
+            "goog.scope(function() {",
+            "  var a_module, b_module, c;",
+            "});"));
   }
 
   public void testAliasShadowsGlobal3() {
     // If locals shadow globals they need to be renamed.
     test(
         "goog.module('a.c'); goog.require('b.c'); var a,b,c;",
-
-        "goog.provide('a.c');"
-        + "goog.require('b.c');"
-        + "goog.scope(function(){b.c;var a_module,b_module,c});");
+        LINE_JOINER.join(
+        "goog.provide('a.c');",
+        "goog.require('b.c');",
+        "goog.scope(function() {",
+        "  var a_module, b_module, c;",
+        "});"));
   }
 
   public void testThis() {
