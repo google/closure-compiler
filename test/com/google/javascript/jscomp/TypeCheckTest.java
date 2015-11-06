@@ -13769,6 +13769,24 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: number"));
   }
 
+  public void testIArrayLikeCovariant1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike<(string|number)>*/ x){};",
+            "function g(/** !IArrayLike<number> */ arr) {",
+            "    f(arr);",
+            "}"));
+  }
+
+  public void testIArrayLikeCovariant2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike<(string|number)>*/ x){};",
+            "function g(/** !Array<number> */ arr) {",
+            "    f(arr);",
+            "}"));
+  }
+
   private static final String EXTERNS_WITH_IOBJECT_DECLS = LINE_JOINER.join(
       "/**",
       " * @constructor",

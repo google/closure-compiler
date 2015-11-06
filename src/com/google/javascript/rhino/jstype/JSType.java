@@ -44,6 +44,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
@@ -79,6 +80,9 @@ public abstract class JSType implements TypeI, Serializable {
   private boolean inTemplatedCheckVisit = false;
   private static final CanCastToVisitor CAN_CAST_TO_VISITOR =
       new CanCastToVisitor();
+
+  private static final ImmutableList<String> COVARIANT_TYPES =
+      ImmutableList.of("Object", "IArrayLike", "Array");
 
   /**
    * Total ordering on types based on their textual representation.
@@ -1542,9 +1546,7 @@ public abstract class JSType implements TypeI, Serializable {
    */
   static boolean isExemptFromTemplateTypeInvariance(JSType type) {
     ObjectType objType = type.toObjectType();
-    return objType == null ||
-        "Array".equals(objType.getReferenceName()) ||
-        "Object".equals(objType.getReferenceName());
+    return objType == null || COVARIANT_TYPES.contains(objType.getReferenceName());
   }
 
   /**
