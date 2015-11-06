@@ -57,6 +57,7 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.FunctionTypeBuilder.AstFunctionContents;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
+import com.google.javascript.jscomp.parsing.NullErrorReporter;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -144,14 +145,25 @@ final class TypedScopeCreator implements ScopeCreator {
           "JSC_CANNOT_INFER_CONST_TYPE",
           "Unable to infer type of constant.");
 
+  static final DiagnosticGroup ALL_DIAGNOSTICS = new DiagnosticGroup(
+      DELEGATE_PROXY_SUFFIX,
+      MALFORMED_TYPEDEF,
+      ENUM_INITIALIZER,
+      CTOR_INITIALIZER,
+      IFACE_INITIALIZER,
+      CONSTRUCTOR_EXPECTED,
+      UNKNOWN_LENDS,
+      LENDS_ON_NON_OBJECT,
+      CANNOT_INFER_CONST_TYPE);
+
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
   private final List<ObjectType> delegateProxyPrototypes = new ArrayList<>();
-  private final Map<String, String> delegateCallingConventions =
-       new HashMap<>();
+  private final Map<String, String> delegateCallingConventions = new HashMap<>();
+  private final boolean runsAfterNTI;
 
   // Simple properties inferred about functions.
   private final Map<Node, AstFunctionContents> functionAnalysisResults =
@@ -191,11 +203,19 @@ final class TypedScopeCreator implements ScopeCreator {
   TypedScopeCreator(AbstractCompiler compiler,
       CodingConvention codingConvention) {
     this.compiler = compiler;
+    this.runsAfterNTI = compiler.getOptions().getNewTypeInference();
     this.validator = compiler.getTypeValidator();
     this.codingConvention = codingConvention;
     this.typeRegistry = compiler.getTypeRegistry();
-    this.typeParsingErrorReporter = typeRegistry.getErrorReporter();
+    this.typeParsingErrorReporter = this.runsAfterNTI
+        ? NullErrorReporter.forOldRhino() : typeRegistry.getErrorReporter();
     this.unknownType = typeRegistry.getNativeObjectType(UNKNOWN_TYPE);
+  }
+
+  private void report(JSError error) {
+    if (!this.runsAfterNTI) {
+      compiler.report(error);
+    }
   }
 
   /**
@@ -617,17 +637,15 @@ final class TypedScopeCreator implements ScopeCreator {
         String lendsName = info.getLendsName();
         TypedVar lendsVar = scope.getVar(lendsName);
         if (lendsVar == null) {
-          compiler.report(
-              JSError.make(objectLit, UNKNOWN_LENDS, lendsName));
+          report(JSError.make(objectLit, UNKNOWN_LENDS, lendsName));
         } else {
           type = lendsVar.getType();
           if (type == null) {
             type = unknownType;
           }
           if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
-            compiler.report(
-                JSError.make(objectLit, LENDS_ON_NON_OBJECT,
-                    lendsName, type.toString()));
+            report(JSError.make(
+                objectLit, LENDS_ON_NON_OBJECT, lendsName, type.toString()));
             type = null;
           } else {
             objectLit.setJSType(type);
@@ -640,7 +658,7 @@ final class TypedScopeCreator implements ScopeCreator {
       String lValueName = NodeUtil.getBestLValueName(lValue);
       boolean createdEnumType = false;
       if (info != null && info.hasEnumParameterType()) {
-        type = createEnumTypeFromNodes(objectLit, lValueName, info, lValue);
+        type = createEnumTypeFromNodes(objectLit, lValueName, info);
         createdEnumType = true;
       }
 
@@ -767,7 +785,7 @@ final class TypedScopeCreator implements ScopeCreator {
       if (n.hasMoreThanOneChild()) {
         if (info != null) {
           // multiple children
-          compiler.report(JSError.make(n, MULTIPLE_VAR_DEF));
+          report(JSError.make(n, MULTIPLE_VAR_DEF));
         }
         for (Node name : n.children()) {
           defineName(name, n, name.getJSDocInfo());
@@ -1059,8 +1077,7 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param lValueNode The node where this function is being
      *     assigned.
      */
-    private EnumType createEnumTypeFromNodes(Node rValue, String name,
-        JSDocInfo info, Node lValueNode) {
+    private EnumType createEnumTypeFromNodes(Node rValue, String name, JSDocInfo info) {
       Preconditions.checkNotNull(info);
       Preconditions.checkState(info.hasEnumParameterType());
 
@@ -1085,11 +1102,9 @@ final class TypedScopeCreator implements ScopeCreator {
             String keyName = NodeUtil.getStringValue(key);
             if (keyName == null) {
               // GET and SET don't have a String value;
-              compiler.report(
-                  JSError.make(key, ENUM_NOT_CONSTANT, keyName));
+              report(JSError.make(key, ENUM_NOT_CONSTANT, keyName));
             } else if (!codingConvention.isValidEnumKey(keyName)) {
-              compiler.report(
-                  JSError.make(key, ENUM_NOT_CONSTANT, keyName));
+              report(JSError.make(key, ENUM_NOT_CONSTANT, keyName));
             } else {
               enumType.defineElement(keyName, key);
             }
@@ -1209,7 +1224,7 @@ final class TypedScopeCreator implements ScopeCreator {
               (initialValue.isObjectLit() ||
                initialValue.isQualifiedName());
           if (!isValidValue) {
-            compiler.report(JSError.make(n, ENUM_INITIALIZER));
+            report(JSError.make(n, ENUM_INITIALIZER));
           }
         }
       }
@@ -1297,7 +1312,7 @@ final class TypedScopeCreator implements ScopeCreator {
       // it constructs itself.
       if (newVar.getInitialValue() == null &&
           !n.isFromExterns()) {
-        compiler.report(
+        report(
             JSError.make(n,
                 fnType.isConstructor() ?
                 CTOR_INITIALIZER : IFACE_INITIALIZER,
@@ -1348,8 +1363,7 @@ final class TypedScopeCreator implements ScopeCreator {
           if (rValue != null && rValue.isObjectLit()) {
             return rValue.getJSType();
           } else {
-            return createEnumTypeFromNodes(
-                rValue, lValue.getQualifiedName(), info, lValue);
+            return createEnumTypeFromNodes(rValue, lValue.getQualifiedName(), info);
           }
         } else if (info.isConstructorOrInterface()) {
           return createFunctionTypeFromNodes(
@@ -1369,7 +1383,7 @@ final class TypedScopeCreator implements ScopeCreator {
                 && info.isConstant()
                 && !info.hasType();
             if (isTypelessConstDecl) {
-              compiler.report(JSError.make(lValue, CANNOT_INFER_CONST_TYPE));
+              report(JSError.make(lValue, CANNOT_INFER_CONST_TYPE));
             }
           } else {
             return rValueType;
@@ -1540,10 +1554,10 @@ final class TypedScopeCreator implements ScopeCreator {
             objectLiteralCast.objectNode.putBooleanProp(
                 Node.REFLECTED_OBJECT, true);
           } else {
-            compiler.report(JSError.make(n, CONSTRUCTOR_EXPECTED));
+            report(JSError.make(n, CONSTRUCTOR_EXPECTED));
           }
         } else {
-          compiler.report(JSError.make(n, objectLiteralCast.diagnosticType));
+          report(JSError.make(n, objectLiteralCast.diagnosticType));
         }
       }
     }
@@ -1920,8 +1934,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       JSType realType = info.getTypedefType().evaluate(scope, typeRegistry);
       if (realType == null) {
-        compiler.report(
-            JSError.make(candidate, MALFORMED_TYPEDEF, typedef));
+        report(JSError.make(candidate, MALFORMED_TYPEDEF, typedef));
       }
 
       typeRegistry.overwriteDeclaredType(typedef, realType);

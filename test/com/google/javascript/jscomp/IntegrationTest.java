@@ -586,6 +586,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
     options.setNewTypeInference(true);
+
     test(
         options,
         "/** @return {number} */\n"
@@ -593,6 +594,11 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "  return 'asdf';\n"
         + "}",
         NewTypeInference.RETURN_NONDECLARED_TYPE);
+
+    test(
+        options,
+        "/** @type {ASDF} */ var x;",
+        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
   }
 
   public void testNTInoMaskTypeParseError() {
