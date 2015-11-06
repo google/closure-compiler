@@ -230,6 +230,11 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(angularPass);
     }
 
+    if (!options.generateExportsAfterTypeChecking
+        && options.generateExports && !options.skipNonTranspilationPasses) {
+      checks.add(generateExports);
+    }
+
     if (options.exportTestFunctions && !options.skipNonTranspilationPasses) {
       checks.add(exportTestFunctions);
     }
@@ -349,7 +354,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (options.generateExports) {
+    if (options.generateExportsAfterTypeChecking && options.generateExports) {
       checks.add(generateExports);
     }
 

@@ -715,6 +715,11 @@ public class CompilerOptions {
 
   public boolean generateExports;
 
+  // TODO(dimvar): generate-exports should always run after typechecking.
+  // If it runs before, it adds a bunch of properties to Object, which masks
+  // many type warnings. Cleanup all clients and remove this.
+  boolean generateExportsAfterTypeChecking;
+
   boolean exportLocalPropertyDefinitions;
 
   /** Map used in the renaming of CSS class names. */
@@ -1050,6 +1055,7 @@ public class CompilerOptions {
     recordFunctionInformation = false;
     checksOnly = false;
     generateExports = false;
+    generateExportsAfterTypeChecking = true;
     exportLocalPropertyDefinitions = false;
     cssRenamingMap = null;
     cssRenamingWhitelist = null;
