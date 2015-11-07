@@ -76,6 +76,11 @@ public final class VariableMapTest extends TestCase {
     assertEquals("BBB", vm.lookupSourceName("b"));
   }
 
+  public void testFromBytesWithEmptyValue() throws ParseException {
+    VariableMap vm = VariableMap.fromBytes("AAA:".getBytes(UTF_8));
+    assertThat(vm.lookupNewName("AAA")).isEmpty();
+  }
+
   public void testFileFormat1() {
     assertEqual(
         new VariableMap(ImmutableMap.of("x\ny", "a")).toBytes(), "x\\ny:a\n".getBytes(UTF_8));

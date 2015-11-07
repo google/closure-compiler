@@ -153,12 +153,12 @@ public final class VariableMap {
 
     for (String line : lines) {
       int pos = findIndexOfChar(line, SEPARATOR);
-      if (pos <= 0 || pos == line.length() - 1) {
+      if (pos <= 0) {
         throw new ParseException("Bad line: " + line, 0);
       }
       map.put(
           unescape(line.substring(0, pos)),
-          unescape(line.substring(pos + 1)));
+          pos == line.length() - 1 ? "" : unescape(line.substring(pos + 1)));
     }
     return new VariableMap(map.build());
   }
