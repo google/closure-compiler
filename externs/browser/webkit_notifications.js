@@ -26,6 +26,12 @@
  */
 var NotificationOptions;
 
+/**
+ * @typedef {{tag: (string|undefined)}}
+ * @see https://notifications.spec.whatwg.org/#dictdef-getnotificationoptions
+ */
+var GetNotificationOptions;
+
 /** @interface */
 var NotificationOptionsInterface_;
 /** @type {string} */ NotificationOptionsInterface_.prototype.dir;

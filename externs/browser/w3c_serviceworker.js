@@ -175,6 +175,13 @@ ServiceWorkerRegistration.prototype.showNotification =
     function(title, opt_options) {};
 
 /**
+ * @see https://notifications.spec.whatwg.org/#service-worker-api
+ * @param {!GetNotificationOptions=} opt_filter
+ * @return {!Promise<?Array<?Notification>>}
+ */
+ServiceWorkerRegistration.prototype.getNotifications = function(opt_filter) {};
+
+/**
  * @see http://www.w3.org/TR/service-workers/#service-worker-container-interface
  * @interface
  * @extends {EventTarget}
