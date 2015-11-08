@@ -53,7 +53,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   static final DiagnosticType USELESS_USE_STRICT_DIRECTIVE =
       DiagnosticType.warning(
           "JSC_USELESS_USE_STRICT_DIRECTIVE",
-          "'use strict' is unnecessary in goog.module files.");
+          "'use strict' is unnecessary in ES6 modules.");
 
   static final DiagnosticType NAMESPACE_IMPORT_CANNOT_USE_STAR =
       DiagnosticType.error(
