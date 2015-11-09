@@ -324,7 +324,6 @@ Document.prototype.anchors;
 Document.prototype.applets;
 /** @type {boolean} */ Document.prototype.async;
 /** @type {string?} */ Document.prototype.baseURI;
-Document.prototype.baseURIObject;
 
 /**
  * @see https://developer.mozilla.org/en/DOM/document.bgColor
@@ -737,9 +736,11 @@ Selection.prototype.selectAllChildren;
  */
 Selection.prototype.selectionLanguageChange;
 
-/** @type {NamedNodeMap} */ Element.prototype.attributes;
-Element.prototype.baseURIObject;
-/** @type {!NodeList} */ Element.prototype.childNodes;
+/** @type {NamedNodeMap} */
+Element.prototype.attributes;
+
+/** @type {!NodeList} */
+Element.prototype.childNodes;
 
 /**
  * @type {!NodeList}
