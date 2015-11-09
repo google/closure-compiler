@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -30,6 +31,14 @@ class InjectEs6RuntimeLibrary implements CompilerPass {
   public void process(Node externs, Node root) {
     if (compiler.needsEs6Runtime) {
       compiler.ensureLibraryInjected("es6_runtime", false);
+      // es6_runtime.js refers to 'window' and 'global' which are only defined in the browser
+      // externs and the node externs, respectively. Therefore one or both of them may be
+      // undeclared. Add synthetic externs for them. The VarCheck pass would do this for us but it
+      // runs before this one.
+      for (String name : new String[] {"window", "global"}) {
+        compiler.getSynthesizedExternsInput().getAstRoot(compiler).addChildToBack(
+            IR.var(IR.name(name)));
+      }
     }
     if (compiler.needsEs6DartRuntime) {
       compiler.ensureLibraryInjected("es6_dart_runtime", false);

@@ -22,16 +22,23 @@
 
 
 
-/** The global object. */
-$jscomp.global = this;
+/**
+ * @param {!Object} maybeGlobal
+ * @return {!Object} The global object.
+ * @suppress {undefinedVars}
+ */
+$jscomp.getGlobal = function(maybeGlobal) {
+  return (typeof window != 'undefined' && window === maybeGlobal) ?
+      maybeGlobal :
+      (typeof global != 'undefined') ? global : maybeGlobal;
+};
 
 /**
- * This is needed to make things work in IE11. Otherwise we get an error:
- * "Variable undefined in strict mode"
- * TODO(tbreisacher): Investigate.
- * @suppress {duplicate}
+ * The global object. For browsers we could just use `this` but in Node that
+ * doesn't work.
+ * @const
  */
-var Symbol;
+$jscomp.global = $jscomp.getGlobal(this);
 
 /**
  * Initializes the Symbol function.
@@ -39,7 +46,7 @@ var Symbol;
  */
 $jscomp.initSymbol = function() {
   if (!$jscomp.global.Symbol) {
-    Symbol = $jscomp.Symbol;
+    $jscomp.global.Symbol = $jscomp.Symbol;
   }
 
   // Only need to do this once. All future calls are no-ops.
