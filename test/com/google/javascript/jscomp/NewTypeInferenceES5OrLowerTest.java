@@ -6245,8 +6245,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "   */",
         "  function f(x, y) {}",
         "  f(a, b);",
-        "}"),
-        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+        "}"));
 
     typeCheck(Joiner.on('\n').join(
         "function f(/** string */ b) {",
@@ -6268,8 +6267,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "   */",
         "  function f(x, y) {}",
         "  f({r:'str'}, {p:20, r:b});",
-        "}"),
-        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+        "}"));
 
     typeCheck(Joiner.on('\n').join(
         "function g(x) {",
@@ -6487,8 +6485,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function g(x) {}",
         "/** @type {function(?, string)} */",
         "function h(x, y) {}",
-        "f(g, h);"),
-        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+        "f(g, h);"));
 
     typeCheck(Joiner.on('\n').join(
         "/**",
@@ -14241,6 +14238,46 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "x = window.n;",
             "x = window.closed;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testInstantiateToTheSuperType() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @enum {number} */",
+        "var E = { A: 1 };",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " */",
+        "function f(x, y) {}",
+        "f(123, E.A);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @enum {number} */",
+        "var E = { A: 1 };",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " */",
+        "function f(x, y) {}",
+        "f(E.A, 123);"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @enum {number} */",
+        "var E = { A: 1 };",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " * @return {T}",
+        " */",
+        "function f(x, y) {",
+        "  return x;",
+        "}",
+        "/** @type {E} */",
+        "var foo = f(123, E.A);"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }

@@ -568,17 +568,26 @@ public abstract class JSType implements TypeI {
     Preconditions.checkNotNull(type);
     Set<JSType> typesToRemove = new LinkedHashSet<>();
     for (JSType other : typeMultimap.get(typeParam)) {
+      if (type == null) {
+        break;
+      }
       JSType unified = unifyUnknowns(type, other);
       if (unified != null) {
         // Can't remove elms while iterating over the collection, so do it later
         typesToRemove.add(other);
         type = unified;
+      } else if (other.isSubtypeOf(type)) {
+        typesToRemove.add(other);
+      } else if (type.isSubtypeOf(other)) {
+        type = null;
       }
     }
     for (JSType typeToRemove : typesToRemove) {
       typeMultimap.remove(typeParam, typeToRemove);
     }
-    typeMultimap.put(typeParam, type);
+    if (type != null) {
+      typeMultimap.put(typeParam, type);
+    }
   }
 
   private static int promoteBoolean(int mask) {
