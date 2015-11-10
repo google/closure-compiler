@@ -189,45 +189,8 @@ public class ParseTree {
     }
   }
 
-  public boolean isRestParameter() {
-    return this.type == ParseTreeType.REST_PARAMETER;
-  }
-
   public boolean isAssignmentRestElement() {
     return this.type == ParseTreeType.ASSIGNMENT_REST_ELEMENT;
-  }
-
-  /**
-   * This function reflects the ECMA standard, or what we would expect to become the ECMA standard.
-   * Most places use isStatement instead which reflects where code on the web diverges from the
-   * standard.
-   */
-  public boolean isStatementStandard() {
-    switch (this.type) {
-    case BLOCK:
-    case VARIABLE_STATEMENT:
-    case EMPTY_STATEMENT:
-    case EXPRESSION_STATEMENT:
-    case IF_STATEMENT:
-    case DO_WHILE_STATEMENT:
-    case WHILE_STATEMENT:
-    case FOR_OF_STATEMENT:
-    case FOR_IN_STATEMENT:
-    case FOR_STATEMENT:
-    case CONTINUE_STATEMENT:
-    case BREAK_STATEMENT:
-    case RETURN_STATEMENT:
-    case YIELD_EXPRESSION:
-    case WITH_STATEMENT:
-    case SWITCH_STATEMENT:
-    case LABELLED_STATEMENT:
-    case THROW_STATEMENT:
-    case TRY_STATEMENT:
-    case DEBUGGER_STATEMENT:
-      return true;
-    default:
-      return false;
-    }
   }
 
   @Override public String toString() {
