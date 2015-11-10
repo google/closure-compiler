@@ -63,6 +63,7 @@ class RenameProperties implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final boolean generatePseudoNames;
+  private final boolean renamePrivatePropertiesOnly;
 
   /** Property renaming map from a previous compilation. */
   private final VariableMap prevUsedPropertyMap;
@@ -128,9 +129,11 @@ class RenameProperties implements CompilerPass {
    * @param compiler The JSCompiler
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
+   * @param renamePrivatePropertiesOnly Only rename properties considered by the
+   *        coding conventions as being private.
    */
-  RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames) {
-    this(compiler, generatePseudoNames, null, null);
+  RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames, boolean renamePrivatePropertiesOnly) {
+    this(compiler, generatePseudoNames, renamePrivatePropertiesOnly, null, null);
   }
 
   /**
@@ -139,12 +142,14 @@ class RenameProperties implements CompilerPass {
    * @param compiler The JSCompiler.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
+   * @param renamePrivatePropertiesOnly Only rename properties considered by the
+   *        coding conventions as being private.
    * @param prevUsedPropertyMap The property renaming map used in a previous
    *        compilation.
    */
   RenameProperties(AbstractCompiler compiler,
-      boolean generatePseudoNames, VariableMap prevUsedPropertyMap) {
-    this(compiler, generatePseudoNames, prevUsedPropertyMap, null);
+      boolean generatePseudoNames, boolean renamePrivatePropertiesOnly, VariableMap prevUsedPropertyMap) {
+    this(compiler, generatePseudoNames, renamePrivatePropertiesOnly, prevUsedPropertyMap, null);
   }
 
   /**
@@ -153,6 +158,8 @@ class RenameProperties implements CompilerPass {
    * @param compiler The JSCompiler.
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
+   * @param renamePrivatePropertiesOnly Only rename properties considered by the
+   *        coding conventions as being private.
    * @param prevUsedPropertyMap The property renaming map used in a previous
    *        compilation.
    * @param reservedCharacters If specified these characters won't be used in
@@ -160,10 +167,12 @@ class RenameProperties implements CompilerPass {
    */
   RenameProperties(AbstractCompiler compiler,
       boolean generatePseudoNames,
+      boolean renamePrivatePropertiesOnly,
       VariableMap prevUsedPropertyMap,
       @Nullable char[] reservedCharacters) {
     this.compiler = compiler;
     this.generatePseudoNames = generatePseudoNames;
+    this.renamePrivatePropertiesOnly = renamePrivatePropertiesOnly;
     this.prevUsedPropertyMap = prevUsedPropertyMap;
     this.reservedCharacters = reservedCharacters;
     externedNames.addAll(compiler.getExternProperties());
@@ -270,8 +279,14 @@ class RenameProperties implements CompilerPass {
   private void generateNames(Set<Property> props, Set<String> reservedNames) {
     NameGenerator nameGen = new DefaultNameGenerator(
         reservedNames, "", reservedCharacters);
+    if (renamePrivatePropertiesOnly) {
+      reservePublicPropertyNames(props, reservedNames);
+    }
     for (Property p : props) {
-      if (generatePseudoNames) {
+      if (renamePrivatePropertiesOnly && !compiler.getCodingConvention().isPrivate(p.oldName)) {
+        p.newName = p.oldName;
+      }
+      else if (generatePseudoNames) {
         p.newName = "$" + p.oldName + "$";
       } else {
         // If we haven't already given this property a reusable name.
@@ -281,6 +296,22 @@ class RenameProperties implements CompilerPass {
       }
       reservedNames.add(p.newName);
       compiler.addToDebugLog(p.oldName + " => " + p.newName);
+    }
+  }
+
+  /**
+   * Reserve public property names to prevent accidental collisions when
+   * renaming private property names.
+   *
+   * @param props Properties to generate new names for
+   * @param reservedNames A set of names to which properties should not be
+   *     renamed
+   */
+  private void reservePublicPropertyNames(Set<Property> props, Set<String> reservedNames) {
+    for (Property p : props) {
+      if (!compiler.getCodingConvention().isPrivate(p.oldName)) {
+        reservedNames.add(p.oldName);
+      }
     }
   }
 

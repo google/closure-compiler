@@ -544,6 +544,12 @@ public class CompilerOptions {
   String debugFunctionSideEffectsPath;
 
   /**
+   * Whether to only rename properties determined as private by the coding
+   * convention.
+   */
+  boolean renamePrivatePropertiesOnly = false;
+
+  /**
    * Rename private properties to disambiguate between unrelated fields based on
    * the coding convention.
    */
@@ -2048,6 +2054,21 @@ public class CompilerOptions {
 
   public void setDebugFunctionSideEffectsPath(String debugFunctionSideEffectsPath) {
     this.debugFunctionSideEffectsPath = debugFunctionSideEffectsPath;
+  }
+
+  /**
+   * @return Whether rename private properties only is enabled.
+   */
+  public boolean isRenamePrivatePropertiesOnly() {
+    return renamePrivatePropertiesOnly;
+  }
+
+  /**
+   * @param value Whether to only rename private properties based on
+   * the coding convention.
+   */
+  public void setRenamePrivatePropertiesOnly(boolean value) {
+    this.renamePrivatePropertiesOnly = value;
   }
 
   /**
