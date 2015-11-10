@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
 
@@ -47,10 +48,17 @@ final class DefaultNameGenerator implements NameGenerator {
     // This is a tie-breaker when two chars occurrence count is the same.
     // When that happens, the 'natural' order prevails.
     final int order;
+
     CharPriority(char name, int order) {
       this.name = name;
       this.order = order;
       this.occurrence = 0;
+    }
+
+    public CharPriority clone() {
+      CharPriority result = new CharPriority(name, order);
+      result.occurrence = occurrence;
+      return result;
     }
 
     @Override
@@ -68,7 +76,7 @@ final class DefaultNameGenerator implements NameGenerator {
 
   // TODO(user): Maybe we don't need a HashMap to look up.
   // I started writing a skip-list like data-structure that would let us
-  // have O(1) favors() and O(1) restartNaming() but the code gotten very messy.
+  // have O(1) favors() and O(1) reset() but the code gotten very messy.
   // Lets start with a logical implementation first until performance becomes
   // a problem.
   private Map<Character, CharPriority> priorityLookupMap;
@@ -94,6 +102,12 @@ final class DefaultNameGenerator implements NameGenerator {
   private CharPriority[] firstChars;
   private CharPriority[] nonFirstChars;
 
+  public DefaultNameGenerator() {
+    buildPriorityLookupMap();
+    Set<String> reservedNames = Sets.newHashSetWithExpectedSize(0);
+    reset(reservedNames, "", null);
+  }
+
   /**
    * Creates a DefaultNameGenerator.
    *
@@ -106,17 +120,41 @@ final class DefaultNameGenerator implements NameGenerator {
    */
   public DefaultNameGenerator(Set<String> reservedNames, String prefix,
       @Nullable char[] reservedCharacters) {
-    this.priorityLookupMap = Maps.newHashMapWithExpectedSize(NONFIRST_CHAR.length);
+    buildPriorityLookupMap();
+    reset(reservedNames, prefix, reservedCharacters);
+  }
 
-    int order = 0;
-    for (char c : NONFIRST_CHAR) {
-      priorityLookupMap.put(c, new CharPriority(c, order));
-      order++;
+  private DefaultNameGenerator(Set<String> reservedNames, String prefix,
+      @Nullable char[] reservedCharacters,
+      Map<Character, CharPriority> priorityLookupMap) {
+    // Clone the priorityLookupMap to preserve information about how often
+    // characters are used.
+    this.priorityLookupMap = Maps.newHashMapWithExpectedSize(
+        NONFIRST_CHAR.length);
+    for (Map.Entry<Character, CharPriority> entry :
+      priorityLookupMap.entrySet()) {
+      this.priorityLookupMap.put(entry.getKey(), entry.getValue().clone());
     }
 
     reset(reservedNames, prefix, reservedCharacters);
   }
 
+  private void buildPriorityLookupMap() {
+    priorityLookupMap = Maps.newHashMapWithExpectedSize(NONFIRST_CHAR.length);
+    int order = 0;
+    for (char c : NONFIRST_CHAR) {
+      priorityLookupMap.put(c, new CharPriority(c, order));
+      order++;
+    }
+  }
+
+  /**
+   * Note that the history of what characters are most used in the program
+   * (set through calls to 'favor') is not deleted. Upon 'reset', that history
+   * is taken into account for the names that will be generated later: it
+   * re-calculates how characters are prioritized based on how often the they
+   * appear in the final output.
+   */
   @Override
   public void reset(
       Set<String> reservedNames,
@@ -130,9 +168,10 @@ final class DefaultNameGenerator implements NameGenerator {
     // build the character arrays to use
     this.firstChars = reserveCharacters(FIRST_CHAR, reservedCharacters);
     this.nonFirstChars = reserveCharacters(NONFIRST_CHAR, reservedCharacters);
+    Arrays.sort(firstChars);
+    Arrays.sort(nonFirstChars);
 
     checkPrefix(prefix);
-
   }
 
   @Override
@@ -140,23 +179,13 @@ final class DefaultNameGenerator implements NameGenerator {
       Set<String> reservedNames,
       String prefix,
       @Nullable char[] reservedCharacters) {
-    return new DefaultNameGenerator(reservedNames, prefix, reservedCharacters);
-  }
-
-  /**
-   * Restarts the name generation. Re-calculate how characters are prioritized
-   * based on how often the they appear in the final output.
-   */
-  @Override
-  public void restartNaming() {
-    Arrays.sort(firstChars);
-    Arrays.sort(nonFirstChars);
-    nameCount = 0;
+    return new DefaultNameGenerator(reservedNames, prefix, reservedCharacters,
+        priorityLookupMap);
   }
 
   /**
    * Increase the prioritization of all the chars in a String. This information
-   * is not used until {@link #restartNaming()} is called. A compiler would be
+   * is not used until {@link #reset()} is called. A compiler would be
    * able to generate names while changing the prioritization of the name
    * generator for the <b>next</b> pass.
    */

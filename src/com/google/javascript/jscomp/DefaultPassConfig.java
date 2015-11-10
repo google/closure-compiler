@@ -2410,7 +2410,8 @@ public final class DefaultPassConfig extends PassConfig {
       case ALL_UNQUOTED:
         RenameProperties rprop =
             new RenameProperties(
-                compiler, options.generatePseudoNames, prevPropertyMap, reservedChars);
+                compiler, options.generatePseudoNames, prevPropertyMap, reservedChars,
+                options.nameGenerator);
         rprop.process(externs, root);
         return rprop.getPropertyMap();
 
@@ -2459,7 +2460,8 @@ public final class DefaultPassConfig extends PassConfig {
         options.preferStableNames,
         prevVariableMap,
         reservedChars,
-        reservedNames);
+        reservedNames,
+        options.nameGenerator);
     rn.process(externs, root);
     return rn.getVariableMap();
   }

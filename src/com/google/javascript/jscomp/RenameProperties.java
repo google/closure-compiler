@@ -82,6 +82,9 @@ class RenameProperties implements CompilerPass {
   // Names to which properties shouldn't be renamed, to avoid name conflicts
   private final Set<String> quotedNames = new HashSet<>();
 
+  // Shared name generator
+  private final NameGenerator nameGenerator;
+
   private static final Comparator<Property> FREQUENCY_COMPARATOR =
     new Comparator<Property>() {
       @Override
@@ -128,9 +131,13 @@ class RenameProperties implements CompilerPass {
    * @param compiler The JSCompiler
    * @param generatePseudoNames Generate pseudo names. e.g foo -> $foo$ instead
    *        of compact obfuscated names. This is used for debugging.
+   * @param nameGenerator a shared NameGenerator that this instance can use;
+   *        the instance may reset or reconfigure it, so the caller should
+   *        not expect any state to be preserved
    */
-  RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames) {
-    this(compiler, generatePseudoNames, null, null);
+  RenameProperties(AbstractCompiler compiler, boolean generatePseudoNames,
+      NameGenerator nameGenerator) {
+    this(compiler, generatePseudoNames, null, null, nameGenerator);
   }
 
   /**
@@ -141,10 +148,15 @@ class RenameProperties implements CompilerPass {
    *        of compact obfuscated names. This is used for debugging.
    * @param prevUsedPropertyMap The property renaming map used in a previous
    *        compilation.
+   * @param nameGenerator a shared NameGenerator that this instance can use;
+   *        the instance may reset or reconfigure it, so the caller should
+   *        not expect any state to be preserved
    */
   RenameProperties(AbstractCompiler compiler,
-      boolean generatePseudoNames, VariableMap prevUsedPropertyMap) {
-    this(compiler, generatePseudoNames, prevUsedPropertyMap, null);
+      boolean generatePseudoNames, VariableMap prevUsedPropertyMap,
+      NameGenerator nameGenerator) {
+    this(compiler, generatePseudoNames, prevUsedPropertyMap, null,
+        nameGenerator);
   }
 
   /**
@@ -156,16 +168,21 @@ class RenameProperties implements CompilerPass {
    * @param prevUsedPropertyMap The property renaming map used in a previous
    *        compilation.
    * @param reservedCharacters If specified these characters won't be used in
-   *   generated names
+   *        generated names
+   * @param nameGenerator a shared NameGenerator that this instance can use;
+   *        the instance may reset or reconfigure it, so the caller should
+   *        not expect any state to be preserved
    */
   RenameProperties(AbstractCompiler compiler,
       boolean generatePseudoNames,
       VariableMap prevUsedPropertyMap,
-      @Nullable char[] reservedCharacters) {
+      @Nullable char[] reservedCharacters,
+      NameGenerator nameGenerator) {
     this.compiler = compiler;
     this.generatePseudoNames = generatePseudoNames;
     this.prevUsedPropertyMap = prevUsedPropertyMap;
     this.reservedCharacters = reservedCharacters;
+    this.nameGenerator = nameGenerator;
     externedNames.addAll(compiler.getExternProperties());
   }
 
@@ -268,15 +285,14 @@ class RenameProperties implements CompilerPass {
    *     renamed
    */
   private void generateNames(Set<Property> props, Set<String> reservedNames) {
-    NameGenerator nameGen = new DefaultNameGenerator(
-        reservedNames, "", reservedCharacters);
+    nameGenerator.reset(reservedNames, "", reservedCharacters);
     for (Property p : props) {
       if (generatePseudoNames) {
         p.newName = "$" + p.oldName + "$";
       } else {
         // If we haven't already given this property a reusable name.
         if (p.newName == null) {
-          p.newName = nameGen.generateNextName();
+          p.newName = nameGenerator.generateNextName();
         }
       }
       reservedNames.add(p.newName);

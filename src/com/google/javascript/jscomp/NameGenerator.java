@@ -48,11 +48,6 @@ interface NameGenerator {
       @Nullable char[] reservedCharacters);
 
   /**
-   * Restarts the name generation.
-   */
-  void restartNaming();
-
-  /**
    * Generates the next name.
    */
   String generateNextName();

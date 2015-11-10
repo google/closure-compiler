@@ -28,10 +28,11 @@ public final class ShadowVariablesTest extends CompilerTestCase{
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-      pass = new RenameVars(
-          compiler, "", false, false,
-          generatePseudoNames, true, false, null, null, null, null);
-      return  pass;
+    pass = new RenameVars(
+        compiler, "", false, false,
+        generatePseudoNames, true, false, null, null, null,
+        new DefaultNameGenerator());
+    return  pass;
   }
 
   @Override

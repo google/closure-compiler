@@ -142,27 +142,21 @@ final class RenameVars implements CompilerPass {
   // TODO(user): No longer needs to be public when shadowing doesn't use it.
   public static final String LOCAL_VAR_PREFIX = "L ";
 
-  // TODO(user): Temporary. To make checking in / merging DefaultPassConfig
-  // easier.
-  private final NameGenerator nameGeneratorGiven;
-  RenameVars(AbstractCompiler compiler, String prefix,
-      boolean localRenamingOnly, boolean preserveFunctionExpressionNames,
-      boolean generatePseudoNames, boolean shouldShadow,
-      boolean preferStableNames, VariableMap prevUsedRenameMap,
-      @Nullable char[] reservedCharacters,
-      @Nullable Set<String> reservedNames) {
-    this(compiler, prefix, localRenamingOnly, preserveFunctionExpressionNames,
-        generatePseudoNames, shouldShadow, preferStableNames, prevUsedRenameMap,
-        reservedCharacters, reservedNames, null);
+  // Shared name generator
+  private final NameGenerator nameGenerator;
 
-  }
+  /*
+   * nameGenerator is a shared NameGenerator that this instance can use;
+   * the instance may reset or reconfigure it, so the caller should
+   * not expect any state to be preserved.
+   */
   RenameVars(AbstractCompiler compiler, String prefix,
       boolean localRenamingOnly, boolean preserveFunctionExpressionNames,
       boolean generatePseudoNames, boolean shouldShadow,
       boolean preferStableNames, VariableMap prevUsedRenameMap,
       @Nullable char[] reservedCharacters,
       @Nullable Set<String> reservedNames,
-      @Nullable NameGenerator nameGenerator) {
+      NameGenerator nameGenerator) {
     this.compiler = compiler;
     this.prefix = nullToEmpty(prefix);
     this.localRenamingOnly = localRenamingOnly;
@@ -181,7 +175,7 @@ final class RenameVars implements CompilerPass {
     } else {
       this.reservedNames = new HashSet<>(reservedNames);
     }
-    this.nameGeneratorGiven = nameGenerator;
+    this.nameGenerator = nameGenerator;
   }
 
   /**
@@ -480,18 +474,19 @@ final class RenameVars implements CompilerPass {
     NameGenerator globalNameGenerator = null;
     NameGenerator localNameGenerator = null;
 
-    if (nameGeneratorGiven != null) {
-      globalNameGenerator = localNameGenerator = nameGeneratorGiven;
-      nameGeneratorGiven.restartNaming();
-    } else {
-      globalNameGenerator =
-          new DefaultNameGenerator(reservedNames, prefix, reservedCharacters);
+    globalNameGenerator = nameGenerator;
+    nameGenerator.reset(reservedNames, prefix, reservedCharacters);
 
-      // Local variables never need a prefix.
-      localNameGenerator =
-          prefix.isEmpty() ? globalNameGenerator : new DefaultNameGenerator(
-              reservedNames, "", reservedCharacters);
-    }
+    // Local variables never need a prefix.
+    // Also, we need to avoid conflicts between global and local variable
+    // names; we do this by having using the same generator (not two
+    // instances). The case where global variables have a prefix (and
+    // therefore we use two different generators) but a local variable name
+    // might nevertheless conflict with a global one is not handled.
+    localNameGenerator =
+        prefix.isEmpty()
+        ? globalNameGenerator
+        : nameGenerator.clone(reservedNames, "", reservedCharacters);
 
     // Generated names and the assignments for non-local vars.
     List<Assignment> pendingAssignments = new ArrayList<>();

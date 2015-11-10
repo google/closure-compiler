@@ -589,6 +589,9 @@ public class CompilerOptions {
   /** Whether to declare globals declared in externs as properties on window */
   boolean declaredGlobalExternsOnWindow;
 
+  /** Shared name generator */
+  NameGenerator nameGenerator;
+
   //--------------------------------
   // Special-purpose alterations
   //--------------------------------
@@ -1025,6 +1028,7 @@ public class CompilerOptions {
     anonymousFunctionNaming = AnonymousFunctionNamingPolicy.OFF;
     exportTestFunctions = false;
     declaredGlobalExternsOnWindow = true;
+    nameGenerator = new DefaultNameGenerator();
 
     // Alterations
     runtimeTypeCheck = false;

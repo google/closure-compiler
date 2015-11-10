@@ -385,6 +385,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return renameProperties =
-        new RenameProperties(compiler, generatePseudoNames, prevUsedPropertyMap);
+        new RenameProperties(compiler, generatePseudoNames,
+            prevUsedPropertyMap,
+            new DefaultNameGenerator());
   }
 }
