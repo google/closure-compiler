@@ -76,8 +76,8 @@ $jscomp.Symbol = function(description) {
  */
 $jscomp.initSymbolIterator = function() {
   $jscomp.initSymbol();
-  if (!Symbol.iterator) {
-    Symbol.iterator = Symbol('iterator');
+  if (!$jscomp.global.Symbol.iterator) {
+    $jscomp.global.Symbol.iterator = $jscomp.global.Symbol('iterator');
   }
 
   // Only need to do this once. All future calls are no-ops.
@@ -96,8 +96,8 @@ $jscomp.initSymbolIterator = function() {
 $jscomp.makeIterator = function(iterable) {
   $jscomp.initSymbolIterator();
 
-  if (iterable[Symbol.iterator]) {
-    return iterable[Symbol.iterator]();
+  if (iterable[$jscomp.global.Symbol.iterator]) {
+    return iterable[$jscomp.global.Symbol.iterator]();
   }
   if (!(iterable instanceof Array) && typeof iterable != 'string' &&
       !(iterable instanceof String)) {
