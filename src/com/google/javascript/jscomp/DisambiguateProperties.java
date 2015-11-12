@@ -143,6 +143,12 @@ class DisambiguateProperties<T> implements CompilerPass {
      */
     final Map<Node, T> rootTypes = new HashMap<>();
 
+    /**
+     * For every property p and type t, we only need to run recordInterfaces
+     * once. Use this cache to avoid needless calls.
+     */
+    private final Set<T> recordInterfacesCache = new HashSet<>();
+
     Property(String name) {
       this.name = name;
     }
@@ -160,24 +166,26 @@ class DisambiguateProperties<T> implements CompilerPass {
      * @return true if the type was recorded for this property, else false,
      *     which would happen if the type was invalidating.
      */
-    boolean addType(T type, T top, T relatedType) {
+    boolean addType(T type, T relatedType) {
       checkState(!skipRenaming, "Attempt to record skipped property: %s", name);
+      T top = typeSystem.getTypeWithProperty(this.name, type);
       if (typeSystem.isInvalidatingType(top)) {
         invalidate();
         return false;
-      } else {
-        if (typeSystem.isTypeToSkip(top)) {
-          addTypeToSkip(top);
-        }
-
-        if (relatedType == null) {
-          getTypes().add(top);
-        } else {
-          getTypes().union(top, relatedType);
-        }
-        typeSystem.recordInterfaces(type, top, this);
-        return true;
       }
+      if (typeSystem.isTypeToSkip(top)) {
+        addTypeToSkip(top);
+      }
+      if (relatedType == null) {
+        getTypes().add(top);
+      } else {
+        getTypes().union(top, relatedType);
+      }
+      if (!recordInterfacesCache.contains(type)) {
+        recordInterfacesCache.add(type);
+        typeSystem.recordInterfaces(type, top, this);
+      }
+      return true;
     }
 
     /** Records the given type as one to skip for this property. */
@@ -555,7 +563,7 @@ class DisambiguateProperties<T> implements CompilerPass {
         if (typeSystem.isInvalidatingType(topType)) {
           return null;
         }
-        prop.addType(type, topType, relatedType);
+        prop.addType(type, relatedType);
         return topType;
       }
     }
@@ -743,6 +751,8 @@ class DisambiguateProperties<T> implements CompilerPass {
   /** Implementation of TypeSystem using JSTypes. */
   private static class JSTypeSystem implements TypeSystem<JSType> {
     private final Set<JSType> invalidatingTypes;
+    // FunctionType#getImplementedInterfaces() is slow, so we use this cache
+    // in recordInterfaces to call it just once per constructor.
     private final Map<FunctionType, Iterable<ObjectType>> implementedInterfaces;
     private JSTypeRegistry registry;
 
@@ -958,9 +968,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       for (ObjectType itype : interfaces) {
         JSType top = getTypeWithProperty(p.name, itype);
         if (top != null) {
-          p.addType(itype, top, relatedType);
-        } else {
-          recordInterfaces(itype, relatedType, p);
+          p.addType(itype, relatedType);
         }
         // If this interface invalidated this property, return now.
         if (p.skipRenaming) {
