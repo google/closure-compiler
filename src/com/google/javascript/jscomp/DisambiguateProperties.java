@@ -72,7 +72,7 @@ import java.util.regex.Pattern;
  * </pre>
  *
  */
-class DisambiguateProperties<T> implements CompilerPass {
+class DisambiguateProperties implements CompilerPass {
   // To prevent the logs from filling up, we cap the number of warnings
   // that we tell the user to fix per-property.
   private static final int MAX_INVALDIATION_WARNINGS_PER_PROPERTY = 10;
@@ -95,7 +95,7 @@ class DisambiguateProperties<T> implements CompilerPass {
   }
 
   private final AbstractCompiler compiler;
-  private final TypeSystem<T> typeSystem;
+  private final TypeSystem typeSystem;
 
   /**
    * Map of a type to all the related errors that invalidated the type
@@ -119,13 +119,13 @@ class DisambiguateProperties<T> implements CompilerPass {
     final String name;
 
     /** All types on which the field exists, grouped together if related. */
-    private UnionFind<T> types;
+    private UnionFind<JSType> types;
 
     /**
      * A set of types for which renaming this field should be skipped. This
      * list is first filled by fields defined in the externs file.
      */
-    Set<T> typesToSkip = new HashSet<>();
+    Set<JSType> typesToSkip = new HashSet<>();
 
     /**
      * If true, do not rename any instance of this field, as it has been
@@ -141,20 +141,20 @@ class DisambiguateProperties<T> implements CompilerPass {
      * field for that node. In the case of a union, the type is the highest type
      * of one of the types in the union.
      */
-    final Map<Node, T> rootTypes = new HashMap<>();
+    final Map<Node, JSType> rootTypes = new HashMap<>();
 
     /**
      * For every property p and type t, we only need to run recordInterfaces
      * once. Use this cache to avoid needless calls.
      */
-    private final Set<T> recordInterfacesCache = new HashSet<>();
+    private final Set<JSType> recordInterfacesCache = new HashSet<>();
 
     Property(String name) {
       this.name = name;
     }
 
     /** Returns the types on which this field is referenced. */
-    UnionFind<T> getTypes() {
+    UnionFind<JSType> getTypes() {
       if (types == null) {
         types = new StandardUnionFind<>();
       }
@@ -166,9 +166,9 @@ class DisambiguateProperties<T> implements CompilerPass {
      * @return true if the type was recorded for this property, else false,
      *     which would happen if the type was invalidating.
      */
-    boolean addType(T type, T relatedType) {
+    boolean addType(JSType type, JSType relatedType) {
       checkState(!skipRenaming, "Attempt to record skipped property: %s", name);
-      T top = typeSystem.getTypeWithProperty(this.name, type);
+      JSType top = typeSystem.getTypeWithProperty(this.name, type);
       if (typeSystem.isInvalidatingType(top)) {
         invalidate();
         return false;
@@ -189,8 +189,8 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
 
     /** Records the given type as one to skip for this property. */
-    void addTypeToSkip(T type) {
-      for (T skipType : typeSystem.getTypesToSkipForType(type)) {
+    void addTypeToSkip(JSType type) {
+      for (JSType skipType : typeSystem.getTypesToSkipForType(type)) {
         typesToSkip.add(skipType);
         getTypes().union(skipType, type);
       }
@@ -208,23 +208,23 @@ class DisambiguateProperties<T> implements CompilerPass {
 
           // Make sure that the representative type for each type to skip is
           // marked as being skipped.
-          Set<T> rootTypesToSkip = new HashSet<>();
-          for (T subType : typesToSkip) {
+          Set<JSType> rootTypesToSkip = new HashSet<>();
+          for (JSType subType : typesToSkip) {
             rootTypesToSkip.add(types.find(subType));
           }
           typesToSkip.addAll(rootTypesToSkip);
 
-          Set<T> newTypesToSkip = new HashSet<>();
-          Set<T> allTypes = types.elements();
+          Set<JSType> newTypesToSkip = new HashSet<>();
+          Set<JSType> allTypes = types.elements();
           int originalTypesSize = allTypes.size();
-          for (T subType : allTypes) {
+          for (JSType subType : allTypes) {
             if (!typesToSkip.contains(subType)
                 && typesToSkip.contains(types.find(subType))) {
               newTypesToSkip.add(subType);
             }
           }
 
-          for (T newType : newTypesToSkip) {
+          for (JSType newType : newTypesToSkip) {
             addTypeToSkip(newType);
           }
 
@@ -247,7 +247,7 @@ class DisambiguateProperties<T> implements CompilerPass {
      * expandTypesToSkip() should be called before this, if anything has been
      * added to the typesToSkip list.
      */
-    boolean shouldRename(T type) {
+    boolean shouldRename(JSType type) {
       return !skipRenaming && !typesToSkip.contains(type);
     }
 
@@ -271,7 +271,7 @@ class DisambiguateProperties<T> implements CompilerPass {
      *     was already invalidated.  False if this property was invalidated this
      *     time.
      */
-    boolean scheduleRenaming(Node node, T type) {
+    boolean scheduleRenaming(Node node, JSType type) {
       if (!skipRenaming) {
         if (typeSystem.isInvalidatingType(type)) {
           invalidate();
@@ -286,11 +286,11 @@ class DisambiguateProperties<T> implements CompilerPass {
 
   private Map<String, Property> properties = new HashMap<>();
 
-  static DisambiguateProperties<JSType> forJSTypeSystem(
+  static DisambiguateProperties forJSTypeSystem(
       AbstractCompiler compiler,
       Map<String, CheckLevel> propertiesToErrorFor) {
-    return new DisambiguateProperties<>(
-        compiler, new JSTypeSystem(compiler), propertiesToErrorFor);
+    return new DisambiguateProperties(
+        compiler, new TypeSystem(compiler), propertiesToErrorFor);
   }
 
   /**
@@ -298,7 +298,7 @@ class DisambiguateProperties<T> implements CompilerPass {
    * above for either the JSType system, or the concrete type system.
    */
   private DisambiguateProperties(AbstractCompiler compiler,
-      TypeSystem<T> typeSystem, Map<String, CheckLevel> propertiesToErrorFor) {
+      TypeSystem typeSystem, Map<String, CheckLevel> propertiesToErrorFor) {
     this.compiler = compiler;
     this.typeSystem = typeSystem;
     this.propertiesToErrorFor = propertiesToErrorFor;
@@ -363,8 +363,10 @@ class DisambiguateProperties<T> implements CompilerPass {
         typeSystem.addInvalidatingType(objType.getImplicitPrototype());
         recordInvalidationError(objType.getImplicitPrototype(), error);
       }
-      if (objType != null && objType.isConstructor() && objType.isFunctionType()) {
-        typeSystem.addInvalidatingType(objType.toMaybeFunctionType().getInstanceType());
+      if (objType != null
+          && objType.isConstructor() && objType.isFunctionType()) {
+        typeSystem.addInvalidatingType(
+            objType.toMaybeFunctionType().getInstanceType());
       }
     }
   }
@@ -379,13 +381,13 @@ class DisambiguateProperties<T> implements CompilerPass {
   }
 
   /** Public for testing. */
-  T getTypeWithProperty(String field, T type) {
+  JSType getTypeWithProperty(String field, JSType type) {
     return typeSystem.getTypeWithProperty(field, type);
   }
 
   /** Tracks the current type system scope while traversing. */
   private abstract class AbstractScopingCallback implements ScopedCallback {
-    protected final Stack<StaticTypedScope<T>> scopes =
+    protected final Stack<StaticTypedScope<JSType>> scopes =
         new Stack<>();
 
     @Override
@@ -408,7 +410,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     }
 
     /** Returns the current scope at this point in the file. */
-    protected StaticTypedScope<T> getScope() {
+    protected StaticTypedScope<JSType> getScope() {
       return scopes.peek();
     }
   }
@@ -422,7 +424,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       // TODO(johnlenz): Support object-literal property definitions.
       if (n.isGetProp()) {
         String field = n.getLastChild().getString();
-        T type = typeSystem.getType(getScope(), n.getFirstChild(), field);
+        JSType type = typeSystem.getType(getScope(), n.getFirstChild(), field);
         Property prop = getProperty(field);
         if (typeSystem.isInvalidatingType(type)) {
           prop.invalidate();
@@ -457,10 +459,12 @@ class DisambiguateProperties<T> implements CompilerPass {
 
     private void handleGetProp(NodeTraversal t, Node n) {
       String name = n.getLastChild().getString();
-      T type = typeSystem.getType(getScope(), n.getFirstChild(), name);
+      JSType type = typeSystem.getType(getScope(), n.getFirstChild(), name);
 
       Property prop = getProperty(name);
-      if (!prop.scheduleRenaming(n.getLastChild(), processProperty(t, prop, type, null))
+      if (!prop.scheduleRenaming(
+             n.getLastChild(),
+             processProperty(t, prop, type, null))
           && propertiesToErrorFor.containsKey(name)) {
         String suggestion = "";
         if (type instanceof JSType) {
@@ -482,8 +486,9 @@ class DisambiguateProperties<T> implements CompilerPass {
             }
           }
         }
-        compiler.report(JSError.make(n, propertiesToErrorFor.get(name), Warnings.INVALIDATION, name,
-            (String.valueOf(type)), n.toString(), suggestion));
+        compiler.report(JSError.make(n, propertiesToErrorFor.get(name),
+                Warnings.INVALIDATION, name, String.valueOf(type), n.toString(),
+                suggestion));
       }
     }
 
@@ -498,7 +503,7 @@ class DisambiguateProperties<T> implements CompilerPass {
 
         // We should never see a mix of numbers and strings.
         String name = child.getString();
-        T type = typeSystem.getType(getScope(), n, name);
+        JSType type = typeSystem.getType(getScope(), n, name);
 
         Property prop = getProperty(name);
         if (!prop.scheduleRenaming(child,
@@ -507,7 +512,7 @@ class DisambiguateProperties<T> implements CompilerPass {
           // case right now.
           if (propertiesToErrorFor.containsKey(name)) {
             compiler.report(JSError.make(child, propertiesToErrorFor.get(name),
-                Warnings.INVALIDATION, name, (String.valueOf(type)), n.toString(), ""));
+                Warnings.INVALIDATION, name, String.valueOf(type), n.toString(), ""));
           }
         }
       }
@@ -541,25 +546,25 @@ class DisambiguateProperties<T> implements CompilerPass {
      *   case of a union type, it will be the highest type on the prototype
      *   chain of one of the members of the union.
      */
-    private T processProperty(
-        NodeTraversal t, Property prop, T type, T relatedType) {
+    private JSType processProperty(
+        NodeTraversal t, Property prop, JSType type, JSType relatedType) {
       type = typeSystem.restrictByNotNullOrUndefined(type);
       if (prop.skipRenaming || typeSystem.isInvalidatingType(type)) {
         return null;
       }
 
-      Iterable<T> alternatives = typeSystem.getTypeAlternatives(type);
+      Iterable<JSType> alternatives = typeSystem.getTypeAlternatives(type);
       if (alternatives != null) {
-        T firstType = relatedType;
-        for (T subType : alternatives) {
-          T lastType = processProperty(t, prop, subType, firstType);
+        JSType firstType = relatedType;
+        for (JSType subType : alternatives) {
+          JSType lastType = processProperty(t, prop, subType, firstType);
           if (lastType != null) {
             firstType = firstType == null ? lastType : firstType;
           }
         }
         return firstType;
       } else {
-        T topType = typeSystem.getTypeWithProperty(prop.name, type);
+        JSType topType = typeSystem.getTypeWithProperty(prop.name, type);
         if (typeSystem.isInvalidatingType(topType)) {
           return null;
         }
@@ -577,7 +582,7 @@ class DisambiguateProperties<T> implements CompilerPass {
     Set<String> reported = new HashSet<>();
     for (Property prop : properties.values()) {
       if (prop.shouldRename()) {
-        Map<T, String> propNames = buildPropNames(prop.getTypes(), prop.name);
+        Map<JSType, String> propNames = buildPropNames(prop.getTypes(), prop.name);
 
         ++propsRenamed;
         prop.expandTypesToSkip();
@@ -585,7 +590,7 @@ class DisambiguateProperties<T> implements CompilerPass {
         // we iterate over all accesses of a property, which can be in very
         // different places in the code.
         for (Node node : prop.renameNodes) {
-          T rootType = prop.rootTypes.get(node);
+          JSType rootType = prop.rootTypes.get(node);
           if (prop.shouldRename(rootType)) {
             String newName = propNames.get(rootType);
             node.setString(newName);
@@ -627,13 +632,13 @@ class DisambiguateProperties<T> implements CompilerPass {
    * Chooses a name to use for renaming in each equivalence class and maps
    * each type in that class to it.
    */
-  private Map<T, String> buildPropNames(UnionFind<T> types, String name) {
-    Map<T, String> names = new HashMap<>();
-    for (Set<T> set : types.allEquivalenceClasses()) {
+  private Map<JSType, String> buildPropNames(UnionFind<JSType> types, String name) {
+    Map<JSType, String> names = new HashMap<>();
+    for (Set<JSType> set : types.allEquivalenceClasses()) {
       checkState(!set.isEmpty());
 
       String typeName = null;
-      for (T type : set) {
+      for (JSType type : set) {
         if (typeName == null || type.toString().compareTo(typeName) < 0) {
           typeName = type.toString();
         }
@@ -647,7 +652,7 @@ class DisambiguateProperties<T> implements CompilerPass {
             + name;
       }
 
-      for (T type : set) {
+      for (JSType type : set) {
         names.put(type, newName);
       }
     }
@@ -655,12 +660,12 @@ class DisambiguateProperties<T> implements CompilerPass {
   }
 
   /** Returns a map from field name to types for which it will be renamed. */
-  Multimap<String, Collection<T>> getRenamedTypesForTesting() {
-    Multimap<String, Collection<T>> ret = HashMultimap.create();
+  Multimap<String, Collection<JSType>> getRenamedTypesForTesting() {
+    Multimap<String, Collection<JSType>> ret = HashMultimap.create();
     for (Map.Entry<String, Property> entry : properties.entrySet()) {
       Property prop = entry.getValue();
       if (!prop.skipRenaming) {
-        for (Collection<T> c : prop.getTypes().allEquivalenceClasses()) {
+        for (Collection<JSType> c : prop.getTypes().allEquivalenceClasses()) {
           if (!c.isEmpty() && !prop.typesToSkip.contains(c.iterator().next())) {
             ret.put(entry.getKey(), c);
           }
@@ -670,93 +675,14 @@ class DisambiguateProperties<T> implements CompilerPass {
     return ret;
   }
 
-  /** Interface for providing the type information needed by this pass. */
-  private interface TypeSystem<T> {
-    // TODO(user): add a getUniqueName(T type) method that is guaranteed
-    // to be unique, performant and human-readable.
-
-    /** Returns the top-most scope used by the type system (if any). */
-    StaticTypedScope<T> getRootScope();
-
-    /** Returns the new scope started at the given function node. */
-    StaticTypedScope<T> getFunctionScope(Node node);
-
-    /**
-     * Returns the type of the given node.
-     * @param prop Only types with this property need to be returned. In general
-     *     with type tightening, this will require no special processing, but in
-     *     the case of an unknown JSType, we might need to add in the native
-     *     types since we don't track them, but only if they have the given
-     *     property.
-     */
-    T getType(StaticTypedScope<T> scope, Node node, String prop);
-
-    /**
-     * Returns true if a field reference on this type will invalidate all
-     * references to that field as candidates for renaming. This is true if the
-     * type is unknown or all-inclusive, as variables with such a type could be
-     * references to any object.
-     */
-    boolean isInvalidatingType(T type);
-
-    /**
-     * Informs the given type system that a type is invalidating due to a type
-     * mismatch found during type checking.
-     */
-    void addInvalidatingType(JSType type);
-
-    /**
-     * Returns a set of types that should be skipped given the given type.
-     * This is necessary for interfaces when using JSTypes, as all super
-     * interfaces must also be skipped.
-     */
-    ImmutableSet<T> getTypesToSkipForType(T type);
-
-    /**
-     * Determines whether the given type is one whose properties should not be
-     * considered for renaming.
-     */
-    boolean isTypeToSkip(T type);
-
-    /** Remove null and undefined from the options in the given type. */
-    T restrictByNotNullOrUndefined(T type);
-
-    /**
-     * Returns the alternatives if this is a type that represents multiple
-     * types, and null if not. Union and interface types can correspond to
-     * multiple other types.
-     */
-    Iterable<T> getTypeAlternatives(T type);
-
-    /**
-     * Returns the type in the chain from the given type that contains the given
-     * field or null if it is not found anywhere.
-     */
-    T getTypeWithProperty(String field, T type);
-
-    /**
-     * Returns the type of the instance of which this is the prototype or null
-     * if this is not a function prototype.
-     */
-    T getInstanceFromPrototype(T type);
-
-    /**
-     * Records that this property could be referenced from any interface that
-     * this type, or any type in its superclass chain, implements.
-     */
-    void recordInterfaces(T type, T relatedType,
-                          DisambiguateProperties<T>.Property p);
-  }
-
-  /** Implementation of TypeSystem using JSTypes. */
-  private static class JSTypeSystem implements TypeSystem<JSType> {
+  private static class TypeSystem {
     private final Set<JSType> invalidatingTypes;
     // FunctionType#getImplementedInterfaces() is slow, so we use this cache
     // in recordInterfaces to call it just once per constructor.
     private final Map<FunctionType, Iterable<ObjectType>> implementedInterfaces;
     private JSTypeRegistry registry;
 
-    public JSTypeSystem(AbstractCompiler compiler) {
+    public TypeSystem(AbstractCompiler compiler) {
       registry = compiler.getTypeRegistry();
       implementedInterfaces = new HashMap<>();
       invalidatingTypes = new HashSet<>(ImmutableSet.of(
@@ -770,18 +696,20 @@ class DisambiguateProperties<T> implements CompilerPass {
           registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
     }
 
-    @Override public void addInvalidatingType(JSType type) {
+    public void addInvalidatingType(JSType type) {
       checkState(!type.isUnionType());
       invalidatingTypes.add(type);
     }
 
-    @Override public StaticTypedScope<JSType> getRootScope() { return null; }
-
-    @Override public StaticTypedScope<JSType> getFunctionScope(Node node) {
+    public StaticTypedScope<JSType> getRootScope() {
       return null;
     }
 
-    @Override public JSType getType(
+    public StaticTypedScope<JSType> getFunctionScope(Node node) {
+      return null;
+    }
+
+    public JSType getType(
         StaticTypedScope<JSType> scope, Node node, String prop) {
       if (node.getJSType() == null) {
         return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
@@ -789,7 +717,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       return node.getJSType();
     }
 
-    @Override public boolean isInvalidatingType(JSType type) {
+    public boolean isInvalidatingType(JSType type) {
       if (type == null || invalidatingTypes.contains(type) ||
           type.isUnknownType() /* unresolved types */) {
         return true;
@@ -799,7 +727,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       return objType != null && !objType.hasReferenceName();
     }
 
-    @Override public ImmutableSet<JSType> getTypesToSkipForType(JSType type) {
+    public ImmutableSet<JSType> getTypesToSkipForType(JSType type) {
       type = type.restrictByNotNullOrUndefined();
       if (type.isUnionType()) {
         ImmutableSet.Builder<JSType> types = ImmutableSet.builder();
@@ -831,15 +759,15 @@ class DisambiguateProperties<T> implements CompilerPass {
       return types;
     }
 
-    @Override public boolean isTypeToSkip(JSType type) {
+    public boolean isTypeToSkip(JSType type) {
       return type.isEnumType() || (type.autoboxesTo() != null);
     }
 
-    @Override public JSType restrictByNotNullOrUndefined(JSType type) {
+    public JSType restrictByNotNullOrUndefined(JSType type) {
       return type.restrictByNotNullOrUndefined();
     }
 
-    @Override public Iterable<JSType> getTypeAlternatives(JSType type) {
+    public Iterable<JSType> getTypeAlternatives(JSType type) {
       if (type.isUnionType()) {
         return type.toMaybeUnionType().getAlternatesWithoutStructuralTyping();
       } else {
@@ -859,7 +787,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       }
     }
 
-    @Override public ObjectType getTypeWithProperty(String field, JSType type) {
+    public ObjectType getTypeWithProperty(String field, JSType type) {
       if (type == null) {
         return null;
       }
@@ -931,7 +859,7 @@ class DisambiguateProperties<T> implements CompilerPass {
       return foundType;
     }
 
-    @Override public JSType getInstanceFromPrototype(JSType type) {
+    public JSType getInstanceFromPrototype(JSType type) {
       if (type.isFunctionPrototypeType()) {
         ObjectType prototype = (ObjectType) type;
         FunctionType owner = prototype.getOwnerFunction();
@@ -942,9 +870,8 @@ class DisambiguateProperties<T> implements CompilerPass {
       return null;
     }
 
-    @Override
-    public void recordInterfaces(JSType type, JSType relatedType,
-                                 DisambiguateProperties<JSType>.Property p) {
+    public void recordInterfaces(
+        JSType type, JSType relatedType, DisambiguateProperties.Property p) {
       ObjectType objType = ObjectType.cast(type);
       if (objType == null) {
         return;
