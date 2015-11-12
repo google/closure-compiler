@@ -449,3 +449,39 @@ md.$mdGestureProvider = function() {};
  * @return {boolean}
  */
 md.$mdGestureProvider.prototype.skipClickHijack = function() {};
+
+
+/******************************************************************************
+ * VirtualRepeatContainerController
+ *****************************************************************************/
+
+/** @constructor */
+md.VirtualRepeatContainerController = function() {};
+
+/** @return {boolean} */
+md.VirtualRepeatContainerController.prototype.isHorizontal = function() {};
+
+/** @return {number} */
+md.VirtualRepeatContainerController.prototype.getSize = function() {};
+
+/** @return {number} */
+md.VirtualRepeatContainerController.prototype.getScrollSize = function() {};
+
+/** @return {number} */
+md.VirtualRepeatContainerController.prototype.getScrollOffset = function() {};
+
+/** @param {number} position */
+md.VirtualRepeatContainerController.prototype.scrollTo = function(position) {};
+
+md.VirtualRepeatContainerController.prototype.resetScroll = function() {};
+
+
+/******************************************************************************
+ * VirtualRepeatController
+ *****************************************************************************/
+
+/** @constructor */
+md.VirtualRepeatController = function() {};
+
+/** @return {?number} */
+md.VirtualRepeatController.prototype.getItemSize = function() {};
