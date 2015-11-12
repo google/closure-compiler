@@ -15,10 +15,10 @@
  */
 package com.google.javascript.refactoring;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertChanges;
 import static com.google.javascript.refactoring.testing.SuggestedFixes.assertReplacement;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.Compiler;
@@ -30,8 +30,6 @@ import com.google.javascript.jscomp.SourceFile;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.util.Arrays;
 
 /**
  * Test case for {@link ErrorToFixMapper}.
@@ -45,7 +43,7 @@ public class ErrorToFixMapperTest {
     String after = "debugger; }";
     Compiler compiler = getCompiler(before + after);
     JSError[] errors = compiler.getErrors();
-    assertEquals(Arrays.toString(errors), 1, errors.length);
+    assertThat(errors).hasLength(1);
     SuggestedFix fix = ErrorToFixMapper.getFixForJsError(errors[0], compiler);
     CodeReplacement replacement = new CodeReplacement(before.length(), "debugger;".length(), "");
     assertReplacement(fix, replacement);
@@ -57,7 +55,7 @@ public class ErrorToFixMapperTest {
     String expectedCode = "var x = 'foo';";
     Compiler compiler = getCompiler(code);
     JSError[] errors = compiler.getErrors();
-    assertEquals(Arrays.toString(errors), 1, errors.length);
+    assertThat(errors).hasLength(1);
     SuggestedFix fix = ErrorToFixMapper.getFixForJsError(errors[0], compiler);
     assertChanges(fix, "", code, expectedCode);
   }

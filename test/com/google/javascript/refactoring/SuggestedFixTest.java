@@ -95,7 +95,7 @@ public class SuggestedFixTest {
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     SuggestedFix fix = new SuggestedFix.Builder()
-        .deleteWithoutRemovingSurroundWhitespace(root.getLastChild())
+        .deleteWithoutRemovingWhitespaceBefore(root.getLastChild())
         .build();
     CodeReplacement replacement = new CodeReplacement(before.length(), after.length(), "");
     assertReplacement(fix, replacement);

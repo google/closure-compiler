@@ -174,7 +174,7 @@ public class RefasterJsScannerTest {
     String externs = ""
         + "/** @constructor */\n"
         + "function FooType() {}\n"
-        + "FooType.prototype.bar = function() {};"
+        + "FooType.prototype.bar = function() {};\n"
         + "FooType.prototype.baz = function() {};";
     String preamble = "var obj = new FooType();\n";
     String postamble = "var someOtherCode = 3;\n";

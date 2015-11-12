@@ -29,7 +29,9 @@ public final class CodeReplacement {
   private final int length;
   private final String newContent;
 
-  CodeReplacement(int startPosition, int length, String newContent) {
+  // TODO(tbreisacher): Make this package-private by refactoring tests so they
+  // don't need to call it directly.
+  public CodeReplacement(int startPosition, int length, String newContent) {
     this.startPosition = startPosition;
     this.length = length;
     this.newContent = newContent;

@@ -19,6 +19,7 @@ package com.google.javascript.refactoring;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
@@ -135,7 +136,7 @@ public final class ApplySuggestedFixes {
     for (CodeReplacement replacement : replacements) {
       if (replacement.getStartPosition() < start) {
         throw new IllegalArgumentException(
-            "Found overlap between code replacements!\n" + replacements);
+            "Found overlap between code replacements!\n" + Joiner.on("\n\n").join(replacements));
       }
       start = Math.max(start, replacement.getStartPosition() + replacement.getLength());
     }
