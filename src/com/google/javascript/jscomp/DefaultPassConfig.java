@@ -664,12 +664,7 @@ public final class DefaultPassConfig extends PassConfig {
     // The mapped name anonymous function pass makes use of information that
     // the extract prototype member declarations pass removes so the former
     // happens before the latter.
-    //
-    // Extracting prototype properties screws up the heuristic renaming
-    // policies, so never run it when those policies are requested.
-    if (options.extractPrototypeMemberDeclarations != ExtractPrototypeMemberDeclarationsMode.OFF
-        && (options.propertyRenaming != PropertyRenamingPolicy.HEURISTIC
-            && options.propertyRenaming != PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC)) {
+    if (options.extractPrototypeMemberDeclarations != ExtractPrototypeMemberDeclarationsMode.OFF) {
       passes.add(extractPrototypeMemberDeclarations);
     }
 
@@ -678,7 +673,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(ambiguateProperties);
     }
 
-    if (options.propertyRenaming != PropertyRenamingPolicy.OFF) {
+    if (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.add(renameProperties);
     }
 
@@ -839,7 +834,7 @@ public final class DefaultPassConfig extends PassConfig {
   /** Creates several passes aimed at removing code. */
   private List<PassFactory> getCodeRemovingPasses() {
     List<PassFactory> passes = new ArrayList<>();
-    if (options.collapseObjectLiterals && !isInliningForbidden()) {
+    if (options.collapseObjectLiterals) {
       passes.add(collapseObjectLiterals);
     }
 
@@ -863,7 +858,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(removeUnusedPrototypeProperties);
     }
 
-    if (options.removeUnusedClassProperties && !isInliningForbidden()) {
+    if (options.removeUnusedClassProperties) {
       passes.add(removeUnusedClassProperties);
     }
 
@@ -1872,7 +1867,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("collapseProperties", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CollapseProperties(compiler, !isInliningForbidden());
+          return new CollapseProperties(compiler);
         }
       };
 
@@ -1978,23 +1973,15 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("inlineVariables", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          if (isInliningForbidden()) {
-            // In old renaming schemes, inlining a variable can change whether
-            // or not a property is renamed. This is bad, and those old renaming
-            // schemes need to die.
-            return new ErrorPass(compiler, CANNOT_USE_PROTOTYPE_AND_VAR);
+          InlineVariables.Mode mode;
+          if (options.inlineVariables) {
+            mode = InlineVariables.Mode.ALL;
+          } else if (options.inlineLocalVariables) {
+            mode = InlineVariables.Mode.LOCALS_ONLY;
           } else {
-            InlineVariables.Mode mode;
-            if (options.inlineVariables) {
-              mode = InlineVariables.Mode.ALL;
-            } else if (options.inlineLocalVariables) {
-              mode = InlineVariables.Mode.LOCALS_ONLY;
-            } else {
-              throw new IllegalStateException("No variable inlining option set.");
-            }
-
-            return new InlineVariables(compiler, mode, true);
+            throw new IllegalStateException("No variable inlining option set.");
           }
+          return new InlineVariables(compiler, mode, true);
         }
       };
 
@@ -2115,13 +2102,12 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("inlineFunctions", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          boolean enableBlockInlining = !isInliningForbidden();
           return new InlineFunctions(
               compiler,
               compiler.getUniqueNameIdSupplier(),
               options.inlineFunctions,
               options.inlineLocalFunctions,
-              enableBlockInlining,
+              true,
               options.assumeStrictThis()
                   || options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT,
               options.assumeClosuresOnlyCaptureReferences,
@@ -2381,44 +2367,25 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("renameProperties", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
+          Preconditions.checkState(options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
           final VariableMap prevPropertyMap = options.inputPropertyMap;
           return new CompilerPass() {
             @Override
             public void process(Node externs, Node root) {
-              propertyMap = runPropertyRenaming(compiler, prevPropertyMap, externs, root);
+              char[] reservedChars = options.anonymousFunctionNaming.getReservedCharacters();
+              RenameProperties rprop =
+                  new RenameProperties(
+                      compiler,
+                      options.generatePseudoNames,
+                      prevPropertyMap,
+                      reservedChars,
+                      options.nameGenerator);
+              rprop.process(externs, root);
+              propertyMap = rprop.getPropertyMap();
             }
           };
         }
       };
-
-  private VariableMap runPropertyRenaming(
-      AbstractCompiler compiler, VariableMap prevPropertyMap, Node externs, Node root) {
-    char[] reservedChars = options.anonymousFunctionNaming.getReservedCharacters();
-    switch (options.propertyRenaming) {
-      case HEURISTIC:
-        RenamePrototypes rproto =
-            new RenamePrototypes(compiler, false, reservedChars, prevPropertyMap);
-        rproto.process(externs, root);
-        return rproto.getPropertyMap();
-
-      case AGGRESSIVE_HEURISTIC:
-        RenamePrototypes rproto2 =
-            new RenamePrototypes(compiler, true, reservedChars, prevPropertyMap);
-        rproto2.process(externs, root);
-        return rproto2.getPropertyMap();
-
-      case ALL_UNQUOTED:
-        RenameProperties rprop =
-            new RenameProperties(
-                compiler, options.generatePseudoNames, prevPropertyMap, reservedChars,
-                options.nameGenerator);
-        rprop.process(externs, root);
-        return rprop.getPropertyMap();
-
-      default:
-        throw new IllegalStateException("Unrecognized property renaming policy");
-    }
-  }
 
   /** Renames variables. */
   private final PassFactory renameVars = new PassFactory("renameVars", true) {
@@ -2551,15 +2518,6 @@ public final class DefaultPassConfig extends PassConfig {
         return runInSerial(options.customPasses.get(executionTime));
       }
     };
-  }
-
-  /**
-   * All inlining is forbidden in heuristic renaming mode, because inlining
-   * will ruin the invariants that it depends on.
-   */
-  private boolean isInliningForbidden() {
-    return options.propertyRenaming == PropertyRenamingPolicy.HEURISTIC
-        || options.propertyRenaming == PropertyRenamingPolicy.AGGRESSIVE_HEURISTIC;
   }
 
   /** Create a compiler pass that runs the given passes in serial. */

@@ -530,7 +530,7 @@ public final class NormalizeTest extends CompilerTestCase {
 
     @Override
     public CompilerPass getProcessor(Compiler compiler) {
-      return new CollapseProperties(compiler, true);
+      return new CollapseProperties(compiler);
     }
   }
 }
