@@ -181,8 +181,7 @@ class DisambiguateProperties implements CompilerPass {
       } else {
         getTypes().union(top, relatedType);
       }
-      if (!recordInterfacesCache.contains(type)) {
-        recordInterfacesCache.add(type);
+      if (recordInterfacesCache.add(type)) {
         typeSystem.recordInterfaces(type, top, this);
       }
       return true;
