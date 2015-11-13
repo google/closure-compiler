@@ -4220,6 +4220,56 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(STRING_TYPE, info.getTypedefType());
   }
 
+  public void testParseCommentWithStarsAfterLeadingSpace() {
+    JSDocInfo jsdoc = preserveWhitespaceParse(
+        "@desc this comment has extra\n"
+            + " * * stars on new lines\n"
+            + " */");
+
+    assertThat(jsdoc.getDescription()).isEqualTo(
+        " this comment has extra\n"
+            + " * stars on new lines\n");
+  }
+
+  public void testParseCommentWithThickLeadingStarBlockPreserveWhitespace() {
+    JSDocInfo jsdoc = preserveWhitespaceParse(
+        "@desc line 2 has extra stars\n"
+            + " **** that should pad content\n"
+            + " */");
+
+    assertThat(jsdoc.getDescription()).isEqualTo(
+        " line 2 has extra stars\n"
+            + "*** that should pad content\n");
+  }
+
+  public void testParseCommentWithThickLeadingStarBlockSingeLine() {
+    JSDocInfo jsdoc = parse(
+        "@desc line 2 has extra stars\n"
+            + " **** that should pad content\n"
+            + " */");
+
+    assertThat(jsdoc.getDescription()).isEqualTo(
+        "line 2 has extra stars *** that should pad content");
+  }
+
+  public void testParseCommentWithStarsOnOpenCommentLine() {
+    Node script = parseFull(
+        "/******\n"
+            + " * This is a typedef comment with ASCII art.\n"
+            + " * @desc this is a description\n"
+            + " *****/\n"
+            + "function x() {}");
+    Preconditions.checkState(script.isScript());
+    Node fn = script.getFirstChild();
+    Preconditions.checkState(fn.isFunction());
+
+    JSDocInfo info = fn.getJSDocInfo();
+    assertThat(info.getBlockDescription()).isEqualTo(
+        "****\nThis is a typedef comment with ASCII art.");
+    assertThat(info.getDescription()).isEqualTo(
+        "this is a description ***");
+  }
+
   /**
    * Asserts that a documentation field exists on the given marker.
    *
