@@ -3092,6 +3092,15 @@ public final class NodeUtil {
   }
 
   /**
+   * @return {@code true} if the node is a definition with Object.defineProperties
+   */
+  static boolean isObjectDefinePropertiesDefinition(Node n) {
+    return n.isCall()
+        && n.getChildCount() == 3
+        && n.getFirstChild().matchesQualifiedName("Object.defineProperties");
+  }
+
+  /**
    * @return {@code true} if the node an assignment to a prototype property of
    *     some constructor.
    */
