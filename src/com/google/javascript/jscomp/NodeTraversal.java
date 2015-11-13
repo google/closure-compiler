@@ -582,7 +582,8 @@ public class NodeTraversal {
     t.traverseRoots(externs, root);
   }
 
-  static void traverseRootsTyped(AbstractCompiler compiler, Callback cb, Node externs, Node root) {
+  public static void traverseRootsTyped(
+      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverseRoots(externs, root);
   }
