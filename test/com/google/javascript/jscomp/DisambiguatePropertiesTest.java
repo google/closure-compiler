@@ -61,8 +61,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
         // This must be created after type checking is run as it depends on
         // any mismatches found during checking.
-        lastPass = DisambiguateProperties.forJSTypeSystem(
-            compiler, propertiesToErrorFor);
+        lastPass = new DisambiguateProperties(compiler, propertiesToErrorFor);
 
         lastPass.process(externs, root);
       }
@@ -1659,8 +1658,7 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
 
   public void runFindHighestTypeInChain() {
     // Check that this doesn't go into an infinite loop.
-    DisambiguateProperties.forJSTypeSystem(new Compiler(),
-         new HashMap<String, CheckLevel>())
+    new DisambiguateProperties(new Compiler(), new HashMap<String, CheckLevel>())
         .getTypeWithProperty("no",
             new JSTypeRegistry(new TestErrorReporter(null, null))
             .getNativeType(JSTypeNative.OBJECT_PROTOTYPE));

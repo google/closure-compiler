@@ -1895,8 +1895,8 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("disambiguateProperties", true) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return DisambiguateProperties.forJSTypeSystem(compiler,
-          options.propertyInvalidationErrors);
+      return new DisambiguateProperties(
+          compiler, options.propertyInvalidationErrors);
     }
   };
 
