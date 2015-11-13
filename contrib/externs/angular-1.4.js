@@ -1199,9 +1199,9 @@ angular.$compileProvider.prototype.imgSrcSanitizationWhitelist = function(
 angular.$cacheFactory;
 
 /**
- * @typedef {function(string): ?angular.$cacheFactory.Cache}
+ * @return {!angular.$cacheFactory.Cache|undefined}
  */
-angular.$cacheFactory.get;
+angular.$cacheFactory.prototype.get = function() {};
 
 /** @typedef {{capacity: (number|undefined)}} */
 angular.$cacheFactory.Options;
