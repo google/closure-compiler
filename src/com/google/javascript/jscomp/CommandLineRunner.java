@@ -190,6 +190,7 @@ public class CommandLineRunner extends
     private List<String> js = new ArrayList<>();
 
     @Option(name = "--jszip",
+        hidden = true,
         usage = "The JavaScript zip filename. You may specify multiple.")
     private List<String> jszip = new ArrayList<>();
 
@@ -360,6 +361,7 @@ public class CommandLineRunner extends
     private CompilationLevel compilationLevelParsed = null;
 
     @Option(name = "--checks-only",
+        hidden = true,
         usage = "Don't generate output. Run checks, but no compiler passes.")
     private boolean checksOnly = false;
 
@@ -577,6 +579,7 @@ public class CommandLineRunner extends
     private boolean useNewTypeInference = false;
 
     @Option(name = "--rename_prefix_namespace",
+        hidden = true,
         usage = "Specifies the name of an object that will be used to store all "
         + "non-extern globals")
     private String renamePrefixNamespace = null;
