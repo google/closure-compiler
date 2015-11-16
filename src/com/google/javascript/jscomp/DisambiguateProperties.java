@@ -74,7 +74,7 @@ import java.util.regex.Pattern;
 class DisambiguateProperties implements CompilerPass {
   // To prevent the logs from filling up, we cap the number of warnings
   // that we tell the user to fix per-property.
-  private static final int MAX_INVALDIATION_WARNINGS_PER_PROPERTY = 10;
+  private static final int MAX_INVALIDATION_WARNINGS_PER_PROPERTY = 10;
 
   private static final Logger logger = Logger.getLogger(
       DisambiguateProperties.class.getName());
@@ -99,7 +99,7 @@ class DisambiguateProperties implements CompilerPass {
 
   /**
    * Map of a type to all the related errors that invalidated the type
-   * for disambiguation. It has be Object because of the generic nature of
+   * for disambiguation. It has to be Object because of the generic nature of
    * this pass.
    */
   private Multimap<Object, JSError> invalidationMap;
@@ -118,7 +118,11 @@ class DisambiguateProperties implements CompilerPass {
     /** The name of the property. */
     final String name;
 
-    /** All types on which the field exists, grouped together if related. */
+    /**
+     * All top types on which the field exists, grouped together if related.
+     * See getTypeWithProperty. If a property exists on a parent class and a
+     * subclass, only the parent class is recorded here.
+     */
     private UnionFind<JSType> types;
 
     /**
@@ -133,15 +137,12 @@ class DisambiguateProperties implements CompilerPass {
      */
     boolean skipRenaming;
 
-    /** Set of nodes for this field that need renaming. */
-    Set<Node> renameNodes = new HashSet<>();
-
     /**
-     * Map from node to the highest type in the prototype chain containing the
-     * field for that node. In the case of a union, the type is the highest type
-     * of one of the types in the union.
+     * A map from nodes that need renaming to the highest type in the prototype
+     * chain containing the field for each node. In the case of a union, the
+     * type is the highest type of one of the types in the union.
      */
-    final Map<Node, JSType> rootTypes = new HashMap<>();
+    Map<Node, JSType> rootTypesByNode = new HashMap<>();
 
     /**
      * For every property p and type t, we only need to run recordInterfaces
@@ -257,6 +258,8 @@ class DisambiguateProperties implements CompilerPass {
       boolean changed = !skipRenaming;
       skipRenaming = true;
       types = null;
+      typesToSkip = null;
+      rootTypesByNode = null;
       return changed;
     }
 
@@ -275,8 +278,7 @@ class DisambiguateProperties implements CompilerPass {
           invalidate();
           return false;
         }
-        renameNodes.add(node);
-        rootTypes.put(node, type);
+        rootTypesByNode.put(node, type);
       }
       return true;
     }
@@ -335,7 +337,10 @@ class DisambiguateProperties implements CompilerPass {
       return;
     }
     if (invalidationMap != null) {
-      invalidationMap.put(t, error);
+      Collection<JSError> errors = this.invalidationMap.get(t);
+      if (errors.size() < MAX_INVALIDATION_WARNINGS_PER_PROPERTY) {
+        errors.add(error);
+      }
     }
   }
 
@@ -390,9 +395,8 @@ class DisambiguateProperties implements CompilerPass {
         Property prop = getProperty(field);
         if (isInvalidatingType(type)) {
           prop.invalidate();
-        } else {
+        } else if (!prop.skipRenaming) {
           prop.addTypeToSkip(type);
-
           // If this is a prototype property, then we want to skip assignments
           // to the instance type as well.  These assignments are not usually
           // seen in the extern code itself, so we must handle them here.
@@ -493,10 +497,6 @@ class DisambiguateProperties implements CompilerPass {
       }
 
       for (JSError error : invalidationMap.get(t)) {
-        if (errors.size() > MAX_INVALDIATION_WARNINGS_PER_PROPERTY) {
-          return;
-        }
-
         errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
       }
     }
@@ -544,17 +544,19 @@ class DisambiguateProperties implements CompilerPass {
     Set<String> reported = new HashSet<>();
     for (Property prop : properties.values()) {
       if (prop.shouldRename()) {
-        Map<JSType, String> propNames = buildPropNames(prop.getTypes(), prop.name);
+        UnionFind<JSType> pTypes = prop.getTypes();
+        Map<JSType, String> propNames = buildPropNames(prop);
 
         ++propsRenamed;
         prop.expandTypesToSkip();
         // This loop has poor locality, because instead of walking the AST,
         // we iterate over all accesses of a property, which can be in very
         // different places in the code.
-        for (Node node : prop.renameNodes) {
-          JSType rootType = prop.rootTypes.get(node);
+        for (Map.Entry<Node, JSType> entry : prop.rootTypesByNode.entrySet()) {
+          Node node = entry.getKey();
+          JSType rootType = entry.getValue();
           if (prop.shouldRename(rootType)) {
-            String newName = propNames.get(rootType);
+            String newName = propNames.get(pTypes.find(rootType));
             node.setString(newName);
             compiler.reportCodeChange();
             ++instancesRenamed;
@@ -592,31 +594,29 @@ class DisambiguateProperties implements CompilerPass {
 
   /**
    * Chooses a name to use for renaming in each equivalence class and maps
-   * each type in that class to it.
+   * the representative type of that class to that name.
    */
-  private Map<JSType, String> buildPropNames(UnionFind<JSType> types, String name) {
+  private Map<JSType, String> buildPropNames(Property prop) {
+    UnionFind<JSType> pTypes = prop.getTypes();
+    String pname = prop.name;
     Map<JSType, String> names = new HashMap<>();
-    for (Set<JSType> set : types.allEquivalenceClasses()) {
+    for (Set<JSType> set : pTypes.allEquivalenceClasses()) {
       checkState(!set.isEmpty());
-
+      JSType representative = pTypes.find(set.iterator().next());
       String typeName = null;
       for (JSType type : set) {
-        if (typeName == null || type.toString().compareTo(typeName) < 0) {
-          typeName = type.toString();
+        String typeString = type.toString();
+        if (typeName == null || typeString.compareTo(typeName) < 0) {
+          typeName = typeString;
         }
       }
-
       String newName;
       if ("{...}".equals(typeName)) {
-        newName = name;
+        newName = pname;
       } else {
-        newName = NONWORD_PATTERN.matcher(typeName).replaceAll("_") + '$'
-            + name;
+        newName = NONWORD_PATTERN.matcher(typeName).replaceAll("_") + '$' + pname;
       }
-
-      for (JSType type : set) {
-        names.put(type, newName);
-      }
+      names.put(representative, newName);
     }
     return names;
   }
