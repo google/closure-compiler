@@ -22,6 +22,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -69,6 +70,15 @@ import java.util.regex.Pattern;
  *   Foo.a$Foo;
  *   Bar.a$Bar;
  * </pre>
+ *
+ * NOTE(dimvar): For every property, this pass groups together the types that
+ * can't be disambiguated. If a type inherits from another type, their common
+ * properties can never be disambiguated, yet we have to compute this info once
+ * per property rather than just once in the pass. This is where the bulk of the
+ * time is spent.
+ * We have added many caches that help a lot, but it is probably worth it to
+ * revisit this pass and rewrite it in a way that does not compute the same
+ * thing over and over.
  *
  */
 class DisambiguateProperties implements CompilerPass {
@@ -182,8 +192,15 @@ class DisambiguateProperties implements CompilerPass {
       } else {
         getTypes().union(top, relatedType);
       }
-      if (recordInterfacesCache.add(type)) {
-        recordInterfaces(type, top, this);
+      FunctionType constructor = getConstructor(type);
+      if (constructor != null
+          // Running recordInterfaces on a constructor that doesn't directly
+          // implement an interface is redundant.
+          // If it has an ancestor that implements an interface, we will run
+          // recordInterfaces when we look at the ancestor.
+          && !Iterables.isEmpty(constructor.getOwnImplementedInterfaces())
+          && recordInterfacesCache.add(type)) {
+        recordInterfaces(constructor, top, this);
       }
     }
 
@@ -366,8 +383,7 @@ class DisambiguateProperties implements CompilerPass {
       }
       if (objType != null
           && objType.isConstructor() && objType.isFunctionType()) {
-        addInvalidatingType(
-            objType.toMaybeFunctionType().getInstanceType());
+        addInvalidatingType(objType.toMaybeFunctionType().getInstanceType());
       }
     }
   }
@@ -391,7 +407,7 @@ class DisambiguateProperties implements CompilerPass {
       // TODO(johnlenz): Support object-literal property definitions.
       if (n.isGetProp()) {
         String field = n.getLastChild().getString();
-        JSType type = getType(n.getFirstChild(), field);
+        JSType type = getType(n.getFirstChild());
         Property prop = getProperty(field);
         if (isInvalidatingType(type)) {
           prop.invalidate();
@@ -425,7 +441,7 @@ class DisambiguateProperties implements CompilerPass {
 
     private void handleGetProp(NodeTraversal t, Node n) {
       String name = n.getLastChild().getString();
-      JSType type = getType(n.getFirstChild(), name);
+      JSType type = getType(n.getFirstChild());
 
       Property prop = getProperty(name);
       if (!prop.scheduleRenaming(
@@ -469,7 +485,7 @@ class DisambiguateProperties implements CompilerPass {
 
         // We should never see a mix of numbers and strings.
         String name = child.getString();
-        JSType type = getType(n, name);
+        JSType type = getType(n);
 
         Property prop = getProperty(name);
         if (!prop.scheduleRenaming(child,
@@ -642,7 +658,7 @@ class DisambiguateProperties implements CompilerPass {
     invalidatingTypes.add(type);
   }
 
-  private JSType getType(Node node, String prop) {
+  private JSType getType(Node node) {
     if (node.getJSType() == null) {
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
@@ -829,13 +845,16 @@ class DisambiguateProperties implements CompilerPass {
   /**
    * Records that this property could be referenced from any interface that
    * this type, or any type in its superclass chain, implements.
+   *
+   * If the property p is defined only on a subtype of constructor, then this
+   * method has no effect. But we tried modifying getTypeWithProperty to tell us
+   * when the returned type is a subtype, and then skip those calls to
+   * recordInterface, and there was no speed-up.
+   * And it made the code harder to understand, so we don't do it.
    */
-  private void recordInterfaces(JSType type, JSType relatedType,
+  private void recordInterfaces(FunctionType constructor, JSType relatedType,
       DisambiguateProperties.Property p) {
-    FunctionType constructor = getConstructor(type);
-    if (constructor == null) {
-      return;
-    }
+    Preconditions.checkArgument(constructor.isConstructor());
     Iterable<ObjectType> interfaces = implementedInterfaces.get(constructor);
     if (interfaces == null) {
       interfaces = constructor.getImplementedInterfaces();
@@ -847,7 +866,6 @@ class DisambiguateProperties implements CompilerPass {
         p.addType(itype, relatedType);
       }
       // If this interface invalidated this property, return now.
-      // asdfasdf sadf asdf asdf
       if (p.skipRenaming) {
         return;
       }
@@ -867,6 +885,7 @@ class DisambiguateProperties implements CompilerPass {
     } else {
       constructor = objType.getConstructor();
     }
-    return constructor;
+    return constructor != null && constructor.isConstructor()
+        ? constructor : null;
   }
 }
