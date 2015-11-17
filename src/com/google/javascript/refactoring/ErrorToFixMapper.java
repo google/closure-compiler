@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
 
 /**
  * Maps a JSError to a SuggestedFix.
+ * TODO(tbreisacher): Move this into the compiler itself (i.e. into the jscomp package). This will
+ *     make it easier for people adding new warnings to also add fixes for them.
  */
 public final class ErrorToFixMapper {
   private ErrorToFixMapper() {} // All static
@@ -49,6 +51,10 @@ public final class ErrorToFixMapper {
     }
   }
 
+  /**
+   * Creates a SuggestedFix for the given error. Note that some errors have multiple fixes
+   * so getFixesForJsError should often be used instead of this.
+   */
   public static SuggestedFix getFixForJsError(JSError error, AbstractCompiler compiler) {
     switch (error.getType().key) {
       case "JSC_DEBUGGER_STATEMENT_PRESENT":
