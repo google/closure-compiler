@@ -110,7 +110,7 @@ class CheckUnusedPrivateProperties
            used.add(propName);
          } else {
            // Only consider "private" properties.
-           if (isPrivatePropDecl(n)) {
+           if (isCheckablePrivatePropDecl(n)) {
              candidates.add(n);
            }
          }
@@ -119,7 +119,7 @@ class CheckUnusedPrivateProperties
 
        case Token.MEMBER_FUNCTION_DEF: {
          // Only consider "private" methods.
-         if (isPrivatePropDecl(n)) {
+         if (isCheckablePrivatePropDecl(n)) {
            candidates.add(n);
          }
          break;
@@ -156,6 +156,13 @@ class CheckUnusedPrivateProperties
     // library.
     JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
     return (info != null && info.getVisibility() == Visibility.PRIVATE);
+  }
+
+  private boolean isCheckablePrivatePropDecl(Node n) {
+    // TODO(tbreisacher): Look for uses of the typedef/interface in type expressions; warn if there
+    // are no uses.
+    JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+    return isPrivatePropDecl(n) && !info.hasTypedefType() && !info.isInterface();
   }
 
   private boolean isCandidatePropertyDefinition(Node n) {

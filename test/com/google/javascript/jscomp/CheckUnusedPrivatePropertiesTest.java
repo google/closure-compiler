@@ -225,6 +225,22 @@ public final class CheckUnusedPrivatePropertiesTest extends CompilerTestCase {
         "new A().method()"));
   }
 
+  public void testTypedef() {
+    used(LINE_JOINER.join(
+        "/** @constructor */ function A() {}",
+        "/** @private @typedef {string} */ A.typedef_;"));
+  }
+
+  public void testInterface() {
+    used(LINE_JOINER.join(
+        "/** @constructor */ function A() {}",
+        "/**",
+        " * @interface",
+        " * @private",
+        " */",
+        "A.Interface = function() {};"));
+  }
+
   public void testConstructorProperty1() {
     unused("/** @constructor */ function C() {} /** @private */ C.prop = 1;");
   }
