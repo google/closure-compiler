@@ -1294,7 +1294,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       Node srcObj = n.getLastChild();
       if (srcObj.isObjectLit() && !srcObj.hasChildren()) {
         Node parent = n.getParent();
-        Node destObj = n.getChildAtIndex(1);
+        Node destObj = n.getChildAtIndex(1).detachFromParent();
         parent.replaceChild(n, destObj);
         reportCodeChange();
       }
