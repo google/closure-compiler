@@ -111,13 +111,13 @@ md.$dialog.AlertConfig_.prototype.title = function(title) {};
 /**
  * @deprecated `$mdDialog.alert().content` is deprecated!
  *     Use textContent or htmlContent instead.
- * @param {string} textContent
+ * @param {?string} textContent
  * @return {!md.$dialog.AlertConfig_}
  */
 md.$dialog.AlertConfig_.prototype.content = function(textContent) {};
 
 /**
- * @param {string} textContent
+ * @param {?string} textContent
  * @return {!md.$dialog.AlertConfig_}
  */
 md.$dialog.AlertConfig_.prototype.textContent = function(textContent) {};
@@ -171,13 +171,13 @@ md.$dialog.ConfirmConfig_.prototype.title = function(title) {};
 /**
  * @deprecated `$mdDialog.confirm().content` is deprecated!
  *     Use textContent or htmlContent instead.
- * @param {string} textContent
+ * @param {?string} textContent
  * @return {!md.$dialog.ConfirmConfig_}
  */
 md.$dialog.ConfirmConfig_.prototype.content = function(textContent) {};
 
 /**
- * @param {string} textContent
+ * @param {?string} textContent
  * @return {!md.$dialog.ConfirmConfig_}
  */
 md.$dialog.ConfirmConfig_.prototype.textContent = function(textContent) {};
