@@ -99,34 +99,138 @@ md.$dialog = function() {};
 md.$dialog.options;
 
 
-/**
- * @typedef {{
- *   title: (function(string): !md.$dialog.AlertConfig_),
- *   content: (function(string): !md.$dialog.AlertConfig_),
- *   ariaLabel: (function(string): !md.$dialog.AlertConfig_),
- *   ok: (function(string): !md.$dialog.AlertConfig_),
- *   theme: (function(string): !md.$dialog.AlertConfig_)
- * }}
- */
+/** @constructor */
 md.$dialog.AlertConfig_;
 
+/**
+ * @param {string} title
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.title = function(title) {};
 
 /**
- * @typedef {{
- *   title: (function(string): !md.$dialog.ConfirmConfig_),
- *   content: (function(string): !md.$dialog.ConfirmConfig_),
- *   ariaLabel: (function(string): !md.$dialog.ConfirmConfig_),
- *   ok: (function(string): !md.$dialog.ConfirmConfig_),
- *   cancel: (function(string): !md.$dialog.ConfirmConfig_),
- *   theme: (function(string): !md.$dialog.ConfirmConfig_)
- * }}
+ * @deprecated `$mdDialog.alert().content` is deprecated!
+ *     Use textContent or htmlContent instead.
+ * @param {string} textContent
+ * @return {!md.$dialog.AlertConfig_}
  */
+md.$dialog.AlertConfig_.prototype.content = function(textContent) {};
+
+/**
+ * @param {string} textContent
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.textContent = function(textContent) {};
+
+/**
+ * @param {string} htmlContent
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.htmlContent = function(htmlContent) {};
+
+/**
+ * @param {string} ariaLabel
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.ariaLabel = function(ariaLabel) {};
+
+/**
+ * @param {string} ok
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.ok = function(ok) {};
+
+/**
+ * @param {string} theme
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.theme = function(theme) {};
+
+/**
+ * @param {boolean} close
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.clickOutsideToClose = function(close) {};
+
+/**
+ * @param {Object|undefined} event
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.targetEvent = function(event) {};
+
+
+/** @constructor */
 md.$dialog.ConfirmConfig_;
 
+/**
+ * @param {string} title
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.title = function(title) {};
 
 /**
- * @param {!md.$dialog.options|!md.$dialog.ConfirmConfig_|
- *     !md.$dialog.AlertConfig_} options
+ * @deprecated `$mdDialog.confirm().content` is deprecated!
+ *     Use textContent or htmlContent instead.
+ * @param {string} textContent
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.content = function(textContent) {};
+
+/**
+ * @param {string} textContent
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.textContent = function(textContent) {};
+
+/**
+ * @param {string} htmlContent
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.htmlContent = function(htmlContent) {};
+
+/**
+ * @param {string} ariaLabel
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.ariaLabel = function(ariaLabel) {};
+
+/**
+ * @param {string} ok
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.ok = function(ok) {};
+
+/**
+ * @param {string} cancel
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.cancel = function(cancel) {};
+
+/**
+ * @param {string} theme
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.theme = function(theme) {};
+
+/**
+ * @param {boolean} close
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.clickOutsideToClose = function(close) {};
+
+/**
+ * @param {Object|undefined} event
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.targetEvent = function(event) {};
+
+
+/** @typedef {!md.$dialog.options|!md.$dialog.ConfirmConfig_|
+ *     !md.$dialog.AlertConfig_} */
+md.$dialog.Config;
+
+/**
+ * @param {!md.$dialog.Config} options
  * @return {!angular.$q.Promise}
  */
 md.$dialog.prototype.show = function(options) {};
