@@ -77,6 +77,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
   @Override
   Node optimizeSubtree(Node subtree) {
     switch(subtree.getType()) {
+      case Token.CALL:
+        return tryFoldCall(subtree);
       case Token.NEW:
         return tryFoldCtorCall(subtree);
 
@@ -1281,10 +1283,29 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     return n;
   }
 
+  /**
+   * Remove useless calls:
+   *   Object.defineProperties(o, {})  ->  o
+   */
+  private Node tryFoldCall(Node n) {
+    Preconditions.checkArgument(n.isCall());
+
+    if (NodeUtil.isObjectDefinePropertiesDefinition(n)) {
+      Node srcObj = n.getLastChild();
+      if (srcObj.isObjectLit() && !srcObj.hasChildren()) {
+        Node parent = n.getParent();
+        Node destObj = n.getChildAtIndex(1);
+        parent.replaceChild(n, destObj);
+        reportCodeChange();
+      }
+    }
+    return n;
+  }
+
   /** Returns whether this node must be coerced to a string. */
   private static boolean inForcedStringContext(Node n) {
-    if (n.getParent().isGetElem() &&
-        n.getParent().getLastChild() == n) {
+    if (n.getParent().isGetElem()
+        && n.getParent().getLastChild() == n) {
       return true;
     }
 

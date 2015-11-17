@@ -1142,6 +1142,12 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     testSame("[][1] = 1;");
   }
 
+  public void foldDefineProperties1() {
+    test("Object.defineProperties({}, {})", "{}");
+    test("Object.defineProperties(a, {})", "a");
+    testSame("Object.defineProperties(a, {anything:1})");
+  }
+
   private static final List<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",
