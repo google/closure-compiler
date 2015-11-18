@@ -851,42 +851,10 @@ function revokeObjectURL(url) {};
 Window.prototype.revokeObjectURL = function(url) {};
 
 /**
- * @see http://www.w3.org/TR/FileAPI/#URL-object
- * @constructor
- */
-function DOMURL() {}
-
-/**
- * @see http://www.w3.org/TR/FileAPI/#
- * @constructor
- * @param {string} urlString
- * @param {string=} opt_base
- * @extends {DOMURL}
- */
-function URL(urlString, opt_base) {}
-
-/** @type {string} */
-URL.prototype.protocol;
-
-/**
- * @see http://www.w3.org/TR/FileAPI/#dfn-createObjectURL
- * @param {!File|!Blob|!MediaSource|!MediaStream} obj
- * @return {string}
- */
-URL.createObjectURL = function(obj) {};
-
-/**
- * @see http://www.w3.org/TR/FileAPI/#dfn-revokeObjectURL
- * @param {string} url
- */
-URL.revokeObjectURL = function(url) {};
-
-/**
  * This has been replaced by URL in Chrome since WebKit revision 75739.
  * @constructor
  * @param {string} urlString
  * @param {string=} opt_base
- * @extends {DOMURL}
  */
 function webkitURL(urlString, opt_base) {}
 
