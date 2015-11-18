@@ -41,10 +41,6 @@ import java.util.Set;
  */
 public class CompilerOptions {
 
-  // Unused. For people using reflection to circumvent access control.
-  @SuppressWarnings("unused")
-  private boolean manageClosureDependencies = false;
-
   /**
    * A common enum for compiler passes that can run either globally or locally.
    */
@@ -1540,7 +1536,6 @@ public class CompilerOptions {
     dependencyOptions.setDependencyPruning(
         newVal || dependencyOptions.shouldPruneDependencies());
     dependencyOptions.setMoocherDropping(false);
-    manageClosureDependencies = newVal;
   }
 
   /**
