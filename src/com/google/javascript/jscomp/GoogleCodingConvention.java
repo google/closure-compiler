@@ -176,6 +176,6 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
    */
   @Override
   public boolean isPrivate(String name) {
-    return name.endsWith("_") && !isExported(name);
+    return name.endsWith("_") && !name.endsWith("__") && !isExported(name);
   }
 }
