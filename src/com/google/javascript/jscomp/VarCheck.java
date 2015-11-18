@@ -188,7 +188,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     Scope scope = t.getScope();
     Var var = scope.getVar(varName);
     if (var == null) {
-      if (NodeUtil.isFunctionExpression(parent)) {
+      if (NodeUtil.isFunctionExpression(parent) || NodeUtil.isClassExpression(parent)) {
         // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
         // current scope.
       } else {

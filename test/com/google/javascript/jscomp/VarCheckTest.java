@@ -167,6 +167,12 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     testErrorEs6("class x{ } let x;", VarCheck.LET_CONST_MULTIPLY_DECLARED_ERROR);
   }
 
+  public void testNamedClass() {
+    testSameEs6("class x {}");
+    testSameEs6("var x = class x {};");
+    testSameEs6("var y = class x {};");
+  }
+
   public void testVarReferenceInExterns() {
     testSame("asdf;", "var asdf;", VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
