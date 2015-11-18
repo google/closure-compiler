@@ -91,6 +91,16 @@ Iterator.prototype.next;
 
 
 /**
+ * Use this to indicate a type is both an Iterator and an Iterable.
+ * @interface
+ * @extends {Iterator<T>}
+ * @extends {Iterable<T>}
+ * @template T
+ */
+function IteratorIterable() {}
+
+
+/**
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator
  * @implements {Iterator<VALUE>}

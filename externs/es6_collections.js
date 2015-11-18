@@ -41,7 +41,7 @@ Map.prototype.clear;
 Map.prototype.delete;
 
 /**
- * @return {!Iterator<!Array<KEY|VALUE>>}
+ * @return {!IteratorIterable<!Array<KEY|VALUE>>}
  * @nosideeffects
  */
 Map.prototype.entries;
@@ -69,7 +69,7 @@ Map.prototype.get;
 Map.prototype.has;
 
 /**
- * @return {!Iterator<KEY>}
+ * @return {!IteratorIterable<KEY>}
  */
 Map.prototype.keys;
 
@@ -89,7 +89,7 @@ Map.prototype.set;
 Map.prototype.size;
 
 /**
- * @return {!Iterator<VALUE>}
+ * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
  */
 Map.prototype.values;
@@ -171,7 +171,7 @@ Set.prototype.clear;
 Set.prototype.delete;
 
 /**
- * @return {!Iterator<!Array<VALUE>>} Where each array has two entries:
+ * @return {!IteratorIterable<!Array<VALUE>>} Where each array has two entries:
  *     [value, value]
  * @nosideeffects
  */
@@ -198,13 +198,13 @@ Set.prototype.has;
 Set.prototype.size;
 
 /**
- * @return {!Iterator<VALUE>}
+ * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
  */
 Set.prototype.keys;
 
 /**
- * @return {!Iterator<VALUE>}
+ * @return {!IteratorIterable<VALUE>}
  * @nosideeffects
  */
 Set.prototype.values;
