@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,6 +107,9 @@ class DisambiguateProperties implements CompilerPass {
   private final AbstractCompiler compiler;
   private final Set<JSType> invalidatingTypes;
   private final JSTypeRegistry registry;
+  // Used as a substitute for null in gtwpCache. The method gtwpCacheGet returns
+  // null to indicate that an element wasn't present.
+  private final ObjectType BOTTOM_OBJECT;
 
   /**
    * Map of a type to all the related errors that invalidated the type
@@ -123,6 +127,27 @@ class DisambiguateProperties implements CompilerPass {
    * properties is invalidated it causes an error.
    */
   private final Map<String, CheckLevel> propertiesToErrorFor;
+
+  // FunctionType#getImplementedInterfaces() is slow, so we use this cache
+  // to call it just once per constructor.
+  private Map<FunctionType, Iterable<ObjectType>> implementedInterfaces;
+
+  // Cache calls to getTypeWithProperty.
+  private Map<String, IdentityHashMap<JSType, ObjectType>> gtwpCache;
+
+  private ObjectType gtwpCacheGet(String field, JSType type) {
+    IdentityHashMap<JSType, ObjectType> m = gtwpCache.get(field);
+    return m == null ? null : m.get(type);
+  }
+
+  private void gtwpCachePut(String field, JSType type, ObjectType top) {
+    IdentityHashMap<JSType, ObjectType> m = gtwpCache.get(field);
+    if (m == null) {
+      m = new IdentityHashMap<>();
+      gtwpCache.put(field, m);
+    }
+    Preconditions.checkState(null == m.put(type, top));
+  }
 
   private class Property {
     /** The name of the property. */
@@ -307,6 +332,8 @@ class DisambiguateProperties implements CompilerPass {
       AbstractCompiler compiler, Map<String, CheckLevel> propertiesToErrorFor) {
     this.compiler = compiler;
     this.registry = compiler.getTypeRegistry();
+    this.BOTTOM_OBJECT =
+        this.registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE).toObjectType();
     this.invalidatingTypes = new HashSet<>(ImmutableSet.of(
         registry.getNativeType(JSTypeNative.ALL_TYPE),
         registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
@@ -328,6 +355,8 @@ class DisambiguateProperties implements CompilerPass {
   public void process(Node externs, Node root) {
     Preconditions.checkState(
         compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+    this.implementedInterfaces = new HashMap<>();
+    this.gtwpCache = new HashMap<>();
     // TypeValidator records places where a type A is used in a context that
     // expects a type B.
     // For each pair (A, B), here we mark both A and B as types whose properties
@@ -759,28 +788,38 @@ class DisambiguateProperties implements CompilerPass {
       return null;
     }
 
+    ObjectType foundType = gtwpCacheGet(field, type);
+    if (foundType != null) {
+      return foundType.equals(BOTTOM_OBJECT) ? null : foundType;
+    }
+
     if (type.isEnumElementType()) {
-      return getTypeWithProperty(
+      foundType = getTypeWithProperty(
           field, type.toMaybeEnumElementType().getPrimitiveType());
+      gtwpCachePut(field, type, foundType == null ? BOTTOM_OBJECT : foundType);
+      return foundType;
     }
 
     if (!(type instanceof ObjectType)) {
       if (type.autoboxesTo() != null) {
-        type = type.autoboxesTo();
+        foundType = getTypeWithProperty(field, type.autoboxesTo());
+        gtwpCachePut(field, type, foundType == null ? BOTTOM_OBJECT : foundType);
+        return foundType;
       } else {
+        gtwpCachePut(field, type, BOTTOM_OBJECT);
         return null;
       }
     }
 
     // Ignore the prototype itself at all times.
     if ("prototype".equals(field)) {
+      gtwpCachePut(field, type, BOTTOM_OBJECT);
       return null;
     }
 
     // We look up the prototype chain to find the highest place (if any) that
     // this appears.  This will make references to overridden properties look
     // like references to the initial property, so they are renamed alike.
-    ObjectType foundType = null;
     ObjectType objType = ObjectType.cast(type);
     if (objType != null && objType.getConstructor() != null
         && objType.getConstructor().isInterface()) {
@@ -823,6 +862,7 @@ class DisambiguateProperties implements CompilerPass {
       foundType = foundType.toMaybeNamedType().getReferencedType().toMaybeObjectType();
     }
 
+    gtwpCachePut(field, type, foundType == null ? BOTTOM_OBJECT : foundType);
     return foundType;
   }
 
@@ -836,11 +876,6 @@ class DisambiguateProperties implements CompilerPass {
     }
     return null;
   }
-
-  // FunctionType#getImplementedInterfaces() is slow, so we use this cache
-  // to call it just once per constructor.
-  private final Map<FunctionType, Iterable<ObjectType>> implementedInterfaces =
-      new HashMap<>();
 
   /**
    * Records that this property could be referenced from any interface that
