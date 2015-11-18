@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.HotSwapCompilerPass;
 import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -29,7 +30,6 @@ import java.util.List;
 
 /**
  * Checks that goog.require() and goog.provide() calls are sorted alphabetically.
- * TODO(tbreisacher): Add automatic fixes for these.
  */
 public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallback
     implements HotSwapCompilerPass {
@@ -59,6 +59,8 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   private List<String> requiredNamespaces;
   private List<String> providedNamespaces;
   private List<String> moduleNamespaces;
+  private boolean containsShorthandRequire = false;
+
   private final AbstractCompiler compiler;
 
   public CheckRequiresAndProvidesSorted(AbstractCompiler compiler) {
@@ -82,11 +84,15 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
       case Token.SCRIPT:
-        if (!Ordering.natural().isOrdered(requiredNamespaces)) {
-          t.report(n, REQUIRES_NOT_SORTED);
-        }
-        if (!Ordering.natural().isOrdered(providedNamespaces)) {
-          t.report(n, PROVIDES_NOT_SORTED);
+        // For now, don't report any sorting-related warnings if there are
+        // "var x = goog.require('goog.x');" style requires.
+        if (!containsShorthandRequire) {
+          if (!Ordering.natural().isOrdered(requiredNamespaces)) {
+            t.report(n, REQUIRES_NOT_SORTED);
+          }
+          if (!Ordering.natural().isOrdered(providedNamespaces)) {
+            t.report(n, PROVIDES_NOT_SORTED);
+          }
         }
         if (!moduleNamespaces.isEmpty() && !providedNamespaces.isEmpty()) {
           t.report(n, MODULE_AND_PROVIDES);
@@ -98,24 +104,36 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
         requiredNamespaces.clear();
         providedNamespaces.clear();
         moduleNamespaces.clear();
+        containsShorthandRequire = false;
         break;
       case Token.CALL:
+        Node callee = n.getFirstChild();
+        if (!callee.matchesQualifiedName("goog.require")
+            && !callee.matchesQualifiedName("goog.provide")
+            && !callee.matchesQualifiedName("goog.module")) {
+          return;
+        }
+
         if (parent.isExprResult() && parent.getParent().isScript()) {
-          String req = compiler.getCodingConvention().extractClassNameIfRequire(n, parent);
-          if (req != null) {
-            requiredNamespaces.add(req);
+          String namespace = n.getLastChild().getString();
+          if (namespace == null) {
+            return;
           }
-          String prov = compiler.getCodingConvention().extractClassNameIfProvide(n, parent);
-          if (prov != null) {
+          if (callee.matchesQualifiedName("goog.require")) {
+            requiredNamespaces.add(namespace);
+          } else {
             if (!requiredNamespaces.isEmpty()) {
               t.report(n, PROVIDES_AFTER_REQUIRES);
             }
-            if (n.getFirstChild().matchesQualifiedName("goog.module")) {
-              moduleNamespaces.add(prov);
+            if (callee.matchesQualifiedName("goog.module")) {
+              moduleNamespaces.add(namespace);
             } else {
-              providedNamespaces.add(prov);
+              providedNamespaces.add(namespace);
             }
           }
+        } else if (NodeUtil.isNameDeclaration(parent.getParent())
+            && callee.matchesQualifiedName("goog.require")) {
+          containsShorthandRequire = true;
         }
         break;
     }

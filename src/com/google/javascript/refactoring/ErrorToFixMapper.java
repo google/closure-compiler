@@ -19,7 +19,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeUtil;
+import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.Node;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,6 +64,10 @@ public final class ErrorToFixMapper {
    */
   public static SuggestedFix getFixForJsError(JSError error, AbstractCompiler compiler) {
     switch (error.getType().key) {
+      case "JSC_REQUIRES_NOT_SORTED":
+        return getFixForUnsortedRequiresOrProvides("goog.require", error, compiler);
+      case "JSC_PROVIDES_NOT_SORTED":
+        return getFixForUnsortedRequiresOrProvides("goog.provide", error, compiler);
       case "JSC_DEBUGGER_STATEMENT_PRESENT":
         return getFixForDebuggerStatement(error);
       case "JSC_INEXISTENT_PROPERTY":
@@ -134,5 +145,65 @@ public final class ErrorToFixMapper {
     return new SuggestedFix.Builder()
         .setOriginalMatchedNode(error.node)
         .removeCast(error.node, compiler).build();
+  }
+
+  private static SuggestedFix getFixForUnsortedRequiresOrProvides(
+      String closureFunction, JSError error, AbstractCompiler compiler) {
+    SuggestedFix.Builder fix = new SuggestedFix.Builder();
+    fix.setOriginalMatchedNode(error.node);
+    Node script = NodeUtil.getEnclosingScript(error.node);
+    RequireProvideSorter cb = new RequireProvideSorter(closureFunction);
+    NodeTraversal.traverseEs6(compiler, script, cb);
+    Node first = cb.calls.get(0);
+    Node last = cb.calls.get(cb.calls.size() - 1);
+
+    cb.sortCallsAlphabetically();
+    StringBuilder sb = new StringBuilder();
+    for (Node n : cb.calls) {
+      String statement = fix.generateCode(compiler, n);
+      JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(n);
+      if (jsDoc != null) {
+        statement = jsDoc.getOriginalCommentString() + "\n" + statement;
+      }
+      sb.append(statement);
+    }
+    // Trim to remove the newline after the last goog.require/provide.
+    String newContent = sb.toString().trim();
+    return fix.replaceRange(first, last, newContent).build();
+  }
+
+  private static String getNamespaceFromClosureNode(Node exprResult) {
+    Preconditions.checkState(exprResult.isExprResult());
+    return exprResult.getFirstChild().getLastChild().getString();
+  }
+
+  private static class RequireProvideSorter extends NodeTraversal.AbstractShallowCallback
+      implements Comparator<Node> {
+    private final String closureFunction;
+    private final List<Node> calls = new ArrayList<>();
+
+    RequireProvideSorter(String closureFunction) {
+      this.closureFunction = closureFunction;
+    }
+
+    @Override
+    public final void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
+      if (n.isCall()
+          && parent.isExprResult()
+          && n.getFirstChild().matchesQualifiedName(closureFunction)) {
+        calls.add(parent);
+      }
+    }
+
+    public void sortCallsAlphabetically() {
+      Collections.sort(calls, this);
+    }
+
+    @Override
+    public int compare(Node n1, Node n2) {
+      String namespace1 = getNamespaceFromClosureNode(n1);
+      String namespace2 = getNamespaceFromClosureNode(n2);
+      return namespace1.compareTo(namespace2);
+    }
   }
 }

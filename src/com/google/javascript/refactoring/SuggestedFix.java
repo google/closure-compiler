@@ -276,6 +276,26 @@ public final class SuggestedFix {
     }
 
     /**
+     * Replaces a range of nodes with the given content.
+     */
+    public Builder replaceRange(Node first, Node last, String newContent) {
+      Preconditions.checkState(first.getParent() == last.getParent());
+
+      int start;
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(first);
+      if (jsdoc == null) {
+        start = first.getSourceOffset();
+      } else {
+        start = jsdoc.getOriginalCommentPosition();
+      }
+
+      int end = last.getSourceOffset() + last.getLength();
+      int length = end - start;
+      replacements.put(first.getSourceFileName(), new CodeReplacement(start, length, newContent));
+      return this;
+    }
+
+    /**
      * Replaces the provided node with new node in the source file.
      */
     public Builder replace(Node original, Node newNode, AbstractCompiler compiler) {
