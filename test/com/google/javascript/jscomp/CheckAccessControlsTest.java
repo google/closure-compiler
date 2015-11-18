@@ -68,36 +68,32 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
     return options;
   }
 
-  /**
-   * Tests that the given JavaScript code has a @deprecated marker
-   * somewhere in it which raises an error. Also tests that the
-   * deprecated marker works with a message. The JavaScript should
-   * have a JsDoc of the form "@deprecated %s\n".
-   *
-   * @param js The JavaScript code to parse and test.
-   * @param reason A simple deprecation reason string, used for testing
-   *    the addition of a deprecation reason to the @deprecated tag.
-   * @param error The deprecation error expected when no reason is given.
-   * @param errorWithMessage The deprecation error expected when a reason
-   *    message is given.
-   */
-  private void testDep(
-      String js, String reason, DiagnosticType error, DiagnosticType errorWithMessage) {
-    // Test without a reason.
-    testError(String.format(js, ""), error);
+  private void testDepName(String js, String errorMessage) {
+    test(js, null, DEPRECATED_NAME_REASON, null, errorMessage);
+  }
 
-    // Test with a reason.
-    test(String.format(js, reason), null, errorWithMessage, null, reason);
+  private void testDepProp(String js, String errorMessage) {
+    test(js, null, DEPRECATED_PROP_REASON, null, errorMessage);
+  }
+
+  private void testDepClass(String js, String errorMessage) {
+    test(js, null, DEPRECATED_CLASS_REASON, null, errorMessage);
+  }
+
+  public void testDeprecatedFunctionNoReason() {
+    testError("/** @deprecated */ function f() {} function g() { f(); }", DEPRECATED_NAME);
   }
 
   public void testDeprecatedFunction() {
-    testDep("/** @deprecated %s */ function f() {} function g() { f(); }", "Some Reason",
-        DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDepName(
+        "/** @deprecated Some Reason */ function f() {} function g() { f(); }",
+        "Variable f has been deprecated: Some Reason");
   }
 
   public void testWarningOnDeprecatedConstVariable() {
-    testDep("/** @deprecated %s */ var f = 4; function g() { alert(f); }", "Another reason",
-        DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDepName(
+        "/** @deprecated Another reason */ var f = 4; function g() { alert(f); }",
+        "Variable f has been deprecated: Another reason");
   }
 
   public void testThatNumbersArentDeprecated() {
@@ -105,9 +101,9 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testDeprecatedFunctionVariable() {
-    testDep(
-        "/** @deprecated %s */ var f = function() {}; function g() { f(); }",
-        "I like g...", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDepName(
+        "/** @deprecated I like g... */ var f = function() {}; function g() { f(); }",
+        "Variable f has been deprecated: I like g...");
   }
 
   public void testNoWarningInGlobalScope() {
@@ -116,8 +112,9 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testNoWarningInGlobalScopeForCall() {
-    testDep("/** @deprecated %s */ function f() {} f();", "Some global scope", DEPRECATED_NAME,
-        DEPRECATED_NAME_REASON);
+    testDepName(
+        "/** @deprecated Some global scope */ function f() {} f();",
+        "Variable f has been deprecated: Some global scope");
   }
 
   public void testNoWarningInDeprecatedFunction() {
@@ -125,34 +122,40 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testWarningInNormalClass() {
-    testDep(
-        "/** @deprecated %s */ function f() {}"
-        + "/** @constructor */  var Foo = function() {}; "
-        + "Foo.prototype.bar = function() { f(); }",
-        "FooBar", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDepName(
+        "/** @deprecated FooBar */ function f() {}"
+            + "/** @constructor */  var Foo = function() {}; "
+            + "Foo.prototype.bar = function() { f(); }",
+        "Variable f has been deprecated: FooBar");
   }
 
   public void testWarningForProperty1() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {}"
-        + "/** @deprecated %s */ Foo.prototype.bar = 3;"
-        + "Foo.prototype.baz = function() { alert((new Foo()).bar); };",
-        "A property is bad", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "/** @deprecated A property is bad */ Foo.prototype.bar = 3;"
+            + "Foo.prototype.baz = function() { alert((new Foo()).bar); };",
+        "Property bar of type Foo has been deprecated: A property is bad");
   }
 
   public void testWarningForProperty2() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {}"
-        + "/** @deprecated %s */ Foo.prototype.bar = 3;"
-        + "Foo.prototype.baz = function() { alert(this.bar); };",
-        "Zee prop, it is deprecated!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "/** @deprecated Zee prop, it is deprecated! */ Foo.prototype.bar = 3;"
+            + "Foo.prototype.baz = function() { alert(this.bar); };",
+        "Property bar of type Foo has been deprecated: Zee prop, it is deprecated!");
   }
 
   public void testWarningForDeprecatedClass() {
-    testDep(
-        "/** @constructor \n* @deprecated %s */ function Foo() {} "
-        + "function f() { new Foo(); }",
-        "Use the class 'Bar'", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
+    testDepClass(
+        "/** @constructor \n* @deprecated Use the class 'Bar' */ function Foo() {} "
+            + "function f() { new Foo(); }",
+        "Class Foo has been deprecated: Use the class 'Bar'");
+  }
+
+  public void testWarningForDeprecatedClassNoReason() {
+    testError(
+        "/** @constructor \n* @deprecated */ function Foo() {} " + "function f() { new Foo(); }",
+        DEPRECATED_CLASS);
   }
 
   public void testNoWarningForDeprecatedClassInstance() {
@@ -161,29 +164,30 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testWarningForDeprecatedSuperClass() {
-    testDep(
-        "/** @constructor \n * @deprecated %s */ function Foo() {} "
-        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-        + "function f() { new SubFoo(); }",
-        "Superclass to the rescue!", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
+    testDepClass(
+        "/** @constructor \n * @deprecated Superclass to the rescue! */ function Foo() {} "
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "function f() { new SubFoo(); }",
+        "Class SubFoo has been deprecated: Superclass to the rescue!");
   }
 
   public void testWarningForDeprecatedSuperClass2() {
-    testDep(
-        "/** @constructor \n * @deprecated %s */ function Foo() {} "
-        + "var namespace = {}; "
-        + "/** @constructor \n * @extends {Foo} */ "
-        + "namespace.SubFoo = function() {}; "
-        + "function f() { new namespace.SubFoo(); }",
-        "Its only weakness is Kryptoclass", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
+    testDepClass(
+        "/** @constructor \n * @deprecated Its only weakness is Kryptoclass */ function Foo() {} "
+            + "var namespace = {}; "
+            + "/** @constructor \n * @extends {Foo} */ "
+            + "namespace.SubFoo = function() {}; "
+            + "function f() { new namespace.SubFoo(); }",
+        "Class namespace.SubFoo has been deprecated: Its only weakness is Kryptoclass");
   }
 
   public void testWarningForPrototypeProperty() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {}"
-        + "/** @deprecated %s */ Foo.prototype.bar = 3;"
-        + "Foo.prototype.baz = function() { alert(Foo.prototype.bar); };",
-        "It is now in production, use that model...", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "/** @deprecated It is now in production, use that model... */ Foo.prototype.bar = 3;"
+            + "Foo.prototype.baz = function() { alert(Foo.prototype.bar); };",
+        "Property bar of type Foo.prototype has been deprecated:"
+            + " It is now in production, use that model...");
   }
 
   public void testNoWarningForNumbers() {
@@ -193,19 +197,20 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testWarningForMethod1() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {}"
-        + "/** @deprecated %s */ Foo.prototype.bar = function() {};"
-        + "Foo.prototype.baz = function() { this.bar(); };",
-        "There is a madness to this method", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "/** @deprecated There is a madness to this method */"
+            + "Foo.prototype.bar = function() {};"
+            + "Foo.prototype.baz = function() { this.bar(); };",
+        "Property bar of type Foo has been deprecated: There is a madness to this method");
   }
 
   public void testWarningForMethod2() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {} "
-        + "/** @deprecated %s */ Foo.prototype.bar; "
-        + "Foo.prototype.baz = function() { this.bar(); };",
-        "Stop the ringing!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "/** @deprecated Stop the ringing! */ Foo.prototype.bar; "
+            + "Foo.prototype.baz = function() { this.bar(); };",
+        "Property bar of type Foo has been deprecated: Stop the ringing!");
   }
 
   public void testNoWarningInDeprecatedClass() {
@@ -240,28 +245,30 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testWarningInStaticMethod() {
-    testDep(
-        "/** @deprecated %s */ function f() {} "
-        + "/** @constructor */ "
-        + "var Foo = function() {}; "
-        + "Foo.bar = function() { f(); }",
-        "crazy!", DEPRECATED_NAME, DEPRECATED_NAME_REASON);
+    testDepName(
+        "/** @deprecated crazy! */ function f() {} "
+            + "/** @constructor */ "
+            + "var Foo = function() {}; "
+            + "Foo.bar = function() { f(); }",
+        "Variable f has been deprecated: crazy!");
   }
 
   public void testDeprecatedObjLitKey() {
-    testDep(
-        "var f = {}; /** @deprecated %s */ f.foo = 3; function g() { return f.foo; }",
-        "It is literally not used anymore", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+    testDepProp(
+        "var f = {};"
+            + "/** @deprecated It is literally not used anymore */ f.foo = 3;"
+            + "function g() { return f.foo; }",
+        "Property foo of type f has been deprecated: It is literally not used anymore");
   }
 
   public void testWarningForSubclassMethod() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {}"
-        + "Foo.prototype.bar = function() {};"
-        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-        + "/** @deprecated %s */ SubFoo.prototype.bar = function() {};"
-        + "function f() { (new SubFoo()).bar(); };",
-        "I have a parent class!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "Foo.prototype.bar = function() {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @deprecated I have a parent class! */ SubFoo.prototype.bar = function() {};"
+            + "function f() { (new SubFoo()).bar(); };",
+        "Property bar of type SubFoo has been deprecated: I have a parent class!");
   }
 
   public void testWarningForSuperClassWithDeprecatedSubclassMethod() {
@@ -274,38 +281,38 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testWarningForSuperclassMethod() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {}"
-        + "/** @deprecated %s */ Foo.prototype.bar = function() {};"
-        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-        + "SubFoo.prototype.bar = function() {};"
-        + "function f() { (new SubFoo()).bar(); };",
-        "I have a child class!", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "/** @deprecated I have a child class! */ Foo.prototype.bar = function() {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "SubFoo.prototype.bar = function() {};"
+            + "function f() { (new SubFoo()).bar(); };",
+        "Property bar of type SubFoo has been deprecated: I have a child class!");
   }
 
   public void testWarningForSuperclassMethod2() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {}"
-        + "/** @deprecated %s \n* @protected */"
-        + "Foo.prototype.bar = function() {};"
-        + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
-        + "/** @protected */SubFoo.prototype.bar = function() {};"
-        + "function f() { (new SubFoo()).bar(); };",
-        "I have another child class...", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + "/** @deprecated I have another child class... \n* @protected */"
+            + "Foo.prototype.bar = function() {};"
+            + "/** @constructor \n * @extends {Foo} */ function SubFoo() {}"
+            + "/** @protected */SubFoo.prototype.bar = function() {};"
+            + "function f() { (new SubFoo()).bar(); };",
+        "Property bar of type SubFoo has been deprecated: I have another child class...");
   }
 
   public void testWarningForBind() {
-    testDep(
-        "/** @deprecated %s */ Function.prototype.bind = function() {};"
-        + "(function() {}).bind();",
-        "I'm bound to this method...", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+    testDepProp(
+        "/** @deprecated I'm bound to this method... */ Function.prototype.bind = function() {};"
+            + "(function() {}).bind();",
+        "Property bind of type function has been deprecated: I'm bound to this method...");
   }
 
   public void testWarningForDeprecatedClassInGlobalScope() {
-    testDep(
-        "/** @constructor \n * @deprecated %s */ var Foo = function() {};"
-        + "new Foo();",
-        "I'm a very worldly object!", DEPRECATED_CLASS, DEPRECATED_CLASS_REASON);
+    testDepClass(
+        "/** @constructor \n * @deprecated I'm a very worldly object! */ var Foo = function() {};"
+            + "new Foo();",
+        "Class Foo has been deprecated: I'm a very worldly object!");
   }
 
   public void testNoWarningForPrototypeCopying() {
@@ -1298,12 +1305,12 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testBadReadOfDeprecatedProperty() {
-    testDep(
+    testDepProp(
         "/** @constructor */ function Foo() {"
-        + " /** @deprecated %s */ this.bar = 3;"
-        + "  this.baz = this.bar;"
-        + "}",
-        "GRR", DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+            + " /** @deprecated GRR */ this.bar = 3;"
+            + "  this.baz = this.bar;"
+            + "}",
+        "Property bar of type Foo has been deprecated: GRR");
   }
 
   public void testAutoboxedDeprecatedProperty() {
@@ -1325,11 +1332,11 @@ public final class CheckAccessControlsTest extends CompilerTestCase {
   }
 
   public void testNullableDeprecatedProperty() {
-    testDep(
+    testError(
         "/** @constructor */ function Foo() {}"
-        + "/** @deprecated %s */ Foo.prototype.length;"
+        + "/** @deprecated */ Foo.prototype.length;"
         + "/** @param {?Foo} x */ function f(x) { return x.length; }",
-        (String) null, DEPRECATED_PROP, DEPRECATED_PROP_REASON);
+        DEPRECATED_PROP);
   }
 
   public void testNullablePrivateProperty() {

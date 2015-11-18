@@ -1042,6 +1042,9 @@ public abstract class CompilerTestCase extends TestCase {
       assert_().withFailureMessage("Unexpected parse error(s): " + errorMsg)
           .that(actualError.getType())
           .isEqualTo(error);
+      if (description != null) {
+        assertThat(actualError.description).isEqualTo(description);
+      }
       return;
     }
     assert_().withFailureMessage("Unexpected parse error(s): " + errorMsg).that(root).isNotNull();
@@ -1152,10 +1155,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
 
     if (error == null) {
-      assertEquals(
-          "Unexpected error(s): " + LINE_JOINER.join(compiler.getErrors()),
-          0,
-          compiler.getErrorCount());
+      assertEquals("Unexpected error(s): " + errorMsg, 0, compiler.getErrorCount());
 
       // Verify the symbol table.
       ErrorManager symbolTableErrorManager = new BlackHoleErrorManager();
@@ -1310,14 +1310,13 @@ public abstract class CompilerTestCase extends TestCase {
       }
     } else {
       assertNull("expected must be null if error != null", expected);
-      String errors = "";
-      for (JSError actualError : compiler.getErrors()) {
-        errors += actualError.description + "\n";
-      }
-      assertEquals("There should be one error. " + errors, 1, compiler.getErrorCount());
+      assertEquals("There should be one error. " + errorMsg, 1, compiler.getErrorCount());
       JSError actualError = compiler.getErrors()[0];
-      assertEquals(errors, error, actualError.getType());
+      assertEquals(errorMsg, error, actualError.getType());
       validateSourceLocation(actualError);
+      if (description != null) {
+        assertThat(actualError.description).isEqualTo(description);
+      }
 
       if (warning != null) {
         String warnings = "";

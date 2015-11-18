@@ -249,9 +249,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
     testSame("", "/** @desc d */\n" +
          "var MSG_E = goog.getMsg('');", MESSAGE_TREE_MALFORMED,
-         "JSC_MSG_TREE_MALFORMED. Message parse tree malformed. "
+         "Message parse tree malformed. "
          + "Empty placeholder value map for a translated message "
-         + "with placeholders. at testcode line 2 : 12", true);
+         + "with placeholders.", true);
   }
 
 
