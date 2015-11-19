@@ -112,6 +112,27 @@ public final class CheckProvidesTest extends Es6CompilerTestCase {
   public void testIgnorePrivatelyAnnotatedConstructor() {
     testSame("/** @private\n@constructor */ X = function(){};");
     testSame("/** @constructor\n@private */ X = function(){};");
+
+    testSameEs6("/** @private */ var X = class {};");
+    testSameEs6("/** @private */ let X = class {};");
+    testSameEs6("/** @private */ X = class {};");
+
+    testSameEs6("/** @private */ var X = class Y {};");
+    testSameEs6("/** @private */ let X = class Y {};");
+    testSameEs6("/** @private */ X = class Y {};");
+
+    testSameEs6("/** @private */ class X {}");
+  }
+
+  public void testIgnorePrivateByConventionConstructor() {
+    testSame("/** @constructor */ privateFn_ = function(){};");
+    testSame("/** @constructor */ privateFn_ = function(){};");
+
+    testSameEs6("var privateCls_ = class {};");
+    testSameEs6("let privateCls_ = class {};");
+    testSameEs6("privateCls_ = class {};");
+
+    testSameEs6("class privateCls_ {}");
   }
 
   public void testArrowFunction() {

@@ -395,6 +395,15 @@ public final class NodeUtil {
   }
 
   /**
+   * @param n A function or class node.
+   * @return The name of the given function or class, if it has one.
+   */
+  public static String getName(Node n) {
+    Node nameNode = getNameNode(n);
+    return nameNode == null ? null : nameNode.getQualifiedName();
+  }
+
+  /**
    * Gets the node of a class's name. This method recognizes five forms:
    * <ul>
    * <li>{@code class name {...}}</li>
@@ -408,12 +417,18 @@ public final class NodeUtil {
    *
    * @param clazz A class node
    * @return the node best representing the class's name
+   * @deprecated Use getNameNode.
    */
+  @Deprecated
   static Node getClassNameNode(Node clazz) {
     Preconditions.checkState(clazz.isClass());
     return getNameNode(clazz);
   }
 
+  /**
+   * @deprecated Use getName.
+   */
+  @Deprecated
   static String getClassName(Node n) {
     Node nameNode = getClassNameNode(n);
     return nameNode == null ? null : nameNode.getQualifiedName();
@@ -433,19 +448,25 @@ public final class NodeUtil {
    *
    * @param n A function node
    * @return the node best representing the function's name
+   * @deprecated Use getNameNode.
    */
+  @Deprecated
   static Node getFunctionNameNode(Node n) {
     Preconditions.checkState(n.isFunction());
     return getNameNode(n);
   }
 
+  /**
+   * @deprecated Use getName.
+   */
+  @Deprecated
   public static String getFunctionName(Node n) {
     Node nameNode = getFunctionNameNode(n);
     return nameNode == null ? null : nameNode.getQualifiedName();
   }
 
-  /** Implementation for getFunctionNameNode and getClassNameNode. */
   private static Node getNameNode(Node n) {
+    Preconditions.checkState(n.isFunction() || n.isClass());
     Node parent = n.getParent();
     switch (parent.getType()) {
       case Token.NAME:
