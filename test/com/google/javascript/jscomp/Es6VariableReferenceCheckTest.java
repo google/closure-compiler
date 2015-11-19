@@ -139,7 +139,7 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testVarShadowing() {
-    assertRedeclare("if (a) { var x; var x;}");
+    assertRedeclareGlobal("if (a) { var x; var x;}");
     assertRedeclareError("if (a) { var x; let x;}");
 
     assertRedeclare("function f() { var x; if (a) { var x; }}");
@@ -202,6 +202,24 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testFunctionHoisting() {
     assertEarlyReference("if (true) { f(); function f() {} }");
+  }
+
+  public void testFunctionHoistingRedeclaration1() {
+    String[] js = {
+      "var x;",
+      "function x() {}",
+    };
+    String message = "Variable x first declared in input0";
+    test(js, null, VarCheck.VAR_MULTIPLY_DECLARED_ERROR, null, message);
+  }
+
+  public void testFunctionHoistingRedeclaration2() {
+    String[] js = {
+      "function x() {}",
+      "var x;",
+    };
+    String message = "Variable x first declared in input0";
+    test(js, null, VarCheck.VAR_MULTIPLY_DECLARED_ERROR, null, message);
   }
 
   public void testArrowFunction() {
@@ -356,44 +374,30 @@ public final class Es6VariableReferenceCheckTest extends CompilerTestCase {
         "}"));
   }
 
-  /**
-   * Expects the JS to generate one bad-read error.
-   */
   private void assertReassign(String js) {
     testError(js, VariableReferenceCheck.REASSIGNED_CONSTANT);
   }
 
-  /**
-   * Expects the JS to generate one bad-read warning.
-   */
   private void assertRedeclare(String js) {
     testWarning(js, VariableReferenceCheck.REDECLARED_VARIABLE);
   }
 
-  /**
-   * Expects the JS to generate one bad-read error.
-   */
+  private void assertRedeclareGlobal(String js) {
+    testError(js, VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
+  }
+
   private void assertRedeclareError(String js) {
     testError(js, VariableReferenceCheck.REDECLARED_VARIABLE_ERROR);
   }
 
-  /**
-   * Expects the JS to generate one bad-read error.
-   */
   private void assertParameterShadowed(String js) {
     testError(js, VariableReferenceCheck.REDECLARED_VARIABLE_ERROR);
   }
 
-  /**
-   * Expects the JS to generate one bad-write warning.
-   */
   private void assertEarlyReference(String js) {
     testSame(js, VariableReferenceCheck.EARLY_REFERENCE);
   }
 
-  /**
-   * Expects the JS to generate one bad-write error.
-   */
   private void assertEarlyReferenceError(String js) {
     testError(js, VariableReferenceCheck.EARLY_REFERENCE_ERROR);
   }

@@ -342,7 +342,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--jscomp_error=checkVars");
     args.add("--warning_level=VERBOSE");
     test("x = 3;", VarCheck.UNDEFINED_VAR_ERROR);
-    test("var y; var y;", VariableReferenceCheck.REDECLARED_VARIABLE);
+    test("var y; var y;", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testCheckSymbolsOverrideForVerbose() {
@@ -1218,7 +1218,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--jscomp_error=checkVars");
     args.add("--warning_level=VERBOSE");
     test("var theirVar = {}; var myVar = {}; var myVar = {};",
-         VariableReferenceCheck.REDECLARED_VARIABLE);
+         VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testGoogAssertStripping() {
