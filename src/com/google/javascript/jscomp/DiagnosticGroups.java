@@ -102,8 +102,8 @@ public class DiagnosticGroups {
       + "missingProvide, missingRequire, missingReturn, msgDescriptions"
       + "newCheckTypes, nonStandardJsDocs, reportUnknownTypes, suspiciousCode, "
       + "strictModuleDepCheck, typeInvalidation, "
-      + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, uselessCode, "
-      + "useOfGoogBase, visibility";
+      + "undefinedNames, undefinedVars, unknownDefines, unnecessaryCasts, unusedLocalVariables, "
+      + "unusedPrivateMembers, uselessCode, useOfGoogBase, visibility";
 
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
@@ -429,6 +429,14 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup DEPRECATED_ANNOTATIONS =
       DiagnosticGroups.registerGroup("deprecatedAnnotations",
           CheckJSDoc.ANNOTATION_DEPRECATED);
+
+  public static final DiagnosticGroup UNUSED_PRIVATE_PROPERTY =
+      DiagnosticGroups.registerGroup("unusedPrivateMembers",
+          CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY);
+
+  public static final DiagnosticGroup UNUSED_LOCAL_VARIABLE =
+      DiagnosticGroups.registerGroup("unusedLocalVariables",
+          VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
 
   // These checks are not intended to be enabled as errors. It is
   // recommended that you think of them as "linter" warnings that
