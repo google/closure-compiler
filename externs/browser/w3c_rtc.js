@@ -197,14 +197,31 @@ MediaStream.prototype.addTrack = function(track) {};
 MediaStream.prototype.removeTrack = function(track) {};
 
 /**
+ * @deprecated
  * @type {boolean}
  */
 MediaStream.prototype.ended;
 
 /**
+ * @deprecated
  * @type {?function(!Event)}
  */
 MediaStream.prototype.onended;
+
+/**
+ * @type {boolean}
+ */
+MediaStream.prototype.active;
+
+/**
+ * @type {?function(!Event)}
+ */
+MediaStream.prototype.onactive;
+
+/**
+ * @type {?function(!Event)}
+ */
+MediaStream.prototype.oninactive;
 
 /**
  * @type {?function(!MediaStreamTrackEvent)}
