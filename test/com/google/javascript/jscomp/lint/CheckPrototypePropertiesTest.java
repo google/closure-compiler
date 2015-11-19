@@ -44,10 +44,12 @@ public final class CheckPrototypePropertiesTest extends CompilerTestCase {
     testSame("function C() {}; C.prototype.foo = 0;");
     testSame("function C() {}; C.prototype.foo = 'someString';");
     testSame("function C() {}; C.prototype.foo = function() {};");
+    testSame("function C() {}; /** @enum {number} */ C.prototype.foo = { BAR: 0 };");
   }
 
   public void testWarnings() {
     testSame("function C() {}; C.prototype.foo = [];", ILLEGAL_PROTOTYPE_MEMBER);
     testSame("function C() {}; C.prototype.foo = {};", ILLEGAL_PROTOTYPE_MEMBER);
+    testSame("function C() {}; C.prototype.foo = { BAR: 0 };", ILLEGAL_PROTOTYPE_MEMBER);
   }
 }
