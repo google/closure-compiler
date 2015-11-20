@@ -64,7 +64,7 @@ import java.util.Set;
  */
 public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
-  final AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   // Map from class names to the static members in each class. This is not a SetMultiMap because
   // when we find an alias A for a class C, we copy the *set* of C's static methods
@@ -190,7 +190,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     private final List<Node> inheritsCalls = new LinkedList<>();
 
     @Override
-    public void visit(NodeTraversal nodeTraversal, Node n, Node parent) {
+    public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getType()) {
         case Token.CALL:
           if (n.getFirstChild().matchesQualifiedName(Es6ToEs3Converter.INHERITS)) {
@@ -201,11 +201,11 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
           visitVar(n);
           break;
         case Token.ASSIGN:
-          visitAssign(n);
+          visitAssign(t, n);
           break;
         case Token.GETPROP:
           if (parent.isExprResult()) {
-            visitGetProp(n);
+            visitGetProp(t, n);
           }
           break;
         case Token.FUNCTION:
@@ -226,14 +226,14 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       }
     }
 
-    private void visitGetProp(Node n) {
-      String className = n.getFirstChild().getQualifiedName();
-      if (classNames.contains(className)) {
-        getSet(staticProperties, className).add(n);
+    private void visitGetProp(NodeTraversal t, Node n) {
+      Node classNode = n.getFirstChild();
+      if (isReferenceToClass(t, classNode)) {
+        getSet(staticProperties, classNode.getQualifiedName()).add(n);
       }
     }
 
-    private void visitAssign(Node n) {
+    private void visitAssign(NodeTraversal t, Node n) {
       // Alias for classes. We assume that the alias appears after the class
       // declaration.
       String existingClassQname = n.getLastChild().getQualifiedName();
@@ -245,11 +245,25 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
         }
       } else if (n.getFirstChild().isGetProp()) {
         Node getProp = n.getFirstChild();
-        String maybeClassName = getProp.getFirstChild().getQualifiedName();
-        if (classNames.contains(maybeClassName)) {
-          getSet(staticMethods, maybeClassName).add(n);
+        Node classNode = getProp.getFirstChild();
+        if (isReferenceToClass(t, classNode)) {
+          getSet(staticMethods, classNode.getQualifiedName()).add(n);
         }
       }
+    }
+
+    private boolean isReferenceToClass(NodeTraversal t, Node n) {
+      String className = n.getQualifiedName();
+      if (!classNames.contains(className)) {
+        return false;
+      }
+
+      if (!n.isName()) {
+        return true;
+      }
+
+      Var var = t.getScope().getVar(className);
+      return var == null || !var.isLocal();
     }
 
     private void visitVar(Node n) {

@@ -272,30 +272,82 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "Bar.prop = Foo.prop;"));
   }
 
-  // TODO(tbreisacher): the correct output should be the same as the input
+  public void testScopeHandling() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
+            "function f() {",
+            "  var Foo = {};",
+            "  Foo.prop = 123;", // Not a reference to the Foo class, so no change.
+            "}",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, Foo);"));
+
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "",
+            "function f() {",
+            "  var Foo = {};",
+            "  function g() {",
+            "    Foo.prop = 123;", // Not a reference to the Foo class, so no change.
+            "  }",
+            "}",
+            "/** @constructor @extends {Foo} */",
+            "function Bar() {}",
+            "$jscomp.inherits(Bar, Foo);"));
+  }
+
+  /**
+   * Examples which are handled incorrectly but are unlikely to come up in practice.
+   */
   public void testIncorrectScopeHandling() {
     test(
         LINE_JOINER.join(
+            "var example = {};",
             "/** @constructor */",
-            "function Foo() {}",
+            "example.Foo = function() {};",
+            "",
             "function f() {",
-            "  var Foo = {};",
-            "  Foo.prop = 123;",
+            "  var example = {};",
+            "  example.Foo = {};",
+            "  // Not a reference to the example.Foo class, so there should be no change.",
+            "  example.Foo.prop = 123;",
             "}",
-            "/** @constructor @extends {Foo} */",
+            "/** @constructor @extends {example.Foo} */",
             "function Bar() {}",
-            "$jscomp.inherits(Bar, Foo);"),
+            "$jscomp.inherits(Bar, example.Foo);"),
         LINE_JOINER.join(
+            "var example = {};",
             "/** @constructor */",
-            "function Foo() {}",
+            "example.Foo = function() {};",
+            "",
             "function f() {",
-            "  var Foo = {};",
-            "  Foo.prop = 123;",
+            "  var example = {};",
+            "  example.Foo = {};",
+            "  example.Foo.prop = 123;",
             "}",
-            "/** @constructor @extends {Foo} */",
+            "/** @constructor @extends {example.Foo} */",
             "function Bar() {}",
-            "$jscomp.inherits(Bar, Foo);",
+            "$jscomp.inherits(Bar, example.Foo);",
             "/** @suppress {visibility} */",
-            "Bar.prop = Foo.prop;"));
+            "Bar.prop = example.Foo.prop"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function a() {",
+            "  /** @constructor */",
+            "  function Foo() {}",
+            "  Foo.bar = function() {};",
+            "",
+            "  /** @constructor @extends {Foo} */",
+            "  function Bar() {}",
+            "  $jscomp.inherits(Bar, Foo);",
+            "  // There should be a declaration for Bar.bar.",
+            "}"));
   }
 }
