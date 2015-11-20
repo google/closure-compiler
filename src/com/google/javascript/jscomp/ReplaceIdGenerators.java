@@ -146,12 +146,12 @@ class ReplaceIdGenerators implements CompilerPass {
     RenameStrategy getRenameStrategy();
   }
 
-  private static class ObfuscatedNameSuppier implements NameSupplier {
+  private static class ObfuscatedNameSupplier implements NameSupplier {
     private final NameGenerator generator;
     private final Map<String, String> previousMappings;
     private RenameStrategy renameStrategy;
 
-    public ObfuscatedNameSuppier(
+    public ObfuscatedNameSupplier(
         RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
       this.previousMappings = previousMappings.inverse();
       this.generator =
@@ -174,11 +174,11 @@ class ReplaceIdGenerators implements CompilerPass {
     }
   }
 
-  private static class PseudoNameSuppier implements NameSupplier {
+  private static class PseudoNameSupplier implements NameSupplier {
     private int counter = 0;
     private RenameStrategy renameStrategy;
 
-    public PseudoNameSuppier(RenameStrategy renameStrategy) {
+    public PseudoNameSupplier(RenameStrategy renameStrategy) {
       this.renameStrategy = renameStrategy;
     }
 
@@ -233,9 +233,9 @@ class ReplaceIdGenerators implements CompilerPass {
     if (renameStrategy == RenameStrategy.STABLE) {
       return new StableNameSupplier();
     } else if (generatePseudoNames) {
-      return new PseudoNameSuppier(renameStrategy);
+      return new PseudoNameSupplier(renameStrategy);
     } else {
-      return new ObfuscatedNameSuppier(renameStrategy, previousMappings);
+      return new ObfuscatedNameSupplier(renameStrategy, previousMappings);
     }
   }
 
