@@ -145,6 +145,12 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
         "function f() {  /** @type {string} */  return; };", MISPLACED_ANNOTATION);
   }
 
+  public void testJSDocOnExports() {
+    testSame(LINE_JOINER.join(
+        "goog.module('foo');",
+        "/** @const {!Array<number>} */",
+        "exports = [];"));
+  }
 
   public void testMisplacedTypeAnnotation1() {
     // misuse with COMMA

@@ -301,11 +301,14 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
           valid = true;
           break;
         // Property assignments are valid, if at the root of an expression.
-        case Token.ASSIGN:
-          valid =
-              n.getParent().isExprResult()
-                  && (n.getFirstChild().isGetProp() || n.getFirstChild().isGetElem());
+        case Token.ASSIGN: {
+          Node lvalue = n.getFirstChild();
+          valid = n.getParent().isExprResult()
+              && (lvalue.isGetProp()
+                  || lvalue.isGetElem()
+                  || lvalue.matchesQualifiedName("exports"));
           break;
+        }
         case Token.GETPROP:
           valid = n.getParent().isExprResult() && n.isQualifiedName();
           break;
