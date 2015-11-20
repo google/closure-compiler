@@ -628,6 +628,44 @@ public final class IntegrationTest extends IntegrationTestCase {
         RhinoErrorReporter.TYPE_PARSE_ERROR);
   }
 
+  public void testLegacyCompileOverridesStrict() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.addWarningsGuard(new StrictWarningsGuard());
+    options.setLegacyCodeCompile(true);
+    Compiler compiler = compile(options, "123();");
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).hasLength(1);
+  }
+
+  public void testLegacyCompileOverridesExplicitPromotionToError() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
+        DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR));
+    options.setLegacyCodeCompile(true);
+    Compiler compiler = compile(options, "123();");
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).hasLength(1);
+  }
+
+  public void testLegacyCompileTurnsOffDisambiguateProperties() {
+    CompilerOptions options = new CompilerOptions();
+    options.setCheckTypes(true);
+    options.setDisambiguateProperties(true);
+    options.setLegacyCodeCompile(true);
+    testSame(options,
+        Joiner.on('\n').join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.p = 123;",
+            "}",
+            "/** @constructor */",
+            "function Bar() {",
+            "  this.p = 234;",
+            "}"));
+  }
+
   public void testReplaceCssNames() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);

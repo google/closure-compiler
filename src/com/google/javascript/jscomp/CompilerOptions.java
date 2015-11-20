@@ -286,6 +286,20 @@ public class CompilerOptions {
     return checkEventfulObjectDisposalPolicy;
   }
 
+  /**
+   * Used for projects that are not well maintained, but are still used.
+   * Does not allow promoting warnings to errors, and disables some potentially
+   * risky optimizations.
+   */
+  boolean legacyCodeCompile = false;
+
+  public boolean getLegacyCodeCompile() {
+    return this.legacyCodeCompile;
+  }
+
+  public void setLegacyCodeCompile(boolean legacy) {
+    this.legacyCodeCompile = legacy;
+  }
 
   //--------------------------------
   // Optimizations
@@ -1241,7 +1255,7 @@ public class CompilerOptions {
    * group of warnings.
    */
   boolean enables(DiagnosticGroup type) {
-    return warningsGuard.enables(type);
+    return this.warningsGuard.enables(type);
   }
 
   /**
@@ -1249,7 +1263,7 @@ public class CompilerOptions {
    * group of warnings.
    */
   boolean disables(DiagnosticGroup type) {
-    return warningsGuard.disables(type);
+    return this.warningsGuard.disables(type);
   }
 
   /**
@@ -1271,14 +1285,14 @@ public class CompilerOptions {
   }
 
   WarningsGuard getWarningsGuard() {
-    return warningsGuard;
+    return this.warningsGuard;
   }
 
   /**
    * Reset the warnings guard.
    */
   public void resetWarningsGuard() {
-    warningsGuard = new ComposeWarningsGuard();
+    this.warningsGuard = new ComposeWarningsGuard();
   }
 
   /**
@@ -1286,14 +1300,18 @@ public class CompilerOptions {
    * warnings guards.
    */
   void useEmergencyFailSafe() {
-    warningsGuard = warningsGuard.makeEmergencyFailSafeGuard();
+    this.warningsGuard = this.warningsGuard.makeEmergencyFailSafeGuard();
+  }
+
+  void useNonStrictWarningsGuard() {
+    this.warningsGuard = this.warningsGuard.makeNonStrict();
   }
 
   /**
    * Add a guard to the set of warnings guards.
    */
   public void addWarningsGuard(WarningsGuard guard) {
-    warningsGuard.addGuard(guard);
+    this.warningsGuard.addGuard(guard);
   }
 
   /**

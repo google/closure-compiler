@@ -55,6 +55,13 @@ public class DiagnosticGroupWarningsGuard extends WarningsGuard {
   }
 
   @Override
+  protected WarningsGuard makeNonStrict() {
+    return new DiagnosticGroupWarningsGuard(
+        this.group,
+        this.level.isOn() ? CheckLevel.WARNING : CheckLevel.OFF);
+  }
+
+  @Override
   public String toString() {
     return group + "(" + level + ")";
   }

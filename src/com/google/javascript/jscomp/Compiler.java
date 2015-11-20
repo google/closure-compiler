@@ -317,6 +317,12 @@ public class Compiler extends AbstractCompiler {
 
     reconcileOptionsWithGuards();
 
+    if (options.legacyCodeCompile) {
+      options.disambiguateProperties = false;
+      options.ambiguateProperties = false;
+      options.useNonStrictWarningsGuard();
+    }
+
     // Initialize the warnings guard.
     this.warningsGuard =
         new ComposeWarningsGuard(
