@@ -14280,4 +14280,72 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var foo = f(123, E.A);"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testUseThisForTypeInstantiation() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/**",
+        " * @template T",
+        " * @this {T}",
+        " * @param {T} x",
+        " */",
+        "Foo.prototype.f = function(x) {};",
+        "(new Foo).f(new Bar);"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @template T",
+        " * @this {T|number}",
+        " */",
+        "function f() {};",
+        "/** @return {*} */",
+        "function g() { return null; }",
+        "f.bind(g());"),
+        NewTypeInference.FAILED_TO_UNIFY);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/**",
+        " * @template T",
+        " * @this {T}",
+        " * @param {T} x",
+        " */",
+        "function f(x) {}",
+        "f.bind(new Foo, new Bar);"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    // We miss the incompatibility between MyArray<number> and  MyArray<string>.
+    // We don't catch it because our heuristic for using the receiver type to
+    // calculate the instantiation is not enough here.
+    typeCheck(Joiner.on('\n').join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function MyArrayLike() {}",
+        "/** @type {number} */",
+        "MyArrayLike.length;",
+        "/**",
+        " * @constructor",
+        " * @implements {MyArrayLike<T>}",
+        " * @param {T} x",
+        " * @template T",
+        " */",
+        "function MyArray(x) {}",
+        "MyArray.prototype.length = 123;",
+        "/**",
+        " * @this {!MyArrayLike<T>}",
+        " * @param {!MyArrayLike<T>} x",
+        " * @template T",
+        " */",
+        "MyArray.prototype.m = function(x) {};",
+        "(new MyArray(123)).m(new MyArray('asdf'));"));
+  }
 }

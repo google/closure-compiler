@@ -996,11 +996,12 @@ public abstract class JSType implements TypeI {
     return fromObjectType(ot.withFunction(ft, fnNominal));
   }
 
+  public boolean isSingletonObj() {
+    return getMask() == NON_SCALAR_MASK && getObjs().size() == 1;
+  }
+
   public ObjectType getObjTypeIfSingletonObj() {
-    if (getMask() != NON_SCALAR_MASK || getObjs().size() > 1) {
-      return null;
-    }
-    return Iterables.getOnlyElement(getObjs());
+    return isSingletonObj() ? Iterables.getOnlyElement(getObjs()) : null;
   }
 
   public FunctionType getFunTypeIfSingletonObj() {
@@ -1019,10 +1020,8 @@ public abstract class JSType implements TypeI {
   }
 
   public NominalType getNominalTypeIfSingletonObj() {
-    if (getMask() != NON_SCALAR_MASK || getObjs().size() > 1) {
-      return null;
-    }
-    return Iterables.getOnlyElement(getObjs()).getNominalType();
+    return isSingletonObj()
+        ? Iterables.getOnlyElement(getObjs()).getNominalType() : null;
   }
 
   public boolean isInterfaceDefinition() {
