@@ -20,8 +20,6 @@ import static com.google.javascript.jscomp.CompilationLevel.ADVANCED_OPTIMIZATIO
 import static com.google.javascript.jscomp.WarningLevel.VERBOSE;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.js.JsExport;
-import com.google.gwt.core.client.js.JsNamespace;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -32,14 +30,15 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.SourceFile;
 
+import jsinterop.annotations.JsMethod;
+
 /**
  * A simple demo for the GWT-compiled JSCompiler
  *
  * @author moz@google.com (Michael Zhou)
  */
-@JsNamespace("jscompiler")
 public class JsCompGwtMain implements EntryPoint {
-  @JsExport
+  @JsMethod(name = "JsCompGwtMain", namespace = "jscompiler")
   public static String compile(String js) {
     CompilerOptions options = new CompilerOptions();
     ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
