@@ -916,11 +916,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * path prefix.
    */
   private static void maybeCreateDirsForPath(String pathPrefix) {
-    if (pathPrefix.length() > 0) {
+    if (!Strings.isNullOrEmpty(pathPrefix)) {
       String dirName =
           pathPrefix.charAt(pathPrefix.length() - 1) == File.separatorChar
-              ? pathPrefix.substring(0, pathPrefix.length() - 1) : new File(
-                  pathPrefix).getParent();
+              ? pathPrefix.substring(0, pathPrefix.length() - 1)
+              : new File(pathPrefix).getParent();
       if (dirName != null) {
         new File(dirName).mkdirs();
       }
