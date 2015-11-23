@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import com.google.javascript.rhino.dtoa.DToA;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -200,7 +201,7 @@ public final class NodeUtil {
         break;
 
       case Token.NUMBER:
-        return getStringValue(n.getDouble());
+        return DToA.numberToString(n.getDouble());
 
       case Token.FALSE:
         return "false";
@@ -228,17 +229,6 @@ public final class NodeUtil {
         return "[object Object]";
     }
     return null;
-  }
-
-  static String getStringValue(double value) {
-    long longValue = (long) value;
-
-    // Return "1" instead of "1.0"
-    if (longValue == value) {
-      return Long.toString(longValue);
-    } else {
-      return Double.toString(value);
-    }
   }
 
   /**
