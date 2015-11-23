@@ -47,7 +47,8 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
     typeCheckCustomExterns(
         DEFAULT_EXTERNS + "var maybeStr; /** @type {string} */ var maybeStr;",
-        "maybeStr - 5;");
+        "maybeStr - 5;",
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheckCustomExterns(
         DEFAULT_EXTERNS + "/** @type {string} */ var str;", "str - 5;",
@@ -14347,5 +14348,45 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "MyArray.prototype.m = function(x) {};",
         "(new MyArray(123)).m(new MyArray('asdf'));"));
+  }
+
+  public void testDontCrashWhenShadowingANamespace() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "function f() {",
+        "  /** @const */",
+        "  var ns = ns || {};",
+        "  /** @constructor */",
+        "  ns.Foo = function() {};",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "function f() {",
+        "  function ns() {};",
+        "  /** @constructor */",
+        "  ns.Foo = function() {};",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "function f() {",
+        "  var ns = {};",
+        "  /** @constructor */",
+        "  ns.Foo = function() {};",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "function ns() {};",
+        "/** @type {number} */",
+        "ns.prop = 123;",
+        "function f() {",
+        "  var ns = {};",
+        "  /** @constructor */",
+        "  ns.Foo = function() {};",
+        "}"));
   }
 }

@@ -405,21 +405,14 @@ final class NTIScope implements DeclaredTypeRegistry {
     return ImmutableSet.copyOf(externs.keySet());
   }
 
-  // Like addLocal, but used when the type is already defined locally
-  void addSimpleType(Node qnameNode, JSType declType) {
-    Preconditions.checkState(qnameNode.isName());
-    String name = qnameNode.getString();
-    if (qnameNode.isFromExterns()) {
-      externs.put(name, declType);
-    } else {
-      locals.put(name, declType);
-    }
-  }
-
+  // We don't check for duplicates here, mainly because we add some
+  // intentionally during the two phases of GlobalTypeInfo.
+  // If a variable is declared many times in a scope, the last definition
+  // overwrites the previous ones. For correctness, we rely on the fact that
+  // the var-check passes run before type checking.
   void addLocal(String name, JSType declType,
       boolean isConstant, boolean isFromExterns) {
     Preconditions.checkArgument(!name.contains("."));
-    Preconditions.checkArgument(!isDefinedLocally(name, false));
     if (isConstant) {
       constVars.add(name);
     }
@@ -435,9 +428,10 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   private void addNamespaceLit(Node qnameNode, NamespaceLit nslit) {
-    Preconditions.checkArgument(!isNamespace(qnameNode));
     if (qnameNode.isName()) {
       String varName = qnameNode.getString();
+      Preconditions.checkArgument(
+          !isDefinedLocally(varName, false) || !isNamespace(qnameNode));
       localNamespaces.put(varName, nslit);
       if (qnameNode.isFromExterns() && !externs.containsKey(varName)) {
         // We don't know the full type of a namespace until after we see all
@@ -446,6 +440,7 @@ final class NTIScope implements DeclaredTypeRegistry {
         externs.put(qnameNode.getString(), null);
       }
     } else {
+      Preconditions.checkArgument(!isNamespace(qnameNode));
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
       Namespace ns = getNamespace(qname.getLeftmostName());
       ns.addSubnamespace(qname.getAllButLeftmost(), nslit);
