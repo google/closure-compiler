@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Token;
  *
  * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
-final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass {
+final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompilerPass {
 
   public static final DiagnosticType MISPLACED_MSG_ANNOTATION =
       DiagnosticType.disabled("JSC_MISPLACED_MSG_ANNOTATION",
@@ -64,6 +64,11 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements CompilerPass
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, externs, this);
     NodeTraversal.traverseEs6(compiler, root, this);
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
   @Override

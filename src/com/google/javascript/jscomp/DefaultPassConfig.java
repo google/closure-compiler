@@ -990,9 +990,9 @@ public final class DefaultPassConfig extends PassConfig {
           "functions are set.");
 
   /** Verifies JSDoc annotations are used properly. */
-  private final PassFactory checkJsDoc = new PassFactory("checkJsDoc", true) {
+  private final HotSwapPassFactory checkJsDoc = new HotSwapPassFactory("checkJsDoc", true) {
     @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
+    protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new CheckJSDoc(compiler);
     }
   };
@@ -1158,10 +1158,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private final PassFactory es6RewriteDestructuring =
-      new PassFactory("Es6RewriteDestructuring", true) {
+  private final HotSwapPassFactory es6RewriteDestructuring =
+      new HotSwapPassFactory("Es6RewriteDestructuring", true) {
         @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RewriteDestructuring(compiler);
         }
       };
@@ -1174,10 +1174,10 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private final PassFactory es6RewriteArrowFunction =
-      new PassFactory("Es6RewriteArrowFunction", true) {
+  private final HotSwapPassFactory es6RewriteArrowFunction =
+      new HotSwapPassFactory("Es6RewriteArrowFunction", true) {
         @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RewriteArrowFunction(compiler);
         }
       };
