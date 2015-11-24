@@ -52,6 +52,14 @@ public final class JSDocInfoPrinterTest extends TestCase {
         JSDocInfoPrinter.print(info));
   }
 
+  public void testDontCrashWhenNoThrowType() {
+    // Happens for code like: @throws TypeNameWithoutBraces
+    builder.recordThrowType(null);
+    builder.recordThrowDescription(null, "TypeNameWithoutBraces");
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/***/", JSDocInfoPrinter.print(info));
+  }
+
   /**
    * test case for the @record tag
    */
