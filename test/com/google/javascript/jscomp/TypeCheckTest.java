@@ -15367,6 +15367,94 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @override */ MutableFooImpl.prototype.copyFrom = function(from) {};"));
   }
 
+  public void testStructuralInterfacesMatchOwnProperties1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function WithProp() {}",
+            "/** @type {number} */ WithProp.prototype.prop;",
+            "",
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {number} */ this.prop = 5;",
+            "}",
+            "var /** !WithProp */ wp = new Foo;"));
+  }
+
+  public void testStructuralInterfacesMatchOwnProperties2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function WithProp() {}",
+            "/** @type {number} */ WithProp.prototype.prop;",
+            "",
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {number} */ this.oops = 5;",
+            "}",
+            "var /** !WithProp */ wp = new Foo;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo",
+            "required: WithProp"));
+  }
+
+  public void testStructuralInterfacesMatchOwnProperties3() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function WithProp() {}",
+            "/** @type {number} */ WithProp.prototype.prop;",
+            "",
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {string} */ this.prop = 'str';",
+            "}",
+            "var /** !WithProp */ wp = new Foo;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo",
+            "required: WithProp"));
+  }
+
+
+  public void testStructuralInterfacesMatchFunctionNamespace1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function WithProp() {}",
+            "/** @type {number} */ WithProp.prototype.prop;",
+            "",
+            "var ns = function() {};",
+            "/** @type {number} */ ns.prop;",
+            "var /** !WithProp */ wp = ns;"));
+  }
+
+  public void testStructuralInterfacesMatchFunctionNamespace2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function WithProp() {}",
+            "/** @type {number} */ WithProp.prototype.prop;",
+            "",
+            "var ns = function() {};",
+            "/** @type {number} */ ns.oops;",
+            "var /** !WithProp */ wp = ns;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : function (): undefined",
+            "required: WithProp"));
+  }
+
+  public void testStructuralInterfacesMatchFunctionNamespace3() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function WithProp() {}",
+            "/** @type {number} */ WithProp.prototype.prop;",
+            "",
+            "var ns = function() {};",
+            "/** @type {string} */ ns.prop;",
+            "var /** !WithProp */ wp = ns;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : function (): undefined",
+            "required: WithProp"));
+  }
 
 
   public void testCovarianceForRecordType1() throws Exception {

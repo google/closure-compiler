@@ -42,6 +42,7 @@ package com.google.javascript.rhino.jstype;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -499,6 +500,43 @@ public abstract class ObjectType
    */
   public int getPropertiesCount() {
     return getPropertyMap().getPropertiesCount();
+  }
+
+  /**
+   * Check for structural equivalence with {@code that}.
+   * (e.g. two @record types with the same prototype properties)
+   */
+  boolean checkStructuralEquivalenceHelper(
+      ObjectType otherObject, EquivalenceMethod eqMethod, EqCache eqCache) {
+    if (this.isTemplatizedType() && this.toMaybeTemplatizedType().wrapsSameRawType(otherObject)) {
+      return this.getTemplateTypeMap().checkEquivalenceHelper(
+          otherObject.getTemplateTypeMap(), eqMethod, eqCache);
+    }
+
+    if (this.hasAnyTemplateTypes() || otherObject.hasAnyTemplateTypes()) {
+      Preconditions.checkState(eqCache.isStructuralTyping());
+      return false;
+    }
+
+    MatchStatus result = eqCache.checkCache(this, otherObject);
+    if (result != null) {
+      return result.subtypeValue();
+    }
+    Set<String> keySet = getPropertyNames();
+    Set<String> otherKeySet = otherObject.getPropertyNames();
+    if (!otherKeySet.equals(keySet)) {
+      eqCache.updateCache(this, otherObject, MatchStatus.NOT_MATCH);
+      return false;
+    }
+    for (String key : keySet) {
+      if (!otherObject.getPropertyType(key).checkEquivalenceHelper(
+              getPropertyType(key), eqMethod, eqCache)) {
+        eqCache.updateCache(this, otherObject, MatchStatus.NOT_MATCH);
+        return false;
+      }
+    }
+    eqCache.updateCache(this, otherObject, MatchStatus.MATCH);
+    return true;
   }
 
   /**
