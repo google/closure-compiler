@@ -44,7 +44,6 @@ import org.kohsuke.args4j.spi.StringOptionHandler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -1222,7 +1221,8 @@ public class CommandLineRunner extends
     if (!flags.instrumentationFile.isEmpty()) {
         String instrumentationPb;
         Instrumentation.Builder builder = Instrumentation.newBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader(flags.instrumentationFile))) {
+      try (BufferedReader br =
+              new BufferedReader(Files.newReader(new File(flags.instrumentationFile), UTF_8))) {
             StringBuilder sb = new StringBuilder();
             String line = br.readLine();
 
