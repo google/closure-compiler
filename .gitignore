@@ -4,3 +4,5 @@ junit*.properties
 target/
 *~
 .settings
+externs/.classpath
+externs/.project

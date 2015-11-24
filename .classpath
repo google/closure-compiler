@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry excluding="**/gwt/**" including="**/*.java|**/*.properties" kind="src" path="src"/>
 	<classpathentry including="**/*.java" kind="src" path="gen"/>
-	<classpathentry including="**/*.java" kind="src" output="build/test-classes" path="test"/>
+	<classpathentry including="**/*.java" kind="src" output="target/test-classes" path="test"/>
 	<classpathentry kind="lib" path="lib/ant.jar"/>
 	<classpathentry kind="lib" path="lib/ant-launcher.jar"/>
 	<classpathentry kind="lib" path="lib/args4j.jar"/>
@@ -13,5 +13,5 @@
 	<classpathentry kind="lib" path="lib/protobuf-java.jar"/>
 	<classpathentry kind="lib" path="lib/truth.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="output" path="build/classes"/>
+	<classpathentry kind="output" path="target/classes"/>
 </classpath>
