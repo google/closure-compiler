@@ -568,14 +568,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   public List<JsonFileSpec> parseJsonFilesFromInputStream() throws IOException {
     List<JsonFileSpec> jsonFiles = new ArrayList<>();
-    JsonReader reader = new JsonReader(new InputStreamReader(System.in, inputCharset));
-    reader.beginArray();
-    while (reader.hasNext()) {
-      JsonFileSpec jsonFile = gson.fromJson(reader, JsonFileSpec.class);
-      jsonFiles.add(jsonFile);
+    try (JsonReader reader = new JsonReader(new InputStreamReader(System.in, inputCharset))) {
+      reader.beginArray();
+      while (reader.hasNext()) {
+        JsonFileSpec jsonFile = gson.fromJson(reader, JsonFileSpec.class);
+        jsonFiles.add(jsonFile);
+      }
+      reader.endArray();
     }
-    reader.endArray();
-    reader.close();
     return jsonFiles;
   }
 
@@ -1249,20 +1249,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   void outputJsonStream() throws IOException {
-    JsonWriter jsonWriter = new JsonWriter(
-        new BufferedWriter(new OutputStreamWriter(defaultJsOutput, "UTF-8")));
-    jsonWriter.beginArray();
-    for (JsonFileSpec jsonFile : this.filesToStreamOut) {
-      jsonWriter.beginObject();
-      jsonWriter.name("src").value(jsonFile.getSrc());
-      jsonWriter.name("path").value(jsonFile.getPath());
-      if (!Strings.isNullOrEmpty(jsonFile.getSourceMap())) {
-        jsonWriter.name("source_map").value(jsonFile.getSourceMap());
+    try (JsonWriter jsonWriter =
+            new JsonWriter(new BufferedWriter(new OutputStreamWriter(defaultJsOutput, "UTF-8")))) {
+      jsonWriter.beginArray();
+      for (JsonFileSpec jsonFile : this.filesToStreamOut) {
+        jsonWriter.beginObject();
+        jsonWriter.name("src").value(jsonFile.getSrc());
+        jsonWriter.name("path").value(jsonFile.getPath());
+        if (!Strings.isNullOrEmpty(jsonFile.getSourceMap())) {
+          jsonWriter.name("source_map").value(jsonFile.getSourceMap());
+        }
+        jsonWriter.endObject();
       }
-      jsonWriter.endObject();
+      jsonWriter.endArray();
     }
-    jsonWriter.endArray();
-    jsonWriter.close();
   }
 
   private void outputModuleBinaryAndSourceMaps(
