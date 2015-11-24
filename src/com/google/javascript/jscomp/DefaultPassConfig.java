@@ -317,12 +317,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertToTypedES6);
     }
 
-    if (options.skipNonTranspilationPasses) {
-      return checks;
+    if ((options.getLanguageIn().isEs6OrHigher() && !options.skipNonTranspilationPasses)
+        || !options.forceLibraryInjection.isEmpty()) {
+      checks.add(es6RuntimeLibrary);
     }
 
-    if (options.getLanguageIn().isEs6OrHigher()) {
-      checks.add(es6RuntimeLibrary);
+    if (options.skipNonTranspilationPasses) {
+      return checks;
     }
 
     checks.add(convertStaticInheritance);

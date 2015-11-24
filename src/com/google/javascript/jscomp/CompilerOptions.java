@@ -783,6 +783,12 @@ public class CompilerOptions {
   /** CommonJS module prefix. */
   List<String> moduleRoots = ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
+  /** Runtime libraries to always inject. */
+  List<String> forceLibraryInjection = ImmutableList.of();
+
+  /** Runtime libraries to never inject. */
+  Set<String> preventLibraryInjection = ImmutableSet.of();
+
 
   //--------------------------------
   // Output options
@@ -2336,6 +2342,20 @@ public class CompilerOptions {
    */
   public void setModuleRoots(List<String> moduleRoots) {
     this.moduleRoots = moduleRoots;
+  }
+
+  /**
+   * Sets list of libraries to always inject, even if not needed.
+   */
+  public void setForceLibraryInjection(Iterable<String> libraries) {
+    this.forceLibraryInjection = ImmutableList.copyOf(libraries);
+  }
+
+  /**
+   * Sets the set of libraries to never inject, even if required.
+   */
+  public void setPreventLibraryInjection(Iterable<String> libraries) {
+    this.preventLibraryInjection = ImmutableSet.copyOf(libraries);
   }
 
   /**
