@@ -1549,7 +1549,7 @@ angular.$http.Interceptor;
 /**
  * @typedef {{
  *   defaults: !angular.$http.Config,
- *   interceptors: !Array.<string|function(...*): !angular.$http.Interceptor>,
+ *   interceptors: !Array.<string|function(...?): !angular.$http.Interceptor>,
  *   useApplyAsync: function(boolean=):(boolean|!angular.$HttpProvider)
  * }}
  */
@@ -1561,7 +1561,7 @@ angular.$HttpProvider;
 angular.$HttpProvider.defaults;
 
 /**
- * @type {!Array.<string|function(...*): !angular.$http.Interceptor>}
+ * @type {!Array.<string|function(...?): !angular.$http.Interceptor>}
  */
 angular.$HttpProvider.interceptors;
 
