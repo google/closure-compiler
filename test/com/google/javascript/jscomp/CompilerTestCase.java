@@ -75,13 +75,25 @@ public abstract class CompilerTestCase extends TestCase {
   /** Whether to rewrite Closure code before the test is run. */
   private boolean rewriteClosureCode = false;
 
-  /** True iff type checking pass runs before pass being tested. */
+  /**
+   * If true, run type checking together with the pass being tested. A separate
+   * flag controls whether type checking runs before or after the pass.
+   */
   private boolean typeCheckEnabled = false;
+
+  /**
+   * If true, run NTI together with the pass being tested. A separate
+   * flag controls whether NTI runs before or after the pass.
+   */
+  private boolean newTypeInferenceEnabled = false;
 
   @Deprecated private CheckLevel reportMissingOverrideCheckLevel = CheckLevel.WARNING;
 
-  /** Whether to the test compiler pass before the type check. */
+  /** Whether to test the compiler pass before the type check. */
   protected boolean runTypeCheckAfterProcessing = false;
+
+  /** Whether to test the compiler pass before NTI. */
+  protected boolean runNTIAfterProcessing = false;
 
   /** Whether to scan externs for property names. */
   private boolean gatherExternPropertiesEnabled = false;
@@ -307,6 +319,13 @@ public abstract class CompilerTestCase extends TestCase {
     typeCheckEnabled = true;
   }
 
+  // Run the new type inference after the test pass. Useful for testing passes
+  // that rewrite the AST prior to typechecking, eg, AngularPass or PolymerPass.
+  void enableNewTypeInference() {
+    this.newTypeInferenceEnabled = true;
+    this.runNTIAfterProcessing = true;
+  }
+
   /**
    * Check to make sure that line numbers were preserved.
    */
@@ -321,6 +340,10 @@ public abstract class CompilerTestCase extends TestCase {
    */
   void disableTypeCheck() {
     typeCheckEnabled = false;
+  }
+
+  void disableNewTypeInference() {
+    this.newTypeInferenceEnabled = false;
   }
 
   /**
@@ -424,6 +447,13 @@ public abstract class CompilerTestCase extends TestCase {
         new SemanticReverseAbstractInterpreter(compiler.getTypeRegistry());
 
     return new TypeCheck(compiler, rai, compiler.getTypeRegistry(), level);
+  }
+
+  private static void runNewTypeInference(Compiler compiler, Node externs, Node js) {
+    GlobalTypeInfo gti = compiler.getSymbolTable();
+    gti.process(externs, js);
+    NewTypeInference nti = new NewTypeInference(compiler);
+    nti.process(externs, js);
   }
 
   /**
@@ -1101,6 +1131,10 @@ public abstract class CompilerTestCase extends TestCase {
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler, reportMissingOverrideCheckLevel);
           check.processForTesting(externsRoot, mainRoot);
+        } else if (!this.runNTIAfterProcessing
+            && this.newTypeInferenceEnabled
+            && i == 0) {
+          runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
         // Only run the normalize pass once, if asked.
@@ -1140,6 +1174,10 @@ public abstract class CompilerTestCase extends TestCase {
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler, reportMissingOverrideCheckLevel);
           check.processForTesting(externsRoot, mainRoot);
+        } else if (this.runNTIAfterProcessing
+            && this.newTypeInferenceEnabled
+            && i == 0) {
+          runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
         hasCodeChanged = hasCodeChanged || recentChange.hasCodeChanged();

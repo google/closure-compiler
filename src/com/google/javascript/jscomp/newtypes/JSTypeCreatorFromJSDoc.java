@@ -147,12 +147,12 @@ public final class JSTypeCreatorFromJSDoc {
   public static final DiagnosticType IMPLEMENTS_NON_INTERFACE =
     DiagnosticType.warning(
         "JSC_NTI_IMPLEMENTS_NON_INTERFACE",
-        "Cannot implement non-interface");
+        "Cannot implement non-interface {0}");
 
   public static final DiagnosticType EXTENDS_NON_INTERFACE =
     DiagnosticType.warning(
         "JSC_NTI_EXTENDS_NON_INTERFACE",
-        "Cannot extend non-interface");
+        "Cannot extend non-interface {0}");
 
   public static final DiagnosticType FUNCTION_WITH_NONFUNC_JSDOC =
     DiagnosticType.warning(
@@ -640,9 +640,11 @@ public final class JSTypeCreatorFromJSDoc {
         if (nt != null && nt.isInterface()) {
           builder.add(nt);
         } else if (implementedIntfs) {
-          warnings.add(JSError.make(expRoot, IMPLEMENTS_NON_INTERFACE));
+          warnings.add(JSError.make(
+              expRoot, IMPLEMENTS_NON_INTERFACE, interfaceType.toString()));
         } else {
-          warnings.add(JSError.make(expRoot, EXTENDS_NON_INTERFACE));
+          warnings.add(JSError.make(
+              expRoot, EXTENDS_NON_INTERFACE, interfaceType.toString()));
         }
       }
     }
