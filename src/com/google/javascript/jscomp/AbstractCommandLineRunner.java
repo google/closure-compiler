@@ -30,6 +30,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
@@ -45,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -172,8 +176,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private Map<String, String> parsedModuleWrappers = null;
 
+  private final Gson gson;
+
   static final String OUTPUT_MARKER = "%output%";
   private static final String OUTPUT_MARKER_JS_STRING = "%output|jsstring%";
+
+  private final List<JsonFileSpec> filesToStreamOut = new ArrayList<>();
 
   AbstractCommandLineRunner() {
     this(System.out, System.err);
@@ -183,6 +191,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     this.config = new CommandLineConfig();
     this.defaultJsOutput = Preconditions.checkNotNull(out);
     this.err = Preconditions.checkNotNull(err);
+    this.gson = new Gson();
   }
 
   /**
@@ -359,6 +368,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (config.createSourceMap.length() > 0) {
       options.sourceMapOutputPath = config.createSourceMap;
+    } else if (config.useJsonStreams) {
+      options.sourceMapOutputPath = "%outname%";
     }
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
     options.sourceMapFormat = config.sourceMapFormat;
@@ -555,6 +566,19 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
+  public List<JsonFileSpec> parseJsonFilesFromInputStream() throws IOException {
+    List<JsonFileSpec> jsonFiles = new ArrayList<>();
+    JsonReader reader = new JsonReader(new InputStreamReader(System.in, inputCharset));
+    reader.beginArray();
+    while (reader.hasNext()) {
+      JsonFileSpec jsonFile = gson.fromJson(reader, JsonFileSpec.class);
+      jsonFiles.add(jsonFile);
+    }
+    reader.endArray();
+    reader.close();
+    return jsonFiles;
+  }
+
   /**
    * Creates inputs from a list of files.
    *
@@ -572,6 +596,21 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
+   * Creates inputs from a list of source files and json files.
+   *
+   * Can be overridden by subclasses who want to pull files from different
+   * places.
+   *
+   * @param files A list of filenames.
+   * @param jsonFiles A list of json encoded files.
+   * @return An array of inputs
+   */
+  protected List<SourceFile> createInputs(List<String> files,
+      List<JsonFileSpec> jsonFiles) throws FlagUsageException, IOException {
+    return createInputs(files, new ArrayList<String>() /* zips */, jsonFiles, false);
+  }
+
+  /**
    * Creates inputs from a list of source files and zips.
    *
    * Can be overridden by subclasses who want to pull files from different
@@ -585,6 +624,25 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    */
   protected List<SourceFile> createInputs(List<String> files,
       List<String> zips, boolean allowStdIn) throws FlagUsageException, IOException {
+    return createInputs(files, zips, null, allowStdIn);
+  }
+
+  /**
+   * Creates inputs from a list of source files, zips and json files.
+   *
+   * Can be overridden by subclasses who want to pull files from different
+   * places.
+   *
+   * @param files A list of filenames.
+   * @param zips A list of zip filenames.
+   * @param jsonFiles A list of json encoded files.
+   * @param allowStdIn Whether '-' is allowed appear as a filename to represent
+   *        stdin. If true, '-' is only allowed to appear once.
+   * @return An array of inputs
+   */
+  protected List<SourceFile> createInputs(List<String> files,
+      List<String> zips, List<JsonFileSpec> jsonFiles, boolean allowStdIn)
+      throws FlagUsageException, IOException {
     List<SourceFile> inputs = new ArrayList<>(files.size());
     boolean usingStdin = false;
     for (String filename : files) {
@@ -619,23 +677,34 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         inputs.addAll(newFiles);
       }
     }
+    if (jsonFiles != null) {
+      for (JsonFileSpec jsonFile : jsonFiles) {
+        inputs.add(SourceFile.fromCode(jsonFile.getPath(), jsonFile.getSrc()));
+      }
+    }
     return inputs;
   }
 
   /**
    * Creates JS source code inputs from a list of files.
    */
-  private List<SourceFile> createSourceInputs(List<String> files, List<String> zips)
+  private List<SourceFile> createSourceInputs(List<String> files, List<String> zips,
+      List<JsonFileSpec> jsonFiles)
       throws FlagUsageException, IOException {
     if (isInTestMode()) {
-      return inputsSupplierForTesting.get();
+      return inputsSupplierForTesting != null ? inputsSupplierForTesting.get()
+          : null;
     }
-    if (files.isEmpty() && zips.isEmpty()) {
+    if (files.isEmpty() && zips.isEmpty() && jsonFiles == null) {
       // Request to read from stdin.
       files = Collections.singletonList("-");
     }
     try {
-      return createInputs(files, zips, true);
+      if (jsonFiles != null) {
+        return createInputs(files, jsonFiles);
+      } else {
+        return createInputs(files, zips, true);
+      }
     } catch (FlagUsageException e) {
       throw new FlagUsageException("Bad --js flag. " + e.getMessage());
     }
@@ -666,7 +735,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * @return An array of module objects
    */
   List<JSModule> createJsModules(
-      List<String> specs, List<String> jsFiles)
+      List<String> specs, List<SourceFile> inputs)
       throws FlagUsageException, IOException {
     if (isInTestMode()) {
       return modulesSupplierForTesting.get();
@@ -674,7 +743,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     Preconditions.checkState(specs != null);
     Preconditions.checkState(!specs.isEmpty());
-    Preconditions.checkState(jsFiles != null);
+    Preconditions.checkState(inputs != null);
 
     List<String> moduleNames = new ArrayList<>(specs.size());
     Map<String, JSModule> modulesByName = new LinkedHashMap<>();
@@ -755,7 +824,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       modulesByName.put(name, module);
     }
 
-    final int totalNumJsFiles = jsFiles.size();
+    final int totalNumJsFiles = inputs.size();
 
     if (numJsFilesExpected >= 0 || minJsFilesRequired > totalNumJsFiles) {
       if (minJsFilesRequired > totalNumJsFiles) {
@@ -782,10 +851,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         numJsFiles = numJsFilesLeft;
       }
 
-      List<String> moduleJsFiles =
-          jsFiles.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
-      for (SourceFile input :
-          createInputs(moduleJsFiles, false)) {
+      List<SourceFile> moduleFiles =
+          inputs.subList(numJsFilesLeft - numJsFiles, numJsFilesLeft);
+      for (SourceFile input : moduleFiles) {
         module.add(input);
       }
       numJsFilesLeft -= numJsFiles;
@@ -971,6 +1039,30 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     List<String> jsFiles = config.js;
     List<String> moduleSpecs = config.module;
+    List<JsonFileSpec> jsonFiles = null;
+
+    if (config.useJsonStreams) {
+      jsonFiles = parseJsonFilesFromInputStream();
+
+      ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
+          = new ImmutableMap.Builder<>();
+
+      boolean foundJsonInputSourceMap = false;
+      for (JsonFileSpec jsonFile : jsonFiles) {
+        if (jsonFile.getSourceMap() != null && jsonFile.getSourceMap().length() > 0) {
+          String sourceMapPath = jsonFile.getPath() + ".map";
+          SourceFile sourceMap = SourceFile.fromCode(sourceMapPath,
+              jsonFile.getSourceMap());
+          inputSourceMaps.put(sourceMapPath, new SourceMapInput(sourceMap));
+          foundJsonInputSourceMap = true;
+        }
+      }
+
+      if (foundJsonInputSourceMap) {
+        inputSourceMaps.putAll(options.inputSourceMaps);
+        options.inputSourceMaps = inputSourceMaps.build();
+      }
+    }
 
     boolean createCommonJsModules = false;
     if (options.processCommonJSModules
@@ -978,8 +1070,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       createCommonJsModules = true;
       moduleSpecs.remove(0);
     }
+    List<SourceFile> inputs = createSourceInputs(jsFiles, config.jsZip, jsonFiles);
     if (!moduleSpecs.isEmpty()) {
-      modules = createJsModules(moduleSpecs, jsFiles);
+      modules = createJsModules(moduleSpecs, inputs);
       for (JSModule m : modules) {
         outputFileNames.add(getModuleOutputFileName(m));
       }
@@ -990,7 +1083,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         result = compiler.compileModules(externs, modules, options);
       }
     } else {
-      List<SourceFile> inputs = createSourceInputs(jsFiles, config.jsZip);
       if (config.skipNormalOutputs) {
         compiler.init(externs, inputs, options);
         compiler.hoistExterns();
@@ -1074,10 +1166,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     } else if (!options.checksOnly && result.success) {
       outputModuleGraphJson();
       if (modules == null) {
-        outputSingleBinary();
+        outputSingleBinary(options);
 
         // Output the source map if requested.
-        outputSourceMap(options, config.jsOutputFile);
+        // If output files are being written to stdout as a JSON string,
+        // outputSingleBinary will have added the sourcemap to the output file
+        if (!config.useJsonStreams) {
+          outputSourceMap(options, config.jsOutputFile);
+        }
       } else {
         outputModuleBinaryAndSourceMaps(modules, options);
       }
@@ -1095,6 +1191,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       // Output the manifest and bundle files if requested.
       outputManifest();
       outputBundle();
+
+      if (config.useJsonStreams) {
+        outputJsonStream();
+      }
     }
 
     // return 0 if no errors, the error count otherwise
@@ -1105,7 +1205,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return SourceCodeEscapers.javascriptEscaper().asFunction();
   }
 
-  void outputSingleBinary() throws IOException {
+  void outputSingleBinary(B options) throws IOException {
     Function<String, String> escaper = null;
     String marker = OUTPUT_MARKER;
     if (config.outputWrapper.contains(OUTPUT_MARKER_JS_STRING)) {
@@ -1113,11 +1213,56 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       escaper = getJavascriptEscaper();
     }
 
-    Appendable jsOutput = createDefaultOutput();
+    if (config.useJsonStreams) {
+      this.filesToStreamOut.add(createJsonFile(options, marker, escaper));
+    } else {
+      Appendable jsOutput = createDefaultOutput();
+      writeOutput(
+          jsOutput, compiler, compiler.toSource(), config.outputWrapper,
+          marker, escaper);
+      closeAppendable(jsOutput);
+    }
+  }
+
+  /**
+   * Save the compiler output to a JsonFileSpec to be later written to
+   * stdout
+   */
+  JsonFileSpec createJsonFile(B options, String outputMarker,
+      Function<String, String> escaper) throws IOException {
+    Appendable jsOutput = new StringBuilder();
     writeOutput(
         jsOutput, compiler, compiler.toSource(), config.outputWrapper,
-        marker, escaper);
-    closeAppendable(jsOutput);
+        outputMarker, escaper);
+
+    JsonFileSpec jsonOutput = new JsonFileSpec(jsOutput.toString(),
+        Strings.isNullOrEmpty(config.jsOutputFile) ?
+            "compiled.js" : config.jsOutputFile);
+
+    if (!Strings.isNullOrEmpty(options.sourceMapOutputPath)) {
+      StringBuilder sourcemap = new StringBuilder();
+      compiler.getSourceMap().appendTo(sourcemap, jsonOutput.getPath());
+      jsonOutput.setSourceMap(sourcemap.toString());
+    }
+
+    return jsonOutput;
+  }
+
+  void outputJsonStream() throws IOException {
+    JsonWriter jsonWriter = new JsonWriter(
+        new BufferedWriter(new OutputStreamWriter(defaultJsOutput, "UTF-8")));
+    jsonWriter.beginArray();
+    for (JsonFileSpec jsonFile : this.filesToStreamOut) {
+      jsonWriter.beginObject();
+      jsonWriter.name("src").value(jsonFile.getSrc());
+      jsonWriter.name("path").value(jsonFile.getPath());
+      if (!Strings.isNullOrEmpty(jsonFile.getSourceMap())) {
+        jsonWriter.name("source_map").value(jsonFile.getSourceMap());
+      }
+      jsonWriter.endObject();
+    }
+    jsonWriter.endArray();
+    jsonWriter.close();
   }
 
   private void outputModuleBinaryAndSourceMaps(
@@ -1130,36 +1275,68 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     // If the source map path is in fact a pattern for each
     // module, create a stream per-module. Otherwise, create
     // a single source map.
-    Writer mapOut = null;
+    Writer mapFileOut = null;
 
-    if (!shouldGenerateMapPerModule(options)) {
-      mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, null));
+    // When the json_streams flag is specified, sourcemaps are always generated
+    // per module
+    if (!(shouldGenerateMapPerModule(options) || config.useJsonStreams)) {
+      mapFileOut = fileNameToOutputWriter2(
+          expandSourceMapPath(options, null));
     }
 
     for (JSModule m : modules) {
-      if (shouldGenerateMapPerModule(options)) {
-        mapOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
-      }
-
-      try (Writer writer = fileNameToLegacyOutputWriter(getModuleOutputFileName(m))) {
-        if (options.sourceMapOutputPath != null) {
-          compiler.getSourceMap().reset();
+      if (config.useJsonStreams) {
+        this.filesToStreamOut.add(createJsonFileFromModule(m));
+      } else {
+        if (shouldGenerateMapPerModule(options)) {
+          mapFileOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
         }
-        writeModuleOutput(writer, m);
-        if (options.sourceMapOutputPath != null) {
-          compiler.getSourceMap().appendTo(mapOut, m.getName());
-        }
-      }
 
-      if (shouldGenerateMapPerModule(options) && mapOut != null) {
-        mapOut.close();
-        mapOut = null;
+        try (Writer writer = fileNameToLegacyOutputWriter(
+            getModuleOutputFileName(m))) {
+          if (options.sourceMapOutputPath != null) {
+            compiler.getSourceMap().reset();
+          }
+          writeModuleOutput(writer, m);
+          if (options.sourceMapOutputPath != null) {
+            compiler.getSourceMap().appendTo(mapFileOut, m.getName());
+          }
+        }
+
+        if (shouldGenerateMapPerModule(options) && mapFileOut != null) {
+          mapFileOut.close();
+          mapFileOut = null;
+        }
       }
     }
 
-    if (mapOut != null) {
-      mapOut.close();
+    if (mapFileOut != null) {
+      mapFileOut.close();
     }
+  }
+
+  /**
+   * Given an output module, convert it to a JSONFileSpec with associated
+   * sourcemap
+   */
+  private JsonFileSpec createJsonFileFromModule(JSModule module) throws
+      FlagUsageException, IOException{
+    compiler.getSourceMap().reset();
+
+    StringBuilder output = new StringBuilder();
+    writeModuleOutput(output, module);
+
+    JsonFileSpec jsonFile = new JsonFileSpec(output.toString(),
+        getModuleOutputFileName(module));
+
+    StringBuilder moduleSourceMap = new StringBuilder();
+
+    compiler.getSourceMap().appendTo(moduleSourceMap,
+        getModuleOutputFileName(module));
+
+    jsonFile.setSourceMap(moduleSourceMap.toString());
+
+    return jsonFile;
   }
 
   /**
@@ -2266,6 +2443,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         return this;
     }
 
+    private boolean useJsonStreams = false;
+
+    CommandLineConfig setUseJsonStreams(boolean useJsonStreams) {
+      this.useJsonStreams = useJsonStreams;
+      return this;
+    }
+
   }
 
   /**
@@ -2292,6 +2476,39 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     protected void clear() {
       entries.clear();
+    }
+  }
+
+  /**
+   * Representation of a source file from an encoded json stream input
+   */
+  private class JsonFileSpec {
+    private final String src;
+    private final String path;
+    private String source_map;
+
+    public JsonFileSpec(String src, String path) {
+      this(src, path, null);
+    }
+
+    public JsonFileSpec(String src, String path, String source_map) {
+      this.src = src;
+      this.path = path;
+      this.source_map = source_map;
+    }
+
+    public String getSrc() {
+      return this.src;
+    }
+
+    public String getPath() {
+      return this.path;
+    }
+
+    public String getSourceMap() { return this.source_map; }
+
+    public void setSourceMap(String map) {
+      this.source_map = map;
     }
   }
 }
