@@ -812,13 +812,15 @@ class CodeGenerator {
         break;
 
       case Token.YIELD:
-        Preconditions.checkState(childCount == 1);
         add("yield");
-        cc.maybeInsertSpace();
         if (n.isYieldFor()) {
+          Preconditions.checkNotNull(first);
           add("*");
         }
-        addExpr(first, NodeUtil.precedence(type), Context.OTHER);
+        if (first != null) {
+          cc.maybeInsertSpace();
+          addExpr(first, NodeUtil.precedence(type), Context.OTHER);
+        }
         break;
 
       case Token.FALSE:

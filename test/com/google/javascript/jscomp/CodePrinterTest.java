@@ -27,6 +27,7 @@ import java.util.List;
 
 
 public final class CodePrinterTest extends CodePrinterTestBase {
+  private static final Joiner LINE_JOINER = Joiner.on('\n');
 
   public void testPrint() {
     assertPrint("10 + a + b", "10+a+b");
@@ -1955,15 +1956,35 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("class C extends D{member(){super.foo()}}");
   }
 
-  public void testGeneratorYield1() {
+  public void testGeneratorYield() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrintSame("function*f(){yield 1}");
+    assertPrintSame("function*f(){yield}");
     assertPrintSame("function*f(){yield 1?0:2}");
     assertPrintSame("function*f(){yield 1,0}");
     assertPrintSame("function*f(){1,yield 0}");
     assertPrintSame("function*f(){yield(a=0)}");
     assertPrintSame("function*f(){a=yield 0}");
     assertPrintSame("function*f(){(yield 1)+(yield 1)}");
+  }
+
+  public void testGeneratorYieldPretty() {
+    languageMode = LanguageMode.ECMASCRIPT6;
+    assertPrettyPrint(
+        "function *f() {yield 1}",
+        LINE_JOINER.join(
+            "function* f() {",
+            "  yield 1;",
+            "}",
+            ""));
+
+    assertPrettyPrint(
+        "function *f() {yield}",
+        LINE_JOINER.join(
+            "function* f() {",
+            "  yield;",
+            "}",
+            ""));
   }
 
   public void testMemberGeneratorYield1() {
@@ -1990,7 +2011,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testPrettyArrowFunction() {
     languageMode = LanguageMode.ECMASCRIPT6;
     assertPrettyPrint("if (x) {var f = ()=>{alert(1); alert(2)}}",
-        Joiner.on('\n').join(
+        LINE_JOINER.join(
             "if (x) {",
             "  var f = () => {",
             "    alert(1);",
