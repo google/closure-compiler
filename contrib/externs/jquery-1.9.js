@@ -596,11 +596,14 @@ jQuery.Event.prototype.bubbles;
 /** @type {number} */
 jQuery.Event.prototype.button;
 
+/** @type {number} */
+jQuery.Event.prototype.buttons;
+
 /** @type {boolean} */
 jQuery.Event.prototype.cancelable;
 
-/** @type {string} */
-jQuery.Event.prototype.charChode;
+/** @type {number} */
+jQuery.Event.prototype.charCode;
 
 /** @type {number} */
 jQuery.Event.prototype.clientX;
@@ -626,6 +629,9 @@ jQuery.Event.prototype.detail;
 /** @type {number} */
 jQuery.Event.prototype.eventPhase;
 
+/** @type {Object} */
+jQuery.Event.prototype.handleObj;
+
 /**
  * @return {boolean}
  * @nosideeffects
@@ -645,10 +651,19 @@ jQuery.Event.prototype.isImmediatePropagationStopped = function() {};
 jQuery.Event.prototype.isPropagationStopped = function() {};
 
 /** @type {boolean} */
+jQuery.Event.prototype.isTrigger;
+
+/** @type {number} */
+jQuery.Event.prototype.keyCode;
+
+/** @type {boolean} */
 jQuery.Event.prototype.metaKey;
 
 /** @type {string} */
 jQuery.Event.prototype.namespace;
+
+/** @type {RegExp} */
+jQuery.Event.prototype.namespace_re;
 
 /** @type {number} */
 jQuery.Event.prototype.offsetX;
@@ -700,6 +715,9 @@ jQuery.Event.prototype.target;
 
 /** @type {number} */
 jQuery.Event.prototype.timeStamp;
+
+/** @type {?} */
+jQuery.Event.prototype.toElement;
 
 /** @type {string} */
 jQuery.Event.prototype.type;
