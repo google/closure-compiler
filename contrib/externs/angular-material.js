@@ -394,7 +394,7 @@ md.$mdThemingProvider.prototype.setDefaultTheme = function(name) {};
 /**
  * @param {string} name
  * @param {string=} opt_parentTheme
- * @return {md.$mdThemingProvider.Theme}
+ * @return {!md.$mdThemingProvider.Theme}
  */
 md.$mdThemingProvider.prototype.theme = function(name, opt_parentTheme) {};
 
