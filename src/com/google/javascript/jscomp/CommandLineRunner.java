@@ -1219,27 +1219,27 @@ public class CommandLineRunner extends
     options.setConformanceConfigs(loadConformanceConfigs(flags.conformanceConfigs));
 
     if (!flags.instrumentationFile.isEmpty()) {
-        String instrumentationPb;
-        Instrumentation.Builder builder = Instrumentation.newBuilder();
+      String instrumentationPb;
+      Instrumentation.Builder builder = Instrumentation.newBuilder();
       try (BufferedReader br =
-              new BufferedReader(Files.newReader(new File(flags.instrumentationFile), UTF_8))) {
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
+          new BufferedReader(Files.newReader(new File(flags.instrumentationFile), UTF_8))) {
+        StringBuilder sb = new StringBuilder();
+        String line = br.readLine();
 
-            while (line != null) {
-                sb.append(line);
-                sb.append(System.lineSeparator());
-                line = br.readLine();
-            }
-            instrumentationPb = sb.toString();
-            TextFormat.merge(instrumentationPb, builder);
-
-            // Setting instrumentation template
-            options.instrumentationTemplate = builder.build();
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading instrumentation template", e);
+        while (line != null) {
+          sb.append(line);
+          sb.append(System.lineSeparator());
+          line = br.readLine();
         }
+        instrumentationPb = sb.toString();
+        TextFormat.merge(instrumentationPb, builder);
+
+        // Setting instrumentation template
+        options.instrumentationTemplate = builder.build();
+
+      } catch (IOException e) {
+        throw new RuntimeException("Error reading instrumentation template", e);
+      }
     }
 
     return options;
