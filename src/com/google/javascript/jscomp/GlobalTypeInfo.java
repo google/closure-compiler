@@ -1672,17 +1672,16 @@ class GlobalTypeInfo implements CompilerPass {
       QualifiedName recvQname = QualifiedName.fromNode(recv);
       String pname = n.getLastChild().getString();
       Declaration decl = this.currentScope.getDeclaration(recvQname, false);
-      if (decl == null) {
-        return null;
-      }
-      EnumType et = decl.getEnum();
-      if (et != null && et.enumLiteralHasKey(pname)) {
-        return et.getEnumeratedType();
-      }
       QualifiedName propQname = new QualifiedName(pname);
-      Namespace ns = decl.getNamespace();
-      if (ns != null) {
-        return simpleInferDeclaration(ns.getDeclaration(propQname));
+      if (decl != null) {
+        EnumType et = decl.getEnum();
+        if (et != null && et.enumLiteralHasKey(pname)) {
+          return et.getEnumeratedType();
+        }
+        Namespace ns = decl.getNamespace();
+        if (ns != null) {
+          return simpleInferDeclaration(ns.getDeclaration(propQname));
+        }
       }
       JSType recvType = simpleInferExprType(recv);
       if (recvType != null && recvType.mayHaveProp(propQname)) {

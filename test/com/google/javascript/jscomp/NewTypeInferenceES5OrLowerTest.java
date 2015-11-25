@@ -7798,6 +7798,26 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         NewTypeInference.WRONG_ARGUMENT_COUNT);
   }
 
+  public void testInferConstTypeFromNestedObjectLiterals() {
+    typeCheck(Joiner.on('\n').join(
+        "/** @constructor */",
+        "function Foo() {};",
+        "/** @param {!{service: !{eventLogging: !Foo }}} x */",
+        "function f(x) {",
+        "  /** @const */",
+        "  var z = x.service.eventLogging;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @param {{p1: {p2: string }}} x */",
+        "function f(x) {",
+        "  /** @const */",
+        "  var z = x.p1.p2;",
+        "  return z - 5;",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
+
   public void testDifficultClassGenericsInstantiation() {
     typeCheck(Joiner.on('\n').join(
         "/**",
