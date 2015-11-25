@@ -33,6 +33,7 @@ import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
 import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
@@ -227,6 +228,15 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   /**
+   * Returns whether output should be a JSON stream.
+   */
+  private boolean isOutputInJson() {
+    return config.jsonStreamMode == JsonStreamMode.OUT
+        || config.jsonStreamMode == JsonStreamMode.BOTH;
+  }
+
+
+  /**
    * Get the command line config, so that it can be initialized.
    */
   protected CommandLineConfig getCommandLineConfig() {
@@ -368,7 +378,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     if (config.createSourceMap.length() > 0) {
       options.sourceMapOutputPath = config.createSourceMap;
-    } else if (config.useJsonStreams) {
+    } else if (isOutputInJson()) {
       options.sourceMapOutputPath = "%outname%";
     }
     options.sourceMapDetailLevel = config.sourceMapDetailLevel;
@@ -1041,7 +1051,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     List<String> moduleSpecs = config.module;
     List<JsonFileSpec> jsonFiles = null;
 
-    if (config.useJsonStreams) {
+    if (config.jsonStreamMode == JsonStreamMode.IN ||
+        config.jsonStreamMode == JsonStreamMode.BOTH) {
       jsonFiles = parseJsonFilesFromInputStream();
 
       ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
@@ -1171,7 +1182,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         // Output the source map if requested.
         // If output files are being written to stdout as a JSON string,
         // outputSingleBinary will have added the sourcemap to the output file
-        if (!config.useJsonStreams) {
+        if (!isOutputInJson()) {
           outputSourceMap(options, config.jsOutputFile);
         }
       } else {
@@ -1192,7 +1203,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       outputManifest();
       outputBundle();
 
-      if (config.useJsonStreams) {
+      if (isOutputInJson()) {
         outputJsonStream();
       }
     }
@@ -1213,7 +1224,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       escaper = getJavascriptEscaper();
     }
 
-    if (config.useJsonStreams) {
+    if (isOutputInJson()) {
       this.filesToStreamOut.add(createJsonFile(options, marker, escaper));
     } else {
       Appendable jsOutput = createDefaultOutput();
@@ -1279,13 +1290,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     // When the json_streams flag is specified, sourcemaps are always generated
     // per module
-    if (!(shouldGenerateMapPerModule(options) || config.useJsonStreams)) {
+    if (!(shouldGenerateMapPerModule(options) || isOutputInJson())) {
       mapFileOut = fileNameToOutputWriter2(
           expandSourceMapPath(options, null));
     }
 
     for (JSModule m : modules) {
-      if (config.useJsonStreams) {
+      if (isOutputInJson()) {
         this.filesToStreamOut.add(createJsonFileFromModule(m));
       } else {
         if (shouldGenerateMapPerModule(options)) {
@@ -2443,10 +2454,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         return this;
     }
 
-    private boolean useJsonStreams = false;
+    private JsonStreamMode jsonStreamMode = JsonStreamMode.NONE;
 
-    CommandLineConfig setUseJsonStreams(boolean useJsonStreams) {
-      this.useJsonStreams = useJsonStreams;
+    CommandLineConfig setJsonStreamMode(JsonStreamMode mode) {
+      this.jsonStreamMode = mode;
       return this;
     }
 
