@@ -1877,8 +1877,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testPreserveTypeAnnotations() {
     preserveTypeAnnotations = true;
     assertPrintSame("/**@type {foo} */var bar");
-    assertPrintSame(
-        "function/** void */f(/** string */s,/** number */n){}");
+    assertPrintSame("function/** void */f(/** string */s,/** number */n){}");
 
     preserveTypeAnnotations = false;
     assertPrint("/** @type {foo} */var bar;", "var bar");

@@ -96,7 +96,7 @@ public final class JSDocInfoPrinter {
 
     if (info.getParameterCount() > 0) {
       for (String name : info.getParameterNames()) {
-        sb.append("@param ");
+        sb.append("\n@param ");
         if (info.getParameterType(name) != null) {
           sb.append("{");
           appendTypeNode(sb, info.getParameterType(name).getRoot());
@@ -107,12 +107,12 @@ public final class JSDocInfoPrinter {
       }
     }
     if (info.hasReturnType()) {
-      sb.append("@return {");
+      sb.append("\n@return {");
       appendTypeNode(sb, info.getReturnType().getRoot());
       sb.append("} ");
     }
     if (info.hasThisType()) {
-      sb.append("@this {");
+      sb.append("\n@this {");
       Node typeNode = info.getThisType().getRoot();
       if (typeNode.getType() == Token.BANG) {
         appendTypeNode(sb, typeNode.getFirstChild());
@@ -122,7 +122,7 @@ public final class JSDocInfoPrinter {
       sb.append("} ");
     }
     if (info.hasBaseType()) {
-      sb.append("@extends {");
+      sb.append("\n@extends {");
       Node typeNode = info.getBaseType().getRoot();
       if (typeNode.getType() == Token.BANG) {
         appendTypeNode(sb, typeNode.getFirstChild());
@@ -132,7 +132,7 @@ public final class JSDocInfoPrinter {
       sb.append("} ");
     }
     for (JSTypeExpression type : info.getExtendedInterfaces()) {
-      sb.append("@extends {");
+      sb.append("\n@extends {");
       Node typeNode = type.getRoot();
       if (typeNode.getType() == Token.BANG) {
         appendTypeNode(sb, typeNode.getFirstChild());
@@ -142,7 +142,7 @@ public final class JSDocInfoPrinter {
       sb.append("} ");
     }
     for (JSTypeExpression type : info.getImplementedInterfaces()) {
-      sb.append("@implements {");
+      sb.append("\n@implements {");
       Node typeNode = type.getRoot();
       if (typeNode.getType() == Token.BANG) {
         appendTypeNode(sb, typeNode.getFirstChild());

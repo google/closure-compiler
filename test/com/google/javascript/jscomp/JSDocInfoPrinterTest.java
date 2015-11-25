@@ -82,22 +82,22 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordParameter("bar",
         new JSTypeExpression(JsDocInfoParser.parseTypeString("string"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**@param {number} foo @param {string} bar */",
+    assertEquals("/**\n@param {number} foo \n@param {string} bar */",
         JSDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.EQUALS, IR.string("number")), ""));
     info = builder.buildAndReset();
-    assertEquals("/**@param {number=} foo */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@param {number=} foo */", JSDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), ""));
     info = builder.buildAndReset();
-    assertEquals("/**@param {...number} foo */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@param {...number} foo */", JSDocInfoPrinter.print(info));
 
     builder.recordParameter("foo", null);
     info = builder.buildAndReset();
-    assertEquals("/**@param foo */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@param foo */", JSDocInfoPrinter.print(info));
   }
 
   public void testRecordTypes() {
@@ -131,12 +131,12 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordReturnType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("number|string"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**@return {(number|string)} */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@return {(number|string)} */", JSDocInfoPrinter.print(info));
 
     builder.recordParameter("foo",
         new JSTypeExpression(new Node(Token.ELLIPSIS, IR.string("number")), ""));
     info = builder.buildAndReset();
-    assertEquals("/**@param {...number} foo */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@param {...number} foo */", JSDocInfoPrinter.print(info));
     builder.recordThrowType(new JSTypeExpression(new Node(Token.STAR), ""));
     info = builder.buildAndReset();
     assertEquals("/**@throws {*} */", JSDocInfoPrinter.print(info));
@@ -204,17 +204,17 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordImplementedInterface(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**@implements {Foo} */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@implements {Foo} */", JSDocInfoPrinter.print(info));
 
     builder.recordImplementedInterface(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("!Foo"), ""));
     info = builder.buildAndReset();
-    assertEquals("/**@implements {Foo} */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@implements {Foo} */", JSDocInfoPrinter.print(info));
 
     builder.recordBaseType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Foo"), ""));
     info = builder.buildAndReset();
-    assertEquals("/**@extends {Foo} */", JSDocInfoPrinter.print(info));
+    assertEquals("/**\n@extends {Foo} */", JSDocInfoPrinter.print(info));
 
     builder.recordBaseType(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("!Foo"), ""));
@@ -223,7 +223,8 @@ public final class JSDocInfoPrinterTest extends TestCase {
     builder.recordImplementedInterface(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Bar.Baz"), ""));
     info = builder.buildAndReset();
-    assertEquals("/**@extends {Foo} @implements {Bar} @implements {Bar.Baz} */",
+    assertEquals(
+        "/**\n@extends {Foo} \n@implements {Bar} \n@implements {Bar.Baz} */",
         JSDocInfoPrinter.print(info));
   }
 
@@ -234,7 +235,7 @@ public final class JSDocInfoPrinterTest extends TestCase {
      builder.recordExtendedInterface(
         new JSTypeExpression(JsDocInfoParser.parseTypeString("Bar"), ""));
     JSDocInfo info = builder.buildAndReset();
-    assertEquals("/**@interface @extends {Foo} @extends {Bar} */",
+    assertEquals("/**@interface \n@extends {Foo} \n@extends {Bar} */",
         JSDocInfoPrinter.print(info));
   }
 
