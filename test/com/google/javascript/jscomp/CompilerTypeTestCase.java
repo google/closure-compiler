@@ -77,7 +77,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
           " */",
           "function IObject() {};",
           "/**",
-          " * @interface",
+          " * @record",
           " * @extends IObject<number, VALUE2>",
           " * @template VALUE2",
           " */",

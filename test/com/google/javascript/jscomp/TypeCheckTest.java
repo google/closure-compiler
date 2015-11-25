@@ -13492,6 +13492,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         });
   }
 
+
   public void testTemplateMap1() throws Exception {
     testTypesWithExtraExterns(EXTERNS_WITH_IARRAYLIKE_DECLS,
         "function f() {\n"
@@ -13786,6 +13787,155 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "    f(arr);",
             "}"));
   }
+
+  public void testIArrayLikeStructuralMatch1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike */ x){};",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {number} */ Foo.prototype.length",
+            "f(new Foo)"));
+  }
+
+  public void testIArrayLikeStructuralMatch2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike */ x){};",
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {number} */ this.length = 5;",
+            "}",
+            "f(new Foo)"));
+  }
+
+  public void testIArrayLikeStructuralMatch3() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike */ x){};",
+            "f({length: 5})"));
+  }
+
+  public void testIArrayLikeStructuralMatch4() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike */ x){};",
+            "/** @const */ var ns = {};",
+            "/** @type {number} */ ns.length",
+            "f(ns)"));
+  }
+
+  public void testIArrayLikeStructuralMatch5() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike */ x){};",
+            "var ns = function() {};",
+            "/** @type {number} */ ns.length",
+            "f(ns)"));
+  }
+
+  public void testIArrayLikeStructuralMatch6() throws Exception {
+    // Even though Foo's [] element type may not be string, we treat the lack
+    // of explicit type like ? and allow this.
+    testTypes(
+        LINE_JOINER.join(
+            "function f(/** !IArrayLike<string> */ x){};",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @type {number} */ Foo.prototype.length",
+            "f(new Foo)"));
+  }
+
+  public void testTemplatizedStructuralMatch1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithPropT() {}",
+            "/** @type {T} */ WithPropT.prototype.prop",
+            "function f(/** !WithPropT<number> */ x){};",
+            "/** @constructor */ function Foo() {}",
+            "/** @type {number} */ Foo.prototype.prop",
+            "f(new Foo)"));
+  }
+
+  public void testTemplatizedStructuralMatch2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithPropT() {}",
+            "/** @type {T} */ WithPropT.prototype.prop",
+            "function f(/** !WithPropT<number> */ x){};",
+            "/** @constructor @template U */ function Foo() {}",
+            "/** @type {number} */ Foo.prototype.prop",
+            "f(new Foo)"));
+  }
+
+  public void testTemplatizedStructuralMatch3() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithPropT() {}",
+            "/** @type {T} */ WithPropT.prototype.prop",
+            "function f(/** !WithPropT<string> */ x){};",
+            "/** @constructor @template U */ function Foo() {}",
+            "/** @type {U} */ Foo.prototype.prop",
+            "f(new Foo)"));
+  }
+
+  public void testTemplatizedStructuralMismatch1() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithPropT() {}",
+            "/** @type {T} */ WithPropT.prototype.prop",
+            "function f(/** !WithPropT<number> */ x){};",
+            "/** @constructor */ function Foo() {}",
+            "/** @type {string} */ Foo.prototype.prop = 'str'",
+            "f(new Foo)"),
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo",
+            "required: WithPropT<number>"));
+  }
+
+  public void testTemplatizedStructuralMismatch2() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithPropT() {}",
+            "/** @type {T} */ WithPropT.prototype.prop",
+            "function f(/** !WithPropT<number> */ x){};",
+            "/** @constructor @template U */ function Foo() {}",
+            "/** @type {string} */ Foo.prototype.prop = 'str'",
+            "f(new Foo)"),
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo",
+            "required: WithPropT<number>"));
+  }
+
+  public void testTemplatizedStructuralMismatch3() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithPropT() {}",
+            "/** @type {T} */ WithPropT.prototype.prop",
+            "function f(/** !WithPropT<number> */ x){};",
+            "/**",
+            " * @constructor",
+            " * @template U",
+            " * @param {U} x",
+            " */",
+            "function Foo(x) {",
+            "  /** @type {U} */ this.prop = x",
+            "}",
+            "f(new Foo('str'))"),
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo<string>",
+            "required: WithPropT<number>"));
+  }
+
 
   private static final String EXTERNS_WITH_IOBJECT_DECLS = LINE_JOINER.join(
       "/**",
@@ -15121,21 +15271,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
    * Using @template @interfaces requires @implements them explicitly.
    */
   public void testStructuralInterfaceMatching45() throws Exception {
-    testTypesWithExtraExterns(
+    testTypes(
         LINE_JOINER.join(
-            "/** @record",
-            " *  @template X",
-            " */ function I() {}",
+            "/**",
+            " * @record",
+            " * @template X",
+            " */",
+            "function I() {}",
             "/** @constructor */",
-            "function C() {}"),
-        LINE_JOINER.join(
-            "/** @type {I} */ var i;",
-            "/** @type {C} */ var c = new C();",
-            "i = c"),
-        LINE_JOINER.join(
-            "assignment",
-            "found   : (C|null)",
-            "required: (I|null)"));
+            "function C() {}",
+            "var i /** !I */ = new C;"));
   }
 
   public void testStructuralInterfaceMatching46() throws Exception {

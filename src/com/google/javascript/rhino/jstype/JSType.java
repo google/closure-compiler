@@ -1347,11 +1347,16 @@ public abstract class JSType implements TypeI, Serializable {
           thatTypeParams, EquivalenceMethod.INVARIANT);
     }
     if (!templateMatch) {
-      return implicitImplCache.isStructuralTyping()
-          && implicitMatch(thisType, thatType, implicitImplCache);
+      return false;
     }
 
-    // Templatized types. The above check guarantees TemplateTypeMap
+    // If the super type is an @record instance, then we can't safely remove a templatized type
+    // (since it might affect the types of the properties)
+    if (implicitImplCache.isStructuralTyping() && thatType.isStructuralInterfaceInstance()) {
+      return implicitMatch(thisType, thatType, implicitImplCache);
+    }
+
+    // Templatized types. For nominal types, the above check guarantees TemplateTypeMap
     // equivalence; check if the base type is a subtype.
     if (thisType.isTemplatizedType()) {
       return thisType.toMaybeTemplatizedType().getReferencedType().isSubtype(
@@ -1363,8 +1368,15 @@ public abstract class JSType implements TypeI, Serializable {
       return thisType.isSubtype(
           ((ProxyObjectType) thatType).getReferencedTypeInternal(), implicitImplCache);
     }
-    return implicitImplCache.isStructuralTyping()
-        && implicitMatch(thisType, thatType, implicitImplCache);
+    return false;
+  }
+
+  private boolean isStructuralInterfaceInstance() {
+    if (!this.isObject()) {
+      return false;
+    }
+    FunctionType constructor = this.toMaybeObjectType().getConstructor();
+    return constructor != null && constructor.isStructuralInterface();
   }
 
   /**
@@ -1373,25 +1385,20 @@ public abstract class JSType implements TypeI, Serializable {
    */
   protected static boolean implicitMatch(JSType subType, JSType superType,
       ImplCache implicitImplCache) {
-    // Union type should be handled by isSubtype already
+    // Union types should be handled by isSubtype already
     Preconditions.checkState(!subType.isUnionType());
     Preconditions.checkState(!superType.isUnionType());
 
-    // Anything other than two object types doesn't match structurally
+    // Anything other than two object types can't match structurally
     if (!subType.isObject() || !superType.isObject()) {
       return false;
     }
-
-    // currently the structural interface matching does not support
-    // implicit matching for templatized type
-    if (superType.isTemplatizedType()) {
-      return false;
-    }
-
+    // A supertype that isn't a structural interface can't match structurally
     FunctionType superConstructor = superType.toMaybeObjectType().getConstructor();
     if (superConstructor == null || !superConstructor.isStructuralInterface()) {
       return false;
     }
+
     return checkObjectImplicitMatch(
         subType.toMaybeObjectType(), superType.toMaybeObjectType(), implicitImplCache);
   }
@@ -1406,11 +1413,6 @@ public abstract class JSType implements TypeI, Serializable {
       return result.subtypeValue();
     }
 
-    if (superType.getConstructor().hasAnyTemplateTypes()) {
-      implicitImplCache.updateCache(subType, superType, MatchStatus.NOT_MATCH);
-      return false;
-    }
-
     for (String propName : superType.getPropertyNames()) {
       if (subType.hasProperty(propName)
           && subType.getPropertyType(propName).isSubtype(
@@ -1421,8 +1423,6 @@ public abstract class JSType implements TypeI, Serializable {
       implicitImplCache.updateCache(subType, superType, MatchStatus.NOT_MATCH);
       return false;
     }
-
-
     implicitImplCache.updateCache(subType, superType, MatchStatus.MATCH);
     return true;
   }
