@@ -116,6 +116,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   static final DiagnosticType NO_TREE_GENERATED_ERROR = DiagnosticType.error(
       "JSC_NO_TREE_GENERATED_ERROR",
       "Code contains errors. No tree was generated.");
+  static final DiagnosticType INVALID_MODULE_SOURCEMAP_PATTERN = DiagnosticType.error(
+      "JSC_INVALID_MODULE_SOURCEMAP_PATTERN",
+      "When using --module flags, the --create_source_map flag must contain "
+      + "%outname% in the value.");
 
   static final String WAITING_FOR_INPUT_WARNING =
       "The compiler is waiting for input via stdin.";
@@ -1132,7 +1136,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           outputSourceMap(options, config.jsOutputFile);
         }
       } else {
-        outputModuleBinaryAndSourceMaps(modules, options);
+        DiagnosticType error = outputModuleBinaryAndSourceMaps(modules, options);
+        if (error != null) {
+          compiler.report(JSError.make(error));
+          return 1;
+        }
       }
 
       // Output the externs if required.
@@ -1226,8 +1234,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
   }
 
-  private void outputModuleBinaryAndSourceMaps(List<JSModule> modules, B options)
-      throws IOException {
+  private DiagnosticType outputModuleBinaryAndSourceMaps(
+      List<JSModule> modules, B options)
+      throws FlagUsageException, IOException {
     parsedModuleWrappers = parseModuleWrappers(
         config.moduleWrapper, modules);
     maybeCreateDirsForPath(config.moduleOutputPathPrefix);
@@ -1239,9 +1248,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     // When the json_streams flag is specified, sourcemaps are always generated
     // per module
-    if (!(shouldGenerateMapPerModule(options) || isOutputInJson())) {
-      mapFileOut = fileNameToOutputWriter2(
-          expandSourceMapPath(options, null));
+    if (!(shouldGenerateMapPerModule(options) || options.sourceMapOutputPath == null ||
+        config.jsonStreamMode == JsonStreamMode.OUT ||
+        config.jsonStreamMode == JsonStreamMode.BOTH)) {
+      // warn that this is not supported
+      return INVALID_MODULE_SOURCEMAP_PATTERN;
     }
 
     for (JSModule m : modules) {
@@ -1252,14 +1263,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           mapFileOut = fileNameToOutputWriter2(expandSourceMapPath(options, m));
         }
 
-        try (Writer writer = fileNameToLegacyOutputWriter(
-            getModuleOutputFileName(m))) {
+        String moduleFilename = getModuleOutputFileName(m);
+        try (Writer writer = fileNameToLegacyOutputWriter(moduleFilename)) {
           if (options.sourceMapOutputPath != null) {
             compiler.getSourceMap().reset();
           }
           writeModuleOutput(writer, m);
           if (options.sourceMapOutputPath != null) {
-            compiler.getSourceMap().appendTo(mapFileOut, m.getName());
+            compiler.getSourceMap().appendTo(mapFileOut, moduleFilename);
           }
         }
 
@@ -1273,6 +1284,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (mapFileOut != null) {
       mapFileOut.close();
     }
+    return null;
   }
 
   /**

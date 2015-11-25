@@ -984,6 +984,13 @@ public final class CommandLineRunnerTest extends TestCase {
         .isEqualTo("foo_m0.js.map");
   }
 
+  public void testInvalidSourceMapPattern() {
+    useModules = ModulePattern.CHAIN;
+    args.add("--create_source_map=out.map");
+    args.add("--module_output_path_prefix=foo_");
+    test(new String[] {"var x = 3;", "var y = 5;"}, AbstractCommandLineRunner.INVALID_MODULE_SOURCEMAP_PATTERN);
+  }
+
   public void testSourceMapFormat1() {
     args.add("--js_output_file");
     args.add("/path/to/out.js");
