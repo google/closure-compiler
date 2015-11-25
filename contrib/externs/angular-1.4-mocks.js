@@ -31,7 +31,6 @@
  *     $httpBackendDecorator
  *     $RootScopeDecorator
  *     angular.mock.module
- *     angular.mock.inject
  */
 
 angular.mock = {};
@@ -245,3 +244,7 @@ angular.mock.animate.prototype.flush = function() {};
 
 /** @typedef {function((!Function|string), !Object, Object=): !Object} */
 angular.mock.$controller;
+
+
+/** @param {!Array|!Function} injectable */
+angular.mock.inject = function(injectable) {};
