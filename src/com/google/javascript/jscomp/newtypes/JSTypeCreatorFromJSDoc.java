@@ -699,7 +699,7 @@ public final class JSTypeCreatorFromJSDoc {
       }
       DeclaredFunctionType declType = getFunTypeFromTypicalFunctionJsdoc(
           jsdoc, functionName, declNode,
-          constructorType, ownerType, registry, builder, false);
+          constructorType, ownerType, registry, builder);
       return new FunctionAndSlotType(null, declType);
     } catch (FunctionTypeBuilder.WrongParameterOrderException e) {
       warnings.add(JSError.make(declNode, WRONG_PARAMETER_ORDER));
@@ -756,10 +756,7 @@ public final class JSTypeCreatorFromJSDoc {
   private DeclaredFunctionType getFunTypeFromTypicalFunctionJsdoc(
       JSDocInfo jsdoc, String functionName, Node funNode,
       RawNominalType constructorType, RawNominalType ownerType,
-      DeclaredTypeRegistry registry, FunctionTypeBuilder builder,
-      boolean ignoreJsdoc /* for when the jsdoc is malformed */) {
-    Preconditions.checkArgument(!ignoreJsdoc || jsdoc == null);
-    Preconditions.checkArgument(!ignoreJsdoc || funNode.isFunction());
+      DeclaredTypeRegistry registry, FunctionTypeBuilder builder) {
     ImmutableList.Builder<String> typeParamsBuilder = new ImmutableList.Builder<>();;
     ImmutableList<String> typeParameters = ImmutableList.of();
     Node parent = funNode.getParent();
@@ -768,6 +765,7 @@ public final class JSTypeCreatorFromJSDoc {
     // - warn for multiple @template annotations
     // - warn for @template annotation w/out usage
 
+    boolean ignoreJsdoc = false;
     if (jsdoc != null) {
       typeParamsBuilder.addAll(jsdoc.getTemplateTypeNames());
       // We don't properly support the type transformation language; we treat
