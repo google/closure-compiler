@@ -23,11 +23,11 @@
 google.maps = {};
 
 /**
- * @enum {string}
+ * @enum {number}
  */
 google.maps.Animation = {
-  DROP: '',
-  BOUNCE: ''
+  DROP: 1,
+  BOUNCE: 2
 };
 
 /**
@@ -159,21 +159,21 @@ google.maps.CircleOptions.prototype.strokeWeight;
 google.maps.CircleOptions.prototype.zIndex;
 
 /**
- * @enum {string}
+ * @enum {number}
  */
 google.maps.ControlPosition = {
-  BOTTOM_CENTER: '',
-  TOP_RIGHT: '',
-  RIGHT_BOTTOM: '',
-  BOTTOM_RIGHT: '',
-  LEFT_TOP: '',
-  LEFT_BOTTOM: '',
-  TOP_LEFT: '',
-  TOP_CENTER: '',
-  LEFT_CENTER: '',
-  RIGHT_CENTER: '',
-  RIGHT_TOP: '',
-  BOTTOM_LEFT: ''
+  BOTTOM_CENTER: 1,
+  TOP_RIGHT: 2,
+  RIGHT_BOTTOM: 3,
+  BOTTOM_RIGHT: 4,
+  LEFT_TOP: 5,
+  LEFT_BOTTOM: 6,
+  TOP_LEFT: 7,
+  TOP_CENTER: 8,
+  LEFT_CENTER: 9,
+  RIGHT_CENTER: 10,
+  RIGHT_TOP: 11,
+  BOTTOM_LEFT: 12
 };
 
 /**
@@ -473,13 +473,13 @@ google.maps.DirectionsService.prototype.route = function(request, callback) {};
  * @enum {string}
  */
 google.maps.DirectionsStatus = {
-  MAX_WAYPOINTS_EXCEEDED: '',
-  OK: '',
-  ZERO_RESULTS: '',
-  INVALID_REQUEST: '',
-  UNKNOWN_ERROR: '',
-  REQUEST_DENIED: '',
-  NOT_FOUND: '',
+  MAX_WAYPOINTS_EXCEEDED: '1',
+  OK: '2',
+  ZERO_RESULTS: '3',
+  INVALID_REQUEST: '4',
+  UNKNOWN_ERROR: '5',
+  REQUEST_DENIED: '6',
+  NOT_FOUND: '7',
   OVER_QUERY_LIMIT: ''
 };
 
@@ -557,9 +557,9 @@ google.maps.Distance.prototype.value;
  * @enum {string}
  */
 google.maps.DistanceMatrixElementStatus = {
-  ZERO_RESULTS: '',
-  NOT_FOUND: '',
-  OK: ''
+  ZERO_RESULTS: '1',
+  NOT_FOUND: '2',
+  OK: '3'
 };
 
 /**
@@ -668,12 +668,12 @@ google.maps.DistanceMatrixService.prototype.getDistanceMatrix = function(request
  * @enum {string}
  */
 google.maps.DistanceMatrixStatus = {
-  OK: '',
-  INVALID_REQUEST: '',
-  MAX_ELEMENTS_EXCEEDED: '',
-  UNKNOWN_ERROR: '',
-  REQUEST_DENIED: '',
-  MAX_DIMENSIONS_EXCEEDED: '',
+  OK: '1',
+  INVALID_REQUEST: '2',
+  MAX_ELEMENTS_EXCEEDED: '3',
+  UNKNOWN_ERROR: '4',
+  REQUEST_DENIED: '5',
+  MAX_DIMENSIONS_EXCEEDED: '6',
   OVER_QUERY_LIMIT: ''
 };
 
@@ -730,10 +730,10 @@ google.maps.ElevationService.prototype.getElevationForLocations = function(reque
  * @enum {string}
  */
 google.maps.ElevationStatus = {
-  INVALID_REQUEST: '',
-  UNKNOWN_ERROR: '',
-  OK: '',
-  REQUEST_DENIED: '',
+  INVALID_REQUEST: '1',
+  UNKNOWN_ERROR: '2',
+  OK: '3',
+  REQUEST_DENIED: '4',
   OVER_QUERY_LIMIT: ''
 };
 
@@ -1013,10 +1013,10 @@ google.maps.GeocoderGeometry.prototype.viewport;
  * @enum {string}
  */
 google.maps.GeocoderLocationType = {
-  RANGE_INTERPOLATED: '',
-  ROOFTOP: '',
-  APPROXIMATE: '',
-  GEOMETRIC_CENTER: ''
+  RANGE_INTERPOLATED: '1',
+  ROOFTOP: '2',
+  APPROXIMATE: '3',
+  GEOMETRIC_CENTER: '4'
 };
 
 /**
@@ -1073,12 +1073,12 @@ google.maps.GeocoderResult.prototype.types;
  * @enum {string}
  */
 google.maps.GeocoderStatus = {
-  OK: '',
-  ZERO_RESULTS: '',
-  INVALID_REQUEST: '',
-  UNKNOWN_ERROR: '',
-  REQUEST_DENIED: '',
-  ERROR: '',
+  OK: '1',
+  ZERO_RESULTS: '2',
+  INVALID_REQUEST: '3',
+  UNKNOWN_ERROR: '4',
+  REQUEST_DENIED: '5',
+  ERROR: '6',
   OVER_QUERY_LIMIT: ''
 };
 
@@ -2134,22 +2134,22 @@ google.maps.MapTypeControlOptions.prototype.position;
 google.maps.MapTypeControlOptions.prototype.style;
 
 /**
- * @enum {string}
+ * @enum {number}
  */
 google.maps.MapTypeControlStyle = {
-  DEFAULT: '',
-  HORIZONTAL_BAR: '',
-  DROPDOWN_MENU: ''
+  DEFAULT: 1,
+  HORIZONTAL_BAR: 2,
+  DROPDOWN_MENU: 3
 };
 
 /**
  * @enum {string}
  */
 google.maps.MapTypeId = {
-  TERRAIN: '',
-  SATELLITE: '',
-  HYBRID: '',
-  ROADMAP: ''
+  TERRAIN: '1',
+  SATELLITE: '2',
+  HYBRID: '3',
+  ROADMAP: '4'
 };
 
 /**
@@ -2194,7 +2194,7 @@ google.maps.MapTypeStyleElementType = {
 };
 
 /**
- * @enum {string}
+ * @enum {number}
  */
 google.maps.MapTypeStyleFeatureType = {
 
@@ -2576,8 +2576,8 @@ google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(latlng, callb
  * @enum {string}
  */
 google.maps.MaxZoomStatus = {
-  OK: '',
-  ERROR: ''
+  OK: '1',
+  ERROR: '2'
 };
 
 /**
@@ -3016,10 +3016,10 @@ google.maps.ScaleControlOptions.prototype.position;
 google.maps.ScaleControlOptions.prototype.style;
 
 /**
- * @enum {string}
+ * @enum {number}
  */
 google.maps.ScaleControlStyle = {
-  DEFAULT: ''
+  DEFAULT: 1
 };
 
 /**
@@ -3344,9 +3344,9 @@ google.maps.StreetViewService.prototype.getPanoramaByLocation = function(latlng,
  * @enum {string}
  */
 google.maps.StreetViewStatus = {
-  UNKNOWN_ERROR: '',
-  ZERO_RESULTS: '',
-  OK: ''
+  UNKNOWN_ERROR: '1',
+  ZERO_RESULTS: '2',
+  OK: '3'
 };
 
 /**
@@ -3438,17 +3438,17 @@ google.maps.TrafficLayer.prototype.setMap = function(map) {};
  * @enum {string}
  */
 google.maps.TravelMode = {
-  WALKING: '',
-  DRIVING: '',
-  BICYCLING: ''
+  WALKING: '1',
+  DRIVING: '2',
+  BICYCLING: '3'
 };
 
 /**
- * @enum {string}
+ * @enum {number}
  */
 google.maps.UnitSystem = {
-  METRIC: '',
-  IMPERIAL: ''
+  METRIC: 1,
+  IMPERIAL: 2
 };
 
 /**
@@ -3467,12 +3467,12 @@ google.maps.ZoomControlOptions.prototype.position;
 google.maps.ZoomControlOptions.prototype.style;
 
 /**
- * @enum {string}
+ * @enum {number}
  */
 google.maps.ZoomControlStyle = {
-  DEFAULT: '',
-  LARGE: '',
-  SMALL: ''
+  DEFAULT: 1,
+  LARGE: 2,
+  SMALL: 3
 };
 
 // Namespace
@@ -3482,17 +3482,17 @@ google.maps.adsense = {};
  * @enum {string}
  */
 google.maps.adsense.AdFormat = {
-  SMALL_RECTANGLE: '',
-  SMALL_SQUARE: '',
-  SQUARE: '',
-  BUTTON: '',
-  VERTICAL_BANNER: '',
-  WIDE_SKYSCRAPER: '',
-  HALF_BANNER: '',
-  SKYSCRAPER: '',
-  MEDIUM_RECTANGLE: '',
-  LARGE_RECTANGLE: '',
-  BANNER: '',
+  SMALL_RECTANGLE: '1',
+  SMALL_SQUARE: '2',
+  SQUARE: '3',
+  BUTTON: '4',
+  VERTICAL_BANNER: '5',
+  WIDE_SKYSCRAPER: '6',
+  HALF_BANNER: '7',
+  SKYSCRAPER: '8',
+  MEDIUM_RECTANGLE: '9',
+  LARGE_RECTANGLE: '10',
+  BANNER: '11',
   LEADERBOARD: ''
 };
 
@@ -4068,11 +4068,11 @@ google.maps.places.PlacesService.prototype.search = function(request, callback) 
  * @enum {string}
  */
 google.maps.places.PlacesServiceStatus = {
-  OK: '',
-  ZERO_RESULTS: '',
-  INVALID_REQUEST: '',
-  UNKNOWN_ERROR: '',
-  REQUEST_DENIED: '',
+  OK: '1',
+  ZERO_RESULTS: '2',
+  INVALID_REQUEST: '3',
+  UNKNOWN_ERROR: '4',
+  REQUEST_DENIED: '5',
   OVER_QUERY_LIMIT: ''
 };
 

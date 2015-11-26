@@ -23,11 +23,11 @@
 google.maps = {};
 
 /**
- * @enum {number|string}
+ * @enum {number}
  */
 google.maps.Animation = {
-  BOUNCE: '',
-  DROP: ''
+  BOUNCE: 1,
+  DROP: 2
 };
 
 /**
@@ -193,21 +193,21 @@ google.maps.CircleOptions.prototype.visible;
 google.maps.CircleOptions.prototype.zIndex;
 
 /**
- * @enum {number|string}
+ * @enum {number}
  */
 google.maps.ControlPosition = {
-  BOTTOM_CENTER: '',
-  BOTTOM_LEFT: '',
-  BOTTOM_RIGHT: '',
-  LEFT_BOTTOM: '',
-  LEFT_CENTER: '',
-  LEFT_TOP: '',
-  RIGHT_BOTTOM: '',
-  RIGHT_CENTER: '',
-  RIGHT_TOP: '',
-  TOP_CENTER: '',
-  TOP_LEFT: '',
-  TOP_RIGHT: ''
+  BOTTOM_CENTER: 1,
+  BOTTOM_LEFT: 2,
+  BOTTOM_RIGHT: 3,
+  LEFT_BOTTOM: 4,
+  LEFT_CENTER: 5,
+  LEFT_TOP: 6,
+  RIGHT_BOTTOM: 7,
+  RIGHT_CENTER: 8,
+  RIGHT_TOP: 9,
+  TOP_CENTER: 10,
+  TOP_LEFT: 11,
+  TOP_RIGHT: 12
 };
 
 /**
@@ -504,16 +504,16 @@ google.maps.DirectionsService = function() {};
 google.maps.DirectionsService.prototype.route = function(request, callback) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.DirectionsStatus = {
-  INVALID_REQUEST: '',
-  MAX_WAYPOINTS_EXCEEDED: '',
-  NOT_FOUND: '',
-  OK: '',
-  OVER_QUERY_LIMIT: '',
-  REQUEST_DENIED: '',
-  UNKNOWN_ERROR: '',
+  INVALID_REQUEST: '1',
+  MAX_WAYPOINTS_EXCEEDED: '2',
+  NOT_FOUND: '3',
+  OK: '4',
+  OVER_QUERY_LIMIT: '5',
+  REQUEST_DENIED: '6',
+  UNKNOWN_ERROR: '7',
   ZERO_RESULTS: ''
 };
 
@@ -588,12 +588,12 @@ google.maps.Distance.prototype.text;
 google.maps.Distance.prototype.value;
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.DistanceMatrixElementStatus = {
-  NOT_FOUND: '',
-  OK: '',
-  ZERO_RESULTS: ''
+  NOT_FOUND: '1',
+  OK: '2',
+  ZERO_RESULTS: '3'
 };
 
 /**
@@ -699,15 +699,15 @@ google.maps.DistanceMatrixService = function() {};
 google.maps.DistanceMatrixService.prototype.getDistanceMatrix = function(request, callback) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.DistanceMatrixStatus = {
-  INVALID_REQUEST: '',
-  MAX_DIMENSIONS_EXCEEDED: '',
-  MAX_ELEMENTS_EXCEEDED: '',
-  OK: '',
-  OVER_QUERY_LIMIT: '',
-  REQUEST_DENIED: '',
+  INVALID_REQUEST: '1',
+  MAX_DIMENSIONS_EXCEEDED: '2',
+  MAX_ELEMENTS_EXCEEDED: '3',
+  OK: '4',
+  OVER_QUERY_LIMIT: '5',
+  REQUEST_DENIED: '6',
   UNKNOWN_ERROR: ''
 };
 
@@ -766,13 +766,13 @@ google.maps.ElevationService.prototype.getElevationAlongPath = function(request,
 google.maps.ElevationService.prototype.getElevationForLocations = function(request, callback) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.ElevationStatus = {
-  INVALID_REQUEST: '',
-  OK: '',
-  OVER_QUERY_LIMIT: '',
-  REQUEST_DENIED: '',
+  INVALID_REQUEST: '1',
+  OK: '2',
+  OVER_QUERY_LIMIT: '3',
+  REQUEST_DENIED: '4',
   UNKNOWN_ERROR: ''
 };
 
@@ -1064,13 +1064,13 @@ google.maps.GeocoderGeometry.prototype.location_type;
 google.maps.GeocoderGeometry.prototype.viewport;
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.GeocoderLocationType = {
-  APPROXIMATE: '',
-  GEOMETRIC_CENTER: '',
-  RANGE_INTERPOLATED: '',
-  ROOFTOP: ''
+  APPROXIMATE: '1',
+  GEOMETRIC_CENTER: '2',
+  RANGE_INTERPOLATED: '3',
+  ROOFTOP: '4'
 };
 
 /**
@@ -1124,15 +1124,15 @@ google.maps.GeocoderResult.prototype.geometry;
 google.maps.GeocoderResult.prototype.types;
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.GeocoderStatus = {
-  ERROR: '',
-  INVALID_REQUEST: '',
-  OK: '',
-  OVER_QUERY_LIMIT: '',
-  REQUEST_DENIED: '',
-  UNKNOWN_ERROR: '',
+  ERROR: '1',
+  INVALID_REQUEST: '2',
+  OK: '3',
+  OVER_QUERY_LIMIT: '4',
+  REQUEST_DENIED: '5',
+  UNKNOWN_ERROR: '6',
   ZERO_RESULTS: ''
 };
 
@@ -1506,17 +1506,17 @@ google.maps.KmlLayerOptions.prototype.preserveViewport;
 google.maps.KmlLayerOptions.prototype.suppressInfoWindows;
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.KmlLayerStatus = {
-  DOCUMENT_NOT_FOUND: '',
-  DOCUMENT_TOO_LARGE: '',
-  FETCH_ERROR: '',
-  INVALID_DOCUMENT: '',
-  INVALID_REQUEST: '',
-  LIMITS_EXCEEDED: '',
-  OK: '',
-  TIMED_OUT: '',
+  DOCUMENT_NOT_FOUND: '1',
+  DOCUMENT_TOO_LARGE: '2',
+  FETCH_ERROR: '3',
+  INVALID_DOCUMENT: '4',
+  INVALID_REQUEST: '5',
+  LIMITS_EXCEEDED: '6',
+  OK: '7',
+  TIMED_OUT: '8',
   UNKNOWN: ''
 };
 
@@ -2248,22 +2248,22 @@ google.maps.MapTypeControlOptions.prototype.position;
 google.maps.MapTypeControlOptions.prototype.style;
 
 /**
- * @enum {number|string}
+ * @enum {number}
  */
 google.maps.MapTypeControlStyle = {
-  DEFAULT: '',
-  DROPDOWN_MENU: '',
-  HORIZONTAL_BAR: ''
+  DEFAULT: 1,
+  DROPDOWN_MENU: 2,
+  HORIZONTAL_BAR: 3
 };
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.MapTypeId = {
-  HYBRID: '',
-  ROADMAP: '',
-  SATELLITE: '',
-  TERRAIN: ''
+  HYBRID: '1',
+  ROADMAP: '2',
+  SATELLITE: '3',
+  TERRAIN: '4'
 };
 
 /**
@@ -2673,11 +2673,11 @@ google.maps.MaxZoomService = function() {};
 google.maps.MaxZoomService.prototype.getMaxZoomAtLatLng = function(latlng, callback) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.MaxZoomStatus = {
-  ERROR: '',
-  OK: ''
+  ERROR: '1',
+  OK: '2'
 };
 
 /**
@@ -3223,10 +3223,10 @@ google.maps.ScaleControlOptions.prototype.position;
 google.maps.ScaleControlOptions.prototype.style;
 
 /**
- * @enum {number|string}
+ * @enum {number}
  */
 google.maps.ScaleControlStyle = {
-  DEFAULT: ''
+  DEFAULT: 1
 };
 
 /**
@@ -3553,12 +3553,12 @@ google.maps.StreetViewService.prototype.getPanoramaById = function(pano, callbac
 google.maps.StreetViewService.prototype.getPanoramaByLocation = function(latlng, radius, callback) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.StreetViewStatus = {
-  OK: '',
-  UNKNOWN_ERROR: '',
-  ZERO_RESULTS: ''
+  OK: '1',
+  UNKNOWN_ERROR: '2',
+  ZERO_RESULTS: '3'
 };
 
 /**
@@ -3641,20 +3641,20 @@ google.maps.TrafficLayer.prototype.getMap = function() {};
 google.maps.TrafficLayer.prototype.setMap = function(map) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.TravelMode = {
-  BICYCLING: '',
-  DRIVING: '',
-  WALKING: ''
+  BICYCLING: '1',
+  DRIVING: '2',
+  WALKING: '3'
 };
 
 /**
- * @enum {number|string}
+ * @enum {number}
  */
 google.maps.UnitSystem = {
-  IMPERIAL: '',
-  METRIC: ''
+  IMPERIAL: 1,
+  METRIC: 2
 };
 
 /**
@@ -3673,32 +3673,32 @@ google.maps.ZoomControlOptions.prototype.position;
 google.maps.ZoomControlOptions.prototype.style;
 
 /**
- * @enum {number|string}
+ * @enum {number}
  */
 google.maps.ZoomControlStyle = {
-  DEFAULT: '',
-  LARGE: '',
-  SMALL: ''
+  DEFAULT: 1,
+  LARGE: 2,
+  SMALL: 3
 };
 
 // Namespace
 google.maps.adsense = {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.adsense.AdFormat = {
-  BANNER: '',
-  BUTTON: '',
-  HALF_BANNER: '',
-  LARGE_RECTANGLE: '',
-  LEADERBOARD: '',
-  MEDIUM_RECTANGLE: '',
-  SKYSCRAPER: '',
-  SMALL_RECTANGLE: '',
-  SMALL_SQUARE: '',
-  SQUARE: '',
-  VERTICAL_BANNER: '',
+  BANNER: '1',
+  BUTTON: '2',
+  HALF_BANNER: '3',
+  LARGE_RECTANGLE: '4',
+  LEADERBOARD: '5',
+  MEDIUM_RECTANGLE: '6',
+  SKYSCRAPER: '7',
+  SMALL_RECTANGLE: '8',
+  SMALL_SQUARE: '9',
+  SQUARE: '10',
+  VERTICAL_BANNER: '11',
   WIDE_SKYSCRAPER: ''
 };
 
@@ -3921,13 +3921,13 @@ google.maps.drawing.OverlayCompleteEvent.prototype.overlay;
 google.maps.drawing.OverlayCompleteEvent.prototype.type;
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.drawing.OverlayType = {
-  CIRCLE: '',
-  MARKER: '',
-  POLYGON: '',
-  POLYLINE: '',
+  CIRCLE: '1',
+  MARKER: '2',
+  POLYGON: '3',
+  POLYLINE: '4',
   RECTANGLE: ''
 };
 
@@ -4435,14 +4435,14 @@ google.maps.places.PlacesService.prototype.getDetails = function(request, callba
 google.maps.places.PlacesService.prototype.search = function(request, callback) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.places.PlacesServiceStatus = {
-  INVALID_REQUEST: '',
-  OK: '',
-  OVER_QUERY_LIMIT: '',
-  REQUEST_DENIED: '',
-  UNKNOWN_ERROR: '',
+  INVALID_REQUEST: '1',
+  OK: '2',
+  OVER_QUERY_LIMIT: '3',
+  REQUEST_DENIED: '4',
+  UNKNOWN_ERROR: '5',
   ZERO_RESULTS: ''
 };
 
@@ -4468,19 +4468,19 @@ google.maps.weather.CloudLayer.prototype.getMap = function() {};
 google.maps.weather.CloudLayer.prototype.setMap = function(map) {};
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.weather.LabelColor = {
-  BLACK: '',
-  WHITE: ''
+  BLACK: '1',
+  WHITE: '2'
 };
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.weather.TemperatureUnit = {
-  CELSIUS: '',
-  FAHRENHEIT: ''
+  CELSIUS: '1',
+  FAHRENHEIT: '2'
 };
 
 /**
@@ -4679,11 +4679,11 @@ google.maps.weather.WeatherMouseEvent.prototype.latLng;
 google.maps.weather.WeatherMouseEvent.prototype.pixelOffset;
 
 /**
- * @enum {number|string}
+ * @enum {string}
  */
 google.maps.weather.WindSpeedUnit = {
-  KILOMETERS_PER_HOUR: '',
-  METERS_PER_SECOND: '',
-  MILES_PER_HOUR: ''
+  KILOMETERS_PER_HOUR: '1',
+  METERS_PER_SECOND: '2',
+  MILES_PER_HOUR: '3'
 };
 
