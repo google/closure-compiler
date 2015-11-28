@@ -1216,6 +1216,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (config.useJsonStreams) {
       this.filesToStreamOut.add(createJsonFile(options, marker, escaper));
     } else {
+      if(!config.jsOutputFile.isEmpty()) {
+        maybeCreateDirsForPath(config.jsOutputFile);
+      }
+
       Appendable jsOutput = createDefaultOutput();
       writeOutput(
           jsOutput, compiler, compiler.toSource(), config.outputWrapper,
@@ -1553,8 +1557,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     String outName = expandSourceMapPath(options, null);
-    File outPath = new File(outName);
-    maybeCreateDirsForPath(outPath.getParent());
+    maybeCreateDirsForPath(outName);
     try (Writer out = fileNameToOutputWriter2(outName)) {
       compiler.getSourceMap().appendTo(out, associatedName);
     }
