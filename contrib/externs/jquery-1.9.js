@@ -1237,7 +1237,7 @@ jQuery.noConflict = function(removeAll) {};
 jQuery.noop = function() {};
 
 /**
- * @param {(jQuerySelector|Array<Element>|function(number)|jQuery)} arg1
+ * @param {(jQuerySelector|Array<Element>|function(this:Element,number,Element=):boolean|jQuery)} arg1
  * @return {!jQuery}
  */
 jQuery.prototype.not = function(arg1) {};
