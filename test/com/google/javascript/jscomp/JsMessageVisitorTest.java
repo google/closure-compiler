@@ -28,6 +28,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
@@ -57,6 +58,34 @@ public final class JsMessageVisitorTest extends TestCase {
   public void testJsMessageOnVar() {
     extractMessagesSafely(
         "/** @desc Hello */ var MSG_HELLO = goog.getMsg('a')");
+    assertEquals(0, compiler.getWarningCount());
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_HELLO", msg.getKey());
+    assertEquals("Hello", msg.getDesc());
+    assertEquals("[testcode]", msg.getSourceName());
+  }
+
+  public void testJsMessageOnLet() {
+    compilerOptions = new CompilerOptions();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    extractMessagesSafely(
+        "/** @desc Hello */ let MSG_HELLO = goog.getMsg('a')");
+    assertEquals(0, compiler.getWarningCount());
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertEquals("MSG_HELLO", msg.getKey());
+    assertEquals("Hello", msg.getDesc());
+    assertEquals("[testcode]", msg.getSourceName());
+  }
+
+  public void testJsMessageOnConst() {
+    compilerOptions = new CompilerOptions();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    extractMessagesSafely(
+        "/** @desc Hello */ const MSG_HELLO = goog.getMsg('a')");
     assertEquals(0, compiler.getWarningCount());
     assertThat(messages).hasSize(1);
 

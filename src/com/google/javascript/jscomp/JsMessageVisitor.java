@@ -204,7 +204,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     switch (node.getType()) {
       case Token.NAME:
         // var MSG_HELLO = 'Message'
-        if ((parent != null) && (parent.isVar())) {
+        if ((parent != null) && (NodeUtil.isNameDeclaration(parent))) {
           messageKey = node.getString();
           isVar = true;
         } else {
