@@ -2639,4 +2639,30 @@ public class CompilerOptions {
      */
     CUSTOM
   }
+
+  /**
+   * Whether standard input or standard output should be an array of
+   * JSON encoded files
+   */
+  static enum JsonStreamMode {
+    /**
+     * stdin/out are both single files.
+     */
+    NONE,
+
+    /**
+     * stdin is a json stream.
+     */
+    IN,
+
+    /**
+     * stdout is a json stream.
+     */
+    OUT,
+
+    /**
+     * stdin and stdout are both json streams.
+     */
+    BOTH
+  }
 }

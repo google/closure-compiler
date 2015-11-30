@@ -607,12 +607,13 @@ public class CommandLineRunner extends
 
     @Option(name = "--json_streams",
         hidden = true,
-        handler = BooleanOptionHandler.class,
-        usage = "Specifies that standard input and output streams will be "
+        usage = "Specifies whether standard input and output streams will be "
             + "a JSON array of sources. Each source will be an object of the "
             + "form {path: filename, src: file_contents, srcmap: srcmap_contents }. "
-            + "Intended for use by stream-based build systems such as gulpjs.")
-    private boolean jsonStreams = false;
+            + "Intended for use by stream-based build systems such as gulpjs. "
+            + "Options: NONE, IN, OUT, BOTH. Defaults to NONE.")
+    private CompilerOptions.JsonStreamMode jsonStreamMode =
+        CompilerOptions.JsonStreamMode.NONE;
 
     @Argument
     private List<String> arguments = new ArrayList<>();
@@ -1131,7 +1132,7 @@ public class CommandLineRunner extends
           .setTracerMode(flags.tracerMode)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setNewTypeInference(flags.useNewTypeInference)
-          .setUseJsonStreams(flags.jsonStreams);
+          .setJsonStreamMode(flags.jsonStreamMode);
     }
     errorStream = null;
   }
