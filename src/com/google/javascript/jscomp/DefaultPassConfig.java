@@ -463,6 +463,15 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(runtimeTypeCheck);
     }
 
+    // Inlines functions that perform dynamic accesses to static properties of parameters that are
+    // typed as {Function}.
+    //
+    // Inlining these functions turns a dynamic access to a static property of a class definition
+    // into a fully qualified access and in so doing enables better dead code stripping.
+    if (options.j2clPass) {
+      passes.add(j2clPass);
+    }
+
     passes.add(createEmptyPass("beforeStandardOptimizations"));
 
     if (options.replaceIdGenerators) {
@@ -2625,6 +2634,15 @@ public final class DefaultPassConfig extends PassConfig {
       return new DartSuperAccessorsPass(compiler);
     }
   };
+
+  /** Rewrites J2CL constructs to be more optimizable. */
+  private final PassFactory j2clPass =
+      new PassFactory("j2clPass", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new J2clPass(compiler);
+        }
+      };
 
   /**
    * A pass-factory that is good for {@code HotSwapCompilerPass} passes.

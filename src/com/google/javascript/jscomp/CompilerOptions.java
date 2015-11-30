@@ -673,6 +673,9 @@ public class CompilerOptions {
   /** Processes the output of the Dart Dev Compiler */
   boolean dartPass;
 
+  /** Processes the output of J2CL */
+  boolean j2clPass;
+
   /** Remove goog.abstractMethod assignments. */
   boolean removeAbstractMethods;
 
@@ -1064,6 +1067,7 @@ public class CompilerOptions {
     angularPass = false;
     polymerPass = false;
     dartPass = false;
+    j2clPass = false;
     removeAbstractMethods = true;
     removeClosureAsserts = false;
     stripTypes = Collections.emptySet();
@@ -1532,6 +1536,10 @@ public class CompilerOptions {
 
   public void setDartPass(boolean dartPass) {
     this.dartPass = dartPass;
+  }
+
+  public void setJ2clPass(boolean j2clPass) {
+    this.j2clPass = j2clPass;
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {

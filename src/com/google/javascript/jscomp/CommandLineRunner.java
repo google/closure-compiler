@@ -500,6 +500,12 @@ public class CommandLineRunner extends
         usage = "Rewrite Dart Dev Compiler output to be compiler-friendly.")
     private boolean dartPass = false;
 
+    @Option(name = "--j2cl_pass",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Rewrite J2CL output to be compiler-friendly.")
+    private boolean j2clPass = false;
+
     @Option(name = "--output_manifest",
         hidden = true,
         usage = "Prints out a list of all the files in the compilation. "
@@ -1193,6 +1199,8 @@ public class CommandLineRunner extends
     options.polymerPass = flags.polymerPass;
 
     options.setDartPass(flags.dartPass);
+
+    options.setJ2clPass(flags.j2clPass);
 
     options.renamePrefixNamespace = flags.renamePrefixNamespace;
 
