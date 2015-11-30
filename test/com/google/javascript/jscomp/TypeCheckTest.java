@@ -13936,6 +13936,53 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: WithPropT<number>"));
   }
 
+  public void testTemplatizedStructuralMismatch4() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithProp() {}",
+            "/** @type {T} */ WithProp.prototype.prop",
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {number} */ this.prop = 4;",
+            "}",
+            "/**",
+            " * @template U",
+            " * @param {!WithProp<U>} x",
+            " * @param {U} y",
+            " */",
+            "function f(x, y){};",
+            "f(new Foo, 'str')"),
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : Foo",
+            "required: WithProp<string>"));
+  }
+
+  public void testTemplatizedStructuralMismatchNotFound() throws Exception {
+    // TODO(blickly): We would like to find the parameter mismatch here.
+    // Currently they match with type WithProp<?>, which is somewhat unsatisfying.
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record @template T */",
+            "function WithProp() {}",
+            "/** @type {T} */ WithProp.prototype.prop",
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {number} */ this.prop = 4;",
+            "}",
+            "/** @constructor */",
+            "function Bar() {",
+            "  /** @type {string} */ this.prop = 'str';",
+            "}",
+            "/**",
+            " * @template U",
+            " * @param {!WithProp<U>} x",
+            " * @param {!WithProp<U>} y",
+            " */",
+            "function f(x, y){};",
+            "f(new Foo, new Bar)"));
+  }
 
   private static final String EXTERNS_WITH_IOBJECT_DECLS = LINE_JOINER.join(
       "/**",

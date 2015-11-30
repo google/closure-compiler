@@ -1352,8 +1352,10 @@ public abstract class JSType implements TypeI, Serializable {
 
     // If the super type is an @record instance, then we can't safely remove a templatized type
     // (since it might affect the types of the properties)
-    if (implicitImplCache.isStructuralTyping() && thatType.isStructuralInterfaceInstance()) {
-      return implicitMatch(thisType, thatType, implicitImplCache);
+    if (implicitImplCache.isStructuralTyping()
+        && thisType.isObject() && thatType.isStructuralInterfaceInstance()) {
+      return thisType.toMaybeObjectType().isStructuralSubtype(
+          thatType.toMaybeObjectType(), implicitImplCache);
     }
 
     // Templatized types. For nominal types, the above check guarantees TemplateTypeMap
@@ -1377,54 +1379,6 @@ public abstract class JSType implements TypeI, Serializable {
     }
     FunctionType constructor = this.toMaybeObjectType().getConstructor();
     return constructor != null && constructor.isStructuralInterface();
-  }
-
-  /**
-   * Determine if the {@code subType} is a subtype of {@code superType} due
-   * to structural interfaces.
-   */
-  protected static boolean implicitMatch(JSType subType, JSType superType,
-      ImplCache implicitImplCache) {
-    // Union types should be handled by isSubtype already
-    Preconditions.checkState(!subType.isUnionType());
-    Preconditions.checkState(!superType.isUnionType());
-
-    // Anything other than two object types can't match structurally
-    if (!subType.isObject() || !superType.isObject()) {
-      return false;
-    }
-    // A supertype that isn't a structural interface can't match structurally
-    FunctionType superConstructor = superType.toMaybeObjectType().getConstructor();
-    if (superConstructor == null || !superConstructor.isStructuralInterface()) {
-      return false;
-    }
-
-    return checkObjectImplicitMatch(
-        subType.toMaybeObjectType(), superType.toMaybeObjectType(), implicitImplCache);
-  }
-
-  protected static boolean checkObjectImplicitMatch(
-      ObjectType subType, ObjectType superType,
-      ImplCache implicitImplCache) {
-    Preconditions.checkArgument(superType.getConstructor().isStructuralInterface());
-
-    MatchStatus result = implicitImplCache.checkCache(subType, superType);
-    if (result != null) {
-      return result.subtypeValue();
-    }
-
-    for (String propName : superType.getPropertyNames()) {
-      if (subType.hasProperty(propName)
-          && subType.getPropertyType(propName).isSubtype(
-                 superType.getPropertyType(propName), implicitImplCache)) {
-        // Then this property is covariant and we should move on.
-        continue;
-      }
-      implicitImplCache.updateCache(subType, superType, MatchStatus.NOT_MATCH);
-      return false;
-    }
-    implicitImplCache.updateCache(subType, superType, MatchStatus.MATCH);
-    return true;
   }
 
   /**

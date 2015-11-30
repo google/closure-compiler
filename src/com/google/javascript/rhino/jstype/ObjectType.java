@@ -540,6 +540,34 @@ public abstract class ObjectType
   }
 
   /**
+   * Determine if {@code this} is a an implicit subtype of {@code structuralInterface}.
+   */
+  boolean isStructuralSubtype(ObjectType structuralInterface, ImplCache implicitImplCache) {
+    // Union types should be handled by isSubtype already
+    Preconditions.checkArgument(!this.isUnionType());
+    Preconditions.checkArgument(!structuralInterface.isUnionType());
+    Preconditions.checkArgument(structuralInterface.getConstructor().isStructuralInterface());
+
+    MatchStatus result = implicitImplCache.checkCache(this, structuralInterface);
+    if (result != null) {
+      return result.subtypeValue();
+    }
+
+    for (String propName : structuralInterface.getPropertyNames()) {
+      if (this.hasProperty(propName)
+          && this.getPropertyType(propName).isSubtype(
+                 structuralInterface.getPropertyType(propName), implicitImplCache)) {
+        // Then this property is covariant and we should move on.
+        continue;
+      }
+      implicitImplCache.updateCache(this, structuralInterface, MatchStatus.NOT_MATCH);
+      return false;
+    }
+    implicitImplCache.updateCache(this, structuralInterface, MatchStatus.MATCH);
+    return true;
+  }
+
+  /**
    * Returns a list of properties defined or inferred on this type and any of
    * its supertypes.
    */
