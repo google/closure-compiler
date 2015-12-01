@@ -1332,7 +1332,7 @@ public class JSDocInfo implements Serializable {
    * Get the message for a given thrown type.
    */
   public String getThrowsDescriptionForType(JSTypeExpression type) {
-    if (info == null || documentation.throwsDescriptions == null) {
+    if (documentation == null || documentation.throwsDescriptions == null) {
       return null;
     }
 

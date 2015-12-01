@@ -631,10 +631,34 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     if (ctorJSDocInfo != null) {
-      newInfo.recordSuppressions(ctorJSDocInfo.getSuppressions());
+      if (!ctorJSDocInfo.getSuppressions().isEmpty()) {
+        newInfo.recordSuppressions(ctorJSDocInfo.getSuppressions());
+      }
+
       for (String param : ctorJSDocInfo.getParameterNames()) {
         newInfo.recordParameter(param, ctorJSDocInfo.getParameterType(param));
+        newInfo.recordParameterDescription(param, ctorJSDocInfo.getDescriptionForParameter(param));
       }
+
+      for (JSTypeExpression thrown : ctorJSDocInfo.getThrownTypes()) {
+        newInfo.recordThrowType(thrown);
+        newInfo.recordThrowDescription(thrown, ctorJSDocInfo.getThrowsDescriptionForType(thrown));
+      }
+
+      JSDocInfo.Visibility visibility = ctorJSDocInfo.getVisibility();
+      if (visibility != null && visibility != JSDocInfo.Visibility.INHERITED) {
+        newInfo.recordVisibility(visibility);
+      }
+
+      if (ctorJSDocInfo.isDeprecated()) {
+        newInfo.recordDeprecated();
+      }
+
+      if (ctorJSDocInfo.getDeprecationReason() != null
+          && !newInfo.isDeprecationReasonRecorded()) {
+        newInfo.recordDeprecationReason(ctorJSDocInfo.getDeprecationReason());
+      }
+
       newInfo.mergePropertyBitfieldFrom(ctorJSDocInfo);
     }
 

@@ -501,6 +501,13 @@ public final class JSDocInfoBuilder {
   }
 
   /**
+   * Returns whether a deprecation reason has been recorded.
+   */
+  public boolean isDeprecationReasonRecorded() {
+    return currentInfo.getDeprecationReason() != null;
+  }
+
+  /**
    * Records the list of suppressed warnings.
    */
   public boolean recordSuppressions(Set<String> suppressions) {

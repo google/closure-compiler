@@ -201,6 +201,18 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "/** @dict */ class C { }",
         "/** @constructor @dict */ var C = function() {};");
+
+    test(
+        "/** @template T */ class C { }",
+        "/** @constructor @struct @template T */ var C = function() {};");
+
+    test(
+        "/** @final */ class C { }",
+        "/** @constructor @struct @final */ var C = function() {};");
+
+    test(
+        "/** @private */ class C { }",
+        "/** @constructor @struct @private */ var C = function() {};");
   }
 
   public void testInterfaceWithJsDoc() {
@@ -241,6 +253,36 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @struct",
             " */",
             "var C = function(b) {};"));
+
+    test(
+        "class C { /** @throws {Error} */ constructor() {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @throws {Error}",
+            " * @constructor",
+            " * @struct",
+            " */",
+            "var C = function() {};"));
+
+    test(
+        "class C { /** @private */ constructor() {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @private",
+            " * @constructor",
+            " * @struct",
+            " */",
+            "var C = function() {};"));
+
+    test(
+        "class C { /** @deprecated */ constructor() {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @deprecated",
+            " * @constructor",
+            " * @struct",
+            " */",
+            "var C = function() {};"));
   }
 
   public void testMemberWithJsDoc() {
