@@ -840,6 +840,9 @@ public class CompilerOptions {
 
   String reportPath;
 
+  // Should only be used when debugging compiler bugs using small JS inputs.
+  boolean printSourceAfterEachPass;
+
   /** Where to save a report of global name usage */
   public void setReportPath(String reportPath) {
     this.reportPath = reportPath;
@@ -1119,6 +1122,7 @@ public class CompilerOptions {
     // Debugging
     aliasHandler = NULL_ALIAS_TRANSFORMATION_HANDLER;
     errorHandler = null;
+    printSourceAfterEachPass = false;
     useDebugLog = false;
   }
 
