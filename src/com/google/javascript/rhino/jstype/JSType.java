@@ -43,15 +43,14 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Table;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.TypeI;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 
 /**
  * Represents JavaScript value types.<p>
@@ -1588,30 +1587,36 @@ public abstract class JSType implements TypeI, Serializable {
   /**
    * base cache data structure
    */
-  protected abstract static class MatchCache {
-    protected Table<JSType, JSType, MatchStatus> matchCache;
-    protected boolean isStructuralTyping;
+  private abstract static class MatchCache {
+    private IdentityHashMap<JSType, IdentityHashMap<JSType, MatchStatus>> matchCache;
+    private boolean isStructuralTyping;
 
-    protected MatchCache(boolean isStructuralTyping) {
+    MatchCache(boolean isStructuralTyping) {
       this.isStructuralTyping = isStructuralTyping;
       this.matchCache = null;
     }
 
-    protected boolean isStructuralTyping() {
+    boolean isStructuralTyping() {
       return isStructuralTyping;
     }
 
     void updateCache(JSType subType, JSType superType, MatchStatus isMatch) {
-      this.matchCache.put(subType, superType, isMatch);
+      IdentityHashMap<JSType, MatchStatus> map = this.matchCache.get(subType);
+      if (map == null) {
+        map = new IdentityHashMap<>();
+      }
+      map.put(superType, isMatch);
+      this.matchCache.put(subType, map);
     }
 
     MatchStatus checkCache(JSType subType, JSType superType) {
       if (this.matchCache == null) {
-        this.matchCache = HashBasedTable.create();
+        this.matchCache = new IdentityHashMap<>();
       }
       // check the cache
-      if (this.matchCache.contains(subType, superType)) {
-        return this.matchCache.get(subType, superType);
+      if (this.matchCache.containsKey(subType)
+          && this.matchCache.get(subType).containsKey(superType)) {
+        return this.matchCache.get(subType).get(superType);
       } else {
         this.updateCache(subType, superType, MatchStatus.PROCESSING);
         return null;
