@@ -468,10 +468,12 @@ public final class CommandLineRunnerTest extends TestCase {
   // Integration tests
 
   public void testIssue70a() {
+    args.add("--language_in=ECMASCRIPT5");
     test("function foo({}) {}", RhinoErrorReporter.ES6_FEATURE);
   }
 
   public void testIssue70b() {
+    args.add("--language_in=ECMASCRIPT5");
     test("function foo([]) {}", RhinoErrorReporter.ES6_FEATURE);
   }
 
@@ -701,6 +703,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testSourceSortingOn3() {
     args.add("--manage_closure_dependencies=true");
+    args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.addDependency('sym', [], []);\nvar x = 3;",
           "var COMPILED = false;",
@@ -713,6 +716,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testSourceSortingCircularDeps1() {
     args.add("--manage_closure_dependencies=true");
+    args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.provide('gin'); goog.require('tonic'); var gin = {};",
           "goog.provide('tonic'); goog.require('gin'); var tonic = {};",
@@ -723,19 +727,20 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testSourceSortingCircularDeps2() {
     args.add("--manage_closure_dependencies=true");
+    args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.provide('roses.lime.juice');",
           "goog.provide('gin'); goog.require('tonic'); var gin = {};",
           "goog.provide('tonic'); goog.require('gin'); var tonic = {};",
           "goog.require('gin'); goog.require('tonic');",
-          "goog.provide('gimlet');" +
-          "     goog.require('gin'); goog.require('roses.lime.juice');"
+          "goog.provide('gimlet'); goog.require('gin'); goog.require('roses.lime.juice');"
          },
          JSModule.CIRCULAR_DEPENDENCY_ERROR);
   }
 
   public void testSourcePruningOn1() {
     args.add("--manage_closure_dependencies=true");
+    args.add("--language_in=ECMASCRIPT5");
     test(new String[] {
           "goog.require('beer');",
           "goog.provide('beer');",
@@ -1278,12 +1283,17 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(compiler.getErrors()).hasLength(2);
   }
 
-  public void testES3ByDefault() {
+  public void testES3() {
+    args.add("--language_in=ECMASCRIPT3");
     useStringComparison = true;
     test(
         "var x = f.function",
         "var x=f[\"function\"];",
         RhinoErrorReporter.INVALID_ES3_PROP_NAME);
+  }
+
+  public void testES6TranspiledByDefault() {
+    test("var x = class X {};", "var x = function() {};");
   }
 
   public void testES5ChecksByDefault() {
@@ -1303,6 +1313,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testES5Strict() {
     args.add("--language_in=ECMASCRIPT5_STRICT");
+    args.add("--language_out=ECMASCRIPT5_STRICT");
     test("var x = f.function", "'use strict';var x = f.function");
     test("var let", RhinoErrorReporter.PARSE_ERROR);
     test("function f(x) { delete x; }", StrictModeCheck.DELETE_VARIABLE);
@@ -1310,13 +1321,15 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testES5StrictUseStrict() {
     args.add("--language_in=ECMASCRIPT5_STRICT");
+    args.add("--language_out=ECMASCRIPT5_STRICT");
     Compiler compiler = compile(new String[] {"var x = f.function"});
     String outputSource = compiler.toSource();
-    assertThat(outputSource.substring(0, 12)).isEqualTo("'use strict'");
+    assertThat(outputSource).startsWith("'use strict'");
   }
 
   public void testES5StrictUseStrictMultipleInputs() {
     args.add("--language_in=ECMASCRIPT5_STRICT");
+    args.add("--language_out=ECMASCRIPT5_STRICT");
     Compiler compiler = compile(new String[] {"var x = f.function",
         "var y = f.function", "var z = f.function"});
     String outputSource = compiler.toSource();

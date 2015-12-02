@@ -526,18 +526,17 @@ public class CommandLineRunner extends
       hidden = true,
       usage =
           "Sets what language spec that input sources conform. "
-              + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-              + "ECMASCRIPT6, ECMASCRIPT6_STRICT, ECMASCRIPT6_TYPED (experimental)"
+              + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+              + "ECMASCRIPT6 (default), ECMASCRIPT6_STRICT, ECMASCRIPT6_TYPED (experimental)"
     )
-    private String languageIn = "ECMASCRIPT3";
+    private String languageIn = "ECMASCRIPT6";
 
     @Option(name = "--language_out",
         hidden = true,
         usage = "Sets what language spec the output should conform to. "
-        + " If omitted, defaults to the value of language_in. "
-        + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
         + "ECMASCRIPT6_TYPED (experimental)")
-    private String languageOut = "";
+    private String languageOut = "ECMASCRIPT3";
 
     @Option(name = "--version",
         hidden = true,
