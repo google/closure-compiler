@@ -3192,9 +3192,9 @@ public final class NodeUtil {
 
       case Token.INSTANCEOF:
       case Token.TYPEOF:
+      case Token.AND:
         return true;
 
-      case Token.AND:
       case Token.HOOK:
         return parent.getFirstChild() == propAccess;
 

@@ -11015,6 +11015,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "  }",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "function f(/** (number|string) */ x) {",
@@ -11022,6 +11023,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    x < 'str';",
         "  }",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "function f(/** (number|string) */ x) {",
@@ -11029,6 +11031,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    x - 5;",
         "  }",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "function f(/** (number|boolean) */ x) {",
@@ -11036,6 +11039,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    var /** boolean */ b = x;",
         "  }",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "/**",
@@ -11045,6 +11049,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function f(x) {",
         "  return goog.isString(x) && (1 < 2) ? x : 'a';",
         "}"));
+
     typeCheck(Joiner.on('\n').join(
         CLOSURE_BASE,
         "/**",
@@ -11059,6 +11064,14 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "    }",
         "  }",
         "  return false;",
+        "}"));
+
+    typeCheck(Joiner.on('\n').join(
+        CLOSURE_BASE,
+        "function f(/** !Object */ obj) {",
+        "  if (goog.isDef(obj.myfun)) {",
+        "    return obj.myfun();",
+        "  }",
         "}"));
   }
 
