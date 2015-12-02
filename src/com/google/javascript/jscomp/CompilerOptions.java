@@ -786,6 +786,9 @@ public class CompilerOptions {
   /** CommonJS module prefix. */
   List<String> moduleRoots = ImmutableList.of(ES6ModuleLoader.DEFAULT_FILENAME_PREFIX);
 
+  /** Rewrite polyfills. */
+  boolean rewritePolyfills = false;
+
   /** Runtime libraries to always inject. */
   List<String> forceLibraryInjection = ImmutableList.of();
 

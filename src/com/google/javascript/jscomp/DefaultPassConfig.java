@@ -310,6 +310,10 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertEs6ToEs3);
       checks.add(rewriteBlockScopedDeclaration);
       checks.add(rewriteGenerators);
+      if (!options.getLanguageOut().isEs6OrHigher() && options.rewritePolyfills) {
+        // TODO(sdh): output version check unnecessary?!?
+        checks.add(rewritePolyfills);
+      }
       checks.add(markTranspilationDone);
     }
 
@@ -1189,6 +1193,14 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RewriteArrowFunction(compiler);
+        }
+      };
+
+  private final HotSwapPassFactory rewritePolyfills =
+      new HotSwapPassFactory("RewritePolyfills", true) {
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new RewritePolyfills(compiler);
         }
       };
 
