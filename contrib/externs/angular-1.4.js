@@ -2415,7 +2415,7 @@ angular.$templateCache;
  *****************************************************************************/
 
 /**
- * @typedef {function(Function, number=, boolean=, ...*):!angular.$q.Promise}
+ * @typedef {function(Function=, number=, boolean=, ...*):!angular.$q.Promise}
  */
 angular.$timeout;
 
