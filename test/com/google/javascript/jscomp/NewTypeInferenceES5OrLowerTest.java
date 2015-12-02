@@ -5744,9 +5744,7 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
 
   public void testQuestionableUnionJsDoc() {
     // 'string|?' is the same as '?'
-    typeCheck(
-        "/** @type {string|?} */ var x;",
-        JSTypeCreatorFromJSDoc.UNION_WITH_UNKNOWN);
+    typeCheck("/** @type {string|?} */ var x;");
 
     typeCheck(Joiner.on('\n').join(
         "goog.forwardDeclare('a');",
@@ -13807,6 +13805,17 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
     typeCheck(Joiner.on('\n').join(
         "function f(/** { a: (number|undefined) } */ x) {}",
         "f({ a: 'asdf' });"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @param {{foo: (?|undefined)}} x */",
+        "function g(x) {}",
+        "g({bar:123});"));
+
+    typeCheck(Joiner.on('\n').join(
+        "/** @param {{foo: ?}} x */",
+        "function g(x) {}",
+        "g({bar:123});"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 

@@ -106,11 +106,6 @@ public final class JSTypeCreatorFromJSDoc {
         "JSC_NTI_BAD_ARRAY_TYPE_SYNTAX",
         "The [] type syntax is not supported. Please use Array.<T> instead");
 
-  public static final DiagnosticType UNION_WITH_UNKNOWN =
-    DiagnosticType.warning(
-        "JSC_NTI_UNION_WITH_UNKNOWN",
-        "A union type that includes ? is equivalent to '?'");
-
   public static final DiagnosticType CANNOT_MAKE_TYPEVAR_NON_NULL =
     DiagnosticType.warning(
         "JSC_NTI_CANNOT_MAKE_TYPEVAR_NON_NULL",
@@ -194,7 +189,6 @@ public final class JSTypeCreatorFromJSDoc {
       TEMPLATED_GETTER_SETTER,
       TWO_JSDOCS,
       UNION_IS_UNINHABITABLE,
-      UNION_WITH_UNKNOWN,
       WRONG_PARAMETER_ORDER);
 
   private final CodingConvention convention;
@@ -292,6 +286,9 @@ public final class JSTypeCreatorFromJSDoc {
       case Token.EMPTY: // for function types that don't declare a return type
         return JSType.UNKNOWN;
       case Token.VOID:
+        // TODO(dimvar): void can be represented in 2 ways: Token.VOID and a
+        // Token.STRING whose getString() is "void".
+        // Change jsdoc parsing to only have one representation.
         return JSType.UNDEFINED;
       case Token.LB:
         warnings.add(JSError.make(n, BAD_ARRAY_TYPE_SYNTAX));
@@ -308,15 +305,8 @@ public final class JSTypeCreatorFromJSDoc {
           // TODO(dimvar): When the union has many things, we join and throw
           // away types, except the result of the last join. Very inefficient.
           // Consider optimizing.
-          JSType nextType =
-              getTypeFromCommentHelper(child, registry, typeParameters);
+          JSType nextType = getTypeFromCommentHelper(child, registry, typeParameters);
           if (nextType.isUnknown()) {
-            if (child.getType() == Token.QMARK
-                && child.getFirstChild() == null) {
-              // Only warn for explicit ?, not for other unknowns such as
-              // forward-declared types.
-              warnings.add(JSError.make(n, UNION_WITH_UNKNOWN));
-            }
             return JSType.UNKNOWN;
           }
           JSType nextUnion = JSType.join(union, nextType);
@@ -356,6 +346,22 @@ public final class JSTypeCreatorFromJSDoc {
     }
   }
 
+  // Looks at the type AST without evaluating it
+  private boolean isUnionWithUndefined(Node n) {
+    if (n == null || n.getType() != Token.PIPE) {
+      return false;
+    }
+    for (Node child : n.children()) {
+      if (child.getType() == Token.VOID
+          || child.getType() == Token.STRING
+          && (child.getString().equals("void")
+              || child.getString().equals("undefined"))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private JSType getRecordTypeHelper(Node n, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters)
       throws UnknownTypeException {
@@ -373,8 +379,8 @@ public final class JSTypeCreatorFromJSDoc {
           ? JSType.UNKNOWN
           : getTypeFromCommentHelper(propNode.getLastChild(), registry, typeParameters);
       Property prop;
-      if (!propType.isUnknown() && !propType.isTop()
-          && JSType.UNDEFINED.isSubtypeOf(propType)) {
+      if (propType.equals(JSType.UNDEFINED)
+          || isUnionWithUndefined(propNode.getLastChild())) {
         prop = Property.makeOptional(null, propType, propType);
       } else {
         prop = Property.make(propType, propType);
