@@ -84,7 +84,7 @@ final class CompilerOptionsPreprocessor {
     if (options.removeUnusedPrototypePropertiesInExterns
         && options.exportLocalPropertyDefinitions) {
       throw new InvalidOptionsException(
-          "remove_unused_prototype_properties_in_externs "
+          "remove_unused_prototype_props_in_externs "
           + "and export_local_property_definitions cannot be used together.");
     }
 
