@@ -354,6 +354,14 @@ public class InlineAliasesTest extends Es6CompilerTestCase {
     testSame("var ns = {}; var /** @define {boolean} */ alias = ns.Foo; var x = new alias;");
   }
 
+  public void testConstWithTypesAreNotInlined() {
+      testSame(
+        LINE_JOINER.join(
+            "var /** @type {number} */ n = 5",
+            "var /** @const {number} */ alias = n;",
+            "var x = use(alias)"));
+  }
+
   public void testPrivateVariablesAreNotInlined() {
     testSame("/** @private */ var x = 0; var /** @const */ alias = x; var y = alias;");
     testSame("var x_ = 0; var /** @const */ alias = x_; var y = alias;");

@@ -80,7 +80,8 @@ final class InlineAliases implements CompilerPass {
      * the rhs will have already been substituted by the time we record the new alias.
      */
     private void visitAliasDefinition(Node lhs, JSDocInfo info) {
-      if (info != null && info.hasConstAnnotation() && lhs.isQualifiedName()) {
+      if (info != null && info.hasConstAnnotation() && !info.hasTypeInformation()
+          && lhs.isQualifiedName()) {
         Node rhs = NodeUtil.getRValueOfLValue(lhs);
         if (rhs != null && rhs.isQualifiedName()) {
           GlobalNamespace.Name lhsName = namespace.getOwnSlot(lhs.getQualifiedName());
