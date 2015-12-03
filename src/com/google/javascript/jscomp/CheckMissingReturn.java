@@ -44,7 +44,6 @@ class CheckMissingReturn implements ScopedCallback {
           "Missing return statement. Function expected to return {0}.");
 
   private final AbstractCompiler compiler;
-  private final CheckLevel level;
   private final CodingConvention convention;
 
   private static final Predicate<Node> IS_RETURN = new Predicate<Node>() {
@@ -84,13 +83,8 @@ class CheckMissingReturn implements ScopedCallback {
     }
   };
 
-  /**
-   * @param level level of severity to report when a missing return statement
-   *     is discovered
-   */
-  CheckMissingReturn(AbstractCompiler compiler, CheckLevel level) {
+  CheckMissingReturn(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.level = level;
     this.convention = compiler.getCodingConvention();
   }
 
@@ -114,8 +108,7 @@ class CheckMissingReturn implements ScopedCallback {
 
     if (!test.allPathsSatisfyPredicate()) {
       compiler.report(
-          t.makeError(t.getScopeRoot(), level,
-              MISSING_RETURN_STATEMENT, returnType.toString()));
+          t.makeError(t.getScopeRoot(), MISSING_RETURN_STATEMENT, returnType.toString()));
     }
   }
 

@@ -63,7 +63,6 @@ final class CompilerOptionsPreprocessor {
     }
 
     if (options.getNewTypeInference()) {
-      options.checkMissingReturn = CheckLevel.OFF;
       options.checkGlobalThisLevel = CheckLevel.OFF;
     }
 

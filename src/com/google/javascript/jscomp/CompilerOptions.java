@@ -384,11 +384,11 @@ public class CompilerOptions {
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
-  public CheckLevel checkMissingReturn;
-
-  /** Checks for missing return statements */
+  /**
+   * @deprecated Does nothing. Use the "missingReturn" diagnostic group
+   */
+  @Deprecated
   public void setCheckMissingReturn(CheckLevel level) {
-    this.checkMissingReturn = level;
   }
 
   public enum ExtractPrototypeMemberDeclarationsMode {
@@ -995,7 +995,6 @@ public class CompilerOptions {
     checkGlobalNamesLevel = CheckLevel.OFF;
     brokenClosureRequiresLevel = CheckLevel.ERROR;
     checkGlobalThisLevel = CheckLevel.OFF;
-    checkMissingReturn = CheckLevel.OFF;
     checkMissingGetCssNameLevel = CheckLevel.OFF;
     checkMissingGetCssNameBlacklist = null;
     computeFunctionSideEffects = false;

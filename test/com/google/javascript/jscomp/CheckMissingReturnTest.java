@@ -30,8 +30,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CombinedCompilerPass(compiler,
-        new CheckMissingReturn(compiler, CheckLevel.ERROR));
+    return new CombinedCompilerPass(compiler, new CheckMissingReturn(compiler));
   }
 
   public void testMissingReturn() {
@@ -241,7 +240,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
 
   private void testMissingInTraditionalFunction(String returnType, String body) {
     String js = createFunction(returnType, body);
-    testError(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
+    testWarning(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   private void testNotMissingInTraditionalFunction(String returnType, String body) {
@@ -251,7 +250,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   private void testMissingInShorthandFunction(String returnType, String body) {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
     String js = createShorthandFunctionInObjLit(returnType, body);
-    testError(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
+    testWarning(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   private void testNotMissingInShorthandFunction(String returnType, String body) {
