@@ -246,7 +246,6 @@ function JSONType() {}
  * @param {(function(string, *) : *)=} opt_reviver
  * @return {*} The JSON object.
  * @throws {Error}
- * @nosideeffects
  */
 JSONType.prototype.parse = function(jsonStr, opt_reviver) {};
 
@@ -257,7 +256,6 @@ JSONType.prototype.parse = function(jsonStr, opt_reviver) {};
  * @param {(number|string)=} opt_space
  * @return {string} JSON string which represents jsonObj.
  * @throws {Error}
- * @nosideeffects
  */
 JSONType.prototype.stringify = function(jsonObj, opt_replacer, opt_space) {};
 
