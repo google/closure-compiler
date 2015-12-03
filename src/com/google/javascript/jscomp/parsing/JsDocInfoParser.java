@@ -100,7 +100,7 @@ public final class JsDocInfoParser {
         charno);
   }
 
-  private void addMissingTypeWarning(String annotation, int lineno, int charno) {
+  private void addMissingTypeWarning(int lineno, int charno) {
     errorReporter.warning("Missing type declaration.", getSourceName(), lineno, charno);
   }
 
@@ -748,7 +748,7 @@ public final class JsDocInfoParser {
             addTypeWarning("msg.missing.variable.name", lineno, charno);
           } else {
             if (!hasParamType) {
-              addMissingTypeWarning(annotationName, stream.getLineno(), stream.getCharno());
+              addMissingTypeWarning(stream.getLineno(), stream.getCharno());
             }
 
             name = stream.getString();
@@ -1034,7 +1034,7 @@ public final class JsDocInfoParser {
           type = null;
 
           if (annotation == Annotation.RETURN && !hasType) {
-            addMissingTypeWarning(annotationName, stream.getLineno(), stream.getCharno());
+            addMissingTypeWarning(stream.getLineno(), stream.getCharno());
           }
 
           if (hasType || !canSkipTypeAnnotation) {
