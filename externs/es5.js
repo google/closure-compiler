@@ -16,7 +16,7 @@
 
 /**
  * @fileoverview Definitions for ECMAScript 5.
- * @see http://www.ecma-international.org/publications/files/drafts/tc39-2009-025.pdf
+ * @see https://es5.github.io/
  * @externs
  */
 
@@ -211,10 +211,10 @@ Object.isFrozen = function(obj) {};
 
 
 /**
- * As per ECMAScript 5, 15.12.3.
  * @param {string=} opt_key The JSON key for this object.
  * @return {*} The serializable representation of this object. Note that this
  *     need not be a string. See http://goo.gl/PEUvs.
+ * @see https://es5.github.io/#x15.12.3
  */
 Object.prototype.toJSON = function(opt_key) {};
 
