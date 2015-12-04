@@ -736,12 +736,6 @@ Selection.prototype.selectAllChildren;
  */
 Selection.prototype.selectionLanguageChange;
 
-/** @type {NamedNodeMap} */
-Element.prototype.attributes;
-
-/** @type {!NodeList} */
-Element.prototype.childNodes;
-
 /**
  * @type {!NodeList}
  * @see https://developer.mozilla.org/en/DOM/element.children
@@ -749,72 +743,43 @@ Element.prototype.childNodes;
 Element.prototype.children;
 
 /**
- * @type {string}
- * @implicitCast
- */
-Element.prototype.className;
-/** @type {string} */ Element.prototype.dir;
-
-/**
  * Firebug sets this property on elements it is inserting into the DOM.
  * @type {boolean}
  */
 Element.prototype.firebugIgnore;
 
-/** @type {Node} */ Element.prototype.firstChild;
 /**
+ * Note: According to the spec, id is actually defined on HTMLElement and
+ * SVGElement, rather than Element. Deliberately ignore this so that saying
+ * Element.id is allowed.
  * @type {string}
  * @implicitCast
  */
 Element.prototype.id;
+
 /**
  * @type {string}
+ * @see http://www.w3.org/TR/DOM-Parsing/#widl-Element-innerHTML
  * @implicitCast
  */
 Element.prototype.innerHTML;
-/** @type {string} */ Element.prototype.lang;
-/** @type {Node} */ Element.prototype.lastChild;
-Element.prototype.localName;
+
+/**
+ * Note: According to the spec, name is defined on specific types of
+ * HTMLElements, rather than on Node, Element, or HTMLElement directly.
+ * Ignore this.
+ * @type {?}
+ * TODO(rdcronin): This should be of type string, but that breaks some things.
+ */
 Element.prototype.name;
-Element.prototype.namespaceURI;
-/** @type {Node} */ Element.prototype.nextSibling;
-Element.prototype.nodeName;
+
 Element.prototype.nodePrincipal;
-/** @type {number} */ Element.prototype.nodeType;
-Element.prototype.nodeValue;
-/** @type {Document} */ Element.prototype.ownerDocument;
-/** @type {Node} */ Element.prototype.parentNode;
-Element.prototype.prefix;
-/** @type {Node} */ Element.prototype.previousSibling;
-/** @type {!CSSStyleDeclaration} */ Element.prototype.style;
-/**
- * @type {number}
- * @implicitCast
- */
-Element.prototype.tabIndex;
-
-/**
- * @type {string}
- * @implicitCast
- */
-Element.prototype.textContent;
-/** @type {string} */ Element.prototype.title;
-
-/**
- * @param {Node} child
- * @return {Node} appendedElement.
- * @override
- */
-Element.prototype.appendChild = function(child) {};
 
 /**
  * @override
  * @return {!Element}
  */
 Element.prototype.cloneNode = function(deep) {};
-
-/** @override */
-Element.prototype.dispatchEvent = function(event) {};
 
 /** @return {undefined} */
 Element.prototype.blur = function() {};
@@ -824,46 +789,6 @@ Element.prototype.click = function() {};
 
 /** @return {undefined} */
 Element.prototype.focus = function() {};
-
-/**
- * @return {boolean}
- * @override
- * @nosideeffects
- */
-Element.prototype.hasAttributes = function() {};
-
-/**
- * @return {boolean}
- * @override
- * @nosideeffects
- */
-Element.prototype.hasChildNodes = function() {};
-
-/** @override */
-Element.prototype.insertBefore = function(insertedNode, adjacentNode) {};
-
-/**
- * @return {undefined}
- * @override
- */
-Element.prototype.normalize = function() {};
-
-/**
- * @param {Node} removedNode
- * @return {!Node}
- * @override
- */
-Element.prototype.removeChild = function(removedNode) {};
-
-/**
- * @param {boolean=} opt_useCapture
- * @override
- */
-Element.prototype.removeEventListener = function(type, handler, opt_useCapture)
-    {};
-
-/** @override */
-Element.prototype.replaceChild = function(insertedNode, replacedNode) {};
 
 /** @type {number} */
 HTMLInputElement.prototype.selectionStart;

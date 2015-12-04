@@ -368,6 +368,12 @@ HTMLElement.prototype.id;
 HTMLElement.prototype.title;
 
 /**
+ * @type {!CSSStyleDeclaration}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-ElementCSSInlineStyle
+ */
+HTMLElement.prototype.style;
+
+/**
  * @type {string}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-59132807
  */
