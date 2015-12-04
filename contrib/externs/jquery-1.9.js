@@ -567,7 +567,10 @@ jQuery.prototype.end = function() {};
  */
 jQuery.prototype.eq = function(arg1) {};
 
-/** @param {string} message */
+/**
+ * @param {string} message
+ * @throws {Error}
+ */
 jQuery.error = function(message) {};
 
 /**
