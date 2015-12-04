@@ -84,10 +84,10 @@ angular.$q.Deferred = function() {};
 /** @param {T=} opt_value */
 angular.$q.Deferred.prototype.resolve = function(opt_value) {};
 
-/** @param {*=} opt_reason */
+/** @param {?=} opt_reason */
 angular.$q.Deferred.prototype.reject = function(opt_reason) {};
 
-/** @param {*=} opt_value */
+/** @param {?=} opt_value */
 angular.$q.Deferred.prototype.notify = function(opt_value) {};
 
 /** @type {!angular.$q.Promise.<T>} */
@@ -135,7 +135,7 @@ angular.$q.prototype.all = function(promises) {};
 angular.$q.prototype.defer = function() {};
 
 /**
- * @param {*=} opt_reason
+ * @param {?=} opt_reason
  * @return {!angular.$q.Promise}
  */
 angular.$q.prototype.reject = function(opt_reason) {};

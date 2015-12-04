@@ -65,7 +65,7 @@ angular.$http.HttpPromise = function() {};
 angular.$http.HttpPromise.prototype.success = function(callback) {};
 
 /**
- * @param {function(*, number, function(string=):
+ * @param {function(?, number, function(string=):
  *     (string|Object|null), angular.$http.Config)} callback
  * @return {!angular.$http.HttpPromise.<T>} Promise for chaining.
  */
