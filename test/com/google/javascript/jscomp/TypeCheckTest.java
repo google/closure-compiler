@@ -15540,6 +15540,32 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: (I7|null)"));
   }
 
+  public void testStructuralInterfaceWithOptionalProperty() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function Rec() {}",
+            "/** @type {string} */ Rec.prototype.str;",
+            "/** @type {(number|undefined)} */ Rec.prototype.opt_num;",
+            "",
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** !Rec */ x = new Foo;"));
+  }
+
+  public void testStructuralInterfaceWithUnknownProperty() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function Rec() {}",
+            "/** @type {string} */ Rec.prototype.str;",
+            "/** @type {?} */ Rec.prototype.opt_unknown;",
+            "",
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** !Rec */ x = new Foo;"));
+  }
+
   public void testStructuralInterfaceCycleDoesntCrash() throws Exception {
     testTypes(
         LINE_JOINER.join(

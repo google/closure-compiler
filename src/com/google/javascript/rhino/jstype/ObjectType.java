@@ -554,14 +554,14 @@ public abstract class ObjectType
     }
 
     for (String propName : structuralInterface.getPropertyNames()) {
-      if (this.hasProperty(propName)
-          && this.getPropertyType(propName).isSubtype(
-                 structuralInterface.getPropertyType(propName), implicitImplCache)) {
-        // Then this property is covariant and we should move on.
-        continue;
+      JSType superPropType = structuralInterface.getPropertyType(propName);
+      boolean subHasProp = this.hasProperty(propName);
+
+      if (subHasProp && !this.getPropertyType(propName).isSubtype(superPropType, implicitImplCache)
+          || !subHasProp && !superPropType.isVoidable()) {
+        implicitImplCache.updateCache(this, structuralInterface, MatchStatus.NOT_MATCH);
+        return false;
       }
-      implicitImplCache.updateCache(this, structuralInterface, MatchStatus.NOT_MATCH);
-      return false;
     }
     implicitImplCache.updateCache(this, structuralInterface, MatchStatus.MATCH);
     return true;
