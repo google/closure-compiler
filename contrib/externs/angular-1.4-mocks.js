@@ -59,6 +59,10 @@ angular.mock.$httpBackend.RequestHandler.prototype.respond = function(
     opt_statusText) {};
 
 
+/** @return {!angular.mock.$httpBackend.RequestHandler} */
+angular.mock.$httpBackend.RequestHandler.prototype.passThrough = function() {};
+
+
 /**
  * @param {string} method
  * @param {(string|RegExp|function(string): boolean)} url
