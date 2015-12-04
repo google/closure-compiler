@@ -21,7 +21,6 @@ import com.google.gwt.regexp.shared.RegExp;
 
 /**
  * GWT-compatible minimal replacement for {@code Matcher}
- * TODO(moz): Implement replaceAll().
  *
  * @author moz@google.com (Michael Zhou)
  */
@@ -81,7 +80,7 @@ public class Matcher {
   }
 
   public String replaceAll(String replacement) {
-    throw new UnsupportedOperationException("Matcher.replaceAll is not implemented");
+    return RegExp.compile(regExp.getSource(), "g").replace(input, replacement);
   }
 
   public Matcher reset() {
