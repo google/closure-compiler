@@ -684,11 +684,11 @@ angular.JQLite.prototype.text = function(opt_value) {};
 angular.JQLite.prototype.toggleClass = function(name, opt_condition) {};
 
 /**
- * @param {string} type
+ * @param {string|!Event} typeOrEvent
  * @param {*=} opt_value
  * @return {!angular.JQLite}
  */
-angular.JQLite.prototype.triggerHandler = function(type, opt_value) {};
+angular.JQLite.prototype.triggerHandler = function(typeOrEvent, opt_value) {};
 
 /**
  * @param {string=} opt_type
