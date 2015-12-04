@@ -19,6 +19,7 @@
  * https://url.spec.whatwg.org.
  *
  * @externs
+ * @author rdcronin@google.com (Devlin Cronin)
  */
 
 /**
