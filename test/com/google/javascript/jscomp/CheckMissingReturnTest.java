@@ -64,8 +64,6 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
     // Returning a union that includes void or undefined.
     testNotMissing("number|undefined", "var x;");
     testNotMissing("number|void", "var x;");
-    testNotMissing("(number,void)", "var x;");
-    testNotMissing("(number,undefined)", "var x;");
     testNotMissing("*", "var x;");
 
     // Test try catch finally.
