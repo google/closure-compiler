@@ -768,12 +768,20 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
         "}"));
   }
 
-  public void testDoWhileForOfCapturedLetAnnotated() {
+  public void testTypeAnnotationsOnLetConst() {
     enableTypeCheck();
 
     testWarning("/** @type {number} */ let x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
-
     testWarning("let /** number */ x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("let /** @type {number} */ x = 5; x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
+
+    testWarning("/** @type {number} */ const x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("const /** number */ x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("const /** @type {number} */ x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+  public void testDoWhileForOfCapturedLetAnnotated() {
+    enableTypeCheck();
 
     test(
         LINE_JOINER.join(
