@@ -479,7 +479,7 @@ public abstract class ObjectType
   @Override
   public boolean isStructuralType() {
     FunctionType constructor = this.getConstructor();
-    return constructor != null && constructor.isStructuralType();
+    return constructor != null && constructor.isStructuralInterface();
   }
 
   /**

@@ -1393,11 +1393,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return isInterface() && isStructuralInterface;
   }
 
-  @Override
-  public boolean isStructuralType() {
-    return isStructuralInterface();
-  }
-
   /**
    * get the map of properties to types covered in a function type
    * @return a Map that maps the property's name to the property's type
