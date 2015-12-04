@@ -15674,6 +15674,26 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: WithProp"));
   }
 
+  public void testRecursiveTemplatizedStructuralInterface() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " * @template T",
+            " */",
+            "var Rec = function() { };",
+            "/** @type {!Rec<T>} */",
+            "Rec.prototype.p;",
+            "",
+            "/**",
+            " * @constructor @implements {Rec<T>}",
+            " * @template T",
+            " */",
+            "var Foo = function() {};",
+            "/** @override */",
+            "Foo.prototype.p = new Foo;"));
+  }
+
 
   public void testCovarianceForRecordType1() throws Exception {
     testTypesWithExtraExterns(

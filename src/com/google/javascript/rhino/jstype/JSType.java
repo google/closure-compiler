@@ -43,6 +43,7 @@ import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -1548,7 +1549,7 @@ public abstract class JSType implements TypeI, Serializable {
    * structure complies with the protocol defined
    * by the interface
    */
-  protected static enum MatchStatus {
+  static enum MatchStatus {
     /**
      * indicate that a function implicitly
      * implements an interface (i.e., the function
@@ -1588,46 +1589,23 @@ public abstract class JSType implements TypeI, Serializable {
    * base cache data structure
    */
   private abstract static class MatchCache {
-    private IdentityHashMap<JSType, IdentityHashMap<JSType, MatchStatus>> matchCache;
     private boolean isStructuralTyping;
 
     MatchCache(boolean isStructuralTyping) {
       this.isStructuralTyping = isStructuralTyping;
-      this.matchCache = null;
     }
 
     boolean isStructuralTyping() {
       return isStructuralTyping;
-    }
-
-    void updateCache(JSType subType, JSType superType, MatchStatus isMatch) {
-      IdentityHashMap<JSType, MatchStatus> map = this.matchCache.get(subType);
-      if (map == null) {
-        map = new IdentityHashMap<>();
-      }
-      map.put(superType, isMatch);
-      this.matchCache.put(subType, map);
-    }
-
-    MatchStatus checkCache(JSType subType, JSType superType) {
-      if (this.matchCache == null) {
-        this.matchCache = new IdentityHashMap<>();
-      }
-      // check the cache
-      if (this.matchCache.containsKey(subType)
-          && this.matchCache.get(subType).containsKey(superType)) {
-        return this.matchCache.get(subType).get(superType);
-      } else {
-        this.updateCache(subType, superType, MatchStatus.PROCESSING);
-        return null;
-      }
     }
   }
 
   /**
    * cache used by equivalence check logic
    */
-  protected static class EqCache extends MatchCache {
+  static class EqCache extends MatchCache {
+    private IdentityHashMap<JSType, IdentityHashMap<JSType, MatchStatus>> matchCache;
+
     static EqCache create() {
       return new EqCache(true);
     }
@@ -1638,13 +1616,40 @@ public abstract class JSType implements TypeI, Serializable {
 
     private EqCache(boolean isStructuralTyping) {
       super(isStructuralTyping);
+      this.matchCache = null;
+    }
+
+    void updateCache(JSType t1, JSType t2, MatchStatus isMatch) {
+      IdentityHashMap<JSType, MatchStatus> map = this.matchCache.get(t1);
+      if (map == null) {
+        map = new IdentityHashMap<>();
+      }
+      map.put(t2, isMatch);
+      this.matchCache.put(t1, map);
+    }
+
+    MatchStatus checkCache(JSType t1, JSType t2) {
+      if (this.matchCache == null) {
+        this.matchCache = new IdentityHashMap<>();
+      }
+      // check the cache
+      if (this.matchCache.containsKey(t1) && this.matchCache.get(t1).containsKey(t2)) {
+        return this.matchCache.get(t1).get(t2);
+      } else if (this.matchCache.containsKey(t2) && this.matchCache.get(t2).containsKey(t1)) {
+        return this.matchCache.get(t2).get(t1);
+      } else {
+        this.updateCache(t1, t2, MatchStatus.PROCESSING);
+        return null;
+      }
     }
   }
 
   /**
    * cache used by check sub-type logic
    */
-  protected static class ImplCache extends MatchCache {
+  static class ImplCache extends MatchCache {
+    private HashBasedTable<JSType, JSType, MatchStatus> matchCache;
+
     static ImplCache create() {
       return new ImplCache(true);
     }
@@ -1655,6 +1660,24 @@ public abstract class JSType implements TypeI, Serializable {
 
     private ImplCache(boolean isStructuralTyping) {
       super(isStructuralTyping);
+      this.matchCache = null;
+    }
+
+    void updateCache(JSType subType, JSType superType, MatchStatus isMatch) {
+      this.matchCache.put(subType, superType, isMatch);
+    }
+
+    MatchStatus checkCache(JSType subType, JSType superType) {
+      if (this.matchCache == null) {
+        this.matchCache = HashBasedTable.create();
+      }
+      // check the cache
+      if (this.matchCache.contains(subType, superType)) {
+        return this.matchCache.get(subType, superType);
+      } else {
+        this.updateCache(subType, superType, MatchStatus.PROCESSING);
+        return null;
+      }
     }
   }
 }
