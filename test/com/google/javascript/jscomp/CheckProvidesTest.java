@@ -26,7 +26,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class CheckProvidesTest extends Es6CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckProvides(compiler, CheckLevel.WARNING);
+    return new CheckProvides(compiler);
   }
 
   public void testIrrelevant() {

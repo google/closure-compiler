@@ -218,7 +218,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(checkSideEffects);
 
-    if (options.checkProvides.isOn() || options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
+    if (options.enables(DiagnosticGroups.MISSING_PROVIDE)) {
       checks.add(checkProvides);
     }
 
@@ -993,7 +993,7 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkProvides", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-      return new CheckProvides(compiler, options.checkProvides);
+      return new CheckProvides(compiler);
     }
   };
 

@@ -30,16 +30,14 @@ import java.util.Map;
  */
 class CheckProvides implements HotSwapCompilerPass {
   private final AbstractCompiler compiler;
-  private final CheckLevel checkLevel;
   private final CodingConvention codingConvention;
 
-  static final DiagnosticType MISSING_PROVIDE_WARNING = DiagnosticType.disabled(
+  static final DiagnosticType MISSING_PROVIDE_WARNING = DiagnosticType.warning(
       "JSC_MISSING_PROVIDE",
       "missing goog.provide(''{0}'')");
 
-  CheckProvides(AbstractCompiler compiler, CheckLevel checkLevel) {
+  CheckProvides(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.checkLevel = checkLevel;
     this.codingConvention = compiler.getCodingConvention();
   }
 
@@ -149,8 +147,7 @@ class CheckProvides implements HotSwapCompilerPass {
         if (!found) {
           Node n = ctorEntry.getValue();
           compiler.report(
-              JSError.make(n,
-                  checkLevel, MISSING_PROVIDE_WARNING, ctorEntry.getKey()));
+              JSError.make(n, MISSING_PROVIDE_WARNING, ctorEntry.getKey()));
         }
       }
       provides.clear();

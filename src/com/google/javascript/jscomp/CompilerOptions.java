@@ -202,11 +202,16 @@ public class CompilerOptions {
     setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, level);
   }
 
+  @Deprecated
   public CheckLevel checkProvides;
 
-  /** Checks for missing goog.provides() calls **/
+  /**
+   * Checks for missing goog.provides() calls.
+   * @deprecated Use setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, level)
+   */
+  @Deprecated
   public void setCheckProvides(CheckLevel level) {
-    checkProvides = level;
+    setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, level);
   }
 
   public CheckLevel checkGlobalNamesLevel;
