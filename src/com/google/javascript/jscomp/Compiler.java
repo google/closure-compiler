@@ -61,6 +61,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -1517,7 +1518,11 @@ public class Compiler extends AbstractCompiler {
     }
 
     if (options.processCommonJSModules) {
-      List<JSModule> modules = new ArrayList<>(modulesByProvide.values());
+      // Get the unique set of modules but preserve the relative order.
+      // While CommonJS modules always have a single export,
+      // ES6 modules and goog.provides/modules can be mixed in here too.
+      List<JSModule> modules = new ArrayList<>(new LinkedHashSet<>(modulesByProvide.values()));
+
       if (!modules.isEmpty()) {
         this.modules = modules;
         this.moduleGraph = new JSModuleGraph(this.modules);

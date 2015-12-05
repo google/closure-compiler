@@ -1043,11 +1043,19 @@ public class CommandLineRunner extends
     if (flags.processCommonJsModules) {
       flags.processClosurePrimitives = true;
       flags.manageClosureDependencies = true;
-      if (flags.commonJsEntryModule == null) {
+
+      // When module systems are mixed, the entry point can be either a CommonJS module
+      // or a closure namespace
+      if (flags.commonJsEntryModule == null && flags.closureEntryPoint == null) {
         reportError("Please specify --common_js_entry_module.");
+      } else if (flags.commonJsEntryModule != null) {
+        String moduleEntryPoint = ES6ModuleLoader.toModuleName(URI.create(flags.commonJsEntryModule));
+        if (flags.closureEntryPoint == null) {
+          flags.closureEntryPoint = ImmutableList.of(moduleEntryPoint);
+        } else {
+          flags.closureEntryPoint.add(moduleEntryPoint);
+        }
       }
-      flags.closureEntryPoint =
-          ImmutableList.of(ES6ModuleLoader.toModuleName(URI.create(flags.commonJsEntryModule)));
     }
 
     if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
