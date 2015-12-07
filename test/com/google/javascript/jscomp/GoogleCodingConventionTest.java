@@ -159,6 +159,8 @@ public final class GoogleCodingConventionTest extends TestCase {
     assertPackageName("foo/bar/baz/unittests/quux.js", "foo/bar/baz/unittests");
     assertPackageName("foo/bar/test/baz/quux.js", "foo/bar/test/baz");
     assertPackageName("foo/test/bar/baz/quux.js", "foo/test/bar/baz");
+    assertPackageName("bin/genfiles/bar/baz/quux.js", "bar/baz");
+    assertPackageName("bin/genfiles/foo/test/bar.js", "foo");
   }
 
   private void assertPackageName(String filename, String expectedPackageName) {

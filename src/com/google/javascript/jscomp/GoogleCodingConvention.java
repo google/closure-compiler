@@ -16,9 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
-
-
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 
@@ -43,6 +40,8 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
 
   private static final Pattern PACKAGE_WITH_TEST_DIR =
     Pattern.compile("^(.*)/(?:test|tests|testing)/(?:[^/]+)$");
+
+  private static final Pattern GENFILES_DIR = Pattern.compile("^.*/genfiles/(.*)$");
 
   /** By default, decorate the ClosureCodingConvention. */
   public GoogleCodingConvention() {
@@ -153,12 +152,18 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
    * {@inheritDoc}
    *
    * <p>In Google code, the package name of a source file is its file path.
-   * Exception: if a source file's parent directory is "test", "tests", or
+   * Exceptions: if a source file's parent directory is "test", "tests", or
    * "testing", that directory is stripped from the package name.
+   * If a file is generated, strip the "genfiles" prefix to try
+   * to match the package of the generating file.
    */
   @Override
   public String getPackageName(StaticSourceFile source) {
     String name = source.getName();
+    Matcher genfilesMatcher = GENFILES_DIR.matcher(name);
+    if (genfilesMatcher.find()) {
+      name = genfilesMatcher.group(1);
+    }
     Matcher m = PACKAGE_WITH_TEST_DIR.matcher(name);
     if (m.find()) {
       return m.group(1);
