@@ -1538,6 +1538,13 @@ angular.$HttpProvider.prototype.interceptors;
  */
 angular.$HttpProvider.prototype.useApplyAsync = function(opt_value) {};
 
+/**
+ * @param {boolean=} opt_value
+ * @return {boolean|!angular.$HttpProvider}
+ */
+angular.$HttpProvider.prototype.useLegacyPromiseExtensions = function(
+    opt_value) {};
+
 /******************************************************************************
  * $injector Service
  *****************************************************************************/
