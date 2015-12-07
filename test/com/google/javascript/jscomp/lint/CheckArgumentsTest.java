@@ -33,6 +33,7 @@ public final class CheckArgumentsTest extends Es6CompilerTestCase {
     testSameEs6("function f() { return [...arguments]; }");
     testSameEs6("function f() { return arguments[1]; }");
     testSameEs6("function f() { for (var i=0; i<arguments.length; i++) alert(arguments[i]); }");
+    testSameEs6("function f() { g.apply(this, arguments); }");
   }
 
   public void testCheckArguments_warning() {
