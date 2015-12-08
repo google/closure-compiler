@@ -23,7 +23,7 @@
 // TODO(johnlenz): Use Tuples for the Map and Set iterators where appropriate.
 
 /**
- * @constructor
+ * @constructor @struct
  * @param {Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable
  * @implements {Iterable<!Array<KEY|VALUE>>}
  * @template KEY, VALUE
@@ -101,7 +101,7 @@ Map.prototype[Symbol.iterator] = function() {};
 
 
 /**
- * @constructor
+ * @constructor @struct
  * @param {Iterable<!Array<KEY|VALUE>>|!Array<!Array<KEY|VALUE>>=} opt_iterable
  * @template KEY, VALUE
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
@@ -143,7 +143,7 @@ WeakMap.prototype.set;
 
 
 /**
- * @constructor
+ * @constructor @struct
  * @param {Iterable<VALUE>|Array<VALUE>=} opt_iterable
  * @implements {Iterable<VALUE>}
  * @template VALUE
@@ -217,7 +217,7 @@ Set.prototype[Symbol.iterator] = function() {};
 
 
 /**
- * @constructor
+ * @constructor @struct
  * @param {Iterable<VALUE>|Array<VALUE>=} opt_iterable
  * @template VALUE
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
