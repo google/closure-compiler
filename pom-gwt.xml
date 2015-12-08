@@ -238,6 +238,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <excludes>
+            <exclude>**/debugger/**</exclude>
             <exclude>**/gwt/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/webservice/**</exclude>

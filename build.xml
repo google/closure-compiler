@@ -147,7 +147,7 @@
     </javac>
     <javac srcdir="${src.dir}"
            destdir="${classes.dir}"
-           excludes=".svn,.git,**/refactoring/**,**/webservice/**,**/testing/**,**/gwt/**"
+           excludes=".svn,.git,**/debugger/**,**/refactoring/**,**/webservice/**,**/testing/**,**/gwt/**"
            debug="${javac.debug}"
            deprecation="on"
            includeantruntime="true"
@@ -223,7 +223,7 @@
     <mkdir dir="${testClasses.dir}" />
     <javac srcdir="${src.dir}"
            destdir="${testClasses.dir}"
-           excludes=".svn,.git,**/gwt/**"
+           excludes=".svn,.git,**/debugger/**,**/gwt/**"
            debug="on"
            deprecation="on"
            includeantruntime="false"
@@ -233,7 +233,7 @@
     </javac>
     <javac srcdir="${test.dir}"
            destdir="${testClasses.dir}"
-           excludes=".svn,.git,**/gwt/**"
+           excludes=".svn,.git,**/debugger/**,**/gwt/**"
            debug="on"
            deprecation="on"
            includeantruntime="false"
