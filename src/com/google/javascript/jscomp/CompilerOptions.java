@@ -389,13 +389,6 @@ public class CompilerOptions {
   /** Removes code that will never execute */
   public boolean removeDeadCode;
 
-  /**
-   * @deprecated Does nothing. Use the "missingReturn" diagnostic group
-   */
-  @Deprecated
-  public void setCheckMissingReturn(CheckLevel level) {
-  }
-
   public enum ExtractPrototypeMemberDeclarationsMode {
     OFF,
     USE_GLOBAL_TEMP,
