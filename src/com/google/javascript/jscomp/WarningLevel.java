@@ -60,7 +60,7 @@ public enum WarningLevel {
     options.setCheckTypes(false);
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
-    options.setCheckMissingReturn(CheckLevel.OFF);
+    options.setWarningLevel(DiagnosticGroups.MISSING_RETURN, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.CONST, CheckLevel.OFF);
     options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY, CheckLevel.OFF);
@@ -98,7 +98,6 @@ public enum WarningLevel {
     options.setCheckSuspiciousCode(true);
     options.setCheckGlobalThisLevel(CheckLevel.WARNING);
     options.setCheckSymbols(true);
-    options.setCheckMissingReturn(CheckLevel.WARNING);
 
     // checkTypes has the side-effect of asserting that the
     // correct number of arguments are passed to a function.
@@ -120,6 +119,8 @@ public enum WarningLevel {
         DiagnosticGroups.CHECK_REGEXP, CheckLevel.WARNING);
     options.setWarningLevel(
         DiagnosticGroups.STRICT_MODULE_DEP_CHECK, CheckLevel.WARNING);
+    options.setWarningLevel(
+        DiagnosticGroups.MISSING_RETURN, CheckLevel.WARNING);
 
     // Kindly tell the user that they have JsDocs that we don't understand.
     options.setWarningLevel(DiagnosticGroups.NON_STANDARD_JSDOC,

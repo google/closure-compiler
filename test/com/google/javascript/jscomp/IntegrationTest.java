@@ -770,7 +770,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.setCheckMissingReturn(CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.MISSING_RETURN, CheckLevel.ERROR);
     testSame(options, code);
 
     options.setCheckTypes(true);
