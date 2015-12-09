@@ -93,6 +93,15 @@ enum CompilationParam {
   // Checks
   //--------------------------------
 
+  CHECK_LINT {
+    @Override
+    void apply(CompilerOptions options, boolean value) {
+      if (value) {
+        options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+      }
+    }
+  },
+
   /** Checks that all symbols are defined */
   CHECK_SYMBOLS(true) {
     @Override
