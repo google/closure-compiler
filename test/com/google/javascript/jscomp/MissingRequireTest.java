@@ -180,7 +180,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     testSame(js);
   }
 
-  public void testFailWithExtends() {
+  public void testFailWithExtends1() {
     String[] js = new String[] {
       "var goog = {};\n"
       + "goog.provide('example.Foo');\n"
@@ -189,6 +189,18 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
       "/** @constructor @extends {example.Foo} */ var Ctor = function() {};"
     };
     String warning = "'example.Foo' used but not goog.require'd";
+    test(js, js, null, MISSING_REQUIRE_WARNING, warning);
+  }
+
+  public void testFailWithExtends2() {
+    String[] js = new String[] {
+      "var goog = {};\n"
+      + "goog.provide('Foo');\n"
+      + "/** @constructor */ var Foo = function() {};",
+
+      "/** @constructor @extends {Foo} */ var Ctor = function() {};"
+    };
+    String warning = "'Foo' used but not goog.require'd";
     test(js, js, null, MISSING_REQUIRE_WARNING, warning);
   }
 

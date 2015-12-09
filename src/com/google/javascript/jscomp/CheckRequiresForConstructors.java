@@ -417,6 +417,11 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         public void visit(Node typeNode) {
           if (typeNode.isString()) {
             String typeString = typeNode.getString();
+            if (mode == Mode.SINGLE_FILE && !typeString.contains(".")) {
+              // If using a single-name type, it's probably something like Error, which we
+              // don't have externs for.
+              return;
+            }
             String rootName = Splitter.on('.').split(typeString).iterator().next();
             Var var = t.getScope().getVar(rootName);
             if (var == null || !var.isExtern()) {

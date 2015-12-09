@@ -37,9 +37,15 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
   }
 
   public void testReferenceToSingleName() {
-    testSameEs6("new Foo();");
-    testSameEs6("new Array();");
-    testSameEs6("new Error();");
+    testSame("new Foo();");
+    testSame("new Array();");
+    testSame("new Error();");
+  }
+
+  public void testExtendsSingleName() {
+    testSame("/** @constructor @extends {Foo} */ function MyFoo() {}");
+    testSame("/** @constructor @extends {Error} */ function MyError() {}");
+    testSame("/** @constructor @extends {Array} */ function MyArray() {}");
   }
 
   public void testReferenceToQualifiedName() {
