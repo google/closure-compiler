@@ -27,39 +27,32 @@ import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 
 import java.util.List;
 
+
+/**
+ * A PassConfig for the standalone linter, which runs on a single file at a time. This runs a
+ * similar set of checks to what you would get when running the compiler with the lintChecks
+ * DiagnosticGroup enabled, but some of the lint checks depend on type information, which is not
+ * available when looking at a single file, so those are omitted here.
+ */
 class LintPassConfig extends PassConfig.PassConfigDelegate {
   LintPassConfig(CompilerOptions options) {
     super(new DefaultPassConfig(options));
   }
 
   @Override protected List<PassFactory> getChecks() {
-    return ImmutableList.of(closureRewriteModule, closureGoogScopeAliases, lintChecks);
+    return ImmutableList.of(
+        checkRequiresAndProvidesSorted, closureRewriteModule, closureGoogScopeAliases, lintChecks);
   }
 
   @Override protected List<PassFactory> getOptimizations() {
     return ImmutableList.of();
   }
 
-  // This doesn't match the list of 'lintChecks' in DefaultPassConfig, because
-  // DefaultPassConfig's list includes some checks that depend on type information,
-  // and the linter skips typechecking to stay fast.
-  private final PassFactory lintChecks =
-      new PassFactory("lintChecks", true) {
+  private final PassFactory checkRequiresAndProvidesSorted =
+      new PassFactory("checkRequiresAndProvidesSorted", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new CombinedCompilerPass(
-              compiler,
-              ImmutableList.<Callback>of(
-                  new CheckArguments(compiler),
-                  new CheckEmptyStatements(compiler),
-                  new CheckEnums(compiler),
-                  new CheckInterfaces(compiler),
-                  new CheckJSDocStyle(compiler),
-                  new CheckJSDoc(compiler),
-                  new CheckPrototypeProperties(compiler),
-                  new CheckRequiresForConstructors(compiler,
-                      CheckRequiresForConstructors.Mode.SINGLE_FILE),
-                  new CheckRequiresAndProvidesSorted(compiler)));
+          return new CheckRequiresAndProvidesSorted(compiler);
         }
       };
 
@@ -79,4 +72,22 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         }
       };
 
+  private final PassFactory lintChecks =
+      new PassFactory("lintChecks", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new CombinedCompilerPass(
+              compiler,
+              ImmutableList.<Callback>of(
+                  new CheckArguments(compiler),
+                  new CheckEmptyStatements(compiler),
+                  new CheckEnums(compiler),
+                  new CheckInterfaces(compiler),
+                  new CheckJSDocStyle(compiler),
+                  new CheckJSDoc(compiler),
+                  new CheckPrototypeProperties(compiler),
+                  new CheckRequiresForConstructors(
+                      compiler, CheckRequiresForConstructors.Mode.SINGLE_FILE)));
+        }
+      };
 }
