@@ -2692,7 +2692,7 @@ class IRFactory {
     String value = token.value;
     if (templateLiteral) {
       // <CR><LF> and <CR> are normalized as <LF> for raw string value
-      value = value.replaceAll("(?<!\\\\)\r(\n)?", "\n");
+      value = value.replaceAll("\r\n?", "\n");
     }
     int start = templateLiteral ? 0 : 1; // skip the leading quote
     int cur = value.indexOf('\\');

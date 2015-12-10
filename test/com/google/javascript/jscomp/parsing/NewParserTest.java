@@ -1743,6 +1743,14 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     return parse(s);
   }
 
+  private void assertSimpleTemplateLiteral(String expectedContents, String literal) {
+    Node node = testTemplateLiteral(literal).getFirstChild().getFirstChild();
+    assertNode(node).hasType(Token.TEMPLATELIT);
+    assertThat(node.getChildCount()).isEqualTo(1);
+    assertNode(node.getFirstChild()).hasType(Token.STRING);
+    assertThat(node.getFirstChild().getString()).isEqualTo(expectedContents);
+  }
+
   public void testUseTemplateLiteral() {
     testTemplateLiteral("f`hello world`;");
     testTemplateLiteral("`hello ${name} ${world}`.length;");
@@ -1758,6 +1766,16 @@ public final class NewParserTest extends BaseJSTypeTestCase {
     testTemplateLiteral("`string containing \\`escaped\\` backticks`;");
     testTemplateLiteral("{ `in block` }");
     testTemplateLiteral("{ `in ${block}` }");
+  }
+
+  public void testTemplateLiteralWithNewline() {
+    assertSimpleTemplateLiteral("hello\nworld", "`hello\nworld`");
+    assertSimpleTemplateLiteral("\n", "`\r`");
+    assertSimpleTemplateLiteral("\n", "`\r\n`");
+    assertSimpleTemplateLiteral("\\\n", "`\\\\\n`");
+    assertSimpleTemplateLiteral("\\\n", "`\\\\\r\n`");
+    assertSimpleTemplateLiteral("\r\n", "`\\r\\n`"); // template literals support explicit escapes
+    assertSimpleTemplateLiteral("\\r\\n", "`\\\\r\\\\n`"); // note: no actual newlines here
   }
 
   public void testTemplateLiteralWithLineContinuation() {
