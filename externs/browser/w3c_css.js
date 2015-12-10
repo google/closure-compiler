@@ -2358,6 +2358,14 @@ ClientRect.prototype.height;
 function CSSInterface() {}
 
 /**
+ * @param {string} ident
+ * @return {string}
+ * @see http://www.w3.org/TR/cssom/#the-css.escape()-method
+ * @throws DOMException {@see DOMException.INVALID_CHARACTER_ERR}
+ */
+CSSInterface.prototype.escape = function(ident) {};
+
+/**
  * @param {string} property
  * @param {string=} opt_value
  * @return {boolean}
