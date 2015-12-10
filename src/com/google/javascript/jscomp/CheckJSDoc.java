@@ -149,8 +149,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   /**
    * Checks that deprecated annotations such as @expose are not present
    */
-  private void validateDeprecatedJsDoc(Node n,
-      JSDocInfo info) {
+  private void validateDeprecatedJsDoc(Node n, JSDocInfo info) {
     if (info != null && info.isExpose()) {
       report(n, ANNOTATION_DEPRECATED, "@expose",
               "Use @nocollapse or @export instead.");
@@ -158,11 +157,10 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   }
 
   /**
-   * Warns when nocollapse annotations are pressent on nodes
-   * which are not eligible for property collapsing .
+   * Warns when nocollapse annotations are present on nodes
+   * which are not eligible for property collapsing.
    */
-  private void validateNoCollapse(Node n,
-      JSDocInfo info) {
+  private void validateNoCollapse(Node n, JSDocInfo info) {
     if (n.isFromExterns()) {
       if (info != null && info.isNoCollapse()) {
         // @nocollapse has no effect in externs
