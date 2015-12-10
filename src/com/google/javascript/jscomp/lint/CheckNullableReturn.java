@@ -40,13 +40,13 @@ public final class CheckNullableReturn implements HotSwapCompilerPass, NodeTrave
   final AbstractCompiler compiler;
 
   public static final DiagnosticType NULLABLE_RETURN =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_NULLABLE_RETURN",
           "This function''s return type is nullable, but it always returns a "
           + "non-null value. Consider making the return type non-nullable.");
 
   public static final DiagnosticType NULLABLE_RETURN_WITH_NAME =
-      DiagnosticType.disabled(
+      DiagnosticType.warning(
           "JSC_NULLABLE_RETURN_WITH_NAME",
           "The return type of the function \"{0}\" is nullable, but it always "
           + "returns a non-null value. Consider making the return type "
