@@ -93,10 +93,12 @@ public final class CheckJsDocTest extends Es6CompilerTestCase {
 
   public void testFunctionJSDocOnMethods() {
     testSameEs6("class Foo { /** @return {?} */ bar() {} }");
+    testSameEs6("class Foo { /** @return {?} */ static bar() {} }");
     testSameEs6("class Foo { /** @return {?} */ get bar() {} }");
     testSameEs6("class Foo { /** @param {?} x */ set bar(x) {} }");
 
     testSameEs6("class Foo { /** @return {?} */ [bar]() {} }");
+    testSameEs6("class Foo { /** @return {?} */ static [bar]() {} }");
     testSameEs6("class Foo { /** @return {?} */ get [bar]() {} }");
     testSameEs6("class Foo { /** @return {?} x */ set [bar](x) {} }");
   }
