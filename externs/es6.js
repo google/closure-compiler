@@ -1156,6 +1156,14 @@ Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};
  */
 Promise.prototype.catch = function(onRejected) {};
 
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of
+ * @param {...T} var_args
+ * @return {!Array<T>}
+ * @template T
+ */
+Array.of = function(var_args) {};
+
 
 /** @return {!Array<number>} */
 Array.prototype.keys;
