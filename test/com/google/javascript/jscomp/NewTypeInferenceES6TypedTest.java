@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
+
 /**
  * Tests for the new type inference on transpiled ES6 code that includes
  * type annotations in the language syntax.
@@ -207,11 +208,11 @@ public final class NewTypeInferenceES6TypedTest extends NewTypeInferenceTestBase
         GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
-  public void testAmbientDeclaration() {
-    typeCheck("declare var x: number;");
-    typeCheck("declare function f(): number;");
-    typeCheck("declare class C { constructor(); }");
-    typeCheck("declare enum Foo { BAR }");
+  public void testAmbientDeclarationsInCode() {
+    typeCheck("declare var x: number;", Es6TypedToEs6Converter.DECLARE_IN_NON_EXTERNS);
+    typeCheck("declare function f(): void;", Es6TypedToEs6Converter.DECLARE_IN_NON_EXTERNS);
+    typeCheck("declare class C { constructor(); }", Es6TypedToEs6Converter.DECLARE_IN_NON_EXTERNS);
+    typeCheck("declare enum Foo { BAR }", Es6TypedToEs6Converter.DECLARE_IN_NON_EXTERNS);
   }
 
   public void testGetterReturnNonDeclaredType() {

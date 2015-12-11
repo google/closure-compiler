@@ -1447,7 +1447,7 @@ public abstract class CompilerTestCase extends TestCase {
     Node externs = externsAndJs.getFirstChild();
 
     Node expected = compiler.parseTestCode(expectedExtern);
-    assertThat(compiler.hasErrors()).isFalse();
+    assertThat(compiler.getErrors()).isEmpty();
 
     (getProcessor(compiler)).process(externs, root);
 

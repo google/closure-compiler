@@ -83,6 +83,12 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       "JSC_SPECIALIZED_SIGNATURE_NOT_SUPPORTED",
       "Specialized signatures are not supported and type information might be lost");
 
+  static final DiagnosticType DECLARE_IN_NON_EXTERNS = DiagnosticType.warning(
+      "JSC_DECLARE_IN_NON_EXTERNS",
+      "Found a declare statement in program code.\n"
+      + "If you are generating externs, this should be fine.\n"
+      + "If not, make sure to pass your .d.ts file as an extern file.");
+
   private final AbstractCompiler compiler;
   private final Map<Node, Namespace> nodeNamespaceMap;
   private final Set<String> convertedNamespaces;
@@ -506,27 +512,34 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   }
 
   private void visitAmbientDeclaration(Node n, Node parent) {
+    if (!n.isFromExterns()) {
+      compiler.report(JSError.make(n, DECLARE_IN_NON_EXTERNS));
+    }
+
+    Node insertionPoint = n;
+    Node topLevel = parent;
+    boolean insideExport = parent.getType() == Token.EXPORT;
+    if (insideExport) {
+      insertionPoint = parent;
+      topLevel = parent.getParent();
+    }
     // The node can have multiple children if transformed from an ambient namespace declaration.
     for (Node c : n.children()) {
-      JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(c.getJSDocInfo());
       if (c.getType() == Token.CONST) {
+        JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(c.getJSDocInfo());
         builder.recordConstancy();
         c.setType(Token.VAR);
+        c.setJSDocInfo(builder.build());
       }
-      c.setJSDocInfo(builder.build());
 
-      Node toAdd;
-      if (parent.getType() == Token.EXPORT && !c.isExprResult()) {
+      Node toAdd = c.detachFromParent();
+      if (insideExport && !toAdd.isExprResult()) {
         // We want to keep the "export" declaration in externs
-        toAdd = parent.detachFromParent();
-        toAdd.addChildToFront(c.detachFromParent());
-      } else {
-        toAdd = c.detachFromParent();
+        toAdd = new Node(Token.EXPORT, toAdd).srcref(parent);
       }
-      compiler.getSynthesizedExternsInput().getAstRoot(compiler)
-          .addChildToBack(toAdd);
+      topLevel.addChildBefore(toAdd, insertionPoint);
     }
-    n.detachFromParent();
+    insertionPoint.detachFromParent();
     compiler.reportCodeChange();
   }
 
