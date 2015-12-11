@@ -30,9 +30,11 @@ import com.google.javascript.rhino.Node;
  * and which we cannot transpile correctly.
  */
 public final class CheckArguments extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType BAD_ARGUMENTS_USAGE = DiagnosticType.warning(
-      "JSC_BAD_ARGUMENTS_USAGE",
-      "This use of the 'arguments' object is discouraged.");
+  public static final DiagnosticType BAD_ARGUMENTS_USAGE =
+      DiagnosticType.warning(
+          "JSC_BAD_ARGUMENTS_USAGE",
+          "This use of the 'arguments' object is discouraged. See "
+              + "https://github.com/google/closure-compiler/wiki/Lint-warning-about-%60arguments%60");
 
   private final AbstractCompiler compiler;
 
