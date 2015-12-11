@@ -182,6 +182,13 @@ public final class CommandLineRunnerTest extends TestCase {
     testSame("function f() { this.a = 3; }");
   }
 
+  public void testWarningGuardHideWarningsFor() {
+    args.add("--jscomp_warning=globalThis");
+    args.add("--hide_warnings_for=foo/bar");
+    setFilename(0, "foo/bar.js");
+    testSame("function f() { this.a = 3; }");
+  }
+
   public void testSimpleModeLeavesUnusedParams() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     testSame("window.f = function(a) {};");

@@ -336,6 +336,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       addWhitelistWarningsGuard(options, new File(config.warningsWhitelistFile));
     }
 
+    if (!config.hideWarningsFor.isEmpty()) {
+      options.addWarningsGuard(new ShowByPathWarningsGuard(
+          config.hideWarningsFor.toArray(new String[] {}),
+          ShowByPathWarningsGuard.ShowType.EXCLUDE));
+    }
+
     createDefineOrTweakReplacements(config.define, options, false);
 
     options.setTweakProcessing(config.tweakProcessing);
@@ -2422,6 +2428,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     CommandLineConfig setWarningsWhitelistFile(String fileName) {
       this.warningsWhitelistFile = fileName;
+      return this;
+    }
+
+    private List<String> hideWarningsFor = ImmutableList.of();
+
+    /**
+     * Sets the paths for which warnings will be hidden.
+     */
+    CommandLineConfig setHideWarningsFor(List<String> hideWarningsFor) {
+      this.hideWarningsFor = hideWarningsFor;
       return this;
     }
 
