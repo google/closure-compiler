@@ -67,6 +67,14 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
     testSame(LINE_JOINER.join(
         "/**",
+        " * @param {number=} x",
+        " * @param {number=} y",
+        " * @param {number=} z",
+        " */",
+        "function f(x = 1, y = 2, z = 3) {}"));
+
+    testSame(LINE_JOINER.join(
+        "/**",
         " * @param {...string} args",
         " */",
         "function f(...args) {}"));

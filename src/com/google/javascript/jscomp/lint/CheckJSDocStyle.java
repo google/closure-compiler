@@ -123,8 +123,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       }
 
       boolean nameOptional;
+      Node nodeToCheck = param;
       if (param.isDefaultValue()) {
-        param = param.getFirstChild();
+        nodeToCheck = param.getFirstChild();
         nameOptional = true;
       } else if (param.isName()) {
         nameOptional = param.getString().startsWith("opt_");
@@ -133,20 +134,20 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
         nameOptional = false;
       }
 
-      if (param.isName() && !param.getString().equals(paramsFromJsDoc.get(i))) {
-        t.report(param, INCORRECT_PARAM_NAME);
+      if (nodeToCheck.isName() && !nodeToCheck.getString().equals(paramsFromJsDoc.get(i))) {
+        t.report(nodeToCheck, INCORRECT_PARAM_NAME);
         return;
       }
-      // If `param` is not a NAME node (i.e. it's a destructuring pattern) then the JSDoc
+      // If `nodeToCheck` is not a NAME node (i.e. it's a destructuring pattern) then the JSDoc
       // can have any param name.
 
       JSTypeExpression paramType = jsDoc.getParameterType(paramsFromJsDoc.get(i));
       // TODO(tbreisacher): Do we want to warn if there is a @param with no type information?
       boolean jsDocOptional = paramType != null && paramType.isOptionalArg();
       if (nameOptional && !jsDocOptional) {
-        t.report(param, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, param.getString());
+        t.report(nodeToCheck, OPTIONAL_PARAM_NOT_MARKED_OPTIONAL, nodeToCheck.getString());
       } else if (!nameOptional && jsDocOptional) {
-        t.report(param, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, param.getString());
+        t.report(nodeToCheck, OPTIONAL_TYPE_NOT_USING_OPTIONAL_NAME, nodeToCheck.getString());
       }
 
       param = param.getNext();
