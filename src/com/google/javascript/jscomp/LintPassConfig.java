@@ -41,7 +41,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
 
   @Override protected List<PassFactory> getChecks() {
     return ImmutableList.of(
-        checkRequiresAndProvidesSorted, closureRewriteModule, closureGoogScopeAliases, lintChecks);
+        checkRequiresAndProvidesSorted,
+        closureRewriteModule,
+        closureGoogScopeAliases,
+        closureRewriteClass,
+        lintChecks);
   }
 
   @Override protected List<PassFactory> getOptimizations() {
@@ -69,6 +73,14 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new ScopedAliases(compiler, null, options.getAliasTransformationHandler());
+        }
+      };
+
+  private final PassFactory closureRewriteClass =
+      new PassFactory("closureRewriteClass", true) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new ClosureRewriteClass(compiler);
         }
       };
 
