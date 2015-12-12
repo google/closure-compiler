@@ -776,6 +776,14 @@ Element.prototype.name;
 Element.prototype.nodePrincipal;
 
 /**
+ * @type {!CSSStyleDeclaration}
+ * This belongs on HTMLElement rather than Element, but that
+ * breaks a lot.
+ * TODO(rdcronin): Remove this declaration once the breakage is fixed.
+ */
+Element.prototype.style;
+
+/**
  * @override
  * @return {!Element}
  */
