@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="**/gwt/**" including="**/*.java|**/*.properties" kind="src" path="src"/>
+	<classpathentry excluding="**/gwt/**|**/debugger/**" including="**/*.java|**/*.properties" kind="src" path="src"/>
 	<classpathentry including="**/*.java" kind="src" path="gen"/>
 	<classpathentry including="**/*.java" kind="src" output="build/test-classes" path="test"/>
 	<classpathentry kind="lib" path="lib/ant.jar"/>
