@@ -16,14 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -48,19 +48,18 @@ import java.util.Map.Entry;
  */
 class MoveFunctionDeclarations implements Callback, CompilerPass {
   private final AbstractCompiler compiler;
-  private final Map<JSModule, List<Node>> functions;
+  private final ListMultimap<JSModule, Node> functions;
 
   MoveFunctionDeclarations(AbstractCompiler compiler) {
     this.compiler = compiler;
-    functions = new HashMap<>();
+    functions = ArrayListMultimap.create();
   }
 
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, this);
-    for (Entry<JSModule, List<Node>> entry : functions.entrySet()) {
-      JSModule module = entry.getKey();
-      Node addingRoot = compiler.getNodeForCodeInsertion(module);
+    for (Entry<JSModule, List<Node>> entry : Multimaps.asMap(functions).entrySet()) {
+      Node addingRoot = compiler.getNodeForCodeInsertion(entry.getKey());
       for (Node n : Lists.reverse(entry.getValue())) {
         addingRoot.addChildToFront(n);
       }
@@ -83,13 +82,7 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
       parent.removeChild(n);
       compiler.reportCodeChange();
 
-      JSModule module = t.getModule();
-      List<Node> moduleFunctions = functions.get(module);
-      if (moduleFunctions == null) {
-        moduleFunctions = new ArrayList<>();
-        functions.put(module, moduleFunctions);
-      }
-      moduleFunctions.add(n);
+      functions.put(t.getModule(), n);
     }
   }
 }
