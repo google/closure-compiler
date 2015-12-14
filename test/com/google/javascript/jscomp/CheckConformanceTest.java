@@ -443,6 +443,75 @@ public final class CheckConformanceTest extends CompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  public void testBanndedProperty3() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'C.prototype.p'",
+        "  error_message: 'C.p is not allowed'",
+        "  whitelist: 'SRC1'",
+        "}");
+
+    String cdecl = LINE_JOINER.join(
+        "/** @constructor */ function SC() {}",
+        "/** @constructor @extends {SC} */",
+        "function C() {}",
+        "/** @type {string} */",
+        "C.prototype.p;");
+    String ddecl = LINE_JOINER.join(
+        "/** @constructor @template T */ function D() {}",
+        "/** @param {T} a */",
+        "D.prototype.method = function(a) {",
+        "  use(a.p);",
+        "};");
+
+    testConformance(cdecl, ddecl,
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+  }
+
+  public void testBanndedProperty4() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'C.prototype.p'",
+        "  error_message: 'C.p is not allowed'",
+        "  whitelist: 'SRC1'",
+        "}");
+
+    String cdecl = LINE_JOINER.join(
+        "/** @constructor */ function SC() {}",
+        "/** @constructor @extends {SC} */",
+        "function C() {}",
+        "/** @type {string} */",
+        "C.prototype.p;",
+        "",
+        "/**",
+        " * @param {!K} key",
+        " * @param {V=} opt_value",
+        " * @constructor",
+        " * @struct",
+        " * @template K, V",
+        " * @private",
+        " */",
+        "var Entry_ = function(key, opt_value) {",
+        "  /** @const {K} */",
+        "  this.key = key;",
+        "  /** @type {V} */",
+        "  this.value = opt_value;",
+        "};");
+
+    String ddecl = LINE_JOINER.join(
+        "/** @constructor @template T */ function D() {}",
+        "/** @param {T} a */",
+        "D.prototype.method = function(a) {",
+        "  var entry = new Entry('key');",
+        "  use(entry.value.p);",
+        "};");
+
+    testConformance(cdecl, ddecl,
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+  }
+
   public void testBannedPropertyWrite() {
     configuration =
         "requirement: {\n" +
