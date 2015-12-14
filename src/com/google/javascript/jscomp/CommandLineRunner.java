@@ -568,6 +568,12 @@ public class CommandLineRunner extends
             "<file-name>:<line-number>?  <warning-description>")
     private String warningsWhitelistFile = "";
 
+    @Option(name = "--hide_warnings_for",
+        hidden = true,
+        usage = "If specified, files whose path contains this string will "
+            + "have their warnings hidden. You may specify multiple.")
+    private List<String> hideWarningsFor = new ArrayList<>();
+
     @Option(name = "--extra_annotation_name",
         hidden = true,
         usage = "A whitelist of tag names in JSDoc. You may specify multiple")
@@ -1133,6 +1139,7 @@ public class CommandLineRunner extends
           .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
+          .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
           .setTracerMode(flags.tracerMode)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
