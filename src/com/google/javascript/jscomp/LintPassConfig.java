@@ -45,7 +45,8 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         closureRewriteModule,
         closureGoogScopeAliases,
         closureRewriteClass,
-        lintChecks);
+        lintChecks,
+        checkRequires);
   }
 
   @Override protected List<PassFactory> getOptimizations() {
@@ -97,9 +98,18 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckInterfaces(compiler),
                   new CheckJSDocStyle(compiler),
                   new CheckJSDoc(compiler),
-                  new CheckPrototypeProperties(compiler),
-                  new CheckRequiresForConstructors(
-                      compiler, CheckRequiresForConstructors.Mode.SINGLE_FILE)));
+                  new CheckPrototypeProperties(compiler)));
+        }
+      };
+
+  // This cannot be part of lintChecks because the callbacks in the CombinedCompilerPass don't
+  // get access to the externs.
+  private final PassFactory checkRequires =
+      new PassFactory("checkRequires", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new CheckRequiresForConstructors(
+              compiler, CheckRequiresForConstructors.Mode.SINGLE_FILE);
         }
       };
 }

@@ -30,15 +30,18 @@ import java.nio.file.Paths;
 public class Linter {
   public static void main(String[] args) throws IOException {
     for (String filename : args) {
-      lint(filename);
+      lint(null, filename);
     }
   }
 
-  protected static void lint(String filename) throws IOException {
-    lint(Paths.get(filename));
+  protected static void lint(SourceFile externs, String filename) throws IOException {
+    lint(externs, Paths.get(filename));
   }
 
-  private static void lint(Path path) throws IOException {
+  private static void lint(SourceFile externs, Path path) throws IOException {
+    if (externs == null) {
+      externs = SourceFile.fromCode("<Linter externs>", "");
+    }
     SourceFile file = SourceFile.fromFile(path.toString());
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -53,6 +56,6 @@ public class Linter {
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
     compiler.setPassConfig(new LintPassConfig(options));
     compiler.disableThreads();
-    compiler.compile(ImmutableList.<SourceFile>of(), ImmutableList.of(file), options);
+    compiler.compile(ImmutableList.<SourceFile>of(externs), ImmutableList.of(file), options);
   }
 }

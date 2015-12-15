@@ -297,6 +297,12 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
     test(externs, js, js, null, null);
   }
 
+  public void testPassExterns() {
+    String externs = "/** @const */ var google = {};";
+    String js = "var ll = new google.maps.LatLng();";
+    test(externs, js, js, null, null);
+  }
+
   public void testNewNodesWithMoreThanOneFile() {
     // Bar is created, and goog.require()ed, but in different files.
     String[] js =
