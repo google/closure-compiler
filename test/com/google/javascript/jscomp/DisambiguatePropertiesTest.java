@@ -1043,6 +1043,19 @@ public final class DisambiguatePropertiesTest extends CompilerTestCase {
     testSets(js, "{a=[[Foo.prototype, I.prototype]]}");
   }
 
+  public void testInterfaceOfSuperclass2() {
+    String js = LINE_JOINER.join(
+        "/** @const */ var goog = {};",
+        "goog.abstractMethod = function(var_args) {};",
+        "/** @interface */ function I() {}",
+        "I.prototype.a = function(x) {};",
+        "/** @constructor @implements {I} */ function Foo() {}",
+        "/** @override */ Foo.prototype.a = goog.abstractMethod;",
+        "/** @constructor @extends Foo */ function Bar() {}",
+        "/** @override */ Bar.prototype.a = function(x) {};");
+    testSets(js, "{a=[[Foo.prototype, I.prototype]]}");
+  }
+
   public void testTwoInterfacesWithSomeInheritance() {
     String js = ""
         + "/** @interface */ function I() {};\n"

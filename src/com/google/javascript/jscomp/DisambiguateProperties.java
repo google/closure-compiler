@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -218,13 +217,7 @@ class DisambiguateProperties implements CompilerPass {
         getTypes().union(top, relatedType);
       }
       FunctionType constructor = getConstructor(type);
-      if (constructor != null
-          // Running recordInterfaces on a constructor that doesn't directly
-          // implement an interface is redundant.
-          // If it has an ancestor that implements an interface, we will run
-          // recordInterfaces when we look at the ancestor.
-          && !Iterables.isEmpty(constructor.getOwnImplementedInterfaces())
-          && recordInterfacesCache.add(type)) {
+      if (constructor != null && recordInterfacesCache.add(type)) {
         recordInterfaces(constructor, top, this);
       }
     }

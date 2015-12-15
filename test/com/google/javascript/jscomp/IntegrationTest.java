@@ -922,6 +922,32 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "function Baz(){} Baz.prototype.Baz_prototype$bar = 3;");
   }
 
+  // When closure-code-removal runs before disambiguate-properties, make sure
+  // that removing abstract methods doesn't mess up disambiguation.
+  public void testDisambiguateProperties2() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+    options.setDisambiguateProperties(true);
+    options.setRemoveDeadCode(true);
+    test(options,
+        Joiner.on('\n').join(
+            "/** @const */ var goog = {};",
+            "/** @interface */ function I() {}",
+            "I.prototype.a = function(x) {};",
+            "/** @constructor @implements {I} */ function Foo() {}",
+            "/** @override */ Foo.prototype.a = goog.abstractMethod;",
+            "/** @constructor @extends Foo */ function Bar() {}",
+            "/** @override */ Bar.prototype.a = function(x) {};"),
+        Joiner.on('\n').join(
+            "var goog={};",
+            "function I(){}",
+            "I.prototype.a=function(x){};",
+            "function Foo(){}",
+            "function Bar(){}",
+            "Bar.prototype.a=function(x){};"));
+  }
+
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();
