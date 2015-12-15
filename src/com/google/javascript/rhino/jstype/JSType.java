@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
@@ -598,21 +597,14 @@ public abstract class JSType implements TypeI, Serializable {
           that.toMaybeFunctionType(), eqMethod, eqCache);
     }
 
-    if (isRecordType() && that.isRecordType()) {
-      return toMaybeRecordType().checkStructuralEquivalenceHelper(
-          that.toMaybeRecordType(), eqMethod, eqCache);
-    }
-
     if (!getTemplateTypeMap().checkEquivalenceHelper(
         that.getTemplateTypeMap(), eqMethod, eqCache)) {
       return false;
     }
 
-    if (eqCache.isStructuralTyping()
-        && this.isStructuralType() && that.isStructuralType()) {
-      // TODO: handle template type equivalence, see:
-      // testDuplicateVariableDefinition8_7 in TypeCheckTest.java
-      return checkStructuralEquivalenceHelper(that, eqMethod, eqCache);
+    if (eqCache.isStructuralTyping() && this.isStructuralType() && that.isStructuralType()) {
+      return toMaybeObjectType()
+          .checkStructuralEquivalenceHelper(that.toMaybeObjectType(), eqMethod, eqCache);
     }
 
     if (isNominalType() && that.isNominalType()) {
@@ -645,18 +637,6 @@ public abstract class JSType implements TypeI, Serializable {
     // there is no need to verify members. If the object pointers are not
     // identical, then the type member must be different.
     return false;
-  }
-
-  private boolean checkStructuralEquivalenceHelper(final JSType that,
-      EquivalenceMethod eqMethod, EqCache eqCache) {
-    if (this.isFunctionType() || that.isFunctionType()) {
-      return false;
-    }
-    Preconditions.checkState(eqCache.isStructuralTyping());
-    Preconditions.checkState((isRecordType() || that.isRecordType())
-        || isNominalType() && that.isNominalType());
-    return toMaybeObjectType()
-        .checkStructuralEquivalenceHelper(that.toMaybeObjectType(), eqMethod, eqCache);
   }
 
   // Named types may be proxies of concrete types.
@@ -1350,10 +1330,10 @@ public abstract class JSType implements TypeI, Serializable {
       return false;
     }
 
-    // If the super type is an @record instance, then we can't safely remove a templatized type
+    // If the super type is a structural type, then we can't safely remove a templatized type
     // (since it might affect the types of the properties)
     if (implicitImplCache.isStructuralTyping()
-        && thisType.isObject() && thatType.isStructuralInterfaceInstance()) {
+        && thisType.isObject() && thatType.isStructuralType()) {
       return thisType.toMaybeObjectType().isStructuralSubtype(
           thatType.toMaybeObjectType(), implicitImplCache);
     }
@@ -1371,14 +1351,6 @@ public abstract class JSType implements TypeI, Serializable {
           ((ProxyObjectType) thatType).getReferencedTypeInternal(), implicitImplCache);
     }
     return false;
-  }
-
-  private boolean isStructuralInterfaceInstance() {
-    if (!this.isObject()) {
-      return false;
-    }
-    FunctionType constructor = this.toMaybeObjectType().getConstructor();
-    return constructor != null && constructor.isStructuralInterface();
   }
 
   /**

@@ -513,11 +513,6 @@ public abstract class ObjectType
           otherObject.getTemplateTypeMap(), eqMethod, eqCache);
     }
 
-    if (this.hasAnyTemplateTypes() || otherObject.hasAnyTemplateTypes()) {
-      Preconditions.checkState(eqCache.isStructuralTyping());
-      return false;
-    }
-
     MatchStatus result = eqCache.checkCache(this, otherObject);
     if (result != null) {
       return result.subtypeValue();
@@ -539,32 +534,49 @@ public abstract class ObjectType
     return true;
   }
 
-  /**
-   * Determine if {@code this} is a an implicit subtype of {@code structuralInterface}.
-   */
-  boolean isStructuralSubtype(ObjectType structuralInterface, ImplCache implicitImplCache) {
-    // Union types should be handled by isSubtype already
-    Preconditions.checkArgument(!this.isUnionType());
-    Preconditions.checkArgument(!structuralInterface.isUnionType());
-    Preconditions.checkArgument(structuralInterface.getConstructor().isStructuralInterface());
+  private static boolean isStructuralSubtypeHelper(
+      ObjectType typeA, ObjectType typeB, ImplCache implicitImplCache) {
 
-    MatchStatus result = implicitImplCache.checkCache(this, structuralInterface);
-    if (result != null) {
-      return result.subtypeValue();
-    }
-
-    for (String propName : structuralInterface.getPropertyNames()) {
-      JSType superPropType = structuralInterface.getPropertyType(propName);
-      boolean subHasProp = this.hasProperty(propName);
-
-      if (subHasProp && !this.getPropertyType(propName).isSubtype(superPropType, implicitImplCache)
-          || !subHasProp && !superPropType.isVoidable()) {
-        implicitImplCache.updateCache(this, structuralInterface, MatchStatus.NOT_MATCH);
+    // typeA is a subtype of record type typeB iff:
+    // 1) typeA has all the non-optional properties declared in typeB.
+    // 2) And for each property of typeB, its type must be
+    //    a super type of the corresponding property of typeA.
+    for (String property : typeB.getPropertyNames()) {
+      JSType propB = typeB.getPropertyType(property);
+      if (!typeA.hasProperty(property)) {
+        // Currently, any type including undefined (other than ?) is considered optional.
+        if (propB.isVoidable() && !propB.isUnknownType()) {
+          continue;
+        }
+        return false;
+      }
+      JSType propA = typeA.getPropertyType(property);
+      if (!propA.isSubtype(propB, implicitImplCache)) {
         return false;
       }
     }
-    implicitImplCache.updateCache(this, structuralInterface, MatchStatus.MATCH);
     return true;
+  }
+
+  /**
+   * Determine if {@code this} is a an implicit subtype of {@code superType}.
+   */
+  boolean isStructuralSubtype(ObjectType superType, ImplCache implicitImplCache) {
+    // Union types should be handled by isSubtype already
+    Preconditions.checkArgument(!this.isUnionType());
+    Preconditions.checkArgument(!superType.isUnionType());
+    Preconditions.checkArgument(superType.isStructuralType(),
+        "isStructuralSubtype should be called with structural supertype. Found %s", superType);
+
+    MatchStatus cachedResult = implicitImplCache.checkCache(this, superType);
+    if (cachedResult != null) {
+      return cachedResult.subtypeValue();
+    }
+
+    boolean result = isStructuralSubtypeHelper(this, superType, implicitImplCache);
+    implicitImplCache.updateCache(
+        this, superType, result ? MatchStatus.MATCH : MatchStatus.NOT_MATCH);
+    return result;
   }
 
   /**

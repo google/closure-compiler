@@ -15540,6 +15540,28 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: (I7|null)"));
   }
 
+  public void testRecordWithOptionalProperty() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/**  @constructor */ function Foo() {};",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** {str: string, opt_num: (undefined|number)} */ x = new Foo;"));
+  }
+
+  public void testRecordWithUnknownProperty() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/**  @constructor */ function Foo() {};",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** {str: string, unknown: ?} */ x = new Foo;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo",
+            "required: {str: string, unknown: ?}"));
+  }
+
   public void testStructuralInterfaceWithOptionalProperty() throws Exception {
     testTypes(
         LINE_JOINER.join(
@@ -15558,12 +15580,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "/** @record */ function Rec() {}",
             "/** @type {string} */ Rec.prototype.str;",
-            "/** @type {?} */ Rec.prototype.opt_unknown;",
+            "/** @type {?} */ Rec.prototype.unknown;",
             "",
             "/** @constructor */ function Foo() {}",
             "Foo.prototype.str = 'foo';",
             "",
-            "var /** !Rec */ x = new Foo;"));
+            "var /** !Rec */ x = new Foo;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo",
+            "required: Rec"));
   }
 
   public void testStructuralInterfaceCycleDoesntCrash() throws Exception {

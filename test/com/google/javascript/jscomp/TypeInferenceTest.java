@@ -1133,7 +1133,7 @@ public final class TypeInferenceTest extends TestCase {
 
   public void testRecordInference() {
     inFunction(
-        "/** @param {{a: (boolean|undefined)}|{b: (string|undefined)}} x */" +
+        "/** @param {{a: boolean}|{b: string}} x */" +
         "function f(x) {}" +
         "var out = {};" +
         "f(out);");

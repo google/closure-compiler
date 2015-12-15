@@ -221,27 +221,6 @@ public class RecordType extends PrototypeObjectType {
       return false;
     }
 
-    return RecordType.isSubtype(
-        this, that.toMaybeRecordType(), implicitImplCache);
-  }
-
-  /** Determines if typeA is a subtype of typeB */
-  static boolean isSubtype(ObjectType typeA, RecordType typeB,
-      ImplCache implicitImplCache) {
-    // typeA is a subtype of record type typeB iff:
-    // 1) typeA has all the properties declared in typeB.
-    // 2) And for each property of typeB, its type must be
-    //    a super type of the corresponding property of typeA.
-    for (String property : typeB.getOwnPropertyNames()) {
-      if (!typeA.hasProperty(property)) {
-        return false;
-      }
-      JSType propA = typeA.getPropertyType(property);
-      JSType propB = typeB.getPropertyType(property);
-      if (!propA.isSubtype(propB, implicitImplCache)) {
-        return false;
-      }
-    }
-    return true;
+    return this.isStructuralSubtype(that.toMaybeRecordType(), implicitImplCache);
   }
 }

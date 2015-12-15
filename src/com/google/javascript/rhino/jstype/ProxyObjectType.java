@@ -126,6 +126,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isStructuralType() {
+    return referencedType.isStructuralType();
+  }
+
+  @Override
   public boolean isNoType() {
     return referencedType.isNoType();
   }
