@@ -31,7 +31,7 @@ import com.google.javascript.rhino.jstype.JSType;
 public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     implements CompilerPass {
 
-  static final DiagnosticType IMPLICITLY_NULLABLE_JSDOC =
+  public static final DiagnosticType IMPLICITLY_NULLABLE_JSDOC =
     DiagnosticType.warning(
         "JSC_IMPLICITLY_NULLABLE_JSDOC",
         "Name {0} in JSDoc is implicitly nullable.\n"
