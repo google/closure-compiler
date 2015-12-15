@@ -887,9 +887,8 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("checkSideEffects", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new CheckSideEffects(compiler,
-          options.checkSuspiciousCode ? CheckLevel.WARNING : CheckLevel.OFF,
-              protectHiddenSideEffects);
+      return new CheckSideEffects(
+          compiler, options.checkSuspiciousCode, protectHiddenSideEffects);
     }
   };
 

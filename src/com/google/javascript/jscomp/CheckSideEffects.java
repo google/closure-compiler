@@ -47,7 +47,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   static final String PROTECTOR_FN = "JSCOMPILER_PRESERVE";
 
-  private final CheckLevel level;
+  private final boolean report;
 
   private final List<Node> problemNodes = new ArrayList<>();
 
@@ -58,10 +58,10 @@ final class CheckSideEffects extends AbstractPostOrderCallback
 
   private final boolean protectSideEffectFreeCode;
 
-  CheckSideEffects(AbstractCompiler compiler, CheckLevel level,
+  CheckSideEffects(AbstractCompiler compiler, boolean report,
       boolean protectSideEffectFreeCode) {
     this.compiler = compiler;
-    this.level = level;
+    this.report = report;
     this.protectSideEffectFreeCode = protectSideEffectFreeCode;
   }
 
@@ -119,16 +119,17 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     boolean isSimpleOp = NodeUtil.isSimpleOperator(n);
     if (!isResultUsed) {
       if (isSimpleOp || !NodeUtil.mayHaveSideEffects(n, t.getCompiler())) {
-        String msg = "This code lacks side-effects. Is there a bug?";
-        if (n.isString() || n.isTemplateLit()) {
-          msg = "Is there a missing '+' on the previous line?";
-        } else if (isSimpleOp) {
-          msg = "The result of the '" + Token.name(n.getType()).toLowerCase() +
-              "' operator is not being used.";
-        }
+        if (report) {
+          String msg = "This code lacks side-effects. Is there a bug?";
+          if (n.isString() || n.isTemplateLit()) {
+            msg = "Is there a missing '+' on the previous line?";
+          } else if (isSimpleOp) {
+            msg = "The result of the '" + Token.name(n.getType()).toLowerCase() +
+                "' operator is not being used.";
+          }
 
-        t.getCompiler().report(
-            t.makeError(n, level, USELESS_CODE_ERROR, msg));
+          t.report(n, USELESS_CODE_ERROR, msg);
+        }
         // TODO(johnlenz): determine if it is necessary to
         // try to protect side-effect free statements as well.
         if (!NodeUtil.isStatement(n)) {
@@ -154,10 +155,11 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         if (qname != null && noSideEffectExterns.containsKey(qname) &&
             !isDefinedInSrc) {
           problemNodes.add(n);
-          String msg = "The result of the extern function call '" + qname +
-              "' is not being used.";
-          t.getCompiler().report(
-              t.makeError(n, level, USELESS_CODE_ERROR, msg));
+          if (report) {
+            String msg = "The result of the extern function call '" + qname +
+                "' is not being used.";
+            t.report(n, USELESS_CODE_ERROR, msg);
+          }
         }
       }
     }

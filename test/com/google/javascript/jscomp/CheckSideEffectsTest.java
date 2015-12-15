@@ -29,7 +29,7 @@ public final class CheckSideEffectsTest extends Es6CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckSideEffects(compiler, CheckLevel.WARNING, true);
+    return new CheckSideEffects(compiler, true, true);
   }
 
   private final DiagnosticType e = CheckSideEffects.USELESS_CODE_ERROR;
