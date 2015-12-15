@@ -60,7 +60,7 @@ public final class JSDocInfoPrinter {
     if (info.isOverride()) {
       sb.append("@override ");
     }
-    if (info.isConstant()) {
+    if (info.isConstant() && !info.isDefine()) {
       sb.append("@const ");
     }
     if (info.isExport()) {
@@ -156,7 +156,7 @@ public final class JSDocInfoPrinter {
       appendTypeNode(sb, info.getTypedefType().getRoot());
       sb.append("} ");
     }
-    if (info.hasType()) {
+    if (info.hasType() && !info.isDefine()) {
       if (info.isInlineType()) {
         sb.append(" ");
         appendTypeNode(sb, info.getType().getRoot());

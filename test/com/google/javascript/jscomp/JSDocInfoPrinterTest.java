@@ -293,4 +293,11 @@ public final class JSDocInfoPrinterTest extends TestCase {
     info = builder.buildAndReset();
     assertEquals("/**@type {function(this:foo):?} */", JSDocInfoPrinter.print(info));
   }
+
+  public void testDefines() {
+    builder.recordDefineType(new JSTypeExpression(
+        JsDocInfoParser.parseTypeString("string"), ""));
+    JSDocInfo info = builder.buildAndReset();
+    assertEquals("/**@define {string} */", JSDocInfoPrinter.print(info));
+  }
 }
