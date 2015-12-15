@@ -1499,7 +1499,7 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isBooleanResult(getNode("([true,false])")));
     assertFalse(NodeUtil.isBooleanResult(getNode("({a:true})")));
 
-    // These are boolean but aren't handled yet, "false" here means "unknown".
+    // These are boolean
     assertTrue(NodeUtil.isBooleanResult(getNode("true && false")));
     assertTrue(NodeUtil.isBooleanResult(getNode("true || false")));
     assertTrue(NodeUtil.isBooleanResult(getNode("a ? true : false")));
@@ -1628,6 +1628,64 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isStringResult(getNode("(1+{})")));
     assertFalse(NodeUtil.isStringResult(getNode("([]+1)")));
     assertFalse(NodeUtil.isStringResult(getNode("(1+[])")));
+  }
+
+  public void testIsObjectResult() {
+    assertFalse(NodeUtil.isObjectResult(getNode("1")));
+    assertFalse(NodeUtil.isObjectResult(getNode("true")));
+    assertFalse(NodeUtil.isObjectResult(getNode("+true")));
+    assertFalse(NodeUtil.isObjectResult(getNode("+1")));
+    assertFalse(NodeUtil.isObjectResult(getNode("-1")));
+    assertFalse(NodeUtil.isObjectResult(getNode("-Infinity")));
+    assertFalse(NodeUtil.isObjectResult(getNode("Infinity")));
+    assertFalse(NodeUtil.isObjectResult(getNode("NaN")));
+    assertFalse(NodeUtil.isObjectResult(getNode("undefined")));
+    assertFalse(NodeUtil.isObjectResult(getNode("void 0")));
+
+    assertFalse(NodeUtil.isObjectResult(getNode("a << b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a >> b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a >>> b")));
+
+    assertFalse(NodeUtil.isObjectResult(getNode("a == b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a != b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a === b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a !== b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a < b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a > b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a <= b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a >= b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a in b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a instanceof b")));
+
+    assertFalse(NodeUtil.isObjectResult(getNode("delete a")));
+    assertFalse(NodeUtil.isObjectResult(getNode("'a'")));
+    assertFalse(NodeUtil.isObjectResult(getNode("'a'+b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a+'b'")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a+b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("{},true")));
+
+    // "false" here means "unknown"
+    assertFalse(NodeUtil.isObjectResult(getNode("a()")));
+    assertFalse(NodeUtil.isObjectResult(getNode("''.a")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a.b")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a.b()")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a().b()")));
+    assertFalse(NodeUtil.isObjectResult(getNode("a ? true : {}")));
+
+    // These are objects but aren't handled yet.
+    assertFalse(NodeUtil.isObjectResult(getNode("true && {}")));
+    assertFalse(NodeUtil.isObjectResult(getNode("true || {}")));
+
+    // Definitely objects
+    assertTrue(NodeUtil.isObjectResult(getNode("new a.b()")));
+    assertTrue(NodeUtil.isObjectResult(getNode("([true,false])")));
+    assertTrue(NodeUtil.isObjectResult(getNode("({a:true})")));
+    assertTrue(NodeUtil.isObjectResult(getNode("a={}")));
+    assertTrue(NodeUtil.isObjectResult(getNode("[] && {}")));
+    assertTrue(NodeUtil.isObjectResult(getNode("[] || {}")));
+    assertTrue(NodeUtil.isObjectResult(getNode("a ? [] : {}")));
+    assertTrue(NodeUtil.isObjectResult(getNode("{},[]")));
+    assertTrue(NodeUtil.isObjectResult(getNode("/a/g")));
   }
 
   public void testValidNames() {

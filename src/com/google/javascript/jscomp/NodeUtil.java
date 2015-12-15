@@ -1525,8 +1525,8 @@ public final class NodeUtil {
     VOID,
     NUMBER,
     STRING,
-    BOOLEAN
-    // TODO(johnlenz): Array,Object,RegExp
+    BOOLEAN,
+    OBJECT
   }
 
   /**
@@ -1558,6 +1558,13 @@ public final class NodeUtil {
         ValueType first = getKnownValueType(n.getFirstChild());
         if (first == ValueType.STRING) {
           return ValueType.STRING;
+        }
+
+        // There are some pretty weird cases for object types:
+        //   {} + [] === "0"
+        //   [] + {} ==== "[object Object]"
+        if (first == ValueType.OBJECT || last == ValueType.OBJECT) {
+          return ValueType.UNDETERMINED;
         }
 
         if (!mayBeString(first) && !mayBeString(last)) {
@@ -1635,6 +1642,12 @@ public final class NodeUtil {
       case Token.VOID:
         return ValueType.VOID;
 
+      case Token.NEW:
+      case Token.ARRAYLIT:
+      case Token.OBJECTLIT:
+      case Token.REGEXP:
+        return ValueType.OBJECT;
+
       default:
         return ValueType.UNDETERMINED;
     }
@@ -1666,6 +1679,13 @@ public final class NodeUtil {
   }
 
   /**
+   * @return Whether the result of node evaluation is always an object
+   */
+  static boolean isObjectResult(Node n) {
+    return getKnownValueType(n) == ValueType.OBJECT;
+  }
+
+  /**
    * @return Whether the results is possibly a string.
    */
   static boolean mayBeString(Node n) {
@@ -1673,7 +1693,8 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the results is possibly a string.
+   * @return Whether the results is possibly a string, this includes Objects which may implicitly
+   * be converted to a string.
    */
   static boolean mayBeString(ValueType type) {
     switch (type) {
@@ -1682,8 +1703,36 @@ public final class NodeUtil {
       case NUMBER:
       case VOID:
         return false;
-      case UNDETERMINED:
+      case OBJECT:
       case STRING:
+      case UNDETERMINED:
+        return true;
+      default:
+        throw new IllegalStateException("unexpected");
+    }
+  }
+
+  /**
+   * @return Whether the results is possibly a string.
+   */
+  static boolean mayBeObect(Node n) {
+    return mayBeObect(getKnownValueType(n));
+  }
+
+  /**
+   * @return Whether the results is possibly a string, this includes Objects which may implicitly
+   * be converted to a string.
+   */
+  static boolean mayBeObect(ValueType type) {
+    switch (type) {
+      case BOOLEAN:
+      case NULL:
+      case NUMBER:
+      case STRING:
+      case VOID:
+        return false;
+      case OBJECT:
+      case UNDETERMINED:
         return true;
       default:
         throw new IllegalStateException("unexpected");
