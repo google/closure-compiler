@@ -176,6 +176,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("x == undefined");
   }
 
+
   public void testUndefinedComparison2() {
     fold("\"123\" !== void 0", "true");
     fold("\"123\" === void 0", "false");
@@ -770,6 +771,17 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     fold("!1 === null", "false");
     fold("!1 === !0", "false");
     fold("!0 === null", "false");
+  }
+
+  public void testFoldComparison4() {
+    foldSame("[] == false");  // true
+    foldSame("[] == true");   // false
+    foldSame("[0] == false"); // true
+    foldSame("[0] == true");  // false
+    foldSame("[1] == false"); // false
+    foldSame("[1] == true");  // true
+    foldSame("({}) == false");  // false
+    foldSame("({}) == true");   // true
   }
 
   public void testFoldGetElem() {
