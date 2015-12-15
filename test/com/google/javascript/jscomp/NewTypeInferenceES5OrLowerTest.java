@@ -6449,6 +6449,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "function h() {}",
         "f(g, h);"),
         NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @constructor",
+        " */",
+        "function Foo(x) {}",
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @param {T} y",
+        " */",
+        "function f(x, y) {}",
+        "/** @type {function(!Foo<!Foo<number>>, !Foo<!Foo<?>>)} */",
+        "function g(x, y) {}",
+        "/** @type {function(!Foo<!Foo<?>>, !Foo<!Foo<number>>)} */",
+        "function h(x, y) {}",
+        "f(g, h);"));
   }
 
   public void testInstantiationInsideObjectTypes() {
@@ -7370,6 +7388,22 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " * @return {B}",
         " */",
         "Child.prototype.method = function(x, y){ return y; };"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T} x",
+        " * @constructor",
+        " */",
+        "function Foo(x) {}",
+        "/**",
+        " * @template T",
+        " * @param {?} x",
+        " * @return {!Foo<!Foo<T>>}",
+        " */",
+        "function f(x) {",
+        "  return new Foo(new Foo(x));",
+        "}"));
   }
 
   public void testGenericsVariance() {
