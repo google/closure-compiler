@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.testing;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -54,6 +55,8 @@ import com.google.javascript.rhino.jstype.TemplatizedType;
 import junit.framework.TestCase;
 
 public abstract class BaseJSTypeTestCase extends TestCase {
+  protected static final Joiner LINE_JOINER = Joiner.on('\n');
+
   protected JSTypeRegistry registry;
   protected TestErrorReporter errorReporter;
 

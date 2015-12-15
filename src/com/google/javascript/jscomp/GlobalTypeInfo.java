@@ -122,7 +122,8 @@ class GlobalTypeInfo implements CompilerPass {
           + "The @const annotation is only allowed for "
           + "properties of namespaces, prototype properties, "
           + "static properties of constructors, and "
-          + "properties of the form this.prop declared inside constructors.");
+          + "properties of the form this.prop declared inside constructors "
+          + "and prototype methods.");
 
   static final DiagnosticType CANNOT_OVERRIDE_FINAL_METHOD =
       DiagnosticType.warning(
@@ -1222,9 +1223,6 @@ class GlobalTypeInfo implements CompilerPass {
     private void visitPropertyDeclaration(Node getProp) {
       // Class property
       if (isClassPropAccess(getProp, currentScope)) {
-        if (isAnnotatedAsConst(getProp) && currentScope.isPrototypeMethod()) {
-          warnings.add(JSError.make(getProp, MISPLACED_CONST_ANNOTATION));
-        }
         visitClassPropertyDeclaration(getProp);
       }
       // Prototype property

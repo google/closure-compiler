@@ -35,12 +35,12 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   protected List<PassFactory> passes;
 
   protected static final String CLOSURE_BASE =
-      Joiner.on('\n').join(
+      LINE_JOINER.join(
           "/** @const */ var goog = {};",
           "/** @return {void} */",
           "goog.nullFunction = function() {};");
   protected static final String DEFAULT_EXTERNS =
-      CompilerTypeTestCase.DEFAULT_EXTERNS + Joiner.on('\n').join(
+      CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
           "/** @return {string} */",
           "Object.prototype.toString = function() {};",
           "/**",

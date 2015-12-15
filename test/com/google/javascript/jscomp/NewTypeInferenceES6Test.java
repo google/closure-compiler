@@ -37,27 +37,27 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
   public void testSimpleClasses() {
     typeCheck("class Foo {}");
 
-    typeCheck(
-        "class Foo {}\n"
-        + "class Bar {}\n"
-        + "/** @type {!Foo} */ var x = new Bar;",
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
+        "class Bar {}",
+        "/** @type {!Foo} */ var x = new Bar;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(
-        "class Foo {\n"
-        + "  constructor(x) {\n"
-        + "    /** @type {string} */\n"
-        + "    this.x = x;\n"
-        + "  }\n"
-        + "}\n"
-        + "(new Foo('')).x - 5;\n",
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  constructor(x) {",
+        "    /** @type {string} */",
+        "    this.x = x;",
+        "  }",
+        "}",
+        "(new Foo('')).x - 5;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testClassInheritance() {
-    typeCheck(
-        "class Foo {}\n"
-        + "class Bar extends Foo {}");
+    typeCheck(LINE_JOINER.join(
+        "class Foo {}",
+        "class Bar extends Foo {}"));
   }
 
   public void testTaggedTemplateLitGlobalThisRef() {
