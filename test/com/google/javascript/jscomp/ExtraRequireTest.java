@@ -101,4 +101,18 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
     testSame(js);
   }
 
+  public void testPassModule() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "import {Foo} from 'bar';",
+            "new Foo();"));
+  }
+
+  public void testFailModule() {
+    // TODO(tbreisacher): Re-enable this check on ES6 modules, and make sure this reports a warning.
+    testSameEs6(
+        LINE_JOINER.join(
+            "import {Foo} from 'bar';",
+            "goog.require('example.ExtraRequire');"));
+  }
 }

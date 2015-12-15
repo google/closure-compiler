@@ -71,6 +71,9 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
   // in weakUsages, don't give a missingRequire warning, nor an extraRequire warning.
   private final Map<String, Node> weakUsages = new HashMap<>();
 
+  // Whether the current file is an ES6 module.
+  private boolean isModule = false;
+
   // Warnings
   static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
@@ -157,16 +160,34 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         break;
       case Token.SCRIPT:
         visitScriptNode(t);
+        reset();
         break;
       case Token.NEW:
         visitNewNode(t, n);
         break;
       case Token.CLASS:
         visitClassNode(n);
+        break;
+      case Token.IMPORT:
+      case Token.EXPORT:
+        isModule = true;
+        break;
     }
   }
 
+  private void reset() {
+    this.usages.clear();
+    this.weakUsages.clear();
+    this.requires.clear();
+    this.constructors.clear();
+    this.isModule = false;
+  }
+
   private void visitScriptNode(NodeTraversal t) {
+    if (isModule) {
+      return;
+    }
+
     Set<String> classNames = new HashSet<>();
 
     // For every usage, check that there is a goog.require, and warn if not.
@@ -215,13 +236,6 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
         reportExtraRequireWarning(call, require);
       }
     }
-
-    // for the next script, if there is one, we don't want the new, ctor, and
-    // require nodes to spill over.
-    this.usages.clear();
-    this.weakUsages.clear();
-    this.requires.clear();
-    this.constructors.clear();
   }
 
   private void reportExtraRequireWarning(Node call, String require) {

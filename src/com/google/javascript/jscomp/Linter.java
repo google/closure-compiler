@@ -34,7 +34,7 @@ public class Linter {
     }
   }
 
-  private static void lint(String filename) throws IOException {
+  protected static void lint(String filename) throws IOException {
     lint(Paths.get(filename));
   }
 
@@ -42,8 +42,12 @@ public class Linter {
     SourceFile file = SourceFile.fromFile(path.toString());
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+
+    // For a full compile, this would cause a crash, as the method name implies. But the passes
+    // in LintPassConfig can all handle untranspiled ES6.
+    options.setSkipTranspilationAndCrash(true);
+
     options.setCodingConvention(new GoogleCodingConvention());
     options.setWarningLevel(DiagnosticGroups.MISSING_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);

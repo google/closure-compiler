@@ -647,4 +647,23 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
         "function func( a = new Bar() ){}",
         "func();"));
   }
+
+  public void testPassModule() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "import {Foo} from 'bar';",
+            "new Foo();"));
+  }
+
+  // Check to make sure that we still get warnings when processing a non-module after processing
+  // a module.
+  public void testFailAfterModule() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+
+    String module = "import {Foo} from 'bar';";
+    String script = "var x = new example.X()";
+    String[] js = new String[] {module, script};
+    String warning = "'example.X' used but not goog.require'd";
+    test(js, null, null, MISSING_REQUIRE_WARNING, warning);
+  }
 }

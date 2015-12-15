@@ -37,6 +37,11 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
     super(externs, compareAsTree);
   }
 
+  @Override
+  protected void setUp() throws Exception {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+  }
+
   /**
    * Verifies that the compiler pass's JS output matches the expected output, under
    * both ES5 and ES6 modes.
