@@ -589,6 +589,10 @@ md.VirtualRepeatContainerController.prototype.getScrollOffset = function() {};
 /** @param {number} position */
 md.VirtualRepeatContainerController.prototype.scrollTo = function(position) {};
 
+/** @param {number} index */
+md.VirtualRepeatContainerController.prototype.scrollToIndex =
+    function(index) {};
+
 md.VirtualRepeatContainerController.prototype.resetScroll = function() {};
 
 
