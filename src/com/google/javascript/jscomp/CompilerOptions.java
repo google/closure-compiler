@@ -90,11 +90,6 @@ public class CompilerOptions {
   }
 
   /**
-   * Whether the compiler accepts type syntax ({@code var foo: string;}).
-   */
-  boolean acceptTypeSyntax;
-
-  /**
    * Whether to infer consts. This should not be configurable by
    * external clients. This is a transitional flag for a new type
    * of const analysis.
@@ -977,9 +972,6 @@ public class CompilerOptions {
 
     // Which environment to use
     environment = Environment.BROWSER;
-
-    // Language variation
-    acceptTypeSyntax = false;
 
     // Checks
     skipNonTranspilationPasses = false;
