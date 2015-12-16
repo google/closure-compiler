@@ -1803,6 +1803,20 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var $jscomp$templatelit$0 = ['', ' world'];",
             "$jscomp$templatelit$0.raw = ['', ' world'];",
             "a.b($jscomp$templatelit$0, hello);"));
+
+    // https://github.com/google/closure-compiler/issues/1299
+    test(
+        "tag`<p class=\"foo\">${x}</p>`",
+        LINE_JOINER.join(
+            "var $jscomp$templatelit$0 = ['<p class=\"foo\">', '</p>'];",
+            "$jscomp$templatelit$0.raw = ['<p class=\"foo\">', '</p>'];",
+            "tag($jscomp$templatelit$0, x);"));
+    test(
+        "tag`<p class='foo'>${x}</p>`",
+        LINE_JOINER.join(
+            "var $jscomp$templatelit$0 = ['<p class=\\'foo\\'>', '</p>'];",
+            "$jscomp$templatelit$0.raw = ['<p class=\\'foo\\'>', '</p>'];",
+            "tag($jscomp$templatelit$0, x);"));
   }
 
   public void testUnicodeEscapes() {

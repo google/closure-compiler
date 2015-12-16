@@ -108,7 +108,6 @@ public class Node implements Serializable {
       GENERATOR_MARKER   = 65,    // Used by the ES6-to-ES3 translator.
       GENERATOR_SAFE     = 66,    // Used by the ES6-to-ES3 translator.
 
-      COOKED_STRING      = 70,    // Used to support ES6 tagged template literal.
       RAW_STRING_VALUE   = 71,    // Used to support ES6 tagged template literal.
       COMPUTED_PROP_METHOD = 72,  // A computed property that has the method
                                   // syntax ( [prop]() {...} ) rather than the
@@ -175,7 +174,6 @@ public class Node implements Serializable {
         case IS_CONSTANT_VAR:    return "is_constant_var";
         case GENERATOR_MARKER:   return "is_generator_marker";
         case GENERATOR_SAFE:     return "is_generator_safe";
-        case COOKED_STRING:      return "cooked_string";
         case RAW_STRING_VALUE:   return "raw_string_value";
         case COMPUTED_PROP_METHOD: return "computed_prop_method";
         case COMPUTED_PROP_GETTER: return "computed_prop_getter";

@@ -125,7 +125,6 @@ class Es6TemplateLiterals {
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isString()) {
         Node string = IR.string(cookString((String) child.getProp(Node.RAW_STRING_VALUE)));
-        string.putBooleanProp(Node.COOKED_STRING, true);
         array.addChildToBack(string);
       }
     }
@@ -141,49 +140,47 @@ class Es6TemplateLiterals {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < s.length();) {
       char c = s.charAt(i++);
-      switch (c) {
-        case '\\':
-          char c2 = s.charAt(i++);
-          switch (c2) {
-            // Strip line continuation.
-            case '\n':
-            case '\u2028':
-            case '\u2029':
-              break;
-            case '\r':
-              // \ \r \n should be stripped as one
-              if (s.charAt(i + 1) == '\n') {
-                i++;
-              }
-              break;
+      if (c == '\\') {
+        char c2 = s.charAt(i++);
+        switch (c2) {
+          case 't':
+            sb.append('\t');
+            break;
+          case 'n':
+            sb.append('\n');
+            break;
+          case 'r':
+            sb.append('\r');
+            break;
+          case 'f':
+            sb.append('\f');
+            break;
+          case 'b':
+            sb.append('\b');
+            break;
+          case 'u':
+            int unicodeValue = Integer.parseInt(s.substring(i, i + 4), 16);
+            sb.append((char) unicodeValue);
+            i += 4;
+            break;
+          // Strip line continuation.
+          case '\n':
+          case '\u2028':
+          case '\u2029':
+            break;
+          case '\r':
+            // \ \r \n should be stripped as one
+            if (s.charAt(i + 1) == '\n') {
+              i++;
+            }
+            break;
 
-            default:
-              sb.append(c);
-              sb.append(c2);
-          }
-          break;
-
-        // Whitespace
-        case '\n':
-          sb.append("\\n");
-          break;
-        // <CR><LF> and <CR> LineTerminatorSequences are normalized to <LF>
-        // for both TV and TRV.
-        case '\r':
-          if (s.charAt(i) == '\n') {
-            i++;
-          }
-          sb.append("\\n");
-          break;
-        case '\u2028':
-          sb.append("\\u2028");
-          break;
-        case '\u2029':
-          sb.append("\\u2029");
-          break;
-
-        default:
-          sb.append(c);
+          default:
+            sb.append(c);
+            sb.append(c2);
+        }
+      } else {
+        sb.append(c);
       }
     }
     return sb.toString();
