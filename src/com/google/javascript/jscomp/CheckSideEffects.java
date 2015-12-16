@@ -109,7 +109,9 @@ final class CheckSideEffects extends AbstractPostOrderCallback
       return;
     }
 
-    if (n.isQualifiedName() && n.getJSDocInfo() != null && n.getJSDocInfo().containsDeclaration()) {
+    // This no-op statement was there so that JSDoc information could
+    // be attached to the name. This check should not complain about it.
+    if (n.isQualifiedName() && n.getJSDocInfo() != null) {
       return;
     }
 
