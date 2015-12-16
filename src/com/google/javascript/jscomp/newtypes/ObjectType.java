@@ -908,8 +908,8 @@ final class ObjectType implements TypeWithProperties {
     for (String propName : this.props.keySet()) {
       Property thisProp = props.get(propName);
       Property otherProp = other.props.get(propName);
-      if (otherProp == null ||
-          !thisProp.unifyWithSubtype(otherProp, typeParameters, typeMultimap)) {
+      if (otherProp != null
+          && !thisProp.unifyWithSubtype(otherProp, typeParameters, typeMultimap)) {
         return false;
       }
     }

@@ -14370,4 +14370,23 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "var x = new Foo;",
         "x.m(1); x.m(2);"));
   }
+
+  public void testUnificationWithOptionalProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {{foo: (T|undefined)}} x",
+        " */",
+        "function g(x) {}",
+        "g({bar:1});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {{foo: (T)}} x",
+        " */",
+        "function g(x) {}",
+        "g({bar:1});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }
