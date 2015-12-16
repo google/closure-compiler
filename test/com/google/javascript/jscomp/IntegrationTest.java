@@ -1333,18 +1333,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "");
   }
 
-  public void testClassWithGettersIsRemoved() {
-    CompilerOptions options = createCompilerOptions();
-    String code =
-        "class Foo { get x() {}; set y(v) {}; static get init() {}; static set prop(v) {} }";
-
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setSmartNameRemoval(true);
-    options.setRemoveDeadCode(true);
-    test(options, code, "");
-  }
-
   public void testSmartNamePassBug11163486() {
     CompilerOptions options = createCompilerOptions();
 

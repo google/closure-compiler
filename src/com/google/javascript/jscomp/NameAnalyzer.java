@@ -308,7 +308,7 @@ final class NameAnalyzer implements CompilerPass {
     @Override
     public void remove() {
       // Setters have VAR, FUNCTION, or ASSIGN parent nodes. CALL parent
-      // nodes are global refs, and are handled in other classes below.
+      // nodes are global refs, and are handled later in this function.
       Node containingNode = parent.getParent();
       switch (parent.getType()) {
         case Token.VAR:
@@ -403,37 +403,6 @@ final class NameAnalyzer implements CompilerPass {
     }
   }
 
-  /**
-   * Class for nodes that represetn function calls that add properties to an object.
-   * i.e. Object.defineProperties
-   */
-  private class PropertyDefinitionNode extends SpecialReferenceNode {
-    /**
-     * Create a class defining function node from the name & the call node
-     *
-     * @param name The name
-     * @param node The CALL node of the Object.defineProperties
-     */
-    PropertyDefinitionNode(JsName name, Node node) {
-      super(name, node);
-      Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(node));
-    }
-
-    @Override
-    public void remove() {
-      Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(node));
-      Node parent = getParent();
-      Node grandparent = getGrandparent();
-      if (grandparent == null) {
-        // We have already removed this definition.
-        return;
-      }
-      if (parent.isExprResult()) {
-        replaceWithRhs(grandparent, parent);
-      }
-    }
-
-  }
 
 
   /**
@@ -540,13 +509,6 @@ final class NameAnalyzer implements CompilerPass {
         recordAssignment(t, n, n);
         if (!NodeUtil.isImmutableResult(n.getLastChild())) {
           recordConsumers(t, n, n);
-        }
-      } else if (isAnalyzableObjectDefinePropertiesDefinition(n)) {
-        Node object = n.getFirstChild().getNext();
-        Node props = n.getLastChild();
-        for (Node prop : props.children()) {
-          NameInformation ns = createNameInformation(t, object, "." + prop.getString());
-          recordDepScope(n, ns);
         }
       } else if (NodeUtil.isVarDeclaration(n)) {
         NameInformation ns = createNameInformation(t, n);
@@ -688,14 +650,6 @@ final class NameAnalyzer implements CompilerPass {
           if (ns != null) {
             recordSet(ns.name, n);
           }
-        } else if (isAnalyzableObjectDefinePropertiesDefinition(n)) {
-          Node object = n.getFirstChild().getNext();
-          Node props = n.getLastChild();
-          for (Node prop : props.children()) {
-            NameInformation ns = createNameInformation(t, object, "." + prop.getString());
-            JsName name = getName(ns.name, true);
-            refNodes.add(new PropertyDefinitionNode(name, n));
-          }
         }
       }
 
@@ -836,8 +790,6 @@ final class NameAnalyzer implements CompilerPass {
         for (Node child : n.children()) {
           addSimplifiedChildren(child);
         }
-      } else if (isAnalyzableObjectDefinePropertiesDefinition(n)) {
-        addSimplifiedChildren(n.getLastChild());
       } else if (n.isCall() && parent.isExprResult()) {
         addSimplifiedChildren(n);
       } else {
@@ -1519,13 +1471,10 @@ final class NameAnalyzer implements CompilerPass {
    *     pass
    */
   private NameInformation createNameInformation(NodeTraversal t, Node n) {
-    return createNameInformation(t, n, "");
-  }
-
-  private NameInformation createNameInformation(NodeTraversal t, Node n, String name) {
     Node parent = n.getParent();
     // Build the full name and find its root node by iterating down through all
     // GETPROP/GETELEM nodes.
+    String name = "";
     Node rootNameNode = n;
     boolean bNameWasShortened = false;
     while (true) {
@@ -1995,13 +1944,6 @@ final class NameAnalyzer implements CompilerPass {
       case Token.FUNCTION:
         // function nodes have no RHS
         return ImmutableList.of();
-      case Token.CALL:
-        {
-          // In our analyzable case, only the last argument to Object.defineProperties
-          // (the object literal) can have side-effects
-          Preconditions.checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
-          return ImmutableList.of(n.getLastChild());
-        }
       case Token.NAME:
         {
           // parent is a var node.  RHS is the first child
@@ -2031,17 +1973,5 @@ final class NameAnalyzer implements CompilerPass {
       default:
         throw new IllegalArgumentException("AstChangeProxy::getRhs " + n);
     }
-  }
-
-  /**
-   * Check if {@code n} is an Object.defineProperties definition
-   * that is static enough for this pass to understand and remove.
-   */
-  private static boolean isAnalyzableObjectDefinePropertiesDefinition(Node n) {
-    // TODO(blickly): Move this code (and code that extracts object/property names)
-    // to CodingConvention so that it's possible to define alternate ways of defining properties.
-    return NodeUtil.isObjectDefinePropertiesDefinition(n)
-        && n.getFirstChild().getNext().isQualifiedName()
-        && n.getLastChild().isObjectLit();
   }
 }
