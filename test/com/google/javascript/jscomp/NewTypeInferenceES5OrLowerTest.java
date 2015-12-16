@@ -14389,4 +14389,60 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "g({bar:1});"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
+
+  public void testFunctionUnificationWithSubtyping() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {function(number,T)} x",
+        " */",
+        "function g(x) {}",
+        "function h(/** number|string */ x, /** number */ y) {}",
+        "g(h);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {function(T, ...number)} x",
+        " */",
+        "function g(x) {}",
+        "/** @type {function(string, ...(number|string))} */",
+        "function h(x, var_args) {}",
+        "g(h);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {function(T):(number|string)} x",
+        " */",
+        "function g(x) {}",
+        "/** @type {function(string):string} */",
+        "function h(x) { return x; }",
+        "g(h);"));
+
+    // This could unify without warnings; we'd have to implement
+    // a unifyWithSupertype function.
+    // Overkill for now.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Parent() {}",
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " * @extends {Parent<T>}",
+        " */",
+        "function Child() {}",
+        "/**",
+        " * @template T",
+        " * @param {function(!Child<T>)} x",
+        " */",
+        "function g(x) {}",
+        "/** @type {function(!Parent<number>)} */",
+        "function h(x) {}",
+        "g(h);"),
+        NewTypeInference.FAILED_TO_UNIFY);
+  }
 }

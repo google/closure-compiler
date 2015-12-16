@@ -734,15 +734,25 @@ public final class FunctionType {
     for (int i = 0; i < maxNonInfiniteArity; i++) {
       JSType thisFormal = getFormalType(i);
       JSType otherFormal = other.getFormalType(i);
+      // NOTE(dimvar): The correct handling here would be to implement
+      // unifyWithSupertype for JSType, ObjectType, etc, to handle the
+      // contravariance here.
+      // But it's probably an overkill to do, so instead we just do a subtype
+      // check if unification fails. Same for restFormals.
+      // Altenatively, maybe the unifyWith function could handle both subtype
+      // and supertype, and we'd catch type errors as invalid-argument-type
+      // after unification. (Not sure this is correct, I'd have to try it.)
       if (otherFormal != null
-          && !thisFormal.unifyWithSubtype(otherFormal, typeParameters, typeMultimap)) {
+          && !thisFormal.unifyWithSubtype(otherFormal, typeParameters, typeMultimap)
+          && !thisFormal.isSubtypeOf(otherFormal)) {
         return false;
       }
     }
     if (this.restFormals != null) {
       JSType otherRestFormals = other.getFormalType(maxNonInfiniteArity);
       if (otherRestFormals != null
-          && !this.restFormals.unifyWithSubtype(otherRestFormals, typeParameters, typeMultimap)) {
+          && !this.restFormals.unifyWithSubtype(otherRestFormals, typeParameters, typeMultimap)
+          && !this.restFormals.isSubtypeOf(otherRestFormals)) {
         return false;
       }
     }
@@ -764,7 +774,7 @@ public final class FunctionType {
       return false;
     }
 
-    return returnType.unifyWithSubtype(other.returnType, typeParameters, typeMultimap);
+    return this.returnType.unifyWithSubtype(other.returnType, typeParameters, typeMultimap);
   }
 
   private static FunctionType instantiateGenericsWithUnknown(FunctionType f) {
