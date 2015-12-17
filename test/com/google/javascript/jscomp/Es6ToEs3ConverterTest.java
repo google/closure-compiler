@@ -243,6 +243,32 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "Converter.prototype.convert = function(x) {};"));
   }
 
+  public void testRecordWithJsDoc() {
+    test(
+        LINE_JOINER.join(
+            "/**",
+            " * @record",
+            " */",
+            "class Converter {",
+            "  /**",
+            "   * @param {X} x",
+            "   * @return {Y}",
+            "   */",
+            "  convert(x) {}",
+            "}"),
+        LINE_JOINER.join(
+            "/**",
+            " * @struct @record",
+            " */",
+            "var Converter = function() { };",
+            "",
+            "/**",
+            " * @param {X} x",
+            " * @return {Y}",
+            " */",
+            "Converter.prototype.convert = function(x) {};"));
+  }
+
   public void testCtorWithJsDoc() {
     test(
         "class C { /** @param {boolean} b */ constructor(b) {} }",
