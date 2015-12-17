@@ -1164,6 +1164,14 @@ Promise.prototype.catch = function(onRejected) {};
  */
 Array.of = function(var_args) {};
 
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+ * @param {!Array<T>|!IArrayLike<T>|!Iterable<T>} arrayLike
+ * @return {!Array<T>}
+ * @template T
+ */
+Array.from = function(arrayLike) {};
+
 
 /** @return {!Array<number>} */
 Array.prototype.keys;
