@@ -15562,6 +15562,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "required: {str: string, unknown: ?}"));
   }
 
+  public void testRecordWithTopProperty() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/**  @constructor */ function Foo() {};",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** {str: string, top: *} */ x = new Foo;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo",
+            "required: {str: string, top: *}"));
+  }
+
   public void testStructuralInterfaceWithOptionalProperty() throws Exception {
     testTypes(
         LINE_JOINER.join(
@@ -15581,6 +15594,23 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "/** @record */ function Rec() {}",
             "/** @type {string} */ Rec.prototype.str;",
             "/** @type {?} */ Rec.prototype.unknown;",
+            "",
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.str = 'foo';",
+            "",
+            "var /** !Rec */ x = new Foo;"),
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Foo",
+            "required: Rec"));
+  }
+
+  public void testStructuralInterfaceWithTopProperty() throws Exception {
+    testTypes(
+        LINE_JOINER.join(
+            "/** @record */ function Rec() {}",
+            "/** @type {string} */ Rec.prototype.str;",
+            "/** @type {*} */ Rec.prototype.top;",
             "",
             "/** @constructor */ function Foo() {}",
             "Foo.prototype.str = 'foo';",
