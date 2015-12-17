@@ -39,6 +39,9 @@ KeyboardEvent.prototype.initKeyboardEvent = function(typeArg, canBubbleArg, canc
 KeyboardEvent.prototype.char;
 
 /** @type {string} */
+KeyboardEvent.prototype.code;
+
+/** @type {string} */
 KeyboardEvent.prototype.key;
 
 /** @type {number} */
@@ -52,6 +55,12 @@ KeyboardEvent.prototype.locale;
 
 /** @type {number} */
 MouseEvent.prototype.buttons;
+
+/**
+ * @param {string} keyIdentifierArg
+ * @return {boolean}
+ */
+MouseEvent.prototype.getModifierState = function(keyIdentifierArg) {};
 
 /** @type {boolean} */
 Event.prototype.defaultPrevented;
