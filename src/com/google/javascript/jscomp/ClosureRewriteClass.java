@@ -617,7 +617,11 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     // @constructor is implied, @interface must be explicit
     boolean isInterface = classInfo.isInterface() || ctorInfo.isInterface();
     if (isInterface) {
-      mergedInfo.recordInterface();
+      if (classInfo.usesImplicitMatch() || ctorInfo.usesImplicitMatch()) {
+        mergedInfo.recordImplicitMatch();
+      } else {
+        mergedInfo.recordInterface();
+      }
       List<JSTypeExpression> extendedInterfaces = null;
       if (classInfo.getExtendedInterfacesCount() > 0) {
         extendedInterfaces = classInfo.getExtendedInterfaces();

@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_MISSING;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_NOT_VALID;
 import static com.google.javascript.jscomp.ClosureRewriteClass.GOOG_CLASS_CONSTRUCTOR_ON_INTERFACE;
@@ -236,6 +235,30 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "var x = function() {this.a = 1};\n"
         + "goog.inherits(x,y);\n"
         + "use(new y().a);\n");
+  }
+
+  public void testRecordAnnotations() {
+    // @record is preserved
+    testRewrite(
+        "/** @record */\n"
+        + "var Rec = goog.defineClass(null, {f : function() {}});",
+
+        "/** @struct @record */\n"
+        + "var Rec = function() {};\n"
+        + "Rec.prototype.f = function() {};");
+  }
+
+  public void testRecordAnnotations2() {
+    enableTypeCheck();
+    testRewrite(
+        "/** @record */\n"
+        + "var Rec = goog.defineClass(null, {f : function() {}});\n"
+        + "var /** !Rec */ r = { f : function() {} };",
+
+        "/** @struct @record */\n"
+        + "var Rec = function() {};\n"
+        + "Rec.prototype.f = function() {};\n"
+        + "var /** !Rec */ r = { f : function() {} };");
   }
 
   public void testInnerClass1() {
