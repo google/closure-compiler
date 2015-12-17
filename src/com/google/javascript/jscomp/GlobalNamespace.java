@@ -617,7 +617,6 @@ class GlobalNamespace
      * to a name, a variable declaration, or an object literal key mapping.
      *
      * @param n The node that represents the name being set
-     * @param parent Parent node of {@code n} (an ASSIGN, VAR, or OBJLIT node)
      * @return Whether the set operation is either a constructor or enum
      *     declaration
      */
