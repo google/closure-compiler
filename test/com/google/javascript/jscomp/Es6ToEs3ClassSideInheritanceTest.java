@@ -302,6 +302,31 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "$jscomp.inherits(Bar, Foo);"));
   }
 
+  public void testInlineTypes() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var A = function() {}",
+            "A.foo = function(/** number */ x) {}",
+            "",
+            "/** @constructor @struct @extends {A} */",
+            "var B = function(var_args) { A.apply(this,arguments); };",
+            "$jscomp.inherits(B, A);"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var A = function() {}",
+            "A.foo = function(/** number */ x) {}",
+            "",
+            "/** @constructor @struct @extends {A} */",
+            "var B = function(var_args) { A.apply(this,arguments); };",
+            "$jscomp.inherits(B, A);",
+            "/**",
+            " * @param {number} x",
+            " * @suppress {visibility}",
+            " */",
+            "B.foo = A.foo;"));
+  }
+
   /**
    * Examples which are handled incorrectly but are unlikely to come up in practice.
    */

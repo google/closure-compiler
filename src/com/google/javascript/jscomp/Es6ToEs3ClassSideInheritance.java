@@ -145,6 +145,18 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
     JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(staticMember.getJSDocInfo());
 
+    Node function = staticMember.getLastChild();
+    if (function.isFunction()) {
+      Node params = NodeUtil.getFunctionParameters(function);
+      Preconditions.checkState(params.isParamList(), params);
+      for (Node param : params.children()) {
+        if (param.getJSDocInfo() != null) {
+          String name = param.getString();
+          info.recordParameter(name, param.getJSDocInfo().getType());
+        }
+      }
+    }
+
     Node assign = IR.assign(
         IR.getprop(subclassNameNode.cloneTree(), IR.string(memberName)),
         IR.getprop(superclassNameNode.cloneTree(), IR.string(memberName)));
