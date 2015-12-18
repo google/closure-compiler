@@ -418,6 +418,21 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("msgDescriptions",
           JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION);
 
+  /**
+   * Warnings that only apply to people who use MSG_ to denote
+   * messages. Note that this doesn't include warnings about
+   * proper use of goog.getMsg
+   */
+  @GwtIncompatible("JsMessage")
+  public static final DiagnosticGroup MSG_CONVENTIONS =
+      DiagnosticGroups.registerGroup("messageConventions", // undocumented
+          JsMessageVisitor.MESSAGE_HAS_NO_DESCRIPTION,
+          JsMessageVisitor.MESSAGE_HAS_NO_TEXT,
+          JsMessageVisitor.MESSAGE_TREE_MALFORMED,
+          JsMessageVisitor.MESSAGE_HAS_NO_VALUE,
+          JsMessageVisitor.MESSAGE_DUPLICATE_KEY,
+          JsMessageVisitor.MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
+
   public static final DiagnosticGroup MISPLACED_TYPE_ANNOTATION =
       DiagnosticGroups.registerGroup("misplacedTypeAnnotation",
           CheckJSDoc.DISALLOWED_MEMBER_JSDOC,

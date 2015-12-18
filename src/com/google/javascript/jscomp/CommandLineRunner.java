@@ -1228,7 +1228,7 @@ public class CommandLineRunner extends
       // so we might as well inline it. But shut off the i18n warnings,
       // because the user didn't really ask for i18n.
       options.messageBundle = new EmptyMessageBundle();
-      options.setWarningLevel(JsMessageVisitor.MSG_CONVENTIONS, CheckLevel.OFF);
+      options.setWarningLevel(DiagnosticGroups.MSG_CONVENTIONS, CheckLevel.OFF);
     }
 
     options.setConformanceConfigs(loadConformanceConfigs(flags.conformanceConfigs));

@@ -89,20 +89,6 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       DiagnosticType.error("JSC_MSG_FALLBACK_ARG_ERROR",
           "Could not find message entry for fallback argument {0}");
 
-  /**
-   * Warnings that only apply to people who use MSG_ to denote
-   * messages. Note that this doesn't include warnings about
-   * proper use of goog.getMsg
-   */
-  static final DiagnosticGroup MSG_CONVENTIONS = new DiagnosticGroup(
-      "messageConventions",
-      MESSAGE_HAS_NO_DESCRIPTION,
-      MESSAGE_HAS_NO_TEXT,
-      MESSAGE_TREE_MALFORMED,
-      MESSAGE_HAS_NO_VALUE,
-      MESSAGE_DUPLICATE_KEY,
-      MESSAGE_NOT_INITIALIZED_USING_NEW_SYNTAX);
-
   private static final String PH_JS_PREFIX = "{$";
   private static final String PH_JS_SUFFIX = "}";
 
