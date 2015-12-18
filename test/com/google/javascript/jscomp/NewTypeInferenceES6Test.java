@@ -67,4 +67,26 @@ public final class NewTypeInferenceES6Test extends NewTypeInferenceTestBase {
   public void testConstEmptyArrayNoWarning() {
     typeCheck("const x = [];");
   }
+
+  public void testFunctionSubtypingContravariantReceiver() {
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  method() {}",
+        "}",
+        "class Bar extends Foo {}",
+        "function f(/** function(this:Bar) */ x) {}",
+        "f(Foo.prototype.method);"));
+
+    typeCheck(LINE_JOINER.join(
+        "class Foo {",
+        "  method() { return 123; }",
+        "}",
+        "class Bar extends Foo {}",
+        "/**",
+        " * @template T",
+         " * @param {function(this:Bar):T} x",
+        " */",
+        "function f(x) {}",
+        "f(Foo.prototype.method);"));
+  }
 }
