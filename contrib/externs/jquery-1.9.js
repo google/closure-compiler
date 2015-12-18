@@ -267,7 +267,10 @@ jQuery.callbacks.prototype.empty = function() {};
 /** @param {...*} var_args */
 jQuery.callbacks.prototype.fire = function(var_args) {};
 
-/** @return {boolean} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.callbacks.prototype.fired = function() {};
 
 /** @param {...*} var_args */
@@ -283,7 +286,10 @@ jQuery.callbacks.prototype.has = function(callback) {};
 /** @return {undefined} */
 jQuery.callbacks.prototype.lock = function() {};
 
-/** @return {boolean} */
+/**
+ * @return {boolean}
+ * @nosideeffects
+ */
 jQuery.callbacks.prototype.locked = function() {};
 
 /** @param {function()} callbacks */
@@ -336,6 +342,7 @@ jQuery.prototype.closest = function(arg1, context) {};
  * @param {Element} container
  * @param {Element} contained
  * @return {boolean}
+ * @nosideeffects
  */
 jQuery.contains = function(container, contained) {};
 
@@ -556,10 +563,14 @@ jQuery.prototype.end = function() {};
 /**
  * @param {number} arg1
  * @return {!jQuery}
+ * @nosideeffects
  */
 jQuery.prototype.eq = function(arg1) {};
 
-/** @param {string} message */
+/**
+ * @param {string} message
+ * @throws {Error}
+ */
 jQuery.error = function(message) {};
 
 /**
@@ -780,7 +791,10 @@ jQuery.prototype.filter = function(arg1) {};
  */
 jQuery.prototype.find = function(arg1) {};
 
-/** @return {!jQuery} */
+/**
+ * @return {!jQuery}
+ * @nosideeffects
+ */
 jQuery.prototype.first = function() {};
 
 /** @see http://docs.jquery.com/Plugins/Authoring */
@@ -925,6 +939,7 @@ jQuery.inArray = function(value, arr, fromIndex) {};
 /**
  * @param {(jQuerySelector|Element|jQuery)=} arg1
  * @return {number}
+ * @nosideeffects
  */
 jQuery.prototype.index = function(arg1) {};
 
@@ -1110,7 +1125,10 @@ jQuery.prototype.keypress = function(arg1, handler) {};
  */
 jQuery.prototype.keyup = function(arg1, handler) {};
 
-/** @return {!jQuery} */
+/**
+ * @return {!jQuery}
+ * @nosideeffects
+ */
 jQuery.prototype.last = function() {};
 
 /** @type {number} */
@@ -1130,6 +1148,7 @@ jQuery.prototype.load = function(arg1, arg2, complete) {};
 /**
  * @param {*} obj
  * @return {Array<*>}
+ * @nosideeffects
  */
 jQuery.makeArray = function(obj) {};
 
@@ -1614,6 +1633,7 @@ jQuery.prototype.size = function() {};
  * @param {number} start
  * @param {number=} end
  * @return {!jQuery}
+ * @nosideeffects
  */
 jQuery.prototype.slice = function(start, end) {};
 
