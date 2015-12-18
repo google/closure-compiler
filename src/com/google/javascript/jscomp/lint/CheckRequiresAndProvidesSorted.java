@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.lint;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.DiagnosticType;
@@ -56,18 +58,18 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
           "JSC_MODULE_AND_PROVIDES",
           "A file using goog.module() may not also use goog.provide() statements.");
 
-  private List<String> requiredNamespaces;
-  private List<String> providedNamespaces;
-  private List<String> moduleNamespaces;
+  private List<Node> requires;
+  private List<Node> provides;
+  private List<Node> modules;
   private boolean containsShorthandRequire = false;
 
   private final AbstractCompiler compiler;
 
   public CheckRequiresAndProvidesSorted(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.requiredNamespaces = new ArrayList<>();
-    this.providedNamespaces = new ArrayList<>();
-    this.moduleNamespaces = new ArrayList<>();
+    this.requires = new ArrayList<>();
+    this.provides = new ArrayList<>();
+    this.modules = new ArrayList<>();
   }
 
   @Override
@@ -80,6 +82,16 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 
+  private final Function<Node, String> getNamespace =
+      new Function<Node, String>() {
+        public String apply(Node n) {
+          Preconditions.checkState(n.isCall());
+          return n.getLastChild().getString();
+        }
+      };
+
+  private final Ordering<Node> alphabetical = Ordering.natural().onResultOf(getNamespace);
+
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getType()) {
@@ -87,23 +99,23 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
         // For now, don't report any sorting-related warnings if there are
         // "var x = goog.require('goog.x');" style requires.
         if (!containsShorthandRequire) {
-          if (!Ordering.natural().isOrdered(requiredNamespaces)) {
-            t.report(n, REQUIRES_NOT_SORTED);
+          if (!alphabetical.isOrdered(requires)) {
+            t.report(requires.get(0), REQUIRES_NOT_SORTED);
           }
-          if (!Ordering.natural().isOrdered(providedNamespaces)) {
-            t.report(n, PROVIDES_NOT_SORTED);
+          if (!alphabetical.isOrdered(provides)) {
+            t.report(provides.get(0), PROVIDES_NOT_SORTED);
           }
         }
-        if (!moduleNamespaces.isEmpty() && !providedNamespaces.isEmpty()) {
-          t.report(n, MODULE_AND_PROVIDES);
+        if (!modules.isEmpty() && !provides.isEmpty()) {
+          t.report(provides.get(0), MODULE_AND_PROVIDES);
         }
-        if (moduleNamespaces.size() > 1) {
-          t.report(n, MULTIPLE_MODULES_IN_FILE);
+        if (modules.size() > 1) {
+          t.report(modules.get(1), MULTIPLE_MODULES_IN_FILE);
         }
 
-        requiredNamespaces.clear();
-        providedNamespaces.clear();
-        moduleNamespaces.clear();
+        requires.clear();
+        provides.clear();
+        modules.clear();
         containsShorthandRequire = false;
         break;
       case Token.CALL:
@@ -120,15 +132,15 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
             return;
           }
           if (callee.matchesQualifiedName("goog.require")) {
-            requiredNamespaces.add(namespace);
+            requires.add(n);
           } else {
-            if (!requiredNamespaces.isEmpty()) {
+            if (!requires.isEmpty()) {
               t.report(n, PROVIDES_AFTER_REQUIRES);
             }
             if (callee.matchesQualifiedName("goog.module")) {
-              moduleNamespaces.add(namespace);
+              modules.add(n);
             } else {
-              providedNamespaces.add(namespace);
+              provides.add(n);
             }
           }
         } else if (NodeUtil.isNameDeclaration(parent.getParent())
