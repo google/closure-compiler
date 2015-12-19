@@ -33,6 +33,11 @@ final class ResourceLoader {
   static String loadTextResource(Class<?> clazz, String path) {
     try {
       return CharStreams.toString(new InputStreamReader(clazz.getResourceAsStream(path), UTF_8));
+    } catch (NullPointerException e) {
+      if (!resourceExists(clazz, path)) {
+        throw new RuntimeException("No such resource: " + path);
+      }
+      throw e;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

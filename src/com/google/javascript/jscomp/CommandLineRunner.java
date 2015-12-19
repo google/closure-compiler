@@ -615,7 +615,7 @@ public class CommandLineRunner extends
     @Option(name = "--instrumentation_template",
             hidden = true,
             usage = "A file containing an instrumentation template.")
-        private String instrumentationFile = "";
+    private String instrumentationFile = "";
 
     @Option(name = "--json_streams",
         hidden = true,
@@ -626,6 +626,17 @@ public class CommandLineRunner extends
             + "Options: NONE, IN, OUT, BOTH. Defaults to NONE.")
     private CompilerOptions.JsonStreamMode jsonStreamMode =
         CompilerOptions.JsonStreamMode.NONE;
+
+    @Option(name = "--preserve_type_annotations",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Preserves type annotations.")
+    private boolean preserveTypeAnnotations = false;
+
+    @Option(name = "--noinject_library",
+        hidden = true,
+        usage = "Prevent injecting the named runtime libraries.")
+    private List<String> noinjectLibrary = new ArrayList<>();
 
     @Argument
     private List<String> arguments = new ArrayList<>();
@@ -1215,6 +1226,10 @@ public class CommandLineRunner extends
     options.setJ2clPass(flags.j2clPass);
 
     options.renamePrefixNamespace = flags.renamePrefixNamespace;
+
+    options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
+
+    options.setPreventLibraryInjection(flags.noinjectLibrary);
 
     if (!flags.translationsFile.isEmpty()) {
       try {
