@@ -33,6 +33,7 @@ import com.google.javascript.rhino.Node;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -1502,6 +1503,80 @@ public final class CommandLineRunnerTest extends TestCase {
         createCommandLineRunner(new String[] {"function f() {}"});
     assertThat(runner.shouldRunCompiler()).isFalse();
     assertThat(runner.hasErrors()).isTrue();
+  }
+
+  public void testJsonStreamInputFlag() throws FlagUsageException {
+    String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
+    args.add("--json_streams=IN");
+
+    CommandLineRunner runner = new CommandLineRunner(
+        args.toArray(new String[]{}),
+        new ByteArrayInputStream(inputString.getBytes()),
+        new PrintStream(outReader),
+        new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    String output = runner.getCompiler().toSource();
+    assertThat(output).isEqualTo("alert(\"foo\");");
+  }
+
+  public void testJsonStreamOutputFlag() throws FlagUsageException {
+    String inputString = "alert('foo');";
+    args.add("--json_streams=OUT");
+
+    CommandLineRunner runner = new CommandLineRunner(
+        args.toArray(new String[]{}),
+        new ByteArrayInputStream(inputString.getBytes()),
+        new PrintStream(outReader),
+        new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
+        + "\"path\":\"compiled.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
+        + "\\n\\\"file\\\":\\\"compiled.js\\\",\\n\\\"lineCount\\\":1,"
+        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+        + "\\n\\\"sources\\\":[\\\"stdin\\\"],"
+        + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
+  }
+
+  public void testJsonStreamBothFlag() throws FlagUsageException {
+    String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
+    args.add("--json_streams=BOTH");
+    args.add("--js_output_file=bar.js");
+
+    CommandLineRunner runner = new CommandLineRunner(
+        args.toArray(new String[]{}),
+        new ByteArrayInputStream(inputString.getBytes()),
+        new PrintStream(outReader),
+        new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
+        + "\"path\":\"bar.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
+        + "\\n\\\"file\\\":\\\"bar.js\\\",\\n\\\"lineCount\\\":1,"
+        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+        + "\\n\\\"sources\\\":[\\\"foo.js\\\"],"
+        + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }
 
   /* Helper functions */
