@@ -67,8 +67,8 @@ public class WhitelistWarningsGuard extends WarningsGuard {
   /**
    * This class depends on an input set that contains the white-list. The format
    * of each white-list string is:
-   * <file-name>:<line-number>?  <warning-description>
-   * # <optional-comment>
+   * {@code <file-name>:<line-number>?  <warning-description>}
+   * {@code # <optional-comment>}
    *
    * @param whitelist The set of JS-warnings that are white-listed. This is
    *     expected to have similar format as {@code formatWarning(JSError)}.

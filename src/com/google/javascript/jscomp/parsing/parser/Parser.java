@@ -156,7 +156,7 @@ import java.util.List;
  * <p>When parsing lists, the preferred pattern is:
  * <pre>
  *   eat(LIST_START);
- *   ImmutableList.Builder&lt;ParseTree> elements = ImmutableList.builder();
+ *   ImmutableList.Builder&lt;ParseTree&gt; elements = ImmutableList.builder();
  *   while (peekListElement()) {
  *     elements.add(parseListElement());
  *   }

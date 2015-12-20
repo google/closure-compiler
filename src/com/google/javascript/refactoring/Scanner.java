@@ -38,7 +38,7 @@ public abstract class Scanner implements Serializable {
    *
    * If this function returns true, a {@link Match} for this node will be passed
    * to {@link #processMatch(Match)} and all matches will be passed to
-   * {@link #processAlMatches(Collection<Match>)} at the end of the traversal.
+   * {@link #processAllMatches(Collection)} at the end of the traversal.
    */
   public abstract boolean matches(Node node, NodeMetadata t);
 

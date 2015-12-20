@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * An AST for JavaScript regular expressions.
  *
- * @author Mike Samuel <mikesamuel@gmail.com>
+ * @author Mike Samuel &lt;mikesamuel@gmail.com&gt;
  */
 public abstract class RegExpTree {
 

@@ -420,7 +420,7 @@ public class IR {
   }
 
   /**
-   * "<"
+   * "&lt;"
    */
   public static Node lt(Node expr1, Node expr2) {
     return binaryOp(Token.LT, expr1, expr2);

@@ -45,7 +45,7 @@ public final class SimpleDependencyInfo implements DependencyInfo {
   private final String pathOfDefiningFile;
 
   /**
-   * Constructs a DependencyInfo object with the given list of provides &
+   * Constructs a DependencyInfo object with the given list of provides and
    * requires. This does *not* copy the given lists, but uses them directly.
    *
    * @param srcPathRelativeToClosure The closure-relative path of the file

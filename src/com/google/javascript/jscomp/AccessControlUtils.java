@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
  * in JavaScript source code.
  *
  * @author brndn@google.com (Brendan Linn)
- * @see {CheckAccessControls}
+ * @see CheckAccessControls
  */
 public final class AccessControlUtils {
 

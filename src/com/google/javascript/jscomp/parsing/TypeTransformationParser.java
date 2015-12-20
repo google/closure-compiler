@@ -28,7 +28,7 @@ import java.util.HashSet;
 
 /**
  * A parser for the type transformation expressions (TTL-Exp) as in
- * @template T := TTL-Exp =:
+ * {@code @template T := TTL-Exp =:}
  *
  */
 public final class TypeTransformationParser {
