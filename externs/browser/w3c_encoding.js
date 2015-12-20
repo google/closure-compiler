@@ -20,6 +20,10 @@
  * @externs
  */
 
+/** @typedef {ArrayBuffer|ArrayBufferView}
+  * @see http://heycam.github.io/webidl/#common-BufferSource */
+var BufferSource;
+
 /**
  * @constructor
  * @param {string=} encoding
@@ -32,9 +36,10 @@ function TextDecoder(encoding, options) {}
 /** @type {boolean} **/ TextDecoder.prototype.ignoreBOM;
 
 /**
- * @param {!Uint8Array} input
+ * @param {BufferSource=} input
  * @param {Object=} options
  * @return {string}
+ * @see https://encoding.spec.whatwg.org/#textdecoder
  */
 TextDecoder.prototype.decode = function decode(input, options) {};
 
