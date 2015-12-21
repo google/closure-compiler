@@ -122,8 +122,8 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType NOT_UNIQUE_INSTANTIATION =
       DiagnosticType.warning(
           "JSC_NTI_NOT_UNIQUE_INSTANTIATION",
-          "Illegal instantiation for type variable {0}.\n" +
-          "You can only specify one type. Found {1}.");
+          "Illegal instantiation in function type {0} for the type variable "
+          + "{1}.\n You can only specify one type. Found {2}.");
 
   static final DiagnosticType FAILED_TO_UNIFY =
       DiagnosticType.warning(
@@ -2273,8 +2273,9 @@ final class NewTypeInference implements CompilerPass {
    * we use a heuristic: if THIS is not a singleton obj, we know it comes from
    * @this, and we use it for the instantiation.
    */
-  private ImmutableMap<String, JSType> calcTypeInstantiation(Node callNode,
-      Node receiver, Node firstArg, FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
+  private ImmutableMap<String, JSType> calcTypeInstantiation(
+      Node callNode, Node receiver, Node firstArg,
+      FunctionType funType, TypeEnv typeEnv, boolean isFwd) {
     Preconditions.checkState(receiver == null || isFwd);
     List<String> typeParameters = funType.getTypeParameters();
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
@@ -2302,7 +2303,7 @@ final class NewTypeInference implements CompilerPass {
       if (types.size() > 1) {
         if (isFwd) {
           warnings.add(JSError.make(callNode, NOT_UNIQUE_INSTANTIATION,
-                typeParam, types.toString()));
+                  funType.toString(), typeParam, types.toString()));
         }
         builder.put(typeParam, JSType.UNKNOWN);
       } else if (types.size() == 1) {
