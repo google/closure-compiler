@@ -26,6 +26,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.REGEXP_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
+import static java.lang.Integer.MAX_VALUE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
