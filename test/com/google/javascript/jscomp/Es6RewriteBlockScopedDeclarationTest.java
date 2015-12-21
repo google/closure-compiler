@@ -778,6 +778,10 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
     testWarning("/** @type {number} */ const x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
     testWarning("const /** number */ x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
     testWarning("const /** @type {number} */ x = 'str';", TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("const /** @type {string} */ x = 3, /** @type {number} */ y = 3;",
+        TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning("const /** @type {string} */ x = 'str', /** @type {string} */ y = 3;",
+        TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   public void testDoWhileForOfCapturedLetAnnotated() {
