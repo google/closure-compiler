@@ -20,10 +20,6 @@
  * @externs
  */
 
-/** @typedef {ArrayBuffer|ArrayBufferView}
-  * @see http://heycam.github.io/webidl/#common-BufferSource */
-var BufferSource;
-
 /**
  * @constructor
  * @param {string=} encoding
