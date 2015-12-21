@@ -44,7 +44,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import java.io.Serializable;
 
 /**
- * The minimum implementation of StaticTypedSlot<JSType>.
+ * The minimum implementation of {@code StaticTypedSlot<JSType>}.
  *
  * @author nicksantos@google.com (Nick Santos)
  */

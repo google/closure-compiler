@@ -47,7 +47,7 @@ import java.util.ResourceBundle;
 
 /**
  * A simple {@link ErrorReporter} that collects warnings and errors and makes
- * them accessible via {@link #errors()} and {@link #warnings()}.
+ * them accessible via {@link #errors} and {@link #warnings}.
  *
  */
 public class SimpleErrorReporter implements ErrorReporter {

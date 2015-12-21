@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 
 /**
  * An object type with declared template types, such as
- * <code>Array<string></code>.
+ * {@code Array<string>}.
  *
  */
 public final class TemplatizedType extends ProxyObjectType {
