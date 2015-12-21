@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Definitions for W3C's Encoding specification
+ * @fileoverview Definitions for WHATWG's Encoding specification
  *     https://encoding.spec.whatwg.org
  * @externs
  */
@@ -32,23 +32,23 @@ function TextDecoder(encoding, options) {}
 /** @type {boolean} **/ TextDecoder.prototype.ignoreBOM;
 
 /**
- * @param {!Uint8Array} input
- * @param {Object=} options
- * @return {string}
+ * @param {!BufferSource=} input
+ * @param {?Object=} options
+ * @return {!string}
+ * @see https://encoding.spec.whatwg.org/#textdecoder
  */
 TextDecoder.prototype.decode = function decode(input, options) {};
 
 /**
  * @constructor
- * @param {string=} encoding
- * @param {Object=} options
+ * @param {string=} utfLabel
  */
-function TextEncoder(encoding, options) {}
+function TextEncoder(utfLabel) {}
 
 /** @type {string} **/ TextEncoder.prototype.encoding;
 
 /**
- * @param {string} input
+ * @param {string=} input
  * @return {!Uint8Array}
  */
 TextEncoder.prototype.encode = function(input) {};
