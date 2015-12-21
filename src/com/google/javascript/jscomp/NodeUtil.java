@@ -845,10 +845,18 @@ public final class NodeUtil {
    * Returns true iff this node defines a namespace, such as goog or goog.math.
    */
   static boolean isNamespaceDecl(Node n) {
-    JSDocInfo jsdoc = getBestJSDocInfo(n);
-    if (jsdoc == null || !jsdoc.isConstant()
-        || !jsdoc.getTypeNodes().isEmpty()) {
-      return false;
+    // In externs, we allow namespace definitions without @const.
+    // This is a worse design than always requiring @const, but it helps with
+    // namespaces that are defined in many places, such as gapi.
+    // Also, omitting @const in externs is not as confusing as in source code,
+    // because assigning an object literal in externs only makes sense when
+    // defining a namespace.
+    if (!n.isFromExterns()) {
+      JSDocInfo jsdoc = getBestJSDocInfo(n);
+      if (jsdoc == null || !jsdoc.isConstant()
+          || !jsdoc.getTypeNodes().isEmpty()) {
+        return false;
+      }
     }
     Node qnameNode;
     Node initializer;

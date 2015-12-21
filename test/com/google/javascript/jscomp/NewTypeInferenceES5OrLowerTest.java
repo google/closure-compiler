@@ -14463,4 +14463,24 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         "g(h);"),
         NewTypeInference.FAILED_TO_UNIFY);
   }
+
+  public void testNamespaceDefinitionInExternsWithoutConst() {
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "var ns = {};"),
+        LINE_JOINER.join(
+            "/** @constructor */ ns.Foo = function() {};",
+            "var /** !ns.Foo */ x;"));
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "var ns = {};",
+            "ns.subns = {};"),
+        LINE_JOINER.join(
+            "/** @constructor */ ns.subns.Foo = function() {};",
+            "var /** !ns.subns.Foo */ x = 123;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }
