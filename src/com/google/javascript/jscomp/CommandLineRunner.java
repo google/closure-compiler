@@ -429,7 +429,7 @@ public class CommandLineRunner extends
         hidden = true,
         usage = "Root of your common JS dependency hierarchy. " +
             "Your main script.")
-    private String commonJsEntryModule;
+    private List<String> commonJsEntryModule;
 
     @Option(name = "--transform_amd_modules",
         hidden = true,
@@ -1055,11 +1055,23 @@ public class CommandLineRunner extends
     if (flags.processCommonJsModules) {
       flags.processClosurePrimitives = true;
       flags.manageClosureDependencies = true;
-      if (flags.commonJsEntryModule == null) {
+
+      // When module systems are mixed, the entry point can be either a CommonJS module
+      // or a closure namespace
+      if (flags.commonJsEntryModule == null && flags.closureEntryPoint == null) {
         reportError("Please specify --common_js_entry_module.");
+      } else if (flags.commonJsEntryModule != null) {
+        List<String> moduleEntryPoints = new ArrayList();
+        for (String entryPoint : flags.commonJsEntryModule) {
+          moduleEntryPoints.add(ES6ModuleLoader.toModuleName(URI.create(entryPoint)));
+        }
+
+        if (flags.closureEntryPoint == null) {
+          flags.closureEntryPoint = moduleEntryPoints;
+        } else {
+          flags.closureEntryPoint.addAll(moduleEntryPoints);
+        }
       }
-      flags.closureEntryPoint =
-          ImmutableList.of(ES6ModuleLoader.toModuleName(URI.create(flags.commonJsEntryModule)));
     }
 
     if (flags.outputWrapperFile != null && !flags.outputWrapperFile.isEmpty()) {
