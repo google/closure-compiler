@@ -14483,4 +14483,16 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
             "var /** !ns.subns.Foo */ x = 123;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testAllowComparisonBetweenEnumAndCorrespondingType() {
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {number} */",
+        "var E = { A:1, B:2 };",
+        "123 < E.A;"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {string} */",
+        "var E = { A:'a', B:'b' };",
+        "'c' < E.A;"));
+  }
 }

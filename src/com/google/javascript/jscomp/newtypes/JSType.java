@@ -432,14 +432,6 @@ public abstract class JSType implements TypeI {
     return obj != null && obj.isFunctionWithProperties();
   }
 
-  public static boolean areCompatibleScalarTypes(JSType lhs, JSType rhs) {
-    Preconditions.checkArgument(
-        lhs.isSubtypeOf(TOP_SCALAR) || rhs.isSubtypeOf(TOP_SCALAR));
-    return lhs.isBottom() || rhs.isBottom()
-        || lhs.isUnknown() || rhs.isUnknown()
-        || (lhs.isBoolean() && rhs.isBoolean()) || lhs.equals(rhs);
-  }
-
   // Only makes sense for a JSType that represents a single enum
   public JSType getEnumeratedType() {
     return isEnumElement() ?
