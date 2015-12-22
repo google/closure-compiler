@@ -727,7 +727,7 @@ final class FunctionTypeBuilder {
       maybeSetBaseType(fnType);
     }
 
-    if (implementedInterfaces != null) {
+    if (implementedInterfaces != null && fnType.isConstructor()) {
       fnType.setImplementedInterfaces(implementedInterfaces);
     }
 

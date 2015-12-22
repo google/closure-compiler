@@ -592,7 +592,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
       }
       this.implementedInterfaces = ImmutableList.copyOf(implementedInterfaces);
     } else {
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException(
+          "An interface cannot implement other inferfaces");
     }
   }
 

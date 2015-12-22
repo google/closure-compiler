@@ -4053,6 +4053,22 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         " */ function derived() {}");
   }
 
+  public void testDontCrashOnDupPropDefinition() throws Exception {
+    testTypes(Joiner.on('\n').join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @interface */",
+        "ns.I = function() {};",
+        "/** @interface */",
+        "ns.A = function() {};",
+        "/**",
+        " * @constructor",
+        " * @implements {ns.I}",
+        " */",
+        "ns.A = function() {};"),
+        "variable ns.A redefined, original definition at [testcode]:6");
+  }
+
   public void testBadInterfaceExtends1() throws Exception {
     testTypes("/** @interface \n * @extends {nonExistent} */function A() {}",
         "Bad type annotation. Unknown type nonExistent");
