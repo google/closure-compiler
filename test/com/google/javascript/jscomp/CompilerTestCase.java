@@ -1193,7 +1193,10 @@ public abstract class CompilerTestCase extends TestCase {
     }
 
     if (error == null) {
-      assertEquals("Unexpected error(s): " + errorMsg, 0, compiler.getErrorCount());
+      assertEquals(
+          "Unexpected error(s):\n" + LINE_JOINER.join(compiler.getErrors()),
+          0,
+          compiler.getErrorCount());
 
       // Verify the symbol table.
       ErrorManager symbolTableErrorManager = new BlackHoleErrorManager();
