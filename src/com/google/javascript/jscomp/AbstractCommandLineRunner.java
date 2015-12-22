@@ -152,6 +152,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private final CommandLineConfig config;
 
+  private final InputStream in;
   private final PrintStream defaultJsOutput;
   private final PrintStream err;
   private A compiler;
@@ -185,11 +186,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   private final List<JsonFileSpec> filesToStreamOut = new ArrayList<>();
 
   AbstractCommandLineRunner() {
-    this(System.out, System.err);
+    this(System.in, System.out, System.err);
   }
 
   AbstractCommandLineRunner(PrintStream out, PrintStream err) {
+    this(System.in, out, err);
+  }
+
+  AbstractCommandLineRunner(InputStream in, PrintStream out, PrintStream err) {
     this.config = new CommandLineConfig();
+    this.in = Preconditions.checkNotNull(in);
     this.defaultJsOutput = Preconditions.checkNotNull(out);
     this.err = Preconditions.checkNotNull(err);
     this.gson = new Gson();
@@ -584,7 +590,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   public List<JsonFileSpec> parseJsonFilesFromInputStream() throws IOException {
     List<JsonFileSpec> jsonFiles = new ArrayList<>();
-    try (JsonReader reader = new JsonReader(new InputStreamReader(System.in, inputCharset))) {
+    try (JsonReader reader = new JsonReader(new InputStreamReader(this.in, inputCharset))) {
       reader.beginArray();
       while (reader.hasNext()) {
         JsonFileSpec jsonFile = gson.fromJson(reader, JsonFileSpec.class);
@@ -683,7 +689,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         }
 
         this.err.println(WAITING_FOR_INPUT_WARNING);
-        inputs.add(SourceFile.fromInputStream("stdin", System.in, inputCharset));
+        inputs.add(SourceFile.fromInputStream("stdin", this.in, inputCharset));
         usingStdin = true;
       }
     }

@@ -44,6 +44,7 @@ import org.kohsuke.args4j.spi.StringOptionHandler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -905,6 +906,11 @@ public class CommandLineRunner extends
 
   protected CommandLineRunner(String[] args, PrintStream out, PrintStream err) {
     super(out, err);
+    initConfigFromFlags(args, out, err);
+  }
+
+  protected CommandLineRunner(String[] args, InputStream in, PrintStream out, PrintStream err) {
+    super(in, out, err);
     initConfigFromFlags(args, out, err);
   }
 
