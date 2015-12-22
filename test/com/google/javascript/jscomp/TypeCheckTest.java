@@ -13351,6 +13351,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
   }
 
+  public void testCheckObjectKeysBadKey11() throws Exception {
+    testTypes(
+        "/** @constructor */\n" +
+        "function X() {}\n" +
+        "/** @constructor @extends {X} */\n" +
+        "function X2() {}\n" +
+        "/** @enum {!X} */\n" +
+        "var XE = {A:new X};\n" +
+        "/** @type {Object<(!XE|!X2), string>} */\n" +
+        "var Y = {};",
+        TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);
+  }
+
   public void testCheckObjectKeysVariousTags1() throws Exception {
     testTypes("/** @type {!Object<!Object, number>} */ var k;",
         TypeCheck.NON_STRINGIFIABLE_OBJECT_KEY);

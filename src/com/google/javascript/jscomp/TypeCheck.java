@@ -2105,6 +2105,16 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       return isStringifiable(((NamedType) type).getReferencedType());
     }
 
+    // For union type every alternate must be stringifiable.
+    if (type.isUnionType()) {
+      for (JSType alternateType : type.toMaybeUnionType().getAlternates()) {
+        if (!isStringifiable(alternateType)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     // Handle interfaces and classes.
     if (type.isObject()) {
       ObjectType objectType = type.toMaybeObjectType();
@@ -2116,16 +2126,6 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       }
       // This is user-defined class so check if it has custom toString() method.
       return classHasToString(objectType);
-    }
-
-    // For union type every alternate must be stringifiable.
-    if (type.isUnionType()) {
-      for (JSType alternateType : type.toMaybeUnionType().getAlternates()) {
-        if (!isStringifiable(alternateType)) {
-          return false;
-        }
-      }
-      return true;
     }
     return false;
   }
