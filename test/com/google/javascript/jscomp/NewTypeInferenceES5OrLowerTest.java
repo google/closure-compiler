@@ -12629,6 +12629,28 @@ public final class NewTypeInferenceES5OrLowerTest extends NewTypeInferenceTestBa
         " */",
         "function googPromiseReject(x, y) {}",
         "googPromiseReject(123, function(x) { x(123); } )"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/** @type {number} */",
+        "Bar.prototype.length;",
+        "/**",
+        " * @template T",
+        " * @param {{length:number}|Foo<T>} x",
+        " */",
+        "function h(x) {}",
+        "h(new Bar);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  Array.prototype.slice.call(arguments, 1);",
+        "}"));
   }
 
   public void testArgumentsArray() {
