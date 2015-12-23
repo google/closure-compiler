@@ -225,6 +225,7 @@
             <link>http://docs.oracle.com/javase/7/docs/api/</link>
           </links>
           <detectLinks>true</detectLinks>
+          <excludePackageNames>*.gwt.*:*.testing.*:*.debugger.*:*.webservice.*:*.debugging.*:*.ant.*</excludePackageNames>
         </configuration>
       </plugin>
 
