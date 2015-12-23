@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  * destructuring declaration. For example
  * <pre>
  *   var [a, b] = foo(), c = bar();}
- * <pre>
+ * </pre>
  * becomes
  * <pre>
  *   var [a, b] = foo();
@@ -70,4 +70,3 @@ public final class Es6SplitVariableDeclarations extends
     }
   }
 }
-

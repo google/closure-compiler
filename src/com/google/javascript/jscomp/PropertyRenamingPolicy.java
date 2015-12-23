@@ -27,13 +27,13 @@ public enum PropertyRenamingPolicy {
 
   /**
    * Rename properties heuristically.
-   * @see RenamePrototypes
+   * @see RenameProperties
    */
   HEURISTIC,
 
   /**
    * Rename properties more heuristically.
-   * @see RenamePrototypes
+   * @see RenameProperties
    */
   AGGRESSIVE_HEURISTIC,
 

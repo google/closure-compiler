@@ -23,7 +23,7 @@ message Instrumentation {
   // used to inform the harness about a function exit.  Must return
   // its second argument.
   //
-  // @returns VAL
+  // @return VAL
   optional string report_exit = 6;
 
   // List of variable declarations in the application's source code

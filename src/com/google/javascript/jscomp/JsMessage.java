@@ -294,7 +294,7 @@ public final class JsMessage {
    * keys and fingerprints for a message that must stay constant over time.
    *
    * This implementation correctly processes unnamed messages and creates a key
-   * for them that looks like MSG_<fingerprint value>.
+   * for them that looks like {@code MSG_<fingerprint value>};.
    */
   @GwtIncompatible("java.util.regex")
   public static class Builder {

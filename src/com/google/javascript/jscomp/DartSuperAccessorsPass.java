@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
  *
  * <p>Note that the approach taken here doesn't lend itself to good optimizations of getters and
  * setters. An alternative approach is needed to generate fully optimizable output before general
- * ES6->ES5 lowering of super accessor expressions can be rolled out.
+ * ES6&rarr;ES5 lowering of super accessor expressions can be rolled out.
  *
  * <p>TODO(ochafik): Add support for `super.x++` (and --, pre/post variants).
  *

@@ -42,7 +42,7 @@ import java.util.Map;
  *  goog.widget
  *  goog.widget.member_fn
  *  goog.widget::local_fn
- *  goog.widget::<anonymous>
+ *  goog.widget::&lt;anonymous&gt;
  *
  */
 

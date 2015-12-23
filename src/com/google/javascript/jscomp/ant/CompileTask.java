@@ -319,7 +319,7 @@ public final class CompileTask
   }
 
   /**
-   * Adds a <warning/> entry
+   * Adds a {@code <warning/>} entry
    *
    * Each warning entry must have two attributes, group and level. Group must
    * contain one of the constants from DiagnosticGroups (e.g.,
@@ -331,7 +331,7 @@ public final class CompileTask
   }
 
   /**
-   * Adds a <entrypoint/> entry
+   * Adds a {@code <entrypoint/>} entry
    *
    * Each entrypoint entry must have one attribute, name.
    */

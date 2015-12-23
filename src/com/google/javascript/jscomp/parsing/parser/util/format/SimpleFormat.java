@@ -61,12 +61,10 @@ public final class SimpleFormat {
      *            more arguments than those specified by the format string, then
      *            the additional arguments are ignored.
      * @return this {@code Formatter}.
-     * @throws IllegalFormatException
+     * @throws IllegalFormatFlagsException
      *             if the format string is illegal or incompatible with the
      *             arguments, or if fewer arguments are sent than those required by
      *             the format string, or any other illegal situation.
-     * @throws FormatterClosedException
-     *             if the {@code Formatter} has been closed.
      */
     public static String format(String format, Object... args) {
       SimpleFormat f = new SimpleFormat();

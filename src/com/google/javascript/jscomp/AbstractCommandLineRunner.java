@@ -80,7 +80,7 @@ import javax.annotation.Nullable;
  *
  * <pre>
  * class MyCommandLineRunner extends
- *     AbstractCommandLineRunner<MyCompiler, MyOptions> {
+ *     AbstractCommandLineRunner&lt;MyCompiler, MyOptions&gt; {
  *   MyCommandLineRunner(String[] args) {
  *     super(args);
  *   }

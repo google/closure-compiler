@@ -28,7 +28,7 @@ import java.util.List;
  *
  * <p>For example:
  * <pre>
- * List<String> paths = new ArrayList<String>();
+ * List&lt;String&gt; paths = new ArrayList&lt;String&gt;();
  * paths.add("foo");
  * WarningsGuard guard =
  *     ByPathWarningsGuard.forPath(paths, CheckLevel.ERROR, 1);

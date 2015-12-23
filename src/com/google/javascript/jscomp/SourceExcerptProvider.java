@@ -73,7 +73,7 @@ public interface SourceExcerptProvider {
    * by the line number. A region must not start or end by a carriage return.
    *
    * @param lineNumber the line number, 1 being the first line of the file
-   * @return the region around the line number indicated, or <code>null</null>
+   * @return the region around the line number indicated, or {@code null}
    * if it does not exist
    */
   Region getSourceRegion(String sourceName, int lineNumber);

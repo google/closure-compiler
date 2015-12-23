@@ -80,7 +80,7 @@ public final class IdMappingUtil {
    *
    * <p>The returned data is grouped by generator name (the map key). The inner map provides
    * mappings from id to content (file, line and column info). In a glimpse, the structure is
-   * Map<geneartor name, BiMap<id, value>>.
+   * {@code Map<generator name, BiMap<id, value>>}.
    *
    * <p>@throws IllegalArgumentException malformed input where there it 1) has duplicate generator
    *     name, or 2) the line has no ':' for id and its content.

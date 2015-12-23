@@ -444,7 +444,7 @@ public class CompilerOptions {
   /** Print string usage as part of the compilation log. */
   boolean outputJsStringUsage;
 
-  /** Converts quoted property accesses to dot syntax (a['b'] -> a.b) */
+  /** Converts quoted property accesses to dot syntax (a['b'] &rarr; a.b) */
   public boolean convertToDottedProperties;
 
   /** Reduces the size of common function expressions. */
@@ -1820,8 +1820,8 @@ public class CompilerOptions {
 
   /**
    * Enables or disables the preservation of all whitespace and formatting within a JSDoc
-   * comment. By default, whitespace is collapsed for all comments except @license and
-   * @preserve blocks,
+   * comment. By default, whitespace is collapsed for all comments except {@literal @license} and
+   * {@literal @preserve} blocks,
    *
    * <p>Setting this option has no effect if {@link #isParseJsDocDocumentation()}
    * returns false.

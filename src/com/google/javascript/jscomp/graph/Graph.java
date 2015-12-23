@@ -69,7 +69,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
   }
 
   /**
-   * Pseudo typedef for ArrayList<AnnotationState>. Record of a collection of
+   * Pseudo typedef for {@code ArrayList<AnnotationState>}. Record of a collection of
    * objects' annotations at some state.
    */
   private static class GraphAnnotationState extends ArrayList<AnnotationState> {
