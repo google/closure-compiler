@@ -295,14 +295,14 @@ md.$toast.options;
 
 /**
  * @param {md.$toast.options} options
- * @return {angular.$q.Promise}
+ * @return {!angular.$q.Promise}
  */
 md.$toast.prototype.show = function(options) {};
 
 
 /**
  * @param {string} text
- * @return {angular.$q.Promise}
+ * @return {!angular.$q.Promise}
  */
 md.$toast.prototype.showSimple = function(text) {};
 
