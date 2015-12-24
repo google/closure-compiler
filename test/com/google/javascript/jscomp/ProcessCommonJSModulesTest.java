@@ -208,7 +208,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "} else {" +
         "  this.foobar = foobar;}",
         "goog.provide('module$test');" +
-        "module$test.default={};" +
         "var foobar$$module$test = {foo: 'bar'};" +
         "module$test.default = foobar$$module$test;");
     testModules(
@@ -220,7 +219,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "} else {" +
         "  this.foobar = foobar;}",
         "goog.provide('module$test');" +
-        "module$test.default={};" +
         "var foobar$$module$test = {foo: 'bar'};" +
         "module$test.default = foobar$$module$test;");
     testModules(
@@ -230,7 +228,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "if (typeof define === 'function' && define.amd) {" +
         "  define([], function () {return foobar;});}",
         "goog.provide('module$test');" +
-        "module$test.default={};" +
         "var foobar$$module$test = {foo: 'bar'};" +
         "module$test.default = foobar$$module$test;");
   }

@@ -385,27 +385,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         newName.putProp(Node.ORIGINALNAME_PROP, ref.getQualifiedName());
         Node rhsValue = ref.getNext();
 
-        // If the rValue is an object literal, check each property to see if
-        // it's an alias, and if it is, copy the annotation over.
-        // This is a common idiom to export a set of constructors.
         if (rhsValue.isObjectLit()) {
-          Scope globalScope = SyntacticScopeCreator.makeUntyped(compiler)
-              .createScope(script, null);
-          for (Node key = rhsValue.getFirstChild();
-               key != null; key = key.getNext()) {
-            if (key.getJSDocInfo() == null &&
-                (key.getFirstChild() == null || key.getFirstChild().isName())) {
-              String aliasedVarName = key.getFirstChild() == null ?
-                  key.getString() : key.getFirstChild().getString();
-              Var aliasedVar = globalScope.getVar(aliasedVarName);
-              JSDocInfo info =
-                  aliasedVar == null ? null : aliasedVar.getJSDocInfo();
-              if (info != null &&
-                  info.getVisibility() != JSDocInfo.Visibility.PRIVATE) {
-                key.setJSDocInfo(info);
-              }
-            }
-          }
+          copyTypeInfoForObjectLit(rhsValue, script);
         }
 
         Node assign = ref.getParent();
@@ -419,28 +400,45 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       Node defaultPropertyInitializer = null;
 
-      if (!hasExportLValues()) {
-        // Transform to:
-        //
-        // moduleName.default.prop0 = 0; // etc.
-        for (Node ref : Iterables.concat(moduleExportRefs, exportRefs)) {
-          defaultPropertyInitializer =
-              initializeDefaultProperty(script, moduleName, defaultPropertyInitializer);
-
-          Node newRef = IR.getprop(IR.name(moduleName), DEFAULT_EXPORT).useSourceInfoFromForTree(ref);
-          newRef.putProp(Node.ORIGINALNAME_PROP, ref.getNext());
-          ref.getParent().replaceChild(ref, newRef);
-        }
-        return;
+      Iterable<Node> exports;
+      boolean hasLValues = hasExportLValues();
+      if (hasLValues) {
+        exports = moduleExportRefs;
+      } else {
+        exports = Iterables.concat(moduleExportRefs, exportRefs);
       }
 
-      // Transform module.exports to moduleName.default
-      for (Node ref : moduleExportRefs) {
-        defaultPropertyInitializer =
-            initializeDefaultProperty(script, moduleName, defaultPropertyInitializer);
+      // Transform to:
+      //
+      // moduleName.default.prop0 = 0; // etc.
+      for (Node ref : exports) {
+        if (!hasLValues) {
+          defaultPropertyInitializer =
+              initializeDefaultProperty(script, moduleName, defaultPropertyInitializer);
+        }
 
-        Node newRef = IR.getprop(IR.name(moduleName), DEFAULT_EXPORT).useSourceInfoFromForTree(ref);
-        ref.getParent().replaceChild(ref, newRef);
+        Node rhsValue = ref.getNext();
+        if (rhsValue != null && rhsValue.isObjectLit()) {
+          copyTypeInfoForObjectLit(rhsValue, script);
+        }
+
+        Node newName = IR.getprop(IR.name(moduleName), DEFAULT_EXPORT)
+            .useSourceInfoFromForTree(ref);
+        newName.putProp(Node.ORIGINALNAME_PROP, rhsValue);
+
+        Node assign = ref.getParent();
+        assign.replaceChild(ref, newName);
+
+        if (assign.isAssign()) {
+          JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+          builder.recordConstancy();
+          JSDocInfo info = builder.build();
+          assign.setJSDocInfo(info);
+        }
+      }
+
+      if(!hasLValues) {
+        return;
       }
 
       // Transform exports to exports$$moduleName and set to point
@@ -477,6 +475,32 @@ public final class ProcessCommonJSModules implements CompilerPass {
         script.addChildToFront(initializer);
       }
       return initializer;
+    }
+
+    /**
+     * Check each property of an object literal to see if
+     * it's an alias, and if it is, copy the annotation over.
+     * This is a common idiom to export a set of constructors.
+     */
+    private void copyTypeInfoForObjectLit(Node n, Node script) {
+      Preconditions.checkState(n.isObjectLit());
+      Scope globalScope = SyntacticScopeCreator.makeUntyped(compiler)
+          .createScope(script, null);
+      for (Node key = n.getFirstChild();
+           key != null; key = key.getNext()) {
+        if (key.getJSDocInfo() == null &&
+            (key.getFirstChild() == null || key.getFirstChild().isName())) {
+          String aliasedVarName = key.getFirstChild() == null ?
+              key.getString() : key.getFirstChild().getString();
+          Var aliasedVar = globalScope.getVar(aliasedVarName);
+          JSDocInfo info =
+              aliasedVar == null ? null : aliasedVar.getJSDocInfo();
+          if (info != null &&
+              info.getVisibility() != JSDocInfo.Visibility.PRIVATE) {
+            key.setJSDocInfo(info);
+          }
+        }
+      }
     }
 
     /**
