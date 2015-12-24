@@ -1382,7 +1382,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--process_common_js_modules");
     args.add("--common_js_entry_module=foo/bar");
     setFilename(0, "foo/bar.js");
-    String expected = "var module$foo$bar={test:1};";
+    String expected = "var module$foo$bar={\"default\":{}};module$foo$bar[\"default\"].test=1;";
     test("exports.test = 1", expected);
     assertThat(outReader.toString()).isEqualTo(expected + "\n");
   }
@@ -1394,7 +1394,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--module=auto");
     setFilename(0, "foo/bar.js");
     test("exports.test = 1",
-        "var module$foo$bar={test:1};");
+        "var module$foo$bar={\"default\":{}};module$foo$bar[\"default\"].test=1;");
     // With modules=auto no direct output is created.
     assertThat(outReader.toString()).isEmpty();
   }
@@ -1444,19 +1444,77 @@ public final class CommandLineRunnerTest extends TestCase {
 
            "goog.array={};",
 
+           "var module$Baz={};" +
            "function Baz$$module$Baz(){}" +
            "Baz$$module$Baz.prototype={" +
            "  baz:function(){return goog.array.last(['asdf','asd','baz'])}," +
            "  bar:function(){return 8}" +
            "};" +
-           "var module$Baz=Baz$$module$Baz;",
+           "module$Baz.default=Baz$$module$Baz;",
 
            "var module$app={}," +
-           "    Baz$$module$app=module$Baz," +
+           "    Baz$$module$app=Baz$$module$Baz," +
            "    baz$$module$app=new Baz$$module$app;" +
            "console.log(baz$$module$app.baz());" +
            "console.log(baz$$module$app.bar())"
          });
+  }
+
+  public void testProcessCJSWithES6Import() {
+    args.add("--process_common_js_modules");
+    args.add("--common_js_entry_module=app.js");
+    args.add("--manage_closure_dependencies");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "foo.js");
+    setFilename(1, "app.js");
+    test(new String[] {
+            "export default class Foo {"
+            + "  bar() { console.log('bar'); }"
+            + "}",
+
+            "var FooBar = require('./foo');\n" +
+                "var baz = new FooBar();\n" +
+                "console.log(baz.bar());"
+        },
+        new String[] {
+            "var module$foo={}," +
+                "Foo$$module$foo=function(){};" +
+                "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};" +
+                "module$foo.default=Foo$$module$foo;",
+
+            "var module$app={}," +
+                "FooBar$$module$app=module$foo.default," +
+                "baz$$module$app=new FooBar$$module$app;" +
+                "console.log(baz$$module$app.bar());"
+        });
+  }
+
+  public void testES6ImportOfCJS() {
+    args.add("--process_common_js_modules");
+    args.add("--common_js_entry_module=app.js");
+    args.add("--manage_closure_dependencies");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "foo.js");
+    setFilename(1, "app.js");
+    test(new String[] {
+            "/** @constructor */ function Foo () {}" +
+                "Foo.prototype.bar = function() { console.log('bar'); };" +
+                "module.exports = Foo;",
+
+            "import FooBar from './foo';" +
+                "var baz = new FooBar();" +
+                "console.log(baz.bar());"
+        },
+        new String[] {
+            "var module$foo={};" +
+                "function Foo$$module$foo(){}" +
+                "Foo$$module$foo.prototype.bar=function(){console.log('bar')};" +
+                "module$foo.default=Foo$$module$foo;",
+
+            "var module$app={}," +
+                "baz$$module$app$$module$app=new Foo$$module$foo;" +
+                "console.log(baz$$module$app$$module$app.bar());"
+        });
   }
 
   public void testFormattingSingleQuote() {
@@ -1475,7 +1533,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--common_js_entry_module=foo/bar");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={foo:1};");
+        "var module$foo$bar={\"default\":{foo:1}};");
   }
 
   public void testModuleJSON() {
@@ -1486,7 +1544,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--output_module_dependencies=test.json");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={foo:1};");
+        "var module$foo$bar={\"default\":{foo:1}};");
   }
 
   public void testOutputSameAsInput() {

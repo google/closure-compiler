@@ -21,6 +21,7 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 
 import java.net.URI;
@@ -39,6 +40,7 @@ import java.util.List;
 public final class ProcessCommonJSModules implements CompilerPass {
   private static final String EXPORTS = "exports";
   private static final String MODULE = "module";
+  private static final String DEFAULT_EXPORT = "default";
 
   private final Compiler compiler;
   private final ES6ModuleLoader loader;
@@ -267,7 +269,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       String moduleName = ES6ModuleLoader.toModuleName(loadAddress);
-      Node moduleRef = IR.name(moduleName).srcref(require);
+      Node moduleRef = IR.getprop(IR.name(moduleName), DEFAULT_EXPORT)
+          .useSourceInfoFromForTree(require);
       parent.replaceChild(require, moduleRef);
       Node script = getCurrentScriptNode(parent);
       if (reportDependencies) {
@@ -375,14 +378,12 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private void processExports(Node script, String moduleName) {
       if (hasOneTopLevelModuleExportAssign()) {
         // One top-level assign: transform to
-        // moduleName = rhs
+        // moduleName.default = rhs
         Node ref = moduleExportRefs.get(0);
-        Node newName = IR.name(moduleName);
+        Node newName = IR.getprop(IR.name(moduleName), DEFAULT_EXPORT)
+            .useSourceInfoFromForTree(ref);
         newName.putProp(Node.ORIGINALNAME_PROP, ref.getQualifiedName());
-
-        Node rhsValue = ref.getNext().detachFromParent();
-        Node newExprResult = IR.exprResult(IR.assign(newName, rhsValue)
-          .useSourceInfoIfMissingFromForTree(ref.getParent()));
+        Node rhsValue = ref.getNext();
 
         // If the rValue is an object literal, check each property to see if
         // it's an alias, and if it is, copy the annotation over.
@@ -408,42 +409,74 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
 
         Node assign = ref.getParent();
-        Node exprResult = assign.getParent();
-        script.replaceChild(exprResult, newExprResult);
+        assign.replaceChild(ref, newName);
+        JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+        builder.recordConstancy();
+        JSDocInfo info = builder.build();
+        assign.setJSDocInfo(info);
         return;
       }
+
+      Node defaultPropertyInitializer = null;
 
       if (!hasExportLValues()) {
         // Transform to:
         //
-        // moduleName.prop0 = 0; // etc.
+        // moduleName.default.prop0 = 0; // etc.
         for (Node ref : Iterables.concat(moduleExportRefs, exportRefs)) {
-          Node newRef = IR.name(moduleName).useSourceInfoIfMissingFrom(ref);
-          newRef.putProp(Node.ORIGINALNAME_PROP, ref.getQualifiedName());
+          defaultPropertyInitializer =
+              initializeDefaultProperty(script, moduleName, defaultPropertyInitializer);
+
+          Node newRef = IR.getprop(IR.name(moduleName), DEFAULT_EXPORT).useSourceInfoFromForTree(ref);
+          newRef.putProp(Node.ORIGINALNAME_PROP, ref.getNext());
           ref.getParent().replaceChild(ref, newRef);
         }
         return;
       }
 
-      // Transform module.exports to moduleName
+      // Transform module.exports to moduleName.default
       for (Node ref : moduleExportRefs) {
-        Node newRef = IR.name(moduleName).useSourceInfoIfMissingFrom(ref);
+        defaultPropertyInitializer =
+            initializeDefaultProperty(script, moduleName, defaultPropertyInitializer);
+
+        Node newRef = IR.getprop(IR.name(moduleName), DEFAULT_EXPORT).useSourceInfoFromForTree(ref);
         ref.getParent().replaceChild(ref, newRef);
       }
 
       // Transform exports to exports$$moduleName and set to point
-      // to module namespace: exports$$moduleName = moduleName;
+      // to module namespace: exports$$moduleName = moduleName.default;
       if (!exportRefs.isEmpty()) {
+        defaultPropertyInitializer =
+            initializeDefaultProperty(script, moduleName, defaultPropertyInitializer);
+
         String aliasName = "exports$$" + moduleName;
-        Node aliasNode = IR.var(IR.name(aliasName), IR.name(moduleName))
-            .useSourceInfoIfMissingFromForTree(script);
-        script.addChildToFront(aliasNode);
+        Node aliasNode = IR.var(IR.name(aliasName), IR.getprop(IR.name(moduleName), DEFAULT_EXPORT))
+            .useSourceInfoFromForTree(script);
+        script.addChildAfter(aliasNode, defaultPropertyInitializer);
 
         for (Node ref : exportRefs) {
           ref.putProp(Node.ORIGINALNAME_PROP, ref.getString());
           ref.setString(aliasName);
         }
       }
+    }
+
+    private Node initializeDefaultProperty(Node script, String moduleName, Node existingInitializer) {
+      Node initializer = existingInitializer;
+      if (initializer == null) {
+        // Initialize the moduleName.default property
+        Node assign = IR.assign(IR.getprop(IR.name(moduleName), DEFAULT_EXPORT),
+            IR.objectlit()).useSourceInfoFromForTree(script);
+        JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+        builder.recordConstancy();
+        JSDocInfo info = builder.build();
+        assign.setJSDocInfo(info);
+
+        initializer = IR.exprResult(assign).srcref(script);
+
+        script.addChildToFront(initializer);
+      }
+      return initializer;
     }
 
     /**
@@ -553,7 +586,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
             return;
           }
 
-          String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress);
+          String globalModuleName = ES6ModuleLoader.toModuleName(loadAddress)
+              + "." + DEFAULT_EXPORT;
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else {

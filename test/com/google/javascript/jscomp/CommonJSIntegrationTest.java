@@ -34,11 +34,12 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "var hello = new Hello();"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0 = Hello$$module$i0;",
+           "module$i0.default = Hello$$module$i0;",
 
            "var module$i1 = {};" +
-           "var Hello$$module$i1 = module$i0;" +
+           "var Hello$$module$i1 = Hello$$module$i0;" +
            "var hello$$module$i1 = new Hello$$module$i1();"
          });
   }
@@ -63,9 +64,10 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "module.exports = Hello;"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
            "var hello$$module$i0 = new Hello$$module$i0();" +
-           "var module$i0 = Hello$$module$i0;"
+           "module$i0.default = Hello$$module$i0;"
          });
   }
 
@@ -78,10 +80,11 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "/** @type {!Hello} */ var hello = new Hello();"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0 = Hello$$module$i0;",
+           "module$i0.default = Hello$$module$i0;",
            "var module$i1 = {};" +
-           "var Hello$$module$i1 = module$i0;" +
+           "var Hello$$module$i1 = Hello$$module$i0;" +
            "var hello$$module$i1 = new Hello$$module$i1();"
          });
   }
@@ -112,10 +115,11 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "util.inherits(SubHello, Hello);"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0=Hello$$module$i0;",
+           "module$i0.default=Hello$$module$i0;",
            "var module$i1={};" +
-           "var Hello$$module$i1=module$i0;" +
+           "var Hello$$module$i1=Hello$$module$i0;" +
            "var util$$module$i1={inherits:function(x,y){}};" +
            "var SubHello$$module$i1=function(){};" +
            "util$$module$i1.inherits(SubHello$$module$i1,Hello$$module$i1);"
@@ -137,10 +141,11 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "util.inherits(SubHello, Hello);"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0=Hello$$module$i0;",
+           "module$i0.default=Hello$$module$i0;",
            "var module$i1={};" +
-           "var Hello$$module$i1=module$i0;" +
+           "var Hello$$module$i1=Hello$$module$i0;" +
            "var util$$module$i1={inherits:function(x,y){}};" +
            "function SubHello$$module$i1(){}" +
            "util$$module$i1.inherits(SubHello$$module$i1,Hello$$module$i1);"
@@ -162,10 +167,11 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "util.inherits(SubHello, Hello);"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0=Hello$$module$i0;",
+           "module$i0.default=Hello$$module$i0;",
            "var module$i1={};" +
-           "var Hello$$module$i1=module$i0;" +
+           "var Hello$$module$i1=Hello$$module$i0;" +
            "var util$$module$i1={inherits:function(x,y){}};" +
            "function SubHello$$module$i1(){ Hello$$module$i1.call(this); }" +
            "util$$module$i1.inherits(SubHello$$module$i1,Hello$$module$i1);"
@@ -187,10 +193,11 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "util.inherits(SubHello, i0.Hello);"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0={Hello: Hello$$module$i0};",
+           "module$i0.default={Hello: Hello$$module$i0};",
            "var module$i1={};" +
-           "var i0$$module$i1=module$i0;" +
+           "var i0$$module$i1=module$i0.default;" +
            "var util$$module$i1={inherits:function(x,y){}};" +
            "function SubHello$$module$i1(){ i0$$module$i1.Hello.call(this); }" +
            "util$$module$i1.inherits(SubHello$$module$i1,i0$$module$i1.Hello);"
@@ -212,10 +219,11 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "util.inherits(SubHello, Hello);"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0=Hello$$module$i0;",
+           "module$i0.default=Hello$$module$i0;",
            "var module$i1={};" +
-           "var Hello$$module$i1=module$i0;" +
+           "var Hello$$module$i1=Hello$$module$i0;" +
            "var util$$module$i1={inherits:function(x,y){}};" +
            "function SubHello$$module$i1(){ Hello$$module$i1.call(this); }" +
            "util$$module$i1.inherits(SubHello$$module$i1,Hello$$module$i1);"
@@ -237,10 +245,11 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
            "util.inherits(SubHello, i0.Hello);"
          },
          new String[] {
+           "var module$i0 = {};" +
            "function Hello$$module$i0(){}" +
-           "var module$i0={Hello: Hello$$module$i0};",
+           "module$i0.default={Hello: Hello$$module$i0};",
            "var module$i1={};" +
-           "var i0$$module$i1=module$i0;" +
+           "var i0$$module$i1=module$i0.default;" +
            "var util$$module$i1={inherits:function(x,y){}};" +
            "function SubHello$$module$i1(){ i0$$module$i1.Hello.call(this); }" +
            "util$$module$i1.inherits(SubHello$$module$i1,i0$$module$i1.Hello);"
@@ -254,6 +263,8 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setProcessCommonJSModules(true);
     options.setClosurePass(true);
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT3);
     return options;
   }
 }
