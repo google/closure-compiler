@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
+import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.TextFormat;
 
 import org.kohsuke.args4j.Argument;
@@ -116,6 +117,9 @@ public class CommandLineRunner extends
 
   // UTF-8 BOM is 0xEF, 0xBB, 0xBF, of which character code is 65279.
   public static final int UTF8_BOM_CODE = 65279;
+
+  // Allowable module name characters that aren't valid in a JS identifier
+  private static final Pattern extraModuleNameChars = Pattern.compile("[-.]+");
 
   private static class GuardLevel {
     final String name;
@@ -1170,6 +1174,15 @@ public class CommandLineRunner extends
   protected void addWhitelistWarningsGuard(
       CompilerOptions options, File whitelistFile) {
     options.addWarningsGuard(WhitelistWarningsGuard.fromFile(whitelistFile));
+  }
+
+  @Override
+  protected void checkModuleName(String name)
+      throws FlagUsageException {
+    if (!TokenStream.isJSIdentifier(
+        extraModuleNameChars.matcher(name).replaceAll("_"))) {
+      throw new FlagUsageException("Invalid module name: '" + name + "'");
+    }
   }
 
   @Override
