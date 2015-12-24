@@ -2536,6 +2536,9 @@ Element.prototype.classList;
 /** @return {boolean} */
 HTMLFormElement.prototype.checkValidity = function() {};
 
+/** @return {boolean} */
+HTMLFormElement.prototype.reportValidity = function() {};
+
 /** @type {boolean} */
 HTMLFormElement.prototype.noValidate;
 
@@ -2593,6 +2596,9 @@ HTMLButtonElement.prototype.willValidate;
 
 /** @return {boolean} */
 HTMLButtonElement.prototype.checkValidity = function() {};
+
+/** @return {boolean} */
+HTMLButtonElement.prototype.reportValidity = function() {};
 
 /** @param {string} message */
 HTMLButtonElement.prototype.setCustomValidity = function(message) {};
@@ -2672,6 +2678,9 @@ HTMLInputElement.prototype.willValidate;
 /** @return {boolean} */
 HTMLInputElement.prototype.checkValidity = function() {};
 
+/** @return {boolean} */
+HTMLInputElement.prototype.reportValidity = function() {};
+
 /** @param {string} message */
 HTMLInputElement.prototype.setCustomValidity = function(message) {};
 
@@ -2705,6 +2714,9 @@ HTMLSelectElement.prototype.willValidate;
 /** @return {boolean} */
 HTMLSelectElement.prototype.checkValidity = function() {};
 
+/** @return {boolean} */
+HTMLSelectElement.prototype.reportValidity = function() {};
+
 /** @param {string} message */
 HTMLSelectElement.prototype.setCustomValidity = function(message) {};
 
@@ -2731,6 +2743,9 @@ HTMLTextAreaElement.prototype.willValidate;
 
 /** @return {boolean} */
 HTMLTextAreaElement.prototype.checkValidity = function() {};
+
+/** @return {boolean} */
+HTMLTextAreaElement.prototype.reportValidity = function() {};
 
 /** @param {string} message */
 HTMLTextAreaElement.prototype.setCustomValidity = function(message) {};
