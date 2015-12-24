@@ -1579,6 +1579,33 @@ public final class CommandLineRunnerTest extends TestCase {
         + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }
 
+  public void testOutputModuleNaming() throws FlagUsageException {
+    String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
+    args.add("--json_streams=BOTH");
+    args.add("--module=foo--bar.baz:1");
+
+    CommandLineRunner runner = new CommandLineRunner(
+        args.toArray(new String[]{}),
+        new ByteArrayInputStream(inputString.getBytes()),
+        new PrintStream(outReader),
+        new PrintStream(errReader));
+
+    lastCompiler = runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    String output = new String(outReader.toByteArray(), UTF_8);
+    assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
+        + "\"path\":\"./foo--bar.baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
+        + "\\n\\\"file\\\":\\\"./foo--bar.baz.js\\\",\\n\\\"lineCount\\\":1,"
+        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+        + "\\n\\\"sources\\\":[\\\"foo.js\\\"],"
+        + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
+  }
+
   /* Helper functions */
 
   private void testSame(String original) {
