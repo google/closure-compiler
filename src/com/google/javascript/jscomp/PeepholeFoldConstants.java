@@ -1485,7 +1485,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (c.getString().equals(right.getString())) {
         switch (c.getType()) {
           case Token.SETTER_DEF:
-            continue;
+            break;
           case Token.GETTER_DEF:
           case Token.STRING_KEY:
             if (value != null && mayHaveSideEffects(value)) {

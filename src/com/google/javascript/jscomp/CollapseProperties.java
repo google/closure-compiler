@@ -233,7 +233,7 @@ class CollapseProperties implements CompilerPass {
         for (Ref ref : refs) {
           switch (ref.type) {
             case SET_FROM_GLOBAL:
-              continue;
+              break;
             case DIRECT_GET:
             case ALIASING_GET:
             case PROTOTYPE_GET:

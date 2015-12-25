@@ -661,25 +661,25 @@ class IRFactory {
       switch (tree.type) {
         case EXPRESSION_STATEMENT:
           tree = tree.asExpressionStatement().expression;
-          continue;
+          break;
         case CALL_EXPRESSION:
           tree = tree.asCallExpression().operand;
-          continue;
+          break;
         case BINARY_OPERATOR:
           tree = tree.asBinaryOperator().left;
-          continue;
+          break;
         case CONDITIONAL_EXPRESSION:
           tree = tree.asConditionalExpression().condition;
-          continue;
+          break;
         case MEMBER_EXPRESSION:
           tree = tree.asMemberExpression().operand;
-          continue;
+          break;
         case MEMBER_LOOKUP_EXPRESSION:
           tree = tree.asMemberLookupExpression().operand;
-          continue;
+          break;
         case POSTFIX_EXPRESSION:
           tree = tree.asPostfixExpression().operand;
-          continue;
+          break;
         default:
           return tree;
       }
