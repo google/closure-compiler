@@ -176,7 +176,7 @@ public final class Mapping {
               com.google.debugging.sourcemap.proto.Mapping.LineMapping.class, com.google.debugging.sourcemap.proto.Mapping.LineMapping.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<LineMapping> PARSER =
+    public static final com.google.protobuf.Parser<LineMapping> PARSER =
         new com.google.protobuf.AbstractParser<LineMapping>() {
       public LineMapping parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -999,7 +999,7 @@ public final class Mapping {
               com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.class, com.google.debugging.sourcemap.proto.Mapping.OriginalMapping.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<OriginalMapping> PARSER =
+    public static final com.google.protobuf.Parser<OriginalMapping> PARSER =
         new com.google.protobuf.AbstractParser<OriginalMapping>() {
       public OriginalMapping parsePartialFrom(
           com.google.protobuf.CodedInputStream input,

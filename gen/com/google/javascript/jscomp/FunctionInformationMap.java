@@ -102,7 +102,7 @@ public  final class FunctionInformationMap extends
             com.google.javascript.jscomp.FunctionInformationMap.class, com.google.javascript.jscomp.FunctionInformationMap.Builder.class);
   }
 
-  public static com.google.protobuf.Parser<FunctionInformationMap> PARSER =
+  public static final com.google.protobuf.Parser<FunctionInformationMap> PARSER =
       new com.google.protobuf.AbstractParser<FunctionInformationMap>() {
     public FunctionInformationMap parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
@@ -320,7 +320,7 @@ public  final class FunctionInformationMap extends
               com.google.javascript.jscomp.FunctionInformationMap.Entry.class, com.google.javascript.jscomp.FunctionInformationMap.Entry.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<Entry> PARSER =
+    public static final com.google.protobuf.Parser<Entry> PARSER =
         new com.google.protobuf.AbstractParser<Entry>() {
       public Entry parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -1473,7 +1473,7 @@ public  final class FunctionInformationMap extends
               com.google.javascript.jscomp.FunctionInformationMap.Module.class, com.google.javascript.jscomp.FunctionInformationMap.Module.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<Module> PARSER =
+    public static final com.google.protobuf.Parser<Module> PARSER =
         new com.google.protobuf.AbstractParser<Module>() {
       public Module parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
