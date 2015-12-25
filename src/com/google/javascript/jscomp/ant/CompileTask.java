@@ -123,7 +123,7 @@ public final class CompileTask
     this.warnings = new LinkedList<>();
   }
 
-  private CompilerOptions.LanguageMode parseLanguage(String value) {
+  private static CompilerOptions.LanguageMode parseLanguageMode(String value) {
     switch (value) {
       case "ECMASCRIPT6_STRICT":
       case "ES6_STRICT":
@@ -152,7 +152,7 @@ public final class CompileTask
    *     (ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT).
    */
   public void setLanguageIn(String value) {
-    this.languageIn = parseLanguage(value);
+    this.languageIn = parseLanguageMode(value);
   }
 
   /**
@@ -161,7 +161,7 @@ public final class CompileTask
    *     (ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT).
    */
   public void setLanguageOut(String value) {
-    this.languageOut = parseLanguage(value);
+    this.languageOut = parseLanguageMode(value);
   }
 
   /**
