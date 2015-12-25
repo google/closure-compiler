@@ -75,6 +75,6 @@ public class SimpleReference<T extends StaticTypedSlot<JSType>>
   public String toString() {
     String sourceName = node == null ? null : node.getSourceFileName();
     int lineNo = node == null ? -1 : node.getLineno();
-    return node.getQualifiedName() + "@" + sourceName + ":" + lineNo;
+    return (node != null ? node.getQualifiedName() : "null") + "@" + sourceName + ":" + lineNo;
   }
 }

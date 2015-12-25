@@ -839,6 +839,7 @@ class RemoveUnusedVars
           toRemove.isVar() ||
           toRemove.isFunction() ||
           toRemove.isParamList() &&
+          parent != null &&
           parent.isFunction(),
           "We should only declare vars and functions and function args");
 

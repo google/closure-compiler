@@ -2805,7 +2805,7 @@ final class NewTypeInference implements CompilerPass {
         && !recvType.mayBeDict()
         && !mayWarnAboutInexistentProp(propAccessNode, recvType, propQname)
         && recvType.hasProp(propQname)
-        && !resultType.isSubtypeOf(requiredType)
+        && resultType != null && !resultType.isSubtypeOf(requiredType)
         && tightenTypeAndDontWarn(
             receiver.isName() ? receiver.getString() : null,
             receiver,

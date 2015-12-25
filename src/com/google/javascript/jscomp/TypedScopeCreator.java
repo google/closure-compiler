@@ -1231,7 +1231,7 @@ final class TypedScopeCreator implements ScopeCreator {
 
       // We need to do some additional work for constructors and interfaces.
       FunctionType fnType = JSType.toMaybeFunctionType(type);
-      if (fnType != null &&
+      if (fnType != null && type != null &&
           // We don't want to look at empty function types.
           !type.isEmptyType()) {
 

@@ -1045,7 +1045,7 @@ public final class Es6RewriteGenerators
         return;
       }
       Node guardName = IR.name(GENERATOR_LOOP_GUARD + generatorCounter.get());
-      if (!guard.isEmpty()) {
+      if (guard != null && !guard.isEmpty()) {
         Node container = new Node(Token.BLOCK);
         n.replaceChild(guard, container);
         container.addChildToFront(

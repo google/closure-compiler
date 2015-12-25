@@ -221,19 +221,21 @@ class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal
       }
     }
 
-    // For every goog.require, check that there is a usage (in either usages or weakUsages)
-    // and warn if there is not.
-    for (Map.Entry<String, Node> entry : requires.entrySet()) {
-      String require = entry.getKey();
-      Node call = entry.getValue();
-      Node parent = call.getParent();
-      if (parent.isAssign()) {
-        // var baz = goog.require('foo.bar.baz');
-        // Assume that the var 'baz' is used somewhere, and don't warn.
-        continue;
-      }
-      if (!usages.containsKey(require) && !weakUsages.containsKey(require)) {
-        reportExtraRequireWarning(call, require);
+    if (requires != null) {
+      // For every goog.require, check that there is a usage (in either usages or weakUsages)
+      // and warn if there is not.
+      for (Map.Entry<String, Node> entry : requires.entrySet()) {
+        String require = entry.getKey();
+        Node call = entry.getValue();
+        Node parent = call.getParent();
+        if (parent.isAssign()) {
+          // var baz = goog.require('foo.bar.baz');
+          // Assume that the var 'baz' is used somewhere, and don't warn.
+          continue;
+        }
+        if (!usages.containsKey(require) && !weakUsages.containsKey(require)) {
+          reportExtraRequireWarning(call, require);
+        }
       }
     }
   }
