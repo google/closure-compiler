@@ -16,6 +16,8 @@
 
 package java.net;
 
+import com.google.common.base.Preconditions;
+
 import java.io.Serializable;
 
 /** GWT compatible minimal emulation of {@code URI} */
@@ -38,6 +40,9 @@ public class URI implements Comparable<URI>, Serializable  {
 
   @Override
   public boolean equals(Object o) {
+    if (o == null)
+      return false;
+    Preconditions.checkState(o instanceof URI);
     URI other = (URI) o;
     return uriString.equals(other.toString());
   }
