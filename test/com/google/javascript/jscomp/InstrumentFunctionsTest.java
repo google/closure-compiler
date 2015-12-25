@@ -22,12 +22,17 @@ import com.google.protobuf.TextFormat;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Tests for {@link InstrumentFunctions}
  *
  */
 public final class InstrumentFunctionsTest extends CompilerTestCase {
+
+  private static final Logger logger = Logger.getLogger(InstrumentFunctionsTest.class.getName());
+
   private String instrumentationPb;
 
   public InstrumentFunctionsTest() {
@@ -247,7 +252,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
       try {
         TextFormat.merge(instrumentationPb, builder);
       } catch (IOException e) {
-        e.printStackTrace();
+        logger.log(Level.WARNING, "Unexpected exception", e);
       }
 
       InstrumentFunctions instrumentation = new InstrumentFunctions(

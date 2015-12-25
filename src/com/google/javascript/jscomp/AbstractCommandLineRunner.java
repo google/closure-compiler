@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -149,6 +150,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     "browser/webkit_css.js",
     "browser/w3c_touch_event.js"
   );
+
+  private static final Logger logger = Logger.getLogger(AbstractCommandLineRunner.class.getName());
 
   private final CommandLineConfig config;
 
@@ -556,9 +559,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       }
     } catch (AbstractCommandLineRunner.FlagUsageException e) {
       System.err.println(e.getMessage());
+      logger.log(Level.WARNING, "Flag using error", e);
       result = -1;
     } catch (Throwable t) {
-      t.printStackTrace();
+      logger.log(Level.WARNING, "Compiler running error", t);
       result = -2;
     }
 
