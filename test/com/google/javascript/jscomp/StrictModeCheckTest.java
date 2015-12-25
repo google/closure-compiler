@@ -340,7 +340,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
         "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
   }
 
-  private String inFn(String body) {
+  private static String inFn(String body) {
     return "function func() {" + body + "}";
   }
 }

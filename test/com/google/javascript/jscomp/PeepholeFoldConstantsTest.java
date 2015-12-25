@@ -1267,7 +1267,7 @@ public final class PeepholeFoldConstantsTest extends CompilerTestCase {
     foldSame("var x = 3 * (r ? Infinity : -Infinity);");
   }
 
-  private String join(String operandA, String op, String operandB) {
+  private static String join(String operandA, String op, String operandB) {
     return operandA + " " + op + " " + operandB;
   }
 

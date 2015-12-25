@@ -553,7 +553,7 @@ public class Compiler extends AbstractCompiler {
    * base path is interpreted as a filename rather than a directory. E.g.:
    *   getRelativeTo("../foo/bar.js", "baz/bam/qux.js") --> "baz/foo/bar.js"
    */
-  private String getRelativeTo(String relative, String base) {
+  private static String getRelativeTo(String relative, String base) {
     return FileSystems.getDefault().getPath(base)
         .resolveSibling(relative)
         .normalize()

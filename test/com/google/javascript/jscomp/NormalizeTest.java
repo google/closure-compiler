@@ -187,7 +187,7 @@ public final class NormalizeTest extends CompilerTestCase {
          "function f() { f(); if (true) {var bar = function () {}}}");
   }
 
-  private String inFunction(String code) {
+  private static String inFunction(String code) {
     return "(function(){" + code + "})";
   }
 

@@ -2500,7 +2500,7 @@ public class Node implements Serializable {
   /**
    * returns true if all the flags are set in value.
    */
-  private boolean areBitFlagsSet(int value, int flags) {
+  private static boolean areBitFlagsSet(int value, int flags) {
     return (value & flags) == flags;
   }
 

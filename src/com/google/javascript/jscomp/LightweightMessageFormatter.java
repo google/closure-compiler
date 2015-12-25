@@ -128,7 +128,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
     return b.toString();
   }
 
-  private String formatPosition(String sourceName, int lineNumber) {
+  private static String formatPosition(String sourceName, int lineNumber) {
     StringBuilder b = new StringBuilder();
     if (sourceName != null) {
       b.append(sourceName);

@@ -1053,7 +1053,7 @@ public final class CheckConformanceTest extends CompilerTestCase {
         "function f() {goog.asserts.assertInstanceof(this, Error);}");
   }
 
-  private String config(String rule, String message, String... fields) {
+  private static String config(String rule, String message, String... fields) {
     String result = "requirement: {\n"
         + "  type: CUSTOM\n"
         + "  java_class: '" + rule + "'\n";
@@ -1064,11 +1064,11 @@ public final class CheckConformanceTest extends CompilerTestCase {
     return result;
   }
 
-  private String rule(String rule) {
+  private static String rule(String rule) {
     return "com.google.javascript.jscomp.ConformanceRules$" + rule;
   }
 
-  private String value(String value) {
+  private static String value(String value) {
     return "  value: '" + value + "'\n";
   }
 

@@ -1498,7 +1498,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
   }
 
-  private SuggestionPair getClosestPropertySuggestion(
+  private static SuggestionPair getClosestPropertySuggestion(
       JSType objectType, String propName) {
     return null;
   }
