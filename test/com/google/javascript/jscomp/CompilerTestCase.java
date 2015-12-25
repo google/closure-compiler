@@ -658,7 +658,7 @@ public abstract class CompilerTestCase extends TestCase {
     test(compiler, maybeCreateArray(expected), error, warning, description);
   }
 
-  private String[] maybeCreateArray(String expected) {
+  private static String[] maybeCreateArray(String expected) {
     if (expected != null) {
       return new String[] {expected};
     }

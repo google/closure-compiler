@@ -1759,7 +1759,7 @@ public final class CommandLineRunnerTest extends TestCase {
         new PrintStream(errReader));
   }
 
-  private FlagEntry<JsSourceType> createZipFile(Map<String, String> entryContentsByName)
+  private static FlagEntry<JsSourceType> createZipFile(Map<String, String> entryContentsByName)
       throws IOException {
     File tempZipFile = File.createTempFile("testdata", ".js.zip");
 

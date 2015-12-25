@@ -52,7 +52,7 @@ public final class SourceMapGeneratorV3Test extends SourceMapTestCase {
     return SourceMap.Format.V3;
   }
 
-  private String getEncodedFileName() {
+  private static String getEncodedFileName() {
     if (File.separatorChar == '\\') {
       return "c:/myfile.js";
     } else {
